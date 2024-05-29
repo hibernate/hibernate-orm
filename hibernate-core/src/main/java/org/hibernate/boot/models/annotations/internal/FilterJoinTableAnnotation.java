@@ -43,14 +43,9 @@ public class FilterJoinTableAnnotation implements FilterJoinTable, FilterDetails
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public FilterJoinTableAnnotation(FilterJoinTable annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, FILTER_JOIN_TABLE, "name", modelContext );
-		this.condition = extractJdkValue( annotation, FILTER_JOIN_TABLE, "condition", modelContext );
-		this.deduceAliasInjectionPoints = extractJdkValue(
-				annotation,
-				FILTER_JOIN_TABLE,
-				"deduceAliasInjectionPoints",
-				modelContext
-		);
+		this.name = annotation.name();
+		this.condition = annotation.condition();
+		this.deduceAliasInjectionPoints = annotation.deduceAliasInjectionPoints();
 		this.aliases = extractJdkValue( annotation, FILTER_JOIN_TABLE, "aliases", modelContext );
 	}
 

@@ -9,9 +9,12 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 
 import org.hibernate.annotations.OrderBy;
+import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.jboss.jandex.AnnotationInstance;
+
+import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -23,9 +26,11 @@ public class OrderByAnnotation implements OrderBy {
 	}
 
 	public OrderByAnnotation(OrderBy annotation, SourceModelBuildingContext modelContext) {
+		clause = annotation.clause();
 	}
 
 	public OrderByAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
+		clause = extractJandexValue( annotation, HibernateAnnotations.ORDER_BY, "clause", modelContext );
 	}
 
 	@Override

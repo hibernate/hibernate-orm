@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -34,8 +33,8 @@ public class GeneratorTypeAnnotation implements GeneratorType {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public GeneratorTypeAnnotation(GeneratorType annotation, SourceModelBuildingContext modelContext) {
-		this.type = extractJdkValue( annotation, HibernateAnnotations.GENERATOR_TYPE, "type", modelContext );
-		this.when = extractJdkValue( annotation, HibernateAnnotations.GENERATOR_TYPE, "when", modelContext );
+		this.type = annotation.type();
+		this.when = annotation.when();
 	}
 
 	/**

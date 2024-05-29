@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -34,13 +33,8 @@ public class JoinFormulaAnnotation implements JoinFormula {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public JoinFormulaAnnotation(JoinFormula annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJdkValue( annotation, HibernateAnnotations.JOIN_FORMULA, "value", modelContext );
-		this.referencedColumnName = extractJdkValue(
-				annotation,
-				HibernateAnnotations.JOIN_FORMULA,
-				"referencedColumnName",
-				modelContext
-		);
+		this.value = annotation.value();
+		this.referencedColumnName = annotation.referencedColumnName();
 	}
 
 	/**

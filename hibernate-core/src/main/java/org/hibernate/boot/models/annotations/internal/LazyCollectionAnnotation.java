@@ -9,10 +9,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 
 import org.hibernate.annotations.LazyCollection;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -30,7 +27,7 @@ public class LazyCollectionAnnotation implements LazyCollection {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public LazyCollectionAnnotation(LazyCollection annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJdkValue( annotation, HibernateAnnotations.LAZY_COLLECTION, "value", modelContext );
+		this.value = annotation.value();
 	}
 
 

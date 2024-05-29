@@ -41,11 +41,11 @@ public class SQLUpdateAnnotation implements SQLUpdate, CustomSqlDetails {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public SQLUpdateAnnotation(SQLUpdate annotation, SourceModelBuildingContext modelContext) {
-		this.sql = extractJdkValue( annotation, HibernateAnnotations.SQL_UPDATE, "sql", modelContext );
-		this.callable = extractJdkValue( annotation, HibernateAnnotations.SQL_UPDATE, "callable", modelContext );
-		this.verify = extractJdkValue( annotation, HibernateAnnotations.SQL_UPDATE, "verify", modelContext );
-		this.check = extractJdkValue( annotation, HibernateAnnotations.SQL_UPDATE, "check", modelContext );
-		this.table = extractJdkValue( annotation, HibernateAnnotations.SQL_UPDATE, "table", modelContext );
+		this.sql = annotation.sql();
+		this.callable = annotation.callable();
+		this.verify = annotation.verify();
+		this.check = annotation.check();
+		this.table = annotation.table();
 	}
 
 	/**

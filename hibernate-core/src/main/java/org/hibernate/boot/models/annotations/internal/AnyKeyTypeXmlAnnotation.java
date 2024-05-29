@@ -15,11 +15,11 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 public class AnyKeyTypeXmlAnnotation implements AnyKeyType {
 	private String value;
 
@@ -33,12 +33,7 @@ public class AnyKeyTypeXmlAnnotation implements AnyKeyType {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public AnyKeyTypeXmlAnnotation(AnyKeyType annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJdkValue(
-				annotation,
-				org.hibernate.boot.models.XmlAnnotations.ANY_KEY_TYPE,
-				"value",
-				modelContext
-		);
+		this.value = annotation.value();
 	}
 
 	/**

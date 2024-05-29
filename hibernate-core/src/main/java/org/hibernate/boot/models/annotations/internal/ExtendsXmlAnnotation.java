@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -32,7 +31,7 @@ public class ExtendsXmlAnnotation implements Extends {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public ExtendsXmlAnnotation(Extends annotation, SourceModelBuildingContext modelContext) {
-		this.superType = extractJdkValue( annotation, XmlAnnotations.EXTENDS, "superType", modelContext );
+		this.superType = annotation.superType();
 	}
 
 	/**

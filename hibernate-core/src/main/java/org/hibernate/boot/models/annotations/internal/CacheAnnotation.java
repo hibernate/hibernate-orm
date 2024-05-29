@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -38,10 +37,10 @@ public class CacheAnnotation implements Cache {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public CacheAnnotation(Cache annotation, SourceModelBuildingContext modelContext) {
-		this.usage = extractJdkValue( annotation, HibernateAnnotations.CACHE, "usage", modelContext );
-		this.region = extractJdkValue( annotation, HibernateAnnotations.CACHE, "region", modelContext );
-		this.includeLazy = extractJdkValue( annotation, HibernateAnnotations.CACHE, "includeLazy", modelContext );
-		this.include = extractJdkValue( annotation, HibernateAnnotations.CACHE, "include", modelContext );
+		this.usage = annotation.usage();
+		this.region = annotation.region();
+		this.includeLazy = annotation.includeLazy();
+		this.include = annotation.include();
 	}
 
 	/**

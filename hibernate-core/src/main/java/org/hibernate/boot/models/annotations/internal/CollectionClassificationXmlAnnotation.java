@@ -16,7 +16,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -35,7 +34,7 @@ public class CollectionClassificationXmlAnnotation implements CollectionClassifi
 	public CollectionClassificationXmlAnnotation(
 			CollectionClassification annotation,
 			SourceModelBuildingContext modelContext) {
-		this.value = extractJdkValue( annotation, XmlAnnotations.COLLECTION_CLASSIFICATION, "value", modelContext );
+		this.value = annotation.value();
 	}
 
 	/**

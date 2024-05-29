@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -34,7 +33,7 @@ public class EmbeddableInstantiatorAnnotation implements EmbeddableInstantiator 
 	public EmbeddableInstantiatorAnnotation(
 			EmbeddableInstantiator annotation,
 			SourceModelBuildingContext modelContext) {
-		this.value = extractJdkValue( annotation, HibernateAnnotations.EMBEDDABLE_INSTANTIATOR, "value", modelContext );
+		this.value = annotation.value();
 	}
 
 	/**

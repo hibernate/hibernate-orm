@@ -8,13 +8,13 @@ package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
 
-import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.jboss.jandex.AnnotationInstance;
 
 import jakarta.persistence.NamedSubgraph;
 
+import static org.hibernate.boot.models.JpaAnnotations.NAMED_SUBGRAPH;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -36,25 +36,20 @@ public class NamedSubgraphJpaAnnotation implements NamedSubgraph {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public NamedSubgraphJpaAnnotation(NamedSubgraph annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.NAMED_SUBGRAPH, "name", modelContext );
-		this.type = extractJdkValue( annotation, JpaAnnotations.NAMED_SUBGRAPH, "type", modelContext );
-		this.attributeNodes = extractJdkValue(
-				annotation,
-				JpaAnnotations.NAMED_SUBGRAPH,
-				"attributeNodes",
-				modelContext
-		);
+		this.name = annotation.name();
+		this.type = annotation.type();
+		this.attributeNodes = extractJdkValue( annotation, NAMED_SUBGRAPH, "attributeNodes", modelContext );
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
 	public NamedSubgraphJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, JpaAnnotations.NAMED_SUBGRAPH, "name", modelContext );
-		this.type = extractJandexValue( annotation, JpaAnnotations.NAMED_SUBGRAPH, "type", modelContext );
+		this.name = extractJandexValue( annotation, NAMED_SUBGRAPH, "name", modelContext );
+		this.type = extractJandexValue( annotation, NAMED_SUBGRAPH, "type", modelContext );
 		this.attributeNodes = extractJandexValue(
 				annotation,
-				JpaAnnotations.NAMED_SUBGRAPH,
+				NAMED_SUBGRAPH,
 				"attributeNodes",
 				modelContext
 		);

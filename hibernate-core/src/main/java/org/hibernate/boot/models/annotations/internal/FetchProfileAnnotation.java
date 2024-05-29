@@ -34,7 +34,7 @@ public class FetchProfileAnnotation implements FetchProfile {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public FetchProfileAnnotation(FetchProfile annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, HibernateAnnotations.FETCH_PROFILE, "name", modelContext );
+		this.name = annotation.name();
 		this.fetchOverrides = extractJdkValue(
 				annotation,
 				HibernateAnnotations.FETCH_PROFILE,

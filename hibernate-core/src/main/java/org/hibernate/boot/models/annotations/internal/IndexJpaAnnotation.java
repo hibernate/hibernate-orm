@@ -16,7 +16,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.Index;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -39,10 +38,10 @@ public class IndexJpaAnnotation implements Index {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public IndexJpaAnnotation(Index annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.INDEX, "name", modelContext );
-		this.columnList = extractJdkValue( annotation, JpaAnnotations.INDEX, "columnList", modelContext );
-		this.unique = extractJdkValue( annotation, JpaAnnotations.INDEX, "unique", modelContext );
-		this.options = extractJdkValue( annotation, JpaAnnotations.INDEX, "options", modelContext );
+		this.name = annotation.name();
+		this.columnList = annotation.columnList();
+		this.unique = annotation.unique();
+		this.options = annotation.options();
 	}
 
 	/**

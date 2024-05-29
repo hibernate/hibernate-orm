@@ -8,13 +8,13 @@ package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
 
-import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.jboss.jandex.AnnotationInstance;
 
 import jakarta.persistence.ConstructorResult;
 
+import static org.hibernate.boot.models.JpaAnnotations.CONSTRUCTOR_RESULT;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -35,26 +35,16 @@ public class ConstructorResultJpaAnnotation implements ConstructorResult {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public ConstructorResultJpaAnnotation(ConstructorResult annotation, SourceModelBuildingContext modelContext) {
-		this.targetClass = extractJdkValue(
-				annotation,
-				JpaAnnotations.CONSTRUCTOR_RESULT,
-				"targetClass",
-				modelContext
-		);
-		this.columns = extractJdkValue( annotation, JpaAnnotations.CONSTRUCTOR_RESULT, "columns", modelContext );
+		this.targetClass = annotation.targetClass();
+		this.columns = extractJdkValue( annotation, CONSTRUCTOR_RESULT, "columns", modelContext );
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
 	public ConstructorResultJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.targetClass = extractJandexValue(
-				annotation,
-				JpaAnnotations.CONSTRUCTOR_RESULT,
-				"targetClass",
-				modelContext
-		);
-		this.columns = extractJandexValue( annotation, JpaAnnotations.CONSTRUCTOR_RESULT, "columns", modelContext );
+		this.targetClass = extractJandexValue( annotation, CONSTRUCTOR_RESULT, "targetClass", modelContext );
+		this.columns = extractJandexValue( annotation, CONSTRUCTOR_RESULT, "columns", modelContext );
 	}
 
 	@Override

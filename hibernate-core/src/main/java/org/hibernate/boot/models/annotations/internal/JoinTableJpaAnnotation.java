@@ -57,12 +57,8 @@ public class JoinTableJpaAnnotation implements JoinTable, CommonTableDetails {
 		this.schema = "";
 		this.joinColumns = new jakarta.persistence.JoinColumn[0];
 		this.inverseJoinColumns = new jakarta.persistence.JoinColumn[0];
-		this.foreignKey = modelContext.getAnnotationDescriptorRegistry()
-				.getDescriptor( jakarta.persistence.ForeignKey.class )
-				.createUsage( modelContext );
-		this.inverseForeignKey = modelContext.getAnnotationDescriptorRegistry()
-				.getDescriptor( jakarta.persistence.ForeignKey.class )
-				.createUsage( modelContext );
+		this.foreignKey = JpaAnnotations.FOREIGN_KEY.createUsage( modelContext );
+		this.inverseForeignKey = JpaAnnotations.FOREIGN_KEY.createUsage( modelContext );
 		this.uniqueConstraints = new jakarta.persistence.UniqueConstraint[0];
 		this.indexes = new jakarta.persistence.Index[0];
 		this.check = new jakarta.persistence.CheckConstraint[0];
@@ -74,9 +70,9 @@ public class JoinTableJpaAnnotation implements JoinTable, CommonTableDetails {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public JoinTableJpaAnnotation(JoinTable annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.JOIN_TABLE, "name", modelContext );
-		this.catalog = extractJdkValue( annotation, JpaAnnotations.JOIN_TABLE, "catalog", modelContext );
-		this.schema = extractJdkValue( annotation, JpaAnnotations.JOIN_TABLE, "schema", modelContext );
+		this.name = annotation.name();
+		this.catalog = annotation.catalog();
+		this.schema = annotation.schema();
 		this.joinColumns = extractJdkValue( annotation, JpaAnnotations.JOIN_TABLE, "joinColumns", modelContext );
 		this.inverseJoinColumns = extractJdkValue(
 				annotation,
@@ -99,8 +95,8 @@ public class JoinTableJpaAnnotation implements JoinTable, CommonTableDetails {
 		);
 		this.indexes = extractJdkValue( annotation, JpaAnnotations.JOIN_TABLE, "indexes", modelContext );
 		this.check = extractJdkValue( annotation, JpaAnnotations.JOIN_TABLE, "check", modelContext );
-		this.comment = extractJdkValue( annotation, JpaAnnotations.JOIN_TABLE, "comment", modelContext );
-		this.options = extractJdkValue( annotation, JpaAnnotations.JOIN_TABLE, "options", modelContext );
+		this.comment = annotation.comment();
+		this.options = annotation.options();
 	}
 
 	/**

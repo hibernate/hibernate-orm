@@ -16,7 +16,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.Entity;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -34,7 +33,7 @@ public class EntityJpaAnnotation implements Entity {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public EntityJpaAnnotation(Entity annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.ENTITY, "name", modelContext );
+		this.name = annotation.name();
 	}
 
 	/**

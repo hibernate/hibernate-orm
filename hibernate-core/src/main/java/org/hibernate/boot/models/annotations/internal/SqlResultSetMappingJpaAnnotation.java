@@ -39,7 +39,7 @@ public class SqlResultSetMappingJpaAnnotation implements SqlResultSetMapping {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public SqlResultSetMappingJpaAnnotation(SqlResultSetMapping annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.SQL_RESULT_SET_MAPPING, "name", modelContext );
+		this.name = annotation.name();
 		this.entities = extractJdkValue( annotation, JpaAnnotations.SQL_RESULT_SET_MAPPING, "entities", modelContext );
 		this.classes = extractJdkValue( annotation, JpaAnnotations.SQL_RESULT_SET_MAPPING, "classes", modelContext );
 		this.columns = extractJdkValue( annotation, JpaAnnotations.SQL_RESULT_SET_MAPPING, "columns", modelContext );

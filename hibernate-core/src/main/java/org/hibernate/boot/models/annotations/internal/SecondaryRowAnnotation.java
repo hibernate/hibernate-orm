@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -37,9 +36,9 @@ public class SecondaryRowAnnotation implements SecondaryRow {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public SecondaryRowAnnotation(SecondaryRow annotation, SourceModelBuildingContext modelContext) {
-		this.table = extractJdkValue( annotation, HibernateAnnotations.SECONDARY_ROW, "table", modelContext );
-		this.owned = extractJdkValue( annotation, HibernateAnnotations.SECONDARY_ROW, "owned", modelContext );
-		this.optional = extractJdkValue( annotation, HibernateAnnotations.SECONDARY_ROW, "optional", modelContext );
+		this.table = annotation.table();
+		this.owned = annotation.owned();
+		this.optional = annotation.optional();
 	}
 
 	/**

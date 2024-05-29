@@ -41,11 +41,11 @@ public class SQLDeleteAllAnnotation implements SQLDeleteAll, CustomSqlDetails {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public SQLDeleteAllAnnotation(SQLDeleteAll annotation, SourceModelBuildingContext modelContext) {
-		this.sql = extractJdkValue( annotation, HibernateAnnotations.SQL_DELETE_ALL, "sql", modelContext );
-		this.callable = extractJdkValue( annotation, HibernateAnnotations.SQL_DELETE_ALL, "callable", modelContext );
-		this.verify = extractJdkValue( annotation, HibernateAnnotations.SQL_DELETE_ALL, "verify", modelContext );
-		this.check = extractJdkValue( annotation, HibernateAnnotations.SQL_DELETE_ALL, "check", modelContext );
-		this.table = extractJdkValue( annotation, HibernateAnnotations.SQL_DELETE_ALL, "table", modelContext );
+		this.sql = annotation.sql();
+		this.callable = annotation.callable();
+		this.verify = annotation.verify();
+		this.check = annotation.check();
+		this.table = annotation.table();
 	}
 
 	/**

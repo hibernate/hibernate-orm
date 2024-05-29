@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.models.annotations.internal;
 
+import java.lang.annotation.Annotation;
+
 import org.hibernate.boot.jaxb.mapping.spi.JaxbDiscriminatorColumnImpl;
 import org.hibernate.boot.models.annotations.spi.ColumnDetails;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
@@ -14,12 +16,9 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.jboss.jandex.AnnotationInstance;
 
-import java.lang.annotation.Annotation;
-
 import jakarta.persistence.DiscriminatorColumn;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -46,36 +45,11 @@ public class DiscriminatorColumnJpaAnnotation implements DiscriminatorColumn, Co
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public DiscriminatorColumnJpaAnnotation(DiscriminatorColumn annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue(
-				annotation,
-				org.hibernate.boot.models.JpaAnnotations.DISCRIMINATOR_COLUMN,
-				"name",
-				modelContext
-		);
-		this.discriminatorType = extractJdkValue(
-				annotation,
-				org.hibernate.boot.models.JpaAnnotations.DISCRIMINATOR_COLUMN,
-				"discriminatorType",
-				modelContext
-		);
-		this.columnDefinition = extractJdkValue(
-				annotation,
-				org.hibernate.boot.models.JpaAnnotations.DISCRIMINATOR_COLUMN,
-				"columnDefinition",
-				modelContext
-		);
-		this.options = extractJdkValue(
-				annotation,
-				org.hibernate.boot.models.JpaAnnotations.DISCRIMINATOR_COLUMN,
-				"options",
-				modelContext
-		);
-		this.length = extractJdkValue(
-				annotation,
-				org.hibernate.boot.models.JpaAnnotations.DISCRIMINATOR_COLUMN,
-				"length",
-				modelContext
-		);
+		this.name = annotation.name();
+		this.discriminatorType = annotation.discriminatorType();
+		this.columnDefinition = annotation.columnDefinition();
+		this.options = annotation.options();
+		this.length = annotation.length();
 	}
 
 	/**

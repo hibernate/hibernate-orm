@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -33,7 +32,7 @@ public class LoaderAnnotation implements Loader {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public LoaderAnnotation(Loader annotation, SourceModelBuildingContext modelContext) {
-		this.namedQuery = extractJdkValue( annotation, HibernateAnnotations.LOADER, "namedQuery", modelContext );
+		this.namedQuery = annotation.namedQuery();
 	}
 
 	/**

@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -38,15 +37,10 @@ public class IndexColumnAnnotation implements IndexColumn {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public IndexColumnAnnotation(IndexColumn annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, HibernateAnnotations.INDEX_COLUMN, "name", modelContext );
-		this.base = extractJdkValue( annotation, HibernateAnnotations.INDEX_COLUMN, "base", modelContext );
-		this.nullable = extractJdkValue( annotation, HibernateAnnotations.INDEX_COLUMN, "nullable", modelContext );
-		this.columnDefinition = extractJdkValue(
-				annotation,
-				HibernateAnnotations.INDEX_COLUMN,
-				"columnDefinition",
-				modelContext
-		);
+		this.name = annotation.name();
+		this.base = annotation.base();
+		this.nullable = annotation.nullable();
+		this.columnDefinition = annotation.columnDefinition();
 	}
 
 	/**

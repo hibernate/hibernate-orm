@@ -17,7 +17,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.ManyToMany;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -44,10 +43,10 @@ public class ManyToManyJpaAnnotation implements ManyToMany,
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public ManyToManyJpaAnnotation(ManyToMany annotation, SourceModelBuildingContext modelContext) {
-		this.targetEntity = extractJdkValue( annotation, JpaAnnotations.MANY_TO_MANY, "targetEntity", modelContext );
-		this.cascade = extractJdkValue( annotation, JpaAnnotations.MANY_TO_MANY, "cascade", modelContext );
-		this.fetch = extractJdkValue( annotation, JpaAnnotations.MANY_TO_MANY, "fetch", modelContext );
-		this.mappedBy = extractJdkValue( annotation, JpaAnnotations.MANY_TO_MANY, "mappedBy", modelContext );
+		this.targetEntity = annotation.targetEntity();
+		this.cascade = annotation.cascade();
+		this.fetch = annotation.fetch();
+		this.mappedBy = annotation.mappedBy();
 	}
 
 	/**

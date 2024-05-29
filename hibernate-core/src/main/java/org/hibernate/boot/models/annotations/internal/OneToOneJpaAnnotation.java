@@ -17,7 +17,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.OneToOne;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -46,12 +45,12 @@ public class OneToOneJpaAnnotation
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public OneToOneJpaAnnotation(OneToOne annotation, SourceModelBuildingContext modelContext) {
-		this.targetEntity = extractJdkValue( annotation, JpaAnnotations.ONE_TO_ONE, "targetEntity", modelContext );
-		this.cascade = extractJdkValue( annotation, JpaAnnotations.ONE_TO_ONE, "cascade", modelContext );
-		this.fetch = extractJdkValue( annotation, JpaAnnotations.ONE_TO_ONE, "fetch", modelContext );
-		this.optional = extractJdkValue( annotation, JpaAnnotations.ONE_TO_ONE, "optional", modelContext );
-		this.mappedBy = extractJdkValue( annotation, JpaAnnotations.ONE_TO_ONE, "mappedBy", modelContext );
-		this.orphanRemoval = extractJdkValue( annotation, JpaAnnotations.ONE_TO_ONE, "orphanRemoval", modelContext );
+		this.targetEntity = annotation.targetEntity();
+		this.cascade = annotation.cascade();
+		this.fetch = annotation.fetch();
+		this.optional = annotation.optional();
+		this.mappedBy = annotation.mappedBy();
+		this.orphanRemoval = annotation.orphanRemoval();
 	}
 
 	/**

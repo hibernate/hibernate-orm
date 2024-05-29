@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -37,9 +36,9 @@ public class CurrentTimestampAnnotation implements CurrentTimestamp {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public CurrentTimestampAnnotation(CurrentTimestamp annotation, SourceModelBuildingContext modelContext) {
-		this.event = extractJdkValue( annotation, HibernateAnnotations.CURRENT_TIMESTAMP, "event", modelContext );
-		this.timing = extractJdkValue( annotation, HibernateAnnotations.CURRENT_TIMESTAMP, "timing", modelContext );
-		this.source = extractJdkValue( annotation, HibernateAnnotations.CURRENT_TIMESTAMP, "source", modelContext );
+		this.event = annotation.event();
+		this.timing = annotation.timing();
+		this.source = annotation.source();
 	}
 
 	/**

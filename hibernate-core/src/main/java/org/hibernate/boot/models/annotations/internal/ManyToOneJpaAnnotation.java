@@ -17,7 +17,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.ManyToOne;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -45,10 +44,10 @@ public class ManyToOneJpaAnnotation implements ManyToOne,
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public ManyToOneJpaAnnotation(ManyToOne annotation, SourceModelBuildingContext modelContext) {
-		this.targetEntity = extractJdkValue( annotation, JpaAnnotations.MANY_TO_ONE, "targetEntity", modelContext );
-		this.cascade = extractJdkValue( annotation, JpaAnnotations.MANY_TO_ONE, "cascade", modelContext );
-		this.fetch = extractJdkValue( annotation, JpaAnnotations.MANY_TO_ONE, "fetch", modelContext );
-		this.optional = extractJdkValue( annotation, JpaAnnotations.MANY_TO_ONE, "optional", modelContext );
+		this.targetEntity = annotation.targetEntity();
+		this.cascade = annotation.cascade();
+		this.fetch = annotation.fetch();
+		this.optional = annotation.optional();
 	}
 
 	/**

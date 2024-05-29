@@ -16,7 +16,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.Converter;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -35,7 +34,7 @@ public class ConverterJpaAnnotation implements Converter {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public ConverterJpaAnnotation(Converter annotation, SourceModelBuildingContext modelContext) {
-		this.autoApply = extractJdkValue( annotation, JpaAnnotations.CONVERTER, "autoApply", modelContext );
+		this.autoApply = annotation.autoApply();
 	}
 
 	/**

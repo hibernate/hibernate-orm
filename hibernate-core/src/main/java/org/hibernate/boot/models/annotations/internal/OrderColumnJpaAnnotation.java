@@ -20,7 +20,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.OrderColumn;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -52,17 +51,12 @@ public class OrderColumnJpaAnnotation implements OrderColumn,
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public OrderColumnJpaAnnotation(OrderColumn annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.ORDER_COLUMN, "name", modelContext );
-		this.nullable = extractJdkValue( annotation, JpaAnnotations.ORDER_COLUMN, "nullable", modelContext );
-		this.insertable = extractJdkValue( annotation, JpaAnnotations.ORDER_COLUMN, "insertable", modelContext );
-		this.updatable = extractJdkValue( annotation, JpaAnnotations.ORDER_COLUMN, "updatable", modelContext );
-		this.columnDefinition = extractJdkValue(
-				annotation,
-				JpaAnnotations.ORDER_COLUMN,
-				"columnDefinition",
-				modelContext
-		);
-		this.options = extractJdkValue( annotation, JpaAnnotations.ORDER_COLUMN, "options", modelContext );
+		this.name = annotation.name();
+		this.nullable = annotation.nullable();
+		this.insertable = annotation.insertable();
+		this.updatable = annotation.updatable();
+		this.columnDefinition = annotation.columnDefinition();
+		this.options = annotation.options();
 	}
 
 	/**

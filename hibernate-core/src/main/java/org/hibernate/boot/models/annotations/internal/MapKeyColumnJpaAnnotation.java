@@ -21,7 +21,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.MapKeyColumn;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -65,22 +64,17 @@ public class MapKeyColumnJpaAnnotation implements MapKeyColumn,
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public MapKeyColumnJpaAnnotation(MapKeyColumn annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.MAP_KEY_COLUMN, "name", modelContext );
-		this.unique = extractJdkValue( annotation, JpaAnnotations.MAP_KEY_COLUMN, "unique", modelContext );
-		this.nullable = extractJdkValue( annotation, JpaAnnotations.MAP_KEY_COLUMN, "nullable", modelContext );
-		this.insertable = extractJdkValue( annotation, JpaAnnotations.MAP_KEY_COLUMN, "insertable", modelContext );
-		this.updatable = extractJdkValue( annotation, JpaAnnotations.MAP_KEY_COLUMN, "updatable", modelContext );
-		this.columnDefinition = extractJdkValue(
-				annotation,
-				JpaAnnotations.MAP_KEY_COLUMN,
-				"columnDefinition",
-				modelContext
-		);
-		this.options = extractJdkValue( annotation, JpaAnnotations.MAP_KEY_COLUMN, "options", modelContext );
-		this.table = extractJdkValue( annotation, JpaAnnotations.MAP_KEY_COLUMN, "table", modelContext );
-		this.length = extractJdkValue( annotation, JpaAnnotations.MAP_KEY_COLUMN, "length", modelContext );
-		this.precision = extractJdkValue( annotation, JpaAnnotations.MAP_KEY_COLUMN, "precision", modelContext );
-		this.scale = extractJdkValue( annotation, JpaAnnotations.MAP_KEY_COLUMN, "scale", modelContext );
+		this.name = annotation.name();
+		this.unique = annotation.unique();
+		this.nullable = annotation.nullable();
+		this.insertable = annotation.insertable();
+		this.updatable = annotation.updatable();
+		this.columnDefinition = annotation.columnDefinition();
+		this.options = annotation.options();
+		this.table = annotation.table();
+		this.length = annotation.length();
+		this.precision = annotation.precision();
+		this.scale = annotation.scale();
 	}
 
 	/**

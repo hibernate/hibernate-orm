@@ -10,6 +10,7 @@ import java.lang.annotation.Annotation;
 
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.boot.models.HibernateAnnotations;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -28,9 +29,7 @@ public class CollectionIdAnnotation implements CollectionId {
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
 	public CollectionIdAnnotation(SourceModelBuildingContext modelContext) {
-		this.column = modelContext.getAnnotationDescriptorRegistry()
-				.getDescriptor( jakarta.persistence.Column.class )
-				.createUsage( modelContext );
+		this.column = JpaAnnotations.COLUMN.createUsage( modelContext );
 		this.generatorImplementation = org.hibernate.id.IdentifierGenerator.class;
 		this.generator = "";
 	}
@@ -40,13 +39,8 @@ public class CollectionIdAnnotation implements CollectionId {
 	 */
 	public CollectionIdAnnotation(CollectionId annotation, SourceModelBuildingContext modelContext) {
 		this.column = extractJdkValue( annotation, HibernateAnnotations.COLLECTION_ID, "column", modelContext );
-		this.generatorImplementation = extractJdkValue(
-				annotation,
-				HibernateAnnotations.COLLECTION_ID,
-				"generatorImplementation",
-				modelContext
-		);
-		this.generator = extractJdkValue( annotation, HibernateAnnotations.COLLECTION_ID, "generator", modelContext );
+		this.generatorImplementation = annotation.generatorImplementation();
+		this.generator = annotation.generator();
 	}
 
 	/**

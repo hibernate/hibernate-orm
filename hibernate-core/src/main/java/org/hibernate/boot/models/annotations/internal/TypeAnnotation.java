@@ -34,7 +34,7 @@ public class TypeAnnotation implements Type {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public TypeAnnotation(Type annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJdkValue( annotation, HibernateAnnotations.TYPE, "value", modelContext );
+		this.value = annotation.value();
 		this.parameters = extractJdkValue( annotation, HibernateAnnotations.TYPE, "parameters", modelContext );
 	}
 

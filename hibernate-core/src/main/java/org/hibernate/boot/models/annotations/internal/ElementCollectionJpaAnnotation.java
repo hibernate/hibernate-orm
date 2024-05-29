@@ -17,7 +17,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.ElementCollection;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -37,13 +36,8 @@ public class ElementCollectionJpaAnnotation implements ElementCollection, Attrib
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public ElementCollectionJpaAnnotation(ElementCollection annotation, SourceModelBuildingContext modelContext) {
-		this.targetClass = extractJdkValue(
-				annotation,
-				JpaAnnotations.ELEMENT_COLLECTION,
-				"targetClass",
-				modelContext
-		);
-		this.fetch = extractJdkValue( annotation, JpaAnnotations.ELEMENT_COLLECTION, "fetch", modelContext );
+		this.targetClass = annotation.targetClass();
+		this.fetch = annotation.fetch();
 	}
 
 	/**

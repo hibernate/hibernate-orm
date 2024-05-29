@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -39,10 +38,10 @@ public class GeneratedAnnotation implements Generated {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public GeneratedAnnotation(Generated annotation, SourceModelBuildingContext modelContext) {
-		this.event = extractJdkValue( annotation, HibernateAnnotations.GENERATED, "event", modelContext );
-		this.value = extractJdkValue( annotation, HibernateAnnotations.GENERATED, "value", modelContext );
-		this.sql = extractJdkValue( annotation, HibernateAnnotations.GENERATED, "sql", modelContext );
-		this.writable = extractJdkValue( annotation, HibernateAnnotations.GENERATED, "writable", modelContext );
+		this.event = annotation.event();
+		this.value = annotation.value();
+		this.sql = annotation.sql();
+		this.writable = annotation.writable();
 	}
 
 	/**

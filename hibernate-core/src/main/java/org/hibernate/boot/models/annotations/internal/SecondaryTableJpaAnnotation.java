@@ -48,9 +48,7 @@ public class SecondaryTableJpaAnnotation implements SecondaryTable, CommonTableD
 		this.catalog = "";
 		this.schema = "";
 		this.pkJoinColumns = new jakarta.persistence.PrimaryKeyJoinColumn[0];
-		this.foreignKey = modelContext.getAnnotationDescriptorRegistry()
-				.getDescriptor( jakarta.persistence.ForeignKey.class )
-				.createUsage( modelContext );
+		this.foreignKey = JpaAnnotations.FOREIGN_KEY.createUsage( modelContext );
 		this.uniqueConstraints = new jakarta.persistence.UniqueConstraint[0];
 		this.indexes = new jakarta.persistence.Index[0];
 		this.check = new jakarta.persistence.CheckConstraint[0];
@@ -62,9 +60,9 @@ public class SecondaryTableJpaAnnotation implements SecondaryTable, CommonTableD
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public SecondaryTableJpaAnnotation(SecondaryTable annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.SECONDARY_TABLE, "name", modelContext );
-		this.catalog = extractJdkValue( annotation, JpaAnnotations.SECONDARY_TABLE, "catalog", modelContext );
-		this.schema = extractJdkValue( annotation, JpaAnnotations.SECONDARY_TABLE, "schema", modelContext );
+		this.name = annotation.name();
+		this.catalog = annotation.catalog();
+		this.schema = annotation.schema();
 		this.pkJoinColumns = extractJdkValue(
 				annotation,
 				JpaAnnotations.SECONDARY_TABLE,
@@ -80,8 +78,8 @@ public class SecondaryTableJpaAnnotation implements SecondaryTable, CommonTableD
 		);
 		this.indexes = extractJdkValue( annotation, JpaAnnotations.SECONDARY_TABLE, "indexes", modelContext );
 		this.check = extractJdkValue( annotation, JpaAnnotations.SECONDARY_TABLE, "check", modelContext );
-		this.comment = extractJdkValue( annotation, JpaAnnotations.SECONDARY_TABLE, "comment", modelContext );
-		this.options = extractJdkValue( annotation, JpaAnnotations.SECONDARY_TABLE, "options", modelContext );
+		this.comment = annotation.comment();
+		this.options = annotation.options();
 	}
 
 	/**

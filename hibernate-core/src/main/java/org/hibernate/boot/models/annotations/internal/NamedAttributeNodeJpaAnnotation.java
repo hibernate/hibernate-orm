@@ -16,7 +16,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.NamedAttributeNode;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -37,14 +36,9 @@ public class NamedAttributeNodeJpaAnnotation implements NamedAttributeNode {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public NamedAttributeNodeJpaAnnotation(NamedAttributeNode annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJdkValue( annotation, JpaAnnotations.NAMED_ATTRIBUTE_NODE, "value", modelContext );
-		this.subgraph = extractJdkValue( annotation, JpaAnnotations.NAMED_ATTRIBUTE_NODE, "subgraph", modelContext );
-		this.keySubgraph = extractJdkValue(
-				annotation,
-				JpaAnnotations.NAMED_ATTRIBUTE_NODE,
-				"keySubgraph",
-				modelContext
-		);
+		this.value = annotation.value();
+		this.subgraph = annotation.subgraph();
+		this.keySubgraph = annotation.keySubgraph();
 	}
 
 	/**

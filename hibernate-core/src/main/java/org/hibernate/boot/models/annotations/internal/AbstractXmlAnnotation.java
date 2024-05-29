@@ -14,6 +14,7 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 public class AbstractXmlAnnotation implements Abstract {
 	public AbstractXmlAnnotation(SourceModelBuildingContext modelContext) {
 	}

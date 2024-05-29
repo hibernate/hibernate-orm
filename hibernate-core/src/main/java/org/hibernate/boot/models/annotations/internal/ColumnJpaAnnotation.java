@@ -76,20 +76,20 @@ public class ColumnJpaAnnotation implements Column,
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public ColumnJpaAnnotation(Column annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.COLUMN, "name", modelContext );
-		this.unique = extractJdkValue( annotation, JpaAnnotations.COLUMN, "unique", modelContext );
-		this.nullable = extractJdkValue( annotation, JpaAnnotations.COLUMN, "nullable", modelContext );
-		this.insertable = extractJdkValue( annotation, JpaAnnotations.COLUMN, "insertable", modelContext );
-		this.updatable = extractJdkValue( annotation, JpaAnnotations.COLUMN, "updatable", modelContext );
-		this.columnDefinition = extractJdkValue( annotation, JpaAnnotations.COLUMN, "columnDefinition", modelContext );
-		this.options = extractJdkValue( annotation, JpaAnnotations.COLUMN, "options", modelContext );
-		this.table = extractJdkValue( annotation, JpaAnnotations.COLUMN, "table", modelContext );
-		this.length = extractJdkValue( annotation, JpaAnnotations.COLUMN, "length", modelContext );
-		this.precision = extractJdkValue( annotation, JpaAnnotations.COLUMN, "precision", modelContext );
-		this.scale = extractJdkValue( annotation, JpaAnnotations.COLUMN, "scale", modelContext );
-		this.secondPrecision = extractJdkValue( annotation, JpaAnnotations.COLUMN, "secondPrecision", modelContext );
+		this.name = annotation.name();
+		this.unique = annotation.unique();
+		this.nullable = annotation.nullable();
+		this.insertable = annotation.insertable();
+		this.updatable = annotation.updatable();
+		this.columnDefinition = annotation.columnDefinition();
+		this.options = annotation.options();
+		this.table = annotation.table();
+		this.length = annotation.length();
+		this.precision = annotation.precision();
+		this.scale = annotation.scale();
+		this.secondPrecision = annotation.secondPrecision();
 		this.check = extractJdkValue( annotation, JpaAnnotations.COLUMN, "check", modelContext );
-		this.comment = extractJdkValue( annotation, JpaAnnotations.COLUMN, "comment", modelContext );
+		this.comment = annotation.comment();
 	}
 
 	/**

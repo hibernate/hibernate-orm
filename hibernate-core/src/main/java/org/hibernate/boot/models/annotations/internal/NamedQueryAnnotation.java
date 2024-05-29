@@ -24,7 +24,6 @@ import jakarta.persistence.CacheStoreMode;
 
 import static org.hibernate.boot.models.HibernateAnnotations.NAMED_QUERY;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 import static org.hibernate.boot.models.xml.internal.QueryProcessing.interpretFlushMode;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -59,19 +58,19 @@ public class NamedQueryAnnotation implements NamedQuery {
 	}
 
 	public NamedQueryAnnotation(NamedQuery annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, NAMED_QUERY, "name", modelContext );
-		this.query = extractJdkValue( annotation, NAMED_QUERY, "query", modelContext );
-		this.resultClass = extractJdkValue( annotation, NAMED_QUERY, "resultClass", modelContext );
-		this.flushMode = extractJdkValue( annotation, NAMED_QUERY, "flushMode", modelContext );
-		this.cacheable = extractJdkValue( annotation, NAMED_QUERY, "cacheable", modelContext );
-		this.cacheRegion = extractJdkValue( annotation, NAMED_QUERY, "cacheRegion", modelContext );
-		this.fetchSize = extractJdkValue( annotation, NAMED_QUERY, "fetchSize", modelContext );
-		this.timeout = extractJdkValue( annotation, NAMED_QUERY, "timeout", modelContext );
-		this.comment = extractJdkValue( annotation, NAMED_QUERY, "comment", modelContext );
-		this.cacheStoreMode = extractJdkValue( annotation, NAMED_QUERY, "cacheStoreMode", modelContext );
-		this.cacheRetrieveMode = extractJdkValue( annotation, NAMED_QUERY, "cacheRetrieveMode", modelContext );
-		this.cacheMode = extractJdkValue( annotation, NAMED_QUERY, "cacheMode", modelContext );
-		this.readOnly = extractJdkValue( annotation, NAMED_QUERY, "readOnly", modelContext );
+		this.name = annotation.name();
+		this.query = annotation.query();
+		this.resultClass = annotation.resultClass();
+		this.flushMode = annotation.flushMode();
+		this.cacheable = annotation.cacheable();
+		this.cacheRegion = annotation.cacheRegion();
+		this.fetchSize = annotation.fetchSize();
+		this.timeout = annotation.timeout();
+		this.comment = annotation.comment();
+		this.cacheStoreMode = annotation.cacheStoreMode();
+		this.cacheRetrieveMode = annotation.cacheRetrieveMode();
+		this.cacheMode = annotation.cacheMode();
+		this.readOnly = annotation.readOnly();
 	}
 
 	public NamedQueryAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {

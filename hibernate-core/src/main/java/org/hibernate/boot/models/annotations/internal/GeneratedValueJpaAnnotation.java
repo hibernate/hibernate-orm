@@ -16,7 +16,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.GeneratedValue;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -36,8 +35,8 @@ public class GeneratedValueJpaAnnotation implements GeneratedValue {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public GeneratedValueJpaAnnotation(GeneratedValue annotation, SourceModelBuildingContext modelContext) {
-		this.strategy = extractJdkValue( annotation, JpaAnnotations.GENERATED_VALUE, "strategy", modelContext );
-		this.generator = extractJdkValue( annotation, JpaAnnotations.GENERATED_VALUE, "generator", modelContext );
+		this.strategy = annotation.strategy();
+		this.generator = annotation.generator();
 	}
 
 	/**

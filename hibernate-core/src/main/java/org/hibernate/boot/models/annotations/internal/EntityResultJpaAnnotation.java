@@ -16,7 +16,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.EntityResult;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -39,15 +38,10 @@ public class EntityResultJpaAnnotation implements EntityResult {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public EntityResultJpaAnnotation(EntityResult annotation, SourceModelBuildingContext modelContext) {
-		this.entityClass = extractJdkValue( annotation, JpaAnnotations.ENTITY_RESULT, "entityClass", modelContext );
-		this.lockMode = extractJdkValue( annotation, JpaAnnotations.ENTITY_RESULT, "lockMode", modelContext );
-		this.fields = extractJdkValue( annotation, JpaAnnotations.ENTITY_RESULT, "fields", modelContext );
-		this.discriminatorColumn = extractJdkValue(
-				annotation,
-				JpaAnnotations.ENTITY_RESULT,
-				"discriminatorColumn",
-				modelContext
-		);
+		this.entityClass = annotation.entityClass();
+		this.lockMode = annotation.lockMode();
+		this.fields = annotation.fields();
+		this.discriminatorColumn = annotation.discriminatorColumn();
 	}
 
 	/**

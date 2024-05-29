@@ -49,34 +49,22 @@ public class MapKeyJoinColumnJpaAnnotation implements MapKeyJoinColumn {
 		this.columnDefinition = "";
 		this.options = "";
 		this.table = "";
-		this.foreignKey = modelContext.getAnnotationDescriptorRegistry()
-				.getDescriptor( jakarta.persistence.ForeignKey.class )
-				.createUsage( modelContext );
+		this.foreignKey = JpaAnnotations.FOREIGN_KEY.createUsage( modelContext );
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public MapKeyJoinColumnJpaAnnotation(MapKeyJoinColumn annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.MAP_KEY_JOIN_COLUMN, "name", modelContext );
-		this.referencedColumnName = extractJdkValue(
-				annotation,
-				JpaAnnotations.MAP_KEY_JOIN_COLUMN,
-				"referencedColumnName",
-				modelContext
-		);
-		this.unique = extractJdkValue( annotation, JpaAnnotations.MAP_KEY_JOIN_COLUMN, "unique", modelContext );
-		this.nullable = extractJdkValue( annotation, JpaAnnotations.MAP_KEY_JOIN_COLUMN, "nullable", modelContext );
-		this.insertable = extractJdkValue( annotation, JpaAnnotations.MAP_KEY_JOIN_COLUMN, "insertable", modelContext );
-		this.updatable = extractJdkValue( annotation, JpaAnnotations.MAP_KEY_JOIN_COLUMN, "updatable", modelContext );
-		this.columnDefinition = extractJdkValue(
-				annotation,
-				JpaAnnotations.MAP_KEY_JOIN_COLUMN,
-				"columnDefinition",
-				modelContext
-		);
-		this.options = extractJdkValue( annotation, JpaAnnotations.MAP_KEY_JOIN_COLUMN, "options", modelContext );
-		this.table = extractJdkValue( annotation, JpaAnnotations.MAP_KEY_JOIN_COLUMN, "table", modelContext );
+		this.name = annotation.name();
+		this.referencedColumnName = annotation.referencedColumnName();
+		this.unique = annotation.unique();
+		this.nullable = annotation.nullable();
+		this.insertable = annotation.insertable();
+		this.updatable = annotation.updatable();
+		this.columnDefinition = annotation.columnDefinition();
+		this.options = annotation.options();
+		this.table = annotation.table();
 		this.foreignKey = extractJdkValue( annotation, JpaAnnotations.MAP_KEY_JOIN_COLUMN, "foreignKey", modelContext );
 	}
 

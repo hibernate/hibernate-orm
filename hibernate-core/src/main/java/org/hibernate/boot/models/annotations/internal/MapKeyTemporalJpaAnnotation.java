@@ -16,7 +16,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.MapKeyTemporal;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -33,7 +32,7 @@ public class MapKeyTemporalJpaAnnotation implements MapKeyTemporal {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public MapKeyTemporalJpaAnnotation(MapKeyTemporal annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJdkValue( annotation, JpaAnnotations.MAP_KEY_TEMPORAL, "value", modelContext );
+		this.value = annotation.value();
 	}
 
 	/**

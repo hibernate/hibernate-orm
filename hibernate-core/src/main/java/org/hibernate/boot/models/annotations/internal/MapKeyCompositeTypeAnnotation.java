@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -32,7 +31,7 @@ public class MapKeyCompositeTypeAnnotation implements MapKeyCompositeType {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public MapKeyCompositeTypeAnnotation(MapKeyCompositeType annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJdkValue( annotation, HibernateAnnotations.MAP_KEY_COMPOSITE_TYPE, "value", modelContext );
+		this.value = annotation.value();
 	}
 
 	/**

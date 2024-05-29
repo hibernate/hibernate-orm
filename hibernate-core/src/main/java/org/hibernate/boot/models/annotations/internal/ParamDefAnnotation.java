@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -35,9 +34,9 @@ public class ParamDefAnnotation implements ParamDef {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public ParamDefAnnotation(ParamDef annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, HibernateAnnotations.PARAM_DEF, "name", modelContext );
-		this.type = extractJdkValue( annotation, HibernateAnnotations.PARAM_DEF, "type", modelContext );
-		this.resolver = extractJdkValue( annotation, HibernateAnnotations.PARAM_DEF, "resolver", modelContext );
+		this.name = annotation.name();
+		this.type = annotation.type();
+		this.resolver = annotation.resolver();
 	}
 
 	/**

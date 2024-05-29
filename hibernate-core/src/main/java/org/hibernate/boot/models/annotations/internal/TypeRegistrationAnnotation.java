@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -33,13 +32,8 @@ public class TypeRegistrationAnnotation implements TypeRegistration {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public TypeRegistrationAnnotation(TypeRegistration annotation, SourceModelBuildingContext modelContext) {
-		this.basicClass = extractJdkValue(
-				annotation,
-				HibernateAnnotations.TYPE_REGISTRATION,
-				"basicClass",
-				modelContext
-		);
-		this.userType = extractJdkValue( annotation, HibernateAnnotations.TYPE_REGISTRATION, "userType", modelContext );
+		this.basicClass = annotation.basicClass();
+		this.userType = annotation.userType();
 	}
 
 	/**

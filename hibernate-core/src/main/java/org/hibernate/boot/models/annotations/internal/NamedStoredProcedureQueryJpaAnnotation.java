@@ -47,31 +47,16 @@ public class NamedStoredProcedureQueryJpaAnnotation implements NamedStoredProced
 	public NamedStoredProcedureQueryJpaAnnotation(
 			NamedStoredProcedureQuery annotation,
 			SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY, "name", modelContext );
-		this.procedureName = extractJdkValue(
-				annotation,
-				JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY,
-				"procedureName",
-				modelContext
-		);
+		this.name = annotation.name();
+		this.procedureName = annotation.procedureName();
 		this.parameters = extractJdkValue(
 				annotation,
 				JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY,
 				"parameters",
 				modelContext
 		);
-		this.resultClasses = extractJdkValue(
-				annotation,
-				JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY,
-				"resultClasses",
-				modelContext
-		);
-		this.resultSetMappings = extractJdkValue(
-				annotation,
-				JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY,
-				"resultSetMappings",
-				modelContext
-		);
+		this.resultClasses = annotation.resultClasses();
+		this.resultSetMappings = annotation.resultSetMappings();
 		this.hints = extractJdkValue( annotation, JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY, "hints", modelContext );
 	}
 

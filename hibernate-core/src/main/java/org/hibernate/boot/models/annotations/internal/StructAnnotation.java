@@ -36,8 +36,10 @@ public class StructAnnotation implements Struct {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public StructAnnotation(Struct annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, HibernateAnnotations.STRUCT, "name", modelContext );
-		this.attributes = extractJdkValue( annotation, HibernateAnnotations.STRUCT, "attributes", modelContext );
+		this.name = annotation.name();
+		this.catalog = annotation.catalog();
+		this.schema = annotation.schema();
+		this.attributes = annotation.attributes();
 	}
 
 	/**
@@ -45,6 +47,8 @@ public class StructAnnotation implements Struct {
 	 */
 	public StructAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
 		this.name = extractJandexValue( annotation, HibernateAnnotations.STRUCT, "name", modelContext );
+		this.catalog = extractJandexValue( annotation, HibernateAnnotations.STRUCT, "catalog", modelContext );
+		this.schema = extractJandexValue( annotation, HibernateAnnotations.STRUCT, "schema", modelContext );
 		this.attributes = extractJandexValue( annotation, HibernateAnnotations.STRUCT, "attributes", modelContext );
 	}
 

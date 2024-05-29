@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -33,7 +32,7 @@ public class NotFoundAnnotation implements NotFound {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public NotFoundAnnotation(NotFound annotation, SourceModelBuildingContext modelContext) {
-		this.action = extractJdkValue( annotation, HibernateAnnotations.NOT_FOUND, "action", modelContext );
+		this.action = annotation.action();
 	}
 
 	/**

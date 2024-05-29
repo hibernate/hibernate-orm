@@ -15,8 +15,8 @@ import org.jboss.jandex.AnnotationInstance;
 
 import jakarta.persistence.Convert;
 
+import static org.hibernate.boot.models.JpaAnnotations.CONVERT;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -39,25 +39,20 @@ public class ConvertJpaAnnotation implements Convert {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public ConvertJpaAnnotation(Convert annotation, SourceModelBuildingContext modelContext) {
-		this.converter = extractJdkValue( annotation, JpaAnnotations.CONVERT, "converter", modelContext );
-		this.attributeName = extractJdkValue( annotation, JpaAnnotations.CONVERT, "attributeName", modelContext );
-		this.disableConversion = extractJdkValue(
-				annotation,
-				JpaAnnotations.CONVERT,
-				"disableConversion",
-				modelContext
-		);
+		this.converter = annotation.converter();
+		this.attributeName = annotation.attributeName();
+		this.disableConversion = annotation.disableConversion();
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
 	public ConvertJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.converter = extractJandexValue( annotation, JpaAnnotations.CONVERT, "converter", modelContext );
-		this.attributeName = extractJandexValue( annotation, JpaAnnotations.CONVERT, "attributeName", modelContext );
+		this.converter = extractJandexValue( annotation, CONVERT, "converter", modelContext );
+		this.attributeName = extractJandexValue( annotation, CONVERT, "attributeName", modelContext );
 		this.disableConversion = extractJandexValue(
 				annotation,
-				JpaAnnotations.CONVERT,
+				CONVERT,
 				"disableConversion",
 				modelContext
 		);

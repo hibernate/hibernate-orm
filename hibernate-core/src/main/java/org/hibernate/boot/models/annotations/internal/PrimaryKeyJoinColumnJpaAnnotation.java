@@ -20,6 +20,7 @@ import org.jboss.jandex.AnnotationInstance;
 
 import jakarta.persistence.PrimaryKeyJoinColumn;
 
+import static org.hibernate.boot.models.JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -40,63 +41,46 @@ public class PrimaryKeyJoinColumnJpaAnnotation implements PrimaryKeyJoinColumn, 
 		this.referencedColumnName = "";
 		this.columnDefinition = "";
 		this.options = "";
-		this.foreignKey = modelContext.getAnnotationDescriptorRegistry()
-				.getDescriptor( jakarta.persistence.ForeignKey.class )
-				.createUsage( modelContext );
+		this.foreignKey = JpaAnnotations.FOREIGN_KEY.createUsage( modelContext );
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public PrimaryKeyJoinColumnJpaAnnotation(PrimaryKeyJoinColumn annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN, "name", modelContext );
-		this.referencedColumnName = extractJdkValue(
-				annotation,
-				JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN,
-				"referencedColumnName",
-				modelContext
-		);
-		this.columnDefinition = extractJdkValue(
-				annotation,
-				JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN,
-				"columnDefinition",
-				modelContext
-		);
-		this.options = extractJdkValue( annotation, JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN, "options", modelContext );
-		this.foreignKey = extractJdkValue(
-				annotation,
-				JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN,
-				"foreignKey",
-				modelContext
-		);
+		this.name = annotation.name();
+		this.referencedColumnName = annotation.referencedColumnName();
+		this.columnDefinition = annotation.columnDefinition();
+		this.options = annotation.options();
+		this.foreignKey = extractJdkValue( annotation, PRIMARY_KEY_JOIN_COLUMN, "foreignKey", modelContext );
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
 	public PrimaryKeyJoinColumnJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN, "name", modelContext );
+		this.name = extractJandexValue( annotation, PRIMARY_KEY_JOIN_COLUMN, "name", modelContext );
 		this.referencedColumnName = extractJandexValue(
 				annotation,
-				JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN,
+				PRIMARY_KEY_JOIN_COLUMN,
 				"referencedColumnName",
 				modelContext
 		);
 		this.columnDefinition = extractJandexValue(
 				annotation,
-				JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN,
+				PRIMARY_KEY_JOIN_COLUMN,
 				"columnDefinition",
 				modelContext
 		);
 		this.options = extractJandexValue(
 				annotation,
-				JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN,
+				PRIMARY_KEY_JOIN_COLUMN,
 				"options",
 				modelContext
 		);
 		this.foreignKey = extractJandexValue(
 				annotation,
-				JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN,
+				PRIMARY_KEY_JOIN_COLUMN,
 				"foreignKey",
 				modelContext
 		);

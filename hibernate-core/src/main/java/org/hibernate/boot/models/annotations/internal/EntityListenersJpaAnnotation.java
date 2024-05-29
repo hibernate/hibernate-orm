@@ -16,7 +16,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.EntityListeners;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -33,7 +32,7 @@ public class EntityListenersJpaAnnotation implements EntityListeners {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public EntityListenersJpaAnnotation(EntityListeners annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJdkValue( annotation, JpaAnnotations.ENTITY_LISTENERS, "value", modelContext );
+		this.value = annotation.value();
 	}
 
 	/**

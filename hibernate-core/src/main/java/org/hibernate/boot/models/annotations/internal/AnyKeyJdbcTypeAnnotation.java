@@ -6,17 +6,15 @@
  */
 package org.hibernate.boot.models.annotations.internal;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
 import java.lang.annotation.Annotation;
 
 import org.hibernate.annotations.AnyKeyJdbcType;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
+import org.jboss.jandex.AnnotationInstance;
+
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -33,12 +31,7 @@ public class AnyKeyJdbcTypeAnnotation implements AnyKeyJdbcType {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public AnyKeyJdbcTypeAnnotation(AnyKeyJdbcType annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJdkValue(
-				annotation,
-				org.hibernate.boot.models.HibernateAnnotations.ANY_KEY_JDBC_TYPE,
-				"value",
-				modelContext
-		);
+		this.value = annotation.value();
 	}
 
 	/**

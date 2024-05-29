@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -33,7 +32,7 @@ public class OptimisticLockingAnnotation implements OptimisticLocking {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public OptimisticLockingAnnotation(OptimisticLocking annotation, SourceModelBuildingContext modelContext) {
-		this.type = extractJdkValue( annotation, HibernateAnnotations.OPTIMISTIC_LOCKING, "type", modelContext );
+		this.type = annotation.type();
 	}
 
 	/**

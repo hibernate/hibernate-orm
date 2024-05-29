@@ -19,7 +19,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.StoredProcedureParameter;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -42,9 +41,9 @@ public class StoredProcedureParameterJpaAnnotation implements StoredProcedurePar
 	public StoredProcedureParameterJpaAnnotation(
 			StoredProcedureParameter annotation,
 			SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.STORED_PROCEDURE_PARAMETER, "name", modelContext );
-		this.mode = extractJdkValue( annotation, JpaAnnotations.STORED_PROCEDURE_PARAMETER, "mode", modelContext );
-		this.type = extractJdkValue( annotation, JpaAnnotations.STORED_PROCEDURE_PARAMETER, "type", modelContext );
+		this.name = annotation.name();
+		this.mode = annotation.mode();
+		this.type = annotation.type();
 	}
 
 	/**

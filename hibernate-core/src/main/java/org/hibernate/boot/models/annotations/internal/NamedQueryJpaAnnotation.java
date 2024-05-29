@@ -44,10 +44,10 @@ public class NamedQueryJpaAnnotation implements NamedQuery {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public NamedQueryJpaAnnotation(NamedQuery annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.NAMED_QUERY, "name", modelContext );
-		this.query = extractJdkValue( annotation, JpaAnnotations.NAMED_QUERY, "query", modelContext );
-		this.resultClass = extractJdkValue( annotation, JpaAnnotations.NAMED_QUERY, "resultClass", modelContext );
-		this.lockMode = extractJdkValue( annotation, JpaAnnotations.NAMED_QUERY, "lockMode", modelContext );
+		this.name = annotation.name();
+		this.query = annotation.query();
+		this.resultClass = annotation.resultClass();
+		this.lockMode = annotation.lockMode();
 		this.hints = extractJdkValue( annotation, JpaAnnotations.NAMED_QUERY, "hints", modelContext );
 	}
 

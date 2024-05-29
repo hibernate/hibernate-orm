@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -35,8 +34,8 @@ public class DiscriminatorOptionsAnnotation implements DiscriminatorOptions {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public DiscriminatorOptionsAnnotation(DiscriminatorOptions annotation, SourceModelBuildingContext modelContext) {
-		this.force = extractJdkValue( annotation, HibernateAnnotations.DISCRIMINATOR_OPTIONS, "force", modelContext );
-		this.insert = extractJdkValue( annotation, HibernateAnnotations.DISCRIMINATOR_OPTIONS, "insert", modelContext );
+		this.force = annotation.force();
+		this.insert = annotation.insert();
 	}
 
 	/**

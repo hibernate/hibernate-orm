@@ -30,9 +30,7 @@ public class MapKeyJoinColumnsJpaAnnotation implements MapKeyJoinColumns, Repeat
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
 	public MapKeyJoinColumnsJpaAnnotation(SourceModelBuildingContext modelContext) {
-		this.foreignKey = modelContext.getAnnotationDescriptorRegistry()
-				.getDescriptor( jakarta.persistence.ForeignKey.class )
-				.createUsage( modelContext );
+		this.foreignKey = JpaAnnotations.FOREIGN_KEY.createUsage( modelContext );
 	}
 
 	/**

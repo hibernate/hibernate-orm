@@ -16,7 +16,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.MapsId;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -34,7 +33,7 @@ public class MapsIdJpaAnnotation implements MapsId {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public MapsIdJpaAnnotation(MapsId annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJdkValue( annotation, JpaAnnotations.MAPS_ID, "value", modelContext );
+		this.value = annotation.value();
 	}
 
 	/**

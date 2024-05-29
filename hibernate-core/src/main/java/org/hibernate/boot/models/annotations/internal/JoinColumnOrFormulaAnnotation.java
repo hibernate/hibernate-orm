@@ -10,10 +10,12 @@ import java.lang.annotation.Annotation;
 
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.boot.models.HibernateAnnotations;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.jboss.jandex.AnnotationInstance;
 
+import static org.hibernate.boot.models.HibernateAnnotations.JOIN_COLUMN_OR_FORMULA;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -27,48 +29,24 @@ public class JoinColumnOrFormulaAnnotation implements JoinColumnOrFormula {
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
 	public JoinColumnOrFormulaAnnotation(SourceModelBuildingContext modelContext) {
-		this.formula = modelContext.getAnnotationDescriptorRegistry()
-				.getDescriptor( org.hibernate.annotations.JoinFormula.class )
-				.createUsage( modelContext );
-		this.column = modelContext.getAnnotationDescriptorRegistry()
-				.getDescriptor( jakarta.persistence.JoinColumn.class )
-				.createUsage( modelContext );
+		this.formula = HibernateAnnotations.JOIN_FORMULA.createUsage( modelContext );
+		this.column = JpaAnnotations.JOIN_COLUMN.createUsage( modelContext );
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public JoinColumnOrFormulaAnnotation(JoinColumnOrFormula annotation, SourceModelBuildingContext modelContext) {
-		this.formula = extractJdkValue(
-				annotation,
-				HibernateAnnotations.JOIN_COLUMN_OR_FORMULA,
-				"formula",
-				modelContext
-		);
-		this.column = extractJdkValue(
-				annotation,
-				HibernateAnnotations.JOIN_COLUMN_OR_FORMULA,
-				"column",
-				modelContext
-		);
+		this.formula = extractJdkValue( annotation, JOIN_COLUMN_OR_FORMULA, "formula", modelContext );
+		this.column = extractJdkValue( annotation, JOIN_COLUMN_OR_FORMULA, "column", modelContext );
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
 	public JoinColumnOrFormulaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.formula = extractJandexValue(
-				annotation,
-				HibernateAnnotations.JOIN_COLUMN_OR_FORMULA,
-				"formula",
-				modelContext
-		);
-		this.column = extractJandexValue(
-				annotation,
-				HibernateAnnotations.JOIN_COLUMN_OR_FORMULA,
-				"column",
-				modelContext
-		);
+		this.formula = extractJandexValue( annotation, JOIN_COLUMN_OR_FORMULA, "formula", modelContext );
+		this.column = extractJandexValue( annotation, JOIN_COLUMN_OR_FORMULA, "column", modelContext );
 	}
 
 	@Override

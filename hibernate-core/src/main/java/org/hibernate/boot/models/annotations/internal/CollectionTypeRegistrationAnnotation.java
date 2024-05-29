@@ -9,11 +9,11 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 
 import org.hibernate.annotations.CollectionTypeRegistration;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.jboss.jandex.AnnotationInstance;
 
+import static org.hibernate.boot.models.HibernateAnnotations.COLLECTION_TYPE_REGISTRATION;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -37,24 +37,9 @@ public class CollectionTypeRegistrationAnnotation implements CollectionTypeRegis
 	public CollectionTypeRegistrationAnnotation(
 			CollectionTypeRegistration annotation,
 			SourceModelBuildingContext modelContext) {
-		this.classification = extractJdkValue(
-				annotation,
-				HibernateAnnotations.COLLECTION_TYPE_REGISTRATION,
-				"classification",
-				modelContext
-		);
-		this.type = extractJdkValue(
-				annotation,
-				HibernateAnnotations.COLLECTION_TYPE_REGISTRATION,
-				"type",
-				modelContext
-		);
-		this.parameters = extractJdkValue(
-				annotation,
-				HibernateAnnotations.COLLECTION_TYPE_REGISTRATION,
-				"parameters",
-				modelContext
-		);
+		this.classification = annotation.classification();
+		this.type = annotation.type();
+		this.parameters = extractJdkValue( annotation, COLLECTION_TYPE_REGISTRATION, "parameters", modelContext );
 	}
 
 	/**
@@ -65,19 +50,19 @@ public class CollectionTypeRegistrationAnnotation implements CollectionTypeRegis
 			SourceModelBuildingContext modelContext) {
 		this.classification = extractJandexValue(
 				annotation,
-				HibernateAnnotations.COLLECTION_TYPE_REGISTRATION,
+				COLLECTION_TYPE_REGISTRATION,
 				"classification",
 				modelContext
 		);
 		this.type = extractJandexValue(
 				annotation,
-				HibernateAnnotations.COLLECTION_TYPE_REGISTRATION,
+				COLLECTION_TYPE_REGISTRATION,
 				"type",
 				modelContext
 		);
 		this.parameters = extractJandexValue(
 				annotation,
-				HibernateAnnotations.COLLECTION_TYPE_REGISTRATION,
+				COLLECTION_TYPE_REGISTRATION,
 				"parameters",
 				modelContext
 		);

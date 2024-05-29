@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -33,7 +32,7 @@ public class NaturalIdCacheAnnotation implements NaturalIdCache {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public NaturalIdCacheAnnotation(NaturalIdCache annotation, SourceModelBuildingContext modelContext) {
-		this.region = extractJdkValue( annotation, HibernateAnnotations.NATURAL_ID_CACHE, "region", modelContext );
+		this.region = annotation.region();
 	}
 
 	/**

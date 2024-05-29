@@ -55,9 +55,7 @@ public class JoinColumnJpaAnnotation implements JoinColumn {
 		this.columnDefinition = "";
 		this.options = "";
 		this.table = "";
-		this.foreignKey = modelContext.getAnnotationDescriptorRegistry()
-				.getDescriptor( jakarta.persistence.ForeignKey.class )
-				.createUsage( modelContext );
+		this.foreignKey = JpaAnnotations.FOREIGN_KEY.createUsage( modelContext );
 		this.check = new jakarta.persistence.CheckConstraint[0];
 		this.comment = "";
 	}
@@ -66,28 +64,18 @@ public class JoinColumnJpaAnnotation implements JoinColumn {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public JoinColumnJpaAnnotation(JoinColumn annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.JOIN_COLUMN, "name", modelContext );
-		this.referencedColumnName = extractJdkValue(
-				annotation,
-				JpaAnnotations.JOIN_COLUMN,
-				"referencedColumnName",
-				modelContext
-		);
-		this.unique = extractJdkValue( annotation, JpaAnnotations.JOIN_COLUMN, "unique", modelContext );
-		this.nullable = extractJdkValue( annotation, JpaAnnotations.JOIN_COLUMN, "nullable", modelContext );
-		this.insertable = extractJdkValue( annotation, JpaAnnotations.JOIN_COLUMN, "insertable", modelContext );
-		this.updatable = extractJdkValue( annotation, JpaAnnotations.JOIN_COLUMN, "updatable", modelContext );
-		this.columnDefinition = extractJdkValue(
-				annotation,
-				JpaAnnotations.JOIN_COLUMN,
-				"columnDefinition",
-				modelContext
-		);
-		this.options = extractJdkValue( annotation, JpaAnnotations.JOIN_COLUMN, "options", modelContext );
-		this.table = extractJdkValue( annotation, JpaAnnotations.JOIN_COLUMN, "table", modelContext );
+		this.name = annotation.name();
+		this.referencedColumnName = annotation.referencedColumnName();
+		this.unique = annotation.unique();
+		this.nullable = annotation.nullable();
+		this.insertable = annotation.insertable();
+		this.updatable = annotation.updatable();
+		this.columnDefinition = annotation.columnDefinition();
+		this.options = annotation.options();
+		this.table = annotation.table();
 		this.foreignKey = extractJdkValue( annotation, JpaAnnotations.JOIN_COLUMN, "foreignKey", modelContext );
 		this.check = extractJdkValue( annotation, JpaAnnotations.JOIN_COLUMN, "check", modelContext );
-		this.comment = extractJdkValue( annotation, JpaAnnotations.JOIN_COLUMN, "comment", modelContext );
+		this.comment = annotation.comment();
 	}
 
 	/**

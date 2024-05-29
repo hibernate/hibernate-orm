@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -34,8 +33,8 @@ public class SynchronizeAnnotation implements Synchronize {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public SynchronizeAnnotation(Synchronize annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJdkValue( annotation, HibernateAnnotations.SYNCHRONIZE, "value", modelContext );
-		this.logical = extractJdkValue( annotation, HibernateAnnotations.SYNCHRONIZE, "logical", modelContext );
+		this.value = annotation.value();
+		this.logical = annotation.logical();
 	}
 
 	/**

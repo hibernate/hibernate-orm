@@ -35,7 +35,7 @@ public class AttributeOverrideJpaAnnotation implements AttributeOverride {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public AttributeOverrideJpaAnnotation(AttributeOverride annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.ATTRIBUTE_OVERRIDE, "name", modelContext );
+		this.name = annotation.name();
 		this.column = extractJdkValue( annotation, JpaAnnotations.ATTRIBUTE_OVERRIDE, "column", modelContext );
 	}
 

@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -37,14 +36,9 @@ public class ColumnTransformerAnnotation implements ColumnTransformer {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public ColumnTransformerAnnotation(ColumnTransformer annotation, SourceModelBuildingContext modelContext) {
-		this.forColumn = extractJdkValue(
-				annotation,
-				HibernateAnnotations.COLUMN_TRANSFORMER,
-				"forColumn",
-				modelContext
-		);
-		this.read = extractJdkValue( annotation, HibernateAnnotations.COLUMN_TRANSFORMER, "read", modelContext );
-		this.write = extractJdkValue( annotation, HibernateAnnotations.COLUMN_TRANSFORMER, "write", modelContext );
+		this.forColumn = annotation.forColumn();
+		this.read = annotation.read();
+		this.write = annotation.write();
 	}
 
 	/**

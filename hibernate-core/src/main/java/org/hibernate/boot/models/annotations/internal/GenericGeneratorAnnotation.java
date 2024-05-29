@@ -38,9 +38,9 @@ public class GenericGeneratorAnnotation implements GenericGenerator {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public GenericGeneratorAnnotation(GenericGenerator annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, HibernateAnnotations.GENERIC_GENERATOR, "name", modelContext );
-		this.type = extractJdkValue( annotation, HibernateAnnotations.GENERIC_GENERATOR, "type", modelContext );
-		this.strategy = extractJdkValue( annotation, HibernateAnnotations.GENERIC_GENERATOR, "strategy", modelContext );
+		this.name = annotation.name();
+		this.type = annotation.type();
+		this.strategy = annotation.strategy();
 		this.parameters = extractJdkValue(
 				annotation,
 				HibernateAnnotations.GENERIC_GENERATOR,

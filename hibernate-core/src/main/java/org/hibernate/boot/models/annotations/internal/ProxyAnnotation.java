@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -35,8 +34,8 @@ public class ProxyAnnotation implements Proxy {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public ProxyAnnotation(Proxy annotation, SourceModelBuildingContext modelContext) {
-		this.lazy = extractJdkValue( annotation, HibernateAnnotations.PROXY, "lazy", modelContext );
-		this.proxyClass = extractJdkValue( annotation, HibernateAnnotations.PROXY, "proxyClass", modelContext );
+		this.lazy = annotation.lazy();
+		this.proxyClass = annotation.proxyClass();
 	}
 
 	/**

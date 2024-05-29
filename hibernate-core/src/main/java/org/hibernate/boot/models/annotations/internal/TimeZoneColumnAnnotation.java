@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -41,26 +40,11 @@ public class TimeZoneColumnAnnotation implements TimeZoneColumn {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public TimeZoneColumnAnnotation(TimeZoneColumn annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, HibernateAnnotations.TIME_ZONE_COLUMN, "name", modelContext );
-		this.insertable = extractJdkValue(
-				annotation,
-				HibernateAnnotations.TIME_ZONE_COLUMN,
-				"insertable",
-				modelContext
-		);
-		this.updatable = extractJdkValue(
-				annotation,
-				HibernateAnnotations.TIME_ZONE_COLUMN,
-				"updatable",
-				modelContext
-		);
-		this.columnDefinition = extractJdkValue(
-				annotation,
-				HibernateAnnotations.TIME_ZONE_COLUMN,
-				"columnDefinition",
-				modelContext
-		);
-		this.table = extractJdkValue( annotation, HibernateAnnotations.TIME_ZONE_COLUMN, "table", modelContext );
+		this.name = annotation.name();
+		this.insertable = annotation.insertable();
+		this.updatable = annotation.updatable();
+		this.columnDefinition = annotation.columnDefinition();
+		this.table = annotation.table();
 	}
 
 	/**

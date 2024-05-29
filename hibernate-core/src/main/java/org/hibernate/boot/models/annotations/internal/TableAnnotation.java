@@ -15,11 +15,11 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.Table;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.jboss.jandex.AnnotationInstance;
 
+import static org.hibernate.boot.models.HibernateAnnotations.TABLE;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -53,43 +53,38 @@ public class TableAnnotation implements Table {
 	}
 
 	public TableAnnotation(Table annotation, SourceModelBuildingContext modelContext) {
-		this.appliesTo = extractJdkValue( annotation, HibernateAnnotations.TABLE, "appliesTo", modelContext );
-		this.fetch = extractJdkValue( annotation, HibernateAnnotations.TABLE, "fetch", modelContext );
-		this.inverse = extractJdkValue( annotation, HibernateAnnotations.TABLE, "inverse", modelContext );
-		this.optional = extractJdkValue( annotation, HibernateAnnotations.TABLE, "optional", modelContext );
-		this.indexes = extractJdkValue( annotation, HibernateAnnotations.TABLE, "indexes", modelContext );
-		this.checkConstraint = extractJdkValue(
-				annotation,
-				HibernateAnnotations.TABLE,
-				"checkConstraint",
-				modelContext
-		);
-		this.comment = extractJdkValue( annotation, HibernateAnnotations.TABLE, "comment", modelContext );
-		this.sqlInsert = extractJdkValue( annotation, HibernateAnnotations.TABLE, "sqlInsert", modelContext );
-		this.sqlUpdate = extractJdkValue( annotation, HibernateAnnotations.TABLE, "sqlUpdate", modelContext );
-		this.sqlDelete = extractJdkValue( annotation, HibernateAnnotations.TABLE, "sqlDelete", modelContext );
-		this.foreignKey = extractJdkValue( annotation, HibernateAnnotations.TABLE, "foreignKey", modelContext );
-		this.indexes = extractJdkValue( annotation, HibernateAnnotations.TABLE, "indexes", modelContext );
+		this.appliesTo = annotation.appliesTo();
+		this.fetch = annotation.fetch();
+		this.inverse = annotation.inverse();
+		this.optional = annotation.optional();
+		this.indexes = extractJdkValue( annotation, TABLE, "indexes", modelContext );
+		this.checkConstraint = annotation.checkConstraint();
+		this.comment = annotation.comment();
+		this.sqlInsert = extractJdkValue( annotation, TABLE, "sqlInsert", modelContext );
+		this.sqlUpdate = extractJdkValue( annotation, TABLE, "sqlUpdate", modelContext );
+		this.sqlDelete = extractJdkValue( annotation, TABLE, "sqlDelete", modelContext );
+		this.foreignKey = extractJdkValue( annotation, TABLE, "foreignKey", modelContext );
+		this.indexes = extractJdkValue( annotation, TABLE, "indexes", modelContext );
 	}
 
 	public TableAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.appliesTo = extractJandexValue( annotation, HibernateAnnotations.TABLE, "appliesTo", modelContext );
-		this.fetch = extractJandexValue( annotation, HibernateAnnotations.TABLE, "fetch", modelContext );
-		this.inverse = extractJandexValue( annotation, HibernateAnnotations.TABLE, "inverse", modelContext );
-		this.optional = extractJandexValue( annotation, HibernateAnnotations.TABLE, "optional", modelContext );
-		this.indexes = extractJandexValue( annotation, HibernateAnnotations.TABLE, "indexes", modelContext );
+		this.appliesTo = extractJandexValue( annotation, TABLE, "appliesTo", modelContext );
+		this.fetch = extractJandexValue( annotation, TABLE, "fetch", modelContext );
+		this.inverse = extractJandexValue( annotation, TABLE, "inverse", modelContext );
+		this.optional = extractJandexValue( annotation, TABLE, "optional", modelContext );
+		this.indexes = extractJandexValue( annotation, TABLE, "indexes", modelContext );
 		this.checkConstraint = extractJandexValue(
 				annotation,
-				HibernateAnnotations.TABLE,
+				TABLE,
 				"checkConstraint",
 				modelContext
 		);
-		this.comment = extractJandexValue( annotation, HibernateAnnotations.TABLE, "comment", modelContext );
-		this.sqlInsert = extractJandexValue( annotation, HibernateAnnotations.TABLE, "sqlInsert", modelContext );
-		this.sqlUpdate = extractJandexValue( annotation, HibernateAnnotations.TABLE, "sqlUpdate", modelContext );
-		this.sqlDelete = extractJandexValue( annotation, HibernateAnnotations.TABLE, "sqlDelete", modelContext );
-		this.foreignKey = extractJandexValue( annotation, HibernateAnnotations.TABLE, "foreignKey", modelContext );
-		this.indexes = extractJandexValue( annotation, HibernateAnnotations.TABLE, "indexes", modelContext );
+		this.comment = extractJandexValue( annotation, TABLE, "comment", modelContext );
+		this.sqlInsert = extractJandexValue( annotation, TABLE, "sqlInsert", modelContext );
+		this.sqlUpdate = extractJandexValue( annotation, TABLE, "sqlUpdate", modelContext );
+		this.sqlDelete = extractJandexValue( annotation, TABLE, "sqlDelete", modelContext );
+		this.foreignKey = extractJandexValue( annotation, TABLE, "foreignKey", modelContext );
+		this.indexes = extractJandexValue( annotation, TABLE, "indexes", modelContext );
 	}
 
 	@Override

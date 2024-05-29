@@ -38,15 +38,10 @@ public class FilterDefAnnotation implements FilterDef {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public FilterDefAnnotation(FilterDef annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, HibernateAnnotations.FILTER_DEF, "name", modelContext );
-		this.defaultCondition = extractJdkValue(
-				annotation,
-				HibernateAnnotations.FILTER_DEF,
-				"defaultCondition",
-				modelContext
-		);
+		this.name = annotation.name();
+		this.defaultCondition = annotation.defaultCondition();
 		this.parameters = extractJdkValue( annotation, HibernateAnnotations.FILTER_DEF, "parameters", modelContext );
-		this.autoEnabled = extractJdkValue( annotation, HibernateAnnotations.FILTER_DEF, "autoEnabled", modelContext );
+		this.autoEnabled = annotation.autoEnabled();
 	}
 
 	/**

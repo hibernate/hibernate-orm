@@ -6,20 +6,15 @@
  */
 package org.hibernate.boot.models.annotations.internal;
 
-import org.hibernate.boot.models.HibernateAnnotations;
-import org.hibernate.models.spi.SourceModelBuildingContext;
-import org.hibernate.models.spi.AnnotationDescriptor;
-import org.hibernate.models.spi.AttributeDescriptor;
-
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationValue;
-
 import java.lang.annotation.Annotation;
 
 import org.hibernate.annotations.Array;
+import org.hibernate.boot.models.HibernateAnnotations;
+import org.hibernate.models.spi.SourceModelBuildingContext;
+
+import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -36,7 +31,7 @@ public class ArrayAnnotation implements Array {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public ArrayAnnotation(Array annotation, SourceModelBuildingContext modelContext) {
-		this.length = extractJdkValue( annotation, HibernateAnnotations.ARRAY, "length", modelContext );
+		this.length = annotation.length();
 	}
 
 	/**

@@ -51,21 +51,11 @@ public class NamedNativeQueryJpaAnnotation implements NamedNativeQuery {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public NamedNativeQueryJpaAnnotation(NamedNativeQuery annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.NAMED_NATIVE_QUERY, "name", modelContext );
-		this.query = extractJdkValue( annotation, JpaAnnotations.NAMED_NATIVE_QUERY, "query", modelContext );
+		this.name = annotation.name();
+		this.query = annotation.query();
 		this.hints = extractJdkValue( annotation, JpaAnnotations.NAMED_NATIVE_QUERY, "hints", modelContext );
-		this.resultClass = extractJdkValue(
-				annotation,
-				JpaAnnotations.NAMED_NATIVE_QUERY,
-				"resultClass",
-				modelContext
-		);
-		this.resultSetMapping = extractJdkValue(
-				annotation,
-				JpaAnnotations.NAMED_NATIVE_QUERY,
-				"resultSetMapping",
-				modelContext
-		);
+		this.resultClass = annotation.resultClass();
+		this.resultSetMapping = annotation.resultSetMapping();
 		this.entities = extractJdkValue( annotation, JpaAnnotations.NAMED_NATIVE_QUERY, "entities", modelContext );
 		this.classes = extractJdkValue( annotation, JpaAnnotations.NAMED_NATIVE_QUERY, "classes", modelContext );
 		this.columns = extractJdkValue( annotation, JpaAnnotations.NAMED_NATIVE_QUERY, "columns", modelContext );

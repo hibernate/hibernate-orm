@@ -11,7 +11,6 @@ import java.lang.annotation.Annotation;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTableImpl;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.CommonTableDetails;
-import org.hibernate.boot.models.annotations.spi.DatabaseObjectDetails;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
@@ -58,14 +57,14 @@ public class TableJpaAnnotation implements Table, CommonTableDetails {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public TableJpaAnnotation(Table annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.TABLE, "name", modelContext );
-		this.catalog = extractJdkValue( annotation, JpaAnnotations.TABLE, "catalog", modelContext );
-		this.schema = extractJdkValue( annotation, JpaAnnotations.TABLE, "schema", modelContext );
+		this.name = annotation.name();
+		this.catalog = annotation.catalog();
+		this.schema = annotation.schema();
 		this.uniqueConstraints = extractJdkValue( annotation, JpaAnnotations.TABLE, "uniqueConstraints", modelContext );
 		this.indexes = extractJdkValue( annotation, JpaAnnotations.TABLE, "indexes", modelContext );
 		this.check = extractJdkValue( annotation, JpaAnnotations.TABLE, "check", modelContext );
-		this.comment = extractJdkValue( annotation, JpaAnnotations.TABLE, "comment", modelContext );
-		this.options = extractJdkValue( annotation, JpaAnnotations.TABLE, "options", modelContext );
+		this.comment = annotation.comment();
+		this.options = annotation.options();
 	}
 
 	/**

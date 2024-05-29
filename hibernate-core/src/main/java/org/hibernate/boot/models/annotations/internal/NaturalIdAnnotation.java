@@ -6,17 +6,15 @@
  */
 package org.hibernate.boot.models.annotations.internal;
 
+import java.lang.annotation.Annotation;
+
+import org.hibernate.annotations.NaturalId;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.jboss.jandex.AnnotationInstance;
 
-import java.lang.annotation.Annotation;
-
-import org.hibernate.annotations.NaturalId;
-
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -34,7 +32,7 @@ public class NaturalIdAnnotation implements NaturalId {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public NaturalIdAnnotation(NaturalId annotation, SourceModelBuildingContext modelContext) {
-		this.mutable = extractJdkValue( annotation, HibernateAnnotations.NATURAL_ID, "mutable", modelContext );
+		this.mutable = annotation.mutable();
 	}
 
 	/**

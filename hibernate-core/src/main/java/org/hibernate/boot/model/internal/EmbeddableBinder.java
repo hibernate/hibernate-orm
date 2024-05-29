@@ -79,7 +79,6 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.unqualify;
-import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
 
 /**
  * A binder responsible for interpreting {@link Embeddable} classes and producing
@@ -899,7 +898,7 @@ public class EmbeddableBinder {
 			component.setComponentClassName( inferredData.getClassOrElementType().getName() );
 		}
 		component.setCustomInstantiator( customInstantiatorImpl );
-		final Constructor<?> constructor = resolveInstantiator( inferredData.getClassOrElementType(), context );
+		final Constructor<?> constructor = resolveInstantiator( inferredData.getClassOrElementType() );
 		if ( constructor != null ) {
 			component.setInstantiator( constructor, constructor.getAnnotation( Instantiator.class ).value() );
 		}
@@ -910,11 +909,11 @@ public class EmbeddableBinder {
 		return component;
 	}
 
-	private static Constructor<?> resolveInstantiator(TypeDetails embeddableClass, MetadataBuildingContext buildingContext) {
-		return embeddableClass == null ? null : resolveInstantiator( embeddableClass.determineRawClass(), buildingContext );
+	private static Constructor<?> resolveInstantiator(TypeDetails embeddableClass) {
+		return embeddableClass == null ? null : resolveInstantiator( embeddableClass.determineRawClass() );
 	}
 
-	private static Constructor<?> resolveInstantiator(ClassDetails embeddableClass, MetadataBuildingContext buildingContext) {
+	private static Constructor<?> resolveInstantiator(ClassDetails embeddableClass) {
 		if ( embeddableClass != null ) {
 			final Constructor<?>[] declaredConstructors = embeddableClass.toJavaClass().getDeclaredConstructors();
 			Constructor<?> constructor = null;

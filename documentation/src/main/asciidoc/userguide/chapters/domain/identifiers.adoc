@@ -594,7 +594,7 @@ receive the following arguments:
 relying on untyped configuration properties in a Map, etc.
 2. The `Member` to which annotation was applied.  This allows access to the Java type of the identifier
 attribute, etc.
-3. `CustomIdGeneratorCreationContext` is a "parameter object" providing access to things often useful
+3. `GeneratorCreationContext` is a "parameter object" providing access to things often useful
 for identifier generators.
 
 

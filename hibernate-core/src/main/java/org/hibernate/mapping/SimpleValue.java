@@ -37,7 +37,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.generator.Generator;
-import org.hibernate.generator.CustomIdGeneratorCreationContext;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -104,7 +104,7 @@ public abstract class SimpleValue implements KeyValue {
 	private ConverterDescriptor attributeConverterDescriptor;
 	private Type type;
 
-	private IdentifierGeneratorCreator customIdGeneratorCreator = ASSIGNED_IDENTIFIER_GENERATOR_CREATOR;
+	private GeneratorCreator customIdGeneratorCreator = ASSIGNED_IDENTIFIER_GENERATOR_CREATOR;
 	private Generator generator;
 
 	public SimpleValue(MetadataBuildingContext buildingContext) {
@@ -374,12 +374,12 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	@Internal
-	public void setCustomIdGeneratorCreator(IdentifierGeneratorCreator customIdGeneratorCreator) {
+	public void setCustomIdGeneratorCreator(GeneratorCreator customIdGeneratorCreator) {
 		this.customIdGeneratorCreator = customIdGeneratorCreator;
 	}
 
 	@Internal
-	public IdentifierGeneratorCreator getCustomIdGeneratorCreator() {
+	public GeneratorCreator getCustomIdGeneratorCreator() {
 		return customIdGeneratorCreator;
 	}
 
@@ -1023,7 +1023,7 @@ public abstract class SimpleValue implements KeyValue {
 		}
 	}
 
-	private class IdGeneratorCreationContext implements CustomIdGeneratorCreationContext {
+	private class IdGeneratorCreationContext implements GeneratorCreationContext {
 		private final RootClass rootClass;
 
 		public IdGeneratorCreationContext(RootClass rootClass) {

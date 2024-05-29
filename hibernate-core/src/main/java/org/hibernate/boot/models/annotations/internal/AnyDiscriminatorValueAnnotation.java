@@ -6,17 +6,15 @@
  */
 package org.hibernate.boot.models.annotations.internal;
 
+import java.lang.annotation.Annotation;
+
+import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.jboss.jandex.AnnotationInstance;
 
-import java.lang.annotation.Annotation;
-
-import org.hibernate.annotations.AnyDiscriminatorValue;
-
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -34,18 +32,8 @@ public class AnyDiscriminatorValueAnnotation implements AnyDiscriminatorValue {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public AnyDiscriminatorValueAnnotation(AnyDiscriminatorValue annotation, SourceModelBuildingContext modelContext) {
-		this.discriminator = extractJdkValue(
-				annotation,
-				HibernateAnnotations.ANY_DISCRIMINATOR_VALUE,
-				"discriminator",
-				modelContext
-		);
-		this.entity = extractJdkValue(
-				annotation,
-				HibernateAnnotations.ANY_DISCRIMINATOR_VALUE,
-				"entity",
-				modelContext
-		);
+		this.discriminator = annotation.discriminator();
+		this.entity = annotation.entity();
 	}
 
 	/**

@@ -9,7 +9,6 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionTableImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinTableImpl;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.CommonTableDetails;
 import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
@@ -21,6 +20,7 @@ import org.jboss.jandex.AnnotationInstance;
 
 import jakarta.persistence.CollectionTable;
 
+import static org.hibernate.boot.models.JpaAnnotations.COLLECTION_TABLE;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.applyCatalog;
@@ -50,9 +50,7 @@ public class CollectionTableJpaAnnotation implements CollectionTable, CommonTabl
 		this.catalog = "";
 		this.schema = "";
 		this.joinColumns = new jakarta.persistence.JoinColumn[0];
-		this.foreignKey = modelContext.getAnnotationDescriptorRegistry()
-				.getDescriptor( jakarta.persistence.ForeignKey.class )
-				.createUsage( modelContext );
+		this.foreignKey = JpaAnnotations.FOREIGN_KEY.createUsage( modelContext );
 		this.uniqueConstraints = new jakarta.persistence.UniqueConstraint[0];
 		this.indexes = new jakarta.persistence.Index[0];
 		this.options = "";
@@ -62,43 +60,38 @@ public class CollectionTableJpaAnnotation implements CollectionTable, CommonTabl
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public CollectionTableJpaAnnotation(CollectionTable annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.COLLECTION_TABLE, "name", modelContext );
-		this.catalog = extractJdkValue( annotation, JpaAnnotations.COLLECTION_TABLE, "catalog", modelContext );
-		this.schema = extractJdkValue( annotation, JpaAnnotations.COLLECTION_TABLE, "schema", modelContext );
-		this.joinColumns = extractJdkValue( annotation, JpaAnnotations.COLLECTION_TABLE, "joinColumns", modelContext );
-		this.foreignKey = extractJdkValue( annotation, JpaAnnotations.COLLECTION_TABLE, "foreignKey", modelContext );
-		this.uniqueConstraints = extractJdkValue(
-				annotation,
-				JpaAnnotations.COLLECTION_TABLE,
-				"uniqueConstraints",
-				modelContext
-		);
-		this.indexes = extractJdkValue( annotation, JpaAnnotations.COLLECTION_TABLE, "indexes", modelContext );
-		this.options = extractJdkValue( annotation, JpaAnnotations.COLLECTION_TABLE, "options", modelContext );
+		this.name = annotation.name();
+		this.catalog = annotation.catalog();
+		this.schema = annotation.schema();
+		this.joinColumns = extractJdkValue( annotation, COLLECTION_TABLE, "joinColumns", modelContext );
+		this.foreignKey = extractJdkValue( annotation, COLLECTION_TABLE, "foreignKey", modelContext );
+		this.uniqueConstraints = extractJdkValue( annotation, COLLECTION_TABLE, "uniqueConstraints", modelContext );
+		this.indexes = extractJdkValue( annotation, COLLECTION_TABLE, "indexes", modelContext );
+		this.options = extractJdkValue( annotation, COLLECTION_TABLE, "options", modelContext );
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
 	public CollectionTableJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, JpaAnnotations.COLLECTION_TABLE, "name", modelContext );
-		this.catalog = extractJandexValue( annotation, JpaAnnotations.COLLECTION_TABLE, "catalog", modelContext );
-		this.schema = extractJandexValue( annotation, JpaAnnotations.COLLECTION_TABLE, "schema", modelContext );
+		this.name = extractJandexValue( annotation, COLLECTION_TABLE, "name", modelContext );
+		this.catalog = extractJandexValue( annotation, COLLECTION_TABLE, "catalog", modelContext );
+		this.schema = extractJandexValue( annotation, COLLECTION_TABLE, "schema", modelContext );
 		this.joinColumns = extractJandexValue(
 				annotation,
-				JpaAnnotations.COLLECTION_TABLE,
+				COLLECTION_TABLE,
 				"joinColumns",
 				modelContext
 		);
-		this.foreignKey = extractJandexValue( annotation, JpaAnnotations.COLLECTION_TABLE, "foreignKey", modelContext );
+		this.foreignKey = extractJandexValue( annotation, COLLECTION_TABLE, "foreignKey", modelContext );
 		this.uniqueConstraints = extractJandexValue(
 				annotation,
-				JpaAnnotations.COLLECTION_TABLE,
+				COLLECTION_TABLE,
 				"uniqueConstraints",
 				modelContext
 		);
-		this.indexes = extractJandexValue( annotation, JpaAnnotations.COLLECTION_TABLE, "indexes", modelContext );
-		this.options = extractJandexValue( annotation, JpaAnnotations.COLLECTION_TABLE, "options", modelContext );
+		this.indexes = extractJandexValue( annotation, COLLECTION_TABLE, "indexes", modelContext );
+		this.options = extractJandexValue( annotation, COLLECTION_TABLE, "options", modelContext );
 	}
 
 	@Override

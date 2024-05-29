@@ -16,7 +16,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.MapKeyClass;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -33,7 +32,7 @@ public class MapKeyClassJpaAnnotation implements MapKeyClass {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public MapKeyClassJpaAnnotation(MapKeyClass annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJdkValue( annotation, JpaAnnotations.MAP_KEY_CLASS, "value", modelContext );
+		this.value = annotation.value();
 	}
 
 	/**

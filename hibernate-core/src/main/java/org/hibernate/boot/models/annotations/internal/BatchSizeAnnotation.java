@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -32,7 +31,7 @@ public class BatchSizeAnnotation implements BatchSize {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public BatchSizeAnnotation(BatchSize annotation, SourceModelBuildingContext modelContext) {
-		this.size = extractJdkValue( annotation, HibernateAnnotations.BATCH_SIZE, "size", modelContext );
+		this.size = annotation.size();
 	}
 
 	/**

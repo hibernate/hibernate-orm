@@ -16,7 +16,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.Inheritance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -34,7 +33,7 @@ public class InheritanceJpaAnnotation implements Inheritance {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public InheritanceJpaAnnotation(Inheritance annotation, SourceModelBuildingContext modelContext) {
-		this.strategy = extractJdkValue( annotation, JpaAnnotations.INHERITANCE, "strategy", modelContext );
+		this.strategy = annotation.strategy();
 	}
 
 	/**

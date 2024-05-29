@@ -16,7 +16,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.ColumnResult;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -35,8 +34,8 @@ public class ColumnResultJpaAnnotation implements ColumnResult {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public ColumnResultJpaAnnotation(ColumnResult annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.COLUMN_RESULT, "name", modelContext );
-		this.type = extractJdkValue( annotation, JpaAnnotations.COLUMN_RESULT, "type", modelContext );
+		this.name = annotation.name();
+		this.type = annotation.type();
 	}
 
 	/**

@@ -8,17 +8,13 @@ package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
 
+import org.hibernate.boot.internal.AnyKeyType;
 import org.hibernate.boot.models.XmlAnnotations;
-import org.hibernate.models.internal.OrmAnnotationDescriptor;
-import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.jboss.jandex.AnnotationInstance;
 
-import org.hibernate.boot.internal.AnyKeyType;
-
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -35,7 +31,7 @@ public class AnyKeTypeAnnotation implements AnyKeyType {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public AnyKeTypeAnnotation(AnyKeyType annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJdkValue( annotation, XmlAnnotations.ANY_KEY_TYPE, "value", modelContext );
+		this.value = annotation.value();
 	}
 
 	/**

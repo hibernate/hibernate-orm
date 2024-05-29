@@ -151,7 +151,8 @@ public final class AggregateComponentBinder {
 							null,
 							context.getMetadataCollector().getDatabase().toIdentifier( sqlType )
 					);
-				}			}
+				}
+			}
 		}
 
 		final Struct struct = returnedClassOrElement.getDirectAnnotationUsage( Struct.class );

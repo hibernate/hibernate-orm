@@ -1005,7 +1005,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final AnnotationValue annotationVal =
 					castNonNull(getAnnotationValue(annotation, "mappedBy"));
 			for ( Element member : context.getAllMembers(assocTypeElement) ) {
-				if ( propertyName(this, member).contentEquals(mappedBy) ) {
+				if ( propertyName(this, member).contentEquals(mappedBy)
+						&& compatibleAccess(assocTypeElement, member) ) {
 					validateBackRef(memberOfClass, annotation, assocTypeElement, member, annotationVal);
 					return;
 				}
@@ -1015,6 +1016,19 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					annotationVal,
 					"no matching member in '" + assocTypeElement.getSimpleName() + "'",
 					Diagnostic.Kind.ERROR);
+		}
+	}
+
+	private boolean compatibleAccess(TypeElement assocTypeElement, Element member) {
+		final AccessType memberAccessType = determineAnnotationSpecifiedAccessType( member );
+		final AccessType accessType = memberAccessType == null ? getAccessType(assocTypeElement) : memberAccessType;
+		switch ( member.getKind() ) {
+			case FIELD:
+				return accessType == AccessType.FIELD;
+			case METHOD:
+				return accessType == AccessType.PROPERTY;
+			default:
+				return false;
 		}
 	}
 
@@ -2106,7 +2120,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private AccessType getAccessType(TypeElement entity) {
 		final String entityClassName = entity.getQualifiedName().toString();
-		determineAccessTypeForHierarchy(entity, context );
+		determineAccessTypeForHierarchy( entity, context );
 		return castNonNull( context.getAccessTypeInfo( entityClassName ) ).getAccessType();
 	}
 

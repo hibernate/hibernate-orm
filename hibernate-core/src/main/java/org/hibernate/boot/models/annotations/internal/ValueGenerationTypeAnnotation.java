@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -32,12 +31,7 @@ public class ValueGenerationTypeAnnotation implements ValueGenerationType {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public ValueGenerationTypeAnnotation(ValueGenerationType annotation, SourceModelBuildingContext modelContext) {
-		this.generatedBy = extractJdkValue(
-				annotation,
-				HibernateAnnotations.VALUE_GENERATION_TYPE,
-				"generatedBy",
-				modelContext
-		);
+		this.generatedBy = annotation.generatedBy();
 	}
 
 	/**

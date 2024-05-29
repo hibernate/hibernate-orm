@@ -16,7 +16,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.ForeignKey;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -40,15 +39,10 @@ public class ForeignKeyJpaAnnotation implements ForeignKey {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public ForeignKeyJpaAnnotation(ForeignKey annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.FOREIGN_KEY, "name", modelContext );
-		this.value = extractJdkValue( annotation, JpaAnnotations.FOREIGN_KEY, "value", modelContext );
-		this.foreignKeyDefinition = extractJdkValue(
-				annotation,
-				JpaAnnotations.FOREIGN_KEY,
-				"foreignKeyDefinition",
-				modelContext
-		);
-		this.options = extractJdkValue( annotation, JpaAnnotations.FOREIGN_KEY, "options", modelContext );
+		this.name = annotation.name();
+		this.value = annotation.value();
+		this.foreignKeyDefinition = annotation.foreignKeyDefinition();
+		this.options = annotation.options();
 	}
 
 	/**

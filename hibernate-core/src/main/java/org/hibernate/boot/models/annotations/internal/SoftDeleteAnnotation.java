@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -37,9 +36,9 @@ public class SoftDeleteAnnotation implements SoftDelete {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public SoftDeleteAnnotation(SoftDelete annotation, SourceModelBuildingContext modelContext) {
-		this.columnName = extractJdkValue( annotation, HibernateAnnotations.SOFT_DELETE, "columnName", modelContext );
-		this.strategy = extractJdkValue( annotation, HibernateAnnotations.SOFT_DELETE, "strategy", modelContext );
-		this.converter = extractJdkValue( annotation, HibernateAnnotations.SOFT_DELETE, "converter", modelContext );
+		this.columnName = annotation.columnName();
+		this.strategy = annotation.strategy();
+		this.converter = annotation.converter();
 	}
 
 	/**

@@ -41,11 +41,11 @@ public class SQLInsertAnnotation implements SQLInsert, CustomSqlDetails {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public SQLInsertAnnotation(SQLInsert annotation, SourceModelBuildingContext modelContext) {
-		this.sql = extractJdkValue( annotation, HibernateAnnotations.SQL_INSERT, "sql", modelContext );
-		this.callable = extractJdkValue( annotation, HibernateAnnotations.SQL_INSERT, "callable", modelContext );
-		this.verify = extractJdkValue( annotation, HibernateAnnotations.SQL_INSERT, "verify", modelContext );
-		this.check = extractJdkValue( annotation, HibernateAnnotations.SQL_INSERT, "check", modelContext );
-		this.table = extractJdkValue( annotation, HibernateAnnotations.SQL_INSERT, "table", modelContext );
+		this.sql = annotation.sql();
+		this.callable = annotation.callable();
+		this.verify = annotation.verify();
+		this.check = annotation.check();
+		this.table = annotation.table();
 	}
 
 	/**

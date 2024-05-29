@@ -33,7 +33,7 @@ public class DynamicInsertAnnotation implements DynamicInsert {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public DynamicInsertAnnotation(DynamicInsert annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJdkValue( annotation, HibernateAnnotations.DYNAMIC_INSERT, "value", modelContext );
+		this.value = annotation.value();
 	}
 
 	/**

@@ -6,16 +6,14 @@
  */
 package org.hibernate.boot.models.annotations.internal;
 
+import java.lang.annotation.Annotation;
+
+import org.hibernate.annotations.Check;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.jboss.jandex.AnnotationInstance;
 
-import java.lang.annotation.Annotation;
-
-import org.hibernate.annotations.Check;
-
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -34,18 +32,8 @@ public class CheckAnnotation implements Check {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public CheckAnnotation(Check annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue(
-				annotation,
-				org.hibernate.boot.models.HibernateAnnotations.CHECK,
-				"name",
-				modelContext
-		);
-		this.constraints = extractJdkValue(
-				annotation,
-				org.hibernate.boot.models.HibernateAnnotations.CHECK,
-				"constraints",
-				modelContext
-		);
+		this.name = annotation.name();
+		this.constraints = annotation.constraints();
 	}
 
 	/**

@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -32,7 +31,7 @@ public class JdbcTypeAnnotation implements JdbcType {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public JdbcTypeAnnotation(JdbcType annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJdkValue( annotation, HibernateAnnotations.JDBC_TYPE, "value", modelContext );
+		this.value = annotation.value();
 	}
 
 	/**

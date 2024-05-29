@@ -34,7 +34,7 @@ public class MapKeyTypeAnnotation implements MapKeyType {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public MapKeyTypeAnnotation(MapKeyType annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJdkValue( annotation, HibernateAnnotations.MAP_KEY_TYPE, "value", modelContext );
+		this.value = annotation.value();
 		this.parameters = extractJdkValue( annotation, HibernateAnnotations.MAP_KEY_TYPE, "parameters", modelContext );
 	}
 

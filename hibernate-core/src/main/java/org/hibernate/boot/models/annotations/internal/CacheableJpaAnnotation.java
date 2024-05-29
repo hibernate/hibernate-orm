@@ -16,7 +16,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.Cacheable;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -34,7 +33,7 @@ public class CacheableJpaAnnotation implements Cacheable {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public CacheableJpaAnnotation(Cacheable annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJdkValue( annotation, JpaAnnotations.CACHEABLE, "value", modelContext );
+		this.value = annotation.value();
 	}
 
 	/**

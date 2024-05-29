@@ -12,17 +12,17 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.orm.test.mapping.converted.enums.ConvertedEnumCheckConstraintsTests;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.type.SqlTypes;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -63,7 +63,7 @@ public class CharEnumerateValueTests {
 	}
 
 	@DomainModel(annotatedClasses = Person.class)
-	@SessionFactory(useCollectingStatementInspector = true)
+	@SessionFactory
 	@Test
 	void testNulls(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
@@ -85,12 +85,29 @@ public class CharEnumerateValueTests {
 	}
 
 	@DomainModel(annotatedClasses = Person.class)
-	@SessionFactory(useCollectingStatementInspector = true)
+	@SessionFactory
 	@Test
 	void verifyCheckConstraints(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> session.doWork( (connection) -> {
 			try (PreparedStatement statement = connection.prepareStatement( "insert into persons (id, gender) values (?, ?)" ) ) {
 				statement.setInt( 1, 100 );
+				statement.setString( 2, "X" );
+				statement.executeUpdate();
+				fail( "Expecting a failure" );
+			}
+			catch (SQLException expected) {
+			}
+		} ) );
+	}
+
+	@DomainModel(annotatedClasses = Person.class)
+	@SessionFactory
+	@SkipForDialect( dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase (at least jTDS driver) truncates the value so the constraint is not violated" )
+	@Test
+	void verifyCheckConstraints2(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> session.doWork( (connection) -> {
+			try (PreparedStatement statement = connection.prepareStatement( "insert into persons (id, gender) values (?, ?)" ) ) {
+				statement.setInt( 1, 200 );
 				// this would work without check constraints or with check constraints based solely on EnumType#STRING
 				statement.setString( 2, "MALE" );
 				statement.executeUpdate();

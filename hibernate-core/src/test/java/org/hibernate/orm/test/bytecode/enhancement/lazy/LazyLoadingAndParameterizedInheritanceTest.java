@@ -16,49 +16,48 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
-import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.util.HashSet;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DomainModel(
-		annotatedClasses = {
-				LazyLoadingAndParameterizedInheritanceTest.One.class,
-				LazyLoadingAndParameterizedInheritanceTest.AbsOne.class,
-				LazyLoadingAndParameterizedInheritanceTest.AbsTwo.class,
-				LazyLoadingAndParameterizedInheritanceTest.Three.class,
-				LazyLoadingAndParameterizedInheritanceTest.Two.class,
-		}
-)
-@ServiceRegistry(
-		settings = {
-				@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false"),
-				@Setting(name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true"),
-		}
-)
-@SessionFactory
-@BytecodeEnhanced
+@RunWith(BytecodeEnhancerRunner.class)
 @JiraKey("HHH-18151")
-public class LazyLoadingAndParameterizedInheritanceTest {
+public class LazyLoadingAndParameterizedInheritanceTest extends BaseCoreFunctionalTestCase {
 
 	private Long oneId;
 	private Long threeId;
 
-	@BeforeAll
-	public void before(SessionFactoryScope scope) {
-		scope.inTransaction( s -> {
+	@Override
+	protected void configure(Configuration cfg) {
+		super.configure( cfg );
+		cfg.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
+		cfg.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
+	}
+
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] {
+				One.class,
+				AbsOne.class,
+				AbsTwo.class,
+				Three.class,
+				Two.class,
+		};
+	}
+
+	@Before
+	public void before() {
+		inTransaction( s -> {
 			final var one = new One();
 			final var two = new Two();
 			final var three = new Three();
@@ -75,9 +74,9 @@ public class LazyLoadingAndParameterizedInheritanceTest {
 		} );
 	}
 
-	@AfterAll
-	void after(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
+	@After
+	public void after() {
+		inTransaction( session -> {
 			session.createMutationQuery( session.getCriteriaBuilder().createCriteriaDelete( One.class ) )
 					.executeUpdate();
 			session.createMutationQuery( session.getCriteriaBuilder().createCriteriaDelete( Two.class ) )
@@ -88,8 +87,8 @@ public class LazyLoadingAndParameterizedInheritanceTest {
 	}
 
 	@Test
-	public void test(SessionFactoryScope scope) {
-		scope.inTransaction( s -> {
+	public void test() {
+		inTransaction( s -> {
 			One one = s.find( One.class, oneId );
 			Two two = one.getTwo();
 			final var three = two.getThree();

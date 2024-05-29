@@ -23,7 +23,7 @@ import java.lang.reflect.Member;
  * same as providing a constructor with this signature:
  * <pre>
  * public GeneratorClass(AnnotationType config, Member idMember,
- *                      CustomIdGeneratorCreationContext creationContext)
+ *                      GeneratorCreationContext creationContext)
  * </pre>
  * <p>
  * where {@code GeneratorClass} is the class that implements {@code Generator}, and

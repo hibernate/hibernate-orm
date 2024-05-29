@@ -25,7 +25,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <pre>
  * public class CustomSequenceGenerator implements BeforeExecutionGenerator {
  *     public CustomSequenceGenerator(CustomSequence config, Member annotatedMember,
- *                                    CustomIdGeneratorCreationContext context) {
+ *                                    GeneratorCreationContext context) {
  *         ...
  *     }
  *     ...

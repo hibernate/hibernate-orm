@@ -13,6 +13,15 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.service.ServiceRegistry;
 
+/**
+ * An object passed as a parameter to the constructor or
+ * {@link AnnotationBasedGenerator#initialize initialize}
+ * method of a {@link Generator} which provides access to
+ * certain objects useful for initialization of the
+ * generator.
+ *
+ * @since 6.2
+ */
 @Incubating
 public interface GeneratorCreationContext {
 	Database getDatabase();

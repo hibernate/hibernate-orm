@@ -801,23 +801,20 @@ public class CockroachLegacyDialect extends Dialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		return intervalType != null
-				? "(?2+?3)"
-				: "cast(?3+" + intervalPattern( unit ) + " as " + temporalType.name().toLowerCase() + ")";
-	}
-
-	private static String intervalPattern(TemporalUnit unit) {
-		switch (unit) {
-			case NATIVE:
-				return "(?2)*interval '1 microsecond'";
+		if ( intervalType != null ) {
+			return "(?2+?3)";
+		}
+		switch ( unit ) {
 			case NANOSECOND:
-				return "(?2)/1e3*interval '1 microsecond'";
+				return "(?3+(?2)/1e3*interval '1 microsecond')";
+			case NATIVE:
+				return "(?3+(?2)*interval '1 microsecond')";
 			case QUARTER: //quarter is not supported in interval literals
-				return "(?2)*interval '3 month'";
+				return "(?3+(?2)*interval '3 month')";
 			case WEEK: //week is not supported in interval literals
-				return "(?2)*interval '7 day'";
+				return "(?3+(?2)*interval '7 day')";
 			default:
-				return "(?2)*interval '1 " + unit + "'";
+				return "(?3+(?2)*interval '1 ?1')";
 		}
 	}
 

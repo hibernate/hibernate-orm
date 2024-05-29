@@ -82,7 +82,6 @@ import static org.hibernate.cfg.DialectSpecificSettings.COCKROACH_VERSION_STRING
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
-import static org.hibernate.query.sqm.TemporalUnit.NATIVE;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -796,11 +795,15 @@ public class CockroachDialect extends Dialect {
 
 	/**
 	 * {@code microsecond} is the smallest unit for an {@code interval},
-	 * and the highest precision for a {@code timestamp}.
+	 * and the highest precision for a {@code timestamp}, so we could
+	 * use it as the "native" precision, but it's more convenient to use
+	 * whole seconds (with the fractional part), since we want to use
+	 * {@code extract(epoch from ...)} in our emulation of
+	 * {@code timestampdiff()}.
 	 */
 	@Override
 	public long getFractionalSecondPrecisionInNanos() {
-		return 1_000; //microseconds
+		return 1_000_000_000; //seconds
 	}
 
 	@Override
@@ -812,10 +815,10 @@ public class CockroachDialect extends Dialect {
 
 	private static String intervalPattern(TemporalUnit unit) {
 		switch (unit) {
-			case NATIVE:
-				return "(?2)*interval '1 microsecond'";
 			case NANOSECOND:
 				return "(?2)/1e3*interval '1 microsecond'";
+			case NATIVE:
+				return "(?2)*interval '1 second'";
 			case QUARTER: //quarter is not supported in interval literals
 				return "(?2)*interval '3 month'";
 			case WEEK: //week is not supported in interval literals
@@ -875,13 +878,6 @@ public class CockroachDialect extends Dialect {
 					throw new SemanticException( "Unrecognized field: " + unit );
 			}
 		}
-	}
-
-	@Override
-	public String translateDurationField(TemporalUnit unit) {
-		return unit==NATIVE
-				? "microsecond"
-				: super.translateDurationField(unit);
 	}
 
 	@Override

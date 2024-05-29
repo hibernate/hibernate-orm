@@ -17,7 +17,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.Basic;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -39,8 +38,8 @@ public class BasicJpaAnnotation
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public BasicJpaAnnotation(Basic annotation, SourceModelBuildingContext modelContext) {
-		this.fetch = extractJdkValue( annotation, JpaAnnotations.BASIC, "fetch", modelContext );
-		this.optional = extractJdkValue( annotation, JpaAnnotations.BASIC, "optional", modelContext );
+		this.fetch = annotation.fetch();
+		this.optional = annotation.optional();
 	}
 
 	/**

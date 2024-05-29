@@ -16,7 +16,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.SequenceGenerator;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -46,28 +45,13 @@ public class SequenceGeneratorJpaAnnotation implements SequenceGenerator {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public SequenceGeneratorJpaAnnotation(SequenceGenerator annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.SEQUENCE_GENERATOR, "name", modelContext );
-		this.sequenceName = extractJdkValue(
-				annotation,
-				JpaAnnotations.SEQUENCE_GENERATOR,
-				"sequenceName",
-				modelContext
-		);
-		this.catalog = extractJdkValue( annotation, JpaAnnotations.SEQUENCE_GENERATOR, "catalog", modelContext );
-		this.schema = extractJdkValue( annotation, JpaAnnotations.SEQUENCE_GENERATOR, "schema", modelContext );
-		this.initialValue = extractJdkValue(
-				annotation,
-				JpaAnnotations.SEQUENCE_GENERATOR,
-				"initialValue",
-				modelContext
-		);
-		this.allocationSize = extractJdkValue(
-				annotation,
-				JpaAnnotations.SEQUENCE_GENERATOR,
-				"allocationSize",
-				modelContext
-		);
-		this.options = extractJdkValue( annotation, JpaAnnotations.SEQUENCE_GENERATOR, "options", modelContext );
+		this.name = annotation.name();
+		this.sequenceName = annotation.sequenceName();
+		this.catalog = annotation.catalog();
+		this.schema = annotation.schema();
+		this.initialValue = annotation.initialValue();
+		this.allocationSize = annotation.allocationSize();
+		this.options = annotation.options();
 	}
 
 	/**

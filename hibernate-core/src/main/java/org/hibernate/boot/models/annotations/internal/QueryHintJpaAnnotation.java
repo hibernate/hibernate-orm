@@ -16,7 +16,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.QueryHint;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -34,8 +33,8 @@ public class QueryHintJpaAnnotation implements QueryHint {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public QueryHintJpaAnnotation(QueryHint annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.QUERY_HINT, "name", modelContext );
-		this.value = extractJdkValue( annotation, JpaAnnotations.QUERY_HINT, "value", modelContext );
+		this.name = annotation.name();
+		this.value = annotation.value();
 	}
 
 	/**

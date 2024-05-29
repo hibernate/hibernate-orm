@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -37,24 +36,9 @@ public class FetchProfileOverrideAnnotation implements FetchProfileOverride {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public FetchProfileOverrideAnnotation(FetchProfileOverride annotation, SourceModelBuildingContext modelContext) {
-		this.mode = extractJdkValue(
-				annotation,
-				DialectOverrideAnnotations.FETCH_PROFILE_OVERRIDE,
-				"mode",
-				modelContext
-		);
-		this.fetch = extractJdkValue(
-				annotation,
-				DialectOverrideAnnotations.FETCH_PROFILE_OVERRIDE,
-				"fetch",
-				modelContext
-		);
-		this.profile = extractJdkValue(
-				annotation,
-				DialectOverrideAnnotations.FETCH_PROFILE_OVERRIDE,
-				"profile",
-				modelContext
-		);
+		this.mode = annotation.mode();
+		this.fetch = annotation.fetch();
+		this.profile = annotation.profile();
 	}
 
 	/**

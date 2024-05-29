@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -35,18 +34,8 @@ public class CompositeTypeRegistrationAnnotation implements CompositeTypeRegistr
 	public CompositeTypeRegistrationAnnotation(
 			CompositeTypeRegistration annotation,
 			SourceModelBuildingContext modelContext) {
-		this.embeddableClass = extractJdkValue(
-				annotation,
-				HibernateAnnotations.COMPOSITE_TYPE_REGISTRATION,
-				"embeddableClass",
-				modelContext
-		);
-		this.userType = extractJdkValue(
-				annotation,
-				HibernateAnnotations.COMPOSITE_TYPE_REGISTRATION,
-				"userType",
-				modelContext
-		);
+		this.embeddableClass = annotation.embeddableClass();
+		this.userType = annotation.userType();
 	}
 
 	/**

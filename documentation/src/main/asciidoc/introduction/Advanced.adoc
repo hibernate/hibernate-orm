@@ -511,7 +511,7 @@ public class UuidGenerator
     public UuidGenerator(
             org.hibernate.annotations.UuidGenerator config,
             Member idMember,
-            CustomIdGeneratorCreationContext creationContext) {
+            GeneratorCreationContext creationContext) {
         this(config, idMember);
     }
 

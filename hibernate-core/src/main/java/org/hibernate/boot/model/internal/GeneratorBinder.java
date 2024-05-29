@@ -49,11 +49,9 @@ import org.hibernate.id.UUIDHexGenerator;
 import org.hibernate.id.enhanced.LegacyNamingStrategy;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.SingleNamingStrategy;
-import org.hibernate.generator.CustomIdGeneratorCreationContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.GeneratorCreator;
-import org.hibernate.mapping.IdentifierGeneratorCreator;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
@@ -62,7 +60,6 @@ import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
-import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -92,10 +89,10 @@ public class GeneratorBinder {
 	private static final Logger LOG = CoreLogging.logger( GeneratorBinder.class );
 
 	public static final String ASSIGNED_GENERATOR_NAME = "assigned";
-	public static final IdentifierGeneratorCreator ASSIGNED_IDENTIFIER_GENERATOR_CREATOR =
-			new IdentifierGeneratorCreator() {
+	public static final GeneratorCreator ASSIGNED_IDENTIFIER_GENERATOR_CREATOR =
+			new GeneratorCreator() {
 				@Override
-				public Generator createGenerator(CustomIdGeneratorCreationContext context) {
+				public Generator createGenerator(GeneratorCreationContext context) {
 					return new Assigned();
 				}
 				@Override
@@ -514,19 +511,20 @@ public class GeneratorBinder {
 		return creationContext -> {
 			final Generator generator = instantiateGenerator(
 					annotation,
-					memberDetails,
-					annotationType,
+					beanContainer,
 					creationContext,
-					GeneratorCreationContext.class,
-					generatorClass
+					generatorClass,
+					memberDetails,
+					annotationType
 			);
 			callInitialize( annotation, memberDetails, creationContext, generator );
+			//TODO: callConfigure( creationContext, generator, emptyMap(), identifierValue );
 			checkVersionGenerationAlways( memberDetails, generator );
 			return generator;
 		};
 	}
 
-	static IdentifierGeneratorCreator identifierGeneratorCreator(
+	static GeneratorCreator identifierGeneratorCreator(
 			MemberDetails idAttributeMember,
 			AnnotationUsage<? extends Annotation> annotation,
 			SimpleValue identifierValue,
@@ -535,14 +533,13 @@ public class GeneratorBinder {
 		final IdGeneratorType idGeneratorType = annotationType.getAnnotation( IdGeneratorType.class );
 		assert idGeneratorType != null;
 		final Class<? extends Generator> generatorClass = idGeneratorType.value();
+		checkGeneratorClass( generatorClass );
 		return creationContext -> {
-			checkGeneratorClass( generatorClass );
 			final Generator generator =
 					instantiateGenerator(
 							annotation,
 							beanContainer,
 							creationContext,
-							CustomIdGeneratorCreationContext.class,
 							generatorClass,
 							idAttributeMember,
 							annotationType
@@ -565,29 +562,26 @@ public class GeneratorBinder {
 	private static <C> Generator instantiateGenerator(
 			AnnotationUsage<? extends Annotation> annotation,
 			BeanContainer beanContainer,
-			C creationContext,
-			Class<C> creationContextClass,
+			GeneratorCreationContext creationContext,
 			Class<? extends Generator> generatorClass,
-			MemberDetails idAttributeMember,
+			MemberDetails memberDetails,
 			Class<? extends Annotation> annotationType) {
 		if ( beanContainer != null ) {
 			return instantiateGeneratorAsBean(
 					annotation,
 					beanContainer,
 					creationContext,
-					creationContextClass,
 					generatorClass,
-					idAttributeMember,
+					memberDetails,
 					annotationType
 			);
 		}
 		else {
 			return instantiateGenerator(
 					annotation,
-					idAttributeMember,
+					memberDetails,
 					annotationType,
 					creationContext,
-					creationContextClass,
 					generatorClass
 			);
 		}
@@ -601,13 +595,12 @@ public class GeneratorBinder {
 	 * @param beanContainer an optional {@code BeanContainer}
 	 * @param generatorClass a class which implements {@code Generator}
 	 */
-	private static <C> Generator instantiateGeneratorAsBean(
+	private static Generator instantiateGeneratorAsBean(
 			AnnotationUsage<? extends Annotation> annotation,
 			BeanContainer beanContainer,
-			C creationContext,
-			Class<C> creationContextClass,
+			GeneratorCreationContext creationContext,
 			Class<? extends Generator> generatorClass,
-			MemberDetails idAttributeMember,
+			MemberDetails memberDetails,
 			Class<? extends Annotation> annotationType) {
 		return beanContainer.getBean( generatorClass,
 				new BeanContainer.LifecycleOptions() {
@@ -626,10 +619,9 @@ public class GeneratorBinder {
 					public <B> B produceBeanInstance(Class<B> beanType) {
 						return (B) instantiateGenerator(
 								annotation,
-								idAttributeMember,
+								memberDetails,
 								annotationType,
 								creationContext,
-								creationContextClass,
 								generatorClass
 						);
 					}
@@ -690,16 +682,15 @@ public class GeneratorBinder {
 	 * @param annotation the generator annotation
 	 * @param generatorClass a class which implements {@code Generator}
 	 */
-	private static <C, G extends Generator> G instantiateGenerator(
+	private static <G extends Generator> G instantiateGenerator(
 			AnnotationUsage<?> annotation,
 			MemberDetails memberDetails,
 			Class<? extends Annotation> annotationType,
-			C creationContext,
-			Class<C> contextClass,
+			GeneratorCreationContext creationContext,
 			Class<? extends G> generatorClass) {
 		try {
 			try {
-				return generatorClass.getConstructor( annotationType, Member.class, contextClass )
+				return generatorClass.getConstructor( annotationType, Member.class, GeneratorCreationContext.class )
 						.newInstance( annotation.toAnnotation(), memberDetails.toJavaMember(), creationContext);
 			}
 			catch (NoSuchMethodException ignore) {
@@ -885,12 +876,12 @@ public class GeneratorBinder {
 	static BeanContainer beanContainer(MetadataBuildingContext buildingContext) {
 		final ServiceRegistry serviceRegistry = buildingContext.getBootstrapContext().getServiceRegistry();
 		return allowExtensionsInCdi( serviceRegistry )
-						? serviceRegistry.requireService( ManagedBeanRegistry.class ).getBeanContainer()
-						: null;
+				? serviceRegistry.requireService( ManagedBeanRegistry.class ).getBeanContainer()
+				: null;
 	}
 
 	/**
-	 * Set up the {@link IdentifierGeneratorCreator} for a case where there is no
+	 * Set up the {@link GeneratorCreator} for a case where there is no
 	 * generator annotation.
 	 */
 	private static void setGeneratorCreator(

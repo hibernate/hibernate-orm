@@ -7,7 +7,6 @@
 package org.hibernate.community.dialect;
 
 import org.hibernate.boot.Metadata;
-import java.sql.Types;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -29,7 +28,6 @@ import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.dialect.unique.UniqueDelegate;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -65,8 +63,6 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.internal.StandardForeignKeyExporter;
 import org.hibernate.tool.schema.spi.Exporter;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -119,24 +115,6 @@ public class InformixDialect extends Dialect {
 		}
 	};
 
-	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
-		@Override
-		public Size resolveSize(
-				JdbcType jdbcType,
-				JavaType<?> javaType,
-				Integer precision,
-				Integer scale,
-				Long length) {
-			switch ( jdbcType.getDdlTypeCode() ) {
-				case Types.FLOAT:
-					// Informix allows FLOAT with a precision up to 16
-					if ( precision != null ) {
-						return Size.precision( Math.min( Math.max( precision, 1 ), 16 ) );
-					}
-			}
-			return super.resolveSize( jdbcType, javaType, precision, scale, length );
-		}
-	};
 	public InformixDialect(DialectResolutionInfo info) {
 		this( info.makeCopyOrDefault( DEFAULT_VERSION ) );
 		registerKeywords( info );
@@ -201,7 +179,7 @@ public class InformixDialect extends Dialect {
 		//float(n) and just always defaults to
 		//double precision.
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( FLOAT, "float($p)", this )
+				CapacityDependentDdlType.builder( FLOAT, "float", this )
 						.withTypeCapacity( 8, "smallfloat" )
 						.build()
 		);
@@ -257,11 +235,6 @@ public class InformixDialect extends Dialect {
 	@Override
 	public int getDoublePrecision() {
 		return 16;
-	}
-
-	@Override
-	public SizeStrategy getSizeStrategy() {
-		return sizeStrategy;
 	}
 
 	@Override

@@ -6,17 +6,15 @@
  */
 package org.hibernate.boot.models.annotations.internal;
 
+import java.lang.annotation.Annotation;
+
+import org.hibernate.annotations.SQLJoinTableRestriction;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.jboss.jandex.AnnotationInstance;
 
-import java.lang.annotation.Annotation;
-
-import org.hibernate.annotations.SQLJoinTableRestriction;
-
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -35,12 +33,7 @@ public class SQLJoinTableRestrictionAnnotation implements SQLJoinTableRestrictio
 	public SQLJoinTableRestrictionAnnotation(
 			SQLJoinTableRestriction annotation,
 			SourceModelBuildingContext modelContext) {
-		this.value = extractJdkValue(
-				annotation,
-				HibernateAnnotations.SQL_JOIN_TABLE_RESTRICTION,
-				"value",
-				modelContext
-		);
+		this.value = annotation.value();
 	}
 
 	/**

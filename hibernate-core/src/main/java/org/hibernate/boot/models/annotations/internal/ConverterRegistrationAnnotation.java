@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -36,24 +35,9 @@ public class ConverterRegistrationAnnotation implements ConverterRegistration {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public ConverterRegistrationAnnotation(ConverterRegistration annotation, SourceModelBuildingContext modelContext) {
-		this.converter = extractJdkValue(
-				annotation,
-				HibernateAnnotations.CONVERTER_REGISTRATION,
-				"converter",
-				modelContext
-		);
-		this.domainType = extractJdkValue(
-				annotation,
-				HibernateAnnotations.CONVERTER_REGISTRATION,
-				"domainType",
-				modelContext
-		);
-		this.autoApply = extractJdkValue(
-				annotation,
-				HibernateAnnotations.CONVERTER_REGISTRATION,
-				"autoApply",
-				modelContext
-		);
+		this.converter = annotation.converter();
+		this.domainType = annotation.domainType();
+		this.autoApply = annotation.autoApply();
 	}
 
 	/**

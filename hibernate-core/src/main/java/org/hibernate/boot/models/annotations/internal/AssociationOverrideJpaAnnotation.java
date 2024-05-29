@@ -6,15 +6,16 @@
  */
 package org.hibernate.boot.models.annotations.internal;
 
+import java.lang.annotation.Annotation;
+
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.jboss.jandex.AnnotationInstance;
 
-import java.lang.annotation.Annotation;
-
 import jakarta.persistence.AssociationOverride;
 
+import static org.hibernate.boot.models.JpaAnnotations.ASSOCIATION_OVERRIDE;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -32,57 +33,28 @@ public class AssociationOverrideJpaAnnotation implements AssociationOverride {
 	 */
 	public AssociationOverrideJpaAnnotation(SourceModelBuildingContext modelContext) {
 		this.joinColumns = new jakarta.persistence.JoinColumn[0];
-		this.foreignKey = modelContext.getAnnotationDescriptorRegistry()
-				.getDescriptor( jakarta.persistence.ForeignKey.class )
-				.createUsage( modelContext );
-		this.joinTable = modelContext.getAnnotationDescriptorRegistry()
-				.getDescriptor( jakarta.persistence.JoinTable.class )
-				.createUsage( modelContext );
+		this.foreignKey = JpaAnnotations.FOREIGN_KEY.createUsage( modelContext );
+		this.joinTable = JpaAnnotations.JOIN_TABLE.createUsage( modelContext );
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public AssociationOverrideJpaAnnotation(AssociationOverride annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.ASSOCIATION_OVERRIDE, "name", modelContext );
-		this.joinColumns = extractJdkValue(
-				annotation,
-				JpaAnnotations.ASSOCIATION_OVERRIDE,
-				"joinColumns",
-				modelContext
-		);
-		this.foreignKey = extractJdkValue(
-				annotation,
-				JpaAnnotations.ASSOCIATION_OVERRIDE,
-				"foreignKey",
-				modelContext
-		);
-		this.joinTable = extractJdkValue( annotation, JpaAnnotations.ASSOCIATION_OVERRIDE, "joinTable", modelContext );
+		this.name = annotation.name();
+		this.joinColumns = extractJdkValue( annotation, ASSOCIATION_OVERRIDE, "joinColumns", modelContext );
+		this.foreignKey = extractJdkValue( annotation, ASSOCIATION_OVERRIDE, "foreignKey", modelContext );
+		this.joinTable = extractJdkValue( annotation, ASSOCIATION_OVERRIDE, "joinTable", modelContext );
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
 	public AssociationOverrideJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, JpaAnnotations.ASSOCIATION_OVERRIDE, "name", modelContext );
-		this.joinColumns = extractJandexValue(
-				annotation,
-				JpaAnnotations.ASSOCIATION_OVERRIDE,
-				"joinColumns",
-				modelContext
-		);
-		this.foreignKey = extractJandexValue(
-				annotation,
-				JpaAnnotations.ASSOCIATION_OVERRIDE,
-				"foreignKey",
-				modelContext
-		);
-		this.joinTable = extractJandexValue(
-				annotation,
-				JpaAnnotations.ASSOCIATION_OVERRIDE,
-				"joinTable",
-				modelContext
-		);
+		this.name = extractJandexValue( annotation, ASSOCIATION_OVERRIDE, "name", modelContext );
+		this.joinColumns = extractJandexValue( annotation, ASSOCIATION_OVERRIDE, "joinColumns", modelContext );
+		this.foreignKey = extractJandexValue( annotation, ASSOCIATION_OVERRIDE, "foreignKey", modelContext );
+		this.joinTable = extractJandexValue( annotation, ASSOCIATION_OVERRIDE, "joinTable", modelContext );
 	}
 
 	@Override

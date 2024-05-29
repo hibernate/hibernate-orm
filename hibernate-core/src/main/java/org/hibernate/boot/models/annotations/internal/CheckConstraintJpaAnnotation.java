@@ -16,7 +16,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.CheckConstraint;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -38,9 +37,9 @@ public class CheckConstraintJpaAnnotation implements CheckConstraint {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public CheckConstraintJpaAnnotation(CheckConstraint annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.CHECK_CONSTRAINT, "name", modelContext );
-		this.constraint = extractJdkValue( annotation, JpaAnnotations.CHECK_CONSTRAINT, "constraint", modelContext );
-		this.options = extractJdkValue( annotation, JpaAnnotations.CHECK_CONSTRAINT, "options", modelContext );
+		this.name = annotation.name();
+		this.constraint = annotation.constraint();
+		this.options = annotation.options();
 	}
 
 	/**

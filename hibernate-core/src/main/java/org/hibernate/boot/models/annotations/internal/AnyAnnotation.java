@@ -6,18 +6,16 @@
  */
 package org.hibernate.boot.models.annotations.internal;
 
+import java.lang.annotation.Annotation;
+
+import org.hibernate.annotations.Any;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.AttributeMarker;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.jboss.jandex.AnnotationInstance;
 
-import java.lang.annotation.Annotation;
-
-import org.hibernate.annotations.Any;
-
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -37,8 +35,8 @@ public class AnyAnnotation implements Any, AttributeMarker, AttributeMarker.Fetc
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public AnyAnnotation(Any annotation, SourceModelBuildingContext modelContext) {
-		this.fetch = extractJdkValue( annotation, HibernateAnnotations.ANY, "fetch", modelContext );
-		this.optional = extractJdkValue( annotation, HibernateAnnotations.ANY, "optional", modelContext );
+		this.fetch = annotation.fetch();
+		this.optional = annotation.optional();
 	}
 
 	/**

@@ -8,13 +8,13 @@ package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
 
-import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.jboss.jandex.AnnotationInstance;
 
 import jakarta.persistence.NamedEntityGraph;
 
+import static org.hibernate.boot.models.JpaAnnotations.NAMED_ENTITY_GRAPH;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -42,49 +42,34 @@ public class NamedEntityGraphJpaAnnotation implements NamedEntityGraph {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public NamedEntityGraphJpaAnnotation(NamedEntityGraph annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.NAMED_ENTITY_GRAPH, "name", modelContext );
-		this.attributeNodes = extractJdkValue(
-				annotation,
-				JpaAnnotations.NAMED_ENTITY_GRAPH,
-				"attributeNodes",
-				modelContext
-		);
-		this.includeAllAttributes = extractJdkValue(
-				annotation,
-				JpaAnnotations.NAMED_ENTITY_GRAPH,
-				"includeAllAttributes",
-				modelContext
-		);
-		this.subgraphs = extractJdkValue( annotation, JpaAnnotations.NAMED_ENTITY_GRAPH, "subgraphs", modelContext );
-		this.subclassSubgraphs = extractJdkValue(
-				annotation,
-				JpaAnnotations.NAMED_ENTITY_GRAPH,
-				"subclassSubgraphs",
-				modelContext
-		);
+		this.name = annotation.name();
+		this.attributeNodes = extractJdkValue( annotation, NAMED_ENTITY_GRAPH, "attributeNodes", modelContext );
+		this.includeAllAttributes = annotation.includeAllAttributes();
+		this.subgraphs = extractJdkValue( annotation, NAMED_ENTITY_GRAPH, "subgraphs", modelContext );
+		this.subclassSubgraphs = extractJdkValue( annotation, NAMED_ENTITY_GRAPH, "subclassSubgraphs", modelContext );
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
 	public NamedEntityGraphJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, JpaAnnotations.NAMED_ENTITY_GRAPH, "name", modelContext );
+		this.name = extractJandexValue( annotation, NAMED_ENTITY_GRAPH, "name", modelContext );
 		this.attributeNodes = extractJandexValue(
 				annotation,
-				JpaAnnotations.NAMED_ENTITY_GRAPH,
+				NAMED_ENTITY_GRAPH,
 				"attributeNodes",
 				modelContext
 		);
 		this.includeAllAttributes = extractJandexValue(
 				annotation,
-				JpaAnnotations.NAMED_ENTITY_GRAPH,
+				NAMED_ENTITY_GRAPH,
 				"includeAllAttributes",
 				modelContext
 		);
-		this.subgraphs = extractJandexValue( annotation, JpaAnnotations.NAMED_ENTITY_GRAPH, "subgraphs", modelContext );
+		this.subgraphs = extractJandexValue( annotation, NAMED_ENTITY_GRAPH, "subgraphs", modelContext );
 		this.subclassSubgraphs = extractJandexValue(
 				annotation,
-				JpaAnnotations.NAMED_ENTITY_GRAPH,
+				NAMED_ENTITY_GRAPH,
 				"subclassSubgraphs",
 				modelContext
 		);

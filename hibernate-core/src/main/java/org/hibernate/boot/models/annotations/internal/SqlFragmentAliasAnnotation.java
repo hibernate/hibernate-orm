@@ -15,7 +15,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -36,9 +35,9 @@ public class SqlFragmentAliasAnnotation implements SqlFragmentAlias {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public SqlFragmentAliasAnnotation(SqlFragmentAlias annotation, SourceModelBuildingContext modelContext) {
-		this.alias = extractJdkValue( annotation, HibernateAnnotations.SQL_FRAGMENT_ALIAS, "alias", modelContext );
-		this.table = extractJdkValue( annotation, HibernateAnnotations.SQL_FRAGMENT_ALIAS, "table", modelContext );
-		this.entity = extractJdkValue( annotation, HibernateAnnotations.SQL_FRAGMENT_ALIAS, "entity", modelContext );
+		this.alias = annotation.alias();
+		this.table = annotation.table();
+		this.entity = annotation.entity();
 	}
 
 	/**

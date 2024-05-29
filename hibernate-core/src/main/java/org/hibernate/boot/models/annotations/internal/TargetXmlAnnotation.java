@@ -6,14 +6,12 @@
  */
 package org.hibernate.boot.models.annotations.internal;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
-import org.hibernate.models.spi.AnnotationDescriptor;
-
-import org.jboss.jandex.AnnotationInstance;
-
 import java.lang.annotation.Annotation;
 
 import org.hibernate.boot.internal.Target;
+import org.hibernate.models.spi.SourceModelBuildingContext;
+
+import org.jboss.jandex.AnnotationInstance;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -24,9 +22,11 @@ public class TargetXmlAnnotation implements Target {
 	}
 
 	public TargetXmlAnnotation(Target annotation, SourceModelBuildingContext modelContext) {
+		throw new UnsupportedOperationException( "Should only ever be sourced from XML" );
 	}
 
 	public TargetXmlAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
+		throw new UnsupportedOperationException( "Should only ever be sourced from XML" );
 	}
 
 	@Override

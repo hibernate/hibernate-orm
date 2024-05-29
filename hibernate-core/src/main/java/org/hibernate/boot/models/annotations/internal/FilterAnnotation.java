@@ -43,14 +43,9 @@ public class FilterAnnotation implements Filter, FilterDetails {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public FilterAnnotation(Filter annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, HibernateAnnotations.FILTER, "name", modelContext );
-		this.condition = extractJdkValue( annotation, HibernateAnnotations.FILTER, "condition", modelContext );
-		this.deduceAliasInjectionPoints = extractJdkValue(
-				annotation,
-				HibernateAnnotations.FILTER,
-				"deduceAliasInjectionPoints",
-				modelContext
-		);
+		this.name = annotation.name();
+		this.condition = annotation.condition();
+		this.deduceAliasInjectionPoints = annotation.deduceAliasInjectionPoints();
 		this.aliases = extractJdkValue( annotation, HibernateAnnotations.FILTER, "aliases", modelContext );
 	}
 

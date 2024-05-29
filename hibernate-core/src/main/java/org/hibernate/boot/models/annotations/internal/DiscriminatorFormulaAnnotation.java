@@ -6,16 +6,14 @@
  */
 package org.hibernate.boot.models.annotations.internal;
 
+import java.lang.annotation.Annotation;
+
+import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.jboss.jandex.AnnotationInstance;
 
-import java.lang.annotation.Annotation;
-
-import org.hibernate.annotations.DiscriminatorFormula;
-
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -34,18 +32,8 @@ public class DiscriminatorFormulaAnnotation implements DiscriminatorFormula {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public DiscriminatorFormulaAnnotation(DiscriminatorFormula annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJdkValue(
-				annotation,
-				org.hibernate.boot.models.HibernateAnnotations.DISCRIMINATOR_FORMULA,
-				"value",
-				modelContext
-		);
-		this.discriminatorType = extractJdkValue(
-				annotation,
-				org.hibernate.boot.models.HibernateAnnotations.DISCRIMINATOR_FORMULA,
-				"discriminatorType",
-				modelContext
-		);
+		this.value = annotation.value();
+		this.discriminatorType = annotation.discriminatorType();
 	}
 
 	/**

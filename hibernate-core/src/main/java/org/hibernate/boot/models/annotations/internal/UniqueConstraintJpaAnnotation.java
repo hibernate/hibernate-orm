@@ -16,7 +16,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.UniqueConstraint;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -37,9 +36,9 @@ public class UniqueConstraintJpaAnnotation implements UniqueConstraint {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public UniqueConstraintJpaAnnotation(UniqueConstraint annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.UNIQUE_CONSTRAINT, "name", modelContext );
-		this.columnNames = extractJdkValue( annotation, JpaAnnotations.UNIQUE_CONSTRAINT, "columnNames", modelContext );
-		this.options = extractJdkValue( annotation, JpaAnnotations.UNIQUE_CONSTRAINT, "options", modelContext );
+		this.name = annotation.name();
+		this.columnNames = annotation.columnNames();
+		this.options = annotation.options();
 	}
 
 	/**

@@ -9,11 +9,11 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 
 import org.hibernate.annotations.CollectionType;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.jboss.jandex.AnnotationInstance;
 
+import static org.hibernate.boot.models.HibernateAnnotations.COLLECTION_TYPE;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -34,23 +34,18 @@ public class CollectionTypeAnnotation implements CollectionType {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public CollectionTypeAnnotation(CollectionType annotation, SourceModelBuildingContext modelContext) {
-		this.type = extractJdkValue( annotation, HibernateAnnotations.COLLECTION_TYPE, "type", modelContext );
-		this.parameters = extractJdkValue(
-				annotation,
-				HibernateAnnotations.COLLECTION_TYPE,
-				"parameters",
-				modelContext
-		);
+		this.type = annotation.type();
+		this.parameters = extractJdkValue( annotation, COLLECTION_TYPE, "parameters", modelContext );
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
 	public CollectionTypeAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.type = extractJandexValue( annotation, HibernateAnnotations.COLLECTION_TYPE, "type", modelContext );
+		this.type = extractJandexValue( annotation, COLLECTION_TYPE, "type", modelContext );
 		this.parameters = extractJandexValue(
 				annotation,
-				HibernateAnnotations.COLLECTION_TYPE,
+				COLLECTION_TYPE,
 				"parameters",
 				modelContext
 		);

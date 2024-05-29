@@ -20,6 +20,7 @@ import org.jboss.jandex.AnnotationInstance;
 
 import jakarta.persistence.TableGenerator;
 
+import static org.hibernate.boot.models.JpaAnnotations.TABLE_GENERATOR;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.collectIndexes;
@@ -63,86 +64,66 @@ public class TableGeneratorJpaAnnotation implements TableGenerator, UniqueConstr
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public TableGeneratorJpaAnnotation(TableGenerator annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJdkValue( annotation, JpaAnnotations.TABLE_GENERATOR, "name", modelContext );
-		this.table = extractJdkValue( annotation, JpaAnnotations.TABLE_GENERATOR, "table", modelContext );
-		this.catalog = extractJdkValue( annotation, JpaAnnotations.TABLE_GENERATOR, "catalog", modelContext );
-		this.schema = extractJdkValue( annotation, JpaAnnotations.TABLE_GENERATOR, "schema", modelContext );
-		this.pkColumnName = extractJdkValue( annotation, JpaAnnotations.TABLE_GENERATOR, "pkColumnName", modelContext );
-		this.valueColumnName = extractJdkValue(
-				annotation,
-				JpaAnnotations.TABLE_GENERATOR,
-				"valueColumnName",
-				modelContext
-		);
-		this.pkColumnValue = extractJdkValue(
-				annotation,
-				JpaAnnotations.TABLE_GENERATOR,
-				"pkColumnValue",
-				modelContext
-		);
-		this.initialValue = extractJdkValue( annotation, JpaAnnotations.TABLE_GENERATOR, "initialValue", modelContext );
-		this.allocationSize = extractJdkValue(
-				annotation,
-				JpaAnnotations.TABLE_GENERATOR,
-				"allocationSize",
-				modelContext
-		);
-		this.uniqueConstraints = extractJdkValue(
-				annotation,
-				JpaAnnotations.TABLE_GENERATOR,
-				"uniqueConstraints",
-				modelContext
-		);
-		this.indexes = extractJdkValue( annotation, JpaAnnotations.TABLE_GENERATOR, "indexes", modelContext );
-		this.options = extractJdkValue( annotation, JpaAnnotations.TABLE_GENERATOR, "options", modelContext );
+		this.name = annotation.name();
+		this.table = annotation.table();
+		this.catalog = annotation.catalog();
+		this.schema = annotation.schema();
+		this.pkColumnName = annotation.pkColumnName();
+		this.valueColumnName = annotation.valueColumnName();
+		this.pkColumnValue = annotation.pkColumnValue();
+		this.initialValue = annotation.initialValue();
+		this.allocationSize = annotation.allocationSize();
+		this.uniqueConstraints = extractJdkValue( annotation, TABLE_GENERATOR, "uniqueConstraints", modelContext );
+		this.indexes = extractJdkValue( annotation, TABLE_GENERATOR, "indexes", modelContext );
+		this.options = annotation.options();
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
 	public TableGeneratorJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, JpaAnnotations.TABLE_GENERATOR, "name", modelContext );
-		this.table = extractJandexValue( annotation, JpaAnnotations.TABLE_GENERATOR, "table", modelContext );
-		this.catalog = extractJandexValue( annotation, JpaAnnotations.TABLE_GENERATOR, "catalog", modelContext );
-		this.schema = extractJandexValue( annotation, JpaAnnotations.TABLE_GENERATOR, "schema", modelContext );
+		this.name = extractJandexValue( annotation, TABLE_GENERATOR, "name", modelContext );
+		this.table = extractJandexValue( annotation, TABLE_GENERATOR, "table", modelContext );
+		this.catalog = extractJandexValue( annotation, TABLE_GENERATOR, "catalog", modelContext );
+		this.schema = extractJandexValue( annotation, TABLE_GENERATOR, "schema", modelContext );
 		this.pkColumnName = extractJandexValue(
 				annotation,
-				JpaAnnotations.TABLE_GENERATOR,
+				TABLE_GENERATOR,
 				"pkColumnName",
 				modelContext
 		);
 		this.valueColumnName = extractJandexValue(
 				annotation,
-				JpaAnnotations.TABLE_GENERATOR,
+				TABLE_GENERATOR,
 				"valueColumnName",
 				modelContext
 		);
 		this.pkColumnValue = extractJandexValue(
 				annotation,
-				JpaAnnotations.TABLE_GENERATOR,
+				TABLE_GENERATOR,
 				"pkColumnValue",
 				modelContext
 		);
 		this.initialValue = extractJandexValue(
 				annotation,
-				JpaAnnotations.TABLE_GENERATOR,
+				TABLE_GENERATOR,
 				"initialValue",
 				modelContext
 		);
 		this.allocationSize = extractJandexValue(
 				annotation,
-				JpaAnnotations.TABLE_GENERATOR,
+				TABLE_GENERATOR,
 				"allocationSize",
 				modelContext
 		);
 		this.uniqueConstraints = extractJandexValue(
 				annotation,
-				JpaAnnotations.TABLE_GENERATOR,
+				TABLE_GENERATOR,
 				"uniqueConstraints",
 				modelContext
 		);
-		this.indexes = extractJandexValue( annotation, JpaAnnotations.TABLE_GENERATOR, "indexes", modelContext );
-		this.options = extractJandexValue( annotation, JpaAnnotations.TABLE_GENERATOR, "options", modelContext );
+		this.indexes = extractJandexValue( annotation, TABLE_GENERATOR, "indexes", modelContext );
+		this.options = extractJandexValue( annotation, TABLE_GENERATOR, "options", modelContext );
 	}
 
 	@Override

@@ -16,7 +16,9 @@ import org.hibernate.dialect.sequence.SequenceSupport;
  */
 public final class InformixSequenceSupport extends NextvalSequenceSupport {
 
-	private boolean supportsIfExists = false;
+	public static final SequenceSupport INSTANCE = new InformixSequenceSupport( false );
+
+	private final boolean supportsIfExists;
 
 	public InformixSequenceSupport(boolean supportsIfExists){
 		this.supportsIfExists = supportsIfExists;

@@ -8,12 +8,12 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.generator.CustomIdGeneratorCreationContext;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
@@ -27,7 +27,7 @@ public class NativeGenerator
 
     private final Generator generator;
 
-    public NativeGenerator(NativeId nativeId, Member member, CustomIdGeneratorCreationContext creationContext) {
+    public NativeGenerator(NativeId nativeId, Member member, GeneratorCreationContext creationContext) {
 		final String strategy = creationContext.getDatabase().getDialect().getNativeIdentifierGeneratorStrategy();
         switch (strategy) {
             case "sequence":

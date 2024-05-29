@@ -93,6 +93,7 @@ public class InformixDialect extends Dialect {
 
 	private final UniqueDelegate uniqueDelegate;
 	private final LimitHandler limitHandler;
+	private final SequenceSupport sequenceSupport;
 	private final StandardForeignKeyExporter foreignKeyExporter = new StandardForeignKeyExporter( this ) {
 		@Override
 		public String[] getSqlCreateStrings(
@@ -137,6 +138,7 @@ public class InformixDialect extends Dialect {
 				//version 11 and above, parameters are supported
 				//but I have not tested this at all!
 				: new SkipFirstLimitHandler( getVersion().isSameOrAfter( 11 ) );
+		sequenceSupport = new InformixSequenceSupport( getVersion().isSameOrAfter( 11, 70 ) );
 	}
 
 	@Override
@@ -399,7 +401,7 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return InformixSequenceSupport.INSTANCE;
+		return sequenceSupport;
 	}
 
 	@Override
@@ -415,6 +417,21 @@ public class InformixDialect extends Dialect {
 	@Override
 	public LimitHandler getLimitHandler() {
 		return limitHandler;
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeTableName() {
+		return getVersion().isSameOrAfter( 11, 70 );
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeTypeName() {
+		return getVersion().isSameOrAfter( 11, 70 );
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeConstraintName() {
+		return getVersion().isSameOrAfter( 11, 70 );
 	}
 
 	@Override

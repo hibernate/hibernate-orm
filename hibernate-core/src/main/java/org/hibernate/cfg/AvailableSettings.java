@@ -133,8 +133,11 @@ public interface AvailableSettings
 	 * The default behavior is to allow refreshing a detached instance unless Hibernate
 	 * is bootstrapped via JPA.
 	 *
+	 * @deprecated Will be removed with no replacement from ORM version 7 onwards
+	 *
 	 * @since 5.2
 	 */
+	@Deprecated(forRemoval = true)
 	String ALLOW_REFRESH_DETACHED_ENTITY = "hibernate.allow_refresh_detached_entity";
 
 	/**

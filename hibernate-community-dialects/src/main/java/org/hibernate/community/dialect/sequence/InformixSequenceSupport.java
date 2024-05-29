@@ -16,11 +16,19 @@ import org.hibernate.dialect.sequence.SequenceSupport;
  */
 public final class InformixSequenceSupport extends NextvalSequenceSupport {
 
-	public static final SequenceSupport INSTANCE = new InformixSequenceSupport();
+	private boolean supportsIfExists = false;
+
+	public InformixSequenceSupport(boolean supportsIfExists){
+		this.supportsIfExists = supportsIfExists;
+	}
 
 	@Override
 	public String getFromDual() {
 		return " from informix.systables where tabid=1";
 	}
 
+	@Override
+	public String getDropSequenceString(String sequenceName) {
+		return "drop sequence " + ( supportsIfExists ? "if exists " : "" ) + sequenceName;
+	}
 }

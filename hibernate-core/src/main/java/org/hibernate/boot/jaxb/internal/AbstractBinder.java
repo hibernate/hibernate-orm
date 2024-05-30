@@ -55,7 +55,9 @@ public abstract class AbstractBinder<T> implements Binder<T> {
 				eventReader.close();
 			}
 			catch (XMLStreamException e) {
-				log.debug( "Unable to close StAX reader", e );
+				if (log.isDebugEnabled()) {
+					log.debug( "Unable to close StAX reader", e );
+				}
 			}
 		}
 	}
@@ -100,8 +102,9 @@ public abstract class AbstractBinder<T> implements Binder<T> {
 				eventReader.close();
 			}
 			catch (Exception e) {
-				log.debug( "Unable to close StAX reader", e );
-
+				if (log.isDebugEnabled()) {
+					log.debug( "Unable to close StAX reader", e );
+				}
 			}
 		}
 	}

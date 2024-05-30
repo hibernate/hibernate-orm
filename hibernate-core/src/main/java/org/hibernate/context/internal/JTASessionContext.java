@@ -104,7 +104,9 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 					currentSession.close();
 				}
 				catch ( Throwable e ) {
-					LOG.debug( "Unable to release generated current-session on failed synchronization registration", e );
+					if (LOG.isDebugEnabled()) {
+						LOG.debug( "Unable to release generated current-session on failed synchronization registration", e );
+					}
 				}
 				throw new HibernateException( "Unable to register cleanup Synchronization with TransactionManager" );
 			}

@@ -102,10 +102,12 @@ public class SessionFactoryServiceRegistryImpl
 	@Override
 	public <R extends Service> @Nullable R getService(Class<R> serviceRole) {
 		if ( serviceRole.equals( EventListenerRegistry.class ) ) {
-			log.debug(
-					"EventListenerRegistry access via ServiceRegistry is deprecated.  " +
-							"Use `sessionFactory.getEventEngine().getListenerRegistry()` instead"
-			);
+			if (log.isDebugEnabled()) {
+				log.debug(
+						"EventListenerRegistry access via ServiceRegistry is deprecated.  " +
+								"Use `sessionFactory.getEventEngine().getListenerRegistry()` instead"
+				);
+			}
 
 			//noinspection unchecked
 			return (R) sessionFactory.getEventEngine().getListenerRegistry();

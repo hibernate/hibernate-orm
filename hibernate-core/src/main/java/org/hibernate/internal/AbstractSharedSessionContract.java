@@ -250,17 +250,19 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	private void logInconsistentOptions(SharedSessionCreationOptions sharedOptions) {
-		if ( sharedOptions.shouldAutoJoinTransactions() ) {
-			log.debug(
-					"Session creation specified 'autoJoinTransactions', which is invalid in conjunction " +
-							"with sharing JDBC connection between sessions; ignoring"
-			);
-		}
-		if ( sharedOptions.getPhysicalConnectionHandlingMode() != connectionHandlingMode ) {
-			log.debug(
-					"Session creation specified 'PhysicalConnectionHandlingMode' which is invalid in conjunction " +
-							"with sharing JDBC connection between sessions; ignoring"
-			);
+		if (log.isDebugEnabled()) {
+			if ( sharedOptions.shouldAutoJoinTransactions() ) {
+				log.debug(
+						"Session creation specified 'autoJoinTransactions', which is invalid in conjunction " +
+								"with sharing JDBC connection between sessions; ignoring"
+				);
+			}
+			if ( sharedOptions.getPhysicalConnectionHandlingMode() != connectionHandlingMode ) {
+				log.debug(
+						"Session creation specified 'PhysicalConnectionHandlingMode' which is invalid in conjunction " +
+								"with sharing JDBC connection between sessions; ignoring"
+				);
+			}
 		}
 	}
 

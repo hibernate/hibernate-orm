@@ -64,10 +64,8 @@ public class DomainResultGraphPrinter {
 			visitGraphNode( domainResult, lastInBranch );
 		}
 
-		AST_LOGGER.debug( buffer.toString() );
-
-		if ( AST_LOGGER.isTraceEnabled() ) {
-			AST_LOGGER.tracef( new Exception(), "Stack trace calling DomainResultGraphPrinter" );
+		if ( AST_LOGGER.isDebugEnabled() ) {
+			AST_LOGGER.debug( buffer.toString() );
 		}
 	}
 

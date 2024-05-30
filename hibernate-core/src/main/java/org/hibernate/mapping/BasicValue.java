@@ -639,7 +639,9 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 					getBuildingContext().getTypeDefinitionRegistry()
 							.resolveAutoApplied( (BasicJavaType<?>) basicJavaType );
 			if ( autoAppliedTypeDef != null ) {
-				log.debug("BasicValue resolution matched auto-applied type-definition");
+				if (log.isDebugEnabled()) {
+					log.debug("BasicValue resolution matched auto-applied type-definition");
+				}
 				return autoAppliedTypeDef.resolve( getTypeParameters(), null, getBuildingContext(), this );
 			}
 		}

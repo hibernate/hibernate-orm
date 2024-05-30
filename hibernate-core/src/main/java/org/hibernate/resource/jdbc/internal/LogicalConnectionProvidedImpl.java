@@ -114,7 +114,9 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 		}
 		else if ( connection == providedConnection ) {
 			// likely an unmatched reconnect call (no matching disconnect call)
-			log.debug( "reconnecting the same connection that is already connected; should this connection have been disconnected?" );
+			if (log.isDebugEnabled()) {
+				log.debug( "reconnecting the same connection that is already connected; should this connection have been disconnected?" );
+			}
 		}
 		else if ( providedConnection != null ) {
 			throw new IllegalArgumentException(
@@ -122,7 +124,9 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 			);
 		}
 		providedConnection = connection;
-		log.debug( "Manually reconnected logical connection" );
+		if (log.isDebugEnabled()) {
+			log.debug( "Manually reconnected logical connection" );
+		}
 	}
 
 	@Override

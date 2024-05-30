@@ -233,7 +233,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 
 			// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
 			// proxy/wrapper around the JDBC Statement, causing excessive logging here.  See HHH-8210.
-			if ( resultSets == null ) {
+			if ( resultSets == null && log.isDebugEnabled() ) {
 				log.debug( "ResultSet statement was not registered (on register)" );
 			}
 
@@ -267,8 +267,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	@Override
 	public void release(Blob blob) {
 		if ( blobs == null ) {
-			log.debug( "Request to release Blob, but appears no Blobs have ever been registered" );
-			return;
+			throw new AssertionError("Request to release Blob, but appears no Blobs have ever been registered");
 		}
 		blobs.remove( blob );
 	}
@@ -284,7 +283,9 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	@Override
 	public void release(Clob clob) {
 		if ( clobs == null ) {
-			log.debug( "Request to release Clob, but appears no Clobs have ever been registered" );
+			if (log.isDebugEnabled()) {
+				log.debug( "Request to release Clob, but appears no Clobs have ever been registered" );
+			}
 			return;
 		}
 		clobs.remove( clob );
@@ -303,7 +304,9 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	public void release(NClob nclob) {
 		// todo : just store them in clobs?
 		if ( nclobs == null ) {
-			log.debug( "Request to release NClob, but appears no NClobs have ever been registered" );
+			if (log.isDebugEnabled()) {
+				log.debug( "Request to release NClob, but appears no NClobs have ever been registered" );
+			}
 			return;
 		}
 		nclobs.remove( nclob );

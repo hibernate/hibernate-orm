@@ -112,7 +112,6 @@ public class JaxbCfgProcessor {
 
 		if ( !isNamespaced( event.asStartElement() ) ) {
 			// if the elements are not namespaced, wrap the reader in a reader which will namespace them as pulled.
-			log.debug( "cfg.xml document did not define namespaces; wrapping in custom event reader to introduce namespace information" );
 			staxEventReader = new NamespaceAddingEventReader( staxEventReader, HIBERNATE_CONFIGURATION_URI );
 		}
 

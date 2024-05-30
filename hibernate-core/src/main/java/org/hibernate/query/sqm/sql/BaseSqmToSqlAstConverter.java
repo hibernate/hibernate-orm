@@ -998,7 +998,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					final int assignedPathJdbcCount = getKeyExpressible( assignedPathInterpretation.getExpressionType() )
 							.getJdbcTypeCount();
 
-					if ( valueExprJdbcCount != assignedPathJdbcCount ) {
+					if ( SqlTreeCreationLogger.LOGGER.isDebugEnabled() && valueExprJdbcCount != assignedPathJdbcCount ) {
 						SqlTreeCreationLogger.LOGGER.debug(
 								"JDBC type count does not match in UPDATE assignment between the assigned-path and the assigned-value; " +
 										"this will likely lead to problems executing the query"

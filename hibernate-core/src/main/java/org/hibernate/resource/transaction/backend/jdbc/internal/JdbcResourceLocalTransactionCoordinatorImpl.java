@@ -243,13 +243,17 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		public void commit() {
 			try {
 				if ( rollbackOnly ) {
-					log.debug( "On commit, transaction was marked for roll-back only, rolling back" );
+					if (log.isDebugEnabled()) {
+						log.debug( "On commit, transaction was marked for roll-back only, rolling back" );
+					}
 
 					try {
 						rollback();
 
 						if ( jpaCompliance.isJpaTransactionComplianceEnabled() ) {
-							log.debug( "Throwing RollbackException on roll-back of transaction marked rollback-only on commit" );
+							if (log.isDebugEnabled()) {
+								log.debug( "Throwing RollbackException on roll-back of transaction marked rollback-only on commit" );
+							}
 							throw new RollbackException( "Transaction was marked for rollback-only" );
 						}
 
@@ -259,7 +263,9 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 						throw e;
 					}
 					catch (RuntimeException e) {
-						log.debug( "Encountered failure rolling back failed commit", e );
+						if (log.isDebugEnabled()) {
+							log.debug( "Encountered failure rolling back failed commit", e );
+						}
 						throw e;
 					}
 				}
@@ -276,7 +282,9 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 					rollback();
 				}
 				catch (RuntimeException e2) {
-					log.debug( "Encountered failure rolling back failed commit", e2 );
+					if (log.isDebugEnabled()) {
+						log.debug( "Encountered failure rolling back failed commit", e2 );
+					}
 				}
 				throw e;
 			}

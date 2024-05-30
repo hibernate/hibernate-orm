@@ -61,9 +61,11 @@ public class HANAServerConfiguration {
 			}
 			catch (SQLException e) {
 				// Ignore
-				LOG.debug(
-						"An error occurred while trying to determine the value of the HANA parameter indexserver.ini / session / max_lob_prefetch_size.",
-						e );
+				if (LOG.isDebugEnabled()) {
+					LOG.debug(
+							"An error occurred while trying to determine the value of the HANA parameter indexserver.ini / session / max_lob_prefetch_size.",
+							e );
+				}
 			}
 		}
 		// default to the dialect-specific configuration settings

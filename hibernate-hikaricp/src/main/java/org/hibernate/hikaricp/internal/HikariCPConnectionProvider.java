@@ -52,7 +52,9 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	@Override
 	public void configure(Map<String, Object> props) throws HibernateException {
 		try {
-			LOGGER.debug( "Configuring HikariCP" );
+			if ( LOGGER.isDebugEnabled() ) {
+				LOGGER.debug( "Configuring HikariCP" );
+			}
 
 			hcfg = HikariConfigurationUtil.loadConfiguration( props );
 			hds = new HikariDataSource( hcfg );
@@ -62,7 +64,9 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 			throw new HibernateException( e );
 		}
 
-		LOGGER.debug( "HikariCP Configured" );
+			if ( LOGGER.isDebugEnabled() ) {
+				LOGGER.debug( "HikariCP Configured" );
+			}
 	}
 
 	// *************************************************************************

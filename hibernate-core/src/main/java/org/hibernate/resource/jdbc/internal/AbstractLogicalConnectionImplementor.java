@@ -113,9 +113,11 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 			}
 		}
 		catch ( Exception e ) {
-			log.debug(
-					"Could not re-enable auto-commit on JDBC Connection after completion of JDBC-based transaction : " + e
-			);
+			if (log.isDebugEnabled()) {
+				log.debug(
+						"Could not re-enable auto-commit on JDBC Connection after completion of JDBC-based transaction : " + e
+				);
+			}
 		}
 	}
 
@@ -145,7 +147,9 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 			return providedConnection.getAutoCommit();
 		}
 		catch (SQLException e) {
-			log.debug( "Unable to ascertain initial auto-commit state of provided connection; assuming auto-commit" );
+			if (log.isDebugEnabled()) {
+				log.debug( "Unable to ascertain initial auto-commit state of provided connection; assuming auto-commit" );
+			}
 			return true;
 		}
 	}

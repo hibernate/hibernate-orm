@@ -86,6 +86,7 @@ import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
 import org.jboss.jandex.IndexView;
+import org.jboss.logging.Logger;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.ConstraintMode;
@@ -118,10 +119,12 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			return (StandardServiceRegistry) serviceRegistry;
 		}
 		else if ( serviceRegistry instanceof BootstrapServiceRegistry ) {
-			log.debug(
-					"ServiceRegistry passed to MetadataBuilder was a BootstrapServiceRegistry; this likely won't end well " +
-							"if attempt is made to build SessionFactory"
-			);
+			if ( log.isEnabled(Logger.Level.WARN) ) {
+				log.warn(
+						"ServiceRegistry passed to MetadataBuilder was a BootstrapServiceRegistry; this likely won't end well " +
+								"if attempt is made to build SessionFactory"
+				);
+			}
 			return new StandardServiceRegistryBuilder( (BootstrapServiceRegistry) serviceRegistry ).build();
 		}
 		else {

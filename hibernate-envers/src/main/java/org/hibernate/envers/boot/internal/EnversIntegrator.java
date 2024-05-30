@@ -49,7 +49,9 @@ public class EnversIntegrator implements Integrator {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Opt-out of registration if EnversService is disabled
 		if ( !enversService.isEnabled() ) {
-			log.debug( "Skipping Envers listener registrations : EnversService disabled" );
+			if (log.isDebugEnabled()) {
+				log.debug( "Skipping Envers listener registrations : EnversService disabled" );
+			}
 			return;
 		}
 
@@ -61,7 +63,9 @@ public class EnversIntegrator implements Integrator {
 				true
 		);
 		if ( !autoRegister ) {
-			log.debug( "Skipping Envers listener registrations : Listener auto-registration disabled" );
+			if (log.isDebugEnabled()) {
+				log.debug( "Skipping Envers listener registrations : Listener auto-registration disabled" );
+			}
 			return;
 		}
 
@@ -76,7 +80,9 @@ public class EnversIntegrator implements Integrator {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Opt-out of registration if no audited entities found
 		if ( !enversService.getEntitiesConfigurations().hasAuditedEntities() ) {
-			log.debug( "Skipping Envers listener registrations : No audited entities found" );
+			if (log.isDebugEnabled()) {
+				log.debug( "Skipping Envers listener registrations : No audited entities found" );
+			}
 			return;
 		}
 

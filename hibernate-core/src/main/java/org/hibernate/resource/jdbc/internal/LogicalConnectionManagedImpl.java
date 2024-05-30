@@ -71,7 +71,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		}
 
 		this.providerDisablesAutoCommit = jdbcSessionContext.doesConnectionProviderDisableAutoCommit();
-		if ( providerDisablesAutoCommit ) {
+		if ( providerDisablesAutoCommit && log.isDebugEnabled() ) {
 			log.debug(
 					"`hibernate.connection.provider_disables_autocommit` was enabled.  This setting should only be " +
 							"enabled when you are certain that the Connections given to Hibernate by the " +
@@ -149,10 +149,14 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 
 		if ( connectionHandlingMode.getReleaseMode() == AFTER_STATEMENT ) {
 			if ( getResourceRegistry().hasRegisteredResources() ) {
-				log.debug( "Skipping aggressive release of JDBC Connection after-statement due to held resources" );
+				if (log.isDebugEnabled()) {
+					log.debug( "Skipping aggressive release of JDBC Connection after-statement due to held resources" );
+				}
 			}
 			else {
-				log.debug( "Initiating JDBC connection release from afterStatement" );
+				if (log.isDebugEnabled()) {
+					log.debug( "Initiating JDBC connection release from afterStatement" );
+				}
 				releaseConnection();
 			}
 		}
@@ -162,7 +166,9 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	public void beforeTransactionCompletion() {
 		super.beforeTransactionCompletion();
 		if ( connectionHandlingMode.getReleaseMode() == BEFORE_TRANSACTION_COMPLETION ) {
-			log.debug( "Initiating JDBC connection release from beforeTransactionCompletion" );
+			if (log.isDebugEnabled()) {
+				log.debug( "Initiating JDBC connection release from beforeTransactionCompletion" );
+			}
 			releaseConnection();
 		}
 	}
@@ -176,7 +182,9 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 			// - AFTER_STATEMENT cases that were circumvented due to held resources
 			// - BEFORE_TRANSACTION_COMPLETION cases that were circumvented because a rollback occurred
 			//   (we don't get a beforeTransactionCompletion event on rollback).
-			log.debug( "Initiating JDBC connection release from afterTransaction" );
+			if (log.isDebugEnabled()) {
+				log.debug( "Initiating JDBC connection release from afterTransaction" );
+			}
 			releaseConnection();
 		}
 	}

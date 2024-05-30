@@ -88,7 +88,9 @@ public class EntityManagerFactoryScopeExtension
 	public void handleTestExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
 		final Optional<EntityManagerFactoryScope> scopeOptional = findEntityManagerFactoryScope( context );
 		if ( ! scopeOptional.isPresent() ) {
-			log.debug( "Could not locate EntityManagerFactoryScope on exception" );
+			if ( log.isDebugEnabled() ) {
+				log.debug( "Could not locate EntityManagerFactoryScope on exception" );
+			}
 		}
 		else {
 			scopeOptional.get().releaseEntityManagerFactory();

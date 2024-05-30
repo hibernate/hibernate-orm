@@ -91,7 +91,9 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 		try {
 			if ( ! file.exists() ) {
 				// best effort, since this is very likely not allowed in EE environments
-				log.debug( "Attempting to create non-existent script target file : " + file.getAbsolutePath() );
+				if (log.isDebugEnabled()) {
+					log.debug( "Attempting to create non-existent script target file : " + file.getAbsolutePath() );
+				}
 				if ( file.getParentFile() != null ) {
 					file.getParentFile().mkdirs();
 				}
@@ -99,7 +101,9 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 			}
 		}
 		catch (Exception e) {
-			log.debug( "Exception calling File#createNewFile : " + e );
+			if (log.isDebugEnabled()) {
+				log.debug( "Exception calling File#createNewFile : " + e );
+			}
 		}
 		try {
 			return charsetName != null ?

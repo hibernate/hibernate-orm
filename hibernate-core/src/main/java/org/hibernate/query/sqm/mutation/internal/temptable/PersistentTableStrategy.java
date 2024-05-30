@@ -97,7 +97,9 @@ public abstract class PersistentTableStrategy {
 		}
 		catch (UnsupportedOperationException e) {
 			// assume this comes from org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl
-			log.debug( "Unable to obtain JDBC connection; assuming ID tables already exist or wont be needed" );
+			if (log.isDebugEnabled()) {
+				log.debug( "Unable to obtain JDBC connection; assuming ID tables already exist or wont be needed" );
+			}
 			return;
 		}
 		catch (SQLException e) {

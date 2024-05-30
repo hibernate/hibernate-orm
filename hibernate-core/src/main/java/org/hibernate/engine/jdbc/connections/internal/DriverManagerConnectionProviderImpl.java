@@ -202,7 +202,9 @@ public class DriverManagerConnectionProviderImpl
 
 	private static Driver loadDriverIfPossible(String driverClassName, ServiceRegistryImplementor serviceRegistry) {
 		if ( driverClassName == null ) {
-			CONNECTIONS_LOGGER.debug( "No driver class specified" );
+			if (CONNECTIONS_LOGGER.isDebugEnabled()) {
+				CONNECTIONS_LOGGER.debug( "No driver class specified" );
+			}
 			return null;
 		}
 
@@ -227,7 +229,9 @@ public class DriverManagerConnectionProviderImpl
 
 	private static ConnectionCreatorFactory loadConnectionCreatorFactory(String connectionCreatorFactoryClassName, ServiceRegistryImplementor serviceRegistry) {
 		if ( connectionCreatorFactoryClassName == null ) {
-			CONNECTIONS_LOGGER.debug( "No connection creator factory class specified" );
+			if (CONNECTIONS_LOGGER.isDebugEnabled()) {
+				CONNECTIONS_LOGGER.debug( "No connection creator factory class specified" );
+			}
 			return null;
 		}
 
@@ -361,7 +365,9 @@ public class DriverManagerConnectionProviderImpl
 
 		private PooledConnections(
 				Builder builder) {
-			CONNECTIONS_LOGGER.debugf( "Initializing Connection pool with %s Connections", builder.initialSize );
+			if (CONNECTIONS_LOGGER.isDebugEnabled()) {
+				CONNECTIONS_LOGGER.debugf( "Initializing Connection pool with %s Connections", builder.initialSize );
+			}
 			connectionCreator = builder.connectionCreator;
 			connectionValidator = builder.connectionValidator == null
 					? ConnectionValidator.ALWAYS_VALID
@@ -379,18 +385,24 @@ public class DriverManagerConnectionProviderImpl
 			if ( !primed && size >= minSize ) {
 				// IMPL NOTE : the purpose of primed is to allow the pool to lazily reach its
 				// defined min-size.
-				CONNECTIONS_LOGGER.debug( "Connection pool now considered primed; min-size will be maintained" );
+				if (CONNECTIONS_LOGGER.isDebugEnabled()) {
+					CONNECTIONS_LOGGER.debug( "Connection pool now considered primed; min-size will be maintained" );
+				}
 				primed = true;
 			}
 
 			if ( size < minSize && primed ) {
 				int numberToBeAdded = minSize - size;
-				CONNECTIONS_LOGGER.debugf( "Adding %s Connections to the pool", numberToBeAdded );
+				if (CONNECTIONS_LOGGER.isDebugEnabled()) {
+					CONNECTIONS_LOGGER.debugf( "Adding %s Connections to the pool", numberToBeAdded );
+				}
 				addConnections( numberToBeAdded );
 			}
 			else if ( size > maxSize ) {
 				int numberToBeRemoved = size - maxSize;
-				CONNECTIONS_LOGGER.debugf( "Removing %s Connections from the pool", numberToBeRemoved );
+				if (CONNECTIONS_LOGGER.isDebugEnabled()) {
+					CONNECTIONS_LOGGER.debugf( "Removing %s Connections from the pool", numberToBeRemoved );
+				}
 				removeConnections( numberToBeRemoved );
 			}
 		}
@@ -415,7 +427,9 @@ public class DriverManagerConnectionProviderImpl
 				t = ex;
 			}
 			closeConnection( conn, t );
-			CONNECTIONS_MESSAGE_LOGGER.debug( "Connection release failed. Closing pooled connection", t );
+			if (CONNECTIONS_LOGGER.isDebugEnabled()) {
+				CONNECTIONS_MESSAGE_LOGGER.debug( "Connection release failed. Closing pooled connection", t );
+			}
 			return null;
 		}
 
@@ -450,7 +464,9 @@ public class DriverManagerConnectionProviderImpl
 				t = ex;
 			}
 			closeConnection( conn, t );
-			CONNECTIONS_MESSAGE_LOGGER.debug( "Connection preparation failed. Closing pooled connection", t );
+			if (CONNECTIONS_LOGGER.isDebugEnabled()) {
+				CONNECTIONS_MESSAGE_LOGGER.debug( "Connection preparation failed. Closing pooled connection", t );
+			}
 			return null;
 		}
 

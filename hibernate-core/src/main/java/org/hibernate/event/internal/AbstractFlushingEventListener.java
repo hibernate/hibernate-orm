@@ -144,7 +144,9 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 	 */
 	private void prepareEntityFlushes(EventSource session, PersistenceContext persistenceContext) throws HibernateException {
 
-		LOG.debug( "Processing flush-time cascades" );
+		if (LOG.isDebugEnabled()) {
+			LOG.debug( "Processing flush-time cascades" );
+		}
 
 		final PersistContext context = getContext( session );
 		//safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
@@ -199,7 +201,9 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		// Initialize dirty flags for arrays + collections with composite elements
 		// and reset reached, doupdate, etc.
 
-		LOG.debug( "Dirty checking collections" );
+		if (LOG.isDebugEnabled()) {
+			LOG.debug( "Dirty checking collections" );
+		}
 		persistenceContext.forEachCollectionEntry( (pc,ce) -> ce.preFlush( pc ), true );
 	}
 

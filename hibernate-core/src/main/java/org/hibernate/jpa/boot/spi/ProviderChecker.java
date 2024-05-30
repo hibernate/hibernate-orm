@@ -88,7 +88,9 @@ public final class ProviderChecker {
 		}
 
 		// NOTE : if no provider requested we assume we are the provider (the calls got to us somehow...)
-		log.debug( "No PersistenceProvider explicitly requested, assuming Hibernate" );
+		if ( log.isDebugEnabled() ) {
+			log.debug( "No PersistenceProvider explicitly requested, assuming Hibernate" );
+		}
 		return HibernatePersistenceProvider.class.getName();
 	}
 

@@ -81,7 +81,9 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 				databaseInformation.cleanup();
 			}
 			catch (Exception e) {
-				log.debug( "Problem releasing DatabaseInformation : " + e.getMessage() );
+				if (log.isDebugEnabled()) {
+					log.debug( "Problem releasing DatabaseInformation : " + e.getMessage() );
+				}
 			}
 
 			isolator.release();

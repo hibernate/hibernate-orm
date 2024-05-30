@@ -786,7 +786,6 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 					session.enableFilter( "regionlist" )
 							.setParameterList( "regions", new String[] { "LA", "APAC" } );
 
-					log.debug( "Performing query of Salespersons" );
 					List salespersons = session.createQuery( "from Salesperson" ).list();
 					assertEquals( "Incorrect salesperson count", 1, salespersons.size() );
 

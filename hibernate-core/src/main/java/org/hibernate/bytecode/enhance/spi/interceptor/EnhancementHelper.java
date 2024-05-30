@@ -186,7 +186,9 @@ public class EnhancementHelper {
 
 		// If we are using a temporary Session, begin a transaction if necessary
 		if ( isTempSession ) {
-			BytecodeInterceptorLogging.LOGGER.debug( "Enhancement interception Helper#performWork started temporary Session" );
+			if (BytecodeInterceptorLogging.LOGGER.isDebugEnabled()) {
+				BytecodeInterceptorLogging.LOGGER.debug( "Enhancement interception Helper#performWork started temporary Session" );
+			}
 
 			isJta = session.getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta();
 
@@ -196,7 +198,9 @@ public class EnhancementHelper {
 				// be created even if a current session and transaction are
 				// open (ex: session.clear() was used).  We must prevent
 				// multiple transactions.
-				BytecodeInterceptorLogging.LOGGER.debug( "Enhancement interception Helper#performWork starting transaction on temporary Session" );
+				if (BytecodeInterceptorLogging.LOGGER.isDebugEnabled()) {
+					BytecodeInterceptorLogging.LOGGER.debug( "Enhancement interception Helper#performWork starting transaction on temporary Session" );
+				}
 				session.beginTransaction();
 			}
 		}
@@ -210,7 +214,9 @@ public class EnhancementHelper {
 				try {
 					// Commit the JDBC transaction if we started one.
 					if ( !isJta ) {
-						BytecodeInterceptorLogging.LOGGER.debug( "Enhancement interception Helper#performWork committing transaction on temporary Session" );
+						if (BytecodeInterceptorLogging.LOGGER.isDebugEnabled()) {
+							BytecodeInterceptorLogging.LOGGER.debug( "Enhancement interception Helper#performWork committing transaction on temporary Session" );
+						}
 						session.getTransaction().commit();
 					}
 				}
@@ -223,7 +229,9 @@ public class EnhancementHelper {
 
 				// Close the just opened temp Session
 				try {
-					BytecodeInterceptorLogging.LOGGER.debug( "Enhancement interception Helper#performWork closing temporary Session" );
+					if (BytecodeInterceptorLogging.LOGGER.isDebugEnabled()) {
+						BytecodeInterceptorLogging.LOGGER.debug( "Enhancement interception Helper#performWork closing temporary Session" );
+					}
 					session.close();
 				}
 				catch (Exception e) {

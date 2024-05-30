@@ -287,7 +287,9 @@ public class ActionQueue {
 		if ( insert.isEarlyInsert() ) {
 			LOG.trace( "Executing insertions before resolved early-insert" );
 			executeInserts();
-			LOG.debug( "Executing identity-insert immediately" );
+			if (LOG.isDebugEnabled()) {
+				LOG.debug( "Executing identity-insert immediately" );
+			}
 			execute( insert );
 		}
 		else {

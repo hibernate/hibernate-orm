@@ -480,7 +480,6 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.refresh(b);
 		//b.getBlob().setBytes( 2, "abc".getBytes() );
-        log.debug("levinson: just bfore b.getClob()");
         b.getClob().getSubString(2, 3);
 		//b.getClob().setString(2, "abc");
 		s.flush();

@@ -98,7 +98,9 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		}
 		catch (SQLException sqle) {
 			// should never ever happen
-			log.debug( "There was a problem accessing DatabaseMetaData in building the JdbcEnvironment", sqle );
+			if (log.isDebugEnabled()) {
+				log.debug( "There was a problem accessing DatabaseMetaData in building the JdbcEnvironment", sqle );
+			}
 		}
 		if ( identifierHelper == null ) {
 			identifierHelper = identifierHelperBuilder.build();
@@ -186,7 +188,9 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		}
 		catch (SQLException sqle) {
 			// should never ever happen
-			log.debug( "There was a problem accessing DatabaseMetaData in building the JdbcEnvironment", sqle );
+			if (log.isDebugEnabled()) {
+				log.debug( "There was a problem accessing DatabaseMetaData in building the JdbcEnvironment", sqle );
+			}
 		}
 		if ( identifierHelper == null ) {
 			identifierHelper = identifierHelperBuilder.build();
@@ -281,7 +285,9 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		}
 		catch (SQLException sqle) {
 			// should never ever happen
-			log.debug( "There was a problem accessing DatabaseMetaData in building the JdbcEnvironment", sqle );
+			if (log.isDebugEnabled()) {
+				log.debug( "There was a problem accessing DatabaseMetaData in building the JdbcEnvironment", sqle );
+			}
 		}
 		if ( identifierHelper == null ) {
 			identifierHelper = identifierHelperBuilder.build();
@@ -335,7 +341,9 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 			return schemaNameResolver.resolveSchemaName( databaseMetaData.getConnection(), dialect );
 		}
 		catch (Exception e) {
-			log.debug( "Unable to resolve connection default schema", e );
+			if (log.isDebugEnabled()) {
+				log.debug( "Unable to resolve connection default schema", e );
+			}
 			return null;
 		}
 	}

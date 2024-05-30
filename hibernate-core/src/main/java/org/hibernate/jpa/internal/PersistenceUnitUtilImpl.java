@@ -43,7 +43,9 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 	@Override
 	public boolean isLoaded(Object entity, String attributeName) {
 		// added log message to help with HHH-7454, if state == LoadState,NOT_LOADED, returning true or false is not accurate.
-		log.debug( "PersistenceUnitUtil#isLoaded is not always accurate; consider using EntityManager#contains instead" );
+		if (log.isDebugEnabled()) {
+			log.debug( "PersistenceUnitUtil#isLoaded is not always accurate; consider using EntityManager#contains instead" );
+		}
 		switch ( isLoadedWithoutReference( entity, attributeName, cache ) ) {
 			case LOADED:
 				return true;
@@ -57,7 +59,9 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 	@Override
 	public boolean isLoaded(Object entity) {
 		// added log message to help with HHH-7454, if state == LoadState,NOT_LOADED, returning true or false is not accurate.
-		log.debug( "PersistenceUnitUtil#isLoaded is not always accurate; consider using EntityManager#contains instead" );
+		if (log.isDebugEnabled()) {
+			log.debug( "PersistenceUnitUtil#isLoaded is not always accurate; consider using EntityManager#contains instead" );
+		}
 		return getLoadState( entity ) != NOT_LOADED;
 	}
 
@@ -78,16 +82,20 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 			}
 			else {
 				// HHH-11426 - best effort to deal with the case of detached entities
-				log.debug( "jakarta.persistence.PersistenceUnitUtil.getIdentifier may not be able to read identifier of a detached entity" );
+				if (log.isDebugEnabled()) {
+					log.debug( "jakarta.persistence.PersistenceUnitUtil.getIdentifier may not be able to read identifier of a detached entity" );
+				}
 				return getIdentifierFromPersister( entity );
 			}
 		}
 		else {
-			log.debug(
-					"jakarta.persistence.PersistenceUnitUtil.getIdentifier is only intended to work with enhanced entities " +
-							"(although Hibernate also adapts this support to its proxies); " +
-							"however the passed entity was not enhanced (nor a proxy).. may not be able to read identifier"
-			);
+			if (log.isDebugEnabled()) {
+				log.debug(
+						"jakarta.persistence.PersistenceUnitUtil.getIdentifier is only intended to work with enhanced entities " +
+								"(although Hibernate also adapts this support to its proxies); " +
+								"however the passed entity was not enhanced (nor a proxy).. may not be able to read identifier"
+				);
+			}
 			return getIdentifierFromPersister( entity );
 		}
 	}

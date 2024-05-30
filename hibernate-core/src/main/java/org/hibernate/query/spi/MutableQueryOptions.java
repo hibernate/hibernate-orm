@@ -41,7 +41,9 @@ public interface MutableQueryOptions extends QueryOptions {
 	 */
 	default void setCacheMode(CacheMode cacheMode) {
 		if ( cacheMode == null ) {
-			QueryLogging.QUERY_LOGGER.debug( "Null CacheMode passed to #setCacheMode; falling back to `NORMAL`" );
+			if (QueryLogging.QUERY_LOGGER.isDebugEnabled()) {
+				QueryLogging.QUERY_LOGGER.debug( "Null CacheMode passed to #setCacheMode; falling back to `NORMAL`" );
+			}
 			cacheMode = CacheMode.NORMAL;
 		}
 

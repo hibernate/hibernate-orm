@@ -82,7 +82,9 @@ public class DeleteRowsCoordinatorStandard implements DeleteRowsCoordinator {
 
 			final Iterator<?> deletes = collection.getDeletes( collectionDescriptor, !deleteByIndex );
 			if ( !deletes.hasNext() ) {
-				MODEL_MUTATION_LOGGER.debug( "No rows to delete" );
+				if (MODEL_MUTATION_LOGGER.isDebugEnabled()) {
+					MODEL_MUTATION_LOGGER.debug( "No rows to delete" );
+				}
 				return;
 			}
 

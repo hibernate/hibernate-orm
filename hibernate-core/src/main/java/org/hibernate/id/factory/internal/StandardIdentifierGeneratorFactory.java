@@ -91,7 +91,9 @@ public class StandardIdentifierGeneratorFactory
 
 	private static BeanContainer getBeanContainer(ServiceRegistry serviceRegistry, boolean ignoreBeanContainer) {
 		if (ignoreBeanContainer) {
-			ID_GEN_FAC_LOGGER.debug( "Ignoring CDI for resolving IdentifierGenerator instances as extended or delayed CDI support was enabled" );
+			if (ID_GEN_FAC_LOGGER.isDebugEnabled()) {
+				ID_GEN_FAC_LOGGER.debug( "Ignoring CDI for resolving IdentifierGenerator instances as extended or delayed CDI support was enabled" );
+			}
 			return null;
 		}
 		else {
@@ -99,7 +101,9 @@ public class StandardIdentifierGeneratorFactory
 					serviceRegistry.requireService( ManagedBeanRegistry.class )
 							.getBeanContainer();
 			if ( beanContainer == null ) {
-				ID_GEN_FAC_LOGGER.debug( "Resolving IdentifierGenerator instances will not use CDI as it was not configured" );
+				if (ID_GEN_FAC_LOGGER.isDebugEnabled()) {
+					ID_GEN_FAC_LOGGER.debug( "Resolving IdentifierGenerator instances will not use CDI as it was not configured" );
+				}
 			}
 			return beanContainer;
 		}

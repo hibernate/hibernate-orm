@@ -79,8 +79,10 @@ public class CacheEntityLoaderHelper {
 			EntityEntry oldEntry = session.getPersistenceContext().getEntry( old );
 			if ( options.isCheckDeleted() ) {
 				if ( oldEntry.getStatus().isDeletedOrGone() ) {
-					LoadingLogger.LOGGER.debug(
-							"Load request found matching entity in context, but it is scheduled for removal; returning null" );
+					if (LoadingLogger.LOGGER.isDebugEnabled()) {
+						LoadingLogger.LOGGER.debug(
+								"Load request found matching entity in context, but it is scheduled for removal; returning null" );
+					}
 					return new PersistenceContextEntry( old, EntityStatus.REMOVED_ENTITY_MARKER );
 				}
 			}
@@ -163,8 +165,10 @@ public class CacheEntityLoaderHelper {
 			EntityEntry oldEntry = session.getPersistenceContext().getEntry( old );
 			if ( options.isCheckDeleted() ) {
 				if ( oldEntry.getStatus().isDeletedOrGone() ) {
-					LoadingLogger.LOGGER.debug(
-							"Load request found matching entity in context, but it is scheduled for removal; returning null" );
+					if (LoadingLogger.LOGGER.isDebugEnabled()) {
+						LoadingLogger.LOGGER.debug(
+								"Load request found matching entity in context, but it is scheduled for removal; returning null" );
+					}
 					return new PersistenceContextEntry( old, EntityStatus.REMOVED_ENTITY_MARKER );
 				}
 			}
@@ -174,9 +178,11 @@ public class CacheEntityLoaderHelper {
 						.getMappingMetamodel()
 						.getEntityDescriptor( keyToLoad.getEntityName() );
 				if ( !persister.isInstance( old ) ) {
-					LOG.debug(
-							"Load request found matching entity in context, but the matched entity was of an inconsistent return type; returning null"
-					);
+					if (LOG.isDebugEnabled()) {
+						LOG.debug(
+								"Load request found matching entity in context, but the matched entity was of an inconsistent return type; returning null"
+						);
+					}
 					return new PersistenceContextEntry( old, EntityStatus.INCONSISTENT_RTN_CLASS_MARKER );
 				}
 			}

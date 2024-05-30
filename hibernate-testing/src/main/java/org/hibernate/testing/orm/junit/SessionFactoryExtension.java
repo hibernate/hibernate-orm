@@ -287,7 +287,9 @@ public class SessionFactoryExtension
 				return;
 			}
 
-			log.debug( "Closing SessionFactoryScope" );
+			if (log.isDebugEnabled()) {
+				log.debug( "Closing SessionFactoryScope" );
+			}
 
 			active = false;
 			releaseSessionFactory();
@@ -295,7 +297,9 @@ public class SessionFactoryExtension
 
 		public void releaseSessionFactory() {
 			if ( sessionFactory != null ) {
-				log.debug( "Releasing SessionFactory" );
+				if (log.isDebugEnabled()) {
+					log.debug( "Releasing SessionFactory" );
+				}
 
 				try {
 					sessionFactory.close();
@@ -314,7 +318,9 @@ public class SessionFactoryExtension
 				throw new IllegalStateException( "SessionFactoryScope is no longer active" );
 			}
 
-			log.debug( "Creating SessionFactory" );
+			if (log.isDebugEnabled()) {
+				log.debug( "Creating SessionFactory" );
+			}
 
 			return producer.produceSessionFactory( modelScope.getDomainModel() );
 		}

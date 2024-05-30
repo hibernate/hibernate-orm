@@ -140,7 +140,9 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 						databaseInformation.cleanup();
 					}
 					catch (Exception e) {
-						log.debug( "Problem releasing DatabaseInformation : " + e.getMessage() );
+						if (log.isDebugEnabled()) {
+							log.debug( "Problem releasing DatabaseInformation : " + e.getMessage() );
+						}
 					}
 				}
 			}

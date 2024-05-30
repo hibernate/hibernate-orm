@@ -476,7 +476,9 @@ public class SessionImpl
 
 	protected void checkSessionFactoryOpen() {
 		if ( !getFactory().isOpen() ) {
-			log.debug( "Forcing Session/EntityManager closed as SessionFactory/EntityManagerFactory has been closed" );
+			if (log.isDebugEnabled()) {
+				log.debug( "Forcing Session/EntityManager closed as SessionFactory/EntityManagerFactory has been closed" );
+			}
 			setClosed();
 		}
 	}
@@ -1063,7 +1065,9 @@ public class SessionImpl
 			clearedEffectiveGraph = false;
 		}
 		else {
-			log.debug("Clearing effective entity graph for subsequent-select");
+			if (log.isDebugEnabled()) {
+				log.debug("Clearing effective entity graph for subsequent-select");
+			}
 			clearedEffectiveGraph = true;
 			effectiveEntityGraph.clear();
 		}
@@ -1396,9 +1400,13 @@ public class SessionImpl
 	public boolean isDirty() throws HibernateException {
 		checkOpen();
 		pulseTransactionCoordinator();
-		log.debug( "Checking session dirtiness" );
+		if (log.isDebugEnabled()) {
+			log.debug( "Checking session dirtiness" );
+		}
 		if ( actionQueue.areInsertionsOrDeletionsQueued() ) {
-			log.debug( "Session dirty (scheduled updates and insertions)" );
+			if (log.isDebugEnabled()) {
+				log.debug( "Session dirty (scheduled updates and insertions)" );
+			}
 			return true;
 		}
 		DirtyCheckEvent event = new DirtyCheckEvent( this );

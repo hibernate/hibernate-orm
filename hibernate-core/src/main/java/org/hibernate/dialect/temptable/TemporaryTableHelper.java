@@ -189,8 +189,10 @@ public class TemporaryTableHelper {
 
 		@Override
 		protected void logWarning(String description, String message) {
-			log.debug( description );
-			log.debug( message );
+			if (log.isDebugEnabled()) {
+				log.debug( description );
+				log.debug( message );
+			}
 		}
 	};
 

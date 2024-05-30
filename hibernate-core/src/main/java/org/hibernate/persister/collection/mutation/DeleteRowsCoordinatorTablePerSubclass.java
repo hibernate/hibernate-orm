@@ -70,7 +70,9 @@ public class DeleteRowsCoordinatorTablePerSubclass implements DeleteRowsCoordina
 
 		final Iterator<?> deletes = collection.getDeletes( collectionDescriptor, !deleteByIndex );
 		if ( !deletes.hasNext() ) {
-			MODEL_MUTATION_LOGGER.debug( "No rows to delete" );
+			if (MODEL_MUTATION_LOGGER.isDebugEnabled()) {
+				MODEL_MUTATION_LOGGER.debug( "No rows to delete" );
+			}
 			return;
 		}
 		final MutationExecutor[] executors = new MutationExecutor[subclassEntries.length];

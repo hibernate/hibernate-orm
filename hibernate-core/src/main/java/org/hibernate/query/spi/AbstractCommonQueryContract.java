@@ -290,7 +290,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	protected void applySynchronizeSpacesHint(Object value) {
-		QueryLogging.QUERY_LOGGER.debug( "Query spaces hint was specified for non-native query; ignoring" );
+		if (QueryLogging.QUERY_LOGGER.isDebugEnabled()) {
+			QueryLogging.QUERY_LOGGER.debug( "Query spaces hint was specified for non-native query; ignoring" );
+		}
 	}
 
 	protected final boolean applySelectionHint(String hintName, Object value) {

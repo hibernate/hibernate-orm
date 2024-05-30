@@ -203,7 +203,9 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 						orphanTransaction.rollback();
 					}
 					catch( Throwable t ) {
-						LOG.debug( "Unable to rollback transaction for orphaned session", t );
+						if (LOG.isDebugEnabled()) {
+							LOG.debug( "Unable to rollback transaction for orphaned session", t );
+						}
 					}
 				}
 			}
@@ -212,7 +214,9 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 					orphan.close();
 				}
 				catch( Throwable t ) {
-					LOG.debug( "Unable to close orphaned session", t );
+					if (LOG.isDebugEnabled()) {
+						LOG.debug( "Unable to close orphaned session", t );
+					}
 				}
 			}
 

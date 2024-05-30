@@ -103,7 +103,9 @@ public class ConfigLoader {
 					stream.close();
 				}
 				catch (IOException e) {
-					log.debug( "Unable to close cfg.xml URL stream", e );
+					if (log.isDebugEnabled()) {
+						log.debug( "Unable to close cfg.xml URL stream", e );
+					}
 				}
 			}
 		}
@@ -132,10 +134,12 @@ public class ConfigLoader {
 				stream.close();
 			}
 			catch (IOException e) {
-				log.debug(
-						String.format( "Unable to close properties file [%s] stream", resourceName ),
-						e
-				);
+				if (log.isDebugEnabled()) {
+					log.debug(
+							String.format( "Unable to close properties file [%s] stream", resourceName ),
+							e
+					);
+				}
 			}
 		}
 	}
@@ -159,10 +163,12 @@ public class ConfigLoader {
 					stream.close();
 				}
 				catch (IOException e) {
-					log.debug(
-							String.format( "Unable to close properties file [%s] stream", file.getAbsolutePath() ),
-							e
-					);
+					if (log.isDebugEnabled()) {
+						log.debug(
+								String.format( "Unable to close properties file [%s] stream", file.getAbsolutePath() ),
+								e
+						);
+					}
 				}
 			}
 		}

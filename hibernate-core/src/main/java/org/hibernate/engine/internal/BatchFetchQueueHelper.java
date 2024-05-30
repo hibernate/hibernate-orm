@@ -50,7 +50,9 @@ public class BatchFetchQueueHelper {
 			SharedSessionContractImplementor session) {
 		if (  ids.length != results.size()
 				&& session.getLoadQueryInfluencers().effectivelyBatchLoadable( persister ) ) {
-			LOG.debug( "Not all entities were loaded." );
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debug( "Not all entities were loaded." );
+			}
 			final Set<Serializable> idSet = new HashSet<>( asList( ids ) );
 			for ( Object result : results ) {
 				// All results should be in the PersistenceContext

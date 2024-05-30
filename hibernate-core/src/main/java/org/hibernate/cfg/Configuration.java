@@ -911,7 +911,9 @@ public class Configuration {
 	 * @throws HibernateException usually indicates an invalid configuration or invalid mapping information
 	 */
 	public SessionFactory buildSessionFactory(ServiceRegistry serviceRegistry) throws HibernateException {
-		log.debug( "Building session factory using provided StandardServiceRegistry" );
+		if (log.isDebugEnabled()) {
+			log.debug( "Building session factory using provided StandardServiceRegistry" );
+		}
 		final MetadataBuilder metadataBuilder =
 				metadataSources.getMetadataBuilder( (StandardServiceRegistry) serviceRegistry );
 
@@ -1009,7 +1011,9 @@ public class Configuration {
 	 * @throws HibernateException usually indicates an invalid configuration or invalid mapping information
 	 */
 	public SessionFactory buildSessionFactory() throws HibernateException {
-		log.debug( "Building session factory using internal StandardServiceRegistryBuilder" );
+		if (log.isDebugEnabled()) {
+			log.debug( "Building session factory using internal StandardServiceRegistryBuilder" );
+		}
 		standardServiceRegistryBuilder.applySettings( properties );
 		StandardServiceRegistry serviceRegistry = standardServiceRegistryBuilder.build();
 		try {

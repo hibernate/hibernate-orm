@@ -130,7 +130,9 @@ public class BatchImpl implements Batch {
 					statement.addBatch();
 				}
 				catch (SQLException e) {
-					BATCH_LOGGER.debug( "SQLException escaped proxy", e );
+					if (BATCH_LOGGER.isDebugEnabled()) {
+						BATCH_LOGGER.debug( "SQLException escaped proxy", e );
+					}
 					throw sqlExceptionHelper.convert(
 							e,
 							"Could not perform addBatch",

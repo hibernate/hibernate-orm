@@ -78,7 +78,9 @@ public class SessionFactoryRegistry {
 		}
 
 		if ( name == null || !isNameAlsoJndiName ) {
-			LOG.debug( "Not binding SessionFactory to JNDI, no JNDI name configured" );
+			if (LOG.isDebugEnabled()) {
+				LOG.debug( "Not binding SessionFactory to JNDI, no JNDI name configured" );
+			}
 			return;
 		}
 

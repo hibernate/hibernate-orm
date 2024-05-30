@@ -163,9 +163,11 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	protected <T> void compare(Map<Integer, T> expected, Map<Integer, T> received, String geometryType) {
 		for ( Map.Entry<Integer, T> entry : expected.entrySet() ) {
 			Integer id = entry.getKey();
-			getLogger().debug( "Case :" + id );
-			getLogger().debug( "expected: " + expected.get( id ) );
-			getLogger().debug( "received: " + received.get( id ) );
+			if ( getLogger().isDebugEnabled() ) {
+				getLogger().debug( "Case :" + id );
+				getLogger().debug( "expected: " + expected.get( id ) );
+				getLogger().debug( "received: " + received.get( id ) );
+			}
 			compare( id, entry.getValue(), received.get( id ), geometryType );
 		}
 	}

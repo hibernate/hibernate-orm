@@ -42,13 +42,17 @@ public class JtaPlatformInitiator implements StandardServiceInitiator<JtaPlatfor
 				.resolveStrategy( JtaPlatform.class, setting );
 
 		if ( platform == null ) {
-			LOG.debug( "No JtaPlatform was specified, checking resolver" );
+			if (LOG.isDebugEnabled()) {
+				LOG.debug( "No JtaPlatform was specified, checking resolver" );
+			}
 			platform = registry.requireService( JtaPlatformResolver.class )
 					.resolveJtaPlatform( configurationValues, registry );
 		}
 
 		if ( platform == null ) {
-			LOG.debug( "No JtaPlatform was specified, checking resolver" );
+			if (LOG.isDebugEnabled()) {
+				LOG.debug( "No JtaPlatform was specified, checking resolver" );
+			}
 			platform = getFallbackProvider( configurationValues, registry );
 		}
 

@@ -70,7 +70,9 @@ public class SchemaManagementToolCoordinator {
 
 		if ( groupings.isEmpty() ) {
 			// no actions specified
-			log.debug( "No actions found; doing nothing" );
+			if (log.isDebugEnabled()) {
+				log.debug( "No actions found; doing nothing" );
+			}
 			return;
 		}
 

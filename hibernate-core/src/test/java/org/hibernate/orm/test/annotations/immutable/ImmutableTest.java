@@ -106,7 +106,6 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		catch ( PersistenceException ex ) {
 			// expected
 			assertTrue(ex.getMessage().contains("changed an immutable collection instance"));
-			log.debug("success");
 		}
 		s.close();
 
@@ -123,7 +122,6 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 			fail();
 		} catch (PersistenceException e) {
 			assertTrue(e.getMessage().contains("changed an immutable collection instance"));
-            log.debug("success");
 		}
 		s.close();
 

@@ -91,7 +91,9 @@ class TypeSafeActivator {
 				throw new IntegrationException( "Bean Validation provider was not available, but 'ddl' validation was requested", e );
 			}
 
-			LOG.debug( "Unable to acquire Bean Validation ValidatorFactory, skipping activation" );
+			if (LOG.isDebugEnabled()) {
+				LOG.debug( "Unable to acquire Bean Validation ValidatorFactory, skipping activation" );
+			}
 			return;
 		}
 
@@ -134,7 +136,9 @@ class TypeSafeActivator {
 		final SessionFactoryServiceRegistry serviceRegistry = activationContext.getServiceRegistry();
 		final ConfigurationService cfgService = serviceRegistry.requireService( ConfigurationService.class );
 		if ( !cfgService.getSetting( BeanValidationIntegrator.APPLY_CONSTRAINTS, StandardConverters.BOOLEAN, true  ) ) {
-			LOG.debug( "Skipping application of relational constraints from legacy Hibernate Validator" );
+			if (LOG.isDebugEnabled()) {
+				LOG.debug( "Skipping application of relational constraints from legacy Hibernate Validator" );
+			}
 			return;
 		}
 

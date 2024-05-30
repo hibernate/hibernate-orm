@@ -246,9 +246,13 @@ public abstract class AbstractSaveEventListener<C>
 		// Sub-insertions should occur before containing insertion so
 		// Try to do the callback now
 		if ( persister.implementsLifecycle() ) {
-			LOG.debug( "Calling onSave()" );
+			if (LOG.isDebugEnabled()) {
+				LOG.debug( "Calling onSave()" );
+			}
 			if ( ((Lifecycle) entity).onSave( source ) ) {
-				LOG.debug( "Insertion vetoed by onSave()" );
+				if (LOG.isDebugEnabled()) {
+					LOG.debug( "Insertion vetoed by onSave()" );
+				}
 				return true;
 			}
 		}

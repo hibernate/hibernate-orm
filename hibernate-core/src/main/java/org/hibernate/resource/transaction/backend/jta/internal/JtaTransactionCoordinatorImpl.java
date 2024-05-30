@@ -167,7 +167,9 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		jtaPlatform.registerSynchronization( new RegisteredSynchronization( getSynchronizationCallbackCoordinator() ) );
 		getSynchronizationCallbackCoordinator().synchronizationRegistered();
 		synchronizationRegistered = true;
-		log.debug( "Hibernate RegisteredSynchronization successfully registered with JTA platform" );
+		if (log.isDebugEnabled()) {
+			log.debug( "Hibernate RegisteredSynchronization successfully registered with JTA platform" );
+		}
 
 		// report entering into a "transactional context"
 		getTransactionCoordinatorOwner().startTransactionBoundary();
@@ -176,7 +178,9 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	@Override
 	public void explicitJoin() {
 		if ( synchronizationRegistered ) {
-			log.debug( "JTA transaction was already joined (RegisteredSynchronization already registered)" );
+			if (log.isDebugEnabled()) {
+				log.debug( "JTA transaction was already joined (RegisteredSynchronization already registered)" );
+			}
 			return;
 		}
 
@@ -229,7 +233,9 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 			adapter = makeUserTransactionAdapter();
 
 			if ( adapter == null ) {
-				log.debug( "Unable to access UserTransaction, attempting to use TransactionManager instead" );
+				if (log.isDebugEnabled()) {
+					log.debug( "Unable to access UserTransaction, attempting to use TransactionManager instead" );
+				}
 				adapter = makeTransactionManagerAdapter();
 			}
 		}
@@ -237,7 +243,9 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 			adapter = makeTransactionManagerAdapter();
 
 			if ( adapter == null ) {
-				log.debug( "Unable to access TransactionManager, attempting to use UserTransaction instead" );
+				if (log.isDebugEnabled()) {
+					log.debug( "Unable to access TransactionManager, attempting to use UserTransaction instead" );
+				}
 				adapter = makeUserTransactionAdapter();
 			}
 		}
@@ -255,7 +263,9 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		try {
 			final UserTransaction userTransaction = jtaPlatform.retrieveUserTransaction();
 			if ( userTransaction == null ) {
-				log.debug( "JtaPlatform#retrieveUserTransaction returned null" );
+				if (log.isDebugEnabled()) {
+					log.debug( "JtaPlatform#retrieveUserTransaction returned null" );
+				}
 			}
 			else {
 				return new JtaTransactionAdapterUserTransactionImpl( userTransaction );
@@ -272,7 +282,9 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		try {
 			final TransactionManager transactionManager = jtaPlatform.retrieveTransactionManager();
 			if ( transactionManager == null ) {
-				log.debug( "JtaPlatform#retrieveTransactionManager returned null" );
+				if (log.isDebugEnabled()) {
+					log.debug( "JtaPlatform#retrieveTransactionManager returned null" );
+				}
 			}
 			else {
 				return new JtaTransactionAdapterTransactionManagerImpl( transactionManager );

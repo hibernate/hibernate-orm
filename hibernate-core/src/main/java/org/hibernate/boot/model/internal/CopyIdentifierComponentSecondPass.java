@@ -207,7 +207,9 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 			//FIXME take care of Formula
 			for ( Selectable selectable : referencedValue.getSelectables() ) {
 				if ( !(selectable instanceof Column) ) {
-					log.debug( "Encountered formula definition; skipping" );
+					if (log.isDebugEnabled()) {
+						log.debug( "Encountered formula definition; skipping" );
+					}
 					continue;
 				}
 				final Column column = (Column) selectable;

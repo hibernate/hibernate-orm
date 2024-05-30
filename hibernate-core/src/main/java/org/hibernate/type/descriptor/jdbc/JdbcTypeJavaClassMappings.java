@@ -73,9 +73,11 @@ public class JdbcTypeJavaClassMappings {
 		}
 
 		int specialCode = cls.hashCode();
-		log.debug(
-				"JDBC type code mapping not known for class [" + cls.getName() + "]; using custom code [" + specialCode + "]"
-		);
+		if (log.isDebugEnabled()) {
+			log.debug(
+					"JDBC type code mapping not known for class [" + cls.getName() + "]; using custom code [" + specialCode + "]"
+			);
+		}
 		return specialCode;
 	}
 

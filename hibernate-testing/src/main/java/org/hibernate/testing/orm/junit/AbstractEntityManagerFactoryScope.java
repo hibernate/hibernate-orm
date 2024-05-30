@@ -34,7 +34,9 @@ abstract class AbstractEntityManagerFactoryScope implements EntityManagerFactory
 				throw new IllegalStateException( "EntityManagerFactoryScope is no longer active" );
 			}
 
-			log.debug( "Creating EntityManagerFactory" );
+			if (log.isDebugEnabled()) {
+				log.debug( "Creating EntityManagerFactory" );
+			}
 			emf = createEntityManagerFactory();
 		}
 
@@ -67,7 +69,9 @@ abstract class AbstractEntityManagerFactoryScope implements EntityManagerFactory
 			return;
 		}
 
-		log.debug( "Closing SessionFactoryScope" );
+		if (log.isDebugEnabled()) {
+			log.debug( "Closing SessionFactoryScope" );
+		}
 
 		active = false;
 		releaseEntityManagerFactory();
@@ -75,7 +79,9 @@ abstract class AbstractEntityManagerFactoryScope implements EntityManagerFactory
 
 	public void releaseEntityManagerFactory() {
 		if ( emf != null ) {
-			log.debug( "Releasing SessionFactory" );
+			if (log.isDebugEnabled()) {
+				log.debug( "Releasing SessionFactory" );
+			}
 
 			try {
 				emf.close();

@@ -109,7 +109,9 @@ public class StrategySelectorImpl implements StrategySelector {
 	public <T> void unRegisterStrategyImplementor(Class<T> strategy, Class<? extends T> implementation) {
 		final Map<String,Class> namedStrategyImplementorMap = namedStrategyImplementorByStrategyMap.get( strategy );
 		if ( namedStrategyImplementorMap == null ) {
-			log.debug( "Named strategy map did not exist on call to un-register" );
+			if (log.isDebugEnabled()) {
+				log.debug( "Named strategy map did not exist on call to un-register" );
+			}
 			return;
 		}
 

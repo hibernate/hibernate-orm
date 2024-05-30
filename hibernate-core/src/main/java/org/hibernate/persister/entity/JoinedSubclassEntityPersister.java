@@ -197,7 +197,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			forceDiscriminator = persistentClass.isForceDiscriminator();
 			final Value discriminatorMapping = persistentClass.getDiscriminator();
 			if ( discriminatorMapping != null ) {
-				log.debug( "Encountered explicit discriminator mapping for joined inheritance" );
+				if (log.isDebugEnabled()) {
+					log.debug( "Encountered explicit discriminator mapping for joined inheritance" );
+				}
 				final Selectable selectable = discriminatorMapping.getSelectables().get(0);
 				if ( selectable instanceof Formula ) {
 					throw new MappingException( "Discriminator formulas on joined inheritance hierarchies not supported at this time" );

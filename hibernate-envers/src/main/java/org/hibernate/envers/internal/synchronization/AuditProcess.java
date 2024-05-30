@@ -148,7 +148,9 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 		}
 
 		if ( !session.getTransactionCoordinator().isActive() ) {
-			log.debug( "Skipping envers transaction hook due to non-active (most likely marked-rollback-only) transaction" );
+			if (log.isDebugEnabled()) {
+				log.debug( "Skipping envers transaction hook due to non-active (most likely marked-rollback-only) transaction" );
+			}
 			return;
 		}
 

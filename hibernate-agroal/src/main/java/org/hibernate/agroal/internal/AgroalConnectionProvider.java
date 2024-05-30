@@ -76,7 +76,9 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 
 	@Override
 	public void configure(Map<String, Object> props) throws HibernateException {
-		LOGGER.debug( "Configuring Agroal" );
+		if ( LOGGER.isDebugEnabled() ) {
+			LOGGER.debug( "Configuring Agroal" );
+		}
 		try {
 			AgroalPropertiesReader agroalProperties = new AgroalPropertiesReader( CONFIG_PREFIX )
 					.readProperties( (Map) props ); //TODO: this is a garbage cast
@@ -95,7 +97,9 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 		catch ( Exception e ) {
 			throw new HibernateException( e );
 		}
-		LOGGER.debug( "Agroal Configured" );
+		if ( LOGGER.isDebugEnabled() ) {
+			LOGGER.debug( "Agroal Configured" );
+		}
 	}
 
 	// --- ConnectionProvider

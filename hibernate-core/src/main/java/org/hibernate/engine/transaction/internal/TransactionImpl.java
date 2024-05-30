@@ -46,7 +46,9 @@ public class TransactionImpl implements TransactionImplementor {
 			this.transactionDriverControl = transactionCoordinator.getTransactionDriverControl();
 		}
 		else {
-			LOG.debug( "TransactionImpl created on closed Session/EntityManager" );
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debug( "TransactionImpl created on closed Session/EntityManager" );
+			}
 		}
 
 		if ( LOG.isDebugEnabled() ) {
@@ -78,7 +80,9 @@ public class TransactionImpl implements TransactionImplementor {
 			}
 		}
 
-		LOG.debug( "begin" );
+		if (LOG.isDebugEnabled()) {
+			LOG.debug( "begin" );
+		}
 
 		this.transactionDriverControl.begin();
 	}
@@ -95,7 +99,9 @@ public class TransactionImpl implements TransactionImplementor {
 			throw new IllegalStateException( "Transaction not successfully started" );
 		}
 
-		LOG.debug( "committing" );
+		if (LOG.isDebugEnabled()) {
+			LOG.debug( "committing" );
+		}
 
 		try {
 			internalGetTransactionDriverControl().commit();
@@ -128,7 +134,9 @@ public class TransactionImpl implements TransactionImplementor {
 		TransactionStatus status = getStatus();
 		if ( status == TransactionStatus.ROLLED_BACK || status == TransactionStatus.NOT_ACTIVE ) {
 			// Allow rollback() calls on completed transactions, just no-op.
-			LOG.debug( "rollback() called on an inactive transaction" );
+			if (LOG.isDebugEnabled()) {
+				LOG.debug( "rollback() called on an inactive transaction" );
+			}
 			return;
 		}
 
@@ -136,7 +144,9 @@ public class TransactionImpl implements TransactionImplementor {
 			throw new TransactionException( "Cannot rollback transaction in current status [" + status.name() + "]" );
 		}
 
-		LOG.debug( "rolling back" );
+		if (LOG.isDebugEnabled()) {
+			LOG.debug( "rolling back" );
+		}
 
 		if ( status != TransactionStatus.FAILED_COMMIT || allowFailedCommitToPhysicallyRollback() ) {
 			internalGetTransactionDriverControl().rollback();
@@ -217,7 +227,9 @@ public class TransactionImpl implements TransactionImplementor {
 				);
 			}
 			else {
-				LOG.debug( "#setRollbackOnly called on a not-active transaction" );
+				if (LOG.isDebugEnabled()) {
+					LOG.debug( "#setRollbackOnly called on a not-active transaction" );
+				}
 			}
 		}
 		else {

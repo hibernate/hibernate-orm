@@ -829,7 +829,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 		if ( txnType == null ) {
 			// is it more appropriate to have this be based on bootstrap entry point (EE vs SE)?
-			LOG.debug( "PersistenceUnitTransactionType not specified - falling back to RESOURCE_LOCAL" );
+			if (LOG.isDebugEnabled()) {
+				LOG.debug( "PersistenceUnitTransactionType not specified - falling back to RESOURCE_LOCAL" );
+			}
 			txnType = PersistenceUnitTransactionType.RESOURCE_LOCAL;
 		}
 

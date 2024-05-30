@@ -26,6 +26,7 @@ import org.hibernate.usertype.UserCollectionType;
 
 import jakarta.persistence.Column;
 
+import static org.hibernate.boot.model.internal.BinderHelper.isGlobalGeneratorNameGlobal;
 import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdGenerator;
 
 /**
@@ -131,7 +132,7 @@ public class IdBagBinder extends BagBinder {
 			generatorName = namedGenerator;
 		}
 
-		if ( buildingContext.getBootstrapContext().getJpaCompliance().isGlobalGeneratorScopeEnabled() ) {
+		if ( isGlobalGeneratorNameGlobal( buildingContext ) ) {
 			SecondPass secondPass = new IdGeneratorResolverSecondPass(
 					id,
 					property,

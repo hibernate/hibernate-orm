@@ -18,7 +18,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -63,10 +62,6 @@ public class SequenceStyleGeneratorBehavesLikeSequeceHiloGeneratorWitZeroIncreme
 		properties.setProperty( SequenceStyleGenerator.SEQUENCE_PARAM, TEST_SEQUENCE );
 		properties.setProperty( SequenceStyleGenerator.OPT_PARAM, "legacy-hilo" );
 		properties.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "0" ); // JPA allocationSize of 1
-		properties.put(
-				PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER,
-				buildingContext.getObjectNameNormalizer()
-		);
 		generator.configure(
 				buildingContext.getBootstrapContext()
 						.getTypeConfiguration()

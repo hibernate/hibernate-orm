@@ -483,21 +483,38 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 			return (SqmSelectStatement<Long>) copy;
 		}
 		else {
-			final JpaSelection<?> selection = queryPart.getFirstQuerySpec().getSelection();
-			if ( selection.isCompoundSelection() ) {
-				char c = 'a';
-				for ( JpaSelection<?> item : selection.getSelectionItems() ) {
-					item.alias( Character.toString( ++c ) + '_' );
-				}
-			}
-			else {
-				selection.alias( "a_" );
-			}
+			aliasSelections( queryPart );
 			final SqmSubQuery<?> subquery = new SqmSubQuery<>( copy, queryPart, null, nodeBuilder() );
 			final SqmSelectStatement<Long> query = nodeBuilder().createQuery( Long.class );
 			query.from( subquery );
 			query.select( nodeBuilder().count() );
 			return query;
+		}
+	}
+
+	private <S> void aliasSelections(SqmQueryPart<S> queryPart) {
+		if ( queryPart.isSimpleQueryPart() ) {
+			final SqmQuerySpec<S> querySpec = queryPart.getFirstQuerySpec();
+			final LinkedHashSet<JpaSelection<?>> newSelections = new LinkedHashSet<>();
+			aliasSelection( querySpec.getSelection(), newSelections );
+			//noinspection unchecked
+			querySpec.setSelection( (JpaSelection<S>) ( newSelections.size() == 1 ?
+					newSelections.iterator().next() :
+					nodeBuilder().tuple( newSelections.toArray( new JpaSelection<?>[0] ) ) ) );
+		}
+		else {
+			( (SqmQueryGroup<?>) queryPart ).getQueryParts().forEach( this::aliasSelections );
+		}
+	}
+
+	private void aliasSelection(JpaSelection<?> selection, LinkedHashSet<JpaSelection<?>> newSelections) {
+		if ( selection.isCompoundSelection() || selection instanceof SqmDynamicInstantiation<?> ) {
+			for ( JpaSelection<?> selectionItem : selection.getSelectionItems() ) {
+				aliasSelection( selectionItem, newSelections );
+			}
+		}
+		else {
+			newSelections.add( selection.alias( "c" + newSelections.size() ) );
 		}
 	}
 }

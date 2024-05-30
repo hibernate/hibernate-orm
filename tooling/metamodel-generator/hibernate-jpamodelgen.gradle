@@ -24,7 +24,7 @@ sourceSets {
 			srcDirs = ['src/quarkusOrmPanache/java']
 		}
 		resources {
-			srcDirs tasks.processTestResources
+			srcDirs sourceSets.main.resources
 		}
 		compileClasspath += sourceSets.main.output + sourceSets.test.output
 		runtimeClasspath += sourceSets.main.output + sourceSets.test.output
@@ -34,7 +34,7 @@ sourceSets {
 			srcDirs = ['src/quarkusHrPanache/java']
 		}
 		resources {
-			srcDirs tasks.processTestResources
+			srcDirs sourceSets.main.resources
 		}
 		compileClasspath += sourceSets.main.output + sourceSets.test.output
 		runtimeClasspath += sourceSets.main.output + sourceSets.test.output
@@ -44,7 +44,7 @@ sourceSets {
             srcDirs = ['src/jakartaData/java']
         }
         resources {
-            srcDirs tasks.processTestResources
+			srcDirs sourceSets.main.resources
         }
         compileClasspath += sourceSets.main.output + sourceSets.test.output
         runtimeClasspath += sourceSets.main.output + sourceSets.test.output

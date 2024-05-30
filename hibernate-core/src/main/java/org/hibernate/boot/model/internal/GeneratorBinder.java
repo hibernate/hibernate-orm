@@ -6,29 +6,23 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Member;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.TableGenerator;
+import jakarta.persistence.Version;
 import org.hibernate.AnnotationException;
+import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.annotations.ValueGenerationType;
-import org.hibernate.boot.internal.GenerationStrategyInterpreter;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.generator.AnnotationBasedGenerator;
 import org.hibernate.generator.Assigned;
 import org.hibernate.generator.BeforeExecutionGenerator;
@@ -36,27 +30,15 @@ import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.id.Configurable;
-import org.hibernate.id.ForeignGenerator;
-import org.hibernate.id.GUIDGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
-import org.hibernate.id.IncrementGenerator;
-import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
-import org.hibernate.id.SelectGenerator;
-import org.hibernate.id.UUIDGenerator;
-import org.hibernate.id.UUIDHexGenerator;
-import org.hibernate.id.enhanced.LegacyNamingStrategy;
-import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.id.enhanced.SingleNamingStrategy;
 import org.hibernate.internal.CoreLogging;
-import org.hibernate.mapping.Column;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.GeneratorCreator;
-import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.AnnotationTarget;
-import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
@@ -65,19 +47,25 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
-import org.jboss.logging.Logger;
-
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.TableGenerator;
-import jakarta.persistence.Version;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Member;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
 
 import static java.util.Collections.emptyMap;
-import static org.hibernate.boot.internal.GenerationStrategyInterpreter.STRATEGY_INTERPRETER;
 import static org.hibernate.boot.model.internal.AnnotationHelper.extractParameterMap;
-import static org.hibernate.boot.model.internal.BinderHelper.isCompositeId;
+import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.isGlobalGeneratorNameGlobal;
+import static org.hibernate.boot.model.internal.GeneratorParameters.collectParameters;
+import static org.hibernate.boot.model.internal.GeneratorParameters.interpretSequenceGenerator;
+import static org.hibernate.boot.model.internal.GeneratorParameters.interpretTableGenerator;
+import static org.hibernate.boot.model.internal.GeneratorStrategies.generatorClass;
+import static org.hibernate.boot.model.internal.GeneratorStrategies.generatorStrategy;
+import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.resource.beans.internal.Helper.allowExtensionsInCdi;
 
 /**
@@ -87,7 +75,7 @@ import static org.hibernate.resource.beans.internal.Helper.allowExtensionsInCdi;
  */
 public class GeneratorBinder {
 
-	private static final Logger LOG = CoreLogging.logger( GeneratorBinder.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( GeneratorBinder.class );
 
 	public static final String ASSIGNED_GENERATOR_NAME = "assigned";
 	public static final GeneratorCreator ASSIGNED_IDENTIFIER_GENERATOR_CREATOR =
@@ -103,144 +91,7 @@ public class GeneratorBinder {
 			};
 
 	/**
-	 * Interpret an "old" generator strategy name as a {@link Generator} class.
-	 */
-	private static Class<? extends Generator> generatorClass(String strategy, SimpleValue idValue) {
-		if ( "native".equals(strategy) ) {
-			strategy =
-					idValue.getMetadata().getDatabase().getDialect()
-							.getNativeIdentifierGeneratorStrategy();
-		}
-		switch (strategy) {
-			case "assigned":
-				return org.hibernate.id.Assigned.class;
-			case "enhanced-sequence":
-			case "sequence":
-				return SequenceStyleGenerator.class;
-			case "enhanced-table":
-			case "table":
-				return org.hibernate.id.enhanced.TableGenerator.class;
-			case "identity":
-				return IdentityGenerator.class;
-			case "increment":
-				return IncrementGenerator.class;
-			case "foreign":
-				return ForeignGenerator.class;
-			case "uuid":
-			case "uuid.hex":
-				return UUIDHexGenerator.class;
-			case "uuid2":
-				return UUIDGenerator.class;
-			case "select":
-				return SelectGenerator.class;
-			case "guid":
-				return GUIDGenerator.class;
-		}
-		final Class<? extends Generator> clazz =
-				idValue.getServiceRegistry().requireService( ClassLoaderService.class )
-						.classForName( strategy );
-		if ( !Generator.class.isAssignableFrom( clazz ) ) {
-			// in principle, this shouldn't happen, since @GenericGenerator
-			// constrains the type to subtypes of Generator
-			throw new MappingException( clazz.getName() + " does not implement 'Generator'" );
-		}
-		return clazz;
-	}
-
-	/**
-	 * Collect the parameters which should be passed to
-	 * {@link Configurable#configure(Type, Properties, ServiceRegistry)}.
-	 */
-	public static Properties collectParameters(
-			SimpleValue identifierValue,
-			Dialect dialect,
-			RootClass rootClass,
-			Map<String, Object> configuration) {
-		final ConfigurationService configService =
-				identifierValue.getMetadata().getMetadataBuildingOptions().getServiceRegistry()
-						.requireService( ConfigurationService.class );
-
-		final Properties params = new Properties();
-
-		// default initial value and allocation size per-JPA defaults
-		params.setProperty( OptimizableGenerator.INITIAL_PARAM,
-				String.valueOf( OptimizableGenerator.DEFAULT_INITIAL_VALUE ) );
-
-		params.setProperty( OptimizableGenerator.INCREMENT_PARAM,
-				String.valueOf( defaultIncrement( configService ) ) );
-		//init the table here instead of earlier, so that we can get a quoted table name
-		//TODO: would it be better to simply pass the qualified table name, instead of
-		//	  splitting it up into schema/catalog/table names
-		final String tableName = identifierValue.getTable().getQuotedName( dialect );
-		params.setProperty( PersistentIdentifierGenerator.TABLE, tableName );
-
-		//pass the column name (a generated id almost always has a single column)
-		final Column column = (Column) identifierValue.getSelectables().get(0);
-		final String columnName = column.getQuotedName( dialect );
-		params.setProperty( PersistentIdentifierGenerator.PK, columnName );
-
-		//pass the entity-name, if not a collection-id
-		if ( rootClass != null ) {
-			params.setProperty( IdentifierGenerator.ENTITY_NAME, rootClass.getEntityName() );
-			params.setProperty( IdentifierGenerator.JPA_ENTITY_NAME, rootClass.getJpaEntityName() );
-			// The table name is not really a good default for subselect entities,
-			// so use the JPA entity name which is short
-			params.setProperty( OptimizableGenerator.IMPLICIT_NAME_BASE,
-					identifierValue.getTable().isSubselect()
-							? rootClass.getJpaEntityName()
-							: identifierValue.getTable().getName() );
-
-			params.setProperty( PersistentIdentifierGenerator.TABLES,
-					identityTablesString( dialect, rootClass ) );
-		}
-		else {
-			params.setProperty( PersistentIdentifierGenerator.TABLES, tableName );
-			params.setProperty( OptimizableGenerator.IMPLICIT_NAME_BASE, tableName );
-		}
-
-		params.put( IdentifierGenerator.CONTRIBUTOR_NAME,
-				identifierValue.getBuildingContext().getCurrentContributorName() );
-
-		final Map<String, Object> settings = configService.getSettings();
-		if ( settings.containsKey( AvailableSettings.PREFERRED_POOLED_OPTIMIZER ) ) {
-			params.put( AvailableSettings.PREFERRED_POOLED_OPTIMIZER,
-					settings.get( AvailableSettings.PREFERRED_POOLED_OPTIMIZER ) );
-		}
-
-		params.putAll( configuration );
-
-		return params;
-	}
-
-	private static String identityTablesString(Dialect dialect, RootClass rootClass) {
-		final StringBuilder tables = new StringBuilder();
-		for ( Table table : rootClass.getIdentityTables() ) {
-			tables.append( table.getQuotedName( dialect ) );
-			if ( !tables.isEmpty() ) {
-				tables.append( ", " );
-			}
-		}
-		return tables.toString();
-	}
-
-	private static int defaultIncrement(ConfigurationService configService) {
-		final String idNamingStrategy =
-				configService.getSetting( AvailableSettings.ID_DB_STRUCTURE_NAMING_STRATEGY,
-						StandardConverters.STRING, null );
-		if ( LegacyNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
-				|| LegacyNamingStrategy.class.getName().equals( idNamingStrategy )
-				|| SingleNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
-				|| SingleNamingStrategy.class.getName().equals( idNamingStrategy ) ) {
-			return 1;
-		}
-		else {
-			return OptimizableGenerator.DEFAULT_INCREMENT_SIZE;
-		}
-	}
-
-	/**
-	 * Apply an id generation strategy and parameters to the
-	 * given {@link SimpleValue} which represents an identifier.
+	 * Create a generator, based on a {@link GeneratedValue} annotation.
 	 */
 	public static void makeIdGenerator(
 			SimpleValue id,
@@ -252,20 +103,15 @@ public class GeneratorBinder {
 
 		//generator settings
 		final Map<String,Object> configuration = new HashMap<>();
-
-		//always settable
+		configuration.put( IdentifierGenerator.GENERATOR_NAME, generatorName );
 		configuration.put( PersistentIdentifierGenerator.TABLE, id.getTable().getName() );
-
 		if ( id.getColumnSpan() == 1 ) {
 			configuration.put( PersistentIdentifierGenerator.PK, id.getColumns().get(0).getName() );
 		}
-		// YUCK!  but cannot think of a clean way to do this given the string-config based scheme
-		configuration.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, context.getObjectNameNormalizer() );
-		configuration.put( IdentifierGenerator.GENERATOR_NAME, generatorName );
 
 		final String generatorStrategy =
 				determineStrategy( idAttributeMember, generatorType, generatorName, context, localGenerators, configuration );
-		setGeneratorCreator( id, configuration, generatorStrategy, beanContainer( context ) );
+		setGeneratorCreator( id, configuration, generatorStrategy, context );
 	}
 
 	private static String determineStrategy(
@@ -300,22 +146,6 @@ public class GeneratorBinder {
 		}
 	}
 
-	/**
-	 * apply an id generator to a SimpleValue
-	 */
-	public static void makeIdGenerator(
-			SimpleValue id,
-			MemberDetails idAttributeMember,
-			String generatorType,
-			String generatorName,
-			MetadataBuildingContext buildingContext,
-			IdentifierGeneratorDefinition foreignKGeneratorDefinition) {
-		makeIdGenerator( id, idAttributeMember, generatorType, generatorName, buildingContext,
-				foreignKGeneratorDefinition != null
-						? Map.of( foreignKGeneratorDefinition.getName(), foreignKGeneratorDefinition )
-						: null );
-	}
-
 	private static IdentifierGeneratorDefinition makeIdentifierGeneratorDefinition(
 			String name,
 			MemberDetails idAttributeMember,
@@ -338,13 +168,12 @@ public class GeneratorBinder {
 
 		final GeneratedValue generatedValue = idAttributeMember.getDirectAnnotationUsage( GeneratedValue.class );
 		if ( generatedValue == null ) {
-			// this should really never happen, but it's easy to protect against it...
-			return new IdentifierGeneratorDefinition(ASSIGNED_GENERATOR_NAME, ASSIGNED_GENERATOR_NAME);
+			throw new AssertionFailure( "No @GeneratedValue annotation" );
 		}
 
 		return IdentifierGeneratorDefinition.createImplicit(
 				name,
-				idAttributeMember.getType().determineRawClass().toJavaClass(),
+				idAttributeMember.getType(),
 				generatedValue.generator(),
 				interpretGenerationType( generatedValue )
 		);
@@ -356,6 +185,10 @@ public class GeneratorBinder {
 		return strategy == null ? GenerationType.AUTO : strategy;
 	}
 
+	/**
+	 * Build any generators declared using {@link TableGenerator}, {@link SequenceGenerator},
+	 * and {@link GenericGenerator} annotations of the given program element.
+	 */
 	public static Map<String, IdentifierGeneratorDefinition> buildGenerators(
 			AnnotationTarget annotatedElement,
 			MetadataBuildingContext context) {
@@ -364,19 +197,19 @@ public class GeneratorBinder {
 		final Map<String, IdentifierGeneratorDefinition> generators = new HashMap<>();
 
 		annotatedElement.forEachAnnotationUsage( TableGenerator.class, sourceModelContext, (usage) -> {
-			IdentifierGeneratorDefinition idGenerator = buildIdGenerator( usage, context );
+			IdentifierGeneratorDefinition idGenerator = buildTableIdGenerator( usage );
 			generators.put( idGenerator.getName(), idGenerator );
 			metadataCollector.addIdentifierGenerator( idGenerator );
 		} );
 
 		annotatedElement.forEachAnnotationUsage( SequenceGenerator.class, sourceModelContext, (usage) -> {
-			IdentifierGeneratorDefinition idGenerator = buildIdGenerator( usage, context );
+			IdentifierGeneratorDefinition idGenerator = buildSequenceIdGenerator( usage );
 			generators.put( idGenerator.getName(), idGenerator );
 			metadataCollector.addIdentifierGenerator( idGenerator );
 		} );
 
 		annotatedElement.forEachAnnotationUsage( GenericGenerator.class, sourceModelContext, (usage) -> {
-			final IdentifierGeneratorDefinition idGenerator = buildIdGenerator( usage, context );
+			final IdentifierGeneratorDefinition idGenerator = buildIdGenerator( usage );
 			generators.put( idGenerator.getName(), idGenerator );
 			metadataCollector.addIdentifierGenerator( idGenerator );
 		} );
@@ -384,87 +217,38 @@ public class GeneratorBinder {
 		return generators;
 	}
 
-	static String generatorType(
-			MetadataBuildingContext context,
-			ClassDetails entityXClass,
-			boolean isComponent,
-			GeneratedValue generatedValue) {
-		if ( isComponent ) {
-			//a component must not have any generator
-			return ASSIGNED_GENERATOR_NAME;
-		}
-		else {
-			return generatedValue == null ? ASSIGNED_GENERATOR_NAME : generatorType( generatedValue, entityXClass, context );
-		}
-	}
+	private static IdentifierGeneratorDefinition buildIdGenerator(GenericGenerator generatorAnnotation) {
+		final IdentifierGeneratorDefinition.Builder definitionBuilder =
+				new IdentifierGeneratorDefinition.Builder();
+		definitionBuilder.setName( generatorAnnotation.name() );
+		final Class<? extends Generator> generatorClass = generatorAnnotation.type();
+		final String strategy =
+				generatorClass.equals( Generator.class )
+						? generatorAnnotation.strategy()
+						: generatorClass.getName();
+		definitionBuilder.setStrategy( strategy );
+		definitionBuilder.addParams( extractParameterMap( generatorAnnotation.parameters() ) );
 
-	static String generatorType(
-			GeneratedValue generatedValue,
-			final ClassDetails javaClass,
-			MetadataBuildingContext context) {
-		return STRATEGY_INTERPRETER.determineGeneratorName(
-				generatedValue.strategy(),
-				new GenerationStrategyInterpreter.GeneratorNameDeterminationContext() {
-					Class<?> javaType = null;
-					@Override
-					public Class<?> getIdType() {
-						if ( javaType == null ) {
-							javaType = javaClass.toJavaClass();
-						}
-						return javaType;
-					}
-					@Override
-					public String getGeneratedValueGeneratorName() {
-						return generatedValue.generator();
-					}
-				}
-		);
-	}
-
-	static IdentifierGeneratorDefinition buildIdGenerator(
-			Annotation generatorAnnotation,
-			MetadataBuildingContext context) {
-		if ( generatorAnnotation == null ) {
-			return null;
-		}
-
-		final IdentifierGeneratorDefinition.Builder definitionBuilder = new IdentifierGeneratorDefinition.Builder();
-		if ( generatorAnnotation instanceof TableGenerator tableGenerator ) {
-			STRATEGY_INTERPRETER.interpretTableGenerator( tableGenerator, definitionBuilder );
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Add table generator with name: {0}", definitionBuilder.getName() );
-			}
-		}
-		else if ( generatorAnnotation instanceof SequenceGenerator sequenceGenerator ) {
-			STRATEGY_INTERPRETER.interpretSequenceGenerator( sequenceGenerator, definitionBuilder );
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Add sequence generator with name: {0}", definitionBuilder.getName() );
-			}
-		}
-		else if ( generatorAnnotation instanceof GenericGenerator genericGenerator ) {
-			definitionBuilder.setName( genericGenerator.name() );
-			final Class<? extends Generator> generatorClass = genericGenerator.type();
-			final String strategy =
-					generatorClass.equals( Generator.class )
-							? genericGenerator.strategy()
-							: generatorClass.getName();
-			definitionBuilder.setStrategy( strategy );
-			definitionBuilder.addParams( extractParameterMap( genericGenerator.parameters() ) );
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Add generic generator with name: {0}", definitionBuilder.getName() );
-			}
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Added generator with name: {0}, strategy: {0}",
+					definitionBuilder.getName(), definitionBuilder.getStrategy() );
 		}
 
 		return definitionBuilder.build();
 	}
 
-	static IdentifierGeneratorDefinition buildSequenceIdGenerator(SequenceGenerator generatorAnnotation) {
-		if ( generatorAnnotation == null ) {
-			return null;
-		}
-
+	private static IdentifierGeneratorDefinition buildSequenceIdGenerator(SequenceGenerator generatorAnnotation) {
 		final IdentifierGeneratorDefinition.Builder definitionBuilder = new IdentifierGeneratorDefinition.Builder();
-		STRATEGY_INTERPRETER.interpretSequenceGenerator( generatorAnnotation, definitionBuilder );
+		interpretSequenceGenerator( generatorAnnotation, definitionBuilder );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Add sequence generator with name: {0}", definitionBuilder.getName() );
+		}
+		return definitionBuilder.build();
+	}
+
+	private static IdentifierGeneratorDefinition buildTableIdGenerator(TableGenerator generatorAnnotation) {
+		final IdentifierGeneratorDefinition.Builder definitionBuilder = new IdentifierGeneratorDefinition.Builder();
+		interpretTableGenerator( generatorAnnotation, definitionBuilder );
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Add sequence generator with name: {0}", definitionBuilder.getName() );
 		}
@@ -494,20 +278,16 @@ public class GeneratorBinder {
 	}
 
 	/**
-	 * In case the given annotation is a value generator annotation, the corresponding value generation strategy to be
-	 * applied to the given property is returned, {@code null} otherwise.
-	 * Instantiates the given generator annotation type, initializing it with the given instance of the corresponding
-	 * generator annotation and the property's type.
+	 * Return a {@link GeneratorCreator} for an attribute annotated
+	 * with a {@linkplain ValueGenerationType generator annotation}.
 	 */
-	static GeneratorCreator generatorCreator(
+	private static GeneratorCreator generatorCreator(
 			MemberDetails memberDetails,
 			Annotation annotation,
 			BeanContainer beanContainer) {
 		final Class<? extends Annotation> annotationType = annotation.annotationType();
 		final ValueGenerationType generatorAnnotation = annotationType.getAnnotation( ValueGenerationType.class );
-		if ( generatorAnnotation == null ) {
-			return null;
-		}
+		assert generatorAnnotation != null;
 		final Class<? extends Generator> generatorClass = generatorAnnotation.generatedBy();
 		checkGeneratorClass( generatorClass );
 		checkGeneratorInterfaces( generatorClass );
@@ -527,15 +307,19 @@ public class GeneratorBinder {
 		};
 	}
 
-	static GeneratorCreator identifierGeneratorCreator(
+	/**
+	 * Return a {@link GeneratorCreator} for an id attribute annotated
+	 * with an {@linkplain IdGeneratorType id generator annotation}.
+	 */
+	private static GeneratorCreator identifierGeneratorCreator(
 			MemberDetails idAttributeMember,
 			Annotation annotation,
 			SimpleValue identifierValue,
 			BeanContainer beanContainer) {
 		final Class<? extends Annotation> annotationType = annotation.annotationType();
-		final IdGeneratorType idGeneratorType = annotationType.getAnnotation( IdGeneratorType.class );
-		assert idGeneratorType != null;
-		final Class<? extends Generator> generatorClass = idGeneratorType.value();
+		final IdGeneratorType idGeneratorAnnotation = annotationType.getAnnotation( IdGeneratorType.class );
+		assert idGeneratorAnnotation != null;
+		final Class<? extends Generator> generatorClass = idGeneratorAnnotation.value();
 		checkGeneratorClass( generatorClass );
 		return creationContext -> {
 			final Generator generator =
@@ -562,7 +346,7 @@ public class GeneratorBinder {
 	 * @param beanContainer an optional {@code BeanContainer}
 	 * @param generatorClass a class which implements {@code Generator}
 	 */
-	private static <C> Generator instantiateGenerator(
+	private static Generator instantiateGenerator(
 			Annotation annotation,
 			BeanContainer beanContainer,
 			GeneratorCreationContext creationContext,
@@ -807,23 +591,26 @@ public class GeneratorBinder {
 		}
 	}
 
-	static void createIdGenerator(
+	/**
+	 * Create a generator, based on a {@link GeneratedValue} annotation.
+	 */
+	private static void createIdGenerator(
 			SimpleValue idValue,
 			Map<String, IdentifierGeneratorDefinition> classGenerators,
 			MetadataBuildingContext context,
-			ClassDetails entityClass,
-			MemberDetails idAttributeMember) {
+			MemberDetails idMember) {
 		//manage composite related metadata
 		//guess if its a component and find id data access (property, field etc)
-		final GeneratedValue generatedValue = idAttributeMember.getDirectAnnotationUsage( GeneratedValue.class );
-		final String generatorType = generatorType( context, entityClass, isCompositeId( entityClass, idAttributeMember ), generatedValue );
-		final String generatorName = generatedValue == null ? "" : generatedValue.generator();
+		final GeneratedValue generatedValue = idMember.getDirectAnnotationUsage( GeneratedValue.class );
+		final String generatorType =
+				generatorStrategy( generatedValue.strategy(), generatedValue.generator(), idMember.getType() );
+		final String generatorName = generatedValue.generator();
 		if ( isGlobalGeneratorNameGlobal( context ) ) {
-			buildGenerators( idAttributeMember, context );
+			buildGenerators( idMember, context );
 			context.getMetadataCollector()
 					.addSecondPass( new IdGeneratorResolverSecondPass(
 							idValue,
-							idAttributeMember,
+							idMember,
 							generatorType,
 							generatorName,
 							context
@@ -832,8 +619,8 @@ public class GeneratorBinder {
 		else {
 			//clone classGenerator and override with local values
 			final Map<String, IdentifierGeneratorDefinition> generators = new HashMap<>( classGenerators );
-			generators.putAll( buildGenerators( idAttributeMember, context ) );
-			makeIdGenerator( idValue, idAttributeMember, generatorType, generatorName, context, generators );
+			generators.putAll( buildGenerators( idMember, context ) );
+			makeIdGenerator( idValue, idMember, generatorType, generatorName, context, generators );
 		}
 	}
 
@@ -846,14 +633,14 @@ public class GeneratorBinder {
 			final MappingDocument sourceDocument,
 			IdentifierGeneratorDefinition definition,
 			SimpleValue identifierValue,
-			MetadataBuildingContext buildingContext) {
+			MetadataBuildingContext context) {
 
 		if ( definition != null ) {
-			final Map<String,Object> configuration = new HashMap<>();
-
 			// see if the specified generator name matches a registered <identifier-generator/>
 			final IdentifierGeneratorDefinition generatorDef =
-					sourceDocument.getMetadataCollector().getIdentifierGenerator( definition.getName() );
+					sourceDocument.getMetadataCollector()
+							.getIdentifierGenerator( definition.getName() );
+			final Map<String,Object> configuration = new HashMap<>();
 			final String generatorStrategy;
 			if ( generatorDef != null ) {
 				generatorStrategy = generatorDef.getStrategy();
@@ -863,20 +650,16 @@ public class GeneratorBinder {
 				generatorStrategy = definition.getStrategy();
 			}
 
-			// YUCK!  but cannot think of a clean way to do this given the string-config based scheme
-			configuration.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER,
-					buildingContext.getObjectNameNormalizer() );
-
 			configuration.putAll( definition.getParameters() );
 
-			setGeneratorCreator( identifierValue, configuration, generatorStrategy, beanContainer( buildingContext ) );
+			setGeneratorCreator( identifierValue, configuration, generatorStrategy, context );
 		}
 	}
 
 	/**
 	 * Obtain a {@link BeanContainer} to be used for instantiating generators.
 	 */
-	static BeanContainer beanContainer(MetadataBuildingContext buildingContext) {
+	private static BeanContainer beanContainer(MetadataBuildingContext buildingContext) {
 		final ServiceRegistry serviceRegistry = buildingContext.getBootstrapContext().getServiceRegistry();
 		return allowExtensionsInCdi( serviceRegistry )
 				? serviceRegistry.requireService( ManagedBeanRegistry.class ).getBeanContainer()
@@ -891,12 +674,13 @@ public class GeneratorBinder {
 			SimpleValue identifierValue,
 			Map<String, Object> configuration,
 			String generatorStrategy,
-			BeanContainer beanContainer) {
+			MetadataBuildingContext context) {
 		if ( ASSIGNED_GENERATOR_NAME.equals( generatorStrategy )
 				|| org.hibernate.id.Assigned.class.getName().equals( generatorStrategy ) ) {
 			identifierValue.setCustomIdGeneratorCreator( ASSIGNED_IDENTIFIER_GENERATOR_CREATOR );
 		}
 		else {
+			final BeanContainer beanContainer = beanContainer( context );
 			identifierValue.setCustomIdGeneratorCreator( creationContext -> {
 				final Generator identifierGenerator =
 						instantiateGenerator( beanContainer, generatorClass( generatorStrategy, identifierValue ) );
@@ -906,6 +690,84 @@ public class GeneratorBinder {
 				}
 				return identifierGenerator;
 			} );
+		}
+	}
+
+	/**
+	 * Set up the id generator by considering all annotations of the identifier
+	 * field, including {@linkplain IdGeneratorType id generator annotations},
+	 * and {@link GeneratedValue}.
+	 */
+	static void createIdGeneratorsFromGeneratorAnnotations(
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			SimpleValue idValue,
+			Map<String, IdentifierGeneratorDefinition> classGenerators,
+			MetadataBuildingContext context) {
+
+		final SourceModelBuildingContext sourceModelContext =
+				context.getMetadataCollector().getSourceModelBuildingContext();
+		final MemberDetails idAttributeMember = inferredData.getAttributeMember();
+		final List<? extends Annotation> idGeneratorAnnotations =
+				idAttributeMember.getMetaAnnotated( IdGeneratorType.class, sourceModelContext );
+		final List<? extends Annotation> generatorAnnotations =
+				idAttributeMember.getMetaAnnotated( ValueGenerationType.class, sourceModelContext );
+		// Since these collections may contain Proxies created by common-annotations module we cannot reliably use simple remove/removeAll
+		// collection methods as those proxies do not implement hashcode/equals and even a simple `a.equals(a)` will return `false`.
+		// Instead, we will check the annotation types, since generator annotations should not be "repeatable" we should have only
+		// at most one annotation for a generator:
+		for ( Annotation id : idGeneratorAnnotations ) {
+			generatorAnnotations.removeIf( gen -> gen.annotationType().equals( id.annotationType() ) );
+		}
+
+		if ( idGeneratorAnnotations.size() + generatorAnnotations.size() > 1 ) {
+			throw new AnnotationException( String.format(
+					Locale.ROOT,
+					"Identifier attribute '%s' has too many generator annotations: %s",
+					getPath( propertyHolder, inferredData ),
+					CollectionHelper.combineUntyped( idGeneratorAnnotations, generatorAnnotations )
+			) );
+		}
+		if ( !idGeneratorAnnotations.isEmpty() ) {
+			idValue.setCustomIdGeneratorCreator( identifierGeneratorCreator(
+					idAttributeMember,
+					idGeneratorAnnotations.get(0),
+					idValue,
+					beanContainer( context )
+			) );
+		}
+		else if ( !generatorAnnotations.isEmpty() ) {
+//			idValue.setCustomGeneratorCreator( generatorCreator( idAttributeMember, generatorAnnotation ) );
+			throw new AnnotationException( String.format(
+					Locale.ROOT,
+					"Identifier attribute '%s' is annotated '%s' which is not an '@IdGeneratorType'",
+					getPath( propertyHolder, inferredData ),
+					generatorAnnotations.get(0).annotationType()
+			) );
+		}
+		else if ( idAttributeMember.hasDirectAnnotationUsage( GeneratedValue.class ) ) {
+			createIdGenerator( idValue, classGenerators, context, idAttributeMember );
+		}
+	}
+
+	/**
+	 * Returns the value generation strategy for the given property, if any, by
+	 * considering {@linkplain ValueGenerationType generator type annotations}.
+	 */
+	static GeneratorCreator createValueGeneratorFromAnnotations(
+			PropertyHolder holder, String propertyName,
+			MemberDetails property, MetadataBuildingContext context) {
+		final List<? extends Annotation> generatorAnnotations =
+				property.getMetaAnnotated( ValueGenerationType.class,
+						context.getMetadataCollector().getSourceModelBuildingContext() );
+		switch ( generatorAnnotations.size() ) {
+			case 0:
+				return null;
+			case 1:
+				return generatorCreator( property, generatorAnnotations.get(0), beanContainer( context ) );
+			default:
+				throw new AnnotationException( "Property '" + qualify( holder.getPath(), propertyName )
+						+ "' has too many generator annotations: " + generatorAnnotations );
 		}
 	}
 }

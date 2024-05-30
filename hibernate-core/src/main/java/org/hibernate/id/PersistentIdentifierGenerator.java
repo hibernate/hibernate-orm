@@ -53,7 +53,10 @@ public interface PersistentIdentifierGenerator extends OptimizableGenerator {
 
 	/**
 	 * The key under which to find the {@link org.hibernate.boot.model.naming.ObjectNameNormalizer} in the config param map.
+	 *
+	 * @deprecated no longer set, use {@link org.hibernate.engine.jdbc.env.spi.JdbcEnvironment#getIdentifierHelper}
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	String IDENTIFIER_NORMALIZER = "identifier_normalizer";
 
 	/**

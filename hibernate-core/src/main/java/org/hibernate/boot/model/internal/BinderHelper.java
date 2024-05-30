@@ -58,7 +58,6 @@ import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.models.spi.TypeDetails;
-import org.hibernate.models.spi.TypeDetailsHelper;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.ConstraintMode;
@@ -76,6 +75,7 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.qualifier;
 import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.models.spi.TypeDetailsHelper.resolveRawClass;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.NOOP;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.interpret;
@@ -586,8 +586,8 @@ public class BinderHelper {
 	 */
 	public static Property findPropertyByName(PersistentClass associatedClass, String propertyName) {
 		Property property = null;
-		Property idProperty = associatedClass.getIdentifierProperty();
-		String idName = idProperty == null ? null : idProperty.getName();
+		final Property idProperty = associatedClass.getIdentifierProperty();
+		final String idName = idProperty == null ? null : idProperty.getName();
 		try {
 			if ( isEmpty( propertyName ) || propertyName.equals( idName ) ) {
 				//default to id
@@ -598,9 +598,9 @@ public class BinderHelper {
 					property = idProperty;
 					propertyName = propertyName.substring( idName.length() + 1 );
 				}
-				StringTokenizer st = new StringTokenizer( propertyName, ".", false );
-				while ( st.hasMoreElements() ) {
-					String element = (String) st.nextElement();
+				final StringTokenizer tokens = new StringTokenizer( propertyName, ".", false );
+				while ( tokens.hasMoreElements() ) {
+					String element = (String) tokens.nextElement();
 					if ( property == null ) {
 						property = associatedClass.getProperty( element );
 					}
@@ -619,9 +619,9 @@ public class BinderHelper {
 				if ( associatedClass.getIdentifierMapper() == null ) {
 					return null;
 				}
-				StringTokenizer st = new StringTokenizer( propertyName, ".", false );
-				while ( st.hasMoreElements() ) {
-					String element = (String) st.nextElement();
+				final StringTokenizer tokens = new StringTokenizer( propertyName, ".", false );
+				while ( tokens.hasMoreElements() ) {
+					final String element = (String) tokens.nextElement();
 					if ( property == null ) {
 						property = associatedClass.getIdentifierMapper().getProperty( element );
 					}
@@ -646,15 +646,14 @@ public class BinderHelper {
 	public static Property findPropertyByName(Component component, String propertyName) {
 		Property property = null;
 		try {
-			if ( propertyName == null
-					|| propertyName.length() == 0) {
+			if ( isEmpty( propertyName ) ) {
 				// Do not expect to use a primary key for this case
 				return null;
 			}
 			else {
-				StringTokenizer st = new StringTokenizer( propertyName, ".", false );
-				while ( st.hasMoreElements() ) {
-					String element = (String) st.nextElement();
+				final StringTokenizer tokens = new StringTokenizer( propertyName, ".", false );
+				while ( tokens.hasMoreElements() ) {
+					final String element = (String) tokens.nextElement();
 					if ( property == null ) {
 						property = component.getProperty( element );
 					}
@@ -673,9 +672,9 @@ public class BinderHelper {
 				if ( component.getOwner().getIdentifierMapper() == null ) {
 					return null;
 				}
-				StringTokenizer st = new StringTokenizer( propertyName, ".", false );
-				while ( st.hasMoreElements() ) {
-					String element = (String) st.nextElement();
+				final StringTokenizer tokens = new StringTokenizer( propertyName, ".", false );
+				while ( tokens.hasMoreElements() ) {
+					final String element = (String) tokens.nextElement();
 					if ( property == null ) {
 						property = component.getOwner().getIdentifierMapper().getProperty( element );
 					}
@@ -834,14 +833,16 @@ public class BinderHelper {
 			MemberDetails property,
 			Consumer<AnyDiscriminatorValue> consumer,
 			SourceModelBuildingContext sourceModelContext) {
-		final AnyDiscriminatorValues valuesAnn = property.locateAnnotationUsage( AnyDiscriminatorValues.class, sourceModelContext );
+		final AnyDiscriminatorValues valuesAnn =
+				property.locateAnnotationUsage( AnyDiscriminatorValues.class, sourceModelContext );
 		if ( valuesAnn != null ) {
 			final AnyDiscriminatorValue[] nestedList = valuesAnn.value();
 			ArrayHelper.forEach( nestedList, consumer );
 			return;
 		}
 
-		final AnyDiscriminatorValue valueAnn = property.locateAnnotationUsage( AnyDiscriminatorValue.class, sourceModelContext );
+		final AnyDiscriminatorValue valueAnn =
+				property.locateAnnotationUsage( AnyDiscriminatorValue.class, sourceModelContext );
 		if ( valueAnn != null ) {
 			consumer.accept( valueAnn );
 		}
@@ -957,10 +958,10 @@ public class BinderHelper {
 		return renderCascadeTypeList( cascadeTypes );
 	}
 
-	private static EnumSet<CascadeType> convertToHibernateCascadeType(jakarta.persistence.CascadeType[] ejbCascades) {
+	private static EnumSet<CascadeType> convertToHibernateCascadeType(jakarta.persistence.CascadeType[] cascades) {
 		final EnumSet<CascadeType> cascadeTypes = EnumSet.noneOf( CascadeType.class );
-		if ( ejbCascades != null ) {
-			for ( jakarta.persistence.CascadeType cascade: ejbCascades ) {
+		if ( cascades != null ) {
+			for ( jakarta.persistence.CascadeType cascade: cascades ) {
 				cascadeTypes.add( convertCascadeType( cascade ) );
 			}
 		}
@@ -1028,7 +1029,7 @@ public class BinderHelper {
 					break;
 			}
 		}
-		return cascade.length() > 0 ? cascade.substring( 1 ) : "none";
+		return cascade.isEmpty() ? "none" : cascade.substring(1);
 	}
 
 	private static void warnAboutDeprecatedCascadeType(CascadeType cascadeType) {
@@ -1053,18 +1054,17 @@ public class BinderHelper {
 		return context.getBootstrapContext().getJpaCompliance().isGlobalGeneratorScopeEnabled();
 	}
 
-	static boolean isCompositeId(ClassDetails entityClass, MemberDetails idProperty) {
-		return entityClass.hasDirectAnnotationUsage( Embeddable.class )
+	static boolean isCompositeId(ClassDetails idClass, MemberDetails idProperty) {
+		return idClass.hasDirectAnnotationUsage( Embeddable.class )
 			|| idProperty.hasDirectAnnotationUsage( EmbeddedId.class );
 	}
 
-	public static boolean isDefault(ClassDetails clazz, MetadataBuildingContext context) {
+	public static boolean isDefault(ClassDetails clazz) {
 		return clazz == ClassDetails.VOID_CLASS_DETAILS;
 	}
 
-	public static boolean isDefault(TypeDetails clazz, MetadataBuildingContext context) {
-		final ClassDetails rawClassDetails = TypeDetailsHelper.resolveRawClass( clazz );
-		return rawClassDetails == ClassDetails.VOID_CLASS_DETAILS;
+	public static boolean isDefault(TypeDetails clazz) {
+		return resolveRawClass( clazz ) == ClassDetails.VOID_CLASS_DETAILS;
 	}
 
 	public static void checkMappedByType(
@@ -1121,7 +1121,7 @@ public class BinderHelper {
 		else {
 			final ConstraintMode mode = foreignKey.value();
 			return mode == NO_CONSTRAINT
-					|| mode == PROVIDER_DEFAULT && noConstraintByDefault;
+				|| mode == PROVIDER_DEFAULT && noConstraintByDefault;
 		}
 	}
 

@@ -6,15 +6,20 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.Instantiator;
@@ -46,32 +51,26 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.usertype.CompositeUserType;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
-import jakarta.persistence.DiscriminatorColumn;
-import jakarta.persistence.DiscriminatorValue;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.buildDiscriminatorColumn;
-import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.getPropertyOverriddenByMapperOrMapsId;
 import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.isGlobalGeneratorNameGlobal;
+import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
-import static org.hibernate.boot.model.internal.GeneratorBinder.generatorType;
 import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdGenerator;
+import static org.hibernate.boot.model.internal.GeneratorStrategies.generatorStrategy;
 import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
 import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
@@ -809,15 +808,15 @@ public class EmbeddableBinder {
 
 	private static void processGeneratedId(MetadataBuildingContext context, Component component, MemberDetails property) {
 		final GeneratedValue generatedValue = property.getDirectAnnotationUsage( GeneratedValue.class );
-		final String generatorType = generatedValue != null
-				? generatorType( generatedValue, property.getType().determineRawClass(), context )
-				: GeneratorBinder.ASSIGNED_GENERATOR_NAME;
-		final String generator = generatedValue != null ? generatedValue.generator() : "";
+		final String generatorType =
+				generatorStrategy( generatedValue.strategy(), generatedValue.generator(), property.getType() );
+		final String generator = generatedValue.generator();
 
+		final SimpleValue value = (SimpleValue) component.getProperty( property.getName()).getValue();
 		if ( isGlobalGeneratorNameGlobal( context ) ) {
 			buildGenerators( property, context );
 			context.getMetadataCollector().addSecondPass( new IdGeneratorResolverSecondPass(
-					(SimpleValue) component.getProperty( property.getName() ).getValue(),
+					value,
 					property,
 					generatorType,
 					generator,
@@ -831,7 +830,7 @@ public class EmbeddableBinder {
 		}
 		else {
 			makeIdGenerator(
-					(SimpleValue) component.getProperty( property.getName() ).getValue(),
+					value,
 					property,
 					generatorType,
 					generator,

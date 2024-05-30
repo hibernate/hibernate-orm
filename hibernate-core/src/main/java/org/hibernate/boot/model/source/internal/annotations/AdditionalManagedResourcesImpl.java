@@ -91,6 +91,20 @@ public class AdditionalManagedResourcesImpl implements ManagedResources {
 		private List<String> packageNames;
 		private Collection<Binding<JaxbBindableMappingDescriptor>> xmlMappings;
 
+		public Builder(boolean validateMappings, boolean transformHbmMappings) {
+			this( new MappingBinder.Options() {
+				@Override
+				public boolean validateMappings() {
+					return validateMappings;
+				}
+
+				@Override
+				public boolean transformHbmMappings() {
+					return transformHbmMappings;
+				}
+			} );
+		}
+
 		public Builder() {
 			this( new MappingBinder.Options() {
 				@Override

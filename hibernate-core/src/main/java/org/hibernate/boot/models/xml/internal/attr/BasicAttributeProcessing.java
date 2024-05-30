@@ -70,6 +70,7 @@ public class BasicAttributeProcessing {
 					xmlDocumentContext.getModelBuildingContext()
 			);
 			columnAnn.apply( jaxbBasic.getColumn(), xmlDocumentContext );
+			XmlAnnotationHelper.applyColumnTransformation( jaxbBasic.getColumn(), memberDetails, xmlDocumentContext );
 		}
 
 		XmlAnnotationHelper.applyConvert( jaxbBasic.getConvert(), memberDetails, xmlDocumentContext );

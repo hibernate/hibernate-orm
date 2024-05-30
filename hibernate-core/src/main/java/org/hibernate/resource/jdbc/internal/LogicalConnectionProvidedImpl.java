@@ -55,7 +55,9 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 
 	@Override
 	public Connection close() {
-		log.trace( "Closing logical connection" );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Closing logical connection" );
+		}
 
 		getResourceRegistry().releaseResources();
 
@@ -65,7 +67,9 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 		finally {
 			providedConnection = null;
 			closed = true;
-			log.trace( "Logical connection closed" );
+			if ( log.isTraceEnabled() ) {
+				log.trace( "Logical connection closed" );
+			}
 		}
 	}
 

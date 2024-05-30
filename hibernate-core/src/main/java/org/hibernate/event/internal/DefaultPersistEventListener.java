@@ -146,7 +146,9 @@ public class DefaultPersistEventListener
 	}
 
 	protected void entityIsPersistent(PersistEvent event, PersistContext createCache) {
-		LOG.trace( "Ignoring persistent instance" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Ignoring persistent instance" );
+		}
 		final EventSource source = event.getSession();
 		//TODO: check that entry.getIdentifier().equals(requestedId)
 		final Object entity = source.getPersistenceContextInternal().unproxy( event.getObject() );
@@ -168,7 +170,9 @@ public class DefaultPersistEventListener
 	 * @param createCache The copy cache of entity instance to merge/copy instance.
 	 */
 	protected void entityIsTransient(PersistEvent event, PersistContext createCache) {
-		LOG.trace( "Saving transient instance" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Saving transient instance" );
+		}
 		final EventSource source = event.getSession();
 		final Object entity = source.getPersistenceContextInternal().unproxy( event.getObject() );
 		if ( createCache.add( entity ) ) {

@@ -39,7 +39,9 @@ public class SynchronizationCallbackCoordinatorNonTrackingImpl implements Synchr
 
 	@Override
 	public void beforeCompletion() {
-		log.trace( "Synchronization coordinator: beforeCompletion()" );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Synchronization coordinator: beforeCompletion()" );
+		}
 
 		if ( !target.isActive() ) {
 			return;

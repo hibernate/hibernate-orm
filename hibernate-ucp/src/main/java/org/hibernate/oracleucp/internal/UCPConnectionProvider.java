@@ -50,7 +50,9 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 	@Override
 	public void configure(Map props) throws HibernateException {
 		try {
-			LOGGER.trace( "Configuring oracle UCP" );
+			if ( LOGGER.isTraceEnabled() ) {
+				LOGGER.trace( "Configuring oracle UCP" );
+			}
 
 			isolation = ConnectionProviderInitiator.extractIsolation( props );
 			autoCommit = ConfigurationHelper.getBoolean( AvailableSettings.AUTOCOMMIT, props );
@@ -66,7 +68,9 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 			throw new HibernateException( e );
 		}
 
-		LOGGER.trace( "oracle UCP Configured" );
+		if ( LOGGER.isTraceEnabled() ) {
+			LOGGER.trace( "oracle UCP Configured" );
+		}
 	}
 	
 	private void configureDataSource(PoolDataSource ucpDS, Properties ucpProps) {

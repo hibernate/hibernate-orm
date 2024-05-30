@@ -387,7 +387,9 @@ public class SessionImpl
 				throw new IllegalStateException( "Illegal call to #close() on already closed Session/EntityManager" );
 			}
 
-			log.trace( "Already closed" );
+			if ( log.isTraceEnabled() ) {
+				log.trace( "Already closed" );
+			}
 			return;
 		}
 
@@ -485,10 +487,14 @@ public class SessionImpl
 
 	private void managedFlush() {
 		if ( isClosed() && !waitingForAutoClose ) {
-			log.trace( "Skipping auto-flush due to session closed" );
+			if ( log.isTraceEnabled() ) {
+				log.trace( "Skipping auto-flush due to session closed" );
+			}
 			return;
 		}
-		log.trace( "Automatically flushing session" );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Automatically flushing session" );
+		}
 		doFlush();
 	}
 
@@ -509,7 +515,9 @@ public class SessionImpl
 	}
 
 	private void managedClose() {
-		log.trace( "Automatically closing session" );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Automatically closing session" );
+		}
 		closeWithoutOpenChecks();
 	}
 
@@ -1981,7 +1989,9 @@ public class SessionImpl
 
 	@Override
 	public void beforeTransactionCompletion() {
-		log.trace( "SessionImpl#beforeTransactionCompletion()" );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "SessionImpl#beforeTransactionCompletion()" );
+		}
 		flushBeforeTransactionCompletion();
 		actionQueue.beforeTransactionCompletion();
 		beforeTransactionCompletionEvents();

@@ -91,7 +91,9 @@ public class Helper {
 		//		2) relative file path (resource lookup)
 		//		3) absolute file path
 
-		log.trace( "Trying as URL..." );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Trying as URL..." );
+		}
 		// ClassLoaderService.locateResource() first tries the given resource name as url form...
 		final URL url = classLoaderService.locateResource( scriptSourceSettingString );
 		if ( url != null ) {
@@ -123,7 +125,9 @@ public class Helper {
 			//		2) relative file path (resource lookup)
 			//		3) absolute file path
 
-			log.trace( "Trying as URL..." );
+			if ( log.isTraceEnabled() ) {
+				log.trace( "Trying as URL..." );
+			}
 			// ClassLoaderService.locateResource() first tries the given resource name as url form...
 			final URL url = classLoaderService.locateResource( scriptTargetSettingString );
 			if ( url != null ) {

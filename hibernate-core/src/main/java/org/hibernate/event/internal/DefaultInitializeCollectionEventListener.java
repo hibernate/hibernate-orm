@@ -115,7 +115,9 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 
 		if ( source.getLoadQueryInfluencers().hasEnabledFilters()
 				&& persister.isAffectedByEnabledFilters( source ) ) {
-			LOG.trace( "Disregarding cached version (if any) of collection due to enabled filters" );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Disregarding cached version (if any) of collection due to enabled filters" );
+			}
 			return false;
 		}
 

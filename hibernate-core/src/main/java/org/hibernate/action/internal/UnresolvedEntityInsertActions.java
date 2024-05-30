@@ -102,7 +102,9 @@ public class UnresolvedEntityInsertActions {
 	 */
 	public void checkNoUnresolvedActionsAfterOperation() throws PropertyValueException {
 		if ( isEmpty() ) {
-			LOG.trace( "No entity insert actions have non-nullable, transient entity dependencies." );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "No entity insert actions have non-nullable, transient entity dependencies." );
+			}
 		}
 		else {
 			final AbstractEntityInsertAction firstDependentAction =

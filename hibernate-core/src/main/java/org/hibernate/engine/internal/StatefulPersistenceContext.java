@@ -1132,7 +1132,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	protected void initializeNonLazyCollections(Consumer<PersistentCollection<?>> initializeAction ) {
 		if ( loadCounter == 0 ) {
-			LOG.trace( "Initializing non-lazy collections" );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Initializing non-lazy collections" );
+			}
 
 			//do this work only at the very highest level of the load
 			//don't let this method be called recursively
@@ -1785,7 +1787,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 * @throws IOException serialization errors.
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
-		LOG.trace( "Serializing persistence-context" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Serializing persistence-context" );
+		}
 
 		oos.writeBoolean( defaultReadOnly );
 		oos.writeBoolean( hasNonReadOnlyEntities );
@@ -1890,6 +1894,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public static StatefulPersistenceContext deserialize(
 			ObjectInputStream ois,
 			SessionImplementor session) throws IOException, ClassNotFoundException {
+		if ( LOG.isTraceEnabled() ) {
+		}
 		LOG.trace( "Deserializing persistence-context" );
 		final StatefulPersistenceContext rtn = new StatefulPersistenceContext( session );
 		SessionFactoryImplementor sfi = session.getFactory();

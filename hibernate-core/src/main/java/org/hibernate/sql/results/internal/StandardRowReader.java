@@ -118,7 +118,9 @@ public class StandardRowReader<T> implements RowReader<T> {
 
 	@Override
 	public T readRow(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
-		LOGGER.trace( "StandardRowReader#readRow" );
+		if ( LOGGER.isTraceEnabled() ) {
+			LOGGER.trace( "StandardRowReader#readRow" );
+		}
 		coordinateInitializers();
 
 		final Object[] resultRow = new Object[ assemblerCount ];
@@ -138,7 +140,9 @@ public class StandardRowReader<T> implements RowReader<T> {
 	}
 
 	private void afterRow() {
-		LOGGER.trace( "StandardRowReader#afterRow" );
+		if ( LOGGER.isTraceEnabled() ) {
+			LOGGER.trace( "StandardRowReader#afterRow" );
+		}
 		initializersList.finishUpRow();
 	}
 

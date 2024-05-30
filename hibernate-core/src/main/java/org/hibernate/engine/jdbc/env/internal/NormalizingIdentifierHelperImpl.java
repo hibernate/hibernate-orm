@@ -115,7 +115,9 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 		log.tracef( "Normalizing identifier quoting for catalog name [%s]", identifier );
 
 		if ( !nameQualifierSupport.supportsCatalogs() ) {
-			log.trace( "Environment does not support catalogs; returning null" );
+			if ( log.isTraceEnabled() ) {
+				log.trace( "Environment does not support catalogs; returning null" );
+			}
 			// null is used to tell DatabaseMetaData to not limit results based on catalog.
 			return null;
 		}
@@ -181,7 +183,9 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 
 		if ( !nameQualifierSupport.supportsSchemas() ) {
 			// null is used to tell DatabaseMetaData to not limit results based on schema.
-			log.trace( "Environment does not support catalogs; returning null" );
+			if ( log.isTraceEnabled() ) {
+				log.trace( "Environment does not support catalogs; returning null" );
+			}
 			return null;
 		}
 

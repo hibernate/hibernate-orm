@@ -67,7 +67,9 @@ public final class SerializationHelper {
 	 * @throws SerializationException (runtime) if the serialization fails
 	 */
 	public static Object clone(Serializable object) throws SerializationException {
-		LOG.trace( "Starting clone through serialization" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Starting clone through serialization" );
+		}
 		if ( object == null ) {
 			return null;
 		}
@@ -211,7 +213,9 @@ public final class SerializationHelper {
 			throw new IllegalArgumentException( "The InputStream must not be null" );
 		}
 
-		LOG.trace( "Starting deserialization of object" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Starting deserialization of object" );
+		}
 
 		try {
 			CustomObjectInputStream in = new CustomObjectInputStream(

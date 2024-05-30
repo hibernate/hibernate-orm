@@ -160,11 +160,15 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		for ( TransactionObserver observer : observers() ) {
 			observer.afterBegin();
 		}
-		log.trace( "ResourceLocalTransactionCoordinatorImpl#afterBeginCallback" );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "ResourceLocalTransactionCoordinatorImpl#afterBeginCallback" );
+		}
 	}
 
 	private void beforeCompletionCallback() {
-		log.trace( "ResourceLocalTransactionCoordinatorImpl#beforeCompletionCallback" );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "ResourceLocalTransactionCoordinatorImpl#beforeCompletionCallback" );
+		}
 		try {
 			transactionCoordinatorOwner.beforeTransactionCompletion();
 			synchronizationRegistry.notifySynchronizationsBeforeTransactionCompletion();

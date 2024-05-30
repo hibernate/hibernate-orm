@@ -40,7 +40,6 @@ public class SqmFunctionRegistry {
 	private final CaseInsensitiveDictionary<String> alternateKeyMap = new CaseInsensitiveDictionary<>();
 
 	public SqmFunctionRegistry() {
-		log.trace( "SqmFunctionRegistry created" );
 	}
 
 	public Set<String> getValidFunctionKeys() {

@@ -34,13 +34,19 @@ public class JtaTransactionAdapterTransactionManagerImpl implements JtaTransacti
 	public void begin() {
 		try {
 			if ( getStatus() == TransactionStatus.NOT_ACTIVE ) {
-				log.trace( "Calling TransactionManager#begin" );
+				if ( log.isTraceEnabled() ) {
+					log.trace( "Calling TransactionManager#begin" );
+				}
 				transactionManager.begin();
 				initiator = true;
-				log.trace( "Called TransactionManager#begin" );
+				if ( log.isTraceEnabled() ) {
+					log.trace( "Called TransactionManager#begin" );
+				}
 			}
 			else {
-				log.trace( "Skipping TransactionManager#begin due to already active transaction" );
+				if ( log.isTraceEnabled() ) {
+					log.trace( "Skipping TransactionManager#begin due to already active transaction" );
+				}
 			}
 		}
 		catch (Exception e) {
@@ -53,12 +59,18 @@ public class JtaTransactionAdapterTransactionManagerImpl implements JtaTransacti
 		try {
 			if ( initiator ) {
 				initiator = false;
-				log.trace( "Calling TransactionManager#commit" );
+				if ( log.isTraceEnabled() ) {
+					log.trace( "Calling TransactionManager#commit" );
+				}
 				transactionManager.commit();
-				log.trace( "Called TransactionManager#commit" );
+				if ( log.isTraceEnabled() ) {
+					log.trace( "Called TransactionManager#commit" );
+				}
 			}
 			else {
-				log.trace( "Skipping TransactionManager#commit due to not being initiator" );
+				if ( log.isTraceEnabled() ) {
+					log.trace( "Skipping TransactionManager#commit due to not being initiator" );
+				}
 			}
 		}
 		catch (Exception e) {
@@ -71,9 +83,13 @@ public class JtaTransactionAdapterTransactionManagerImpl implements JtaTransacti
 		try {
 			if ( initiator ) {
 				initiator = false;
-				log.trace( "Calling TransactionManager#rollback" );
+				if ( log.isTraceEnabled() ) {
+					log.trace( "Calling TransactionManager#rollback" );
+				}
 				transactionManager.rollback();
-				log.trace( "Called TransactionManager#rollback" );
+				if ( log.isTraceEnabled() ) {
+					log.trace( "Called TransactionManager#rollback" );
+				}
 			}
 			else {
 				markRollbackOnly();

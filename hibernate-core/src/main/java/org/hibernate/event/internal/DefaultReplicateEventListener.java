@@ -53,14 +53,18 @@ public class DefaultReplicateEventListener
 		final EventSource source = event.getSession();
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		if ( persistenceContext.reassociateIfUninitializedProxy( event.getObject() ) ) {
-			LOG.trace( "Uninitialized proxy passed to replicate()" );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Uninitialized proxy passed to replicate()" );
+			}
 			return;
 		}
 
 		Object entity = persistenceContext.unproxyAndReassociate( event.getObject() );
 
 		if ( persistenceContext.isEntryFor( entity ) ) {
-			LOG.trace( "Ignoring persistent instance passed to replicate()" );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Ignoring persistent instance passed to replicate()" );
+			}
 			//hum ... should we cascade anyway? throw an exception? fine like it is?
 			return;
 		}

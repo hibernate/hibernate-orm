@@ -33,7 +33,9 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	public static final IdentifierValue ANY = new IdentifierValue() {
 		@Override
 		public Boolean isUnsaved(Object id) {
-			LOG.trace( "ID unsaved-value strategy ANY" );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "ID unsaved-value strategy ANY" );
+			}
 			return Boolean.TRUE;
 		}
 
@@ -54,7 +56,9 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	public static final IdentifierValue NONE = new IdentifierValue() {
 		@Override
 		public Boolean isUnsaved(Object id) {
-			LOG.trace( "ID unsaved-value strategy NONE" );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "ID unsaved-value strategy NONE" );
+			}
 			return Boolean.FALSE;
 		}
 
@@ -76,7 +80,9 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	public static final IdentifierValue NULL = new IdentifierValue() {
 		@Override
 		public Boolean isUnsaved(@Nullable Object id) {
-			LOG.trace( "ID unsaved-value strategy NULL" );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "ID unsaved-value strategy NULL" );
+			}
 			return id == null;
 		}
 
@@ -97,7 +103,9 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	public static final IdentifierValue UNDEFINED = new IdentifierValue() {
 		@Override
 		public @Nullable Boolean isUnsaved(Object id) {
-			LOG.trace( "ID unsaved-value strategy UNDEFINED" );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "ID unsaved-value strategy UNDEFINED" );
+			}
 			return null;
 		}
 

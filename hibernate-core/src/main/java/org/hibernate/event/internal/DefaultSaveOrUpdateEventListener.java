@@ -69,7 +69,9 @@ public class DefaultSaveOrUpdateEventListener
 		final SessionImplementor source = event.getSession();
 		// For an uninitialized proxy, noop, don't even need to return an id, since it is never a save()
 		if ( reassociateIfUninitializedProxy( object, source ) ) {
-			LOG.trace( "Reassociated uninitialized proxy" );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Reassociated uninitialized proxy" );
+			}
 		}
 		else {
 			//initialize properties of the event:
@@ -162,7 +164,9 @@ public class DefaultSaveOrUpdateEventListener
 	 */
 	protected Object entityIsTransient(SaveOrUpdateEvent event) {
 
-		LOG.trace( "Saving transient instance" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Saving transient instance" );
+		}
 
 		final EventSource source = event.getSession();
 
@@ -200,7 +204,9 @@ public class DefaultSaveOrUpdateEventListener
 	 * @param event The update event to be handled.
 	 */
 	protected void entityIsDetached(SaveOrUpdateEvent event) {
-		LOG.trace( "Updating detached instance" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Updating detached instance" );
+		}
 
 		final EventSource session = event.getSession();
 		if ( session.getPersistenceContextInternal().isEntryFor( event.getEntity() ) ) {

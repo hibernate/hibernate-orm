@@ -35,13 +35,19 @@ public class JtaTransactionAdapterUserTransactionImpl implements JtaTransactionA
 	public void begin() {
 		try {
 			if ( getStatus() == TransactionStatus.NOT_ACTIVE ) {
-				log.trace( "Calling UserTransaction#begin" );
+				if ( log.isTraceEnabled() ) {
+					log.trace( "Calling UserTransaction#begin" );
+				}
 				userTransaction.begin();
 				initiator = true;
-				log.trace( "Called UserTransaction#begin" );
+				if ( log.isTraceEnabled() ) {
+					log.trace( "Called UserTransaction#begin" );
+				}
 			}
 			else {
-				log.trace( "Skipping TransactionManager#begin due to already active transaction" );
+				if ( log.isTraceEnabled() ) {
+					log.trace( "Skipping TransactionManager#begin due to already active transaction" );
+				}
 			}
 		}
 		catch (Exception e) {
@@ -54,12 +60,18 @@ public class JtaTransactionAdapterUserTransactionImpl implements JtaTransactionA
 		try {
 			if ( initiator ) {
 				initiator = false;
-				log.trace( "Calling UserTransaction#commit" );
+				if ( log.isTraceEnabled() ) {
+					log.trace( "Calling UserTransaction#commit" );
+				}
 				userTransaction.commit();
-				log.trace( "Called UserTransaction#commit" );
+				if ( log.isTraceEnabled() ) {
+					log.trace( "Called UserTransaction#commit" );
+				}
 			}
 			else {
-				log.trace( "Skipping TransactionManager#commit due to not being initiator" );
+				if ( log.isTraceEnabled() ) {
+					log.trace( "Skipping TransactionManager#commit due to not being initiator" );
+				}
 			}
 		}
 		catch (Exception e) {
@@ -72,9 +84,13 @@ public class JtaTransactionAdapterUserTransactionImpl implements JtaTransactionA
 		try {
 			if ( initiator ) {
 				initiator = false;
-				log.trace( "Calling UserTransaction#rollback" );
+				if ( log.isTraceEnabled() ) {
+					log.trace( "Calling UserTransaction#rollback" );
+				}
 				userTransaction.rollback();
-				log.trace( "Called UserTransaction#rollback" );
+				if ( log.isTraceEnabled() ) {
+					log.trace( "Called UserTransaction#rollback" );
+				}
 			}
 			else {
 				markRollbackOnly();

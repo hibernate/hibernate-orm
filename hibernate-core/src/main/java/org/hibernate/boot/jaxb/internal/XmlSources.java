@@ -104,14 +104,18 @@ public class XmlSources {
 	}
 
 	public static XmlSource fromStream(InputStream inputStream) {
-		JaxbLogger.JAXB_LOGGER.trace( "reading mappings from InputStream" );
+		if ( JaxbLogger.JAXB_LOGGER.isTraceEnabled() ) {
+			JaxbLogger.JAXB_LOGGER.trace( "reading mappings from InputStream" );
+		}
 
 		final Origin origin = new Origin( SourceType.INPUT_STREAM, null );
 		return new InputStreamXmlSource( origin, inputStream, false );
 	}
 
 	public static XmlSource fromDocument(Document document) {
-		JaxbLogger.JAXB_LOGGER.trace( "reading mappings from DOM" );
+		if ( JaxbLogger.JAXB_LOGGER.isTraceEnabled() ) {
+			JaxbLogger.JAXB_LOGGER.trace( "reading mappings from DOM" );
+		}
 		final Origin origin = new Origin( SourceType.DOM, Origin.UNKNOWN_FILE_PATH );
 		return new JaxpSourceXmlSource( origin, new DOMSource( document ) );
 	}

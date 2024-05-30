@@ -49,7 +49,9 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		log.tracef( "Starting createEntityManagerFactory for persistenceUnitName %s", persistenceUnitName );
 		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties );
 		if ( builder == null ) {
-			log.trace( "Could not obtain matching EntityManagerFactoryBuilder, returning null" );
+			if ( log.isTraceEnabled() ) {
+				log.trace( "Could not obtain matching EntityManagerFactoryBuilder, returning null" );
+			}
 			return null;
 		}
 		return builder.build();
@@ -166,7 +168,9 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, map );
 		if ( builder == null ) {
-			log.trace( "Could not obtain matching EntityManagerFactoryBuilder, returning false" );
+			if ( log.isTraceEnabled() ) {
+				log.trace( "Could not obtain matching EntityManagerFactoryBuilder, returning false" );
+			}
 			return false;
 		}
 		builder.generateSchema();

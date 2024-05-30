@@ -2689,7 +2689,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	 * @throws InvalidObjectException Thrown if we could not resolve the factory by uuid/name.
 	 */
 	private Object readResolve() throws InvalidObjectException {
-		LOG.trace( "Resolving serialized SqmCriteriaNodeBuilder" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Resolving serialized SqmCriteriaNodeBuilder" );
+		}
 		return locateSessionFactoryOnDeserialization( uuid, name ).getCriteriaBuilder();
 	}
 

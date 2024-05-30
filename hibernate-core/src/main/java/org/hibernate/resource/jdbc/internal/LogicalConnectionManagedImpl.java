@@ -261,14 +261,18 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 
 		getResourceRegistry().releaseResources();
 
-		log.trace( "Closing logical connection" );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Closing logical connection" );
+		}
 		try {
 			releaseConnection();
 		}
 		finally {
 			// no matter what
 			closed = true;
-			log.trace( "Logical connection closed" );
+			if ( log.isTraceEnabled() ) {
+				log.trace( "Logical connection closed" );
+			}
 		}
 		return null;
 	}

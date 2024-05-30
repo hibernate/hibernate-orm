@@ -285,7 +285,9 @@ public class ActionQueue {
 
 	private void addResolvedEntityInsertAction(AbstractEntityInsertAction insert) {
 		if ( insert.isEarlyInsert() ) {
-			LOG.trace( "Executing insertions before resolved early-insert" );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Executing insertions before resolved early-insert" );
+			}
 			executeInserts();
 			if (LOG.isDebugEnabled()) {
 				LOG.debug( "Executing identity-insert immediately" );
@@ -293,7 +295,9 @@ public class ActionQueue {
 			execute( insert );
 		}
 		else {
-			LOG.trace( "Adding resolved non-early insert action." );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Adding resolved non-early insert action." );
+			}
 			OrderedActions.EntityInsertAction.ensureInitialized( this );
 			insertions.add( insert );
 		}
@@ -921,7 +925,9 @@ public class ActionQueue {
 	 * @throws IOException Indicates an error writing to the stream
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
-		LOG.trace( "Serializing action-queue" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Serializing action-queue" );
+		}
 		if ( unresolvedInsertions == null ) {
 			unresolvedInsertions = new UnresolvedEntityInsertActions();
 		}

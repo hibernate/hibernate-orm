@@ -111,7 +111,9 @@ public class XmlMappingBinderAccess {
 	 * Create a {@linkplain Binding binding} from an input stream
 	 */
 	public <X extends BindableMappingDescriptor> Binding<X> bind(InputStream xmlInputStream) {
-		LOG.trace( "reading mappings from InputStream" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "reading mappings from InputStream" );
+		}
 		final Origin origin = new Origin( SourceType.INPUT_STREAM, null );
 		//noinspection unchecked
 		return new InputStreamXmlSource( origin, xmlInputStream, false ).doBind( getMappingBinder() );

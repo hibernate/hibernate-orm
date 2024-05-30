@@ -911,7 +911,9 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 					throw new IllegalStateException( "EntityManagerFactory is already closed" );
 				}
 
-				LOG.trace( "Already closed" );
+				if ( LOG.isTraceEnabled() ) {
+					LOG.trace( "Already closed" );
+				}
 				return;
 			}
 
@@ -1634,7 +1636,9 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			LOG.debugf( "Serializing: %s", getUuid() );
 		}
 		out.defaultWriteObject();
-		LOG.trace( "Serialized" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Serialized" );
+		}
 	}
 
 	/**
@@ -1646,7 +1650,9 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	 * @throws ClassNotFoundException Again, can be thrown by the stream
 	 */
 	private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-		LOG.trace( "Deserializing" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Deserializing" );
+		}
 		in.defaultReadObject();
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Deserialized: %s", getUuid() );
@@ -1665,7 +1671,9 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	 * @throws InvalidObjectException Thrown if we could not resolve the factory by uuid/name.
 	 */
 	private Object readResolve() throws InvalidObjectException {
-		LOG.trace( "Resolving serialized SessionFactory" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Resolving serialized SessionFactory" );
+		}
 		return locateSessionFactoryOnDeserialization( getUuid(), name );
 	}
 
@@ -1711,7 +1719,9 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	 * @throws IOException indicates problems reading back serial data stream
 	 */
 	static SessionFactoryImpl deserialize(ObjectInputStream ois) throws IOException {
-		LOG.trace( "Deserializing SessionFactory from Session" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Deserializing SessionFactory from Session" );
+		}
 		final String uuid = ois.readUTF();
 		boolean isNamed = ois.readBoolean();
 		final String name = isNamed ? ois.readUTF() : null;

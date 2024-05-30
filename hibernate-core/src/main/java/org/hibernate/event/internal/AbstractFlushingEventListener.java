@@ -71,7 +71,9 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 	 */
 	protected void flushEverythingToExecutions(FlushEvent event) throws HibernateException {
 
-		LOG.trace( "Flushing session" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Flushing session" );
+		}
 
 		final EventSource session = event.getSession();
 
@@ -215,7 +217,9 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 	private int flushEntities(final FlushEvent event, final PersistenceContext persistenceContext)
 			throws HibernateException {
 
-		LOG.trace( "Flushing entities and processing referenced collections" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Flushing entities and processing referenced collections" );
+		}
 
 		final EventSource source = event.getSession();
 		final EventListenerGroup<FlushEntityEventListener> flushListeners =
@@ -281,7 +285,9 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 	 */
 	private int flushCollections(final EventSource session, final PersistenceContext persistenceContext)
 			throws HibernateException {
-		LOG.trace( "Processing unreferenced collections" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Processing unreferenced collections" );
+		}
 
 		final int count = persistenceContext.getCollectionEntriesSize();
 
@@ -294,7 +300,9 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 		// Schedule updates to collections:
 
-		LOG.trace( "Scheduling collection removes/(re)creates/updates" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Scheduling collection removes/(re)creates/updates" );
+		}
 
 		final ActionQueue actionQueue = session.getActionQueue();
 		final Interceptor interceptor = session.getInterceptor();
@@ -368,7 +376,9 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 	 * @param session The session being flushed
 	 */
 	protected void performExecutions(EventSource session) {
-		LOG.trace( "Executing flush" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Executing flush" );
+		}
 
 		// IMPL NOTE : here we alter the flushing flag of the persistence context to allow
 		//		during-flush callbacks more leniency in regards to initializing proxies and
@@ -403,7 +413,9 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 	 */
 	protected void postFlush(SessionImplementor session) throws HibernateException {
 
-		LOG.trace( "Post flush" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Post flush" );
+		}
 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		persistenceContext.clearCollectionsByKey();

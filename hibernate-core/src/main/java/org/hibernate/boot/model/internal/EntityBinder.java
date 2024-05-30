@@ -1188,7 +1188,9 @@ public class EntityBinder {
 					context
 			);
 		}
-		LOG.trace( "Subclass joined column(s) created" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Subclass joined column(s) created" );
+		}
 		return joinColumns;
 	}
 

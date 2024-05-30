@@ -107,7 +107,9 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				refresh( event, refreshedAlready, entity );
 			}
 			else {
-				LOG.trace( "Already refreshed" );
+				if ( LOG.isTraceEnabled() ) {
+					LOG.trace( "Already refreshed" );
+				}
 			}
 		}
 	}

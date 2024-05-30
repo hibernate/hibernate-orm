@@ -310,7 +310,9 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			// existing proxy associated with the PC - and if so, use it
 			final Object proxy;
 			if ( holder != null && ( proxy = holder.getProxy() ) != null ) {
-				LOG.trace( "Entity proxy found in session cache" );
+				if ( LOG.isTraceEnabled() ) {
+					LOG.trace( "Entity proxy found in session cache" );
+				}
 				if ( LOG.isDebugEnabled() && HibernateProxy.extractLazyInitializer( proxy ).isUnwrap() ) {
 					LOG.debug( "Ignoring NO_PROXY to honor laziness" );
 				}

@@ -837,7 +837,9 @@ public class AnnotatedColumn {
 			}
 		}
 		else {
-			LOG.trace("Could not perform @ColumnDefault lookup as 'PropertyData' did not give access to XProperty");
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace("Could not perform @ColumnDefault lookup as 'PropertyData' did not give access to XProperty");
+			}
 		}
 	}
 
@@ -855,7 +857,9 @@ public class AnnotatedColumn {
 			}
 		}
 		else {
-			LOG.trace("Could not perform @GeneratedColumn lookup as 'PropertyData' did not give access to XProperty");
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace("Could not perform @GeneratedColumn lookup as 'PropertyData' did not give access to XProperty");
+			}
 		}
 	}
 
@@ -880,7 +884,9 @@ public class AnnotatedColumn {
 			}
 		}
 		else {
-			LOG.trace("Could not perform @Check lookup as 'PropertyData' did not give access to XProperty");
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace("Could not perform @Check lookup as 'PropertyData' did not give access to XProperty");
+			}
 		}
 	}
 

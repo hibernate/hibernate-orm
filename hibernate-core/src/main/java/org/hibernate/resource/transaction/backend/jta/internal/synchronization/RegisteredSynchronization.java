@@ -32,7 +32,9 @@ public class RegisteredSynchronization implements Synchronization {
 
 	@Override
 	public void beforeCompletion() {
-		log.trace( "Registered JTA Synchronization : beforeCompletion()" );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Registered JTA Synchronization : beforeCompletion()" );
+		}
 
 		synchronizationCallbackCoordinator.beforeCompletion();
 	}

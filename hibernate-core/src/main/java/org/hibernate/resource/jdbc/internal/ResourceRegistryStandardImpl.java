@@ -329,7 +329,9 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 
 	@Override
 	public void releaseResources() {
-		log.trace( "Releasing JDBC resources" );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Releasing JDBC resources" );
+		}
 
 		if ( jdbcObserver != null ) {
 			jdbcObserver.jdbcReleaseRegistryResourcesStart();

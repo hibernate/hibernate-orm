@@ -8,7 +8,6 @@ package org.hibernate.orm.test.envers.integration.naming.ids;
 
 import java.util.List;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -24,7 +23,6 @@ import org.hibernate.envers.Audited;
 @Table(name = "JoinEmbIdRefEd")
 public class JoinEmbIdNamingRefEdEntity {
 	@Id
-	@GeneratedValue
 	private EmbIdNaming id;
 
 	@Audited

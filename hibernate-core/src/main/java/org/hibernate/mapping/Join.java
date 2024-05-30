@@ -152,14 +152,6 @@ public class Join implements AttributeContainer, Serializable {
 		return customInsertCallable;
 	}
 
-	/**
-	 * @deprecated use {@link #getInsertExpectation()}
-	 */
-	@Deprecated(since = "6.5", forRemoval = true)
-	public ExecuteUpdateResultCheckStyle getCustomSQLInsertCheckStyle() {
-		return insertCheckStyle;
-	}
-
 	public void setCustomSQLUpdate(String customSQLUpdate, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLUpdate = customSQLUpdate;
 		this.customUpdateCallable = callable;
@@ -173,14 +165,6 @@ public class Join implements AttributeContainer, Serializable {
 
 	public boolean isCustomUpdateCallable() {
 		return customUpdateCallable;
-	}
-
-	/**
-	 * @deprecated use {@link #getUpdateExpectation()}
-	 */
-	@Deprecated(since = "6.5", forRemoval = true)
-	public ExecuteUpdateResultCheckStyle getCustomSQLUpdateCheckStyle() {
-		return updateCheckStyle;
 	}
 
 	public void setCustomSQLDelete(String customSQLDelete, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {

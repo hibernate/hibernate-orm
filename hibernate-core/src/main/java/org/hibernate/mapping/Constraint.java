@@ -69,25 +69,6 @@ public abstract class Constraint implements Exportable, Serializable {
 	}
 
 	/**
-	 * Helper method for {@link #generateName(String, Table, Column...)}.
-	 *
-	 * @return String The generated name
-	 *
-	 * @deprecated This method does not respect the {@link org.hibernate.boot.model.naming.ImplicitNamingStrategy}
-	 */
-	@Deprecated(since = "6.5", forRemoval = true)
-	public static String generateName(String prefix, Table table, List<Column> columns) {
-		// N.B. legacy APIs are involved: can't trust that the columns List is actually
-		// containing Column instances - the generic type isn't consistently enforced.
-		// So some elements might be Formula instances, but they don't need to be part
-		// of the name generation.
-		final Column[] defensive = columns.stream()
-				.filter( (Object thing) -> thing instanceof Column )
-				.toArray( Column[]::new );
-		return generateName( prefix, table, defensive);
-	}
-
-	/**
 	 * Hash a constraint name using MD5. Convert the MD5 digest to base 35
 	 * (full alphanumeric), guaranteeing
 	 * that the length of the name will always be smaller than the 30

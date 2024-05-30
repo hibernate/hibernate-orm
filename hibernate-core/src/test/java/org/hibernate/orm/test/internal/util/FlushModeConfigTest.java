@@ -12,8 +12,8 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 
+import org.hibernate.jpa.HibernateHints;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -32,7 +32,7 @@ public class FlushModeConfigTest {
 	@EnumSource( FlushMode.class )
 	public void testFlushModeSettingTakingEffect(FlushMode flushMode) {
 		final StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( AvailableSettings.FLUSH_MODE, flushMode.name() )
+				.applySetting(HibernateHints.HINT_FLUSH_MODE, flushMode.name() )
 				.build();
 		try ( final SessionFactory sessionFactory = new MetadataSources(serviceRegistry).buildMetadata().buildSessionFactory() ) {
 			try ( final Session session = sessionFactory.openSession() ) {

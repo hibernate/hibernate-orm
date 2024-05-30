@@ -546,25 +546,6 @@ public interface SharedSessionContractImplementor
 	}
 
 	/**
-	 * Are we currently enforcing a {@linkplain GraphSemantic#FETCH fetch graph}?
-	 *
-	 * @deprecated this is not used  anywhere
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	default boolean isEnforcingFetchGraph() {
-		return false;
-	}
-
-	/**
-	 * Enable or disable {@linkplain GraphSemantic#FETCH fetch graph} enforcement.
-	 *
-	 * @deprecated this is not used  anywhere
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	default void setEnforcingFetchGraph(boolean enforcingFetchGraph) {
-	}
-
-	/**
 	 * Check if there is a Hibernate or JTA transaction in progress and,
 	 * if there is not, flush if necessary, making sure that the connection
 	 * has been committed (if it is not in autocommit mode), and finally

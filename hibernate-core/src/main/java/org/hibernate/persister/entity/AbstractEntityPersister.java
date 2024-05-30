@@ -2832,14 +2832,6 @@ public abstract class AbstractEntityPersister
 		return tableMappings;
 	}
 
-	/**
-	 * @deprecated this method is no longer used
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	public int getTableMappingsCount() {
-		return tableMappings.length;
-	}
-
 	public EntityTableMapping getTableMapping(int i) {
 		return tableMappings[i];
 	}
@@ -2932,14 +2924,6 @@ public abstract class AbstractEntityPersister
 	@Override
 	public void delete(Object id, Object version, Object object, SharedSessionContractImplementor session) {
 		deleteCoordinator.delete( object, id, version, session );
-	}
-
-	/**
-	 * @deprecated this method is no longer used
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	protected boolean isAllOrDirtyOptLocking() {
-		return entityMetamodel.getOptimisticLockStyle().isAllOrDirty();
 	}
 
 	protected void logStaticSQL() {

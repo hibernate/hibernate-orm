@@ -590,25 +590,6 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		}
 	}
 
-	/**
-	 * If there is one given column, mark it unique, otherwise
-	 * create a {@link UniqueKey} comprising the given columns.
-	 * @deprecated Use {@link #createUniqueKey(List, MetadataBuildingContext)}
-	 */
-	@Deprecated(since = "6.5", forRemoval = true)
-	public void createUniqueKey(List<Column> keyColumns) {
-		if ( keyColumns.size() == 1 ) {
-			keyColumns.get(0).setUnique( true );
-		}
-		else {
-			String keyName = Constraint.generateName( "UK_", this, keyColumns );
-			UniqueKey uniqueKey = getOrCreateUniqueKey( keyName );
-			for ( Column keyColumn : keyColumns ) {
-				uniqueKey.addColumn( keyColumn );
-			}
-		}
-	}
-
 	public UniqueKey getUniqueKey(String keyName) {
 		return uniqueKeys.get( keyName );
 	}

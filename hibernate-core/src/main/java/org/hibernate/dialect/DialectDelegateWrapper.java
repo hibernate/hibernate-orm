@@ -406,12 +406,6 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
-	@Deprecated(since = "6", forRemoval = true)
-	public boolean isLockTimeoutParameterized() {
-		return wrapped.isLockTimeoutParameterized();
-	}
-
-	@Override
 	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
 		return wrapped.getLockingStrategy( lockable, lockMode );
 	}
@@ -1360,12 +1354,6 @@ public class DialectDelegateWrapper extends Dialect {
 	@Override
 	public boolean supportsWait() {
 		return wrapped.supportsWait();
-	}
-
-	@Override
-	@Deprecated(since = "6", forRemoval = true)
-	public String inlineLiteral(String literal) {
-		return wrapped.inlineLiteral( literal );
 	}
 
 	@Override

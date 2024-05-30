@@ -12,10 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Exportable;
-import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 
 import static java.util.Collections.unmodifiableList;
@@ -85,28 +83,6 @@ public class Index implements Exportable, Serializable {
 		return statement.toString();
 	}
 
-	/**
-	 * @deprecated This method will be removed in the next release
-	 */
-	@Deprecated(forRemoval = true)
-	public static String buildSqlCreateIndexString(
-			SqlStringGenerationContext context,
-			String name,
-			Table table,
-			java.util.List<Column> columns,
-			java.util.Map<Column, String> columnOrderMap,
-			boolean unique,
-			Metadata metadata) {
-		return buildSqlCreateIndexString(
-				context.getDialect(),
-				name,
-				context.format( table.getQualifiedTableName() ),
-				columns,
-				columnOrderMap,
-				unique
-		);
-	}
-
 	public Table getTable() {
 		return table;
 	}
@@ -164,24 +140,6 @@ public class Index implements Exportable, Serializable {
 		if ( isNotEmpty( order ) ) {
 			selectableOrderMap.put( selectable, order );
 		}
-	}
-
-	/**
-	 * @deprecated use {@link #getSelectableOrderMap()}
-	 */
-	@Deprecated(since = "6.3", forRemoval = true)
-	public void addColumns(java.util.List<Column> extraColumns) {
-		for ( Column column : extraColumns ) {
-			addColumn( column );
-		}
-	}
-
-	/**
-	 * @deprecated use {@link #getSelectableOrderMap()}
-	 */
-	@Deprecated(since = "6.3", forRemoval = true)
-	public boolean containsColumn(Column column) {
-		return selectables.contains( column );
 	}
 
 	public String getName() {

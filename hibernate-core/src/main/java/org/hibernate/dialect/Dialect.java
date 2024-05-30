@@ -2046,28 +2046,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * If this dialect supports specifying lock timeouts, are those timeouts
-	 * rendered into the {@code SQL} string as parameters? The implication
-	 * is that Hibernate will need to bind the timeout value as a parameter
-	 * in the {@link PreparedStatement}. If true, the parameter position
-	 * is always handled as the last parameter; if the dialect specifies the
-	 * lock timeout elsewhere in the {@code SQL} statement then the timeout
-	 * value should be directly rendered into the statement and this method
-	 * should return false.
-	 *
-	 * @return True if the lock timeout is rendered into the {@code SQL}
-	 *         string as a parameter; false otherwise.
-	 *
-	 * @deprecated This is never called, and since at least Hibernate 5 has
-	 *             just returned {@code false} in every dialect. It will be
-	 *             removed.
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	public boolean isLockTimeoutParameterized() {
-		return false;
-	}
-
-	/**
 	 * A {@link LockingStrategy} which is able to acquire a database-level
 	 * lock with the specified {@linkplain LockMode level}.
 	 *
@@ -4581,16 +4559,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public boolean supportsWait() {
 		return supportsNoWait();
-	}
-
-	/**
-	 * @deprecated This is no longer called
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	public String inlineLiteral(String literal) {
-		final StringBuilder sb = new StringBuilder( literal.length() + 2 );
-		appendLiteral( new StringBuilderSqlAppender( sb ), literal );
-		return sb.toString();
 	}
 
 	/**

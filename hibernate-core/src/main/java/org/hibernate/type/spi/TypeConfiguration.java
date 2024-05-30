@@ -682,9 +682,15 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			}
 		}
 		else if ( isDuration( secondType ) ) {
-			// it's either addition/subtraction of durations
+			// if firstType is not known, and operator is
+			// addition/subtraction, then this can be
+			// either addition/subtraction of duration
+			// to/from temporal or addition/subtraction of
+			// durations in this case we shall return null;
+			// otherwise, it's either addition/subtraction of durations
 			// or prefix scalar multiplication of a duration
-			return secondType;
+//			return secondType;
+			return firstType == null ? null : secondType;
 		}
 		else if ( firstType==null && getSqlTemporalType( secondType ) != null ) {
 			// subtraction of a date or timestamp from a

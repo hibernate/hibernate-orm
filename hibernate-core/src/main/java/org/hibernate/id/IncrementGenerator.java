@@ -15,7 +15,7 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.naming.ObjectNameNormalizer;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
@@ -29,10 +29,10 @@ import org.hibernate.type.Type;
 
 import static org.hibernate.id.IdentifierGeneratorHelper.getIntegralDataTypeHolder;
 import static org.hibernate.id.PersistentIdentifierGenerator.CATALOG;
-import static org.hibernate.id.PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER;
 import static org.hibernate.id.PersistentIdentifierGenerator.PK;
 import static org.hibernate.id.PersistentIdentifierGenerator.SCHEMA;
 import static org.hibernate.internal.util.StringHelper.split;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
 
 /**
  * An {@link IdentifierGenerator} that returns a {@code long}, constructed by counting
@@ -89,18 +89,17 @@ public class IncrementGenerator implements IdentifierGenerator {
 		returnClass = type.getReturnedClass();
 
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
-		final ObjectNameNormalizer normalizer = (ObjectNameNormalizer) parameters.get( IDENTIFIER_NORMALIZER );
+		final IdentifierHelper identifierHelper = jdbcEnvironment.getIdentifierHelper();
 
 		column = parameters.getProperty( COLUMN );
 		if ( column == null ) {
 			column = parameters.getProperty( PK );
 		}
-		column = normalizer.normalizeIdentifierQuoting( column ).render( jdbcEnvironment.getDialect() );
+		column = identifierHelper.normalizeQuoting( identifierHelper.toIdentifier( column ) )
+				.render( jdbcEnvironment.getDialect() );
 
-		IdentifierHelper identifierHelper = jdbcEnvironment.getIdentifierHelper();
-
-		final String schema = normalizer.toDatabaseIdentifierText( parameters.getProperty( SCHEMA ) );
-		final String catalog = normalizer.toDatabaseIdentifierText( parameters.getProperty( CATALOG ) );
+		final Identifier catalog = identifierHelper.toIdentifier( getString( CATALOG, parameters ) );
+		final Identifier schema =  identifierHelper.toIdentifier( getString( SCHEMA, parameters ) );
 
 		String tableList = parameters.getProperty( TABLES );
 		if ( tableList == null ) {
@@ -108,8 +107,7 @@ public class IncrementGenerator implements IdentifierGenerator {
 		}
 		physicalTableNames = new ArrayList<>();
 		for ( String tableName : split( ", ", tableList ) ) {
-			physicalTableNames.add( new QualifiedTableName( identifierHelper.toIdentifier( catalog ),
-					identifierHelper.toIdentifier( schema ), identifierHelper.toIdentifier( tableName ) ) );
+			physicalTableNames.add( new QualifiedTableName( catalog, schema, identifierHelper.toIdentifier( tableName ) ) );
 		}
 	}
 

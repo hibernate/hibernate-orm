@@ -9,7 +9,6 @@ package org.hibernate.boot.model.internal;
 import java.lang.annotation.Annotation;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
@@ -18,7 +17,6 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AttributeBinderType;
 import org.hibernate.annotations.CompositeType;
-import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.LazyGroup;
@@ -26,7 +24,6 @@ import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.Parent;
-import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.binder.AttributeBinder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.naming.Identifier;
@@ -47,7 +44,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
@@ -90,17 +86,14 @@ import static org.hibernate.boot.model.internal.BinderHelper.getMappedSuperclass
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.getPropertyOverriddenByMapperOrMapsId;
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
-import static org.hibernate.boot.model.internal.BinderHelper.isCompositeId;
 import static org.hibernate.boot.model.internal.ClassPropertyHolder.handleGenericComponentProperty;
 import static org.hibernate.boot.model.internal.ClassPropertyHolder.prepareActualProperty;
 import static org.hibernate.boot.model.internal.CollectionBinder.bindCollection;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.createCompositeBinder;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.createEmbeddable;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.isEmbedded;
-import static org.hibernate.boot.model.internal.GeneratorBinder.beanContainer;
-import static org.hibernate.boot.model.internal.GeneratorBinder.createIdGenerator;
-import static org.hibernate.boot.model.internal.GeneratorBinder.generatorCreator;
-import static org.hibernate.boot.model.internal.GeneratorBinder.identifierGeneratorCreator;
+import static org.hibernate.boot.model.internal.GeneratorBinder.createIdGeneratorsFromGeneratorAnnotations;
+import static org.hibernate.boot.model.internal.GeneratorBinder.createValueGeneratorFromAnnotations;
 import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.resolveTimeZoneStorageCompositeUserType;
 import static org.hibernate.boot.model.internal.ToOneBinder.bindManyToOne;
 import static org.hibernate.boot.model.internal.ToOneBinder.bindOneToOne;
@@ -449,33 +442,10 @@ public class PropertyBinder {
 	}
 
 	private void handleValueGeneration(Property property) {
-		if ( this.memberDetails != null ) {
-			property.setValueGeneratorCreator( getValueGenerationFromAnnotations( this.memberDetails ) );
+		if ( memberDetails != null ) {
+			property.setValueGeneratorCreator(
+					createValueGeneratorFromAnnotations( holder, name, memberDetails, buildingContext ) );
 		}
-	}
-
-	/**
-	 * Returns the value generation strategy for the given property, if any.
-	 */
-	private GeneratorCreator getValueGenerationFromAnnotations(MemberDetails property) {
-		GeneratorCreator creator = null;
-		final List<? extends Annotation> metaAnnotatedTargets = property.getMetaAnnotated(
-				ValueGenerationType.class,
-				getSourceModelContext()
-		);
-		for ( Annotation metaAnnotatedTarget : metaAnnotatedTargets ) {
-			final GeneratorCreator candidate = generatorCreator( property, metaAnnotatedTarget, beanContainer( buildingContext ) );
-			if ( candidate != null ) {
-				if ( creator != null ) {
-					throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
-							+ "' has multiple '@ValueGenerationType' annotations" );
-				}
-				else {
-					creator = candidate;
-				}
-			}
-		}
-		return creator;
 	}
 
 	private void handleLob(Property property) {
@@ -1181,12 +1151,15 @@ public class PropertyBinder {
 		}
 		else if ( propertyBinder.isId() ) {
 			//components and regular basic types create SimpleValue objects
-			processId(
+			if ( isIdentifierMapper ) {
+				throw new AnnotationException( "Property '"+ getPath( propertyHolder, inferredData )
+						+ "' belongs to an '@IdClass' and may not be annotated '@Id' or '@EmbeddedId'" );
+			}
+			createIdGeneratorsFromGeneratorAnnotations(
 					propertyHolder,
 					inferredData,
 					(SimpleValue) propertyBinder.getValue(),
 					classGenerators,
-					isIdentifierMapper,
 					context
 			);
 		}
@@ -1456,72 +1429,5 @@ public class PropertyBinder {
 		}
 
 		return null;
-	}
-
-	private static void processId(
-			PropertyHolder propertyHolder,
-			PropertyData inferredData,
-			SimpleValue idValue,
-			Map<String, IdentifierGeneratorDefinition> classGenerators,
-			boolean isIdentifierMapper,
-			MetadataBuildingContext context) {
-		if ( isIdentifierMapper ) {
-			throw new AnnotationException( "Property '"+ getPath( propertyHolder, inferredData )
-					+ "' belongs to an '@IdClass' and may not be annotated '@Id' or '@EmbeddedId'" );
-		}
-
-		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
-		final MemberDetails idAttributeMember = inferredData.getAttributeMember();
-		final List<? extends Annotation> idGeneratorAnnotations = idAttributeMember.getMetaAnnotated( IdGeneratorType.class, sourceModelContext );
-		final List<? extends Annotation> generatorAnnotations = idAttributeMember.getMetaAnnotated( ValueGenerationType.class, sourceModelContext );
-		removeIdGenerators( generatorAnnotations, idGeneratorAnnotations );
-		if ( idGeneratorAnnotations.size() + generatorAnnotations.size() > 1 ) {
-			throw new AnnotationException( String.format(
-					Locale.ROOT,
-					"Property `%s` has too many generator annotations : %s",
-					getPath( propertyHolder, inferredData ),
-					CollectionHelper.combineUntyped( idGeneratorAnnotations, generatorAnnotations )
-			) );
-		}
-		if ( !idGeneratorAnnotations.isEmpty() ) {
-			idValue.setCustomIdGeneratorCreator( identifierGeneratorCreator(
-					idAttributeMember,
-					idGeneratorAnnotations.get(0),
-					idValue,
-					beanContainer( context )
-			) );
-		}
-		else if ( !generatorAnnotations.isEmpty() ) {
-//			idValue.setCustomGeneratorCreator( generatorCreator( idAttributeMember, generatorAnnotation ) );
-			throw new AnnotationException( String.format(
-					Locale.ROOT,
-					"Property '%s' is annotated `%s` which is not an `@IdGeneratorType`",
-					getPath( propertyHolder, inferredData ),
-					generatorAnnotations.get(0).annotationType()
-			) );
-		}
-		else {
-			final ClassDetails entityClass = inferredData.getClassOrElementType().determineRawClass();
-			createIdGenerator( idValue, classGenerators, context, entityClass, idAttributeMember );
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev(
-						"Bind {0} on {1}",
-						isCompositeId( entityClass, idAttributeMember ) ? "@EmbeddedId" : "@Id",
-						inferredData.getPropertyName()
-				);
-			}
-		}
-	}
-
-	// Since these collections may contain Proxies created by common-annotations module we cannot reliably use simple remove/removeAll
-	// collection methods as those proxies do not implement hashcode/equals and even a simple `a.equals(a)` will return `false`.
-	// Instead, we will check the annotation types, since generator annotations should not be "repeatable" we should have only
-	// at most one annotation for a generator:
-	private static void removeIdGenerators(
-			List<? extends Annotation> generatorAnnotations,
-			List<? extends Annotation> idGeneratorAnnotations) {
-		for ( Annotation id : idGeneratorAnnotations ) {
-			generatorAnnotations.removeIf( gen -> gen.annotationType().equals( id.annotationType() ) );
-		}
 	}
 }

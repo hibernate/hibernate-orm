@@ -8,7 +8,6 @@ package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -156,7 +155,6 @@ import static org.hibernate.boot.model.internal.BinderHelper.toAliasTableMap;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverrideAnnotation;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
-import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdGenerator;
 import static org.hibernate.boot.model.internal.InheritanceState.getInheritanceStateOfSuperEntity;
 import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
 import static org.hibernate.boot.model.internal.PropertyBinder.hasIdAnnotation;
@@ -749,35 +747,11 @@ public class EntityBinder {
 
 		rootClass.setIdentifier( id );
 
-		handleIdGenerator( inferredData, buildingContext, id );
-
 		rootClass.setEmbeddedIdentifier( inferredData.getPropertyType() == null );
 
 		propertyHolder.setInIdClass( null );
 
 		return id;
-	}
-
-	private static void handleIdGenerator(PropertyData inferredData, MetadataBuildingContext buildingContext, Component id) {
-		if ( buildingContext.getBootstrapContext().getJpaCompliance().isGlobalGeneratorScopeEnabled() ) {
-			buildingContext.getMetadataCollector().addSecondPass( new IdGeneratorResolverSecondPass(
-					id,
-					inferredData.getAttributeMember(),
-					GeneratorBinder.ASSIGNED_GENERATOR_NAME,
-					"",
-					buildingContext
-			) );
-		}
-		else {
-			makeIdGenerator(
-					id,
-					inferredData.getAttributeMember(),
-					GeneratorBinder.ASSIGNED_GENERATOR_NAME,
-					"",
-					buildingContext,
-					Collections.emptyMap()
-			);
-		}
 	}
 
 	private void handleSecondaryTables() {

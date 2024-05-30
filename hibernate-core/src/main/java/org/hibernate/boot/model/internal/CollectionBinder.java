@@ -1614,7 +1614,7 @@ public abstract class CollectionBinder {
 	}
 
 	TypeDetails getElementType() {
-		if ( isDefault( targetEntity, buildingContext ) ) {
+		if ( isDefault( targetEntity ) ) {
 			if ( collectionElementType != null ) {
 				return collectionElementType;
 			}

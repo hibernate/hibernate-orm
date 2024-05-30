@@ -24,7 +24,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.internal.GeneratedValuesHelper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -34,6 +33,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifierIfNotUnsaved;
+import static org.hibernate.internal.util.StringHelper.unquote;
 import static org.hibernate.spi.NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
 
 /**
@@ -124,7 +124,7 @@ public final class IdentifierGeneratorHelper {
 
 	private static boolean equal(String keyColumnName, String alias, Dialect dialect) {
 		return alias.equalsIgnoreCase( keyColumnName )
-				|| alias.equalsIgnoreCase( StringHelper.unquote( keyColumnName, dialect ) );
+			|| alias.equalsIgnoreCase( unquote( keyColumnName, dialect ) );
 	}
 
 	public static IntegralDataTypeHolder getIntegralDataTypeHolder(Class<?> integralType) {

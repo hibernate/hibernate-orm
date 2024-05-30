@@ -194,7 +194,7 @@ public class ToOneBinder {
 			// This is a @OneToOne mapped to a physical o.h.mapping.ManyToOne
 			value.markAsLogicalOneToOne();
 		}
-		value.setReferencedEntityName( getReferenceEntityName( inferredData, targetEntity, context ) );
+		value.setReferencedEntityName( getReferenceEntityName( inferredData, targetEntity ) );
 		final MemberDetails property = inferredData.getAttributeMember();
 		defineFetchingStrategy( value, property, inferredData, propertyHolder );
 		//value.setFetchMode( fetchMode );
@@ -231,7 +231,7 @@ public class ToOneBinder {
 				value,
 				joinColumns,
 				unique,
-				isTargetAnnotatedEntity( targetEntity, property, context ),
+				isTargetAnnotatedEntity( targetEntity, property ),
 				propertyHolder.getPersistentClass(),
 				fullPath,
 				context
@@ -257,8 +257,8 @@ public class ToOneBinder {
 		);
 	}
 
-	static boolean isTargetAnnotatedEntity(ClassDetails targetEntity, MemberDetails property, MetadataBuildingContext context) {
-		final ClassDetails target = isDefault( targetEntity, context ) ? property.getType().determineRawClass() : targetEntity;
+	static boolean isTargetAnnotatedEntity(ClassDetails targetEntity, MemberDetails property) {
+		final ClassDetails target = isDefault( targetEntity ) ? property.getType().determineRawClass() : targetEntity;
 		return target.hasDirectAnnotationUsage( Entity.class );
 	}
 
@@ -535,8 +535,8 @@ public class ToOneBinder {
 					propertyHolder.getEntityName(),
 					propertyHolder,
 					inferredData,
-					getReferenceEntityName( inferredData, targetEntity, context ),
-					isTargetAnnotatedEntity( targetEntity, annotatedProperty, context ),
+					getReferenceEntityName( inferredData, targetEntity ),
+					isTargetAnnotatedEntity( targetEntity, annotatedProperty ),
 					notFoundAction,
 					cascadeOnDelete,
 					optional,
@@ -653,14 +653,14 @@ public class ToOneBinder {
 		}
 	}
 
-	public static String getReferenceEntityName(PropertyData propertyData, ClassDetails targetEntity, MetadataBuildingContext context) {
-		return isDefault( targetEntity, context )
+	public static String getReferenceEntityName(PropertyData propertyData, ClassDetails targetEntity) {
+		return isDefault( targetEntity )
 				? propertyData.getClassOrElementName()
 				: targetEntity.getName();
 	}
 
 	public static String getReferenceEntityName(PropertyData propertyData, MetadataBuildingContext context) {
-		return getReferenceEntityName( propertyData, getTargetEntity( propertyData, context ), context );
+		return getReferenceEntityName( propertyData, getTargetEntity( propertyData, context ) );
 	}
 
 	public static ClassDetails getTargetEntity(PropertyData propertyData, MetadataBuildingContext context) {

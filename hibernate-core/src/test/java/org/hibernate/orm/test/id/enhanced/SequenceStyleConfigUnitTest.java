@@ -11,7 +11,6 @@ import java.util.Properties;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
@@ -96,10 +95,6 @@ public class SequenceStyleConfigUnitTest {
 
 	private Properties buildGeneratorPropertiesBase(MetadataBuildingContext buildingContext) {
 		Properties props = new Properties();
-		props.put(
-				PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER,
-				buildingContext.getObjectNameNormalizer()
-		);
 		props.put(
 				PersistentIdentifierGenerator.IMPLICIT_NAME_BASE,
 				"ID"

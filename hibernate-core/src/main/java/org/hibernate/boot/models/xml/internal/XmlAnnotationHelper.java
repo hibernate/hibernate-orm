@@ -17,6 +17,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.CascadeType;
+import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.ResultCheckStyle;
@@ -73,6 +74,7 @@ import org.hibernate.boot.models.annotations.internal.CheckConstraintJpaAnnotati
 import org.hibernate.boot.models.annotations.internal.CollectionIdAnnotation;
 import org.hibernate.boot.models.annotations.internal.CollectionTypeAnnotation;
 import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.ColumnTransformerAnnotation;
 import org.hibernate.boot.models.annotations.internal.ConvertJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ConvertsJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.DiscriminatorColumnJpaAnnotation;
@@ -197,19 +199,44 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		createColumnAnnotation( jaxbColumn, memberDetails, xmlDocumentContext );
+		final ColumnJpaAnnotation columnAnnotationUsage = (ColumnJpaAnnotation) memberDetails.applyAnnotationUsage(
+				COLUMN,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		columnAnnotationUsage.apply( jaxbColumn, xmlDocumentContext );
 	}
 
 	private static ColumnJpaAnnotation createColumnAnnotation(
 			JaxbColumnImpl jaxbColumn,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		final ColumnJpaAnnotation columnAnnotationUsage = (ColumnJpaAnnotation) target.applyAnnotationUsage(
-				COLUMN,
+		final ColumnJpaAnnotation usage = COLUMN.createUsage( xmlDocumentContext.getModelBuildingContext() );
+		usage.apply( jaxbColumn, xmlDocumentContext );
+		return usage;
+	}
+
+	public static void applyColumnTransformation(
+			JaxbColumnImpl jaxbColumn,
+			MutableMemberDetails memberDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( StringHelper.isEmpty( jaxbColumn.getRead() )
+				&& StringHelper.isEmpty( jaxbColumn.getWrite() ) ) {
+			return;
+		}
+
+		final ColumnTransformerAnnotation annotationUsage = (ColumnTransformerAnnotation) memberDetails.applyAnnotationUsage(
+				HibernateAnnotations.COLUMN_TRANSFORMER,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		columnAnnotationUsage.apply( jaxbColumn, xmlDocumentContext );
-		return columnAnnotationUsage;
+
+		annotationUsage.forColumn( jaxbColumn.getName() );
+
+		if ( StringHelper.isNotEmpty( jaxbColumn.getRead() ) ) {
+			annotationUsage.read( jaxbColumn.getRead() );
+		}
+		if ( StringHelper.isNotEmpty( jaxbColumn.getWrite() ) ) {
+			annotationUsage.write( jaxbColumn.getWrite() );
+		}
 	}
 
 	public static void applyUserType(

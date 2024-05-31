@@ -27,20 +27,6 @@ public class OptimizerFactory {
 			OptimizerFactory.class.getName()
 	);
 
-	/**
-	 * Does the given optimizer name represent a pooled strategy?
-	 *
-	 * @param optimizerName The name of the optimizer
-	 *
-	 * @return {@code true} indicates the optimizer is a pooled strategy.
-	 *
-	 * @deprecated No longer used
-	 */
-	@Deprecated(since = "6.3")
-	public static boolean isPooledOptimizer(String optimizerName) {
-		return StandardOptimizerDescriptor.fromExternalName( optimizerName ).isPooled();
-	}
-
 	private static final Class<?>[] CTOR_SIG = new Class[] { Class.class, int.class };
 
 	private static Optimizer buildOptimizer(OptimizerDescriptor descriptor, Class<?> returnClass, int incrementSize) {

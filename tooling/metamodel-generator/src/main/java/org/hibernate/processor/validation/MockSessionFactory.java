@@ -48,7 +48,6 @@ import org.hibernate.internal.FastSessionServices;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
-import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.CollectionClassification;
@@ -559,11 +558,6 @@ public abstract class MockSessionFactory
 	@Override
 	public EntityNameResolver[] getEntityNameResolvers() {
 		return NO_RESOLVERS;
-	}
-
-	@Override
-	public BatchFetchStyle getBatchFetchStyle() {
-		return BatchFetchStyle.LEGACY;
 	}
 
 	@Override

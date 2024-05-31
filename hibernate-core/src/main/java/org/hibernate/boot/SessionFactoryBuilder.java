@@ -18,7 +18,6 @@ import org.hibernate.annotations.CacheLayout;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -268,20 +267,6 @@ public interface SessionFactoryBuilder {
 	 * @see TempTableDdlTransactionHandling
 	 */
 	SessionFactoryBuilder applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling);
-
-	/**
-	 * What style of batching should be used?
-	 *
-	 * @param style The style to use
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#BATCH_FETCH_STYLE
-	 *
-	 * @deprecated : an appropriate style is selected
-	 */
-	@Deprecated(since = "6.0")
-	SessionFactoryBuilder applyBatchFetchStyle(BatchFetchStyle style);
 
 	/**
 	 * Should entity {@linkplain org.hibernate.loader.ast.spi.Loader loaders} be

@@ -98,14 +98,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			this.versionUpdateBatchkey = null;
 		}
 		else {
-			this.batchKey = new BasicBatchKey(
-					entityPersister.getEntityName() + "#UPDATE",
-					null
-			);
-			this.versionUpdateBatchkey = new BasicBatchKey(
-					entityPersister.getEntityName() + "#UPDATE_VERSION",
-					null
-			);
+			this.batchKey = new BasicBatchKey( entityPersister.getEntityName() + "#UPDATE" );
+			this.versionUpdateBatchkey = new BasicBatchKey( entityPersister.getEntityName() + "#UPDATE_VERSION" );
 		}
 	}
 

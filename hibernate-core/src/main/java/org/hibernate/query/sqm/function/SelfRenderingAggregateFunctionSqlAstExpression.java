@@ -28,21 +28,6 @@ public class SelfRenderingAggregateFunctionSqlAstExpression extends SelfRenderin
 
 	private final Predicate filter;
 
-	/**
-	 * @deprecated Use {@link #SelfRenderingAggregateFunctionSqlAstExpression(String, FunctionRenderer, List, Predicate, ReturnableType, JdbcMappingContainer)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public SelfRenderingAggregateFunctionSqlAstExpression(
-			String functionName,
-			FunctionRenderingSupport renderer,
-			List<? extends SqlAstNode> sqlAstArguments,
-			Predicate filter,
-			ReturnableType<?> type,
-			JdbcMappingContainer expressible) {
-		super( functionName, renderer, sqlAstArguments, type, expressible );
-		this.filter = filter;
-	}
-
 	public SelfRenderingAggregateFunctionSqlAstExpression(
 			String functionName,
 			FunctionRenderer renderer,

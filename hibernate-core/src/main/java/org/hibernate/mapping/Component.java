@@ -20,7 +20,6 @@ import java.util.Set;
 
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.Remove;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.QualifiedName;
@@ -166,11 +165,6 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	public int getPropertySpan() {
 		return properties.size();
-	}
-
-	@Deprecated @Remove
-	public Iterator<Property> getPropertyIterator() {
-		return properties.iterator();
 	}
 
 	public List<Property> getProperties() {

@@ -140,16 +140,4 @@ public interface IdentifierGenerator extends BeforeExecutionGenerator, Exportabl
 	default EnumSet<EventType> getEventTypes() {
 		return INSERT_ONLY;
 	}
-
-	/**
-	 * Check if JDBC batch inserts are supported.
-	 *
-	 * @return JDBC batch inserts are supported.
-	 *
-	 * @deprecated this method is no longer called
-	 */
-	@Deprecated(since="6.2", forRemoval = true)
-	default boolean supportsJdbcBatchInserts() {
-		return true;
-	}
 }

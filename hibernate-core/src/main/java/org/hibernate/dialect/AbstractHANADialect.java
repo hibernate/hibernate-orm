@@ -352,14 +352,6 @@ public abstract class AbstractHANADialect extends Dialect {
 		return false;
 	}
 
-	/**
-	 * @deprecated Use {@link HANAServerConfiguration#fromDialectResolutionInfo(DialectResolutionInfo)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	protected static DatabaseVersion createVersion(DialectResolutionInfo info) {
-		return HANAServerConfiguration.fromDialectResolutionInfo( info ).getFullVersion();
-	}
-
 	@Override
 	public String castPattern(CastType from, CastType to) {
 		if ( to == CastType.BOOLEAN ) {

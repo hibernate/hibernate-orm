@@ -286,11 +286,6 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
-	public String trimPattern(TrimSpec specification, char character) {
-		return wrapped.trimPattern( specification, character );
-	}
-
-	@Override
 	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
 		return wrapped.trimPattern( specification, isWhitespace );
 	}
@@ -403,12 +398,6 @@ public class DialectDelegateWrapper extends Dialect {
 	@Override
 	public boolean supportsLockTimeouts() {
 		return wrapped.supportsLockTimeouts();
-	}
-
-	@Override
-	@Deprecated(since = "6", forRemoval = true)
-	public boolean isLockTimeoutParameterized() {
-		return wrapped.isLockTimeoutParameterized();
 	}
 
 	@Override
@@ -1047,12 +1036,6 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
-	@Deprecated(since = "6", forRemoval = true)
-	public boolean supportsParametersInInsertSelect() {
-		return wrapped.supportsParametersInInsertSelect();
-	}
-
-	@Override
 	public boolean supportsOrdinalSelectItemReference() {
 		return wrapped.supportsOrdinalSelectItemReference();
 	}
@@ -1365,12 +1348,6 @@ public class DialectDelegateWrapper extends Dialect {
 	@Override
 	public boolean supportsWait() {
 		return wrapped.supportsWait();
-	}
-
-	@Override
-	@Deprecated(since = "6", forRemoval = true)
-	public String inlineLiteral(String literal) {
-		return wrapped.inlineLiteral( literal );
 	}
 
 	@Override

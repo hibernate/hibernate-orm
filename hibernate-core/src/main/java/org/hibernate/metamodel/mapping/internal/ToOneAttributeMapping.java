@@ -295,9 +295,8 @@ public class ToOneAttributeMapping
 								&& join.getPropertySpan() == 1
 								&& join.getTable() == manyToOne.getTable()
 								&& equal( join.getKey(), manyToOne ) ) {
-							//noinspection deprecation
 							bidirectionalAttributeName = SelectablePath.parse(
-									join.getPropertyIterator().next().getName()
+									join.getProperties().get(0).getName()
 							);
 							hasJoinTable = true;
 							break;

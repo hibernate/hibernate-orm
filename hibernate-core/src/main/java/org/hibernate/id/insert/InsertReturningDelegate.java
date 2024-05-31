@@ -12,7 +12,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -22,7 +21,6 @@ import org.hibernate.generator.values.GeneratedValueBasicResultBuilder;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.generator.values.internal.TableUpdateReturningBuilder;
-import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -46,14 +44,6 @@ import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getG
 public class InsertReturningDelegate extends AbstractReturningDelegate {
 	private final MutatingTableReference tableReference;
 	private final List<ColumnReference> generatedColumns;
-
-	/**
-	 * @deprecated Use {@link #InsertReturningDelegate(EntityPersister, EventType)} instead.
-	 */
-	@Deprecated( forRemoval = true, since = "6.5" )
-	public InsertReturningDelegate(PostInsertIdentityPersister persister, Dialect dialect) {
-		this( persister, EventType.INSERT );
-	}
 
 	public InsertReturningDelegate(EntityPersister persister, EventType timing) {
 		super(

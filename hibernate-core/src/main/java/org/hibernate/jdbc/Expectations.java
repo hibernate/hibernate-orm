@@ -10,12 +10,10 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.util.function.Supplier;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.StaleStateException;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
@@ -109,52 +107,6 @@ public class Expectations {
 		}
 	}
 
-	// Base Expectation impls ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	/**
-	 * @deprecated Use {@link RowCount}, creating a custom subclass if necessary
-	 */
-	@Deprecated(since = "6.5")
-	public static class BasicExpectation extends Expectation.RowCount {
-		private final int expectedRowCount;
-
-		protected BasicExpectation(int expectedRowCount) {
-			this.expectedRowCount = expectedRowCount;
-			if ( expectedRowCount < 0 ) {
-				throw new IllegalArgumentException( "Expected row count must be greater than zero" );
-			}
-		}
-
-		@Override
-		protected int expectedRowCount() {
-			return expectedRowCount;
-		}
-	}
-
-	/**
-	 * @deprecated Use {@link OutParameter}, creating a custom subclass if necessary
-	 */
-	@Deprecated(since = "6.5")
-	public static class BasicParamExpectation extends Expectation.OutParameter {
-		private final int parameterPosition;
-		private final int expectedRowCount;
-
-		protected BasicParamExpectation(int expectedRowCount, int parameterPosition) {
-			this.expectedRowCount = expectedRowCount;
-			this.parameterPosition = parameterPosition;
-		}
-
-		@Override
-		protected int expectedRowCount() {
-			return expectedRowCount;
-		}
-
-		@Override
-		protected int parameterIndex() {
-			return parameterPosition;
-		}
-	}
-
 	// Various Expectation instances ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
@@ -175,29 +127,6 @@ public class Expectations {
 	@Deprecated(since = "6.5")
 	public static final Expectation PARAM = new Expectation.OutParameter();
 
-	@Deprecated(since = "6.5", forRemoval = true)
-	public static Expectation appropriateExpectation(ExecuteUpdateResultCheckStyle style) {
-		switch ( style ) {
-			case NONE:
-				return NONE;
-			case COUNT:
-				return BASIC;
-			case PARAM:
-				return PARAM;
-			default:
-				throw new AssertionFailure( "unknown result check style: " + style );
-		}
-	}
-
 	private Expectations() {
 	}
-
-	// Unused, for removal ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Deprecated(since = "6.5", forRemoval = true)
-	public static final int USUAL_EXPECTED_COUNT = 1;
-
-	@Deprecated(since = "6.5", forRemoval = true)
-	public static final int USUAL_PARAM_POSITION = 1;
-
 }

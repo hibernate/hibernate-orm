@@ -30,7 +30,6 @@ import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
@@ -329,22 +328,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		isCached = cached;
 	}
 
-	/**
-	 * @deprecated Use {@link #isCached} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public boolean isCachingExplicitlyRequested() {
-		return isCached();
-	}
-
-	/**
-	 * @deprecated Use {@link #setCached} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public void setCachingExplicitlyRequested(boolean cached) {
-		setCached( cached );
-	}
-
 	public CacheLayout getQueryCacheLayout() {
 		return queryCacheLayout;
 	}
@@ -581,25 +564,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	}
 
 	/**
-	 * @deprecated This will be removed with no replacement.
-	 */
-	@Deprecated(since = "6.2", forRemoval = true)
-	public Property getSubclassProperty(String propertyName) throws MappingException {
-		final Property identifierProperty = getIdentifierProperty();
-		if ( identifierProperty != null
-				&& identifierProperty.getName().equals( root( propertyName ) ) ) {
-			return identifierProperty;
-		}
-		else {
-			final Component identifierMapper = getIdentifierMapper();
-			final List<Property> closure = identifierMapper != null
-					? new JoinedList<>( identifierMapper.getProperties(), getSubclassPropertyClosure() )
-					: getSubclassPropertyClosure();
-			return getProperty( propertyName, closure );
-		}
-	}
-
-	/**
 	 * Check to see if this PersistentClass defines a property with the given name.
 	 *
 	 * @param name The property name to check
@@ -648,22 +612,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		return hasProperty( name )
 			|| getSuperMappedSuperclass() != null && getSuperMappedSuperclass().isPropertyDefinedInHierarchy( name )
 			|| getSuperclass() != null && getSuperclass().isPropertyDefinedInHierarchy( name );
-	}
-
-	/**
-	 * @deprecated prefer {@link #getOptimisticLockStyle}
-	 */
-	@Deprecated(forRemoval = true)
-	public int getOptimisticLockMode() {
-		return getOptimisticLockStyle().getOldCode();
-	}
-
-	/**
-	 * @deprecated prefer {@link #setOptimisticLockStyle}
-	 */
-	@Deprecated(forRemoval = true)
-	public void setOptimisticLockMode(int optimisticLockMode) {
-		setOptimisticLockStyle( OptimisticLockStyle.interpretOldCode( optimisticLockMode ) );
 	}
 
 	public OptimisticLockStyle getOptimisticLockStyle() {
@@ -812,14 +760,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		return customInsertCallable;
 	}
 
-	/**
-	 * @deprecated use {@link #getInsertExpectation()}
-	 */
-	@Deprecated(since = "6.5", forRemoval = true)
-	public ExecuteUpdateResultCheckStyle getCustomSQLInsertCheckStyle() {
-		return insertCheckStyle;
-	}
-
 	public void setCustomSQLUpdate(String customSQLUpdate, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLUpdate = customSQLUpdate;
 		this.customUpdateCallable = callable;
@@ -835,14 +775,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		return customUpdateCallable;
 	}
 
-	/**
-	 * @deprecated use {@link #getUpdateExpectation()}
-	 */
-	@Deprecated(since = "6.5", forRemoval = true)
-	public ExecuteUpdateResultCheckStyle getCustomSQLUpdateCheckStyle() {
-		return updateCheckStyle;
-	}
-
 	public void setCustomSQLDelete(String customSQLDelete, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLDelete = customSQLDelete;
 		this.customDeleteCallable = callable;
@@ -856,14 +788,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 
 	public boolean isCustomDeleteCallable() {
 		return customDeleteCallable;
-	}
-
-	/**
-	 * @deprecated use {@link #getDeleteExpectation()}
-	 */
-	@Deprecated(since = "6.5", forRemoval = true)
-	public ExecuteUpdateResultCheckStyle getCustomSQLDeleteCheckStyle() {
-		return deleteCheckStyle;
 	}
 
 	public void addFilter(

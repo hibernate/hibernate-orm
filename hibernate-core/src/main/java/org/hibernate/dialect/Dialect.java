@@ -3646,22 +3646,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Does this dialect support parameters within the {@code SELECT} clause
-	 * of {@code INSERT ... SELECT ...} statements?
-	 *
-	 * @return True if this is supported; false otherwise.
-	 *
-	 * @since 3.2
-	 *
-	 * @deprecated This seems to be supported on all platforms, and we don't
-	 *             call this except in test suite
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	public boolean supportsParametersInInsertSelect() {
-		return true;
-	}
-
-	/**
 	 * Does this dialect support references to result variables
 	 * (i.e, select items) by column positions (1-origin) as defined
 	 * by the select clause?

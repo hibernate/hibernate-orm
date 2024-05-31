@@ -97,12 +97,6 @@ abstract public class DialectChecks {
 		}
 	}
 
-	public static class SupportsParametersInInsertSelectCheck implements DialectCheck {
-		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsParametersInInsertSelect();
-		}
-	}
-
 	public static class HasSelfReferentialForeignKeyBugCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.hasSelfReferentialForeignKeyBug();

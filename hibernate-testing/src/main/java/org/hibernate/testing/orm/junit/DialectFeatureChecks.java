@@ -138,12 +138,6 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
-	public static class SupportsParametersInInsertSelectCheck implements DialectFeatureCheck {
-		public boolean apply(Dialect dialect) {
-			return dialect.supportsParametersInInsertSelect();
-		}
-	}
-
 	public static class HasSelfReferentialForeignKeyBugCheck implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.hasSelfReferentialForeignKeyBug();

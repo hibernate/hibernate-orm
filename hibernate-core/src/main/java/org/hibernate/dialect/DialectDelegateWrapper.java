@@ -1031,12 +1031,6 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
-	@Deprecated(since = "6", forRemoval = true)
-	public boolean supportsParametersInInsertSelect() {
-		return wrapped.supportsParametersInInsertSelect();
-	}
-
-	@Override
 	public boolean supportsOrdinalSelectItemReference() {
 		return wrapped.supportsOrdinalSelectItemReference();
 	}

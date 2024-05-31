@@ -22,7 +22,7 @@ import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureParameter;
 import jakarta.persistence.StoredProcedureQuery;
 
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.result.Output;
@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Vlad Mihalcea, Jonathan Bregler
  */
-@RequiresDialect(AbstractHANADialect.class)
+@RequiresDialect(HANADialect.class)
 @DomainModel(
 		annotatedClasses = {
 				Person.class,

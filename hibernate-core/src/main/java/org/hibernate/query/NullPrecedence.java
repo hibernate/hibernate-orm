@@ -42,7 +42,10 @@ public enum NullPrecedence {
 
 	/**
 	 * Is this null precedence the default for the given sort order and null ordering.
+	 *
+	 * @deprecated No longer called
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	public boolean isDefaultOrdering(SortDirection sortOrder, NullOrdering nullOrdering) {
 		switch (this) {
 			case NONE:

@@ -24,7 +24,6 @@ import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.BaselineSessionEventsListenerBuilder;
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.ValueHandlingMode;
@@ -135,12 +134,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	boolean isInitializeLazyStateOutsideTransactionsEnabled();
 
 	TempTableDdlTransactionHandling getTempTableDdlTransactionHandling();
-
-	/**
-	 * @deprecated : No longer used internally
-	 */
-	@Deprecated(since = "6.0")
-	BatchFetchStyle getBatchFetchStyle();
 
 	boolean isDelayBatchFetchLoaderCreationsEnabled();
 

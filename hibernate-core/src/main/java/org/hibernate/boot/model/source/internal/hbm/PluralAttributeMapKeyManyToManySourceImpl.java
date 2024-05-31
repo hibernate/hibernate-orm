@@ -144,11 +144,6 @@ public class PluralAttributeMapKeyManyToManySourceImpl
 	}
 
 	@Override
-	public boolean isReferencedEntityAttribute() {
-		return true;
-	}
-
-	@Override
 	public List<RelationalValueSource> getRelationalValueSources() {
 		return relationalValueSources;
 	}

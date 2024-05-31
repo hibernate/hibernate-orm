@@ -7,7 +7,7 @@
 package org.hibernate.dialect.sequence;
 
 /**
- * Sequence support for {@link org.hibernate.dialect.AbstractHANADialect}.
+ * Sequence support for {@link org.hibernate.dialect.HANADialect}.
  *
  * @author Gavin King
  */

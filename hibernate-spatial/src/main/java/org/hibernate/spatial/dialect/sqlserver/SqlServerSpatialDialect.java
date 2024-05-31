@@ -6,7 +6,7 @@
  */
 package org.hibernate.spatial.dialect.sqlserver;
 
-import org.hibernate.dialect.SQLServer2012Dialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.spatial.SpatialDialect;
 
 /**
@@ -14,6 +14,6 @@ import org.hibernate.spatial.SpatialDialect;
  * @deprecated A SpatialDialect is no longer required. Use the standard Dialect for this database.
  */
 @Deprecated
-public class SqlServer2012SpatialDialect extends SQLServer2012Dialect implements SpatialDialect {
+public class SqlServerSpatialDialect extends SQLServerDialect implements SpatialDialect {
 
 }

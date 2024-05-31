@@ -19,7 +19,7 @@ import jakarta.persistence.criteria.Root;
 
 import org.hibernate.query.Query;
 import org.hibernate.ScrollableResults;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.junit.Test;
 import org.hibernate.testing.SkipForDialect;
@@ -48,7 +48,7 @@ public class CriteriaToScrollableResultsFetchTest extends BaseEntityManagerFunct
 	}
 
 	@Test
-	@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA only supports forward-only cursors")
+	@SkipForDialect(value = HANADialect.class, comment = "HANA only supports forward-only cursors")
 	public void testWithScroll() {
 		// Creates data necessary for test
 		Long facilityId = populate();

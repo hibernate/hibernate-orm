@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
@@ -32,7 +32,7 @@ import static org.junit.Assert.assertEquals;
 @SkipForDialect(MariaDBDialect.class)
 @SkipForDialect(MySQLDialect.class)
 @SkipForDialect(value = OracleDialect.class, comment = "Oracle date does not support milliseconds  ")
-@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA date does not support milliseconds  ")
+@SkipForDialect(value = HANADialect.class, comment = "HANA date does not support milliseconds  ")
 public class TimeAndTimestampTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override

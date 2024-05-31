@@ -22,7 +22,7 @@ import org.hibernate.TransactionException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -1186,7 +1186,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@SkipForDialect(value = MySQLDialect.class, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
 	@SkipForDialect(value = MariaDBDialect.class, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
 	@SkipForDialect(value = HSQLDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
-	@SkipForDialect(value = AbstractHANADialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
+	@SkipForDialect(value = HANADialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(value = CockroachDialect.class, comment = "Cockroach supports the 'for no key update' syntax but it doesn't work")
 	@SkipForDialect(value = FirebirdDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(value = AltibaseDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
@@ -1225,7 +1225,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@SkipForDialect(value = MySQLDialect.class, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
 	@SkipForDialect(value = MariaDBDialect.class, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
 	@SkipForDialect(value = HSQLDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
-	@SkipForDialect(value = AbstractHANADialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
+	@SkipForDialect(value = HANADialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(value = CockroachDialect.class, comment = "Cockroach supports the 'for no key update' syntax but it doesn't work")
 	@SkipForDialect(value = FirebirdDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(value = AltibaseDialect.class, comment = "FK constraint checks are not compatible with exclusive locks")

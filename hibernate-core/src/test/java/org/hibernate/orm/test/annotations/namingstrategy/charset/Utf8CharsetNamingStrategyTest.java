@@ -8,7 +8,7 @@
 // $Id$
 package org.hibernate.orm.test.annotations.namingstrategy.charset;
 
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 
 /**
@@ -23,7 +23,7 @@ public class Utf8CharsetNamingStrategyTest extends AbstractCharsetNamingStrategy
 
 	@Override
 	protected String expectedUniqueKeyName() {
-		if ( this.serviceRegistry.getService( JdbcServices.class ).getDialect() instanceof AbstractHANADialect ) {
+		if ( this.serviceRegistry.getService( JdbcServices.class ).getDialect() instanceof HANADialect ) {
 			return "UKinnacp0woeltj5l0k4vgabf8k"; // Non-ASCII, non-alphanumeric identifiers are quoted on HANA
 		}
 		else {
@@ -33,7 +33,7 @@ public class Utf8CharsetNamingStrategyTest extends AbstractCharsetNamingStrategy
 
 	@Override
 	protected String expectedForeignKeyName() {
-		if ( this.serviceRegistry.getService( JdbcServices.class ).getDialect() instanceof AbstractHANADialect ) {
+		if ( this.serviceRegistry.getService( JdbcServices.class ).getDialect() instanceof HANADialect ) {
 			return "FKe1lr9dd16cmmon53r7m736yev"; // Non-ASCII, non-alphanumeric identifiers are quoted on HANA
 		}
 		else {
@@ -43,7 +43,7 @@ public class Utf8CharsetNamingStrategyTest extends AbstractCharsetNamingStrategy
 
 	@Override
 	protected String expectedIndexName() {
-		if ( this.serviceRegistry.getService( JdbcServices.class ).getDialect() instanceof AbstractHANADialect ) {
+		if ( this.serviceRegistry.getService( JdbcServices.class ).getDialect() instanceof HANADialect ) {
 			return "IDXinnacp0woeltj5l0k4vgabf8k"; // Non-ASCII, non-alphanumeric identifiers are quoted on HANA
 		}
 		else {

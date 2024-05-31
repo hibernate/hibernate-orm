@@ -68,9 +68,8 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		render( expression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 	}
 
-	@SuppressWarnings("removal")
 	private boolean isHanaCloud() {
-		return ( (AbstractHANADialect) getDialect() ).isCloud();
+		return ( (HANADialect) getDialect() ).isCloud();
 	}
 
 	@Override

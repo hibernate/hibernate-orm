@@ -11,7 +11,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.junit.Test;
 
@@ -36,7 +36,7 @@ import static org.junit.Assert.assertNotNull;
  */
 @TestForIssue(jiraKey = "HHH-13104")
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-@SkipForDialect(value=AbstractHANADialect.class, comment="SAP HANA requires at least value in insert value-list clause.")
+@SkipForDialect(value=HANADialect.class, comment="SAP HANA requires at least value in insert value-list clause.")
 public class IdentityInsertSoleColumnTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

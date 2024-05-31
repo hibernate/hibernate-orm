@@ -17,7 +17,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.Session;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.query.Query;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
@@ -31,7 +31,7 @@ import org.junit.Test;
  * 
  * @author Jonathan Bregler
  */
-@RequiresDialect(AbstractHANADialect.class)
+@RequiresDialect(HANADialect.class)
 public class HANADecimalTest extends BaseCoreFunctionalTestCase {
 
 	private static final String ENTITY_NAME = "DecimalEntity";

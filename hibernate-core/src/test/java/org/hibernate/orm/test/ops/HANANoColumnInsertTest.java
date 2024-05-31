@@ -8,7 +8,7 @@ package org.hibernate.orm.test.ops;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect( value = AbstractHANADialect.class )
+@RequiresDialect( value = HANADialect.class )
 public class HANANoColumnInsertTest extends BaseSessionFactoryFunctionalTest {
 
 	@Override

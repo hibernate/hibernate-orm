@@ -18,7 +18,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PersistenceException;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.SQLServer2012Dialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * getters and setters have been omitted for clarity of the code. A separate test has been made for
  * {@link GenerationType#SEQUENCE}, {@link GenerationType#TABLE}, and
  * {@link GenerationType#AUTO} since there are known complications with some {@link Dialect}s (e.g.
- * {@link SQLServer2012Dialect}) and the {@link GenerationType#IDENTITY}
+ * {@link SQLServerDialect}) and the {@link GenerationType#IDENTITY}
  *
  * @author Jason Pyeron <support@pdinc.us>
  * @see <a href='https://hibernate.atlassian.net/browse/HHH-10956'>HHH-10956</a> Persisting partially-generated

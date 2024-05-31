@@ -16,6 +16,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinFormula;
+import org.hibernate.boot.internal.FailedSecondPassException;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource;
@@ -27,7 +28,6 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.cfg.RecoverableException;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Column;
@@ -324,7 +324,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 				// we throw a recoverable exception here in case this
 				// is merely an ordering issue, so that the SecondPass
 				// will get reprocessed later
-				throw new RecoverableException( me.getMessage(), me );
+				throw new FailedSecondPassException( me.getMessage(), me );
 			}
 		}
 		final Table table = table( columnOwner );

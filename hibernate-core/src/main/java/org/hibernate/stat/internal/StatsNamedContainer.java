@@ -10,7 +10,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 
-import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 
 import org.checkerframework.checker.nullness.qual.Nullable;

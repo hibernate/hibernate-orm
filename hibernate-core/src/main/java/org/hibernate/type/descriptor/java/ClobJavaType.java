@@ -24,7 +24,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 /**
  * Descriptor for {@link Clob} handling.
@@ -144,9 +143,6 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 		else if ( Reader.class.isAssignableFrom( value.getClass() ) ) {
 			Reader reader = (Reader) value;
 			return options.getLobCreator().createClob( DataHelper.extractString( reader ) );
-		}
-		else if ( String.class.isAssignableFrom( value.getClass() ) ) {
-			return options.getLobCreator().createClob( (String) value );
 		}
 
 		throw unknownWrap( value.getClass() );

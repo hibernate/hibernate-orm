@@ -13,9 +13,8 @@
  * <p/>
  * Happens in 2 steps -<ol>
  *     <li>
- *         Create the "source metamodel" ({@linkplain org.hibernate.models.spi.ClassDetails classes},
- *         {@linkplain org.hibernate.models.spi.AnnotationUsage annotations},
- *         {@linkplain org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl XML}, etc.)
+ *         Create the "source metamodel" - {@linkplain org.hibernate.models.spi.ClassDetails classes},
+ *         {@linkplain org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl XML}, etc.
  *     </li>
  *     <li>
  *         Process this "source metamodel" and produce the {@linkplain org.hibernate.boot.models.categorize.spi.CategorizedDomainModel categorized model}

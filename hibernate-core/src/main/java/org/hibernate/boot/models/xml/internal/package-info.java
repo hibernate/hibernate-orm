@@ -6,9 +6,7 @@
  */
 
 /**
- * Support for processing mapping XML files and applying implied
- * {@linkplain org.hibernate.models.spi.AnnotationUsage}
- * references over the appropriate
+ * Support for processing mapping XML files and applying annotation references over the appropriate
  * {@linkplain org.hibernate.models.spi.ClassDetails classes},
  * {@linkplain org.hibernate.models.spi.FieldDetails fields} and
  * {@linkplain org.hibernate.models.spi.MethodDetails methods}.

@@ -41,16 +41,6 @@ import static org.junit.Assert.assertTrue;
 public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey {
 	private final String SANDBOX_TBL = "SANDBOX_JDBC_TST";
 
-	@Override
-	public int getBatchedStatementCount() {
-		return 1;
-	}
-
-	@Override
-	public Expectation getExpectation() {
-		return Expectations.BASIC;
-	}
-
 	@Test
 	public void testBatchingUsage() throws Exception {
 		final Session session = openSession();

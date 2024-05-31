@@ -28,9 +28,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
 import org.hibernate.property.access.spi.Getter;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 
 import jakarta.persistence.Transient;
 
@@ -347,52 +344,6 @@ public final class ReflectHelper {
 	 */
 	public static boolean isFinalClass(Class<?> clazz) {
 		return Modifier.isFinal( clazz.getModifiers() );
-	}
-
-	/**
-	 * Retrieve a constructor for the given class, with arguments matching
-	 * the specified Hibernate mapping {@linkplain Type types}.
-	 *
-	 * @param clazz The class needing instantiation
-	 * @param types The types representing the required ctor param signature
-	 * @return The matching constructor
-	 * @throws PropertyNotFoundException Indicates we could not locate an appropriate constructor
-	 *
-	 * @deprecated no longer used, since we moved away from the {@link Type} interface
-	 */
-	 // todo : again with PropertyNotFoundException???
-	@Deprecated(since = "6", forRemoval = true)
-	public static Constructor<?> getConstructor(Class<?> clazz, Type[] types) throws PropertyNotFoundException {
-		final Constructor<?>[] candidates = clazz.getConstructors();
-		Constructor<?> constructor = null;
-		int numberOfMatchingConstructors = 0;
-		for ( final Constructor<?> candidate : candidates ) {
-			final Class<?>[] params = candidate.getParameterTypes();
-			if ( params.length == types.length ) {
-				boolean found = true;
-				for ( int j = 0; j < params.length; j++ ) {
-					final boolean ok = types[j] == null || params[j].isAssignableFrom( types[j].getReturnedClass() ) || (
-							types[j] instanceof BasicType<?> && ( (BasicType<?>) types[j] ).getJavaTypeDescriptor() instanceof PrimitiveJavaType
-									&& params[j] == ( (PrimitiveJavaType<?>) ( ( (BasicType<?>) types[j] ).getJavaTypeDescriptor() ) ).getPrimitiveClass()
-					);
-					if ( !ok ) {
-						found = false;
-						break;
-					}
-				}
-				if ( found ) {
-					numberOfMatchingConstructors ++;
-					ensureAccessibility( candidate );
-					constructor = candidate;
-				}
-			}
-		}
-
-		if ( numberOfMatchingConstructors == 1 ) {
-			return constructor;
-		}
-		throw new PropertyNotFoundException( "no appropriate constructor in class: " + clazz.getName() );
-
 	}
 
 	/**

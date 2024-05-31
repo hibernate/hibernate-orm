@@ -51,7 +51,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 )
 @ServiceRegistry(
 		settings = {
-				@Setting( name = AvailableSettings.BATCH_FETCH_STYLE, value = "PADDED" ),
 				@Setting( name = AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, value = "10" ),
 		}
 )

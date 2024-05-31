@@ -19,6 +19,7 @@ import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -42,13 +43,20 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
  */
 @DomainModel(
 		annotatedClasses = {
-				AbstractBatchingTest.ParentEntity.class, AbstractBatchingTest.ChildEntity.class
+				BatchingTest.ParentEntity.class, BatchingTest.ChildEntity.class
 		}
 )
 @SessionFactory
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, value = "100" ),
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+		}
+)
 @BytecodeEnhanced
 @CustomEnhancementContext({ NoDirtyCheckEnhancementContext.class })
-public abstract class AbstractBatchingTest {
+@JiraKey("HHH-14108")
+public abstract class BatchingTest {
 	protected String childName = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
 	protected Long parentId;
 

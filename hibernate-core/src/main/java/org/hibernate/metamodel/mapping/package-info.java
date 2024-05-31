@@ -10,7 +10,7 @@
  * of the application's domain model parts (entities, attributes) to
  * relational database objects (tables, columns).
  *
- * @implNote Built on top of the {@link org.hibernate.persister} package.
+ * @implNote Built on top of the {@code org.hibernate.persister} package.
  *
  * @implSpec This entire package is considered incubating at the moment
  */

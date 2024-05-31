@@ -559,7 +559,7 @@ public final class ReflectHelper {
 	/**
 	 * Find the method that can be used as the getter for this property.
 	 *
-	 * @param containerClass The Class<?> which contains the property
+	 * @param containerClass The Class which contains the property
 	 * @param propertyName The name of the property
 	 *
 	 * @return The getter method, or {@code null} if there is none.

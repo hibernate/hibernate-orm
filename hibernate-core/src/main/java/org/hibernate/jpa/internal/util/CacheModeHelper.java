@@ -12,8 +12,8 @@ import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
 
 /**
- * Helper to deal with {@link CacheMode} <-> {@link CacheRetrieveMode}/{@link CacheStoreMode}
- * conversions.
+ * Helper to deal with conversions between {@link CacheMode} and {@link CacheRetrieveMode}/{@link CacheStoreMode}
+ * .
  *
  * @author Steve Ebersole
  */

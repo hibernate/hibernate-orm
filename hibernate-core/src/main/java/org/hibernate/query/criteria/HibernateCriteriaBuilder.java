@@ -2817,7 +2817,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Whether an array is a subset of another array.
 	 *
 	 * @since 6.4
-	 * @deprecated Replaced with {@link #arrayIncludes(Expression, T[])}
+	 * @deprecated Replaced with {@link #arrayIncludes(Expression, Object[])}
 	 */
 	@Incubating
 	@Deprecated(forRemoval = true)
@@ -2829,7 +2829,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Whether an array is a subset of another array.
 	 *
 	 * @since 6.4
-	 * @deprecated Replaced with {@link #arrayIncludes(T[], Expression)}
+	 * @deprecated Replaced with {@link #arrayIncludes(Object[], Expression)}
 	 */
 	@Incubating
 	@Deprecated(forRemoval = true)
@@ -2853,7 +2853,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Whether an array is a subset of another array with nullable elements.
 	 *
 	 * @since 6.4
-	 * @deprecated Replaced with {@link #arrayIncludesNullable(Expression, T[])}
+	 * @deprecated Replaced with {@link #arrayIncludesNullable(Expression, Object[])}
 	 */
 	@Incubating
 	@Deprecated(forRemoval = true)
@@ -2865,7 +2865,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Whether an array is a subset of another array with nullable elements.
 	 *
 	 * @since 6.4
-	 * @deprecated Replaced with {@link #arrayIncludesNullable(T[], Expression)}
+	 * @deprecated Replaced with {@link #arrayIncludesNullable(Object[], Expression)}
 	 */
 	@Incubating
 	@Deprecated(forRemoval = true)
@@ -2937,7 +2937,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Whether one array has any elements common with another array.
 	 *
 	 * @since 6.4
-	 * @deprecated Replaced with {@link #arrayIntersects(Expression, T[])}
+	 * @deprecated Replaced with {@link #arrayIntersects(Expression, Object[])}
 	 */
 	@Incubating
 	@Deprecated(forRemoval = true)
@@ -2949,7 +2949,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Whether one array has any elements common with another array.
 	 *
 	 * @since 6.4
-	 * @deprecated Replaced with {@link #arrayIntersects(T[], Expression)}
+	 * @deprecated Replaced with {@link #arrayIntersects(Object[], Expression)}
 	 */
 	@Incubating
 	@Deprecated(forRemoval = true)
@@ -2973,7 +2973,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Whether one array has any elements common with another array, supporting {@code null} elements.
 	 *
 	 * @since 6.4
-	 * @deprecated Replaced with {@link #arrayIntersectsNullable(Expression, T[])}
+	 * @deprecated Replaced with {@link #arrayIntersectsNullable(Expression, Object[])}
 	 */
 	@Incubating
 	@Deprecated(forRemoval = true)
@@ -2985,7 +2985,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Whether one array has any elements common with another array, supporting {@code null} elements.
 	 *
 	 * @since 6.4
-	 * @deprecated Replaced with {@link #arrayIntersectsNullable(T[], Expression)}
+	 * @deprecated Replaced with {@link #arrayIntersectsNullable(Object[], jakarta.persistence.criteria.Expression)}
 	 */
 	@Incubating
 	@Deprecated(forRemoval = true)

@@ -10,7 +10,6 @@ package org.hibernate.boot.internal;
  * Limited set of {@linkplain org.hibernate.metamodel.CollectionClassification}
  * used in mapping a dynamic model.
  *
- * @see org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionClassificationImpl
  * @see org.hibernate.metamodel.CollectionClassification
  *
  * @author Steve Ebersole

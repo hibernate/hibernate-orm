@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
@@ -30,24 +29,6 @@ public class JdbcOperationQuerySelect extends AbstractJdbcOperationQuery {
 	private final JdbcParameter limitParameter;
 	private final JdbcLockStrategy jdbcLockStrategy;
 
-	/**
-	 * @deprecated {@code filterJdbcParameters} is no longer used
-	 */
-	@Deprecated
-	public JdbcOperationQuerySelect(
-			String sql,
-			List<JdbcParameterBinder> parameterBinders,
-			JdbcValuesMappingProducer jdbcValuesMappingProducer,
-			Set<String> affectedTableNames,
-			Set<FilterJdbcParameter> filterJdbcParameters) {
-		this(
-				sql,
-				parameterBinders,
-				jdbcValuesMappingProducer,
-				affectedTableNames
-		);
-	}
-
 	public JdbcOperationQuerySelect(
 			String sql,
 			List<JdbcParameterBinder> parameterBinders,
@@ -58,44 +39,13 @@ public class JdbcOperationQuerySelect extends AbstractJdbcOperationQuery {
 				parameterBinders,
 				jdbcValuesMappingProducer,
 				affectedTableNames,
-				null,
 				0,
 				Integer.MAX_VALUE,
 				Collections.emptyMap(),
 				JdbcLockStrategy.AUTO,
 				null,
 				null
-		);
-	}
-
-	/**
-	 * @deprecated {@code filterJdbcParameters} is no longer used
-	 */
-	@Deprecated
-	public JdbcOperationQuerySelect(
-			String sql,
-			List<JdbcParameterBinder> parameterBinders,
-			JdbcValuesMappingProducer jdbcValuesMappingProducer,
-			Set<String> affectedTableNames,
-			Set<FilterJdbcParameter> filterJdbcParameters,
-			int rowsToSkip,
-			int maxRows,
-			Map<JdbcParameter, JdbcParameterBinding> appliedParameters,
-			JdbcLockStrategy jdbcLockStrategy,
-			JdbcParameter offsetParameter,
-			JdbcParameter limitParameter) {
-		this(
-				sql,
-				parameterBinders,
-				jdbcValuesMappingProducer,
-				affectedTableNames,
-				rowsToSkip,
-				maxRows,
-				appliedParameters,
-				jdbcLockStrategy,
-				offsetParameter,
-				limitParameter
-		);
+				);
 	}
 
 	public JdbcOperationQuerySelect(

@@ -63,6 +63,7 @@ public final class Bootstrap {
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
 			URL persistenceXmlUrl,
 			String persistenceUnitName,
+			@SuppressWarnings("removal")
 			PersistenceUnitTransactionType transactionType,
 			Map integration) {
 		return new EntityManagerFactoryBuilderImpl(

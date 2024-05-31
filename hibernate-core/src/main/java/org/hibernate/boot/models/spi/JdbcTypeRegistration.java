@@ -12,7 +12,6 @@ import org.hibernate.models.spi.ClassDetails;
  * {@linkplain org.hibernate.type.descriptor.jdbc.JdbcType} registration
  *
  * @see org.hibernate.annotations.JdbcTypeRegistration
- * @see org.hibernate.boot.jaxb.mapping.JaxbJdbcTypeRegistration
  *
  * @author Steve Ebersole
  */

@@ -84,11 +84,9 @@
     <xs:complexType name="ToolingHintType" mixed="true">
         <xs:annotation>
             <xs:documentation><![CDATA[
-                <meta.../> is used to assign meta-level attributes to a class
+                Used to assign meta-level attributes to a class
                 or property.  Is currently used by tooling as a placeholder for
                 values that is not directly related to OR mappings.
-
-                Example: <meta attribute="someHintName">the-hint-value</meta>
             ]]></xs:documentation>
         </xs:annotation>
         <xs:simpleContent>

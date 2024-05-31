@@ -1676,4 +1676,11 @@ public class OracleDialect extends Dialect {
 	public String[] getDropEnumTypeCommand(String name) {
 		return new String[] { "drop domain if exists " + name + " force" };
 	}
+
+	@Override
+	public boolean useInputStreamToInsertBlob() {
+		// see HHH-18206
+		return false;
+	}
+
 }

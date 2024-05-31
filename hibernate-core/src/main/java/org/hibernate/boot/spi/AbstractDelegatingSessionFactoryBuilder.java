@@ -18,7 +18,6 @@ import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -154,12 +153,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	@Override
 	public T applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling) {
 		delegate.applyTempTableDdlTransactionHandling( handling );
-		return getThis();
-	}
-
-	@Override
-	public T applyBatchFetchStyle(BatchFetchStyle style) {
-		delegate.applyBatchFetchStyle( style );
 		return getThis();
 	}
 

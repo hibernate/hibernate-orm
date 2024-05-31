@@ -160,9 +160,6 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 			Reader reader = (Reader) value;
 			return options.getLobCreator().createClob( DataHelper.extractString( reader ) );
 		}
-		else if ( String.class.isAssignableFrom( value.getClass() ) ) {
-			return options.getLobCreator().createClob( (String) value );
-		}
 
 		throw unknownWrap( value.getClass() );
 	}

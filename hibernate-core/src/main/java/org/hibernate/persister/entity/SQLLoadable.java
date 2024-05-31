@@ -40,6 +40,4 @@ public interface SQLLoadable extends Loadable {
 	 */
 	Type getType();
 
-	
-
 }

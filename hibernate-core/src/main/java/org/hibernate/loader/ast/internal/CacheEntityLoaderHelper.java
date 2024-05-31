@@ -277,13 +277,13 @@ public class CacheEntityLoaderHelper {
 		if ( statistics.isStatisticsEnabled() ) {
 			if ( ce == null ) {
 				statistics.entityCacheMiss(
-						StatsHelper.INSTANCE.getRootEntityRole( persister ),
+						StatsHelper.getRootEntityRole( persister ),
 						cache.getRegion().getName()
 				);
 			}
 			else {
 				statistics.entityCacheHit(
-						StatsHelper.INSTANCE.getRootEntityRole( persister ),
+						StatsHelper.getRootEntityRole( persister ),
 						cache.getRegion().getName()
 				);
 			}

@@ -222,7 +222,7 @@ public class EntityUpdateAction extends EntityAction {
 				final StatisticsImplementor statistics = session.getFactory().getStatistics();
 				if ( put && statistics.isStatisticsEnabled() ) {
 					statistics.entityCachePut(
-							StatsHelper.INSTANCE.getRootEntityRole( persister ),
+							StatsHelper.getRootEntityRole( persister ),
 							getPersister().getCacheAccessStrategy().getRegion().getName()
 					);
 				}
@@ -466,7 +466,7 @@ public class EntityUpdateAction extends EntityAction {
 			final StatisticsImplementor statistics = session.getFactory().getStatistics();
 			if ( put && statistics.isStatisticsEnabled() ) {
 				statistics.entityCachePut(
-						StatsHelper.INSTANCE.getRootEntityRole( getPersister() ),
+						StatsHelper.getRootEntityRole( getPersister() ),
 						cache.getRegion().getName()
 				);
 			}

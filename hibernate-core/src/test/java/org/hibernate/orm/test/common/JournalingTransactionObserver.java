@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.common;
 
-import org.hibernate.engine.transaction.spi.TransactionObserver;
+import org.hibernate.resource.transaction.spi.TransactionObserver;
 
 /**
 * @author Steve Ebersole

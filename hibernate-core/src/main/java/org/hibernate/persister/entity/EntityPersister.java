@@ -249,7 +249,10 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * entity spaces.
 	 *
 	 * @return The synchronization spaces.
+	 *
+	 * @deprecated No longer called
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	default String[] getSynchronizationSpaces() {
 		return (String[]) getQuerySpaces();
 	}
@@ -1222,7 +1225,6 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	FilterAliasGenerator getFilterAliasGenerator(final String rootAlias);
 
 	default FilterAliasGenerator getFilterAliasGenerator(TableGroup rootTableGroup) {
-		assert this instanceof Joinable;
 		return new TableGroupFilterAliasGenerator( ( (Joinable) this ).getTableName(), rootTableGroup );
 	}
 

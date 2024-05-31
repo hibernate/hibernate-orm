@@ -21,7 +21,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
@@ -36,7 +36,7 @@ import org.junit.runners.Parameterized;
  * Tests for storage of LocalDate properties.
  */
 @TestForIssue(jiraKey = "HHH-10371")
-@SkipForDialect(value = AbstractHANADialect.class,
+@SkipForDialect(value = HANADialect.class,
 		comment = "HANA systematically returns the wrong date when the JVM default timezone is not UTC")
 @SkipForDialect(value = MySQLDialect.class,
 		comment = "HHH-13582: MySQL ConnectorJ 8.x returns the wrong date"

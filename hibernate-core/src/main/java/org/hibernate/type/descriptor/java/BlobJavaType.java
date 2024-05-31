@@ -133,7 +133,7 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 			else if (Blob.class.isAssignableFrom( type )) {
 				final Blob blob =  value instanceof WrappedBlob
 						? ( (WrappedBlob) value ).getWrappedBlob()
-						: value;
+						: options.getLobCreator().createBlob(value.getBinaryStream(), value.length());
 				return (X) blob;
 			}
 		}

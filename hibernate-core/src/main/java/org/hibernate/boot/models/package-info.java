@@ -6,21 +6,10 @@
  */
 
 /**
- * Overall, this module is responsible for taking a
+ * Overall, this module is responsible for taking
  * {@linkplain org.hibernate.boot.model.process.spi.ManagedResources managed-resources} and
- * table them into Hibernate's {@linkplain org.hibernate.mapping boot-time model}.
- * <p/>
- * Works in 2 broad phases -<ol>
- *     <li>
- *         First we {@linkplain org.hibernate.boot.models.categorize categorize} the application's domain model,
- *         as understood through {@linkplain org.hibernate.boot.model.process.spi.ManagedResources},
- *         and produce a {@linkplain org.hibernate.boot.models.categorize.spi.CategorizedDomainModel}
- *     </li>
- *     <li>
- *         Finally, the categorized metamodel is {@linkplain org.hibernate.boot.models.bind bound}
- *         into Hibernate's {@linkplain org.hibernate.mapping boot-time model}.
- *     </li>
- * </ol>
+ * building the {@code hibernate-models} model ({@linkplain org.hibernate.models.spi.ClassDetails}, etc.)
+ * to ultimately be bound into Hibernate's {@linkplain org.hibernate.mapping boot-time model}.
  *
  * @author Steve Ebersole
  */

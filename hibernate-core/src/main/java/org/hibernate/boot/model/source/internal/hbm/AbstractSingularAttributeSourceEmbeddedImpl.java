@@ -21,7 +21,7 @@ import org.hibernate.boot.model.source.spi.ToolingHintContext;
 import org.hibernate.tuple.GenerationTiming;
 
 /**
- * Common base class for <component/> and <composite-id/> mappings.
+ * Common base class for {@code <component/>} and {@code <composite-id/>} mappings.
  *
  * @author Steve Ebersole
  */

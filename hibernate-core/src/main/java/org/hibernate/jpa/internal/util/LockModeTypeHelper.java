@@ -12,7 +12,7 @@ import org.hibernate.LockMode;
 import org.hibernate.internal.util.LockModeConverter;
 
 /**
- * Helper to deal with {@link LockModeType} <-> {@link LockMode} conversions.
+ * Helper to deal with conversions between {@link LockModeType} and {@link LockMode}.
  *
  * @author Steve Ebersole
  */

@@ -317,7 +317,7 @@ public abstract class AbstractCollectionPersister
 		 * Add the predicate on the role in the WHERE clause before creating the SQL queries.
 		 */
 		BasicValue discriminatorDescriptor = collectionBootDescriptor.getMappedByAnyDiscriminatorDescriptor();
-		if ( discriminatorDescriptor.getColumn() instanceof Column ) {
+		if ( discriminatorDescriptor != null && discriminatorDescriptor.getColumn() instanceof Column ) {
 			collectionBootDescriptor.setWhere(
 					getNonEmptyOrConjunctionIfBothNonEmpty(
 							collectionBootDescriptor.getWhere(),

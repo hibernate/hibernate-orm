@@ -11,8 +11,11 @@
  * <p>
  * Value-generation related contracts have been replaced by
  * {@link org.hibernate.generator}
+ *
+ * @deprecated The contents of this package and its subpackages
+ *             are deprecated
  */
-@Remove
+@Remove @Deprecated
 package org.hibernate.tuple;
 
 import org.hibernate.Remove;

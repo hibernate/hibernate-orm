@@ -48,15 +48,4 @@ public interface FetchSettings {
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applySubselectFetchEnabled(boolean)
 	 */
 	String USE_SUBSELECT_FETCH = "hibernate.use_subselect_fetch";
-
-	/**
-	 * Specifies the {@link org.hibernate.loader.BatchFetchStyle} to use,
-	 * either the name of a {code BatchFetchStyle} instance, or an instance
-	 * of {@code BatchFetchStyle}.
-	 *
-	 * @deprecated An appropriate batch-fetch style is selected automatically
-	 */
-	@Deprecated(since = "6.0")
-	@SuppressWarnings("DeprecatedIsStillUsed")
-	String BATCH_FETCH_STYLE = "hibernate.batch_fetch_style";
 }

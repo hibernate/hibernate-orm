@@ -19,7 +19,7 @@ import jakarta.persistence.criteria.Root;
 import java.io.Serializable;
 import java.util.List;
 
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
@@ -150,7 +150,7 @@ public class CriteriaLiteralInSelectExpressionTest {
 	@SkipForDialect( dialectClass = DB2Dialect.class)
 	@SkipForDialect( dialectClass = SQLServerDialect.class)
 	@SkipForDialect( dialectClass = SybaseDialect.class)
-	@SkipForDialect( dialectClass = AbstractHANADialect.class)
+	@SkipForDialect( dialectClass = HANADialect.class)
 	public void testStringLiteral2(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {

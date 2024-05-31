@@ -20,7 +20,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -734,7 +734,7 @@ public class MergeTest extends AbstractOperationTestCase {
 
 	@Test
 	@SuppressWarnings("unchecked")
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testRecursiveMergeTransient(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -784,7 +784,7 @@ public class MergeTest extends AbstractOperationTestCase {
 
 	@SuppressWarnings("unchecked")
 	@Test
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testMergeManyToManyWithCollectionDeference(SessionFactoryScope scope) {
 		// setup base data...
 		Competition competition = new Competition();

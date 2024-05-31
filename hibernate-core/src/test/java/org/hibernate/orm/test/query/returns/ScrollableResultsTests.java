@@ -12,7 +12,7 @@ import jakarta.persistence.TupleElement;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryImplementor;
@@ -58,7 +58,7 @@ public class ScrollableResultsTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "HANA supports only ResultSet.TYPE_FORWARD_ONLY")
+	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA supports only ResultSet.TYPE_FORWARD_ONLY")
 	public void testCursorPositioning(SessionFactoryScope scope) {
 		// create an extra row so we can better test cursor positioning
 		scope.inTransaction(
@@ -269,7 +269,7 @@ public class ScrollableResultsTests {
 
 		final SessionImplementor session = (SessionImplementor) query.getSession();
 		// HANA supports only ResultSet.TYPE_FORWARD_ONLY
-		if ( !( session.getFactory().getJdbcServices().getDialect() instanceof AbstractHANADialect ) ) {
+		if ( !( session.getFactory().getJdbcServices().getDialect() instanceof HANADialect ) ) {
 			try (final ScrollableResults<R> results = query.scroll( ScrollMode.SCROLL_INSENSITIVE )) {
 				assertThat( results.next(), is( true ) );
 				validator.accept( results.get() );

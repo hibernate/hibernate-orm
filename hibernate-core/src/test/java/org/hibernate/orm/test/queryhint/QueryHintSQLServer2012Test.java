@@ -10,7 +10,6 @@ package org.hibernate.orm.test.queryhint;
 import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.query.Query;
 
@@ -166,7 +165,7 @@ public class QueryHintSQLServer2012Test {
 	 * after completely processing it. Instead, use this ridiculous hack to ensure Loader actually calls Dialect. TODO:
 	 * This is terrible. Better ideas?
 	 */
-	public static class QueryHintTestSQLServer2012Dialect extends SQLServer2012Dialect {
+	public static class QueryHintTestSQLServer2012Dialect extends SQLServerDialect {
 
 		private static String processedSql;
 

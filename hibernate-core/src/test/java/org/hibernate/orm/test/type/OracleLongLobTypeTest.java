@@ -18,7 +18,6 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.community.dialect.Oracle12cDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.BasicType;
@@ -44,17 +43,17 @@ public class OracleLongLobTypeTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-10345" )
 	public void testOracle12() {
-		check( Oracle12cDialect.class, Primitives.class, StandardBasicTypes.BINARY, StandardBasicTypes.CHAR_ARRAY );
-		check( Oracle12cDialect.class, LobPrimitives.class, StandardBasicTypes.MATERIALIZED_BLOB, StandardBasicTypes.MATERIALIZED_CLOB_CHAR_ARRAY );
-		check( Oracle12cDialect.class, LobLocators.class, StandardBasicTypes.BLOB, StandardBasicTypes.CLOB );
+		check( OracleDialect.class, Primitives.class, StandardBasicTypes.BINARY, StandardBasicTypes.CHAR_ARRAY );
+		check( OracleDialect.class, LobPrimitives.class, StandardBasicTypes.MATERIALIZED_BLOB, StandardBasicTypes.MATERIALIZED_CLOB_CHAR_ARRAY );
+		check( OracleDialect.class, LobLocators.class, StandardBasicTypes.BLOB, StandardBasicTypes.CLOB );
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-10345" )
 	public void testOracle12PreferLongRaw() {
-		check( Oracle12cDialect.class, Primitives.class, StandardBasicTypes.BINARY, StandardBasicTypes.CHAR_ARRAY, true );
-		check( Oracle12cDialect.class, LobPrimitives.class, StandardBasicTypes.MATERIALIZED_BLOB, StandardBasicTypes.MATERIALIZED_CLOB_CHAR_ARRAY, true );
-		check( Oracle12cDialect.class, LobLocators.class, StandardBasicTypes.BLOB, StandardBasicTypes.CLOB, true );
+		check( OracleDialect.class, Primitives.class, StandardBasicTypes.BINARY, StandardBasicTypes.CHAR_ARRAY, true );
+		check( OracleDialect.class, LobPrimitives.class, StandardBasicTypes.MATERIALIZED_BLOB, StandardBasicTypes.MATERIALIZED_CLOB_CHAR_ARRAY, true );
+		check( OracleDialect.class, LobLocators.class, StandardBasicTypes.BLOB, StandardBasicTypes.CLOB, true );
 	}
 
 	private void check(

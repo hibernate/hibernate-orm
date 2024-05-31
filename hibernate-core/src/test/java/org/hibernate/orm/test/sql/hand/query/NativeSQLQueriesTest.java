@@ -24,7 +24,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.QueryException;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.orm.test.sql.hand.Dimension;

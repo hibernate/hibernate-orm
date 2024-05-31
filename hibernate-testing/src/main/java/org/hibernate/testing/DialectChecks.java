@@ -7,12 +7,12 @@
 package org.hibernate.testing;
 
 import org.hibernate.community.dialect.FirebirdDialect;
-import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DialectDelegateWrapper;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -106,10 +106,10 @@ abstract public class DialectChecks {
 	public static class SupportsRowValueConstructorSyntaxCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
-			return dialect instanceof AbstractHANADialect
-					|| dialect instanceof CockroachDialect
-					|| dialect instanceof MySQLDialect
-					|| dialect instanceof PostgreSQLDialect;
+			return dialect instanceof HANADialect
+				|| dialect instanceof CockroachDialect
+				|| dialect instanceof MySQLDialect
+				|| dialect instanceof PostgreSQLDialect;
 		}
 	}
 
@@ -284,7 +284,7 @@ abstract public class DialectChecks {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.supportsOrderByInSubquery()
 					// For some reason, HANA doesn't support order by in correlated subqueries...
-					&& !( dialect instanceof AbstractHANADialect );
+					&& !( dialect instanceof HANADialect );
 		}
 	}
 

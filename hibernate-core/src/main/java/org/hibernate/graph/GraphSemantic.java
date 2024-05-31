@@ -9,7 +9,6 @@ package org.hibernate.graph;
 import java.util.Locale;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.jpa.LegacySpecHints;
 
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_FETCH_GRAPH;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOAD_GRAPH;

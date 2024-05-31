@@ -655,7 +655,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		if ( pk != null ) {
 			if ( statisticsEnabled ) {
 				statistics.naturalIdCacheHit(
-						StatsHelper.INSTANCE.getRootEntityRole( persister ),
+						StatsHelper.getRootEntityRole( persister ),
 						naturalIdCacheAccessStrategy.getRegion().getName()
 				);
 			}
@@ -683,7 +683,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		}
 		else if ( statisticsEnabled ) {
 			statistics.naturalIdCacheMiss(
-					StatsHelper.INSTANCE.getRootEntityRole( persister ),
+					StatsHelper.getRootEntityRole( persister ),
 					naturalIdCacheAccessStrategy.getRegion().getName()
 			);
 		}

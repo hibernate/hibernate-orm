@@ -138,9 +138,8 @@ public class PatternRenderer {
 	/**
 	 * The rendering code.
 	 *
-	 * @param sqlAppender
+	 * @param sqlAppender Target for appending
 	 * @param args The arguments to inject into the template
-	 * @return The rendered template with replacements
 	 */
 	@SuppressWarnings({ "UnusedDeclaration" })
 	public void render(

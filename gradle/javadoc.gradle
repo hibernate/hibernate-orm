@@ -14,15 +14,14 @@ tasks.named( "javadoc", Javadoc ) {
     inputs.property "currentYear", currentYear
 
     // exclude any generated sources and internal packages
-    exclude '**/generated-src/**'
-    exclude '**/generated/source/**'
-    exclude '**/generated/sources/**'
-    exclude '**/internal/**'
+    exclude 'org/hibernate/grammars'
     include '**/*.java'
 
     maxMemory = '512m'
 
     configure( options ) {
+        quiet()
+
         // this is the config needed to use asciidoclet for Javadoc rendering.  It relies on a build from John's PR @ https://github.com/asciidoctor/asciidoclet/pull/91
         // however, the PR does not work for me in that Javadocs with `@asciidoclet` are not rendered using asciidoc(tor/let).  Also tried the preferable `@asciidoc`
         // with the same result.  Leaving all this config in place however as the outcome is the same as not enabling it.
@@ -40,7 +39,7 @@ tasks.named( "javadoc", Javadoc ) {
 
         // The javadoc folder contains cached versions of the respective element-list files to avoid release issues when servers are down
         // When upgrading versions of the libraries, don't forget to update the file contents in the repository
-        linksOffline 'https://docs.oracle.com/en/java/javase/11/docs/api/', "${project.rootDir}/javadoc/javase11"
+        linksOffline 'https://docs.oracle.com/en/java/javase/17/docs/api/', "${project.rootDir}/javadoc/javase17"
         linksOffline 'https://jakarta.ee/specifications/bean-validation/3.0/apidocs/', "${project.rootDir}/javadoc/jakarta-validation-3.0"
         linksOffline 'https://jakarta.ee/specifications/cdi/4.0/apidocs/', "${project.rootDir}/javadoc/jakarta-cdi-4.0"
         linksOffline 'https://jakarta.ee/specifications/platform/9/apidocs/', "${project.rootDir}/javadoc/jakarta-platform-9"
@@ -55,7 +54,7 @@ tasks.named( "javadoc", Javadoc ) {
                 'settingDefault:f:Default Value:'
         )
 
-        addStringOption( 'Xdoclint:none', '-quiet' )
+        addBooleanOption('Xdoclint:none', true)
     }
 }
 

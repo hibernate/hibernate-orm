@@ -17,7 +17,7 @@ import org.hibernate.MappingException;
 import org.jboss.logging.Logger;
 
 /**
- * Helper to deal with {@link FlushModeType} <-> {@link FlushMode} conversions.
+ * Helper to deal with conversions between {@link FlushModeType} and {@link FlushMode}.
  *
  * @author Steve Ebersole
  */

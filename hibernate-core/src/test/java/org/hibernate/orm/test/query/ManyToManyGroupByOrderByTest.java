@@ -35,6 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 } )
 @SessionFactory
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17837" )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-18202" )
 public class ManyToManyGroupByOrderByTest {
 	@Test
 	public void testSelectEntity(SessionFactoryScope scope) {
@@ -104,6 +105,42 @@ public class ManyToManyGroupByOrderByTest {
 		scope.inTransaction( session -> {
 			final Tuple result = session.createQuery(
 					"select element(cat.owners).id from Cat cat group by element(cat.owners) order by element(cat.owners)",
+					Tuple.class
+			).getSingleResult();
+			assertThat( result.get( 0, Long.class ) ).isEqualTo( 1L );
+		} );
+	}
+
+	@Test
+	public void testDistinctAndAggregates(SessionFactoryScope scope) {
+		// explicit join distinct
+		scope.inTransaction( session -> {
+			final Tuple result = session.createQuery(
+					"select distinct owner.id from Cat cat join cat.owners owner group by owner.id order by owner.id",
+					Tuple.class
+			).getSingleResult();
+			assertThat( result.get( 0, Long.class ) ).isEqualTo( 1L );
+		} );
+		// explicit join distinct + aggregate
+		scope.inTransaction( session -> {
+			final Tuple result = session.createQuery(
+					"select distinct min(owner.id), cat.id from Cat cat join cat.owners owner group by cat.id order by min(owner.id), cat.id",
+					Tuple.class
+			).getSingleResult();
+			assertThat( result.get( 0, Long.class ) ).isEqualTo( 1L );
+		} );
+		// implicit join distinct
+		scope.inTransaction( session -> {
+			final Tuple result = session.createQuery(
+					"select distinct element(cat.owners).id from Cat cat group by element(cat.owners).id order by element(cat.owners).id",
+					Tuple.class
+			).getSingleResult();
+			assertThat( result.get( 0, Long.class ) ).isEqualTo( 1L );
+		} );
+		// implicit join distinct + aggregate
+		scope.inTransaction( session -> {
+			final Tuple result = session.createQuery(
+					"select distinct min(element(cat.owners).id), cat.id from Cat cat group by cat.id order by min(element(cat.owners).id), cat.id",
 					Tuple.class
 			).getSingleResult();
 			assertThat( result.get( 0, Long.class ) ).isEqualTo( 1L );

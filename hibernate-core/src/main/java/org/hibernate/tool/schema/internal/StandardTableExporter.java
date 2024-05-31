@@ -25,8 +25,10 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
 import org.hibernate.sql.Template;
 import org.hibernate.tool.schema.spi.Exporter;
@@ -95,7 +97,7 @@ public class StandardTableExporter implements Exporter<Table> {
 					}
 				}
 				if ( table.hasPrimaryKey() ) {
-					createTable.append( ", " ).append( table.getPrimaryKey().sqlConstraintString( dialect ) );
+					createTable.append( ", " ).append( primaryKeyString( table.getPrimaryKey() ) );
 				}
 
 				createTable.append( dialect.getUniqueDelegate().getTableCreationUniqueConstraintsFragment( table, context ) );
@@ -331,6 +333,27 @@ public class StandardTableExporter implements Exporter<Table> {
 	protected String tableCreateString(boolean hasPrimaryKey) {
 		return hasPrimaryKey ? dialect.getCreateTableString() : dialect.getCreateMultisetTableString();
 
+	}
+
+	protected String primaryKeyString(PrimaryKey key) {
+		final StringBuilder constraint = new StringBuilder();
+		final UniqueKey orderingUniqueKey = key.getOrderingUniqueKey();
+		if ( orderingUniqueKey != null && orderingUniqueKey.isNameExplicit() ) {
+			constraint.append( "constraint " )
+					.append( orderingUniqueKey.getName() ).append( ' ' );
+		}
+		constraint.append( "primary key (" );
+		boolean first = true;
+		for ( Column column : key.getColumns() ) {
+			if ( first ) {
+				first = false;
+			}
+			else {
+				constraint.append(", ");
+			}
+			constraint.append( column.getQuotedName( dialect ) );
+		}
+		return constraint.append(')').toString();
 	}
 
 	@Override

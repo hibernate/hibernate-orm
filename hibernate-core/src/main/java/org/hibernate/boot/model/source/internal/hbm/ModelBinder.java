@@ -4124,8 +4124,7 @@ public class ModelBinder {
 
 			final List<Identifier> columnNames = new ArrayList<>();
 
-			final UniqueKey uk = new UniqueKey();
-			uk.setTable( entityBinding.getTable() );
+			final UniqueKey uk = new UniqueKey(entityBinding.getTable() );
 			for ( Property attributeBinding : attributeBindings ) {
 				for ( Selectable selectable : attributeBinding.getSelectables() ) {
 					if ( selectable instanceof Column ) {

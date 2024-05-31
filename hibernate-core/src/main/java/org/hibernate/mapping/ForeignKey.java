@@ -23,12 +23,17 @@ import static org.hibernate.internal.util.StringHelper.qualify;
  * @author Gavin King
  */
 public class ForeignKey extends Constraint {
+
 	private Table referencedTable;
 	private String referencedEntityName;
 	private String keyDefinition;
 	private OnDeleteAction onDeleteAction;
 	private final List<Column> referencedColumns = new ArrayList<>();
 	private boolean creationEnabled = true;
+
+	public ForeignKey(Table table){
+		setTable( table );
+	}
 
 	public ForeignKey() {
 	}
@@ -133,22 +138,6 @@ public class ForeignKey extends Constraint {
 
 	public OnDeleteAction getOnDeleteAction() {
 		return onDeleteAction;
-	}
-
-	/**
-	 * @deprecated use {@link #getOnDeleteAction()}
-	 */
-	@Deprecated(since = "6.2")
-	public boolean isCascadeDeleteEnabled() {
-		return onDeleteAction == OnDeleteAction.CASCADE;
-	}
-
-	/**
-	 * @deprecated use {@link #setOnDeleteAction(OnDeleteAction)}
-	 */
-	@Deprecated(since = "6.2")
-	public void setCascadeDeleteEnabled(boolean cascadeDeleteEnabled) {
-		this.onDeleteAction = cascadeDeleteEnabled ? OnDeleteAction.CASCADE : OnDeleteAction.NO_ACTION;
 	}
 
 	public boolean isPhysicalConstraint() {

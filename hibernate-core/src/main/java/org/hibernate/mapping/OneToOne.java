@@ -6,7 +6,6 @@
  */
 package org.hibernate.mapping;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
@@ -115,15 +114,6 @@ public class OneToOne extends ToOne {
 			columns = identifier.getColumns();
 		}
 		return columns;
-	}
-
-	/**
-	 * @deprecated Use {@link #getSelectables()} instead
-	 */
-	@Deprecated(forRemoval = true, since = "6.3")
-	@Override
-	public Iterator<Selectable> getConstraintColumnIterator() {
-		return identifier.getSelectables().iterator();
 	}
 
 	/**

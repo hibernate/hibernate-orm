@@ -8,7 +8,6 @@ package org.hibernate.mapping;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -82,11 +81,6 @@ public class Join implements AttributeContainer, Serializable {
 
 	public boolean containsProperty(Property property) {
 		return properties.contains( property );
-	}
-
-	@Deprecated(since = "6.0")
-	public Iterator<Property> getPropertyIterator() {
-		return properties.iterator();
 	}
 
 	public Table getTable() {
@@ -180,14 +174,6 @@ public class Join implements AttributeContainer, Serializable {
 
 	public boolean isCustomDeleteCallable() {
 		return customDeleteCallable;
-	}
-
-	/**
-	 * @deprecated use {@link #getDeleteExpectation()}
-	 */
-	@Deprecated(since = "6.5", forRemoval = true)
-	public ExecuteUpdateResultCheckStyle getCustomSQLDeleteCheckStyle() {
-		return deleteCheckStyle;
 	}
 
 	public boolean isInverse() {

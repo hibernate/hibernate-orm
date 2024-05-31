@@ -228,11 +228,6 @@ public abstract class MockEntityPersister implements EntityPersister, Queryable,
 	}
 
 	@Override
-	public boolean consumesEntityAlias() {
-		return true;
-	}
-
-	@Override
 	public Type getDiscriminatorType() {
 		return typeConfiguration.getBasicTypeForJavaType(String.class);
 	}

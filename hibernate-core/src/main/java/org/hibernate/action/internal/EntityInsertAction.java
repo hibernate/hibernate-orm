@@ -175,7 +175,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 			final StatisticsImplementor statistics = factory.getStatistics();
 			if ( put && statistics.isStatisticsEnabled() ) {
 				statistics.entityCachePut(
-						StatsHelper.INSTANCE.getRootEntityRole( persister ),
+						StatsHelper.getRootEntityRole( persister ),
 						cache.getRegion().getName()
 				);
 			}
@@ -266,7 +266,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 			final StatisticsImplementor statistics = factory.getStatistics();
 			if ( put && statistics.isStatisticsEnabled() ) {
 				statistics.entityCachePut(
-						StatsHelper.INSTANCE.getRootEntityRole( persister ),
+						StatsHelper.getRootEntityRole( persister ),
 						cache.getRegion().getName()
 				);
 			}

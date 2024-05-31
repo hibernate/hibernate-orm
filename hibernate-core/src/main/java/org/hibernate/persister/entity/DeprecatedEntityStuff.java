@@ -13,5 +13,5 @@ import org.hibernate.metadata.ClassMetadata;
  */
 @Deprecated
 public interface DeprecatedEntityStuff
-		extends OuterJoinLoadable, ClassMetadata, UniqueKeyLoadable, SQLLoadable, Lockable,	org.hibernate.persister.entity.Queryable {
+		extends OuterJoinLoadable, ClassMetadata, UniqueKeyLoadable, SQLLoadable, Lockable,	Queryable {
 }

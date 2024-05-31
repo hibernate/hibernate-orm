@@ -11,7 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 
 import org.hibernate.Session;
-import org.hibernate.engine.transaction.spi.TransactionObserver;
+import org.hibernate.resource.transaction.spi.TransactionObserver;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 
 import org.hibernate.testing.TestForIssue;

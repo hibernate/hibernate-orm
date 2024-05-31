@@ -4264,16 +4264,6 @@ public abstract class AbstractEntityPersister
 		return false;
 	}
 
-	@Override
-	public boolean consumesEntityAlias() {
-		return true;
-	}
-
-	@Override
-	public boolean consumesCollectionAlias() {
-		return false;
-	}
-
 	/**
 	 * {@inheritDoc}
 	 *

@@ -754,16 +754,6 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	}
 
 	@Override
-	public boolean consumesEntityAlias() {
-		return false;
-	}
-
-	@Override
-	public boolean consumesCollectionAlias() {
-		return true;
-	}
-
-	@Override
 	public boolean isOneToMany() {
 		return false;
 	}

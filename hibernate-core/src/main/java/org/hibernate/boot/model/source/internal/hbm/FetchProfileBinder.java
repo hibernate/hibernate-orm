@@ -6,11 +6,14 @@
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFetchProfileType;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MetadataSource;
 
 import org.jboss.logging.Logger;
+
+import static jakarta.persistence.FetchType.EAGER;
 
 /**
  * @author Steve Ebersole
@@ -69,8 +72,17 @@ public class FetchProfileBinder {
 						context.getOrigin()
 				);
 			}
-			profile.addFetch( entityName, fetchBinding.getAssociation(), fetchBinding.getStyle().value() );
+			String association = fetchBinding.getAssociation();
+			profile.addFetch( new FetchProfile.Fetch(entityName, association, fetchMode(fetchBinding.getStyle().value()), EAGER ) );
 		}
 	}
 
+	private static FetchMode fetchMode(String style) {
+		for ( FetchMode mode: FetchMode.values() ) {
+			if ( mode.name().equalsIgnoreCase( style ) ) {
+				return mode;
+			}
+		}
+		throw new IllegalArgumentException( "Unknown FetchMode: " + style );
+	}
 }

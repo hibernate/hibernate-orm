@@ -26,7 +26,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
-import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -1098,10 +1097,6 @@ public class QuerySqmImpl<R>
 
 		if ( cls.isInstance( getQueryOptions().getAppliedGraph() ) ) {
 			return (T) getQueryOptions().getAppliedGraph();
-		}
-
-		if ( EntityGraphQueryHint.class.isAssignableFrom( cls ) ) {
-			return (T) new EntityGraphQueryHint( getQueryOptions().getAppliedGraph() );
 		}
 
 		throw new PersistenceException( "Unrecognized unwrap type [" + cls.getName() + "]" );

@@ -592,14 +592,6 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		return customInsertCallable;
 	}
 
-	/**
-	 * @deprecated use {@link #getInsertExpectation()}
-	 */
-	@Deprecated(since = "6.5", forRemoval = true)
-	public ExecuteUpdateResultCheckStyle getCustomSQLInsertCheckStyle() {
-		return insertCheckStyle;
-	}
-
 	public void setCustomSQLUpdate(String customSQLUpdate, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLUpdate = customSQLUpdate;
 		this.customUpdateCallable = callable;
@@ -615,14 +607,6 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		return customUpdateCallable;
 	}
 
-	/**
-	 * @deprecated use {@link #getUpdateExpectation()}
-	 */
-	@Deprecated(since = "6.5", forRemoval = true)
-	public ExecuteUpdateResultCheckStyle getCustomSQLUpdateCheckStyle() {
-		return updateCheckStyle;
-	}
-
 	public void setCustomSQLDelete(String customSQLDelete, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLDelete = customSQLDelete;
 		this.customDeleteCallable = callable;
@@ -636,14 +620,6 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 
 	public boolean isCustomDeleteCallable() {
 		return customDeleteCallable;
-	}
-
-	/**
-	 * @deprecated use {@link #getDeleteExpectation()}
-	 */
-	@Deprecated(since = "6.5", forRemoval = true)
-	public ExecuteUpdateResultCheckStyle getCustomSQLDeleteCheckStyle() {
-		return deleteCheckStyle;
 	}
 
 	public void setCustomSQLDeleteAll(

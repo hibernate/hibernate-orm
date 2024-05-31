@@ -38,30 +38,8 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 	private final @Nullable ReturnableType<T> impliedResultType;
 	private final @Nullable ArgumentsValidator argumentsValidator;
 	private final FunctionReturnTypeResolver returnTypeResolver;
-	private final FunctionRenderingSupport renderingSupport;
 	private final FunctionRenderer renderer;
 	private @Nullable ReturnableType<?> resultType;
-
-	/**
-	 * @deprecated Use {@link #SelfRenderingSqmFunction(SqmFunctionDescriptor, FunctionRenderer, List, ReturnableType, ArgumentsValidator, FunctionReturnTypeResolver, NodeBuilder, String)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public SelfRenderingSqmFunction(
-			SqmFunctionDescriptor descriptor,
-			FunctionRenderingSupport renderingSupport,
-			List<? extends SqmTypedNode<?>> arguments,
-			@Nullable ReturnableType<T> impliedResultType,
-			@Nullable ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			NodeBuilder nodeBuilder,
-			String name) {
-		super( name, descriptor, impliedResultType, arguments, nodeBuilder );
-		this.renderingSupport = renderingSupport;
-		this.renderer = renderingSupport::render;
-		this.impliedResultType = impliedResultType;
-		this.argumentsValidator = argumentsValidator;
-		this.returnTypeResolver = returnTypeResolver;
-	}
 
 	public SelfRenderingSqmFunction(
 			SqmFunctionDescriptor descriptor,
@@ -73,7 +51,6 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 			NodeBuilder nodeBuilder,
 			String name) {
 		super( name, descriptor, impliedResultType, arguments, nodeBuilder );
-		this.renderingSupport = renderer;
 		this.renderer = renderer;
 		this.impliedResultType = impliedResultType;
 		this.argumentsValidator = argumentsValidator;
@@ -105,14 +82,6 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		);
 		copyTo( expression, context );
 		return expression;
-	}
-
-	/**
-	 * @deprecated Use {@link #getFunctionRenderer()} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public FunctionRenderingSupport getRenderingSupport() {
-		return renderingSupport;
 	}
 
 	public FunctionRenderer getFunctionRenderer() {
@@ -195,11 +164,6 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		return nodeType;
 	}
 
-	@Deprecated(forRemoval = true)
-	protected @Nullable ReturnableType<?> resolveResultType(TypeConfiguration typeConfiguration) {
-		return resolveResultType( () -> null, typeConfiguration );
-	}
-
 	public @Nullable ReturnableType<?> resolveResultType(SqmToSqlAstConverter walker) {
 		if ( resultType == null ) {
 			resultType = determineResultType(
@@ -220,22 +184,6 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 				getArguments(),
 				typeConfiguration
 		);
-	}
-
-	@Deprecated(forRemoval = true)
-	protected @Nullable ReturnableType<?> resolveResultType(
-			Supplier<MappingModelExpressible<?>> inferredTypeSupplier,
-			TypeConfiguration typeConfiguration) {
-		if ( resultType == null ) {
-			resultType = returnTypeResolver.resolveFunctionReturnType(
-					impliedResultType,
-					inferredTypeSupplier,
-					getArguments(),
-					typeConfiguration
-			);
-			setExpressibleType( resultType );
-		}
-		return resultType;
 	}
 
 	protected MappingModelExpressible<?> getMappingModelExpressible(

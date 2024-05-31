@@ -11,12 +11,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.GeneratedValueBasicResultBuilder;
-import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -36,14 +34,6 @@ public class UniqueKeySelectingDelegate extends AbstractSelectingDelegate {
 	private final Type[] uniqueKeyTypes;
 
 	private final String selectString;
-
-	/**
-	 * @deprecated Use {@link #UniqueKeySelectingDelegate(EntityPersister, String[], EventType)} instead.
-	 */
-	@Deprecated( forRemoval = true, since = "6.5" )
-	public UniqueKeySelectingDelegate(PostInsertIdentityPersister persister, Dialect dialect, String[] uniqueKeyPropertyNames) {
-		this( persister, uniqueKeyPropertyNames, EventType.INSERT );
-	}
 
 	public UniqueKeySelectingDelegate(
 			EntityPersister persister,

@@ -918,19 +918,6 @@ public abstract class AbstractCollectionPersister
 		return elementClass;
 	}
 
-	/**
-	 * @deprecated No longer used.
-	 */
-	@Deprecated(forRemoval = true)
-	@Remove
-	protected Object decrementIndexByBase(Object index) {
-		final int baseIndex = attributeMapping.getIndexMetadata().getListIndexBase();
-		if ( baseIndex > 0 ) {
-			index = (Integer)index - baseIndex;
-		}
-		return index;
-	}
-
 	protected Object incrementIndexByBase(Object index) {
 		final int baseIndex = attributeMapping.getIndexMetadata().getListIndexBase();
 		if ( baseIndex > 0  ) {

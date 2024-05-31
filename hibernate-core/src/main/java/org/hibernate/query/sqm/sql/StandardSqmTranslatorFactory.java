@@ -12,16 +12,10 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.internal.StandardSqmTranslator;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
-import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
-import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.tree.MutationStatement;
-import org.hibernate.sql.ast.tree.delete.DeleteStatement;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
 
 /**
  * Standard implementation of the SqmTranslatorFactory
@@ -60,63 +54,6 @@ public class StandardSqmTranslatorFactory implements SqmTranslatorFactory {
 			SqlAstCreationContext creationContext) {
 		return new StandardSqmTranslator<>(
 				sqmDeleteStatement,
-				queryOptions,
-				domainParameterXref,
-				domainParameterBindings,
-				loadQueryInfluencers,
-				creationContext,
-				false
-		);
-	}
-
-	@Override
-	public SqmTranslator<DeleteStatement> createSimpleDeleteTranslator(
-			SqmDeleteStatement<?> sqmDeleteStatement,
-			QueryOptions queryOptions,
-			DomainParameterXref domainParameterXref,
-			QueryParameterBindings domainParameterBindings,
-			LoadQueryInfluencers loadQueryInfluencers,
-			SqlAstCreationContext creationContext) {
-		return new StandardSqmTranslator<>(
-				sqmDeleteStatement,
-				queryOptions,
-				domainParameterXref,
-				domainParameterBindings,
-				loadQueryInfluencers,
-				creationContext,
-				false
-		);
-	}
-
-	@Override
-	public SqmTranslator<InsertStatement> createInsertTranslator(
-			SqmInsertStatement<?> sqmInsertStatement,
-			QueryOptions queryOptions,
-			DomainParameterXref domainParameterXref,
-			QueryParameterBindings domainParameterBindings,
-			LoadQueryInfluencers loadQueryInfluencers,
-			SqlAstCreationContext creationContext) {
-		return new StandardSqmTranslator<>(
-				sqmInsertStatement,
-				queryOptions,
-				domainParameterXref,
-				domainParameterBindings,
-				loadQueryInfluencers,
-				creationContext,
-				false
-		);
-	}
-
-	@Override
-	public SqmTranslator<UpdateStatement> createSimpleUpdateTranslator(
-			SqmUpdateStatement<?> sqmUpdateStatement,
-			QueryOptions queryOptions,
-			DomainParameterXref domainParameterXref,
-			QueryParameterBindings domainParameterBindings,
-			LoadQueryInfluencers loadQueryInfluencers,
-			SqlAstCreationContext creationContext) {
-		return new StandardSqmTranslator<>(
-				sqmUpdateStatement,
 				queryOptions,
 				domainParameterXref,
 				domainParameterBindings,

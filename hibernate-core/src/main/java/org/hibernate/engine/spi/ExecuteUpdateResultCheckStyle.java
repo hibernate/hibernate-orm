@@ -88,10 +88,6 @@ public enum ExecuteUpdateResultCheckStyle {
 		return null;
 	}
 
-	public static ExecuteUpdateResultCheckStyle determineDefault(@Nullable String customSql, boolean callable) {
-		return customSql != null && callable ? PARAM : COUNT;
-	}
-
 	public static @Nullable Supplier<? extends Expectation> expectationConstructor(
 			@Nullable ExecuteUpdateResultCheckStyle style) {
 		return style == null ? null : style.expectationConstructor();

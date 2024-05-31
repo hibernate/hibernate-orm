@@ -6961,14 +6961,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		appendSql( getCastTypeName( castTarget, sessionFactory.getTypeConfiguration() ) );
 	}
 
-	/**
-	 * @deprecated Use {@link #getSqlTypeName(SqlTypedMapping, TypeConfiguration)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public static String getSqlTypeName(SqlTypedMapping castTarget, SessionFactoryImplementor factory) {
-		return getSqlTypeName( castTarget, factory.getTypeConfiguration() );
-	}
-
 	public static String getSqlTypeName(SqlTypedMapping castTarget, TypeConfiguration typeConfiguration) {
 		if ( castTarget.getColumnDefinition() != null ) {
 			return castTarget.getColumnDefinition();
@@ -6986,14 +6978,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 			return ddlType.getTypeName( castTargetSize, expressionType, ddlTypeRegistry );
 		}
-	}
-
-	/**
-	 * @deprecated Use {@link #getCastTypeName(SqlTypedMapping, TypeConfiguration)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public static String getCastTypeName(SqlTypedMapping castTarget, SessionFactoryImplementor factory) {
-		return getCastTypeName( castTarget, factory.getTypeConfiguration() );
 	}
 
 	public static String getCastTypeName(SqlTypedMapping castTarget, TypeConfiguration typeConfiguration) {
@@ -8550,18 +8534,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 */
 	protected boolean supportsJoinInMutationStatementSubquery() {
 		return true;
-	}
-
-	/**
-	 * Some databases require a bit of syntactic noise when
-	 * there are no tables in the from clause.
-	 *
-	 * @return the SQL equivalent to Oracle's {@code from dual}.
-	 * @deprecated Use {@link #getDual()} instead
-	 */
-	@Deprecated(forRemoval = true)
-	protected String getFromDual() {
-		return " from " + getDual() + " d_";
 	}
 
 	/**

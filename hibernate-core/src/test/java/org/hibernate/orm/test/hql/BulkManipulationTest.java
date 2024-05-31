@@ -668,10 +668,6 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature(
-			value = DialectChecks.SupportsParametersInInsertSelectCheck.class,
-			comment = "dialect does not support parameter in INSERT ... SELECT"
-	)
 	public void testInsertWithGeneratedTimestampVersion() {
 		// Make sure the env supports bulk inserts with generated ids...
 		Assumptions.assumeTrue( supportsBulkInsertIdGeneration( TimestampVersioned.class ), "bulk id generation not supported" );

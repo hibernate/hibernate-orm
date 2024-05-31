@@ -35,12 +35,6 @@ public interface JdbcSessionContext {
 	Integer getFetchSizeOrNull();
 
 	/**
-	 * @deprecated this is never called, and luckily so, because it's not null-safe
-	 */
-	@Deprecated(since = "6.2", forRemoval = true)
-	int getFetchSize();
-
-	/**
 	 * @see org.hibernate.cfg.AvailableSettings#CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT
 	 */
 	boolean doesConnectionProviderDisableAutoCommit();

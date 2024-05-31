@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.tree.delete;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.hibernate.query.criteria.JpaCriteriaDelete;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -19,12 +18,10 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.ParameterExpression;
 import jakarta.persistence.criteria.Predicate;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import jakarta.persistence.criteria.Subquery;
@@ -39,31 +36,6 @@ public class SqmDeleteStatement<T>
 
 	public SqmDeleteStatement(NodeBuilder nodeBuilder) {
 		super( SqmQuerySource.HQL, nodeBuilder );
-	}
-
-	/**
-	 * @deprecated was previously used for HQL. Use {@link SqmDeleteStatement#SqmDeleteStatement(NodeBuilder)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public SqmDeleteStatement(SqmRoot<T> target, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
-		super( target, querySource, nodeBuilder );
-	}
-
-	/**
-	 * @deprecated was previously used for Criteria. Use {@link SqmDeleteStatement#SqmDeleteStatement(Class,NodeBuilder)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public SqmDeleteStatement(Class<T> targetEntity, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
-		super(
-				new SqmRoot<>(
-						nodeBuilder.getDomainModel().entity( targetEntity ),
-						null,
-						false,
-						nodeBuilder
-				),
-				querySource,
-				nodeBuilder
-		);
 	}
 
 	public SqmDeleteStatement(Class<T> targetEntity, NodeBuilder nodeBuilder) {

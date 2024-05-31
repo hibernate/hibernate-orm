@@ -1541,22 +1541,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * Obtain a pattern for the SQL equivalent to a
 	 * {@code trim()} function call. The resulting
 	 * pattern must contain a ?1 placeholder for the
-	 * argument of type {@link String}.
-	 *
-	 * @param specification {@code leading} or {@code trailing}
-	 * @param character the character to trim
-	 *
-	 * @deprecated Use {@link #trimPattern(TrimSpec, boolean)} instead.
-	 */
-	@Deprecated( forRemoval = true )
-	public String trimPattern(TrimSpec specification, char character) {
-		return trimPattern( specification, character == ' ' );
-	}
-
-	/**
-	 * Obtain a pattern for the SQL equivalent to a
-	 * {@code trim()} function call. The resulting
-	 * pattern must contain a ?1 placeholder for the
 	 * argument of type {@link String} and a ?2 placeholder
 	 * for the trim character if {@code isWhitespace}
 	 * was false.
@@ -2039,28 +2023,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public boolean supportsLockTimeouts() {
 		return true;
-	}
-
-	/**
-	 * If this dialect supports specifying lock timeouts, are those timeouts
-	 * rendered into the {@code SQL} string as parameters? The implication
-	 * is that Hibernate will need to bind the timeout value as a parameter
-	 * in the {@link PreparedStatement}. If true, the parameter position
-	 * is always handled as the last parameter; if the dialect specifies the
-	 * lock timeout elsewhere in the {@code SQL} statement then the timeout
-	 * value should be directly rendered into the statement and this method
-	 * should return false.
-	 *
-	 * @return True if the lock timeout is rendered into the {@code SQL}
-	 *         string as a parameter; false otherwise.
-	 *
-	 * @deprecated This is never called, and since at least Hibernate 5 has
-	 *             just returned {@code false} in every dialect. It will be
-	 *             removed.
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	public boolean isLockTimeoutParameterized() {
-		return false;
 	}
 
 	/**
@@ -3725,22 +3687,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Does this dialect support parameters within the {@code SELECT} clause
-	 * of {@code INSERT ... SELECT ...} statements?
-	 *
-	 * @return True if this is supported; false otherwise.
-	 *
-	 * @since 3.2
-	 *
-	 * @deprecated This seems to be supported on all platforms, and we don't
-	 *             call this except in test suite
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	public boolean supportsParametersInInsertSelect() {
-		return true;
-	}
-
-	/**
 	 * Does this dialect support references to result variables
 	 * (i.e, select items) by column positions (1-origin) as defined
 	 * by the select clause?
@@ -4634,16 +4580,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public boolean supportsWait() {
 		return supportsNoWait();
-	}
-
-	/**
-	 * @deprecated This is no longer called
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	public String inlineLiteral(String literal) {
-		final StringBuilder sb = new StringBuilder( literal.length() + 2 );
-		appendLiteral( new StringBuilderSqlAppender( sb ), literal );
-		return sb.toString();
 	}
 
 	/**

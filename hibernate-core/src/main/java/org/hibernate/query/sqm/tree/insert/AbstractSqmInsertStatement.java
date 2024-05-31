@@ -44,23 +44,8 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 	private List<SqmPath<?>> insertionTargetPaths;
 	private @Nullable SqmConflictClause<T> conflictClause;
 
-	protected AbstractSqmInsertStatement(SqmQuerySource querySource, NodeBuilder nodeBuilder) {
-		super( querySource, nodeBuilder );
-	}
-
 	protected AbstractSqmInsertStatement(SqmRoot<T> targetRoot, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
 		super( targetRoot, querySource, nodeBuilder );
-	}
-
-	@Deprecated(forRemoval = true)
-	protected AbstractSqmInsertStatement(
-			NodeBuilder builder,
-			SqmQuerySource querySource,
-			Set<SqmParameter<?>> parameters,
-			Map<String, SqmCteStatement<?>> cteStatements,
-			SqmRoot<T> target,
-			List<SqmPath<?>> insertionTargetPaths) {
-		this( builder, querySource, parameters, cteStatements, target, insertionTargetPaths, null );
 	}
 
 	protected AbstractSqmInsertStatement(

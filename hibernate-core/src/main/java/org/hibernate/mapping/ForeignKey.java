@@ -14,8 +14,6 @@ import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.dialect.Dialect;
 
 import static org.hibernate.internal.util.StringHelper.qualify;
 
@@ -25,12 +23,17 @@ import static org.hibernate.internal.util.StringHelper.qualify;
  * @author Gavin King
  */
 public class ForeignKey extends Constraint {
+
 	private Table referencedTable;
 	private String referencedEntityName;
 	private String keyDefinition;
 	private OnDeleteAction onDeleteAction;
 	private final List<Column> referencedColumns = new ArrayList<>();
 	private boolean creationEnabled = true;
+
+	public ForeignKey(Table table){
+		setTable( table );
+	}
 
 	public ForeignKey() {
 	}
@@ -57,41 +60,6 @@ public class ForeignKey extends Constraint {
 		if ( "none".equals( name ) ) {
 			disableCreation();
 		}
-	}
-
-	@Override @Deprecated(since="6.2", forRemoval = true)
-	public String sqlConstraintString(
-			SqlStringGenerationContext context,
-			String constraintName,
-			String defaultCatalog,
-			String defaultSchema) {
-		Dialect dialect = context.getDialect();
-		String[] columnNames = new String[getColumnSpan()];
-		String[] referencedColumnNames = new String[getColumnSpan()];
-
-		final List<Column> referencedColumns = isReferenceToPrimaryKey()
-				? referencedTable.getPrimaryKey().getColumns()
-				: this.referencedColumns;
-
-		List<Column> columns = getColumns();
-		for ( int i=0; i<referencedColumns.size() && i<columns.size(); i++ ) {
-			columnNames[i] = columns.get(i).getQuotedName( dialect );
-			referencedColumnNames[i] = referencedColumns.get(i).getQuotedName( dialect );
-		}
-
-		final String result = keyDefinition != null
-				? dialect.getAddForeignKeyConstraintString( constraintName, keyDefinition )
-				: dialect.getAddForeignKeyConstraintString(
-						constraintName,
-						columnNames,
-						referencedTable.getQualifiedName( context ),
-						referencedColumnNames,
-						isReferenceToPrimaryKey()
-				);
-
-		return onDeleteAction != null && onDeleteAction != OnDeleteAction.NO_ACTION && dialect.supportsCascadeDelete()
-				? result + " on delete " + onDeleteAction.toSqlString()
-				: result;
 	}
 
 	public Table getReferencedTable() {
@@ -172,22 +140,6 @@ public class ForeignKey extends Constraint {
 		return onDeleteAction;
 	}
 
-	/**
-	 * @deprecated use {@link #getOnDeleteAction()}
-	 */
-	@Deprecated(since = "6.2")
-	public boolean isCascadeDeleteEnabled() {
-		return onDeleteAction == OnDeleteAction.CASCADE;
-	}
-
-	/**
-	 * @deprecated use {@link #setOnDeleteAction(OnDeleteAction)}
-	 */
-	@Deprecated(since = "6.2")
-	public void setCascadeDeleteEnabled(boolean cascadeDeleteEnabled) {
-		this.onDeleteAction = cascadeDeleteEnabled ? OnDeleteAction.CASCADE : OnDeleteAction.NO_ACTION;
-	}
-
 	public boolean isPhysicalConstraint() {
 		return referencedTable.isPhysicalTable()
 			&& getTable().isPhysicalTable()
@@ -232,11 +184,6 @@ public class ForeignKey extends Constraint {
 			return super.toString();
 		}
 
-	}
-
-	@Deprecated(forRemoval = true)
-	public String generatedConstraintNamePrefix() {
-		return "FK_";
 	}
 
 	@Internal

@@ -19,13 +19,4 @@ public interface AfterLoadAction {
 	 * The action trigger - the {@code entity} is being loaded
 	 */
 	void afterLoad(Object entity, EntityMappingType entityMappingType, SharedSessionContractImplementor session);
-
-	/**
-	 * @deprecated Use the {@linkplain #afterLoad(Object, EntityMappingType, SharedSessionContractImplementor) updated form}
-	 */
-	@SuppressWarnings("removal")
-	@Deprecated(since = "6", forRemoval = true)
-	default void afterLoad(SharedSessionContractImplementor session, Object entity, org.hibernate.persister.entity.Loadable persister) {
-		afterLoad( entity, persister, session );
-	}
 }

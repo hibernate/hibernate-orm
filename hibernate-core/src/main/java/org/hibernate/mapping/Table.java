@@ -325,24 +325,8 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return unmodifiableMap( indexes );
 	}
 
-	/**
-	 * @deprecated No longer used, should be removed
-	 */
-	@Deprecated(since = "6.0", forRemoval = true)
-	public Iterator<ForeignKey> getForeignKeyIterator() {
-		return getForeignKeys().values().iterator();
-	}
-
 	public Map<ForeignKeyKey, ForeignKey> getForeignKeys() {
 		return unmodifiableMap( foreignKeys );
-	}
-
-	/**
-	 * @deprecated No longer used, should be removed
-	 */
-	@Deprecated(since = "6.0", forRemoval = true)
-	public Iterator<UniqueKey> getUniqueKeyIterator() {
-		return getUniqueKeys().values().iterator();
 	}
 
 	public Map<String, UniqueKey> getUniqueKeys() {
@@ -590,25 +574,6 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		}
 	}
 
-	/**
-	 * If there is one given column, mark it unique, otherwise
-	 * create a {@link UniqueKey} comprising the given columns.
-	 * @deprecated Use {@link #createUniqueKey(List, MetadataBuildingContext)}
-	 */
-	@Deprecated(since = "6.5", forRemoval = true)
-	public void createUniqueKey(List<Column> keyColumns) {
-		if ( keyColumns.size() == 1 ) {
-			keyColumns.get(0).setUnique( true );
-		}
-		else {
-			String keyName = Constraint.generateName( "UK_", this, keyColumns );
-			UniqueKey uniqueKey = getOrCreateUniqueKey( keyName );
-			for ( Column keyColumn : keyColumns ) {
-				uniqueKey.addColumn( keyColumn );
-			}
-		}
-	}
-
 	public UniqueKey getUniqueKey(String keyName) {
 		return uniqueKeys.get( keyName );
 	}
@@ -616,9 +581,8 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	public UniqueKey getOrCreateUniqueKey(String keyName) {
 		UniqueKey uniqueKey = uniqueKeys.get( keyName );
 		if ( uniqueKey == null ) {
-			uniqueKey = new UniqueKey();
+			uniqueKey = new UniqueKey( this );
 			uniqueKey.setName( keyName );
-			uniqueKey.setTable( this );
 			uniqueKeys.put( keyName, uniqueKey );
 		}
 		return uniqueKey;
@@ -641,8 +605,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 		ForeignKey foreignKey = foreignKeys.get( key );
 		if ( foreignKey == null ) {
-			foreignKey = new ForeignKey();
-			foreignKey.setTable( this );
+			foreignKey = new ForeignKey( this );
 			foreignKey.setReferencedEntityName( referencedEntityName );
 			foreignKey.setKeyDefinition( keyDefinition );
 			for ( Column keyColumn : keyColumns ) {
@@ -773,22 +736,6 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 	public void setComment(String comment) {
 		this.comment = comment;
-	}
-
-	/**
-	 * @deprecated No longer used, should be removed
-	 */
-	@Deprecated(since = "6.0", forRemoval = true)
-	public Iterator<String> getCheckConstraintsIterator() {
-		return getCheckConstraints().iterator();
-	}
-
-	/**
-	 * @deprecated No longer used, should be removed
-	 */
-	@Deprecated(since = "6.2", forRemoval = true)
-	public List<String> getCheckConstraints() {
-		return checkConstraints.stream().map( CheckConstraint::getConstraint ).collect( toList() );
 	}
 
 	public List<CheckConstraint> getChecks() {

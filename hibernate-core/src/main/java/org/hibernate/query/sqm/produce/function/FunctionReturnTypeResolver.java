@@ -26,25 +26,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Steve Ebersole
  */
 public interface FunctionReturnTypeResolver {
-	/**
-	 * Resolve the return type for a function given its context-implied type and
-	 * the arguments to this call.
-	 * <p>
-	 * The <em>context-implied</em> type is the type implied by where the function
-	 * occurs in the query.  E.g., for an equality predicate (`something = some_function`)
-	 * the implied type of the return from `some_function` would be defined by the type
-	 * of `some_function`.
-	 *
-	 * @return The resolved type.
-	 * @deprecated Use {@link #resolveFunctionReturnType(ReturnableType, SqmToSqlAstConverter, List, TypeConfiguration)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	default @Nullable ReturnableType<?> resolveFunctionReturnType(
-			ReturnableType<?> impliedType,
-			List<? extends SqmTypedNode<?>> arguments,
-			TypeConfiguration typeConfiguration) {
-		throw new UnsupportedOperationException( "Not implemented for " + getClass().getName() );
-	}
 
 	/**
 	 * Resolve the return type for a function given its context-implied type and

@@ -23,7 +23,6 @@ import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.internal.BaselineSessionEventsListenerBuilder;
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.ValueHandlingMode;
@@ -168,11 +167,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public TempTableDdlTransactionHandling getTempTableDdlTransactionHandling() {
 		return delegate.getTempTableDdlTransactionHandling();
-	}
-
-	@Override
-	public BatchFetchStyle getBatchFetchStyle() {
-		return delegate.getBatchFetchStyle();
 	}
 
 	@Override

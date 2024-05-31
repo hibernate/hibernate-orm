@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 
@@ -26,22 +25,6 @@ public class AbstractJdbcOperationQuery implements JdbcOperationQuery {
 	protected final Set<String> affectedTableNames;
 	protected final Map<JdbcParameter, JdbcParameterBinding> appliedParameters;
 
-	/**
-	 * @deprecated {@code filterJdbcParameters} is no longer used
-	 */
-	@Deprecated
-	public AbstractJdbcOperationQuery(
-			String sql,
-			List<JdbcParameterBinder> parameterBinders,
-			Set<String> affectedTableNames,
-			Set<FilterJdbcParameter> filterJdbcParameters) {
-		this(
-				sql,
-				parameterBinders,
-				affectedTableNames
-		);
-	}
-
 	public AbstractJdbcOperationQuery(
 			String sql,
 			List<JdbcParameterBinder> parameterBinders,
@@ -52,19 +35,6 @@ public class AbstractJdbcOperationQuery implements JdbcOperationQuery {
 				affectedTableNames,
 				Collections.emptyMap()
 		);
-	}
-
-	/**
-	 * @deprecated {@code filterJdbcParameters} is no longer used
-	 */
-	@Deprecated
-	public AbstractJdbcOperationQuery(
-			String sql,
-			List<JdbcParameterBinder> parameterBinders,
-			Set<String> affectedTableNames,
-			Set<FilterJdbcParameter> filterJdbcParameters,
-			Map<JdbcParameter, JdbcParameterBinding> appliedParameters) {
-		this( sql, parameterBinders, affectedTableNames, appliedParameters );
 	}
 
 	public AbstractJdbcOperationQuery(

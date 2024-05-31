@@ -12,5 +12,8 @@
  * Deprecated, use {@link org.hibernate.query.TupleTransformer}
  * and/or {@link org.hibernate.query.ResultListTransformer}
  * which are defined in {@link org.hibernate.query}.
+ *
+ * @deprecated The contents of this package are deprecated
  */
+@Deprecated
 package org.hibernate.transform;

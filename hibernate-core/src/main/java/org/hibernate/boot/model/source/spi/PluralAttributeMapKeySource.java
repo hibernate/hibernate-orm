@@ -22,20 +22,9 @@ public interface PluralAttributeMapKeySource extends PluralAttributeIndexSource 
 		ANY
 	}
 
-	Nature getMapKeyNature();
-
 	/**
-	 * Is this plural attribute index source for an attribute of the referenced
-	 * entity (relevant only for one-to-many and many-to-many associations)?
-	 * <p>
-	 * If this method returns {@code true}, then this object can safely
-	 * be cast to {@link PluralAttributeMapKeyManyToManySource}.
-	 *
-	 * @return true, if this plural attribute index source for an attribute of
-	 *         the referenced entity; false, otherwise.
-	 *
-	 * @deprecated no longer used, so this should be removed
+	 * @deprecated No longer used
 	 */
-	@Deprecated(since = "6.4")
-	boolean isReferencedEntityAttribute();
+	@Deprecated(since = "7.0", forRemoval = true)
+	Nature getMapKeyNature();
 }

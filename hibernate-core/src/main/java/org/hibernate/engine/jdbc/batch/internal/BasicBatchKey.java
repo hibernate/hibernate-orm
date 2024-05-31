@@ -17,36 +17,12 @@ import org.hibernate.jdbc.Expectations;
  */
 public class BasicBatchKey implements BatchKey {
 	private final String comparison;
-	private final int statementCount;
-	private final Expectation expectation;
 
 	/**
 	 * Constructs a BasicBatchKey with {@link Expectations#NONE}
 	 */
 	public BasicBatchKey(String comparison) {
-		this( comparison, Expectations.NONE );
-	}
-
-	/**
-	 * Constructs a BasicBatchKey
-	 *
-	 * @param comparison A string used to compare batch keys.
-	 * @param expectation The expectation for the batch
-	 */
-	public BasicBatchKey(String comparison, Expectation expectation) {
 		this.comparison = comparison;
-		this.statementCount = 1;
-		this.expectation = expectation;
-	}
-
-	@Override
-	public Expectation getExpectation() {
-		return expectation;
-	}
-
-	@Override
-	public int getBatchedStatementCount() {
-		return statementCount;
 	}
 
 	@Override

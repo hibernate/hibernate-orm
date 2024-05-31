@@ -9,8 +9,6 @@ package org.hibernate.orm.test.mapping.inheritance.dynamic;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.tuple.DynamicMapInstantiator;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -19,6 +17,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.metamodel.internal.AbstractDynamicMapInstantiator.TYPE_KEY;
 
 /**
  * @author Steve Ebersole
@@ -31,8 +30,8 @@ public class DynamicJoinedInheritanceTests {
 		scope.inTransaction( (session) -> {
 			final Map<String,?> entity = (Map<String, ?>) session.get( "Sub", 1 );
 			assertThat( entity ).isNotNull();
-			assertThat( entity.get( DynamicMapInstantiator.KEY ) ).isNotNull();
-			assertThat( entity.get( DynamicMapInstantiator.KEY ) ).isEqualTo( "Sub" );
+			assertThat( entity.get( TYPE_KEY ) ).isNotNull();
+			assertThat( entity.get( TYPE_KEY ) ).isEqualTo( "Sub" );
 		} );
 	}
 

@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.mapping;
+
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -17,8 +18,6 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Exportable;
-import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.dialect.Dialect;
 
 /**
  * A mapping model object representing a constraint on a relational database table.
@@ -137,37 +136,11 @@ public abstract class Constraint implements Exportable, Serializable {
 		this.table = table;
 	}
 
-	/**
-	 * @deprecated No longer used
-	 */
-	@Deprecated(forRemoval = true)
-	public boolean isGenerated(Dialect dialect) {
-		return true;
-	}
-
 	public List<Column> getColumns() {
 		return columns;
 	}
 
-	/**
-	 * @deprecated this method is no longer called
-	 */
-	@Deprecated(since="6.2", forRemoval = true)
-	public abstract String sqlConstraintString(
-			SqlStringGenerationContext context,
-			String constraintName,
-			String defaultCatalog,
-			String defaultSchema);
-
 	public String toString() {
 		return getClass().getSimpleName() + '(' + getTable().getName() + getColumns() + ") as " + name;
 	}
-
-	/**
-	 * @return String The prefix to use in generated constraint names.  Examples:
-	 * "UK_", "FK_", and "PK_".
-	 * @deprecated No longer used, should be removed
-	 */
-	@Deprecated(since="6.5", forRemoval = true)
-	public abstract String generatedConstraintNamePrefix();
 }

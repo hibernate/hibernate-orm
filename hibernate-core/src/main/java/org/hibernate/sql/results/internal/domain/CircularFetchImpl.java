@@ -63,19 +63,6 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 		this.referencedNavigablePath = referencedNavigablePath;
 	}
 
-	protected CircularFetchImpl(CircularFetchImpl original) {
-		super(
-				original.getNavigablePath(),
-				original.getFetchedMapping(),
-				original.getFetchParent(),
-				original.getKeyResult(),
-				original.getDiscriminatorFetch(),
-				original.isSelectByUniqueKey()
-		);
-		this.timing = original.timing;
-		this.referencedNavigablePath = original.referencedNavigablePath;
-	}
-
 	@Override
 	public NavigablePath getReferencedPath() {
 		return referencedNavigablePath;
@@ -135,29 +122,6 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 		}
 	}
 
-	/**
-	 * @deprecated Use {@link #buildEntitySelectFetchInitializer(InitializerParent, ToOneAttributeMapping, EntityPersister, DomainResult, NavigablePath, boolean, AssemblerCreationState)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	protected EntityInitializer buildEntitySelectFetchInitializer(
-			FetchParentAccess parentAccess,
-			ToOneAttributeMapping fetchable,
-			EntityPersister entityPersister,
-			DomainResult<?> keyResult,
-			NavigablePath navigablePath,
-			boolean selectByUniqueKey,
-			AssemblerCreationState creationState) {
-		return buildEntitySelectFetchInitializer(
-				(InitializerParent) parentAccess,
-				fetchable,
-				entityPersister,
-				keyResult,
-				navigablePath,
-				selectByUniqueKey,
-				creationState
-		);
-	}
-
 	protected EntityInitializer buildEntitySelectFetchInitializer(
 			InitializerParent parent,
 			ToOneAttributeMapping fetchable,
@@ -174,27 +138,6 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 				navigablePath,
 				selectByUniqueKey,
 				creationState
-		);
-	}
-
-	/**
-	 * @deprecated Use {@link #buildEntityDelayedFetchInitializer(InitializerParent, NavigablePath, ToOneAttributeMapping, boolean, DomainResultAssembler, BasicResultAssembler)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	protected EntityInitializer buildEntityDelayedFetchInitializer(
-			FetchParentAccess parentAccess,
-			NavigablePath referencedPath,
-			ToOneAttributeMapping fetchable,
-			boolean selectByUniqueKey,
-			DomainResultAssembler<?> resultAssembler,
-			BasicResultAssembler<?> discriminatorAssembler) {
-		return buildEntityDelayedFetchInitializer(
-				(InitializerParent) parentAccess,
-				referencedPath,
-				fetchable,
-				selectByUniqueKey,
-				resultAssembler,
-				discriminatorAssembler
 		);
 	}
 

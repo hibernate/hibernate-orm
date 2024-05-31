@@ -7,6 +7,7 @@
 package org.hibernate.internal;
 
 import org.hibernate.HibernateException;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -57,7 +58,7 @@ public class FetchProfileHelper {
 			( (FetchProfileAffectee) owner ).registerAffectingFetchProfile( profileName);
 
 			final Association association = new Association( owner, mappingFetch.getAssociation() );
-			final FetchStyle fetchStyle = Fetch.Style.forMethod( mappingFetch.getMethod() ).toFetchStyle();
+			final FetchStyle fetchStyle = fetchStyle( mappingFetch.getMethod() );
 			final FetchTiming fetchTiming = FetchTiming.forType( mappingFetch.getType() );
 
 			// validate the specified association fetch
@@ -71,6 +72,19 @@ public class FetchProfileHelper {
 			fetchProfile.addFetch( new Fetch( association, fetchStyle, fetchTiming ) );
 		}
 		return fetchProfile;
+	}
+
+	private static FetchStyle fetchStyle(FetchMode fetchMode) {
+		switch ( fetchMode ) {
+			case JOIN:
+				return FetchStyle.JOIN;
+			case SELECT:
+				return FetchStyle.SELECT;
+			case SUBSELECT:
+				return FetchStyle.SUBSELECT;
+			default:
+				throw new IllegalArgumentException( "Unknown FetchMode" );
+		}
 	}
 
 	private static void validateFetchablePart(ModelPart fetchablePart, String profileName, Association association) {

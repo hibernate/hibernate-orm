@@ -30,24 +30,6 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 
 	private final SqmPredicate filter;
 
-	/**
-	 * @deprecated Use {@link #SelfRenderingSqmAggregateFunction(SqmFunctionDescriptor, FunctionRenderer, List, SqmPredicate, ReturnableType, ArgumentsValidator, FunctionReturnTypeResolver, NodeBuilder, String)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public SelfRenderingSqmAggregateFunction(
-			SqmFunctionDescriptor descriptor,
-			FunctionRenderingSupport renderingSupport,
-			List<? extends SqmTypedNode<?>> arguments,
-			SqmPredicate filter,
-			ReturnableType<T> impliedResultType,
-			ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			NodeBuilder nodeBuilder,
-			String name) {
-		super( descriptor, renderingSupport, arguments, impliedResultType, argumentsValidator, returnTypeResolver, nodeBuilder, name );
-		this.filter = filter;
-	}
-
 	public SelfRenderingSqmAggregateFunction(
 			SqmFunctionDescriptor descriptor,
 			FunctionRenderer renderer,

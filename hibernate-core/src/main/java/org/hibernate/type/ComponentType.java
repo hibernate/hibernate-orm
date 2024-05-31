@@ -19,7 +19,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.Remove;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
@@ -72,11 +71,6 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	private boolean hasNullProperty;
 
 	private EmbeddableValuedModelPart mappingModelPart;
-
-	@Deprecated(forRemoval = true)
-	public ComponentType(Component component, int[] originalPropertyOrder, MetadataBuildingContext context) {
-		this( component, originalPropertyOrder );
-	}
 
 	public ComponentType(Component component, int[] originalPropertyOrder) {
 		this( component, originalPropertyOrder,

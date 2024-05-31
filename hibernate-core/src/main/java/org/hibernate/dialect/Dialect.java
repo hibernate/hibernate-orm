@@ -1545,22 +1545,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * Obtain a pattern for the SQL equivalent to a
 	 * {@code trim()} function call. The resulting
 	 * pattern must contain a ?1 placeholder for the
-	 * argument of type {@link String}.
-	 *
-	 * @param specification {@code leading} or {@code trailing}
-	 * @param character the character to trim
-	 *
-	 * @deprecated Use {@link #trimPattern(TrimSpec, boolean)} instead.
-	 */
-	@Deprecated( forRemoval = true )
-	public String trimPattern(TrimSpec specification, char character) {
-		return trimPattern( specification, character == ' ' );
-	}
-
-	/**
-	 * Obtain a pattern for the SQL equivalent to a
-	 * {@code trim()} function call. The resulting
-	 * pattern must contain a ?1 placeholder for the
 	 * argument of type {@link String} and a ?2 placeholder
 	 * for the trim character if {@code isWhitespace}
 	 * was false.

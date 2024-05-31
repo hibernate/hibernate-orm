@@ -22,7 +22,6 @@ import static java.util.stream.Collectors.toUnmodifiableList;
 import static java.util.stream.Collectors.toUnmodifiableMap;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
-import static org.hibernate.internal.util.StringHelper.unqualify;
 
 /**
  * A mapping model object representing an {@linkplain jakarta.persistence.Index index} on a relational database table.
@@ -38,50 +37,6 @@ public class Index implements Exportable, Serializable {
 	private boolean unique;
 	private final java.util.List<Selectable> selectables = new ArrayList<>();
 	private final java.util.Map<Selectable, String> selectableOrderMap = new HashMap<>();
-
-	/**
-	 * @deprecated This method will be removed in the next release
-	 */
-	@Deprecated(forRemoval = true)
-	public static String buildSqlDropIndexString(String name, String tableName) {
-		return "drop index " + qualify( tableName, name );
-	}
-
-	/**
-	 * @deprecated This method will be removed in the next release
-	 */
-	@Deprecated(forRemoval = true)
-	public static String buildSqlCreateIndexString(
-			Dialect dialect,
-			String name,
-			String tableName,
-			java.util.List<Column> columns,
-			java.util.Map<Column, String> columnOrderMap,
-			boolean unique) {
-		StringBuilder statement = new StringBuilder( dialect.getCreateIndexString( unique ) )
-				.append( " " )
-				.append( dialect.qualifyIndexName() ? name : unqualify( name ) )
-				.append( " on " )
-				.append( tableName )
-				.append( " (" );
-		boolean first = true;
-		for ( Column column : columns ) {
-			if ( first ) {
-				first = false;
-			}
-			else {
-				statement.append(", ");
-			}
-			statement.append( column.getQuotedName( dialect ) );
-			if ( columnOrderMap.containsKey( column ) ) {
-				statement.append( " " ).append( columnOrderMap.get( column ) );
-			}
-		}
-		statement.append( ")" );
-		statement.append( dialect.getCreateIndexTail( unique, columns ) );
-
-		return statement.toString();
-	}
 
 	public Table getTable() {
 		return table;

@@ -32,28 +32,6 @@ public class SelfRenderingSqmWindowFunction<T> extends SelfRenderingSqmFunction<
 	private final Boolean respectNulls;
 	private final Boolean fromFirst;
 
-	/**
-	 * @deprecated Use {@link #SelfRenderingSqmWindowFunction(SqmFunctionDescriptor, FunctionRenderer, List, SqmPredicate, Boolean, Boolean, ReturnableType, ArgumentsValidator, FunctionReturnTypeResolver, NodeBuilder, String)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public SelfRenderingSqmWindowFunction(
-			SqmFunctionDescriptor descriptor,
-			FunctionRenderingSupport renderingSupport,
-			List<? extends SqmTypedNode<?>> arguments,
-			SqmPredicate filter,
-			Boolean respectNulls,
-			Boolean fromFirst,
-			ReturnableType<T> impliedResultType,
-			ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			NodeBuilder nodeBuilder,
-			String name) {
-		super( descriptor, renderingSupport, arguments, impliedResultType, argumentsValidator, returnTypeResolver, nodeBuilder, name );
-		this.filter = filter;
-		this.respectNulls = respectNulls;
-		this.fromFirst = fromFirst;
-	}
-
 	public SelfRenderingSqmWindowFunction(
 			SqmFunctionDescriptor descriptor,
 			FunctionRenderer renderer,

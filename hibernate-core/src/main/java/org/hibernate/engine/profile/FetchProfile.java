@@ -64,32 +64,6 @@ public class FetchProfile {
 	/**
 	 * Add a {@linkplain Fetch fetch override} to the profile.
 	 *
-	 * @param association The association to be fetched
-	 * @param fetchStyleName The name of the fetch style to apply
-	 *
-	 * @deprecated No longer used
-	 */
-	@Deprecated(forRemoval = true)
-	public void addFetch(Association association, String fetchStyleName) {
-		addFetch( new Fetch( association, Fetch.Style.parse( fetchStyleName ) ) );
-	}
-
-	/**
-	 * Add a {@linkplain Fetch fetch override} to the profile.
-	 *
-	 * @param association The association to be fetched
-	 * @param style The style to apply
-	 *
-	 * @deprecated No longer used
-	 */
-	@Deprecated(forRemoval = true)
-	public void addFetch(Association association, Fetch.Style style) {
-		addFetch( new Fetch( association, style ) );
-	}
-
-	/**
-	 * Add a {@linkplain Fetch fetch override} to the profile.
-	 *
 	 * @param fetch The fetch override to add.
 	 */
 	@Internal
@@ -157,28 +131,6 @@ public class FetchProfile {
 	 */
 	public @Nullable Fetch getFetchByRole(String role) {
 		return fetches.get( role );
-	}
-
-	/**
-	 * Does this fetch profile contain any collection join fetches?
-	 *
-	 * @deprecated No longer used
-	 */
-	@Deprecated(forRemoval = true)
-	public boolean isContainsJoinFetchedCollection() {
-		return containsJoinFetchedCollection;
-	}
-
-	/**
-	 * Does this fetch profile contained any bag join fetches?
-	 *
-	 * @deprecated No longer used
-	 *
-	 * @return Value for property 'containsJoinFetchedBag'.
-	 */
-	@Deprecated(forRemoval = true)
-	public boolean isContainsJoinFetchedBag() {
-		return containsJoinFetchedBag;
 	}
 
 	@Override

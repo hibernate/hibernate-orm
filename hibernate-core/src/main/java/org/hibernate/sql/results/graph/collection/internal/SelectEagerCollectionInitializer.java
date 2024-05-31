@@ -13,7 +13,6 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.InitializerParent;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -22,19 +21,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Andrea Boriero
  */
 public class SelectEagerCollectionInitializer extends AbstractCollectionInitializer {
-
-	/**
-	 * @deprecated Use {@link #SelectEagerCollectionInitializer(NavigablePath, PluralAttributeMapping, InitializerParent, DomainResult, AssemblerCreationState)}  instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public SelectEagerCollectionInitializer(
-			NavigablePath fetchedPath,
-			PluralAttributeMapping fetchedMapping,
-			FetchParentAccess parentAccess,
-			@Nullable DomainResult<?> collectionKeyResult,
-			AssemblerCreationState creationState) {
-		super( fetchedPath, fetchedMapping, parentAccess, collectionKeyResult, false, creationState );
-	}
 
 	public SelectEagerCollectionInitializer(
 			NavigablePath fetchedPath,

@@ -761,11 +761,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected boolean isInverseSubclassTable(int j) {
-		return isInverseSubclassTable[j];
-	}
-
-	@Override
 	protected boolean isNullableSubclassTable(int j) {
 		return isNullableSubclassTable[j];
 	}

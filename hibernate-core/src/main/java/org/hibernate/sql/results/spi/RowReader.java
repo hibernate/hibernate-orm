@@ -9,8 +9,6 @@ package org.hibernate.sql.results.spi;
 import java.util.List;
 
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.internal.InitializersList;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
@@ -49,15 +47,6 @@ public interface RowReader<R> {
 	List<JavaType<?>> getResultJavaTypes();
 
 	/**
-	 * The initializers associated with this reader.
-	 *
-	 * @see org.hibernate.sql.results.graph.DomainResult
-	 * @deprecated Not needed anymore
-	 */
-	@Deprecated(forRemoval = true)
-	List<Initializer> getInitializers();
-
-	/**
 	 * Called before reading the first row.
 	 */
 	void startLoading(RowProcessingState processingState);
@@ -71,15 +60,6 @@ public interface RowReader<R> {
 	 * Called at the end of processing all rows
 	 */
 	void finishUp(JdbcValuesSourceProcessingState context);
-
-	/**
-	 * The initializers associated with this reader.
-	 *
-	 * @see org.hibernate.sql.results.graph.DomainResult
-	 * @deprecated Not needed anymore. Also, was exposing internal type
-	 */
-	@Deprecated(forRemoval = true)
-	InitializersList getInitializersList();
 
 	@Nullable EntityKey resolveSingleResultEntityKey(RowProcessingState rowProcessingState);
 

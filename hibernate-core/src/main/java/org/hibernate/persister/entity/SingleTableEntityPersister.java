@@ -396,11 +396,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected boolean isInverseSubclassTable(int j) {
-		return isInverseSubclassTable[j];
-	}
-
-	@Override
 	public String getDiscriminatorColumnName() {
 		return discriminatorColumnName;
 	}

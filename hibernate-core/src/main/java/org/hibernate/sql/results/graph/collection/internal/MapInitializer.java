@@ -20,7 +20,6 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -40,35 +39,6 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer {
 
 	private final DomainResultAssembler<?> mapKeyAssembler;
 	private final DomainResultAssembler<?> mapValueAssembler;
-
-	/**
-	 * @deprecated Use {@link #MapInitializer(NavigablePath, PluralAttributeMapping, InitializerParent, LockMode, DomainResult, DomainResult, boolean, AssemblerCreationState, Fetch, Fetch)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public MapInitializer(
-			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
-			FetchParentAccess parentAccess,
-			LockMode lockMode,
-			DomainResult<?> collectionKeyResult,
-			DomainResult<?> collectionValueKeyResult,
-			Fetch mapKeyFetch,
-			Fetch mapValueFetch,
-			boolean isResultInitializer,
-			AssemblerCreationState creationState) {
-		this(
-				navigablePath,
-				attributeMapping,
-				(InitializerParent) parentAccess,
-				lockMode,
-				collectionKeyResult,
-				collectionValueKeyResult,
-				isResultInitializer,
-				creationState,
-				mapKeyFetch,
-				mapValueFetch
-		);
-	}
 
 	public MapInitializer(
 			NavigablePath navigablePath,

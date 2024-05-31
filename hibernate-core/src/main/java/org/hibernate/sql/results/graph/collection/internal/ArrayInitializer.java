@@ -21,7 +21,6 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -38,35 +37,6 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer {
 	private final DomainResultAssembler<?> elementAssembler;
 
 	private final int indexBase;
-
-	/**
-	 * @deprecated Use {@link #ArrayInitializer(NavigablePath, PluralAttributeMapping, InitializerParent, LockMode, DomainResult, DomainResult, boolean, AssemblerCreationState, Fetch, Fetch)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public ArrayInitializer(
-			NavigablePath navigablePath,
-			PluralAttributeMapping arrayDescriptor,
-			FetchParentAccess parentAccess,
-			LockMode lockMode,
-			DomainResult<?> collectionKeyResult,
-			DomainResult<?> collectionValueKeyResult,
-			Fetch listIndexFetch,
-			Fetch elementFetch,
-			boolean isResultInitializer,
-			AssemblerCreationState creationState) {
-		this(
-				navigablePath,
-				arrayDescriptor,
-				(InitializerParent) parentAccess,
-				lockMode,
-				collectionKeyResult,
-				collectionValueKeyResult,
-				isResultInitializer,
-				creationState,
-				listIndexFetch,
-				elementFetch
-		);
-	}
 
 	public ArrayInitializer(
 			NavigablePath navigablePath,

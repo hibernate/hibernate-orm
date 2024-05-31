@@ -205,14 +205,6 @@ public abstract class AbstractSqmSelectQuery<T>
 		return resultType;
 	}
 
-	/**
-	 * @deprecated Don't use this method. It has no effect.
-	 */
-	@Deprecated(forRemoval = true)
-	protected void setResultType(Class<T> resultType) {
-		// No-op
-	}
-
 	@Override
 	public SqmQuerySpec<T> getQuerySpec() {
 		return sqmQueryPart.getFirstQuerySpec();
@@ -228,11 +220,12 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	public Set<Root<?>> getRoots() {
 		return (Set) getQuerySpec().getRoots();
 	}
 
+	@SuppressWarnings("rawtypes")
 	public List<Root<?>> getRootList() {
 		return (List) getQuerySpec().getRootList();
 	}
@@ -327,7 +320,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	// Grouping
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	public List<Expression<?>> getGroupList() {
 		return (List) getQuerySpec().getGroupingExpressions();
 	}
@@ -338,7 +331,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	public SqmSelectQuery<T> groupBy(List<Expression<?>> grouping) {
 		getQuerySpec().setGroupingExpressions( (List) grouping );
 		return this;

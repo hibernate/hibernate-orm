@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.Internal;
-import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 
@@ -81,29 +80,6 @@ public class PrimaryKey extends Constraint {
 			buf.append( column.getQuotedName( dialect ) );
 		}
 		return buf.append(')').toString();
-	}
-
-	@Override @Deprecated(since="6.2", forRemoval = true)
-	public String sqlConstraintString(SqlStringGenerationContext context, String constraintName, String defaultCatalog, String defaultSchema) {
-		Dialect dialect = context.getDialect();
-		StringBuilder buf = new StringBuilder();
-		buf.append( dialect.getAddPrimaryKeyConstraintString( constraintName ) ).append('(');
-		boolean first = true;
-		for ( Column column : getColumns() ) {
-			if ( first ) {
-				first = false;
-			}
-			else {
-				buf.append(", ");
-			}
-			buf.append( column.getQuotedName( dialect ) );
-		}
-		return buf.append(')').toString();
-	}
-
-	@Deprecated(forRemoval = true)
-	public String generatedConstraintNamePrefix() {
-		return "PK_";
 	}
 
 	@Override

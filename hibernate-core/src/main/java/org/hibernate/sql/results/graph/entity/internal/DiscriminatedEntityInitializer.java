@@ -57,31 +57,6 @@ public class DiscriminatedEntityInitializer extends AbstractInitializer implemen
 	protected Object entityIdentifier;
 	protected Object entityInstance;
 
-	/**
-	 * @deprecated Use {@link #DiscriminatedEntityInitializer(InitializerParent, DiscriminatedAssociationModelPart, NavigablePath, Fetch, Fetch, boolean, boolean, AssemblerCreationState)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public DiscriminatedEntityInitializer(
-			FetchParentAccess parent,
-			DiscriminatedAssociationModelPart fetchedPart,
-			NavigablePath fetchedNavigable,
-			Fetch discriminatorFetch,
-			Fetch keyFetch,
-			boolean eager,
-			boolean resultInitializer,
-			AssemblerCreationState creationState) {
-		this(
-				(InitializerParent) parent,
-				fetchedPart,
-				fetchedNavigable,
-				discriminatorFetch,
-				keyFetch,
-				eager,
-				resultInitializer,
-				creationState
-		);
-	}
-
 	public DiscriminatedEntityInitializer(
 			InitializerParent parent,
 			DiscriminatedAssociationModelPart fetchedPart,

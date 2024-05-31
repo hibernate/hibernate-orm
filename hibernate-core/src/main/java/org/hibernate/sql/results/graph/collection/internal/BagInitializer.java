@@ -21,7 +21,6 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -39,35 +38,6 @@ public class BagInitializer extends AbstractImmediateCollectionInitializer {
 
 	private final DomainResultAssembler<?> elementAssembler;
 	private final DomainResultAssembler<?> collectionIdAssembler;
-
-	/**
-	 * @deprecated Use {@link #BagInitializer(NavigablePath, PluralAttributeMapping, InitializerParent, LockMode, DomainResult, DomainResult, boolean, AssemblerCreationState, Fetch, Fetch)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public BagInitializer(
-			PluralAttributeMapping bagDescriptor,
-			FetchParentAccess parentAccess,
-			NavigablePath navigablePath,
-			LockMode lockMode,
-			DomainResult<?> collectionKeyResult,
-			DomainResult<?> collectionValueKeyResult,
-			Fetch elementFetch,
-			@Nullable Fetch collectionIdFetch,
-			boolean isResultInitializer,
-			AssemblerCreationState creationState) {
-		this(
-				navigablePath,
-				bagDescriptor,
-				(InitializerParent) parentAccess,
-				lockMode,
-				collectionKeyResult,
-				collectionValueKeyResult,
-				isResultInitializer,
-				creationState,
-				elementFetch,
-				collectionIdFetch
-		);
-	}
 
 	public BagInitializer(
 			NavigablePath navigablePath,

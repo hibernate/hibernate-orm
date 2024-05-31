@@ -56,17 +56,6 @@ public interface FetchParentAccess extends InitializerParent {
 	NavigablePath getNavigablePath();
 
 	/**
-	 * Register a listener to be notified when the parent is "resolved"
-	 *
-	 * @apiNote If already resolved, the callback is triggered immediately
-	 * @deprecated Not used anymore
-	 */
-	@Deprecated(forRemoval = true)
-	default void registerResolutionListener(Consumer<Object> resolvedParentConsumer) {
-		throw new UnsupportedOperationException( "Don't use this method. It will be removed." );
-	}
-
-	/**
 	 * @deprecated Use {@link #getParent()} instead
 	 */
 	@Deprecated(forRemoval = true)
@@ -77,13 +66,5 @@ public interface FetchParentAccess extends InitializerParent {
 	@Override
 	default @Nullable InitializerParent getParent() {
 		return getFetchParentAccess();
-	}
-
-	/**
-	 * @deprecated Not needed anymore.
-	 */
-	@Deprecated(forRemoval = true)
-	default boolean shouldSkipInitializer(RowProcessingState rowProcessingState) {
-		return false;
 	}
 }

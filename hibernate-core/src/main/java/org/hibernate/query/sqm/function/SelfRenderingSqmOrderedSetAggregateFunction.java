@@ -35,35 +35,6 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 
 	private final SqmOrderByClause withinGroup;
 
-	/**
-	 * @deprecated Use {@link #SelfRenderingSqmOrderedSetAggregateFunction(SqmFunctionDescriptor, FunctionRenderer, List, SqmPredicate, SqmOrderByClause, ReturnableType, ArgumentsValidator, FunctionReturnTypeResolver, NodeBuilder, String)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public SelfRenderingSqmOrderedSetAggregateFunction(
-			SqmFunctionDescriptor descriptor,
-			FunctionRenderingSupport renderingSupport,
-			List<? extends SqmTypedNode<?>> arguments,
-			SqmPredicate filter,
-			SqmOrderByClause withinGroupClause,
-			ReturnableType<T> impliedResultType,
-			ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			NodeBuilder nodeBuilder,
-			String name) {
-		super(
-				descriptor,
-				renderingSupport,
-				arguments,
-				filter,
-				impliedResultType,
-				argumentsValidator,
-				returnTypeResolver,
-				nodeBuilder,
-				name
-		);
-		this.withinGroup = withinGroupClause;
-	}
-
 	public SelfRenderingSqmOrderedSetAggregateFunction(
 			SqmFunctionDescriptor descriptor,
 			FunctionRenderer renderer,

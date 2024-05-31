@@ -173,19 +173,11 @@ public interface Initializer {
 	 */
 	boolean isPartOfKey();
 
-	/**
-	 * @deprecated Use {@link #isPartOfKey(NavigablePath, InitializerParent)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	static boolean isPartOfKey(NavigablePath navigablePath, FetchParentAccess parentAccess) {
-		return isPartOfKey( navigablePath, (InitializerParent) parentAccess );
-	}
-
 	static boolean isPartOfKey(NavigablePath navigablePath, InitializerParent parent) {
 		return parent != null && parent.isEmbeddableInitializer() && parent.isPartOfKey()
-				|| navigablePath instanceof EntityIdentifierNavigablePath
-				|| ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
-				|| ForeignKeyDescriptor.TARGET_PART_NAME.equals( navigablePath.getLocalName() );
+			|| navigablePath instanceof EntityIdentifierNavigablePath
+			|| ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
+			|| ForeignKeyDescriptor.TARGET_PART_NAME.equals( navigablePath.getLocalName() );
 	}
 
 	/**

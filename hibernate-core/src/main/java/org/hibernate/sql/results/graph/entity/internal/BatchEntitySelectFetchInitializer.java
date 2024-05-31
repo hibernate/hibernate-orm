@@ -22,7 +22,6 @@ import org.hibernate.property.access.spi.Setter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.type.Type;
 
@@ -32,25 +31,6 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 	protected final Type referencedModelPartType;
 
 	private Map<EntityKey, List<ParentInfo>> toBatchLoad;
-
-	/**
-	 * @deprecated Use {@link #BatchEntitySelectFetchInitializer(InitializerParent, ToOneAttributeMapping, NavigablePath, EntityPersister, DomainResultAssembler)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public BatchEntitySelectFetchInitializer(
-			FetchParentAccess parentAccess,
-			ToOneAttributeMapping referencedModelPart,
-			NavigablePath fetchedNavigable,
-			EntityPersister concreteDescriptor,
-			DomainResultAssembler<?> identifierAssembler) {
-		this(
-				(InitializerParent) parentAccess,
-				referencedModelPart,
-				fetchedNavigable,
-				concreteDescriptor,
-				identifierAssembler
-		);
-	}
 
 	public BatchEntitySelectFetchInitializer(
 			InitializerParent parentAccess,

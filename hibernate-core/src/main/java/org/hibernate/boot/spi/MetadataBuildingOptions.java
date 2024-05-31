@@ -229,14 +229,4 @@ public interface MetadataBuildingOptions {
 	 * Check to see if extensions can be hosted in CDI
 	 */
 	boolean isAllowExtensionsInCdi();
-
-	/**
-	 * Check to see if extensions can be hosted in CDI
-	 *
-	 * @deprecated Use {@link #isAllowExtensionsInCdi()}
-	 */
-	@Deprecated(forRemoval = true)
-	default boolean disallowExtensionsInCdi() {
-		return !isAllowExtensionsInCdi();
-	}
 }

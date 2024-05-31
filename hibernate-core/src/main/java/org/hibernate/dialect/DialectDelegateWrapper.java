@@ -286,11 +286,6 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
-	public String trimPattern(TrimSpec specification, char character) {
-		return wrapped.trimPattern( specification, character );
-	}
-
-	@Override
 	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
 		return wrapped.trimPattern( specification, isWhitespace );
 	}

@@ -48,26 +48,6 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 	protected @Nullable Object entityIdentifier;
 	protected @Nullable EntityKey entityKey;
 
-	/**
-	 *
-	 * @deprecated Use {@link #AbstractBatchEntitySelectFetchInitializer(InitializerParent, ToOneAttributeMapping, NavigablePath, EntityPersister, DomainResultAssembler)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public AbstractBatchEntitySelectFetchInitializer(
-			FetchParentAccess parent,
-			ToOneAttributeMapping referencedModelPart,
-			NavigablePath fetchedNavigable,
-			EntityPersister concreteDescriptor,
-			DomainResultAssembler<?> identifierAssembler) {
-		this(
-				(InitializerParent) parent,
-				referencedModelPart,
-				fetchedNavigable,
-				concreteDescriptor,
-				identifierAssembler
-		);
-	}
-
 	public AbstractBatchEntitySelectFetchInitializer(
 			InitializerParent parent,
 			ToOneAttributeMapping referencedModelPart,

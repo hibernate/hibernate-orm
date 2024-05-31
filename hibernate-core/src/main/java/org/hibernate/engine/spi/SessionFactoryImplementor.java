@@ -6,7 +6,6 @@
  */
 package org.hibernate.engine.spi;
 
-import java.io.Serializable;
 import java.util.Collection;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
@@ -201,16 +200,6 @@ public interface SessionFactoryImplementor
 	 */
 	@Deprecated(since = "6.2")
 	IdentifierGenerator getIdentifierGenerator(String rootEntityName);
-
-	/**
-	 * Contract for resolving this SessionFactory on deserialization
-	 *
-	 * @deprecated this is no longer used
-	 */
-	@Deprecated(since = "6.2", forRemoval = true)
-	interface DeserializationResolver<T extends SessionFactoryImplementor> extends Serializable {
-		T resolve();
-	}
 
 	/**
 	 * @deprecated no longer for internal use, use {@link #getMappingMetamodel()} or {@link #getJpaMetamodel()}

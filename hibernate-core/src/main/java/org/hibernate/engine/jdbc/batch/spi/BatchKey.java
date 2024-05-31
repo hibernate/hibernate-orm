@@ -6,36 +6,12 @@
  */
 package org.hibernate.engine.jdbc.batch.spi;
 
-import org.hibernate.jdbc.Expectation;
-
 /**
  * Unique key for batch identification.
  *
  * @author Steve Ebersole
  */
 public interface BatchKey {
-	/**
-	 * How many statements will be in this batch?
-	 * <p>
-	 * Note that this is distinctly different to the size of the batch.
-	 *
-	 * @return The number of statements.
-	 *
-	 * @deprecated With no replacement.  No longer used
-	 */
-	@Deprecated
-	int getBatchedStatementCount();
-
-	/**
-	 * Get the expectation pertaining to the outcome of the {@link Batch} associated with this key.
-	 *
-	 * @return The expectations
-	 *
-	 * @deprecated With no replacement.  No longer used
-	 */
-	@Deprecated
-	Expectation getExpectation();
-
 	default String toLoggableString() {
 		return toString();
 	}

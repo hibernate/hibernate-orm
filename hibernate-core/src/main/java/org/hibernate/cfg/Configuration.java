@@ -1002,17 +1002,6 @@ public class Configuration {
 	}
 
 	/**
-	 * @deprecated use {@link #addSqlFunction(String, SqmFunctionDescriptor)}
-	 */
-	@Deprecated(since = "6.5", forRemoval = true)
-	public Map<String,SqmFunctionDescriptor> getSqlFunctions() {
-		if ( customFunctionDescriptors == null ) {
-			customFunctionDescriptors = new HashMap<>();
-		}
-		return customFunctionDescriptors;
-	}
-
-	/**
 	 * Adds a {@linkplain SqmFunctionDescriptor function descriptor} to
 	 * this configuration.
 	 *

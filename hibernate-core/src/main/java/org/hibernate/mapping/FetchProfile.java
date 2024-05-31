@@ -10,9 +10,6 @@ import jakarta.persistence.FetchType;
 import org.hibernate.annotations.FetchMode;
 
 import java.util.LinkedHashSet;
-import java.util.Locale;
-
-import static jakarta.persistence.FetchType.EAGER;
 
 /**
  * A mapping model object representing a {@link org.hibernate.annotations.FetchProfile}.
@@ -67,20 +64,6 @@ public class FetchProfile {
 
 	/**
 	 * Adds a fetch to this profile.
-	 *
-	 * @param entity The entity which contains the association to be fetched
-	 * @param association The association to fetch
-	 * @param style The style of fetch to apply
-	 *
-	 * @deprecated use {@link #addFetch(Fetch)}
-	 */
-	@Deprecated(forRemoval = true)
-	public void addFetch(String entity, String association, String style) {
-		addFetch( new Fetch( entity, association, style ) );
-	}
-
-	/**
-	 * Adds a fetch to this profile.
 	 */
 	public void addFetch(Fetch fetch) {
 		fetches.add( fetch );
@@ -122,40 +105,12 @@ public class FetchProfile {
 			this.type = type;
 		}
 
-		/**
-		 * @deprecated use {@link FetchProfile.Fetch#Fetch(String,String,FetchMode,FetchType)}
-		 */
-		@Deprecated(forRemoval = true)
-		public Fetch(String entity, String association, String style) {
-			this.entity = entity;
-			this.association = association;
-			this.method = fetchMode( style );
-			this.type = EAGER;
-		}
-
-		private FetchMode fetchMode(String style) {
-			for ( FetchMode mode: FetchMode.values() ) {
-				if ( mode.name().equalsIgnoreCase( style ) ) {
-					return mode;
-				}
-			}
-			throw new IllegalArgumentException( "Unknown FetchMode: " + style );
-		}
-
 		public String getEntity() {
 			return entity;
 		}
 
 		public String getAssociation() {
 			return association;
-		}
-
-		/**
-		 * @deprecated use {@link #getMethod()}
-		 */
-		@Deprecated(forRemoval = true)
-		public String getStyle() {
-			return method.toString().toLowerCase(Locale.ROOT);
 		}
 
 		public FetchMode getMethod() {

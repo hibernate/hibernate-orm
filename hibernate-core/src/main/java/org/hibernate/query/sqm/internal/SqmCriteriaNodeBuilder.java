@@ -580,7 +580,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			throw new FunctionArgumentException( "Path '" + path + "' does not refer to a single-valued association" );
 		}
 
-		return new SqmFkExpression<>( (SqmEntityValuedSimplePath<?>) path, this );
+		return new SqmFkExpression<>( (SqmEntityValuedSimplePath<?>) path );
 	}
 
 	@Override

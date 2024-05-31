@@ -217,14 +217,6 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 	private final transient SchemaManager schemaManager;
 
-	/**
-	 * @deprecated This constructor will be removed
-	 */
-	@Deprecated(since = "6.2", forRemoval = true)
-	public SessionFactoryImpl(MetadataImplementor bootMetamodel, SessionFactoryOptions options) {
-		this( bootMetamodel, options, bootMetamodel.getTypeConfiguration().getMetadataBuildingContext().getBootstrapContext() );
-	}
-
 	public SessionFactoryImpl(
 			final MetadataImplementor bootMetamodel,
 			final SessionFactoryOptions options,
@@ -774,12 +766,6 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	@Override
 	public SqlStringGenerationContext getSqlStringGenerationContext() {
 		return sqlStringGenerationContext;
-	}
-
-	@Override @Deprecated
-	public DeserializationResolver<?> getDeserializationResolver() {
-		return () -> (SessionFactoryImplementor)
-				SessionFactoryRegistry.INSTANCE.findSessionFactory( uuid, name );
 	}
 
 	@Override @SuppressWarnings({"rawtypes","unchecked"})

@@ -105,7 +105,7 @@ public class NClobJavaType extends AbstractClassJavaType<NClob> {
 			else if (NClob.class.isAssignableFrom( type )) {
 				final NClob nclob =  value instanceof WrappedNClob
 						? ( (WrappedNClob) value ).getWrappedNClob()
-						: options.getLobCreator().createNClob(value.getCharacterStream(), value.length());
+						: options.getLobCreator().createNClob(value.getSubString(1, (int)value.length()));
 				return (X) nclob;
 			}
 		}

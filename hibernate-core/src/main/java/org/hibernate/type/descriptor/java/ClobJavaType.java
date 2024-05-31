@@ -107,7 +107,7 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 			else if (Clob.class.isAssignableFrom( type )) {
 				final Clob clob =  value instanceof WrappedClob
 						? ( (WrappedClob) value ).getWrappedClob()
-						: options.getLobCreator().createClob(value.getCharacterStream(), value.length());
+						: options.getLobCreator().createClob(value.getSubString(1, (int)value.length()) );
 				return (X) clob;
 			}
 			else if ( String.class.isAssignableFrom( type ) ) {

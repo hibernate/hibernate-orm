@@ -75,14 +75,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		addSessionFactoryObservers( new SessionFactoryObserverForRegistration() );
 	}
 
-	/**
-	 * @deprecated This constructor will be removed
-	 */
-	@Deprecated(since = "6.2", forRemoval = true)
-	public SessionFactoryBuilderImpl(MetadataImplementor metadata, SessionFactoryOptionsBuilder optionsBuilder) {
-		this( metadata, optionsBuilder, metadata.getTypeConfiguration().getMetadataBuildingContext().getBootstrapContext() );
-	}
-
 	@Override
 	public SessionFactoryBuilder applyBeanManager(Object beanManager) {
 		this.optionsBuilder.applyBeanManager(  beanManager );

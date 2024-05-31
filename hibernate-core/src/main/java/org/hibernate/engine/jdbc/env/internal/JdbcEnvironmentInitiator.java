@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
@@ -87,7 +88,8 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 
 	/**
 	 * @deprecated This setting was never a documented feature of Hibernate,
-	 *			 is not supported, and will be removed.
+	 *			   is not supported, and will be removed. Use
+	 *			   {@value org.hibernate.cfg.JdbcSettings#ALLOW_METADATA_ON_BOOT}.
 	 */
 	@Deprecated(since="6", forRemoval = true)
 	private static final String USE_JDBC_METADATA_DEFAULTS = "hibernate.temp.use_jdbc_metadata_defaults";
@@ -706,11 +708,6 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		@Override
 		public Integer getFetchSizeOrNull() {
 			return null;
-		}
-
-		@Override @Deprecated
-		public int getFetchSize() {
-			return 0;
 		}
 
 		@Override

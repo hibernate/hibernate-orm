@@ -19,11 +19,6 @@ import org.hibernate.dialect.Dialect;
  * @see <a href="https://docs.oracle.com/en/database/oracle/oracle-database/23/sqlrf/CREATE-SEQUENCE.html">Oracle Database Documentation</a>
  */
 public final class OracleSequenceSupport extends NextvalSequenceSupport {
-	/**
-	 * @deprecated Construct instance based on version instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public static final SequenceSupport INSTANCE = new OracleSequenceSupport( true, false );
 
 	public static SequenceSupport getInstance(final Dialect dialect) {
 		return new OracleSequenceSupport(dialect.getVersion());

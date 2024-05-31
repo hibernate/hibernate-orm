@@ -59,11 +59,6 @@ public class JdbcSessionContextImpl implements JdbcSessionContext {
 		return settings().isGetGeneratedKeysEnabled();
 	}
 
-	@Override @Deprecated
-	public int getFetchSize() {
-		return settings().getJdbcFetchSize();
-	}
-
 	@Override
 	public Integer getFetchSizeOrNull() {
 		return settings().getJdbcFetchSize();

@@ -210,15 +210,4 @@ public interface AvailableSettings
 	 * {@code hibernate.event.listener.eventType packageName.ClassName1, packageName.ClassName2}
 	 */
 	String EVENT_LISTENER_PREFIX = "hibernate.event.listener";
-
-	/**
-	 * @deprecated There are much better ways to control the flush mode of a session,
-	 *             for example, {@link org.hibernate.SessionBuilder#flushMode} or
-	 *             {@link org.hibernate.Session#setHibernateFlushMode}.
-	 *
-	 * @see org.hibernate.jpa.HibernateHints#HINT_FLUSH_MODE
-	 */
-	@Deprecated(since = "6.2", forRemoval = true)
-	@SuppressWarnings("DeprecatedIsStillUsed")
-	String FLUSH_MODE = "org.hibernate.flushMode";
 }

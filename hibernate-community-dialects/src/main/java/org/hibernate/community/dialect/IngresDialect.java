@@ -133,7 +133,7 @@ public class IngresDialect extends Dialect {
 	protected String columnType(int sqlTypeCode) {
 		//TODO: should we be using nchar/nvarchar/long nvarchar
 		//      here? I think Ingres char/varchar types don't
-		//      support Unicode. Copy what AbstractHANADialect
+		//      support Unicode. Copy what HANADialect
 		//      does with a Hibernate property to config this.
 
 		switch ( sqlTypeCode ) {

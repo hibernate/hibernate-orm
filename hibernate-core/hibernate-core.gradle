@@ -102,13 +102,6 @@ ext {
 }
 
 sourceSets {
-    main {
-        // add the XJC generated JAXB classes to the main source-set
-        java{
-            srcDir project.jaxbTargetDir
-        }
-    }
-
     test {
         resources {
             srcDir 'src/test/resources'

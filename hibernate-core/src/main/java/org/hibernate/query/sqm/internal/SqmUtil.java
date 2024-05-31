@@ -54,6 +54,7 @@ import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
@@ -62,7 +63,9 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
@@ -167,7 +170,8 @@ public class SqmUtil {
 					if ( association.getTargetKeyPropertyNames().contains( sqmPath.getReferencedPathSource().getPathName() )
 							&& ( clause == Clause.GROUP || clause == Clause.ORDER
 							|| !isFkOptimizationAllowed( sqmPath.getLhs() )
-							|| queryPart.getFirstQuerySpec().groupByClauseContains( sqmPath.getNavigablePath() ) ) ) {
+							|| queryPart.getFirstQuerySpec().groupByClauseContains( sqmPath.getNavigablePath(), sqlAstCreationState )
+							|| queryPart.getFirstQuerySpec().orderByClauseContains( sqmPath.getNavigablePath(), sqlAstCreationState ) ) ) {
 						return association.getAssociatedEntityMappingType();
 					}
 				}
@@ -208,6 +212,35 @@ public class SqmUtil {
 			}
 		}
 		return false;
+	}
+
+	public static List<NavigablePath> getGroupByNavigablePaths(SqmQuerySpec<?> querySpec) {
+		final List<SqmExpression<?>> expressions = querySpec.getGroupByClauseExpressions();
+		if ( expressions.isEmpty() ) {
+			return Collections.emptyList();
+		}
+
+		final List<NavigablePath> navigablePaths = new ArrayList<>( expressions.size() );
+		final SqmPathVisitor pathVisitor = new SqmPathVisitor( path -> navigablePaths.add( path.getNavigablePath() ) );
+		for ( SqmExpression<?> expression : expressions ) {
+			expression.accept( pathVisitor );
+		}
+		return navigablePaths;
+	}
+
+	public static List<NavigablePath> getOrderByNavigablePaths(SqmQuerySpec<?> querySpec) {
+		final SqmOrderByClause order = querySpec.getOrderByClause();
+		if ( order == null || order.getSortSpecifications().isEmpty() ) {
+			return Collections.emptyList();
+		}
+
+		final List<SqmSortSpecification> sortSpecifications = order.getSortSpecifications();
+		final List<NavigablePath> navigablePaths = new ArrayList<>( sortSpecifications.size() );
+		final SqmPathVisitor pathVisitor = new SqmPathVisitor( path -> navigablePaths.add( path.getNavigablePath() ) );
+		for ( SqmSortSpecification sortSpec : sortSpecifications ) {
+			sortSpec.getSortExpression().accept( pathVisitor );
+		}
+		return navigablePaths;
 	}
 
 	public static <T, A> SqmAttributeJoin<T, A> findCompatibleFetchJoin(

@@ -172,14 +172,6 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 		return replaceLtrimRtrim( specification, isWhitespace );
 	}
 
-	/**
-	 * @deprecated Use {@link #replaceLtrimRtrim(TrimSpec, boolean)} instead.
-	 */
-	@Deprecated( forRemoval = true )
-	public static String replaceLtrimRtrim(TrimSpec specification, char character) {
-		return replaceLtrimRtrim( specification, character == ' ' );
-	}
-
 	public static String replaceLtrimRtrim(TrimSpec specification, boolean isWhitespace) {
 		switch ( specification ) {
 			case LEADING:

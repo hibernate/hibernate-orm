@@ -201,9 +201,9 @@ public interface Initializer<Data extends InitializerData> {
 
 	static boolean isPartOfKey(NavigablePath navigablePath, InitializerParent<?> parent) {
 		return parent != null && parent.isEmbeddableInitializer() && parent.isPartOfKey()
-				|| navigablePath instanceof EntityIdentifierNavigablePath
-				|| ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
-				|| ForeignKeyDescriptor.TARGET_PART_NAME.equals( navigablePath.getLocalName() );
+			|| navigablePath instanceof EntityIdentifierNavigablePath
+			|| ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
+			|| ForeignKeyDescriptor.TARGET_PART_NAME.equals( navigablePath.getLocalName() );
 	}
 
 	/**

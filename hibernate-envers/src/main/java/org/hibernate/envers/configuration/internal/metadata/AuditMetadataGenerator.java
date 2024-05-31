@@ -152,7 +152,7 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 			org.hibernate.mapping.Join join = joins.next();
 
 			// Checking if all of the join properties are audited
-			if ( !checkPropertiesAudited( join.getPropertyIterator(), auditingData ) ) {
+			if ( !checkPropertiesAudited( join.getProperties().iterator(), auditingData ) ) {
 				continue;
 			}
 
@@ -205,7 +205,7 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 			if ( entityJoin != null ) {
 				addProperties(
 						entityJoin,
-						join.getPropertyIterator(),
+						join.getProperties().iterator(),
 						currentMapper,
 						auditingData,
 						entityName,

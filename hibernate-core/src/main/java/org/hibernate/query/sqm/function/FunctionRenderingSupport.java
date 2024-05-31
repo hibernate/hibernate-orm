@@ -35,48 +35,6 @@ public interface FunctionRenderingSupport {
 			SqlAstTranslator<?> walker);
 
 	/**
-	 * @deprecated Use {@link #render(SqlAppender, List, Predicate, ReturnableType, SqlAstTranslator)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	default void render(
-			SqlAppender sqlAppender,
-			List<? extends SqlAstNode> sqlAstArguments,
-			Predicate filter,
-			SqlAstTranslator<?> walker) {
-		// Ignore the filter by default. Subclasses will override this
-		render( sqlAppender, sqlAstArguments, walker );
-	}
-
-	/**
-	 * @deprecated Use {@link #render(SqlAppender, List, Predicate, List, ReturnableType, SqlAstTranslator)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	default void render(
-			SqlAppender sqlAppender,
-			List<? extends SqlAstNode> sqlAstArguments,
-			Predicate filter,
-			List<SortSpecification> withinGroup,
-			SqlAstTranslator<?> walker) {
-		// Ignore the filter by default. Subclasses will override this
-		render( sqlAppender, sqlAstArguments, walker );
-	}
-
-	/**
-	 * @deprecated Use {@link #render(SqlAppender, List, Predicate, Boolean, Boolean, ReturnableType, SqlAstTranslator)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	default void render(
-			SqlAppender sqlAppender,
-			List<? extends SqlAstNode> sqlAstArguments,
-			Predicate filter,
-			Boolean respectNulls,
-			Boolean fromFirst,
-			SqlAstTranslator<?> walker) {
-		// Ignore the filter by default. Subclasses will override this
-		render( sqlAppender, sqlAstArguments, walker );
-	}
-
-	/**
 	 * @since 6.4
 	 */
 	default void render(

@@ -16,7 +16,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.AbstractGeneratedValuesMutationDelegate;
 import org.hibernate.generator.values.GeneratedValues;
-import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 
@@ -30,13 +29,6 @@ import org.hibernate.pretty.MessageHelper;
  */
 public abstract class AbstractReturningDelegate extends AbstractGeneratedValuesMutationDelegate
 		implements InsertGeneratedIdentifierDelegate {
-	/**
-	 * @deprecated Use {@link #AbstractReturningDelegate(EntityPersister, EventType, boolean, boolean)} instead.
-	 */
-	@Deprecated( forRemoval = true, since = "6.5" )
-	public AbstractReturningDelegate(PostInsertIdentityPersister persister) {
-		super( persister, EventType.INSERT );
-	}
 
 	public AbstractReturningDelegate(
 			EntityPersister persister,
@@ -90,18 +82,6 @@ public abstract class AbstractReturningDelegate extends AbstractGeneratedValuesM
 					sql
 			);
 		}
-	}
-
-	/**
-	 * @deprecated No longer used
-	 */
-	@Deprecated( forRemoval = true, since = "6.5" )
-	protected Object executeAndExtract(
-			String sql,
-			PreparedStatement preparedStatement,
-			SharedSessionContractImplementor session) {
-		final GeneratedValues generatedValues = executeAndExtractReturning( sql, preparedStatement, session );
-		return generatedValues.getGeneratedValue( persister.getIdentifierMapping() );
 	}
 
 	protected abstract GeneratedValues executeAndExtractReturning(

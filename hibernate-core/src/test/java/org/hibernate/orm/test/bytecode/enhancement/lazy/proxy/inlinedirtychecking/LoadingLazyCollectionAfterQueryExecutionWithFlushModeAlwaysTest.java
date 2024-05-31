@@ -14,6 +14,7 @@ import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 
+import org.hibernate.jpa.HibernateHints;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -42,7 +43,7 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
 )
 @ServiceRegistry(
 		settings = {
-				@Setting( name = AvailableSettings.FLUSH_MODE, value = "ALWAYS" ),
+				@Setting( name = HibernateHints.HINT_FLUSH_MODE, value = "ALWAYS" ),
 		}
 )
 @SessionFactory

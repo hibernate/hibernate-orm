@@ -49,24 +49,6 @@ public class SelfRenderingFunctionSqlAstExpression
 	private final @Nullable ReturnableType<?> type;
 	private final @Nullable JdbcMappingContainer expressible;
 
-	/**
-	 * @deprecated Use {@link #SelfRenderingFunctionSqlAstExpression(String, FunctionRenderer, List, ReturnableType, JdbcMappingContainer)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public SelfRenderingFunctionSqlAstExpression(
-			String functionName,
-			FunctionRenderingSupport renderer,
-			List<? extends SqlAstNode> sqlAstArguments,
-			@Nullable ReturnableType<?> type,
-			@Nullable JdbcMappingContainer expressible) {
-		this.functionName = functionName;
-		this.renderer = renderer::render;
-		this.sqlAstArguments = sqlAstArguments;
-		this.type = type;
-		//might be null due to code in SelfRenderingFunctionSqlAstExpression
-		this.expressible = expressible;
-	}
-
 	public SelfRenderingFunctionSqlAstExpression(
 			String functionName,
 			FunctionRenderer renderer,
@@ -96,14 +78,6 @@ public class SelfRenderingFunctionSqlAstExpression
 		return type instanceof SqlExpressible
 				? (JdbcMappingContainer) type
 				: expressible;
-	}
-
-	/**
-	 * @deprecated Use {@link #getFunctionRenderer()} instead
-	 */
-	@Deprecated(forRemoval = true)
-	protected FunctionRenderingSupport getRenderer() {
-		return renderer;
 	}
 
 	protected FunctionRenderer getFunctionRenderer() {

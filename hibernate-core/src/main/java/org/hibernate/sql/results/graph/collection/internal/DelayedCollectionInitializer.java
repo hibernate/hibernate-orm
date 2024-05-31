@@ -19,19 +19,6 @@ import org.hibernate.sql.results.graph.InitializerParent;
  */
 public class DelayedCollectionInitializer extends AbstractCollectionInitializer {
 
-	/**
-	 * @deprecated Use {@link #DelayedCollectionInitializer(NavigablePath, PluralAttributeMapping, InitializerParent, DomainResult, AssemblerCreationState)}  instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public DelayedCollectionInitializer(
-			NavigablePath fetchedPath,
-			PluralAttributeMapping fetchedMapping,
-			FetchParentAccess parentAccess,
-			DomainResult<?> collectionKeyResult,
-			AssemblerCreationState creationState) {
-		super( fetchedPath, fetchedMapping, parentAccess, collectionKeyResult, false, creationState );
-	}
-
 	public DelayedCollectionInitializer(
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedMapping,

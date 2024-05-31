@@ -41,9 +41,4 @@ public class QueryParameterException extends QueryException {
 	public QueryParameterException(String message, String queryString) {
 		super( message, queryString );
 	}
-
-	@Override
-	protected QueryException generateQueryException(String queryString) {
-		return new QueryParameterException( super.getOriginalMessage(), queryString, this );
-	}
 }

@@ -41,14 +41,6 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 		);
 	}
 
-	/**
-	 * @deprecated Use {@link #processSql(String, boolean, boolean, LockOptions)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	protected String processSql(String sql, boolean hasFirstRow, LockOptions lockOptions) {
-		return processSql( sql, hasFirstRow, true, lockOptions );
-	}
-
 	protected String processSql(String sql, boolean hasFirstRow, boolean hasMaxRows, LockOptions lockOptions) {
 		if ( lockOptions != null ) {
 			final LockMode lockMode = lockOptions.getLockMode();
@@ -66,14 +58,6 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 			}
 		}
 		return processSqlOffsetFetch( sql, hasFirstRow, hasMaxRows );
-	}
-
-	/**
-	 * @deprecated Use {@link #processSqlOffsetFetch(String, boolean, boolean)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	protected String processSqlOffsetFetch(String sql, boolean hasFirstRow) {
-		return processSqlOffsetFetch( sql, hasFirstRow, true );
 	}
 
 	protected String processSqlOffsetFetch(String sql, boolean hasFirstRow, boolean hasMaxRows) {
@@ -100,14 +84,6 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 		}
 
 		return insertAtEnd(offsetFetchString, sql);
-	}
-
-	/**
-	 * @deprecated Use {@link #processSql(String, int, boolean, boolean)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	protected String processSql(String sql, int forUpdateIndex, boolean hasFirstRow) {
-		return processSql( sql, forUpdateIndex, hasFirstRow, true );
 	}
 
 	protected String processSql(String sql, int forUpdateIndex, boolean hasFirstRow, boolean hasMaxRows) {

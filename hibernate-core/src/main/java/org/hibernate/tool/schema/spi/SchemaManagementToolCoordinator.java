@@ -190,17 +190,6 @@ public class SchemaManagementToolCoordinator {
 		};
 	}
 
-	/**
-	 * @deprecated Use {@link #buildExecutionOptions(Map, ExceptionHandler)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public static ExecutionOptions buildExecutionOptions(
-			final Map<String,Object> configurationValues,
-			final SchemaFilter schemaFilter,
-			final ExceptionHandler exceptionHandler) {
-		return buildExecutionOptions( configurationValues, exceptionHandler );
-	}
-
 	private static void performDatabaseAction(
 			final Action action,
 			Metadata metadata,

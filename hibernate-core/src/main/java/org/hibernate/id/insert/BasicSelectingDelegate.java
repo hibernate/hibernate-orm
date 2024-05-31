@@ -6,10 +6,8 @@
  */
 package org.hibernate.id.insert;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.EventType;
-import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.persister.entity.EntityPersister;
@@ -22,14 +20,6 @@ import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
  */
 public class BasicSelectingDelegate extends AbstractSelectingDelegate {
 	final private EntityPersister persister;
-
-	/**
-	 * @deprecated Use {@link #BasicSelectingDelegate(EntityPersister)} instead.
-	 */
-	@Deprecated( forRemoval = true, since = "6.5" )
-	public BasicSelectingDelegate(PostInsertIdentityPersister persister, Dialect dialect) {
-		this( persister );
-	}
 
 	public BasicSelectingDelegate(EntityPersister persister) {
 		super( persister, EventType.INSERT, false, false );

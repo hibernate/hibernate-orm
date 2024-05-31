@@ -54,25 +54,6 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 		}
 	};
 
-	/**
-	 * @deprecated Use {@link #BatchEntityInsideEmbeddableSelectFetchInitializer(InitializerParent, ToOneAttributeMapping, NavigablePath, EntityPersister, DomainResultAssembler)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public BatchEntityInsideEmbeddableSelectFetchInitializer(
-			FetchParentAccess parentAccess,
-			ToOneAttributeMapping referencedModelPart,
-			NavigablePath fetchedNavigable,
-			EntityPersister concreteDescriptor,
-			DomainResultAssembler<?> identifierAssembler) {
-		this(
-				(InitializerParent) parentAccess,
-				referencedModelPart,
-				fetchedNavigable,
-				concreteDescriptor,
-				identifierAssembler
-		);
-	}
-
 	public BatchEntityInsideEmbeddableSelectFetchInitializer(
 			InitializerParent parentAccess,
 			ToOneAttributeMapping referencedModelPart,
@@ -255,21 +236,6 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 			loadedState[propertyIndex] = entityDescriptor.getPropertyType( rootEmbeddablePropertyName )
 					.deepCopy( rootEmbeddable, session.getFactory() );
 		}
-	}
-
-	/**
-	 * @deprecated Use {@link #getRootEmbeddablePropertyName(EntityInitializer, InitializerParent, ToOneAttributeMapping)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	protected static String getRootEmbeddablePropertyName(
-			EntityInitializer firstEntityInitializer,
-			FetchParentAccess parentAccess,
-			ToOneAttributeMapping referencedModelPart) {
-		return getRootEmbeddablePropertyName(
-				firstEntityInitializer,
-				(InitializerParent) parentAccess,
-				referencedModelPart
-		);
 	}
 
 	protected static String getRootEmbeddablePropertyName(

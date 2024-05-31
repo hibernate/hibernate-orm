@@ -12,28 +12,19 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Objects;
 
-import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.TransientObjectException;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.generator.values.internal.GeneratedValuesHelper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.SqlTypedMapping;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.WrapperOptions;
 
 import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifierIfNotUnsaved;
-import static org.hibernate.internal.util.StringHelper.unquote;
 import static org.hibernate.spi.NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
 
 /**
@@ -61,71 +52,6 @@ public final class IdentifierGeneratorHelper {
 			return "SHORT_CIRCUIT_INDICATOR";
 		}
 	};
-
-	/**
-	 * Marker object returned from {@link IdentifierGenerator#generate} to indicate that the entity's
-	 * identifier will be generated as part of the database insertion.
-	 *
-	 * @deprecated Use a {@link org.hibernate.generator.OnExecutionGenerator}
-	 */
-	@Deprecated(forRemoval = true, since = "6.2")
-	public static final Serializable POST_INSERT_INDICATOR = new Serializable() {
-		@Override
-		public String toString() {
-			return "POST_INSERT_INDICATOR";
-		}
-	};
-
-	/**
-	 * Get the generated identifier when using identity columns
-	 *
-	 * @param path           The {@link NavigableRole#getFullPath()}
-	 * @param resultSet      The result set from which to extract the generated identity
-	 * @param wrapperOptions The session
-	 * @return The generated identity value
-	 * @throws SQLException       Can be thrown while accessing the result set
-	 * @throws HibernateException Indicates a problem reading back a generated identity value.
-	 *
-	 * @deprecated Use {@link GeneratedValuesHelper#getGeneratedValues} instead
-	 */
-	@Deprecated( since = "6.5", forRemoval = true )
-	public static Object getGeneratedIdentity(
-			String path,
-			ResultSet resultSet,
-			PostInsertIdentityPersister persister,
-			WrapperOptions wrapperOptions) throws SQLException {
-		if ( !resultSet.next() ) {
-			throw new HibernateException( "The database returned no natively generated identity value : " + path );
-		}
-
-		JdbcMapping identifierType = ( (SqlTypedMapping) persister.getIdentifierMapping() ).getJdbcMapping();
-		Object id = identifierType.getJdbcValueExtractor()
-				.extract( resultSet, columnIndex( resultSet, persister ), wrapperOptions );
-		LOG.debugf( "Natively generated identity (%s) : %s", path, id );
-		return id;
-	}
-
-	private static int columnIndex(ResultSet resultSet, PostInsertIdentityPersister persister) {
-		try {
-			ResultSetMetaData metaData = resultSet.getMetaData();
-			String keyColumnName = persister.getRootTableKeyColumnNames()[0];
-			Dialect dialect = persister.getFactory().getJdbcServices().getDialect();
-			for ( int i = 1 ; i<=metaData.getColumnCount(); i++ ) {
-				if ( equal( keyColumnName, metaData.getColumnName(i), dialect ) ) {
-					return i;
-				}
-			}
-		}
-		catch (SQLException e) {
-			LOG.debugf( "Could not determine column index from JDBC metadata", e );
-		}
-		return 1;
-	}
-
-	private static boolean equal(String keyColumnName, String alias, Dialect dialect) {
-		return alias.equalsIgnoreCase( keyColumnName )
-			|| alias.equalsIgnoreCase( unquote( keyColumnName, dialect ) );
-	}
 
 	public static IntegralDataTypeHolder getIntegralDataTypeHolder(Class<?> integralType) {
 		if ( integralType == Long.class
@@ -412,7 +338,7 @@ public final class IdentifierGeneratorHelper {
 
 		@Override
 		public int hashCode() {
-			return (int) ( value ^ ( value >>> 32 ) );
+			return Long.hashCode(value);
 		}
 	}
 

@@ -10,11 +10,9 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.query.hql.spi.SqmCreationState;
-import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.TreatException;
-import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.spi.NavigablePath;
 
@@ -25,14 +23,6 @@ import org.hibernate.spi.NavigablePath;
  * @author Steve Ebersole
  */
 public class SqmFkExpression<T> extends AbstractSqmPath<T> {
-
-	/**
-	 * @deprecated Use {@link #SqmFkExpression(SqmEntityValuedSimplePath)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public SqmFkExpression(SqmEntityValuedSimplePath<?> toOnePath, NodeBuilder criteriaBuilder) {
-		this( toOnePath );
-	}
 
 	public SqmFkExpression(SqmEntityValuedSimplePath<?> toOnePath) {
 		this( toOnePath.getNavigablePath().append( ForeignKeyDescriptor.PART_NAME ), toOnePath );

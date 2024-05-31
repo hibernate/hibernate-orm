@@ -60,15 +60,6 @@ public interface Expression extends SqlAstNode, SqlSelectionProducer {
 		);
 	}
 
-	@Deprecated(forRemoval = true)
-	default SqlSelection createDomainResultSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			JavaType javaType,
-			TypeConfiguration typeConfiguration) {
-		return createDomainResultSqlSelection( jdbcPosition, valuesArrayPosition, javaType, false, typeConfiguration );
-	}
-
 	default SqlSelection createDomainResultSqlSelection(
 			int jdbcPosition,
 			int valuesArrayPosition,

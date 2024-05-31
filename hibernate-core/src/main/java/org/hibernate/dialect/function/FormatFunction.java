@@ -19,7 +19,6 @@ import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionRenderer;
-import org.hibernate.query.sqm.function.FunctionRenderingSupport;
 import org.hibernate.query.sqm.function.MultipatternSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
@@ -173,33 +172,6 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 
 		private final boolean supportsPatternLiterals;
 		private final TypeConfiguration typeConfiguration;
-
-		/**
-		 * @deprecated Use {@link #FormatSqmFunction(SqmFunctionDescriptor, FunctionRenderer, List, ReturnableType, ArgumentsValidator, FunctionReturnTypeResolver, boolean, QueryEngine)} instead
-		 */
-		@Deprecated(forRemoval = true)
-		public FormatSqmFunction(
-				SqmFunctionDescriptor descriptor,
-				FunctionRenderingSupport renderingSupport,
-				List<? extends SqmTypedNode<?>> arguments,
-				ReturnableType<T> impliedResultType,
-				ArgumentsValidator argumentsValidator,
-				FunctionReturnTypeResolver returnTypeResolver,
-				boolean supportsPatternLiterals,
-				QueryEngine queryEngine) {
-			super(
-					descriptor,
-					renderingSupport,
-					arguments,
-					impliedResultType,
-					argumentsValidator,
-					returnTypeResolver,
-					queryEngine.getCriteriaBuilder(),
-					"format"
-			);
-			this.supportsPatternLiterals = supportsPatternLiterals;
-			this.typeConfiguration = queryEngine.getTypeConfiguration();
-		}
 
 		public FormatSqmFunction(
 				SqmFunctionDescriptor descriptor,

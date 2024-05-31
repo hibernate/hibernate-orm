@@ -53,27 +53,6 @@ public class EntityDelayedFetchInitializer extends AbstractInitializer implement
 	private Object entityInstance;
 	private Object identifier;
 
-	/**
-	 * @deprecated Use {@link #EntityDelayedFetchInitializer(InitializerParent, NavigablePath, ToOneAttributeMapping, boolean, DomainResultAssembler, BasicResultAssembler)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public EntityDelayedFetchInitializer(
-			FetchParentAccess parentAccess,
-			NavigablePath fetchedNavigable,
-			ToOneAttributeMapping referencedModelPart,
-			boolean selectByUniqueKey,
-			DomainResultAssembler<?> identifierAssembler,
-			BasicResultAssembler<?> discriminatorAssembler) {
-		this(
-				(InitializerParent) parentAccess,
-				fetchedNavigable,
-				referencedModelPart,
-				selectByUniqueKey,
-				identifierAssembler,
-				discriminatorAssembler
-		);
-	}
-
 	public EntityDelayedFetchInitializer(
 			InitializerParent parent,
 			NavigablePath fetchedNavigable,

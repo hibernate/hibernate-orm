@@ -64,31 +64,6 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 	private Object collectionValueKey;
 	private LoadingCollectionEntryImpl responsibility;
 
-	/**
-	 * @deprecated Use {@link #AbstractImmediateCollectionInitializer(NavigablePath, PluralAttributeMapping, InitializerParent, LockMode, DomainResult, DomainResult, boolean, AssemblerCreationState)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public AbstractImmediateCollectionInitializer(
-			NavigablePath collectionPath,
-			PluralAttributeMapping collectionAttributeMapping,
-			FetchParentAccess parentAccess,
-			LockMode lockMode,
-			DomainResult<?> collectionKeyResult,
-			DomainResult<?> collectionValueKeyResult,
-			boolean isResultInitializer,
-			AssemblerCreationState creationState) {
-		this(
-				collectionPath,
-				collectionAttributeMapping,
-				(InitializerParent) parentAccess,
-				lockMode,
-				collectionKeyResult,
-				collectionValueKeyResult,
-				isResultInitializer,
-				creationState
-		);
-	}
-
 	public AbstractImmediateCollectionInitializer(
 			NavigablePath collectionPath,
 			PluralAttributeMapping collectionAttributeMapping,

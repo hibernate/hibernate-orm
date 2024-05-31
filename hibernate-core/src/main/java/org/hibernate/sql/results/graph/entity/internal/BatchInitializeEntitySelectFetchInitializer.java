@@ -29,25 +29,6 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 
 	private final Set<EntityKey> toBatchLoad = new HashSet<>();
 
-	/**
-	 * @deprecated Use {@link #BatchInitializeEntitySelectFetchInitializer(InitializerParent, ToOneAttributeMapping, NavigablePath, EntityPersister, DomainResultAssembler)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public BatchInitializeEntitySelectFetchInitializer(
-			FetchParentAccess parentAccess,
-			ToOneAttributeMapping referencedModelPart,
-			NavigablePath fetchedNavigable,
-			EntityPersister concreteDescriptor,
-			DomainResultAssembler<?> identifierAssembler) {
-		this(
-				(InitializerParent) parentAccess,
-				referencedModelPart,
-				fetchedNavigable,
-				concreteDescriptor,
-				identifierAssembler
-		);
-	}
-
 	public BatchInitializeEntitySelectFetchInitializer(
 			InitializerParent parent,
 			ToOneAttributeMapping referencedModelPart,

@@ -134,14 +134,6 @@ public class Property implements Serializable, MetaAttributable {
 		}
 	}
 
-	/**
-	 * @deprecated this method is no longer used
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	public boolean isPrimitive(Class<?> clazz) {
-		return getGetter( clazz ).getReturnTypeClass().isPrimitive();
-	}
-
 	public CascadeStyle getCascadeStyle() throws MappingException {
 		final Type type = value.getType();
 		if ( type.isComponentType() ) {
@@ -252,15 +244,6 @@ public class Property implements Serializable, MetaAttributable {
 		this.propertyAccessStrategy = propertyAccessStrategy;
 	}
 
-	/**
-	 * Approximate!
-	 * @deprecated this method is no longer used
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	boolean isNullable() {
-		return value==null || value.isNullable();
-	}
-
 	public boolean isBasicPropertyAccessor() {
 		return propertyAccessorName==null || "property".equals( propertyAccessorName );
 	}
@@ -369,14 +352,6 @@ public class Property implements Serializable, MetaAttributable {
 	
 	public void setSelectable(boolean selectable) {
 		this.selectable = selectable;
-	}
-
-	/**
-	 * @deprecated this method is no longer used
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	public String getAccessorPropertyName(RepresentationMode mode) {
-		return getName();
 	}
 
 	// todo : remove

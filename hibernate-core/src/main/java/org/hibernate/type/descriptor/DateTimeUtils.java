@@ -393,25 +393,6 @@ public final class DateTimeUtils {
 		}
 	}
 
-	/**
-	 * Calendar has no microseconds.
-	 *
-	 * @deprecated use {@link #appendAsTimestampWithMillis(SqlAppender, Calendar, TimeZone)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public static void appendAsTimestampWithMicros(SqlAppender appender, Calendar calendar, TimeZone jdbcTimeZone) {
-		// it is possible to use micro sec resolution with java.util.Date
-		final SimpleDateFormat simpleDateFormat = TIMESTAMP_WITH_MILLIS_FORMAT.get();
-		final TimeZone originalTimeZone = simpleDateFormat.getTimeZone();
-		try {
-			simpleDateFormat.setTimeZone( jdbcTimeZone );
-			appender.appendSql( simpleDateFormat.format( calendar.getTime() ) );
-		}
-		finally {
-			simpleDateFormat.setTimeZone( originalTimeZone );
-		}
-	}
-
 	public static void appendAsDate(SqlAppender appender, java.util.Calendar calendar) {
 		final SimpleDateFormat simpleDateFormat = LOCAL_DATE_FORMAT.get();
 		final TimeZone originalTimeZone = simpleDateFormat.getTimeZone();

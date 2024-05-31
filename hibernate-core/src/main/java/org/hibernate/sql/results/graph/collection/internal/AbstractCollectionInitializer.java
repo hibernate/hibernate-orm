@@ -52,27 +52,6 @@ public abstract class AbstractCollectionInitializer extends AbstractInitializer 
 	protected @Nullable Object collectionKeyValue;
 	protected @Nullable CollectionKey collectionKey;
 
-	/**
-	 * @deprecated Use {@link #AbstractCollectionInitializer(NavigablePath, PluralAttributeMapping, InitializerParent, DomainResult, boolean, AssemblerCreationState)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	protected AbstractCollectionInitializer(
-			NavigablePath collectionPath,
-			PluralAttributeMapping collectionAttributeMapping,
-			FetchParentAccess parent,
-			@Nullable DomainResult<?> collectionKeyResult,
-			boolean isResultInitializer,
-			AssemblerCreationState creationState) {
-		this(
-				collectionPath,
-				collectionAttributeMapping,
-				(InitializerParent) parent,
-				collectionKeyResult,
-				isResultInitializer,
-				creationState
-		);
-	}
-
 	protected AbstractCollectionInitializer(
 			NavigablePath collectionPath,
 			PluralAttributeMapping collectionAttributeMapping,
@@ -316,11 +295,5 @@ public abstract class AbstractCollectionInitializer extends AbstractInitializer 
 	@Override
 	public boolean isResultInitializer() {
 		return isResultInitializer;
-	}
-
-	@Override
-	public @Nullable CollectionKey resolveCollectionKey(RowProcessingState rowProcessingState) {
-		resolveInstance();
-		return collectionKey;
 	}
 }

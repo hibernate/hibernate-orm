@@ -56,19 +56,6 @@ public class EntitySelectFetchInitializer extends AbstractInitializer implements
 	protected Object entityIdentifier;
 	protected Object entityInstance;
 
-	/**
-	 * @deprecated Use {@link #EntitySelectFetchInitializer(InitializerParent, ToOneAttributeMapping, NavigablePath, EntityPersister, DomainResultAssembler)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public EntitySelectFetchInitializer(
-			FetchParentAccess parent,
-			ToOneAttributeMapping toOneMapping,
-			NavigablePath fetchedNavigable,
-			EntityPersister concreteDescriptor,
-			DomainResultAssembler<?> keyAssembler) {
-		this( (InitializerParent) parent, toOneMapping, fetchedNavigable, concreteDescriptor, keyAssembler );
-	}
-
 	public EntitySelectFetchInitializer(
 			InitializerParent parent,
 			ToOneAttributeMapping toOneMapping,

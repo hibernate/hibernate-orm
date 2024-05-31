@@ -310,11 +310,6 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		return delegate.getFastSessionServices();
 	}
 
-	@Override @Deprecated
-	public DeserializationResolver<?> getDeserializationResolver() {
-		return delegate.getDeserializationResolver();
-	}
-
 	@Override
 	public Type getIdentifierType(String className) throws MappingException {
 		return delegate.getIdentifierType( className );

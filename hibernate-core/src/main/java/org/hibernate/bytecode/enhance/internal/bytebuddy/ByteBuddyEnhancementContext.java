@@ -40,16 +40,6 @@ class ByteBuddyEnhancementContext {
 		this.enhancementContext = Objects.requireNonNull( enhancementContext );
 	}
 
-	/**
-	 * @deprecated as it's currently unused and we're not always actually sourcing the classes to be transformed
-	 * from a classloader, so this getter can't always be honoured correctly.
-	 * @return the ClassLoader provided by the underlying EnhancementContext. Might be otherwise ignored.
-	 */
-	@Deprecated(forRemoval = true)
-	public ClassLoader getLoadingClassLoader() {
-		return enhancementContext.getLoadingClassLoader();
-	}
-
 	public boolean isEntityClass(TypeDescription classDescriptor) {
 		return enhancementContext.isEntityClass( new UnloadedTypeDescription( classDescriptor ) );
 	}

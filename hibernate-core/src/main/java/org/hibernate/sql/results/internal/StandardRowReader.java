@@ -88,17 +88,6 @@ public class StandardRowReader<T> implements RowReader<T> {
 	}
 
 	@Override
-	@Deprecated
-	public List<Initializer> getInitializers() {
-		return initializersList.asList();
-	}
-
-	@Override
-	public InitializersList getInitializersList() {
-		return initializersList;
-	}
-
-	@Override
 	public @Nullable EntityKey resolveSingleResultEntityKey(RowProcessingState rowProcessingState) {
 		final EntityInitializer entityInitializer = resultInitializers.length == 0
 				? null

@@ -11,7 +11,7 @@ import org.hibernate.dialect.Dialect;
 /**
  * @deprecated use {@link org.hibernate.dialect.unique.AlterTableUniqueDelegate}
  */
-@Deprecated(since="6.2")
+@Deprecated(since="6.2", forRemoval = true)
 public class DefaultUniqueDelegate extends AlterTableUniqueDelegate {
 	public DefaultUniqueDelegate(Dialect dialect) {
 		super(dialect);

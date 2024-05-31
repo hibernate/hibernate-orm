@@ -213,12 +213,6 @@ public interface SessionFactoryImplementor
 	}
 
 	/**
-	 * @deprecated this is never called
-	 */
-	@Deprecated(since = "6.2", forRemoval = true)
-	DeserializationResolver<?> getDeserializationResolver();
-
-	/**
 	 * @deprecated no longer for internal use, use {@link #getMappingMetamodel()} or {@link #getJpaMetamodel()}
 	 */
 	@Override @Deprecated

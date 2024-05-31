@@ -19,7 +19,6 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -33,33 +32,6 @@ public class SetInitializer extends AbstractImmediateCollectionInitializer {
 	private static final String CONCRETE_NAME = SetInitializer.class.getSimpleName();
 
 	private final DomainResultAssembler<?> elementAssembler;
-
-	/**
-	 * @deprecated Use {@link #SetInitializer(NavigablePath, PluralAttributeMapping, InitializerParent, LockMode, DomainResult, DomainResult, boolean, AssemblerCreationState, Fetch)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public SetInitializer(
-			NavigablePath navigablePath,
-			PluralAttributeMapping setDescriptor,
-			FetchParentAccess parentAccess,
-			LockMode lockMode,
-			DomainResult<?> collectionKeyResult,
-			DomainResult<?> collectionValueKeyResult,
-			Fetch elementFetch,
-			boolean isResultInitializer,
-			AssemblerCreationState creationState) {
-		this(
-				navigablePath,
-				setDescriptor,
-				(InitializerParent) parentAccess,
-				lockMode,
-				collectionKeyResult,
-				collectionValueKeyResult,
-				isResultInitializer,
-				creationState,
-				elementFetch
-		);
-	}
 
 	public SetInitializer(
 			NavigablePath navigablePath,

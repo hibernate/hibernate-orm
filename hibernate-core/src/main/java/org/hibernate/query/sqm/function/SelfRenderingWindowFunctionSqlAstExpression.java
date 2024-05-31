@@ -30,25 +30,6 @@ public class SelfRenderingWindowFunctionSqlAstExpression extends SelfRenderingFu
 	private final Boolean respectNulls;
 	private final Boolean fromFirst;
 
-	/**
-	 * @deprecated Use {@link #SelfRenderingWindowFunctionSqlAstExpression(String, FunctionRenderer, List, Predicate, Boolean, Boolean, ReturnableType, JdbcMappingContainer)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public SelfRenderingWindowFunctionSqlAstExpression(
-			String functionName,
-			FunctionRenderingSupport renderer,
-			List<? extends SqlAstNode> sqlAstArguments,
-			Predicate filter,
-			Boolean respectNulls,
-			Boolean fromFirst,
-			ReturnableType<?> type,
-			JdbcMappingContainer expressible) {
-		super( functionName, renderer, sqlAstArguments, type, expressible );
-		this.filter = filter;
-		this.respectNulls = respectNulls;
-		this.fromFirst = fromFirst;
-	}
-
 	public SelfRenderingWindowFunctionSqlAstExpression(
 			String functionName,
 			FunctionRenderer renderer,

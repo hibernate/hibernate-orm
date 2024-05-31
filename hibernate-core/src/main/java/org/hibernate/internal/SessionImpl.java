@@ -2492,9 +2492,6 @@ public class SessionImpl
 			final EffectiveEntityGraph effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
 			effectiveEntityGraph.applyConfiguredGraph( properties );
 			loadQueryInfluencers.setReadOnly( getReadOnlyHint( properties ) );
-			if ( effectiveEntityGraph.getSemantic() == GraphSemantic.FETCH ) {
-				setEnforcingFetchGraph( true );
-			}
 
 			return byId( entityClass )
 					.with( determineAppropriateLocalCacheMode( properties ) )
@@ -2550,7 +2547,6 @@ public class SessionImpl
 		finally {
 			loadQueryInfluencers.getEffectiveEntityGraph().clear();
 			loadQueryInfluencers.setReadOnly( null );
-			setEnforcingFetchGraph( false );
 		}
 	}
 
@@ -3090,15 +3086,4 @@ public class SessionImpl
 	private Boolean getReadOnlyFromLoadQueryInfluencers() {
 		return loadQueryInfluencers != null ? loadQueryInfluencers.getReadOnly() : null;
 	}
-
-	@Override @Deprecated(forRemoval = true)
-	public boolean isEnforcingFetchGraph() {
-		return isEnforcingFetchGraph;
-	}
-
-	@Override @Deprecated(forRemoval = true)
-	public void setEnforcingFetchGraph(boolean isEnforcingFetchGraph) {
-		this.isEnforcingFetchGraph = isEnforcingFetchGraph;
-	}
-
 }

@@ -80,7 +80,6 @@ import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.RecoverableException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -2036,7 +2035,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 				try {
 					pass.doSecondPass( getEntityBindingMap() );
 				}
-				catch (RecoverableException e) {
+				catch (FailedSecondPassException e) {
 					failingSecondPasses.add( pass );
 					if ( originalException == null ) {
 						originalException = (RuntimeException) e.getCause();

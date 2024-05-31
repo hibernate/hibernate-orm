@@ -199,11 +199,6 @@ public abstract class MockCollectionPersister implements QueryableCollection {
 	}
 
 	@Override
-	public boolean consumesCollectionAlias() {
-		return true;
-	}
-
-	@Override
 	public String[] toColumns(String propertyName) {
 		return new String[] {""};
 	}

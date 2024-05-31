@@ -255,14 +255,6 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	}
 
-	public boolean consumesEntityAlias() {
-		return true;
-	}
-
-	public boolean consumesCollectionAlias() {
-		return true;
-	}
-
 	public boolean isOneToMany() {
 		return true;
 	}

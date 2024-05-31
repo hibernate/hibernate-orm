@@ -41,20 +41,4 @@ public interface Joinable extends Restrictable {
 	 * Is this instance actually a CollectionPersister?
 	 */
 	boolean isCollection();
-
-	/**
-	 * Very, very, very ugly...
-	 *
-	 * @return Does this persister "consume" entity column aliases in the result
-	 * set?
-	 */
-	boolean consumesEntityAlias();
-
-	/**
-	 * Very, very, very ugly...
-	 *
-	 * @return Does this persister "consume" collection column aliases in the result
-	 * set?
-	 */
-	boolean consumesCollectionAlias();
 }

@@ -20,14 +20,14 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.Session;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.query.Query;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-@RequiresDialect(AbstractHANADialect.class)
+@RequiresDialect(HANADialect.class)
 public class HANACalcViewTest extends BaseCoreFunctionalTestCase {
 
 	private static final String CALC_VIEW_NAME = "DUMMY_CV_VIEW";

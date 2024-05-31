@@ -19,7 +19,7 @@ import org.hibernate.MappingException;
 import org.hibernate.Transaction;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.NativeQuery;
@@ -124,7 +124,7 @@ public class QueryAndSQLTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "invalid name of function or procedure: SYSDATE")
+	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "invalid name of function or procedure: SYSDATE")
 	public void testNativeQueryWithFormulaAttributeWithoutAlias(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

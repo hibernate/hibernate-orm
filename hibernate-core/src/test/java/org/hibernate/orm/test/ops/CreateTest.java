@@ -12,7 +12,7 @@ import java.util.Collection;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.PersistenceException;
 
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.exception.ConstraintViolationException;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -214,7 +214,7 @@ public class CreateTest extends AbstractOperationTestCase {
 
 	@Test
 	@SuppressWarnings("unchecked")
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testBasic(SessionFactoryScope scope) throws Exception {
 		Employer er = new Employer();
 		Employee ee = new Employee();

@@ -26,7 +26,6 @@ import org.hibernate.Internal;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
-import org.hibernate.Remove;
 import org.hibernate.TransientObjectException;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -873,24 +872,6 @@ public abstract class AbstractCollectionPersister
 
 	protected abstract RowMutationOperations getRowMutationOperations();
 	protected abstract RemoveCoordinator getRemoveCoordinator();
-
-	@Override
-	public String getSQLOrderByString(String alias) {
-		if ( hasOrdering() ) {
-			throw new UnsupportedOperationException();
-		}
-
-		return "";
-	}
-
-	@Override
-	public String getManyToManyOrderByString(String alias) {
-		if ( hasManyToManyOrdering() ) {
-			throw new UnsupportedOperationException();
-		}
-
-		return "";
-	}
 
 	@Override
 	public FetchMode getFetchMode() {

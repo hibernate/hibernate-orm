@@ -33,7 +33,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.StaticFilterAliasGenerator;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Column;
@@ -444,10 +443,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	@Override
 	public int getTableSpan() {
 		return 1;
-	}
-
-	protected boolean[] getTableHasColumns() {
-		return ArrayHelper.TRUE;
 	}
 
 	@Override

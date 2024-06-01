@@ -10,16 +10,22 @@ package org.hibernate.sql.results.internal;
 import org.hibernate.sql.results.spi.RowTransformer;
 
 /**
+ * Returns the first object in each row.
+ * <p>
+ * Should only be used when the query has exactly
+ * one item in its selection list.
+ *
  * @author Steve Ebersole
  */
 public class RowTransformerSingularReturnImpl<R> implements RowTransformer<R> {
 	/**
 	 * Singleton access
 	 */
+	@SuppressWarnings("rawtypes")
 	public static final RowTransformerSingularReturnImpl INSTANCE = new RowTransformerSingularReturnImpl();
 
 	@SuppressWarnings("unchecked")
-	public static <R> RowTransformerSingularReturnImpl<R> instance() {
+	public static <R> RowTransformer<R> instance() {
 		return INSTANCE;
 	}
 

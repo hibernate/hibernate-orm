@@ -12,5 +12,5 @@ package org.hibernate.persister.entity;
  */
 @Deprecated
 public interface DeprecatedEntityStuff
-		extends OuterJoinLoadable, UniqueKeyLoadable, SQLLoadable, Lockable,	Queryable {
+		extends OuterJoinLoadable, UniqueKeyLoadable, Loadable, Lockable, Queryable {
 }

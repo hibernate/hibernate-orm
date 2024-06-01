@@ -81,7 +81,6 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.property.access.internal.ChainedPropertyAccessImpl;
@@ -565,8 +564,7 @@ public class MappingModelCreationHelper {
 
 				indexDescriptor = null;
 
-				assert collectionDescriptor instanceof SQLLoadableCollection;
-				final SQLLoadableCollection loadableCollection = (SQLLoadableCollection) collectionDescriptor;
+				final QueryableCollection loadableCollection = (QueryableCollection) collectionDescriptor;
 				final String identifierColumnName = loadableCollection.getIdentifierColumnName();
 				assert identifierColumnName != null;
 

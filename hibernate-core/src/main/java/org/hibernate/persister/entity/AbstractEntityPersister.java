@@ -78,7 +78,6 @@ import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.internal.ImmutableEntityEntryFactory;
 import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
-import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
@@ -237,7 +236,6 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategyProvide
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.Alias;
-import org.hibernate.sql.Delete;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
@@ -308,7 +306,6 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttrib
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
-import static org.hibernate.engine.internal.Versioning.isVersionIncrementRequired;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.generator.EventType.UPDATE;
 import static org.hibernate.internal.util.ReflectHelper.isAbstractClass;
@@ -324,7 +321,6 @@ import static org.hibernate.internal.util.collections.ArrayHelper.toTypeArray;
 import static org.hibernate.internal.util.collections.CollectionHelper.combine;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
-import static org.hibernate.internal.util.collections.CollectionHelper.toSmallList;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.supportsSqlArrayType;
 import static org.hibernate.metamodel.RepresentationMode.POJO;
 import static org.hibernate.persister.entity.DiscriminatorHelper.NOT_NULL_DISCRIMINATOR;
@@ -386,8 +382,6 @@ public abstract class AbstractEntityPersister
 	private final boolean[][] propertyColumnInsertable;
 	private final Set<String> sharedColumnNames;
 
-	private final List<Integer> lobProperties;
-
 	//information about lazy properties of this class
 	private final String[] lazyPropertyNames;
 	private final int[] lazyPropertyNumbers;
@@ -442,10 +436,6 @@ public abstract class AbstractEntityPersister
 	private GeneratedValuesMutationDelegate insertDelegate;
 	private GeneratedValuesMutationDelegate updateDelegate;
 	private String identitySelectString;
-
-	private boolean[] tableHasColumns;
-
-	private final Map<String,String[]> subclassPropertyColumnNames = new HashMap<>();
 
 	private final JavaType<?> javaType;
 	private final EntityRepresentationStrategy representationStrategy;
@@ -648,7 +638,6 @@ public abstract class AbstractEntityPersister
 		final ArrayList<Type> lazyTypes = new ArrayList<>();
 		final ArrayList<String[]> lazyColAliases = new ArrayList<>();
 
-		final ArrayList<Integer> lobPropertiesLocalCollector = new ArrayList<>();
 		final List<Property> propertyClosure = persistentClass.getPropertyClosure();
 		boolean foundFormula = false;
 		for ( int i = 0; i < propertyClosure.size(); i++ ) {
@@ -709,12 +698,7 @@ public abstract class AbstractEntityPersister
 
 			propertyColumnUpdateable[i] = prop.getValue().getColumnUpdateability();
 			propertyColumnInsertable[i] = prop.getValue().getColumnInsertability();
-
-			if ( prop.isLob() && dialect.forceLobAsLastValue() ) {
-				lobPropertiesLocalCollector.add( i );
-			}
 		}
-		lobProperties = toSmallList( lobPropertiesLocalCollector );
 		hasFormulaProperties = foundFormula;
 		lazyPropertyColumnAliases = to2DStringArray( lazyColAliases );
 		lazyPropertyNames = toStringArray( lazyNames );
@@ -1081,10 +1065,6 @@ public abstract class AbstractEntityPersister
 
 	public boolean isSharedColumn(String columnExpression) {
 		return sharedColumnNames.contains( columnExpression );
-	}
-
-	protected boolean[] getTableHasColumns() {
-		return tableHasColumns;
 	}
 
 	@Override
@@ -2649,12 +2629,6 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public String[] getSubclassPropertyColumnNames(String propertyName) {
-		//TODO: should we allow suffixes on these ?
-		return subclassPropertyColumnNames.get( propertyName );
-	}
-
-	@Override
 	public Object loadByUniqueKey(
 			String propertyName,
 			Object uniqueKey,
@@ -3438,13 +3412,6 @@ public abstract class AbstractEntityPersister
 		mergeCoordinator = buildMergeCoordinator();
 
 		final int joinSpan = getTableSpan();
-
-		tableHasColumns = new boolean[joinSpan];
-		for ( int j = 0; j < joinSpan; j++ ) {
-			final String tableName = getTableName( j );
-			final EntityTableMapping tableMapping = findTableMapping( tableName );
-			tableHasColumns[j] = tableMapping.hasColumns();
-		}
 
 		//select SQL
 		sqlVersionSelectString = generateSelectVersionString();
@@ -4311,11 +4278,6 @@ public abstract class AbstractEntityPersister
 	public Type getPropertyType(String propertyName) throws MappingException {
 		// todo (PropertyMapping) : caller also deprecated (aka, easy to remove)
 		return propertyMapping.toType( propertyName );
-	}
-
-	@Override
-	public Type getType() {
-		return entityMetamodel.getEntityType();
 	}
 
 	@Override
@@ -6423,13 +6385,11 @@ public abstract class AbstractEntityPersister
 		// aliases for identifier ( alias.id ); skip if the entity defines a non-id property named 'id'
 		if ( !entityMetamodel.hasNonIdentifierPropertyNamedId() ) {
 			subclassPropertyAliases.put( ENTITY_ID, getIdentifierAliases() );
-			subclassPropertyColumnNames.put( ENTITY_ID, getIdentifierColumnNames() );
 		}
 
 		// aliases named identifier ( alias.idname )
 		if ( hasIdentifierProperty() ) {
 			subclassPropertyAliases.put( getIdentifierPropertyName(), getIdentifierAliases() );
-			subclassPropertyColumnNames.put( getIdentifierPropertyName(), getIdentifierColumnNames() );
 		}
 
 		// aliases for composite-id's
@@ -6446,10 +6406,6 @@ public abstract class AbstractEntityPersister
 							ENTITY_ID + "." + idPropertyNames[i],
 							new String[] {idAliases[i]}
 					);
-					subclassPropertyColumnNames.put(
-							ENTITY_ID + "." + getIdentifierPropertyName() + "." + idPropertyNames[i],
-							new String[] {idColumnNames[i]}
-					);
 				}
 //				if (hasIdentifierProperty() && !ENTITY_ID.equals( getIdentifierPropertyNames() ) ) {
 				if ( hasIdentifierProperty() ) {
@@ -6457,22 +6413,16 @@ public abstract class AbstractEntityPersister
 							getIdentifierPropertyName() + "." + idPropertyNames[i],
 							new String[] {idAliases[i]}
 					);
-					subclassPropertyColumnNames.put(
-							getIdentifierPropertyName() + "." + idPropertyNames[i],
-							new String[] {idColumnNames[i]}
-					);
 				}
 				else {
 					// embedded composite ids ( alias.idName1, alias.idName2 )
 					subclassPropertyAliases.put( idPropertyNames[i], new String[] {idAliases[i]} );
-					subclassPropertyColumnNames.put( idPropertyNames[i], new String[] {idColumnNames[i]} );
 				}
 			}
 		}
 
 		if ( entityMetamodel.isPolymorphic() ) {
 			subclassPropertyAliases.put( ENTITY_CLASS, new String[] {getDiscriminatorAlias()} );
-			subclassPropertyColumnNames.put( ENTITY_CLASS, new String[] {getDiscriminatorColumnName()} );
 		}
 
 	}
@@ -6496,7 +6446,6 @@ public abstract class AbstractEntityPersister
 			}
 
 			subclassPropertyAliases.put( name, aliases );
-			subclassPropertyColumnNames.put( name, cols );
 		}
 
 	}

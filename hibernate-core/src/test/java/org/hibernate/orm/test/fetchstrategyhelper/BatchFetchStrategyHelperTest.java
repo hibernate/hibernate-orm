@@ -15,7 +15,7 @@ import org.hibernate.annotations.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.internal.FetchOptionsHelper;
-import org.hibernate.persister.entity.OuterJoinLoadable;
+import org.hibernate.persister.entity.Loadable;
 import org.hibernate.type.AssociationType;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -172,7 +172,7 @@ public class BatchFetchStrategyHelperTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private org.hibernate.FetchMode determineFetchMode(Class<?> entityClass, String path) {
-        OuterJoinLoadable entityPersister = (OuterJoinLoadable) sessionFactory().getRuntimeMetamodels()
+        Loadable entityPersister = (Loadable) sessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor(entityClass.getName());
 		int index = entityPersister.getPropertyIndex( path );
@@ -180,7 +180,7 @@ public class BatchFetchStrategyHelperTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private AssociationType determineAssociationType(Class<?> entityClass, String path) {
-        OuterJoinLoadable entityPersister = (OuterJoinLoadable) sessionFactory().getRuntimeMetamodels()
+		Loadable entityPersister = (Loadable) sessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor(entityClass.getName());
 		int index = entityPersister.getPropertyIndex( path );

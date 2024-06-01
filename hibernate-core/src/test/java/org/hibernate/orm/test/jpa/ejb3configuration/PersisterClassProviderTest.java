@@ -42,7 +42,6 @@ import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.AttributeMappingsMap;
@@ -549,11 +548,6 @@ public class PersisterClassProviderTest {
 
 		@Override
 		public CacheEntryStructure getCacheEntryStructure() {
-			return null;
-		}
-
-		@Override
-		public ClassMetadata getClassMetadata() {
 			return null;
 		}
 

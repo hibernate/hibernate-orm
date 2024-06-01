@@ -44,8 +44,6 @@ import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.AttributeMappingsMap;
@@ -522,11 +520,6 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		@Override
 		public CacheEntry buildCacheEntry(
 				Object entity, Object[] state, Object version, SharedSessionContractImplementor session) {
-			return null;
-		}
-
-		@Override
-		public ClassMetadata getClassMetadata() {
 			return null;
 		}
 
@@ -1011,10 +1004,6 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 
 		public String[] getCollectionSpaces() {
 			return new String[0];  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		public CollectionMetadata getCollectionMetadata() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
 		public boolean isCascadeDeleteEnabled() {

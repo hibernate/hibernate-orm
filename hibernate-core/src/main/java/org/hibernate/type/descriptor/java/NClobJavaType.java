@@ -122,7 +122,8 @@ public class NClobJavaType extends AbstractClassJavaType<NClob> {
 			if(value.length() == 0) {
 				// empty NClob
 				return options.getLobCreator().createNClob("");
-			} else {
+			}
+			else {
 				return options.getLobCreator().createNClob(value.getSubString(1, (int) value.length()));
 			}
 		}

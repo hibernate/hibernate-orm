@@ -150,7 +150,8 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 			if(value.length() == 0) {
 				// empty Blob
 				return options.getLobCreator().createBlob(new byte[0]);
-			} else {
+			}
+			else {
 				return options.getLobCreator().createBlob(value.getBytes(1, (int) value.length()));
 			}
 		}

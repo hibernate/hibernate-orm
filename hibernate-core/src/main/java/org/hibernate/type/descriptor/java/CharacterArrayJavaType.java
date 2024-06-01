@@ -9,6 +9,7 @@ package org.hibernate.type.descriptor.java;
 import java.io.Reader;
 import java.io.StringReader;
 import java.sql.Clob;
+import java.sql.NClob;
 import java.util.Arrays;
 
 import org.hibernate.engine.jdbc.CharacterStream;
@@ -79,6 +80,9 @@ public class CharacterArrayJavaType extends AbstractClassJavaType<Character[]> {
 		}
 		if ( String.class.isAssignableFrom( type ) ) {
 			return (X) new String( unwrapChars( value ) );
+		}
+		if ( NClob.class.isAssignableFrom( type ) ) {
+			return (X) options.getLobCreator().createNClob( new String( unwrapChars( value ) ) );
 		}
 		if ( Clob.class.isAssignableFrom( type ) ) {
 			return (X) options.getLobCreator().createClob( new String( unwrapChars( value ) ) );

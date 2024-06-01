@@ -336,6 +336,11 @@ public class MimerSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean useConnectionToCreateLob() {
+		return false;
+	}
+
+	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return MimerSQLIdentityColumnSupport.INSTANCE;
 	}

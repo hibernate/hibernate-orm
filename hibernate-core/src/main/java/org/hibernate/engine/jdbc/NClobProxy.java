@@ -53,7 +53,7 @@ public class NClobProxy extends ClobProxy {
 	 * @return The generated proxy.
 	 */
 	public static NClob generateProxy(Reader reader, long length) {
-		return (NClob) Proxy.newProxyInstance( getProxyClassLoader(), PROXY_INTERFACES, new ClobProxy( reader, length ) );
+		return (NClob) Proxy.newProxyInstance( getProxyClassLoader(), PROXY_INTERFACES, new NClobProxy( reader, length ) );
 	}
 
 	/**

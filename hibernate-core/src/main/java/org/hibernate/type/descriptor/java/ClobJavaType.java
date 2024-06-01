@@ -133,7 +133,8 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 			if(value.length() == 0) {
 				// empty Clob
 				return options.getLobCreator().createClob("");
-			} else {
+			}
+			else {
 				return options.getLobCreator().createClob(value.getSubString(1, (int) value.length()));
 			}
 		}

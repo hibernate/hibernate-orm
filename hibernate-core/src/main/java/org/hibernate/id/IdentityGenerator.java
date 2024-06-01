@@ -15,6 +15,7 @@ import org.hibernate.id.insert.GetGeneratedKeysDelegate;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.id.insert.InsertReturningDelegate;
 import org.hibernate.id.insert.UniqueKeySelectingDelegate;
+import org.hibernate.persister.entity.EntityPersister;
 
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.generator.internal.NaturalIdHelper.getNaturalIdPropertyNames;
@@ -52,7 +53,7 @@ public class IdentityGenerator
 	}
 
 	@Override
-	public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(PostInsertIdentityPersister persister) {
+	public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(EntityPersister persister) {
 		final SessionFactoryImplementor factory = persister.getFactory();
 		final Dialect dialect = factory.getJdbcServices().getDialect();
 		// Try to use generic delegates if the dialects supports them
@@ -65,7 +66,7 @@ public class IdentityGenerator
 		}
 		// Fall back to delegates which only handle identifiers
 		else if ( sessionFactoryOptions.isGetGeneratedKeysEnabled() ) {
-			return dialect.getIdentityColumnSupport().buildGetGeneratedKeysDelegate( persister, dialect );
+			return dialect.getIdentityColumnSupport().buildGetGeneratedKeysDelegate( persister );
 		}
 		else if ( persister.getNaturalIdentifierProperties() != null
 				&& !persister.getEntityMetamodel().isNaturalIdentifierInsertGenerated() ) {

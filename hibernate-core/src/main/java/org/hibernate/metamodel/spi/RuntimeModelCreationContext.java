@@ -14,7 +14,6 @@ import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
@@ -25,7 +24,7 @@ import java.util.Map;
 /**
  * @author Steve Ebersole
  */
-public interface RuntimeModelCreationContext extends PersisterCreationContext {
+public interface RuntimeModelCreationContext {
 	SessionFactoryImplementor getSessionFactory();
 
 	BootstrapContext getBootstrapContext();
@@ -42,7 +41,6 @@ public interface RuntimeModelCreationContext extends PersisterCreationContext {
 		return getTypeConfiguration().getJavaTypeRegistry();
 	}
 
-	@Override
 	default MetadataImplementor getMetadata() {
 		return getBootModel();
 	}

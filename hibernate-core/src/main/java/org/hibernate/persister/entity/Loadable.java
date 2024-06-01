@@ -6,6 +6,7 @@
  */
 package org.hibernate.persister.entity;
 
+import org.hibernate.FetchMode;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.type.Type;
@@ -115,4 +116,19 @@ public interface Loadable extends EntityPersister {
 	 * Return the column alias names used to persist/query the named property of the class or a subclass (optional operation).
 	 */
 	String[] getSubclassPropertyColumnAliases(String propertyName, String suffix);
+
+	/**
+	 * May this (subclass closure) property be fetched using an SQL outerjoin?
+	 */
+	FetchMode getFetchMode(int i);
+
+	/**
+	 * Get the type of the numbered property of the class or a subclass.
+	 */
+	Type getSubclassPropertyType(int i);
+
+	/**
+	 * Get the column names for the given property path
+	 */
+	String[] getPropertyColumnNames(String propertyPath);
 }

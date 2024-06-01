@@ -44,7 +44,6 @@ import org.hibernate.persister.collection.mutation.RowMutationOperations;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinator;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorStandard;
-import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -80,14 +79,6 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	private final UpdateRowsCoordinator updateCoordinator;
 	private final DeleteRowsCoordinator deleteRowsCoordinator;
 	private final RemoveCoordinator removeCoordinator;
-
-	@Deprecated(since = "6.0")
-	public BasicCollectionPersister(
-			Collection collectionBinding,
-			CollectionDataAccess cacheAccessStrategy,
-			PersisterCreationContext creationContext) throws MappingException, CacheException {
-		this( collectionBinding, cacheAccessStrategy, (RuntimeModelCreationContext) creationContext );
-	}
 
 	public BasicCollectionPersister(
 			Collection collectionBinding,

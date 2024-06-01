@@ -73,7 +73,6 @@ import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
-import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -1370,11 +1369,6 @@ public abstract class AbstractCollectionPersister
 
 	protected abstract void doProcessQueuedOps(PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session)
 			throws HibernateException;
-
-	@Override @Deprecated
-	public CollectionMetadata getCollectionMetadata() {
-		return this;
-	}
 
 	@Override
 	public SessionFactoryImplementor getFactory() {

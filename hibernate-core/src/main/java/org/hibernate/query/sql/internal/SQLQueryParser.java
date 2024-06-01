@@ -13,8 +13,8 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.collection.SQLLoadableCollection;
-import org.hibernate.persister.entity.SQLLoadable;
+import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.entity.Loadable;
 
 /**
  * Substitutes escape sequences of form {@code {alias}},
@@ -36,10 +36,10 @@ public class SQLQueryParser {
 
 	public interface ParserContext {
 		boolean isEntityAlias(String aliasName);
-		SQLLoadable getEntityPersister(String alias);
+		Loadable getEntityPersister(String alias);
 		String getEntitySuffix(String alias);
 		boolean isCollectionAlias(String aliasName);
-		SQLLoadableCollection getCollectionPersister(String alias);
+		QueryableCollection getCollectionPersister(String alias);
 		String getCollectionSuffix(String alias);
 		Map<String, String[]> getPropertyResultsMap(String alias);
 	}
@@ -207,7 +207,7 @@ public class SQLQueryParser {
 			String aliasName,
 			String propertyName) {
 		final Map<String, String[]> fieldResults = context.getPropertyResultsMap( aliasName );
-		final SQLLoadableCollection collectionPersister = context.getCollectionPersister( aliasName );
+		final QueryableCollection collectionPersister = context.getCollectionPersister( aliasName );
 		final String collectionSuffix = context.getCollectionSuffix( aliasName );
 		switch ( propertyName ) {
 			case "*":
@@ -234,7 +234,7 @@ public class SQLQueryParser {
 
 	private String resolveProperties(String aliasName, String propertyName) {
 		final Map<String, String[]> fieldResults = context.getPropertyResultsMap( aliasName );
-		final SQLLoadable persister = context.getEntityPersister( aliasName );
+		final Loadable persister = context.getEntityPersister( aliasName );
 		final String suffix = context.getEntitySuffix( aliasName );
 		if ( "*".equals( propertyName ) ) {
 			if ( !fieldResults.isEmpty() ) {

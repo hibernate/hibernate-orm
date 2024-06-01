@@ -53,18 +53,10 @@ public interface QueryableCollection extends PropertyMapping, Joinable, Collecti
 	 * key columns in the case of a one-to-many association)
 	 */
 	String[] getElementColumnNames();
-	/**
-	 * Get the order by SQL
-	 */
-	String getSQLOrderByString(String alias);
 
-	/**
-	 * Get the order-by to be applied at the target table of a many to many
-	 *
-	 * @param alias The alias for the many-to-many target table
-	 * @return appropriate order-by fragment or empty string.
-	 */
-	String getManyToManyOrderByString(String alias);
+	String getIdentifierColumnName();
+
+	String[] getCollectionPropertyColumnAliases(String propertyName, String string);
 
 	/**
 	 * Does this collection role have a where clause filter?
@@ -81,5 +73,4 @@ public interface QueryableCollection extends PropertyMapping, Joinable, Collecti
 	 * Should we load this collection role by outerjoining?
 	 */
 	FetchMode getFetchMode();
-
 }

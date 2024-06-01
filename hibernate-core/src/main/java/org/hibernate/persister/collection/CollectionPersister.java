@@ -23,7 +23,6 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -259,14 +258,6 @@ public interface CollectionPersister extends Restrictable {
 	 * Get the "space" that holds the persistent state
 	 */
 	String[] getCollectionSpaces();
-
-	/**
-	 * Get the user-visible metadata for the collection (optional operation)
-	 *
-	 * @deprecated This operation is no longer called by Hibernate.
-	 */
-	@Deprecated(since = "6.0")
-	CollectionMetadata getCollectionMetadata();
 
 	/**
 	 * Is cascade delete handled by the database-level

@@ -83,7 +83,6 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
@@ -905,10 +904,6 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	}
 	public String getIdentifierPropertyName(String className) throws MappingException {
 		return runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( className ).getIdentifierPropertyName();
-	}
-
-	public CollectionMetadata getCollectionMetadata(String roleName) throws HibernateException {
-		return (CollectionMetadata) runtimeMetamodels.getMappingMetamodel().getCollectionDescriptor( roleName );
 	}
 
 	public Type getReferencedPropertyType(String className, String propertyName) throws MappingException {

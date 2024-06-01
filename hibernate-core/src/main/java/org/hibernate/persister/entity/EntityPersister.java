@@ -41,7 +41,6 @@ import org.hibernate.internal.TableGroupFilterAliasGenerator;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
-import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -857,14 +856,6 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * Get the NaturalId cache (optional operation)
 	 */
 	NaturalIdDataAccess getNaturalIdCacheAccessStrategy();
-
-	/**
-	 * Get the user-visible metadata for the class (optional operation)
-	 *
-	 * @deprecated This operation is no longer called by Hibernate.
-	 */
-	@Deprecated(since = "6.0")
-	ClassMetadata getClassMetadata();
 
 	/**
 	 * The batch size for batch loading.

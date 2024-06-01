@@ -43,7 +43,6 @@ import org.hibernate.internal.StaticFilterAliasGenerator;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.AttributeMappingsMap;
@@ -640,10 +639,6 @@ public class CustomPersister implements EntityPersister {
 
 	public Serializable[] getQuerySpaces() {
 		return new String[] { "CUSTOMS" };
-	}
-
-	public ClassMetadata getClassMetadata() {
-		return null;
 	}
 
 	public boolean[] getPropertyUpdateability() {

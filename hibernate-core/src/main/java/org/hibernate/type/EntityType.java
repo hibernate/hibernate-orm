@@ -24,7 +24,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -738,10 +737,9 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			Object key,
 			SharedSessionContractImplementor session) throws HibernateException {
 		final SessionFactoryImplementor factory = session.getFactory();
-		final UniqueKeyLoadable persister = (UniqueKeyLoadable) factory
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityName );
+		EntityPersister persister =
+				factory.getMappingMetamodel()
+						.getEntityDescriptor( entityName );
 
 		//TODO: implement 2nd level caching?! natural id caching ?! proxies?!
 

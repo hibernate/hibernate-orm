@@ -7,10 +7,11 @@
 package org.hibernate.persister.entity;
 
 
+import org.hibernate.id.PostInsertIdentityPersister;
+
 /**
  * @deprecated Just used to singly extend all the deprecated entity persister roles
  */
 @Deprecated
-public interface DeprecatedEntityStuff
-		extends OuterJoinLoadable, UniqueKeyLoadable, Loadable, Lockable, Queryable {
+public interface DeprecatedEntityStuff extends Loadable, Lockable, Queryable, PostInsertIdentityPersister {
 }

@@ -12,9 +12,9 @@ import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentityGenerator;
-import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
@@ -94,7 +94,7 @@ public class NativeGenerator
     }
 
     @Override
-    public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(PostInsertIdentityPersister persister) {
+    public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(EntityPersister persister) {
         return ((OnExecutionGenerator) generator).getGeneratedIdentifierDelegate(persister);
     }
 }

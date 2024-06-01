@@ -10,9 +10,5 @@ package org.hibernate.persister.collection;
  * @deprecated Just used to singly extend all the deprecated collection persister roles
  */
 @Deprecated
-public interface DeprecatedCollectionStuff extends SQLLoadableCollection {
-	@Override
-	default String getRole() {
-		return SQLLoadableCollection.super.getRole();
-	}
+public interface DeprecatedCollectionStuff extends QueryableCollection {
 }

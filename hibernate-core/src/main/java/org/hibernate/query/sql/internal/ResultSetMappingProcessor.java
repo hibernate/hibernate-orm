@@ -27,10 +27,8 @@ import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
-import org.hibernate.persister.entity.SQLLoadable;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultSetMapping;
@@ -236,7 +234,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 					null,
 					determineNavigablePath( fetchBuilder )
 			);
-			final SQLLoadable loadable = (SQLLoadable) alias2Persister.get( fetchBuilder.getOwnerAlias() );
+			final Loadable loadable = (Loadable) alias2Persister.get( fetchBuilder.getOwnerAlias() );
 			final List<String> columnNames;
 			final String[] columnAliases = loadable.getSubclassPropertyColumnAliases(
 					fetchBuilder.getFetchableName(),
@@ -308,7 +306,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			String suffix,
 			LockMode lockMode,
 			NavigablePath navigablePath) {
-		final SQLLoadable loadable = (SQLLoadable) entityMapping.getEntityPersister();
+		final Loadable loadable = (Loadable) entityMapping.getEntityPersister();
 		final DynamicResultBuilderEntityStandard resultBuilderEntity = new DynamicResultBuilderEntityStandard(
 				entityMapping,
 				tableAlias,
@@ -347,7 +345,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 
 	private void addFetchBuilder(
 			String suffix,
-			SQLLoadable loadable,
+			Loadable loadable,
 			DynamicFetchBuilderContainer resultBuilderEntity,
 			String tableAlias,
 			String[] identifierAliases,
@@ -441,14 +439,14 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 		);
 	}
 
-	private SQLLoadable getSQLLoadable(String entityName) throws MappingException {
+	private Loadable getSQLLoadable(String entityName) throws MappingException {
 		final EntityPersister entityDescriptor = factory.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityName );
-		if ( !(entityDescriptor instanceof SQLLoadable) ) {
-			throw new MappingException( "class persister is not SQLLoadable: " + entityName );
+		if ( !(entityDescriptor instanceof Loadable) ) {
+			throw new MappingException( "class persister is not Loadable: " + entityName );
 		}
-		return (SQLLoadable) entityDescriptor;
+		return (Loadable) entityDescriptor;
 	}
 
 	private String generateEntitySuffix() {
@@ -501,12 +499,12 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			return;
 		}
 
-		SQLLoadable persister = (SQLLoadable) rootReturn.getEntityMapping().getEntityPersister();
+		Loadable persister = (Loadable) rootReturn.getEntityMapping().getEntityPersister();
 		Map<String, String[]> propertyResultsMap = Collections.emptyMap();//rootReturn.getPropertyResultsMap()
 		addPersister( rootReturn.getTableAlias(), propertyResultsMap, persister );
 	}
 
-	private void addPersister(String alias, Map<String, String[]> propertyResult, SQLLoadable persister) {
+	private void addPersister(String alias, Map<String, String[]> propertyResult, Loadable persister) {
 		alias2Persister.put( alias, persister );
 		String suffix = generateEntitySuffix();
 		LOG.tracev( "Mapping alias [{0}] to entity-suffix [{1}]", alias, suffix );
@@ -516,9 +514,9 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 
 	private void addCollection(String role, String alias, Map<String, String[]> propertyResults) {
 
-		final SQLLoadableCollection collectionDescriptor = (SQLLoadableCollection) factory.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getCollectionDescriptor( role );
+		final QueryableCollection collectionDescriptor = (QueryableCollection)
+				factory.getRuntimeMetamodels().getMappingMetamodel()
+						.getCollectionDescriptor( role );
 
 		alias2CollectionPersister.put( alias, collectionDescriptor );
 		String suffix = generateCollectionSuffix();
@@ -527,7 +525,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 		collectionPropertyResultMaps.put( alias, propertyResults );
 
 		if ( collectionDescriptor.isOneToMany() || collectionDescriptor.isManyToMany() ) {
-			SQLLoadable persister = ( SQLLoadable ) collectionDescriptor.getElementPersister();
+			Loadable persister = (Loadable) collectionDescriptor.getElementPersister();
 			addPersister( alias, filter( propertyResults ), persister );
 		}
 	}
@@ -565,7 +563,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			processReturn( alias2Return.get( ownerAlias ) );
 		}
 
-		SQLLoadable ownerPersister = ( SQLLoadable ) alias2Persister.get( ownerAlias );
+		Loadable ownerPersister = (Loadable) alias2Persister.get( ownerAlias );
 		Type returnType = ownerPersister.getPropertyType( fetchReturn.getFetchableName() );
 
 		if ( returnType.isCollectionType() ) {
@@ -577,7 +575,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 		else if ( returnType.isEntityType() ) {
 			EntityType eType = ( EntityType ) returnType;
 			String returnEntityName = eType.getAssociatedEntityName();
-			SQLLoadable persister = getSQLLoadable( returnEntityName );
+			Loadable persister = getSQLLoadable( returnEntityName );
 			Map<String, String[]> propertyResultsMap = Collections.emptyMap();//fetchReturn.getPropertyResultsMap()
 			addPersister( alias, propertyResultsMap, persister );
 		}
@@ -594,13 +592,13 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 	}
 
 	@Override
-	public SQLLoadable getEntityPersister(String alias) {
-		return (SQLLoadable) alias2Persister.get( alias );
+	public Loadable getEntityPersister(String alias) {
+		return (Loadable) alias2Persister.get( alias );
 	}
 
 	@Override
-	public SQLLoadableCollection getCollectionPersister(String alias) {
-		return (SQLLoadableCollection) alias2CollectionPersister.get( alias );
+	public QueryableCollection getCollectionPersister(String alias) {
+		return (QueryableCollection) alias2CollectionPersister.get( alias );
 	}
 
 	@Override

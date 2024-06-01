@@ -21,12 +21,10 @@ import java.util.List;
  */
 public class RowTransformerConstructorImpl<T> implements RowTransformer<T> {
 	private final Class<T> type;
-	private final TupleMetadata tupleMetadata;
 	private final Constructor<T> constructor;
 
 	public RowTransformerConstructorImpl(Class<T> type, TupleMetadata tupleMetadata) {
 		this.type = type;
-		this.tupleMetadata = tupleMetadata;
 		final List<TupleElement<?>> elements = tupleMetadata.getList();
 		final Class<?>[] sig = new Class[elements.size()];
 		for (int i = 0; i < elements.size(); i++) {

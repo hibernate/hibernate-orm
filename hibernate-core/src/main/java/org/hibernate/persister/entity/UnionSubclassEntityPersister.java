@@ -47,7 +47,6 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -92,18 +91,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	private final String[] constraintOrderedTableNames;
 	private final String[][] constraintOrderedKeyColumnNames;
-
-	//INITIALIZATION:
-
-	@Deprecated(since = "6.0")
-	public UnionSubclassEntityPersister(
-			final PersistentClass persistentClass,
-			final EntityDataAccess cacheAccessStrategy,
-			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
-			final PersisterCreationContext creationContext) throws HibernateException {
-		this( persistentClass,cacheAccessStrategy,naturalIdRegionAccessStrategy,
-				(RuntimeModelCreationContext) creationContext );
-	}
 
 	public UnionSubclassEntityPersister(
 			final PersistentClass persistentClass,
@@ -354,23 +341,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	// Execute the SQL:
 
 	@Override
-	public String fromTableFragment(String name) {
-		return getTableName() + ' ' + name;
-	}
-
-	@Override
-	public String getSubclassPropertyTableName(int i) {
+	public String getAttributeMutationTableName(int i) {
 		return getTableName();//ie. the subquery! yuck!
-	}
-
-	@Override
-	public String getAttributeMutationTableName(int attributeIndex) {
-		return getRootTableName();
-	}
-
-	@Override
-	protected int getSubclassPropertyTableNumber(int i) {
-		return 0;
 	}
 
 	@Override

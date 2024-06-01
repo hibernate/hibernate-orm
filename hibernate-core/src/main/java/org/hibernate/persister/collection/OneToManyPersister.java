@@ -57,7 +57,6 @@ import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorOneToMan
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorTablePerSubclass;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
-import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -102,14 +101,6 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	private final boolean keyIsNullable;
 	private final MutationExecutorService mutationExecutorService;
-
-	@Deprecated(since = "6.0")
-	public OneToManyPersister(
-			Collection collectionBinding,
-			CollectionDataAccess cacheAccessStrategy,
-			PersisterCreationContext creationContext) throws MappingException, CacheException {
-		this( collectionBinding, cacheAccessStrategy, (RuntimeModelCreationContext) creationContext );
-	}
 
 	public OneToManyPersister(
 			Collection collectionBinding,

@@ -45,7 +45,6 @@ import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.tuple.PropertyFactory;
@@ -62,7 +61,6 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.util.ReflectHelper.isAbstractClass;
 import static org.hibernate.internal.util.ReflectHelper.isFinalClass;
 import static org.hibernate.internal.util.collections.ArrayHelper.toIntArray;
-import static org.hibernate.internal.util.collections.CollectionHelper.toSmallMap;
 import static org.hibernate.internal.util.collections.CollectionHelper.toSmallSet;
 
 /**
@@ -141,19 +139,11 @@ public class EntityMetamodel implements Serializable {
 	private final boolean inherited;
 	private final boolean hasSubclasses;
 	private final Set<String> subclassEntityNames;
-	private final Map<Class<?>,String> entityNameByInheritanceClassMap;
+//	private final Map<Class<?>,String> entityNameByInheritanceClassMap;
 
 	private final BeforeExecutionGenerator versionGenerator;
 
 	private final BytecodeEnhancementMetadata bytecodeEnhancementMetadata;
-
-	@Deprecated(since = "6.0")
-	public EntityMetamodel(
-			PersistentClass persistentClass,
-			EntityPersister persister,
-			PersisterCreationContext creationContext) {
-		this( persistentClass, persister, (RuntimeModelCreationContext) creationContext );
-	}
 
 	public EntityMetamodel(
 			PersistentClass persistentClass,
@@ -186,7 +176,7 @@ public class EntityMetamodel implements Serializable {
 			final Set<String> idAttributeNames;
 
 			if ( identifierMapperComponent != null ) {
-				nonAggregatedCidMapper = (CompositeType) identifierMapperComponent.getType();
+				nonAggregatedCidMapper = identifierMapperComponent.getType();
 				idAttributeNames = new HashSet<>( );
 				for ( Property property : identifierMapperComponent.getProperties() ) {
 					idAttributeNames.add( property.getName() );
@@ -469,14 +459,14 @@ public class EntityMetamodel implements Serializable {
 		}
 		subclassEntityNames = toSmallSet( subclassEntityNamesLocal );
 
-		HashMap<Class<?>, String> entityNameByInheritanceClassMapLocal = new HashMap<>();
-		if ( persistentClass.hasPojoRepresentation() ) {
-			entityNameByInheritanceClassMapLocal.put( persistentClass.getMappedClass(), persistentClass.getEntityName() );
-			for ( Subclass subclass : persistentClass.getSubclasses() ) {
-				entityNameByInheritanceClassMapLocal.put( subclass.getMappedClass(), subclass.getEntityName() );
-			}
-		}
-		entityNameByInheritanceClassMap = toSmallMap( entityNameByInheritanceClassMapLocal );
+//		HashMap<Class<?>, String> entityNameByInheritanceClassMapLocal = new HashMap<>();
+//		if ( persistentClass.hasPojoRepresentation() ) {
+//			entityNameByInheritanceClassMapLocal.put( persistentClass.getMappedClass(), persistentClass.getEntityName() );
+//			for ( Subclass subclass : persistentClass.getSubclasses() ) {
+//				entityNameByInheritanceClassMapLocal.put( subclass.getMappedClass(), subclass.getEntityName() );
+//			}
+//		}
+//		entityNameByInheritanceClassMap = toSmallMap( entityNameByInheritanceClassMapLocal );
 	}
 
 	private void verifyNaturalIdProperty(Property property) {
@@ -770,15 +760,15 @@ public class EntityMetamodel implements Serializable {
 		return isAbstract;
 	}
 
-	/**
-	 * Return the entity-name mapped to the given class within our inheritance hierarchy, if any.
-	 *
-	 * @param inheritanceClass The class for which to resolve the entity-name.
-	 * @return The mapped entity-name, or null if no such mapping was found.
-	 */
-	public String findEntityNameByEntityClass(Class<?> inheritanceClass) {
-		return entityNameByInheritanceClassMap.get( inheritanceClass );
-	}
+//	/**
+//	 * Return the entity-name mapped to the given class within our inheritance hierarchy, if any.
+//	 *
+//	 * @param inheritanceClass The class for which to resolve the entity-name.
+//	 * @return The mapped entity-name, or null if no such mapping was found.
+//	 */
+//	public String findEntityNameByEntityClass(Class<?> inheritanceClass) {
+//		return entityNameByInheritanceClassMap.get( inheritanceClass );
+//	}
 
 	@Override
 	public String toString() {

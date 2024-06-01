@@ -156,7 +156,6 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
-import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -4243,11 +4242,6 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getRootName();
 	}
 
-	@Override @Deprecated
-	public ClassMetadata getClassMetadata() {
-		return this;
-	}
-
 	@Override
 	public String getMappedSuperclass() {
 		return entityMetamodel.getSuperclass();
@@ -4864,8 +4858,7 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.hasNaturalIdentifier();
 	}
 
-	@Override
-	public void setPropertyValue(Object object, String propertyName, Object value) {
+	private void setPropertyValue(Object object, String propertyName, Object value) {
 		final AttributeMapping attributeMapping = findSubPart( propertyName, this ).asAttributeMapping();
 		setterCache[attributeMapping.getStateArrayPosition()].set( object, value );
 	}

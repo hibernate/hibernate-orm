@@ -6,12 +6,11 @@
  */
 package org.hibernate.persister.entity;
 
-import org.hibernate.metadata.ClassMetadata;
 
 /**
  * @deprecated Just used to singly extend all the deprecated entity persister roles
  */
 @Deprecated
 public interface DeprecatedEntityStuff
-		extends OuterJoinLoadable, ClassMetadata, UniqueKeyLoadable, SQLLoadable, Lockable,	Queryable {
+		extends OuterJoinLoadable, UniqueKeyLoadable, SQLLoadable, Lockable,	Queryable {
 }

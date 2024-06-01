@@ -6,13 +6,11 @@
  */
 package org.hibernate.persister.collection;
 
-import org.hibernate.metadata.CollectionMetadata;
-
 /**
  * @deprecated Just used to singly extend all the deprecated collection persister roles
  */
 @Deprecated
-public interface DeprecatedCollectionStuff extends SQLLoadableCollection, CollectionMetadata {
+public interface DeprecatedCollectionStuff extends SQLLoadableCollection {
 	@Override
 	default String getRole() {
 		return SQLLoadableCollection.super.getRole();

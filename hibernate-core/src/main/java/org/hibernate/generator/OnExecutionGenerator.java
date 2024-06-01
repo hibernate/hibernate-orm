@@ -9,7 +9,6 @@ package org.hibernate.generator;
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.id.insert.GetGeneratedKeysDelegate;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.id.insert.InsertReturningDelegate;
@@ -118,7 +117,7 @@ public interface OnExecutionGenerator extends Generator {
 	 * identity columns is the reason why this layer-breaking method exists.
 	 */
 	@Incubating
-	default InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(PostInsertIdentityPersister persister) {
+	default InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(EntityPersister persister) {
 		final SessionFactoryImplementor factory = persister.getFactory();
 		final Dialect dialect = factory.getJdbcServices().getDialect();
 		if ( dialect.supportsInsertReturningGeneratedKeys()

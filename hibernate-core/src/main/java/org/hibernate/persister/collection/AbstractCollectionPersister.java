@@ -98,7 +98,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
-import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.QueryOptions;
@@ -252,15 +251,6 @@ public abstract class AbstractCollectionPersister
 
 	private PluralAttributeMapping attributeMapping;
 	private volatile Set<String> affectingFetchProfiles;
-
-
-	@Deprecated(since = "6.0")
-	public AbstractCollectionPersister(
-			Collection collectionBootDescriptor,
-			@Nullable CollectionDataAccess cacheAccessStrategy,
-			PersisterCreationContext creationContext) throws MappingException, CacheException {
-		this( collectionBootDescriptor, cacheAccessStrategy, (RuntimeModelCreationContext) creationContext );
-	}
 
 	public AbstractCollectionPersister(
 			Collection collectionBootDescriptor,

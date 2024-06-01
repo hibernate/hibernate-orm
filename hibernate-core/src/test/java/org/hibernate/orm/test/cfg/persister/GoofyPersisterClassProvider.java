@@ -58,6 +58,7 @@ import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyEntry;
@@ -66,7 +67,6 @@ import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.spi.PersisterClassResolver;
-import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.spi.NavigablePath;
@@ -102,7 +102,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 				final PersistentClass persistentClass,
 				final EntityDataAccess cacheAccessStrategy,
 				final NaturalIdDataAccess naturalIdRegionAccessStrategy,
-				final PersisterCreationContext creationContext) {
+				final RuntimeModelCreationContext creationContext) {
 			throw new GoofyException(NoopEntityPersister.class);
 		}
 
@@ -868,7 +868,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		public NoopCollectionPersister(
 				Collection collectionBinding,
 				CollectionDataAccess cacheAccessStrategy,
-				PersisterCreationContext creationContext) {
+				RuntimeModelCreationContext creationContext) {
 			throw new GoofyException(NoopCollectionPersister.class);
 		}
 

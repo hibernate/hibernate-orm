@@ -258,8 +258,9 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 				if ( polymorphic && ( legacyFetchBuilders == null || legacyFetchBuilders.isEmpty() )
 						&& !entityResult.hasJoinFetches() ) {
 					final Set<String> aliases = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
-					final AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityResult.getReferencedMappingContainer()
-							.getEntityPersister();
+					final AbstractEntityPersister entityPersister = (AbstractEntityPersister)
+							entityResult.getReferencedMappingContainer()
+									.getEntityPersister();
 					for ( String[] columns : entityPersister.getContraintOrderedTableKeyColumnClosure() ) {
 						addColumns( aliases, knownDuplicateAliases, columns );
 					}

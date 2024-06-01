@@ -2248,17 +2248,17 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private DiscriminatorType discriminatorType;
+	private DiscriminatorType<?> discriminatorType;
 
 
-	protected DiscriminatorType resolveDiscriminatorType() {
+	protected DiscriminatorType<?> resolveDiscriminatorType() {
 		if ( discriminatorType == null ) {
 			discriminatorType = buildDiscriminatorType();
 		}
 		return discriminatorType;
 	}
 
-	private DiscriminatorType buildDiscriminatorType() {
+	private DiscriminatorType<?> buildDiscriminatorType() {
 		final BasicType<?> underlingJdbcMapping = getDiscriminatorType();
 		if ( underlingJdbcMapping == null ) {
 			return null;

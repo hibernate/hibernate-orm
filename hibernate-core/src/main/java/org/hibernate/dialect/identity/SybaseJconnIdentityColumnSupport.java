@@ -6,8 +6,6 @@
  */
 package org.hibernate.dialect.identity;
 
-import org.hibernate.dialect.Dialect;
-import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.id.insert.GetGeneratedKeysDelegate;
 import org.hibernate.id.insert.SybaseJConnGetGeneratedKeysDelegate;
 import org.hibernate.persister.entity.EntityPersister;

@@ -8,7 +8,6 @@ package org.hibernate.dialect.identity;
 
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.id.insert.GetGeneratedKeysDelegate;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -122,23 +121,6 @@ public interface IdentityColumnSupport {
 	 */
 	default boolean hasIdentityInsertKeyword() {
 		return getIdentityInsertString() != null;
-	}
-
-	/**
-	 * The Delegate for dealing with IDENTITY columns using JDBC3 getGeneratedKeys
-	 *
-	 * @param persister The persister
-	 * @param dialect The dialect against which to generate the delegate
-	 *
-	 * @return the dialect specific GetGeneratedKeys delegate
-	 *
-	 * @deprecated Use {@link #buildGetGeneratedKeysDelegate(EntityPersister)} instead.
-	 */
-	@Deprecated( forRemoval = true, since = "6.5" )
-	default GetGeneratedKeysDelegate buildGetGeneratedKeysDelegate(
-			PostInsertIdentityPersister persister,
-			Dialect dialect) {
-		return buildGetGeneratedKeysDelegate( persister );
 	}
 
 	/**

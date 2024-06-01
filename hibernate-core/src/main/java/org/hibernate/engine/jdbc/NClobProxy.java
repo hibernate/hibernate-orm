@@ -41,7 +41,7 @@ public class NClobProxy extends ClobProxy {
 	 * @return The generated proxy.
 	 */
 	public static NClob generateProxy(String string) {
-		return (NClob) Proxy.newProxyInstance( getProxyClassLoader(), PROXY_INTERFACES, new ClobProxy( string ) );
+		return (NClob) Proxy.newProxyInstance( getProxyClassLoader(), PROXY_INTERFACES, new NClobProxy( string ) );
 	}
 
 	/**

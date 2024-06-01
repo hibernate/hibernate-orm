@@ -3648,6 +3648,20 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Should BLOB, CLOB, and NCLOB be created solely using respectively
+	 * {@link Connection#createBlob()}, {@link Connection#createClob()},
+	 * and {@link Connection#createNClob()}.
+	 *
+	 * @return True if BLOB, CLOB, and NCLOB should be created using JDBC
+	 * {@link Connection}.
+	 *
+	 * @since 6.6
+	 */
+	public boolean useConnectionToCreateLob() {
+		return !useInputStreamToInsertBlob();
+	}
+
+	/**
 	 * Does this dialect support parameters within the {@code SELECT} clause
 	 * of {@code INSERT ... SELECT ...} statements?
 	 *

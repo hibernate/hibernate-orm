@@ -15,7 +15,6 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Queryable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -35,7 +34,7 @@ public class EntityTypeLiteral
 
 	public EntityTypeLiteral(EntityPersister entityTypeDescriptor) {
 		this.entityTypeDescriptor = entityTypeDescriptor;
-		this.discriminatorType = (DiscriminatorType) ( (Queryable) entityTypeDescriptor ).getTypeDiscriminatorMetadata().getResolutionType();
+		this.discriminatorType = (DiscriminatorType) entityTypeDescriptor.getTypeDiscriminatorMetadata().getResolutionType();
 	}
 
 	public EntityPersister getEntityTypeDescriptor() {

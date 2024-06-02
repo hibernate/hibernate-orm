@@ -45,7 +45,6 @@ import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.mutation.CollectionMutationTarget;
-import org.hibernate.persister.entity.Joinable;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
@@ -176,7 +175,7 @@ public class PluralAttributeMappingImpl
 			separateCollectionTable = null;
 		}
 		else {
-			separateCollectionTable = ( (Joinable) collectionDescriptor ).getTableName();
+			separateCollectionTable = collectionDescriptor.getTableName();
 		}
 
 		final int baseIndex;
@@ -979,7 +978,7 @@ public class PluralAttributeMappingImpl
 				this,
 				creationState.getSqlAliasBaseGenerator()
 		);
-		final String collectionTableName = ( (Joinable) collectionDescriptor ).getTableName();
+		final String collectionTableName = collectionDescriptor.getTableName();
 		final TableReference collectionTableReference = new NamedTableReference(
 				collectionTableName,
 				sqlAliasBase.generateNewAlias(),

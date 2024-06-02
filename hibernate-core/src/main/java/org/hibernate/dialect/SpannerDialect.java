@@ -34,7 +34,7 @@ import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
@@ -709,7 +709,7 @@ public class SpannerDialect extends Dialect {
 	}
 
 	@Override
-	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
+	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		return LOCKING_STRATEGY;
 	}
 

@@ -59,7 +59,6 @@ import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.derived.AnonymousTupleSqmPathSource;
@@ -316,9 +315,9 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 					modelCreationContext
 			);
 			collectionPersisterMap.put( model.getRole(), persister );
-			Type indexType = persister.getIndexType();
+			final Type indexType = persister.getIndexType();
 			if ( indexType != null && indexType.isEntityType() && !indexType.isAnyType() ) {
-				String entityName = ( (org.hibernate.type.EntityType) indexType ).getAssociatedEntityName();
+				final String entityName = ( (org.hibernate.type.EntityType) indexType ).getAssociatedEntityName();
 				Set<String> roles = collectionRolesByEntityParticipant.get( entityName );
 				//noinspection Java8MapApi
 				if ( roles == null ) {
@@ -327,9 +326,9 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 				}
 				roles.add( persister.getRole() );
 			}
-			Type elementType = persister.getElementType();
+			final Type elementType = persister.getElementType();
 			if ( elementType.isEntityType() && !elementType.isAnyType() ) {
-				String entityName = ( (org.hibernate.type.EntityType) elementType ).getAssociatedEntityName();
+				final String entityName = ( (org.hibernate.type.EntityType) elementType ).getAssociatedEntityName();
 				Set<String> roles = collectionRolesByEntityParticipant.get( entityName );
 				//noinspection Java8MapApi
 				if ( roles == null ) {
@@ -755,35 +754,33 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	}
 
 	private String[] doGetImplementors(Class<?> clazz) throws MappingException {
-		ArrayList<String> results = new ArrayList<>();
+		final ArrayList<String> results = new ArrayList<>();
 		for ( EntityPersister checkPersister : entityPersisters().values() ) {
-			if ( checkPersister instanceof Queryable ) {
-				final String checkQueryableEntityName = ((EntityMappingType) checkPersister).getEntityName();
-				final boolean isMappedClass = clazz.getName().equals( checkQueryableEntityName );
-				if ( checkPersister.isExplicitPolymorphism() ) {
-					if ( isMappedClass ) {
-						return new String[] { clazz.getName() }; // NOTE EARLY EXIT
-					}
+			final String checkQueryableEntityName = ((EntityMappingType) checkPersister).getEntityName();
+			final boolean isMappedClass = clazz.getName().equals( checkQueryableEntityName );
+			if ( checkPersister.isExplicitPolymorphism() ) {
+				if ( isMappedClass ) {
+					return new String[] { clazz.getName() }; // NOTE EARLY EXIT
+				}
+			}
+			else {
+				if ( isMappedClass ) {
+					results.add( checkQueryableEntityName );
 				}
 				else {
-					if ( isMappedClass ) {
-						results.add( checkQueryableEntityName );
-					}
-					else {
-						final Class<?> mappedClass = checkPersister.getMappedClass();
-						if ( mappedClass != null && clazz.isAssignableFrom( mappedClass ) ) {
-							final boolean assignableSuperclass;
-							if ( checkPersister.isInherited() ) {
-								final String superTypeName = checkPersister.getSuperMappingType().getEntityName();
-								Class<?> mappedSuperclass = getEntityDescriptor( superTypeName ).getMappedClass();
-								assignableSuperclass = clazz.isAssignableFrom( mappedSuperclass );
-							}
-							else {
-								assignableSuperclass = false;
-							}
-							if ( !assignableSuperclass ) {
-								results.add( checkQueryableEntityName );
-							}
+					final Class<?> mappedClass = checkPersister.getMappedClass();
+					if ( mappedClass != null && clazz.isAssignableFrom( mappedClass ) ) {
+						final boolean assignableSuperclass;
+						if ( checkPersister.isInherited() ) {
+							final String superTypeName = checkPersister.getSuperMappingType().getEntityName();
+							final Class<?> mappedSuperclass = getEntityDescriptor( superTypeName ).getMappedClass();
+							assignableSuperclass = clazz.isAssignableFrom( mappedSuperclass );
+						}
+						else {
+							assignableSuperclass = false;
+						}
+						if ( !assignableSuperclass ) {
+							results.add( checkQueryableEntityName );
 						}
 					}
 				}

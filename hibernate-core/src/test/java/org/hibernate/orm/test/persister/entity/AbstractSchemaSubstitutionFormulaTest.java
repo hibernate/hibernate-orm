@@ -17,7 +17,6 @@ import org.hibernate.annotations.Formula;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 

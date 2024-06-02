@@ -31,7 +31,6 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.results.TableGroupImpl;
@@ -662,7 +661,7 @@ public class CteInsertHandler implements InsertHandler {
 				.getMappingMetamodel()
 				.getEntityDescriptor( rootEntityName );
 
-		final String hierarchyRootTableName = ( (Joinable) rootEntityDescriptor ).getTableName();
+		final String hierarchyRootTableName = rootEntityDescriptor.getTableName();
 		final TableReference hierarchyRootTableReference = updatingTableGroup.resolveTableReference(
 				updatingTableGroup.getNavigablePath(),
 				hierarchyRootTableName

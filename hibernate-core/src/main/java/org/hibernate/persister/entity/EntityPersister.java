@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
@@ -42,6 +43,7 @@ import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
@@ -1216,8 +1218,13 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	FilterAliasGenerator getFilterAliasGenerator(final String rootAlias);
 
 	default FilterAliasGenerator getFilterAliasGenerator(TableGroup rootTableGroup) {
-		return new TableGroupFilterAliasGenerator( ( (Joinable) this ).getTableName(), rootTableGroup );
+		return new TableGroupFilterAliasGenerator( getTableName(), rootTableGroup );
 	}
+
+	/**
+	 * The table to join to.
+	 */
+	String getTableName();
 
 	/**
 	 * Converts an array of attribute names to a set of indexes, according to the entity metamodel
@@ -1311,5 +1318,101 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 */
 	String getIdentitySelectString();
 
+	/**
+	 * Get the names of columns used to persist the identifier
+	 */
 	String[] getIdentifierColumnNames();
+
+	/**
+	 * Get the result set aliases used for the identifier columns, given a suffix
+	 */
+	String[] getIdentifierAliases(String suffix);
+
+	/**
+	 * Locks are always applied to the "root table".
+	 *
+	 * @return The root table name
+	 */
+	String getRootTableName();
+
+	/**
+	 * Get the names of columns on the root table used to persist the identifier.
+	 *
+	 * @return The root table identifier column names.
+	 */
+	String[] getRootTableIdentifierColumnNames();
+
+	/**
+	 * For versioned entities, get the name of the column (again, expected on the
+	 * root table) used to store the version values.
+	 *
+	 * @return The version column name.
+	 */
+	String getVersionColumnName();
+
+	/**
+	 * Get the result set aliases used for the property columns, given a suffix (properties of this class, only).
+	 */
+	String[] getPropertyAliases(String suffix, int i);
+
+	/**
+	 * Get the result set aliases used for the identifier columns, given a suffix
+	 */
+	String getDiscriminatorAlias(String suffix);
+
+	/**
+	 * @return the column name for the discriminator as specified in the mapping.
+	 *
+	 * @deprecated Use {@link EntityDiscriminatorMapping#getSelectionExpression()} instead
+	 */
+	@Deprecated
+	String getDiscriminatorColumnName();
+
+	/**
+	 * Get the discriminator type
+	 */
+	Type getDiscriminatorType();
+
+	/**
+	 * Does the result set contain rowids?
+	 */
+	boolean hasRowId();
+
+	/**
+	 * Return the column alias names used to persist/query the named property of the class or a subclass (optional operation).
+	 */
+	String[] getSubclassPropertyColumnAliases(String propertyName, String suffix);
+
+	/**
+	 * May this (subclass closure) property be fetched using an SQL outer join?
+	 */
+	FetchMode getFetchMode(int i);
+
+	/**
+	 * Get the type of the numbered property of the class or a subclass.
+	 */
+	Type getSubclassPropertyType(int i);
+
+	/**
+	 * Get the column names for the given property path
+	 */
+	String[] getPropertyColumnNames(String propertyPath);
+
+	/**
+	 * All columns to select, when loading.
+	 */
+	String selectFragment(String alias, String suffix);
+
+	/**
+	 * Retrieve the information needed to properly deal with this entity's discriminator
+	 * in a query.
+	 *
+	 * @return The entity discriminator metadata
+	 */
+	DiscriminatorMetadata getTypeDiscriminatorMetadata();
+
+	/**
+	 * Given a property path, return the corresponding column name(s).
+	 */
+	String[] toColumns(String propertyName);
 }

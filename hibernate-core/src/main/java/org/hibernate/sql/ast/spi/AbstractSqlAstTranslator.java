@@ -58,7 +58,7 @@ import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.persister.entity.Loadable;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.ReturnableType;
@@ -8594,8 +8594,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		private String[] determineKeyColumnNames(ModelPart modelPart) {
-			if ( modelPart instanceof Loadable ) {
-				return ( (Loadable) modelPart ).getIdentifierColumnNames();
+			if ( modelPart instanceof EntityPersister) {
+				return ( (EntityPersister) modelPart ).getIdentifierColumnNames();
 			}
 			else if ( modelPart instanceof PluralAttributeMapping ) {
 				return ((PluralAttributeMapping) modelPart).getCollectionDescriptor().getKeyColumnAliases( null );

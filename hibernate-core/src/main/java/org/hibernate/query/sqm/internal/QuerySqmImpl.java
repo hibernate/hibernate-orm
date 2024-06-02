@@ -742,7 +742,7 @@ public class QuerySqmImpl<R>
 		final AbstractEntityPersister persister = (AbstractEntityPersister)
 				getSessionFactory().getMappingMetamodel().getEntityDescriptor( entityNameToInsert );
 
-		boolean useMultiTableInsert = persister.isMultiTable();
+		boolean useMultiTableInsert = persister.hasMultipleTables();
 		if ( !useMultiTableInsert && !isSimpleValuesInsert( sqmInsert, persister ) ) {
 			final Generator identifierGenerator = persister.getGenerator();
 			if ( identifierGenerator instanceof BulkInsertionCapableIdentifierGenerator

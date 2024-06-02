@@ -10,7 +10,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ListType;
 import org.hibernate.type.MapType;
@@ -23,7 +22,7 @@ import static org.hibernate.processor.validation.MockSessionFactory.typeConfigur
  * @author Gavin King
  */
 @SuppressWarnings("nullness")
-public abstract class MockCollectionPersister implements CollectionPersister, PropertyMapping, Joinable {
+public abstract class MockCollectionPersister implements CollectionPersister, Joinable {
 
 	private final String role;
 	private final MockSessionFactory factory;

@@ -460,7 +460,7 @@ public abstract class AbstractEntityPersister
 	 * for the concrete EntityPersister (since the concrete EntityPersister
 	 * cannot have duplicated property names).
 	 */
-	protected final BasicEntityPropertyMapping propertyMapping;
+	private final EntityPropertyMapping propertyMapping;
 
 	private final boolean implementsLifecycle;
 
@@ -524,7 +524,7 @@ public abstract class AbstractEntityPersister
 		hasPartitionedSelectionMapping = persistentClass.hasPartitionedSelectionMapping();
 		hasCollectionNotReferencingPK = persistentClass.hasCollectionNotReferencingPK();
 
-		propertyMapping = new BasicEntityPropertyMapping( this );
+		propertyMapping = new EntityPropertyMapping( this );
 
 		// IDENTIFIER
 

@@ -208,7 +208,6 @@ public abstract class AbstractCollectionPersister
 	private final Dialect dialect;
 	protected final SqlExceptionHelper sqlExceptionHelper;
 	private final BeforeExecutionGenerator identifierGenerator;
-//	private final PropertyMapping elementPropertyMapping;
 	private final EntityPersister elementPersister;
 	private final @Nullable CollectionDataAccess cacheAccessStrategy;
 
@@ -229,7 +228,6 @@ public abstract class AbstractCollectionPersister
 	private final Comparator<?> comparator;
 
 	private CollectionLoader collectionLoader;
-//	private volatile CollectionLoader standardCollectionLoader;
 	private CollectionElementLoaderByIndex collectionElementLoaderByIndex;
 
 	private PluralAttributeMapping attributeMapping;
@@ -496,29 +494,6 @@ public abstract class AbstractCollectionPersister
 			// for non-arrays, we don't need to know the element class
 			elementClass = null; // elementType.returnedClass();
 		}
-
-//		if ( elementType.isComponentType() ) {
-//			elementPropertyMapping = new CompositeElementPropertyMapping(
-//					elementColumnNames,
-//					elementColumnReaders,
-//					elementColumnReaderTemplates,
-//					elementFormulaTemplates,
-//					(CompositeType) elementType,
-//					creationContext.getMetadata()
-//			);
-//		}
-//		else if ( !elementType.isEntityType() ) {
-//			elementPropertyMapping = new ElementPropertyMapping( elementColumnNames, elementType );
-//		}
-//		else {
-//			// not all entity-persisters implement PropertyMapping!
-//			if ( elementPersister instanceof PropertyMapping ) {
-//				elementPropertyMapping = (PropertyMapping) elementPersister;
-//			}
-//			else {
-//				elementPropertyMapping = new ElementPropertyMapping( elementColumnNames, elementType );
-//			}
-//		}
 
 		hasOrder = collectionBootDescriptor.getOrderBy() != null;
 		hasManyToManyOrder = collectionBootDescriptor.getManyToManyOrdering() != null;

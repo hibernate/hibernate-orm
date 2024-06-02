@@ -11,7 +11,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.DiscriminatorMetadata;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.Type;
 
@@ -30,7 +29,7 @@ import static org.hibernate.processor.validation.MockSessionFactory.typeConfigur
  * @author Gavin King
  */
 @SuppressWarnings("nullness")
-public abstract class MockEntityPersister implements EntityPersister, PropertyMapping, Joinable, DiscriminatorMetadata {
+public abstract class MockEntityPersister implements EntityPersister, Joinable, DiscriminatorMetadata {
 
 	private static final String[] ID_COLUMN = {"id"};
 

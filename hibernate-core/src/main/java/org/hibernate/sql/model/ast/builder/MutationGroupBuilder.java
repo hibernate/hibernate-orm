@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
-import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.ast.MutationGroup;
@@ -73,8 +73,7 @@ public class MutationGroupBuilder implements SelectableConsumer {
 
 	@Override
 	public void accept(int selectionIndex, SelectableMapping selectableMapping) {
-		final AbstractEntityPersister entityPersister = (AbstractEntityPersister) mutationTarget.getTargetPart()
-				.getEntityPersister();
+		final EntityPersister entityPersister = mutationTarget.getTargetPart().getEntityPersister();
 		final String tableNameForMutation = entityPersister.physicalTableNameForMutation( selectableMapping );
 		final ColumnValuesTableMutationBuilder mutationBuilder = findTableDetailsBuilder( tableNameForMutation );
 		mutationBuilder.addValueColumn( selectableMapping );

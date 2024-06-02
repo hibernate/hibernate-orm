@@ -217,7 +217,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 			final CollectionPersister collectionPersister = pluralAttributeMapping.getCollectionDescriptor();
 			final CollectionKey collectionKey = new CollectionKey(
 					collectionPersister,
-					( (AbstractEntityPersister) getPersister() ).getCollectionKey(
+					AbstractEntityPersister.getCollectionKey(
 							collectionPersister,
 							getInstance(),
 							persistenceContext.getEntry( getInstance() ),

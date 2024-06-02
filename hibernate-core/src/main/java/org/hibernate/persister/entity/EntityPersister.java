@@ -1310,4 +1310,26 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	String getIdentitySelectString();
 
 	String[] getIdentifierColumnNames();
+
+	/**
+	 * Locks are always applied to the "root table".
+	 *
+	 * @return The root table name
+	 */
+	String getRootTableName();
+
+	/**
+	 * Get the names of columns on the root table used to persist the identifier.
+	 *
+	 * @return The root table identifier column names.
+	 */
+	String[] getRootTableIdentifierColumnNames();
+
+	/**
+	 * For versioned entities, get the name of the column (again, expected on the
+	 * root table) used to store the version values.
+	 *
+	 * @return The version column name.
+	 */
+	String getVersionColumnName();
 }

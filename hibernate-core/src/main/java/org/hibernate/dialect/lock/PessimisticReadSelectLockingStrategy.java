@@ -10,7 +10,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * A pessimistic locking strategy where {@link LockMode#PESSIMISTIC_READ}
@@ -34,7 +34,7 @@ public class PessimisticReadSelectLockingStrategy extends AbstractSelectLockingS
 	 * @param lockable The metadata for the entity to be locked.
 	 * @param lockMode Indicates the type of lock to be acquired.
 	 */
-	public PessimisticReadSelectLockingStrategy(Lockable lockable, LockMode lockMode) {
+	public PessimisticReadSelectLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		super( lockable, lockMode );
 	}
 

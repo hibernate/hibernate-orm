@@ -56,7 +56,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.hql.HqlTranslator;
@@ -401,7 +401,7 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
-	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
+	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		return wrapped.getLockingStrategy( lockable, lockMode );
 	}
 

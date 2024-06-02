@@ -2112,11 +2112,6 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public String getRootTableAlias(String drivingAlias) {
-		return drivingAlias;
-	}
-
-	@Override
 	public String[] getRootTableIdentifierColumnNames() {
 		return getRootTableKeyColumnNames();
 	}

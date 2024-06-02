@@ -14,7 +14,7 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
@@ -33,17 +33,17 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  * @author Steve Ebersole
  */
 public abstract class AbstractSelectLockingStrategy implements LockingStrategy {
-	private final Lockable lockable;
+	private final EntityPersister lockable;
 	private final LockMode lockMode;
 	private final String waitForeverSql;
 
-	protected AbstractSelectLockingStrategy(Lockable lockable, LockMode lockMode) {
+	protected AbstractSelectLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		this.lockable = lockable;
 		this.lockMode = lockMode;
 		this.waitForeverSql = generateLockString( LockOptions.WAIT_FOREVER );
 	}
 
-	protected Lockable getLockable() {
+	protected EntityPersister getLockable() {
 		return lockable;
 	}
 
@@ -75,7 +75,7 @@ public abstract class AbstractSelectLockingStrategy implements LockingStrategy {
 			throws StaleObjectStateException, JDBCException {
 		final String sql = determineSql( timeout );
 		final SessionFactoryImplementor factory = session.getFactory();
-		final Lockable lockable = getLockable();
+		final EntityPersister lockable = getLockable();
 		try {
 			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 			final PreparedStatement st = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );

@@ -15,6 +15,7 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -58,6 +59,7 @@ import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.entity.DiscriminatorMetadata;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyEntry;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
@@ -999,5 +1001,90 @@ public class CustomPersister implements EntityPersister {
 	@Override
 	public GeneratedValuesMutationDelegate getUpdateDelegate() {
 		return null;
+	}
+
+	@Override
+	public String getTableName() {
+		return "";
+	}
+
+	@Override
+	public String[] getIdentifierAliases(String suffix) {
+		return new String[0];
+	}
+
+	@Override
+	public String getRootTableName() {
+		return "";
+	}
+
+	@Override
+	public String[] getRootTableIdentifierColumnNames() {
+		return new String[0];
+	}
+
+	@Override
+	public String getVersionColumnName() {
+		return "";
+	}
+
+	@Override
+	public String[] getPropertyAliases(String suffix, int i) {
+		return new String[0];
+	}
+
+	@Override
+	public String getDiscriminatorAlias(String suffix) {
+		return "";
+	}
+
+	@Override
+	public String getDiscriminatorColumnName() {
+		return "";
+	}
+
+	@Override
+	public Type getDiscriminatorType() {
+		return null;
+	}
+
+	@Override
+	public boolean hasRowId() {
+		return false;
+	}
+
+	@Override
+	public String[] getSubclassPropertyColumnAliases(String propertyName, String suffix) {
+		return new String[0];
+	}
+
+	@Override
+	public FetchMode getFetchMode(int i) {
+		return null;
+	}
+
+	@Override
+	public Type getSubclassPropertyType(int i) {
+		return null;
+	}
+
+	@Override
+	public String[] getPropertyColumnNames(String propertyPath) {
+		return new String[0];
+	}
+
+	@Override
+	public String selectFragment(String alias, String suffix) {
+		return "";
+	}
+
+	@Override
+	public DiscriminatorMetadata getTypeDiscriminatorMetadata() {
+		return null;
+	}
+
+	@Override
+	public String[] toColumns(String propertyName) {
+		return new String[0];
 	}
 }

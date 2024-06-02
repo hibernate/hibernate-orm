@@ -17,7 +17,7 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Update;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -40,7 +40,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 			UpdateLockingStrategy.class.getName()
 	);
 
-	private final Lockable lockable;
+	private final EntityPersister lockable;
 	private final LockMode lockMode;
 	private final String sql;
 
@@ -51,7 +51,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 	 * @param lockMode Indicates the type of lock to be acquired.  Note that
 	 * read-locks are not valid for this strategy.
 	 */
-	public UpdateLockingStrategy(Lockable lockable, LockMode lockMode) {
+	public UpdateLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		this.lockable = lockable;
 		this.lockMode = lockMode;
 		if ( lockMode.lessThan( LockMode.WRITE ) ) {

@@ -6,8 +6,6 @@
  */
 package org.hibernate.persister.entity;
 
-import org.hibernate.metamodel.mapping.Restrictable;
-
 /**
  * Anything that can be loaded by outer join - namely
  * persisters for classes or collections.
@@ -20,25 +18,5 @@ import org.hibernate.metamodel.mapping.Restrictable;
  * depending on need
  */
 @Deprecated(since = "6", forRemoval = true)
-public interface Joinable extends Restrictable {
-	//should this interface extend PropertyMapping?
-
-	/**
-	 * An identifying name; a class name or collection role name.
-	 */
-	String getName();
-	/**
-	 * The table to join to.
-	 */
-	String getTableName();
-
-	/**
-	 * The columns to join on
-	 */
-	String[] getKeyColumnNames();
-
-	/**
-	 * Is this instance actually a CollectionPersister?
-	 */
-	boolean isCollection();
+public interface Joinable {
 }

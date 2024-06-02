@@ -55,7 +55,6 @@ import org.hibernate.persister.collection.mutation.UpdateRowsCoordinator;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorOneToMany;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorTablePerSubclass;
-import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -257,7 +256,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	@Override
 	public String getTableName() {
-		return ( (Joinable) getElementPersister() ).getTableName();
+		return getElementPersister().getTableName();
 	}
 
 	protected void applyWhereFragments(

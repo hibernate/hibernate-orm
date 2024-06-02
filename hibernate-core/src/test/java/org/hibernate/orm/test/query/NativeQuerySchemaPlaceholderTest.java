@@ -23,7 +23,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 		annotatedClasses = { NativeQuerySchemaPlaceholderTest.TestEntity.class }
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15269")
+@TestForIssue(jiraKey = {"HHH-15269", "HHH-18215"})
 public class NativeQuerySchemaPlaceholderTest {
 
 	@BeforeEach
@@ -55,13 +55,29 @@ public class NativeQuerySchemaPlaceholderTest {
 					nativeQuery.executeUpdate();
 				}
 		);
-
 		scope.inTransaction(
 				session -> {
 					List<TestEntity> testEntities = session.createQuery( "from TestEntity", TestEntity.class )
 							.list();
 					TestEntity testEntity = testEntities.get( 0 );
 					assertThat( testEntity.name, is( "updated_test" ) );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					NativeQueryImplementor<Tuple> nativeQuery = session.createNativeQuery(
+							"UPDATE {h-schema}TestEntity SET name = '{updated_test'"
+					);
+					nativeQuery.executeUpdate();
+				}
+		);
+		scope.inTransaction(
+				session -> {
+					List<TestEntity> testEntities = session.createQuery( "from TestEntity", TestEntity.class )
+							.list();
+					TestEntity testEntity = testEntities.get( 0 );
+					assertThat( testEntity.name, is( "{updated_test" ) );
 				}
 		);
 	}

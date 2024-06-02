@@ -131,6 +131,24 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 						.append(parameterName)
 						.append(") {\n\t");
 			}
+			if ( "upsert".equals(operationName) ) {
+				//TODO: only do this for @GeneratedValue
+				declaration
+						.append("\t\tif (")
+						.append(sessionName)
+						.append(".getFactory().getPersistenceUnitUtil().getIdentifier(")
+						.append(iterateParameter ? "_entity" : parameterName)
+						.append(") == null)\n")
+						.append("\t\t\t")
+						.append(sessionName)
+						.append('.')
+						.append("insert")
+						.append('(')
+						.append(iterateParameter ? "_entity" : parameterName)
+						.append(')')
+						.append(";\n")
+						.append("\t\telse\n\t");
+			}
 			declaration
 					.append("\t\t")
 					.append(sessionName)

@@ -286,4 +286,15 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @since 6.0
 	 */
 	void fetch(Object association);
+
+	/**
+	 * Return the identifier value of the given entity, which may be detached.
+	 *
+	 * @param entity a persistent instance associated with this session
+	 *
+	 * @return the identifier
+	 *
+	 * @since 6.6
+	 */
+	Object getIdentifier(Object entity);
 }

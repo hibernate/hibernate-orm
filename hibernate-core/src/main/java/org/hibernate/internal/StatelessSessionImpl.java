@@ -770,6 +770,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
+	public Object getIdentifier(Object entity) throws HibernateException {
+		checkOpen();
+		return getFactory().getPersistenceUnitUtil().getIdentifier(entity);
+	}
+
+	@Override
 	public boolean isAutoCloseSessionEnabled() {
 		return getFactory().getSessionFactoryOptions().isAutoCloseSessionEnabled();
 	}

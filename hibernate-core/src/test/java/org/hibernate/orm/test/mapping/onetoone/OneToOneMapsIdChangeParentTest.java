@@ -12,8 +12,8 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.entity.AbstractEntityPersister;
 
+import org.hibernate.persister.entity.mutation.UpdateCoordinatorStandard;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
@@ -43,7 +43,7 @@ public class OneToOneMapsIdChangeParentTest {
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
 			Logger.getMessageLogger(
 					CoreMessageLogger.class,
-					AbstractEntityPersister.class.getName()
+					UpdateCoordinatorStandard.class.getName()
 			)
 	);
 

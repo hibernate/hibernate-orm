@@ -17,9 +17,8 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
-import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 
@@ -40,7 +39,7 @@ public abstract class AbstractDeleteCoordinator
 	private MutationOperationGroup noVersionDeleteGroup;
 
 	public AbstractDeleteCoordinator(
-			AbstractEntityPersister entityPersister,
+			EntityPersister entityPersister,
 			SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 
@@ -169,7 +168,7 @@ public abstract class AbstractDeleteCoordinator
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings) {
 		if ( loadedState != null ) {
-			final AbstractEntityPersister persister = entityPersister();
+			final EntityPersister persister = entityPersister();
 			final boolean[] versionability = persister.getPropertyVersionability();
 			for ( int attributeIndex = 0; attributeIndex < versionability.length; attributeIndex++ ) {
 				final AttributeMapping attribute;
@@ -206,7 +205,7 @@ public abstract class AbstractDeleteCoordinator
 	private void applyVersionLocking(
 			Object version,
 			JdbcValueBindings jdbcValueBindings) {
-		final AbstractEntityPersister persister = entityPersister();
+		final EntityPersister persister = entityPersister();
 		final EntityVersionMapping versionMapping = persister.getVersionMapping();
 		if ( version != null && versionMapping != null ) {
 			jdbcValueBindings.bindValue(
@@ -225,7 +224,7 @@ public abstract class AbstractDeleteCoordinator
 			MutationOperationGroup operationGroup,
 			SharedSessionContractImplementor session) {
 		final JdbcValueBindings jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
-		final EntityRowIdMapping rowIdMapping = entityPersister().getRowIdMapping();
+//		final EntityRowIdMapping rowIdMapping = entityPersister().getRowIdMapping();
 
 		for ( int position = 0; position < operationGroup.getNumberOfOperations(); position++ ) {
 			final MutationOperation jdbcMutation = operationGroup.getOperation( position );

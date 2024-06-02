@@ -115,9 +115,7 @@ public class WrapVisitor extends ProxyVisitor {
 							&& ((LazyAttributeLoadingInterceptor)attributeInterceptor).isAttributeLoaded( persister.getAttributeMapping().getAttributeName() ) ) {
 						final EntityEntry entry = persistenceContext.getEntry( entity );
 						if ( entry.isExistsInDatabase() ) {
-							final AbstractEntityPersister entityDescriptor =
-									(AbstractEntityPersister) persister.getOwnerEntityPersister();
-							final Object key = entityDescriptor.getCollectionKey(
+							final Object key = AbstractEntityPersister.getCollectionKey(
 									persister,
 									entity,
 									entry,

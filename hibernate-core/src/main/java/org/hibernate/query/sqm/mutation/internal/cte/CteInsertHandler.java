@@ -29,7 +29,6 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.SqlExpressible;
-import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.SortDirection;
@@ -144,14 +143,8 @@ public class CteInsertHandler implements InsertHandler {
 		this.domainParameterXref = domainParameterXref;
 	}
 
-	public static CteTable createCteTable(
-			CteTable sqmCteTable,
-			List<CteColumn> sqmCteColumns,
-			SessionFactoryImplementor factory) {
-		return new CteTable(
-				sqmCteTable.getTableExpression(),
-				sqmCteColumns
-		);
+	public static CteTable createCteTable(CteTable sqmCteTable, List<CteColumn> sqmCteColumns) {
+		return new CteTable( sqmCteTable.getTableExpression(), sqmCteColumns );
 	}
 
 	public SqmInsertStatement<?> getSqmStatement() {
@@ -327,11 +320,7 @@ public class CteInsertHandler implements InsertHandler {
 			targetPathCteColumns.add( rowNumberColumn );
 		}
 
-		final CteTable entityCteTable = createCteTable(
-				getCteTable(),
-				targetPathCteColumns,
-				factory
-		);
+		final CteTable entityCteTable = createCteTable( getCteTable(), targetPathCteColumns );
 
 		// Create the main query spec that will return the count of rows
 		final QuerySpec querySpec = new QuerySpec( true, 1 );
@@ -502,11 +491,7 @@ public class CteInsertHandler implements InsertHandler {
 				}
 				else {
 					targetPathCteColumns.add( 0, getCteTable().getCteColumns().get( 0 ) );
-					finalEntityCteTable = createCteTable(
-							getCteTable(),
-							targetPathCteColumns,
-							factory
-					);
+					finalEntityCteTable = createCteTable( getCteTable(), targetPathCteColumns );
 				}
 				final List<CteColumn> cteColumns = finalEntityCteTable.getCteColumns();
 				for ( int i = 1; i < cteColumns.size(); i++ ) {
@@ -545,11 +530,7 @@ public class CteInsertHandler implements InsertHandler {
 			);
 			statement.addCteStatement( baseEntityCte );
 			targetPathCteColumns.add( 0, cteTable.getCteColumns().get( 0 ) );
-			final CteTable finalEntityCteTable = createCteTable(
-					getCteTable(),
-					targetPathCteColumns,
-					factory
-			);
+			final CteTable finalEntityCteTable = createCteTable( getCteTable(), targetPathCteColumns );
 			final QuerySpec finalQuerySpec = new QuerySpec( true );
 			final SelectStatement finalQueryStatement = new SelectStatement( finalQuerySpec );
 			entityCte = new CteStatement(
@@ -719,7 +700,7 @@ public class CteInsertHandler implements InsertHandler {
 		// Add the root insert as cte
 
 
-		final AbstractEntityPersister persister = (AbstractEntityPersister) entityDescriptor.getEntityPersister();
+		final EntityPersister persister = entityDescriptor.getEntityPersister();
 		final String rootTableName = persister.getTableName( 0 );
 		final TableReference rootTableReference = updatingTableGroup.getTableReference(
 				updatingTableGroup.getNavigablePath(),
@@ -1093,9 +1074,8 @@ public class CteInsertHandler implements InsertHandler {
 			List<String> columnsToMatch;
 			if ( constraintColumnNames.isEmpty() ) {
 				// Assume the primary key columns
-				final AbstractEntityPersister aep = (AbstractEntityPersister) entityDescriptor;
 				Predicate predicate = buildColumnMatchPredicate(
-						columnsToMatch = Arrays.asList( aep.getKeyColumns( tableIndex ) ),
+						columnsToMatch = Arrays.asList( ( (EntityPersister) entityDescriptor).getKeyColumns( tableIndex ) ),
 						insertStatement,
 						false,
 						true

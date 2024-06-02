@@ -24,7 +24,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.NonUniqueDiscoveredSqlAliasException;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
@@ -256,17 +255,16 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 				if ( polymorphic && ( legacyFetchBuilders == null || legacyFetchBuilders.isEmpty() )
 						&& !entityResult.hasJoinFetches() ) {
 					final Set<String> aliases = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
-					final AbstractEntityPersister entityPersister = (AbstractEntityPersister) persister;
-					for ( String[] columns : entityPersister.getContraintOrderedTableKeyColumnClosure() ) {
+					for ( String[] columns : persister.getConstraintOrderedTableKeyColumnClosure() ) {
 						addColumns( aliases, knownDuplicateAliases, columns );
 					}
-					addColumn( aliases, knownDuplicateAliases, entityPersister.getDiscriminatorColumnName() );
-					addColumn( aliases, knownDuplicateAliases, entityPersister.getVersionColumnName() );
-					for ( int i = 0; i < entityPersister.countSubclassProperties(); i++ ) {
+					addColumn( aliases, knownDuplicateAliases, persister.getDiscriminatorColumnName() );
+					addColumn( aliases, knownDuplicateAliases, persister.getVersionColumnName() );
+					for (int i = 0; i < persister.countSubclassProperties(); i++ ) {
 						addColumns(
 								aliases,
 								knownDuplicateAliases,
-								entityPersister.getSubclassPropertyColumnNames( i )
+								persister.getSubclassPropertyColumnNames( i )
 						);
 					}
 				}

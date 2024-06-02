@@ -25,7 +25,6 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -93,7 +92,7 @@ public class RestrictedDeleteExecutionDelegate extends AbstractDeleteExecutionDe
 		final EntityPersister entityDescriptor = getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( getSqmDelete().getTarget().getEntityName() );
-		final String hierarchyRootTableName = ( (Joinable) entityDescriptor ).getTableName();
+		final String hierarchyRootTableName = entityDescriptor.getTableName();
 
 		final TableGroup deletingTableGroup = getConverter().getMutatingTableGroup();
 
@@ -169,7 +168,7 @@ public class RestrictedDeleteExecutionDelegate extends AbstractDeleteExecutionDe
 		assert getEntityDescriptor() == getEntityDescriptor().getRootEntityDescriptor();
 
 		final EntityPersister rootEntityPersister = getEntityDescriptor().getEntityPersister();
-		final String rootTableName = ( (Joinable) rootEntityPersister ).getTableName();
+		final String rootTableName = rootEntityPersister.getTableName();
 		final NamedTableReference rootTableReference = (NamedTableReference) tableGroup.resolveTableReference(
 				tableGroup.getNavigablePath(),
 				rootTableName

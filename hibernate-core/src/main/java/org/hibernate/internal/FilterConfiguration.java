@@ -12,7 +12,7 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.persister.entity.Joinable;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * @author Rob Worsnop
@@ -76,8 +76,7 @@ public class FilterConfiguration {
 
 		if ( aliasEntityMap != null ) {
 			for ( Map.Entry<String, String> entry : aliasEntityMap.entrySet() ) {
-				final Joinable joinable = (Joinable) factory.getRuntimeMetamodels()
-						.getMappingMetamodel()
+				final EntityPersister joinable = factory.getMappingMetamodel()
 						.getEntityDescriptor( entry.getValue() );
 				ret.put( entry.getKey(), joinable.getTableName() );
 			}

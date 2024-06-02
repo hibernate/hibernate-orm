@@ -457,4 +457,23 @@ public interface CollectionPersister extends Restrictable {
 	 */
 	@Deprecated( forRemoval = true )
 	Type getIdentifierType();
+
+	String getIdentifierColumnName();
+
+	String getTableName();
+
+	/**
+	 * Generate a list of collection index and element columns
+	 */
+	String selectFragment(String alias, String columnSuffix);
+
+	String[] getCollectionPropertyColumnAliases(String propertyName, String string);
+
+	/**
+	 * Get the persister of the element class, if this is a
+	 * collection of entities (optional operation).  Note that
+	 * for a one-to-many association, the returned persister
+	 * must be {@code OuterJoinLoadable}.
+	 */
+	EntityPersister getElementPersister();
 }

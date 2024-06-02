@@ -97,8 +97,7 @@ public final class ManagedTypeHelper {
 	}
 
 	/**
-	 * @param entity
-	 * @return true if and only if the entity implements {@see ManagedEntity}
+	 * @return true if and only if the entity implements {@link ManagedEntity}
 	 */
 	public static boolean isManagedEntity(final Object entity) {
 		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
@@ -109,8 +108,7 @@ public final class ManagedTypeHelper {
 	}
 
 	/**
-	 * @param entity
-	 * @return true if and only if the entity implements {@see HibernateProxy}
+	 * @return true if and only if the entity implements {@link HibernateProxy}
 	 */
 	public static boolean isHibernateProxy(final Object entity) {
 		if ( entity instanceof PrimeAmongSecondarySupertypes ) {

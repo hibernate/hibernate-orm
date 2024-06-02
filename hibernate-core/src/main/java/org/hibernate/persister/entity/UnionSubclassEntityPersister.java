@@ -514,9 +514,9 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		subMappingTypesAndThis.add( this );
 		subMappingTypesAndThis.addAll( subMappingTypes );
 		for ( EntityMappingType mappingType : subMappingTypesAndThis ) {
-			final AbstractEntityPersister persister = (AbstractEntityPersister) mappingType;
+			final EntityPersister persister = (EntityPersister) mappingType;
 			final String subclassTableName;
-			if ( persister.hasSubclasses() ) {
+			if ( mappingType.hasSubclasses() ) {
 				subclassTableName = persister.getRootTableName();
 			}
 			else {
@@ -624,7 +624,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public String[][] getContraintOrderedTableKeyColumnClosure() {
+	public String[][] getConstraintOrderedTableKeyColumnClosure() {
 		return constraintOrderedKeyColumnNames;
 	}
 

@@ -108,7 +108,6 @@ import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EntityDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
-import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityNameUse;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BindableType;
@@ -3073,7 +3072,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			EntityNameUse entityNameUse,
 			String treatTargetTypeName,
 			boolean projection) {
-		final AbstractEntityPersister persister;
+		final EntityPersister persister;
 		if ( tableGroup.getModelPart() instanceof EmbeddableValuedModelPart ) {
 			persister = null;
 			final EmbeddableDomainType<?> embeddableDomainType = creationContext.getSessionFactory()
@@ -3085,11 +3084,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 		else {
-			persister = (AbstractEntityPersister) creationContext.getSessionFactory()
-					.getRuntimeMetamodels()
+			persister = (EntityPersister) creationContext.getSessionFactory()
 					.getMappingMetamodel()
 					.findEntityDescriptor( treatTargetTypeName );
-			if ( persister == null || !persister.isPolymorphic() ) {
+			if ( persister == null || !persister.getEntityMetamodel().isPolymorphic() ) {
 				return;
 			}
 		}
@@ -3140,10 +3138,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			EntityMappingType superMappingType = persister;
 			while ( ( superMappingType = superMappingType.getSuperMappingType() ) != null ) {
 				entityNameUses.putIfAbsent( superMappingType.getEntityName(), EntityNameUse.PROJECTION );
-				actualTableGroup.resolveTableReference(
-						null,
-						( (AbstractEntityPersister) superMappingType.getEntityPersister() ).getTableName()
-				);
+				actualTableGroup.resolveTableReference( null, superMappingType.getEntityPersister().getTableName() );
 			}
 		}
 
@@ -3205,7 +3200,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final MappingType partMappingType = tableGroup.getModelPart().getPartMappingType();
 		if ( partMappingType instanceof EntityMappingType ) {
 			final EntityMappingType mappingType = (EntityMappingType) partMappingType;
-			final AbstractEntityPersister persister = (AbstractEntityPersister) mappingType.getEntityPersister();
+			final EntityPersister persister = mappingType.getEntityPersister();
 			// Avoid resolving subclass tables for persisters with physical discriminators as we won't need them
 			if ( persister.getDiscriminatorMapping().hasPhysicalColumn() ) {
 				return;
@@ -5234,7 +5229,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final TableGroup elementTableGroup = tableGroup instanceof PluralTableGroup
 					? ( (PluralTableGroup) tableGroup ).getElementTableGroup()
 					: tableGroup;
-			final AbstractEntityPersister persister = (AbstractEntityPersister) elementTableGroup.getModelPart().getPartMappingType();
+			final EntityPersister persister = (EntityPersister) elementTableGroup.getModelPart().getPartMappingType();
 			// Only need a case expression around the basic valued path for the parent treat expression
 			// if the column of the basic valued path is shared between subclasses
 			if ( persister.isSharedColumn( basicPath.getColumnReference().getColumnExpression() ) ) {
@@ -5434,8 +5429,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private Predicate createTreatTypeRestriction(SqmPath<?> lhs, EntityDomainType<?> treatTarget) {
-		final AbstractEntityPersister entityDescriptor = (AbstractEntityPersister) domainModel.findEntityDescriptor( treatTarget.getHibernateEntityName() );
-		if ( entityDescriptor.isPolymorphic() && lhs.getNodeType() != treatTarget ) {
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( treatTarget.getHibernateEntityName() );
+		if ( entityDescriptor.getEntityMetamodel().isPolymorphic() && lhs.getNodeType() != treatTarget ) {
 			final Set<String> subclassEntityNames = entityDescriptor.getSubclassEntityNames();
 			return createTreatTypeRestriction( lhs, subclassEntityNames );
 		}

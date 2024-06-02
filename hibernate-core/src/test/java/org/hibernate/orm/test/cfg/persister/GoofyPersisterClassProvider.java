@@ -15,7 +15,6 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import org.hibernate.FetchMode;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -56,6 +55,7 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
@@ -76,6 +76,7 @@ import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.tuple.entity.EntityMetamodel;
@@ -920,16 +921,6 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public FetchMode getFetchMode(int i) {
-			return null;
-		}
-
-		@Override
-		public Type getSubclassPropertyType(int i) {
-			return null;
-		}
-
-		@Override
 		public String[] getPropertyColumnNames(String propertyPath) {
 			return new String[0];
 		}
@@ -947,6 +938,111 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		@Override
 		public String[] toColumns(String propertyName) {
 			return new String[0];
+		}
+
+		@Override
+		public boolean[] getNonLazyPropertyUpdateability() {
+			return new boolean[0];
+		}
+
+		@Override
+		public boolean hasMultipleTables() {
+			return false;
+		}
+
+		@Override
+		public String[] getTableNames() {
+			return new String[0];
+		}
+
+		@Override
+		public String getTableName(int j) {
+			return "";
+		}
+
+		@Override
+		public String[] getKeyColumns(int j) {
+			return new String[0];
+		}
+
+		@Override
+		public int getTableSpan() {
+			return 0;
+		}
+
+		@Override
+		public boolean isInverseTable(int j) {
+			return false;
+		}
+
+		@Override
+		public boolean isNullableTable(int j) {
+			return false;
+		}
+
+		@Override
+		public boolean hasDuplicateTables() {
+			return false;
+		}
+
+		@Override
+		public int getSubclassTableSpan() {
+			return 0;
+		}
+
+		@Override
+		public String getSubclassTableName(int j) {
+			return "";
+		}
+
+		@Override
+		public String getTableNameForColumn(String columnName) {
+			return "";
+		}
+
+		@Override
+		public String[] getSubclassPropertyColumnNames(int i) {
+			return new String[0];
+		}
+
+		@Override
+		public int countSubclassProperties() {
+			return 0;
+		}
+
+		@Override
+		public boolean isSharedColumn(String columnExpression) {
+			return false;
+		}
+
+		@Override
+		public String[][] getConstraintOrderedTableKeyColumnClosure() {
+			return new String[0][];
+		}
+
+		@Override
+		public EntityTableMapping[] getTableMappings() {
+			return new EntityTableMapping[0];
+		}
+
+		@Override
+		public String physicalTableNameForMutation(SelectableMapping selectableMapping) {
+			return "";
+		}
+
+		@Override
+		public void addDiscriminatorToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
+
+		}
+
+		@Override
+		public void addSoftDeleteToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
+
+		}
+
+		@Override
+		public String getAttributeMutationTableName(int i) {
+			return "";
 		}
 	}
 

@@ -7,7 +7,7 @@
 package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.ast.builder.AbstractTableUpdateBuilder;
 import org.hibernate.sql.model.ast.builder.TableMergeBuilder;
@@ -19,7 +19,7 @@ import org.hibernate.sql.model.ast.builder.TableMergeBuilder;
  */
 public class MergeCoordinator extends UpdateCoordinatorStandard {
 
-	public MergeCoordinator(AbstractEntityPersister entityPersister, SessionFactoryImplementor factory) {
+	public MergeCoordinator(EntityPersister entityPersister, SessionFactoryImplementor factory) {
 		super(entityPersister, factory);
 	}
 

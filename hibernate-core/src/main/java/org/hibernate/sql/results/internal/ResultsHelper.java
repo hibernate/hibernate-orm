@@ -27,7 +27,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.spi.NavigablePath;
@@ -205,7 +204,7 @@ public class ResultsHelper {
 
 		boolean isPutFromLoad = true;
 		if ( collectionDescriptor.getElementType().isAssociationType() ) {
-			final EntityPersister entityPersister = ( (QueryableCollection) collectionDescriptor ).getElementPersister();
+			final EntityPersister entityPersister = collectionDescriptor.getElementPersister();
 			for ( Object id : entry.getState() ) {
 				if ( persistenceContext.wasInsertedDuringTransaction( entityPersister, id ) ) {
 					isPutFromLoad = false;

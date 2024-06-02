@@ -26,7 +26,7 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.persister.entity.DiscriminatorMetadata;
-import org.hibernate.persister.entity.Queryable;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -71,19 +71,14 @@ public class EntityTypeImpl<J>
 		this.jpaEntityName = jpaEntityName;
 		this.metamodel = metamodel;
 
-		final Queryable entityDescriptor = (Queryable)
+		final EntityPersister entityDescriptor =
 				metamodel.getMappingMetamodel()
 						.getEntityDescriptor( getHibernateEntityName() );
 		final DiscriminatorMetadata discriminatorMetadata = entityDescriptor.getTypeDiscriminatorMetadata();
-		final DomainType discriminatorType;
-		if ( discriminatorMetadata != null ) {
-			discriminatorType = (DomainType) discriminatorMetadata.getResolutionType();
-		}
-		else {
-			discriminatorType = metamodel.getTypeConfiguration()
-					.getBasicTypeRegistry()
-					.resolve( StandardBasicTypes.STRING );
-		}
+		final DomainType discriminatorType =
+				discriminatorMetadata != null
+						? (DomainType) discriminatorMetadata.getResolutionType()
+						: metamodel.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING );
 
 		this.discriminatorPathSource = discriminatorType == null ? null : new EntityDiscriminatorSqmPathSource(
 				discriminatorType,

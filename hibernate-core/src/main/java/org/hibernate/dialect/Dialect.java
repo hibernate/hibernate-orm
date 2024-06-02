@@ -118,7 +118,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
@@ -2035,7 +2035,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *
 	 * @since 3.2
 	 */
-	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
+	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		switch ( lockMode ) {
 			case PESSIMISTIC_FORCE_INCREMENT:
 				return new PessimisticForceIncrementLockingStrategy( lockable, lockMode );

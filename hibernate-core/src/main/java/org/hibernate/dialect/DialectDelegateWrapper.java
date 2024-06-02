@@ -1042,6 +1042,11 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
+	public boolean useConnectionToCreateLob() {
+		return wrapped.useConnectionToCreateLob();
+	}
+
+	@Override
 	@Deprecated(since = "6", forRemoval = true)
 	public boolean supportsParametersInInsertSelect() {
 		return wrapped.supportsParametersInInsertSelect();

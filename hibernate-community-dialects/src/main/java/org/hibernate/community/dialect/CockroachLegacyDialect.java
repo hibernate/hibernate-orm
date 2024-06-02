@@ -1046,6 +1046,11 @@ public class CockroachLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public boolean useConnectionToCreateLob() {
+		return false;
+	}
+
+	@Override
 	public boolean supportsOffsetInSubquery() {
 		return true;
 	}

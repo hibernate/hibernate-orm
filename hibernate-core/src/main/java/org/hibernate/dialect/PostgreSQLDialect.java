@@ -904,6 +904,11 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean useConnectionToCreateLob() {
+		return false;
+	}
+
+	@Override
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
 		// TODO: adapt this to handle named enum types!
 		// Workaround for postgres bug #1453

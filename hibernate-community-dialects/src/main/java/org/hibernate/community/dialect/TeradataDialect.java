@@ -139,6 +139,11 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
+	public boolean useConnectionToCreateLob() {
+		return false;
+	}
+
+	@Override
 	public int getMaxVarcharLength() {
 		//for the unicode server character set
 		return 32_000;

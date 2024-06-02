@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.descriptor;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -33,6 +34,13 @@ public interface WrapperOptions {
 	 * Access to the current session factory.
 	 */
 	SessionFactoryImplementor getSessionFactory();
+
+	/**
+	 * Access to the current dialect.
+	 */
+	default Dialect getDialect() {
+		return getSessionFactory().getJdbcServices().getDialect();
+	}
 
 	/**
 	 * Determines whether streams should be used for binding LOB values.

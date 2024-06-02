@@ -28,7 +28,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
@@ -56,7 +56,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 	private final MutationOperationGroup staticInsertGroup;
 	private final BasicBatchKey batchKey;
 
-	public InsertCoordinatorStandard(AbstractEntityPersister entityPersister, SessionFactoryImplementor factory) {
+	public InsertCoordinatorStandard(EntityPersister entityPersister, SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 
 		if ( entityPersister.isIdentifierAssignedByInsert() || entityPersister.hasInsertGeneratedProperties() ) {
@@ -131,7 +131,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	protected boolean preInsertInMemoryValueGeneration(Object[] values, Object entity, SharedSessionContractImplementor session) {
-		final AbstractEntityPersister persister = entityPersister();
+		final EntityPersister persister = entityPersister();
 		final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
 		boolean foundStateDependentGenerator = false;
 		if ( entityMetamodel.hasPreInsertGeneratedValues() ) {

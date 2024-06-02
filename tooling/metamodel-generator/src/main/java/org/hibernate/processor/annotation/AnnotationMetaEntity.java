@@ -1375,11 +1375,24 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 								operation,
 								context.addNonnullAnnotation(),
 								isIterableLifecycleParameter(parameterType),
-								returnArgument
+								returnArgument,
+								hasGeneratedId(declaredType)
 						)
 				);
 			}
 		}
+	}
+
+	private boolean hasGeneratedId(DeclaredType entityType)  {
+		final TypeElement typeElement = (TypeElement) entityType.asElement();
+		for ( Element member : context.getAllMembers(typeElement) ) {
+			if ( hasAnnotation(member, GENERATED_VALUE)
+					&& hasAnnotation(member, ID) ) {
+				return true;
+			}
+			//TODO: look for generator annotations
+		}
+		return false;
 	}
 
 	private static boolean isIterableLifecycleParameter(TypeMirror parameterType) {

@@ -40,7 +40,6 @@ import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
-import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
@@ -73,11 +72,7 @@ import static org.hibernate.internal.util.collections.ArrayHelper.trim;
  * @author Steve Ebersole
  */
 public class UpdateCoordinatorStandard extends AbstractMutationCoordinator implements UpdateCoordinator {
-	// `org.hibernate.orm.test.mapping.onetoone.OneToOneMapsIdChangeParentTest#test` expects
-	// the logger-name to be AbstractEntityPersister
-	// todo (mutation) : Change this?  It is an interesting "api" question wrt logging
-//	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( UpdateCoordinatorStandard.class );
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractEntityPersister.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( UpdateCoordinatorStandard.class );
 
 	private final MutationOperationGroup staticUpdateGroup;
 	private final BatchKey batchKey;
@@ -85,7 +80,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	private final MutationOperationGroup versionUpdateGroup;
 	private final BatchKey versionUpdateBatchkey;
 
-	public UpdateCoordinatorStandard(AbstractEntityPersister entityPersister, SessionFactoryImplementor factory) {
+	public UpdateCoordinatorStandard(EntityPersister entityPersister, SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 
 		// NOTE : even given dynamic-update and/or dirty optimistic locking
@@ -105,7 +100,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 	//Used by Hibernate Reactive to efficiently create new instances of this same class
 	protected UpdateCoordinatorStandard(
-			AbstractEntityPersister entityPersister,
+			EntityPersister entityPersister,
 			SessionFactoryImplementor factory,
 			MutationOperationGroup staticUpdateGroup,
 			BatchKey batchKey,
@@ -216,7 +211,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 		else if ( dirtyAttributeIndexes != null
 				&& entityPersister().hasUninitializedLazyProperties( entity )
-				&& entityPersister().hasLazyDirtyFields( dirtyAttributeIndexes ) ) {
+				&& hasLazyDirtyFields( entityPersister(), dirtyAttributeIndexes ) ) {
 			// we have an entity with dirty lazy attributes.  we need to use dynamic
 			// delete and add the dirty, lazy attributes plus the non-lazy attributes
 			forceDynamicUpdate = true;
@@ -615,7 +610,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object rowId,
 			boolean forceDynamicUpdate,
 			SharedSessionContractImplementor session) {
-		final AbstractEntityPersister persister = entityPersister();
+		final EntityPersister persister = entityPersister();
 		final AttributeMappingsList attributeMappings = persister.getAttributeMappings();
 
 		// NOTE:
@@ -719,7 +714,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 	private void processSet(UpdateValuesAnalysisImpl analysis, SelectableMapping selectable, boolean needsDynamicUpdate) {
 		if ( selectable != null && !selectable.isFormula() && selectable.isUpdateable() ) {
-			final EntityTableMapping tableMapping = entityPersister().getPhysicalTableMappingForMutation( selectable );
+			final EntityTableMapping tableMapping = physicalTableMappingForMutation( entityPersister(), selectable );
 			analysis.registerColumnSet( tableMapping, selectable.getSelectionExpression(), selectable.getWriteExpression() );
 			if ( needsDynamicUpdate ) {
 				analysis.getTablesNeedingDynamicUpdate().add( tableMapping );
@@ -739,7 +734,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				null,
 				(valueIndex, updateAnalysis, noop, jdbcValue, columnMapping) -> {
 					if ( !columnMapping.isFormula() ) {
-						final EntityTableMapping tableMapping = entityPersister().getPhysicalTableMappingForMutation( columnMapping );
+						final EntityTableMapping tableMapping = physicalTableMappingForMutation( entityPersister(), columnMapping );
 						updateAnalysis.registerColumnOptLock( tableMapping, columnMapping.getSelectionExpression(), jdbcValue );
 					}
 				},
@@ -1151,7 +1146,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	private void applyPartitionKeyRestriction(TableUpdateBuilder<?> tableUpdateBuilder) {
-		final AbstractEntityPersister persister = entityPersister();
+		final EntityPersister persister = entityPersister();
 		if ( persister.hasPartitionedSelectionMapping() ) {
 			final AttributeMappingsList attributeMappings = persister.getAttributeMappings();
 			for ( int m = 0; m < attributeMappings.size(); m++ ) {
@@ -1696,6 +1691,29 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	@FunctionalInterface
 	protected interface DirtinessChecker {
 		AttributeAnalysis.DirtynessStatus isDirty(int position, AttributeMapping attribute);
+	}
+
+	public boolean hasLazyDirtyFields(EntityPersister persister,  int[] dirtyFields) {
+		final boolean[] propertyLaziness = persister.getPropertyLaziness();
+		for ( int i = 0; i < dirtyFields.length; i++ ) {
+			if ( propertyLaziness[dirtyFields[i]] ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public EntityTableMapping physicalTableMappingForMutation(
+			EntityPersister persister, SelectableMapping selectableMapping) {
+		final String tableNameForMutation = persister.physicalTableNameForMutation( selectableMapping );
+		final EntityTableMapping[] tableMappings = persister.getTableMappings();
+		for ( int i = 0; i < tableMappings.length; i++ ) {
+			if ( tableNameForMutation.equals( tableMappings[i].getTableName() ) ) {
+				return tableMappings[i];
+			}
+		}
+
+		throw new IllegalArgumentException( "Unable to resolve TableMapping for selectable - " + selectableMapping );
 	}
 
 	@Override

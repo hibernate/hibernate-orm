@@ -38,7 +38,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
-import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.query.SemanticException;
@@ -218,7 +217,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			);
 
 			if ( rows != 0 ) {
-				final AbstractEntityPersister persister = (AbstractEntityPersister) entityDescriptor.getEntityPersister();
+				final EntityPersister persister = entityDescriptor.getEntityPersister();
 				final int tableSpan = persister.getTableSpan();
 				final int insertedRows = insertRootTable(
 						persister.getTableName( 0 ),
@@ -724,7 +723,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			}
 		}
 		final String targetKeyColumnName = keyColumns[0];
-		final AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityDescriptor.getEntityPersister();
+		final EntityPersister entityPersister = entityDescriptor.getEntityPersister();
 		final Generator identifierGenerator = entityPersister.getGenerator();
 		final boolean needsKeyInsert;
 		if ( identifierGenerator.generatedOnExecution() ) {

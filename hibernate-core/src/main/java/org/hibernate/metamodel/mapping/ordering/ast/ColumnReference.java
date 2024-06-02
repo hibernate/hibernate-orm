@@ -11,7 +11,7 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
-import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -119,11 +119,9 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 
 			final MappingType elementMappingType = pluralAttribute.getElementDescriptor().getPartMappingType();
 
-			if ( elementMappingType instanceof AbstractEntityPersister ) {
-				final AbstractEntityPersister abstractEntityPersister = (AbstractEntityPersister) elementMappingType;
-				final int tableNumber = abstractEntityPersister.determineTableNumberForColumn( columnExpression );
-				final String tableName = abstractEntityPersister.getTableName( tableNumber );
-
+			if ( elementMappingType instanceof EntityPersister) {
+				final EntityPersister entityPersister = (EntityPersister) elementMappingType;
+				final String tableName = entityPersister.getTableNameForColumn( columnExpression );
 				return tableGroup.getTableReference( tableGroup.getNavigablePath(), tableName );
 			}
 			else {

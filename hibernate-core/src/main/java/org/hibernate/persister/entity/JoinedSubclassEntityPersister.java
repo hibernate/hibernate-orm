@@ -960,12 +960,12 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public String[][] getContraintOrderedTableKeyColumnClosure() {
+	public String[][] getConstraintOrderedTableKeyColumnClosure() {
 		return constraintOrderedKeyColumnNames;
 	}
 
 	@Override
-	public int determineTableNumberForColumn(String columnName) {
+	protected int determineTableNumberForColumn(String columnName) {
 		// HHH-7630: In case the naturalOrder/identifier column is explicitly given in the ordering, check here.
 		for ( int i = 0, max = naturalOrderTableKeyColumns.length; i < max; i++ ) {
 			final String[] keyColumns = naturalOrderTableKeyColumns[i];

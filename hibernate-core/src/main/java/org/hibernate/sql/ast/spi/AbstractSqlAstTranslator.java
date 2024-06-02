@@ -57,7 +57,6 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
-import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.query.IllegalQueryOperationException;
@@ -5974,8 +5973,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		processNestedTableGroupJoins( tableGroup, null );
 		processTableGroupJoins( tableGroup );
 		ModelPartContainer modelPart = tableGroup.getModelPart();
-		if ( modelPart instanceof AbstractEntityPersister ) {
-			String[] querySpaces = (String[]) ( (AbstractEntityPersister) modelPart ).getQuerySpaces();
+		if ( modelPart instanceof EntityPersister ) {
+			String[] querySpaces = (String[]) ( (EntityPersister) modelPart ).getQuerySpaces();
 			for ( int i = 0; i < querySpaces.length; i++ ) {
 				registerAffectedTable( querySpaces[i] );
 			}
@@ -6017,8 +6016,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			processTableGroupJoins( tableGroup );
 		}
 		ModelPartContainer modelPart = tableGroup.getModelPart();
-		if ( modelPart instanceof AbstractEntityPersister ) {
-			String[] querySpaces = (String[]) ( (AbstractEntityPersister) modelPart ).getQuerySpaces();
+		if ( modelPart instanceof EntityPersister ) {
+			String[] querySpaces = (String[]) ( (EntityPersister) modelPart ).getQuerySpaces();
 			for ( int i = 0; i < querySpaces.length; i++ ) {
 				registerAffectedTable( querySpaces[i] );
 			}
@@ -6100,8 +6099,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		ModelPartContainer modelPart = tableGroup.getModelPart();
-		if ( modelPart instanceof AbstractEntityPersister ) {
-			String[] querySpaces = (String[]) ( (AbstractEntityPersister) modelPart ).getQuerySpaces();
+		if ( modelPart instanceof EntityPersister ) {
+			String[] querySpaces = (String[]) ( (EntityPersister) modelPart ).getQuerySpaces();
 			for ( int i = 0; i < querySpaces.length; i++ ) {
 				registerAffectedTable( querySpaces[i] );
 			}

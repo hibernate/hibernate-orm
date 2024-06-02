@@ -59,7 +59,6 @@ import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
-import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityNameUse;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
@@ -358,12 +357,11 @@ public class ToOneAttributeMapping
 					isKeyTableNullable = !persister.getTableName().equals( targetTableName );
 				}
 				else {
-					final AbstractEntityPersister persister = (AbstractEntityPersister) declaringEntityPersister;
 					final int tableIndex = ArrayHelper.indexOf(
-							persister.getTableNames(),
+							declaringEntityPersister.getTableNames(),
 							targetTableName
 					);
-					isKeyTableNullable = persister.isNullableTable( tableIndex );
+					isKeyTableNullable = declaringEntityPersister.isNullableTable( tableIndex );
 				}
 			}
 			isOptional = ( (ManyToOne) bootValue ).isIgnoreNotFound();
@@ -723,8 +721,8 @@ public class ToOneAttributeMapping
 	}
 
 	static String findMapsIdPropertyName(EntityMappingType entityMappingType, String referencedPropertyName) {
-		final AbstractEntityPersister persister = (AbstractEntityPersister) entityMappingType.getEntityPersister();
-		if ( Arrays.equals( persister.getKeyColumnNames(), persister.getPropertyColumnNames( referencedPropertyName ) ) ) {
+		final EntityPersister persister = entityMappingType.getEntityPersister();
+		if ( Arrays.equals( persister.getIdentifierColumnNames(), persister.getPropertyColumnNames( referencedPropertyName ) ) ) {
 			return persister.getIdentifierPropertyName();
 		}
 		return null;

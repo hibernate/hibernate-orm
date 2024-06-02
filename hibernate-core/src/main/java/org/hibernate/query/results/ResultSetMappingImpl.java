@@ -247,19 +247,15 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 			if ( resultBuilders.size() == 1 && domainResults.size()  == 1 && domainResults.get( 0 ) instanceof EntityResult ) {
 				// Special case for result set mappings that just fetch a single polymorphic entity
 				final EntityResult entityResult = (EntityResult) domainResults.get( 0 );
-				final boolean polymorphic = entityResult.getReferencedMappingContainer()
-						.getEntityPersister()
-						.getEntityMetamodel()
-						.isPolymorphic();
+				final EntityPersister persister = entityResult.getReferencedMappingContainer().getEntityPersister();
+				final boolean polymorphic = persister.getEntityMetamodel().isPolymorphic();
 				// We only need to check for duplicate aliases if we have join fetches,
 				// otherwise we assume that even if there are duplicate aliases, the values are equivalent.
 				// If we don't do that, there is no way to fetch joined inheritance entities
 				if ( polymorphic && ( legacyFetchBuilders == null || legacyFetchBuilders.isEmpty() )
 						&& !entityResult.hasJoinFetches() ) {
 					final Set<String> aliases = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
-					final AbstractEntityPersister entityPersister = (AbstractEntityPersister)
-							entityResult.getReferencedMappingContainer()
-									.getEntityPersister();
+					final AbstractEntityPersister entityPersister = (AbstractEntityPersister) persister;
 					for ( String[] columns : entityPersister.getContraintOrderedTableKeyColumnClosure() ) {
 						addColumns( aliases, knownDuplicateAliases, columns );
 					}

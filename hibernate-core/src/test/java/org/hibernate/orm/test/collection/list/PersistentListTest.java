@@ -16,7 +16,6 @@ import org.hibernate.collection.spi.PersistentList;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.sql.ComparisonRestriction;
 import org.hibernate.sql.SimpleSelect;
 
@@ -72,9 +71,8 @@ public class PersistentListTest {
 				session2 -> {
 					session2.doWork(
 							connection -> {
-								final QueryableCollection queryableCollection = (QueryableCollection) collectionPersister;
 								SimpleSelect select = new SimpleSelect( sessionFactory )
-										.setTableName( queryableCollection.getTableName() )
+										.setTableName( collectionPersister.getTableName() )
 										.addColumn( "NAME" )
 										.addColumn( "LIST_INDEX" )
 										.addRestriction( "NAME", ComparisonRestriction.Operator.NE, "?" );
@@ -133,9 +131,8 @@ public class PersistentListTest {
 				session2 -> {
 					session2.doWork(
 							connection -> {
-								final QueryableCollection queryableCollection = (QueryableCollection) collectionPersister;
 								SimpleSelect select = new SimpleSelect( sessionFactory )
-										.setTableName( queryableCollection.getTableName() )
+										.setTableName( collectionPersister.getTableName() )
 										.addColumn( "order_id" )
 										.addColumn( "INDX" )
 										.addColumn( "PRD_CODE" );

@@ -21,24 +21,4 @@ import org.hibernate.metamodel.mapping.Restrictable;
  */
 @Deprecated(since = "6", forRemoval = true)
 public interface Joinable extends Restrictable {
-	//should this interface extend PropertyMapping?
-
-	/**
-	 * An identifying name; a class name or collection role name.
-	 */
-	String getName();
-	/**
-	 * The table to join to.
-	 */
-	String getTableName();
-
-	/**
-	 * The columns to join on
-	 */
-	String[] getKeyColumnNames();
-
-	/**
-	 * Is this instance actually a CollectionPersister?
-	 */
-	boolean isCollection();
 }

@@ -78,11 +78,8 @@ import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Joinable;
 import org.hibernate.property.access.internal.ChainedPropertyAccessImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -498,7 +495,7 @@ public class MappingModelCreationHelper {
 		final CollectionPersister collectionDescriptor = domainModel.findCollectionDescriptor( bootValueMapping.getRole() );
 		assert collectionDescriptor != null;
 
-		final String tableExpression = ( (Joinable) collectionDescriptor ).getTableName();
+		final String tableExpression = collectionDescriptor.getTableName();
 
 		final String sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( bootProperty.getName() );
 
@@ -564,15 +561,14 @@ public class MappingModelCreationHelper {
 
 				indexDescriptor = null;
 
-				final QueryableCollection loadableCollection = (QueryableCollection) collectionDescriptor;
-				final String identifierColumnName = loadableCollection.getIdentifierColumnName();
+				final String identifierColumnName = collectionDescriptor.getIdentifierColumnName();
 				assert identifierColumnName != null;
 
 				identifierDescriptor = new CollectionIdentifierDescriptorImpl(
 						collectionDescriptor,
 						tableExpression,
 						identifierColumnName,
-						(BasicType) loadableCollection.getIdentifierType()
+						(BasicType) collectionDescriptor.getIdentifierType()
 				);
 
 				break;
@@ -765,10 +761,10 @@ public class MappingModelCreationHelper {
 		final String lhsPropertyName = collectionDescriptor.getCollectionType().getLHSPropertyName();
 		final boolean isReferenceToPrimaryKey = lhsPropertyName == null;
 		final ManagedMappingType keyDeclaringType;
-		final String collectionTableName = ((AbstractCollectionPersister) collectionDescriptor).getTableName();
+		final String collectionTableName = collectionDescriptor.getTableName();
 
 		if ( collectionDescriptor.getElementType().isEntityType() ) {
-			keyDeclaringType = ( (QueryableCollection) collectionDescriptor ).getElementPersister();
+			keyDeclaringType = collectionDescriptor.getElementPersister();
 		}
 		else {
 			// This is not "really correct" but it is as good as it gets.

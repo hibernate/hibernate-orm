@@ -33,7 +33,6 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.Query;
 import org.hibernate.sql.SimpleSelect;
@@ -310,9 +309,8 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().begin();
 		
 		try {
-			final QueryableCollection queryableCollection = (QueryableCollection) transactionsPersister;
 			SimpleSelect select = new SimpleSelect( sessionFactory() )
-					.setTableName( queryableCollection.getTableName() )
+					.setTableName( transactionsPersister.getTableName() )
 					.addColumn( "code" )
 					.addColumn( "transactions_index" );
 			final String sql = select.toStatementString();

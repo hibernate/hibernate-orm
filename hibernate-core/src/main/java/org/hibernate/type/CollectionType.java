@@ -38,7 +38,6 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.pretty.MessageHelper;
@@ -475,7 +474,7 @@ public abstract class CollectionType extends AbstractType implements Association
 			throws MappingException {
 		try {
 
-			QueryableCollection collectionPersister = (QueryableCollection) factory.getRuntimeMetamodels().getMappingMetamodel().getCollectionDescriptor( role );
+			CollectionPersister collectionPersister = factory.getRuntimeMetamodels().getMappingMetamodel().getCollectionDescriptor( role );
 
 			if ( !collectionPersister.getElementType().isEntityType() ) {
 				throw new MappingException(

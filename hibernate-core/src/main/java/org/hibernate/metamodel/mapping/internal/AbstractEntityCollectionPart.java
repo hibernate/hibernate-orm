@@ -26,8 +26,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.collection.mutation.CollectionMutationTarget;
-import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
@@ -431,8 +429,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				targetKeyPropertyNames.add( referencedPropertyName.substring( 0, dotIndex ) );
 			}
 			// todo (PropertyMapping) : the problem here is timing.  this needs to be delayed.
-			final Type propertyType = ( (PropertyMapping) elementTypeDescriptor.getEntityPersister() )
-					.toType( referencedPropertyName );
+			final Type propertyType = elementTypeDescriptor.getEntityPersister().getPropertyType( referencedPropertyName );
 			ToOneAttributeMapping.addPrefixedPropertyPaths(
 					targetKeyPropertyNames,
 					referencedPropertyName,

@@ -136,7 +136,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 				declaration
 						.append("\t\tif (")
 						.append(sessionName)
-						.append(".getFactory().getPersistenceUnitUtil().getIdentifier(")
+						.append(".getIdentifier(")
 						.append(iterateParameter ? "_entity" : parameterName)
 						.append(") == null)\n")
 						.append("\t\t\t")

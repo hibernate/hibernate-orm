@@ -483,7 +483,8 @@ public class PostgreSQLDialect extends Dialect {
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		return intervalType != null
 				? "(?2+?3)"
-				: "cast(?3+" + intervalPattern( unit ) + " as " + temporalType.name().toLowerCase() + ")";
+				//: "cast(?3+" + intervalPattern( unit ) + " as " + temporalType.name().toLowerCase() + ")";
+				: "(cast(?3" + " as " + temporalType.name().toLowerCase() + ")+" + intervalPattern( unit ) + ")";
 	}
 
 	private static String intervalPattern(TemporalUnit unit) {

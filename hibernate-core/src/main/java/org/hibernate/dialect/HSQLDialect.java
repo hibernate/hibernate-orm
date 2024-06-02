@@ -291,7 +291,8 @@ public class HSQLDialect extends Dialect {
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		StringBuilder pattern = new StringBuilder();
-		boolean castTo = temporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
+		//boolean castTo = temporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
+		boolean castTo = true;
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:

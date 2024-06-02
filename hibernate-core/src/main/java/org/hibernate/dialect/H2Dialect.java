@@ -455,8 +455,8 @@ public class H2Dialect extends Dialect {
 		return unit == SECOND
 				//TODO: if we have an integral number of seconds
 				//      (the common case) this is unnecessary
-				? "dateadd(nanosecond,?2*1e9,?3)"
-				: "dateadd(?1,?2,?3)";
+				? "dateadd(nanosecond,?2*1e9,cast(?3 as timestamp))"
+				: "dateadd(?1,?2,cast(?3 as timestamp))";
 	}
 
 	@Override

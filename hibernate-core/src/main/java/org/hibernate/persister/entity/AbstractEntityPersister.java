@@ -251,7 +251,6 @@ import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
@@ -527,7 +526,7 @@ public abstract class AbstractEntityPersister
 		assert javaType != null;
 		this.implementsLifecycle = Lifecycle.class.isAssignableFrom( javaType.getJavaTypeClass() );
 
-		concreteProxy = isPolymorphic()
+		concreteProxy = entityMetamodel.isPolymorphic()
 				&& ( getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() || hasProxy() )
 				&& persistentClass.isConcreteProxy();
 
@@ -942,8 +941,6 @@ public abstract class AbstractEntityPersister
 		return queryCacheLayout == CacheLayout.SHALLOW_WITH_DISCRIMINATOR;
 	}
 
-	public abstract String getSubclassTableName(int j);
-
 	protected abstract String[] getSubclassTableNames();
 
 	protected abstract String[] getSubclassTableKeyColumns(int j);
@@ -966,36 +963,11 @@ public abstract class AbstractEntityPersister
 		return isClassOrSuperclassTable( j );
 	}
 
-	public abstract int getSubclassTableSpan();
-
-	public abstract int getTableSpan();
-
-	public abstract boolean hasDuplicateTables();
-
-	/**
-	 * @deprecated Only ever used from places where we really want to use<ul>
-	 *     <li>{@link SelectStatement} (select generator)</li>
-	 *     <li>{@link InsertSelectStatement}</li>
-	 *     <li>{@link org.hibernate.sql.ast.tree.update.UpdateStatement}</li>
-	 *     <li>{@link org.hibernate.sql.ast.tree.delete.DeleteStatement}</li>
-	 * </ul>
-	 */
-	@Deprecated( since = "6.2" )
-	public abstract String getTableName(int j);
-
-	public abstract String[] getKeyColumns(int j);
-
 	public abstract boolean isPropertyOfTable(int property, int j);
 
 	protected abstract int[] getPropertyTableNumbers();
 
 	private static final String DISCRIMINATOR_ALIAS = "clazz_";
-
-	/**
-	 * The name of the table to use when performing mutations (INSERT,UPDATE,DELETE)
-	 * for the given attribute
-	 */
-	public abstract String getAttributeMutationTableName(int i);
 
 	@Override
 	public String getDiscriminatorColumnName() {
@@ -1016,10 +988,12 @@ public abstract class AbstractEntityPersister
 		return null;
 	}
 
+	@Override
 	public boolean isInverseTable(int j) {
 		return false;
 	}
 
+	@Override
 	public boolean isNullableTable(int j) {
 		return false;
 	}
@@ -1033,6 +1007,7 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getSubclassEntityNames().contains( entityName );
 	}
 
+	@Override
 	public boolean isSharedColumn(String columnExpression) {
 		return sharedColumnNames.contains( columnExpression );
 	}
@@ -1087,6 +1062,7 @@ public abstract class AbstractEntityPersister
 		return rowIdName != null;
 	}
 
+	@Override
 	public String[] getTableNames() {
 		final String[] tableNames = new String[getTableSpan()];
 		for ( int i = 0; i < tableNames.length; i++ ) {
@@ -1403,7 +1379,7 @@ public abstract class AbstractEntityPersister
 				generateJoinPredicate(
 						lhs,
 						joinedTableReference,
-						getKeyColumnNames(),
+						getIdentifierColumnNames(),
 						targetColumns,
 						creationState
 				)
@@ -1555,7 +1531,7 @@ public abstract class AbstractEntityPersister
 
 	}
 
-	public @Nullable Object getCollectionKey(
+	public @Nullable static Object getCollectionKey(
 			CollectionPersister persister,
 			Object owner,
 			EntityEntry ownerEntry,
@@ -2275,20 +2251,20 @@ public abstract class AbstractEntityPersister
 		return hasFormulaProperties;
 	}
 
-	@Override
 	public FetchMode getFetchMode(int i) {
 		return subclassPropertyFetchModeClosure[i];
 	}
 
-	@Override
 	public Type getSubclassPropertyType(int i) {
 		return subclassPropertyTypeClosure[i];
 	}
 
+	@Override
 	public int countSubclassProperties() {
 		return subclassPropertyTypeClosure.length;
 	}
 
+	@Override
 	public String[] getSubclassPropertyColumnNames(int i) {
 		return subclassPropertyColumnNameClosure[i];
 	}
@@ -2647,17 +2623,6 @@ public abstract class AbstractEntityPersister
 		return select.toStatementString();
 	}
 
-	@Internal
-	public boolean hasLazyDirtyFields(int[] dirtyFields) {
-		final boolean[] propertyLaziness = getPropertyLaziness();
-		for ( int i = 0; i < dirtyFields.length; i++ ) {
-			if ( propertyLaziness[dirtyFields[i]] ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
 	@Override
 	public GeneratedValuesMutationDelegate getInsertDelegate() {
 		return insertDelegate;
@@ -2668,11 +2633,12 @@ public abstract class AbstractEntityPersister
 		return updateDelegate;
 	}
 
-	protected EntityTableMapping[] getTableMappings() {
+	@Override
+	public EntityTableMapping[] getTableMappings() {
 		return tableMappings;
 	}
 
-	public EntityTableMapping getTableMapping(int i) {
+	protected EntityTableMapping getTableMapping(int i) {
 		return tableMappings[i];
 	}
 
@@ -2680,20 +2646,10 @@ public abstract class AbstractEntityPersister
 	 * Unfortunately we cannot directly use `SelectableMapping#getContainingTableExpression()`
 	 * as that blows up for attributes declared on super-type for union-subclass mappings
 	 */
+	@Override
 	public String physicalTableNameForMutation(SelectableMapping selectableMapping) {
 		assert !selectableMapping.isFormula();
 		return selectableMapping.getContainingTableExpression();
-	}
-
-	public EntityTableMapping getPhysicalTableMappingForMutation(SelectableMapping selectableMapping) {
-		final String tableNameForMutation = physicalTableNameForMutation( selectableMapping );
-		for ( int i = 0; i < tableMappings.length; i++ ) {
-			if ( tableNameForMutation.equals( tableMappings[i].getTableName() ) ) {
-				return tableMappings[i];
-			}
-		}
-
-		throw new IllegalArgumentException( "Unable to resolve TableMapping for selectable - " + selectableMapping );
 	}
 
 	@Override
@@ -2863,7 +2819,7 @@ public abstract class AbstractEntityPersister
 													joinedTableReference,
 													needsDiscriminator()
 															? getRootTableKeyColumnNames()
-															: getKeyColumnNames(),
+															: getIdentifierColumnNames(),
 													getSubclassTableKeyColumns( i ),
 													creationState
 											)
@@ -3256,8 +3212,6 @@ public abstract class AbstractEntityPersister
 		return GeneratedValuesHelper.getGeneratedValuesDelegate( this, UPDATE );
 	}
 
-	public abstract String[][] getContraintOrderedTableKeyColumnClosure();
-
 	private static class TableMappingBuilder {
 		private final String tableName;
 		private final int relativePosition;
@@ -3496,9 +3450,11 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
+	@Override
 	public void addDiscriminatorToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
 	}
 
+	@Override
 	public void addSoftDeleteToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
 		if ( softDeleteMapping != null ) {
 			final TableInsertBuilder insertBuilder = insertGroupBuilder.getTableDetailsBuilder( getIdentifierTableName() );
@@ -3805,10 +3761,6 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getName();
 	}
 
-	public boolean isPolymorphic() {
-		return entityMetamodel.isPolymorphic();
-	}
-
 	@Override
 	public boolean isInherited() {
 		return entityMetamodel.isInherited();
@@ -4047,10 +3999,6 @@ public abstract class AbstractEntityPersister
 		return concreteTypeLoader.getConcreteType( id, session );
 	}
 
-	public String[] getKeyColumnNames() {
-		return getIdentifierColumnNames();
-	}
-
 	/**
 	 * {@inheritDoc}
 	 *
@@ -4169,6 +4117,7 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getPropertyCheckability();
 	}
 
+	@Override
 	public boolean[] getNonLazyPropertyUpdateability() {
 		return entityMetamodel.getNonlazyPropertyUpdateability();
 	}
@@ -4418,6 +4367,7 @@ public abstract class AbstractEntityPersister
 		return this;
 	}
 
+	@Override
 	public boolean hasMultipleTables() {
 		return false;
 	}
@@ -4638,7 +4588,12 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getBytecodeEnhancementMetadata();
 	}
 
-	public int determineTableNumberForColumn(String columnName) {
+	@Override
+	public String getTableNameForColumn(String columnName) {
+		return getTableName( determineTableNumberForColumn( columnName ) );
+	}
+
+	protected int determineTableNumberForColumn(String columnName) {
 		return 0;
 	}
 

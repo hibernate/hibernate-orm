@@ -13,7 +13,8 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
-import org.hibernate.type.spi.TypeConfiguration;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.SUBTRACT;
@@ -145,4 +146,10 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 		rhsOperand.appendHqlString( sb );
 	}
 
+	@Override
+	public void applyInferableType(@Nullable SqmExpressible<?> type) {
+		if (type != null && getExpressible() == null) {
+			setExpressibleType( type );
+		}
+	}
 }

@@ -457,12 +457,13 @@ public final class TypeUtils {
 	}
 
 	private static @Nullable AccessType getAccessTypeOfIdAnnotation(Element element) {
-		final ElementKind kind = element.getKind();
-		if ( kind == ElementKind.FIELD || kind == ElementKind.METHOD ) {
-			return kind == ElementKind.FIELD ? AccessType.FIELD : AccessType.PROPERTY;
-		}
-		else {
-			return null;
+		switch ( element.getKind() ) {
+			case FIELD:
+				return AccessType.FIELD;
+			case METHOD:
+				return AccessType.PROPERTY;
+			default:
+				return null;
 		}
 	}
 

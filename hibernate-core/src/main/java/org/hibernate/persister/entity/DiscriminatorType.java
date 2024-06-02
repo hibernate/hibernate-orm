@@ -44,12 +44,12 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 @Deprecated( since = "6.2", forRemoval = true )
 public class DiscriminatorType<T> extends AbstractType implements BasicType<T> {
 	private final BasicType<Object> underlyingType;
-	private final Loadable persister;
+	private final EntityPersister persister;
 	private final DiscriminatorConverter converter;
 
 	public DiscriminatorType(
 			BasicType<?> underlyingType,
-			Loadable persister,
+			EntityPersister persister,
 			DiscriminatorConverter converter) {
 		this.underlyingType = (BasicType<Object>) underlyingType;
 		this.persister = persister;

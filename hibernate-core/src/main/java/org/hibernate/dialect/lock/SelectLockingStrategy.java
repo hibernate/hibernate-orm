@@ -10,7 +10,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.persister.entity.EntityPersister;
 
  /**
  * A locking strategy where an optimistic lock is obtained via a select
@@ -33,7 +33,7 @@ public class SelectLockingStrategy extends AbstractSelectLockingStrategy {
 	 * @param lockable The metadata for the entity to be locked.
 	 * @param lockMode Indicates the type of lock to be acquired.
 	 */
-	public SelectLockingStrategy(Lockable lockable, LockMode lockMode) {
+	public SelectLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		super( lockable, lockMode );
 	}
 

@@ -51,7 +51,7 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.dialect.NullOrdering;
@@ -736,7 +736,7 @@ public class HSQLLegacyDialect extends Dialect {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
+	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		switch (lockMode) {
 			case PESSIMISTIC_FORCE_INCREMENT:
 				return new PessimisticForceIncrementLockingStrategy( lockable, lockMode);
@@ -758,7 +758,7 @@ public class HSQLLegacyDialect extends Dialect {
 	}
 
 	private static class ReadUncommittedLockingStrategy extends SelectLockingStrategy {
-		private ReadUncommittedLockingStrategy(Lockable lockable, LockMode lockMode) {
+		private ReadUncommittedLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 			super( lockable, lockMode );
 		}
 

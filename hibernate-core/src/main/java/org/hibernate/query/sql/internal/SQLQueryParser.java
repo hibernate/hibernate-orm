@@ -14,8 +14,8 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.entity.Loadable;
+import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * @author Gavin King
@@ -38,10 +38,10 @@ public class SQLQueryParser {
 
 	public interface ParserContext {
 		boolean isEntityAlias(String aliasName);
-		Loadable getEntityPersister(String alias);
+		EntityPersister getEntityPersister(String alias);
 		String getEntitySuffix(String alias);
 		boolean isCollectionAlias(String aliasName);
-		QueryableCollection getCollectionPersister(String alias);
+		CollectionPersister getCollectionPersister(String alias);
 		String getCollectionSuffix(String alias);
 		Map<String, String[]> getPropertyResultsMap(String alias);
 	}
@@ -176,7 +176,7 @@ public class SQLQueryParser {
 			String aliasName,
 			String propertyName) {
 		final Map<String, String[]> fieldResults = context.getPropertyResultsMap( aliasName );
-		final QueryableCollection collectionPersister = context.getCollectionPersister( aliasName );
+		final CollectionPersister collectionPersister = context.getCollectionPersister( aliasName );
 		final String collectionSuffix = context.getCollectionSuffix( aliasName );
 
 		switch ( propertyName ) {
@@ -225,7 +225,7 @@ public class SQLQueryParser {
 	}
 	private String resolveProperties(String aliasName, String propertyName) {
 		final Map<String, String[]> fieldResults = context.getPropertyResultsMap( aliasName );
-		final Loadable persister = context.getEntityPersister( aliasName );
+		final EntityPersister persister = context.getEntityPersister( aliasName );
 		final String suffix = context.getEntitySuffix( aliasName );
 
 		if ( "*".equals( propertyName ) ) {

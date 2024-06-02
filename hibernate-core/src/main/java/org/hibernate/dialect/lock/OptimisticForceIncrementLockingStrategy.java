@@ -9,9 +9,8 @@ package org.hibernate.dialect.lock;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.action.internal.EntityIncrementVersionProcess;
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * An optimistic locking strategy that verifies that the version
@@ -24,7 +23,7 @@ import org.hibernate.persister.entity.Lockable;
  * @since 3.5
  */
 public class OptimisticForceIncrementLockingStrategy implements LockingStrategy {
-	private final Lockable lockable;
+	private final EntityPersister lockable;
 	private final LockMode lockMode;
 
 	/**
@@ -33,7 +32,7 @@ public class OptimisticForceIncrementLockingStrategy implements LockingStrategy 
 	 * @param lockable The metadata for the entity to be locked.
 	 * @param lockMode Indicates the type of lock to be acquired.
 	 */
-	public OptimisticForceIncrementLockingStrategy(Lockable lockable, LockMode lockMode) {
+	public OptimisticForceIncrementLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		this.lockable = lockable;
 		this.lockMode = lockMode;
 		if ( lockMode.lessThan( LockMode.OPTIMISTIC_FORCE_INCREMENT ) ) {

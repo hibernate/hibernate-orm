@@ -10,7 +10,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.action.internal.EntityVerifyVersionProcess;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * An optimistic locking strategy that simply verifies that the
@@ -22,7 +22,7 @@ import org.hibernate.persister.entity.Lockable;
  * @since 3.5
  */
 public class OptimisticLockingStrategy implements LockingStrategy {
-	private final Lockable lockable;
+	private final EntityPersister lockable;
 	private final LockMode lockMode;
 
 	/**
@@ -31,7 +31,7 @@ public class OptimisticLockingStrategy implements LockingStrategy {
 	 * @param lockable The metadata for the entity to be locked.
 	 * @param lockMode Indicates the type of lock to be acquired.
 	 */
-	public OptimisticLockingStrategy(Lockable lockable, LockMode lockMode) {
+	public OptimisticLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		this.lockable = lockable;
 		this.lockMode = lockMode;
 		if ( lockMode.lessThan( LockMode.OPTIMISTIC ) ) {

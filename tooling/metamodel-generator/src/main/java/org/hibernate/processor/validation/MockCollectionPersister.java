@@ -6,11 +6,10 @@
  */
 package org.hibernate.processor.validation;
 
-import org.hibernate.FetchMode;
-import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.Joinable;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ListType;
 import org.hibernate.type.MapType;
@@ -23,10 +22,7 @@ import static org.hibernate.processor.validation.MockSessionFactory.typeConfigur
  * @author Gavin King
  */
 @SuppressWarnings("nullness")
-public abstract class MockCollectionPersister implements QueryableCollection {
-
-	private static final String[] ID_COLUMN = {"id"};
-	private static final String[] INDEX_COLUMN = {"pos"};
+public abstract class MockCollectionPersister implements CollectionPersister, Joinable {
 
 	private final String role;
 	private final MockSessionFactory factory;
@@ -52,11 +48,6 @@ public abstract class MockCollectionPersister implements QueryableCollection {
 	}
 
 	@Override
-	public String getName() {
-		return role;
-	}
-
-	@Override
 	public CollectionType getCollectionType() {
 		return collectionType;
 	}
@@ -67,25 +58,6 @@ public abstract class MockCollectionPersister implements QueryableCollection {
 	}
 
 	abstract Type getElementPropertyType(String propertyPath);
-
-	@Override
-	public Type toType(String propertyName) throws QueryException {
-		if ("index".equals(propertyName)) {
-			//this is what AbstractCollectionPersister does!
-			//TODO: move it to FromElementType:626 or all
-			//	  the way to CollectionPropertyMapping
-			return getIndexType();
-		}
-		Type type = getElementPropertyType(propertyName);
-		if (type==null) {
-			throw new QueryException(elementType.getName()
-					+ " has no mapped "
-					+ propertyName);
-		}
-		else {
-			return type;
-		}
-	}
 
 	@Override
 	public Type getKeyType() {
@@ -154,53 +126,7 @@ public abstract class MockCollectionPersister implements QueryableCollection {
 	}
 
 	@Override
-	public String[] getIndexColumnNames() {
-		return INDEX_COLUMN;
-	}
-
-	@Override
-	public String[] getIndexColumnNames(String alias) {
-		return INDEX_COLUMN;
-	}
-
-	@Override
-	public String[] getIndexFormulas() {
-		return null;
-	}
-
-	@Override
-	public String[] getElementColumnNames(String alias) {
-		return new String[] {""};
-	}
-
-	@Override
-	public String[] getElementColumnNames() {
-		return new String[] {""};
-	}
-
-	@Override
-	public FetchMode getFetchMode() {
-		return FetchMode.DEFAULT;
-	}
-
-	@Override
 	public String getTableName() {
 		return role;
 	}
-
-	@Override
-	public String[] getKeyColumnNames() {
-		return ID_COLUMN;
-	}
-
-	@Override
-	public boolean isCollection() {
-		return true;
-	}
-
-	@Override
-	public String[] toColumns(String propertyName) {
-		return new String[] {""};
-	}
-
 }

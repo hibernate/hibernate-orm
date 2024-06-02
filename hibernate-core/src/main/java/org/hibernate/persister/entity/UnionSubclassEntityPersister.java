@@ -299,11 +299,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public String getSubclassForDiscriminatorValue(Object value) {
-		return subclassByDiscriminatorValue.get( value );
-	}
-
-	@Override
 	public String[] getPropertySpaces() {
 		return spaces;
 	}
@@ -362,7 +357,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected boolean hasMultipleTables() {
+	public boolean hasMultipleTables() {
 		// This could also just be true all the time...
 		return isAbstract() || hasSubclasses();
 	}

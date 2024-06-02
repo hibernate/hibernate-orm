@@ -758,17 +758,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public String getSubclassForDiscriminatorValue(Object value) {
-		if ( value == null ) {
-			return subclassesByDiscriminatorValue.get( NULL_DISCRIMINATOR );
-		}
-		else {
-			final String result = subclassesByDiscriminatorValue.get( value );
-			return result == null ? subclassesByDiscriminatorValue.get( NOT_NULL_DISCRIMINATOR ) : result;
-		}
-	}
-
-	@Override
 	public void addDiscriminatorToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
 		if ( explicitDiscriminatorColumnName != null ) {
 			final TableInsertBuilder tableInsertBuilder = insertGroupBuilder.getTableDetailsBuilder( getRootTableName() );
@@ -866,11 +855,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public String generateFilterConditionAlias(String rootAlias) {
-		return generateTableAlias( rootAlias, tableSpan - 1 );
-	}
-
-	@Override
 	public String[] getIdentifierColumnNames() {
 		return tableKeyColumns[0];
 	}
@@ -896,7 +880,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected boolean hasMultipleTables() {
+	public boolean hasMultipleTables() {
 		return true;
 	}
 
@@ -978,20 +962,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	@Override
 	public String[][] getContraintOrderedTableKeyColumnClosure() {
 		return constraintOrderedKeyColumnNames;
-	}
-
-	@Override
-	public String getRootTableAlias(String drivingAlias) {
-		return generateTableAlias( drivingAlias, getTableId( getRootTableName(), tableNames ) );
-	}
-
-	@Override
-	public Declarer getSubclassPropertyDeclarer(String propertyPath) {
-		if ( "class".equals( propertyPath ) ) {
-			// special case where we need to force include all subclass joins
-			return Declarer.SUBCLASS;
-		}
-		return super.getSubclassPropertyDeclarer( propertyPath );
 	}
 
 	@Override

@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
@@ -58,6 +57,8 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.tree.from.RootTableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
@@ -796,7 +797,11 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * (is the property optimistic-locked)
 	 */
 	boolean[] getPropertyVersionability();
+
 	boolean[] getPropertyLaziness();
+
+	boolean[] getNonLazyPropertyUpdateability();
+
 	/**
 	 * Get the cascade styles of the properties (optional operation)
 	 */
@@ -1360,6 +1365,37 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 */
 	String getDiscriminatorAlias(String suffix);
 
+	boolean hasMultipleTables();
+
+	String[] getTableNames();
+
+	/**
+	 * @deprecated Only ever used from places where we really want to use<ul>
+	 *     <li>{@link SelectStatement} (select generator)</li>
+	 *     <li>{@link InsertSelectStatement}</li>
+	 *     <li>{@link org.hibernate.sql.ast.tree.update.UpdateStatement}</li>
+	 *     <li>{@link org.hibernate.sql.ast.tree.delete.DeleteStatement}</li>
+	 * </ul>
+	 */
+	@Deprecated( since = "6.2" )
+	String getTableName(int j);
+
+	String[] getKeyColumns(int j);
+
+	int getTableSpan();
+
+	boolean isInverseTable(int j);
+
+	boolean isNullableTable(int j);
+
+	boolean hasDuplicateTables();
+
+	int getSubclassTableSpan();
+
+	String getSubclassTableName(int j);
+
+	String getTableNameForColumn(String columnName);
+
 	/**
 	 * @return the column name for the discriminator as specified in the mapping.
 	 *
@@ -1378,20 +1414,14 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 */
 	boolean hasRowId();
 
+	String[] getSubclassPropertyColumnNames(int i);
+
 	/**
 	 * Return the column alias names used to persist/query the named property of the class or a subclass (optional operation).
 	 */
 	String[] getSubclassPropertyColumnAliases(String propertyName, String suffix);
 
-	/**
-	 * May this (subclass closure) property be fetched using an SQL outer join?
-	 */
-	FetchMode getFetchMode(int i);
-
-	/**
-	 * Get the type of the numbered property of the class or a subclass.
-	 */
-	Type getSubclassPropertyType(int i);
+	int countSubclassProperties();
 
 	/**
 	 * Get the column names for the given property path
@@ -1413,6 +1443,13 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	/**
 	 * Given a property path, return the corresponding column name(s).
+	 * 
+	 * @deprecated No longer used in ORM core
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	String[] toColumns(String propertyName);
+
+	boolean isSharedColumn(String columnExpression);
+
+	String[][] getConstraintOrderedTableKeyColumnClosure();
 }

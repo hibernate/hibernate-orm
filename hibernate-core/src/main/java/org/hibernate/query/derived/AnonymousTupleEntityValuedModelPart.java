@@ -85,8 +85,8 @@ public class AnonymousTupleEntityValuedModelPart
 	private final DomainType<?> domainType;
 	private final String componentName;
 	private final EntityValuedModelPart delegate;
-	private final Set<String> targetKeyPropertyNames;
-	private final int fetchableIndex;
+//	private final Set<String> targetKeyPropertyNames;
+//	private final int fetchableIndex;
 
 	public AnonymousTupleEntityValuedModelPart(
 			EntityIdentifierMapping identifierMapping,
@@ -108,8 +108,8 @@ public class AnonymousTupleEntityValuedModelPart
 				persister.getIdentifierType(),
 				persister.getFactory()
 		);
-		this.targetKeyPropertyNames = targetKeyPropertyNames;
-		this.fetchableIndex = fetchableIndex;
+//		this.targetKeyPropertyNames = targetKeyPropertyNames;
+//		this.fetchableIndex = fetchableIndex;
 	}
 
 	public ModelPart getForeignKeyPart() {
@@ -380,7 +380,7 @@ public class AnonymousTupleEntityValuedModelPart
 					}
 			);
 		}
-		Consumer<TableGroup> tableGroupInitializerCallback = tg -> {
+		return tg -> {
 					this.identifierMapping.forEachSelectable(
 							(i, selectableMapping) -> {
 								final SelectableMapping targetMapping = targetMappings.get( i );
@@ -401,7 +401,6 @@ public class AnonymousTupleEntityValuedModelPart
 							}
 					);
 				};
-		return tableGroupInitializerCallback;
 	}
 
 	public TableGroup createTableGroupInternal(
@@ -487,7 +486,8 @@ public class AnonymousTupleEntityValuedModelPart
 	public boolean canUseParentTableGroup(TableGroupProducer producer, NavigablePath navigablePath, ValuedModelPart valuedModelPart) {
 		final ModelPart foreignKeyPart = getForeignKeyPart();
 		if ( foreignKeyPart instanceof AnonymousTupleNonAggregatedEntityIdentifierMapping ) {
-			final AnonymousTupleNonAggregatedEntityIdentifierMapping identifierMapping = (AnonymousTupleNonAggregatedEntityIdentifierMapping) foreignKeyPart;
+			final AnonymousTupleNonAggregatedEntityIdentifierMapping identifierMapping =
+					(AnonymousTupleNonAggregatedEntityIdentifierMapping) foreignKeyPart;
 			final int numberOfFetchables = identifierMapping.getNumberOfFetchables();
 			for ( int i = 0; i< numberOfFetchables; i++ ) {
 				if ( valuedModelPart == identifierMapping.getFetchable( i ) ) {
@@ -723,8 +723,7 @@ public class AnonymousTupleEntityValuedModelPart
 	@Override
 	public boolean isSimpleJoinPredicate(Predicate predicate) {
 		return delegate instanceof TableGroupJoinProducer
-				? ( (TableGroupJoinProducer) delegate ).isSimpleJoinPredicate( predicate )
-				: false;
+			&& ( (TableGroupJoinProducer) delegate ).isSimpleJoinPredicate(predicate);
 	}
 
 	@Override

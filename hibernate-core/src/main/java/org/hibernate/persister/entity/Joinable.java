@@ -6,8 +6,6 @@
  */
 package org.hibernate.persister.entity;
 
-import org.hibernate.metamodel.mapping.Restrictable;
-
 /**
  * Anything that can be loaded by outer join - namely
  * persisters for classes or collections.
@@ -20,5 +18,5 @@ import org.hibernate.metamodel.mapping.Restrictable;
  * depending on need
  */
 @Deprecated(since = "6", forRemoval = true)
-public interface Joinable extends Restrictable {
+public interface Joinable {
 }

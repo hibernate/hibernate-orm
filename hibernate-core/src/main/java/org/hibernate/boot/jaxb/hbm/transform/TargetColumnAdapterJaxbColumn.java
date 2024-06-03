@@ -8,6 +8,7 @@ package org.hibernate.boot.jaxb.hbm.transform;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCheckConstraintImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnImpl;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * @author Steve Ebersole
@@ -105,6 +106,9 @@ public class TargetColumnAdapterJaxbColumn implements TargetColumnAdapter {
 
 	@Override
 	public void setCheck(String value) {
+		if ( StringHelper.isEmpty( value ) ) {
+			return;
+		}
 		final JaxbCheckConstraintImpl checkConstraint = new JaxbCheckConstraintImpl();
 		checkConstraint.setConstraint( value );
 		jaxbColumn.getCheckConstraints().add( checkConstraint );

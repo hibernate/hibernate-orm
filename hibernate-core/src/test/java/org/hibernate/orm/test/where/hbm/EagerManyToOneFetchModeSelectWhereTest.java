@@ -28,11 +28,6 @@ import static org.junit.Assert.assertSame;
 public class EagerManyToOneFetchModeSelectWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		settings.put( AvailableSettings.CREATE_EMPTY_COMPOSITES_ENABLED, true );
-	}
-
-	@Override
 	protected String getBaseForMappings() {
 		return "org/hibernate/orm/test/";
 	}
@@ -99,9 +94,8 @@ public class EagerManyToOneFetchModeSelectWhereTest extends BaseNonConfigCoreFun
 					Product p = session.get( Product.class, product.id );
 					assertNotNull( p );
 					assertNull( p.category );
-					assertNull( p.containedCategory.category );
-					assertEquals( 1, p.containedCategories.size() );
-					assertNull( p.containedCategories.iterator().next().category );
+					assertNull( p.containedCategory );
+					assertEquals( 0, p.containedCategories.size() );
 				}
 		);
 	}

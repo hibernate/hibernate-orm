@@ -17,7 +17,6 @@ import java.util.function.Consumer;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.CascadeType;
-import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.ResultCheckStyle;
@@ -42,6 +41,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerContainerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityOrMappedSuperclass;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbGeneratedValueImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbGenericIdGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbHbmFilterImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIdClassImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIndexImpl;
@@ -89,6 +89,7 @@ import org.hibernate.boot.models.annotations.internal.FilterJoinTableAnnotation;
 import org.hibernate.boot.models.annotations.internal.FilterJoinTablesAnnotation;
 import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
 import org.hibernate.boot.models.annotations.internal.GeneratedValueJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.GenericGeneratorAnnotation;
 import org.hibernate.boot.models.annotations.internal.IdClassJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.IndexJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.InheritanceJpaAnnotation;
@@ -115,8 +116,8 @@ import org.hibernate.boot.models.annotations.internal.UniqueConstraintJpaAnnotat
 import org.hibernate.boot.models.annotations.internal.UuidGeneratorAnnotation;
 import org.hibernate.boot.models.annotations.spi.CustomSqlDetails;
 import org.hibernate.boot.models.annotations.spi.DatabaseObjectDetails;
-import org.hibernate.boot.models.spi.JpaEventListener;
 import org.hibernate.boot.models.categorize.spi.JpaEventListenerStyle;
+import org.hibernate.boot.models.spi.JpaEventListener;
 import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
 import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
 import org.hibernate.boot.models.xml.internal.db.TableProcessing;
@@ -151,6 +152,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
+import static org.hibernate.boot.models.HibernateAnnotations.FILTER;
+import static org.hibernate.boot.models.HibernateAnnotations.FILTER_JOIN_TABLE;
+import static org.hibernate.boot.models.HibernateAnnotations.PARAMETER;
+import static org.hibernate.boot.models.HibernateAnnotations.SQL_RESTRICTION;
 import static org.hibernate.boot.models.JpaAnnotations.ASSOCIATION_OVERRIDE;
 import static org.hibernate.boot.models.JpaAnnotations.ASSOCIATION_OVERRIDES;
 import static org.hibernate.boot.models.JpaAnnotations.ATTRIBUTE_OVERRIDE;
@@ -160,11 +165,7 @@ import static org.hibernate.boot.models.JpaAnnotations.COLUMN;
 import static org.hibernate.boot.models.JpaAnnotations.CONVERT;
 import static org.hibernate.boot.models.JpaAnnotations.EXCLUDE_DEFAULT_LISTENERS;
 import static org.hibernate.boot.models.JpaAnnotations.EXCLUDE_SUPERCLASS_LISTENERS;
-import static org.hibernate.boot.models.HibernateAnnotations.FILTER;
-import static org.hibernate.boot.models.HibernateAnnotations.FILTER_JOIN_TABLE;
 import static org.hibernate.boot.models.JpaAnnotations.INDEX;
-import static org.hibernate.boot.models.HibernateAnnotations.PARAMETER;
-import static org.hibernate.boot.models.HibernateAnnotations.SQL_RESTRICTION;
 import static org.hibernate.boot.models.JpaAnnotations.SECONDARY_TABLE;
 import static org.hibernate.boot.models.JpaAnnotations.UNIQUE_CONSTRAINT;
 
@@ -523,6 +524,37 @@ public class XmlAnnotationHelper {
 		);
 
 		uuidGenAnn.style( jaxbGenerator.getStyle() );
+	}
+
+	public static void applyGenericGenerator(
+			JaxbGenericIdGeneratorImpl jaxbGenerator,
+			MutableMemberDetails memberDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbGenerator == null ) {
+			return;
+		}
+
+		final GenericGeneratorAnnotation generatorAnn = (GenericGeneratorAnnotation) memberDetails.applyAnnotationUsage(
+				HibernateAnnotations.GENERIC_GENERATOR,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		generatorAnn.name( "" );
+		generatorAnn.strategy( jaxbGenerator.getClazz() );
+
+		final List<JaxbConfigurationParameterImpl> jaxbParameters = jaxbGenerator.getParameters();
+		if ( CollectionHelper.isEmpty( jaxbParameters ) ) {
+			generatorAnn.parameters( NO_PARAMETERS );
+		}
+		else {
+			final Parameter[] parameters = new Parameter[jaxbParameters.size()];
+			for ( int i = 0; i < jaxbParameters.size(); i++ ) {
+				final ParameterAnnotation parameterUsage = PARAMETER.createUsage( xmlDocumentContext.getModelBuildingContext() );
+				parameterUsage.name( jaxbParameters.get(i).getName() );
+				parameterUsage.value( jaxbParameters.get(i).getValue() );
+				parameters[i] = parameterUsage;
+			}
+			generatorAnn.parameters( parameters );
+		}
 	}
 
 	public static void applyAttributeOverrides(

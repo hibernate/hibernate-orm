@@ -21,7 +21,6 @@ import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.Setter;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -44,6 +43,8 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
+import static org.hibernate.sql.results.graph.embeddable.EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER;
 import static org.hibernate.sql.results.graph.entity.internal.BatchEntityInsideEmbeddableSelectFetchInitializer.BATCH_PROPERTY;
 
 /**
@@ -58,7 +59,6 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 	private final @Nullable InitializerParent<InitializerData> parent;
 	private final boolean isResultInitializer;
 	private final boolean isPartOfKey;
-	private final boolean createEmptyCompositesEnabled;
 	private final SessionFactoryImplementor sessionFactory;
 
 	protected final DomainResultAssembler<?>[][] assemblers;
@@ -117,7 +117,6 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 
 		this.isPartOfKey = embedded.isEntityIdentifierMapping() || Initializer.isPartOfKey( navigablePath, parent );
 		// We never want to create empty composites for the FK target or PK, otherwise collections would break
-		this.createEmptyCompositesEnabled = !isPartOfKey && embeddableMappingType.isCreateEmptyCompositesEnabled();
 		this.sessionFactory = creationState.getSqlAstCreationContext().getSessionFactory();
 		final Collection<EmbeddableMappingType.ConcreteEmbeddableType> concreteEmbeddableTypes = embeddableMappingType.getConcreteEmbeddableTypes();
 		final DomainResultAssembler<?>[][] assemblers = new DomainResultAssembler[concreteEmbeddableTypes.isEmpty() ? 1 : concreteEmbeddableTypes.size()][];
@@ -474,6 +473,8 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 		if ( data.getInstance() == null ) {
 			data.setInstance( createCompositeInstance( data ) );
 		}
+
+		EMBEDDED_LOAD_LOGGER.debugf( "Created composite instance [%s]", navigablePath );
 	}
 
 	private void extractRowState(EmbeddableInitializerData data) {
@@ -515,11 +516,7 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 
 	private Object createCompositeInstance(EmbeddableInitializerData data) {
 		if ( data.getState() == State.MISSING ) {
-			// todo (6.0) : should we initialize the composite instance if it has a parent attribute?
-//			if ( !createEmptyCompositesEnabled && embedded.getParentInjectionAttributePropertyAccess() == null ) {
-			if ( !createEmptyCompositesEnabled ) {
-				return null;
-			}
+			return null;
 		}
 
 		final EmbeddableInstantiator instantiator = data.concreteEmbeddableType == null
@@ -527,6 +524,7 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 				: data.concreteEmbeddableType.getInstantiator();
 		final Object instance = instantiator.instantiate( data, sessionFactory );
 		data.setState( State.RESOLVED );
+		EMBEDDED_LOAD_LOGGER.debugf( "Created composite instance [%s] : %s", navigablePath, instance );
 		return instance;
 	}
 

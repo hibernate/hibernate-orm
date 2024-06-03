@@ -12,6 +12,7 @@ import java.util.TreeSet;
 
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 /**
  * @author Bogdan Știrbăț
@@ -19,7 +20,13 @@ import jakarta.persistence.Entity;
 @Entity
 public class Homework {
 
+    private long id;
     private List<String> paths;
+
+    @Id
+    public long getId() {
+        return id;
+    }
 
     @ElementCollection
     public List<String> getPaths() {

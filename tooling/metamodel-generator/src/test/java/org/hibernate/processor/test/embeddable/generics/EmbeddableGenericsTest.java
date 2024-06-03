@@ -33,7 +33,7 @@ public class EmbeddableGenericsTest extends CompilationTest {
 //				"Expected Set for attribute named 'fields'"
 //		);
 
-		assertSuperClassRelationShipInMetamodel(
+		assertSuperclassRelationshipInMetamodel(
 				ChildEmbeddable.class,
 				ParentEmbeddable.class
 		);

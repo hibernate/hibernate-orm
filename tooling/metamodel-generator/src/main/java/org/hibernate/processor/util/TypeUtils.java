@@ -359,25 +359,25 @@ public final class TypeUtils {
 	}
 
 	private static void updateEmbeddableAccessTypeForMember(Context context, AccessType defaultAccessType, Element member) {
-		final String embeddedClassName = member.asType().accept( new EmbeddedAttributeVisitor( context ), member );
-		if ( embeddedClassName != null ) {
-			updateEmbeddableAccessType( context, defaultAccessType, embeddedClassName );
+		final @Nullable TypeElement embedded = member.asType().accept( new EmbeddedAttributeVisitor( context ), member );
+		if ( embedded != null ) {
+			updateEmbeddableAccessType( context, defaultAccessType, embedded );
 		}
 	}
 
-	private static void updateEmbeddableAccessType(Context context, AccessType defaultAccessType, String embeddedClassName) {
-		final AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo( embeddedClassName );
+	private static void updateEmbeddableAccessType(Context context, AccessType defaultAccessType, TypeElement embedded) {
+		final String embeddedClassName = embedded.getQualifiedName().toString();
+		final AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo(embeddedClassName);
 		if ( accessTypeInfo == null ) {
 			final AccessTypeInformation newAccessTypeInfo =
 					new AccessTypeInformation( embeddedClassName, null, defaultAccessType );
 			context.addAccessTypeInformation( embeddedClassName, newAccessTypeInfo );
-			final TypeElement typeElement = context.getElementUtils().getTypeElement( embeddedClassName );
-			updateEmbeddableAccessType( typeElement, context, defaultAccessType );
-			final TypeMirror superclass = typeElement.getSuperclass();
+			updateEmbeddableAccessType( embedded, context, defaultAccessType );
+			final TypeMirror superclass = embedded.getSuperclass();
 			if ( superclass.getKind() == TypeKind.DECLARED ) {
 				final DeclaredType declaredType = (DeclaredType) superclass;
 				final TypeElement element = (TypeElement) declaredType.asElement();
-				updateEmbeddableAccessType( context, defaultAccessType, element.getQualifiedName().toString() );
+				updateEmbeddableAccessType( context, defaultAccessType, element );
 			}
 		}
 		else {
@@ -654,7 +654,7 @@ public final class TypeUtils {
 			|| !entityMetaComplete && containsAnnotation( superClassElement, ENTITY, MAPPED_SUPERCLASS );
 	}
 
-	static class EmbeddedAttributeVisitor extends SimpleTypeVisitor8<@Nullable String, Element> {
+	static class EmbeddedAttributeVisitor extends SimpleTypeVisitor8<@Nullable TypeElement, Element> {
 		private final Context context;
 
 		EmbeddedAttributeVisitor(Context context) {
@@ -662,16 +662,14 @@ public final class TypeUtils {
 		}
 
 		@Override
-		public @Nullable String visitDeclared(DeclaredType declaredType, Element element) {
+		public @Nullable TypeElement visitDeclared(DeclaredType declaredType, Element element) {
 			final TypeElement returnedElement = (TypeElement)
 					context.getTypeUtils().asElement( declaredType );
-			return containsAnnotation( returnedElement, EMBEDDABLE )
-					? returnedElement.getQualifiedName().toString()
-					: null;
+			return containsAnnotation( returnedElement, EMBEDDABLE ) ? returnedElement : null;
 		}
 
 		@Override
-		public @Nullable String visitExecutable(ExecutableType executable, Element element) {
+		public @Nullable TypeElement visitExecutable(ExecutableType executable, Element element) {
 			if ( element.getKind().equals( ElementKind.METHOD ) ) {
 				final String string = element.getSimpleName().toString();
 				return isProperty( string, toTypeString( executable.getReturnType() ) )

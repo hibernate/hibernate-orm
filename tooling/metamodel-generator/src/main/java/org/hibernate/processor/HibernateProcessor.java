@@ -518,7 +518,7 @@ public class HibernateProcessor extends AbstractProcessor {
 	}
 
 	private static boolean isEntityOrEmbeddable(Element element) {
-		return containsAnnotation(
+		return hasAnnotation(
 				element,
 				ENTITY,
 				MAPPED_SUPERCLASS,
@@ -550,7 +550,7 @@ public class HibernateProcessor extends AbstractProcessor {
 
 	private void handleRootElementAnnotationMirrors(final Element element) {
 		if ( isClassOrRecordType( element ) ) {
-			if ( hasAnnotation( element, ENTITY, MAPPED_SUPERCLASS, EMBEDDABLE ) ) {
+			if ( isEntityOrEmbeddable( element ) ) {
 				final TypeElement typeElement = (TypeElement) element;
 				indexEntityName( typeElement );
 				indexEnumFields( typeElement );

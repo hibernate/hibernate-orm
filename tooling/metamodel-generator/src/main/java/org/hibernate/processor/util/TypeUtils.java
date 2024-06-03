@@ -39,6 +39,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 import static java.beans.Introspector.decapitalize;
+import static org.hibernate.processor.util.AccessTypeInformation.DEFAULT_ACCESS_TYPE;
 import static org.hibernate.processor.util.Constants.ACCESS;
 import static org.hibernate.processor.util.Constants.BASIC;
 import static org.hibernate.processor.util.Constants.ELEMENT_COLLECTION;
@@ -69,9 +70,6 @@ public final class TypeUtils {
 	public static final String DEFAULT_ANNOTATION_PARAMETER_NAME = "value";
 	private static final Map<TypeKind, String> PRIMITIVE_WRAPPERS = new HashMap<>();
 	private static final Map<TypeKind, String> PRIMITIVES = new HashMap<>();
-
-	private static final String PROPERTY = AccessType.PROPERTY.toString();
-	private static final String FIELD = AccessType.FIELD.toString();
 
 	static {
 		PRIMITIVE_WRAPPERS.put( TypeKind.CHAR, "Character" );
@@ -320,8 +318,7 @@ public final class TypeUtils {
 					// if we end up here we need to recursively look for superclasses
 					AccessType newDefaultAccessType = getDefaultAccessForHierarchy( searchedElement, context );
 					if ( newDefaultAccessType == null ) {
-						//TODO: this default is arbitrary and very questionable!
-						newDefaultAccessType = AccessType.PROPERTY;
+						newDefaultAccessType = DEFAULT_ACCESS_TYPE;
 					}
 					final AccessTypeInformation newAccessTypeInfo =
 							new AccessTypeInformation( qualifiedName, null, newDefaultAccessType );
@@ -369,6 +366,8 @@ public final class TypeUtils {
 				final AccessTypeInformation newAccessTypeInfo =
 						new AccessTypeInformation( embeddedClassName, null, defaultAccessType );
 				context.addAccessTypeInformation( embeddedClassName, newAccessTypeInfo );
+				final TypeElement typeElement = context.getElementUtils().getTypeElement(embeddedClassName);
+				updateEmbeddableAccessType( typeElement, context, defaultAccessType );
 			}
 			else {
 				accessTypeInfo.setDefaultAccessType( defaultAccessType );
@@ -479,10 +478,10 @@ public final class TypeUtils {
 			if ( accessType != null ) {
 				final VariableElement enumValue = (VariableElement) accessType.getValue();
 				final Name enumValueName = enumValue.getSimpleName();
-				if ( enumValueName.contentEquals(PROPERTY) ) {
+				if ( enumValueName.contentEquals(AccessType.PROPERTY.name()) ) {
 					return AccessType.PROPERTY;
 				}
-				else if ( enumValueName.contentEquals(FIELD) ) {
+				else if ( enumValueName.contentEquals(AccessType.FIELD.name()) ) {
 					return AccessType.FIELD;
 				}
 			}

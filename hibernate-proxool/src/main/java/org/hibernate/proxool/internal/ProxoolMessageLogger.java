@@ -40,7 +40,7 @@ public interface ProxoolMessageLogger extends ConnectionPoolingLogger {
 	 * @param proxoolAlias The name (alias) of the proxool pool
 	 */
 	@LogMessage(level = INFO)
-	@Message(value = "Configuring Proxool Provider to use pool alias: %s", id = 30002)
+	@Message(value = "Configuring Proxool to use pool alias: %s", id = 30002)
 	void configuringProxoolProviderToUsePoolAlias(String proxoolAlias);
 
 	/**
@@ -49,7 +49,7 @@ public interface ProxoolMessageLogger extends ConnectionPoolingLogger {
 	 * @param proxoolAlias The name (alias) of the proxool pool
 	 */
 	@LogMessage(level = INFO)
-	@Message(value = "Configuring Proxool Provider using existing pool in memory: %s", id = 30003)
+	@Message(value = "Configuring Proxool using existing pool in memory: %s", id = 30003)
 	void configuringProxoolProviderUsingExistingPool(String proxoolAlias);
 
 	/**
@@ -58,7 +58,7 @@ public interface ProxoolMessageLogger extends ConnectionPoolingLogger {
 	 * @param jaxpFile The XML configuration file to use
 	 */
 	@LogMessage(level = INFO)
-	@Message(value = "Configuring Proxool Provider using JAXPConfigurator: %s", id = 30004)
+	@Message(value = "Configuring Proxool using JAXPConfigurator: %s", id = 30004)
 	void configuringProxoolProviderUsingJaxpConfigurator(String jaxpFile);
 
 	/**
@@ -67,7 +67,7 @@ public interface ProxoolMessageLogger extends ConnectionPoolingLogger {
 	 * @param propFile The properties file to use
 	 */
 	@LogMessage(level = INFO)
-	@Message(value = "Configuring Proxool Provider using Properties File: %s", id = 30005)
+	@Message(value = "Configuring Proxool using properties file: %s", id = 30005)
 	void configuringProxoolProviderUsingPropertiesFile(String propFile);
 
 	/**

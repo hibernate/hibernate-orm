@@ -8,13 +8,16 @@ package org.hibernate.orm.test.collection.bag;
 
 import java.util.ArrayList;
 
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.collection.spi.PersistentBag;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @author Steve Ebersole
  */
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TRANSFORM_HBM_XML, value = "true"))
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNoColumnInsert.class)
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/collection/bag/Mappings.hbm.xml"

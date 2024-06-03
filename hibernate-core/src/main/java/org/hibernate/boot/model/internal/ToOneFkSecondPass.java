@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.model.internal;
 
+import java.util.Map;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -17,6 +19,7 @@ import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
+import org.hibernate.mapping.Value;
 
 import static org.hibernate.boot.model.internal.BinderHelper.createSyntheticPropertyReference;
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -97,10 +100,9 @@ public class ToOneFkSecondPass extends FkSecondPass {
 
 	@Override
 	public void doSecondPass(java.util.Map<String, PersistentClass> persistentClasses) throws MappingException {
-		if ( value instanceof ManyToOne ) {
+		if ( value instanceof ManyToOne manyToOne ) {
 			//TODO: move this validation logic to a separate ManyToOneSecondPass
 			//      for consistency with how this is handled for OneToOnes
-			final ManyToOne manyToOne = (ManyToOne) value;
 			final String targetEntityName = manyToOne.getReferencedEntityName();
 			final PersistentClass targetEntity = persistentClasses.get( targetEntityName );
 			if ( targetEntity == null ) {
@@ -111,17 +113,31 @@ public class ToOneFkSecondPass extends FkSecondPass {
 						+ "' targets the type '" + targetEntityName + "'" + problem );
 			}
 			manyToOne.setPropertyName( path );
-			createSyntheticPropertyReference(
-					columns,
-					targetEntity,
-					persistentClass,
-					manyToOne,
-					path,
-					false,
-					buildingContext
-			);
+			final String propertyRef = columns.getReferencedProperty();
+			if ( propertyRef != null ) {
+				handlePropertyRef(
+						columns,
+						targetEntity,
+						persistentClass,
+						manyToOne,
+						path,
+						propertyRef,
+						persistentClasses,
+						buildingContext
+				);
+			}
+			else {
+				createSyntheticPropertyReference(
+						columns,
+						targetEntity,
+						persistentClass,
+						manyToOne,
+						path,
+						false,
+						buildingContext
+				);
+			}
 			TableBinder.bindForeignKey( targetEntity, persistentClass, columns, manyToOne, unique, buildingContext );
-			// HbmMetadataSourceProcessorImpl does this only when property-ref != null, but IMO, it makes sense event if it is null
 			if ( !manyToOne.isIgnoreNotFound() ) {
 				manyToOne.createPropertyRefConstraints( persistentClasses );
 			}
@@ -132,5 +148,28 @@ public class ToOneFkSecondPass extends FkSecondPass {
 		else {
 			throw new AssertionFailure( "FkSecondPass for a wrong value type: " + value.getClass().getName() );
 		}
+	}
+
+	private void handlePropertyRef(
+			AnnotatedJoinColumns columns,
+			PersistentClass targetEntity,
+			PersistentClass persistentClass,
+			ManyToOne manyToOne,
+			String path,
+			String referencedPropertyName,
+			Map<String, PersistentClass> persistentClasses,
+			MetadataBuildingContext buildingContext) {
+		manyToOne.setReferencedPropertyName( referencedPropertyName );
+		manyToOne.setReferenceToPrimaryKey( false );
+
+		buildingContext.getMetadataCollector().addUniquePropertyReference(
+				targetEntity.getEntityName(),
+				referencedPropertyName
+		);
+		buildingContext.getMetadataCollector().addPropertyReferencedAssociation(
+				targetEntity.getEntityName(),
+				path,
+				referencedPropertyName
+		);
 	}
 }

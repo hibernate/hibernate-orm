@@ -46,6 +46,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterAliasMappingType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterDefinitionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterParameterType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmGeneratorSpecificationType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmIdBagCollectionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmIdentifierGeneratorDefinitionType;
@@ -121,6 +122,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbFetchProfileImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbFieldResultImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbFilterDefImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbForeignKeyImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbGeneratedValueImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbGenericIdGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbHbmFilterImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbHqlImportImpl;
@@ -142,6 +144,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAnyMappingImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralFetchModeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPrimaryKeyJoinColumnImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbPropertyRefImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbQueryParamTypeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSecondaryTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSingularAssociationAttribute;
@@ -167,6 +170,7 @@ import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 
 import static org.hibernate.boot.jaxb.hbm.transform.HbmTransformationLogging.TRANSFORMATION_LOGGER;
+import static org.hibernate.internal.util.StringHelper.coalesce;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
@@ -1276,8 +1280,8 @@ public class HbmXmlTransformer {
 				attributes.getBasicAttributes().add( transformBasicAttribute( basic ) );
 			}
 			else if ( hbmAttributeMapping instanceof JaxbHbmCompositeAttributeType hbmComponent ) {
-				ormRoot.getEmbeddables().add( convertEmbeddable( hbmComponent ) );
-				attributes.getEmbeddedAttributes().add( transformEmbedded( hbmComponent ) );
+				final JaxbEmbeddableImpl jaxbEmbeddable = applyEmbeddable( ormRoot, hbmComponent );
+				attributes.getEmbeddedAttributes().add( transformEmbedded( jaxbEmbeddable, hbmComponent ) );
 			}
 			else if ( hbmAttributeMapping instanceof JaxbHbmPropertiesType hbmProperties ) {
 				transferAttributes( hbmProperties.getAttributes(), attributes );
@@ -1434,10 +1438,27 @@ public class HbmXmlTransformer {
 		);
 	}
 
-	private JaxbEmbeddableImpl convertEmbeddable(JaxbHbmCompositeAttributeType hbmComponent) {
+	private JaxbEmbeddableImpl applyEmbeddable(JaxbEntityMappingsImpl ormRoot, JaxbHbmCompositeAttributeType hbmComponent) {
+		final String embeddableClassName = hbmComponent.getClazz();
+		final String embeddableName = determineEmbeddableName( embeddableClassName, hbmComponent.getName() );
+		final JaxbEmbeddableImpl jaxbEmbeddable = convertEmbeddable(
+				embeddableName,
+				embeddableClassName,
+				hbmComponent
+		);
+		ormRoot.getEmbeddables().add( jaxbEmbeddable );
+		return jaxbEmbeddable;
+	}
+
+
+	private JaxbEmbeddableImpl convertEmbeddable(
+			String embeddableName,
+			String embeddableClassName,
+			JaxbHbmCompositeAttributeType hbmComponent) {
 		final JaxbEmbeddableImpl embeddable = new JaxbEmbeddableImpl();
 		embeddable.setMetadataComplete( true );
-		embeddable.setClazz( determineEmbeddableName( hbmComponent ) );
+		embeddable.setName( embeddableName );
+		embeddable.setClazz( embeddableClassName );
 
 		embeddable.setAttributes( new JaxbEmbeddableAttributesContainerImpl() );
 		transferAttributes( hbmComponent.getAttributes(), embeddable.getAttributes() );
@@ -1446,25 +1467,20 @@ public class HbmXmlTransformer {
 	}
 
 	private int counter = 1;
-
-	private String determineEmbeddableName(JaxbHbmCompositeAttributeType hbmComponent) {
-		if ( StringHelper.isNotEmpty( hbmComponent.getClazz() ) ) {
-			return hbmComponent.getClazz();
+	private String determineEmbeddableName(String componentClassName, String attributeName) {
+		if ( StringHelper.isNotEmpty( componentClassName ) ) {
+			return componentClassName;
 		}
-		return hbmComponent.getName() + "_" + counter++;
+		return attributeName + "_" + counter++;
 	}
 
-	private String determineEmbeddableName(JaxbHbmCompositeCollectionElementType hbmComponent, PluralAttributeInfo hbmCollection) {
-		if ( StringHelper.isNotEmpty( hbmComponent.getClazz() ) ) {
-			return hbmComponent.getClazz();
-		}
-		return hbmCollection.getName() + "_" + counter++;
-	}
-
-	private JaxbEmbeddedImpl transformEmbedded(JaxbHbmCompositeAttributeType hbmComponent) {
+	private JaxbEmbeddedImpl transformEmbedded(
+			JaxbEmbeddableImpl jaxbEmbeddable,
+			JaxbHbmCompositeAttributeType hbmComponent) {
 		final JaxbEmbeddedImpl embedded = new JaxbEmbeddedImpl();
 		embedded.setName( hbmComponent.getName() );
 		embedded.setAttributeAccessor( hbmComponent.getAccess() );
+		embedded.setTarget( jaxbEmbeddable.getName() );
 		return embedded;
 	}
 
@@ -1515,6 +1531,11 @@ public class HbmXmlTransformer {
 			}
 		}
 
+		if ( StringHelper.isNotEmpty( hbmNode.getPropertyRef() ) ) {
+			m2o.setPropertyRef( new JaxbPropertyRefImpl() );
+			m2o.getPropertyRef().setName( hbmNode.getPropertyRef() );
+		}
+
 		transferColumnsAndFormulas(
 				new ColumnAndFormulaSource() {
 					@Override
@@ -1545,7 +1566,8 @@ public class HbmXmlTransformer {
 
 					@Override
 					public void addColumn(TargetColumnAdapter column) {
-						m2o.getJoinColumns().add( ( (TargetColumnAdapterJaxbJoinColumn) column ).getTargetColumn() );
+						m2o.getJoinColumns()
+								.add( ( (TargetColumnAdapterJaxbJoinColumn) column ).getTargetColumn() );
 					}
 
 					@Override
@@ -1695,13 +1717,20 @@ public class HbmXmlTransformer {
 		target.setName( source.getName() );
 		target.setAttributeAccessor( source.getAccess() );
 		target.setFetchMode( convert( source.getFetch() ) );
+		target.setFetch( convert( source.getLazy() ) );
 
 		if ( source instanceof JaxbHbmSetType set ) {
-			target.setSort( set.getSort() );
+			final String sort = set.getSort();
+			if ( StringHelper.isNotEmpty( sort ) && !"unsorted".equals( sort ) ) {
+				target.setSort( sort );
+			}
 			target.setOrderBy( set.getOrderBy() );
 		}
 		else if ( source instanceof JaxbHbmMapType map ) {
-			target.setSort( map.getSort() );
+			final String sort = map.getSort();
+			if ( StringHelper.isNotEmpty( sort ) && !"unsorted".equals( sort ) ) {
+				target.setSort( sort );
+			}
 			target.setOrderBy( map.getOrderBy() );
 
 			transferMapKey( (JaxbHbmMapType) source, target );
@@ -1730,6 +1759,13 @@ public class HbmXmlTransformer {
 					target
 			);
 		}
+	}
+
+	private FetchType convert(JaxbHbmLazyWithExtraEnum lazy) {
+		if ( lazy == null || lazy == JaxbHbmLazyWithExtraEnum.TRUE ) {
+			return FetchType.LAZY;
+		}
+		return FetchType.EAGER;
 	}
 
 	private void transferListIndex(
@@ -1867,13 +1903,18 @@ public class HbmXmlTransformer {
 		transferCollectionBasicInfo( hbmCollection, target );
 		transferCollectionTable( hbmCollection, target );
 
-		final String embeddableName = determineEmbeddableName( compositeElement, hbmCollection );
+		final String embeddableClassName = compositeElement.getClazz();
+		final String embeddableName = determineEmbeddableName( embeddableClassName, hbmCollection.getName() );
 
-		target.setTargetClass( embeddableName );
+		target.setTarget( embeddableName );
+		if ( StringHelper.isNotEmpty( embeddableClassName ) ) {
+			target.setTargetClass( embeddableClassName );
+		}
 
 		// todo : account for same embeddable used multiple times
 		final JaxbEmbeddableImpl embeddable = new JaxbEmbeddableImpl();
-		embeddable.setClazz( embeddableName );
+		embeddable.setClazz( embeddableClassName );
+		embeddable.setName( embeddableName );
 		embeddable.setAttributes( new JaxbEmbeddableAttributesContainerImpl() );
 		transferAttributes(
 				compositeElement.getAttributes(),
@@ -1921,7 +1962,7 @@ public class HbmXmlTransformer {
 			handleUnsupported( "`node` not supported for transformation" );
 		}
 		if ( hbmOneToMany.getNotFound() != null ) {
-			handleUnsupported( "`not-found` not supported for transformation" );
+			target.setNotFound( interpretNotFoundAction( hbmOneToMany.getNotFound() ) );
 		}
 
 		transferCollectionBasicInfo( hbmAttributeInfo, target );
@@ -2103,35 +2144,28 @@ public class HbmXmlTransformer {
 		target.setName( source.getName() );
 		target.setAttributeAccessor( source.getAccess() );
 
-//		// this depends on how we want to model "generic generators" in the mapping xsd.  this might
-//		// mean "inline" like we do in hbm.xml or using separate generator declarations like orm.xml
-//		if ( source.getGenerator() != null ) {
-//			final JaxbGenericIdGenerator generator = new JaxbGenericIdGenerator();
-//			generator.setStrategy( source.getGenerator().getClazz() );
-//			for ( JaxbHbmConfigParameterType param : source.getGenerator().getConfigParameters() ) {
-//				JaxbHbmParam hbmParam = new JaxbHbmParam();
-//				hbmParam.setName( param.getName() );
-//				hbmParam.setValue( param.getValue() );
-//				generator.getParam().add( hbmParam );
-//			}
-//			target.getGeneratedValue().setGenerator( generator );
-//		}
+		final JaxbHbmGeneratorSpecificationType hbmGenerator = source.getGenerator();
+		if ( hbmGenerator != null && !"assigned".equals( hbmGenerator.getClazz() ) ) {
+			final JaxbGeneratedValueImpl jaxbGeneratedValue = new JaxbGeneratedValueImpl();
+			target.setGeneratedValue( jaxbGeneratedValue );
 
-//		if ( isNotEmpty( source.getTypeAttribute() ) ) {
-//			target.setType( new JaxbHbmType() );
-//			target.getType().setName( source.getTypeAttribute() );
-//		}
-//		else {
-//			if ( source.getType() != null ) {
-//				target.setType( new JaxbHbmType() );
-//				target.getType().setName( source.getType().getName() );
-//				for ( JaxbHbmConfigParameterType hbmParam : source.getType().getConfigParameters() ) {
-//					final JaxbHbmParam param = new JaxbHbmParam();
-//					param.setName( hbmParam.getName() );
-//					param.setValue( hbmParam.getValue() );
-//					target.getType().getParam().add( param );
-//				}
-//			}
+			final JaxbGenericIdGeneratorImpl generator = new JaxbGenericIdGeneratorImpl();
+			target.setGenericGenerator( generator );
+			generator.setClazz( hbmGenerator.getClazz() );
+
+			final List<JaxbHbmConfigParameterType> hbmConfigParameters = hbmGenerator.getConfigParameters();
+			if ( CollectionHelper.isNotEmpty( hbmConfigParameters ) ) {
+				for ( JaxbHbmConfigParameterType hbmConfigParameter : hbmConfigParameters ) {
+					final JaxbConfigurationParameterImpl jaxbParam = new JaxbConfigurationParameterImpl();
+					generator.getParameters().add( jaxbParam );
+					jaxbParam.setName( hbmConfigParameter.getName() );
+					jaxbParam.setValue( hbmConfigParameter.getValue() );
+				}
+			}
+		}
+
+//		if ( isNotEmpty( source.getTypeAttribute() ) || source.getType() != null ) {
+//			handleUnsupported( "<id/> specified type which is not supported" );
 //		}
 
 		target.setUnsavedValue( source.getUnsavedValue() );

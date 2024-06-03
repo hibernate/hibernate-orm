@@ -187,6 +187,9 @@ public class OracleDialect extends Dialect {
 	// Is MAX_STRING_SIZE set to EXTENDED?
 	protected final boolean extended;
 
+	// Is the database accessed using a database service protected by Application Continuity.
+	protected final boolean applicationContinuity;
+
 	protected final int driverMajorVersion;
 
 	protected final int driverMinorVersion;
@@ -200,6 +203,7 @@ public class OracleDialect extends Dialect {
 		super(version);
 		autonomous = false;
 		extended = false;
+		applicationContinuity = false;
 		driverMajorVersion = 19;
 		driverMinorVersion = 0;
 	}
@@ -212,6 +216,7 @@ public class OracleDialect extends Dialect {
 		super( info );
 		autonomous = serverConfiguration.isAutonomous();
 		extended = serverConfiguration.isExtended();
+		applicationContinuity = serverConfiguration.isApplicationContinuity();
 		this.driverMinorVersion = serverConfiguration.getDriverMinorVersion();
 		this.driverMajorVersion = serverConfiguration.getDriverMajorVersion();
 	}
@@ -256,6 +261,10 @@ public class OracleDialect extends Dialect {
 
 	public boolean isExtended() {
 		return extended;
+	}
+
+	public boolean isApplicationContinuity() {
+		return applicationContinuity;
 	}
 
 	@Override

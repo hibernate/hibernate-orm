@@ -2638,6 +2638,23 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Does the dialect also need cross-references to get a complete
+	 * list of foreign keys?
+	 */
+	public boolean useCrossReferenceForeignKeys(){
+		return false;
+	}
+
+	/**
+	 * Some dialects require a not null primaryTable filter.
+	 * Sometimes a wildcard entry is sufficient for the like condition.
+	 * @return
+	 */
+	public String getCrossReferenceParentTableFilter(){
+		return null;
+	}
+
+	/**
 	 * The syntax used to add a primary key constraint to a table.
 	 *
 	 * @param constraintName The name of the PK constraint.

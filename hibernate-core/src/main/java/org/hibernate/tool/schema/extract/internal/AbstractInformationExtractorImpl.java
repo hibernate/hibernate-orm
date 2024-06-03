@@ -1264,6 +1264,92 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			ExtractionContext.ResultSetProcessor<T> processor
 	) throws SQLException;
 
+	/**
+	 * Must do the following:
+	 * <ol>
+	 *     <li>
+	 *         obtain a {@link ResultSet} containing a row for each foreign key
+	 *         column making up a foreign key for any existing
+	 *         foreignCatalog/foreignSchema/foreignTable combination as specified by
+	 *         parameters described below.
+	 *         The {@link ResultSet} must contain the following, consistent
+	 *         with the corresponding columns returned by {@link DatabaseMetaData#getCrossReference}:
+	 *         <ul>
+	 *             <li>
+	 *                 column label {@link #getResultSetForeignKeyLabel} -
+	 *                 foreign key name (may be null)
+	 *             </li>
+	 *             <li>
+	 *                 column label {@link #getResultSetPrimaryKeyCatalogLabel} -
+	 *                 primary key table catalog being imported (may be null)
+	 *             </li>
+	 *             <li>
+	 *                 column label {@link #getResultSetPrimaryKeySchemaLabel} -
+	 *                 primary key table schema being imported (may be null)
+	 *             </li>
+	 *             <li>
+	 *                 column label {@link #getResultSetPrimaryKeyTableLabel} -
+	 *                 primary key table name being imported
+	 *             </li>
+	 *             <li>
+	 *                 column label {@link #getResultSetForeignKeyColumnNameLabel} -
+	 *                 foreign key column name
+	 *             </li>
+	 *             <li>
+	 *                 column label {@link #getResultSetPrimaryKeyColumnNameLabel} -
+	 *                 primary key column name being imported
+	 *             </li>
+	 *         </ul>
+	 *         The ResultSet must be ordered by the primary key
+	 *         foreignCatalog/foreignSchema/foreignTable and column position within the key.
+	 *     </li>
+	 *     <li> execute {@code processor.process( resultSet )};</li>
+	 *     <li>
+	 *         release resources whether {@code processor.process( resultSet )}
+	 *         executes successfully or not.
+	 *     </li>
+	 * </ol>
+	 * <p>
+	 * The {@code parentCatalog}, {@code parentSchema}, {@code parentTable},
+	 * {@code foreignCatalog}, {@code foreignSchema}, {@code foreignTable}
+	 * parameters are as specified by {@link DatabaseMetaData#getCrossReference(
+	 * String, String, String, String, String, String)}
+	 * and are copied here:
+	 *
+	 * @param parentCatalog a catalog name; must match the catalog name
+	 * as it is stored in the database; "" retrieves those without a
+	 * catalog; {@code null} means drop catalog name from the selection criteria
+	 * @param parentSchema a schema name; must match the schema name as
+	 * it is stored in the database; "" retrieves those without a schema;
+	 * {@code null} means drop schema name from the selection criteria
+	 * @param parentTable the name of the table that exports the key; must match
+	 * the table name as it is stored in the database
+	 * @param foreignCatalog a catalog name; must match the catalog name as
+	 * it is stored in the database; "" retrieves those without a
+	 * catalog; {@code null} means drop catalog name from the selection criteria
+	 * @param foreignSchema a schema name; must match the schema name as it
+	 * is stored in the database; "" retrieves those without a schema;
+	 * {@code null} means drop schema name from the selection criteria
+	 * @param foreignTable the name of the table that imports the key; must match
+	 * the table name as it is stored in the database
+	 * @param processor - the provided ResultSetProcessor.
+	 * @param <T> - defined by {@code processor}
+	 * @return - defined by {@code processor}
+	 * @throws SQLException - if a database error occurs
+	 * @see #processImportedKeysResultSet(String, String, String,
+	 * ExtractionContext.ResultSetProcessor)
+	 */
+	protected abstract <T> T processCrossReferenceResultSet(
+			String parentCatalog,
+			String parentSchema,
+			String parentTable,
+			String foreignCatalog,
+			String foreignSchema,
+			String foreignTable,
+			ExtractionContext.ResultSetProcessor<T> processor
+	) throws SQLException;
+
+
 	@Override
 	public Iterable<ForeignKeyInformation> getForeignKeys(TableInformation tableInformation) {
 		final Map<Identifier, ForeignKeyBuilder> fkBuilders = new HashMap<>();
@@ -1289,52 +1375,62 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		}
 
 		try {
+			ExtractionContext.ResultSetProcessor<Void> processor = resultSet -> {
+				while ( resultSet.next() ) {
+					// IMPL NOTE : The builder is mainly used to collect the column reference mappings
+					final Identifier fkIdentifier = DatabaseIdentifier.toIdentifier(
+							resultSet.getString( getResultSetForeignKeyLabel() )
+					);
+					ForeignKeyBuilder fkBuilder = fkBuilders.get( fkIdentifier );
+					if ( fkBuilder == null ) {
+						fkBuilder = generateForeignKeyBuilder( fkIdentifier );
+						fkBuilders.put( fkIdentifier, fkBuilder );
+					}
+
+					final QualifiedTableName incomingPkTableName = extractPrimaryKeyTableName( resultSet );
+
+					final TableInformation pkTableInformation = extractionContext.getDatabaseObjectAccess()
+							.locateTableInformation( incomingPkTableName );
+
+					if ( pkTableInformation == null ) {
+						// the assumption here is that we have not seen this table already based on fully-qualified name
+						// during previous step of building all table metadata so most likely this is
+						// not a match based solely on schema/catalog and that another row in this result set
+						// should match.
+						continue;
+					}
+
+					final Identifier fkColumnIdentifier = DatabaseIdentifier.toIdentifier(
+							resultSet.getString( getResultSetForeignKeyColumnNameLabel() )
+					);
+					final Identifier pkColumnIdentifier = DatabaseIdentifier.toIdentifier(
+							resultSet.getString( getResultSetPrimaryKeyColumnNameLabel() )
+					);
+
+					fkBuilder.addColumnMapping(
+							tableInformation.getColumn( fkColumnIdentifier ),
+							pkTableInformation.getColumn( pkColumnIdentifier )
+					);
+				}
+				return null;
+			};
 			processImportedKeysResultSet(
 					catalogFilter,
 					schemaFilter,
 					tableInformation.getName().getTableName().getText(),
-					resultSet -> {
-						// todo : need to account for getCrossReference() as well...
-
-						while ( resultSet.next() ) {
-							// IMPL NOTE : The builder is mainly used to collect the column reference mappings
-							final Identifier fkIdentifier = DatabaseIdentifier.toIdentifier(
-									resultSet.getString( getResultSetForeignKeyLabel() )
-							);
-							ForeignKeyBuilder fkBuilder = fkBuilders.get( fkIdentifier );
-							if ( fkBuilder == null ) {
-								fkBuilder = generateForeignKeyBuilder( fkIdentifier );
-								fkBuilders.put( fkIdentifier, fkBuilder );
-							}
-
-							final QualifiedTableName incomingPkTableName = extractPrimaryKeyTableName( resultSet );
-
-							final TableInformation pkTableInformation = extractionContext.getDatabaseObjectAccess()
-									.locateTableInformation( incomingPkTableName );
-
-							if ( pkTableInformation == null ) {
-								// the assumption here is that we have not seen this table already based on fully-qualified name
-								// during previous step of building all table metadata so most likely this is
-								// not a match based solely on schema/catalog and that another row in this result set
-								// should match.
-								continue;
-							}
-
-							final Identifier fkColumnIdentifier = DatabaseIdentifier.toIdentifier(
-									resultSet.getString( getResultSetForeignKeyColumnNameLabel() )
-							);
-							final Identifier pkColumnIdentifier = DatabaseIdentifier.toIdentifier(
-									resultSet.getString( getResultSetPrimaryKeyColumnNameLabel() )
-							);
-
-							fkBuilder.addColumnMapping(
-									tableInformation.getColumn( fkColumnIdentifier ),
-									pkTableInformation.getColumn( pkColumnIdentifier )
-							);
-						}
-						return null;
-					}
-			);
+					processor);
+			final Dialect dialect = extractionContext.getJdbcEnvironment().getDialect();
+			if (dialect.useCrossReferenceForeignKeys()) {
+				processCrossReferenceResultSet(
+						null,
+						null,
+						dialect.getCrossReferenceParentTableFilter(),
+						catalogFilter,
+						schemaFilter,
+						tableInformation.getName().getTableName().getText(),
+						processor
+				);
+			}
 		}
 		catch (SQLException e) {
 			throw convertSQLException(

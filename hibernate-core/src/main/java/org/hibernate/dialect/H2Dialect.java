@@ -453,11 +453,13 @@ public class H2Dialect extends Dialect {
 		if ( intervalType != null ) {
 			return "(?2+?3)";
 		}
-		if (unit == SECOND) {
+		if ( unit == SECOND ) {
 			return "dateadd(nanosecond,?2*1e9,cast(?3 as " + temporalType.name().toLowerCase() + "))";
-		} else if (unit == DAY) {
+		}
+		else if ( unit == DAY ) {
 			return "dateadd(?1,?2,cast(?3 as date))";
-		} else {
+		}
+		else {
 			return "dateadd(?1,?2,?3)";
 		}
 	}

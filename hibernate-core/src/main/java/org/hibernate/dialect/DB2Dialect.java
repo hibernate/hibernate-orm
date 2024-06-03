@@ -623,17 +623,24 @@ public class DB2Dialect extends Dialect {
 			if ( temporalType == TemporalType.TIME ) {
 				timestampExpression = "timestamp('1970-01-01',?3)";
 			}
-			else {
-				timestampExpression = "?3";
+			else if ( temporalType == TemporalType.DATE ) {
+				timestampExpression = "cast(?3 as date)";
 			}
+			else {
+				timestampExpression = "cast(?3 as timestamp(6))";
+			}
+//			else {
+//				timestampExpression = "?3";
+//			}
 		}
 		else {
-			if ( temporalType == TemporalType.DATE ) {
-				timestampExpression = "cast(?3 as timestamp)";
-			}
-			else {
-				timestampExpression = "?3";
-			}
+			timestampExpression = "cast(?3 as timestamp(6))";
+//			if ( temporalType == TemporalType.DATE ) {
+//				timestampExpression = "cast(?3 as timestamp)";
+//			}
+//			else {
+//				timestampExpression = "?3";
+//			}
 		}
 		pattern.append(timestampExpression);
 		pattern.append("+(");

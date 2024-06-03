@@ -597,13 +597,13 @@ public class ManagedTypeProcessor {
 		);
 
 		XmlAnnotationHelper.applyTableGenerator(
-				jaxbEntity.getTableGenerators(),
+				jaxbEntity.getTableGenerator(),
 				classDetails,
 				xmlDocumentContext
 		);
 
 		XmlAnnotationHelper.applySequenceGenerator(
-				jaxbEntity.getSequenceGenerators(),
+				jaxbEntity.getSequenceGenerator(),
 				classDetails,
 				xmlDocumentContext
 		);

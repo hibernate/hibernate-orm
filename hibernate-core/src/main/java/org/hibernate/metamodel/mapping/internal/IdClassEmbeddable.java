@@ -264,14 +264,6 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		return embedded;
 	}
 
-
-	@Override
-	public boolean isCreateEmptyCompositesEnabled() {
-		// generally we do not want empty composites for identifiers
-		return false;
-	}
-
-
 	@Override
 	public void forEachAttributeMapping(Consumer<? super AttributeMapping> action) {
 		forEachAttribute( (index, attribute) -> action.accept( attribute ) );

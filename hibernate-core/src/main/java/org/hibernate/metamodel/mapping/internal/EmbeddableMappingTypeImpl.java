@@ -18,16 +18,13 @@ import java.util.function.Function;
 
 import org.hibernate.MappingException;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.BasicValue;
@@ -178,7 +175,6 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	private final Map<String, ConcreteEmbeddableTypeImpl> concreteEmbeddableBySubclass;
 	private final Map<Object, ConcreteEmbeddableTypeImpl> concreteEmbeddableByDiscriminator;
 
-	private final boolean createEmptyCompositesEnabled;
 	private final SelectableMapping aggregateMapping;
 	private final boolean aggregateMappingRequiresColumnWriter;
 	private final boolean preferSelectAggregateMapping;
@@ -221,12 +217,6 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			this.concreteEmbeddableBySubclass = null;
 		}
 
-		this.createEmptyCompositesEnabled = ConfigurationHelper.getBoolean(
-				Environment.CREATE_EMPTY_COMPOSITES_ENABLED,
-				creationContext.getServiceRegistry()
-						.requireService( ConfigurationService.class )
-						.getSettings()
-		);
 		final AggregateColumn aggregateColumn = bootDescriptor.getAggregateColumn();
 		if ( aggregateColumn != null ) {
 			final Dialect dialect = creationContext.getDialect();
@@ -365,7 +355,6 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		this.discriminatorMapping = null;
 		this.concreteEmbeddableBySubclass = null;
 		this.concreteEmbeddableByDiscriminator = null;
-		this.createEmptyCompositesEnabled = inverseMappingType.isCreateEmptyCompositesEnabled();
 		this.aggregateMapping = null;
 		this.aggregateMappingRequiresColumnWriter = false;
 		this.preferSelectAggregateMapping = false;
@@ -1116,11 +1105,6 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		return valueMapping.findContainingEntityMapping();
 	}
 
-
-	@Override
-	public boolean isCreateEmptyCompositesEnabled() {
-		return createEmptyCompositesEnabled;
-	}
 
 	@Override
 	public SelectableMapping getAggregateMapping() {

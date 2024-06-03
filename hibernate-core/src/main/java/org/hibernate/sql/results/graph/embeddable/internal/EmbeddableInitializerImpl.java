@@ -21,7 +21,6 @@ import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.Setter;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -35,7 +34,6 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableLoadingLogger;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.internal.AbstractInitializer;
@@ -44,6 +42,8 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
+import static org.hibernate.sql.results.graph.embeddable.EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER;
 import static org.hibernate.sql.results.graph.entity.internal.BatchEntityInsideEmbeddableSelectFetchInitializer.BATCH_PROPERTY;
 
 /**
@@ -57,7 +57,6 @@ public class EmbeddableInitializerImpl extends AbstractInitializer
 	private final InitializerParent parent;
 	private final boolean isResultInitializer;
 	private final boolean isPartOfKey;
-	private final boolean createEmptyCompositesEnabled;
 	private final SessionFactoryImplementor sessionFactory;
 
 	protected final DomainResultAssembler<?>[][] assemblers;
@@ -86,7 +85,6 @@ public class EmbeddableInitializerImpl extends AbstractInitializer
 
 		this.isPartOfKey = embedded.isEntityIdentifierMapping() || Initializer.isPartOfKey( navigablePath, parent );
 		// We never want to create empty composites for the FK target or PK, otherwise collections would break
-		this.createEmptyCompositesEnabled = !isPartOfKey && embeddableTypeDescriptor.isCreateEmptyCompositesEnabled();
 		this.sessionFactory = creationState.getSqlAstCreationContext().getSessionFactory();
 		this.assemblers = createAssemblers(
 				resultDescriptor,
@@ -277,40 +275,36 @@ public class EmbeddableInitializerImpl extends AbstractInitializer
 
 	@Override
 	public void initializeInstance() {
-		if ( state != State.RESOLVED ) {
-			return;
-		}
-		state = State.INITIALIZED;
-		EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER.debugf( "Initializing composite instance [%s]", navigablePath );
-
-		if ( embedded.getParentInjectionAttributePropertyAccess() != null || embedded instanceof VirtualModelPart ) {
-			handleParentInjection();
-
-			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( compositeInstance );
-			// If the composite instance has a lazy initializer attached, this means that the embeddable is actually virtual
-			// and the compositeInstance == entity, so we have to inject the row state into the entity when it finishes resolution
-			if ( lazyInitializer != null ) {
-				if ( parent != null ) {
-					embedded.getEmbeddableTypeDescriptor().setValues(
-							lazyInitializer.getImplementation(),
-							rowState
-					);
+		if ( state == State.RESOLVED ) {
+			state = State.INITIALIZED;
+			EMBEDDED_LOAD_LOGGER.debugf( "Initializing composite instance [%s]", navigablePath );
+			if ( embedded.getParentInjectionAttributePropertyAccess() != null
+					|| embedded instanceof VirtualModelPart ) {
+				handleParentInjection();
+				final LazyInitializer lazyInitializer = extractLazyInitializer( compositeInstance );
+				// If the composite instance has a lazy initializer attached, this means that the embeddable is actually virtual
+				// and the compositeInstance == entity, so we have to inject the row state into the entity when it finishes resolution
+				if ( lazyInitializer != null ) {
+					if ( parent != null ) {
+						embedded.getEmbeddableTypeDescriptor()
+								.setValues( lazyInitializer.getImplementation(), rowState );
+					}
+					else {
+						// At this point, createEmptyCompositesEnabled is always true, so we generate
+						// the composite instance.
+						//
+						// NOTE: `valuesAccess` is set to null to indicate that all values are null,
+						//		as opposed to returning the all-null value array.  the instantiator
+						//		interprets that as the values are not known or were all null.
+						final Object target = embedded.getEmbeddableTypeDescriptor().getRepresentationStrategy()
+								.getInstantiator()
+								.instantiate( this, sessionFactory );
+						lazyInitializer.setImplementation( target );
+					}
 				}
 				else {
-					// At this point, createEmptyCompositesEnabled is always true, so we generate
-					// the composite instance.
-					//
-					// NOTE: `valuesAccess` is set to null to indicate that all values are null,
-					//		as opposed to returning the all-null value array.  the instantiator
-					//		interprets that as the values are not known or were all null.
-					final Object target = embedded.getEmbeddableTypeDescriptor().getRepresentationStrategy()
-							.getInstantiator()
-							.instantiate( this, sessionFactory );
-					lazyInitializer.setImplementation( target );
+					embedded.getEmbeddableTypeDescriptor().setValues( compositeInstance, rowState );
 				}
-			}
-			else {
-				embedded.getEmbeddableTypeDescriptor().setValues( compositeInstance, rowState );
 			}
 		}
 	}
@@ -356,7 +350,7 @@ public class EmbeddableInitializerImpl extends AbstractInitializer
 		if ( parent != null && embedded instanceof VirtualModelPart && !isPartOfKey ) {
 			parent.resolveInstance();
 			compositeInstance = parent.getInitializedInstance();
-			EntityInitializer entityInitializer = parent.asEntityInitializer();
+			final EntityInitializer entityInitializer = parent.asEntityInitializer();
 			if ( entityInitializer != null && entityInitializer.isEntityInitialized() ) {
 				return;
 			}
@@ -366,10 +360,7 @@ public class EmbeddableInitializerImpl extends AbstractInitializer
 			compositeInstance = createCompositeInstance();
 		}
 
-		EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER.debugf(
-				"Created composite instance [%s]",
-				navigablePath
-		);
+		EMBEDDED_LOAD_LOGGER.debugf( "Created composite instance [%s]", navigablePath );
 	}
 
 	private void extractRowState() {
@@ -411,22 +402,18 @@ public class EmbeddableInitializerImpl extends AbstractInitializer
 
 	private Object createCompositeInstance() {
 		if ( state == State.MISSING ) {
-			// todo (6.0) : should we initialize the composite instance if it has a parent attribute?
-//			if ( !createEmptyCompositesEnabled && embedded.getParentInjectionAttributePropertyAccess() == null ) {
-			if ( !createEmptyCompositesEnabled ) {
-				return null;
-			}
+			return null;
 		}
-
-		final EmbeddableInstantiator instantiator = concreteEmbeddableType == null
-				? embedded.getEmbeddableTypeDescriptor().getRepresentationStrategy().getInstantiator()
-				: concreteEmbeddableType.getInstantiator();
-		final Object instance = instantiator.instantiate( this, sessionFactory );
-		state = State.RESOLVED;
-
-		EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER.debugf( "Created composite instance [%s] : %s", navigablePath, instance );
-
-		return instance;
+		else {
+			final EmbeddableInstantiator instantiator =
+					concreteEmbeddableType == null
+							? embedded.getEmbeddableTypeDescriptor().getRepresentationStrategy().getInstantiator()
+							: concreteEmbeddableType.getInstantiator();
+			final Object instance = instantiator.instantiate( this, sessionFactory );
+			state = State.RESOLVED;
+			EMBEDDED_LOAD_LOGGER.debugf( "Created composite instance [%s] : %s", navigablePath, instance );
+			return instance;
+		}
 	}
 
 	@Override
@@ -450,33 +437,27 @@ public class EmbeddableInitializerImpl extends AbstractInitializer
 
 	private void handleParentInjection() {
 		final PropertyAccess parentInjectionAccess = embedded.getParentInjectionAttributePropertyAccess();
-		if ( parentInjectionAccess == null ) {
-			// embeddable defined no parent injection
-			return;
+		if ( parentInjectionAccess != null ) {
+			// embeddable defined parent injection
+			final Object parent = determineParentInstance( determineOwningInitializer() );
+			if ( parent == null ) {
+				EMBEDDED_LOAD_LOGGER.debugf(
+						"Unable to determine parent for injection into embeddable [%s]",
+						navigablePath
+				);
+			}
+			else {
+				EMBEDDED_LOAD_LOGGER.debugf(
+						"Injecting parent into embeddable [%s] : `%s` -> `%s`",
+						navigablePath,
+						parent,
+						compositeInstance
+				);
+				final Setter setter = parentInjectionAccess.getSetter();
+				assert setter != null;
+				setter.set( compositeInstance, parent );
+			}
 		}
-
-		final Initializer owningInitializer = determineOwningInitializer();
-		final Object parent = determineParentInstance( owningInitializer );
-		if ( parent == null ) {
-			EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER.debugf(
-					"Unable to determine parent for injection into embeddable [%s]",
-					navigablePath
-			);
-			return;
-		}
-
-		EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER.debugf(
-				"Injecting parent into embeddable [%s] : `%s` -> `%s`",
-				navigablePath,
-				parent,
-				compositeInstance
-		);
-
-
-		final Setter setter = parentInjectionAccess.getSetter();
-		assert setter != null;
-
-		setter.set( compositeInstance, parent );
 	}
 
 	private Initializer determineOwningInitializer() {

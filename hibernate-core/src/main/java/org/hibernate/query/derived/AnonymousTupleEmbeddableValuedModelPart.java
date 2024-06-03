@@ -189,11 +189,6 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	}
 
 	@Override
-	public boolean isCreateEmptyCompositesEnabled() {
-		return false;
-	}
-
-	@Override
 	public EmbeddableMappingType createInverseMappingType(
 			EmbeddedAttributeMapping valueMapping,
 			TableGroupProducer declaringTableGroupProducer,

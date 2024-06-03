@@ -147,12 +147,6 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 	}
 
 	@Override
-	public boolean isCreateEmptyCompositesEnabled() {
-		// generally we do not want empty composites for identifiers
-		return false;
-	}
-
-	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return idMapping.findContainingEntityMapping();
 	}

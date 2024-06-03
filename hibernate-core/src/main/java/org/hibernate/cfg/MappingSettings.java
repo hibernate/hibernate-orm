@@ -454,29 +454,6 @@ public interface MappingSettings {
 	String DEFAULT_LIST_SEMANTICS = "hibernate.mapping.default_list_semantics";
 
 	/**
-	 * Enable instantiation of composite/embedded objects when all attribute values
-	 * are {@code null}. The default (and historical) behavior is that a {@code null}
-	 * reference will be used to represent the composite value when all of its
-	 * attributes are {@code null}.
-	 *
-	 * @apiNote This is an experimental feature that has known issues. It should not
-	 *          be used in production until it is stabilized. See Hibernate JIRA issue
-	 *          HHH-11936 for details.
-	 *
-	 * @deprecated It makes no sense at all to enable this at the global level for a
-	 *             persistence unit. If anything, it could be a setting specific to
-	 *             a given embeddable class. But, four years after the introduction of
-	 *             this feature, it's still marked experimental and has multiple known
-	 *             unresolved bugs. It's therefore time for those who advocated for
-	 *             this feature to accept defeat.
-	 *
-	 * @since 5.1
-	 */
-	@Incubating
-	@Deprecated(since = "6")
-	String CREATE_EMPTY_COMPOSITES_ENABLED = "hibernate.create_empty_composites.enabled";
-
-	/**
 	 * The {@link org.hibernate.annotations.Where @Where} annotation specifies a
 	 * restriction on the table rows which are visible as entity class instances or
 	 * collection elements.

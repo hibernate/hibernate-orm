@@ -57,7 +57,7 @@ public interface C3P0MessageLogger extends ConnectionPoolingLogger {
 	 * @param jdbcUrl The JDBC URL
 	 */
 	@LogMessage(level = INFO)
-	@Message(value = "C3P0 using driver: %s at URL: %s", id = 10002)
+	@Message(value = "C3P0 using driver [%s] at URL: %s", id = 10002)
 	void c3p0UsingDriver(String jdbcDriverClass, String jdbcUrl);
 
 	/**

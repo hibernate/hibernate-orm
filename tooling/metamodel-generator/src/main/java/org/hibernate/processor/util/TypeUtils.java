@@ -361,17 +361,27 @@ public final class TypeUtils {
 	private static void updateEmbeddableAccessTypeForMember(Context context, AccessType defaultAccessType, Element member) {
 		final String embeddedClassName = member.asType().accept( new EmbeddedAttributeVisitor( context ), member );
 		if ( embeddedClassName != null ) {
-			final AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo( embeddedClassName );
-			if ( accessTypeInfo == null ) {
-				final AccessTypeInformation newAccessTypeInfo =
-						new AccessTypeInformation( embeddedClassName, null, defaultAccessType );
-				context.addAccessTypeInformation( embeddedClassName, newAccessTypeInfo );
-				final TypeElement typeElement = context.getElementUtils().getTypeElement(embeddedClassName);
-				updateEmbeddableAccessType( typeElement, context, defaultAccessType );
+			updateEmbeddableAccessType( context, defaultAccessType, embeddedClassName );
+		}
+	}
+
+	private static void updateEmbeddableAccessType(Context context, AccessType defaultAccessType, String embeddedClassName) {
+		final AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo( embeddedClassName );
+		if ( accessTypeInfo == null ) {
+			final AccessTypeInformation newAccessTypeInfo =
+					new AccessTypeInformation( embeddedClassName, null, defaultAccessType );
+			context.addAccessTypeInformation( embeddedClassName, newAccessTypeInfo );
+			final TypeElement typeElement = context.getElementUtils().getTypeElement( embeddedClassName );
+			updateEmbeddableAccessType( typeElement, context, defaultAccessType );
+			final TypeMirror superclass = typeElement.getSuperclass();
+			if ( superclass.getKind() == TypeKind.DECLARED ) {
+				final DeclaredType declaredType = (DeclaredType) superclass;
+				final TypeElement element = (TypeElement) declaredType.asElement();
+				updateEmbeddableAccessType( context, defaultAccessType, element.getQualifiedName().toString() );
 			}
-			else {
-				accessTypeInfo.setDefaultAccessType( defaultAccessType );
-			}
+		}
+		else {
+			accessTypeInfo.setDefaultAccessType(defaultAccessType);
 		}
 	}
 

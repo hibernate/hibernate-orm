@@ -17,7 +17,6 @@ import jakarta.persistence.Version;
 
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.annotations.SelectBeforeUpdate;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.type.Type;
 import org.junit.Test;
@@ -50,23 +49,14 @@ public class SelectBeforeUpdateEmbeddedTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11237")
-	public void testSelectBeforeUpdateUsingEmptyComposites() {
-		// Opt-in behavior 5.1+
-		rebuildSessionFactory( c -> c.setProperty( AvailableSettings.CREATE_EMPTY_COMPOSITES_ENABLED, "true" ) );
-		testSelectBeforeUpdate();
-	}
-
-	@Test
-	@TestForIssue(jiraKey = "HHH-11237")
 	public void testSelectBeforeUpdateUsingNullComposites() {
 		// Legacy behavior test
-		rebuildSessionFactory( c -> c.setProperty( AvailableSettings.CREATE_EMPTY_COMPOSITES_ENABLED, "false" ) );
 		testSelectBeforeUpdate();
 	}
 
 	/**
 	 * Performs various tests both available attached and detached entities which use
-	 * the {@code @SelectBeforeUpdate} annotation with an {code @Embedded} component.
+	 * the {@code @SelectBeforeUpdate} annotation with an {@code @Embedded} component.
 	 */
 	private void testSelectBeforeUpdate() {
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {

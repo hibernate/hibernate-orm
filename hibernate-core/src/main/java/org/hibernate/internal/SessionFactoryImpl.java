@@ -138,7 +138,6 @@ import jakarta.persistence.TypedQueryReference;
 import static jakarta.persistence.SynchronizationType.SYNCHRONIZED;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
-import static org.hibernate.cfg.AvailableSettings.CREATE_EMPTY_COMPOSITES_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_VALIDATION_FACTORY;
 import static org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY;
@@ -147,7 +146,6 @@ import static org.hibernate.cfg.PersistenceSettings.SESSION_FACTORY_JNDI_NAME;
 import static org.hibernate.engine.config.spi.StandardConverters.STRING;
 import static org.hibernate.internal.FetchProfileHelper.getFetchProfiles;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
-import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.jpa.HibernateHints.HINT_TENANT_ID;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
@@ -240,7 +238,6 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		maskOutSensitiveInformation( settings );
 		deprecationCheck( settings );
 		LOG.debugf( "Instantiating SessionFactory with settings: %s", settings);
-		logIfEmptyCompositesEnabled( settings );
 
 		sqlStringGenerationContext = createSqlStringGenerationContext( bootMetamodel, options, jdbcServices );
 
@@ -1781,13 +1778,6 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	private static void maskOutIfSet(Map<String, Object> props, String setting) {
 		if ( props.containsKey( setting ) ) {
 			props.put( setting, "****" );
-		}
-	}
-
-	private static void logIfEmptyCompositesEnabled(Map<String, Object> props ) {
-		final boolean isEmptyCompositesEnabled = getBoolean( CREATE_EMPTY_COMPOSITES_ENABLED, props );
-		if ( isEmptyCompositesEnabled ) {
-			LOG.emptyCompositesEnabled();
 		}
 	}
 

@@ -6,6 +6,7 @@
  */
 package org.hibernate.processor.annotation;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.internal.util.StringHelper;
 
 import javax.lang.model.element.ExecutableElement;
@@ -13,13 +14,13 @@ import java.util.List;
 import java.util.Locale;
 
 import static org.hibernate.processor.util.Constants.HIB_SESSION;
-import static org.hibernate.processor.util.Constants.UNI;
 import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
  * @author Gavin King
  */
 public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
+	final @Nullable String containerType;
 	final String entity;
 	final List<String> fetchProfiles;
 
@@ -28,6 +29,7 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 			ExecutableElement method,
 			String methodName,
 			String entity,
+			@Nullable String containerType,
 			boolean belongsToDao,
 			String sessionType,
 			String sessionName,
@@ -36,15 +38,20 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 			List<String> paramTypes,
 			List<OrderBy> orderBys,
 			boolean addNonnullAnnotation,
-			boolean convertToDataExceptions) {
+			boolean convertToDataExceptions,
+			String fullReturnType,
+			boolean nullable) {
 		super( annotationMetaEntity, method,
 				methodName,
 				paramNames, paramTypes, entity,
 				sessionType, sessionName,
 				belongsToDao, orderBys,
 				addNonnullAnnotation,
-				convertToDataExceptions );
+				convertToDataExceptions,
+				fullReturnType,
+				nullable );
 		this.entity = entity;
+		this.containerType = containerType;
 		this.fetchProfiles = fetchProfiles;
 	}
 
@@ -173,16 +180,6 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 		return unwrapped;
 	}
 
-	void preamble(StringBuilder declaration) {
-		modifiers( declaration );
-		entityType( declaration );
-		declaration
-				.append(" ")
-				.append(methodName);
-		parameters( paramTypes, declaration ) ;
-		declaration.append(" {\n");
-	}
-
 	void tryReturn(StringBuilder declaration) {
 		if (dataRepository) {
 			declaration
@@ -193,19 +190,19 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 				.append(sessionName);
 	}
 
-	private void entityType(StringBuilder declaration) {
-		if ( isReactive() ) {
-			declaration
-					.append(annotationMetaEntity.importType(UNI))
-					.append('<');
-		}
-		declaration
-				.append(annotationMetaEntity.importType(entity));
-		if ( isReactive() ) {
-			declaration
-					.append('>');
-		}
-	}
+//	private void returnType(StringBuilder declaration) {
+//		if ( isReactive() ) {
+//			declaration
+//					.append(annotationMetaEntity.importType(UNI))
+//					.append('<');
+//		}
+//		declaration
+//				.append(annotationMetaEntity.importType(entity));
+//		if ( isReactive() ) {
+//			declaration
+//					.append('>');
+//		}
+//	}
 
 	void modifiers(StringBuilder declaration) {
 		declaration

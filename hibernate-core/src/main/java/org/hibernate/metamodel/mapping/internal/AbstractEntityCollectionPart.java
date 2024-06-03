@@ -60,7 +60,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 	private final EntityMappingType associatedEntityTypeDescriptor;
 	private final NotFoundAction notFoundAction;
 
-	private final Set<String> targetKeyPropertyNames;
+	protected final Set<String> targetKeyPropertyNames;
 
 	public AbstractEntityCollectionPart(
 			Nature nature,
@@ -110,10 +110,6 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 		return getAssociatedEntityMappingType();
 	}
 
-	protected Set<String> getTargetKeyPropertyNames() {
-		return targetKeyPropertyNames;
-	}
-
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
@@ -122,6 +118,11 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 	@Override
 	public Nature getNature() {
 		return nature;
+	}
+
+	@Override
+	public PluralAttributeMapping getCollectionAttribute() {
+		return collectionDescriptor.getAttributeMapping();
 	}
 
 	@Override
@@ -333,7 +334,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				primaryTableReference,
 				true,
 				sqlAliasBase,
-				(tableExpression) -> getEntityMappingType().containsTableReference( tableExpression ),
+				getEntityMappingType().getRootEntityDescriptor()::containsTableReference,
 				(tableExpression, tg) -> getEntityMappingType().createTableReferenceJoin(
 						tableExpression,
 						sqlAliasBase,

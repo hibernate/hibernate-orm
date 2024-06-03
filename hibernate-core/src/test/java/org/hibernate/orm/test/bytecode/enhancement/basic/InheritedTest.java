@@ -4,13 +4,12 @@ import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -18,16 +17,16 @@ import jakarta.persistence.Version;
 
 import static org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils.checkDirtyTracking;
 import static org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils.clearDirtyTracking;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * @author Luis Barreiro
  * @author Craig Andrews
  */
-@TestForIssue( jiraKey = "HHH-11284" )
-@RunWith( BytecodeEnhancerRunner.class )
+@JiraKey( "HHH-11284" )
+@BytecodeEnhanced
 @CustomEnhancementContext( {EnhancerTestContext.class, InheritedTest.EagerEnhancementContext.class} )
 public class InheritedTest {
 
@@ -62,7 +61,7 @@ public class InheritedTest {
 
     // Adapted from BasicEnhancementTest#basicExtendedEnhancementTest
     @Test
-    @TestForIssue(jiraKey = "HHH-14006")
+    @JiraKey("HHH-14006")
     public void extendedEnhancementTest() {
         // This test only works if lazy loading bytecode enhancement is enabled,
         // otherwise extended bytecode enhancement does not do anything we can check.

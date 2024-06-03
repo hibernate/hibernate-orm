@@ -7,8 +7,8 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
+import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -22,18 +22,18 @@ import org.hibernate.spi.NavigablePath;
  */
 public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> implements SqmTreatedPath<T,S> {
 	private final SqmListJoin<O,T> wrappedPath;
-	private final EntityDomainType<S> treatTarget;
+	private final TreatableDomainType<S> treatTarget;
 
 	public SqmTreatedListJoin(
 			SqmListJoin<O, T> wrappedPath,
-			EntityDomainType<S> treatTarget,
+			TreatableDomainType<S> treatTarget,
 			String alias) {
 		this( wrappedPath, treatTarget, alias, false );
 	}
 
 	public SqmTreatedListJoin(
 			SqmListJoin<O, T> wrappedPath,
-			EntityDomainType<S> treatTarget,
+			TreatableDomainType<S> treatTarget,
 			String alias,
 			boolean fetched) {
 		//noinspection unchecked
@@ -41,7 +41,7 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 				wrappedPath.getLhs(),
 				wrappedPath.getNavigablePath()
 						.append( CollectionPart.Nature.ELEMENT.getName() )
-						.treatAs( treatTarget.getHibernateEntityName(), alias ),
+						.treatAs( treatTarget.getTypeName(), alias ),
 				(ListPersistentAttribute<O, S>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
@@ -55,7 +55,7 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 	private SqmTreatedListJoin(
 			NavigablePath navigablePath,
 			SqmListJoin<O, T> wrappedPath,
-			EntityDomainType<S> treatTarget,
+			TreatableDomainType<S> treatTarget,
 			String alias,
 			boolean fetched) {
 		//noinspection unchecked
@@ -98,7 +98,7 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 	}
 
 	@Override
-	public EntityDomainType<S> getTreatTarget() {
+	public TreatableDomainType<S> getTreatTarget() {
 		return treatTarget;
 	}
 
@@ -108,7 +108,7 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 	}
 
 	@Override
-	public EntityDomainType<S> getReferencedPathSource() {
+	public TreatableDomainType<S> getReferencedPathSource() {
 		return treatTarget;
 	}
 
@@ -135,7 +135,7 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 		sb.append( "treat(" );
 		wrappedPath.appendHqlString( sb );
 		sb.append( " as " );
-		sb.append( treatTarget.getName() );
+		sb.append( treatTarget.getTypeName() );
 		sb.append( ')' );
 	}
 }

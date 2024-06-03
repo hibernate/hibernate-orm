@@ -102,6 +102,14 @@ public final class ClassWriter {
 
 			final List<MetaAttribute> members = entity.getMembers();
 			for ( MetaAttribute metaMember : members ) {
+				if ( metaMember.hasStringAttribute() ) {
+					pw.println( '\t' + metaMember.getAttributeNameDeclarationString() );
+				}
+			}
+
+			pw.println();
+
+			for ( MetaAttribute metaMember : members ) {
 				if ( metaMember.hasTypedAttribute() ) {
 					metaMember.getAttributeDeclarationString().lines()
 							.forEach(line -> {
@@ -116,12 +124,6 @@ public final class ClassWriter {
 							});
 				}
 			}
-			pw.println();
-			for ( MetaAttribute metaMember : members ) {
-				if ( metaMember.hasStringAttribute() ) {
-					pw.println( '\t' + metaMember.getAttributeNameDeclarationString() );
-				}
-			}
 
 			pw.println();
 			pw.println("}");
@@ -130,7 +132,11 @@ public final class ClassWriter {
 	}
 
 	private static void printClassDeclaration(Metamodel entity, PrintWriter pw) {
-		pw.print( entity.isImplementation() ? "public class " : "public abstract class " );
+		pw.print( "public " );
+		if ( !entity.isImplementation() && !entity.isJakartaDataStyle() ) {
+			pw.print( "abstract " );
+		}
+		pw.print( entity.isJakartaDataStyle() ? "interface " : "class " );
 		pw.print( getGeneratedClassName(entity) );
 
 		String superClassName = entity.getSupertypeName();

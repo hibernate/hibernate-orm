@@ -375,6 +375,12 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
+	public SessionFactoryBuilder enableJpaCascadeCompliance(boolean enabled) {
+		delegate.enableJpaCascadeCompliance( enabled );
+		return getThis();
+	}
+
+	@Override
 	public SessionFactoryBuilder enableJpaListCompliance(boolean enabled) {
 		delegate.enableJpaListCompliance( enabled );
 		return getThis();

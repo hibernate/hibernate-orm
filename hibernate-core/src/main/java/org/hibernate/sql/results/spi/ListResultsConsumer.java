@@ -173,11 +173,9 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 				results = new Results<>( domainResultJavaType );
 			}
 
-			rowReader.getInitializersList().startLoading( rowProcessingState );
-
 			int readRows = 0;
 			if ( uniqueSemantic == UniqueSemantic.FILTER
-					|| uniqueSemantic == UniqueSemantic.ASSERT && rowProcessingState.hasCollectionInitializers()
+					|| uniqueSemantic == UniqueSemantic.ASSERT && rowReader.hasCollectionInitializers()
 					|| uniqueSemantic == UniqueSemantic.ALLOW && isEntityResultType ) {
 				while ( rowProcessingState.next() ) {
 					final boolean added = results.addUnique( rowReader.readRow( rowProcessingState, processingOptions ) );

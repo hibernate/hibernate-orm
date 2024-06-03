@@ -14,25 +14,18 @@ import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Fetch;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.testing.BeforeClassOnce;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.jdbc.SQLStatementInterceptor;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -43,38 +36,36 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.annotations.FetchMode.JOIN;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 /**
  * Test for lazy uni-directional to-one (with JOIN fetching) when enhanced proxies are allowed
  */
-@RunWith( BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				JoinFetchedManyToOneAllowProxyTests.Customer.class,
+				 JoinFetchedManyToOneAllowProxyTests.Order.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions( lazyLoading = true )
-public class JoinFetchedManyToOneAllowProxyTests extends BaseNonConfigCoreFunctionalTestCase {
-	private SQLStatementInterceptor sqlStatementInterceptor;
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( Customer.class );
-		sources.addAnnotatedClass( Order.class );
-	}
-
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		sqlStatementInterceptor = new SQLStatementInterceptor( ssrb );
-	}
+public class JoinFetchedManyToOneAllowProxyTests {
 
 	@Test
-	public void testOwnerIsProxy() {
-		final EntityPersister orderDescriptor = sessionFactory().getMappingMetamodel().getEntityDescriptor( Order.class );
+	public void testOwnerIsProxy(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		final EntityPersister orderDescriptor = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( Order.class );
 		final BytecodeEnhancementMetadata orderEnhancementMetadata = orderDescriptor.getBytecodeEnhancementMetadata();
 		assertThat( orderEnhancementMetadata.isEnhancedForLazyLoading(), is( true ) );
 
-		final EntityPersister customerDescriptor = sessionFactory().getMappingMetamodel().getEntityDescriptor( Customer.class );
+		final EntityPersister customerDescriptor = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( Customer.class );
 		final BytecodeEnhancementMetadata customerEnhancementMetadata = customerDescriptor.getBytecodeEnhancementMetadata();
 		assertThat( customerEnhancementMetadata.isEnhancedForLazyLoading(), is( true ) );
 
-		inTransaction(
+		scope.inTransaction(
 				(session) -> {
 					final Order order = session.byId( Order.class ).getReference( 1 );
 
@@ -111,9 +102,10 @@ public class JoinFetchedManyToOneAllowProxyTests extends BaseNonConfigCoreFuncti
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14659")
-	public void testQueryJoinFetch() {
-		Order order = fromTransaction( (session) -> {
+	@JiraKey("HHH-14659")
+	public void testQueryJoinFetch(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		Order order = scope.fromTransaction( (session) -> {
 			final Order result = session.createQuery(
 							"select o from Order o join fetch o.customer",
 							Order.class )
@@ -131,9 +123,10 @@ public class JoinFetchedManyToOneAllowProxyTests extends BaseNonConfigCoreFuncti
 		assertThat( sqlStatementInterceptor.getSqlQueries().size(), is( 1 ) );
 	}
 
-	@Before
-	public void createTestData() {
-		inTransaction(
+	@BeforeEach
+	public void createTestData(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		scope.inTransaction(
 				(session) -> {
 					final Customer customer = new Customer( 1, "Acme Brick" );
 					session.persist( customer );
@@ -144,9 +137,9 @@ public class JoinFetchedManyToOneAllowProxyTests extends BaseNonConfigCoreFuncti
 		sqlStatementInterceptor.clear();
 	}
 
-	@After
-	public void dropTestData() {
-		inTransaction(
+	@AfterEach
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				(session) -> {
 					session.createQuery( "delete Order" ).executeUpdate();
 					session.createQuery( "delete Customer" ).executeUpdate();

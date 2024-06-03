@@ -6,21 +6,22 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.batch;
 
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.loader.BatchFetchStyle;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-14108")
+@JiraKey("HHH-14108")
+@ServiceRegistry(
+		settings = {
+				@Setting(name = AvailableSettings.BATCH_FETCH_STYLE, value = "PADDED"),
+				@Setting( name = AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, value = "100" ),
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+		}
+)
 public class PaddedBatchingTest extends AbstractBatchingTest {
-
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.BATCH_FETCH_STYLE, BatchFetchStyle.PADDED.toString() );
-	}
 }

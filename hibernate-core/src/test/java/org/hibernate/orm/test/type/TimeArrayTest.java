@@ -7,14 +7,24 @@
 package org.hibernate.orm.test.type;
 
 import java.sql.Time;
+import java.sql.Timestamp;
 import java.time.LocalTime;
-import java.util.Map;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseASEDialect;
+
+import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,43 +37,30 @@ import jakarta.persistence.Query;
 import jakarta.persistence.Table;
 import jakarta.persistence.TypedQuery;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Jordan Gigov
  * @author Christian Beikov
  */
-@SkipForDialect(value = SybaseASEDialect.class, comment = "Sybase or the driver are trimming trailing zeros in byte arrays")
-public class TimeArrayTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[]{ TableWithTimeArrays.class };
-	}
-
-	@Override
-	protected void addSettings(Map<String, Object> settings) {
-		// Make sure this stuff runs on a dedicated connection pool,
-		// otherwise we might run into ORA-21700: object does not exist or is marked for delete
-		// because the JDBC connection or database session caches something that should have been invalidated
-		settings.put( AvailableSettings.CONNECTION_PROVIDER, "" );
-	}
+@BootstrapServiceRegistry(
+		// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
+		integrators = SharedDriverManagerTypeCacheClearingIntegrator.class
+)
+@DomainModel(annotatedClasses = TimeArrayTest.TableWithTimeArrays.class)
+@SessionFactory
+@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase or the driver are trimming trailing zeros in byte arrays")
+public class TimeArrayTest {
 
 	private LocalTime time1;
 	private LocalTime time2;
 	private LocalTime time3;
 	private LocalTime time4;
 
-	public void startUp() {
-		super.startUp();
-		inTransaction( em -> {
+	@BeforeAll
+	public void startUp(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
 			time1 = LocalTime.of( 0, 0, 0 );
 			time2 = LocalTime.of( 6, 15, 0 );
 			time3 = LocalTime.of( 12, 30, 0 );
@@ -86,8 +83,8 @@ public class TimeArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testById() {
-		inSession( em -> {
+	public void testById(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TableWithTimeArrays tableRecord;
 			tableRecord = em.find( TableWithTimeArrays.class, 1L );
 			assertThat( tableRecord.getTheArray(), is( new LocalTime[]{} ) );
@@ -104,8 +101,8 @@ public class TimeArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testQueryById() {
-		inSession( em -> {
+	public void testQueryById(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TypedQuery<TableWithTimeArrays> tq = em.createNamedQuery( "TableWithTimeArrays.JPQL.getById", TableWithTimeArrays.class );
 			tq.setParameter( "id", 2L );
 			TableWithTimeArrays tableRecord = tq.getSingleResult();
@@ -114,9 +111,8 @@ public class TimeArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect( value = AbstractHANADialect.class, comment = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
-	public void testQuery() {
-		inSession( em -> {
+	public void testQuery(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TypedQuery<TableWithTimeArrays> tq = em.createNamedQuery( "TableWithTimeArrays.JPQL.getByData", TableWithTimeArrays.class );
 			tq.setParameter( "data", new LocalTime[]{} );
 			TableWithTimeArrays tableRecord = tq.getSingleResult();
@@ -125,8 +121,8 @@ public class TimeArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testNativeQueryById() {
-		inSession( em -> {
+	public void testNativeQueryById(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TypedQuery<TableWithTimeArrays> tq = em.createNamedQuery( "TableWithTimeArrays.Native.getById", TableWithTimeArrays.class );
 			tq.setParameter( "id", 2L );
 			TableWithTimeArrays tableRecord = tq.getSingleResult();
@@ -135,10 +131,10 @@ public class TimeArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect( value = HSQLDialect.class, comment = "HSQL does not like plain parameters in the distinct from predicate")
-	@SkipForDialect( value = OracleDialect.class, comment = "Oracle requires a special function to compare XML")
-	public void testNativeQuery() {
-		inSession( em -> {
+	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL does not like plain parameters in the distinct from predicate")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle requires a special function to compare XML")
+	public void testNativeQuery(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			final String op = em.getJdbcServices().getDialect().supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
 			TypedQuery<TableWithTimeArrays> tq = em.createNativeQuery(
 					"SELECT * FROM table_with_time_arrays t WHERE the_array " + op + " :data",
@@ -151,16 +147,29 @@ public class TimeArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature(DialectChecks.SupportsArrayDataTypes.class)
-	public void testNativeQueryUntyped() {
-		inSession( em -> {
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
+	public void testNativeQueryUntyped(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			Query q = em.createNamedQuery( "TableWithTimeArrays.Native.getByIdUntyped" );
 			q.setParameter( "id", 2L );
 			Object[] tuple = (Object[]) q.getSingleResult();
-			assertThat(
-					tuple[1],
-					is( new Time[] { Time.valueOf( time1 ), Time.valueOf( time2 ), Time.valueOf( time3 ) } )
-			);
+			final Dialect dialect = em.getSessionFactory().getJdbcServices().getDialect();
+			if ( dialect instanceof OracleDialect ) {
+				assertThat(
+						tuple[1],
+						is( new Object[] {
+								new Timestamp( Time.valueOf( time1 ).getTime() ),
+								new Timestamp( Time.valueOf( time2 ).getTime() ),
+								new Timestamp( Time.valueOf( time3 ).getTime() )
+						} )
+				);
+			}
+			else {
+				assertThat(
+						tuple[1],
+						is( new Time[] { Time.valueOf( time1 ), Time.valueOf( time2 ), Time.valueOf( time3 ) } )
+				);
+			}
 		} );
 	}
 

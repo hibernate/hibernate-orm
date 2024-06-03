@@ -236,11 +236,11 @@ public interface MappingSettings {
 	 * {@linkplain org.hibernate.type.descriptor.jdbc.InstantJdbcType}.
 	 *
 	 * @settingDefault false
-	 * 
+	 *
 	 * @since 6.5
 	 */
 	@Incubating
-	String PREFER_JAVA_TYPE_JDBC_TYPES = "hibernate.type.prefer_java_type_jdbc_types";
+	String JAVA_TIME_USE_DIRECT_JDBC = "hibernate.type.java_time_use_direct_jdbc";
 
 	/**
 	 * Indicates whether to prefer using SQL enums and the respective special JDBC types for binding/extracting
@@ -256,6 +256,23 @@ public interface MappingSettings {
 	 */
 	@Incubating
 	String PREFER_NATIVE_ENUM_TYPES = "hibernate.type.prefer_native_enum_types";
+
+	/**
+	 * Specifies the preferred JDBC type for storing plural i.e. array/collection values.
+	 * <p>
+	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},
+	 * {@link org.hibernate.annotations.JdbcTypeCode}, and friends.
+	 * <p>
+	 * Can also specify the name of the {@link org.hibernate.type.SqlTypes} constant
+	 * field, for example, {@code hibernate.type.preferred_array_jdbc_type=ARRAY}
+	 * or {@code hibernate.type.preferred_array_jdbc_type=TABLE}.
+	 *
+	 * @settingDefault {@link Dialect#getPreferredSqlTypeCodeForArray()}.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	String PREFERRED_ARRAY_JDBC_TYPE = "hibernate.type.preferred_array_jdbc_type";
 
 	/**
 	 * Specifies a {@link org.hibernate.type.format.FormatMapper} used for JSON

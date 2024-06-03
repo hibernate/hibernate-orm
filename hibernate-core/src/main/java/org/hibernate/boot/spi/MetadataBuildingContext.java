@@ -100,7 +100,7 @@ public interface MetadataBuildingContext {
 
 	static boolean isPreferJavaTimeJdbcTypesEnabled(ConfigurationService configurationService) {
 		return ConfigurationHelper.getBoolean(
-				MappingSettings.PREFER_JAVA_TYPE_JDBC_TYPES,
+				MappingSettings.JAVA_TIME_USE_DIRECT_JDBC,
 				configurationService.getSettings(),
 				// todo : true would be better eventually so maybe just rip off that band aid
 				false

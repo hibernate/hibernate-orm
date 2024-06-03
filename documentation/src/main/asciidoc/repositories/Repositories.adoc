@@ -1,0 +1,563 @@
+[[programming-model]]
+== Programming model
+
+Jakarta Data and Jakarta Persistence both represent data in a typesafe way, using _entity classes_.
+Since Hibernate's implementation of Jakarta Data is backed by access to a relational database, these entity classes are mapped using the annotations defined by Jakarta Persistence.
+
+For example:
+
+[source,java]
+----
+@Entity
+public class Book {
+    @Id
+    String isbn;
+
+    @Basic(optional = false)
+    String title;
+
+    LocalDate publicationDate;
+
+    @Basic(optional = false)
+    String text;
+
+    @Enumerated(STRING)
+    @Basic(optional = false)
+    Type type = Type.Book;
+
+    @ManyToOne(optional = false, fetch = LAZY)
+    Publisher publisher;
+
+    @ManyToMany(mappedBy = Author_.BOOKS)
+    Set<Author> authors;
+
+    ...
+}
+
+@Entity
+public class Author {
+    @Id
+    String ssn;
+
+    @Basic(optional = false)
+    String name;
+
+    Address address;
+
+    @ManyToMany
+    Set<Book> books;
+}
+----
+
+For more information about mapping entities, see the link:{doc-introduction-url}#entities[Introduction to Hibernate 6].
+
+[NOTE]
+====
+Jakarta Data also works with entities defined using similarly-named annotations defined by Jakarta NoSQL.
+But in this document we’re using Hibernate Data Repositories, so all mapping annotations should be understood to be the ones defined in `jakarta.persistence` or `org.hibernate.annotations`.
+For more information about entities in Jakarta Data, please consult chapter 3 of the specification.
+====
+
+Furthermore, queries may be expressed in HQL, Hibernate's superset of the Jakarta Persistence Query Language (JPQL).
+
+[NOTE]
+====
+The Jakarta Data specification defines a simple subset of JPQL called, appropriately, JDQL.
+JDQL is mostly relevant to non-relational datastores; an implementation of Jakarta Data backed by access to relational data is normally expected to support a much larger subset of JPQL.
+Indeed, Hibernate Data Repositories supports a _superset_ of JPQL.
+So, even though we put rather a large amount of effort into advocating, designing, and specifying JDQL, we won't talk much about it here.
+For information about JDQL, please consult chapter 5 of the Jakarta Data specification.
+====
+
+To learn more about HQL and JPQL, see the link:{doc-query-language-url}[Guide to Hibernate Query Language].
+
+This is where the similarity between Jakarta Persistence and Jakarta Data ends.
+The following table contrasts the two programming models.
+
+[cols="25,^~,^~"]
+|===
+| | Persistence | Data
+
+| Persistence contexts | Stateful | Stateless
+| Gateway | `EntityManager` interface  | User-written `@Repository` interface
+| Underlying implementation
+| link:{doc-javadoc-url}org/hibernate/Session.html[`Session`]
+| link:{doc-javadoc-url}org/hibernate/StatelessSession.html[`StatelessSession`]
+| Persistence operations | Generic methods like `find()`, `persist()`, `merge()`, `remove()` | Typesafe user-written methods annotated `@Find`, `@Insert`, `@Update`, `@Save`, `@Delete`
+| SQL execution | During flush | Immediate
+| Updates | Usually implicit (dirty checking during flush) | Always explicit (by calling `@Update` method)
+| Operation cascading | Depends on `CascadeType` | Never
+| Lazy fetching | Implicit | Explicit using link:{doc-javadoc-url}org/hibernate/StatelessSession.html#fetch(java.lang.Object)[`StatelessSession.fetch()`]
+| Validation of JPQL | Runtime | Compile time
+|===
+
+The fundamental difference here that Jakarta Data does not feature stateful persistence contexts.
+Among other consequences:
+
+- entity instances are always detached, and so
+- updates require an explicit operation, and
+- there's no transparent lazy association fetching.
+
+It's important to understand that a repository in Hibernate Data Repositories is backed by a `StatelessSession`, not by a Jakarta Persistence `EntityManager`.
+
+[IMPORTANT]
+====
+There's only one portable way to fetch an association in Jakarta Data, and that's by using a JPQL `join fetch` clause, in a <<query-method,`@Query` annotation>>.
+The specification does not provide a portable way to fetch an association lazily.
+To fetch an association, we need to <<stateless-fetch,call the `StatelessSession` directly>>.
+This really isn't as bad as it sounds; overuse of lazy fetching is associated with poor performance due to many round trips to the database server.
+====
+
+[NOTE]
+====
+A future release of Jakarta Data will feature repositories backed by Jakarta Persistence stateful persistence contexts, but this functionality did not make the cut for Jakarta Data 1.0.
+====
+
+The second big difference is that instead of providing a generic interface like `EntityManager` that's capable of performing persistence operations for any entity class, Jakarta Data requires that each interaction with the database go via a user-written method specific to just one entity type. The method is marked with annotations allowing Hibernate to fill in the method implementation.
+
+For example, whereas Jakarta Persistence defines the methods `find()` and `persist()` of `EntityManager`, in Jakarta Data the application programmer is required to write an interface like the following:
+
+[source,java]
+----
+@Repository
+interface Library {
+    @Find
+    Book book(String isbn);
+
+    @Insert
+    void add(Book book);
+}
+----
+
+This is our first example of a repository.
+
+=== Repository interfaces
+
+A _repository interface_ is an interface written by you, the application programmer, and annotated `@Repository`.
+The implementation of the repository interface is provided by a Jakarta Data provider, in our case, by Hibernate Data Repositories.
+
+The Jakarta Data specification does not say how this should work, but in Hibernate Data Repositories, the implementation is generated by an annotation processor.
+In fact, you might already be using this annotation processor: it's just `HibernateProcessor` from the now-inaptly-named `hibernate-jpamodelgen` module.
+
+[TIP]
+====
+That's right, this fancy thing I'm calling Hibernate Data Repositories is really just a new feature of Hibernate's venerable static metamodel generator.
+If you're already using the JPA static metamodel in your project, you already have Jakarta Data at your fingertips.
+If you don't, we'll see how to set it up in the <<configuration-integration,next chapter>>.
+====
+
+Of course, a Jakarta Data provider can't generate an implementation of any arbitrary method.
+Therefore, the methods of a repository interface must fall into one of the following categories:
+
+- <<default-method,`default` methods>>,
+- <<lifecycle-method,_lifecycle methods_>> annotated `@Insert`, `@Update`, `@Delete`, or `@Save`,
+- <<find-method,_automatic query methods_>> annotated `@Find`,
+- <<query-method,_annotated query methods_>> annotated `@Query` or `@SQL`, and
+- <<resource-accessor-method,_resource accessor methods_>>.
+
+[TIP]
+====
+For users migrating from Spring Data, Jakarta Data also provides a _Query by Method Name_ facility.
+We don't recommend this approach for new code, since it leads to extremely verbose and unnatural method names for anything but the most trivial examples.
+====
+
+We'll discuss each of these kinds of method soon.
+But first we need to ask a more basic question: how are persistence operations organized into repositories, and how do repository interfaces relate to entity types?
+The--perhaps surprising--answer is: it's completely up to you.
+
+=== Organizing persistence operations
+
+Jakarta Data lets you freely assign persistence operations to repositories according to your own preference.
+In particular, Jakarta Data does not require that a repository interface inherit a built-in supertype declaring the basic "CRUD" operations, and so it's not necessary to have a separate repository interface for each entity.
+You're permitted, for example, to have a single `Library` interface instead of `BookRepository`, `AuthorRepository`, and `PublisherRepository`.
+
+Thus, the whole programming model is much more flexible than older approaches such as Spring Data, which require a repository interface per entity class, or, at least, per so-called "aggregate".
+
+[WARNING]
+====
+The concept of an "aggregate" makes sense in something like a document database.
+But relational data does not have aggregates, and you should avoid attempting to shoehorn your relational tables into this inappropriate way of thinking about data.
+====
+
+As a convenience, especially for users migrating from older frameworks, Jakarta Data does define the `BasicRepository` and `CrudRepository` interfaces, and you can use them if you like.
+But in Jakarta Data there's not much special about these interfaces; their operations are declared using the same annotations you'll use to declare methods of your own repositories.
+This older, less-flexible approach is illustrated in the following example.
+
+[source,java]
+----
+// old way
+
+@Repository
+interface BookRepository
+        extends CrudRepository<Book,String> {
+    // query methods
+    ...
+}
+
+@Repository
+interface AuthorRepository
+        extends CrudRepository<Author,String> {
+    // query methods
+    ...
+}
+----
+
+We won't see `BasicRepository` and `CrudRepository` again in this document, because they're not necessary, and because they implement the older, less-flexible way of doing things.
+
+Instead, our repositories will often group together operations dealing with several related entities, even when the entities don't have a single "root".
+This situation is _extremely_ common in relational data models.
+In our example, `Book` and `Author` are related by a `@ManyToMany` association, and are both "roots".
+
+[source,java]
+----
+// new way
+
+@Repository
+interface Publishing {
+    @Find
+    Book book(String isbn);
+
+    @Find
+    Author author(String ssn);
+
+    @Insert
+    void publish(Book book);
+
+    @Insert
+    void create(Author author);
+
+    // query methods
+    ...
+}
+----
+
+Now let's walk through the different kinds of method that a repository interface might declare, beginning with the easiest kind.
+If the following summary is insufficient, you'll find more detailed information about repositories in chapter 4 of the Jakarta Data specification, and in the Javadoc of the relevant annotations.
+
+
+[[default-method]]
+=== Default methods
+
+A `default` method is one you implement yourself, and there's nothing special about it.
+
+[source,java]
+----
+@Repository
+interface Library {
+    default void hello() {
+        System.out.println("Hello, World!");
+    }
+}
+----
+
+This doesn't look very useful, at least not unless there's some way to interact with the database from a `default` method.
+For that, we'll need to add a resource accessor method.
+
+[[resource-accessor-method]]
+=== Resource accessor methods
+
+A resource accessor method is one which exposes access to an underlying implementation type.
+Currently, Hibernate Data Repositories only supports one such type: `StatelessSession`.
+So a resource accessor method is just any abstract method which returns `StatelessSession`.
+The name of the method doesn't matter.
+
+[source,java]
+----
+StatelessSession session();
+----
+
+This method returns the `StatelessSession` backing the repository.
+
+[TIP]
+====
+Usually, a resource accessor method is called from a `default` method of the same repository.
+[source,java]
+----
+default void refresh(Book book) {
+    session().refresh(book);
+}
+----
+This is very useful when we need to gain direct access to the `StatelessSession` in order to take advantage of the full power of Hibernate.
+====
+
+[[stateless-fetch]]
+[TIP]
+====
+A resource accessor method is also useful when we need to lazily fetch an association.
+[source,java]
+----
+library.session().fetch(book.authors);
+----
+====
+
+Usually, of course, we want Jakarta Data to take care of interacting with the `StatelessSession`.
+
+[[lifecycle-method]]
+=== Lifecycle methods
+
+Jakarta Data 1.0 defines four built-in lifecycle annotations, which map perfectly to the basic operations of the Hibernate `StatelessSession`:
+
+- `@Insert` maps to `insert()`,
+- `@Update` maps to `update()`,
+- `@Delete` maps to `delete()`, and
+- `@Save` maps to `upsert()`.
+
+[NOTE]
+The basic operations of `StatelessSession` -- `insert()`, `update()`, `delete()`, and `upsert()` -- do not have matching ``CascadeType``s, and so these operations are never cascaded to associated entities.
+
+A lifecycle method usually accepts an instance of an entity type, and is usually declared `void`.
+
+[source,java]
+----
+@Insert
+void add(Book book);
+----
+
+Alternatively, it may accept a list or array of entities.
+(A variadic parameter is considered an array.)
+
+[source,java]
+----
+@Insert
+void add(Book... books);
+----
+
+[NOTE]
+====
+A future release of Jakarta Data might expand the list of built-in lifecycle annotations.
+In particular, we're hoping to add `@Persist`, `@Merge`, `@Refresh`, `@Lock`, and `@Remove`, mapping to the fundamental operations of `EntityManager`.
+====
+
+Repositories wouldn't be useful at all if this was all they could do.
+Jakarta Data really starts to shine when we start to use it to express queries.
+
+[[find-method]]
+=== Automatic query methods
+
+An automatic query method is usually annotated `@Find`.
+The simplest automatic query method is one which retrieves an entity instance by its unique identifier.
+
+[source,java]
+----
+@Find
+Book book(String isbn);
+----
+
+The name of the parameter identifies that this is a lookup by primary key (the `isbn` field is annotated `@Id` in `Book`) and so this method will be implemented to call the `get()` method of `StatelessSession`.
+
+[NOTE]
+====
+If the parameter name does not match any field of the returned entity type, or if the type of the parameter does not match the type of the matching field, `HibernateProcessor` reports a helpful error at compilation time.
+This is our first glimpse of the advantages of using Jakarta Data repositories with Hibernate.
+====
+
+If there is no `Book` with the given `isbn` in the database, the method throws `EmptyResultException`.
+There's two ways around this if that's not what we want:
+
+- declare the method to return `Optional`, or
+- annotate the method `@jakarta.annotation.Nullable`.
+
+The first option is blessed by the specification:
+
+[source,java]
+----
+@Find
+Optional<Book> book(String isbn);
+----
+
+The second option is an extension provided by Hibernate:
+
+[source,java]
+----
+@Find @Nullable
+Book book(String isbn);
+----
+
+An automatic query method might return multiple results.
+In this case, the return type must be an array or list of the entity type.
+
+[source,java]
+----
+@Find
+List<Book> book(String title);
+----
+
+Usually, arguments to a parameter of an automatic query method must match _exactly_ with the field of an entity.
+However, Hibernate provides the link:{doc-javadoc-url}org/hibernate/annotations/processing/Pattern.html[`@Pattern`] annotation to allow for "fuzzy" matching using `like`.
+
+[source,java]
+----
+@Find
+List<Book> books(@Pattern String title);
+----
+
+Furthermore, if the parameter type is a list or array of the entity field type, the resulting query has an `in` condition.
+
+[source,java]
+----
+@Find
+List<Book> books(String[] ibsn);
+----
+
+Or course, an automatic query method might have multiple parameters.
+
+[source,java]
+----
+@Find
+List<Book> book(@Pattern String title, Year yearPublished);
+----
+
+In this case, _every_ argument must match the corresponding field of the entity.
+
+The `_` character in a parameter name may be used to navigate associations:
+
+[source,java]
+----
+@Find
+List<Book> booksPublishedBy(String publisher_name);
+----
+
+However, once our query starts to involve multiple entities, it's usually better to use an <<query-method,annotated query method>>.
+
+The `@OrderBy` annotation allows results to be sorted.
+
+[source,java]
+----
+@Find
+@OrderBy("title")
+@OrderBy("publisher.name")
+List<Book> book(@Pattern String title, Year yearPublished);
+----
+
+This might not look very typesafe at first glance, but--amazingly--the content of the `@OrderBy` annotation is completely validated at compile time, as we will see below.
+
+Automatic query methods are great and convenient for very simple queries.
+For anything that's not extremely simple, we're much better off writing a query in JPQL.
+
+[[query-method]]
+=== Annotated query methods
+
+An annotated query method is declared using:
+
+- `@Query` from Jakarta Data, or
+- link:{doc-javadoc-url}org/hibernate/annotations/processing/HQL.html[`@HQL`] or link:{doc-javadoc-url}org/hibernate/annotations/processing/SQL.html[`@SQL`] from `org.hibernate.annotations.processing`.
+
+The `@Query` annotation is defined to accept JPQL, JDQL, or anything in between.
+In Hibernate Data Repositories, it accepts arbitrary HQL.
+
+[NOTE]
+====
+There's no strong reason to use `@HQL` in preference to `@Query`.
+This annotation exists because the functionality described here predates the existence of Jakarta Data.
+====
+
+Consider the following example:
+
+[source,java]
+----
+@Query("where title like :pattern order by title, isbn")
+List<Book> booksByTitle(String pattern);
+----
+
+You might notice that:
+
+- The `from` clause is not required in JDQL, and is inferred from the return type of the repository method.
+- Since Jakarta Persistence 3.2, neither the `select` cause nor entity aliases (identification variables) are required in JPQL, finally standardizing a very old feature of HQL.
+
+This allows simple queries to be written in a very compact form.
+
+Method parameters are automatically matched to ordinal or named parameters of the query.
+In the previous example, `pattern` matches `:pattern`.
+In the following variation, the first method parameter matches `?1`.
+
+[source,java]
+----
+@Query("where title like ?1 order by title, isbn")
+List<Book> booksByTitle(String pattern);
+----
+
+You might be imagining that the JPQL query specified within the `@Query` annotation cannot be validated at compile time, but this is not the case.
+`HibernateProcessor` is not only capable of validating the _syntax_ of the query, but it even _typechecks_ the query completely.
+This is much better than passing a string to the `createQuery()` method of `EntityManager`, and it's probably the top reason to use Jakarta Data with Hibernate.
+
+When a query returns more than one object, the nicest thing to do is package each result as an instance of a Java `record` type.
+For example, we might define a `record` holding some fields of `Book` and `Author`.
+
+[source,java]
+----
+record AuthorBookSummary(String isbn, String ssn, String authorName, String title) {}
+----
+
+We need to specify that the values in the `select` clause should be packaged as instances of `AuthorBookSummary`.
+The JPQL specification provides the `select new` construct for this.
+
+[source,java]
+----
+@Query("select new AuthorBookRecord(b.isbn, a.ssn, a.name, b.title " +
+       "from Author a join books b " +
+       "where title like :pattern")
+List<AuthorBookSummary> summariesForTitle(@Pattern String pattern);
+----
+
+Note that the `from` clause is required here, since it's impossible to infer the queried entity type from the return type of the repository method.
+
+[TIP]
+====
+Since this is quite verbose, Hibernate doesn't require the use of `select new`, nor of aliases, and lets us write:
+[source,java]
+----
+@Query("select isbn, ssn, name, title " +
+       "from Author join books " +
+       "where title like :pattern")
+List<AuthorBookSummary> summariesForTitle(@Pattern String pattern);
+----
+====
+
+An annotated query method may even perform an `update`, `delete`, or `insert` statement.
+
+[source,java]
+----
+@Query("delete from Book " +
+       "where extract(year from publicationDate) < :year")
+int deleteOldBooks(int year);
+
+----
+
+The method must be declared `void`, or return `int` or `long`.
+The return value is the number of affected records.
+
+Finally, a native SQL query may be specified using `@SQL`.
+
+[source,java]
+----
+@SQL("select title from books where title like :pattern order by title, isbn")
+List<String> booksByTitle(String pattern);
+----
+
+Unfortunately, native SQL queries cannot be validated at compile time, so if there's anything wrong with our SQL, we won't find out until we run our program.
+
+=== `@By` and `@Param`
+
+Query methods match method parameters to entity fields or query parameters by name.
+Occasionally, this is inconvenient, resulting in less natural method parameter names.
+Let's reconsider an example we already saw above:
+
+[source,java]
+----
+@Find
+List<Book> books(String[] ibsn);
+----
+
+Here, because the parameter name must match the field `isbn` of `Book`, we couldn't call it `isbns`, plural.
+
+The `@By` annotation lets us work around this problem:
+
+[source,java]
+----
+@Find
+List<Book> books(@By("isbn") String[] ibsns);
+----
+
+Naturally, the name and type of the parameter are still checked at compile time; there's no loss of typesafety here, despite the string.
+
+The `@Param` annotation is significantly less useful, since we can always rename our HQL query parameter to match the method parameter, or, at worst, use an ordinal parameter instead.

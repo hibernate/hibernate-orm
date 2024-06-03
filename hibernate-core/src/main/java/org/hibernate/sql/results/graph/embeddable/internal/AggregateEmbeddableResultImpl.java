@@ -29,7 +29,9 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.InitializerProducer;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResult;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
@@ -51,6 +53,7 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent implem
 	private final boolean containsAnyNonScalars;
 	private final SqlSelection aggregateSelection;
 	private final EmbeddableMappingType fetchContainer;
+	private final BasicFetch<?> discriminatorFetch;
 
 	public AggregateEmbeddableResultImpl(
 			NavigablePath navigablePath,
@@ -104,6 +107,7 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent implem
 				null,
 				typeConfiguration
 		);
+		this.discriminatorFetch = creationState.visitEmbeddableDiscriminatorFetch( this, true );
 		resetFetches( creationState.visitNestedFetches( this ) );
 		this.containsAnyNonScalars = determineIfContainedAnyScalars( getFetches() );
 	}
@@ -152,24 +156,33 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent implem
 	public DomainResultAssembler<T> createResultAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
+		return createResultAssembler( (InitializerParent) parentAccess, creationState );
+	}
+
+	@Override
+	public DomainResultAssembler<T> createResultAssembler(
+			InitializerParent parent,
+			AssemblerCreationState creationState) {
 		//noinspection unchecked
-		return new EmbeddableAssembler( creationState.resolveInitializer( this, parentAccess, this ).asEmbeddableInitializer() );
+		return new EmbeddableAssembler( creationState.resolveInitializer( this, parent, this ).asEmbeddableInitializer() );
 	}
 
 	@Override
 	public Initializer createInitializer(
 			AggregateEmbeddableResultImpl<T> resultGraphNode,
-			FetchParentAccess parentAccess,
+			InitializerParent parent,
 			AssemblerCreationState creationState) {
-		return resultGraphNode.createInitializer( parentAccess, creationState );
+		return resultGraphNode.createInitializer( parent, creationState );
 	}
 
 	@Override
-	public Initializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
-		return new AggregateEmbeddableResultInitializer(
-				parentAccess,
+	public Initializer createInitializer(InitializerParent parent, AssemblerCreationState creationState) {
+		return new AggregateEmbeddableInitializerImpl(
 				this,
+				discriminatorFetch,
+				parent,
 				creationState,
+				true,
 				aggregateSelection
 		);
 	}

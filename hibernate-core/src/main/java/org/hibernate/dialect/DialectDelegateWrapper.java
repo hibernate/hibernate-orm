@@ -132,19 +132,19 @@ public class DialectDelegateWrapper extends Dialect {
 		return wrapped;
 	}
 
-	//can't be overriden because of how Dialects get initialized: see constructor of parent
+	//can't be overridden because of how Dialects get initialized: see constructor of parent
 	@Override
 	protected final void checkVersion() {
 		//intentionally empty: this is used by the super constructor (yuk)
 	}
 
-	//can't be overriden because of how Dialects get initialized: see constructor of parent
+	//can't be overridden because of how Dialects get initialized: see constructor of parent
 	@Override
 	protected final void registerDefaultKeywords() {
 		//intentionally empty: this is used by the super constructor (yuk)
 	}
 
-	//can't be overriden because of how Dialects get initialized: see constructor of parent
+	//can't be overridden because of how Dialects get initialized: see constructor of parent
 	@Override
 	protected final void initDefaultProperties() {
 		//intentionally empty: this is used by the super constructor (yuk)
@@ -1039,6 +1039,11 @@ public class DialectDelegateWrapper extends Dialect {
 	@Override
 	public boolean useInputStreamToInsertBlob() {
 		return wrapped.useInputStreamToInsertBlob();
+	}
+
+	@Override
+	public boolean useConnectionToCreateLob() {
+		return wrapped.useConnectionToCreateLob();
 	}
 
 	@Override

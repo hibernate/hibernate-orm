@@ -69,6 +69,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
+import static org.hibernate.grammars.hql.HqlLexer.AS;
 import static org.hibernate.grammars.hql.HqlLexer.FROM;
 import static org.hibernate.grammars.hql.HqlLexer.GROUP;
 import static org.hibernate.grammars.hql.HqlLexer.HAVING;
@@ -380,7 +381,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 		if ( repository ) {
 			final List<ExecutableElement> methodsOfClass =
-					methodsIn( context.getElementUtils().getAllMembers(element) );
+					methodsIn( context.getAllMembers(element) );
 			for ( ExecutableElement method: methodsOfClass ) {
 				if ( containsAnnotation( method, HQL, SQL, JD_QUERY, FIND, JD_FIND ) ) {
 					queryMethods.add( method );
@@ -401,8 +402,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						&& !isSessionGetter(method) ) {
 					final String companionClassName = element.getQualifiedName().toString() + '$';
 					if ( context.getElementUtils().getTypeElement(companionClassName) == null ) {
-						message( method, "repository method cannot be implemented",
-								Diagnostic.Kind.ERROR );
+						message( method, "repository method cannot be implemented (skipping whole repository)",
+								Diagnostic.Kind.WARNING );
 					}
 					// NOTE EARLY EXIT with initialized = false
 					return;
@@ -410,6 +411,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 
 			primaryEntity = primaryEntity( lifecycleMethods );
+			if ( primaryEntity != null && !hasAnnotation(primaryEntity, ENTITY)
+					|| !checkEntities(lifecycleMethods)) {
+				// NOTE EARLY EXIT with initialized = false
+				return;
+			}
 
 			if ( !lifecycleMethods.isEmpty() ) {
 				validateStatelessSessionType();
@@ -454,6 +460,36 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		initialized = true;
 	}
 
+	private boolean checkEntities(List<ExecutableElement> lifecycleMethods) {
+		boolean foundPersistenceEntity = false;
+		VariableElement nonPersistenceParameter = null;
+		for (ExecutableElement lifecycleMethod : lifecycleMethods) {
+			final List<? extends VariableElement> parameters = lifecycleMethod.getParameters();
+			if ( !parameters.isEmpty() ) {
+				final VariableElement parameter = parameters.get(0);
+				final TypeMirror declaredType = parameter.asType();
+				final TypeMirror parameterType = parameterType(parameter);
+				final DeclaredType type = entityType(parameterType);
+				if ( type != null ) {
+					if ( hasAnnotation( type.asElement(), ENTITY ) ) {
+						foundPersistenceEntity = true;
+					}
+					else if ( declaredType == parameterType
+							&& nonPersistenceParameter==null ) {
+						nonPersistenceParameter = parameter;
+					}
+				}
+			}
+		}
+		if ( foundPersistenceEntity && nonPersistenceParameter != null ) {
+			message(nonPersistenceParameter,
+					"parameter type '" + nonPersistenceParameter.asType()
+							+ "' is not a Jakarta Persistence entity class (skipping entire repository)",
+					Diagnostic.Kind.WARNING);
+		}
+		return nonPersistenceParameter == null;
+	}
+
 	private void validateStatelessSessionType() {
 		if ( !usingStatelessSession(sessionType) ) {
 			message( element,
@@ -462,7 +498,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private @Nullable TypeElement primaryEntity(List<ExecutableElement> lifecycleMethods) {
+	private static @Nullable TypeElement primaryEntity(TypeElement element) {
 		for (TypeMirror typeMirror : element.getInterfaces()) {
 			final DeclaredType declaredType = (DeclaredType) typeMirror;
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
@@ -477,8 +513,27 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					return (TypeElement) entityDeclared.asElement();
 				}
 			}
+			else {
+				final TypeElement primaryEntity = primaryEntity(typeElement);
+				if ( primaryEntity != null ) {
+					return primaryEntity;
+				}
+			}
 		}
-		TypeElement result = null;
+		return null;
+	}
+
+	private @Nullable TypeElement primaryEntity(List<ExecutableElement> lifecycleMethods) {
+		// first see if we are a subtype of DataRepository
+		// in that case, the first type argument determines
+		// the primary entity type
+		TypeElement result = primaryEntity(element);
+		if ( result != null ) {
+			return result;
+		}
+		// otherwise, we have to check all the lifecycle
+		// methods and determine if they all agree on the
+		// entity type; if so, it is the primary
 		final Types types = context.getTypeUtils();
 		for ( ExecutableElement element : lifecycleMethods ) {
 			if ( element.getParameters().size()==1 ) {
@@ -538,12 +593,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 				else {
 					// For Panache subtypes, we look at the session type, but no DAO, we want static methods
-					sessionType = getter.getReturnType().toString();
+					sessionType = fullReturnType(getter);
 				}
 			}
 			else if ( element.getKind() == ElementKind.INTERFACE
+					&& !jakartaDataRepository
 					&& ( context.usesQuarkusOrm() || context.usesQuarkusReactive() ) ) {
-				// if we don't have a getter, but we're in Quarkus, we know how to find the default sessions
+				// if we don't have a getter, and not a JD repository, but we're in Quarkus, we know how to find the default sessions
 				repository = true;
 				sessionType = setupQuarkusDaoConstructor();
 			}
@@ -647,7 +703,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 * it.
 	 */
 	private String addDaoConstructor(@Nullable ExecutableElement method) {
-		final String sessionType = method == null ? this.sessionType : method.getReturnType().toString();
+		final String sessionType = method == null ? this.sessionType : fullReturnType(method);
 		final String sessionVariableName = getSessionVariableName( sessionType );
 		final String name = method == null ? sessionVariableName : method.getSimpleName().toString();
 
@@ -948,8 +1004,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 			final AnnotationValue annotationVal =
 					castNonNull(getAnnotationValue(annotation, "mappedBy"));
-			for ( Element member : context.getElementUtils().getAllMembers(assocTypeElement) ) {
-				if ( propertyName(this, member).contentEquals(mappedBy) ) {
+			for ( Element member : context.getAllMembers(assocTypeElement) ) {
+				if ( propertyName(this, member).contentEquals(mappedBy)
+						&& compatibleAccess(assocTypeElement, member) ) {
 					validateBackRef(memberOfClass, annotation, assocTypeElement, member, annotationVal);
 					return;
 				}
@@ -959,6 +1016,19 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					annotationVal,
 					"no matching member in '" + assocTypeElement.getSimpleName() + "'",
 					Diagnostic.Kind.ERROR);
+		}
+	}
+
+	private boolean compatibleAccess(TypeElement assocTypeElement, Element member) {
+		final AccessType memberAccessType = determineAnnotationSpecifiedAccessType( member );
+		final AccessType accessType = memberAccessType == null ? getAccessType(assocTypeElement) : memberAccessType;
+		switch ( member.getKind() ) {
+			case FIELD:
+				return accessType == AccessType.FIELD;
+			case METHOD:
+				return accessType == AccessType.PROPERTY;
+			default:
+				return false;
 		}
 	}
 
@@ -1055,16 +1125,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private void addQueryMethod(ExecutableElement method) {
-		final ExecutableType methodType =
-				(ExecutableType) context.getTypeUtils()
-						.asMemberOf((DeclaredType) element.asType(), method);
-		final TypeMirror returnType = methodType.getReturnType();
+		final TypeMirror returnType = memberMethodType(method).getReturnType();
 		final TypeKind kind = returnType.getKind();
 		if ( kind == TypeKind.VOID || kind == TypeKind.ARRAY || kind.isPrimitive() ) {
 			addQueryMethod( method, returnType, null );
 		}
 		else if ( kind == TypeKind.DECLARED ) {
-			final DeclaredType declaredType = (DeclaredType) ununi( returnType );
+			final DeclaredType declaredType = (DeclaredType) ununiIfPossible(method, returnType);
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
 			final List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
 			switch ( typeArguments.size() ) {
@@ -1096,13 +1163,28 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
+	private TypeMirror ununiIfPossible(ExecutableElement method, TypeMirror returnType) {
+		final TypeMirror result = ununi( returnType );
+		if ( repository ) {
+			if ( usingReactiveSession( sessionType ) )  {
+				if ( result == returnType ) {
+					message( method, "backed by a reactive session, must return 'Uni'", Diagnostic.Kind.ERROR );
+				}
+			}
+			else {
+				if ( result != returnType ) {
+					message( method, "not backed by a reactive session, must not return 'Uni'", Diagnostic.Kind.ERROR );
+				}
+			}
+		}
+		return result;
+	}
+
 	private boolean validatedQueryReturnType(ExecutableElement method, TypeElement typeElement) {
 		final String typeName = typeElement.getQualifiedName().toString();
 		switch ( typeName ) {
 			case JD_PAGE:
-			case JD_CURSORED_PAGE:
-				if ( method.getParameters().stream()
-						.noneMatch(param -> typeNameEquals(param.asType(), JD_PAGE_REQUEST))) {
+				if ( !hasPageRequest(method) ) {
 					message(method,
 							"method with return type '" + typeName
 									+ "' has no parameter of type 'PageRequest'",
@@ -1112,9 +1194,26 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				else {
 					return true;
 				}
+			case JD_CURSORED_PAGE:
+				if ( !hasPageRequest(method) ) {
+					message(method,
+							"method with return type '" + typeName
+									+ "' has no parameter of type 'PageRequest'",
+							Diagnostic.Kind.ERROR);
+					return false;
+				}
+				else if ( !hasOrder(method) ) {
+					message(method,
+							"method with return type '" + typeName
+									+ "' has no parameter of type 'Order' or 'Sort' and no '@OrderBy' annotation",
+							Diagnostic.Kind.ERROR);
+					return false;
+				}
+				else {
+					return true;
+				}
 			case HIB_KEYED_RESULT_LIST:
-				if ( method.getParameters().stream()
-						.noneMatch(param -> typeNameEquals(param.asType(), HIB_KEYED_PAGE))) {
+				if ( !hashKeyedPage(method) ) {
 					message(method,
 							"method with return type '" + typeName
 									+ "' has no parameter of type 'KeyedPage'",
@@ -1135,6 +1234,24 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					return false;
 				}
 		}
+	}
+
+	private static boolean hashKeyedPage(ExecutableElement method) {
+		return method.getParameters().stream()
+				.anyMatch(param -> typeNameEquals(param.asType(), HIB_KEYED_PAGE));
+	}
+
+	private static boolean hasPageRequest(ExecutableElement method) {
+		return method.getParameters().stream()
+				.anyMatch(param -> typeNameEquals(param.asType(), JD_PAGE_REQUEST));
+	}
+
+	private static boolean hasOrder(ExecutableElement method) {
+		return hasAnnotation(method, JD_ORDER_BY, JD_ORDER_BY_LIST)
+			|| method.getParameters().stream()
+				.anyMatch(param -> typeNameEquals(param.asType(), JD_ORDER)
+						|| typeNameEquals(param.asType(), JD_SORT)
+						|| typeNameEqualsArray(param.asType(), JD_SORT));
 	}
 
 	private static TypeMirror ununi(TypeMirror returnType) {
@@ -1199,13 +1316,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						Diagnostic.Kind.ERROR);
 			}
 			else {
-				createCriteriaDelete(method, returnType);
+				createCriteriaDelete(method);
 			}
 		}
 	}
 
 	private void addLifecycleMethod(ExecutableElement method) {
-		final TypeMirror returnType = ununi(method.getReturnType());
+		final TypeMirror returnType = ununiIfPossible( method, method.getReturnType() );
 		if ( method.getParameters().size() != 1 ) {
 			message( method,
 					"must have exactly one parameter",
@@ -1229,7 +1346,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						"incorrect parameter type '" + parameterType + "' is not an entity type",
 						Diagnostic.Kind.ERROR );
 			}
-			else if ( !containsAnnotation( declaredType.asElement(), ENTITY )
+			else if ( !hasAnnotation( declaredType.asElement(), ENTITY )
 					// TODO: improve this (carefully consider the case of an erased type variable)
 					&& declaredParameterType == parameterType ) {
 				message( parameter,
@@ -1258,11 +1375,24 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 								operation,
 								context.addNonnullAnnotation(),
 								isIterableLifecycleParameter(parameterType),
-								returnArgument
+								returnArgument,
+								hasGeneratedId(declaredType)
 						)
 				);
 			}
 		}
+	}
+
+	private boolean hasGeneratedId(DeclaredType entityType)  {
+		final TypeElement typeElement = (TypeElement) entityType.asElement();
+		for ( Element member : context.getAllMembers(typeElement) ) {
+			if ( hasAnnotation(member, GENERATED_VALUE)
+					&& hasAnnotation(member, ID) ) {
+				return true;
+			}
+			//TODO: look for generator annotations
+		}
+		return false;
 	}
 
 	private static boolean isIterableLifecycleParameter(TypeMirror parameterType) {
@@ -1389,7 +1519,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 		}
 		else if ( returnType.getKind() == TypeKind.DECLARED ) {
-			final DeclaredType declaredType = (DeclaredType) ununi( returnType );
+			final DeclaredType declaredType = (DeclaredType) returnType;
 			final TypeElement entity = (TypeElement) declaredType.asElement();
 			if ( !containsAnnotation( entity, ENTITY ) ) {
 				message( method,
@@ -1397,8 +1527,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						Diagnostic.Kind.ERROR );
 			}
 			else {
-				if ( containerType != null ) {
-					// multiple results, it has to be a criteria finder
+				if ( containerType != null
+						&& !containerType.getQualifiedName().contentEquals(OPTIONAL) ) {
+					// multiple results, so it has to be a criteria finder
 					createCriteriaFinder( method, declaredType, containerType.toString(), entity );
 				}
 				else {
@@ -1411,6 +1542,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							message( parameter, "ordering would have no effect", Diagnostic.Kind.ERROR);
 						}
 					}
+					final String containerTypeName = containerType==null ? null : OPTIONAL;
 					final long parameterCount =
 							method.getParameters().stream()
 									.filter(AnnotationMetaEntity::isFinderParameterMappingToAttribute)
@@ -1420,10 +1552,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							message( method, "missing parameter", Diagnostic.Kind.ERROR );
 							break;
 						case 1:
-							createSingleParameterFinder( method, declaredType, entity );
+							createSingleParameterFinder( method, declaredType, entity, containerTypeName );
 							break;
 						default:
-							createMultipleParameterFinder( method, declaredType, entity );
+							createMultipleParameterFinder( method, declaredType, entity, containerTypeName );
 					}
 				}
 			}
@@ -1473,7 +1605,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						enabledFetchProfiles( method ),
 						orderByList( method, entity ),
 						context.addNonnullAnnotation(),
-						jakartaDataRepository
+						jakartaDataRepository,
+						fullReturnType(method),
+						hasAnnotation(method, NULLABLE)
 				)
 		);
 	}
@@ -1481,19 +1615,18 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void checkFinderParameter(TypeElement entity, VariableElement parameter) {
 		final Types types = context.getTypeUtils();
 		final TypeMirror parameterType = parameterType(parameter);
-		boolean pageRequest = typeNameEquals( parameterType, JD_PAGE_REQUEST );
-		if ( isOrderParam( typeName(parameterType) ) || pageRequest ) {
+		if ( isOrderParam( typeName(parameterType) ) ) {
 			final TypeMirror typeArgument = getTypeArgument( parameterType, entity );
 			if ( typeArgument == null ) {
-				missingTypeArgError( entity.getSimpleName().toString(), parameter, pageRequest );
+				missingTypeArgError( entity.getSimpleName().toString(), parameter );
 			}
 			else if ( !types.isSameType( typeArgument, entity.asType() ) ) {
-				wrongTypeArgError( entity.getSimpleName().toString(), parameter, pageRequest );
+				wrongTypeArgError( entity.getSimpleName().toString(), parameter );
 			}
 		}
 	}
 
-	private void createCriteriaDelete(ExecutableElement method, TypeMirror returnType) {
+	private void createCriteriaDelete(ExecutableElement method) {
 		final TypeElement entity = primaryEntity;
 		if ( entity == null) {
 			message( method, "repository does not have a well-defined primary entity type",
@@ -1520,7 +1653,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							this, method,
 							methodName,
 							entity.getQualifiedName().toString(),
-							returnType.toString(),
 							paramNames,
 							paramTypes,
 							parameterNullability(method, entity),
@@ -1530,35 +1662,27 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							sessionType[0],
 							sessionType[1],
 							context.addNonnullAnnotation(),
-							jakartaDataRepository
+							jakartaDataRepository,
+							fullReturnType(method)
 					)
 			);
 		}
 	}
 
-	private void wrongTypeArgError(String entity, VariableElement parameter, boolean pageRequest) {
-		message(parameter,
-				(pageRequest
-						? "mismatched type of page request (should be 'PageRequest<? super "
-						:"mismatched type of order (should be 'Order<? super ")
-						+ entity + ">')",
+	private void wrongTypeArgError(String entity, VariableElement parameter) {
+		message(parameter, "mismatched type of order (should be 'Order<? super " + entity + ">')",
 				Diagnostic.Kind.ERROR );
 	}
 
-	private void missingTypeArgError(String entity, VariableElement parameter, boolean pageRequest) {
-		message(parameter,
-				(pageRequest
-						? "missing type of page request (should be 'PageRequest<? super "
-						: "missing type of order (should be 'Order<? super ")
-						+ entity + ">')",
+	private void missingTypeArgError(String entity, VariableElement parameter) {
+		message(parameter, "missing type of order (should be 'Order<? super " + entity + ">')",
 				Diagnostic.Kind.ERROR );
 	}
 
 	private List<OrderBy> orderByList(ExecutableElement method, TypeElement returnType) {
 		final TypeElement entityType = implicitEntityType( returnType );
 		if ( entityType != null ) {
-			final AnnotationMirror orderByList =
-					getAnnotationMirror( method, "jakarta.data.repository.OrderBy.List" );
+			final AnnotationMirror orderByList = getAnnotationMirror( method, JD_ORDER_BY_LIST );
 			if ( orderByList != null ) {
 				final List<OrderBy> result = new ArrayList<>();
 				@SuppressWarnings("unchecked")
@@ -1569,8 +1693,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 				return result;
 			}
-			final AnnotationMirror orderBy =
-					getAnnotationMirror( method, "jakarta.data.repository.OrderBy" );
+			final AnnotationMirror orderBy = getAnnotationMirror( method, JD_ORDER_BY );
 			if ( orderBy != null ) {
 				return List.of( orderByExpression(orderBy, entityType, method) );
 			}
@@ -1615,7 +1738,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					case HIB_ORDER:
 					case JD_SORT:
 					case JD_ORDER:
-					case JD_PAGE_REQUEST:
 						for ( TypeMirror arg : type.getTypeArguments() ) {
 							switch ( arg.getKind() ) {
 								case WILDCARD:
@@ -1696,7 +1818,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private void createMultipleParameterFinder(ExecutableElement method, TypeMirror returnType, TypeElement entity) {
+	private void createMultipleParameterFinder(
+			ExecutableElement method, TypeMirror returnType, TypeElement entity, @Nullable String containerType) {
 		final String methodName = method.getSimpleName().toString();
 		final List<String> paramNames = parameterNames( method, entity );
 		final List<String> paramTypes = parameterTypes( method );
@@ -1721,6 +1844,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							this, method,
 							methodName,
 							returnType.toString(),
+							containerType,
 							paramNames,
 							paramTypes,
 							parameterNullability(method, entity),
@@ -1729,7 +1853,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							sessionType[1],
 							enabledFetchProfiles( method ),
 							context.addNonnullAnnotation(),
-							jakartaDataRepository
+							jakartaDataRepository,
+							fullReturnType(method)
 					)
 			);
 		}
@@ -1740,7 +1865,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							this, method,
 							methodName,
 							returnType.toString(),
-							null,
+							containerType,
 							paramNames,
 							paramTypes,
 							parameterNullability(method, entity),
@@ -1752,13 +1877,16 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							enabledFetchProfiles( method ),
 							orderByList( method, entity ),
 							context.addNonnullAnnotation(),
-							jakartaDataRepository
+							jakartaDataRepository,
+							fullReturnType(method),
+							hasAnnotation(method, NULLABLE)
 					)
 			);
 		}
 	}
 
-	private void createSingleParameterFinder(ExecutableElement method, TypeMirror returnType, TypeElement entity) {
+	private void createSingleParameterFinder(
+			ExecutableElement method, TypeMirror returnType, TypeElement entity, @Nullable String containerType) {
 		final String methodName = method.getSimpleName().toString();
 		final VariableElement parameter =
 				method.getParameters().stream()
@@ -1778,6 +1906,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									this, method,
 									methodName,
 									returnType.toString(),
+									containerType,
 									paramNames,
 									paramTypes,
 									repository,
@@ -1785,7 +1914,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									sessionType[1],
 									profiles,
 									context.addNonnullAnnotation(),
-									jakartaDataRepository
+									jakartaDataRepository,
+									fullReturnType(method),
+									hasAnnotation(method, NULLABLE)
 							)
 					);
 					break;
@@ -1795,6 +1926,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									this, method,
 									methodName,
 									returnType.toString(),
+									containerType,
 									paramNames,
 									paramTypes,
 									parameterNullability(method, entity),
@@ -1803,7 +1935,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									sessionType[1],
 									profiles,
 									context.addNonnullAnnotation(),
-									jakartaDataRepository
+									jakartaDataRepository,
+									fullReturnType(method)
 							)
 					);
 					break;
@@ -1815,7 +1948,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									this, method,
 									methodName,
 									returnType.toString(),
-									null,
+									containerType,
 									paramNames,
 									paramTypes,
 									parameterNullability(method, entity),
@@ -1830,7 +1963,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									profiles,
 									orderByList( method, entity ),
 									context.addNonnullAnnotation(),
-									jakartaDataRepository
+									jakartaDataRepository,
+									fullReturnType(method),
+									hasAnnotation(method, NULLABLE)
 							)
 					);
 					break;
@@ -1998,7 +2133,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private AccessType getAccessType(TypeElement entity) {
 		final String entityClassName = entity.getQualifiedName().toString();
-		determineAccessTypeForHierarchy(entity, context );
+		determineAccessTypeForHierarchy( entity, context );
 		return castNonNull( context.getAccessTypeInfo( entityClassName ) ).getAccessType();
 	}
 
@@ -2019,7 +2154,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private @Nullable Element memberMatchingPath(TypeElement entityType, StringTokenizer tokens) {
 		final AccessType accessType = getAccessType(entityType);
 		final String nextToken = tokens.nextToken();
-		for ( Element member : context.getElementUtils().getAllMembers(entityType) ) {
+		for ( Element member : context.getAllMembers(entityType) ) {
 			if ( isIdRef(nextToken) && hasAnnotation( member, ID) ) {
 				return member;
 			}
@@ -2188,9 +2323,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						sessionType[1],
 						orderBys,
 						context.addNonnullAnnotation(),
-						jakartaDataRepository
+						jakartaDataRepository,
+						fullReturnType(method),
+						hasAnnotation(method, NULLABLE)
 				);
 		putMember( attribute.getPropertyName() + paramTypes, attribute );
+	}
+
+	private String fullReturnType(ExecutableElement method) {
+		return typeAsString( memberMethodType(method).getReturnType() );
 	}
 
 	private static String returnTypeClass(TypeMirror returnType) {
@@ -2284,10 +2425,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					break;
 				}
 			}
-			for (Token token : allTokens) {
+			for (int i = 0; i < allTokens.size(); i++) {
+				final Token token = allTokens.get(i);
 				switch ( token.getType() ) {
 					case FROM:
-						return hql;
+						return thisText.isEmpty() || hasAlias(i, allTokens) ? hql
+								: new StringBuilder(hql)
+								.insert(allTokens.get(i+1).getStopIndex() + 1, thisText)
+								.toString();
 					case WHERE:
 					case HAVING:
 					case GROUP:
@@ -2298,6 +2443,17 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 			}
 			return hql + " from " + entityType + thisText;
+		}
+	}
+
+	private static boolean hasAlias(int i, List<? extends Token> allTokens) {
+		if ( allTokens.size() <= i+2 ) {
+			return false;
+		}
+		else {
+			final int nextTokenType = allTokens.get(i+2).getType();
+			return nextTokenType == IDENTIFIER
+				|| nextTokenType == AS;
 		}
 	}
 
@@ -2340,7 +2496,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						returnType,
 						true,
 						new ErrorHandler( context, isLocal(method) ? method : element, mirror, value, hql ),
-						ProcessorSessionFactory.create( context.getProcessingEnvironment() )
+						ProcessorSessionFactory.create( context.getProcessingEnvironment(),
+								context.getEntityNameMappings(), context.getEnumTypesByValue() )
 				);
 		if ( statement != null ) {
 			if ( statement instanceof SqmSelectStatement ) {
@@ -2376,7 +2533,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 		if ( reactive ) {
 			// for reactive calls, don't use the returnType param, which has been ununi-ed, we want to check the full one
-			final String returnTypeName = method.getReturnType().toString();
+			final String returnTypeName = fullReturnType(method);
 			return returnTypeName.equals( UNI_VOID )
 				|| returnTypeName.equals( UNI_BOOLEAN )
 				|| returnTypeName.equals( UNI_INTEGER );
@@ -2430,9 +2587,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				// TODO: anything more we can do here? e.g. check constructor
 				try {
 					final Class<?> javaResultType = selection.getJavaType();
-					final TypeElement typeElement = context.getTypeElementForFullyQualifiedName( javaResultType.getName() );
-					final Types types = context.getTypeUtils();
-					returnTypeCorrect = types.isAssignable( returnType,  types.erasure( typeElement.asType() ) );
+					if ( javaResultType == null ) {
+						returnTypeCorrect = true;
+					}
+					else {
+						final TypeElement typeElement = context.getTypeElementForFullyQualifiedName( javaResultType.getName() );
+						final Types types = context.getTypeUtils();
+						returnTypeCorrect = context.getTypeUtils().isAssignable( returnType, types.erasure( typeElement.asType() ) );
+					}
 				}
 				catch (Exception e) {
 					//ignore
@@ -2542,7 +2704,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static boolean parameterMatches(VariableElement parameter, JpaSelection<?> item) {
-		return parameterMatches( parameter.asType(), item.getJavaType() );
+		final Class<?> javaType = item.getJavaType();
+		return javaType != null && parameterMatches( parameter.asType(), javaType );
 	}
 
 	private static boolean parameterMatches(TypeMirror parameterType, Class<?> itemType) {
@@ -2732,10 +2895,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private TypeMirror parameterType(VariableElement parameter) {
 		final ExecutableElement method =
 				(ExecutableElement) parameter.getEnclosingElement();
-		final ExecutableType methodType =
-				(ExecutableType) context.getTypeUtils()
-						.asMemberOf((DeclaredType) element.asType(), method);
-		final TypeMirror type = methodType.getParameterTypes()
+		final TypeMirror type = memberMethodType(method).getParameterTypes()
 				.get( method.getParameters().indexOf(parameter) );
 		switch ( type.getKind() ) {
 			case TYPEVAR:
@@ -2750,6 +2910,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			default:
 				return type;
 		}
+	}
+
+	private ExecutableType memberMethodType(ExecutableElement method) {
+		return (ExecutableType) context.getTypeUtils()
+				.asMemberOf((DeclaredType) element.asType(), method);
 	}
 
 	private static List<Boolean> parameterPatterns(ExecutableElement method) {
@@ -2881,11 +3046,21 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return primaryEntity;
 	}
 
-	private boolean typeNameEquals(TypeMirror parameterType, String typeName) {
+	private static boolean typeNameEquals(TypeMirror parameterType, String typeName) {
 		if ( parameterType.getKind() == TypeKind.DECLARED ) {
 			final DeclaredType declaredType = (DeclaredType) parameterType;
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
 			return typeElement.getQualifiedName().contentEquals(typeName);
+		}
+		else {
+			return false;
+		}
+	}
+
+	private static boolean typeNameEqualsArray(TypeMirror parameterType, String typeName) {
+		if ( parameterType.getKind() == TypeKind.ARRAY ) {
+			final ArrayType arrayType = (ArrayType) parameterType;
+			return typeNameEquals( arrayType.getComponentType(), typeName );
 		}
 		else {
 			return false;

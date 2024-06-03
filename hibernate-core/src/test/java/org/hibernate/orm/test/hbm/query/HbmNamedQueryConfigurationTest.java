@@ -8,40 +8,44 @@ package org.hibernate.orm.test.hbm.query;
 
 import java.util.Map;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@RunWith(BytecodeEnhancerRunner.class)
-@EnhancementOptions(inlineDirtyChecking = true, lazyLoading = true, extendedEnhancement = true)
-public class HbmNamedQueryConfigurationTest extends BaseEntityManagerFunctionalTestCase {
-	@Override
-	protected String[] getMappings() {
-		return new String[]{
+import org.junit.jupiter.api.Test;
+
+@DomainModel(
+		xmlMappings = {
 				"org/hibernate/orm/test/hbm/query/HbmOverridesAnnotation.orm.xml",
 				"org/hibernate/orm/test/hbm/query/HbmOverridesAnnotation.hbm.xml"
-		};
-	}
-
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Override
-	protected void addConfigOptions(Map options) {
-		options.put( "hibernate.enable_specj_proprietary_syntax", "true" );
-		options.put( "hibernate.transform_hbm_xml.enabled", "true" );
-	}
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name ="hibernate.enable_specj_proprietary_syntax", value = "true"),
+				@Setting( name ="hibernate.transform_hbm_xml.enabled", value = "true"),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+@EnhancementOptions(inlineDirtyChecking = true, lazyLoading = true, extendedEnhancement = true)
+public class HbmNamedQueryConfigurationTest {
 
 	@Test
-	@TestForIssue( jiraKey = { "HHH-15619", "HHH-15620"} )
-	public void testHbmOverride() {
-		NamedObjectRepository namedObjectRepository = entityManagerFactory()
+	@JiraKey("HHH-15619")
+	@JiraKey("HHH-15620")
+	public void testHbmOverride(SessionFactoryScope scope) {
+		NamedObjectRepository namedObjectRepository = scope.getSessionFactory()
 				.getQueryEngine()
 				.getNamedObjectRepository();
 		NamedSqmQueryMemento sqmQueryMemento = namedObjectRepository.getSqmQueryMemento( Bar.FIND_ALL );

@@ -14,6 +14,8 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  * Allows creation of a new {@link StatelessSession} with specific options.
  *
  * @author Steve Ebersole
+ *
+ * @see SessionFactory#withStatelessOptions()
  */
 public interface StatelessSessionBuilder {
 	/**

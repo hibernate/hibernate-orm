@@ -22,6 +22,7 @@ import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
@@ -47,6 +48,7 @@ import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asSelfDirtinessTracker;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
@@ -214,16 +216,15 @@ public class DefaultMergeEventListener
 				entityIsPersistent( event, copiedAlready );
 				break;
 			default: //DELETED
-				if ( event.getSession().getPersistenceContext().getEntry( entity ) == null ) {
-					assert event.getSession().getPersistenceContext().containsDeletedUnloadedEntityKey(
-							event.getSession().generateEntityKey(
-									event.getSession()
-											.getEntityPersister( event.getEntityName(), entity )
+				if ( persistenceContext.getEntry( entity ) == null ) {
+					assert persistenceContext.containsDeletedUnloadedEntityKey(
+							source.generateEntityKey(
+									source.getEntityPersister( event.getEntityName(), entity )
 											.getIdentifier( entity, event.getSession() ),
-									event.getSession().getEntityPersister( event.getEntityName(), entity )
+									source.getEntityPersister( event.getEntityName(), entity )
 							)
 					);
-					event.getSession().getActionQueue().unScheduleUnloadedDeletion( entity );
+					source.getActionQueue().unScheduleUnloadedDeletion( entity );
 					entityIsDetached(event, copiedId, originalId, copiedAlready);
 					break;
 				}
@@ -393,7 +394,7 @@ public class DefaultMergeEventListener
 		}
 		final Object clonedIdentifier;
 		if ( copiedId == null ) {
-			clonedIdentifier = persister.getIdentifierType().deepCopy( originalId, source.getFactory() );
+			clonedIdentifier = persister.getIdentifierType().deepCopy( originalId, event.getFactory() );
 		}
 		else {
 			clonedIdentifier = copiedId;
@@ -404,17 +405,26 @@ public class DefaultMergeEventListener
 		final Object result = source.getLoadQueryInfluencers().fromInternalFetchProfile(
 				CascadingFetchProfile.MERGE,
 				() -> source.get( entityName, clonedIdentifier )
-
 		);
-		if ( result == null ) {
-			//TODO: we should throw an exception if we really *know* for sure
-			//      that this is a detached instance, rather than just assuming
-			//throw new StaleObjectStateException(entityName, id);
 
+		if ( result == null ) {
+			LOG.trace( "Detached instance not found in database" );
 			// we got here because we assumed that an instance
-			// with an assigned id was detached, when it was
-			// really persistent
-			entityIsTransient( event, clonedIdentifier, copyCache );
+			// with an assigned id and no version was detached,
+			// when it was really transient (or deleted)
+			final Boolean knownTransient = persister.isTransient( entity, source );
+			if ( knownTransient == Boolean.FALSE ) {
+				// we know for sure it's detached (generated id
+				// or a version property), and so the instance
+				// must have been deleted by another transaction
+				throw new StaleObjectStateException( entityName, id );
+			}
+			else {
+				// we know for sure it's transient, or we just
+				// don't have information (assigned id and no
+				// version property) so keep assuming transient
+				entityIsTransient( event, clonedIdentifier, copyCache );
+			}
 		}
 		else {
 			// before cascade!
@@ -514,10 +524,18 @@ public class DefaultMergeEventListener
 		// for enhanced entities, copy over the dirty attributes
 		if ( isSelfDirtinessTracker( entity ) && isSelfDirtinessTracker( target ) ) {
 			// clear, because setting the embedded attributes dirties them
+			final ManagedEntity managedEntity = asManagedEntity( target );
+			final boolean useTracker = asManagedEntity( entity ).$$_hibernate_useTracker();
 			final SelfDirtinessTracker selfDirtinessTrackerTarget = asSelfDirtinessTracker( target );
-			selfDirtinessTrackerTarget.$$_hibernate_clearDirtyAttributes();
-			for ( String fieldName : asSelfDirtinessTracker( entity ).$$_hibernate_getDirtyAttributes() ) {
-				selfDirtinessTrackerTarget.$$_hibernate_trackChange( fieldName );
+			if ( !selfDirtinessTrackerTarget.$$_hibernate_hasDirtyAttributes() &&  !useTracker ) {
+				managedEntity.$$_hibernate_setUseTracker( false );
+			}
+			else {
+				managedEntity.$$_hibernate_setUseTracker( true );
+				selfDirtinessTrackerTarget.$$_hibernate_clearDirtyAttributes();
+				for ( String fieldName : asSelfDirtinessTracker( entity ).$$_hibernate_getDirtyAttributes() ) {
+					selfDirtinessTrackerTarget.$$_hibernate_trackChange( fieldName );
+				}
 			}
 		}
 	}

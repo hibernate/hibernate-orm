@@ -6,13 +6,11 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.dirty;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.Jira;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -24,7 +22,7 @@ import jakarta.persistence.MappedSuperclass;
  * @author Yoann Rodière
  * @author Marco Belladelli
  */
-@RunWith( BytecodeEnhancerRunner.class )
+@BytecodeEnhanced
 @EnhancementOptions( inlineDirtyChecking = true )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-16459" )
 public class DirtyTrackingInheritanceTest {

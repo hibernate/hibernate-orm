@@ -256,7 +256,8 @@ public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCas
 					}
 				}
 			}
-			return true;
+			// Don't veto updates
+			return false;
 		}
 	}
 }

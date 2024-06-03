@@ -6,7 +6,18 @@
  */
 package org.hibernate.orm.test.jpa.criteria;
 
-import jakarta.persistence.EntityManager;
+import java.util.Arrays;
+import java.util.List;
+
+import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -15,19 +26,6 @@ import jakarta.persistence.criteria.ParameterExpression;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 
-import java.util.Arrays;
-import java.util.Map;
-
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.OracleDialect;
-import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.junit.Test;
-
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.transaction.TransactionUtil;
-
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -35,106 +33,94 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Steve Ebersole
  */
-public class ParameterTest extends BaseEntityManagerFunctionalTestCase {
-	@Override
-	protected void addConfigOptions(Map options) {
-		// Make sure this stuff runs on a dedicated connection pool,
-		// otherwise we might run into ORA-21700: object does not exist or is marked for delete
-		// because the JDBC connection or database session caches something that should have been invalidated
-		options.put( AvailableSettings.CONNECTION_PROVIDER, "" );
+@BootstrapServiceRegistry(
+		// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
+		integrators = SharedDriverManagerTypeCacheClearingIntegrator.class
+)
+@DomainModel(annotatedClasses = MultiTypedBasicAttributesEntity.class)
+@SessionFactory
+public class ParameterTest {
+
+	@Test
+	public void testPrimitiveArrayParameterBinding(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			CriteriaQuery<MultiTypedBasicAttributesEntity> criteria = em.getCriteriaBuilder()
+					.createQuery( MultiTypedBasicAttributesEntity.class );
+			Root<MultiTypedBasicAttributesEntity> rootEntity = criteria.from( MultiTypedBasicAttributesEntity.class );
+			Path<int[]> someIntsPath = rootEntity.get( MultiTypedBasicAttributesEntity_.someInts );
+			ParameterExpression<int[]> param = em.getCriteriaBuilder().parameter( int[].class, "theInts" );
+			criteria.where( em.getCriteriaBuilder().equal( someIntsPath, param ) );
+			TypedQuery<MultiTypedBasicAttributesEntity> query = em.createQuery( criteria );
+			query.setParameter( param, new int[] { 1,1,1 } );
+			assertThat( query.getParameterValue( param.getName() ), instanceOf( int[].class) );
+			query.getResultList();
+		} );
 	}
 
 	@Test
-	public void testPrimitiveArrayParameterBinding() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		CriteriaQuery<MultiTypedBasicAttributesEntity> criteria = em.getCriteriaBuilder()
-				.createQuery( MultiTypedBasicAttributesEntity.class );
-		Root<MultiTypedBasicAttributesEntity> rootEntity = criteria.from( MultiTypedBasicAttributesEntity.class );
-		Path<int[]> someIntsPath = rootEntity.get( MultiTypedBasicAttributesEntity_.someInts );
-		ParameterExpression<int[]> param = em.getCriteriaBuilder().parameter( int[].class, "theInts" );
-		criteria.where( em.getCriteriaBuilder().equal( someIntsPath, param ) );
-		TypedQuery<MultiTypedBasicAttributesEntity> query = em.createQuery( criteria );
-		query.setParameter( param, new int[] { 1,1,1 } );
-		assertThat( query.getParameterValue( param.getName() ), instanceOf( int[].class) );
-		query.getResultList();
-		em.getTransaction().commit();
-		em.close();
+	public void testNonPrimitiveArrayParameterBinding(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			CriteriaQuery<MultiTypedBasicAttributesEntity> criteria = em.getCriteriaBuilder()
+					.createQuery( MultiTypedBasicAttributesEntity.class );
+			Root<MultiTypedBasicAttributesEntity> rootEntity = criteria.from( MultiTypedBasicAttributesEntity.class );
+			Path<Integer[]> thePath = rootEntity.get( MultiTypedBasicAttributesEntity_.someWrappedIntegers );
+			ParameterExpression<Integer[]> param = em.getCriteriaBuilder().parameter( Integer[].class, "theIntegers" );
+			criteria.where( em.getCriteriaBuilder().equal( thePath, param ) );
+			TypedQuery<MultiTypedBasicAttributesEntity> query = em.createQuery( criteria );
+			query.setParameter( param, new Integer[] { 1, 1, 1 } );
+			assertThat( query.getParameterValue( param.getName() ), instanceOf( Integer[].class ) );
+			query.getResultList();
+		} );
 	}
 
 	@Test
-	public void testNonPrimitiveArrayParameterBinding() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		CriteriaQuery<MultiTypedBasicAttributesEntity> criteria = em.getCriteriaBuilder()
-				.createQuery( MultiTypedBasicAttributesEntity.class );
-		Root<MultiTypedBasicAttributesEntity> rootEntity = criteria.from( MultiTypedBasicAttributesEntity.class );
-		Path<Integer[]> thePath = rootEntity.get( MultiTypedBasicAttributesEntity_.someWrappedIntegers );
-		ParameterExpression<Integer[]> param = em.getCriteriaBuilder().parameter( Integer[].class, "theIntegers" );
-		criteria.where( em.getCriteriaBuilder().equal( thePath, param ) );
-		TypedQuery<MultiTypedBasicAttributesEntity> query = em.createQuery( criteria );
-		query.setParameter( param, new Integer[] {1, 1, 1} );
-		assertThat( query.getParameterValue( param.getName() ), instanceOf( Integer[].class ) );
-		query.getResultList();
-		em.getTransaction().commit();
-		em.close();
+	public void testNamedParameterMetadata(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			CriteriaQuery<MultiTypedBasicAttributesEntity> criteria = em.getCriteriaBuilder()
+					.createQuery( MultiTypedBasicAttributesEntity.class );
+			Root<MultiTypedBasicAttributesEntity> rootEntity = criteria.from( MultiTypedBasicAttributesEntity.class );
+
+			criteria.where(
+					em.getCriteriaBuilder().equal(
+							rootEntity.get( MultiTypedBasicAttributesEntity_.id ),
+							em.getCriteriaBuilder().parameter( Long.class, "id" )
+					)
+			);
+
+			TypedQuery<MultiTypedBasicAttributesEntity> query = em.createQuery( criteria );
+			Parameter<?> parameter = query.getParameter( "id" );
+			assertEquals( "id", parameter.getName() );
+		} );
 	}
 
 	@Test
-	public void testNamedParameterMetadata() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		CriteriaQuery<MultiTypedBasicAttributesEntity> criteria = em.getCriteriaBuilder()
-				.createQuery( MultiTypedBasicAttributesEntity.class );
-		Root<MultiTypedBasicAttributesEntity> rootEntity = criteria.from( MultiTypedBasicAttributesEntity.class );
-
-		criteria.where(
-				em.getCriteriaBuilder().equal(
-						rootEntity.get( MultiTypedBasicAttributesEntity_.id ),
-						em.getCriteriaBuilder().parameter( Long.class, "id" )
-				)
-		);
-
-		TypedQuery<MultiTypedBasicAttributesEntity> query = em.createQuery( criteria );
-		Parameter<?> parameter = query.getParameter( "id" );
-		assertEquals( "id", parameter.getName() );
-
-		em.getTransaction().commit();
-		em.close();
-	}
-
-	@Test
-	public void testParameterInParameterList() {
+	public void testParameterInParameterList(SessionFactoryScope scope) {
 		// Yes, this test makes no semantic sense.  But the JPA TCK does it...
 		// 		it causes a problem on Derby, which does not like the form "... where ? in (?,?)"
 		//		Derby wants one side or the other to be CAST (I assume so it can check typing).
+		scope.inTransaction( em -> {
+			CriteriaQuery<MultiTypedBasicAttributesEntity> criteria = em.getCriteriaBuilder()
+					.createQuery( MultiTypedBasicAttributesEntity.class );
+			criteria.from( MultiTypedBasicAttributesEntity.class );
 
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		CriteriaQuery<MultiTypedBasicAttributesEntity> criteria = em.getCriteriaBuilder()
-				.createQuery( MultiTypedBasicAttributesEntity.class );
-		criteria.from( MultiTypedBasicAttributesEntity.class );
+			criteria.where(
+					em.getCriteriaBuilder().in( em.getCriteriaBuilder().parameter( Long.class, "p1" ) )
+							.value( em.getCriteriaBuilder().parameter( Long.class, "p2" ) )
+							.value( em.getCriteriaBuilder().parameter( Long.class, "p3" ) )
+			);
 
-		criteria.where(
-				em.getCriteriaBuilder().in( em.getCriteriaBuilder().parameter( Long.class, "p1" ) )
-						.value( em.getCriteriaBuilder().parameter( Long.class, "p2" ) )
-						.value( em.getCriteriaBuilder().parameter( Long.class, "p3" ) )
-		);
-
-		TypedQuery<MultiTypedBasicAttributesEntity> query = em.createQuery( criteria );
-		query.setParameter( "p1", 1L );
-		query.setParameter( "p2", 2L );
-		query.setParameter( "p3", 3L );
-		query.getResultList();
-
-		em.getTransaction().commit();
-		em.close();
+			TypedQuery<MultiTypedBasicAttributesEntity> query = em.createQuery( criteria );
+			query.setParameter( "p1", 1L );
+			query.setParameter( "p2", 2L );
+			query.setParameter( "p3", 3L );
+			query.getResultList();
+		} );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10870")
-	public void testParameterInParameterList2() {
-		TransactionUtil.doInJPA( this::entityManagerFactory, em -> {
+	@JiraKey("HHH-10870")
+	public void testParameterInParameterList2(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
 			final CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
 			final CriteriaQuery<MultiTypedBasicAttributesEntity> criteria = criteriaBuilder
 					.createQuery( MultiTypedBasicAttributesEntity.class );
@@ -150,8 +136,22 @@ public class ParameterTest extends BaseEntityManagerFunctionalTestCase {
 		} );
 	}
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class[] { MultiTypedBasicAttributesEntity.class };
+	@Test
+	@JiraKey("HHH-17912")
+	public void testAttributeEqualListParameter(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			final CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+			final CriteriaQuery<MultiTypedBasicAttributesEntity> criteria = criteriaBuilder
+					.createQuery( MultiTypedBasicAttributesEntity.class );
+
+			final ParameterExpression<List> parameter = criteriaBuilder.parameter( List.class );
+
+			final Root<MultiTypedBasicAttributesEntity> root = criteria.from( MultiTypedBasicAttributesEntity.class );
+			criteria.select( root ).where( criteriaBuilder.equal( root.get( MultiTypedBasicAttributesEntity_.integerList ), parameter ) );
+
+			final TypedQuery<MultiTypedBasicAttributesEntity> query1 = em.createQuery( criteria );
+			query1.setParameter( parameter, List.of( 1, 2, 3 ) );
+			query1.getResultList();
+		} );
 	}
 }

@@ -10,6 +10,8 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.util.TimeZone;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -77,6 +79,18 @@ public abstract class AbstractDescriptorTest<T> extends BaseUnitTestCase {
 		@Override
 		public TimeZone getJdbcTimeZone() {
 			return null;
+		}
+
+		private final Dialect dialect = new H2Dialect() {
+			@Override
+			public boolean useConnectionToCreateLob() {
+				return false;
+			}
+		};
+
+		@Override
+		public Dialect getDialect() {
+			return dialect;
 		}
 	};
 

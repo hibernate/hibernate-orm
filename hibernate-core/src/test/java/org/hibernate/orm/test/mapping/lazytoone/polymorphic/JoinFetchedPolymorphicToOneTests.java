@@ -16,67 +16,74 @@ import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Fetch;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.jdbc.SQLStatementInterceptor;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static jakarta.persistence.FetchType.LAZY;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.annotations.FetchMode.JOIN;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
-@RunWith( BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				JoinFetchedPolymorphicToOneTests.Order.class,
+				JoinFetchedPolymorphicToOneTests.Customer.class,
+				JoinFetchedPolymorphicToOneTests.ForeignCustomer.class,
+				JoinFetchedPolymorphicToOneTests.DomesticCustomer.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions( lazyLoading = true )
-public class JoinFetchedPolymorphicToOneTests extends BaseNonConfigCoreFunctionalTestCase {
+public class JoinFetchedPolymorphicToOneTests {
+
 	@Test
-	public void testInheritedToOneLaziness() {
-		inTransaction(
+	public void testInheritedToOneLaziness(SessionFactoryScope scope) {
+		scope.inTransaction(
 				(session) -> {
-					sqlStatementInterceptor.clear();
+					SQLStatementInspector sqlStatementInspector = scope.getCollectingStatementInspector();
+					sqlStatementInspector.clear();
 
 					final Order order = session.byId( Order.class ).getReference( 1 );
-					assertThat( sqlStatementInterceptor.getQueryCount(), is( 0 ) );
+					sqlStatementInspector.assertExecutedCount( 0 );
 
 					System.out.println( "Order # " + order.getId() );
-					assertThat( sqlStatementInterceptor.getQueryCount(), is( 0 ) );
+					sqlStatementInspector.assertExecutedCount( 0 );
 
 					System.out.println( "  - amount : " + order.getAmount() );
 					// triggers load of base fetch state
-					assertThat( sqlStatementInterceptor.getQueryCount(), is( 1 ) );
+					sqlStatementInspector.assertExecutedCount( 1 );
 
 					final Customer customer = order.getCustomer();
 					// customer is part of base fetch state
-					assertThat( sqlStatementInterceptor.getQueryCount(), is( 1 ) );
+					sqlStatementInspector.assertExecutedCount( 1 );
 					assertTrue( Hibernate.isInitialized( customer ) );
 
 					System.out.println( "  - customer : " + customer.getId() );
-					assertThat( sqlStatementInterceptor.getQueryCount(), is( 1 ) );
+					sqlStatementInspector.assertExecutedCount( 1 );
 
 					customer.getName();
 					// customer base fetch state should also have been loaded above
-					assertThat( sqlStatementInterceptor.getQueryCount(), is( 1 ) );
+					sqlStatementInspector.assertExecutedCount( 1 );
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14659")
-	public void testQueryJoinFetch() {
-		inTransaction(
+	@JiraKey("HHH-14659")
+	public void testQueryJoinFetch(SessionFactoryScope scope) {
+		scope.inTransaction(
 				(session) -> {
 					final Order order = session.createQuery( "select o from Order o join fetch o.customer", Order.class )
 							.uniqueResult();
@@ -88,9 +95,9 @@ public class JoinFetchedPolymorphicToOneTests extends BaseNonConfigCoreFunctiona
 		);
 	}
 
-	@Before
-	public void createTestData() {
-		inTransaction(
+	@BeforeEach
+	public void createTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				(session) -> {
 					final DomesticCustomer customer = new DomesticCustomer( 1, "them", "123" );
 					session.persist( customer );
@@ -100,31 +107,14 @@ public class JoinFetchedPolymorphicToOneTests extends BaseNonConfigCoreFunctiona
 		);
 	}
 
-	@After
-	public void dropTestData() {
-		inTransaction(
+	@AfterEach
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				(session) -> {
 					session.createQuery( "delete Order" ).executeUpdate();
 					session.createQuery( "delete Customer" ).executeUpdate();
 				}
 		);
-	}
-
-	private SQLStatementInterceptor sqlStatementInterceptor;
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( Order.class );
-		sources.addAnnotatedClass( Customer.class );
-		sources.addAnnotatedClass( ForeignCustomer.class );
-		sources.addAnnotatedClass( DomesticCustomer.class );
-	}
-
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		sqlStatementInterceptor = new SQLStatementInterceptor( ssrb );
 	}
 
 	@Entity( name = "Order" )

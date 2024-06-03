@@ -126,6 +126,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.dialect.HANAServerConfiguration.MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.ANY;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
@@ -185,6 +186,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	private static final Boolean USE_LEGACY_BOOLEAN_TYPE_DEFAULT_VALUE = Boolean.FALSE;
 	private static final Boolean TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_DEFAULT_VALUE = Boolean.FALSE;
+	private static final String SQL_IGNORE_LOCKED = " ignore locked";
 
 	private final int maxLobPrefetchSize;
 
@@ -807,6 +809,12 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
+	public boolean doesRoundTemporalOnOverflow() {
+		// HANA does truncation
+		return false;
+	}
+
+	@Override
 	public boolean supportsExistsInSelect() {
 		return false;
 	}
@@ -1148,14 +1156,14 @@ public abstract class AbstractHANADialect extends Dialect {
 		switch (unit) {
 			case NANOSECOND:
 				if ( temporalType == TemporalType.TIME ) {
-					return "cast(add_nano100('1970-01-01 '||(?3),?2/100) as time)";
+					return "cast(add_nano100(cast('1970-01-01 '||(?3) as timestamp),?2/100) as time)";
 				}
 				else {
 					return "add_nano100(?3,?2/100)";
 				}
 			case NATIVE:
 				if ( temporalType == TemporalType.TIME ) {
-					return "cast(add_nano100('1970-01-01 '||(?3),?2) as time)";
+					return "cast(add_nano100(cast('1970-01-01 '||(?3) as timestamp),?2) as time)";
 				}
 				else {
 					return "add_nano100(?3,?2)";
@@ -1165,9 +1173,24 @@ public abstract class AbstractHANADialect extends Dialect {
 			case WEEK:
 				return "add_days(?3,7*?2)";
 			case MINUTE:
-				return "add_seconds(?3,60*?2)";
+				if ( temporalType == TemporalType.TIME ) {
+					return "cast(add_seconds(cast('1970-01-01 '||(?3) as timestamp),60*?2) as time)";
+				}
+				else {
+					return "add_seconds(?3,60*?2)";
+				}
 			case HOUR:
-				return "add_seconds(?3,3600*?2)";
+				if ( temporalType == TemporalType.TIME ) {
+					return "cast(add_seconds(cast('1970-01-01 '||(?3) as timestamp),3600*?2) as time)";
+				}
+				else {
+					return "add_seconds(?3,3600*?2)";
+				}
+			case SECOND:
+				if ( temporalType == TemporalType.TIME ) {
+					return "cast(add_seconds(cast('1970-01-01 '||(?3) as timestamp),?2) as time)";
+				}
+				// Fall through on purpose
 			default:
 				return "add_?1s(?3,?2)";
 		}
@@ -1757,7 +1780,7 @@ public abstract class AbstractHANADialect extends Dialect {
 					if ( nclob == null ) {
 						return null;
 					}
-					if ( nclob.length() < HANANClobJdbcType.this.maxLobPrefetchSize ) {
+					if ( nclob.length() < maxLobPrefetchSize ) {
 						X retVal = javaType.wrap(nclob, options);
 						nclob.free();
 						return retVal;
@@ -1784,14 +1807,14 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		public int getMaxLobPrefetchSize() {
-			return this.maxLobPrefetchSize;
+			return maxLobPrefetchSize;
 		}
 	}
 
 	public static class HANABlobType implements JdbcType {
 
 		private static final long serialVersionUID = 5874441715643764323L;
-		public static final JdbcType INSTANCE = new HANABlobType( HANAServerConfiguration.MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE );
+		public static final JdbcType INSTANCE = new HANABlobType( MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE );
 
 		final int maxLobPrefetchSize;
 
@@ -1809,7 +1832,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		@Override
 		public String getFriendlyName() {
-			return "BLOB (hana)";
+			return "BLOB (HANA)";
 		}
 
 		@Override
@@ -1824,7 +1847,7 @@ public abstract class AbstractHANADialect extends Dialect {
 					if ( blob == null ) {
 						return null;
 					}
-					if (blob.length() < HANABlobType.this.maxLobPrefetchSize ) {
+					if ( blob.length() < maxLobPrefetchSize ) {
 						X retVal = javaType.wrap(blob, options);
 						blob.free();
 						return retVal;
@@ -1862,7 +1885,7 @@ public abstract class AbstractHANADialect extends Dialect {
 						descriptor = BlobJdbcType.PRIMITIVE_ARRAY_BINDING;
 					}
 					else if ( options.useStreamForLobBinding() ) {
-						descriptor = HANABlobType.this.hanaStreamBlobTypeDescriptor;
+						descriptor = hanaStreamBlobTypeDescriptor;
 					}
 					descriptor.getBinder( javaType ).bind( st, value, index, options );
 				}
@@ -1875,7 +1898,7 @@ public abstract class AbstractHANADialect extends Dialect {
 						descriptor = BlobJdbcType.PRIMITIVE_ARRAY_BINDING;
 					}
 					else if ( options.useStreamForLobBinding() ) {
-						descriptor = HANABlobType.this.hanaStreamBlobTypeDescriptor;
+						descriptor = hanaStreamBlobTypeDescriptor;
 					}
 					descriptor.getBinder( javaType ).bind( st, value, name, options );
 				}
@@ -1883,7 +1906,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		public int getMaxLobPrefetchSize() {
-			return this.maxLobPrefetchSize;
+			return maxLobPrefetchSize;
 		}
 	}
 
@@ -1940,5 +1963,27 @@ public abstract class AbstractHANADialect extends Dialect {
 	@Override
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public boolean supportsSkipLocked() {
+		// HANA supports IGNORE LOCKED since HANA 2.0 SPS3 (2.0.030)
+		return getVersion().isSameOrAfter(2, 0, 30);
+	}
+
+	@Override
+	public String getForUpdateSkipLockedString() {
+		return supportsSkipLocked() ? getForUpdateString() + SQL_IGNORE_LOCKED : getForUpdateString();
+	}
+
+	@Override
+	public String getForUpdateSkipLockedString(String aliases) {
+		return supportsSkipLocked() ?
+				getForUpdateString(aliases) + SQL_IGNORE_LOCKED : getForUpdateString(aliases);
+	}
+
+	@Override
+	public String getForUpdateString(LockMode lockMode) {
+		return super.getForUpdateString(lockMode);
 	}
 }

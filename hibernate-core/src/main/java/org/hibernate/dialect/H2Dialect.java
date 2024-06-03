@@ -65,14 +65,17 @@ import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.descriptor.jdbc.EnumJdbcType;
 import org.hibernate.type.descriptor.jdbc.H2FormatJsonJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.OrdinalEnumJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimeUtcAsOffsetTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsInstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -148,7 +151,11 @@ public class H2Dialect extends Dialect {
 	}
 
 	private static DatabaseVersion parseVersion(DialectResolutionInfo info) {
-		return DatabaseVersion.make( info.getMajor(), info.getMinor(), parseBuildId( info ) );
+		DatabaseVersion version = info.makeCopyOrDefault( MINIMUM_VERSION );
+		if ( info.getDatabaseVersion() != null ) {
+			version = DatabaseVersion.make( version.getMajor(), version.getMinor(), parseBuildId( info ) );
+		}
+		return version;
 	}
 
 	private static int parseBuildId(DialectResolutionInfo info) {
@@ -223,7 +230,8 @@ public class H2Dialect extends Dialect {
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INTERVAL_SECOND, "interval second($p,$s)", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
-		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this) );
+		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
 	}
 
 	@Override
@@ -238,7 +246,8 @@ public class H2Dialect extends Dialect {
 		jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( H2DurationIntervalSecondJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( H2FormatJsonJdbcType.INSTANCE );
-		jdbcTypeRegistry.addDescriptor( new MySQLEnumJdbcType() );
+		jdbcTypeRegistry.addDescriptor( EnumJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( OrdinalEnumJdbcType.INSTANCE );
 	}
 
 	@Override
@@ -322,7 +331,7 @@ public class H2Dialect extends Dialect {
 		functionFactory.arrayPrepend_operator();
 		functionFactory.arrayAppend_operator();
 		functionFactory.arrayContains_h2( getMaximumArraySize() );
-		functionFactory.arrayOverlaps_h2( getMaximumArraySize() );
+		functionFactory.arrayIntersects_h2( getMaximumArraySize() );
 		functionFactory.arrayGet_h2();
 		functionFactory.arraySet_h2( getMaximumArraySize() );
 		functionFactory.arrayRemove_h2( getMaximumArraySize() );
@@ -443,7 +452,11 @@ public class H2Dialect extends Dialect {
 		if ( intervalType != null ) {
 			return "(?2+?3)";
 		}
-		return "dateadd(?1,?2,?3)";
+		return unit == SECOND
+				//TODO: if we have an integral number of seconds
+				//      (the common case) this is unnecessary
+				? "dateadd(nanosecond,?2*1e9,?3)"
+				: "dateadd(?1,?2,?3)";
 	}
 
 	@Override
@@ -686,6 +699,11 @@ public class H2Dialect extends Dialect {
 				),
 				runtimeModelCreationContext.getSessionFactory()
 		);
+	}
+
+	@Override
+	public String getTemporaryTableCreateOptions() {
+		return "TRANSACTIONAL";
 	}
 
 	@Override

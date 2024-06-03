@@ -10,21 +10,24 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.cache.spi.CacheImplementor;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests to verify that even when dealing with Enhanced Proxies, we will still attempt
@@ -32,29 +35,29 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Sanne Grinovero
  */
-@TestForIssue( jiraKey = "HHH-14004" )
-@RunWith(BytecodeEnhancerRunner.class)
-public class EnhancedProxyCacheTest extends BaseCoreFunctionalTestCase {
+@JiraKey( "HHH-14004" )
+@DomainModel(
+		annotatedClasses = {
+				Country.class, Continent.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class EnhancedProxyCacheTest {
 
 	private static final AtomicLong countryId = new AtomicLong();
 
-	@Override
-	protected void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, true );
-		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, true );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Country.class, Continent.class };
-	}
-
 	@Test
-	public void testPreferenceFor2LCOverUninitializedProxy() throws Exception {
-		final Statistics stats = sessionFactory().getStatistics();
-		storeTestData();
-		clearAllCaches();
+	public void testPreferenceFor2LCOverUninitializedProxy(SessionFactoryScope scope) throws Exception {
+		final Statistics stats = scope.getSessionFactory().getStatistics();
+		storeTestData( scope );
+		clearAllCaches( scope );
 		stats.clear();
 		assertTrue( stats.isStatisticsEnabled() );
 		assertEquals( 0, stats.getEntityFetchCount() );
@@ -62,7 +65,7 @@ public class EnhancedProxyCacheTest extends BaseCoreFunctionalTestCase {
 
 		// First we load the Country once, then trigger initialization of the related Continent proxy.
 		// 2LC is empty, so stats should show that these objects are being loaded from the DB.
-		inSession( s -> {
+		scope.inSession( s -> {
 			Country nl = s.get( Country.class, countryId.get() );
 			assertNotNull( nl );
 
@@ -95,7 +98,7 @@ public class EnhancedProxyCacheTest extends BaseCoreFunctionalTestCase {
 		//and we should see no needs to hit the DB.
 		//Also, since all data is readily available we won't need to make
 		//all attributes lazy.
-		inSession( s -> {
+		scope.inSession( s -> {
 
 			assertEquals( 0, stats.getSecondLevelCacheHitCount() );
 			assertEquals( 0, stats.getSecondLevelCacheMissCount() );
@@ -132,15 +135,15 @@ public class EnhancedProxyCacheTest extends BaseCoreFunctionalTestCase {
 
 	}
 
-	private void clearAllCaches() {
-		final CacheImplementor cache = sessionFactory().getCache();
+	private void clearAllCaches(SessionFactoryScope scope) {
+		final CacheImplementor cache = scope.getSessionFactory().getCache();
 		for (String name : cache.getCacheRegionNames() ) {
 			cache.getRegion( name ).clear();
 		}
 	}
 
-	private void storeTestData() {
-		inTransaction( s -> {
+	private void storeTestData(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			Continent continent = new Continent();
 			continent.setCode( "EU" );
 			continent.setName( "Europe" );

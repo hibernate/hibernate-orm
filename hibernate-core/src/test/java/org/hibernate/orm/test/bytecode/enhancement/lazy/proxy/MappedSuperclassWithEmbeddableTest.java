@@ -6,6 +6,8 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.Serializable;
 import java.util.Objects;
 import jakarta.persistence.Column;
@@ -15,62 +17,59 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertThat;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Andrea Boriero
  */
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				MappedSuperclassWithEmbeddableTest.TestEntity.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.FORMAT_SQL, value = "false" ),
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions(lazyLoading = true, inlineDirtyChecking = true)
-public class MappedSuperclassWithEmbeddableTest extends BaseNonConfigCoreFunctionalTestCase {
+public class MappedSuperclassWithEmbeddableTest {
 
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
-		ssrb.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
-		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
-
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { TestEntity.class };
-	}
-
-	@Before
-	public void prepare() {
-		doInHibernate( this::sessionFactory, s -> {
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			TestEntity testEntity = new TestEntity( "2", "test" );
 			s.persist( testEntity );
 		} );
 	}
 
-	@After
-	public void tearDown() {
-		doInHibernate( this::sessionFactory, s -> {
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			s.createQuery( "delete from TestEntity" ).executeUpdate();
 		} );
 	}
 
 	@Test
-	public void testIt() {
-		doInHibernate( this::sessionFactory, s -> {
+	public void testIt(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			TestEntity testEntity = s.get( TestEntity.class, "2" );
-			assertThat( testEntity, notNullValue() );
+			assertThat( testEntity ).isNotNull();
 		} );
 	}
 

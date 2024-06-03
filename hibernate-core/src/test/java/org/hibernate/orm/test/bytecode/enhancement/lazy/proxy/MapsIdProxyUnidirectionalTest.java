@@ -13,43 +13,56 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gail Badner
  */
 
-@TestForIssue(jiraKey = "HHH-13814")
-@RunWith( BytecodeEnhancerRunner.class )
+@JiraKey("HHH-13814")
+@DomainModel(
+		annotatedClasses = {
+				MapsIdProxyUnidirectionalTest.EmployerInfo.class,
+				MapsIdProxyUnidirectionalTest.Employer.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.FORMAT_SQL, value = "false" ),
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.USE_QUERY_CACHE, value = "false" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions( lazyLoading = true )
-public class MapsIdProxyUnidirectionalTest extends BaseNonConfigCoreFunctionalTestCase {
+public class MapsIdProxyUnidirectionalTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13814")
-	public void testBatchAssociation() {
-		inTransaction(
+	@JiraKey("HHH-13814")
+	public void testBatchAssociation(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
-					final Statistics statistics = sessionFactory().getStatistics();
+					final Statistics statistics = scope.getSessionFactory().getStatistics();
 					statistics.clear();
 					EmployerInfo employerInfo = session.get( EmployerInfo.class, 1 );
 
@@ -59,23 +72,15 @@ public class MapsIdProxyUnidirectionalTest extends BaseNonConfigCoreFunctionalTe
 					assertFalse( Hibernate.isInitialized( employerInfo.employer ) );
 					Hibernate.initialize( employerInfo.employer );
 
-					assertThat( statistics.getEntityLoadCount(), is( 2L ) );
-					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
+					assertThat( statistics.getEntityLoadCount() ).isEqualTo( 2L );
+					assertThat( statistics.getPrepareStatementCount() ).isEqualTo( 2L );
 				}
 		);
 	}
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				EmployerInfo.class,
-				Employer.class
-		};
-	}
-
-	@Before
-	public void setUpData() {
-		inTransaction(
+	@BeforeEach
+	public void setUpData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					final Employer employer = new Employer();
 					employer.id =1;
@@ -88,30 +93,14 @@ public class MapsIdProxyUnidirectionalTest extends BaseNonConfigCoreFunctionalTe
 		);
 	}
 
-	@After
-	public void cleanupDate() {
-		inTransaction(
+	@AfterEach
+	public void cleanupDate(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from EmployerInfo" ).executeUpdate();
 					session.createQuery( "delete from Employer" ).executeUpdate();
 				}
 		);
-	}
-
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
-		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
-		ssrb.applySetting( AvailableSettings.SHOW_SQL, true );
-	}
-
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		super.configureSessionFactoryBuilder( sfb );
-		sfb.applyStatisticsSupport( true );
-		sfb.applySecondLevelCacheSupport( false );
-		sfb.applyQueryCacheSupport( false );
 	}
 
 	@Entity(name = "EmployerInfo")

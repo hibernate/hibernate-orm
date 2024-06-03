@@ -48,6 +48,8 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	private final String table;
 	private final String column;
 	private final DiscriminatedAssociationModelPart anyPart;
+	private final String customReadExpression;
+	private final String customWriteExpression;
 	private final String columnDefinition;
 	private final Long length;
 	private final Integer precision;
@@ -63,6 +65,8 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			DiscriminatedAssociationModelPart anyPart,
 			String table,
 			String column,
+			String customReadExpression,
+			String customWriteExpression,
 			String columnDefinition,
 			Long length,
 			Integer precision,
@@ -76,6 +80,8 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 		this.table = table;
 		this.column = column;
 		this.anyPart = anyPart;
+		this.customReadExpression = customReadExpression;
+		this.customWriteExpression = customWriteExpression;
 		this.columnDefinition = columnDefinition;
 		this.length = length;
 		this.precision = precision;
@@ -124,12 +130,12 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 
 	@Override
 	public String getCustomReadExpression() {
-		return null;
+		return customReadExpression;
 	}
 
 	@Override
 	public String getCustomWriteExpression() {
-		return null;
+		return customWriteExpression;
 	}
 
 	@Override
@@ -242,7 +248,8 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 				fetchablePath,
 				this,
 				fetchTiming,
-				creationState
+				creationState,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -333,7 +340,9 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				jdbcMapping,
-				navigablePath
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 

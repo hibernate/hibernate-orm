@@ -39,6 +39,8 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.engine.internal.Collections.skipRemoval;
+
 /**
  * A convenience base class for listeners whose functionality results in flushing.
  *
@@ -115,18 +117,19 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		}
 		final EventSource session = event.getSession();
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final ActionQueue actionQueue = session.getActionQueue();
 		LOG.debugf(
 				"Flushed: %s insertions, %s updates, %s deletions to %s objects",
-				session.getActionQueue().numberOfInsertions(),
-				session.getActionQueue().numberOfUpdates(),
-				session.getActionQueue().numberOfDeletions(),
+				actionQueue.numberOfInsertions(),
+				actionQueue.numberOfUpdates(),
+				actionQueue.numberOfDeletions(),
 				persistenceContext.getNumberOfManagedEntities()
 		);
 		LOG.debugf(
 				"Flushed: %s (re)creations, %s updates, %s removals to %s collections",
-				session.getActionQueue().numberOfCollectionCreations(),
-				session.getActionQueue().numberOfCollectionUpdates(),
-				session.getActionQueue().numberOfCollectionRemovals(),
+				actionQueue.numberOfCollectionCreations(),
+				actionQueue.numberOfCollectionUpdates(),
+				actionQueue.numberOfCollectionRemovals(),
 				persistenceContext.getCollectionEntriesSize()
 		);
 		new EntityPrinter( session.getFactory() ).toString(
@@ -143,7 +146,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 		LOG.debug( "Processing flush-time cascades" );
 
-		final PersistContext context = getContext();
+		final PersistContext context = getContext( session );
 		//safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
 		for ( Map.Entry<Object,EntityEntry> me : persistenceContext.reentrantSafeEntityEntries() ) {
 //		for ( Map.Entry me : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
@@ -166,19 +169,25 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
 		try {
-			Cascade.cascade( getCascadingAction(), CascadePoint.BEFORE_FLUSH, session, persister, object, anything );
+			Cascade.cascade( getCascadingAction(session), CascadePoint.BEFORE_FLUSH, session, persister, object, anything );
 		}
 		finally {
 			persistenceContext.decrementCascadeLevel();
 		}
 	}
 
-	protected PersistContext getContext() {
-		return jpaBootstrap ? PersistContext.create() : null;
+	protected PersistContext getContext(EventSource session) {
+		return jpaBootstrap || isJpaCascadeComplianceEnabled( session ) ? PersistContext.create() : null;
 	}
 
-	protected CascadingAction<PersistContext> getCascadingAction() {
-		return jpaBootstrap ? CascadingActions.PERSIST_ON_FLUSH : CascadingActions.SAVE_UPDATE;
+	protected CascadingAction<PersistContext> getCascadingAction(EventSource session) {
+		return jpaBootstrap || isJpaCascadeComplianceEnabled( session )
+				? CascadingActions.PERSIST_ON_FLUSH
+				: CascadingActions.SAVE_UPDATE;
+	}
+
+	private static boolean isJpaCascadeComplianceEnabled(EventSource session) {
+		return session.getSessionFactory().getSessionFactoryOptions().getJpaCompliance().isJpaCascadeComplianceEnabled();
 	}
 
 	/**
@@ -205,8 +214,8 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		LOG.trace( "Flushing entities and processing referenced collections" );
 
 		final EventSource source = event.getSession();
-		final EventListenerGroup<FlushEntityEventListener> flushListeners = source.getFactory()
-				.getFastSessionServices().eventListenerGroup_FLUSH_ENTITY;
+		final EventListenerGroup<FlushEntityEventListener> flushListeners =
+				event.getFactory().getFastSessionServices().eventListenerGroup_FLUSH_ENTITY;
 
 		// Among other things, updateReachables() will recursively load all
 		// collections that are moving roles. This might cause entities to
@@ -300,15 +309,17 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 					}
 					if ( ce.isDoremove() ) {
 						interceptor.onCollectionRemove( coll, ce.getLoadedKey() );
-						actionQueue.addAction(
-								new CollectionRemoveAction(
-										coll,
-										ce.getLoadedPersister(),
-										ce.getLoadedKey(),
-										ce.isSnapshotEmpty( coll ),
-										session
-								)
-						);
+						if ( !skipRemoval( session, ce.getLoadedPersister(), ce.getLoadedKey() ) ) {
+							actionQueue.addAction(
+									new CollectionRemoveAction(
+											coll,
+											ce.getLoadedPersister(),
+											ce.getLoadedKey(),
+											ce.isSnapshotEmpty( coll ),
+											session
+									)
+							);
+						}
 					}
 					if ( ce.isDoupdate() ) {
 						interceptor.onCollectionUpdate( coll, ce.getLoadedKey() );

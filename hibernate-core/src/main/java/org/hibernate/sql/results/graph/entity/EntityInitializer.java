@@ -11,6 +11,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Initializer implementation for initializing entity references.
  *
@@ -26,7 +28,8 @@ public interface EntityInitializer extends FetchParentAccess {
 	EntityPersister getConcreteDescriptor();
 
 	@Override
-	default FetchParentAccess findFirstEntityDescriptorAccess() {
+	default @Nullable EntityInitializer findFirstEntityDescriptorAccess() {
+		// Keep this method around for binary backwards compatibility
 		return this;
 	}
 
@@ -44,12 +47,36 @@ public interface EntityInitializer extends FetchParentAccess {
 	 */
 	Object getEntityInstance();
 
+	default Object getManagedInstance() {
+		return getEntityInstance();
+	}
+
+	default Object getTargetInstance() {
+		return getEntityInstance();
+	}
+
 	@Override
 	default Object getInitializedInstance() {
 		return getEntityInstance();
 	}
 
-	EntityKey getEntityKey();
+	default @Nullable EntityKey resolveEntityKeyOnly(RowProcessingState rowProcessingState) {
+		resolveKey();
+		final EntityKey entityKey = getEntityKey();
+		finishUpRow();
+		return entityKey;
+	}
+
+	/**
+	 * @deprecated Use {@link #resolveEntityKeyOnly(RowProcessingState)} instead.
+	 */
+	@Deprecated(forRemoval = true)
+	@Nullable EntityKey getEntityKey();
+
+	default @Nullable Object getEntityIdentifier() {
+		final EntityKey entityKey = getEntityKey();
+		return entityKey == null ? null : entityKey.getIdentifier();
+	}
 
 	@Override
 	default boolean isEntityInitializer() {

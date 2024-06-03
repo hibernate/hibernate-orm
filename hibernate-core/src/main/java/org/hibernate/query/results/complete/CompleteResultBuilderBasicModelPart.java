@@ -13,9 +13,7 @@ import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultBuilder;
-import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -24,7 +22,6 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 import static org.hibernate.query.results.ResultsHelper.impl;
-import static org.hibernate.query.results.ResultsHelper.jdbcPositionToValuesArrayPosition;
 
 /**
  * CompleteResultBuilder for basic-valued ModelParts
@@ -93,7 +90,10 @@ public class CompleteResultBuilderBasicModelPart
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				columnAlias,
-				modelPart.getJdbcMapping()
+				modelPart.getJdbcMapping(),
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 

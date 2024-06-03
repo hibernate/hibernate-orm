@@ -21,9 +21,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
-/**
- * @author Gavin King
- */
+// Note: JD test is in jakartaData tests, due to requiring Java 17
 public class QuarkusOrmPanacheTest extends CompilationTest {
 	@Test
 	@WithClasses({ PanacheBook.class })

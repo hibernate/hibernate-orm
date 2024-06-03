@@ -131,11 +131,16 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 		if ( LocalTime.class.isAssignableFrom( type ) ) {
 			final Time time = value instanceof java.sql.Time
 					? ( (java.sql.Time) value )
-					: new java.sql.Time( value.getTime() );
+					: new java.sql.Time( value.getTime() % 86_400_000 );
 			final LocalTime localTime = time.toLocalTime();
-			final long millis = time.getTime() % 1000;
+			long millis = time.getTime() % 1000;
 			if ( millis == 0 ) {
 				return localTime;
+			}
+			if ( millis < 0 ) {
+				// The milliseconds for a Time could be negative,
+				// which usually means the time is in a different time zone
+				millis += 1_000L;
 			}
 			return localTime.with( ChronoField.NANO_OF_SECOND, millis * 1_000_000L );
 		}
@@ -143,7 +148,7 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 		if ( Time.class.isAssignableFrom( type ) ) {
 			return value instanceof Time
 					? value
-					: new Time( value.getTime() );
+					: new Time( value.getTime() % 86_400_000 );
 		}
 
 		if ( Date.class.isAssignableFrom( type ) ) {
@@ -181,6 +186,14 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 			return null;
 		}
 
+		if ( value instanceof Time ) {
+			return (Date) value;
+		}
+
+		if ( value instanceof Date ) {
+			return new Time( ( (Date) value ).getTime() % 86_400_000 );
+		}
+
 		if ( value instanceof LocalTime ) {
 			final LocalTime localTime = (LocalTime) value;
 			final Time time = Time.valueOf( localTime );
@@ -191,16 +204,12 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 			return new Time( time.getTime() + DateTimeUtils.roundToPrecision( localTime.getNano(), 3 ) / 1000000 );
 		}
 
-		if ( value instanceof Date ) {
-			return (Date) value;
-		}
-
 		if ( value instanceof Long ) {
 			return new Time( (Long) value );
 		}
 
 		if ( value instanceof Calendar ) {
-			return new Time( ( (Calendar) value ).getTimeInMillis() );
+			return new Time( ( (Calendar) value ).getTimeInMillis() % 86_400_000 );
 		}
 
 		throw unknownWrap( value.getClass() );

@@ -1,9 +1,9 @@
-= Hibernate 6.5.0.CR1
+= Hibernate 6.6.0.Alpha1
 Steve Ebersole
 :awestruct-tags: ["Hibernate ORM", "Releases"]
 :awestruct-layout: blog-post
 
-:family: 6.5
+:family: 6.6
 
 :docs-url: https://docs.jboss.org/hibernate/orm/{family}
 :javadocs-url: {docs-url}/javadocs
@@ -12,216 +12,199 @@ Steve Ebersole
 :user-guide-url: {docs-url}/userguide/html_single/Hibernate_User_Guide.html
 :ql-guide-url: {docs-url}/querylanguage/html_single/Hibernate_Query_Language.html
 
-6.5 brings many new features, in addition to many improvements and fixes.
-
-
-[[java-time]]
-== Java Time Handling
-
-Java Time objects can now be directly marshalled through the JDBC driver as defined by JDBC 4.2.
-In previous versions, Hibernate would handle Java Time objects using `java.sql.Date`, `java.sql.Time` or
-`java.sql.Timestamp` references as intermediate forms.
-
-Another behavioral change with this is handling for timezones.  `OffsetDateTime`, `OffsetTime` and
-`ZonedDateTime` all encode explicit timezone information.  With direct marshalling, Hibernate simply
-passes along the value as-is.  In the legacy behavior, since the `java.sql` variants do not
-encode timezone information, Hibernate generally has to specially handle timezones when converting to
-those intermediate forms.
-
-For 6.5 this behavior is disabled by default.  To opt-in,
-
-[source,properties]
-----
-hibernate.type.prefer_java_type_jdbc_types=true
-----
-
-See the link:{javadocs-url}/org/hibernate/cfg/MappingSettings.html#PREFER_JAVA_TYPE_JDBC_TYPES[setting Javadoc] for additional details.
-
-
-[[query-cache-layout]]
-== Configurable Query Cache Layout
-
-In Hibernate ORM 6.0 the query cache layout changed from a "shallow" representation of entities and collections,
-to a "full" representation. This was done to support re-materializing join fetched data from the query cache data
-without hitting the database.  Storing the full data in the query cache leads to a higher memory consumption,
-which in turn might also hurt application throughput due to a higher garbage collection activity.
-
-6.5 adds the ability to configure the format in which query results are stored in the query cache, either
-
-* globally via the `hibernate.cache.query_cache_layout` setting
-* per entity or collection via the `@QueryCacheLayout` annotation
-
-The global `hibernate.cache.query_cache_layout` setting defaults to the `AUTO` value,
-which will automatically choose `SHALLOW` or `FULL` for an entity/collection,
-depending on whether the entity/collection is cacheable.
-
-Applications that want to retain the `FULL` cache layout that Hibernate ORM 6.0 used should configure
-the global property `hibernate.cache.query_cache_layout=FULL`.
-Applications that want the cache layout that Hibernate ORM 5 and older versions used should configure
-the global property `hibernate.cache.query_cache_layout=SHALLOW`.
-
-[NOTE]
-====
-Even with the `SHALLOW` cache layout, the association eagerness implied through join fetches will be respected,
-and associations will be eagerly initialized. So there is no change of behavior when choosing a different cache layout.
-
-With `SHALLOW`, Hibernate might need to hit the database to materialize the associated data *if it does not exist in the second level cache*.
-====
-
-[[record-as-idclass]]
-== Allow Java record as @IdClass
-
-A Java record can now be used as an `@IdClass`
-
-[source,java]
-----
-record PK(Integer key1, Integer key2) {}
-
-@Entity
-@IdClass(PK.class)
-class AnEntity {
-	@Id Integer key1;
-	@Id Integer key2;
-	...
-}
-----
-
-[[auto-filters]]
-== Support for Auto Enabled Filters
-
-Filters can now be automatically enabled for each Session and StatelessSession
-
-[source,java]
-----
-@FilterDef(
-    name="active-filter",
-    condition="status = true",
-    autoEnabled=true
-)
-@Filter(name="active-filter")
-@Entity
-class DeletableEntity {
-    ...
-}
-----
-
-Can be combined with the ability to dynamically resolve condition parameters, e.g.
-
-[source,java]
-----
-class TenantIdResolver implements Supplier<String> {
-    @Override
-    public String get() {
-        return SomeContext.determineTenantId();
-    }
-}
-
-@FilterDef(
-    name="tenancy-filter",
-    condition="tenant_id = :tenantId",
-    autoEnabled=true,
-    parameter = @ParamDef(
-        name="tenantId",
-        type=String.class,
-        resolver=TenantIdResolver.class
-    )
-)
-@Filter(name="tenancy-filter")
-@Entity
-class SensitiveData {
-	...
-}
-----
-
-
-[[sqm-mutation-joins]]
-== Joined Mutation Queries
-
-UPDATE and DELETE queries can now use joins, e.g.
-
-[source]
-----
-delete from Person p where p.association.someAttr = 1
-----
-
-
-[[manually-assigned-generated-ids]]
-== Manually Assigned Identifiers with custom `Generator`
-
-Manually assigned identifier values can now be used with custom a `Generator` thanks to the new `allowAssignedIdentifiers()` method.
-
-[source,java]
-----
-class MyIdGenerator implements Generator {
-    ...
-    @Override public boolean allowAssignedIdentifiers() {
-        return true;
-    }
-}
-
-@IdGeneratorType(MyIdGenerator.class)
-@Target({METHOD, FIELD})
-@Retention(RUNTIME)
-@interface MyGeneratedId {
-}
-
-@Entity
-class Book {
-  @Id @MyGeneratedId
-  Integer id;
-  ...
-}
-
-Book book = new Book(1,...)
-session.persist(book);
-----
-
-
-
-[[query-result-count]]
-== SelectionQuery.getResultCount()
-
-Selection queries now have the ability to report the number of results there will
-be in the final result.
-
-IMPORTANT: This triggers a query against the database.
-
-[source,java]
-----
-Query query = session.createQuery("from Person");
-int results = query.getResultCount();
-----
-
-[[key-pagination]]
-== Key-based Pagination
-
-As an incubating feature, 6.5 offers support for link:{intro-guide-url}#key-based-pagination[key-based pagination] (sometimes called "keyset" pagination) via both `SelectionQuery` and link:{intro-guide-url}#key-based-paging[generated query methods].
-
-Please see the Javadoc for link:{javadocs-url}/org/hibernate/query/KeyedPage.html[`KeyedPage`] and link:{javadocs-url}/org/hibernate/query/KeyedResultList.html[`KeyedResultList`] for more information.
-
-[[on-conflict]]
-== ON CONFLICT Clause for Insert Queries
-
-Both HQL and Criteria now support an optional ON CONFLICT clause to allow controlling what
-should happen when a constraint violation occurs, e.g.
-
-[source]
-----
-insert into Person (id, name)
-values (1, 'John')
-on conflict do nothing
-----
-
-See the link:{user-guide-url}#hql-insert[User Guide] for more details.
-
-
-[[stateless-session]]
-== Work on StatelessSession
-
-`StatelessSession` now supports https://hibernate.atlassian.net/browse/HHH-17620[filters] and https://hibernate.atlassian.net/browse/HHH-17673[SQL logging]
-
-
 [[jakarta-data]]
 == Jakarta Data
 
-6.5 also includes a tech preview of Jakarta Data based on the Hibernate annotation processor.
+Hibernate 6.6 includes a complete implementation of the current Jakarta Data 1.0 Release Candidate. As https://in.relation.to/2024/04/18/jakarta-data-1/[discussed here], our implementation:
+
+- is based on compile-time code generation via an annotation processor, enabling unprecedented compile-time type safety, and
+- is backed by Hibernate's `StatelessSession`, which has been enhanced especially to meet the needs of Jakarta Data.
+
+This implementation already passes the Jakarta Data TCK, and we have a request for certification pending.
+
+To make use of _Hibernate Data Repositories_, you'll need to depend on:
+
+- our annotation processor, `hibernate-jpamodelgen`, and
+- the Jakarta Data API, `jakarta.data-api.
+
+For example, in Gradle:
+
+[source,groovy]
+----
+implementation 'jakarta.data:jakarta.data-api:1.0.0-RC1'
+implementation 'org.hibernate.orm:hibernate-core:6.6.0.Alpha1'
+
+annotationProcessor 'org.hibernate.orm:hibernate-jpamodelgen:6.6.0.Alpha1'
+----
+
+For more information, please see the brand-new _Hibernate Data Repositories_ link:{docs-url}/repositories/html_single/Hibernate_Data_Repositories.html[documentation].
+
+
+[[concrete-proxy]]
+== @ConcreteProxy
+
+6.6 also provides a new `@ConcreteProxy` annotation intended as an improved replacement for the deprecated `@Proxy` and `@LazyToOne` annotations.  Indicates that lazy references should be instantiated as the concrete type rather than the referenced type.
+
+Consider the following model and data
+
+[source,java]
+----
+@ConcreteProxy
+@Entity
+@Inheritance
+class Payment { ... }
+
+@Entity
+class CardPayment extends Payment { ... }
+
+session1.persist( new CardPayment( 1, ... ) );
+----
+
+
+As a simple example -
+
+[source,java]
+----
+Payment loaded = session2.getReference( Payment.class, 1 );
+----
+
+Historically, Hibernate would create a lazy proxy for `loaded` of type `Payment`.  Attempts to cast that reference to `CardPayment` would result in a casting error.  `@ConcreteProxy` forces Hibernate to resolve the actual, concrete type and create a proxy of that type instead -
+
+[source,java]
+----
+CardPayment loaded = (CardPayment) session2.getReference( Payment.class, 1 );
+----
+
+IMPORTANT: Hibernate will try a number of different ways to determine the concrete type, but may ultimately have to fall back to hitting the database which might have an effect on performance.
+
+This feature works with both Hibernate's legacy proxy-based laziness and the newer bytecode enhancement laziness.
+
+
+[[extended-array]]
+== Extended Array support
+
+ORM 6.6 adds support for mapping arrays of embeddable aggregate types e.g.
+
+[source,java]
+----
+@Entity
+class MyEntity {
+	List<MyEmbeddable> embeddableAggregateList;
+}
+
+@Struct
+@Embeddable
+class MyEmbeddable { ... }
+
+----
+
+[[array-syntax-sugar]]
+== Syntax sugar for array functions
+
+Plenty of syntax sugar for array operations was added:
+
+
+|===
+|Function |Syntax sugar |
+
+|`array(1, 2)`
+|`[1, 2]`
+|Shorthand bracket syntax for array construction
+
+|`array_slice(array, 1, 2)`
+|`array[1:2]`
+|Shorthand bracket syntax for array slicing
+
+|`array_length(array)`
+|`length(array)`
+|Overload length function with array_length semantics on array input
+
+|`array_position(array, element)`
+|`position(element in array)`
+|Overload position function with array_position semantics on array input
+
+|`array_to_string(array, ',', 'null')`
+|`cast(array as String)`
+|Support casting array to string
+
+|`array_contains(array, element)`
+|`array contains element` or `element in array`
+|Contains predicate for containment check
+
+|`array_includes(array, array)`
+|`array includes subArray`
+|Predicate to for subset checking
+
+|`array_intersects(array, array(1, 2))`
+|`array intersects [1, 2]`
+|Overlaps predicate for overlaps check
+|===
+
+[[string-syntax-sugar]]
+== Syntax sugar for string functions
+
+The bracket syntax can now also be used for string typed expressions to select a single character by index,
+or obtain a substring by start and end index.
+
+`stringPath[2]` is syntax sugar for `substring(stringPath, 2, 1)` and returns a `Character`.
+`stringPath[2:3]` is syntax sugar for `substring(stringPath, 2, 3-2+1)`,
+where `3-2+1` is the expression to determine the desired string length.
+
+
+[[embeddable-inheritance]]
+== Embeddable Inheritance
+
+Another new feature of this version is discriminator-based inheritance for `@Embeddable` types. An `@Embeddable` class
+may be extended by other `@Embeddable` classes, in which case the `@Embedded` properties using that type will
+rely on an additional discriminator column to store information about the composite value's subtype.
+
+When retrieving the inherited embedded property, Hibernate will read the discriminator value and instantiate the
+correct `@Embeddable` subtype with its corresponding properties.
+
+For example, a mapping like this:
+[source,java]
+----
+@Embeddable
+@DiscriminatorValue( "parent" )
+@DiscriminatorColumn( name = "embeddable_type" )
+class ParentEmbeddable implements Serializable {
+	private String parentProp;
+	// ...
+}
+
+@Embeddable
+@DiscriminatorValue( "child_one" )
+class ChildOneEmbeddable extends ParentEmbeddable {
+	private Integer childOneProp;
+	// ...
+}
+
+@Entity
+class TestEntity {
+	@Embedded
+	private ParentEmbeddable embeddable;
+	// ...
+}
+----
+
+Will result in the following table structure:
+[source,sql]
+----
+create table TestEntity (
+    -- ...
+    embeddable_type varchar(31) not null,
+    parentProp varchar(255),
+    childOneProp integer,
+    -- ...
+)
+----
+
+For more detailed information please refer to the link:{user-guide-url}#embeddable-inheritance[Embeddable inheritance] user guide chapter.
+
+[[oracle-vector]]
+== Oracle Vector support
+
+Oracle engineers contributed the support for vector data types and functions to the `hibernate-vector` module
+to use with Oracle database version 23.4 and newer.
+
+For further information about vectors, consult the link:https://docs.oracle.com/en/database/oracle/oracle-database/23/vecse/overview-node.html[Oracle documentation].

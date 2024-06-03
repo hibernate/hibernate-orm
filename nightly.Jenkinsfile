@@ -13,7 +13,7 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 /*
  * See https://github.com/hibernate/hibernate-jenkins-pipeline-helpers
  */
-@Library('hibernate-jenkins-pipeline-helpers@1.5') _
+@Library('hibernate-jenkins-pipeline-helpers@1.13') _
 import org.hibernate.jenkins.pipeline.helpers.job.JobHelper
 
 @Field final String DEFAULT_JDK_VERSION = '11'
@@ -103,7 +103,7 @@ stage('Build') {
 					stage('Checkout') {
 						checkout scm
 					}
-					try {
+					tryFinally({
 						stage('Start database') {
 							switch (buildEnv.dbName) {
 								case "hsqldb_2_6":
@@ -173,35 +173,33 @@ stage('Build') {
 							}
 						}
 						stage('Test') {
-							String cmd = "./ci/build.sh ${buildEnv.additionalOptions ?: ''} ${state[buildEnv.tag]['additionalOptions'] ?: ''}"
+              String args = "${buildEnv.additionalOptions ?: ''} ${state[buildEnv.tag]['additionalOptions'] ?: ''}"
 							withEnv(["RDBMS=${buildEnv.dbName}"]) {
-								try {
+								tryFinally({
 									if (buildEnv.dbLockableResource == null) {
 										withCredentials([file(credentialsId: 'sybase-jconnect-driver', variable: 'jconnect_driver')]) {
 											sh 'cp -f $jconnect_driver ./drivers/jconn4.jar'
 											timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
-												sh cmd
+												ciBuild buildEnv, args
 											}
 										}
 									}
 									else {
 										lock(label: buildEnv.dbLockableResource, quantity: 1, variable: 'LOCKED_RESOURCE') {
 											if ( buildEnv.dbLockResourceAsHost ) {
-												cmd += " -DdbHost=${LOCKED_RESOURCE}"
+												args += " -DdbHost=${LOCKED_RESOURCE}"
 											}
 											timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
-												sh cmd
+												ciBuild buildEnv, args
 											}
 										}
 									}
-								}
-								finally {
+								}, { // Finally
 									junit '**/target/test-results/test/*.xml,**/target/test-results/testKitTest/*.xml'
-								}
+								})
 							}
 						}
-					}
-					finally {
+					}, { // Finally
 						if ( state[buildEnv.tag]['containerName'] != null ) {
 							sh "docker rm -f ${state[buildEnv.tag]['containerName']}"
 						}
@@ -209,7 +207,7 @@ stage('Build') {
 						if ( !env.CHANGE_ID && buildEnv.notificationRecipients != null ) {
 							handleNotifications(currentBuild, buildEnv)
 						}
-					}
+					})
 				}
 			}
 		})
@@ -239,18 +237,29 @@ class BuildEnvironment {
 void runBuildOnNode(String label, Closure body) {
 	node( label ) {
 		pruneDockerContainers()
-        try {
-			body()
-        }
-        finally {
-        	// If this is a PR, we clean the workspace at the end
-        	if ( env.CHANGE_BRANCH != null ) {
-        		cleanWs()
-        	}
-        	pruneDockerContainers()
-        }
+    tryFinally(body, {
+      // If this is a PR, we clean the workspace at the end
+      if ( env.CHANGE_BRANCH != null ) {
+        cleanWs()
+      }
+      pruneDockerContainers()
+    })
 	}
 }
+
+void ciBuild(buildEnv, String args) {
+  // On untrusted nodes, we use the same access key as for PRs:
+  // it has limited access, essentially it can only push build scans.
+  def develocityCredentialsId = buildEnv.node ? 'ge.hibernate.org-access-key-pr' : 'ge.hibernate.org-access-key'
+
+  withCredentials([string(credentialsId: develocityCredentialsId,
+      variable: 'DEVELOCITY_ACCESS_KEY')]) {
+    withGradle { // withDevelocity, actually: https://plugins.jenkins.io/gradle/#plugin-content-capturing-build-scans-from-jenkins-pipeline
+      sh "./ci/build.sh $args"
+    }
+  }
+}
+
 void pruneDockerContainers() {
 	if ( !sh( script: 'command -v docker || true', returnStdout: true ).trim().isEmpty() ) {
 		sh 'docker container prune -f || true'
@@ -323,4 +332,34 @@ String getParallelResult( RunWrapper build, String parallelBranchName ) {
     	return null;
     }
     return branch.status.result
+}
+
+// try-finally construct that properly suppresses exceptions thrown in the finally block.
+def tryFinally(Closure main, Closure ... finallies) {
+	def mainFailure = null
+	try {
+		main()
+	}
+	catch (Throwable t) {
+		mainFailure = t
+		throw t
+	}
+	finally {
+		finallies.each {it ->
+			try {
+				it()
+			}
+			catch (Throwable t) {
+				if ( mainFailure ) {
+					mainFailure.addSuppressed( t )
+				}
+				else {
+					mainFailure = t
+				}
+			}
+		}
+	}
+	if ( mainFailure ) { // We may reach here if only the "finally" failed
+		throw mainFailure
+	}
 }

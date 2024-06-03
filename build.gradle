@@ -20,7 +20,7 @@ buildscript {
 
 
 plugins {
-	id 'org.hibernate.build.xjc-jakarta' version '1.0.2' apply false
+	id 'org.hibernate.build.xjc-jakarta' version '2.0.3' apply false
 	id 'org.hibernate.matrix-test' version '3.1.1' apply false
 	id 'org.hibernate.orm.database-service' apply false
 	id 'biz.aQute.bnd' version '6.3.1' apply false

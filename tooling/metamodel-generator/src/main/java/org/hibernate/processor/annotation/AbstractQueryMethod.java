@@ -49,6 +49,8 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	final List<OrderBy> orderBys;
 	final boolean addNonnullAnnotation;
 	final boolean dataRepository;
+	final String fullReturnType;
+	final boolean nullable;
 
 	AbstractQueryMethod(
 			AnnotationMetaEntity annotationMetaEntity,
@@ -61,7 +63,9 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			boolean belongsToDao,
 			List<OrderBy> orderBys,
 			boolean addNonnullAnnotation,
-			boolean dataRepository) {
+			boolean dataRepository,
+			String fullReturnType,
+			boolean nullable) {
 		super(annotationMetaEntity, method, sessionName, sessionType);
 		this.methodName = methodName;
 		this.paramNames = paramNames;
@@ -71,6 +75,8 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		this.orderBys = orderBys;
 		this.addNonnullAnnotation = addNonnullAnnotation;
 		this.dataRepository = dataRepository;
+		this.fullReturnType = fullReturnType;
+		this.nullable = nullable;
 	}
 
 	@Override
@@ -107,9 +113,9 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		return type.endsWith("...") ? stripped + "..." : stripped;
 	}
 
-	void preamble(StringBuilder declaration, String returnType, List<String> paramTypes) {
+	void preamble(StringBuilder declaration, List<String> paramTypes) {
 		declaration
-				.append(returnType)
+				.append(annotationMetaEntity.importType(fullReturnType))
 				.append(" ")
 				.append(methodName);
 		parameters( paramTypes, declaration );
@@ -132,7 +138,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 				notNull( declaration );
 			}
 			declaration
-					.append(annotationMetaEntity.importType(importReturnTypeArgument(paramType)))
+					.append(annotationMetaEntity.importType(paramType))
 					.append(" ")
 					.append(paramNames.get(i).replace('.', '$'));
 		}
@@ -142,12 +148,6 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 
 	static boolean isSessionParameter(String paramType) {
 		return SESSION_TYPES.contains(paramType);
-	}
-
-	private String importReturnTypeArgument(String type) {
-		return returnTypeName != null
-				? type.replace(returnTypeName, annotationMetaEntity.importType(returnTypeName))
-				: type;
 	}
 
 	void sessionParameter(StringBuilder declaration) {
@@ -211,8 +211,8 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	}
 
 	void setPage(StringBuilder declaration, String paramName, String paramType) {
-		boolean jakartaLimit = JD_LIMIT.equals(paramType);
-		boolean jakartaPageRequest = paramType.startsWith(JD_PAGE_REQUEST);
+		final boolean jakartaLimit = JD_LIMIT.equals(paramType);
+		final boolean jakartaPageRequest = JD_PAGE_REQUEST.equals(paramType);
 		if ( jakartaLimit || jakartaPageRequest
 				|| isUsingEntityManager() ) {
 			final String firstResult;
@@ -282,14 +282,14 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 						.append(" exception) {\n")
 						.append("\t\tthrow new ")
 						.append(annotationMetaEntity.importType("jakarta.data.exceptions.EmptyResultException"))
-						.append("(exception);\n")
+						.append("(exception.getMessage(), exception);\n")
 						.append("\t}\n")
 						.append("\tcatch (")
 						.append(annotationMetaEntity.importType("jakarta.persistence.NonUniqueResultException"))
 						.append(" exception) {\n")
 						.append("\t\tthrow new ")
 						.append(annotationMetaEntity.importType("jakarta.data.exceptions.NonUniqueResultException"))
-						.append("(exception);\n")
+						.append("(exception.getMessage(), exception);\n")
 						.append("\t}\n");
 			}
 			declaration
@@ -298,7 +298,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 					.append(" exception) {\n")
 					.append("\t\tthrow new ")
 					.append(annotationMetaEntity.importType("jakarta.data.exceptions.DataException"))
-					.append("(exception);\n")
+					.append("(exception.getMessage(), exception);\n")
 					.append("\t}\n");
 		}
 	}
@@ -332,15 +332,14 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	static boolean isPageParam(String parameterType) {
 		return HIB_PAGE.equals(parameterType)
 			|| JD_LIMIT.equals(parameterType)
-			|| parameterType.startsWith(JD_PAGE_REQUEST);
+			|| JD_PAGE_REQUEST.equals(parameterType);
 	}
 
 	static boolean isOrderParam(String parameterType) {
 		return parameterType.startsWith(HIB_ORDER)
 			|| parameterType.startsWith(LIST + "<" + HIB_ORDER)
 			|| parameterType.startsWith(JD_SORT)
-			|| parameterType.startsWith(JD_ORDER)
-			|| parameterType.startsWith(JD_PAGE_REQUEST);
+			|| parameterType.startsWith(JD_ORDER);
 	}
 
 	static boolean isJakartaCursoredPage(@Nullable String containerType) {
@@ -378,8 +377,8 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			"\t\t\t\t\t\t.collect(toList());\n" +
 			//SHOULD BE new CursoredPageRecord<>
 			"\t\treturn new CursoredPageRecord(_results.getResultList(), _cursors, _totalResults, pageRequest,\n" +
-			"\t\t\t\t_results.isLastPage() ? null : pageRequest.page(pageRequest.page()+1).afterCursor(_cursors.get(_cursors.size()-1)),\n" +
-			"\t\t\t\t_results.isFirstPage() ? null : pageRequest.page(pageRequest.page()-1).beforeCursor(_cursors.get(0)));";
+			"\t\t\t\t_results.isLastPage() ? null : afterCursor(_cursors.get(_cursors.size()-1), pageRequest.page()+1, pageRequest.size(), pageRequest.requestTotal()),\n" +
+			"\t\t\t\t_results.isFirstPage() ? null : beforeCursor(_cursors.get(0), pageRequest.page()-1, pageRequest.size(), pageRequest.requestTotal()));";
 
 	static final String MAKE_KEYED_PAGE
 			= "\tvar _unkeyedPage =\n" +
@@ -522,8 +521,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 								.append(name)
 								.append(");\n");
 					}
-					else if ( type.startsWith(JD_ORDER)
-							|| type.startsWith(JD_PAGE_REQUEST) ) {
+					else if ( type.startsWith(JD_ORDER) ) {
 						annotationMetaEntity.staticImport(HIB_SORT_DIRECTION, "*");
 						declaration
 								.append("\tfor (var _sort : ")
@@ -585,14 +583,6 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			|| !orderBys.isEmpty();
 	}
 
-	boolean unwrapIfNecessary(StringBuilder declaration, @Nullable String containerType, boolean unwrapped) {
-		if ( OPTIONAL.equals(containerType) || isJakartaCursoredPage(containerType) ) {
-			unwrapQuery( declaration, unwrapped );
-			unwrapped = true;
-		}
-		return unwrapped;
-	}
-
 	protected void executeSelect(
 			StringBuilder declaration,
 			List<String> paramTypes,
@@ -600,8 +590,15 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			boolean unwrapped,
 			boolean mustUnwrap) {
 		if ( containerType == null ) {
-			declaration
-					.append("\t\t\t.getSingleResult();");
+			if ( nullable ) {
+				unwrapQuery(declaration, unwrapped);
+				declaration
+						.append("\t\t\t.getSingleResultOrNull();");
+			}
+			else {
+				declaration
+						.append("\t\t\t.getSingleResult();");
+			}
 		}
 		else {
 			switch (containerType) {
@@ -617,6 +614,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 					}
 					break;
 				case OPTIONAL:
+					unwrapQuery(declaration, unwrapped);
 					declaration
 							.append("\t\t\t.uniqueResultOptional();");
 					break;
@@ -672,9 +670,11 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 						unwrapQuery(declaration, unwrapped);
 						declaration
 								.append("\t\t\t.getKeyedResultList(_keyedPage);\n");
-						annotationMetaEntity.importType("jakarta.data.page.PageRequest");
-						annotationMetaEntity.importType("jakarta.data.page.PageRequest.Cursor");
+						annotationMetaEntity.importType(JD_PAGE_REQUEST);
+						annotationMetaEntity.importType(JD_PAGE_REQUEST + ".Cursor");
 						annotationMetaEntity.importType("jakarta.data.page.impl.CursoredPageRecord");
+						annotationMetaEntity.staticImport(JD_PAGE_REQUEST, "beforeCursor");
+						annotationMetaEntity.staticImport(JD_PAGE_REQUEST, "afterCursor");
 						String fragment = MAKE_KEYED_SLICE
 								.replace("pageRequest",
 										parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))

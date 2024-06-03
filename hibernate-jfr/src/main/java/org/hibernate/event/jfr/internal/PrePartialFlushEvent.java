@@ -28,13 +28,9 @@ public class PrePartialFlushEvent extends Event implements HibernateMonitoringEv
 	@Label("Session Identifier")
 	public String sessionIdentifier;
 
-	@Label("PrePartialFlushEvent time")
-	public long executionTime;
-
 	@Override
 	public String toString() {
 		return NAME;
 	}
 
-	public transient long startedAt;
 }

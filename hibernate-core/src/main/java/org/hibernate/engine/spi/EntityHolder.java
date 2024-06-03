@@ -53,6 +53,11 @@ public interface EntityHolder {
 	void markAsReloaded(JdbcValuesSourceProcessingState processingState);
 
 	/**
+	 * Whether the entity is already initialized
+	 */
+	boolean isInitialized();
+
+	/**
 	 * Whether the entity is already initialized or will be initialized through an initializer eventually.
 	 */
 	boolean isEventuallyInitialized();

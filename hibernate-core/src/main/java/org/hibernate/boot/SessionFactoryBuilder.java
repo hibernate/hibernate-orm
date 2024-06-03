@@ -27,12 +27,14 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.type.format.FormatMapper;
 
 /**
- * The contract for building a {@link SessionFactory} given a number of options.
+ * The contract for building a {@link SessionFactory} given a specified set of options.
  *
  * @author Steve Ebersole
  * @author Gail Badner
  *
  * @since 5.0
+ *
+ * @see Metadata#getSessionFactoryBuilder()
  */
 public interface SessionFactoryBuilder {
 	/**
@@ -256,6 +258,12 @@ public interface SessionFactoryBuilder {
 	 */
 	SessionFactoryBuilder applyLazyInitializationOutsideTransaction(boolean enabled);
 
+	/**
+	 * Specifies how temporary tables should be created or dropped with respect
+	 * to transaction handling.
+	 *
+	 * @see TempTableDdlTransactionHandling
+	 */
 	SessionFactoryBuilder applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling);
 
 	/**
@@ -360,11 +368,18 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyOrderingOfUpdates(boolean enabled);
 
 	/**
-	 * Specifies whether multi-tenancy is enabled
+	 * Specifies whether multitenancy is enabled via use of a
+	 * {@link org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider}.
+	 * <p>
+	 * Note that this setting does not affect
+	 * {@linkplain org.hibernate.annotations.TenantId discriminator-based}
+	 * multitenancy.
 	 *
-	 * @param enabled True if multi-tenancy in use.
+	 * @param enabled True if multi-tenancy in use via a {@code MultiTenantConnectionProvider}.
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#MULTI_TENANT_CONNECTION_PROVIDER
 	 */
 	SessionFactoryBuilder applyMultiTenancy(boolean enabled);
 
@@ -715,6 +730,13 @@ public interface SessionFactoryBuilder {
 	 */
 	@Deprecated( since = "6.0" )
 	SessionFactoryBuilder enableJpaListCompliance(boolean enabled);
+
+	/**
+	 * @see JpaCompliance#isJpaCascadeComplianceEnabled()
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JPA_CASCADE_COMPLIANCE
+	 */
+	SessionFactoryBuilder enableJpaCascadeCompliance(boolean enabled);
 
 	/**
 	 * @see JpaCompliance#isJpaClosedComplianceEnabled()

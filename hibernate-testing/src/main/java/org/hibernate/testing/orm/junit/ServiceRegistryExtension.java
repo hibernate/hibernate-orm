@@ -334,6 +334,7 @@ public class ServiceRegistryExtension
 
 		private StandardServiceRegistry createRegistry() {
 			BootstrapServiceRegistryBuilder bsrb = new BootstrapServiceRegistryBuilder().enableAutoClose();
+			bsrb.applyClassLoader( Thread.currentThread().getContextClassLoader() );
 			ssrProducer.prepareBootstrapRegistryBuilder(bsrb);
 
 			final org.hibernate.boot.registry.BootstrapServiceRegistry bsr = bsrProducer.produceServiceRegistry( bsrb );

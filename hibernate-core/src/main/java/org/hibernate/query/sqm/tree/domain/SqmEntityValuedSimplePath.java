@@ -78,8 +78,8 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 //	}
 
 	@Override
-	public <S extends T> SqmTreatedSimplePath<T,S> treatAs(Class<S> treatJavaType) throws PathException {
-		return (SqmTreatedSimplePath<T, S>) treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	public <S extends T> SqmTreatedEntityValuedSimplePath<T,S> treatAs(Class<S> treatJavaType) throws PathException {
+		return (SqmTreatedEntityValuedSimplePath<T, S>) treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
 	}
 
 	@Override

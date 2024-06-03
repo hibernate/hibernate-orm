@@ -239,18 +239,19 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 	}
 
 	protected boolean preInsert() {
-		boolean veto = false;
-
 		final EventListenerGroup<PreInsertEventListener> listenerGroup
 				= getFastSessionServices().eventListenerGroup_PRE_INSERT;
 		if ( listenerGroup.isEmpty() ) {
+			return false;
+		}
+		else {
+			boolean veto = false;
+			final PreInsertEvent event = new PreInsertEvent( getInstance(), getId(), getState(), getPersister(), eventSource() );
+			for ( PreInsertEventListener listener : listenerGroup.listeners() ) {
+				veto |= listener.onPreInsert( event );
+			}
 			return veto;
 		}
-		final PreInsertEvent event = new PreInsertEvent( getInstance(), getId(), getState(), getPersister(), eventSource() );
-		for ( PreInsertEventListener listener : listenerGroup.listeners() ) {
-			veto |= listener.onPreInsert( event );
-		}
-		return veto;
 	}
 
 	@Override

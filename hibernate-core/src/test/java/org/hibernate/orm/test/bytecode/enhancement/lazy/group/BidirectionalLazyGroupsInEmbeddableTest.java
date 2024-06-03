@@ -26,14 +26,16 @@ import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
+
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests removing non-owning side of the bidirectional association,
@@ -43,25 +45,24 @@ import org.junit.runner.RunWith;
  *
  * @author Gail Badner
  */
-@TestForIssue(jiraKey = "HHH-13241")
-@RunWith(BytecodeEnhancerRunner.class)
+@JiraKey("HHH-13241")
+@DomainModel(
+		annotatedClasses = {
+				BidirectionalLazyGroupsInEmbeddableTest.Employer.class, BidirectionalLazyGroupsInEmbeddableTest.Employee.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @CustomEnhancementContext({
 		EnhancerTestContext.class,
 		BidirectionalLazyGroupsInEmbeddableTest.NoDirtyCheckEnhancementContext.class
 })
-public class BidirectionalLazyGroupsInEmbeddableTest extends BaseCoreFunctionalTestCase {
-
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Employer.class, Employee.class };
-	}
+public class BidirectionalLazyGroupsInEmbeddableTest {
 
 	@Test
-	@Ignore("Test is failing with ByteBuddy if the mappings are moved to the fields.")
-	public void test() {
-
-		doInHibernate(
-				this::sessionFactory, session -> {
-
+	@Disabled("Test is failing with ByteBuddy if the mappings are moved to the fields.")
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 					Employer employer = new Employer( "RedHat" );
 					session.persist( employer );
 					employer.addEmployee( new Employee( "Jack" ) );
@@ -73,8 +74,7 @@ public class BidirectionalLazyGroupsInEmbeddableTest extends BaseCoreFunctionalT
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 					Employer employer = session.createQuery( "from Employer e", Employer.class ).getSingleResult();
 					session.remove( employer );
 					for ( Employee employee : employer.getEmployees() ) {

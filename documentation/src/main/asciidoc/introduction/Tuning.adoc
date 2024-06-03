@@ -239,7 +239,7 @@ session.setSubselectFetchingEnabled(true);
 [%unbreakable]
 [TIP]
 ====
-We may request subselect fetching more selectively by annotating a collection or many-valued association with the `@Fetch` annotation.
+We may request subselect fetching more selectively by annotating a collection or many-valued association with the link:{doc-javadoc-url}/org/hibernate/annotations/Fetch.html[`@Fetch`] annotation.
 [source,java]
 ----
 @ManyToMany @Fetch(SUBSELECT)
@@ -362,7 +362,7 @@ So a second-level cache is often by far the easiest way to improve the performan
 And so the cache is a potential source of bugs which are difficult to isolate and reproduce.
 
 Therefore, by default, an entity is not eligible for storage in the second-level cache.
-We must explicitly mark each entity that will  be stored in the second-level cache with the `@Cache` annotation from `org.hibernate.annotations`.
+We must explicitly mark each entity that will  be stored in the second-level cache with the link:{doc-javadoc-url}/org/hibernate/annotations/Cache.html[`@Cache`] annotation from `org.hibernate.annotations`.
 
 But that's still not enough.
 Hibernate does not itself contain an implementation of a second-level cache, so it's necessary to configure an external _cache provider_.
@@ -529,7 +529,7 @@ There's no need for this association to be lazily fetched, since we're expecting
 But on the other hand, if we leave it marked for eager fetching then, by default, Hibernate will often fetch it using a join.
 This places completely unnecessary load on the database.
 
-The solution is the `@Fetch` annotation:
+The solution is the link:{doc-javadoc-url}/org/hibernate/annotations/Fetch.html[`@Fetch`] annotation:
 
 [source,java]
 ----
@@ -694,7 +694,7 @@ As is generally the case with any second-level cache, the query cache can break 
 For the most part, the second-level cache is transparent.
 Program logic which interacts with the Hibernate session is unaware of the cache, and is not impacted by changes to caching policies.
 
-At worst, interaction with the cache may be controlled by specifying of an explicit `CacheMode`:
+At worst, interaction with the cache may be controlled by specifying of an explicit link:{doc-javadoc-url}/org/hibernate/CacheMode.html[`CacheMode`]:
 
 [source,java]
 ----
@@ -870,9 +870,11 @@ a `select`
 | `upsert(Object)`     | Immediately `insert` or `update` the state of the given detached object using a SQL `merge into` statement
 |===
 
+NOTE: The operations of a stateless session have no corresponding ``CascadeType``s, and so these operations never cascade to associated entity instances.
+
 NOTE: There's no `flush()` operation, and so `update()` is always explicit.
 
-In certain circumstances, this makes stateless sessions easier to work with, but with the caveat that a stateless session is much more vulnerable to data aliasing effects, since it's easy to get two non-identical Java objects which both represent the same row of a database table.
+In certain circumstances, this makes stateless sessions easier to work with and simpler to reason about, but with the caveat that a stateless session is much more vulnerable to data aliasing effects, since it's easy to get two non-identical Java objects which both represent the same row of a database table.
 
 [%unbreakable]
 [CAUTION]
@@ -892,11 +894,6 @@ Use of a `StatelessSession` alleviates the need to call:
 Stateless sessions can be useful, but for bulk operations on huge datasets, Hibernate can't possibly compete with stored procedures!
 ====
 
-When using a stateless session, you should be aware of the following additional limitations:
-
-- persistence operations never cascade to associated instances,
-- changes to `@ManyToMany` associations and ``@ElementCollection``s cannot be made persistent, and
-- operations performed via a stateless session bypass callbacks.
 
 [[optimistic-and-pessimistic-locking]]
 === Optimistic and pessimistic locking
@@ -921,7 +918,7 @@ Indeed, the usual practice is to avoid having transactions that span user intera
 That said, there _is_ also a place for pessimistic locks, which can sometimes reduce the probability of transaction rollbacks.
 
 Therefore, the `find()`, `lock()`, and `refresh()` methods of the reactive session accept an optional `LockMode`.
-We can also specify a `LockMode` for a query.
+We can also specify a link:{doc-javadoc-url}/org/hibernate/LockMode.html[`LockMode`] for a query.
 The lock mode can be used to request a pessimistic lock, or to customize the behavior of optimistic locking:
 
 .Optimistic and pessimistic lock modes
@@ -946,7 +943,19 @@ an entity is written to the database using
 | `PESSIMISTIC_WRITE`           | A pessimistic `for update` lock
 | `PESSIMISTIC_FORCE_INCREMENT` | A pessimistic lock enforced using an immediate
 `update` to increment the version
+| `NONE`                        | No lock; assigned when an entity is read from the second-level cache
 |===
+
+Note that an `OPTIMISTIC` lock is always verified at the end of the transaction, even when the entity has not been modified.
+This is slightly different to what most people mean when they talk about an "optimistic lock".
+It's never necessary to request an `OPTIMISTIC` lock on a modified entity, since the version number is always verified when a SQL `update` is executed.
+
+[CAUTION]
+====
+JPA has its own `LockModeType`, which enumerates most of the same modes.
+However, JPA's `LockModeType.READ` is a synonym for `OPTIMISTIC` -- it's not the same as Hibernate's `LockMode.READ`.
+Similarly, `LockModeType.WRITE` is a synonym for `OPTIMISTIC_FORCE_INCREMENT` and is not the same as `LockMode.WRITE`.
+====
 
 [[statistics]]
 === Collecting statistics

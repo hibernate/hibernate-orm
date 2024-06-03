@@ -6,14 +6,10 @@
  */
 package org.hibernate.sql.results.jdbc.spi;
 
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.spi.RowReader;
-
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * State pertaining to the processing of a single "row" of a JdbcValuesSource
@@ -73,7 +69,11 @@ public interface RowProcessingState extends ExecutionContext {
 	}
 
 	/**
-	 * Locate the Initializer registered for the given path
+	 * If this is a row processing state for aggregate components,
+	 * this will return the underlying row processing state.
 	 */
-	Initializer resolveInitializer(@Nullable NavigablePath path);
+	default RowProcessingState unwrap() {
+		return this;
+	}
+
 }

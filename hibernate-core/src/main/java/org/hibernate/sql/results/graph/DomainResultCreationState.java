@@ -6,9 +6,14 @@
  */
 package org.hibernate.sql.results.graph;
 
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.AssociationKey;
+import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorMapping;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -18,7 +23,9 @@ import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 
@@ -117,6 +124,30 @@ public interface DomainResultCreationState {
 		}
 	}
 
+	default BasicFetch<?> visitEmbeddableDiscriminatorFetch(EmbeddableResultGraphNode fetchParent, boolean nested) {
+		final EmbeddableMappingType embeddableType = fetchParent.getReferencedMappingType();
+		final EmbeddableDiscriminatorMapping discriminatorMapping = embeddableType.getDiscriminatorMapping();
+		if ( discriminatorMapping != null ) {
+			final Function<FetchParent, BasicFetch<?>> fetchSupplier = fp -> discriminatorMapping.generateFetch(
+					fp,
+					fp.getNavigablePath().append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
+					FetchTiming.IMMEDIATE,
+					true,
+					null,
+					this
+			);
+			if ( nested ) {
+				return withNestedFetchParent( fetchParent, fetchSupplier );
+			}
+			else {
+				return fetchSupplier.apply( fetchParent );
+			}
+		}
+		else {
+			return null;
+		}
+	}
+
 	/**
 	 * Visit fetches for the given parent.
 	 *
@@ -150,7 +181,11 @@ public interface DomainResultCreationState {
  	 */
 	ImmutableFetchList visitFetches(FetchParent fetchParent);
 
-	ImmutableFetchList visitNestedFetches(FetchParent fetchParent);
+	default ImmutableFetchList visitNestedFetches(FetchParent fetchParent) {
+		return withNestedFetchParent( fetchParent, this::visitFetches );
+	}
+
+	<R> R withNestedFetchParent(FetchParent fetchParent, Function<FetchParent, R> action);
 
 	boolean isResolvingCircularFetch();
 

@@ -369,7 +369,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	public Object getKeyOfOwner(Object owner, SharedSessionContractImplementor session) {
 		final PersistenceContext pc = session.getPersistenceContextInternal();
 
-		EntityEntry entityEntry = pc.getEntry( owner );
+		final EntityEntry entityEntry = pc.getEntry( owner );
 		if ( entityEntry == null ) {
 			// This just handles a particular case of component
 			// projection, perhaps get rid of it and throw an exception
@@ -385,9 +385,10 @@ public abstract class CollectionType extends AbstractType implements Association
 			// later in the mapping document) - now, we could try and use e.getStatus()
 			// to decide to semiResolve(), trouble is that initializeEntity() reuses
 			// the same array for resolved and hydrated values
-			Object id = entityEntry.getLoadedState() != null
-					? entityEntry.getLoadedValue( foreignKeyPropertyName )
-					: entityEntry.getPersister().getPropertyValue( owner, foreignKeyPropertyName );
+			final Object loadedValue = entityEntry.getLoadedValue( foreignKeyPropertyName );
+			final Object id = loadedValue == null ?
+					entityEntry.getPersister().getPropertyValue( owner, foreignKeyPropertyName ) :
+					loadedValue;
 
 			// NOTE VERY HACKISH WORKAROUND!!
 			// TODO: Fix this so it will work for non-POJO entity mode

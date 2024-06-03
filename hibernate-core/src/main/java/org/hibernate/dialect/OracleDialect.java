@@ -49,6 +49,7 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
@@ -78,19 +79,24 @@ import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
+import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
+import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -163,7 +169,7 @@ public class OracleDialect extends Dialect {
 	public static final String PREFER_LONG_RAW = "hibernate.dialect.oracle.prefer_long_raw";
 
 	private static final String yqmSelect =
-		"(trunc(%2$s, 'MONTH') + numtoyminterval(%1$s, 'MONTH') + (least(extract(day from %2$s), extract(day from last_day(trunc(%2$s, 'MONTH') + numtoyminterval(%1$s, 'MONTH')))) - 1))";
+			"(trunc(%2$s, 'MONTH') + numtoyminterval(%1$s, 'MONTH') + (least(extract(day from %2$s), extract(day from last_day(trunc(%2$s, 'MONTH') + numtoyminterval(%1$s, 'MONTH')))) - 1))";
 
 	private static final String ADD_YEAR_EXPRESSION = String.format( yqmSelect, "?2*12", "?3" );
 	private static final String ADD_QUARTER_EXPRESSION = String.format( yqmSelect, "?2*3", "?3" );
@@ -171,13 +177,20 @@ public class OracleDialect extends Dialect {
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 19 );
 
+	private final OracleUserDefinedTypeExporter userDefinedTypeExporter = new OracleUserDefinedTypeExporter( this );
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
+	private final SequenceSupport oracleSequenceSupport = OracleSequenceSupport.getInstance(this);
 
 	// Is it an Autonomous Database Cloud Service?
 	protected final boolean autonomous;
 
 	// Is MAX_STRING_SIZE set to EXTENDED?
 	protected final boolean extended;
+
+	protected final int driverMajorVersion;
+
+	protected final int driverMinorVersion;
+
 
 	public OracleDialect() {
 		this( MINIMUM_VERSION );
@@ -187,6 +200,8 @@ public class OracleDialect extends Dialect {
 		super(version);
 		autonomous = false;
 		extended = false;
+		driverMajorVersion = 19;
+		driverMinorVersion = 0;
 	}
 
 	public OracleDialect(DialectResolutionInfo info) {
@@ -197,6 +212,8 @@ public class OracleDialect extends Dialect {
 		super( info );
 		autonomous = serverConfiguration.isAutonomous();
 		extended = serverConfiguration.isExtended();
+		this.driverMinorVersion = serverConfiguration.getDriverMinorVersion();
+		this.driverMajorVersion = serverConfiguration.getDriverMajorVersion();
 	}
 
 	@Deprecated( since = "6.4" )
@@ -248,7 +265,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
-		return Types.BIT;
+		return getVersion().isSameOrAfter( 23 ) ? super.getPreferredSqlTypeCodeForBoolean() : Types.BIT;
 	}
 
 	@Override
@@ -349,7 +366,7 @@ public class OracleDialect extends Dialect {
 		functionFactory.arrayPrepend_oracle();
 		functionFactory.arrayAppend_oracle();
 		functionFactory.arrayContains_oracle();
-		functionFactory.arrayOverlaps_oracle();
+		functionFactory.arrayIntersects_oracle();
 		functionFactory.arrayGet_oracle();
 		functionFactory.arraySet_oracle();
 		functionFactory.arrayRemove_oracle();
@@ -420,7 +437,6 @@ public class OracleDialect extends Dialect {
 	}
 
 	/**
-	 * Oracle doesn't have any sort of {@link Types#BOOLEAN}
 	 * type or {@link Types#TIME} type, and its default behavior
 	 * for casting dates and timestamps to and from strings is just awful.
 	 */
@@ -448,6 +464,11 @@ public class OracleDialect extends Dialect {
 				}
 				break;
 			case BOOLEAN:
+				result = BooleanDecoder.toBoolean( from );
+				if ( result != null ) {
+					return result;
+				}
+				break;
 			case TF_BOOLEAN:
 				result = BooleanDecoder.toTrueFalseBoolean( from );
 				if ( result != null ) {
@@ -456,6 +477,7 @@ public class OracleDialect extends Dialect {
 				break;
 			case STRING:
 				switch ( from ) {
+					case BOOLEAN:
 					case INTEGER_BOOLEAN:
 					case TF_BOOLEAN:
 					case YN_BOOLEAN:
@@ -695,9 +717,12 @@ public class OracleDialect extends Dialect {
 	protected String columnType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
 			case BOOLEAN:
-				// still, after all these years...
-				return "number(1,0)";
-
+				if ( getVersion().isSameOrAfter( 23 ) ) {
+					return super.columnType( sqlTypeCode );
+				}
+				else {
+					return "number(1,0)";
+				}
 			case TINYINT:
 				return "number(3,0)";
 			case SMALLINT:
@@ -723,8 +748,8 @@ public class OracleDialect extends Dialect {
 				return "date";
 			case TIME:
 				return "timestamp($p)";
-				// the only difference between date and timestamp
-				// on Oracle is that date has no fractional seconds
+			// the only difference between date and timestamp
+			// on Oracle is that date has no fractional seconds
 			case TIME_WITH_TIMEZONE:
 				return "timestamp($p) with time zone";
 
@@ -758,6 +783,11 @@ public class OracleDialect extends Dialect {
 
 		ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this, false ) );
 		ddlTypeRegistry.addDescriptor( TABLE, new ArrayDdlTypeImpl( this, false ) );
+
+		if(getVersion().isSameOrAfter(23)) {
+			ddlTypeRegistry.addDescriptor(new NamedNativeEnumDdlTypeImpl(this));
+			ddlTypeRegistry.addDescriptor( new NamedNativeOrdinalEnumDdlTypeImpl( this ) );
+		}
 	}
 
 	@Override
@@ -800,12 +830,12 @@ public class OracleDialect extends Dialect {
 					jdbcTypeCode = GEOMETRY;
 				}
 				else {
-					final AggregateJdbcType aggregateDescriptor = jdbcTypeRegistry.findAggregateDescriptor(
+					final SqlTypedJdbcType descriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
 							// Skip the schema
 							columnTypeName.substring( columnTypeName.indexOf( '.' ) + 1 )
 					);
-					if ( aggregateDescriptor != null ) {
-						return aggregateDescriptor;
+					if ( descriptor != null ) {
+						return descriptor;
 					}
 				}
 				break;
@@ -816,6 +846,15 @@ public class OracleDialect extends Dialect {
 							jdbcTypeRegistry.getDescriptor( NUMERIC ),
 							ColumnTypeInformation.EMPTY
 					);
+				}
+				else {
+					final SqlTypedJdbcType descriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
+							// Skip the schema
+							columnTypeName.substring( columnTypeName.indexOf( '.' ) + 1 )
+					);
+					if ( descriptor != null ) {
+						return descriptor;
+					}
 				}
 				break;
 			case NUMERIC:
@@ -871,7 +910,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String getArrayTypeName(String javaElementTypeName, String elementTypeName, Integer maxLength) {
-		return javaElementTypeName + "Array";
+		return ( javaElementTypeName == null ? elementTypeName : javaElementTypeName ) + "Array";
 	}
 
 	@Override
@@ -881,10 +920,17 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
+	public Exporter<UserDefinedType> getUserDefinedTypeExporter() {
+		return userDefinedTypeExporter;
+	}
+
+	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
-
-		typeContributions.contributeJdbcType( OracleBooleanJdbcType.INSTANCE );
+		if ( getVersion().isBefore( 23 ) ) {
+			// starting 23c we support Boolean type natively
+			typeContributions.contributeJdbcType( OracleBooleanJdbcType.INSTANCE );
+		}
 		typeContributions.contributeJdbcType( OracleXmlJdbcType.INSTANCE );
 		if ( OracleJdbcHelper.isUsable( serviceRegistry ) ) {
 			typeContributions.contributeJdbcType( OracleJdbcHelper.getStructJdbcType( serviceRegistry ) );
@@ -895,17 +941,9 @@ public class OracleDialect extends Dialect {
 
 		// account for Oracle's deprecated support for LONGVARBINARY
 		// prefer BLOB, unless the user explicitly opts out
-		boolean preferLong = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
-				PREFER_LONG_RAW,
-				StandardConverters.BOOLEAN,
-				false
-		);
-
-		BlobJdbcType descriptor = preferLong ?
-				BlobJdbcType.PRIMITIVE_ARRAY_BINDING :
-				BlobJdbcType.DEFAULT;
-
-		typeContributions.contributeJdbcType( descriptor );
+		final boolean preferLong = serviceRegistry.requireService( ConfigurationService.class )
+				.getSetting( PREFER_LONG_RAW, StandardConverters.BOOLEAN, false );
+		typeContributions.contributeJdbcType( preferLong ? BlobJdbcType.PRIMITIVE_ARRAY_BINDING : BlobJdbcType.DEFAULT );
 
 		if ( getVersion().isSameOrAfter( 21 ) ) {
 			typeContributions.contributeJdbcType( OracleJsonJdbcType.INSTANCE );
@@ -915,6 +953,8 @@ public class OracleDialect extends Dialect {
 		}
 
 		if ( OracleJdbcHelper.isUsable( serviceRegistry ) ) {
+			// Register a JdbcType to allow reading from native queries
+			typeContributions.contributeJdbcType( new ArrayJdbcType( ObjectJdbcType.INSTANCE ) );
 			typeContributions.contributeJdbcTypeConstructor( getArrayJdbcTypeConstructor( serviceRegistry ) );
 			typeContributions.contributeJdbcTypeConstructor( getNestedTableJdbcTypeConstructor( serviceRegistry ) );
 		}
@@ -940,8 +980,14 @@ public class OracleDialect extends Dialect {
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeRegistry()
 								.getDescriptor( Object.class )
-						)
+				)
 		);
+
+		if(getVersion().isSameOrAfter(23)) {
+			final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
+			jdbcTypeRegistry.addDescriptor(OracleEnumJdbcType.INSTANCE);
+			jdbcTypeRegistry.addDescriptor(OracleOrdinalEnumJdbcType.INSTANCE);
+		}
 	}
 
 	@Override
@@ -1025,7 +1071,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return OracleSequenceSupport.INSTANCE;
+		return oracleSequenceSupport;
 	}
 
 	@Override
@@ -1223,10 +1269,10 @@ public class OracleDialect extends Dialect {
 		}
 
 		return DISTINCT_KEYWORD_PATTERN.matcher( sql ).find()
-			|| GROUP_BY_KEYWORD_PATTERN.matcher( sql ).find()
-			|| UNION_KEYWORD_PATTERN.matcher( sql ).find()
-			|| ORDER_BY_KEYWORD_PATTERN.matcher( sql ).find() && queryOptions.hasLimit()
-			|| queryOptions.hasLimit() && queryOptions.getLimit().getFirstRow() != null;
+				|| GROUP_BY_KEYWORD_PATTERN.matcher( sql ).find()
+				|| UNION_KEYWORD_PATTERN.matcher( sql ).find()
+				|| ORDER_BY_KEYWORD_PATTERN.matcher( sql ).find() && queryOptions.hasLimit()
+				|| queryOptions.hasLimit() && queryOptions.getLimit().getFirstRow() != null;
 	}
 
 	@Override
@@ -1597,4 +1643,44 @@ public class OracleDialect extends Dialect {
 	public boolean supportsFromClauseInUpdate() {
 		return true;
 	}
+
+	public int getDriverMajorVersion() {
+		return driverMajorVersion;
+	}
+
+	public int getDriverMinorVersion() {
+		return driverMinorVersion;
+	}
+
+	@Override
+	public String getEnumTypeDeclaration(String name, String[] values) {
+		return getVersion().isSameOrAfter(23) ? name : super.getEnumTypeDeclaration(name, values);
+	}
+
+	@Override
+	public String[] getCreateEnumTypeCommand(String name, String[] values) {
+		final StringBuilder domain = new StringBuilder();
+		domain.append( "create domain " )
+				.append( name )
+				.append( " as enum (" );
+		String separator = "";
+		for ( String value : values ) {
+			domain.append( separator ).append( value );
+			separator = ", ";
+		}
+		domain.append( ')' );
+		return new String[] { domain.toString() };
+	}
+
+	@Override
+	public String[] getDropEnumTypeCommand(String name) {
+		return new String[] { "drop domain if exists " + name + " force" };
+	}
+
+	@Override
+	public boolean useInputStreamToInsertBlob() {
+		// see HHH-18206
+		return false;
+	}
+
 }

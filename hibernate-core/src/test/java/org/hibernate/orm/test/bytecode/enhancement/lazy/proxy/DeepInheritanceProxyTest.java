@@ -14,39 +14,56 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.Hibernate;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gail Badner
  */
 
-@TestForIssue( jiraKey = "HHH-11147" )
-@RunWith( BytecodeEnhancerRunner.class )
+@JiraKey( "HHH-11147" )
+@DomainModel(
+		annotatedClasses = {
+				DeepInheritanceProxyTest.AMappedSuperclass.class,
+				DeepInheritanceProxyTest.AEntity.class,
+				DeepInheritanceProxyTest.AAEntity.class,
+				DeepInheritanceProxyTest.AAAEntity.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.FORMAT_SQL, value = "false" ),
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.USE_QUERY_CACHE, value = "false" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions( lazyLoading = true )
-public class DeepInheritanceProxyTest extends BaseNonConfigCoreFunctionalTestCase {
+public class DeepInheritanceProxyTest {
 
 	@Test
-	public void testRootGetValueToInitialize() {
-		inTransaction(
+	public void testRootGetValueToInitialize(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
 
 					AEntity aEntity = session.getReference( AEntity.class, "AEntity" );
@@ -63,9 +80,9 @@ public class DeepInheritanceProxyTest extends BaseNonConfigCoreFunctionalTestCas
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
 
 					AEntity aEntity = session.getReference( AEntity.class, "AEntity" );
@@ -84,10 +101,10 @@ public class DeepInheritanceProxyTest extends BaseNonConfigCoreFunctionalTestCas
 	}
 
 	@Test
-	public void testRootSetValueToInitialize() {
-		inTransaction(
+	public void testRootSetValueToInitialize(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
 
 					AEntity aEntity = session.getReference( AEntity.class, "AEntity" );
@@ -104,9 +121,9 @@ public class DeepInheritanceProxyTest extends BaseNonConfigCoreFunctionalTestCas
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
 
 					AEntity aEntity = session.getReference( AEntity.class, "AEntity" );
@@ -123,9 +140,9 @@ public class DeepInheritanceProxyTest extends BaseNonConfigCoreFunctionalTestCas
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
 
 					AEntity aEntity = session.get( AEntity.class, "AEntity" );
@@ -142,10 +159,10 @@ public class DeepInheritanceProxyTest extends BaseNonConfigCoreFunctionalTestCas
 	}
 
 	@Test
-	public void testMiddleGetValueToInitialize() {
-		inTransaction(
+	public void testMiddleGetValueToInitialize(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
 
 					AAEntity aaEntity = session.getReference( AAEntity.class, "AAEntity" );
@@ -164,9 +181,9 @@ public class DeepInheritanceProxyTest extends BaseNonConfigCoreFunctionalTestCas
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
 
 					AAEntity aaEntity = session.getReference( AAEntity.class, "AAEntity" );
@@ -185,9 +202,9 @@ public class DeepInheritanceProxyTest extends BaseNonConfigCoreFunctionalTestCas
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
 
 					AAEntity aaEntity = session.getReference( AAEntity.class, "AAEntity" );
@@ -208,10 +225,10 @@ public class DeepInheritanceProxyTest extends BaseNonConfigCoreFunctionalTestCas
 	}
 
 	@Test
-	public void testMiddleSetValueToInitialize() {
-		inTransaction(
+	public void testMiddleSetValueToInitialize(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
 
 					AAEntity aaEntity = session.getReference( AAEntity.class, "AAEntity" );
@@ -230,9 +247,9 @@ public class DeepInheritanceProxyTest extends BaseNonConfigCoreFunctionalTestCas
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
 
 					AAEntity aaEntity = session.getReference( AAEntity.class, "AAEntity" );
@@ -251,9 +268,9 @@ public class DeepInheritanceProxyTest extends BaseNonConfigCoreFunctionalTestCas
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
 
 					AAEntity aaEntity = session.getReference( AAEntity.class, "AAEntity" );
@@ -272,9 +289,9 @@ public class DeepInheritanceProxyTest extends BaseNonConfigCoreFunctionalTestCas
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
 
 					AAEntity aaEntity = session.get( AAEntity.class, "AAEntity" );
@@ -293,10 +310,10 @@ public class DeepInheritanceProxyTest extends BaseNonConfigCoreFunctionalTestCas
 	}
 
 	@Test
-	public void testLeafGetValueToInitialize() {
-		inTransaction(
+	public void testLeafGetValueToInitialize(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
 
 					AAAEntity aaaEntity = session.getReference( AAAEntity.class, "AAAEntity" );
@@ -317,9 +334,9 @@ public class DeepInheritanceProxyTest extends BaseNonConfigCoreFunctionalTestCas
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
 
 					AAAEntity aaaEntity = session.getReference( AAAEntity.class, "AAAEntity" );
@@ -340,9 +357,9 @@ public class DeepInheritanceProxyTest extends BaseNonConfigCoreFunctionalTestCas
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
 
 					AAAEntity aaaEntity = session.getReference( AAAEntity.class, "AAAEntity" );
@@ -365,10 +382,10 @@ public class DeepInheritanceProxyTest extends BaseNonConfigCoreFunctionalTestCas
 	}
 
 	@Test
-	public void testLeafSetValueToInitialize() {
-		inTransaction(
+	public void testLeafSetValueToInitialize(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
 
 					AAAEntity aaaEntity = session.getReference( AAAEntity.class, "AAAEntity" );
@@ -389,9 +406,9 @@ public class DeepInheritanceProxyTest extends BaseNonConfigCoreFunctionalTestCas
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
 
 					AAAEntity aaaEntity = session.getReference( AAAEntity.class, "AAAEntity" );
@@ -413,9 +430,9 @@ public class DeepInheritanceProxyTest extends BaseNonConfigCoreFunctionalTestCas
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
 
 					AAAEntity aaaEntity = session.getReference( AAAEntity.class, "AAAEntity" );
@@ -436,9 +453,9 @@ public class DeepInheritanceProxyTest extends BaseNonConfigCoreFunctionalTestCas
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
 
 					AAAEntity aaaEntity = session.getReference( AAAEntity.class, "AAAEntity" );
@@ -459,9 +476,9 @@ public class DeepInheritanceProxyTest extends BaseNonConfigCoreFunctionalTestCas
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
 
 					AAAEntity aaaEntity = session.get( AAAEntity.class, "AAAEntity" );
@@ -481,33 +498,9 @@ public class DeepInheritanceProxyTest extends BaseNonConfigCoreFunctionalTestCas
 		);
 	}
 
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
-		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
-
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		super.configureSessionFactoryBuilder( sfb );
-		sfb.applyStatisticsSupport( true );
-		sfb.applySecondLevelCacheSupport( false );
-		sfb.applyQueryCacheSupport( false );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( AMappedSuperclass.class );
-		sources.addAnnotatedClass( AEntity.class );
-		sources.addAnnotatedClass( AAEntity.class );
-		sources.addAnnotatedClass( AAAEntity.class );
-	}
-
-	@Before
-	public void prepareTestData() {
-		inTransaction(
+	@BeforeEach
+	public void prepareTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					AEntity aEntity = new AEntity( "AEntity" );
 					aEntity.setFieldInAMappedSuperclass( (short) 2 );
@@ -530,9 +523,9 @@ public class DeepInheritanceProxyTest extends BaseNonConfigCoreFunctionalTestCas
 		);
 	}
 
-	@After
-	public void clearTestData(){
-		inTransaction(
+	@AfterEach
+	public void clearTestData(SessionFactoryScope scope){
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from AEntity" ).executeUpdate();
 				}

@@ -6,20 +6,20 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.group;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.orm.test.bytecode.enhancement.lazy.NoDirtyCheckingContext;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
@@ -28,20 +28,21 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				MultiLazyBasicInLazyGroupUpdateTest.LazyEntity.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @CustomEnhancementContext( { EnhancerTestContext.class, NoDirtyCheckingContext.class} )
-public class MultiLazyBasicInLazyGroupUpdateTest extends BaseCoreFunctionalTestCase {
+public class MultiLazyBasicInLazyGroupUpdateTest {
 
 	private Long entityId;
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { LazyEntity.class };
-	}
-
-	@Before
-	public void prepare() {
-		doInHibernate( this::sessionFactory, s -> {
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			LazyEntity entity = new LazyEntity();
 			s.persist( entity );
 			entityId = entity.getId();
@@ -49,13 +50,13 @@ public class MultiLazyBasicInLazyGroupUpdateTest extends BaseCoreFunctionalTestC
 	}
 
 	@Test
-	public void updateOneLazyProperty() {
+	public void updateOneLazyProperty(SessionFactoryScope scope) {
 		// null -> non-null
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			entity.setLazyProperty1( "update1" );
 		} );
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			assertEquals( "update1", entity.getLazyProperty1() );
 			assertNull(entity.getLazyProperty2());
@@ -63,11 +64,11 @@ public class MultiLazyBasicInLazyGroupUpdateTest extends BaseCoreFunctionalTestC
 		} );
 
 		// non-null -> non-null
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			entity.setLazyProperty1( "update2" );
 		} );
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			assertEquals( "update2", entity.getLazyProperty1() );
 			assertNull(entity.getLazyProperty2());
@@ -76,14 +77,14 @@ public class MultiLazyBasicInLazyGroupUpdateTest extends BaseCoreFunctionalTestC
 	}
 
 	@Test
-	public void updateOneEagerPropertyAndOneLazyProperty() {
+	public void updateOneEagerPropertyAndOneLazyProperty(SessionFactoryScope scope) {
 		// null -> non-null
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			entity.setEagerProperty( "eager_update1" );
 			entity.setLazyProperty1( "update1" );
 		} );
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			assertEquals( "eager_update1", entity.getEagerProperty() );
 			assertEquals( "update1", entity.getLazyProperty1() );
@@ -91,12 +92,12 @@ public class MultiLazyBasicInLazyGroupUpdateTest extends BaseCoreFunctionalTestC
 		} );
 
 		// non-null -> non-null
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			entity.setEagerProperty( "eager_update2" );
 			entity.setLazyProperty1( "update2" );
 		} );
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			assertEquals( "eager_update2", entity.getEagerProperty() );
 			assertEquals( "update2", entity.getLazyProperty1() );
@@ -105,14 +106,14 @@ public class MultiLazyBasicInLazyGroupUpdateTest extends BaseCoreFunctionalTestC
 	}
 
 	@Test
-	public void updateAllLazyProperties() {
+	public void updateAllLazyProperties(SessionFactoryScope scope) {
 		// null -> non-null
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			entity.setLazyProperty1( "update1" );
 			entity.setLazyProperty2( "update2_1" );
 		} );
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			assertEquals( "update1", entity.getLazyProperty1() );
 			assertEquals( "update2_1", entity.getLazyProperty2() );
@@ -120,12 +121,12 @@ public class MultiLazyBasicInLazyGroupUpdateTest extends BaseCoreFunctionalTestC
 		} );
 
 		// non-null -> non-null
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			entity.setLazyProperty1( "update2" );
 			entity.setLazyProperty2( "update2_2" );
 		} );
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			assertEquals( "update2", entity.getLazyProperty1() );
 			assertEquals( "update2_2", entity.getLazyProperty2() );
@@ -135,7 +136,7 @@ public class MultiLazyBasicInLazyGroupUpdateTest extends BaseCoreFunctionalTestC
 
 	@Entity
 	@Table(name = "LAZY_ENTITY")
-	private static class LazyEntity {
+	static class LazyEntity {
 		@Id
 		@GeneratedValue
 		Long id;

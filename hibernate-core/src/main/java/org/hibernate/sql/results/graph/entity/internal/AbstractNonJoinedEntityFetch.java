@@ -14,16 +14,17 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.InitializerProducer;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
-
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Steve Ebersole
@@ -34,6 +35,7 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 	private final ToOneAttributeMapping fetchedModelPart;
 	private final FetchParent fetchParent;
 	private final DomainResult<?> keyResult;
+	private final BasicFetch<?> discriminatorFetch;
 	private final boolean selectByUniqueKey;
 
 	public AbstractNonJoinedEntityFetch(
@@ -41,11 +43,29 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 			ToOneAttributeMapping fetchedModelPart,
 			FetchParent fetchParent,
 			DomainResult<?> keyResult,
+			boolean selectDiscriminator,
+			boolean selectByUniqueKey,
+			DomainResultCreationState creationState) {
+		this.navigablePath = navigablePath;
+		this.fetchedModelPart = fetchedModelPart;
+		this.fetchParent = fetchParent;
+		this.keyResult = keyResult;
+		this.discriminatorFetch = selectDiscriminator ? creationState.visitDiscriminatorFetch( this ) : null;
+		this.selectByUniqueKey = selectByUniqueKey;
+	}
+
+	protected AbstractNonJoinedEntityFetch(
+			NavigablePath navigablePath,
+			ToOneAttributeMapping fetchedModelPart,
+			FetchParent fetchParent,
+			DomainResult<?> keyResult,
+			BasicFetch<?> discriminatorFetch,
 			boolean selectByUniqueKey) {
 		this.navigablePath = navigablePath;
 		this.fetchedModelPart = fetchedModelPart;
 		this.fetchParent = fetchParent;
 		this.keyResult = keyResult;
+		this.discriminatorFetch = discriminatorFetch;
 		this.selectByUniqueKey = selectByUniqueKey;
 	}
 
@@ -99,6 +119,9 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 		if ( keyResult != null ) {
 			keyResult.collectValueIndexesToCache( valueIndexes );
 		}
+		if ( discriminatorFetch != null ) {
+			discriminatorFetch.collectValueIndexesToCache( valueIndexes );
+		}
 	}
 
 	@Override
@@ -110,6 +133,10 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 		return keyResult;
 	}
 
+	public BasicFetch<?> getDiscriminatorFetch() {
+		return discriminatorFetch;
+	}
+
 	public boolean isSelectByUniqueKey() {
 		return selectByUniqueKey;
 	}
@@ -118,7 +145,14 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 	public DomainResultAssembler<?> createAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
-		final EntityInitializer entityInitializer = creationState.resolveInitializer( this, parentAccess, this )
+		return createAssembler( (InitializerParent) parentAccess, creationState );
+	}
+
+	@Override
+	public DomainResultAssembler<?> createAssembler(
+			InitializerParent parent,
+			AssemblerCreationState creationState) {
+		final EntityInitializer entityInitializer = creationState.resolveInitializer( this, parent, this )
 				.asEntityInitializer();
 		assert entityInitializer != null;
 		return buildEntityAssembler( entityInitializer );
@@ -127,13 +161,13 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 	@Override
 	public EntityInitializer createInitializer(
 			AbstractNonJoinedEntityFetch resultGraphNode,
-			FetchParentAccess parentAccess,
+			InitializerParent parent,
 			AssemblerCreationState creationState) {
-		return resultGraphNode.createInitializer( parentAccess, creationState );
+		return resultGraphNode.createInitializer( parent, creationState );
 	}
 
 	@Override
-	public abstract EntityInitializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState);
+	public abstract EntityInitializer createInitializer(InitializerParent parent, AssemblerCreationState creationState);
 
 	protected EntityAssembler buildEntityAssembler(EntityInitializer entityInitializer) {
 		return new EntityAssembler( getFetchedMapping().getJavaType(), entityInitializer );

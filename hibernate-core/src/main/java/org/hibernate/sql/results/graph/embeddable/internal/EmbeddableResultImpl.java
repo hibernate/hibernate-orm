@@ -22,7 +22,9 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.InitializerProducer;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResult;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
@@ -38,6 +40,7 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 	private final String resultVariable;
 	private final boolean containsAnyNonScalars;
 	private final EmbeddableMappingType fetchContainer;
+	private final BasicFetch<?> discriminatorFetch;
 
 	public EmbeddableResultImpl(
 			NavigablePath navigablePath,
@@ -74,6 +77,8 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 					return tableGroupJoin.getJoinedGroup();
 				}
 		);
+
+		this.discriminatorFetch = creationState.visitEmbeddableDiscriminatorFetch( this, false );
 
 		afterInitialize( this, creationState );
 
@@ -125,20 +130,27 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 	public DomainResultAssembler<T> createResultAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
+		return createResultAssembler( (InitializerParent) parentAccess, creationState );
+	}
+
+	@Override
+	public DomainResultAssembler<T> createResultAssembler(
+			InitializerParent parent,
+			AssemblerCreationState creationState) {
 		//noinspection unchecked
-		return new EmbeddableAssembler( creationState.resolveInitializer( this, parentAccess, this ).asEmbeddableInitializer() );
+		return new EmbeddableAssembler( creationState.resolveInitializer( this, parent, this ).asEmbeddableInitializer() );
 	}
 
 	@Override
 	public Initializer createInitializer(
 			EmbeddableResultImpl<T> resultGraphNode,
-			FetchParentAccess parentAccess,
+			InitializerParent parent,
 			AssemblerCreationState creationState) {
-		return resultGraphNode.createInitializer( parentAccess, creationState );
+		return resultGraphNode.createInitializer( parent, creationState );
 	}
 
 	@Override
-	public Initializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
-		return new EmbeddableResultInitializer( this, parentAccess, creationState );
+	public Initializer createInitializer(InitializerParent parent, AssemblerCreationState creationState) {
+		return new EmbeddableInitializerImpl( this, discriminatorFetch, parent, creationState, true );
 	}
 }

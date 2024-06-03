@@ -6,10 +6,13 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.association;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -24,43 +27,43 @@ import java.util.List;
 /**
  * @author Luis Barreiro
  */
-@RunWith( BytecodeEnhancerRunner.class )
+@BytecodeEnhanced
 public class OneToManyAssociationTest {
 
     @Test
     public void test() {
         Customer customer = new Customer();
-        Assert.assertTrue( customer.getInventories().isEmpty() );
+        assertTrue( customer.getInventories().isEmpty() );
 
         CustomerInventory customerInventory = new CustomerInventory();
         customerInventory.setCustomer( customer );
 
-        Assert.assertEquals( 1, customer.getInventories().size() );
-        Assert.assertTrue( customer.getInventories().contains( customerInventory ) );
+        assertEquals( 1, customer.getInventories().size() );
+        assertTrue( customer.getInventories().contains( customerInventory ) );
 
         Customer anotherCustomer = new Customer();
-        Assert.assertTrue( anotherCustomer.getInventories().isEmpty() );
+        assertTrue( anotherCustomer.getInventories().isEmpty() );
         customerInventory.setCustomer( anotherCustomer );
 
-        Assert.assertTrue( customer.getInventories().isEmpty() );
-        Assert.assertEquals( 1, anotherCustomer.getInventories().size() );
-        Assert.assertSame( customerInventory, anotherCustomer.getInventories().get( 0 ) );
+        assertTrue( customer.getInventories().isEmpty() );
+        assertEquals( 1, anotherCustomer.getInventories().size() );
+        assertSame( customerInventory, anotherCustomer.getInventories().get( 0 ) );
 
         customer.addInventory( customerInventory );
 
-        Assert.assertSame( customer, customerInventory.getCustomer() );
-        Assert.assertTrue( anotherCustomer.getInventories().isEmpty() );
-        Assert.assertEquals( 1, customer.getInventories().size() );
+        assertSame( customer, customerInventory.getCustomer() );
+        assertTrue( anotherCustomer.getInventories().isEmpty() );
+        assertEquals( 1, customer.getInventories().size() );
 
         customer.addInventory( new CustomerInventory() );
-        Assert.assertEquals( 2, customer.getInventories().size() );
+        assertEquals( 2, customer.getInventories().size() );
 
         // Test remove
         customer.removeInventory( customerInventory );
-        Assert.assertEquals( 1, customer.getInventories().size() );
+        assertEquals( 1, customer.getInventories().size() );
 
         // This happens (and is expected) because there was no snapshot taken before remove
-        Assert.assertNotNull( customerInventory.getCustomer() );
+        assertNotNull( customerInventory.getCustomer() );
     }
 
     // --- //

@@ -7,15 +7,17 @@ import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.Entity;
@@ -33,24 +35,23 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @JiraKey("HHH-16890")
-@RunWith( BytecodeEnhancerRunner.class )
-public class BatchEntityWithSelectFetchTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				BatchEntityWithSelectFetchTest.Order.class,
+				BatchEntityWithSelectFetchTest.Product.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class BatchEntityWithSelectFetchTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Order.class,
-				Product.class
-		};
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, true );
-	}
-
-	@Before
-	public void setupData() {
+	@BeforeEach
+	public void setupData(SessionFactoryScope scope) {
 		Product cheese1 = new Product( 1l, "Cheese 1" );
 		Product cheese2 = new Product( 2l, "Cheese 2" );
 		Product cheese3 = new Product( 3l, "Cheese 3" );
@@ -61,7 +62,7 @@ public class BatchEntityWithSelectFetchTest extends BaseCoreFunctionalTestCase {
 		order.setProduct( cheese2 );
 		order2.setProduct( cheese1 );
 
-		inTransaction( s -> {
+		scope.inTransaction( s -> {
 			s.persist( cheese1 );
 			s.persist( cheese2 );
 			s.persist( cheese3 );
@@ -70,9 +71,9 @@ public class BatchEntityWithSelectFetchTest extends BaseCoreFunctionalTestCase {
 		} );
 	}
 
-	@After
-	public void tearDown(){
-		inTransaction(
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope){
+		scope.inTransaction(
 				session -> {
 					session.createMutationQuery( "delete from Order" ).executeUpdate();
 					session.createMutationQuery( "delete from Product" ).executeUpdate();
@@ -81,8 +82,8 @@ public class BatchEntityWithSelectFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testGetOrder() {
-		inSession( s -> {
+	public void testGetOrder(SessionFactoryScope scope) {
+		scope.inSession( s -> {
 			s.getSessionFactory().getCache().evictAllRegions();
 
 			Product product1 = s.getReference( Product.class, 1l );
@@ -96,8 +97,8 @@ public class BatchEntityWithSelectFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testGetOrder2() {
-		inSession( s -> {
+	public void testGetOrder2(SessionFactoryScope scope) {
+		scope.inSession( s -> {
 			s.getSessionFactory().getCache().evictAllRegions();
 
 			Product product = s.getReference( Product.class, 2l );
@@ -110,8 +111,8 @@ public class BatchEntityWithSelectFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testGetProduct() {
-		inSession( s -> {
+	public void testGetProduct(SessionFactoryScope scope) {
+		scope.inSession( s -> {
 			s.getSessionFactory().getCache().evictAllRegions();
 
 			Product product3 = s.getReference( Product.class, 3l );
@@ -125,8 +126,8 @@ public class BatchEntityWithSelectFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testCriteriaQuery() {
-		inSession( s -> {
+	public void testCriteriaQuery(SessionFactoryScope scope) {
+		scope.inSession( s -> {
 			s.getSessionFactory().getCache().evictAllRegions();
 
 			Product product1 = s.getReference( Product.class, 1l );

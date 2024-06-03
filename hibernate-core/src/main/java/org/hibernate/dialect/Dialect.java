@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.Blob;
@@ -40,6 +41,7 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.Length;
 import org.hibernate.LockMode;
@@ -107,7 +109,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.MathHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.io.StreamCopier;
 import org.hibernate.loader.ast.spi.MultiKeyLoadSizingStrategy;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
@@ -339,7 +340,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	protected Dialect(DialectResolutionInfo info) {
-		this.version = info.makeCopy();
+		this.version = info.makeCopyOrDefault( getMinimumSupportedVersion() );
 		checkVersion();
 		registerDefaultKeywords();
 		registerKeywords(info);
@@ -763,14 +764,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			int precision,
 			int scale,
 			int displaySize) {
-		// It seems MariaDB/MySQL return the precision in bytes depending on the charset,
-		// so to detect whether we have a single character here, we check the display size
-		if ( jdbcTypeCode == Types.CHAR && precision <= 4 ) {
-			return displaySize;
-		}
-		else {
-			return precision;
-		}
+		return precision;
 	}
 
 	/**
@@ -1597,6 +1591,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * {@link Types#VARBINARY BINARY} and
 	 * {@link Types#LONGVARBINARY LONGVARBINARY} as the same type, since
 	 * Hibernate doesn't really differentiate these types.
+	 * <p>
+	 * On the other hand, integral types are not treated as equivalent,
+	 * instead, {@link #isCompatibleIntegralType(int, int)} is responsible
+	 * for determining if the types are compatible.
 	 *
 	 * @param typeCode1 the first column type info
 	 * @param typeCode2 the second column type info
@@ -1606,14 +1604,37 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public boolean equivalentTypes(int typeCode1, int typeCode2) {
 		return typeCode1==typeCode2
 			|| isNumericOrDecimal(typeCode1) && isNumericOrDecimal(typeCode2)
-//			|| isIntegral(typeCode1) && isIntegral(typeCode2)
 			|| isFloatOrRealOrDouble(typeCode1) && isFloatOrRealOrDouble(typeCode2)
 			|| isVarcharType(typeCode1) && isVarcharType(typeCode2)
 			|| isVarbinaryType(typeCode1) && isVarbinaryType(typeCode2)
+			|| isCompatibleIntegralType(typeCode1, typeCode2)
 			// HHH-17908: Since the runtime can cope with enum on the DDL side,
 			// but varchar on the ORM expectation side, let's treat the types as equivalent
-			|| isEnumType( typeCode1 ) && isVarcharType( typeCode2 )
+			|| isEnumType(typeCode1) && isVarcharType(typeCode2)
 			|| sameColumnType(typeCode1, typeCode2);
+	}
+
+	/**
+	 * Tolerate storing {@code short} in {@code INTEGER} or {@code BIGINT}
+	 * or {@code int} in {@code BIGINT} for the purposes of schema validation
+	 * and migration.
+	 */
+	private boolean isCompatibleIntegralType(int typeCode1, int typeCode2) {
+		switch (typeCode1) {
+			case TINYINT:
+				return typeCode2 == TINYINT
+					|| typeCode2 == SMALLINT
+					|| typeCode2 == INTEGER
+					|| typeCode2 == BIGINT;
+			case SMALLINT:
+				return typeCode2 == SMALLINT
+					|| typeCode2 == INTEGER
+					|| typeCode2 == BIGINT;
+			case INTEGER:
+				return typeCode2 == INTEGER
+					|| typeCode2 == BIGINT;
+		}
+		return false;
 	}
 
 	private boolean sameColumnType(int typeCode1, int typeCode2) {
@@ -1694,13 +1715,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			jdbcTypeRegistry.addDescriptor( NClobJdbcType.DEFAULT );
 		}
 
-		if ( useInputStreamToInsertBlob() ) {
-			jdbcTypeRegistry.addDescriptor(
-					Types.CLOB,
-					ClobJdbcType.STREAM_BINDING
-			);
-		}
-
 		if ( getTimeZoneSupport() == TimeZoneSupport.NATIVE ) {
 			jdbcTypeRegistry.addDescriptor( TimestampUtcAsOffsetDateTimeJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptor( TimeUtcAsOffsetTimeJdbcType.INSTANCE );
@@ -1755,8 +1769,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 					final OutputStream connectedStream = target.setBinaryStream( 1L );
 					// the BLOB from the detached state
 					final InputStream detachedStream = original.getBinaryStream();
-					StreamCopier.copy( detachedStream, connectedStream );
+					detachedStream.transferTo( connectedStream );
 					return target;
+				}
+				catch (IOException e ) {
+					throw new HibernateException( "Unable to copy stream content", e );
 				}
 				catch (SQLException e ) {
 					throw session.getFactory().getJdbcServices().getSqlExceptionHelper()
@@ -1776,8 +1793,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 					final OutputStream connectedStream = target.setAsciiStream( 1L );
 					// the CLOB from the detached state
 					final InputStream detachedStream = original.getAsciiStream();
-					StreamCopier.copy( detachedStream, connectedStream );
+					detachedStream.transferTo( connectedStream );
 					return target;
+				}
+				catch (IOException e ) {
+					throw new HibernateException( "Unable to copy stream content", e );
 				}
 				catch (SQLException e ) {
 					throw session.getFactory().getJdbcServices().getSqlExceptionHelper().convert( e, "unable to merge CLOB data" );
@@ -1796,8 +1816,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 					final OutputStream connectedStream = target.setAsciiStream( 1L );
 					// the NCLOB from the detached state
 					final InputStream detachedStream = original.getAsciiStream();
-					StreamCopier.copy( detachedStream, connectedStream );
+					detachedStream.transferTo( connectedStream );
 					return target;
+				}
+				catch (IOException e ) {
+					throw new HibernateException( "Unable to copy stream content", e );
 				}
 				catch (SQLException e ) {
 					throw session.getFactory().getJdbcServices().getSqlExceptionHelper().convert( e, "unable to merge NCLOB data" );
@@ -2022,16 +2045,21 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		switch ( lockMode ) {
 			case PESSIMISTIC_FORCE_INCREMENT:
 				return new PessimisticForceIncrementLockingStrategy( lockable, lockMode );
+			case UPGRADE_NOWAIT:
+			case UPGRADE_SKIPLOCKED:
 			case PESSIMISTIC_WRITE:
 				return new PessimisticWriteSelectLockingStrategy( lockable, lockMode );
 			case PESSIMISTIC_READ:
 				return new PessimisticReadSelectLockingStrategy( lockable, lockMode );
-			case OPTIMISTIC:
-				return new OptimisticLockingStrategy( lockable, lockMode );
 			case OPTIMISTIC_FORCE_INCREMENT:
 				return new OptimisticForceIncrementLockingStrategy( lockable, lockMode );
-			default:
+			case OPTIMISTIC:
+				return new OptimisticLockingStrategy( lockable, lockMode );
+			case READ:
 				return new SelectLockingStrategy( lockable, lockMode );
+			default:
+				// WRITE, NONE are not allowed here
+				throw new IllegalArgumentException( "Unsupported lock mode" );
 		}
 	}
 
@@ -3620,6 +3648,20 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Should BLOB, CLOB, and NCLOB be created solely using respectively
+	 * {@link Connection#createBlob()}, {@link Connection#createClob()},
+	 * and {@link Connection#createNClob()}.
+	 *
+	 * @return True if BLOB, CLOB, and NCLOB should be created using JDBC
+	 * {@link Connection}.
+	 *
+	 * @since 6.6
+	 */
+	public boolean useConnectionToCreateLob() {
+		return !useInputStreamToInsertBlob();
+	}
+
+	/**
 	 * Does this dialect support parameters within the {@code SELECT} clause
 	 * of {@code INSERT ... SELECT ...} statements?
 	 *
@@ -4825,7 +4867,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public int getDefaultTimestampPrecision() {
 		//milliseconds or microseconds is the maximum
 		//for most dialects that support explicit
-		//precision, with the exception of DB2 which
+		//precision, with the exception of Oracle,
+		//which accepts up to 9 digits, and DB2 which
 		//accepts up to 12 digits!
 		return 6; //microseconds!
 	}

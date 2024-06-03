@@ -14,6 +14,7 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.InitializerProducer;
 import org.hibernate.sql.results.graph.entity.AbstractDiscriminatedEntityResultGraphNode;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -43,25 +44,32 @@ public class DiscriminatedEntityResult<T> extends AbstractDiscriminatedEntityRes
 	public DomainResultAssembler<T> createResultAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
+		return createResultAssembler( (InitializerParent) parentAccess, creationState );
+	}
+
+	@Override
+	public DomainResultAssembler<T> createResultAssembler(
+			InitializerParent parent,
+			AssemblerCreationState creationState) {
 		//noinspection unchecked
 		return new EntityAssembler(
 				getReferencedMappingContainer().getJavaType(),
-				creationState.resolveInitializer( this, parentAccess, this ).asEntityInitializer()
+				creationState.resolveInitializer( this, parent, this ).asEntityInitializer()
 		);
 	}
 
 	@Override
 	public Initializer createInitializer(
 			DiscriminatedEntityResult<T> resultGraphNode,
-			FetchParentAccess parentAccess,
+			InitializerParent parent,
 			AssemblerCreationState creationState) {
-		return resultGraphNode.createInitializer( parentAccess, creationState );
+		return resultGraphNode.createInitializer( parent, creationState );
 	}
 
 	@Override
-	public Initializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
+	public Initializer createInitializer(InitializerParent parent, AssemblerCreationState creationState) {
 		return new DiscriminatedEntityInitializer(
-				parentAccess,
+				parent,
 				getReferencedMappingType(),
 				getNavigablePath(),
 				getDiscriminatorValueFetch(),

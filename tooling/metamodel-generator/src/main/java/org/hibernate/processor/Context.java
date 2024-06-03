@@ -17,7 +17,11 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
@@ -30,6 +34,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.lang.Boolean.parseBoolean;
 import static java.util.Collections.emptyList;
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 
 /**
  * @author Max Andersen
@@ -97,6 +102,12 @@ public final class Context {
 
 	private boolean usesQuarkusOrm = false;
 	private boolean usesQuarkusReactive = false;
+
+	private String[] includes = {"*"};
+	private String[] excludes = {};
+
+	private final Map<String, String> entityNameMappings = new HashMap<>();
+	private final Map<String, Set<String>> enumTypesByValue = new HashMap<>();
 
 	public Context(ProcessingEnvironment processingEnvironment) {
 		this.processingEnvironment = processingEnvironment;
@@ -411,5 +422,88 @@ public final class Context {
 	
 	public boolean usesQuarkusReactive() {
 		return usesQuarkusReactive;
+	}
+
+	public void setInclude(String include) {
+		includes = include.split(",\\s*");
+	}
+
+	public void setExclude(String exclude) {
+		excludes = exclude.isBlank()
+				? EMPTY_STRING_ARRAY
+				: exclude.split(",\\s*");
+	}
+
+	public boolean isIncluded(String typeName) {
+		for (String include : includes) {
+			if ( matches(typeName, include) ) {
+				for (String exclude : excludes) {
+					if ( matches(typeName, exclude) ) {
+						return false;
+					}
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean matches(String name, String pattern) {
+		return "*".equals(pattern)
+			|| name.equals( pattern )
+			|| pattern.endsWith("*") && name.startsWith( pattern.substring(0, pattern.length()-1) )
+			|| pattern.startsWith("*") && name.endsWith( pattern.substring(1) )
+			|| pattern.startsWith("*") && pattern.endsWith("*") && name.contains( pattern.substring(1, pattern.length()-1) );
+	}
+
+	public List<Element> getAllMembers(TypeElement type) {
+		final List<? extends Element> elements = type.getEnclosedElements();
+		final List<Element> list = new ArrayList<>(elements);
+		final TypeMirror superclass = type.getSuperclass();
+		if ( superclass.getKind() == TypeKind.DECLARED ) {
+			final DeclaredType declaredType = (DeclaredType) superclass;
+			final TypeElement typeElement = (TypeElement) declaredType.asElement();
+			for ( Element inherited : getAllMembers(typeElement) ) {
+				if ( notOverridden(type, inherited, elements) ) {
+					list.add( inherited );
+				}
+			}
+		}
+		for (TypeMirror supertype : type.getInterfaces()) {
+			final DeclaredType declaredType = (DeclaredType) supertype;
+			final TypeElement typeElement = (TypeElement) declaredType.asElement();
+			for ( Element inherited : getAllMembers(typeElement) ) {
+				if ( notOverridden(type, inherited, elements) ) {
+					list.add( inherited );
+				}
+			}
+		}
+		return list;
+	}
+
+	private boolean notOverridden(TypeElement type, Element inherited, List<? extends Element> elements) {
+		return !(inherited instanceof ExecutableElement)
+			|| elements.stream().noneMatch(member -> member instanceof ExecutableElement
+				&& getElementUtils().overrides((ExecutableElement) member, (ExecutableElement) inherited, type));
+	}
+
+	public Map<String, String> getEntityNameMappings() {
+		return entityNameMappings;
+	}
+
+	public void addEntityNameMapping(String entityName, String qualifiedName) {
+		entityNameMappings.put( entityName, qualifiedName );
+	}
+
+	public @Nullable String qualifiedNameForEntityName(String entityName) {
+		return entityNameMappings.get(entityName);
+	}
+
+	public Map<String,Set<String>> getEnumTypesByValue() {
+		return enumTypesByValue;
+	}
+
+	public void addEnumValue(String type, String value) {
+		enumTypesByValue.computeIfAbsent( value, s -> new HashSet<>() ).add( type );
 	}
 }

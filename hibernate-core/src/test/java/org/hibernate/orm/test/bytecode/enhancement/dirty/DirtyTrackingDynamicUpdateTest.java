@@ -1,33 +1,35 @@
 package org.hibernate.orm.test.bytecode.enhancement.dirty;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				DirtyTrackingDynamicUpdateTest.TestEntity.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions(inlineDirtyChecking = true)
 @JiraKey("HHH-16688")
-public class DirtyTrackingDynamicUpdateTest extends BaseCoreFunctionalTestCase {
+public class DirtyTrackingDynamicUpdateTest {
 
 	public static final int ID = 1;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { TestEntity.class };
-	}
-
-	@Before
-	public void setUp() {
-		inTransaction(
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 
 					TestEntity testEntity = new TestEntity( ID );
@@ -41,14 +43,14 @@ public class DirtyTrackingDynamicUpdateTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testDynamicUpdate() {
+	public void testDynamicUpdate(SessionFactoryScope scope) {
 
 		String aSuperNewValue = "aSuper after";
 		String bSuperNewValue = "bSuper after";
 		String aChildNewValue = "aChild after";
 		String bChildNewValue = "bChild after";
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					TestEntity entity = session.find( TestEntity.class, ID );
 					entity.setaSuper( aSuperNewValue );
@@ -59,7 +61,7 @@ public class DirtyTrackingDynamicUpdateTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					TestEntity entity = session.find( TestEntity.class, ID );
 					assertThat( entity.getaSuper() ).isEqualTo( aSuperNewValue );

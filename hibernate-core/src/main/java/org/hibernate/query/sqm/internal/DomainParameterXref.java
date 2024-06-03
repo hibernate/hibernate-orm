@@ -22,6 +22,7 @@ import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.type.BasicCollectionType;
 
 /**
  * Maintains a cross-reference between SqmParameter and QueryParameter references.
@@ -89,6 +90,9 @@ public class DomainParameterXref {
 					);
 					queryParameter.disallowMultiValuedBinding();
 				}
+			}
+			else if ( sqmParameter.getExpressible() != null && sqmParameter.getExpressible().getSqmType() instanceof BasicCollectionType ) {
+				queryParameter.disallowMultiValuedBinding();
 			}
 
 			sqmParamsByQueryParam.computeIfAbsent( queryParameter, qp -> new ArrayList<>() ).add( sqmParameter );

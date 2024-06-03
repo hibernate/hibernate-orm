@@ -25,6 +25,7 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
+import org.hibernate.sql.ast.tree.expression.EmbeddableTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.Every;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -34,6 +35,7 @@ import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
+import org.hibernate.sql.ast.tree.expression.NestedColumnReference;
 import org.hibernate.sql.ast.tree.expression.OrderedSetAggregateFunctionExpression;
 import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.Overflow;
@@ -465,6 +467,10 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 	}
 
 	@Override
+	public void visitNestedColumnReference(NestedColumnReference nestedColumnReference) {
+	}
+
+	@Override
 	public void visitAggregateColumnWriteExpression(AggregateColumnWriteExpression aggregateColumnWriteExpression) {
 	}
 
@@ -522,6 +528,10 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 
 	@Override
 	public void visitEntityTypeLiteral(EntityTypeLiteral expression) {
+	}
+
+	@Override
+	public void visitEmbeddableTypeLiteral(EmbeddableTypeLiteral expression) {
 	}
 
 	@Override

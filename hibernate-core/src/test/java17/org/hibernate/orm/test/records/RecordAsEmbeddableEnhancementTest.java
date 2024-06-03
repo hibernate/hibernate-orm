@@ -10,49 +10,48 @@ package org.hibernate.orm.test.records;
 import org.hibernate.engine.spi.ManagedComposite;
 import org.hibernate.engine.spi.ManagedEntity;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @JiraKey( "HHH-15072" )
-@RunWith( BytecodeEnhancerRunner.class )
+@DomainModel(
+		annotatedClasses = {
+				RecordAsEmbeddableEnhancementTest.MyEntity.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions(lazyLoading = true, extendedEnhancement = true, inlineDirtyChecking = true)
-public class RecordAsEmbeddableEnhancementTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { MyEntity.class };
-	}
+public class RecordAsEmbeddableEnhancementTest {
 
 	@Test
-	public void test() {
+	public void test(SessionFactoryScope scope) {
 		// Ensure entity is enhanced, but not the record class
 		assertTrue( ManagedEntity.class.isAssignableFrom( MyEntity.class ) );
 		assertFalse( ManagedComposite.class.isAssignableFrom( MyRecord.class ) );
 
-		doInHibernate(
-				this::sessionFactory,
+		scope.inTransaction(
 				session -> {
 					session.persist( new MyEntity( 1L, new MyRecord( "test", "abc" ) ) );
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory,
+		scope.inTransaction(
 				session -> {
 					MyEntity myEntity = session.get( MyEntity.class, 1L );
 					assertNotNull( myEntity );

@@ -21,8 +21,10 @@ import org.hibernate.dialect.function.array.ArrayConcatFunction;
 import org.hibernate.dialect.function.array.ArrayConstructorFunction;
 import org.hibernate.dialect.function.array.ArrayContainsOperatorFunction;
 import org.hibernate.dialect.function.array.ArrayContainsUnnestFunction;
-import org.hibernate.dialect.function.array.ArrayOverlapsOperatorFunction;
-import org.hibernate.dialect.function.array.ArrayOverlapsUnnestFunction;
+import org.hibernate.dialect.function.array.ArrayIncludesOperatorFunction;
+import org.hibernate.dialect.function.array.ArrayIncludesUnnestFunction;
+import org.hibernate.dialect.function.array.ArrayIntersectsOperatorFunction;
+import org.hibernate.dialect.function.array.ArrayIntersectsUnnestFunction;
 import org.hibernate.dialect.function.array.ArrayGetUnnestFunction;
 import org.hibernate.dialect.function.array.ArrayRemoveIndexUnnestFunction;
 import org.hibernate.dialect.function.array.ArrayReplaceUnnestFunction;
@@ -34,7 +36,8 @@ import org.hibernate.dialect.function.array.CockroachArrayFillFunction;
 import org.hibernate.dialect.function.array.ElementViaArrayArgumentReturnTypeResolver;
 import org.hibernate.dialect.function.array.H2ArrayContainsFunction;
 import org.hibernate.dialect.function.array.H2ArrayFillFunction;
-import org.hibernate.dialect.function.array.H2ArrayOverlapsFunction;
+import org.hibernate.dialect.function.array.H2ArrayIncludesFunction;
+import org.hibernate.dialect.function.array.H2ArrayIntersectsFunction;
 import org.hibernate.dialect.function.array.H2ArrayPositionFunction;
 import org.hibernate.dialect.function.array.H2ArrayPositionsFunction;
 import org.hibernate.dialect.function.array.H2ArrayRemoveFunction;
@@ -52,7 +55,8 @@ import org.hibernate.dialect.function.array.HSQLArrayToStringFunction;
 import org.hibernate.dialect.function.array.OracleArrayConcatElementFunction;
 import org.hibernate.dialect.function.array.OracleArrayConcatFunction;
 import org.hibernate.dialect.function.array.OracleArrayFillFunction;
-import org.hibernate.dialect.function.array.OracleArrayOverlapsFunction;
+import org.hibernate.dialect.function.array.OracleArrayIncludesFunction;
+import org.hibernate.dialect.function.array.OracleArrayIntersectsFunction;
 import org.hibernate.dialect.function.array.OracleArrayGetFunction;
 import org.hibernate.dialect.function.array.OracleArrayLengthFunction;
 import org.hibernate.dialect.function.array.OracleArrayPositionFunction;
@@ -814,6 +818,11 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * Emulate left via substr and right via substr and length.
+	 * This function is for Apache Derby and uses {@link SqlAstNodeRenderingMode#NO_PLAIN_PARAMETER}
+	 * for the right function emulation, because length in Apache Derby can't handle plain parameters.
+	 */
 	public void leftRight_substrLength() {
 		functionRegistry.patternDescriptorBuilder( "left", "substr(?1,1,?2)" )
 				.setInvariantType(stringType)
@@ -826,6 +835,7 @@ public class CommonFunctionFactory {
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(STRING, INTEGER)
 				.setArgumentListSignature( "(STRING string, INTEGER length)" )
+				.setArgumentRenderingMode( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER )
 				.register();
 	}
 
@@ -1599,34 +1609,34 @@ public class CommonFunctionFactory {
 	 * Transact SQL-style
 	 */
 	public void characterLength_len() {
-		functionRegistry.namedDescriptorBuilder( "len" )
+		functionRegistry.namedDescriptorBuilder( "character_length", "len" )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING_OR_CLOB)
 				.register();
-		functionRegistry.registerAlternateKey( "character_length", "len" );
-		functionRegistry.registerAlternateKey( "length", "len" );
+		functionRegistry.registerAlternateKey( "len", "character_length" );
+		functionRegistry.registerAlternateKey( "length", "character_length" );
 	}
 
 	/**
 	 * Oracle-style
 	 */
 	public void characterLength_length(SqlAstNodeRenderingMode argumentRenderingMode) {
-		functionRegistry.namedDescriptorBuilder( "length" )
+		functionRegistry.namedDescriptorBuilder( "character_length", "length" )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING_OR_CLOB)
 				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
-		functionRegistry.registerAlternateKey( "character_length", "length" );
+		functionRegistry.registerAlternateKey( "length", "character_length" );
 	}
 
 	public void characterLength_length(String clobPattern) {
 		functionRegistry.register(
-				"length",
+				"character_length",
 				new LengthFunction( "length", "length(?1)", clobPattern, typeConfiguration )
 		);
-		functionRegistry.registerAlternateKey( "character_length", "length" );
+		functionRegistry.registerAlternateKey( "length", "character_length" );
 	}
 
 	public void octetLength() {
@@ -1638,10 +1648,15 @@ public class CommonFunctionFactory {
 	}
 
 	public void octetLength_pattern(String pattern) {
+		octetLength_pattern( pattern, SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public void octetLength_pattern(String pattern, SqlAstNodeRenderingMode renderingMode) {
 		functionRegistry.patternDescriptorBuilder( "octet_length", pattern )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING_OR_CLOB)
+				.setArgumentRenderingMode( renderingMode )
 				.register();
 	}
 
@@ -1661,10 +1676,15 @@ public class CommonFunctionFactory {
 	}
 
 	public void bitLength_pattern(String pattern) {
+		bitLength_pattern( pattern, SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public void bitLength_pattern(String pattern, SqlAstNodeRenderingMode renderingMode) {
 		functionRegistry.patternDescriptorBuilder( "bit_length", pattern )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING_OR_CLOB)
+				.setArgumentRenderingMode( renderingMode )
 				.register();
 	}
 
@@ -2665,6 +2685,14 @@ public class CommonFunctionFactory {
 				"array_contains_nullable",
 				new H2ArrayContainsFunction( true, maximumArraySize, typeConfiguration )
 		);
+		functionRegistry.register(
+				"array_includes",
+				new H2ArrayIncludesFunction( false, maximumArraySize, typeConfiguration )
+		);
+		functionRegistry.register(
+				"array_includes_nullable",
+				new H2ArrayIncludesFunction( true, maximumArraySize, typeConfiguration )
+		);
 	}
 
 	/**
@@ -2679,6 +2707,14 @@ public class CommonFunctionFactory {
 				"array_contains_nullable",
 				new ArrayContainsUnnestFunction( true, typeConfiguration )
 		);
+		functionRegistry.register(
+				"array_includes",
+				new ArrayIncludesUnnestFunction( false, typeConfiguration )
+		);
+		functionRegistry.register(
+				"array_includes_nullable",
+				new ArrayIncludesUnnestFunction( true, typeConfiguration )
+		);
 	}
 
 	/**
@@ -2687,6 +2723,8 @@ public class CommonFunctionFactory {
 	public void arrayContains_postgresql() {
 		functionRegistry.register( "array_contains", new ArrayContainsOperatorFunction( false, typeConfiguration ) );
 		functionRegistry.register( "array_contains_nullable", new ArrayContainsOperatorFunction( true, typeConfiguration ) );
+		functionRegistry.register( "array_includes", new ArrayIncludesOperatorFunction( false, typeConfiguration ) );
+		functionRegistry.register( "array_includes_nullable", new ArrayIncludesOperatorFunction( true, typeConfiguration ) );
 	}
 
 	/**
@@ -2695,56 +2733,66 @@ public class CommonFunctionFactory {
 	public void arrayContains_oracle() {
 		functionRegistry.register( "array_contains", new OracleArrayContainsFunction( false, typeConfiguration ) );
 		functionRegistry.register( "array_contains_nullable", new OracleArrayContainsFunction( true, typeConfiguration ) );
+		functionRegistry.register( "array_includes", new OracleArrayIncludesFunction( false, typeConfiguration ) );
+		functionRegistry.register( "array_includes_nullable", new OracleArrayIncludesFunction( true, typeConfiguration ) );
 	}
 
 	/**
-	 * H2 array_overlaps() function
+	 * H2 array_intersects() function
 	 */
-	public void arrayOverlaps_h2(int maximumArraySize) {
+	public void arrayIntersects_h2(int maximumArraySize) {
 		functionRegistry.register(
-				"array_overlaps",
-				new H2ArrayOverlapsFunction( false, maximumArraySize, typeConfiguration )
+				"array_intersects",
+				new H2ArrayIntersectsFunction( false, maximumArraySize, typeConfiguration )
 		);
 		functionRegistry.register(
-				"array_overlaps_nullable",
-				new H2ArrayOverlapsFunction( true, maximumArraySize, typeConfiguration )
+				"array_intersects_nullable",
+				new H2ArrayIntersectsFunction( true, maximumArraySize, typeConfiguration )
 		);
+		functionRegistry.registerAlternateKey( "array_overlaps", "array_intersects" );
+		functionRegistry.registerAlternateKey( "array_overlaps_nullable", "array_intersects_nullable" );
 	}
 
 	/**
-	 * HSQL array_overlaps() function
+	 * HSQL array_intersects() function
 	 */
-	public void arrayOverlaps_hsql() {
+	public void arrayIntersects_hsql() {
 		functionRegistry.register(
-				"array_overlaps",
-				new ArrayOverlapsUnnestFunction( false, typeConfiguration )
+				"array_intersects",
+				new ArrayIntersectsUnnestFunction( false, typeConfiguration )
 		);
 		functionRegistry.register(
-				"array_overlaps_nullable",
-				new ArrayOverlapsUnnestFunction( true, typeConfiguration )
+				"array_intersects_nullable",
+				new ArrayIntersectsUnnestFunction( true, typeConfiguration )
 		);
+		functionRegistry.registerAlternateKey( "array_overlaps", "array_intersects" );
+		functionRegistry.registerAlternateKey( "array_overlaps_nullable", "array_intersects_nullable" );
 	}
 
 	/**
-	 * CockroachDB and PostgreSQL array overlaps operator
+	 * CockroachDB and PostgreSQL array intersects operator
 	 */
-	public void arrayOverlaps_postgresql() {
-		functionRegistry.register( "array_overlaps", new ArrayOverlapsOperatorFunction( false, typeConfiguration ) );
-		functionRegistry.register( "array_overlaps_nullable", new ArrayOverlapsOperatorFunction( true, typeConfiguration ) );
+	public void arrayIntersects_postgresql() {
+		functionRegistry.register( "array_intersects", new ArrayIntersectsOperatorFunction( false, typeConfiguration ) );
+		functionRegistry.register( "array_intersects_nullable", new ArrayIntersectsOperatorFunction( true, typeConfiguration ) );
+		functionRegistry.registerAlternateKey( "array_overlaps", "array_intersects" );
+		functionRegistry.registerAlternateKey( "array_overlaps_nullable", "array_intersects_nullable" );
 	}
 
 	/**
-	 * Oracle array_overlaps() function
+	 * Oracle array_intersects() function
 	 */
-	public void arrayOverlaps_oracle() {
+	public void arrayIntersects_oracle() {
 		functionRegistry.register(
-				"array_overlaps",
-				new OracleArrayOverlapsFunction( typeConfiguration, false )
+				"array_intersects",
+				new OracleArrayIntersectsFunction( typeConfiguration, false )
 		);
 		functionRegistry.register(
-				"array_overlaps_nullable",
-				new OracleArrayOverlapsFunction( typeConfiguration, true )
+				"array_intersects_nullable",
+				new OracleArrayIntersectsFunction( typeConfiguration, true )
 		);
+		functionRegistry.registerAlternateKey( "array_overlaps", "array_intersects" );
+		functionRegistry.registerAlternateKey( "array_overlaps_nullable", "array_intersects_nullable" );
 	}
 
 	/**
@@ -2845,6 +2893,7 @@ public class CommonFunctionFactory {
 				)
 				.setArgumentListSignature( "(ARRAY array)" )
 				.register();
+		functionRegistry.register( "length", new DynamicDispatchFunction( functionRegistry, "character_length", "array_length" ) );
 	}
 
 	/**
@@ -2852,6 +2901,7 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayLength_oracle() {
 		functionRegistry.register( "array_length", new OracleArrayLengthFunction( typeConfiguration ) );
+		functionRegistry.register( "length", new DynamicDispatchFunction( functionRegistry, "character_length", "array_length" ) );
 	}
 
 	/**

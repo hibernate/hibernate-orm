@@ -13,9 +13,8 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -46,11 +45,11 @@ public class SelectEagerCollectionFetch extends CollectionFetch {
 		return false;
 	}
 
-	public CollectionInitializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
+	public CollectionInitializer createInitializer(InitializerParent parent, AssemblerCreationState creationState) {
 		return new SelectEagerCollectionInitializer(
 				getNavigablePath(),
 				getFetchedMapping(),
-				parentAccess,
+				parent,
 				collectionKeyDomainResult,
 				creationState
 		);

@@ -20,6 +20,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
@@ -43,7 +44,6 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
-import org.hibernate.Transaction;
 import org.hibernate.TransientObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnknownProfileException;
@@ -64,7 +64,6 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
 import org.hibernate.event.spi.EventManager;
@@ -126,6 +125,7 @@ import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.UnknownSqlResultSetMappingException;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -560,7 +560,7 @@ public class SessionImpl
 			throw new TransientObjectException( "Given object not associated with the session" );
 		}
 
-		if ( e.getStatus() != Status.MANAGED ) {
+		if ( e.getStatus().isDeletedOrGone() ) {
 			throw new ObjectDeletedException(
 					"The given object was deleted",
 					e.getId(),
@@ -1971,24 +1971,12 @@ public class SessionImpl
 
 	private transient LobHelperImpl lobHelper;
 
-	private Transaction getTransactionIfAccessible() {
-		// We do not want an exception to be thrown if the transaction
-		// is not accessible. If the transaction is not accessible,
-		// then return null.
-		return fastSessionServices.isJtaTransactionAccessible ? accessTransaction() : null;
-	}
-
 	@Override
 	public void beforeTransactionCompletion() {
 		log.trace( "SessionImpl#beforeTransactionCompletion()" );
 		flushBeforeTransactionCompletion();
 		actionQueue.beforeTransactionCompletion();
-		try {
-			getInterceptor().beforeTransactionCompletion( getTransactionIfAccessible() );
-		}
-		catch (Throwable t) {
-			log.exceptionInBeforeTransactionCompletionInterceptor( t );
-		}
+		beforeTransactionCompletionEvents();
 		super.beforeTransactionCompletion();
 	}
 
@@ -2007,19 +1995,7 @@ public class SessionImpl
 		persistenceContext.afterTransactionCompletion();
 		actionQueue.afterTransactionCompletion( successful );
 
-		getEventListenerManager().transactionCompletion( successful );
-
-		final StatisticsImplementor statistics = getFactory().getStatistics();
-		if ( statistics.isStatisticsEnabled() ) {
-			statistics.endTransaction( successful );
-		}
-
-		try {
-			getInterceptor().afterTransactionCompletion( getTransactionIfAccessible() );
-		}
-		catch (Throwable t) {
-			log.exceptionInAfterTransactionCompletionInterceptor( t );
-		}
+		afterTransactionCompletionEvents( successful );
 
 		if ( !delayed ) {
 			if ( shouldAutoClose() && (!isClosed() || waitingForAutoClose) ) {
@@ -2074,6 +2050,7 @@ public class SessionImpl
 			implements SharedSessionBuilder, SharedSessionCreationOptions {
 		private final SessionImpl session;
 		private boolean shareTransactionContext;
+		private boolean tenantIdChanged;
 
 		private SharedSessionBuilderImpl(SessionImpl session) {
 			super( (SessionFactoryImpl) session.getFactory() );
@@ -2081,20 +2058,32 @@ public class SessionImpl
 			super.tenantIdentifier( session.getTenantIdentifierValue() );
 		}
 
+		@Override
+		public SessionImpl openSession() {
+			if ( session.getSessionFactory().getSessionFactoryOptions().isMultiTenancyEnabled() ) {
+				if ( tenantIdChanged && shareTransactionContext ) {
+					throw new SessionException( "Cannot redefine the tenant identifier on a child session if the connection is reused" );
+				}
+			}
+			return super.openSession();
+		}
+
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// SharedSessionBuilder
 
 
-		@Override
+		@Override @Deprecated
 		public SharedSessionBuilderImpl tenantIdentifier(String tenantIdentifier) {
-			// todo : is this always true?  Or just in the case of sharing JDBC resources?
-			throw new SessionException( "Cannot redefine tenant identifier on child session" );
+			super.tenantIdentifier( tenantIdentifier );
+			tenantIdChanged = true;
+			return this;
 		}
 
 		@Override
 		public SharedSessionBuilderImpl tenantIdentifier(Object tenantIdentifier) {
-			// todo : is this always true?  Or just in the case of sharing JDBC resources?
-			throw new SessionException( "Cannot redefine tenant identifier on child session" );
+			super.tenantIdentifier( tenantIdentifier );
+			tenantIdChanged = true;
+			return this;
 		}
 
 		@Override
@@ -2171,6 +2160,48 @@ public class SessionImpl
 		@Override
 		public SharedSessionBuilderImpl autoClose() {
 			autoClose( session.autoClose );
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl jdbcTimeZone(TimeZone timeZone) {
+			super.jdbcTimeZone(timeZone);
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl clearEventListeners() {
+			super.clearEventListeners();
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl flushMode(FlushMode flushMode) {
+			super.flushMode(flushMode);
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl autoClear(boolean autoClear) {
+			super.autoClear(autoClear);
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl statementInspector(StatementInspector statementInspector) {
+			super.statementInspector(statementInspector);
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl connectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
+			super.connectionHandlingMode(connectionHandlingMode);
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl eventListeners(SessionEventListener... listeners) {
+			super.eventListeners(listeners);
 			return this;
 		}
 
@@ -2271,12 +2302,7 @@ public class SessionImpl
 					managedFlush();
 				}
 				actionQueue.beforeTransactionCompletion();
-				try {
-					getInterceptor().beforeTransactionCompletion( getTransactionIfAccessible() );
-				}
-				catch ( Throwable t ) {
-					log.exceptionInBeforeTransactionCompletionInterceptor( t );
-				}
+				beforeTransactionCompletionEvents();
 			}
 
 			@Override
@@ -2317,7 +2343,7 @@ public class SessionImpl
 	@Override
 	public void afterTransactionBegin() {
 		checkOpenOrWaitingForAutoClose();
-		getInterceptor().afterTransactionBegin( getTransactionIfAccessible() );
+		afterTransactionBeginEvents();
 	}
 
 	@Override

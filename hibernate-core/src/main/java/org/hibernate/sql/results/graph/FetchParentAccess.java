@@ -8,11 +8,14 @@ package org.hibernate.sql.results.graph;
 
 import java.util.function.Consumer;
 
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.collection.internal.AbstractImmediateCollectionInitializer;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
@@ -24,22 +27,31 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Steve Ebersole
  */
-public interface FetchParentAccess extends Initializer {
+public interface FetchParentAccess extends InitializerParent {
 	/**
 	 * Find the first entity access up the fetch parent graph
+	 * @deprecated use {@link #findOwningEntityInitializer()} instead
 	 */
-	@Nullable FetchParentAccess findFirstEntityDescriptorAccess();
-
-	default @Nullable EntityInitializer findFirstEntityInitializer() {
-		final EntityInitializer entityInitializer = this.asEntityInitializer();
-		if ( entityInitializer != null ) {
-			return entityInitializer;
-		}
-		final FetchParentAccess entityDescriptorAccess = findFirstEntityDescriptorAccess();
-		return entityDescriptorAccess == null ? null : entityDescriptorAccess.asEntityInitializer();
+	@Deprecated(forRemoval = true)
+	default @Nullable EntityInitializer findFirstEntityDescriptorAccess() {
+		return findOwningEntityInitializer();
 	}
 
-	@Nullable Object getParentKey();
+	default @Nullable EntityInitializer findFirstEntityInitializer() {
+		// Keep this method around for binary backwards compatibility
+		return InitializerParent.super.findFirstEntityInitializer();
+	}
+
+	/**
+	 * @deprecated Use {@link EntityInitializer#getEntityIdentifier()} on {@link #findFirstEntityInitializer()} instead.
+	 */
+	@Deprecated(forRemoval = true)
+	default @Nullable Object getParentKey() {
+		EntityInitializer entityInitializer = asEntityInitializer();
+		return entityInitializer == null || ( entityInitializer = findOwningEntityInitializer() ) == null
+				? null
+				: entityInitializer.getEntityIdentifier();
+	}
 
 	NavigablePath getNavigablePath();
 
@@ -47,91 +59,31 @@ public interface FetchParentAccess extends Initializer {
 	 * Register a listener to be notified when the parent is "resolved"
 	 *
 	 * @apiNote If already resolved, the callback is triggered immediately
+	 * @deprecated Not used anymore
 	 */
-	void registerResolutionListener(Consumer<Object> resolvedParentConsumer);
+	@Deprecated(forRemoval = true)
+	default void registerResolutionListener(Consumer<Object> resolvedParentConsumer) {
+		throw new UnsupportedOperationException( "Don't use this method. It will be removed." );
+	}
 
+	/**
+	 * @deprecated Use {@link #getParent()} instead
+	 */
+	@Deprecated(forRemoval = true)
 	default @Nullable FetchParentAccess getFetchParentAccess() {
 		return null;
 	}
 
-	@Nullable FetchParentAccess getOwningParent();
-
-	static @Nullable FetchParentAccess determineOwningParent(@Nullable FetchParentAccess parentAccess) {
-		if ( parentAccess == null
-				|| parentAccess.isEntityInitializer()
-				|| parentAccess.isCollectionInitializer()
-				|| parentAccess.isEmbeddableInitializer() && parentAccess.isResultInitializer() ) {
-			return parentAccess;
-		}
-		return parentAccess.getOwningParent();
+	@Override
+	default @Nullable InitializerParent getParent() {
+		return getFetchParentAccess();
 	}
 
-	@Nullable EntityMappingType getOwnedModelPartDeclaringType();
-
-	static @Nullable EntityMappingType determineOwnedModelPartDeclaringType(
-			ModelPart modelPart,
-			@Nullable FetchParentAccess parentAccess,
-			@Nullable FetchParentAccess owningParent) {
-		final EntityInitializer entityInitializer;
-		if ( owningParent == null || ( entityInitializer = owningParent.asEntityInitializer() ) == null ) {
-			return null;
-		}
-
-		while ( parentAccess != null && parentAccess != owningParent ) {
-			modelPart = parentAccess.getInitializedPart();
-			parentAccess = parentAccess.getFetchParentAccess();
-		}
-		if ( modelPart != null && entityInitializer.getEntityDescriptor().getEntityMetamodel().isPolymorphic() ) {
-			return modelPart.asAttributeMapping() != null ?
-					modelPart.asAttributeMapping().getDeclaringType().findContainingEntityMapping() :
-					modelPart.asEntityMappingType();
-		}
-		return null;
-	}
-
+	/**
+	 * @deprecated Not needed anymore.
+	 */
+	@Deprecated(forRemoval = true)
 	default boolean shouldSkipInitializer(RowProcessingState rowProcessingState) {
-		if ( isPartOfKey() ) {
-			// We can never skip an initializer if it is part of a key
-			return false;
-		}
-
-		FetchParentAccess owningParent = getOwningParent();
-		if ( owningParent != null ) {
-			if ( owningParent instanceof AbstractImmediateCollectionInitializer ) {
-				final AbstractImmediateCollectionInitializer collectionInitializer = (AbstractImmediateCollectionInitializer) owningParent;
-				// If this initializer is owned by an immediate collection initializer,
-				// skipping only depends on whether the collection key is resolvable or not
-				return collectionInitializer.resolveCollectionKey( rowProcessingState ) == null;
-			}
-			final EntityInitializer entityInitializer = owningParent.asEntityInitializer();
-			if ( entityInitializer == null ) {
-				// We can never skip an initializer if it is part of an embeddable domain result,
-				// because that embeddable always has to be materialized with its full state
-				assert owningParent.isEmbeddableInitializer() && owningParent.isResultInitializer();
-				return false;
-			}
-
-			// We must resolve the key of the parent in order to determine the concrete descriptor
-			entityInitializer.resolveKey( rowProcessingState );
-			final EntityPersister concreteDescriptor = entityInitializer.getConcreteDescriptor();
-			if ( concreteDescriptor == null ) {
-				// Skip processing this initializer if the parent owning initializer is missing
-				return true;
-			}
-			// We can skip if the parent is either null or already initialized,
-			if ( ( entityInitializer.getEntityKey() == null || entityInitializer.isEntityInitialized() )
-					// but only if the query cache put does not depend on the initializer accessing JdbcValues.
-					// If result caching is disabled, there are no dependencies
-					&& rowProcessingState.getQueryOptions().isResultCachingEnabled() != Boolean.TRUE ) {
-				return true;
-			}
-			final EntityMappingType declaringType = getOwnedModelPartDeclaringType();
-			if ( declaringType != null && concreteDescriptor != declaringType ) {
-				// Skip the initializer if the declaring type is not a super type
-				// of the parent entity initializer's concrete type
-				return !declaringType.getSubclassEntityNames().contains( concreteDescriptor.getEntityName() );
-			}
-		}
 		return false;
 	}
 }

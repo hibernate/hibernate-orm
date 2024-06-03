@@ -11,6 +11,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.BasicType;
@@ -21,13 +22,15 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.function.Supplier;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.extractArgumentType;
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.extractArgumentValuedMapping;
 import static org.hibernate.type.SqlTypes.*;
 
 /**
  * Resolve according to JPA spec 4.8.5
- *
+ * <p>
  * {@code SUM} returns:
  * <ul>
  * <li>{@code Long} when applied to state fields of integral types (other than {@code BigInteger});
@@ -59,15 +62,7 @@ class SumReturnTypeResolver implements FunctionReturnTypeResolver {
 	@Override
 	public ReturnableType<?> resolveFunctionReturnType(
 			ReturnableType<?> impliedType,
-			List<? extends SqmTypedNode<?>> arguments,
-			TypeConfiguration typeConfiguration) {
-		return resolveFunctionReturnType( impliedType, null, arguments, typeConfiguration );
-	}
-
-	@Override
-	public ReturnableType<?> resolveFunctionReturnType(
-			ReturnableType<?> impliedType,
-			Supplier<MappingModelExpressible<?>> inferredTypeSupplier,
+			@Nullable SqmToSqlAstConverter converter,
 			List<? extends SqmTypedNode<?>> arguments,
 			TypeConfiguration typeConfiguration) {
 		if ( impliedType != null ) {

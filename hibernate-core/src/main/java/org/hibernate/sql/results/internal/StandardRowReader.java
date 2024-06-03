@@ -9,15 +9,19 @@ package org.hibernate.sql.results.internal;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.sql.results.LoadingLogger;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.results.spi.RowTransformer;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.jboss.logging.Logger;
 
@@ -27,7 +31,9 @@ import org.jboss.logging.Logger;
 @SuppressWarnings("rawtypes")
 public class StandardRowReader<T> implements RowReader<T> {
 	private final List<DomainResultAssembler<?>> resultAssemblers;
-	private final InitializersList initializers;
+	private final Initializer[] resultInitializers;
+	private final InitializersList initializersList;
+	private final boolean hasCollectionInitializers;
 	private final RowTransformer<T> rowTransformer;
 	private final Class<T> domainResultJavaType;
 
@@ -37,14 +43,25 @@ public class StandardRowReader<T> implements RowReader<T> {
 
 	public StandardRowReader(
 			List<DomainResultAssembler<?>> resultAssemblers,
-			InitializersList initializers,
+			boolean hasCollectionInitializers,
+			InitializersList initializersList,
 			RowTransformer<T> rowTransformer,
 			Class<T> domainResultJavaType) {
 		this.resultAssemblers = resultAssemblers;
-		this.initializers = initializers;
+		this.resultInitializers = getResultInitializers( resultAssemblers );
+		this.initializersList = initializersList;
+		this.hasCollectionInitializers = hasCollectionInitializers;
 		this.rowTransformer = rowTransformer;
 		this.assemblerCount = resultAssemblers.size();
 		this.domainResultJavaType = domainResultJavaType;
+	}
+
+	private static Initializer[] getResultInitializers(List<DomainResultAssembler<?>> resultAssemblers) {
+		final ArrayList<Initializer> initializers = new ArrayList<>( resultAssemblers.size() );
+		for ( DomainResultAssembler<?> resultAssembler : resultAssemblers ) {
+			resultAssembler.forEachResultAssembler( (initializer, list) -> list.add( initializer ), initializers );
+		}
+		return initializers.toArray(Initializer.EMPTY_ARRAY);
 	}
 
 	@Override
@@ -73,18 +90,36 @@ public class StandardRowReader<T> implements RowReader<T> {
 	@Override
 	@Deprecated
 	public List<Initializer> getInitializers() {
-		return initializers.asList();
+		return initializersList.asList();
 	}
 
 	@Override
 	public InitializersList getInitializersList() {
-		return initializers;
+		return initializersList;
+	}
+
+	@Override
+	public @Nullable EntityKey resolveSingleResultEntityKey(RowProcessingState rowProcessingState) {
+		final EntityInitializer entityInitializer = resultInitializers.length == 0
+				? null
+				: resultInitializers[0].asEntityInitializer();
+		if ( entityInitializer == null ) {
+			return null;
+		}
+		final EntityKey entityKey = entityInitializer.resolveEntityKeyOnly( rowProcessingState );
+		initializersList.finishUpRow();
+		return entityKey;
+	}
+
+	@Override
+	public boolean hasCollectionInitializers() {
+		return hasCollectionInitializers;
 	}
 
 	@Override
 	public T readRow(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
 		LOGGER.trace( "StandardRowReader#readRow" );
-		coordinateInitializers( rowProcessingState );
+		coordinateInitializers();
 
 		final Object[] resultRow = new Object[ assemblerCount ];
 		final boolean debugEnabled = LOGGER.isDebugEnabled();
@@ -97,25 +132,34 @@ public class StandardRowReader<T> implements RowReader<T> {
 			resultRow[i] = assembler.assemble( rowProcessingState, options );
 		}
 
-		afterRow( rowProcessingState );
+		afterRow();
 
 		return rowTransformer.transformRow( resultRow );
 	}
 
-	private void afterRow(RowProcessingState rowProcessingState) {
+	private void afterRow() {
 		LOGGER.trace( "StandardRowReader#afterRow" );
-		initializers.finishUpRow( rowProcessingState );
+		initializersList.finishUpRow();
 	}
 
-	private void coordinateInitializers(RowProcessingState rowProcessingState) {
-		initializers.resolveKeys( rowProcessingState );
-		initializers.resolveInstances( rowProcessingState );
-		initializers.initializeInstance( rowProcessingState );
+	private void coordinateInitializers() {
+		for ( Initializer initializer : resultInitializers ) {
+			initializer.resolveKey();
+		}
+		initializersList.resolveInstances();
+		initializersList.initializeInstance();
+	}
+
+	@Override
+	public void startLoading(RowProcessingState processingState) {
+		for ( Initializer initializer : resultInitializers ) {
+			initializer.startLoading( processingState );
+		}
 	}
 
 	@Override
 	public void finishUp(JdbcValuesSourceProcessingState processingState) {
-		initializers.endLoading( processingState.getExecutionContext() );
+		initializersList.endLoading( processingState.getExecutionContext() );
 	}
 
 }

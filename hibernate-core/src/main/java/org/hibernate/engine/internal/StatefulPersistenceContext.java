@@ -516,6 +516,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			final Object entity = holder.entity;
 			if ( holder.proxy != null ) {
 				holder.entity = null;
+				holder.state = EntityHolderState.UNINITIALIZED;
 				entitiesByKey.put( key, holder );
 			}
 			return entity;
@@ -1106,7 +1107,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public CollectionEntry addInitializedCollection(CollectionPersister persister, PersistentCollection<?> collection, Object id)
 			throws HibernateException {
 		final CollectionEntry ce = new CollectionEntry( collection, persister, id, flushing );
-		ce.postInitialize( collection );
+		ce.postInitialize( collection, session );
 		addCollection( collection, ce, id );
 		return ce;
 	}
@@ -2197,6 +2198,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		@Override
 		public void markAsReloaded(JdbcValuesSourceProcessingState processingState) {
 			processingState.registerReloadedEntityHolder( this );
+		}
+
+		@Override
+		public boolean isInitialized() {
+			return state == EntityHolderState.INITIALIZED;
 		}
 
 		@Override

@@ -2,7 +2,6 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.inlinedirtychecki
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -11,58 +10,56 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 
-import org.hibernate.FlushMode;
 import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
-@TestForIssue( jiraKey = "HHH-14549")
-@RunWith(BytecodeEnhancerRunner.class)
+@JiraKey("HHH-14549")
+@DomainModel(
+		annotatedClasses = {
+				LoadingLazyCollectionAfterQueryExecutionWithFlushModeAlwaysTest.Customer.class,
+				LoadingLazyCollectionAfterQueryExecutionWithFlushModeAlwaysTest.ProductOrder.class,
+				LoadingLazyCollectionAfterQueryExecutionWithFlushModeAlwaysTest.Product.class,
+				LoadingLazyCollectionAfterQueryExecutionWithFlushModeAlwaysTest.City.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.FLUSH_MODE, value = "ALWAYS" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @CustomEnhancementContext({ DirtyCheckEnhancementContext.class, NoDirtyCheckEnhancementContext.class })
-public class LoadingLazyCollectionAfterQueryExecutionWithFlushModeAlwaysTest
-		extends BaseEntityManagerFunctionalTestCase {
+public class LoadingLazyCollectionAfterQueryExecutionWithFlushModeAlwaysTest {
 
-	boolean skipTest;
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Customer.class,
-				ProductOrder.class,
-				Product.class,
-				City.class
-		};
-	}
-
-	@Override
-	protected void addMappings(Map settings) {
+	@BeforeAll
+	static void beforeAll() {
 		String byteCodeProvider = Environment.getProperties().getProperty( AvailableSettings.BYTECODE_PROVIDER );
-		settings.put( AvailableSettings.FLUSH_MODE, FlushMode.ALWAYS );
-		if ( byteCodeProvider != null && !BytecodeProviderInitiator.BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals( byteCodeProvider ) ) {
-			// skip the test if the bytecode provider is Javassist
-			skipTest = true;
-		}
+		assumeFalse( byteCodeProvider != null && !BytecodeProviderInitiator.BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals(
+				byteCodeProvider ) );
 	}
 
-	@Before
-	public void setUp() {
-		if ( skipTest ) {
-			return;
-		}
-		doInJPA(
-				this::entityManagerFactory, entityManager -> {
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					ProductOrder order = new ProductOrder();
 					order.setOrderNumber( "12345" );
 
@@ -83,12 +80,8 @@ public class LoadingLazyCollectionAfterQueryExecutionWithFlushModeAlwaysTest
 	}
 
 	@Test
-	public void reproducer_Case1() {
-		if ( skipTest ) {
-			return;
-		}
-		doInJPA(
-				this::entityManagerFactory, entityManager -> {
+	public void reproducer_Case1(SessionFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					List<Customer> customers = entityManager.createQuery( "select c from Customer c" ).getResultList();
 					assertEquals( 1, customers.size() );
 

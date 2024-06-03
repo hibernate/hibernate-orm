@@ -19,7 +19,6 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.loader.LoaderLogging;
@@ -52,10 +51,9 @@ public class LoaderHelper {
 	public static void upgradeLock(Object object, EntityEntry entry, LockOptions lockOptions, EventSource session) {
 		final LockMode requestedLockMode = lockOptions.getLockMode();
 		if ( requestedLockMode.greaterThan( entry.getLockMode() ) ) {
-			// The user requested a "greater" (i.e. more restrictive) form of
-			// pessimistic lock
+			// Request is for a more restrictive lock than the lock already held
 
-			if ( entry.getStatus() != Status.MANAGED ) {
+			if ( entry.getStatus().isDeletedOrGone()) {
 				throw new ObjectDeletedException(
 						"attempted to lock a deleted instance",
 						entry.getId(),

@@ -45,9 +45,4 @@ public class HqlParseTreeBuilder {
 			}
 		};
 	}
-
-	public HqlParser buildHqlParser(String hql) {
-		// Build the lexer
-		return buildHqlParser( hql, buildHqlLexer( hql ) );
-	}
 }

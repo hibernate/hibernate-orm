@@ -3,15 +3,16 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy;
 import java.util.List;
 
 import org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.inlinedirtychecking.DirtyCheckEnhancementContext;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -21,26 +22,24 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @JiraKey("HHH-17049")
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				JpaConstructorInitializationTest.Person.class,
+				JpaConstructorInitializationTest.LoginAccount.class,
+				JpaConstructorInitializationTest.AccountPreferences.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @CustomEnhancementContext({ NoDirtyCheckingContext.class, DirtyCheckEnhancementContext.class })
-public class JpaConstructorInitializationTest extends BaseEntityManagerFunctionalTestCase {
+public class JpaConstructorInitializationTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Person.class,
-				LoginAccount.class,
-				AccountPreferences.class
-		};
-	}
-
-	@Before
-	public void setUp() {
-		doInJPA( this::entityManagerFactory, em -> {
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
 					 Person person = new Person( 1l, "Henry" );
 					 LoginAccount loginAccount = new LoginAccount();
 					 loginAccount.setOwner( person );
@@ -49,7 +48,7 @@ public class JpaConstructorInitializationTest extends BaseEntityManagerFunctiona
 				 }
 		);
 
-		doInJPA( this::entityManagerFactory, em -> {
+		scope.inTransaction( em -> {
 					 List<LoginAccount> accounts = em.createQuery(
 							 "select la from LoginAccount la",
 							 LoginAccount.class
@@ -65,9 +64,9 @@ public class JpaConstructorInitializationTest extends BaseEntityManagerFunctiona
 		);
 	}
 
-	@After
-	public void tearDown() {
-		doInJPA( this::entityManagerFactory, em -> {
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
 					 em.createQuery( "delete from Person" ).executeUpdate();
 					 em.createQuery( "delete from LoginAccount" ).executeUpdate();
 					 em.createQuery( "delete from AccountPreferences" ).executeUpdate();
@@ -76,15 +75,15 @@ public class JpaConstructorInitializationTest extends BaseEntityManagerFunctiona
 	}
 
 	@Test
-	public void findTest() {
-		doInJPA( this::entityManagerFactory, em -> {
+	public void findTest(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
 					 em.clear();
 					 Person person = em.find( Person.class, 1L );
 					 person.setFirstName( "Liza" );
 				 }
 		);
 
-		doInJPA( this::entityManagerFactory, em -> {
+		scope.inTransaction( em -> {
 					 List<LoginAccount> accounts = em.createQuery(
 							 "select la from LoginAccount la",
 							 LoginAccount.class
@@ -101,15 +100,15 @@ public class JpaConstructorInitializationTest extends BaseEntityManagerFunctiona
 	}
 
 	@Test
-	public void getReferenceTest() {
-		doInJPA( this::entityManagerFactory, em -> {
+	public void getReferenceTest(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
 					 em.clear();
 					 Person person = em.getReference( Person.class, 1L );
 					 person.setFirstName( "Liza" );
 				 }
 		);
 
-		doInJPA( this::entityManagerFactory, em -> {
+		scope.inTransaction( em -> {
 					 List<LoginAccount> accounts = em.createQuery(
 							 "select la from LoginAccount la",
 							 LoginAccount.class
@@ -126,8 +125,8 @@ public class JpaConstructorInitializationTest extends BaseEntityManagerFunctiona
 	}
 
 	@Test
-	public void findTest2() {
-		doInJPA( this::entityManagerFactory, em -> {
+	public void findTest2(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
 					 em.clear();
 					 Person person = em.find( Person.class, 1L );
 					 person.setFirstName( "Liza" );
@@ -137,7 +136,7 @@ public class JpaConstructorInitializationTest extends BaseEntityManagerFunctiona
 				 }
 		);
 
-		doInJPA( this::entityManagerFactory, em -> {
+		scope.inTransaction( em -> {
 					 Person person = em.find( Person.class, 1L );
 					 assertThat( person.getFirstName() ).isEqualTo( "Liza" );
 
@@ -161,8 +160,8 @@ public class JpaConstructorInitializationTest extends BaseEntityManagerFunctiona
 	}
 
 	@Test
-	public void getReferenceTest2() {
-		doInJPA( this::entityManagerFactory, em -> {
+	public void getReferenceTest2(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
 					 em.clear();
 					 Person person = em.getReference( Person.class, 1L );
 					 person.setFirstName( "Liza" );
@@ -172,7 +171,7 @@ public class JpaConstructorInitializationTest extends BaseEntityManagerFunctiona
 				 }
 		);
 
-		doInJPA( this::entityManagerFactory, em -> {
+		scope.inTransaction( em -> {
 					 Person person = em.find( Person.class, 1L );
 					 assertThat( person.getFirstName() ).isEqualTo( "Liza" );
 

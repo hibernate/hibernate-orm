@@ -296,6 +296,32 @@ The only reason to specify this property is if you're using a custom user-writte
 Similarly, neither `hibernate.connection.driver_class` nor `jakarta.persistence.jdbc.driver` is needed when working with one of the supported databases.
 ====
 
+In some environments it's useful to be able to start Hibernate without accessing the database.
+In this case, we must explicitly specify not only the database platform, but also the version of the database, using the standard JPA configuration properties.
+
+[source,properties]
+----
+# disable use of JDBC database metadata
+hibernate.boot.allow_jdbc_metadata_access=false
+
+# explicitly specify database and version
+jakarta.persistence.database-product-name=PostgreSQL
+jakarta.persistence.database-major-version=15
+jakarta.persistence.database-minor-version=7
+----
+
+The product name is the value returned by `java.sql.DatabaseMetaData.getDatabaseProductName()`, for example, `PostgreSQL`, `MySQL` `H2`, `Oracle`, `EnterpriseDB`, `MariaDB`, or `Microsoft SQL Server`.
+
+.Settings needed when database is inaccessible at startup
+[%breakable,cols="50,~"]
+|===
+| Configuration property name | Purpose
+
+| `hibernate.boot.allow_jdbc_metadata_access` | Set to `false` to disallow access to the database at startup
+| `jakarta.persistence.database-product-name` | The database product name, according to the JDBC driver
+| `jakarta.persistence.database-major-version` and `jakarta.persistence.database-minor-version` | The major and minor versions of the database
+|===
+
 Pooling JDBC connections is an extremely important performance optimization.
 You can set the size of Hibernate's built-in connection pool using this property:
 
@@ -339,7 +365,7 @@ initialization time by specifying one or more of the following configuration
 properties:
 
 .Schema management settings
-[%breakable,cols="52,~"]
+[%breakable,cols="50,~"]
 |===
 | Configuration property name                                | Purpose
 

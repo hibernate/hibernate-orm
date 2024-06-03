@@ -8,42 +8,44 @@ package org.hibernate.orm.test.bytecode.enhancement.basic;
 
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * @author Luis Barreiro
  */
-@RunWith( BytecodeEnhancerRunner.class )
-public class BasicSessionTest extends BaseCoreFunctionalTestCase {
-
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class[]{ MyEntity.class};
-    }
+@DomainModel(
+        annotatedClasses = {
+                BasicSessionTest.MyEntity.class,
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class BasicSessionTest {
 
     @Test
-    public void test() {
-        doInHibernate( this::sessionFactory, s -> {
+    public void test(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             s.save( new MyEntity( 1L ) );
             s.save( new MyEntity( 2L ) );
         } );
 
         MyEntity[] entities = new MyEntity[2];
 
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             entities[0] = s.get( MyEntity.class, 1L );
             entities[1] = s.get( MyEntity.class, 2L );
 
@@ -70,7 +72,7 @@ public class BasicSessionTest extends BaseCoreFunctionalTestCase {
 
     @Entity( name = "MyEntity" )
     @Table( name = "MY_ENTITY" )
-    private static class MyEntity implements ManagedEntity {
+    static class MyEntity implements ManagedEntity {
 
         @Id
         Long id;
@@ -122,6 +124,16 @@ public class BasicSessionTest extends BaseCoreFunctionalTestCase {
         @Override
         public void $$_hibernate_setPreviousManagedEntity(ManagedEntity previous) {
             this.previous = previous;
+        }
+
+        @Override
+        public void $$_hibernate_setUseTracker(boolean useTracker) {
+
+        }
+
+        @Override
+        public boolean $$_hibernate_useTracker() {
+            return false;
         }
     }
 }

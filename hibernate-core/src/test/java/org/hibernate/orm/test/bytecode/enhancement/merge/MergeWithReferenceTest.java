@@ -3,12 +3,12 @@ package org.hibernate.orm.test.bytecode.enhancement.merge;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -22,20 +22,19 @@ import org.assertj.core.api.Assertions;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(BytecodeEnhancerRunner.class)
-public class MergeWithReferenceTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				MergeWithReferenceTest.Foo.class,
+				MergeWithReferenceTest.Bar.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class MergeWithReferenceTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Foo.class,
-				Bar.class
-		};
-	}
-
-	@After
-	public void tearDown() {
-		inTransaction(
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createMutationQuery( "delete from Foo" ).executeUpdate();
 					session.createMutationQuery( "delete from Bar" ).executeUpdate();
@@ -44,13 +43,13 @@ public class MergeWithReferenceTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testMergeReference() {
+	public void testMergeReference(SessionFactoryScope scope) {
 		Bar bar = new Bar( "unique3" );
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			session.persist( bar );
 		} );
 
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			Bar reference = session.getReference( Bar.class, bar.getId() );
 			Foo merged = session.merge( new Foo( reference ) );
 			Assertions.assertThat( merged.getBar().getKey() ).isEqualTo( bar.getKey() );
@@ -58,19 +57,19 @@ public class MergeWithReferenceTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testMergeReference2() {
+	public void testMergeReference2(SessionFactoryScope scope) {
 		Bar bar = new Bar( "unique3" );
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			session.persist( bar );
 		} );
 
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			Bar reference = session.getReference( Bar.class, bar.getId() );
 			reference.setName( "Davide" );
 			session.merge( reference );
 		} );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Bar reference = session.getReference( Bar.class, bar.getId() );
 					assertThat( reference.getName() ).isEqualTo( "Davide" );

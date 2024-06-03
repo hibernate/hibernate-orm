@@ -11,6 +11,12 @@ import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.sql.results.spi.RowTransformer;
 
 /**
+ * Verifies that the first object in each row is
+ * assignable to the query result type.
+ * <p>
+ * Should only be used when the query has exactly
+ * one item in its selection list.
+ *
  * @author Gavin King
  */
 public class RowTransformerCheckingImpl<R> implements RowTransformer<R> {

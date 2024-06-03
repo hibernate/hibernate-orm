@@ -6,20 +6,6 @@
  */
 package org.hibernate.orm.test.bytecode.enhance.internal.bytebuddy;
 
-import java.lang.reflect.Method;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
-import org.assertj.core.extractor.Extractors;
-
-import org.hibernate.bytecode.enhance.internal.tracker.SimpleFieldTracker;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.extractor.Extractors.resultOf;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.ENTITY_ENTRY_FIELD_NAME;
@@ -39,8 +25,21 @@ import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.TRACKER_GET_N
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.TRACKER_HAS_CHANGED_NAME;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.TRACKER_SUSPEND_NAME;
 
-@TestForIssue(jiraKey = "HHH-13759")
-@RunWith(BytecodeEnhancerRunner.class)
+import java.lang.reflect.Method;
+
+import org.hibernate.bytecode.enhance.internal.tracker.SimpleFieldTracker;
+
+import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
+
+@JiraKey("HHH-13759")
+@BytecodeEnhanced
 @EnhancementOptions(inlineDirtyChecking = true)
 public class DirtyCheckingWithMappedsuperclassTest {
 

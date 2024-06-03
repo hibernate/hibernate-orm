@@ -26,6 +26,7 @@ import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
+import org.hibernate.sql.ast.tree.expression.EmbeddableTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.Every;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -34,6 +35,7 @@ import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
+import org.hibernate.sql.ast.tree.expression.NestedColumnReference;
 import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.Overflow;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
@@ -117,6 +119,11 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 	@Override
 	public void visitColumnReference(ColumnReference columnReference) {
 		doReplaceExpression( columnReference );
+	}
+
+	@Override
+	public void visitNestedColumnReference(NestedColumnReference nestedColumnReference) {
+		doReplaceExpression( nestedColumnReference );
 	}
 
 	@Override
@@ -206,6 +213,11 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 
 	@Override
 	public void visitEntityTypeLiteral(EntityTypeLiteral expression) {
+		doReplaceExpression( expression );
+	}
+
+	@Override
+	public void visitEmbeddableTypeLiteral(EmbeddableTypeLiteral expression) {
 		doReplaceExpression( expression );
 	}
 

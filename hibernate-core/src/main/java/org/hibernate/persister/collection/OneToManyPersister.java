@@ -100,7 +100,6 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	private final DeleteRowsCoordinator deleteRowsCoordinator;
 	private final RemoveCoordinator removeCoordinator;
 
-	private final boolean cascadeDeleteEnabled;
 	private final boolean keyIsNullable;
 	private final MutationExecutorService mutationExecutorService;
 
@@ -117,8 +116,6 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			CollectionDataAccess cacheAccessStrategy,
 			RuntimeModelCreationContext creationContext) throws MappingException, CacheException {
 		super( collectionBinding, cacheAccessStrategy, creationContext );
-		cascadeDeleteEnabled = collectionBinding.getKey().isCascadeDeleteEnabled()
-				&& creationContext.getDialect().supportsCascadeDelete();
 		keyIsNullable = collectionBinding.getKey().isNullable();
 
 		this.rowMutationOperations = buildRowMutationOperations();
@@ -155,10 +152,6 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	@Override
 	protected boolean isRowDeleteEnabled() {
 		return super.isRowDeleteEnabled() && keyIsNullable;
-	}
-
-	public boolean isCascadeDeleteEnabled() {
-		return cascadeDeleteEnabled;
 	}
 
 	@Override

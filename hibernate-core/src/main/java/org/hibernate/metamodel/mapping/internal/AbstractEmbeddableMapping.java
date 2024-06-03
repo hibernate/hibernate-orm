@@ -7,8 +7,10 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.MappingException;
@@ -33,6 +35,7 @@ import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
+import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -46,6 +49,7 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
@@ -67,12 +71,38 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * Base support for EmbeddableMappingType implementations
  */
-public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType {
+public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType,
+		EmbeddableMappingType.ConcreteEmbeddableType {
 	final protected MutableAttributeMappingList attributeMappings;
 	protected SelectableMappings selectableMappings;
 
 	public AbstractEmbeddableMapping(MutableAttributeMappingList attributeMappings) {
 		this.attributeMappings = attributeMappings;
+	}
+
+	@Override
+	public EmbeddableInstantiator getInstantiator() {
+		return getRepresentationStrategy().getInstantiator();
+	}
+
+	@Override
+	public int getSubclassId() {
+		return 0;
+	}
+
+	@Override
+	public boolean declaresAttribute(AttributeMapping attributeMapping) {
+		return true;
+	}
+
+	@Override
+	public boolean declaresAttribute(int attributeIndex) {
+		return true;
+	}
+
+	@Override
+	public Object getDiscriminatorValue() {
+		return null;
 	}
 
 	@Override
@@ -91,6 +121,10 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			return optimizer.getAccessOptimizer().getPropertyValues( compositeInstance );
 		}
 
+		return getAttributeValues( compositeInstance );
+	}
+
+	protected Object[] getAttributeValues(Object compositeInstance) {
 		final Object[] results = new Object[getNumberOfAttributeMappings()];
 		for ( int i = 0; i < results.length; i++ ) {
 			final Getter getter = getAttributeMapping( i ).getAttributeMetadata()
@@ -108,9 +142,13 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			optimizer.getAccessOptimizer().setPropertyValues( component, values );
 		}
 		else {
-			for ( int i = 0; i < values.length; i++ ) {
-				getAttributeMapping( i ).getPropertyAccess().getSetter().set( component, values[i] );
-			}
+			setAttributeValues( component, values );
+		}
+	}
+
+	protected void setAttributeValues(Object component, Object[] values) {
+		for ( int i = 0; i < values.length; i++ ) {
+			getAttributeMapping( i ).getPropertyAccess().getSetter().set( component, values[i] );
 		}
 	}
 
@@ -278,6 +316,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 					containingTableExpression = rootTableExpression;
 					columnExpression = rootTableKeyColumnNames[ columnPosition ];
 				}
+				final NavigableRole role = navigableRole.append( bootPropertyDescriptor.getName() );
 				final SelectablePath selectablePath;
 				final String columnDefinition;
 				final Long length;
@@ -296,6 +335,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 					nullable = column.isNullable();
 					isLob = column.isSqlTypeLob( creationProcess.getCreationContext().getMetadata() );
 					selectablePath = basicValue.createSelectablePath( column.getQuotedName( dialect ) );
+					MappingModelCreationHelper.resolveAggregateColumnBasicType( creationProcess, role, column );
 				}
 				else {
 					columnDefinition = null;
@@ -310,18 +350,18 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 
 				attributeMapping = MappingModelCreationHelper.buildBasicAttributeMapping(
 						bootPropertyDescriptor.getName(),
-						navigableRole.append( bootPropertyDescriptor.getName() ),
+						role,
 						attributeIndex,
 						attributeIndex,
 						bootPropertyDescriptor,
 						declarer,
-						(BasicType<?>) subtype,
+						basicValue.getResolution().getLegacyResolvedBasicType(),
 						containingTableExpression,
 						columnExpression,
 						selectablePath,
 						selectable.isFormula(),
 						selectable.getCustomReadExpression(),
-						selectable.getWriteExpr( ( (BasicType<?>) subtype ).getJdbcMapping(), dialect ),
+						selectable.getWriteExpr( basicValue.getResolution().getJdbcMapping(), dialect ),
 						columnDefinition,
 						length,
 						precision,
@@ -639,6 +679,13 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				attributeMapping.addToCacheKey( cacheKey, attributeMapping.getValue( value ), session );
 			}
 		}
+		if ( isPolymorphic() ) {
+			final EmbeddableDiscriminatorMapping discriminatorMapping = getDiscriminatorMapping();
+			final Object discriminatorValue = value != null ?
+					discriminatorMapping.getDiscriminatorValue( value.getClass().getName() )
+					: null;
+			discriminatorMapping.addToCacheKey( cacheKey, discriminatorValue, session );
+		}
 	}
 
 	@Override
@@ -724,6 +771,10 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						(columnIndex, selection) -> selectableMappings.add( selection )
 				)
 		);
+
+		if ( getDiscriminatorMapping() != null ) {
+			getDiscriminatorMapping().forEachSelectable( (index, selection) -> selectableMappings.add( selection ) );
+		}
 
 		this.selectableMappings = new SelectableMappingsImpl( selectableMappings.toArray( new SelectableMapping[0] ) );
 

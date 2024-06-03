@@ -51,7 +51,7 @@ public class DoubleJavaType extends AbstractClassJavaType<Double> implements
 		if ( value == null ) {
 			return null;
 		}
-		if ( Double.class.isAssignableFrom( type ) ) {
+		if ( Double.class.isAssignableFrom( type ) || type == Object.class ) {
 			return (X) value;
 		}
 		if ( Float.class.isAssignableFrom( type ) ) {

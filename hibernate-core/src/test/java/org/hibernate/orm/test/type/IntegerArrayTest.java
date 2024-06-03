@@ -6,13 +6,20 @@
  */
 package org.hibernate.orm.test.type;
 
-import java.util.Map;
-
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseASEDialect;
+
+import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,38 +32,25 @@ import jakarta.persistence.Query;
 import jakarta.persistence.Table;
 import jakarta.persistence.TypedQuery;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Jordan Gigov
  * @author Christian Beikov
  */
-@SkipForDialect(value = SybaseASEDialect.class, comment = "Sybase or the driver are trimming trailing zeros in byte arrays")
-public class IntegerArrayTest extends BaseNonConfigCoreFunctionalTestCase {
+@BootstrapServiceRegistry(
+		// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
+		integrators = SharedDriverManagerTypeCacheClearingIntegrator.class
+)
+@DomainModel(annotatedClasses = IntegerArrayTest.TableWithIntegerArrays.class)
+@SessionFactory
+@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase or the driver are trimming trailing zeros in byte arrays")
+public class IntegerArrayTest {
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[]{ TableWithIntegerArrays.class };
-	}
-
-	@Override
-	protected void addSettings(Map<String, Object> settings) {
-		// Make sure this stuff runs on a dedicated connection pool,
-		// otherwise we might run into ORA-21700: object does not exist or is marked for delete
-		// because the JDBC connection or database session caches something that should have been invalidated
-		settings.put( AvailableSettings.CONNECTION_PROVIDER, "" );
-	}
-
-	public void startUp() {
-		super.startUp();
-		inTransaction( em -> {
+	@BeforeAll
+	public void startUp(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
 			em.persist( new TableWithIntegerArrays( 1L, new Integer[]{} ) );
 			em.persist( new TableWithIntegerArrays( 2L, new Integer[]{ 512, 112, null, 0 } ) );
 			em.persist( new TableWithIntegerArrays( 3L, null ) );
@@ -75,8 +69,8 @@ public class IntegerArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testById() {
-		inSession( em -> {
+	public void testById(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TableWithIntegerArrays tableRecord;
 			tableRecord = em.find( TableWithIntegerArrays.class, 1L );
 			assertThat( tableRecord.getTheArray(), is( new Integer[]{} ) );
@@ -90,8 +84,8 @@ public class IntegerArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testQueryById() {
-		inSession( em -> {
+	public void testQueryById(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TypedQuery<TableWithIntegerArrays> tq = em.createNamedQuery( "TableWithIntegerArrays.JPQL.getById", TableWithIntegerArrays.class );
 			tq.setParameter( "id", 2L );
 			TableWithIntegerArrays tableRecord = tq.getSingleResult();
@@ -100,9 +94,8 @@ public class IntegerArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect( value = AbstractHANADialect.class, comment = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
-	public void testQuery() {
-		inSession( em -> {
+	public void testQuery(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TypedQuery<TableWithIntegerArrays> tq = em.createNamedQuery( "TableWithIntegerArrays.JPQL.getByData", TableWithIntegerArrays.class );
 			tq.setParameter( "data", new Integer[]{} );
 			TableWithIntegerArrays tableRecord = tq.getSingleResult();
@@ -111,8 +104,8 @@ public class IntegerArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testNativeQueryById() {
-		inSession( em -> {
+	public void testNativeQueryById(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			TypedQuery<TableWithIntegerArrays> tq = em.createNamedQuery( "TableWithIntegerArrays.Native.getById", TableWithIntegerArrays.class );
 			tq.setParameter( "id", 2L );
 			TableWithIntegerArrays tableRecord = tq.getSingleResult();
@@ -121,10 +114,10 @@ public class IntegerArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect( value = HSQLDialect.class, comment = "HSQL does not like plain parameters in the distinct from predicate")
-	@SkipForDialect( value = OracleDialect.class, comment = "Oracle requires a special function to compare XML")
-	public void testNativeQuery() {
-		inSession( em -> {
+	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL does not like plain parameters in the distinct from predicate")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle requires a special function to compare XML")
+	public void testNativeQuery(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			final String op = em.getJdbcServices().getDialect().supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
 			TypedQuery<TableWithIntegerArrays> tq = em.createNativeQuery(
 					"SELECT * FROM table_with_integer_arrays t WHERE the_array " + op + " :data",
@@ -137,13 +130,13 @@ public class IntegerArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature(DialectChecks.SupportsArrayDataTypes.class)
-	public void testNativeQueryUntyped() {
-		inSession( em -> {
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
+	public void testNativeQueryUntyped(SessionFactoryScope scope) {
+		scope.inSession( em -> {
 			Query q = em.createNamedQuery( "TableWithIntegerArrays.Native.getByIdUntyped" );
 			q.setParameter( "id", 2L );
 			Object[] tuple = (Object[]) q.getSingleResult();
-			assertThat( tuple[1], is( new Integer[]{ 512, 112, null, 0 } ) );
+			assertThat( tuple[1], is( new Integer[] { 512, 112, null, 0 } ) );
 		} );
 	}
 

@@ -8,20 +8,20 @@ package org.hibernate.boot.model.internal;
 
 import java.util.List;
 
-import org.hibernate.AnnotationException;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Struct;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.QualifiedName;
+import org.hibernate.boot.model.relational.QualifiedNameImpl;
+import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Value;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.spi.EmbeddableAggregateJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -38,29 +38,28 @@ public final class AggregateComponentBinder {
 			Component component,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
-			XClass returnedClassOrElement,
+			XClass componentXClass,
 			AnnotatedColumns columns,
 			MetadataBuildingContext context) {
-		if ( isAggregate( inferredData.getProperty(), inferredData.getClassOrElement() ) ) {
-			validateComponent( component, BinderHelper.getPath( propertyHolder, inferredData ) );
-
+		if ( isAggregate( inferredData.getProperty(), componentXClass ) ) {
 			final InFlightMetadataCollector metadataCollector = context.getMetadataCollector();
 			final TypeConfiguration typeConfiguration = metadataCollector.getTypeConfiguration();
 			// Determine a struct name if this is a struct through some means
-			final String structName = determineStructName( columns, inferredData, returnedClassOrElement );
+			final QualifiedName structQualifiedName = determineStructName( columns, inferredData, componentXClass, context );
+			final String structName = structQualifiedName == null ? null : structQualifiedName.render();
 
 			// We must register a special JavaType for the embeddable which can provide a recommended JdbcType
 			typeConfiguration.getJavaTypeRegistry().resolveDescriptor(
 					component.getComponentClass(),
 					() -> new EmbeddableAggregateJavaType<>( component.getComponentClass(), structName )
 			);
-			component.setStructName( structName );
-			component.setStructColumnNames( determineStructAttributeNames( inferredData, returnedClassOrElement ) );
+			component.setStructName( structQualifiedName );
+			component.setStructColumnNames( determineStructAttributeNames( inferredData, componentXClass ) );
 
 			// Determine the aggregate column
 			BasicValueBinder basicValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ATTRIBUTE, component, context );
 			basicValueBinder.setPropertyName( inferredData.getPropertyName() );
-			basicValueBinder.setReturnedClassName( inferredData.getClassOrElementName() );
+			basicValueBinder.setReturnedClassName( inferredData.getPropertyClass().getName() );
 			basicValueBinder.setColumns( columns );
 			basicValueBinder.setPersistentClassName( propertyHolder.getClassName() );
 			basicValueBinder.setType(
@@ -71,9 +70,24 @@ public final class AggregateComponentBinder {
 			);
 			final BasicValue propertyValue = basicValueBinder.make();
 			final AggregateColumn aggregateColumn = (AggregateColumn) propertyValue.getColumn();
-			aggregateColumn.setSqlType( structName );
-			if ( structName != null ) {
-				aggregateColumn.setSqlTypeCode( SqlTypes.STRUCT );
+			if ( structName != null && aggregateColumn.getSqlType() == null ) {
+				if ( inferredData.getProperty().isArray() || inferredData.getProperty().isCollection() ) {
+					aggregateColumn.setSqlTypeCode( getStructPluralSqlTypeCode( context ) );
+					aggregateColumn.setSqlType(
+							context.getMetadataCollector()
+									.getDatabase()
+									.getDialect()
+									.getArrayTypeName(
+											null,
+											structName,
+											null
+									)
+					);
+				}
+				else {
+					aggregateColumn.setSqlTypeCode( SqlTypes.STRUCT );
+					aggregateColumn.setSqlType( structName );
+				}
 			}
 			component.setAggregateColumn( aggregateColumn );
 
@@ -81,59 +95,73 @@ public final class AggregateComponentBinder {
 					new AggregateComponentSecondPass(
 							propertyHolder,
 							component,
-							returnedClassOrElement,
+							componentXClass,
+							inferredData.getPropertyName(),
 							context
 					)
 			);
 		}
 	}
 
-	private static void validateComponent(Component component, String basePath) {
-		for ( Property property : component.getProperties() ) {
-			final Value value = property.getValue();
-			if ( !( value instanceof BasicValue ) && !( value instanceof Component ) ) {
-				// todo: see HHH-15831
-				throw new AnnotationException(
-						"Property '" + StringHelper.qualify( basePath, property.getName() )
-								+ "' uses not yet supported mapping type '"
-								+ value.getClass().getName()
-								+ "' in component class '"
-								+ component.getComponentClassName()
-								+ "'. Aggregate components currently may only contain basic values and components of basic values."
-				);
-			}
-			if ( value instanceof Component ) {
-				final Component c = (Component) value;
-				if ( c.getAggregateColumn() == null ) {
-					validateComponent( c, StringHelper.qualify( basePath, property.getName() ) );
-				}
-			}
+	private static int getStructPluralSqlTypeCode(MetadataBuildingContext context) {
+		final int arrayTypeCode = context.getPreferredSqlTypeCodeForArray();
+		switch ( arrayTypeCode ) {
+			case SqlTypes.ARRAY:
+				return SqlTypes.STRUCT_ARRAY;
+			case SqlTypes.TABLE:
+				return SqlTypes.STRUCT_TABLE;
+			default:
+				throw new UnsupportedOperationException( "Dialect does not support structured array types: " + context.getMetadataCollector()
+						.getDatabase()
+						.getDialect()
+						.getClass()
+						.getName() );
 		}
 	}
 
-	private static String determineStructName(
+	private static QualifiedName determineStructName(
 			AnnotatedColumns columns,
 			PropertyData inferredData,
-			XClass returnedClassOrElement) {
+			XClass returnedClassOrElement,
+			MetadataBuildingContext context) {
 		final XProperty property = inferredData.getProperty();
 		if ( property != null ) {
 			final Struct struct = property.getAnnotation( Struct.class );
 			if ( struct != null ) {
-				return struct.name();
+				return toQualifiedName( struct, context );
 			}
 			final JdbcTypeCode jdbcTypeCode = property.getAnnotation( JdbcTypeCode.class );
-			if ( jdbcTypeCode != null && jdbcTypeCode.value() == SqlTypes.STRUCT && columns != null ) {
+			if ( jdbcTypeCode != null
+					&& ( jdbcTypeCode.value() == SqlTypes.STRUCT || jdbcTypeCode.value() == SqlTypes.STRUCT_ARRAY || jdbcTypeCode.value() == SqlTypes.STRUCT_TABLE )
+					&& columns != null ) {
 				final List<AnnotatedColumn> columnList = columns.getColumns();
-				if ( columnList.size() == 1 && columnList.get( 0 ).getSqlType() != null ) {
-					return columnList.get( 0 ).getSqlType();
+				final String sqlType;
+				if ( columnList.size() == 1 && ( sqlType = columnList.get( 0 ).getSqlType() ) != null ) {
+					if ( sqlType.contains( "." ) ) {
+						return QualifiedNameParser.INSTANCE.parse( sqlType );
+					}
+					return new QualifiedNameParser.NameParts(
+							null,
+							null,
+							context.getMetadataCollector().getDatabase().toIdentifier( sqlType )
+					);
 				}
 			}
 		}
 		final Struct struct = returnedClassOrElement.getAnnotation( Struct.class );
 		if ( struct != null ) {
-			return struct.name();
+			return toQualifiedName( struct, context );
 		}
 		return null;
+	}
+
+	private static QualifiedName toQualifiedName(Struct struct, MetadataBuildingContext context) {
+		final Database database = context.getMetadataCollector().getDatabase();
+		return new QualifiedNameImpl(
+				database.toIdentifier( struct.catalog() ),
+				database.toIdentifier( struct.schema() ),
+				database.toIdentifier( struct.name() )
+		);
 	}
 
 	private static String[] determineStructAttributeNames(PropertyData inferredData, XClass returnedClassOrElement) {
@@ -163,6 +191,10 @@ public final class AggregateComponentBinder {
 					case SqlTypes.STRUCT:
 					case SqlTypes.JSON:
 					case SqlTypes.SQLXML:
+					case SqlTypes.STRUCT_ARRAY:
+					case SqlTypes.STRUCT_TABLE:
+					case SqlTypes.JSON_ARRAY:
+					case SqlTypes.XML_ARRAY:
 						return true;
 				}
 			}

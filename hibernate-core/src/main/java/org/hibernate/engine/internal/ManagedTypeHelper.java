@@ -97,8 +97,7 @@ public final class ManagedTypeHelper {
 	}
 
 	/**
-	 * @param entity
-	 * @return true if and only if the entity implements {@see ManagedEntity}
+	 * @return true if and only if the entity implements {@link ManagedEntity}
 	 */
 	public static boolean isManagedEntity(final Object entity) {
 		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
@@ -109,8 +108,7 @@ public final class ManagedTypeHelper {
 	}
 
 	/**
-	 * @param entity
-	 * @return true if and only if the entity implements {@see HibernateProxy}
+	 * @return true if and only if the entity implements {@link HibernateProxy}
 	 */
 	public static boolean isHibernateProxy(final Object entity) {
 		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
@@ -218,11 +216,26 @@ public final class ManagedTypeHelper {
 		}
 	}
 
+	public static void processIfManagedEntity(final Object entity, final ManagedEntityConsumer action) {
+		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
+			final PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
+			final ManagedEntity e = t.asManagedEntity();
+			if ( e != null ) {
+				action.accept( e );
+			}
+		}
+	}
+
 	 // Not using Consumer<SelfDirtinessTracker> because of JDK-8180450:
 	 // use a custom functional interface with explicit type.
 	@FunctionalInterface
 	public interface SelfDirtinessTrackerConsumer {
 		void accept(SelfDirtinessTracker tracker);
+	}
+
+	@FunctionalInterface
+	public interface ManagedEntityConsumer {
+		void accept(ManagedEntity entity);
 	}
 
 	/**

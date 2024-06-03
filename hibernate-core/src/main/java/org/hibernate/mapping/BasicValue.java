@@ -967,7 +967,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		return aggregateColumn == null
 				? jdbcTypeCode
 				: getDialect().getAggregateSupport()
-				.aggregateComponentSqlTypeCode( aggregateColumn.getSqlTypeCode(), jdbcTypeCode );
+				.aggregateComponentSqlTypeCode( aggregateColumn.getSqlTypeCode( getMetadata() ), jdbcTypeCode );
 	}
 
 	@Override
@@ -1192,5 +1192,9 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		 * The resolved MutabilityPlan
 		 */
 		MutabilityPlan<J> getMutabilityPlan();
+
+		default void updateResolution(BasicType<?> type) {
+			throw new UnsupportedOperationException();
+		}
 	}
 }

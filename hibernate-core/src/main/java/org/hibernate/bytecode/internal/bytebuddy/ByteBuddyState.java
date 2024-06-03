@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImplConstants;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.bytecode.spi.BasicProxyFactory;
 import org.hibernate.engine.spi.PrimeAmongSecondarySupertypes;
@@ -68,9 +69,11 @@ public final class ByteBuddyState {
 
 	private final ByteBuddy byteBuddy;
 
-	private static final ProxyDefinitionHelpers proxyDefinitionHelpers = new ProxyDefinitionHelpers();
+	private final ProxyDefinitionHelpers proxyDefinitionHelpers = new ProxyDefinitionHelpers();
 
 	private final ClassRewriter classRewriter;
+
+	private final EnhancerImplConstants enhancerConstants = new EnhancerImplConstants();
 
 	/**
 	 * It will be easier to maintain the cache and its state when it will no longer be static
@@ -252,6 +255,10 @@ public final class ByteBuddyState {
 		classRewriter.registerAuthorizedClass( unloadedClass );
 
 		return unloadedClass;
+	}
+
+	public EnhancerImplConstants getEnhancerConstants() {
+		return this.enhancerConstants;
 	}
 
 	private static class GetDeclaredMethodAction implements PrivilegedAction<Method> {

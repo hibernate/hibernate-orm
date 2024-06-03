@@ -6,8 +6,9 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
+import org.hibernate.FetchNotFoundException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
@@ -15,62 +16,81 @@ import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerParent;
+import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
-import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+import org.hibernate.sql.results.graph.internal.AbstractInitializer;
 import org.hibernate.type.Type;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.sql.results.graph.entity.internal.EntityInitializerImpl.determineConcreteEntityDescriptor;
 
 /**
  * @author Andrea Boriero
  * @author Steve Ebersole
  */
-public class EntityDelayedFetchInitializer implements EntityInitializer {
+public class EntityDelayedFetchInitializer extends AbstractInitializer implements EntityInitializer {
 
-	private final FetchParentAccess parentAccess;
+	private final InitializerParent parent;
 	private final NavigablePath navigablePath;
-	private final FetchParentAccess owningParent;
-	private final EntityMappingType ownedModelPartDeclaringType;
 	private final boolean isPartOfKey;
 	private final ToOneAttributeMapping referencedModelPart;
 	private final boolean selectByUniqueKey;
 	private final DomainResultAssembler<?> identifierAssembler;
-
-	protected boolean parentShallowCached;
+	private final BasicResultAssembler<?> discriminatorAssembler;
 
 	// per-row state
-	private boolean processed;
 	private Object entityInstance;
 	private Object identifier;
 
+	/**
+	 * @deprecated Use {@link #EntityDelayedFetchInitializer(InitializerParent, NavigablePath, ToOneAttributeMapping, boolean, DomainResultAssembler, BasicResultAssembler)} instead.
+	 */
+	@Deprecated(forRemoval = true)
 	public EntityDelayedFetchInitializer(
 			FetchParentAccess parentAccess,
 			NavigablePath fetchedNavigable,
 			ToOneAttributeMapping referencedModelPart,
 			boolean selectByUniqueKey,
-			DomainResultAssembler<?> identifierAssembler) {
-		// associations marked with `@NotFound` are ALWAYS eagerly fetched
-		assert referencedModelPart.getNotFoundAction() == null;
+			DomainResultAssembler<?> identifierAssembler,
+			BasicResultAssembler<?> discriminatorAssembler) {
+		this(
+				(InitializerParent) parentAccess,
+				fetchedNavigable,
+				referencedModelPart,
+				selectByUniqueKey,
+				identifierAssembler,
+				discriminatorAssembler
+		);
+	}
 
-		this.parentAccess = parentAccess;
+	public EntityDelayedFetchInitializer(
+			InitializerParent parent,
+			NavigablePath fetchedNavigable,
+			ToOneAttributeMapping referencedModelPart,
+			boolean selectByUniqueKey,
+			DomainResultAssembler<?> identifierAssembler,
+			BasicResultAssembler<?> discriminatorAssembler) {
+		// associations marked with `@NotFound` are ALWAYS eagerly fetched, unless we're resolving the concrete type
+		assert !referencedModelPart.hasNotFoundAction() || referencedModelPart.getEntityMappingType().isConcreteProxy();
+
+		this.parent = parent;
 		this.navigablePath = fetchedNavigable;
-		this.isPartOfKey = Initializer.isPartOfKey( fetchedNavigable, parentAccess );
-		this.owningParent = FetchParentAccess.determineOwningParent( parentAccess );
-		this.ownedModelPartDeclaringType = FetchParentAccess.determineOwnedModelPartDeclaringType( referencedModelPart, parentAccess, owningParent );
+		this.isPartOfKey = Initializer.isPartOfKey( fetchedNavigable, parent );
 		this.referencedModelPart = referencedModelPart;
 		this.selectByUniqueKey = selectByUniqueKey;
 		this.identifierAssembler = identifierAssembler;
+		this.discriminatorAssembler = discriminatorAssembler;
 	}
 
 	@Override
@@ -79,37 +99,49 @@ public class EntityDelayedFetchInitializer implements EntityInitializer {
 	}
 
 	@Override
-	public void resolveKey(RowProcessingState rowProcessingState) {
-		// nothing to do
-	}
-
-	@Override
 	public ModelPart getInitializedPart() {
 		return referencedModelPart;
 	}
 
 	@Override
-	public void resolveInstance(RowProcessingState rowProcessingState) {
-		if ( processed ) {
+	public void resolveInstance() {
+		if ( state != State.KEY_RESOLVED ) {
 			return;
 		}
 
-		processed = true;
-
-		// We can avoid processing further if the parent is already initialized or missing,
-		// as the value produced by this initializer will never be used anyway.
-		if ( parentShallowCached || shouldSkipInitializer( rowProcessingState ) ) {
-			return;
-		}
+		state = State.RESOLVED;
 
 		identifier = identifierAssembler.assemble( rowProcessingState );
 
 		if ( identifier == null ) {
 			entityInstance = null;
+			state = State.MISSING;
 		}
 		else {
 			final SharedSessionContractImplementor session = rowProcessingState.getSession();
-			final EntityPersister concreteDescriptor = referencedModelPart.getEntityMappingType().getEntityPersister();
+
+			final EntityPersister entityPersister = referencedModelPart.getEntityMappingType().getEntityPersister();
+			final EntityPersister concreteDescriptor;
+			if ( discriminatorAssembler != null ) {
+				concreteDescriptor = determineConcreteEntityDescriptor(
+						rowProcessingState,
+						discriminatorAssembler,
+						entityPersister
+				);
+				if ( concreteDescriptor == null ) {
+					// If we find no discriminator it means there's no entity in the target table
+					if ( !referencedModelPart.isOptional() ) {
+						throw new FetchNotFoundException( entityPersister.getEntityName(), identifier );
+					}
+					entityInstance = null;
+					state = State.MISSING;
+					return;
+				}
+			}
+			else {
+				concreteDescriptor = entityPersister;
+			}
+
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			if ( selectByUniqueKey ) {
 				final String uniqueKeyPropertyName = referencedModelPart.getReferencedPropertyName();
@@ -182,25 +214,35 @@ public class EntityDelayedFetchInitializer implements EntityInitializer {
 	}
 
 	@Override
-	public void initializeInstance(RowProcessingState rowProcessingState) {
-		// nothing to do
+	public void resolveInstance(Object instance) {
+		if ( instance == null ) {
+			state = State.MISSING;
+			identifier = null;
+			entityInstance = null;
+		}
+		else {
+			state = State.RESOLVED;
+			final SharedSessionContractImplementor session = rowProcessingState.getSession();
+			final EntityPersister concreteDescriptor = referencedModelPart.getEntityMappingType().getEntityPersister();
+			identifier = concreteDescriptor.getIdentifier( instance, session );
+			entityInstance = instance;
+			final Initializer initializer = identifierAssembler.getInitializer();
+			if ( initializer != null ) {
+				initializer.resolveInstance( identifier );
+			}
+			else if ( !rowProcessingState.isQueryCacheHit() && rowProcessingState.getQueryOptions().isResultCachingEnabled() == Boolean.TRUE ) {
+				// Resolve the state of the identifier if result caching is enabled and this is not a query cache hit
+				identifierAssembler.resolveState( rowProcessingState );
+			}
+		}
 	}
 
 	@Override
-	public void finishUpRow(RowProcessingState rowProcessingState) {
-		entityInstance = null;
-		identifier = null;
-		processed = false;
-	}
-
-	@Override
-	public void markShallowCached() {
-		parentShallowCached = true;
-	}
-
-	@Override
-	public void endLoading(ExecutionContext executionContext) {
-		parentShallowCached = false;
+	protected <X> void forEachSubInitializer(BiConsumer<Initializer, X> consumer, X arg) {
+		final Initializer initializer = identifierAssembler.getInitializer();
+		if ( initializer != null ) {
+			consumer.accept( initializer, arg );
+		}
 	}
 
 	@Override
@@ -220,17 +262,12 @@ public class EntityDelayedFetchInitializer implements EntityInitializer {
 
 	@Override
 	public FetchParentAccess getFetchParentAccess() {
-		return parentAccess;
+		return (FetchParentAccess) parent;
 	}
 
 	@Override
-	public @Nullable FetchParentAccess getOwningParent() {
-		return owningParent;
-	}
-
-	@Override
-	public @Nullable EntityMappingType getOwnedModelPartDeclaringType() {
-		return ownedModelPartDeclaringType;
+	public @Nullable InitializerParent getParent() {
+		return parent;
 	}
 
 	@Override
@@ -260,14 +297,6 @@ public class EntityDelayedFetchInitializer implements EntityInitializer {
 		this.entityInstance = entityInstance;
 	}
 
-	protected void setProcessed(boolean processed) {
-		this.processed = processed;
-	}
-
-	protected boolean isProcessed() {
-		return processed;
-	}
-
 	protected Object getIdentifier() {
 		return identifier;
 	}
@@ -292,12 +321,6 @@ public class EntityDelayedFetchInitializer implements EntityInitializer {
 
 	@Override
 	public Object getParentKey() {
-		throw new UnsupportedOperationException(
-				"This should never happen, because this initializer has not child initializers" );
-	}
-
-	@Override
-	public void registerResolutionListener(Consumer<Object> listener) {
 		throw new UnsupportedOperationException(
 				"This should never happen, because this initializer has not child initializers" );
 	}

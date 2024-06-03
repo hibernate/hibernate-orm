@@ -6,16 +6,21 @@
  */
 package org.hibernate.dialect.function.array;
 
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import org.jboss.logging.Logger;
 
 /**
  * Encapsulates the validator, return type and argument type resolvers for the array_contains function.
  * Subclasses only have to implement the rendering.
  */
 public abstract class AbstractArrayContainsFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
+
+	protected static final DeprecationLogger LOG = Logger.getMessageLogger( DeprecationLogger.class, AbstractArrayContainsFunction.class.getName() );
 
 	protected final boolean nullable;
 

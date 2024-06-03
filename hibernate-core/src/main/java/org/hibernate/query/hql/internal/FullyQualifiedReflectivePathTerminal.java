@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.hql.internal;
 
-import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
@@ -33,6 +32,8 @@ import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.criteria.Expression;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 
 /**
@@ -41,10 +42,10 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 public class FullyQualifiedReflectivePathTerminal
 		extends FullyQualifiedReflectivePath
 		implements SqmExpression {
-	private final SqmExpressible expressibleType;
+	private final @Nullable SqmExpressible<?> expressibleType;
 	private final SqmCreationState creationState;
 
-	private final Function<SemanticQueryWalker,?> handler;
+	private final Function<SemanticQueryWalker<?>,?> handler;
 
 	public FullyQualifiedReflectivePathTerminal(
 			FullyQualifiedReflectivePathSource pathSource,
@@ -64,8 +65,7 @@ public class FullyQualifiedReflectivePathTerminal
 		return this;
 	}
 
-	@SuppressWarnings("unchecked")
-	private Function<SemanticQueryWalker, ?> resolveTerminalSemantic() {
+	private Function<SemanticQueryWalker<?>, ?> resolveTerminalSemantic() {
 		return semanticQueryWalker -> {
 			final SqmCreationContext creationContext = creationState.getCreationContext();
 			final ClassLoaderService cls =
@@ -136,7 +136,7 @@ public class FullyQualifiedReflectivePathTerminal
 	}
 
 	@Override
-	public SqmExpressible getNodeType() {
+	public @Nullable SqmExpressible<?> getNodeType() {
 		return expressibleType;
 	}
 
@@ -146,13 +146,13 @@ public class FullyQualifiedReflectivePathTerminal
 	}
 
 	@Override
-	public JavaType getJavaTypeDescriptor() {
-		return expressibleType.getExpressibleJavaType();
+	public JavaType<?> getJavaTypeDescriptor() {
+		return expressibleType == null ? null : expressibleType.getExpressibleJavaType();
 	}
 
 
 	@Override
-	public void applyInferableType(SqmExpressible type) {
+	public void applyInferableType(@Nullable SqmExpressible type) {
 	}
 
 	@Override
@@ -198,7 +198,7 @@ public class FullyQualifiedReflectivePathTerminal
 	}
 
 	@Override
-	public SqmExpression as(Class type) {
+	public SqmExpression<?> as(Class type) {
 		return null;
 	}
 
@@ -248,7 +248,7 @@ public class FullyQualifiedReflectivePathTerminal
 	}
 
 	@Override
-	public JpaSelection alias(String name) {
+	public JpaSelection<?> alias(String name) {
 		return null;
 	}
 

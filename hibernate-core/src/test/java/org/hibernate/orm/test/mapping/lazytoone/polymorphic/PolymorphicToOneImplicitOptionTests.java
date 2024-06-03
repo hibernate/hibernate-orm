@@ -15,71 +15,79 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.proxy.HibernateProxy;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.jdbc.SQLStatementInterceptor;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
-@RunWith( BytecodeEnhancerRunner.class)
-@EnhancementOptions( lazyLoading = true )
-public class PolymorphicToOneImplicitOptionTests extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				PolymorphicToOneImplicitOptionTests.Order.class,
+				PolymorphicToOneImplicitOptionTests.Customer.class,
+				PolymorphicToOneImplicitOptionTests.ForeignCustomer.class,
+				PolymorphicToOneImplicitOptionTests.DomesticCustomer.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+@EnhancementOptions(lazyLoading = true)
+public class PolymorphicToOneImplicitOptionTests {
 	@Test
-	public void testInheritedToOneLaziness() {
-		inTransaction(
+	public void testInheritedToOneLaziness(SessionFactoryScope scope) {
+		scope.inTransaction(
 				(session) -> {
-					sqlStatementInterceptor.clear();
+					SQLStatementInspector sqlStatementInspector = scope.getCollectingStatementInspector();
+					sqlStatementInspector.clear();
 
 					final Order order = session.byId( Order.class ).getReference( 1 );
-					assertThat( sqlStatementInterceptor.getQueryCount(), is( 0 ) );
+					sqlStatementInspector.assertExecutedCount( 0 );
 
 					System.out.println( "Order # " + order.getId() );
-					assertThat( sqlStatementInterceptor.getQueryCount(), is( 0 ) );
+					sqlStatementInspector.assertExecutedCount( 0 );
 
 					System.out.println( "  - amount : " + order.getAmount() );
 					// triggers load of base fetch state
-					assertThat( sqlStatementInterceptor.getQueryCount(), is( 1 ) );
+					sqlStatementInspector.assertExecutedCount( 1 );
 
 					final Customer customer = order.getCustomer();
-					assertThat( sqlStatementInterceptor.getQueryCount(), is( 1 ) );
+					sqlStatementInspector.assertExecutedCount( 1 );
 					// customer is part of base fetch state
 					assertFalse( Hibernate.isInitialized( customer ) );
 					assertThat( customer, instanceOf( HibernateProxy.class ) );
 
 					System.out.println( "  - customer : " + customer.getId() );
-					assertThat( sqlStatementInterceptor.getQueryCount(), is( 1 ) );
+					sqlStatementInspector.assertExecutedCount( 1 );
 
 					customer.getName();
-					assertThat( sqlStatementInterceptor.getQueryCount(), is( 2 ) );
+					sqlStatementInspector.assertExecutedCount( 2 );
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14659")
-	public void testQueryJoinFetch() {
-		inTransaction(
+	@JiraKey("HHH-14659")
+	public void testQueryJoinFetch(SessionFactoryScope scope) {
+		scope.inTransaction(
 				(session) -> {
-					final Order order = session.createQuery( "select o from Order o join fetch o.customer", Order.class )
+					final Order order = session.createQuery(
+									"select o from Order o join fetch o.customer", Order.class )
 							.uniqueResult();
 
 					assertTrue( Hibernate.isPropertyInitialized( order, "customer" ) );
@@ -89,9 +97,9 @@ public class PolymorphicToOneImplicitOptionTests extends BaseNonConfigCoreFuncti
 		);
 	}
 
-	@Before
-	public void createTestData() {
-		inTransaction(
+	@BeforeEach
+	public void createTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				(session) -> {
 					final DomesticCustomer customer = new DomesticCustomer( 1, "them", "123" );
 					session.persist( customer );
@@ -101,9 +109,9 @@ public class PolymorphicToOneImplicitOptionTests extends BaseNonConfigCoreFuncti
 		);
 	}
 
-	@After
-	public void dropTestData() {
-		inTransaction(
+	@AfterEach
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				(session) -> {
 					session.createQuery( "delete Order" ).executeUpdate();
 					session.createQuery( "delete Customer" ).executeUpdate();
@@ -111,30 +119,13 @@ public class PolymorphicToOneImplicitOptionTests extends BaseNonConfigCoreFuncti
 		);
 	}
 
-	private SQLStatementInterceptor sqlStatementInterceptor;
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( Order.class );
-		sources.addAnnotatedClass( Customer.class );
-		sources.addAnnotatedClass( ForeignCustomer.class );
-		sources.addAnnotatedClass( DomesticCustomer.class );
-	}
-
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		sqlStatementInterceptor = new SQLStatementInterceptor( ssrb );
-	}
-
-	@Entity( name = "Order" )
-	@Table( name = "`order`" )
+	@Entity(name = "Order")
+	@Table(name = "`order`")
 	public static class Order {
 		@Id
 		private Integer id;
 		private BigDecimal amount;
-		@ManyToOne( fetch = LAZY, optional = false )
+		@ManyToOne(fetch = LAZY, optional = false)
 		private Customer customer;
 
 		public Order() {
@@ -171,8 +162,8 @@ public class PolymorphicToOneImplicitOptionTests extends BaseNonConfigCoreFuncti
 		}
 	}
 
-	@Entity( name = "Customer" )
-	@Inheritance( strategy = InheritanceType.TABLE_PER_CLASS )
+	@Entity(name = "Customer")
+	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 	public static abstract class Customer {
 		@Id
 		private Integer id;

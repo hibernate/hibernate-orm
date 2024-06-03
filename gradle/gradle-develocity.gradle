@@ -1,0 +1,71 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Applies details for `https://ge.hibernate.org`
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ext {
+    isCiEnvironment = isJenkins() || isGitHubActions() || isGenericCi()
+    populateRemoteBuildCache = isEnabled( "POPULATE_REMOTE_GRADLE_CACHE" )
+}
+
+private static boolean isJenkins() {
+    return getSetting( "JENKINS_URL" ).isPresent()
+}
+
+private static boolean isGitHubActions() {
+    return getSetting( "GITHUB_ACTIONS" ).isPresent()
+}
+
+private static boolean isGenericCi() {
+    return System.getenv("CI") != null || System.getProperty("CI") != null
+}
+
+static java.util.Optional<String> getSetting(String name) {
+    def envVar = System.getenv(name)
+    if ( envVar != null ) {
+        return java.util.Optional.of(envVar);
+    }
+
+    def sysProp = System.getProperty(name)
+    return java.util.Optional.ofNullable(sysProp);
+}
+
+static boolean isEnabled(String setting) {
+	if ( System.getenv().hasProperty( setting ) ) {
+		return true
+	}
+
+	return System.hasProperty( setting )
+}
+
+develocity {
+    server = 'https://ge.hibernate.org'
+
+    buildScan {
+        capture {
+            fileFingerprints = true
+        }
+        publishing.onlyIf { it.authenticated }
+
+        obfuscation {
+            // Don't share ip addresses
+            ipAddresses { addresses -> addresses.collect { address -> "0.0.0.0" } }
+        }
+
+        uploadInBackground = !settings.ext.isCiEnvironment
+
+        tag "jdk-${settings.extensions.jdkVersions.test.launcher}"
+        tag settings.extensions.db
+        value 'database', settings.extensions.db
+
+        if ( settings.extensions.findByName( 'ci.node' ) ) {
+            tag settings.extensions.findByName( 'ci.node' )
+        }
+    }
+}

@@ -97,8 +97,26 @@ public interface DatabaseVersion {
 	}
 
 	/**
-	 * Make a simple copy of this version object
+	 * Make a simple copy of this version object,
+	 * unless this version object has {@link #NO_VERSION no version information},
+	 * in which case just return the given {@code defaultVersion}.
+	 * @param defaultVersion The default version, to be returned if
+	 * this version object has {@link #NO_VERSION no version information}.
+	 * @return The copy, or {@code defaultVersion}.
 	 */
+	default DatabaseVersion makeCopyOrDefault(DatabaseVersion defaultVersion) {
+		if ( getMajor() == NO_VERSION && getMinor() == NO_VERSION && getMicro() == NO_VERSION ) {
+			return defaultVersion;
+		}
+		return makeCopy();
+	}
+
+	/**
+	 * Make a simple copy of this version object
+	 * @deprecated In dialect implementations, prefer {@link #makeCopyOrDefault(DatabaseVersion)} to gracefully default
+	 * to the minimum supported version.
+	 */
+	@Deprecated
 	default DatabaseVersion makeCopy() {
 		return new SimpleDatabaseVersion( this );
 	}
@@ -106,7 +124,10 @@ public interface DatabaseVersion {
 	/**
 	 * Make a copy of this version object, possibly converting {@link #NO_VERSION}
 	 * to zero
+	 * @deprecated In dialect implementations, prefer {@link #makeCopyOrDefault(DatabaseVersion)} to gracefully default
+	 * to the minimum supported version.
 	 */
+	@Deprecated
 	default DatabaseVersion makeCopy(boolean noVersionAsZero) {
 		return new SimpleDatabaseVersion( this, noVersionAsZero );
 	}

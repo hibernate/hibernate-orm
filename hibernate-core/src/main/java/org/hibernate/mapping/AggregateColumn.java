@@ -10,6 +10,11 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.sql.Template;
 
+import static org.hibernate.type.SqlTypes.JSON_ARRAY;
+import static org.hibernate.type.SqlTypes.STRUCT_ARRAY;
+import static org.hibernate.type.SqlTypes.STRUCT_TABLE;
+import static org.hibernate.type.SqlTypes.XML_ARRAY;
+
 /**
  * An aggregate column is a column of type {@link org.hibernate.type.SqlTypes#STRUCT},
  * {@link org.hibernate.type.SqlTypes#JSON} or {@link org.hibernate.type.SqlTypes#SQLXML}
@@ -75,8 +80,10 @@ public class AggregateColumn extends Column {
 		final AggregateColumn parentAggregateColumn = component.getParentAggregateColumn();
 		final String simpleAggregateName = aggregateColumn.getQuotedName( dialect );
 		final String aggregateSelectableExpression;
-		if ( parentAggregateColumn == null ) {
-			aggregateSelectableExpression = Template.TEMPLATE + "." + simpleAggregateName;
+		// If the aggregate column is an array, drop the parent read expression, because this is a NestedColumnReference
+		// and will require special rendering
+		if ( parentAggregateColumn == null || isArray( aggregateColumn ) ) {
+			aggregateSelectableExpression = getRootAggregateSelectableExpression( aggregateColumn, simpleAggregateName );
 		}
 		else {
 			aggregateSelectableExpression = dialect.getAggregateSupport().aggregateComponentCustomReadExpression(
@@ -87,10 +94,32 @@ public class AggregateColumn extends Column {
 							parentAggregateColumn.getComponent()
 					),
 					simpleAggregateName,
-					parentAggregateColumn, aggregateColumn
+					parentAggregateColumn,
+					aggregateColumn
 			);
 		}
 		return aggregateSelectableExpression;
+	}
+
+	private static String getRootAggregateSelectableExpression(AggregateColumn aggregateColumn, String simpleAggregateName) {
+		if ( isArray( aggregateColumn ) ) {
+			return Template.TEMPLATE;
+		}
+		else {
+			return Template.TEMPLATE + "." + simpleAggregateName;
+		}
+	}
+
+	private static boolean isArray(AggregateColumn aggregateColumn) {
+		switch ( aggregateColumn.getTypeCode() ) {
+			case JSON_ARRAY:
+			case XML_ARRAY:
+			case STRUCT_ARRAY:
+			case STRUCT_TABLE:
+				return true;
+			default:
+				return false;
+		}
 	}
 
 	public String getAggregateAssignmentExpressionTemplate(Dialect dialect) {

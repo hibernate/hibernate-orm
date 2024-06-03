@@ -8,8 +8,8 @@ package org.hibernate.query.sqm;
 
 import java.util.List;
 
+import org.hibernate.metamodel.model.domain.DiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
-import org.hibernate.metamodel.model.domain.internal.EntityDiscriminatorSqmPath;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -33,6 +33,7 @@ import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmFkExpression;
+import org.hibernate.query.sqm.tree.domain.SqmFunctionPath;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.domain.SqmListJoin;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
@@ -66,6 +67,7 @@ import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralEmbeddableType;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
@@ -237,13 +239,15 @@ public interface SemanticQueryWalker<T> {
 
 	T visitFkExpression(SqmFkExpression<?> fkExpression);
 
-	T visitDiscriminatorPath(EntityDiscriminatorSqmPath sqmPath);
+	T visitDiscriminatorPath(DiscriminatorSqmPath<?> sqmPath);
 	
 	T visitIndexedPluralAccessPath(SqmIndexedCollectionAccessPath<?> path);
 
 	T visitElementAggregateFunction(SqmElementAggregateFunction<?> path);
 
 	T visitIndexAggregateFunction(SqmIndexAggregateFunction<?> path);
+
+	T visitFunctionPath(SqmFunctionPath<?> functionPath);
 
 	T visitTreatedPath(SqmTreatedPath<?, ?> sqmTreatedPath);
 
@@ -316,6 +320,8 @@ public interface SemanticQueryWalker<T> {
 	T visitJpaCriteriaParameter(JpaCriteriaParameter<?> expression);
 
 	T visitEntityTypeLiteralExpression(SqmLiteralEntityType<?> expression);
+
+	T visitEmbeddableTypeLiteralExpression(SqmLiteralEmbeddableType<?> expression);
 
 	T visitAnyDiscriminatorTypeExpression(AnyDiscriminatorSqmPath<?> expression);
 
@@ -411,5 +417,4 @@ public interface SemanticQueryWalker<T> {
 	T visitMapEntryFunction(SqmMapEntryReference<?, ?> function);
 
 	T visitFullyQualifiedClass(Class<?> namedClass);
-
 }

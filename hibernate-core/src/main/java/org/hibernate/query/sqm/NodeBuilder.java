@@ -265,40 +265,100 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	<T> SqmPredicate arrayContainsNullable(T[] array, Expression<T> elementExpression);
 
 	@Override
-	<T> SqmPredicate arrayContainsAll(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression);
+	default <T> SqmPredicate arrayContainsAll(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression) {
+		return arrayIncludes( arrayExpression, subArrayExpression );
+	}
 
 	@Override
-	<T> SqmPredicate arrayContainsAll(Expression<T[]> arrayExpression, T[] subArray);
+	default <T> SqmPredicate arrayContainsAll(Expression<T[]> arrayExpression, T[] subArray) {
+		return arrayIncludes( arrayExpression, subArray );
+	}
 
 	@Override
-	<T> SqmPredicate arrayContainsAll(T[] array, Expression<T[]> subArrayExpression);
+	default <T> SqmPredicate arrayContainsAll(T[] array, Expression<T[]> subArrayExpression) {
+		return arrayIncludes( array, subArrayExpression );
+	}
 
 	@Override
-	<T> SqmPredicate arrayContainsAllNullable(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression);
+	default <T> SqmPredicate arrayContainsAllNullable(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression) {
+		return arrayIncludesNullable( arrayExpression, subArrayExpression );
+	}
 
 	@Override
-	<T> SqmPredicate arrayContainsAllNullable(Expression<T[]> arrayExpression, T[] subArray);
+	default <T> SqmPredicate arrayContainsAllNullable(Expression<T[]> arrayExpression, T[] subArray) {
+		return arrayIncludesNullable( arrayExpression, subArray );
+	}
 
 	@Override
-	<T> SqmPredicate arrayContainsAllNullable(T[] array, Expression<T[]> subArrayExpression);
+	default <T> SqmPredicate arrayContainsAllNullable(T[] array, Expression<T[]> subArrayExpression) {
+		return arrayIncludesNullable( array, subArrayExpression );
+	}
 
 	@Override
-	<T> SqmPredicate arrayOverlaps(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2);
+	<T> SqmPredicate arrayIncludes(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression);
 
 	@Override
-	<T> SqmPredicate arrayOverlaps(Expression<T[]> arrayExpression1, T[] array2);
+	<T> SqmPredicate arrayIncludes(Expression<T[]> arrayExpression, T[] subArray);
 
 	@Override
-	<T> SqmPredicate arrayOverlaps(T[] array1, Expression<T[]> arrayExpression2);
+	<T> SqmPredicate arrayIncludes(T[] array, Expression<T[]> subArrayExpression);
 
 	@Override
-	<T> SqmPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2);
+	<T> SqmPredicate arrayIncludesNullable(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression);
 
 	@Override
-	<T> SqmPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, T[] array2);
+	<T> SqmPredicate arrayIncludesNullable(Expression<T[]> arrayExpression, T[] subArray);
 
 	@Override
-	<T> SqmPredicate arrayOverlapsNullable(T[] array1, Expression<T[]> arrayExpression2);
+	<T> SqmPredicate arrayIncludesNullable(T[] array, Expression<T[]> subArrayExpression);
+
+	@Override
+	default <T> SqmPredicate arrayOverlaps(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
+		return arrayIntersects( arrayExpression1, arrayExpression2 );
+	}
+
+	@Override
+	default <T> SqmPredicate arrayOverlaps(Expression<T[]> arrayExpression1, T[] array2) {
+		return arrayIntersects( arrayExpression1, array2 );
+	}
+
+	@Override
+	default <T> SqmPredicate arrayOverlaps(T[] array1, Expression<T[]> arrayExpression2) {
+		return arrayIntersects( array1, arrayExpression2 );
+	}
+
+	@Override
+	default <T> SqmPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
+		return arrayIntersectsNullable( arrayExpression1, arrayExpression2 );
+	}
+
+	@Override
+	default <T> SqmPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, T[] array2) {
+		return arrayIntersectsNullable( arrayExpression1, array2 );
+	}
+
+	@Override
+	default <T> SqmPredicate arrayOverlapsNullable(T[] array1, Expression<T[]> arrayExpression2) {
+		return arrayIntersectsNullable( array1, arrayExpression2 );
+	}
+
+	@Override
+	<T> SqmPredicate arrayIntersects(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2);
+
+	@Override
+	<T> SqmPredicate arrayIntersects(Expression<T[]> arrayExpression1, T[] array2);
+
+	@Override
+	<T> SqmPredicate arrayIntersects(T[] array1, Expression<T[]> arrayExpression2);
+
+	@Override
+	<T> SqmPredicate arrayIntersectsNullable(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2);
+
+	@Override
+	<T> SqmPredicate arrayIntersectsNullable(Expression<T[]> arrayExpression1, T[] array2);
+
+	@Override
+	<T> SqmPredicate arrayIntersectsNullable(T[] array1, Expression<T[]> arrayExpression2);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Array functions for collection types
@@ -445,40 +505,110 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	<E> SqmPredicate collectionContainsNullable(Collection<E> collection, Expression<E> elementExpression);
 
 	@Override
-	<E> SqmPredicate collectionContainsAll(Expression<? extends Collection<E>> collectionExpression, Expression<? extends Collection<? extends E>> subCollectionExpression);
+	default <E> SqmPredicate collectionContainsAll(
+			Expression<? extends Collection<E>> collectionExpression,
+			Expression<? extends Collection<? extends E>> subCollectionExpression) {
+		return collectionIncludes( collectionExpression, subCollectionExpression );
+	}
 
 	@Override
-	<E> SqmPredicate collectionContainsAll(Expression<? extends Collection<E>> collectionExpression, Collection<? extends E> subCollection);
+	default <E> SqmPredicate collectionContainsAll(
+			Expression<? extends Collection<E>> collectionExpression,
+			Collection<? extends E> subCollection) {
+		return collectionIncludes( collectionExpression, subCollection );
+	}
 
 	@Override
-	<E> SqmPredicate collectionContainsAll(Collection<E> collection, Expression<? extends Collection<? extends E>> subArrayExpression);
+	default <E> SqmPredicate collectionContainsAll(
+			Collection<E> collection,
+			Expression<? extends Collection<? extends E>> subCollectionExpression) {
+		return collectionIncludes( collection, subCollectionExpression );
+	}
 
 	@Override
-	<E> SqmPredicate collectionContainsAllNullable(Expression<? extends Collection<E>> collectionExpression, Expression<? extends Collection<? extends E>> subCollectionExpression);
+	default <E> SqmPredicate collectionContainsAllNullable(
+			Expression<? extends Collection<E>> collectionExpression,
+			Expression<? extends Collection<? extends E>> subCollectionExpression) {
+		return collectionIncludesNullable( collectionExpression, subCollectionExpression );
+	}
 
 	@Override
-	<E> SqmPredicate collectionContainsAllNullable(Expression<? extends Collection<E>> collectionExpression, Collection<? extends E> subCollection);
+	default <E> SqmPredicate collectionContainsAllNullable(
+			Expression<? extends Collection<E>> collectionExpression,
+			Collection<? extends E> subCollection) {
+		return collectionIncludesNullable( collectionExpression, subCollection );
+	}
 
 	@Override
-	<E> SqmPredicate collectionContainsAllNullable(Collection<E> collection, Expression<? extends Collection<? extends E>> subCollectionExpression);
+	default <E> SqmPredicate collectionContainsAllNullable(Collection<E> collection, Expression<? extends Collection<? extends E>> subCollectionExpression) {
+		return collectionIncludesNullable( collection, subCollectionExpression );
+	}
 
 	@Override
-	<E> SqmPredicate collectionOverlaps(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2);
+	<E> SqmPredicate collectionIncludes(Expression<? extends Collection<E>> collectionExpression, Expression<? extends Collection<? extends E>> subCollectionExpression);
 
 	@Override
-	<E> SqmPredicate collectionOverlaps(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2);
+	<E> SqmPredicate collectionIncludes(Expression<? extends Collection<E>> collectionExpression, Collection<? extends E> subCollection);
 
 	@Override
-	<E> SqmPredicate collectionOverlaps(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
+	<E> SqmPredicate collectionIncludes(Collection<E> collection, Expression<? extends Collection<? extends E>> subArrayExpression);
 
 	@Override
-	<E> SqmPredicate collectionOverlapsNullable(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2);
+	<E> SqmPredicate collectionIncludesNullable(Expression<? extends Collection<E>> collectionExpression, Expression<? extends Collection<? extends E>> subCollectionExpression);
 
 	@Override
-	<E> SqmPredicate collectionOverlapsNullable(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2);
+	<E> SqmPredicate collectionIncludesNullable(Expression<? extends Collection<E>> collectionExpression, Collection<? extends E> subCollection);
 
 	@Override
-	<E> SqmPredicate collectionOverlapsNullable(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
+	<E> SqmPredicate collectionIncludesNullable(Collection<E> collection, Expression<? extends Collection<? extends E>> subCollectionExpression);
+
+	@Override
+	default <E> SqmPredicate collectionOverlaps(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return collectionIntersects( collectionExpression1, collectionExpression2 );
+	}
+
+	@Override
+	default <E> SqmPredicate collectionOverlaps(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2) {
+		return collectionIntersects( collectionExpression1, collection2 );
+	}
+
+	@Override
+	default <E> SqmPredicate collectionOverlaps(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return collectionIntersects( collection1, collectionExpression2 );
+	}
+
+	@Override
+	default <E> SqmPredicate collectionOverlapsNullable(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return collectionIntersectsNullable( collectionExpression1, collectionExpression2 );
+	}
+
+	@Override
+	default <E> SqmPredicate collectionOverlapsNullable(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2) {
+		return collectionIntersectsNullable( collectionExpression1, collection2 );
+	}
+
+	@Override
+	default <E> SqmPredicate collectionOverlapsNullable(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return collectionIntersectsNullable( collection1, collectionExpression2 );
+	}
+
+	@Override
+	<E> SqmPredicate collectionIntersects(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2);
+
+	@Override
+	<E> SqmPredicate collectionIntersects(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2);
+
+	@Override
+	<E> SqmPredicate collectionIntersects(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
+
+	@Override
+	<E> SqmPredicate collectionIntersectsNullable(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2);
+
+	@Override
+	<E> SqmPredicate collectionIntersectsNullable(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2);
+
+	@Override
+	<E> SqmPredicate collectionIntersectsNullable(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides

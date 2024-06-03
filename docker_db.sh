@@ -21,7 +21,7 @@ mysql() {
 
 mysql_8_0() {
     $CONTAINER_CLI rm -f mysql || true
-    $CONTAINER_CLI run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mysql:8.0.31 --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs --skip-character-set-client-handshake --log-bin-trust-function-creators=1
+    $CONTAINER_CLI run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mysql:8.0.31 --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs --skip-character-set-client-handshake --log-bin-trust-function-creators=1 --lower_case_table_names=2
     # Give the container some time to start
     OUTPUT=
     n=0
@@ -45,7 +45,7 @@ mysql_8_0() {
 
 mysql_8_1() {
     $CONTAINER_CLI rm -f mysql || true
-    $CONTAINER_CLI run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mysql:8.1.0 --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs --skip-character-set-client-handshake --log-bin-trust-function-creators=1
+    $CONTAINER_CLI run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mysql:8.1.0 --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs --skip-character-set-client-handshake --log-bin-trust-function-creators=1 --lower_case_table_names=2
     # Give the container some time to start
     OUTPUT=
     n=0
@@ -69,7 +69,7 @@ mysql_8_1() {
 
 mysql_8_2() {
     $CONTAINER_CLI rm -f mysql || true
-    $CONTAINER_CLI run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mysql:8.2.0 --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs --skip-character-set-client-handshake --log-bin-trust-function-creators=1
+    $CONTAINER_CLI run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mysql:8.2.0 --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs --skip-character-set-client-handshake --log-bin-trust-function-creators=1 --lower_case_table_names=2
     # Give the container some time to start
     OUTPUT=
     n=0
@@ -97,7 +97,7 @@ mariadb() {
 
 mariadb_10_4() {
     $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:10.4.31 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake
+    $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:10.4.31 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
     OUTPUT=
     n=0
     until [ "$n" -ge 5 ]
@@ -120,7 +120,7 @@ mariadb_10_4() {
 
 mariadb_10_9() {
     $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:10.9.3 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake
+    $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:10.9.3 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
     OUTPUT=
     n=0
     until [ "$n" -ge 5 ]
@@ -143,7 +143,7 @@ mariadb_10_9() {
 
 mariadb_11_1() {
     $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:11.1.2 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake
+    $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:11.1.2 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
     OUTPUT=
     n=0
     until [ "$n" -ge 5 ]
@@ -166,7 +166,7 @@ mariadb_11_1() {
 
 mariadb_11_3() {
     $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:11.3.1-rc --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake
+    $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:11.3.1-rc --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
     OUTPUT=
     n=0
     until [ "$n" -ge 5 ]
@@ -381,8 +381,8 @@ mssql_2017() {
 
 mssql_2022() {
     $CONTAINER_CLI rm -f mssql || true
-    #This sha256 matches a specific tag of mcr.microsoft.com/mssql/server:2022-latest :
-    $CONTAINER_CLI run --name mssql -d -p 1433:1433 -e "SA_PASSWORD=Hibernate_orm_test" -e ACCEPT_EULA=Y mcr.microsoft.com/mssql/server@sha256:5439be9edc3b514cf647bcd3651779fa13f487735a985f40cbdcfecc60fea273
+    #This sha256 matches a specific tag of 2022-CU12-ubuntu-22.04 (https://mcr.microsoft.com/en-us/product/mssql/server/tags):
+    $CONTAINER_CLI run --name mssql -d -p 1433:1433 -e "SA_PASSWORD=Hibernate_orm_test" -e ACCEPT_EULA=Y mcr.microsoft.com/mssql/server@sha256:b94071acd4612bfe60a73e265097c2b6388d14d9d493db8f37cf4479a4337480
     sleep 5
     n=0
     until [ "$n" -ge 5 ]
@@ -863,6 +863,7 @@ SET CLUSTER SETTING jobs.registry.interval.cancel = '180s';
 SET CLUSTER SETTING jobs.retention_time = '15s';
 SET CLUSTER SETTING sql.stats.automatic_collection.enabled = false;
 SET CLUSTER SETTING kv.range_split.by_load_merge_delay = '5s';
+SET CLUSTER SETTING sql.defaults.serial_normalization = 'sql_sequence_cached';
 ALTER RANGE default CONFIGURE ZONE USING "gc.ttlseconds" = 600;
 ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 600;
 
@@ -903,6 +904,7 @@ SET CLUSTER SETTING jobs.registry.interval.cancel = '180s';
 SET CLUSTER SETTING jobs.retention_time = '15s';
 SET CLUSTER SETTING sql.stats.automatic_collection.enabled = false;
 SET CLUSTER SETTING kv.range_split.by_load_merge_delay = '5s';
+SET CLUSTER SETTING sql.defaults.serial_normalization = 'sql_sequence_cached';
 ALTER RANGE default CONFIGURE ZONE USING "gc.ttlseconds" = 600;
 ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 600;
 SET CLUSTER SETTING sql.defaults.serial_normalization=sql_sequence;
@@ -915,12 +917,14 @@ EOF
 }
 
 tidb() {
-  tidb_5_1
+  tidb_5_4
 }
 
-tidb_5_1() {
+tidb_5_4() {
     $CONTAINER_CLI rm -f tidb || true
-    $CONTAINER_CLI run --name tidb -p4000:4000 -d docker.io/pingcap/tidb:v5.1.4
+    $CONTAINER_CLI network rm -f tidb_network || true
+    $CONTAINER_CLI network create tidb_network
+    $CONTAINER_CLI run --name tidb -p4000:4000 -d --network tidb_network docker.io/pingcap/tidb:v5.4.3
     # Give the container some time to start
     OUTPUT=
     n=0
@@ -934,7 +938,7 @@ tidb_5_1() {
         echo "Waiting for TiDB to start..."
         sleep 3
     done
-    $CONTAINER_CLI run --link tidb:tidb -it --rm docker.io/mysql:8.2.0 mysql -htidb -P4000 -uroot -e "create database hibernate_orm_test; create user 'hibernate_orm_test' identified by 'hibernate_orm_test'; grant all on hibernate_orm_test.* to 'hibernate_orm_test';"
+    $CONTAINER_CLI run -it --rm --network tidb_network docker.io/mysql:8.2.0 mysql -htidb -P4000 -uroot -e "create database hibernate_orm_test; create user 'hibernate_orm_test' identified by 'hibernate_orm_test'; grant all on hibernate_orm_test.* to 'hibernate_orm_test';"
     if [ "$n" -ge 5 ]; then
       echo "TiDB failed to start and configure after 15 seconds"
     else
@@ -981,7 +985,7 @@ if [ -z ${1} ]; then
     echo -e "\tpostgresql_12"
     echo -e "\tsybase"
     echo -e "\ttidb"
-    echo -e "\ttidb_5_1"
+    echo -e "\ttidb_5_4"
 else
     ${1}
 fi

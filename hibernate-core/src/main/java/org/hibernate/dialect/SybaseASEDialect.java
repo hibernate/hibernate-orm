@@ -70,6 +70,10 @@ public class SybaseASEDialect extends SybaseDialect {
 				Integer scale,
 				Long length) {
 			switch ( jdbcType.getDdlTypeCode() ) {
+				case Types.NCLOB:
+				case Types.CLOB:
+				case Types.BLOB:
+					return Size.length( getDefaultLobLength() );
 				case Types.FLOAT:
 					// Sybase ASE allows FLOAT with a precision up to 48
 					if ( precision != null ) {
@@ -164,6 +168,11 @@ public class SybaseASEDialect extends SybaseDialect {
 		return 16_384;
 	}
 
+	@Override
+	public long getDefaultLobLength() {
+		return Integer.MAX_VALUE;
+	}
+
 	private static boolean isAnsiNull(DialectResolutionInfo info) {
 		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
@@ -241,22 +250,6 @@ public class SybaseASEDialect extends SybaseDialect {
 		if ( getDriverKind() == SybaseDriverKind.JTDS ) {
 			jdbcTypeRegistry.addDescriptor( Types.TIMESTAMP_WITH_TIMEZONE, TimestampJdbcType.INSTANCE );
 		}
-	}
-
-	@Override
-	public int resolveSqlTypeLength(
-			String columnTypeName,
-			int jdbcTypeCode,
-			int precision,
-			int scale,
-			int displaySize) {
-		// Sybase ASE reports the "actual" precision in the display size
-		switch ( jdbcTypeCode ) {
-			case Types.REAL:
-			case Types.DOUBLE:
-				return displaySize;
-		}
-		return super.resolveSqlTypeLength( columnTypeName, jdbcTypeCode, precision, scale, displaySize );
 	}
 
 	@Override

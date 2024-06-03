@@ -13,7 +13,7 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 
 /**
@@ -29,8 +29,8 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 			NavigablePath navigablePath,
 			DomainResult<?> keyResult,
 			boolean selectByUniqueKey,
-			@SuppressWarnings("unused") DomainResultCreationState creationState) {
-		super( navigablePath, fetchedAttribute, fetchParent, keyResult, selectByUniqueKey );
+			DomainResultCreationState creationState) {
+		super( navigablePath, fetchedAttribute, fetchParent, keyResult, false, selectByUniqueKey, creationState );
 	}
 
 	/**
@@ -42,6 +42,7 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 				original.getFetchedMapping(),
 				original.getFetchParent(),
 				original.getKeyResult(),
+				original.getDiscriminatorFetch(),
 				original.isSelectByUniqueKey()
 		);
 	}
@@ -52,9 +53,9 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 	}
 
 	@Override
-	public EntityInitializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
+	public EntityInitializer createInitializer(InitializerParent parent, AssemblerCreationState creationState) {
 		return EntitySelectFetchInitializerBuilder.createInitializer(
-				parentAccess,
+				parent,
 				getFetchedMapping(),
 				getReferencedMappingContainer().getEntityPersister(),
 				getKeyResult(),

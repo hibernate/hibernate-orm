@@ -62,12 +62,13 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -258,6 +259,8 @@ public class CockroachLegacyDialect extends Dialect {
 		else {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
 		}
+		ddlTypeRegistry.addDescriptor( new NamedNativeEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NamedNativeOrdinalEnumDdlTypeImpl( this ) );
 	}
 
 	@Override
@@ -350,6 +353,8 @@ public class CockroachLegacyDialect extends Dialect {
 		// Don't use this type due to https://github.com/pgjdbc/pgjdbc/issues/2862
 		//jdbcTypeRegistry.addDescriptor( TimestampUtcAsOffsetDateTimeJdbcType.INSTANCE );
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
+			jdbcTypeRegistry.addDescriptor( PostgreSQLEnumJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( PostgreSQLOrdinalEnumJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLUUIDJdbcType.INSTANCE );
 			if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getIntervalJdbcType( serviceRegistry ) );
@@ -402,6 +407,8 @@ public class CockroachLegacyDialect extends Dialect {
 								.getDescriptor( Object.class )
 				)
 		);
+
+		jdbcTypeRegistry.addTypeConstructor( PostgreSQLArrayJdbcTypeConstructor.INSTANCE );
 	}
 
 	@Override
@@ -468,7 +475,7 @@ public class CockroachLegacyDialect extends Dialect {
 		functionFactory.arrayPrepend_postgresql();
 		functionFactory.arrayAppend_postgresql();
 		functionFactory.arrayContains_postgresql();
-		functionFactory.arrayOverlaps_postgresql();
+		functionFactory.arrayIntersects_postgresql();
 		functionFactory.arrayGet_bracket();
 		functionFactory.arraySet_unnest();
 		functionFactory.arrayRemove();
@@ -794,20 +801,23 @@ public class CockroachLegacyDialect extends Dialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		if ( intervalType != null ) {
-			return "(?2+?3)";
-		}
-		switch ( unit ) {
-			case NANOSECOND:
-				return "(?3+(?2)/1e3*interval '1 microsecond')";
+		return intervalType != null
+				? "(?2+?3)"
+				: "cast(?3+" + intervalPattern( unit ) + " as " + temporalType.name().toLowerCase() + ")";
+	}
+
+	private static String intervalPattern(TemporalUnit unit) {
+		switch (unit) {
 			case NATIVE:
-				return "(?3+(?2)*interval '1 microsecond')";
+				return "(?2)*interval '1 microsecond'";
+			case NANOSECOND:
+				return "(?2)/1e3*interval '1 microsecond'";
 			case QUARTER: //quarter is not supported in interval literals
-				return "(?3+(?2)*interval '3 month')";
+				return "(?2)*interval '3 month'";
 			case WEEK: //week is not supported in interval literals
-				return "(?3+(?2)*interval '7 day')";
+				return "(?2)*interval '7 day'";
 			default:
-				return "(?3+(?2)*interval '1 ?1')";
+				return "(?2)*interval '1 " + unit + "'";
 		}
 	}
 
@@ -848,13 +858,16 @@ public class CockroachLegacyDialect extends Dialect {
 					//all the following units:
 
 					// Note that CockroachDB also has an extract_duration function which returns an int,
-					// but we don't use that here because it is deprecated since v20
+					// but we don't use that here because it is deprecated since v20.
+					// We need to use round() instead of cast(... as int) because extract epoch returns
+					// float8 which can cause loss-of-precision in some cases
+					// https://github.com/cockroachdb/cockroach/issues/72523
 					case HOUR:
 					case MINUTE:
 					case SECOND:
 					case NANOSECOND:
 					case NATIVE:
-						return "cast(extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this ) + " as int)";
+						return "round(extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this ) + ")::int";
 					default:
 						throw new SemanticException( "unrecognized field: " + unit );
 				}
@@ -1029,6 +1042,11 @@ public class CockroachLegacyDialect extends Dialect {
 
 	@Override
 	public boolean useInputStreamToInsertBlob() {
+		return false;
+	}
+
+	@Override
+	public boolean useConnectionToCreateLob() {
 		return false;
 	}
 

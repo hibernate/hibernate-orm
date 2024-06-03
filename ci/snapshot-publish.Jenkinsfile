@@ -1,7 +1,7 @@
 /*
  * See https://github.com/hibernate/hibernate-jenkins-pipeline-helpers
  */
-@Library('hibernate-jenkins-pipeline-helpers@1.5') _
+@Library('hibernate-jenkins-pipeline-helpers@1.13') _
 
 // Avoid running the pipeline on branch indexing
 if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
@@ -33,7 +33,7 @@ pipeline {
 				withCredentials([
 					usernamePassword(credentialsId: 'ossrh.sonatype.org', usernameVariable: 'hibernatePublishUsername', passwordVariable: 'hibernatePublishPassword'),
 					usernamePassword(credentialsId: 'plugins.gradle.org', usernameVariable: 'hibernatePluginPortalUsername', passwordVariable: 'hibernatePluginPortalPassword'),
-					string(credentialsId: 'ge.hibernate.org-access-key', variable: 'GRADLE_ENTERPRISE_ACCESS_KEY'),
+					string(credentialsId: 'ge.hibernate.org-access-key', variable: 'DEVELOCITY_ACCESS_KEY'),
 					string(credentialsId: 'release.gpg.passphrase', variable: 'SIGNING_PASS'),
 					file(credentialsId: 'release.gpg.private-key', variable: 'SIGNING_KEYRING')
 				]) {

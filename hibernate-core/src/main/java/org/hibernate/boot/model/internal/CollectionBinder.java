@@ -178,6 +178,7 @@ import static org.hibernate.boot.model.internal.HCANNHelper.findAnnotation;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.boot.model.source.internal.hbm.ModelBinder.useEntityWhereClauseForCollections;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
+import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -517,7 +518,7 @@ public abstract class CollectionBinder {
 			final Class<?> targetElement = elementCollectionAnn.targetClass();
 			collectionBinder.setTargetEntity( reflectionManager.toXClass( targetElement ) );
 			//collectionBinder.setCascadeStrategy( getCascadeStrategy( embeddedCollectionAnn.cascade(), hibernateCascade ) );
-			collectionBinder.setOneToMany( true );
+			collectionBinder.setOneToMany( false );
 		}
 		else if ( manyToManyAnn != null ) {
 			mappedBy = nullIfEmpty( manyToManyAnn.mappedBy() );
@@ -1334,7 +1335,7 @@ public abstract class CollectionBinder {
 					fromResultCheckStyle( sqlInsert.check() )
 			);
 			if ( sqlInsert.verify() != Expectation.class ) {
-				collection.setInsertExpectation( sqlInsert.verify() );
+				collection.setInsertExpectation( getDefaultSupplier( sqlInsert.verify() ) );
 			}
 		}
 
@@ -1346,7 +1347,7 @@ public abstract class CollectionBinder {
 					fromResultCheckStyle( sqlUpdate.check() )
 			);
 			if ( sqlUpdate.verify() != Expectation.class ) {
-				collection.setUpdateExpectation( sqlUpdate.verify() );
+				collection.setUpdateExpectation( getDefaultSupplier( sqlUpdate.verify() ) );
 			}
 		}
 
@@ -1358,7 +1359,7 @@ public abstract class CollectionBinder {
 					fromResultCheckStyle( sqlDelete.check() )
 			);
 			if ( sqlDelete.verify() != Expectation.class ) {
-				collection.setDeleteExpectation( sqlDelete.verify() );
+				collection.setDeleteExpectation( getDefaultSupplier( sqlDelete.verify() ) );
 			}
 		}
 
@@ -1370,7 +1371,7 @@ public abstract class CollectionBinder {
 					fromResultCheckStyle( sqlDeleteAll.check() )
 			);
 			if ( sqlDeleteAll.verify() != Expectation.class ) {
-				collection.setDeleteAllExpectation( sqlDeleteAll.verify() );
+				collection.setDeleteAllExpectation( getDefaultSupplier( sqlDeleteAll.verify() ) );
 			}
 		}
 

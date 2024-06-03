@@ -6,13 +6,19 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
+import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * Reference to the key-side (as opposed to the target-side) of the
@@ -20,13 +26,30 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
  *
  * @author Steve Ebersole
  */
-public class SqmFkExpression<T> extends AbstractSqmExpression<T> {
-	private final SqmEntityValuedSimplePath<?> toOnePath;
+public class SqmFkExpression<T> extends AbstractSqmPath<T> {
+
+	/**
+	 * @deprecated Use {@link #SqmFkExpression(SqmEntityValuedSimplePath)} instead.
+	 */
+	@Deprecated(forRemoval = true)
+	public SqmFkExpression(SqmEntityValuedSimplePath<?> toOnePath, NodeBuilder criteriaBuilder) {
+		this( toOnePath );
+	}
+
+	public SqmFkExpression(SqmEntityValuedSimplePath<?> toOnePath) {
+		this( toOnePath.getNavigablePath().append( ForeignKeyDescriptor.PART_NAME ), toOnePath );
+	}
 
 	@SuppressWarnings("unchecked")
-	public SqmFkExpression(SqmEntityValuedSimplePath<?> toOnePath, NodeBuilder criteriaBuilder) {
-		super( (SqmExpressible<? super T>) pathDomainType( toOnePath ).getIdType(), criteriaBuilder );
-		this.toOnePath = toOnePath;
+	private SqmFkExpression(
+			NavigablePath navigablePath,
+			SqmEntityValuedSimplePath<?> toOnePath) {
+		super(
+				navigablePath,
+				(SqmPathSource<T>) pathDomainType( toOnePath ).getIdentifierDescriptor(),
+				toOnePath,
+				toOnePath.nodeBuilder()
+		);
 	}
 
 	private static IdentifiableDomainType<?> pathDomainType(SqmEntityValuedSimplePath<?> toOnePath) {
@@ -34,7 +57,7 @@ public class SqmFkExpression<T> extends AbstractSqmExpression<T> {
 	}
 
 	public SqmEntityValuedSimplePath<?> getToOnePath() {
-		return toOnePath;
+		return (SqmEntityValuedSimplePath<?>) getLhs();
 	}
 
 	@Override
@@ -45,20 +68,37 @@ public class SqmFkExpression<T> extends AbstractSqmExpression<T> {
 	@Override
 	public void appendHqlString(StringBuilder sb) {
 		sb.append( "fk(" );
-		toOnePath.appendHqlString( sb );
+		getLhs().appendHqlString( sb );
 		sb.append( ')' );
 	}
 
 	@Override
-	public SqmExpression<T> copy(SqmCopyContext context) {
+	public SqmFkExpression<T> copy(SqmCopyContext context) {
 		final SqmFkExpression<T> existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-
+		final SqmEntityValuedSimplePath<?> lhsCopy = (SqmEntityValuedSimplePath<?>) getLhs().copy( context );
 		return context.registerCopy(
 				this,
-				new SqmFkExpression<T>( toOnePath.copy( context ), nodeBuilder() )
+				new SqmFkExpression<T>( getNavigablePathCopy( lhsCopy ), lhsCopy )
 		);
+	}
+
+	@Override
+	public <S extends T> SqmPath<S> treatAs(Class<S> treatJavaType) {
+		throw new FunctionArgumentException( "Fk paths cannot be TREAT-ed" );
+	}
+
+	@Override
+	public <S extends T> SqmPath<S> treatAs(EntityDomainType<S> treatTarget) {
+		throw new FunctionArgumentException( "Fk paths cannot be TREAT-ed" );
+	}
+
+	@Override
+	public SqmPath<?> resolvePathPart(String name, boolean isTerminal, SqmCreationState creationState) {
+		final SqmPath<?> sqmPath = get( name );
+		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
+		return sqmPath;
 	}
 }

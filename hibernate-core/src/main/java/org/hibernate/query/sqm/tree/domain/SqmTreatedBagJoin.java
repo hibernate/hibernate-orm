@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -20,18 +20,18 @@ import org.hibernate.spi.NavigablePath;
  */
 public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> implements SqmTreatedPath<T,S> {
 	private final SqmBagJoin<O, T> wrappedPath;
-	private final EntityDomainType<S> treatTarget;
+	private final TreatableDomainType<S> treatTarget;
 
 	public SqmTreatedBagJoin(
 			SqmBagJoin<O, T> wrappedPath,
-			EntityDomainType<S> treatTarget,
+			TreatableDomainType<S> treatTarget,
 			String alias) {
 		this( wrappedPath, treatTarget, alias, false );
 	}
 
 	public SqmTreatedBagJoin(
 			SqmBagJoin<O, T> wrappedPath,
-			EntityDomainType<S> treatTarget,
+			TreatableDomainType<S> treatTarget,
 			String alias,
 			boolean fetched) {
 		//noinspection unchecked
@@ -39,7 +39,7 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 				wrappedPath.getLhs(),
 				wrappedPath.getNavigablePath()
 						.append( CollectionPart.Nature.ELEMENT.getName() )
-						.treatAs( treatTarget.getHibernateEntityName(), alias ),
+						.treatAs( treatTarget.getTypeName(), alias ),
 				(BagPersistentAttribute<O, S>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
@@ -53,16 +53,13 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 	private SqmTreatedBagJoin(
 			NavigablePath navigablePath,
 			SqmBagJoin<O, T> wrappedPath,
-			EntityDomainType<S> treatTarget,
+			TreatableDomainType<S> treatTarget,
 			String alias,
 			boolean fetched) {
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
-				wrappedPath.getNavigablePath().treatAs(
-						treatTarget.getHibernateEntityName(),
-						alias
-				),
+				navigablePath,
 				(BagPersistentAttribute<O, S>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
@@ -99,7 +96,7 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 	}
 
 	@Override
-	public EntityDomainType<S> getTreatTarget() {
+	public TreatableDomainType<S> getTreatTarget() {
 		return treatTarget;
 	}
 
@@ -109,7 +106,7 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 	}
 
 	@Override
-	public EntityDomainType<S> getReferencedPathSource() {
+	public TreatableDomainType<S> getReferencedPathSource() {
 		return treatTarget;
 	}
 
@@ -128,7 +125,7 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 		sb.append( "treat(" );
 		wrappedPath.appendHqlString( sb );
 		sb.append( " as " );
-		sb.append( treatTarget.getName() );
+		sb.append( treatTarget.getTypeName() );
 		sb.append( ')' );
 	}
 }

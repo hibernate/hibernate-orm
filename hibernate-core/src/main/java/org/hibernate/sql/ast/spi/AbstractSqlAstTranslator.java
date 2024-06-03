@@ -83,6 +83,7 @@ import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -114,6 +115,7 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
+import org.hibernate.sql.ast.tree.expression.EmbeddableTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.Every;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -124,6 +126,7 @@ import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.LiteralAsParameter;
 import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
+import org.hibernate.sql.ast.tree.expression.NestedColumnReference;
 import org.hibernate.sql.ast.tree.expression.OrderedSetAggregateFunctionExpression;
 import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.Overflow;
@@ -216,6 +219,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -223,6 +227,7 @@ import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.persister.entity.DiscriminatorHelper.jdbcLiteral;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.DIVIDE_PORTABLE;
 import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
 import static org.hibernate.sql.ast.SqlTreePrinter.logSqlAst;
@@ -4407,21 +4412,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			emulateSortSpecificationNullPrecedence( sortExpression, nullPrecedence );
 		}
 
-		if ( ignoreCase ) {
-			appendSql( dialect.getLowercaseFunction() );
-			appendSql( OPEN_PARENTHESIS );
-		}
-
-		if ( inOverOrWithinGroupClause() ) {
-			resolveAliasedExpression( sortExpression ).accept( this );
-		}
-		else {
-			sortExpression.accept( this );
-		}
-
-		if ( ignoreCase ) {
-			appendSql( CLOSE_PARENTHESIS );
-		}
+		renderSortExpression( sortExpression, ignoreCase );
 
 		if ( sortOrder == SortDirection.DESCENDING ) {
 			appendSql( " desc" );
@@ -4433,6 +4424,24 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( renderNullPrecedence && supportsNullPrecedence ) {
 			appendSql( " nulls " );
 			appendSql( nullPrecedence == NullPrecedence.LAST ? "last" : "first" );
+		}
+	}
+
+	protected void renderSortExpression(Expression sortExpression, boolean ignoreCase) {
+		if ( ignoreCase ) {
+			appendSql( dialect.getLowercaseFunction() );
+			appendSql( OPEN_PARENTHESIS );
+		}
+
+		if ( inOverOrWithinGroupClause() || ignoreCase ) {
+			resolveAliasedExpression( sortExpression ).accept( this );
+		}
+		else {
+			sortExpression.accept( this );
+		}
+
+		if ( ignoreCase ) {
+			appendSql( CLOSE_PARENTHESIS );
 		}
 	}
 
@@ -6878,6 +6887,19 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	@Override
+	public void visitNestedColumnReference(NestedColumnReference nestedColumnReference) {
+		final String readExpression = nestedColumnReference.getReadExpression();
+		int start = 0;
+		int idx;
+		while ( ( idx = readExpression.indexOf( Template.TEMPLATE, start ) ) != -1 ) {
+			append( readExpression, start, idx );
+			nestedColumnReference.getBaseExpression().accept( this );
+			start = idx + Template.TEMPLATE.length();
+		}
+		append( readExpression, start, readExpression.length() );
+	}
+
+	@Override
 	public void visitAggregateColumnWriteExpression(AggregateColumnWriteExpression aggregateColumnWriteExpression) {
 		aggregateColumnWriteExpression.appendWriteExpression(
 				this,
@@ -7184,24 +7206,41 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		appendSql( expression.getEntityTypeDescriptor().getDiscriminatorSQLValue() );
 	}
 
+	@SuppressWarnings( { "rawtypes", "unchecked" } )
+	@Override
+	public void visitEmbeddableTypeLiteral(EmbeddableTypeLiteral expression) {
+		final BasicValueConverter valueConverter = expression.getJdbcMapping().getValueConverter();
+		appendSql( jdbcLiteral(
+				valueConverter != null ?
+						valueConverter.toRelationalValue( expression.getEmbeddableClass() ) :
+						expression.getEmbeddableClass(),
+				expression.getExpressionType().getSingleJdbcMapping().getJdbcLiteralFormatter(),
+				getDialect()
+		) );
+	}
+
 	@Override
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
 		final BinaryArithmeticOperator operator = arithmeticExpression.getOperator();
 		if ( operator == BinaryArithmeticOperator.MODULO ) {
 			append( "mod" );
 			appendSql( OPEN_PARENTHESIS );
-			arithmeticExpression.getLeftHandOperand().accept( this );
+			visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
 			appendSql( ',' );
-			arithmeticExpression.getRightHandOperand().accept( this );
+			visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 			appendSql( CLOSE_PARENTHESIS );
 		}
 		else {
 			appendSql( OPEN_PARENTHESIS );
-			arithmeticExpression.getLeftHandOperand().accept( this );
+			visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
 			appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-			arithmeticExpression.getRightHandOperand().accept( this );
+			visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 			appendSql( CLOSE_PARENTHESIS );
 		}
+	}
+
+	protected void visitArithmeticOperand(Expression expression) {
+		expression.accept( this );
 	}
 
 	@Override

@@ -6,12 +6,13 @@
  */
 package org.hibernate.engine.internal;
 
-import java.lang.reflect.Constructor;
 import java.util.function.Supplier;
 
-import org.hibernate.InstantiationException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.IdentifierValue;
+import org.hibernate.engine.spi.SharedSessionDelegatorBaseImpl;
 import org.hibernate.engine.spi.VersionValue;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.property.access.spi.Getter;
@@ -94,7 +95,8 @@ public class UnsavedValueFactory {
 
 				// if the version of a newly instantiated object is not the same
 				// as the version seed value, use that as the unsaved-value
-				final T seedValue = jtd.seed( length, precision, scale, null );
+				final T seedValue = jtd.seed( length, precision, scale,
+						mockSession( bootVersionMapping.getBuildingContext() ) );
 				return jtd.areEqual( seedValue, defaultValue )
 						? VersionValue.UNDEFINED
 						: new VersionValue( defaultValue );
@@ -117,6 +119,16 @@ public class UnsavedValueFactory {
 			}
 		}
 
+	}
+
+	private static SharedSessionDelegatorBaseImpl mockSession(MetadataBuildingContext context) {
+		return new SharedSessionDelegatorBaseImpl(null) {
+			@Override
+			public JdbcServices getJdbcServices() {
+				return context.getBootstrapContext().getServiceRegistry()
+						.requireService( JdbcServices.class );
+			}
+		};
 	}
 
 	private UnsavedValueFactory() {

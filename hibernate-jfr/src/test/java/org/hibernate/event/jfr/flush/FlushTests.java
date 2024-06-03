@@ -52,7 +52,7 @@ public class FlushTests {
 		RecordedEvent event = events.get( 0 );
 		assertThat( event.getEventType().getName() )
 				.isEqualTo( FlushEvent.NAME );
-		assertThat( event.getLong( "executionTime" ) ).isGreaterThan( 0 );
+		assertThat( event.getDuration() ).isPositive();
 		assertThat( event.getString( "sessionIdentifier" ) )
 				.isEqualTo( sessionId );
 		assertThat( event.getInt( "numberOfEntitiesProcessed" ) )

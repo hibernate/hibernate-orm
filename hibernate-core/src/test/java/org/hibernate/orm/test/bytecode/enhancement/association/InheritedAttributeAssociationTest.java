@@ -6,11 +6,12 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.association;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
+import java.util.List;
+
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
@@ -24,56 +25,55 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
-import java.util.List;
 
 /**
  * @author Luis Barreiro
  */
-@TestForIssue( jiraKey = "HHH-11050" )
-@RunWith( BytecodeEnhancerRunner.class )
+@JiraKey("HHH-11050")
+@BytecodeEnhanced
 public class InheritedAttributeAssociationTest {
 
-    @Test
-    public void test() {
-        // The mapping is wrong but the point is that the enhancement phase does not need to fail. See JIRA for further detail
+	@Test
+	public void test() {
+		// The mapping is wrong but the point is that the enhancement phase does not need to fail. See JIRA for further detail
 
-        // If enhancement of 'items' attribute fails, 'name' won't be enhanced
-        Author author = new Author();
-        author.name = "Bernardo Soares";
-        EnhancerTestUtils.checkDirtyTracking( author, "name" );
-    }
+		// If enhancement of 'items' attribute fails, 'name' won't be enhanced
+		Author author = new Author();
+		author.name = "Bernardo Soares";
+		EnhancerTestUtils.checkDirtyTracking( author, "name" );
+	}
 
-    // --- //
+	// --- //
 
-    @Entity
-    private static class Author {
+	@Entity
+	private static class Author {
 
-        @Id
-        @GeneratedValue
-        Long id;
+		@Id
+		@GeneratedValue
+		Long id;
 
-        @OneToMany( fetch = FetchType.LAZY, mappedBy = "author" )
-        List<ChildItem> items;
+		@OneToMany(fetch = FetchType.LAZY, mappedBy = "author")
+		List<ChildItem> items;
 
-        // keep this field after 'items'
-        String name;
-    }
+		// keep this field after 'items'
+		String name;
+	}
 
-    @MappedSuperclass
-    @Inheritance( strategy = InheritanceType.SINGLE_TABLE )
-    @DiscriminatorColumn( name = "type", discriminatorType = DiscriminatorType.STRING )
-    private static abstract class Item {
+	@MappedSuperclass
+	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+	@DiscriminatorColumn(name = "type", discriminatorType = DiscriminatorType.STRING)
+	private static abstract class Item {
 
-        @Id
-        @GeneratedValue
-        Long id;
+		@Id
+		@GeneratedValue
+		Long id;
 
-        @ManyToOne( fetch = FetchType.LAZY )
-        Author author;
-    }
+		@ManyToOne(fetch = FetchType.LAZY)
+		Author author;
+	}
 
-    @Entity
-    @DiscriminatorValue( "child" )
-    private static class ChildItem extends Item {
-    }
+	@Entity
+	@DiscriminatorValue("child")
+	private static class ChildItem extends Item {
+	}
 }

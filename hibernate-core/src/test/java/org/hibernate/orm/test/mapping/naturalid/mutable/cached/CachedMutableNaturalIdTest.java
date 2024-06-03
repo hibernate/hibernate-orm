@@ -179,6 +179,40 @@ public abstract class CachedMutableNaturalIdTest {
 				}
 		);
 	}
+	
+	@Test
+	@TestForIssue( jiraKey = "HHH-16557" )
+	public void testCreateDeleteRecreate(SessionFactoryScope scope) {
+
+		final Integer id = scope.fromTransaction(
+				(session) -> {
+					AllCached it = new AllCached( "it" );
+					session.persist(it);
+					session.remove(it);
+					// insert-remove might happen in an app driven by users GUI interactions
+					return it.getId();
+				}
+		);
+
+		// now recreate with same naturalId value
+		scope.inTransaction(
+				(session) -> {
+					AllCached it = new AllCached( "it" );
+					session.persist(it);
+					// resolving from first level cache
+					assertNotNull(session.bySimpleNaturalId( AllCached.class ).load( "it" ));
+				}
+		);
+
+		scope.inTransaction(
+				(session) -> {
+					// should resolve from second level cache
+					final AllCached shouldBeThere = session.bySimpleNaturalId( AllCached.class ).load( "it" );
+					assertNotNull( shouldBeThere );
+					assert(id.compareTo(shouldBeThere.getId()) != 0);
+				}
+		);
+	}
 
 	@Test
 	@JiraKey("HHH-16558")

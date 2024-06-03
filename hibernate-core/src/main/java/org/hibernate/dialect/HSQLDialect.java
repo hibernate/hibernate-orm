@@ -199,7 +199,7 @@ public class HSQLDialect extends Dialect {
 		functionFactory.arrayPrepend_operator();
 		functionFactory.arrayAppend_operator();
 		functionFactory.arrayContains_hsql();
-		functionFactory.arrayOverlaps_hsql();
+		functionFactory.arrayIntersects_hsql();
 		functionFactory.arrayGet_unnest();
 		functionFactory.arraySet_hsql();
 		functionFactory.arrayRemove_hsql();
@@ -299,6 +299,11 @@ public class HSQLDialect extends Dialect {
 				break;
 			case WEEK:
 				pattern.append("dateadd('day',?2*7,");
+				break;
+			case SECOND:
+				//TODO: if we have an integral number of seconds
+				//      (the common case) this is unnecessary
+				pattern.append("timestampadd(sql_tsi_frac_second, ?2*1e9,");
 				break;
 			default:
 				pattern.append("dateadd('?1',?2,");

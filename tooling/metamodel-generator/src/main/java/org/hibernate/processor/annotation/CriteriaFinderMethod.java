@@ -7,8 +7,6 @@
 package org.hibernate.processor.annotation;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.AssertionFailure;
-import org.hibernate.processor.util.Constants;
 
 import javax.lang.model.element.ExecutableElement;
 import java.util.List;
@@ -18,7 +16,6 @@ import java.util.List;
  */
 public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 
-	private final @Nullable String containerType;
 	private final List<Boolean> paramNullability;
 
 	CriteriaFinderMethod(
@@ -36,10 +33,12 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 			List<String> fetchProfiles,
 			List<OrderBy> orderBys,
 			boolean addNonnullAnnotation,
-			boolean dataRepository) {
-		super( annotationMetaEntity, method, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
-				paramNames, paramTypes, orderBys, addNonnullAnnotation, dataRepository, multivalued, paramPatterns );
-		this.containerType = containerType;
+			boolean dataRepository,
+			String fullReturnType,
+			boolean nullable) {
+		super( annotationMetaEntity, method, methodName, entity, containerType, belongsToDao, sessionType, sessionName,
+				fetchProfiles, paramNames, paramTypes, orderBys, addNonnullAnnotation, dataRepository, multivalued,
+				paramPatterns, fullReturnType, nullable );
 		this.paramNullability = paramNullability;
 	}
 
@@ -62,7 +61,8 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 		castResult( declaration );
 		createQuery( declaration );
 		handlePageParameters( declaration, paramTypes, containerType );
-		boolean unwrapped = specialNeeds( declaration );
+		boolean unwrapped = !isUsingEntityManager();
+		unwrapped = enableFetchProfile( declaration, unwrapped );
 		unwrapped = applyOrder( declaration, paramTypes, containerType, unwrapped );
 		execute( declaration, paramTypes, unwrapped );
 	}
@@ -75,13 +75,6 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 					.append(annotationMetaEntity.importType(entity))
 					.append(") ");
 		}
-	}
-
-	private boolean specialNeeds(StringBuilder declaration) {
-		boolean unwrapped = !isUsingEntityManager();
-		unwrapped = enableFetchProfile( declaration, unwrapped );
-		unwrapped = unwrapIfNecessary( declaration, containerType, unwrapped );
-		return unwrapped;
 	}
 
 	private void execute(StringBuilder declaration, List<String> paramTypes, boolean unwrapped) {
@@ -100,31 +93,31 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 		return "createQuery";
 	}
 
-	@Override
-	String returnType() {
-		final StringBuilder type = new StringBuilder();
-		if ( "[]".equals(containerType) ) {
-			if ( returnTypeName == null ) {
-				throw new AssertionFailure("array return type, but no type name");
-			}
-			type.append(annotationMetaEntity.importType(returnTypeName)).append("[]");
-		}
-		else {
-			final boolean returnsUni = isReactive() && isUnifiableReturnType(containerType);
-			if ( returnsUni ) {
-				type.append(annotationMetaEntity.importType(Constants.UNI)).append('<');
-			}
-			if ( containerType != null ) {
-				type.append(annotationMetaEntity.importType(containerType)).append('<');
-			}
-			type.append(annotationMetaEntity.importType(entity));
-			if ( containerType != null ) {
-				type.append('>');
-			}
-			if ( returnsUni ) {
-				type.append('>');
-			}
-		}
-		return type.toString();
-	}
+//	@Override
+//	String returnType() {
+//		final StringBuilder type = new StringBuilder();
+//		if ( "[]".equals(containerType) ) {
+//			if ( returnTypeName == null ) {
+//				throw new AssertionFailure("array return type, but no type name");
+//			}
+//			type.append(annotationMetaEntity.importType(returnTypeName)).append("[]");
+//		}
+//		else {
+//			final boolean returnsUni = isReactive() && isUnifiableReturnType(containerType);
+//			if ( returnsUni ) {
+//				type.append(annotationMetaEntity.importType(Constants.UNI)).append('<');
+//			}
+//			if ( containerType != null ) {
+//				type.append(annotationMetaEntity.importType(containerType)).append('<');
+//			}
+//			type.append(annotationMetaEntity.importType(entity));
+//			if ( containerType != null ) {
+//				type.append('>');
+//			}
+//			if ( returnsUni ) {
+//				type.append('>');
+//			}
+//		}
+//		return type.toString();
+//	}
 }

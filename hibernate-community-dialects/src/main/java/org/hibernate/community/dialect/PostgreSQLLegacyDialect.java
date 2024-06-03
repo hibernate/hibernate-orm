@@ -77,16 +77,18 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
+import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -260,6 +262,8 @@ public class PostgreSQLLegacyDialect extends Dialect {
 				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
 			}
 		}
+		ddlTypeRegistry.addDescriptor( new NamedNativeEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NamedNativeOrdinalEnumDdlTypeImpl( this ) );
 	}
 
 	@Override
@@ -339,12 +343,23 @@ public class PostgreSQLLegacyDialect extends Dialect {
 								ColumnTypeInformation.EMPTY
 						);
 					}
+					final SqlTypedJdbcType elementDescriptor = jdbcTypeRegistry.findSqlTypedDescriptor( componentTypeName );
+					if ( elementDescriptor != null ) {
+						return jdbcTypeRegistry.resolveTypeConstructorDescriptor(
+								jdbcTypeCode,
+								elementDescriptor,
+								ColumnTypeInformation.EMPTY
+						);
+					}
 				}
 				break;
 			case STRUCT:
-				final AggregateJdbcType aggregateDescriptor = jdbcTypeRegistry.findAggregateDescriptor( columnTypeName );
-				if ( aggregateDescriptor != null ) {
-					return aggregateDescriptor;
+				final SqlTypedJdbcType descriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
+						// Skip the schema
+						columnTypeName.substring( columnTypeName.indexOf( '.' ) + 1 )
+				);
+				if ( descriptor != null ) {
+					return descriptor;
 				}
 				break;
 		}
@@ -588,7 +603,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		functionFactory.arrayPrepend_postgresql();
 		functionFactory.arrayAppend_postgresql();
 		functionFactory.arrayContains_postgresql();
-		functionFactory.arrayOverlaps_postgresql();
+		functionFactory.arrayIntersects_postgresql();
 		functionFactory.arrayGet_bracket();
 		functionFactory.arraySet_unnest();
 		functionFactory.arrayRemove();
@@ -831,6 +846,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 
 	@Override
 	public boolean useInputStreamToInsertBlob() {
+		return false;
+	}
+
+	@Override
+	public boolean useConnectionToCreateLob() {
 		return false;
 	}
 
@@ -1371,6 +1391,8 @@ public class PostgreSQLLegacyDialect extends Dialect {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLStructCastingJdbcType.INSTANCE );
 			}
 
+			jdbcTypeRegistry.addDescriptor( PostgreSQLEnumJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( PostgreSQLOrdinalEnumJdbcType.INSTANCE );
 			if ( getVersion().isSameOrAfter( 8, 2 ) ) {
 				// HHH-9562 / HHH-14358
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLUUIDJdbcType.INSTANCE );
@@ -1424,6 +1446,8 @@ public class PostgreSQLLegacyDialect extends Dialect {
 								.getDescriptor( Object.class )
 				)
 		);
+
+		jdbcTypeRegistry.addTypeConstructor( PostgreSQLArrayJdbcTypeConstructor.INSTANCE );
 	}
 
 	@Override

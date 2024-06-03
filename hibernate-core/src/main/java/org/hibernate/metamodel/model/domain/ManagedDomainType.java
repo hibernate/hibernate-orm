@@ -37,9 +37,6 @@ public interface ManagedDomainType<J> extends SqmExpressible<J>, DomainType<J>, 
 
 	/**
 	 * The descriptor of the supertype of this type.
-	 *
-	 * @apiNote we define this here in anticipation of eventually supporting
-	 *          embeddable inheritance
 	 */
 	ManagedDomainType<? super J> getSuperType();
 

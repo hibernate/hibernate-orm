@@ -18,6 +18,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.DuplicateMappingException;
@@ -95,6 +96,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -135,6 +137,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	private final Map<String,PersistentClass> entityBindingMap = new HashMap<>();
 	private final List<Component> composites = new ArrayList<>();
 	private final Map<Class<?>, Component> genericComponentsMap = new HashMap<>();
+	private final Map<XClass, List<XClass>> embeddableSubtypes = new HashMap<>();
+	private final Map<Class<?>, DiscriminatorType<?>> embeddableDiscriminatorTypesMap = new HashMap<>();
 	private final Map<String,Collection> collectionBindingMap = new HashMap<>();
 
 	private final Map<String, FilterDefinition> filterDefinitionMap = new HashMap<>();
@@ -282,6 +286,24 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	@Override
 	public Component getGenericComponent(Class<?> componentClass) {
 		return genericComponentsMap.get( componentClass );
+	}
+
+	@Override
+	public void registerEmbeddableSubclass(XClass superclass, XClass subclass) {
+		embeddableSubtypes.computeIfAbsent( superclass, c -> new ArrayList<>() ).add( subclass );
+	}
+
+	@Override
+	public List<XClass> getEmbeddableSubclasses(XClass superclass) {
+		final List<XClass> subclasses = embeddableSubtypes.get( superclass );
+		return subclasses != null ? subclasses : List.of();
+	}
+
+	@Override
+	public DiscriminatorType<?> resolveEmbeddableDiscriminatorType(
+			Class<?> embeddableClass,
+			Supplier<DiscriminatorType<?>> supplier) {
+		return embeddableDiscriminatorTypesMap.computeIfAbsent( embeddableClass, k -> supplier.get() );
 	}
 
 	@Override
@@ -1756,7 +1778,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			processSecondPasses( idGeneratorResolverSecondPassList );
 			processSecondPasses( implicitColumnNamingSecondPassList );
 			processSecondPasses( setBasicValueTypeSecondPassList );
-			processSecondPasses( aggregateComponentSecondPassList );
 			processSecondPasses( toOneJoinTableSecondPassList );
 
 			composites.forEach( Component::sortProperties );
@@ -1772,6 +1793,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 
 			processPropertyReferences();
 
+			processSecondPasses( aggregateComponentSecondPassList );
 			secondPassCompileForeignKeys( buildingContext );
 
 			processNaturalIdUniqueKeyBinders();
@@ -2060,6 +2082,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 					entityBindingMap,
 					composites,
 					genericComponentsMap,
+					embeddableDiscriminatorTypesMap,
 					mappedSuperClasses,
 					collectionBindingMap,
 					typeDefRegistry.copyRegistrationMap(),

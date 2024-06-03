@@ -7,6 +7,7 @@
 package org.hibernate.internal;
 
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -19,8 +20,10 @@ import org.hibernate.UnresolvableObjectException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityDataAccess;
+import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
+import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
@@ -30,16 +33,33 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.event.spi.AutoFlushEvent;
+import org.hibernate.event.spi.PostDeleteEvent;
+import org.hibernate.event.spi.PostDeleteEventListener;
+import org.hibernate.event.spi.PostInsertEvent;
+import org.hibernate.event.spi.PostInsertEventListener;
+import org.hibernate.event.spi.PostUpdateEvent;
+import org.hibernate.event.spi.PostUpdateEventListener;
+import org.hibernate.event.spi.PostUpsertEvent;
+import org.hibernate.event.spi.PostUpsertEventListener;
+import org.hibernate.event.spi.PreDeleteEvent;
+import org.hibernate.event.spi.PreDeleteEventListener;
+import org.hibernate.event.spi.PreInsertEvent;
+import org.hibernate.event.spi.PreInsertEventListener;
+import org.hibernate.event.spi.PreUpdateEvent;
+import org.hibernate.event.spi.PreUpdateEventListener;
+import org.hibernate.event.spi.PreUpsertEvent;
+import org.hibernate.event.spi.PreUpsertEventListener;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 import jakarta.persistence.EntityGraph;
@@ -50,8 +70,10 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttrib
 import static org.hibernate.engine.internal.Versioning.incrementVersion;
 import static org.hibernate.engine.internal.Versioning.seedVersion;
 import static org.hibernate.engine.internal.Versioning.setVersion;
+import static org.hibernate.event.internal.DefaultInitializeCollectionEventListener.handlePotentiallyEmptyCollection;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
@@ -93,7 +115,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public Object insert(Object entity) {
-		checkOpen();
 		return insert( null, entity );
 	}
 
@@ -103,30 +124,51 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		final EntityPersister persister = getEntityPersister( entityName, entity );
 		final Object id;
 		final Object[] state = persister.getValues( entity );
+		if ( persister.isVersioned() ) {
+			if ( seedVersion( entity, state, persister, this ) ) {
+				persister.setValues( entity, state );
+			}
+		}
 		final Generator generator = persister.getGenerator();
 		if ( !generator.generatedOnExecution( entity, this ) ) {
 			id = ( (BeforeExecutionGenerator) generator).generate( this, entity, null, INSERT );
-			if ( persister.isVersioned() ) {
-				if ( seedVersion( entity, state, persister, this ) ) {
-					persister.setValues( entity, state );
-				}
+			if ( firePreInsert(entity, id, state, persister) ) {
+				return id;
 			}
+			getInterceptor()
+					.onInsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
 			persister.getInsertCoordinator().insert( entity, id, state, this );
 		}
 		else {
+			if ( firePreInsert(entity, null, state, persister) ) {
+				return null;
+			}
+			getInterceptor()
+					.onInsert( entity, null, state, persister.getPropertyNames(), persister.getPropertyTypes() );
 			final GeneratedValues generatedValues = persister.getInsertCoordinator().insert( entity, state, this );
 			id = castNonNull( generatedValues ).getGeneratedValue( persister.getIdentifierMapping() );
 		}
 		persister.setIdentifier( entity, id, this );
+		forEachOwnedCollection( entity, id, persister,
+				(descriptor, collection) -> {
+					descriptor.recreate( collection, id, this);
+					final StatisticsImplementor statistics = getFactory().getStatistics();
+					if ( statistics.isStatisticsEnabled() ) {
+						statistics.recreateCollection( descriptor.getRole() );
+					}
+				} );
+		firePostInsert(entity, id, state, persister);
+		final StatisticsImplementor statistics = getFactory().getStatistics();
+		if ( statistics.isStatisticsEnabled() ) {
+			statistics.insertEntity( persister.getEntityName() );
+		}
 		return id;
 	}
-
 
 	// deletes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
 	public void delete(Object entity) {
-		checkOpen();
 		delete( null, entity );
 	}
 
@@ -136,7 +178,24 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		final EntityPersister persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
 		final Object version = persister.getVersion( entity );
-		persister.getDeleteCoordinator().delete( entity, id, version, this );
+		if ( !firePreDelete(entity, id, persister) ) {
+			getInterceptor()
+					.onDelete( entity, id, persister.getPropertyNames(), persister.getPropertyTypes() );
+			forEachOwnedCollection( entity, id, persister,
+					(descriptor, collection) -> {
+						descriptor.remove( id, this );
+						final StatisticsImplementor statistics = getFactory().getStatistics();
+						if ( statistics.isStatisticsEnabled() ) {
+							statistics.removeCollection( descriptor.getRole() );
+						}
+					} );
+			persister.getDeleteCoordinator().delete( entity, id, version, this );
+			firePostDelete(entity, id, persister);
+			final StatisticsImplementor statistics = getFactory().getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.deleteEntity( persister.getEntityName() );
+			}
+		}
 	}
 
 
@@ -144,13 +203,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public void update(Object entity) {
-		checkOpen();
 		update( null, entity );
 	}
 
 	@Override
 	public void upsert(Object entity) {
-		checkOpen();
 		upsert( null, entity );
 	}
 
@@ -170,46 +227,227 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		else {
 			oldVersion = null;
 		}
-		persister.getUpdateCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
+		if ( !firePreUpdate(entity, id, state, persister) ) {
+			getInterceptor()
+					.onUpdate( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
+			persister.getUpdateCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
+			forEachOwnedCollection( entity, id, persister,
+					(descriptor, collection) -> {
+						// TODO: can we do better here?
+						descriptor.remove( id, this );
+						descriptor.recreate( collection, id, this );
+						final StatisticsImplementor statistics = getFactory().getStatistics();
+						if ( statistics.isStatisticsEnabled() ) {
+							statistics.updateCollection( descriptor.getRole() );
+						}
+					} );
+			firePostUpdate(entity, id, state, persister);
+			final StatisticsImplementor statistics = getFactory().getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.updateEntity( persister.getEntityName() );
+			}
+		}
 	}
 
 	@Override
 	public void upsert(String entityName, Object entity) {
 		checkOpen();
 		final EntityPersister persister = getEntityPersister( entityName, entity );
-		Object id = persister.getIdentifier( entity, this );
-		Boolean knownTransient = persister.isTransient( entity, this );
-		if ( knownTransient!=null && knownTransient ) {
-			throw new TransientObjectException(
-					"Object passed to upsert() has a null identifier: "
-							+ persister.getEntityName() );
-//			final Generator generator = persister.getGenerator();
-//			if ( !generator.generatedOnExecution() ) {
-//				id = ( (BeforeExecutionGenerator) generator).generate( this, entity, null, INSERT );
-//			}
-		}
+		final Object id = idToUpsert( entity, persister );
 		final Object[] state = persister.getValues( entity );
-		final Object oldVersion;
+		if ( !firePreUpsert(entity, id, state, persister) ) {
+			getInterceptor()
+					.onUpsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
+			final Object oldVersion = versionToUpsert( entity, persister, state );
+			persister.getMergeCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
+			// TODO: statistics for upsert!
+			forEachOwnedCollection( entity, id, persister,
+					(descriptor, collection) -> {
+						// TODO: can we do better here?
+						descriptor.remove( id, this );
+						descriptor.recreate( collection, id, this );
+						final StatisticsImplementor statistics = getFactory().getStatistics();
+						if ( statistics.isStatisticsEnabled() ) {
+							statistics.updateCollection( descriptor.getRole() );
+						}
+					} );
+			firePostUpsert(entity, id, state, persister);
+		}
+	}
+
+	private Object versionToUpsert(Object entity, EntityPersister persister, Object[] state) {
 		if ( persister.isVersioned() ) {
-			oldVersion = persister.getVersion( entity );
-			if ( oldVersion == null ) {
+			final Object oldVersion = persister.getVersion( entity );
+			final Boolean knownTransient =
+					persister.getVersionMapping()
+							.getUnsavedStrategy()
+							.isUnsaved( oldVersion );
+			if ( knownTransient != null && knownTransient ) {
 				if ( seedVersion( entity, state, persister, this ) ) {
 					persister.setValues( entity, state );
 				}
+				// this is a nonsense but avoids setting version restriction
+				// parameter to null later on deep in the guts
+				return state[persister.getVersionProperty()];
 			}
 			else {
 				final Object newVersion = incrementVersion( entity, oldVersion, persister, this );
 				setVersion( state, newVersion, persister );
 				persister.setValues( entity, state );
+				return oldVersion;
 			}
 		}
 		else {
-			oldVersion = null;
+			return null;
 		}
-		persister.getMergeCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
-//		persister.setIdentifier( entity, id, this );
 	}
 
+	private Object idToUpsert(Object entity, EntityPersister persister) {
+		final Object id = persister.getIdentifier( entity, this );
+		final Boolean unsaved =
+				persister.getIdentifierMapping()
+						.getUnsavedStrategy()
+						.isUnsaved( id );
+		if ( unsaved != null && unsaved ) {
+			throw new TransientObjectException( "Object passed to upsert() has an unsaved identifier value: "
+					+ persister.getEntityName() );
+		}
+		return id;
+	}
+
+	// event processing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	private boolean firePreInsert(Object entity, Object id, Object[] state, EntityPersister persister) {
+		if ( fastSessionServices.eventListenerGroup_PRE_INSERT.isEmpty() ) {
+			return false;
+		}
+		else {
+			boolean veto = false;
+			final PreInsertEvent event = new PreInsertEvent( entity, id, state, persister, null );
+			for ( PreInsertEventListener listener : fastSessionServices.eventListenerGroup_PRE_INSERT.listeners() ) {
+				veto |= listener.onPreInsert( event );
+			}
+			return veto;
+		}
+	}
+
+	private boolean firePreUpdate(Object entity, Object id, Object[] state, EntityPersister persister) {
+		if ( fastSessionServices.eventListenerGroup_PRE_UPDATE.isEmpty() ) {
+			return false;
+		}
+		else {
+			boolean veto = false;
+			final PreUpdateEvent event = new PreUpdateEvent( entity, id, state, null, persister, null );
+			for ( PreUpdateEventListener listener : fastSessionServices.eventListenerGroup_PRE_UPDATE.listeners() ) {
+				veto |= listener.onPreUpdate( event );
+			}
+			return veto;
+		}
+	}
+
+	private boolean firePreUpsert(Object entity, Object id, Object[] state, EntityPersister persister) {
+		if ( fastSessionServices.eventListenerGroup_PRE_UPSERT.isEmpty() ) {
+			return false;
+		}
+		else {
+			boolean veto = false;
+			final PreUpsertEvent event = new PreUpsertEvent( entity, id, state, persister, null );
+			for ( PreUpsertEventListener listener : fastSessionServices.eventListenerGroup_PRE_UPSERT.listeners() ) {
+				veto |= listener.onPreUpsert( event );
+			}
+			return veto;
+		}
+	}
+
+	private boolean firePreDelete(Object entity, Object id, EntityPersister persister) {
+		if ( fastSessionServices.eventListenerGroup_PRE_DELETE.isEmpty() ) {
+			return false;
+		}
+		else {
+			boolean veto = false;
+			final PreDeleteEvent event = new PreDeleteEvent( entity, id, null, persister, null );
+			for ( PreDeleteEventListener listener : fastSessionServices.eventListenerGroup_PRE_DELETE.listeners() ) {
+				veto |= listener.onPreDelete( event );
+			}
+			return veto;
+		}
+	}
+
+	private void firePostInsert(Object entity, Object id, Object[] state, EntityPersister persister) {
+		if ( !fastSessionServices.eventListenerGroup_POST_INSERT.isEmpty() ) {
+			final PostInsertEvent event = new PostInsertEvent( entity, id, state, persister, null );
+			for ( PostInsertEventListener listener : fastSessionServices.eventListenerGroup_POST_INSERT.listeners() ) {
+				listener.onPostInsert( event );
+			}
+		}
+	}
+
+	private void firePostUpdate(Object entity, Object id, Object[] state, EntityPersister persister) {
+		if ( !fastSessionServices.eventListenerGroup_POST_UPDATE.isEmpty() ) {
+			final PostUpdateEvent event = new PostUpdateEvent( entity, id, state, null, null, persister, null );
+			for ( PostUpdateEventListener listener : fastSessionServices.eventListenerGroup_POST_UPDATE.listeners() ) {
+				listener.onPostUpdate( event );
+			}
+		}
+	}
+
+	private void firePostUpsert(Object entity, Object id, Object[] state, EntityPersister persister) {
+		if ( !fastSessionServices.eventListenerGroup_POST_UPSERT.isEmpty() ) {
+			final PostUpsertEvent event = new PostUpsertEvent( entity, id, state, null, persister, null );
+			for ( PostUpsertEventListener listener : fastSessionServices.eventListenerGroup_POST_UPSERT.listeners() ) {
+				listener.onPostUpsert( event );
+			}
+		}
+	}
+
+	private void firePostDelete(Object entity, Object id, EntityPersister persister) {
+		if (!fastSessionServices.eventListenerGroup_POST_DELETE.isEmpty()) {
+			final PostDeleteEvent event = new PostDeleteEvent( entity, id, null, persister, null );
+			for ( PostDeleteEventListener listener : fastSessionServices.eventListenerGroup_POST_DELETE.listeners() ) {
+				listener.onPostDelete( event );
+			}
+		}
+	}
+
+	// collections ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	private void forEachOwnedCollection(
+			Object entity, Object key,
+			EntityPersister persister, BiConsumer<CollectionPersister, PersistentCollection<?>> action) {
+		persister.visitAttributeMappings( att -> {
+			if ( att.isPluralAttributeMapping() ) {
+				final PluralAttributeMapping pluralAttributeMapping = att.asPluralAttributeMapping();
+				final CollectionPersister descriptor = pluralAttributeMapping.getCollectionDescriptor();
+				if ( !descriptor.isInverse() ) {
+					final Object collection = att.getPropertyAccess().getGetter().get(entity);
+					final PersistentCollection<?> persistentCollection;
+					if (collection instanceof PersistentCollection) {
+						persistentCollection = (PersistentCollection<?>) collection;
+						if ( !persistentCollection.wasInitialized() ) {
+							return;
+						}
+					}
+					else {
+						persistentCollection = collection == null
+								? instantiateEmpty(key, descriptor)
+								: wrap(descriptor, collection);
+					}
+					action.accept(descriptor, persistentCollection);
+				}
+			}
+		} );
+	}
+
+	private PersistentCollection<?> instantiateEmpty(Object key, CollectionPersister descriptor) {
+		return descriptor.getCollectionSemantics().instantiateWrapper(key, descriptor, this);
+	}
+
+	//TODO: is this the right way to do this?
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	private PersistentCollection<?> wrap(CollectionPersister descriptor, Object collection) {
+		final CollectionSemantics collectionSemantics = descriptor.getCollectionSemantics();
+		return collectionSemantics.wrap(collection, descriptor, this);
+	}
 
 	// loading ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -285,6 +523,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public void refresh(String entityName, Object entity, LockMode lockMode) {
+		checkOpen();
 		final EntityPersister persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
 		if ( LOG.isTraceEnabled() ) {
@@ -324,16 +563,35 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public void initializeCollection(
-			PersistentCollection<?> collection,
-			boolean writing) throws HibernateException {
-		throw new SessionException( "collections cannot be fetched by a stateless session" );
+	public void initializeCollection(PersistentCollection<?> collection, boolean writing)
+			throws HibernateException {
+		checkOpen();
+		final PersistenceContext persistenceContext = getPersistenceContextInternal();
+		final CollectionEntry ce = persistenceContext.getCollectionEntry( collection );
+		if ( ce == null ) {
+			throw new HibernateException( "no entry for collection" );
+		}
+		if ( !collection.wasInitialized() ) {
+			final CollectionPersister loadedPersister = ce.getLoadedPersister();
+			final Object loadedKey = ce.getLoadedKey();
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev( "Initializing collection {0}",
+						collectionInfoString( loadedPersister, collection, loadedKey, this ) );
+			}
+			loadedPersister.initialize( loadedKey, this );
+			handlePotentiallyEmptyCollection( collection, persistenceContext, loadedKey, loadedPersister );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Collection initialized" );
+			}
+			final StatisticsImplementor statistics = getFactory().getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.fetchCollection( loadedPersister.getRole() );
+			}
+		}
 	}
 
 	@Override
-	public Object instantiate(
-			String entityName,
-			Object id) throws HibernateException {
+	public Object instantiate(String entityName, Object id) throws HibernateException {
 		return instantiate( getEntityPersister( entityName ), id );
 	}
 
@@ -472,6 +730,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				proxyInterceptor.setSession( this );
 				try {
 					proxyInterceptor.forceInitialize( association, null );
+					// TODO: statistics?? call statistics.fetchEntity()
 				}
 				finally {
 					proxyInterceptor.unsetSession();
@@ -491,6 +750,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				persistentCollection.setCurrentSession( this );
 				try {
 					collectionDescriptor.initialize( key, this );
+					handlePotentiallyEmptyCollection( persistentCollection, getPersistenceContextInternal(), key,
+							collectionDescriptor );
+					final StatisticsImplementor statistics = getFactory().getStatistics();
+					if ( statistics.isStatisticsEnabled() ) {
+						statistics.fetchCollection( collectionDescriptor.getRole() );
+					}
 				}
 				finally {
 					persistentCollection.unsetSession( this );
@@ -500,6 +765,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				}
 			}
 		}
+	}
+
+	@Override
+	public Object getIdentifier(Object entity) throws HibernateException {
+		checkOpen();
+		return getFactory().getPersistenceUnitUtil().getIdentifier(entity);
 	}
 
 	@Override
@@ -656,15 +927,18 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public void afterTransactionBegin() {
+		afterTransactionBeginEvents();
 	}
 
 	@Override
 	public void beforeTransactionCompletion() {
 		flushBeforeTransactionCompletion();
+		beforeTransactionCompletionEvents();
 	}
 
 	@Override
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
+		afterTransactionCompletionEvents( successful );
 		if ( shouldAutoClose() && !isClosed() ) {
 			managedClose();
 		}

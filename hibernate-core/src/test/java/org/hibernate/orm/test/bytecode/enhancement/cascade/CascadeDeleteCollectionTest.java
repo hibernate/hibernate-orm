@@ -6,12 +6,18 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.cascade;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
@@ -25,35 +31,30 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.Hibernate;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 /**
  * @author Luis Barreiro
  */
-@TestForIssue( jiraKey = "HHH-10252" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class CascadeDeleteCollectionTest extends BaseCoreFunctionalTestCase {
+@JiraKey( "HHH-10252" )
+@DomainModel(
+        annotatedClasses = {
+               CascadeDeleteCollectionTest.Parent.class, CascadeDeleteCollectionTest.Child.class
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class CascadeDeleteCollectionTest {
     private Parent originalParent;
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class[]{Parent.class, Child.class};
-    }
 
-    @Before
-    public void prepare() {
+    @BeforeEach
+    public void prepare(SessionFactoryScope scope) {
         // Create a Parent with one Child
-        originalParent = doInHibernate( this::sessionFactory, s -> {
+        originalParent = scope.fromTransaction( s -> {
                     Parent p = new Parent();
                     p.setName( "PARENT" );
                     p.setLazy( "LAZY" );
@@ -65,13 +66,13 @@ public class CascadeDeleteCollectionTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    public void testManagedWithUninitializedAssociation() {
+    public void testManagedWithUninitializedAssociation(SessionFactoryScope scope) {
         // Delete the Parent
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             Parent loadedParent = (Parent) s.createQuery( "SELECT p FROM Parent p WHERE name=:name" )
                     .setParameter( "name", "PARENT" )
                     .uniqueResult();
-            checkInterceptor( loadedParent, false );
+            checkInterceptor( scope, loadedParent, false );
             assertFalse( Hibernate.isInitialized( loadedParent.getChildren() ) );
             s.delete( loadedParent );
         } );
@@ -79,14 +80,14 @@ public class CascadeDeleteCollectionTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    @TestForIssue(jiraKey = "HHH-13129")
-    public void testManagedWithInitializedAssociation() {
+    @JiraKey("HHH-13129")
+    public void testManagedWithInitializedAssociation(SessionFactoryScope scope) {
         // Delete the Parent
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             Parent loadedParent = (Parent) s.createQuery( "SELECT p FROM Parent p WHERE name=:name" )
                     .setParameter( "name", "PARENT" )
                     .uniqueResult();
-            checkInterceptor( loadedParent, false );
+            checkInterceptor( scope, loadedParent, false );
             loadedParent.getChildren().size();
             assertTrue( Hibernate.isInitialized( loadedParent.getChildren() ) );
             s.delete( loadedParent );
@@ -95,27 +96,27 @@ public class CascadeDeleteCollectionTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    @TestForIssue(jiraKey = "HHH-13129")
-    public void testDetachedWithUninitializedAssociation() {
-        final Parent detachedParent = doInHibernate( this::sessionFactory, s -> {
+    @JiraKey("HHH-13129")
+    public void testDetachedWithUninitializedAssociation(SessionFactoryScope scope) {
+        final Parent detachedParent = scope.fromTransaction( s -> {
             return s.get( Parent.class, originalParent.getId() );
         } );
 
         assertFalse( Hibernate.isInitialized( detachedParent.getChildren() ) );
 
-        checkInterceptor( detachedParent, false );
+        checkInterceptor( scope, detachedParent, false );
 
         // Delete the detached Parent with uninitialized children
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
              s.delete( detachedParent );
         } );
         // If the lazy relation is not fetch on cascade there is a constraint violation on commit
     }
 
     @Test
-    @TestForIssue(jiraKey = "HHH-13129")
-    public void testDetachedWithInitializedAssociation() {
-        final Parent detachedParent = doInHibernate( this::sessionFactory, s -> {
+    @JiraKey("HHH-13129")
+    public void testDetachedWithInitializedAssociation(SessionFactoryScope scope) {
+        final Parent detachedParent = scope.fromTransaction( s -> {
              Parent parent = s.get( Parent.class, originalParent.getId() );
              // initialize collection before detaching
              parent.getChildren().size();
@@ -124,33 +125,33 @@ public class CascadeDeleteCollectionTest extends BaseCoreFunctionalTestCase {
 
         assertTrue( Hibernate.isInitialized( detachedParent.getChildren() ) );
 
-        checkInterceptor( detachedParent, false );
+        checkInterceptor( scope, detachedParent, false );
 
         // Delete the detached Parent with initialized children
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             s.delete( detachedParent );
         } );
         // If the lazy relation is not fetch on cascade there is a constraint violation on commit
     }
 
     @Test
-    @TestForIssue(jiraKey = "HHH-13129")
-    public void testDetachedOriginal() {
+    @JiraKey("HHH-13129")
+    public void testDetachedOriginal(SessionFactoryScope scope) {
 
         // originalParent#children should be initialized
         assertTrue( Hibernate.isPropertyInitialized( originalParent, "children" ) );
 
-        checkInterceptor( originalParent, true );
+        checkInterceptor( scope, originalParent, true );
 
         // Delete the Parent
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             s.delete( originalParent );
         } );
         // If the lazy relation is not fetch on cascade there is a constraint violation on commit
     }
 
-    private void checkInterceptor(Parent parent, boolean isNullExpected) {
-        final BytecodeEnhancementMetadata bytecodeEnhancementMetadata = sessionFactory().getRuntimeMetamodels()
+    private void checkInterceptor(SessionFactoryScope scope, Parent parent, boolean isNullExpected) {
+        final BytecodeEnhancementMetadata bytecodeEnhancementMetadata = scope.getSessionFactory().getRuntimeMetamodels()
                 .getMappingMetamodel()
                 .getEntityDescriptor( Parent.class )
                 .getBytecodeEnhancementMetadata();
@@ -223,7 +224,7 @@ public class CascadeDeleteCollectionTest extends BaseCoreFunctionalTestCase {
 
     @Entity
     @Table( name = "CHILD" )
-    private static class Child {
+    static class Child {
 
         @Id
         @GeneratedValue( strategy = GenerationType.AUTO )

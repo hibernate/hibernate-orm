@@ -72,6 +72,8 @@ import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import jakarta.persistence.TemporalType;
@@ -112,6 +114,8 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
  */
 public class MySQLLegacyDialect extends Dialect {
 
+	private static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 5, 0 );
+
 	private final MySQLStorageEngine storageEngine = createStorageEngine();
 	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
 		@Override
@@ -138,7 +142,7 @@ public class MySQLLegacyDialect extends Dialect {
 	private final boolean noBackslashEscapesEnabled;
 
 	public MySQLLegacyDialect() {
-		this( DatabaseVersion.make( 5, 0 ) );
+		this( DEFAULT_VERSION );
 	}
 
 	public MySQLLegacyDialect(DatabaseVersion version) {
@@ -179,7 +183,7 @@ public class MySQLLegacyDialect extends Dialect {
 				// Ignore
 			}
 		}
-		return info.makeCopy();
+		return info.makeCopyOrDefault( DEFAULT_VERSION );
 	}
 
 	@Override
@@ -377,6 +381,9 @@ public class MySQLLegacyDialect extends Dialect {
 						.withTypeCapacity( maxLobLen, "text" )
 						.build()
 		);
+
+		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
 	}
 
 	@Deprecated
@@ -506,6 +513,23 @@ public class MySQLLegacyDialect extends Dialect {
 				scale,
 				jdbcTypeRegistry
 		);
+	}
+
+	@Override
+	public int resolveSqlTypeLength(
+			String columnTypeName,
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			int displaySize) {
+		// It seems MariaDB/MySQL return the precision in bytes depending on the charset,
+		// so to detect whether we have a single character here, we check the display size
+		if ( jdbcTypeCode == Types.CHAR && precision <= 4 ) {
+			return displaySize;
+		}
+		else {
+			return precision;
+		}
 	}
 
 	@Override

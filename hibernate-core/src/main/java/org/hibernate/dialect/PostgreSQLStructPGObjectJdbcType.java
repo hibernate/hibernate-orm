@@ -11,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.mapping.UserDefinedObjectType;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -59,6 +60,14 @@ public class PostgreSQLStructPGObjectJdbcType extends AbstractPostgreSQLStructJd
 	}
 
 	@Override
+	protected String getRawStructFromJdbcValue(Object rawJdbcValue) {
+		if ( rawJdbcValue instanceof PGobject ) {
+			return ( (PGobject) rawJdbcValue ).getValue();
+		}
+		return (String) rawJdbcValue;
+	}
+
+	@Override
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
 		return new BasicBinder<>( javaType, this ) {
 			@Override
@@ -70,7 +79,7 @@ public class PostgreSQLStructPGObjectJdbcType extends AbstractPostgreSQLStructJd
 						options
 				);
 				final PGobject holder = new PGobject();
-				holder.setType( getTypeName() );
+				holder.setType( getStructTypeName() );
 				holder.setValue( stringValue );
 				st.setObject( index, holder );
 			}
@@ -84,9 +93,14 @@ public class PostgreSQLStructPGObjectJdbcType extends AbstractPostgreSQLStructJd
 						options
 				);
 				final PGobject holder = new PGobject();
-				holder.setType( getTypeName() );
+				holder.setType( getStructTypeName() );
 				holder.setValue( stringValue );
 				st.setObject( name, holder );
+			}
+
+			@Override
+			public Object getBindValue(X value, WrapperOptions options) throws SQLException {
+				return ( (PostgreSQLStructPGObjectJdbcType) getJdbcType() ).getBindValue( value, options );
 			}
 		};
 	}

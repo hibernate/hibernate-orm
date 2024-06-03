@@ -38,7 +38,7 @@ public final class Constants {
 	public static final String ELEMENT_COLLECTION = "jakarta.persistence.ElementCollection";
 	public static final String ACCESS = "jakarta.persistence.Access";
 	public static final String CONVERT = "jakarta.persistence.Convert";
-	public static final String HIBERNATE_TYPE = "org.hibernate.annotations.Type";
+	public static final String GENERATED_VALUE = "jakarta.persistence.GeneratedValue";
 
 	public static final String NAMED_QUERY = "jakarta.persistence.NamedQuery";
 	public static final String NAMED_QUERIES = "jakarta.persistence.NamedQueries";
@@ -62,7 +62,7 @@ public final class Constants {
 	public static final String SQL = "org.hibernate.annotations.processing.SQL";
 	public static final String FIND = "org.hibernate.annotations.processing.Find";
 	public static final String PATTERN = "org.hibernate.annotations.processing.Pattern";
-	public static final String SUPPRESS = "org.hibernate.annotations.processing.Suppress";
+	public static final String EXCLUDE = "org.hibernate.annotations.processing.Exclude";
 
 	public static final String JD_REPOSITORY = "jakarta.data.repository.Repository";
 	public static final String JD_QUERY = "jakarta.data.repository.Query";
@@ -80,6 +80,8 @@ public final class Constants {
 	public static final String BASIC_REPOSITORY = "jakarta.data.repository.BasicRepository";
 	public static final String CRUD_REPOSITORY = "jakarta.data.repository.CrudRepository";
 	public static final String DATA_REPOSITORY = "jakarta.data.repository.DataRepository";
+	public static final String JD_ORDER_BY = "jakarta.data.repository.OrderBy";
+	public static final String JD_ORDER_BY_LIST = "jakarta.data.repository.OrderBy.List";
 
 	public static final String HIB_ORDER = "org.hibernate.query.Order";
 	public static final String HIB_PAGE = "org.hibernate.query.Page";
@@ -127,6 +129,8 @@ public final class Constants {
 	public static final String SET = "java.util.Set";
 	public static final String OPTIONAL = "java.util.Optional";
 	public static final String STREAM = "java.util.stream.Stream";
+
+	public static final String NULLABLE = "jakarta.annotation.Nullable";
 
 	public static final String PANACHE_ORM_REPOSITORY_BASE = "io.quarkus.hibernate.orm.panache.PanacheRepositoryBase";
 	public static final String PANACHE_ORM_ENTITY_BASE = "io.quarkus.hibernate.orm.panache.PanacheEntityBase";

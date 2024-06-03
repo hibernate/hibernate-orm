@@ -6,12 +6,18 @@
  */
 package org.hibernate;
 
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
+
 import java.sql.Connection;
+import java.util.TimeZone;
 
 /**
  * Specialized {@link SessionBuilder} with access to stuff from another session.
  *
  * @author Steve Ebersole
+ *
+ * @see Session#sessionWithOptions()
  */
 public interface SharedSessionBuilder extends SessionBuilder {
 
@@ -67,8 +73,32 @@ public interface SharedSessionBuilder extends SessionBuilder {
 	 */
 	SharedSessionBuilder autoClose();
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// overrides to maintain binary compatibility
+	@Override
+	SharedSessionBuilder statementInspector(StatementInspector statementInspector);
+
+	@Override
+	SharedSessionBuilder connectionHandlingMode(PhysicalConnectionHandlingMode mode);
+
+	@Override
+	SharedSessionBuilder autoClear(boolean autoClear);
+
+	@Override
+	SharedSessionBuilder flushMode(FlushMode flushMode);
+
+	@Override @Deprecated(forRemoval = true)
+	SharedSessionBuilder tenantIdentifier(String tenantIdentifier);
+
+	@Override
+	SharedSessionBuilder tenantIdentifier(Object tenantIdentifier);
+
+	@Override
+	SharedSessionBuilder eventListeners(SessionEventListener... listeners);
+
+	@Override
+	SharedSessionBuilder clearEventListeners();
+
+	@Override
+	SharedSessionBuilder jdbcTimeZone(TimeZone timeZone);
 
 	@Override
 	SharedSessionBuilder interceptor(Interceptor interceptor);

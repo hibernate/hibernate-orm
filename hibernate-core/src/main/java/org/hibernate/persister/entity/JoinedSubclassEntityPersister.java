@@ -22,6 +22,7 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -1083,6 +1084,26 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
+	public Object forceVersionIncrement(Object id, Object currentVersion, SharedSessionContractImplementor session) {
+		if ( getSuperMappingType() != null ) {
+			return getSuperMappingType().getEntityPersister().forceVersionIncrement( id, currentVersion, session );
+		}
+		return super.forceVersionIncrement( id, currentVersion, session );
+	}
+
+	@Override
+	public Object forceVersionIncrement(
+			Object id,
+			Object currentVersion,
+			boolean batching,
+			SharedSessionContractImplementor session) throws HibernateException {
+		if ( getSuperMappingType() != null ) {
+			return getSuperMappingType().getEntityPersister().forceVersionIncrement( id, currentVersion, session );
+		}
+		return super.forceVersionIncrement( id, currentVersion, batching, session );
+	}
+
+	@Override
 	protected EntityVersionMapping generateVersionMapping(
 			Supplier<?> templateInstanceCreator,
 			PersistentClass bootEntityDescriptor,
@@ -1184,9 +1205,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected EntityDiscriminatorMapping generateDiscriminatorMapping(
-			PersistentClass bootEntityDescriptor,
-			MappingModelCreationProcess modelCreationProcess) {
+	protected EntityDiscriminatorMapping generateDiscriminatorMapping(PersistentClass bootEntityDescriptor) {
 		final EntityMappingType superMappingType = getSuperMappingType();
 		if ( superMappingType != null ) {
 			return superMappingType.getDiscriminatorMapping();
@@ -1197,7 +1216,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				// even though this is a JOINED hierarchy the user has defined an
 				// explicit discriminator column - so we can use the normal
 				// discriminator mapping
-				return super.generateDiscriminatorMapping( bootEntityDescriptor, modelCreationProcess );
+				return super.generateDiscriminatorMapping( bootEntityDescriptor );
 			}
 			else {
 				// otherwise, we need to use the case approach
@@ -1208,8 +1227,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 						notNullColumnNames,
 						discriminatorValues,
 						discriminatorAbstract,
-						resolveDiscriminatorType(),
-						modelCreationProcess
+						resolveDiscriminatorType()
 				);
 			}
 		}
@@ -1240,7 +1258,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public TableDetails getMappedTableDetails() {
-		return getTableMapping( getTableMappings().length - 1 );
+		// Subtract the number of secondary tables (tableSpan - coreTableSpan) and get the last table mapping
+		return getTableMapping( getTableMappings().length - ( tableSpan - coreTableSpan ) - 1 );
 	}
 
 	@Override

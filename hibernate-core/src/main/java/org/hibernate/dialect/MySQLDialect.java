@@ -71,12 +71,15 @@ import org.hibernate.type.NullType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.EnumJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
+import org.hibernate.type.descriptor.jdbc.OrdinalEnumJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import jakarta.persistence.TemporalType;
@@ -188,7 +191,12 @@ public class MySQLDialect extends Dialect {
 		registerKeywords( info );
 	}
 
+	@Deprecated
 	protected static DatabaseVersion createVersion(DialectResolutionInfo info) {
+		return createVersion( info, MINIMUM_VERSION );
+	}
+
+	protected static DatabaseVersion createVersion(DialectResolutionInfo info, DatabaseVersion defaultVersion) {
 		final String versionString = info.getDatabaseVersion();
 		if ( versionString != null ) {
 			final String[] components = versionString.split( "\\." );
@@ -204,7 +212,7 @@ public class MySQLDialect extends Dialect {
 				}
 			}
 		}
-		return info.makeCopy();
+		return info.makeCopyOrDefault( defaultVersion );
 	}
 
 	@Override
@@ -418,7 +426,8 @@ public class MySQLDialect extends Dialect {
 						.build()
 		);
 
-		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl(this) );
+		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
 	}
 
 	@Deprecated
@@ -542,6 +551,23 @@ public class MySQLDialect extends Dialect {
 				scale,
 				jdbcTypeRegistry
 		);
+	}
+
+	@Override
+	public int resolveSqlTypeLength(
+			String columnTypeName,
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			int displaySize) {
+		// It seems MariaDB/MySQL return the precision in bytes depending on the charset,
+		// so to detect whether we have a single character here, we check the display size
+		if ( jdbcTypeCode == Types.CHAR && precision <= 4 ) {
+			return displaySize;
+		}
+		else {
+			return precision;
+		}
 	}
 
 	@Override
@@ -672,7 +698,8 @@ public class MySQLDialect extends Dialect {
 				)
 		);
 
-		jdbcTypeRegistry.addDescriptor( new MySQLEnumJdbcType() );
+		jdbcTypeRegistry.addDescriptor( EnumJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( OrdinalEnumJdbcType.INSTANCE );
 	}
 
 	@Override

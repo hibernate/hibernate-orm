@@ -94,11 +94,11 @@ public interface JaxbEntity extends JaxbEntityOrMappedSuperclass {
 	@Nullable JaxbDiscriminatorFormulaImpl getDiscriminatorFormula();
 	void setDiscriminatorFormula(@Nullable JaxbDiscriminatorFormulaImpl value);
 
-	@Nullable JaxbSequenceGeneratorImpl getSequenceGenerators();
+	@Nullable JaxbSequenceGeneratorImpl getSequenceGenerator();
 
-	@Nullable JaxbTableGeneratorImpl getTableGenerators();
+	@Nullable JaxbTableGeneratorImpl getTableGenerator();
 
-	List<JaxbGenericIdGeneratorImpl> getIdentifierGenerators();
+	@Nullable JaxbGenericIdGeneratorImpl getGenericGenerator();
 
 	List<JaxbNamedQueryImpl> getNamedQueries();
 	List<JaxbNamedNativeQueryImpl> getNamedNativeQueries();

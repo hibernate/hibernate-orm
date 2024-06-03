@@ -515,6 +515,10 @@ public interface HibernateAnnotations {
 			Proxy.class,
 			ProxyAnnotation.class
 	);
+	OrmAnnotationDescriptor<PropertyRef,PropertyRefAnnotation> PROPERTY_REF = new OrmAnnotationDescriptor<>(
+			PropertyRef.class,
+			PropertyRefAnnotation.class
+	);
 	OrmAnnotationDescriptor<QueryCacheLayout,QueryCacheLayoutAnnotation> QUERY_CACHE_LAYOUT = new OrmAnnotationDescriptor<>(
 			QueryCacheLayout.class,
 			QueryCacheLayoutAnnotation.class

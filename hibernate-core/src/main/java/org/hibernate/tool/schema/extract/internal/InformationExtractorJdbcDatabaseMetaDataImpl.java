@@ -134,6 +134,26 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 		}
 	}
 
+	@Override
+	protected <T> T processCrossReferenceResultSet(
+			String parentCatalog,
+			String parentSchema,
+			String parentTable,
+			String foreignCatalog,
+			String foreignSchema,
+			String foreignTable,
+			ExtractionContext.ResultSetProcessor<T> processor) throws SQLException {
+		try (ResultSet resultSet = getExtractionContext().getJdbcDatabaseMetaData().getCrossReference(
+				parentCatalog,
+				parentSchema,
+				parentTable,
+				foreignCatalog,
+				foreignSchema,
+				foreignTable) ) {
+			return processor.process( resultSet );
+		}
+	}
+
 	protected void addColumns(TableInformation tableInformation) {
 		final Dialect dialect = getExtractionContext().getJdbcEnvironment().getDialect();
 

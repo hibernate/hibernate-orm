@@ -574,6 +574,26 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public String[] getCreateSchemaCommand(String schemaName) {
+		return new String[] { "create schema authorization " + schemaName };
+	}
+
+	@Override
+	public String[] getDropSchemaCommand(String schemaName) {
+		return new String[] { "" };
+	}
+
+	@Override
+	public boolean useCrossReferenceForeignKeys(){
+		return true;
+	}
+
+	@Override
+	public String getCrossReferenceParentTableFilter(){
+		return "%";
+	}
+
+	@Override
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
 	}

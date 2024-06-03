@@ -10,7 +10,7 @@ import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
 import org.junit.Test;
 
-import static org.hibernate.processor.test.util.TestUtil.assertSuperClassRelationShipInMetamodel;
+import static org.hibernate.processor.test.util.TestUtil.assertSuperclassRelationshipInMetamodel;
 
 /**
  * @author Emmanuel Bernard
@@ -27,7 +27,7 @@ public class UnmappedClassInHierarchyTest extends CompilationTest {
 			SubB.class
 	})
 	public void testUnmappedClassInHierarchy() throws Exception {
-		assertSuperClassRelationShipInMetamodel( SubA.class, BaseEntity.class );
-		assertSuperClassRelationShipInMetamodel( SubB.class, MappedBase.class );
+		assertSuperclassRelationshipInMetamodel( SubA.class, BaseEntity.class );
+		assertSuperclassRelationshipInMetamodel( SubB.class, MappedBase.class );
 	}
 }

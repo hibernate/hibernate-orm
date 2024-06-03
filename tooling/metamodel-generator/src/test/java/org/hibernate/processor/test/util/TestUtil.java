@@ -183,7 +183,7 @@ public class TestUtil {
 		assertEquals( buildErrorString( errorString, clazz ), expectedMapValue, actualMapKeyValue );
 	}
 
-	public static void assertSuperClassRelationShipInMetamodel(Class<?> entityClass, Class<?> superEntityClass) {
+	public static void assertSuperclassRelationshipInMetamodel(Class<?> entityClass, Class<?> superEntityClass) {
 		Class<?> clazz = getMetamodelClassFor( entityClass );
 		Class<?> superClazz = getMetamodelClassFor( superEntityClass );
 		assertEquals(

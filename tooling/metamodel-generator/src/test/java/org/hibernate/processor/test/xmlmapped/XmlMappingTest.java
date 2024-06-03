@@ -16,7 +16,7 @@ import org.junit.Test;
 import static org.hibernate.processor.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
-import static org.hibernate.processor.test.util.TestUtil.assertSuperClassRelationShipInMetamodel;
+import static org.hibernate.processor.test.util.TestUtil.assertSuperclassRelationshipInMetamodel;
 
 /**
  * @author Hardy Ferentschik
@@ -86,7 +86,7 @@ public class XmlMappingTest extends CompilationTest {
 	public void testClassHierarchy() {
 		assertMetamodelClassGeneratedFor( Mammal.class );
 		assertMetamodelClassGeneratedFor( LivingBeing.class );
-		assertSuperClassRelationShipInMetamodel( Mammal.class, LivingBeing.class );
+		assertSuperclassRelationshipInMetamodel( Mammal.class, LivingBeing.class );
 	}
 
 	@Test(expected = ClassNotFoundException.class)

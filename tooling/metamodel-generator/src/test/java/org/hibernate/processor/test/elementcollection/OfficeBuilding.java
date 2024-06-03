@@ -10,11 +10,18 @@ import java.util.Map;
 
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 @Entity
 public class OfficeBuilding {
 
+	private long id;
 	private Map<Integer, byte[]> doorCodes;
+
+	@Id
+	public long getId() {
+		return id;
+	}
 
 	@ElementCollection
 	public Map<Integer, byte[]> getDoorCodes() {

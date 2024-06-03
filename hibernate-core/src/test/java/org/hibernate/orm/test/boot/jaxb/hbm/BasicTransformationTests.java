@@ -89,7 +89,8 @@ public class BasicTransformationTests {
 
 		final JaxbEmbeddableImpl jaxbEmbeddable = transformed.getEmbeddables().get( 0 );
 		assertThat( jaxbEmbeddable.isMetadataComplete() ).isTrue();
-		assertThat( jaxbEmbeddable.getClazz() ).isEqualTo( "composition_1" );
+		assertThat( jaxbEmbeddable.getName() ).isEqualTo( "composition_1" );
+		assertThat( jaxbEmbeddable.getClazz() ).isNull();
 
 		TransformationHelper.verifyTransformation( transformed );
 	}

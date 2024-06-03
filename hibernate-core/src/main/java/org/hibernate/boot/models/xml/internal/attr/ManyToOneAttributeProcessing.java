@@ -7,9 +7,11 @@
 package org.hibernate.boot.models.xml.internal.attr;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOneImpl;
+import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.XmlAnnotations;
 import org.hibernate.boot.models.annotations.internal.ManyToOneJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.PropertyRefAnnotation;
 import org.hibernate.boot.models.annotations.internal.TargetXmlAnnotation;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
@@ -63,6 +65,13 @@ public class ManyToOneAttributeProcessing {
 
 		TableProcessing.transformJoinTable( jaxbManyToOne.getJoinTable(), memberDetails, xmlDocumentContext );
 		JoinColumnProcessing.applyJoinColumns( jaxbManyToOne.getJoinColumns(), memberDetails, xmlDocumentContext );
+		if ( jaxbManyToOne.getPropertyRef() != null ) {
+			final PropertyRefAnnotation propertyRefUsage = (PropertyRefAnnotation) memberDetails.applyAnnotationUsage(
+					HibernateAnnotations.PROPERTY_REF,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			propertyRefUsage.value( jaxbManyToOne.getPropertyRef().getName() );
+		}
 
 		applyNotFound( jaxbManyToOne, memberDetails, xmlDocumentContext );
 		applyOnDelete( memberDetails, jaxbManyToOne, manyToOneAnn, xmlDocumentContext );

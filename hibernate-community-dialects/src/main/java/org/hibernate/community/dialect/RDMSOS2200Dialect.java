@@ -90,8 +90,6 @@ public class RDMSOS2200Dialect extends Dialect {
 	 */
 	public RDMSOS2200Dialect() {
 		super( SimpleDatabaseVersion.ZERO_VERSION );
-		// Display the dialect version.
-		LOG.rdmsOs2200Dialect();
 	}
 
 	public RDMSOS2200Dialect(DialectResolutionInfo info) {

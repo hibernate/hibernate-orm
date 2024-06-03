@@ -291,8 +291,6 @@ public class HSQLDialect extends Dialect {
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		StringBuilder pattern = new StringBuilder();
-		//boolean castTo = temporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
-		boolean castTo = true;
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:
@@ -309,11 +307,11 @@ public class HSQLDialect extends Dialect {
 			default:
 				pattern.append("dateadd('?1',?2,");
 		}
-		if (castTo) {
-			pattern.append("cast(?3 as timestamp)");
+		if ( temporalType == TemporalType.DATE ) {
+			pattern.append( "cast(?3 as date)" );
 		}
 		else {
-			pattern.append("?3");
+			pattern.append( "cast(?3 as timestamp)" );
 		}
 		pattern.append(")");
 		return pattern.toString();

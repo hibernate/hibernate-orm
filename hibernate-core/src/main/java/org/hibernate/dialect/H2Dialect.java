@@ -81,6 +81,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.query.sqm.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.TemporalUnit.SECOND;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -452,11 +453,13 @@ public class H2Dialect extends Dialect {
 		if ( intervalType != null ) {
 			return "(?2+?3)";
 		}
-		return unit == SECOND
-				//TODO: if we have an integral number of seconds
-				//      (the common case) this is unnecessary
-				? "dateadd(nanosecond,?2*1e9,cast(?3 as timestamp))"
-				: "dateadd(?1,?2,cast(?3 as timestamp))";
+		if (unit == SECOND) {
+			return "dateadd(nanosecond,?2*1e9,cast(?3 as " + temporalType.name().toLowerCase() + "))";
+		} else if (unit == DAY) {
+			return "dateadd(?1,?2,cast(?3 as date))";
+		} else {
+			return "dateadd(?1,?2,?3)";
+		}
 	}
 
 	@Override

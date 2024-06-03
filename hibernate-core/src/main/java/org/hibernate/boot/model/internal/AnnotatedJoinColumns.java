@@ -16,6 +16,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinFormula;
+import org.hibernate.annotations.PropertyRef;
 import org.hibernate.boot.internal.FailedSecondPassException;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
@@ -29,6 +30,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -39,6 +41,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.JoinColumn;
 
@@ -64,6 +67,8 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 
 	private final List<AnnotatedJoinColumn> columns = new ArrayList<>();
 	private String propertyName; // this is really a .-separated property path
+
+	private String referencedProperty;
 
 	private String mappedBy;
 	private String mapsId;
@@ -99,7 +104,26 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 				AnnotatedJoinColumn.buildJoinColumn( column, mappedBy, parent, propertyHolder, inferredData );
 			}
 		}
+
+		handlePropertyRef( inferredData.getAttributeMember(), parent, context );
+
 		return parent;
+	}
+
+	private static void handlePropertyRef(
+			MemberDetails attributeMember,
+			AnnotatedJoinColumns parent,
+			MetadataBuildingContext context) {
+		final PropertyRef propertyRefUsage = attributeMember.getDirectAnnotationUsage( PropertyRef.class );
+		if ( propertyRefUsage == null ) {
+			return;
+		}
+
+		final String referencedPropertyName = propertyRefUsage.value();
+		if ( StringHelper.isEmpty( referencedPropertyName ) ) {
+			throw new AnnotationException( "@PropertyRef did not specify target attribute name : " + attributeMember );
+		}
+		parent.referencedProperty = referencedPropertyName;
 	}
 
 	static AnnotatedJoinColumns buildJoinColumnsWithFormula(
@@ -114,6 +138,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 		joinColumns.setPropertyHolder( propertyHolder );
 		joinColumns.setPropertyName( getRelativePath( propertyHolder, inferredData.getPropertyName() ) );
 		AnnotatedJoinColumn.buildJoinFormula( joinFormula, joinColumns );
+		handlePropertyRef( inferredData.getAttributeMember(), joinColumns, context );
 		return joinColumns;
 	}
 
@@ -157,6 +182,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 		parent.setPropertyHolder( propertyHolder );
 		parent.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 		parent.setMappedBy( mappedBy );
+		final MemberDetails memberDetails = inferredData.getAttributeMember();
 		if ( ArrayHelper.isEmpty( actualColumns ) ) {
 			AnnotatedJoinColumn.buildJoinColumn(
 					null,
@@ -182,6 +208,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 				);
 			}
 		}
+		handlePropertyRef( memberDetails, parent, context );
 		return parent;
 	}
 
@@ -209,6 +236,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 				AnnotatedJoinColumn.buildExplicitJoinTableJoinColumn( parent, propertyHolder, inferredData, joinColumn );
 			}
 		}
+		handlePropertyRef( inferredData.getAttributeMember(), parent, context );
 		return parent;
 	}
 
@@ -248,6 +276,10 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 	public void addColumn(AnnotatedJoinColumn child) {
 		super.addColumn( child );
 		columns.add( child );
+	}
+
+	public String getReferencedProperty() {
+		return referencedProperty;
 	}
 
 	public String getMappedBy() {
@@ -308,6 +340,10 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 	 * some other combination of mapped columns.
 	 */
 	public ForeignKeyType getReferencedColumnsType(PersistentClass referencedEntity) {
+		if ( referencedProperty != null ) {
+			return ForeignKeyType.NON_PRIMARY_KEY_REFERENCE;
+		}
+
 		if ( columns.isEmpty() ) {
 			return ForeignKeyType.IMPLICIT_PRIMARY_KEY_REFERENCE; //shortcut
 		}

@@ -16,6 +16,7 @@ import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.INFO;
 
 /**
@@ -37,18 +38,18 @@ public interface HSMessageLogger extends BasicLogger {
 	HSMessageLogger SPATIAL_MSG_LOGGER = Logger.getMessageLogger( HSMessageLogger.class, LOGGER_NAME );
 
 	@LogMessage(level = INFO)
-	@Message(value = "hibernate-spatial integration enabled : %s", id = 80000001)
+	@Message(value = "Hibernate Spatial integration enabled: %s", id = 80000001)
 	void spatialEnabled(boolean enabled);
 
-	@LogMessage(level = INFO)
-	@Message(value = "hibernate-spatial using Connection Finder for creating Oracle types : %s", id = 80000002)
+	@LogMessage(level = DEBUG)
+	@Message(value = "Hibernate Spatial using Connection Finder for creating Oracle types: %s", id = 80000002)
 	void connectionFinder(String className);
 
-	@LogMessage(level = INFO) //maybe should be DEBUG?
-	@Message(value = "hibernate-spatial adding type contributions from : %s", id = 80000003)
+	@LogMessage(level = DEBUG)
+	@Message(value = "hibernate-spatial adding type contributions from: %s", id = 80000003)
 	void typeContributions(String source);
 
-	@LogMessage(level = INFO) //maybe should be DEBUG?
-	@Message(value = "hibernate-spatial adding function contributions from : %s", id = 80000004)
+	@LogMessage(level = DEBUG)
+	@Message(value = "hibernate-spatial adding function contributions from: %s", id = 80000004)
 	void functionContributions(String source);
 }

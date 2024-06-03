@@ -17,6 +17,7 @@ import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.WARN;
@@ -71,14 +72,14 @@ public interface ConnectionPoolingLogger extends BasicLogger {
 	void usingUrl(String url);
 
 	@LogMessage(level = WARN)
-	@Message(id = 10001006, value = "No JDBC Driver class was specified by property `jakarta.persistence.jdbc.driver`, `hibernate.driver` or `javax.persistence.jdbc.driver`")
+	@Message(id = 10001006, value = "No JDBC Driver class was specified by property 'jakarta.persistence.jdbc.driver', 'hibernate.driver' or 'javax.persistence.jdbc.driver'")
 	void jdbcDriverNotSpecified();
 
 	@LogMessage(level = INFO)
 	@Message(value = "JDBC isolation level: %s", id = 10001007)
 	void jdbcIsolationLevel(String isolationLevelToString);
 
-	@LogMessage(level = INFO)
+	@LogMessage(level = DEBUG)
 	@Message(value = "Cleaning up connection pool [%s]", id = 10001008)
 	void cleaningUpConnectionPool(String url);
 
@@ -86,7 +87,7 @@ public interface ConnectionPoolingLogger extends BasicLogger {
 	@Message(value = "Problem closing pooled connection", id = 10001009)
 	void unableToClosePooledConnection(@Cause SQLException e);
 
-	@LogMessage(level = INFO)
+	@LogMessage(level = DEBUG)
 	@Message(value = "Connection pool size: %s (min=%s)", id = 10001115)
 	void hibernateConnectionPoolSize(int poolSize, int minSize);
 

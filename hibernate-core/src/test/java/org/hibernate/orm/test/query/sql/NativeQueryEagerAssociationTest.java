@@ -61,6 +61,7 @@ public class NativeQueryEagerAssociationTest {
 					building2,
 					List.of( building3, building4 )
 			) );
+			session.persist( building5 );
 			session.persist( new Classroom( 2L, "classroom_2", building5, null, null ) );
 		} );
 		scope.inTransaction( session -> {

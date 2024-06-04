@@ -6,7 +6,7 @@
  */
 package org.hibernate;
 
-import org.hibernate.pretty.MessageHelper;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * Thrown when Hibernate could not resolve an object by id, especially when
@@ -60,7 +60,7 @@ public class UnresolvableObjectException extends HibernateException {
 
 	@Override
 	public String getMessage() {
-		return super.getMessage() + ": " + MessageHelper.infoString( entityName, identifier );
+		return super.getMessage() + ": " + infoString( entityName, identifier );
 	}
 
 }

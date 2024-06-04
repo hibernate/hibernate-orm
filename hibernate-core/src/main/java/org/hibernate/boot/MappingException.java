@@ -28,11 +28,10 @@ public class MappingException extends org.hibernate.MappingException {
 
 	@Override
 	public String getMessage() {
-		String message = super.getMessage();
-		if (origin != null) {
-			message += " : origin(" + origin.getName() + ")";
-		}
-		return message;
+		final String message = super.getMessage();
+		return origin != null
+				? message + " [" + origin.getName() + "]"
+				: message;
 	}
 
 	public Origin getOrigin() {

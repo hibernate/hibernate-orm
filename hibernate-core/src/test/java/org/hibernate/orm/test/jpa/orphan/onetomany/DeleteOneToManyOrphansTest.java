@@ -10,7 +10,6 @@ import java.util.List;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.Jpa;
 
 import org.junit.jupiter.api.AfterEach;
@@ -56,7 +55,7 @@ public class DeleteOneToManyOrphansTest {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9568")
-	@FailureExpected( jiraKey = "HHH-9568" )
+//	@FailureExpected( jiraKey = "HHH-9568" )
 	public void testOrphanedWhileManaged(EntityManagerFactoryScope scope) {
 		Long productId = scope.fromTransaction(
 				entityManager -> {
@@ -85,7 +84,7 @@ public class DeleteOneToManyOrphansTest {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9568")
-	@FailureExpected( jiraKey = "HHH-9568" )
+//	@FailureExpected( jiraKey = "HHH-9568" )
 	public void testOrphanedWhileManagedMergeOwner(EntityManagerFactoryScope scope) {
 		Long productId = scope.fromTransaction(
 				entityManager -> {
@@ -115,7 +114,7 @@ public class DeleteOneToManyOrphansTest {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9568")
-	@FailureExpected( jiraKey = "HHH-9568" )
+//	@FailureExpected( jiraKey = "HHH-9568" )
 	public void testReplacedWhileManaged(EntityManagerFactoryScope scope) {
 		Long featureNewId = scope.fromTransaction(
 				entityManager -> {

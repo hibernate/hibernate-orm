@@ -64,6 +64,8 @@ import org.hibernate.persister.entity.EntityNameUse;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.spi.TreatedNavigablePath;
@@ -2405,6 +2407,10 @@ public class ToOneAttributeMapping
 		}
 
 		if ( referencedPropertyName != null ) {
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( domainValue );
+			if ( lazyInitializer != null ) {
+				domainValue = lazyInitializer.getImplementation();
+			}
 			assert getAssociatedEntityMappingType()
 					.getRepresentationStrategy()
 					.getInstantiator()

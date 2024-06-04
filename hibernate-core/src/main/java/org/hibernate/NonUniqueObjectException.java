@@ -6,7 +6,7 @@
  */
 package org.hibernate;
 
-import org.hibernate.pretty.MessageHelper;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * This exception is thrown when an operation would break session-scoped identity.
@@ -57,6 +57,6 @@ public class NonUniqueObjectException extends HibernateException {
 
 	@Override
 	public String getMessage() {
-		return super.getMessage() + " : " + MessageHelper.infoString( entityName, identifier );
+		return super.getMessage() + ": " + infoString( entityName, identifier );
 	}
 }

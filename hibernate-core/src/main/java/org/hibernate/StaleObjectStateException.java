@@ -6,7 +6,7 @@
  */
 package org.hibernate;
 
-import org.hibernate.pretty.MessageHelper;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * A specialized {@link StaleStateException} that carries information about
@@ -38,7 +38,7 @@ public class StaleObjectStateException extends StaleStateException {
 	}
 
 	public String getMessage() {
-		return super.getMessage() + " : " + MessageHelper.infoString( entityName, identifier );
+		return super.getMessage() + ": " + infoString( entityName, identifier );
 	}
 
 }

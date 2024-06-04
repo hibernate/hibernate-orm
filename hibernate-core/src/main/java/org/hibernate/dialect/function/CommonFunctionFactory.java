@@ -2381,6 +2381,29 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public void timestampaddAndDiff(Dialect dialect, SqlAstNodeRenderingMode timestampRenderingMode) {
+		functionRegistry.register(
+				"timestampadd",
+				new TimestampaddFunction(
+						dialect,
+						typeConfiguration,
+						SqlAstNodeRenderingMode.DEFAULT,
+						SqlAstNodeRenderingMode.DEFAULT,
+						timestampRenderingMode
+				)
+		);
+		functionRegistry.register(
+				"timestampdiff",
+				new TimestampdiffFunction(
+						dialect,
+						typeConfiguration,
+						SqlAstNodeRenderingMode.DEFAULT,
+						timestampRenderingMode,
+						timestampRenderingMode
+				)
+		);
+	}
+
 	/**
 	 * MySQL style, returns the number of days between two dates
 	 */

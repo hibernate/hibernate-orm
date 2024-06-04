@@ -19,6 +19,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Date;
@@ -49,6 +50,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
@@ -820,6 +822,17 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	public static TemporalType getSqlTemporalType(MappingModelExpressible<?> type) {
 		if ( type instanceof BasicValuedMapping ) {
 			return getSqlTemporalType( ( (BasicValuedMapping) type ).getJdbcMapping().getJdbcType() );
+		}
+		else if ( type instanceof EmbeddableValuedModelPart ) {
+			// Handle the special embeddables for emulated offset/timezone handling
+			final Class<?> javaTypeClass = ( (EmbeddableValuedModelPart) type ).getJavaType().getJavaTypeClass();
+			if ( javaTypeClass == OffsetDateTime.class
+					|| javaTypeClass == ZonedDateTime.class ) {
+				return TemporalType.TIMESTAMP;
+			}
+			else if ( javaTypeClass == OffsetTime.class ) {
+				return TemporalType.TIME;
+			}
 		}
 		return null;
 	}

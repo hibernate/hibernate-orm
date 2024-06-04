@@ -6010,6 +6010,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 		}
 
+		if ( sqmExpression instanceof SqmBinaryArithmetic<?> ) {
+			final SqmBinaryArithmetic<?> binaryArithmetic = (SqmBinaryArithmetic<?>) sqmExpression;
+			if ( binaryArithmetic.getNodeType() == null ) {
+				final MappingModelExpressible<?> lhs = determineValueMapping( binaryArithmetic.getLeftHandOperand() );
+				final MappingModelExpressible<?> rhs = determineValueMapping( binaryArithmetic.getRightHandOperand() );
+				// This cast should be fine since the result of this will be a BasicType
+				return (MappingModelExpressible<?>) getTypeConfiguration().resolveArithmeticType(
+						// These casts should be safe, since the only JdbcMapping is BasicType
+						// which also implements SqmExpressible
+						lhs == null ? null : (SqmExpressible<?>) lhs.getSingleJdbcMapping(),
+						rhs == null ? null : (SqmExpressible<?>) rhs.getSingleJdbcMapping()
+				);
+			}
+		}
+
 		log.debugf( "Determining mapping-model type for generalized SqmExpression : %s", sqmExpression );
 		final SqmExpressible<?> nodeType = sqmExpression.getNodeType();
 		if ( nodeType == null ) {
@@ -6536,11 +6551,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		SqmExpression<?> leftOperand = expression.getLeftHandOperand();
 		SqmExpression<?> rightOperand = expression.getRightHandOperand();
 
-		boolean durationToRight = isDuration( rightOperand.getNodeType() );
-		TypeConfiguration typeConfiguration = getCreationContext().getMappingMetamodel().getTypeConfiguration();
-		TemporalType temporalTypeToLeft = typeConfiguration.getSqlTemporalType( leftOperand.getNodeType() );
-		TemporalType temporalTypeToRight = typeConfiguration.getSqlTemporalType( rightOperand.getNodeType() );
-		boolean temporalTypeSomewhereToLeft = adjustedTimestamp != null || temporalTypeToLeft != null;
+		// Need to infer the operand types here first to decide how to transform the expression
+		final FromClauseIndex fromClauseIndex = fromClauseIndexStack.getCurrent();
+		inferrableTypeAccessStack.push( () -> determineValueMapping( rightOperand, fromClauseIndex ) );
+		final MappingModelExpressible<?> leftOperandType = determineValueMapping( leftOperand );
+		inferrableTypeAccessStack.pop();
+		inferrableTypeAccessStack.push( () -> determineValueMapping( leftOperand, fromClauseIndex ) );
+		final MappingModelExpressible<?> rightOperandType = determineValueMapping( rightOperand );
+		inferrableTypeAccessStack.pop();
+
+		final boolean durationToRight = isDuration( rightOperand.getNodeType() );
+		final TypeConfiguration typeConfiguration = getCreationContext().getMappingMetamodel().getTypeConfiguration();
+		final TemporalType temporalTypeToLeft = typeConfiguration.getSqlTemporalType( leftOperandType );
+		final TemporalType temporalTypeToRight = typeConfiguration.getSqlTemporalType( rightOperandType );
+		final boolean temporalTypeSomewhereToLeft = adjustedTimestamp != null || temporalTypeToLeft != null;
 
 		if ( temporalTypeToLeft != null && durationToRight ) {
 			if ( adjustmentScale != null || negativeAdjustment ) {
@@ -6557,7 +6581,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else {
 			// Infer one operand type through the other
-			final FromClauseIndex fromClauseIndex = fromClauseIndexStack.getCurrent();
 			inferrableTypeAccessStack.push( () -> determineValueMapping( rightOperand, fromClauseIndex ) );
 			final Expression lhs = toSqlExpression( leftOperand.accept( this ) );
 			inferrableTypeAccessStack.pop();

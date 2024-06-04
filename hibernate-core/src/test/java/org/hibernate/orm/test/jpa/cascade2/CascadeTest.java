@@ -9,7 +9,6 @@ package org.hibernate.orm.test.jpa.cascade2;
 import org.hibernate.Session;
 
 import org.hibernate.TransientObjectException;
-import org.hibernate.TransientPropertyValueException;
 import org.hibernate.orm.test.jpa.model.AbstractJPATest;
 import org.junit.jupiter.api.Test;
 
@@ -87,7 +86,7 @@ public class CascadeTest extends AbstractJPATest {
 			}
 			catch (IllegalStateException e) {
 				// expected result
-				assertInstanceOf( TransientPropertyValueException.class, e.getCause() );
+				assertInstanceOf( TransientObjectException.class, e.getCause() );
 				s.getTransaction().rollback();
 			}
 			finally {
@@ -119,7 +118,7 @@ public class CascadeTest extends AbstractJPATest {
 			}
 			catch (IllegalStateException e) {
 				// expected result
-				assertInstanceOf( TransientPropertyValueException.class, e.getCause() );
+				assertInstanceOf( TransientObjectException.class, e.getCause() );
 				s.getTransaction().rollback();
 			}
 			finally {
@@ -149,7 +148,7 @@ public class CascadeTest extends AbstractJPATest {
 			}
 			catch (IllegalStateException e) {
 				// expected result
-				assertInstanceOf( TransientPropertyValueException.class, e.getCause() );
+				assertInstanceOf( TransientObjectException.class, e.getCause() );
 				s.getTransaction().rollback();
 			}
 			finally {
@@ -179,7 +178,7 @@ public class CascadeTest extends AbstractJPATest {
 			}
 			catch (IllegalStateException e) {
 				// expected result
-				assertInstanceOf( TransientPropertyValueException.class, e.getCause() );
+				assertInstanceOf( TransientObjectException.class, e.getCause() );
 				s.getTransaction().rollback();
 			}
 			finally {
@@ -207,7 +206,7 @@ public class CascadeTest extends AbstractJPATest {
 			}
 			catch (IllegalStateException e) {
 				// expected result
-				assertInstanceOf( TransientPropertyValueException.class, e.getCause() );
+				assertInstanceOf( TransientObjectException.class, e.getCause() );
 				s.getTransaction().rollback();
 			}
 			finally {
@@ -235,7 +234,7 @@ public class CascadeTest extends AbstractJPATest {
 			}
 			catch (IllegalStateException e) {
 				// expected result
-				assertInstanceOf( TransientPropertyValueException.class, e.getCause() );
+				assertInstanceOf( TransientObjectException.class, e.getCause() );
 				s.getTransaction().rollback();
 			}
 			finally {
@@ -264,7 +263,7 @@ public class CascadeTest extends AbstractJPATest {
 			}
 			catch (IllegalStateException e) {
 				// expected result
-				assertInstanceOf( TransientPropertyValueException.class, e.getCause() );
+				assertInstanceOf( TransientObjectException.class, e.getCause() );
 				s.getTransaction().rollback();
 			}
 			finally {
@@ -293,7 +292,7 @@ public class CascadeTest extends AbstractJPATest {
 			}
 			catch (IllegalStateException e) {
 				// expected result
-				assertInstanceOf( TransientPropertyValueException.class, e.getCause() );
+				assertInstanceOf( TransientObjectException.class, e.getCause() );
 				s.getTransaction().rollback();
 			}
 			finally {

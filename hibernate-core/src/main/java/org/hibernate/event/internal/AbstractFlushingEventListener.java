@@ -155,6 +155,14 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 				cascadeOnFlush( session, entry.getPersister(), me.getKey(), context );
 			}
 		}
+
+		// perform these checks after all cascade persist events have been
+		// processed, so that all entities which will be persisted are
+		// persistent when we do the check (I wonder if we could move this
+		// into Nullability, instead of abusing the Cascade infrastructure)
+		persistenceContext.getEntitiesByKey().forEach( (entry, entity) -> {
+			Cascade.cascade( CascadingActions.CHECK_ON_FLUSH, CascadePoint.BEFORE_FLUSH, session, entry.getPersister(), entity, null );
+		} );
 	}
 
 	private static boolean flushable(EntityEntry entry) {

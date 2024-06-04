@@ -22,7 +22,6 @@ import org.hibernate.event.spi.PersistContext;
 import org.hibernate.event.spi.RefreshContext;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;

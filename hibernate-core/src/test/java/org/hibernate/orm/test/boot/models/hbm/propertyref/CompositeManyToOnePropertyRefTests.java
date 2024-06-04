@@ -23,6 +23,7 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -98,7 +99,9 @@ public class CompositeManyToOnePropertyRefTests {
 
 	@Embeddable
 	public static class Name {
+		@Column(name = "fname")
 		private String first;
+		@Column(name = "lname")
 		private String last;
 
 		public Name() {

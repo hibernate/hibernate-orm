@@ -16,8 +16,8 @@
     <class name="CompositeManyToOnePropertyRefTests$Person" table="persons">
         <id name="id"/>
         <component name="name" class="CompositeManyToOnePropertyRefTests$Name">
-            <property name="first"/>
-            <property name="last"/>
+            <property name="first" column="fname"/>
+            <property name="last" column="lname"/>
         </component>
     </class>
 

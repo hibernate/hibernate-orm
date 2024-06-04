@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Locale;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -510,7 +511,11 @@ public class DerbyDialect extends Dialect {
 			case NATIVE:
 				return "{fn timestampadd(sql_tsi_frac_second,mod(bigint(?2),1000000000),{fn timestampadd(sql_tsi_second,bigint((?2)/1000000000),?3)})}";
 			default:
-				return "{fn timestampadd(sql_tsi_?1,bigint(?2),?3)}";
+				final String addExpression = "{fn timestampadd(sql_tsi_?1,bigint(?2),?3)}";
+				// Since timestampadd will always produce a TIMESTAMP, we have to cast back to the intended type
+				return temporalType == TemporalType.TIMESTAMP
+						? addExpression
+						: "cast(" + addExpression + " as " + temporalType.name().toLowerCase( Locale.ROOT ) + ")" ;
 		}
 	}
 

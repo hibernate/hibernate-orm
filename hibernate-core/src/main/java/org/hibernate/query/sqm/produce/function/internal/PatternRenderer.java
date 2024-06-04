@@ -36,7 +36,7 @@ public class PatternRenderer {
 	private final int[] paramIndexes;
 	private final int varargParam;
 	private final int maxParamIndex;
-	private final SqlAstNodeRenderingMode argumentRenderingMode;
+	private final SqlAstNodeRenderingMode[] argumentRenderingModes;
 
 	public PatternRenderer(String pattern) {
 		this( pattern, SqlAstNodeRenderingMode.DEFAULT );
@@ -49,6 +49,16 @@ public class PatternRenderer {
 	 * @param argumentRenderingMode The rendering mode for arguments
 	 */
 	public PatternRenderer(String pattern, SqlAstNodeRenderingMode argumentRenderingMode) {
+		this( pattern, new SqlAstNodeRenderingMode[] { argumentRenderingMode } );
+	}
+
+	/**
+	 * Constructs a template renderer
+	 *
+	 * @param pattern The template
+	 * @param argumentRenderingModes The rendering modes for arguments
+	 */
+	public PatternRenderer(String pattern, SqlAstNodeRenderingMode[] argumentRenderingModes) {
 		final Set<Integer> paramNumbers = new HashSet<>();
 		final List<String> chunkList = new ArrayList<>();
 		final List<Integer> paramList = new ArrayList<>();
@@ -116,7 +126,7 @@ public class PatternRenderer {
 			paramIndexes[i] = paramList.get( i );
 		}
 		this.paramIndexes = paramIndexes;
-		this.argumentRenderingMode = argumentRenderingMode;
+		this.argumentRenderingModes = argumentRenderingModes;
 	}
 
 	public boolean hasVarargs() {
@@ -185,6 +195,7 @@ public class PatternRenderer {
 
 		for ( int i = 0; i < chunks.length; i++ ) {
 			if ( i == varargParam ) {
+				final SqlAstNodeRenderingMode argumentRenderingMode = getArgumentRenderingMode(varargParam - 1);
 				for ( int j = i; j < numberOfArguments; j++ ) {
 					final SqlAstNode arg = args.get( j );
 					if ( arg != null ) {
@@ -217,11 +228,11 @@ public class PatternRenderer {
 						filter.accept( translator );
 						translator.getCurrentClauseStack().pop();
 						sqlAppender.appendSql( " then " );
-						translator.render( arg, argumentRenderingMode );
+						translator.render( arg, getArgumentRenderingMode(index) );
 						sqlAppender.appendSql( " else null end" );
 					}
 					else {
-						translator.render( arg, argumentRenderingMode );
+						translator.render( arg, getArgumentRenderingMode(index) );
 					}
 				}
 			}
@@ -233,10 +244,10 @@ public class PatternRenderer {
 		if ( withinGroup != null && !withinGroup.isEmpty() ) {
 			translator.getCurrentClauseStack().push( Clause.WITHIN_GROUP );
 			sqlAppender.appendSql( " within group (order by" );
-			translator.render( withinGroup.get( 0 ), argumentRenderingMode );
+			translator.render( withinGroup.get( 0 ), getArgumentRenderingMode( 0 ) );
 			for ( int i = 1; i < withinGroup.size(); i++ ) {
 				sqlAppender.appendSql( SqlAppender.COMMA_SEPARATOR_CHAR );
-				translator.render( withinGroup.get( 0 ), argumentRenderingMode );
+				translator.render( withinGroup.get( 0 ), getArgumentRenderingMode( 0 ) );
 			}
 			sqlAppender.appendSql( ')' );
 			translator.getCurrentClauseStack().pop();
@@ -266,5 +277,12 @@ public class PatternRenderer {
 			sqlAppender.appendSql( ')' );
 			translator.getCurrentClauseStack().pop();
 		}
+	}
+
+	private SqlAstNodeRenderingMode getArgumentRenderingMode(int index) {
+		if ( index < argumentRenderingModes.length ) {
+			return argumentRenderingModes[index];
+		}
+		return argumentRenderingModes[argumentRenderingModes.length - 1];
 	}
 }

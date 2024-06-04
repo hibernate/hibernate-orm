@@ -86,10 +86,10 @@ public class CompositeManyToOnePropertyRefTests {
 		scope.inTransaction( (session) -> {
 			session.doWork( (connection) -> {
 				try (Statement statement = connection.createStatement()) {
-					final int deleteAccounts = statement.executeUpdate( "delete accounts" );
+					final int deleteAccounts = statement.executeUpdate( "delete from accounts" );
 					assertThat( deleteAccounts ).isEqualTo( 1 );
 
-					final int deletePersons = statement.executeUpdate( "delete persons" );
+					final int deletePersons = statement.executeUpdate( "delete from persons" );
 					assertThat( deletePersons ).isEqualTo( 1 );
 				}
 			} );

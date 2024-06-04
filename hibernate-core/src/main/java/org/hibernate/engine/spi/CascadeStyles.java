@@ -197,7 +197,8 @@ public final class CascadeStyles {
 		@Override
 		public boolean doCascade(CascadingAction action) {
 			return action == CascadingActions.DELETE
-				|| action == CascadingActions.SAVE_UPDATE //WHAT??
+				|| action == CascadingActions.SAVE_UPDATE
+				|| action == CascadingActions.PERSIST_ON_FLUSH
 				|| action == CascadingActions.CHECK_ON_FLUSH;
 		}
 
@@ -307,7 +308,7 @@ public final class CascadeStyles {
 		@Override
 		public boolean doCascade(CascadingAction action) {
 			if ( action == CascadingActions.CHECK_ON_FLUSH ) {
-				return !doCascade( CascadingActions.PERSIST_ON_FLUSH );
+				return !reallyDoCascade( CascadingActions.PERSIST_ON_FLUSH );
 			}
 			for ( CascadeStyle style : styles ) {
 				if ( style.doCascade( action ) ) {

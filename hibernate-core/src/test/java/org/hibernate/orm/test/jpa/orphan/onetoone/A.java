@@ -30,7 +30,7 @@ public class A implements Serializable {
 		this.id = id;
 	}
 
-	@OneToOne(targetEntity=B.class, mappedBy="a", orphanRemoval = true)
+	@OneToOne(mappedBy = "a", orphanRemoval = true)
 	public B getB() {
 		return b;
 	}

@@ -9,7 +9,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 // build a map of the database settings to use.
 ext {
-        db = project.hasProperty('db') ? project.getProperty('db') : 'derby'
+        db = project.hasProperty('db') ? project.getProperty('db') : 'h2'
         dbHost = System.getProperty( 'dbHost', 'localhost' )
         dbService = System.getProperty( 'dbService', '' )
         runID = System.getProperty( 'runID', '' )

@@ -1221,11 +1221,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 		//timestampadd()/timestampdiff() delegated back to the Dialect itself
 		//since there is a great variety of different ways to emulate them
-
-		functionContributions.getFunctionRegistry().register( "timestampadd",
-				new TimestampaddFunction( this, typeConfiguration ) );
-		functionContributions.getFunctionRegistry().register( "timestampdiff",
-				new TimestampdiffFunction( this, typeConfiguration ) );
+		//by default, we don't allow plain parameters for the timestamp argument as most database don't support this
+		functionFactory.timestampaddAndDiff( this, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 		functionContributions.getFunctionRegistry().registerAlternateKey( "dateadd", "timestampadd" );
 		functionContributions.getFunctionRegistry().registerAlternateKey( "datediff", "timestampdiff" );
 

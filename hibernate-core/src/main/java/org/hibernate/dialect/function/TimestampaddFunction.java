@@ -18,6 +18,7 @@ import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -47,8 +48,13 @@ public class TimestampaddFunction
 		extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	private final Dialect dialect;
+	private final SqlAstNodeRenderingMode[] renderingModes;
 
 	public TimestampaddFunction(Dialect dialect, TypeConfiguration typeConfiguration) {
+		this( dialect, typeConfiguration, SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public TimestampaddFunction(Dialect dialect, TypeConfiguration typeConfiguration, SqlAstNodeRenderingMode... renderingModes) {
 		super(
 				"timestampadd",
 				new ArgumentTypesValidator(
@@ -59,6 +65,7 @@ public class TimestampaddFunction
 				StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, TEMPORAL_UNIT, INTEGER, TEMPORAL )
 		);
 		this.dialect = dialect;
+		this.renderingModes = renderingModes;
 	}
 
 	@Override
@@ -78,7 +85,7 @@ public class TimestampaddFunction
 	PatternRenderer patternRenderer(TemporalUnit unit, Expression interval, Expression to) {
 		TemporalType temporalType = getSqlTemporalType( to.getExpressionType() );
 		IntervalType intervalType = getSqlIntervalType( interval.getExpressionType().getSingleJdbcMapping() );
-		return new PatternRenderer( dialect.timestampaddPattern( unit, temporalType, intervalType ) );
+		return new PatternRenderer( dialect.timestampaddPattern( unit, temporalType, intervalType ), renderingModes );
 	}
 
 //	@Override

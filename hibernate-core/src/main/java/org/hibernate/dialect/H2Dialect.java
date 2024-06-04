@@ -456,11 +456,8 @@ public class H2Dialect extends Dialect {
 		if ( unit == SECOND ) {
 			return "dateadd(nanosecond,?2*1e9,cast(?3 as " + temporalType.name().toLowerCase() + "))";
 		}
-		else if ( unit == DAY ) {
-			return "dateadd(?1,?2,cast(?3 as date))";
-		}
 		else {
-			return "dateadd(?1,?2,?3)";
+			return "dateadd(?1,?2,cast(?3 as " + temporalType.name().toLowerCase() + "))";
 		}
 	}
 

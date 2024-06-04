@@ -510,7 +510,9 @@ public class DerbyDialect extends Dialect {
 			case NATIVE:
 				return "{fn timestampadd(sql_tsi_frac_second,mod(bigint(?2),1000000000),{fn timestampadd(sql_tsi_second,bigint((?2)/1000000000),?3)})}";
 			default:
-				return "{fn timestampadd(sql_tsi_?1,bigint(?2),?3)}";
+				return temporalType == TemporalType.TIMESTAMP
+						? "{fn timestampadd(sql_tsi_?1,bigint(?2),?3)}"
+						: "cast({fn timestampadd(sql_tsi_?1,bigint(?2),?3)} as " + temporalType.name().toLowerCase() + ")";
 		}
 	}
 

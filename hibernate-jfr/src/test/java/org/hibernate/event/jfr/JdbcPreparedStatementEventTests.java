@@ -1,5 +1,6 @@
 package org.hibernate.event.jfr;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 
@@ -33,6 +34,7 @@ public class JdbcPreparedStatementEventTests {
 	@EnableEvent(JdbcPreparedStatementCreationEvent.NAME)
 	@EnableEvent(JdbcPreparedStatementExecutionEvent.NAME)
 	public void testJdbcPreparedStatementEvent(SessionFactoryScope scope) {
+		jfrEvents.reset();
 		scope.inTransaction(
 				session -> {
 					session.createQuery( "select t from TestEntity t" ).list();
@@ -72,7 +74,7 @@ public class JdbcPreparedStatementEventTests {
 		jfrEvents.reset();
 		scope.inTransaction(
 				session -> {
-
+					// No-op
 				}
 		);
 		final List<RecordedEvent> events = jfrEvents.events()
@@ -93,6 +95,7 @@ public class JdbcPreparedStatementEventTests {
 	@EnableEvent(JdbcPreparedStatementCreationEvent.NAME)
 	@EnableEvent(JdbcPreparedStatementExecutionEvent.NAME)
 	public void testJdbcPreparedStatementEventStoredProcedure(SessionFactoryScope scope) {
+		jfrEvents.reset();
 		scope.inTransaction(
 				session -> {
 					ProcedureCall call = session.createStoredProcedureCall("DB_OBJECT_SQL", String.class)
@@ -120,14 +123,14 @@ public class JdbcPreparedStatementEventTests {
 					RecordedEvent preparedStatementCreationEvent = events.get( 0 );
 					assertThat( preparedStatementCreationEvent.getEventType().getName() )
 							.isEqualTo( JdbcPreparedStatementCreationEvent.NAME );
-					assertThat( preparedStatementCreationEvent.getLong( "executionTime" ) ).isGreaterThan( 0 );
+					assertThat( preparedStatementCreationEvent.getDuration() ).isGreaterThan( Duration.ZERO );
 					assertThat( preparedStatementCreationEvent.getString( "sql" ).toLowerCase( Locale.ROOT ) )
 							.contains( "{call " );
 
 					RecordedEvent preparedStatementExecutionEvent = events.get( 1 );
 					assertThat( preparedStatementExecutionEvent.getEventType().getName() )
 							.isEqualTo( JdbcPreparedStatementExecutionEvent.NAME );
-					assertThat( preparedStatementExecutionEvent.getLong( "executionTime" ) ).isGreaterThan( 0 );
+					assertThat( preparedStatementExecutionEvent.getDuration() ).isGreaterThan( Duration.ZERO );
 					assertThat( preparedStatementExecutionEvent.getString( "sql" ) )
 							.isEqualTo( preparedStatementCreationEvent.getString( "sql" ) );
 				}

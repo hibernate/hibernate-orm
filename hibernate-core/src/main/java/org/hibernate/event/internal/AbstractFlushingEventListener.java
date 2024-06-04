@@ -419,7 +419,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 					}
 					else {
 						//otherwise recreate the mapping between the collection and its key
-						CollectionKey collectionKey = new CollectionKey(
+						final CollectionKey collectionKey = new CollectionKey(
 								collectionEntry.getLoadedPersister(),
 								collectionEntry.getLoadedKey()
 						);

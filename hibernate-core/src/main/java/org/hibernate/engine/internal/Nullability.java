@@ -11,13 +11,14 @@ import java.util.Iterator;
 import org.hibernate.HibernateException;
 import org.hibernate.PropertyValueException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.generator.Generator;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
+
+import static org.hibernate.engine.spi.CascadingActions.getLoadedElementsIterator;
 
 /**
  * Implements the algorithm for validating property values for illegal null values
@@ -155,7 +156,7 @@ public final class Nullability {
 			if ( collectionElementType.isComponentType() ) {
 				// check for all components values in the collection
 				final CompositeType componentType = (CompositeType) collectionElementType;
-				final Iterator<?> itr = CascadingActions.getLoadedElementsIterator( session, collectionType, value );
+				final Iterator<?> itr = getLoadedElementsIterator( session, collectionType, value );
 				while ( itr.hasNext() ) {
 					final Object compositeElement = itr.next();
 					if ( compositeElement != null ) {

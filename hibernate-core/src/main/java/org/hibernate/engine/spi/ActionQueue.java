@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.PropertyValueException;
+import org.hibernate.TransientObjectException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.action.internal.CollectionRecreateAction;
@@ -492,7 +493,17 @@ public class ActionQueue {
 	 */
 	public void executeActions() throws HibernateException {
 		if ( hasUnresolvedEntityInsertActions() ) {
-			throw new IllegalStateException( "About to execute actions, but there are unresolved entity insert actions." );
+			final AbstractEntityInsertAction insertAction =
+					unresolvedInsertions.getDependentEntityInsertActions()
+							.iterator().next();
+			final NonNullableTransientDependencies transientEntities = insertAction.findNonNullableTransientEntities();
+			final Object transientEntity = transientEntities.getNonNullableTransientEntities().iterator().next();
+			final String path = transientEntities.getNonNullableTransientPropertyPaths(transientEntity).iterator().next();
+			//TODO: should be TransientPropertyValueException
+			throw new TransientObjectException( "Persistent instance of '" + insertAction.getEntityName()
+					+ "' with id '" + insertAction.getId()
+					+ "' references an unsaved transient instance via attribute '" + path
+					+ "' (save the transient instance before flushing)" );
 		}
 
 		for ( OrderedActions action : ORDERED_OPERATIONS ) {

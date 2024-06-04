@@ -34,6 +34,7 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
+import static org.hibernate.engine.spi.CascadingActions.CHECK_ON_FLUSH;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.type.ForeignKeyDirection.TO_PARENT;
 
@@ -80,15 +81,17 @@ public final class Cascade {
 			final EntityPersister persister,
 			final Object parent,
 			final T anything) throws HibernateException {
-		if ( persister.hasCascades() || action.requiresNoCascadeChecking() ) { // performance opt
+		if ( persister.hasCascades() || action == CHECK_ON_FLUSH ) { // performance opt
 			final boolean traceEnabled = LOG.isTraceEnabled();
 			if ( traceEnabled ) {
 				LOG.tracev( "Processing cascade {0} for: {1}", action, persister.getEntityName() );
 			}
 			final PersistenceContext persistenceContext = eventSource.getPersistenceContextInternal();
 			final EntityEntry entry = persistenceContext.getEntry( parent );
-			if ( entry != null && entry.getLoadedState() == null && entry.getStatus() == Status.MANAGED && persister.getBytecodeEnhancementMetadata()
-					.isEnhancedForLazyLoading() ) {
+			if ( entry != null
+					&& entry.getLoadedState() == null
+					&& entry.getStatus() == Status.MANAGED
+					&& persister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
 				return;
 			}
 			final Type[] types = persister.getPropertyTypes();
@@ -99,11 +102,11 @@ public final class Cascade {
 			for ( int i = 0; i < types.length; i++) {
 				final CascadeStyle style = cascadeStyles[ i ];
 				final String propertyName = propertyNames[ i ];
+				final Type type = types[i];
 				final boolean isUninitializedProperty =
 						hasUninitializedLazyProperties &&
 						!persister.getBytecodeEnhancementMetadata().isAttributeLoaded( parent, propertyName );
 
-				final Type type = types[i];
 				if ( style.doCascade( action ) ) {
 					final Object child;
 					if ( isUninitializedProperty  ) {
@@ -169,15 +172,6 @@ public final class Cascade {
 					);
 				}
 				else {
-					if ( action.requiresNoCascadeChecking() ) {
-						action.noCascade(
-								eventSource,
-								parent,
-								persister,
-								type,
-								i
-						);
-					}
 					// If the property is uninitialized, then there cannot be any orphans.
 					if ( action.deleteOrphans() && !isUninitializedProperty && isLogicalOneToOne( type ) ) {
 						cascadeLogicalOneToOneOrphanRemoval(

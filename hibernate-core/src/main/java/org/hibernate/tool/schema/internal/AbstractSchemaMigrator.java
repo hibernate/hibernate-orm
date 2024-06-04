@@ -77,13 +77,6 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		this.schemaFilter = schemaFilter == null ? DefaultSchemaFilter.INSTANCE : schemaFilter;
 	}
 
-	/**
-	 * For testing.
-	 */
-	public void setUniqueConstraintStrategy(UniqueConstraintSchemaUpdateStrategy uniqueConstraintStrategy) {
-		this.uniqueConstraintStrategy = uniqueConstraintStrategy;
-	}
-
 	@Override
 	public void doMigration(
 			Metadata metadata,

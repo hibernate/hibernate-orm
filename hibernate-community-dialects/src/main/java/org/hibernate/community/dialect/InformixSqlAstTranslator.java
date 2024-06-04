@@ -10,11 +10,11 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -36,12 +36,30 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
+	public void visitSelectClause(SelectClause selectClause) {
+		getClauseStack().push( Clause.SELECT );
+
+		try {
+			appendSql( "select " );
+			visitSqlSelections( selectClause );
+			renderVirtualSelections( selectClause );
+		}
+		finally {
+			getClauseStack().pop();
+		}
+
+	}
+
+	@Override
 	protected void visitSqlSelections(SelectClause selectClause) {
 		if ( supportsSkipFirstClause() ) {
 			renderSkipFirstClause( (QuerySpec) getQueryPartStack().getCurrent() );
 		}
 		else {
 			renderFirstClause( (QuerySpec) getQueryPartStack().getCurrent() );
+		}
+		if ( selectClause.isDistinct() ) {
+			appendSql( "distinct " );
 		}
 		super.visitSqlSelections( selectClause );
 	}

@@ -143,8 +143,12 @@ public class SqmDynamicInstantiation<T>
 
 	private List<Class<?>> argumentTypes() {
 		return getArguments().stream()
-				.map(arg -> arg.getNodeJavaType() == null ? Void.class : arg.getNodeJavaType().getJavaTypeClass())
-				.collect(toList());
+				.map( arg -> {
+					final SqmExpressible<?> expressible = arg.getExpressible();
+					return expressible != null && expressible.getExpressibleJavaType() != null ?
+							expressible.getExpressibleJavaType().getJavaTypeClass() :
+							Void.class;
+				} ).collect( toList() );
 	}
 
 	public boolean isFullyAliased() {

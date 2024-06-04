@@ -1146,7 +1146,7 @@ public class XmlAnnotationHelper {
 			JaxbIdClassImpl jaxbIdClass,
 			MutableClassDetails target,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( jaxbIdClass == null ) {
+		if ( jaxbIdClass == null || StringHelper.isEmpty( jaxbIdClass.getClazz() ) ) {
 			return;
 		}
 

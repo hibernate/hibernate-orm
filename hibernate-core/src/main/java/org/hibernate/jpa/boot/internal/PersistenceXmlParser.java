@@ -12,11 +12,10 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
 import javax.xml.transform.stream.StreamSource;
 
 import org.hibernate.boot.archive.internal.ArchiveHelper;
@@ -51,20 +50,80 @@ public class PersistenceXmlParser {
 	private static final EntityManagerMessageLogger LOG = messageLogger( PersistenceXmlParser.class );
 
 	/**
-	 * Find all persistence-units from all accessible {@code META-INF/persistence.xml} resources
-	 *
+	 * @return A {@link PersistenceXmlParser} using no settings at all.
+	 */
+	public static PersistenceXmlParser create() {
+		return new PersistenceXmlParser( Map.of(), null, null );
+	}
+
+	/**
 	 * @param integration The Map of integration settings
+	 * @return A {@link PersistenceXmlParser} using the provided settings.
+	 */
+	public static PersistenceXmlParser create(Map<?,?> integration) {
+		return new PersistenceXmlParser( integration, null, null );
+	}
+
+	/**
+	 * @param integration The Map of integration settings
+	 * @param providedClassLoader A class loader to use.
+	 * Resources will be retrieved from this classloader in priority,
+	 * before looking into classloaders mentioned in integration settings.
+	 * @param providedClassLoaderService A class loader service to use.
+	 * Takes precedence over classloading settings in {@code integration}
+	 * and over {@code providedClassLoader}.
+	 * @return A {@link PersistenceXmlParser} using the provided settings and classloading configuration.
+	 */
+	public static PersistenceXmlParser create(Map<?,?> integration, ClassLoader providedClassLoader,
+			ClassLoaderService providedClassLoaderService) {
+		return new PersistenceXmlParser( integration, providedClassLoader, providedClassLoaderService );
+	}
+
+	private final Map<?, ?> integration;
+	private final ClassLoaderService classLoaderService;
+
+	protected PersistenceXmlParser(Map<?, ?> integration, ClassLoader providedClassLoader,
+			ClassLoaderService providedClassLoaderService) {
+		this.integration = integration;
+		if ( providedClassLoaderService != null ) {
+			classLoaderService = providedClassLoaderService;
+		}
+		else {
+			final List<ClassLoader> providedClassLoaders = new ArrayList<>();
+			if ( providedClassLoader != null ) {
+				providedClassLoaders.add( providedClassLoader );
+			}
+
+			@SuppressWarnings("unchecked")
+			final Collection<ClassLoader> classLoaders =
+					(Collection<ClassLoader>) integration.get( AvailableSettings.CLASSLOADERS );
+			if ( classLoaders != null ) {
+				providedClassLoaders.addAll( classLoaders );
+			}
+
+			classLoaderService = new ClassLoaderServiceImpl(
+					providedClassLoaders,
+					TcclLookupPrecedence.from( integration, TcclLookupPrecedence.AFTER )
+			);
+		}
+	}
+
+	/**
+	 * Find all persistence-units from all accessible {@code META-INF/persistence.xml} resources
 	 *
 	 * @return List of descriptors for all discovered persistence-units.
 	 */
-	public static List<ParsedPersistenceXmlDescriptor> locatePersistenceUnits(Map<?,?> integration) {
-		@SuppressWarnings("removal")
-		final PersistenceXmlParser parser = new PersistenceXmlParser(
-				fromConfigSettings( integration ),
-				PersistenceUnitTransactionType.RESOURCE_LOCAL
-		);
-		parser.doResolve( integration );
-		return new ArrayList<>( parser.persistenceUnits.values() );
+	@SuppressWarnings("removal")
+	public List<ParsedPersistenceXmlDescriptor> locatePersistenceUnits() {
+		Map<String, ParsedPersistenceXmlDescriptor> persistenceUnits = new HashMap<>();
+		final List<URL> xmlUrls = classLoaderService.locateResources( "META-INF/persistence.xml" );
+		if ( xmlUrls.isEmpty() ) {
+			LOG.unableToFindPersistenceXmlInClasspath();
+		}
+		else {
+			parsePersistenceXml( persistenceUnits, xmlUrls, PersistenceUnitTransactionType.RESOURCE_LOCAL );
+		}
+		return new ArrayList<>( persistenceUnits.values() );
 	}
 
 	/**
@@ -72,13 +131,12 @@ public class PersistenceXmlParser {
 	 * persistence-unit.
 	 *
 	 * @param persistenceXmlUrl The {@code persistence.xml} URL
-	 * @param integration The Map of integration settings
 	 *
 	 * @return The single persistence-unit descriptor
 	 */
 	@SuppressWarnings("removal")
-	public static ParsedPersistenceXmlDescriptor locateIndividualPersistenceUnit(URL persistenceXmlUrl, Map<?,?> integration) {
-		return locateIndividualPersistenceUnit( persistenceXmlUrl, PersistenceUnitTransactionType.RESOURCE_LOCAL, integration );
+	public ParsedPersistenceXmlDescriptor locateIndividualPersistenceUnit(URL persistenceXmlUrl) {
+		return locateIndividualPersistenceUnit( persistenceXmlUrl, PersistenceUnitTransactionType.RESOURCE_LOCAL );
 	}
 
 	/**
@@ -87,25 +145,17 @@ public class PersistenceXmlParser {
 	 *
 	 * @param persistenceXmlUrl The {@code persistence.xml} URL
 	 * @param transactionType The specific PersistenceUnitTransactionType to incorporate into the persistence-unit descriptor
-	 * @param integration The Map of integration settings
 	 *
 	 * @return The single persistence-unit descriptor
 	 */
-	public static ParsedPersistenceXmlDescriptor locateIndividualPersistenceUnit(
+	public ParsedPersistenceXmlDescriptor locateIndividualPersistenceUnit(
 			URL persistenceXmlUrl,
 			@SuppressWarnings("removal")
-			PersistenceUnitTransactionType transactionType,
-			Map<?,?> integration) {
-		final PersistenceXmlParser parser = new PersistenceXmlParser(
-				fromConfigSettings( integration ),
-				transactionType
-		);
-
-		parser.parsePersistenceXml( persistenceXmlUrl, integration );
-
-		assert parser.persistenceUnits.size() == 1;
-
-		return parser.persistenceUnits.values().iterator().next();
+			PersistenceUnitTransactionType transactionType) {
+		Map<String, ParsedPersistenceXmlDescriptor> persistenceUnits = new HashMap<>();
+		parsePersistenceXml( persistenceUnits, persistenceXmlUrl, transactionType );
+		assert persistenceUnits.size() == 1;
+		return persistenceUnits.values().iterator().next();
 	}
 
 	/**
@@ -113,25 +163,12 @@ public class PersistenceXmlParser {
 	 *
 	 * @param persistenceXmlUrl The {@code persistence.xml} URL
 	 * @param name The PU name to match
-	 *
-	 * @return The matching persistence-unit descriptor
-	 */
-	public static ParsedPersistenceXmlDescriptor locateNamedPersistenceUnit(URL persistenceXmlUrl, String name) {
-		return locateNamedPersistenceUnit( persistenceXmlUrl, name, Collections.emptyMap() );
-	}
-
-	/**
-	 * Parse a specific {@code persistence.xml} and return the descriptor for the persistence-unit with matching name
-	 *
-	 * @param persistenceXmlUrl The {@code persistence.xml} URL
-	 * @param name The PU name to match
-	 * @param integration The Map of integration settings
 	 *
 	 * @return The matching persistence-unit descriptor
 	 */
 	@SuppressWarnings("removal")
-	public static ParsedPersistenceXmlDescriptor locateNamedPersistenceUnit(URL persistenceXmlUrl, String name, Map<?,?> integration) {
-		return locateNamedPersistenceUnit( persistenceXmlUrl, name, PersistenceUnitTransactionType.RESOURCE_LOCAL, integration );
+	public ParsedPersistenceXmlDescriptor locateNamedPersistenceUnit(URL persistenceXmlUrl, String name) {
+		return locateNamedPersistenceUnit( persistenceXmlUrl, name, PersistenceUnitTransactionType.RESOURCE_LOCAL );
 	}
 
 	/**
@@ -140,39 +177,20 @@ public class PersistenceXmlParser {
 	 * @param persistenceXmlUrl The {@code persistence.xml} URL
 	 * @param name The PU name to match
 	 * @param transactionType The specific PersistenceUnitTransactionType to incorporate into the persistence-unit descriptor
-	 * @param integration The Map of integration settings
 	 *
 	 * @return The matching persistence-unit descriptor
 	 */
-	public static ParsedPersistenceXmlDescriptor locateNamedPersistenceUnit(
+	public ParsedPersistenceXmlDescriptor locateNamedPersistenceUnit(
 			URL persistenceXmlUrl,
 			String name,
 			@SuppressWarnings("removal")
-			PersistenceUnitTransactionType transactionType,
-			Map<?,?> integration) {
+			PersistenceUnitTransactionType transactionType) {
 		assert StringHelper.isNotEmpty( name );
 
-		final PersistenceXmlParser parser = new PersistenceXmlParser(
-				fromConfigSettings( integration ),
-				transactionType
-		);
-
-		parser.parsePersistenceXml( persistenceXmlUrl, integration );
-		assert parser.persistenceUnits.containsKey( name );
-
-		return parser.persistenceUnits.get( name );
-	}
-
-	/**
-	 * Intended only for use by Hibernate tests!
-	 * <p>
-	 * Parses a specific persistence.xml file...
-	 */
-	@SuppressWarnings("removal")
-	public static Map<String, ParsedPersistenceXmlDescriptor> parse(
-			URL persistenceXmlUrl,
-			PersistenceUnitTransactionType transactionType) {
-		return parse( persistenceXmlUrl, transactionType, Collections.emptyMap() );
+		Map<String, ParsedPersistenceXmlDescriptor> persistenceUnits = new HashMap<>();
+		parsePersistenceXml( persistenceUnits, persistenceXmlUrl, transactionType );
+		assert persistenceUnits.containsKey( name );
+		return persistenceUnits.get( name );
 	}
 
 	/**
@@ -181,69 +199,30 @@ public class PersistenceXmlParser {
 	 *
 	 * @param persistenceXmlUrl The URL of the {@code persistence.xml} to parse
 	 * @param transactionType The specific PersistenceUnitTransactionType to incorporate into the persistence-unit descriptor
-	 * @param integration The Map of integration settings
 	 *
 	 * @return Map of persistence-unit descriptors keyed by the PU name
 	 */
-	public static Map<String, ParsedPersistenceXmlDescriptor> parse(
+	public Map<String, ParsedPersistenceXmlDescriptor> parse(
 			URL persistenceXmlUrl,
 			@SuppressWarnings("removal")
-			PersistenceUnitTransactionType transactionType,
-			Map<?,?> integration) {
-		PersistenceXmlParser parser = new PersistenceXmlParser(
-				fromConfigSettings( integration ),
-				transactionType
-		);
-
-		parser.parsePersistenceXml( persistenceXmlUrl, integration );
-		return parser.persistenceUnits;
+			PersistenceUnitTransactionType transactionType) {
+		Map<String, ParsedPersistenceXmlDescriptor> persistenceUnits = new HashMap<>();
+		parsePersistenceXml( persistenceUnits, persistenceXmlUrl, transactionType );
+		return persistenceUnits;
 	}
 
-	private final ClassLoaderService classLoaderService;
-	@SuppressWarnings("removal")
-	private final PersistenceUnitTransactionType defaultTransactionType;
-	private final Map<String, ParsedPersistenceXmlDescriptor> persistenceUnits;
-
-	@SuppressWarnings("removal")
-	protected PersistenceXmlParser(ClassLoaderService classLoaderService, PersistenceUnitTransactionType defaultTransactionType) {
-		this.classLoaderService = classLoaderService;
-		this.defaultTransactionType = defaultTransactionType;
-		this.persistenceUnits = new ConcurrentHashMap<>();
-	}
-
-	private static ClassLoaderServiceImpl fromConfigSettings(Map<?,?> configValues) {
-		final List<ClassLoader> providedClassLoaders = new ArrayList<>();
-
-		@SuppressWarnings("unchecked")
-		final Collection<ClassLoader> classLoaders =
-				(Collection<ClassLoader>) configValues.get( AvailableSettings.CLASSLOADERS );
-		if ( classLoaders != null ) {
-			providedClassLoaders.addAll( classLoaders );
-		}
-
-		return new ClassLoaderServiceImpl(
-				providedClassLoaders,
-				TcclLookupPrecedence.from( configValues, TcclLookupPrecedence.AFTER )
-		);
-	}
-
-	private void doResolve(Map<?,?> integration) {
-		final List<URL> xmlUrls = classLoaderService.locateResources( "META-INF/persistence.xml" );
-		if ( xmlUrls.isEmpty() ) {
-			LOG.unableToFindPersistenceXmlInClasspath();
-		}
-		else {
-			parsePersistenceXml( xmlUrls, integration );
-		}
-	}
-
-	private void parsePersistenceXml(List<URL> xmlUrls, Map<?,?> integration) {
+	private void parsePersistenceXml(Map<String, ParsedPersistenceXmlDescriptor> persistenceUnits,
+			List<URL> xmlUrls,
+			@SuppressWarnings("removal")
+			PersistenceUnitTransactionType defaultTransactionType) {
 		for ( URL xmlUrl : xmlUrls ) {
-			parsePersistenceXml( xmlUrl, integration );
+			parsePersistenceXml( persistenceUnits, xmlUrl, defaultTransactionType );
 		}
 	}
 
-	protected void parsePersistenceXml(URL xmlUrl, Map<?,?> integration) {
+	@SuppressWarnings("removal")
+	protected void parsePersistenceXml(Map<String, ParsedPersistenceXmlDescriptor> persistenceUnits,
+			URL xmlUrl, PersistenceUnitTransactionType defaultTransactionType) {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracef( "Attempting to parse persistence.xml file : %s", xmlUrl.toExternalForm() );
 		}
@@ -267,7 +246,7 @@ public class PersistenceXmlParser {
 
 			// per JPA spec, any settings passed in to PersistenceProvider bootstrap methods should override
 			// values found in persistence.xml
-			applyIntegrationOverrides( integration, persistenceUnitDescriptor );
+			applyIntegrationOverrides( integration, defaultTransactionType, persistenceUnitDescriptor );
 
 			persistenceUnits.put( persistenceUnitDescriptor.getName(), persistenceUnitDescriptor );
 		}
@@ -316,8 +295,9 @@ public class PersistenceXmlParser {
 		return false;
 	}
 
-	@SuppressWarnings("deprecation")
-	private void applyIntegrationOverrides(Map<?,?> integration, ParsedPersistenceXmlDescriptor persistenceUnitDescriptor) {
+	@SuppressWarnings({"deprecation", "removal"})
+	private void applyIntegrationOverrides(Map<?,?> integration, PersistenceUnitTransactionType defaultTransactionType,
+			ParsedPersistenceXmlDescriptor persistenceUnitDescriptor) {
 		if ( integration.containsKey( AvailableSettings.JAKARTA_PERSISTENCE_PROVIDER ) ) {
 			persistenceUnitDescriptor.setProviderClassName( (String) integration.get( AvailableSettings.JAKARTA_PERSISTENCE_PROVIDER ) );
 		}
@@ -364,14 +344,15 @@ public class PersistenceXmlParser {
 			persistenceUnitDescriptor.setNonJtaDataSource( integration.get( AvailableSettings.JAKARTA_NON_JTA_DATASOURCE ) );
 		}
 
-		applyTransactionTypeOverride( persistenceUnitDescriptor );
+		applyTransactionTypeOverride( persistenceUnitDescriptor, defaultTransactionType );
 
 		final Properties properties = persistenceUnitDescriptor.getProperties();
 		ConfigurationHelper.overrideProperties( properties, integration );
 	}
 
 	@SuppressWarnings("removal")
-	private void applyTransactionTypeOverride(ParsedPersistenceXmlDescriptor persistenceUnitDescriptor) {
+	private void applyTransactionTypeOverride(ParsedPersistenceXmlDescriptor persistenceUnitDescriptor,
+			PersistenceUnitTransactionType defaultTransactionType) {
 		// if transaction type is set already, use that value
 		if ( persistenceUnitDescriptor.getTransactionType() == null ) {
 			// else

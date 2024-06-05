@@ -8,6 +8,7 @@ package org.hibernate.orm.test.jpa.compliance;
 
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.boot.archive.scan.internal.DisabledScanner;
@@ -52,7 +53,7 @@ public class PersistenceUnitNameTests {
 
 	private static EntityManagerFactory loadFactory(String name, ServiceRegistryScope scope) {
 		final URL puFile = PersistenceUnitNameTests.class.getClassLoader().getResource( "xml/jakarta/simple/2units.xml" );
-		var descriptors = PersistenceXmlParser.create().parse( puFile );
+		var descriptors = PersistenceXmlParser.create().parse( List.of( puFile ) );
 		assertThat( descriptors ).containsKey( name );
 		final PersistenceUnitDescriptor descriptor = descriptors.get( name );
 		final EntityManagerFactoryBuilder emfBuilder = Bootstrap.getEntityManagerFactoryBuilder(

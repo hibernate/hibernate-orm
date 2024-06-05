@@ -12,7 +12,7 @@ package org.hibernate.community.dialect;
  *
  * @author Tobias Sternvik
  *
- * @deprecated use {@code DB2390Dialect(8)}
+ * @deprecated use {@code DB2LegacyDialect(8)}
  */
 @Deprecated
 public class DB2390V8Dialect extends DB2390Dialect {

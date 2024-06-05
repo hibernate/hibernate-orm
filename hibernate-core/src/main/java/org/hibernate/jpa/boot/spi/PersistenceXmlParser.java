@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.boot.internal;
+package org.hibernate.jpa.boot.spi;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,6 +33,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 
 import jakarta.persistence.PersistenceException;
@@ -45,7 +46,7 @@ import static org.hibernate.internal.HEMLogging.messageLogger;
  *
  * @author Steve Ebersole
  */
-public class PersistenceXmlParser {
+public final class PersistenceXmlParser {
 
 	private static final EntityManagerMessageLogger LOG = messageLogger( PersistenceXmlParser.class );
 
@@ -82,7 +83,7 @@ public class PersistenceXmlParser {
 	private final Map<?, ?> integration;
 	private final ClassLoaderService classLoaderService;
 
-	protected PersistenceXmlParser(Map<?, ?> integration, ClassLoader providedClassLoader,
+	private PersistenceXmlParser(Map<?, ?> integration, ClassLoader providedClassLoader,
 			ClassLoaderService providedClassLoaderService) {
 		this.integration = integration;
 		if ( providedClassLoaderService != null ) {
@@ -109,13 +110,21 @@ public class PersistenceXmlParser {
 	}
 
 	/**
+	 * @return The {@link ClassLoaderService} used by this parser.
+	 * Useful to retrieve URLs of persistence.xml files.
+	 */
+	public ClassLoaderService getClassLoaderService() {
+		return classLoaderService;
+	}
+
+	/**
 	 * Find all persistence-units from all accessible {@code META-INF/persistence.xml} resources
 	 *
 	 * @return List of descriptors for all discovered persistence-units.
 	 */
 	@SuppressWarnings("removal")
-	public List<ParsedPersistenceXmlDescriptor> locatePersistenceUnits() {
-		Map<String, ParsedPersistenceXmlDescriptor> persistenceUnits = new HashMap<>();
+	public List<PersistenceUnitDescriptor> locatePersistenceUnits() {
+		Map<String, PersistenceUnitDescriptor> persistenceUnits = new HashMap<>();
 		final List<URL> xmlUrls = classLoaderService.locateResources( "META-INF/persistence.xml" );
 		if ( xmlUrls.isEmpty() ) {
 			LOG.unableToFindPersistenceXmlInClasspath();
@@ -127,70 +136,18 @@ public class PersistenceXmlParser {
 	}
 
 	/**
-	 * Parse a specific {@code persistence.xml} with the assumption that it defines a single
-	 * persistence-unit.
+	 * Generic method to parse a specified {@code persistence.xml} and return a Map of descriptors
+	 * for all discovered persistence-units keyed by the PU name.
 	 *
-	 * @param persistenceXmlUrl The {@code persistence.xml} URL
+	 * @param persistenceXmlUrl The URL of the {@code persistence.xml} to parse
 	 *
-	 * @return The single persistence-unit descriptor
+	 * @return Map of persistence-unit descriptors keyed by the PU name
 	 */
 	@SuppressWarnings("removal")
-	public ParsedPersistenceXmlDescriptor locateIndividualPersistenceUnit(URL persistenceXmlUrl) {
-		return locateIndividualPersistenceUnit( persistenceXmlUrl, PersistenceUnitTransactionType.RESOURCE_LOCAL );
-	}
-
-	/**
-	 * Parse a specific {@code persistence.xml} with the assumption that it defines a single
-	 * persistence-unit.
-	 *
-	 * @param persistenceXmlUrl The {@code persistence.xml} URL
-	 * @param transactionType The specific PersistenceUnitTransactionType to incorporate into the persistence-unit descriptor
-	 *
-	 * @return The single persistence-unit descriptor
-	 */
-	public ParsedPersistenceXmlDescriptor locateIndividualPersistenceUnit(
-			URL persistenceXmlUrl,
-			@SuppressWarnings("removal")
-			PersistenceUnitTransactionType transactionType) {
-		Map<String, ParsedPersistenceXmlDescriptor> persistenceUnits = new HashMap<>();
-		parsePersistenceXml( persistenceUnits, persistenceXmlUrl, transactionType );
-		assert persistenceUnits.size() == 1;
-		return persistenceUnits.values().iterator().next();
-	}
-
-	/**
-	 * Parse a specific {@code persistence.xml} and return the descriptor for the persistence-unit with matching name
-	 *
-	 * @param persistenceXmlUrl The {@code persistence.xml} URL
-	 * @param name The PU name to match
-	 *
-	 * @return The matching persistence-unit descriptor
-	 */
-	@SuppressWarnings("removal")
-	public ParsedPersistenceXmlDescriptor locateNamedPersistenceUnit(URL persistenceXmlUrl, String name) {
-		return locateNamedPersistenceUnit( persistenceXmlUrl, name, PersistenceUnitTransactionType.RESOURCE_LOCAL );
-	}
-
-	/**
-	 * Parse a specific {@code persistence.xml} and return the descriptor for the persistence-unit with matching name
-	 *
-	 * @param persistenceXmlUrl The {@code persistence.xml} URL
-	 * @param name The PU name to match
-	 * @param transactionType The specific PersistenceUnitTransactionType to incorporate into the persistence-unit descriptor
-	 *
-	 * @return The matching persistence-unit descriptor
-	 */
-	public ParsedPersistenceXmlDescriptor locateNamedPersistenceUnit(
-			URL persistenceXmlUrl,
-			String name,
-			@SuppressWarnings("removal")
-			PersistenceUnitTransactionType transactionType) {
-		assert StringHelper.isNotEmpty( name );
-
-		Map<String, ParsedPersistenceXmlDescriptor> persistenceUnits = new HashMap<>();
-		parsePersistenceXml( persistenceUnits, persistenceXmlUrl, transactionType );
-		assert persistenceUnits.containsKey( name );
-		return persistenceUnits.get( name );
+	public Map<String, PersistenceUnitDescriptor> parse(URL persistenceXmlUrl) {
+		Map<String, PersistenceUnitDescriptor> persistenceUnits = new HashMap<>();
+		parsePersistenceXml( persistenceUnits, persistenceXmlUrl, PersistenceUnitTransactionType.RESOURCE_LOCAL );
+		return persistenceUnits;
 	}
 
 	/**
@@ -202,16 +159,16 @@ public class PersistenceXmlParser {
 	 *
 	 * @return Map of persistence-unit descriptors keyed by the PU name
 	 */
-	public Map<String, ParsedPersistenceXmlDescriptor> parse(
+	public Map<String, PersistenceUnitDescriptor> parse(
 			URL persistenceXmlUrl,
 			@SuppressWarnings("removal")
 			PersistenceUnitTransactionType transactionType) {
-		Map<String, ParsedPersistenceXmlDescriptor> persistenceUnits = new HashMap<>();
+		Map<String, PersistenceUnitDescriptor> persistenceUnits = new HashMap<>();
 		parsePersistenceXml( persistenceUnits, persistenceXmlUrl, transactionType );
 		return persistenceUnits;
 	}
 
-	private void parsePersistenceXml(Map<String, ParsedPersistenceXmlDescriptor> persistenceUnits,
+	private void parsePersistenceXml(Map<String, PersistenceUnitDescriptor> persistenceUnits,
 			List<URL> xmlUrls,
 			@SuppressWarnings("removal")
 			PersistenceUnitTransactionType defaultTransactionType) {
@@ -221,7 +178,7 @@ public class PersistenceXmlParser {
 	}
 
 	@SuppressWarnings("removal")
-	protected void parsePersistenceXml(Map<String, ParsedPersistenceXmlDescriptor> persistenceUnits,
+	protected void parsePersistenceXml(Map<String, PersistenceUnitDescriptor> persistenceUnits,
 			URL xmlUrl, PersistenceUnitTransactionType defaultTransactionType) {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracef( "Attempting to parse persistence.xml file : %s", xmlUrl.toExternalForm() );

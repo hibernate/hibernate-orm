@@ -421,9 +421,17 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 			appendSql( " from old table (" );
 		}
 		else {
-			appendSql( " from final table (" );
+			appendSql( " from ");
+			appendSql( getNewTableChangeModifier() );
+			appendSql(" table (" );
 		}
 		return true;
+	}
+
+	protected String getNewTableChangeModifier() {
+		// Use 'from new table' to also see data from triggers
+		// See https://www.ibm.com/docs/en/db2/10.5?topic=clause-table-reference#:~:text=FOR%20sequence%20reference-,FINAL%20TABLE,-Specifies%20that%20the
+		return "new";
 	}
 
 	@Override
@@ -439,7 +447,9 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 				appendSql( returningColumns.get( i ).getColumnExpression() );
 			}
 
-			appendSql( " from new table (" ); // 'from final table' does not seem to play well with triggers
+			appendSql( " from ");
+			appendSql( getNewTableChangeModifier() );
+			appendSql(" table (" );
 			super.visitStandardTableInsert( tableInsert );
 			appendSql( ")" );
 		}

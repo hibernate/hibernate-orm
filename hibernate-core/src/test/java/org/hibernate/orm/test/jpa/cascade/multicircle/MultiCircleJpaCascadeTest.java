@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * <p>
  * All IDs are generated from a sequence.
  * <p>
- * JPA cascade types are used (jakarta.persistence.CascadeType)..
+ * JPA cascade types are used (jakarta.persistence.CascadeType).
  * <p>
  * This test uses the following model:
  *
@@ -186,7 +186,7 @@ public class MultiCircleJpaCascadeTest {
 	}
 
 	@Test
-	public void testPersistThenUpdateNoCascadeToTransient(EntityManagerFactoryScope scope) {
+	public void testPersistThenUpdateNoCascadeToTransient1(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {
 					// remove elements from collections and persist
@@ -205,21 +205,63 @@ public class MultiCircleJpaCascadeTest {
 					catch (RollbackException ex) {
 						assertTrue( ex.getCause() instanceof IllegalStateException );
 						IllegalStateException ise = (IllegalStateException) ex.getCause();
-						assertTyping(
-								TransientObjectException.class,
-								ise.getCause()
-						);
+						assertTyping( TransientObjectException.class, ise.getCause() );
+						String message = ise.getCause().getMessage();
+						assertTrue( message.contains("'org.hibernate.orm.test.jpa.cascade.multicircle.B'") );
+					}
+					finally {
+						entityManager.getTransaction().rollback();
+						entityManager.close();
+					}
+				}
+		);
+	}
+
+	@Test
+	public void testPersistThenUpdateNoCascadeToTransient2(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(
+				entityManager -> {
+					// remove elements from collections and persist
+					c.getBCollection().clear();
+					c.getDCollection().clear();
+
+					entityManager.getTransaction().begin();
+					entityManager.persist( c );
+					entityManager.persist( b );
+					// now add the elements back
+					c.getBCollection().add( b );
+					c.getDCollection().add( d );
+					entityManager.getTransaction().commit();
+				}
+		);
+	}
+
+	@Test
+	public void testPersistThenUpdateNoCascadeToTransient3(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(
+				entityManager -> {
+					// remove elements from collections and persist
+					c.getBCollection().clear();
+					c.getDCollection().clear();
+					d.getBCollection().clear();
+
+					entityManager.getTransaction().begin();
+					entityManager.persist( c );
+					// now add the elements back
+					c.getDCollection().add( d );
+					try {
+						entityManager.getTransaction().commit();
+						fail( "should have thrown IllegalStateException" );
+					}
+					catch (RollbackException ex) {
+						assertTrue( ex.getCause() instanceof IllegalStateException );
+						IllegalStateException ise = (IllegalStateException) ex.getCause();
+						assertTyping( TransientObjectException.class, ise.getCause() );
 						String message = ise.getCause().getMessage();
 						assertTrue( message.contains("'org.hibernate.orm.test.jpa.cascade.multicircle.F'") );
 						assertTrue( message.contains("'g'") );
-//						TransientPropertyValueException tpve = assertTyping(
-//								TransientPropertyValueException.class,
-//								ise.getCause()
-//						);
-//						assertEquals( G.class.getName(), tpve.getTransientEntityName() );
-//						assertEquals( F.class.getName(), tpve.getPropertyOwnerEntityName() );
-//						assertEquals( "g", tpve.getPropertyName() );
-					} finally {
+					}
+					finally {
 						entityManager.getTransaction().rollback();
 						entityManager.close();
 					}

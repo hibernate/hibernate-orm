@@ -180,7 +180,7 @@ public final class CascadeStyles {
 	public static final CascadeStyle DELETE = new BaseCascadeStyle() {
 		@Override
 		public boolean doCascade(CascadingAction action) {
-			return action == CascadingActions.DELETE
+			return action == CascadingActions.REMOVE
 				|| action == CascadingActions.CHECK_ON_FLUSH;
 		}
 
@@ -196,7 +196,7 @@ public final class CascadeStyles {
 	public static final CascadeStyle DELETE_ORPHAN = new BaseCascadeStyle() {
 		@Override
 		public boolean doCascade(CascadingAction action) {
-			return action == CascadingActions.DELETE
+			return action == CascadingActions.REMOVE
 				|| action == CascadingActions.SAVE_UPDATE
 				|| action == CascadingActions.PERSIST_ON_FLUSH
 				|| action == CascadingActions.CHECK_ON_FLUSH;
@@ -204,7 +204,7 @@ public final class CascadeStyles {
 
 		@Override
 		public boolean reallyDoCascade(CascadingAction action) {
-			return action == CascadingActions.DELETE
+			return action == CascadingActions.REMOVE
 				|| action == CascadingActions.CHECK_ON_FLUSH;
 		}
 

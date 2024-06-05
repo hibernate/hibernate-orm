@@ -322,6 +322,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		Book book = new Book();
 		author.books.put(1, book);
 		em.persist(author);
+		em.persist(book);
 
 		em.getTransaction().commit();
 		em.clear();

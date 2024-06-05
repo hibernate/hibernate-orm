@@ -15,6 +15,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.MultiTenancySettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jndi.spi.JndiService;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -47,6 +48,8 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 	private T tenantIdentifierForAny;
 	private String baseJndiNamespace;
 
+	private DatabaseConnectionInfo dbInfo;
+
 	@Override
 	protected DataSource selectAnyDataSource() {
 		return selectDataSource( tenantIdentifierForAny );
@@ -59,6 +62,7 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 			dataSource = (DataSource) jndiService.locate( baseJndiNamespace + '/' + tenantIdentifier );
 			dataSourceMap().put( tenantIdentifier, dataSource );
 		}
+		dbInfo = new DatabaseConnectionInfoImpl().setDBUrl( "Connecting through datasource" + baseJndiNamespace + '/' + tenantIdentifier );
 		return dataSource;
 	}
 
@@ -119,4 +123,10 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 			dataSourceMap = null;
 		}
 	}
+
+	@Override
+	public DatabaseConnectionInfo getDatabaseConnectionInfo() {
+		return dbInfo;
+	}
+
 }

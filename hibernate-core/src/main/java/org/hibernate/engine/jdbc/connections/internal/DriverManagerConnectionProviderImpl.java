@@ -28,8 +28,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.Database;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.internal.util.securitymanager.SystemSecurityManager;
 import org.hibernate.service.UnknownUnwrapTypeException;
@@ -66,6 +68,8 @@ public class DriverManagerConnectionProviderImpl
 	public static final String CONNECTION_CREATOR_FACTORY ="hibernate.connection.creator_factory_class";
 
 	private volatile PoolState state;
+
+	private static DatabaseConnectionInfo dbInfo;
 
 	// create the pool ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -132,13 +136,10 @@ public class DriverManagerConnectionProviderImpl
 			}
 		}
 
-		if ( success ) {
-			CONNECTIONS_MESSAGE_LOGGER.loadedDriver( driverClassName );
-		}
-		else {
+		StringBuilder list = new StringBuilder();
+		if ( !success ) {
 			//we're hoping that the driver is already loaded
 			CONNECTIONS_MESSAGE_LOGGER.noDriver( AvailableSettings.DRIVER );
-			StringBuilder list = new StringBuilder();
 			Enumeration<Driver> drivers = DriverManager.getDrivers();
 			while ( drivers.hasMoreElements() ) {
 				if ( list.length() != 0) {
@@ -146,7 +147,6 @@ public class DriverManagerConnectionProviderImpl
 				}
 				list.append( drivers.nextElement().getClass().getName() );
 			}
-			CONNECTIONS_MESSAGE_LOGGER.loadedDrivers( list.toString() );
 		}
 
 		if ( url == null ) {
@@ -154,8 +154,6 @@ public class DriverManagerConnectionProviderImpl
 			CONNECTIONS_LOGGER.error( msg );
 			throw new HibernateException( msg );
 		}
-
-		CONNECTIONS_MESSAGE_LOGGER.usingUrl( url );
 
 		final Properties connectionProps = ConnectionProviderInitiator.getConnectionProperties( configurationValues );
 
@@ -168,13 +166,7 @@ public class DriverManagerConnectionProviderImpl
 		}
 
 		final boolean autoCommit = ConfigurationHelper.getBoolean( AvailableSettings.AUTOCOMMIT, configurationValues );
-		CONNECTIONS_MESSAGE_LOGGER.autoCommitMode( autoCommit );
-
 		final Integer isolation = ConnectionProviderInitiator.extractIsolation( configurationValues );
-		if ( isolation != null ) {
-			CONNECTIONS_MESSAGE_LOGGER.jdbcIsolationLevel( ConnectionProviderInitiator.toIsolationNiceName( isolation ) );
-		}
-
 		final String initSql = (String) configurationValues.get( INIT_SQL );
 
 		final Object connectionCreatorFactory = configurationValues.get( CONNECTION_CREATOR_FACTORY );
@@ -188,7 +180,17 @@ public class DriverManagerConnectionProviderImpl
 		if ( factory == null ) {
 			factory = ConnectionCreatorFactoryImpl.INSTANCE;
 		}
+
+		dbInfo = new DatabaseConnectionInfoImpl()
+				.setDBUrl( url )
+				.setDBDriverName( success ? driverClassName : list.toString() )
+				.setDBAutoCommitMode( Boolean.toString( autoCommit ) )
+				.setDBIsolationLevel( isolation != null ? ConnectionProviderInitiator.toIsolationNiceName(isolation) : null )
+				// no standard setting for minimum size?
+				.setDBMaxPoolSize( ConfigurationHelper.getString(JdbcSettings.POOL_SIZE, configurationValues) );
+
 		return factory.create(
+
 				driver,
 				serviceRegistry,
 				url,
@@ -273,6 +275,11 @@ public class DriverManagerConnectionProviderImpl
 	@Override
 	public boolean supportsAggressiveRelease() {
 		return false;
+	}
+
+	@Override
+	public DatabaseConnectionInfo getDatabaseConnectionInfo() {
+		return dbInfo;
 	}
 
 	@Override

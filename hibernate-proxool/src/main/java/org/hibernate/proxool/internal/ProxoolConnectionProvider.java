@@ -20,13 +20,16 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.cfg.ProxoolSettings;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
+import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 
+import org.logicalcobwebs.proxool.ConnectionPoolDefinitionIF;
 import org.logicalcobwebs.proxool.ProxoolException;
 import org.logicalcobwebs.proxool.ProxoolFacade;
 import org.logicalcobwebs.proxool.configuration.JAXPConfigurator;
@@ -60,6 +63,8 @@ public class ProxoolConnectionProvider
 	private boolean autocommit;
 
 	private ClassLoaderService classLoaderService;
+
+	private DatabaseConnectionInfo dbInfo;
 
 	@Override
 	public Connection getConnection() throws SQLException {
@@ -115,8 +120,9 @@ public class ProxoolConnectionProvider
 		final String propFile = (String) props.get( ProxoolSettings.PROXOOL_PROPERTIES );
 		final String externalConfig = (String) props.get( ProxoolSettings.PROXOOL_EXISTING_POOL );
 
+		String proxoolPoolAlias;
 		// Default the Proxool alias setting
-		proxoolAlias = (String) props.get( ProxoolSettings.PROXOOL_POOL_ALIAS );
+		proxoolAlias = proxoolPoolAlias = (String) props.get( ProxoolSettings.PROXOOL_POOL_ALIAS );
 
 		// Configured outside of Hibernate (i.e. Servlet container, or Java Bean Container
 		// already has Proxool pools running, and this provider is to just borrow one of these
@@ -188,10 +194,22 @@ public class ProxoolConnectionProvider
 
 		// Remember Isolation level
 		isolation = ConnectionProviderInitiator.extractIsolation( props );
-		PROXOOL_MESSAGE_LOGGER.jdbcIsolationLevel( ConnectionProviderInitiator.toIsolationNiceName( isolation ) );
-
 		autocommit = getBoolean( JdbcSettings.AUTOCOMMIT, props );
-		PROXOOL_MESSAGE_LOGGER.autoCommitMode( autocommit );
+
+		try {
+			ConnectionPoolDefinitionIF cpd = ProxoolFacade.getConnectionPoolDefinition( proxoolPoolAlias );
+			dbInfo = new DatabaseConnectionInfoImpl()
+					.setDBUrl( cpd.getUrl() )
+					.setDBDriverName( cpd.getDriver() )
+					.setDBIsolationLevel( ConnectionProviderInitiator.toIsolationNiceName(isolation) )
+					.setDBAutoCommitMode( Boolean.toString(autocommit) )
+					.setDBMinPoolSize( String.valueOf(cpd.getMinimumConnectionCount()) )
+					.setDBMaxPoolSize( String.valueOf(cpd.getMaximumConnectionCount()) );
+		}
+		catch (ProxoolException e) {
+			PROXOOL_MESSAGE_LOGGER.warn( "Error while obtaining the database pool information", e );
+		}
+
 	}
 
 	private Reader getConfigStreamReader(String resource) {
@@ -238,6 +256,11 @@ public class ProxoolConnectionProvider
 			PROXOOL_LOGGER.warn( msg, e );
 			throw new HibernateException( msg, e );
 		}
+	}
+
+	@Override
+	public DatabaseConnectionInfo getDatabaseConnectionInfo() {
+		return dbInfo;
 	}
 
 	/**

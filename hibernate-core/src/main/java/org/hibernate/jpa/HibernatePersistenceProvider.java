@@ -78,7 +78,8 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		final Map<?,?> integration = wrap( properties );
 		final List<ParsedPersistenceXmlDescriptor> units;
 		try {
-			units = PersistenceXmlParser.locatePersistenceUnits( integration );
+			units = PersistenceXmlParser.create( integration, providedClassLoader, providedClassLoaderService )
+					.locatePersistenceUnits();
 		}
 		catch (Exception e) {
 			log.debug( "Unable to locate persistence units", e );

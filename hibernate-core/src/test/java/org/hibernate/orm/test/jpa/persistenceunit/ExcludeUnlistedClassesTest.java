@@ -19,8 +19,8 @@ import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.ConfigHelper;
-import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
-import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
@@ -51,7 +51,7 @@ public class ExcludeUnlistedClassesTest extends BaseUnitTestCase {
 		
 		final Map<String, Object> properties = new HashMap<String, Object>();
 		properties.put( AvailableSettings.CLASSLOADERS, Arrays.asList( new TestClassLoader() ) );
-		final List<ParsedPersistenceXmlDescriptor> parsedDescriptors = PersistenceXmlParser.create( properties )
+		final List<PersistenceUnitDescriptor> parsedDescriptors = PersistenceXmlParser.create( properties )
 				.locatePersistenceUnits();
 		
 		doTest( parsedDescriptors, "ExcludeUnlistedClassesTest1", false );
@@ -60,9 +60,9 @@ public class ExcludeUnlistedClassesTest extends BaseUnitTestCase {
 		doTest( parsedDescriptors, "ExcludeUnlistedClassesTest4", true );
 	}
 	
-	private void doTest(List<ParsedPersistenceXmlDescriptor> parsedDescriptors,
+	private void doTest(List<PersistenceUnitDescriptor> parsedDescriptors,
 			final String persistenceUnitName, final boolean shouldExclude) {
-		for (final ParsedPersistenceXmlDescriptor descriptor : parsedDescriptors) {
+		for (final PersistenceUnitDescriptor descriptor : parsedDescriptors) {
 			if (descriptor.getName().equals( persistenceUnitName )) {
 				assertEquals(descriptor.isExcludeUnlistedClasses(), shouldExclude);
 				return;

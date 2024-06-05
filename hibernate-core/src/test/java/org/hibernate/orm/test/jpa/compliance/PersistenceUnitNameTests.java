@@ -13,10 +13,9 @@ import java.util.Map;
 import org.hibernate.boot.archive.scan.internal.DisabledScanner;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.JdbcSettings;
-import org.hibernate.cfg.MappingSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
-import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 
@@ -53,7 +52,9 @@ public class PersistenceUnitNameTests {
 
 	private static EntityManagerFactory loadFactory(String name, ServiceRegistryScope scope) {
 		final URL puFile = PersistenceUnitNameTests.class.getClassLoader().getResource( "xml/jakarta/simple/2units.xml" );
-		final ParsedPersistenceXmlDescriptor descriptor = PersistenceXmlParser.locateNamedPersistenceUnit( puFile, name );
+		var descriptors = PersistenceXmlParser.create().parse( puFile );
+		assertThat( descriptors ).containsKey( name );
+		final PersistenceUnitDescriptor descriptor = descriptors.get( name );
 		final EntityManagerFactoryBuilder emfBuilder = Bootstrap.getEntityManagerFactoryBuilder(
 				descriptor,
 				buildSettings( scope )

@@ -14,7 +14,7 @@ import org.hibernate.dialect.OracleDialect;
  *
  * @author zhouyanming (zhouyanming@gmail.com)
  *
- * @deprecated use {@code OracleDialect(12)}
+ * @deprecated use {@code OracleLegacyDialect(12)}
  */
 @Deprecated
 public class Oracle12cDialect extends OracleDialect {

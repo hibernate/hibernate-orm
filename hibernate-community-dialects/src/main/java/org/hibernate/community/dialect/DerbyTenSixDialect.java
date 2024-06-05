@@ -14,7 +14,7 @@ import org.hibernate.dialect.DatabaseVersion;
  * @author Simon Johnston
  * @author Scott Marlow
  *
- * @deprecated use {@code DerbyDialect(1060)}
+ * @deprecated use {@code DerbyLegacyDialect(1060)}
  */
 @Deprecated
 public class DerbyTenSixDialect extends DerbyLegacyDialect {

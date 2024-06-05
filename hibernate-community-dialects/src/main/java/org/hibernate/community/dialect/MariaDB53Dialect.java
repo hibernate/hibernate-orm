@@ -11,7 +11,7 @@ import org.hibernate.dialect.DatabaseVersion;
 /**
  * @author Vlad Mihalcea
  *
- * @deprecated use {@code MariaDBDialect(530)}
+ * @deprecated use {@code MariaDBLegacyDialect(530)}
  */
 @Deprecated
 public class MariaDB53Dialect extends MariaDBLegacyDialect {

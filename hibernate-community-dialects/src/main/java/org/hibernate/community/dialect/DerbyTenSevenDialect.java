@@ -13,7 +13,7 @@ import org.hibernate.dialect.DatabaseVersion;
  *
  * @author Strong Liu
  *
- * @deprecated use {@code DerbyDialect(1070)}
+ * @deprecated use {@code DerbyLegacyDialect(1070)}
  */
 @Deprecated
 public class DerbyTenSevenDialect extends DerbyLegacyDialect {

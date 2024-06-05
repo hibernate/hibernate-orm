@@ -9,7 +9,7 @@ package org.hibernate.orm.test.jpa.jakarta;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Collections;
+import java.util.Map;
 import java.util.stream.Stream;
 import javax.xml.transform.stream.StreamSource;
 
@@ -23,8 +23,8 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitDefaultsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitMetadataImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
-import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -71,9 +71,12 @@ public class JakartaXmlSmokeTests {
 	public void testLoadingPersistenceXml(ServiceRegistryScope scope) {
 		final ClassLoaderService cls = scope.getRegistry().getService( ClassLoaderService.class );
 		final URL url = cls.locateResource( "xml/jakarta/simple/persistence.xml" );
-		final ParsedPersistenceXmlDescriptor descriptor = PersistenceXmlParser.create()
-				.locateIndividualPersistenceUnit( url );
-		assertThat( descriptor.getName() ).isEqualTo( "defaultpar" );
+		final Map<String, PersistenceUnitDescriptor> descriptors = PersistenceXmlParser.create()
+				.parse( url );
+		String expectedPuName = "defaultpar";
+		assertThat( descriptors ).containsOnlyKeys( expectedPuName );
+		var descriptor = descriptors.get( expectedPuName );
+		assertThat( descriptor.getName() ).isEqualTo( expectedPuName );
 		assertThat( descriptor.getManagedClassNames() ).contains( "org.hibernate.jpa.test.pack.defaultpar.Lighter" );
 	}
 }

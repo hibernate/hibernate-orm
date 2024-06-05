@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -48,10 +49,10 @@ public class PersistenceXmlParserTest {
 				new TestClassLoader( "pu2" ),
 				null
 		);
-		assertThat( parser.getClassLoaderService() ).isNotNull();
-		assertThat( parser.locatePersistenceUnits() )
-				.extracting( PersistenceUnitDescriptor::getName )
-				.containsExactlyInAnyOrder( "pu1", "pu2" );
+		ClassLoaderService clService = parser.getClassLoaderService();
+		assertThat( clService ).isNotNull();
+		assertThat( parser.parse( clService.locateResources( "META-INF/persistence.xml" ) ) )
+				.containsOnlyKeys( "pu1", "pu2" );
 	}
 
 	@Test
@@ -64,36 +65,16 @@ public class PersistenceXmlParserTest {
 				new TestClassLoader( "pu2" ),
 				myClassLoaderService
 		);
-		assertThat( parser.getClassLoaderService() ).isSameAs( myClassLoaderService );
-		assertThat( parser.locatePersistenceUnits() )
-				.extracting( PersistenceUnitDescriptor::getName )
-				.containsExactlyInAnyOrder( "pu3" );
-	}
-
-	@Test
-	public void locatePersistenceUnits() {
-		var parser = PersistenceXmlParser.create(
-				Map.of(),
-				new TestClassLoader( "pu1" ),
-				null
-		);
-		assertThat( parser.locatePersistenceUnits() )
-				.singleElement()
-				.returns( "pu1", PersistenceUnitDescriptor::getName );
-	}
-
-	@Test
-	public void locatePersistenceUnits_empty() {
-		var noFileLog = logInspection.watchForLogMessages( "HHH000318" );
-		var parser = PersistenceXmlParser.create();
-		assertThat( parser.locatePersistenceUnits() ).isEmpty();
-		assertThat( noFileLog.wasTriggered() ).isTrue();
+		ClassLoaderService clService = parser.getClassLoaderService();
+		assertThat( clService ).isSameAs( myClassLoaderService );
+		assertThat( parser.parse( clService.locateResources( "META-INF/persistence.xml" ) ) )
+				.containsOnlyKeys( "pu3" );
 	}
 
 	@Test
 	public void parse() {
 		var parser = PersistenceXmlParser.create();
-		var result = parser.parse( findPuResource( "multipu" ) );
+		var result = parser.parse( List.of( findPuResource( "multipu" ) ) );
 		assertThat( result )
 				.containsOnlyKeys( "multipu1", "multipu2", "multipu3" );
 		assertThat( result.get( "multipu1" ) )
@@ -112,7 +93,7 @@ public class PersistenceXmlParserTest {
 	@Test
 	public void parse_defaultTransactionType() {
 		var parser = PersistenceXmlParser.create();
-		var result = parser.parse( findPuResource( "multipu" ), PersistenceUnitTransactionType.JTA );
+		var result = parser.parse( List.of( findPuResource( "multipu" ) ), PersistenceUnitTransactionType.JTA );
 		assertThat( result.get( "multipu1" ) )
 				.returns( "multipu1", PersistenceUnitDescriptor::getName )
 				.returns(

@@ -44,9 +44,9 @@ public class CascadingActions {
 	}
 
 	/**
-	 * @see org.hibernate.Session#delete(Object)
+	 * @see org.hibernate.Session#remove(Object)
 	 */
-	public static final CascadingAction<DeleteContext> DELETE = new BaseCascadingAction<>() {
+	public static final CascadingAction<DeleteContext> REMOVE = new BaseCascadingAction<>() {
 		@Override
 		public void cascade(
 				EventSource session,
@@ -78,6 +78,14 @@ public class CascadingActions {
 			return "ACTION_DELETE";
 		}
 	};
+
+	/**
+	 * @see org.hibernate.Session#delete(Object)
+	 *
+	 * @deprecated Use {@link #REMOVE}
+	 */
+	@Deprecated(since = "6.6")
+	public static final CascadingAction<DeleteContext> DELETE = REMOVE;
 
 	/**
 	 * @see org.hibernate.Session#lock(Object, LockMode)

@@ -51,8 +51,8 @@ public class ExcludeUnlistedClassesTest extends BaseUnitTestCase {
 		
 		final Map<String, Object> properties = new HashMap<String, Object>();
 		properties.put( AvailableSettings.CLASSLOADERS, Arrays.asList( new TestClassLoader() ) );
-		final List<ParsedPersistenceXmlDescriptor> parsedDescriptors = PersistenceXmlParser.locatePersistenceUnits(
-				properties );
+		final List<ParsedPersistenceXmlDescriptor> parsedDescriptors = PersistenceXmlParser.create( properties )
+				.locatePersistenceUnits();
 		
 		doTest( parsedDescriptors, "ExcludeUnlistedClassesTest1", false );
 		doTest( parsedDescriptors, "ExcludeUnlistedClassesTest2", true );

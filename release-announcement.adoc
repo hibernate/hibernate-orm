@@ -208,3 +208,13 @@ Oracle engineers contributed the support for vector data types and functions to 
 to use with Oracle database version 23.4 and newer.
 
 For further information about vectors, consult the link:https://docs.oracle.com/en/database/oracle/oracle-database/23/vecse/overview-node.html[Oracle documentation].
+
+[[one-to-many-mapped-by-any]]
+== `@OneToMany(mappedBy)` support for `@Any`
+
+So far, the target of `@OneToMany` had to be a `@ManyToOne`. To map a `@OneToMany` based on an any association,
+it was necessary to spell out a custom `@SQLRestriction` and specify the join columns.
+
+Targeting an `@Any` association is now supported and will default to the appropriate join columns,
+as well as add a `@SQLRestriciton` to the `@OneToMany` automatically.
+

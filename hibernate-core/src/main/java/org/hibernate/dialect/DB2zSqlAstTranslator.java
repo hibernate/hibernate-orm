@@ -78,6 +78,12 @@ public class DB2zSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTran
 	}
 
 	@Override
+	protected String getNewTableChangeModifier() {
+		// On DB2 zOS, `final` also sees the trigger data
+		return "final";
+	}
+
+	@Override
 	public DatabaseVersion getDB2Version() {
 		return DB2_LUW_VERSION;
 	}

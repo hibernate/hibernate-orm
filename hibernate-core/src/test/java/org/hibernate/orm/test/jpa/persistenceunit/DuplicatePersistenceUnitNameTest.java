@@ -63,7 +63,7 @@ public class DuplicatePersistenceUnitNameTest extends BaseUnitTestCase {
 	public void testDuplicatePersistenceUnitNameLogAWarnMessage() {
 		final Map<String, Object> properties = new HashMap<String, Object>();
 		properties.put( AvailableSettings.CLASSLOADERS, Arrays.asList( new TestClassLoader() ) );
-		PersistenceXmlParser.locatePersistenceUnits( properties );
+		PersistenceXmlParser.create( properties ).locatePersistenceUnits();
 		assertTrue( "The warn HHH015018 has not been logged ", triggerable.wasTriggered() );
 	}
 

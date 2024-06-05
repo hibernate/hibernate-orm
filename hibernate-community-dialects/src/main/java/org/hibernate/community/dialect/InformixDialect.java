@@ -28,6 +28,7 @@ import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -63,6 +64,7 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.internal.StandardForeignKeyExporter;
 import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -185,14 +187,14 @@ public class InformixDialect extends Dialect {
 		);
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( VARCHAR, columnType( LONG32VARCHAR ), this )
+				CapacityDependentDdlType.builder( VARCHAR, columnType( LONG32VARCHAR ), "varchar(255)",this )
 						.withTypeCapacity( 255, "varchar($l)" )
 						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
 						.build()
 		);
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( NVARCHAR, columnType( LONG32NVARCHAR ), this )
-						.withTypeCapacity( 255, "varchar($l)" )
+				CapacityDependentDdlType.builder( NVARCHAR, columnType( LONG32NVARCHAR ), "nvarchar(255)", this )
+						.withTypeCapacity( 255, "nvarchar($l)" )
 						.withTypeCapacity( getMaxNVarcharLength(), columnType( NVARCHAR ) )
 						.build()
 		);
@@ -678,7 +680,16 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
-		String typeName = typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType).getRawTypeName();
+		DdlType descriptor = typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType );
+		if ( descriptor == null ) {
+			return "null";
+		}
+		String typeName = descriptor.getTypeName( Size.length( Size.DEFAULT_LENGTH ) );
+		//trim off the length/precision/scale
+		final int loc = typeName.indexOf( '(' );
+		if ( loc > -1 ) {
+			typeName = typeName.substring( 0, loc );
+		}
 		return "null::" + typeName;
 	}
 

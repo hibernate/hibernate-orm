@@ -507,7 +507,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		try {
 			// cascade-delete to collections BEFORE the collection owner is deleted
 			Cascade.cascade(
-					CascadingActions.DELETE,
+					CascadingActions.REMOVE,
 					CascadePoint.AFTER_INSERT_BEFORE_DELETE,
 					session,
 					persister,
@@ -534,7 +534,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		try {
 			// cascade-delete to many-to-one AFTER the parent was deleted
 			Cascade.cascade(
-					CascadingActions.DELETE,
+					CascadingActions.REMOVE,
 					CascadePoint.BEFORE_INSERT_AFTER_DELETE,
 					session,
 					persister,

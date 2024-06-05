@@ -18,9 +18,8 @@ import jakarta.persistence.spi.PersistenceUnitInfo;
 import jakarta.persistence.spi.ProviderUtil;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
 import org.hibernate.jpa.boot.spi.PersistenceConfigurationDescriptor;
-import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
+import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -76,7 +75,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		log.tracef( "Attempting to obtain correct EntityManagerFactoryBuilder for persistenceUnitName : %s", persistenceUnitName );
 
 		final Map<?,?> integration = wrap( properties );
-		final List<ParsedPersistenceXmlDescriptor> units;
+		final List<PersistenceUnitDescriptor> units;
 		try {
 			units = PersistenceXmlParser.create( integration, providedClassLoader, providedClassLoaderService )
 					.locatePersistenceUnits();
@@ -93,7 +92,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 			throw new PersistenceException( "No name provided and multiple persistence units found" );
 		}
 
-		for ( ParsedPersistenceXmlDescriptor persistenceUnit : units ) {
+		for ( PersistenceUnitDescriptor persistenceUnit : units ) {
 			if ( log.isDebugEnabled() ) {
 				log.debugf(
 						"Checking persistence-unit [name=%s, explicit-provider=%s] against incoming persistence unit name [%s]",

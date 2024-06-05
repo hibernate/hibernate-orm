@@ -20,7 +20,9 @@ import javax.sql.DataSource;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
+import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
@@ -46,6 +48,8 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 	private boolean autoCommit;
 	private Integer isolation;
 
+	private DatabaseConnectionInfo dbInfo;
+
 	@SuppressWarnings("rawtypes")
 	@Override
 	public void configure(Map props) throws HibernateException {
@@ -60,6 +64,14 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 			ucpDS = PoolDataSourceFactory.getPoolDataSource();
 			Properties ucpProps = getConfiguration(props);
 			configureDataSource(ucpDS, ucpProps);
+
+			dbInfo = new DatabaseConnectionInfoImpl()
+					.setDBUrl( ucpDS.getURL() )
+					.setDBDriverName( ucpDS.getConnectionFactoryClassName() )
+					.setDBAutoCommitMode( Boolean.toString( autoCommit ) )
+					.setDBIsolationLevel( isolation != null ? ConnectionProviderInitiator.toIsolationConnectionConstantName( isolation ) : null )
+					.setDBMinPoolSize( String.valueOf(ucpDS.getMinPoolSize()) )
+					.setDBMaxPoolSize( String.valueOf(ucpDS.getMaxPoolSize()) );
 		}
 		catch (Exception e) {
 			LOGGER.debug( "oracle UCP Configuration failed" );
@@ -181,6 +193,11 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 	@Override
 	public boolean supportsAggressiveRelease() {
 		return false;
+	}
+
+	@Override
+	public DatabaseConnectionInfo getDatabaseConnectionInfo() {
+		return dbInfo;
 	}
 
 	@Override

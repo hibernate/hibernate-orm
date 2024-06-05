@@ -47,36 +47,16 @@ public interface ConnectionPoolingLogger extends BasicLogger {
 	@Message(value = "Using built-in connection pool (not intended for production use)", id = 10001002)
 	void usingHibernateBuiltInConnectionPool();
 
-	@LogMessage(level = INFO)
-	@Message(value = "Autocommit mode: %s", id = 10001003)
-	void autoCommitMode(boolean autocommit);
-
 	@Message(value = "No JDBC URL specified by property %s", id = 10001004)
 	String jdbcUrlNotSpecified(String property);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Loaded JDBC driver class: %s", id = 10001005)
-	void loadedDriver(String driverClassName);
 
 	@LogMessage(level = INFO)
 	@Message(value = "No JDBC driver class specified by %s", id = 10001010)
 	void noDriver(String property);
 
-	@LogMessage(level = INFO)
-	@Message(value = "Loaded JDBC drivers: %s", id = 10001011)
-	void loadedDrivers(String loadedDrivers);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Connecting with JDBC URL [%s]", id = 10001012)
-	void usingUrl(String url);
-
 	@LogMessage(level = WARN)
 	@Message(id = 10001006, value = "No JDBC Driver class was specified by property `jakarta.persistence.jdbc.driver`, `hibernate.driver` or `javax.persistence.jdbc.driver`")
 	void jdbcDriverNotSpecified();
-
-	@LogMessage(level = INFO)
-	@Message(value = "JDBC isolation level: %s", id = 10001007)
-	void jdbcIsolationLevel(String isolationLevelToString);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Cleaning up connection pool [%s]", id = 10001008)

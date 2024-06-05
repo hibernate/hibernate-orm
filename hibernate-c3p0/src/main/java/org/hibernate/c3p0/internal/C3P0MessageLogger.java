@@ -51,16 +51,6 @@ public interface C3P0MessageLogger extends ConnectionPoolingLogger {
 	void bothHibernateAndC3p0StylesSet(String hibernateStyle,String c3p0Style);
 
 	/**
-	 * Log a message (INFO) about which Driver class is being used.
-	 *
-	 * @param jdbcDriverClass The JDBC Driver class
-	 * @param jdbcUrl The JDBC URL
-	 */
-	@LogMessage(level = INFO)
-	@Message(value = "C3P0 using driver: %s at URL: %s", id = 10002)
-	void c3p0UsingDriver(String jdbcDriverClass, String jdbcUrl);
-
-	/**
 	 * Build a message about not being able to find the JDBC driver class
 	 *
 	 * @param jdbcDriverClass The JDBC driver class we could not find

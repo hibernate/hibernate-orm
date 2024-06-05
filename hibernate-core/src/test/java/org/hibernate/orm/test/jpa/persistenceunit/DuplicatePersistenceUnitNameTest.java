@@ -19,7 +19,7 @@ import java.util.Set;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
+import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;

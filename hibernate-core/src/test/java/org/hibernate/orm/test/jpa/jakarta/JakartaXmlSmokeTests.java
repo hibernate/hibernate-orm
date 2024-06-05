@@ -70,9 +70,8 @@ public class JakartaXmlSmokeTests {
 	@Test
 	public void testLoadingPersistenceXml(ServiceRegistryScope scope) {
 		final ClassLoaderService cls = scope.getRegistry().getService( ClassLoaderService.class );
-		final URL url = cls.locateResource( "xml/jakarta/simple/persistence.xml" );
 		final Map<String, PersistenceUnitDescriptor> descriptors = PersistenceXmlParser.create()
-				.parse( url );
+				.parse( cls.locateResources( "xml/jakarta/simple/persistence.xml" ) );
 		String expectedPuName = "defaultpar";
 		assertThat( descriptors ).containsOnlyKeys( expectedPuName );
 		var descriptor = descriptors.get( expectedPuName );

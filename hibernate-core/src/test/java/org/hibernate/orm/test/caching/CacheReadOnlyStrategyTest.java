@@ -18,20 +18,20 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @JiraKey("HHH-17997")
 @Jpa(
 		annotatedClasses = {
-				ChacheReadOnlyStartegyTest.TestEntity.class
+				CacheReadOnlyStrategyTest.TestEntity.class
 		},
 		integrationSettings = {
 				@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true"),
 				@Setting(name = AvailableSettings.USE_QUERY_CACHE, value = "false"),
 		}
 )
-public class ChacheReadOnlyStartegyTest {
+public class CacheReadOnlyStrategyTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
@@ -43,7 +43,7 @@ public class ChacheReadOnlyStartegyTest {
 
 	@Test
 	public void testPersistThenClearAndQuery(EntityManagerFactoryScope scope) {
-		final long testEntityId = 1l;
+		final long testEntityId = 1L;
 
 		scope.inTransaction(
 				entityManager -> {
@@ -71,26 +71,21 @@ public class ChacheReadOnlyStartegyTest {
 
 	@Test
 	public void testPersistThenClearAndQueryWithRollback(EntityManagerFactoryScope scope) {
-		final long testEntityId = 1l;
+		final long testEntityId = 1L;
 
-		scope.inEntityManager(
+		scope.inTransaction(
 				entityManager -> {
-					entityManager.getTransaction().begin();
-					try {
-						TestEntity entity = new TestEntity( testEntityId, "test" );
-						entityManager.persist( entity );
-						entityManager.flush();
-						entityManager.clear();
-						List<TestEntity> results = entityManager.createQuery(
-								"select t from TestEntity t where t.id = :id",
-								TestEntity.class
-						).setParameter( "id", testEntityId ).getResultList();
+					TestEntity entity = new TestEntity( testEntityId, "test" );
+					entityManager.persist( entity );
+					entityManager.flush();
+					entityManager.clear();
+					List<TestEntity> results = entityManager.createQuery(
+							"select t from TestEntity t where t.id = :id",
+							TestEntity.class
+					).setParameter( "id", testEntityId ).getResultList();
 
-						assertThat( results.size() ).isEqualTo( 1 );
-					}
-					finally {
-						entityManager.getTransaction().rollback();
-					}
+					entityManager.getTransaction().setRollbackOnly();
+					assertThat( results.size() ).isEqualTo( 1 );
 				}
 		);
 

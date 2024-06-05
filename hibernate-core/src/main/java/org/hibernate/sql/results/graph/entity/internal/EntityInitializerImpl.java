@@ -22,6 +22,7 @@ import org.hibernate.WrongClassException;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.spi.EntityEntry;
@@ -1389,16 +1390,26 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		// we need to be careful not to clobber the lock here in the cache so that it can be rolled back if need be
 		final EventManager eventManager = session.getEventManager();
 		if ( persistenceContext.wasInsertedDuringTransaction( data.concreteDescriptor, data.entityKey.getIdentifier() ) ) {
-			boolean update = false;
+			boolean cacheContentChanged = false;
 			final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
 			try {
-				update = cacheAccess.update(
-						session,
-						cacheKey,
-						data.concreteDescriptor.getCacheEntryStructure().structure( cacheEntry ),
-						version,
-						version
-				);
+				// Updating the cache entry for entities that were inserted in this transaction
+				// only makes sense for transactional caches. Other implementations no-op for #update
+				// Since #afterInsert will run at the end of the transaction,
+				// the state of an entity will be stored in the cache eventually.
+				// Refreshing an inserted entity is a potential concern,
+				// because one might think that we are missing to store the refreshed data in the cache.
+				// Actually an entity is evicted from the cache on refresh for non-transactional caches
+				// via CachedDomainDataAccess#unlockItem after transaction completion, so all is fine.
+				if ( cacheAccess.getAccessType() == AccessType.TRANSACTIONAL ) {
+					cacheContentChanged = cacheAccess.update(
+							session,
+							cacheKey,
+							data.concreteDescriptor.getCacheEntryStructure().structure( cacheEntry ),
+							version,
+							version
+					);
+				}
 			}
 			finally {
 				eventManager.completeCachePutEvent(
@@ -1406,7 +1417,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 						session,
 						cacheAccess,
 						data.concreteDescriptor,
-						update,
+						cacheContentChanged,
 						EventManager.CacheActionDescription.ENTITY_UPDATE
 				);
 			}

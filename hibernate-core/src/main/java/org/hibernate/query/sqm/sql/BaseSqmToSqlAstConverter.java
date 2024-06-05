@@ -7424,13 +7424,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				new ArrayList<>( predicate.getPredicates().size() ),
 				getBooleanType()
 		);
-		final Map<TableGroup, Map<String, EntityNameUse>> previousTableGroupEntityNameUses;
-		if ( tableGroupEntityNameUses.isEmpty() ) {
-			previousTableGroupEntityNameUses = null;
-		}
-		else {
-			previousTableGroupEntityNameUses = new IdentityHashMap<>( tableGroupEntityNameUses );
-		}
+		final Map<TableGroup, Map<String, EntityNameUse>> previousTableGroupEntityNameUses = new IdentityHashMap<>( tableGroupEntityNameUses );
 		Map<TableGroup, Map<String, EntityNameUse>>[] disjunctEntityNameUsesArray = null;
 		Map<TableGroup, Map<String, EntityNameUse>> entityNameUsesToPropagate = null;
 		List<TableGroup> treatedTableGroups = null;
@@ -7442,9 +7436,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( !tableGroupEntityNameUses.isEmpty() ) {
 				if ( disjunctEntityNameUsesArray == null ) {
 					disjunctEntityNameUsesArray = new Map[predicate.getPredicates().size()];
-					entityNameUsesToPropagate = previousTableGroupEntityNameUses == null
-						? new IdentityHashMap<>()
-						: new IdentityHashMap<>( previousTableGroupEntityNameUses );
+					entityNameUsesToPropagate = new IdentityHashMap<>( previousTableGroupEntityNameUses );
 				}
 				if ( i == 0 ) {
 					// Collect the table groups for which filters are registered
@@ -7482,7 +7474,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// If every disjunct contains a FILTER, we can merge the filters
 				// If every disjunct contains a TREAT, we can merge the treats
 				// Otherwise, we downgrade the entity name uses to expression uses
-				for ( Map.Entry<TableGroup, Map<String, EntityNameUse>> entry : tableGroupEntityNameUses.entrySet() ) {
+				final Iterator<Map.Entry<TableGroup, Map<String, EntityNameUse>>> iterator = tableGroupEntityNameUses.entrySet().iterator();
+				while ( iterator.hasNext() ) {
+					final Map.Entry<TableGroup, Map<String, EntityNameUse>> entry = iterator.next();
 					final TableGroup tableGroup = entry.getKey();
 					final Map<String, EntityNameUse> entityNameUses = entityNameUsesToPropagate.computeIfAbsent(
 							tableGroup,
@@ -7490,10 +7484,22 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					);
 					final boolean downgradeTreatUses;
 					final boolean downgradeFilterUses;
-					if ( i == 0 ) {
-						// Never downgrade the treat uses of the first disjunct
+					if ( getFromClauseAccess().findTableGroup( tableGroup.getNavigablePath() ) == null ) {
+						// Always preserver name uses for table groups not found in the current from clause index
+						previousTableGroupEntityNameUses.put( tableGroup, entry.getValue() );
+						// Remove from the current junction context since no more processing is required
+						if ( treatedTableGroups != null ) {
+							treatedTableGroups.remove( tableGroup );
+						}
+						if ( filteredTableGroups != null ) {
+							filteredTableGroups.remove( tableGroup );
+						}
+						iterator.remove();
+						continue;
+					}
+					else if ( i == 0 ) {
+						// Never downgrade treat or filter uses of the first disjunct
 						downgradeTreatUses = false;
-						// Never downgrade the filter uses of the first disjunct
 						downgradeFilterUses = false;
 					}
 					else {
@@ -7580,9 +7586,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 		if ( disjunctEntityNameUsesArray == null ) {
-			if ( previousTableGroupEntityNameUses != null ) {
-				tableGroupEntityNameUses.putAll( previousTableGroupEntityNameUses );
-			}
+			tableGroupEntityNameUses.putAll( previousTableGroupEntityNameUses );
 			return disjunction;
 		}
 
@@ -7653,9 +7657,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		// Restore the parent context entity name uses state
 		tableGroupEntityNameUses.clear();
-		if ( previousTableGroupEntityNameUses != null ) {
-			tableGroupEntityNameUses.putAll( previousTableGroupEntityNameUses );
-		}
+		tableGroupEntityNameUses.putAll( previousTableGroupEntityNameUses );
 		// Propagate the union of the entity name uses upwards
 		for ( Map.Entry<TableGroup, Map<String, EntityNameUse>> entry : entityNameUsesToPropagate.entrySet() ) {
 			final Map<String, EntityNameUse> entityNameUses = tableGroupEntityNameUses.putIfAbsent(

@@ -71,7 +71,8 @@ public class JakartaXmlSmokeTests {
 	public void testLoadingPersistenceXml(ServiceRegistryScope scope) {
 		final ClassLoaderService cls = scope.getRegistry().getService( ClassLoaderService.class );
 		final URL url = cls.locateResource( "xml/jakarta/simple/persistence.xml" );
-		final ParsedPersistenceXmlDescriptor descriptor = PersistenceXmlParser.locateIndividualPersistenceUnit( url, Collections.emptyMap() );
+		final ParsedPersistenceXmlDescriptor descriptor = PersistenceXmlParser.create()
+				.locateIndividualPersistenceUnit( url );
 		assertThat( descriptor.getName() ).isEqualTo( "defaultpar" );
 		assertThat( descriptor.getManagedClassNames() ).contains( "org.hibernate.jpa.test.pack.defaultpar.Lighter" );
 	}

@@ -7,6 +7,7 @@
 package org.hibernate.jpa.boot.spi;
 
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -66,7 +67,7 @@ public final class Bootstrap {
 			PersistenceUnitTransactionType transactionType,
 			Map integration) {
 		return new EntityManagerFactoryBuilderImpl(
-				PersistenceXmlParser.create( integration ).parse( persistenceXmlUrl, transactionType ).get( persistenceUnitName ),
+				PersistenceXmlParser.create( integration ).parse( List.of( persistenceXmlUrl ), transactionType ).get( persistenceUnitName ),
 				integration
 		);
 	}

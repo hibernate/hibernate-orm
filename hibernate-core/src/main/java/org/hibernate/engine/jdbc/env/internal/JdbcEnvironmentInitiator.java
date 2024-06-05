@@ -17,9 +17,12 @@ import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
+import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.dialect.spi.DialectFactory;
@@ -119,8 +122,9 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			}
 		}
 
+		final JdbcEnvironment jdbcEnvironment;
 		if ( allowJdbcMetadataAccess( configurationValues ) ) {
-			return getJdbcEnvironmentUsingJdbcMetadata(
+			jdbcEnvironment = getJdbcEnvironmentUsingJdbcMetadata(
 					configurationValues,
 					registry,
 					dialectFactory,
@@ -130,7 +134,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 					explicitDatabaseVersion);
 		}
 		else if ( explicitDialectConfiguration( explicitDatabaseName, configurationValues ) ) {
-			return getJdbcEnvironmentWithExplicitConfiguration(
+			jdbcEnvironment = getJdbcEnvironmentWithExplicitConfiguration(
 					configurationValues,
 					registry,
 					dialectFactory,
@@ -141,8 +145,24 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			);
 		}
 		else {
-			return getJdbcEnvironmentWithDefaults( configurationValues, registry, dialectFactory );
+			jdbcEnvironment = getJdbcEnvironmentWithDefaults( configurationValues, registry, dialectFactory );
 		}
+
+		// Standardized DB info logging
+		final ConnectionProvider cp = registry.requireService( ConnectionProvider.class );
+		// Don't want a setter for the version in the interface, so cloning it is
+		DatabaseConnectionInfoImpl clonedDci = new DatabaseConnectionInfoImpl( cp.getDatabaseConnectionInfo() );
+		// most likely, the version hasn't been set yet, at least not for the ConnectionProviders that we currently maintain
+		if ( shouldSetDBVersion(cp.getDatabaseConnectionInfo()) ) {
+			clonedDci.setDbVersion( jdbcEnvironment.getDialect().getVersion() );
+		}
+		log.info( clonedDci );
+
+		return jdbcEnvironment;
+	}
+
+	private static boolean shouldSetDBVersion(DatabaseConnectionInfo dci) {
+		return dci.getDBVersion() == null || dci.getDBVersion().isSame( SimpleDatabaseVersion.ZERO_VERSION );
 	}
 
 	private static JdbcEnvironmentImpl getJdbcEnvironmentWithDefaults(

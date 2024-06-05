@@ -30,6 +30,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Database;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.internal.util.securitymanager.SystemSecurityManager;
 import org.hibernate.service.UnknownUnwrapTypeException;
@@ -66,6 +67,8 @@ public class DriverManagerConnectionProviderImpl
 	public static final String CONNECTION_CREATOR_FACTORY ="hibernate.connection.creator_factory_class";
 
 	private volatile PoolState state;
+
+	private static DatabaseConnectionInfoImpl dbInfo;
 
 	// create the pool ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -188,7 +191,11 @@ public class DriverManagerConnectionProviderImpl
 		if ( factory == null ) {
 			factory = ConnectionCreatorFactoryImpl.INSTANCE;
 		}
+
+		dbInfo = new DatabaseConnectionInfoImpl( url, driverClassName );
+
 		return factory.create(
+
 				driver,
 				serviceRegistry,
 				url,
@@ -273,6 +280,11 @@ public class DriverManagerConnectionProviderImpl
 	@Override
 	public boolean supportsAggressiveRelease() {
 		return false;
+	}
+
+	@Override
+	public DatabaseConnectionInfo getDatabaseConnectionInfo() {
+		return dbInfo;
 	}
 
 	@Override

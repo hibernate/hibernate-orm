@@ -13,7 +13,9 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
@@ -45,6 +47,8 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	 */
 	private HikariDataSource hds = null;
 
+	private DatabaseConnectionInfoImpl dbinfo;
+
 	// *************************************************************************
 	// Configurable
 	// *************************************************************************
@@ -57,6 +61,7 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 			hcfg = HikariConfigurationUtil.loadConfiguration( props );
 			hds = new HikariDataSource( hcfg );
 
+			dbinfo = new DatabaseConnectionInfoImpl( hcfg.getJdbcUrl(), hcfg.getDriverClassName() );
 		}
 		catch (Exception e) {
 			throw new HibernateException( e );
@@ -87,6 +92,11 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	@Override
 	public boolean supportsAggressiveRelease() {
 		return false;
+	}
+
+	@Override
+	public DatabaseConnectionInfo getDatabaseConnectionInfo() {
+		return dbinfo;
 	}
 
 	@Override

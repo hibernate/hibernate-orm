@@ -7,7 +7,9 @@
 
 package org.hibernate.vibur.internal;
 
+import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
@@ -50,6 +52,8 @@ public class ViburDBCPConnectionProvider implements ConnectionProvider, Configur
 
 	private ViburDBCPDataSource dataSource = null;
 
+	private static DatabaseConnectionInfoImpl dbInfo = new DatabaseConnectionInfoImpl();
+
 	@Override
 	public void configure(Map<String, Object> configurationValues) {
 		dataSource = new ViburDBCPDataSource( transform( configurationValues ) );
@@ -80,6 +84,11 @@ public class ViburDBCPConnectionProvider implements ConnectionProvider, Configur
 	}
 
 	@Override
+	public DatabaseConnectionInfo getDatabaseConnectionInfo() {
+		return dbInfo;
+	}
+
+	@Override
 	public boolean isUnwrappableAs(Class<?> unwrapType) {
 		return ConnectionProvider.class.equals( unwrapType ) ||
 				ViburDBCPConnectionProvider.class.isAssignableFrom( unwrapType );
@@ -103,10 +112,13 @@ public class ViburDBCPConnectionProvider implements ConnectionProvider, Configur
 		if ( driverClassName != null ) {
 			result.setProperty( "driverClassName", driverClassName );
 		}
+		dbInfo.setDriverName( driverClassName );
+
 		String jdbcUrl = (String) configurationValues.get( URL );
 		if ( jdbcUrl != null ) {
 			result.setProperty( "jdbcUrl", jdbcUrl );
 		}
+		dbInfo.setUrl( jdbcUrl );
 
 		String username = (String) configurationValues.get( USER );
 		if ( username != null ) {

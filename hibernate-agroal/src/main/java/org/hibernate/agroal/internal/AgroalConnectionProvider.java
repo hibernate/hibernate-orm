@@ -16,7 +16,9 @@ import io.agroal.api.security.SimplePassword;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
+import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
@@ -56,6 +58,8 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 	private static final Logger LOGGER = Logger.getLogger( AgroalConnectionProvider.class );
 	private AgroalDataSource agroalDataSource = null;
 
+	private final DatabaseConnectionInfoImpl dbInfo = new DatabaseConnectionInfoImpl();
+
 	// --- Configurable
 
 	private static void resolveIsolationSetting(Map<String, Object> properties, AgroalConnectionFactoryConfigurationSupplier cf) {
@@ -90,6 +94,10 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 				return cf;
 			} ) );
 
+			// For logging purposes
+			copyProperty( props, AvailableSettings.URL, dbInfo::setUrl, Function.identity() );
+			copyProperty( props, AvailableSettings.DRIVER, dbInfo::setDriverName, Function.identity() );
+
 			agroalDataSource = AgroalDataSource.from( agroalProperties );
 		}
 		catch ( Exception e ) {
@@ -116,6 +124,11 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 		// That logic is similar with what Hibernate does (however with better performance since it's integrated in the pool)
 		// and therefore that integration is not leveraged right now.
 		return false;
+	}
+
+	@Override
+	public DatabaseConnectionInfo getDatabaseConnectionInfo() {
+		return dbInfo;
 	}
 
 	@Override

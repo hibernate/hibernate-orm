@@ -33,7 +33,7 @@ public final class CascadeStyles {
 	public static final CascadeStyle ALL_DELETE_ORPHAN = new BaseCascadeStyle() {
 		@Override
 		public boolean doCascade(CascadingAction action) {
-			return true;
+			return action != CascadingActions.CHECK_ON_FLUSH;
 		}
 
 		@Override
@@ -53,7 +53,7 @@ public final class CascadeStyles {
 	public static final CascadeStyle ALL = new BaseCascadeStyle() {
 		@Override
 		public boolean doCascade(CascadingAction action) {
-			return true;
+			return action != CascadingActions.CHECK_ON_FLUSH;
 		}
 
 		@Override

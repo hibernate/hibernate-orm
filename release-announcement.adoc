@@ -216,5 +216,5 @@ So far, the target of `@OneToMany` had to be a `@ManyToOne`. To map a `@OneToMan
 it was necessary to spell out a custom `@SQLRestriction` and specify the join columns.
 
 Targeting an `@Any` association is now supported and will default to the appropriate join columns,
-as well as add a `@SQLRestriciton` to the `@OneToMany` automatically.
+as well as add a `@SQLRestriction` to the `@OneToMany` automatically.
 

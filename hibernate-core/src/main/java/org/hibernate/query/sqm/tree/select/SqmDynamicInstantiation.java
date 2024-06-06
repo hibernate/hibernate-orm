@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.tree.select;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -17,7 +18,9 @@ import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -143,7 +146,18 @@ public class SqmDynamicInstantiation<T>
 
 	private List<Class<?>> argumentTypes() {
 		return getArguments().stream()
-				.map(arg -> arg.getNodeJavaType() == null ? Void.class : arg.getNodeJavaType().getJavaTypeClass())
+				.map( arg -> {
+					if ( arg.getSelectableNode() instanceof SqmPath ) {
+						SqmPath path = (SqmPath) arg.getSelectableNode();
+						if ( path.getModel() instanceof SqmPathSource ) {
+							if ( ( (SqmPathSource) path.getModel() ).isGeneric() ) {
+								SqmPathSource resolvedModel = path.getResolvedModel();
+								return (Class<?>) (resolvedModel.getBindableJavaType() == null ? Void.class :  resolvedModel.getBindableJavaType());
+							}
+						}
+					}
+					return arg.getNodeJavaType() == null ? Void.class : arg.getNodeJavaType().getJavaTypeClass();
+				} )
 				.collect(toList());
 	}
 

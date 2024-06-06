@@ -21,15 +21,10 @@ import org.hibernate.internal.util.StringHelper;
 @Internal
 public class InFragment {
 
-	public InFragment(boolean columnCanBeNull) {
-		this.columnCanBeNull = columnCanBeNull;
-	}
-
 	public static final String NULL = "null";
 	public static final String NOT_NULL = "not null";
 
 	protected String columnName;
-	protected boolean columnCanBeNull;
 	protected List<Object> values = new ArrayList<>();
 
 	/**
@@ -71,15 +66,7 @@ public class InFragment {
 
 		switch ( values.size() ) {
 			case 0: {
-				if ( columnCanBeNull ) {
-					return buf.append( "(1 = case when " )
-							.append( columnName )
-							.append(" is not null then 0 end)")
-							.toString();
-				}
-				else {
-					return "0=1";
-				}
+				return "0=1";
 			}
 			case 1: {
 				Object value = values.get( 0 );

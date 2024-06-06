@@ -11,10 +11,12 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.hibernate.Internal;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.FetchClauseType;
@@ -32,6 +34,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.AbstractQuery;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.ParameterExpression;
@@ -252,6 +255,31 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 		parameters.add( parameter );
 	}
 
+	@Override
+	protected <X> JpaCteCriteria<X> withInternal(String name, AbstractQuery<X> criteria) {
+		if ( criteria instanceof SqmSubQuery<?> ) {
+			throw new IllegalArgumentException(
+					"Invalid query type provided to root query 'with' method, " +
+							"expecting a root query to use as CTE instead found a subquery"
+			);
+		}
+		return super.withInternal( name, criteria );
+	}
+
+	@Override
+	protected <X> JpaCteCriteria<X> withInternal(
+			String name,
+			AbstractQuery<X> baseCriteria,
+			boolean unionDistinct,
+			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
+		if ( baseCriteria instanceof SqmSubQuery<?> ) {
+			throw new IllegalArgumentException(
+					"Invalid query type provided to root query 'with' method, " +
+							"expecting a root query to use as CTE instead found a subquery"
+			);
+		}
+		return super.withInternal( name, baseCriteria, unionDistinct, recursiveCriteriaProducer );
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA

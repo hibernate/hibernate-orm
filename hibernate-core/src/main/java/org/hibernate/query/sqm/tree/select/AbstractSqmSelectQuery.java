@@ -168,7 +168,7 @@ public abstract class AbstractSqmSelectQuery<T>
 		return name;
 	}
 
-	private <X> JpaCteCriteria<X> withInternal(String name, AbstractQuery<X> criteria) {
+	protected <X> JpaCteCriteria<X> withInternal(String name, AbstractQuery<X> criteria) {
 		final SqmCteStatement<X> cteStatement = new SqmCteStatement<>(
 				name,
 				(SqmSelectQuery<X>) criteria,
@@ -181,7 +181,7 @@ public abstract class AbstractSqmSelectQuery<T>
 		return cteStatement;
 	}
 
-	private <X> JpaCteCriteria<X> withInternal(
+	protected <X> JpaCteCriteria<X> withInternal(
 			String name,
 			AbstractQuery<X> baseCriteria,
 			boolean unionDistinct,

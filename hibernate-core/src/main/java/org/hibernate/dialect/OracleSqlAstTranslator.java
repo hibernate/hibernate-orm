@@ -62,6 +62,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  * A SQL AST translator for Oracle.
  *
  * @author Christian Beikov
+ * @author Loïc Lefèvre
  */
 public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithUpsert<T> {
 
@@ -568,7 +569,12 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 			List<SqlSelection> lhsExpressions,
 			SqlTuple tuple,
 			ComparisonOperator operator) {
-		emulateSelectTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
+		if(getDialect().getVersion().isSameOrAfter(23)) {
+			super.renderSelectTupleComparison(lhsExpressions, tuple, operator);
+		}
+		else {
+			emulateSelectTupleComparison(lhsExpressions, tuple.getExpressions(), operator, true);
+		}
 	}
 
 	@Override

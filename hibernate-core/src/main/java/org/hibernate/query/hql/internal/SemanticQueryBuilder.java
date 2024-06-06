@@ -784,10 +784,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final HqlParser.QueryExpressionContext queryExpressionContext = (HqlParser.QueryExpressionContext) ctx.getChild( queryExpressionIndex );
 		final SqmSelectQuery<Object> cte;
 		if ( cteContainer instanceof SqmSubQuery<?> ) {
-			cte = new SqmSubQuery<>(
-					processingStateStack.getCurrent().getProcessingQuery(),
-					creationContext.getNodeBuilder()
-			);
+			cte = new SqmSubQuery<>( ( (SqmSubQuery<?>) cteContainer ).getParent(), creationContext.getNodeBuilder() );
 		}
 		else {
 			cte = new SqmSelectStatement<>( creationContext.getNodeBuilder() );

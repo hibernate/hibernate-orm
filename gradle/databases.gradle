@@ -291,7 +291,7 @@ ext {
                         'connection.init_sql' : ''
                 ],
                 informix : [
-                        'db.dialect' : 'org.hibernate.dialect.InformixDialect',
+                        'db.dialect' : 'org.hibernate.community.dialect.InformixDialect',
                         'jdbc.driver': 'com.informix.jdbc.IfxDriver',
                         'jdbc.user'  : 'informix',
                         'jdbc.pass'  : 'in4mix',

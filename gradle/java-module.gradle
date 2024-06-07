@@ -131,6 +131,9 @@ dependencies {
 	else if ( db.startsWith( 'altibase' ) ) {
 		testRuntimeOnly dbLibs.altibase
 	}
+	else if ( db.startsWith( 'informix' ) ) {
+		testRuntimeOnly dbLibs.informix
+	}
 
 	annotationProcessor libs.loggingProcessor
 	annotationProcessor libs.logging

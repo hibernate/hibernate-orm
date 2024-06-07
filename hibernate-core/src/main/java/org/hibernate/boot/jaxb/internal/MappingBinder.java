@@ -15,22 +15,19 @@ import javax.xml.stream.events.StartElement;
 import org.hibernate.Internal;
 import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.boot.UnsupportedOrmXsdVersionException;
-import org.hibernate.boot.jaxb.JaxbLogger;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
-import org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer;
 import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.jaxb.internal.stax.HbmEventReader;
 import org.hibernate.boot.jaxb.internal.stax.JpaOrmXmlEventReader;
 import org.hibernate.boot.jaxb.internal.stax.MappingEventReader;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
-import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.xsd.MappingXsdSupport;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -62,8 +59,6 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 
 	public interface Options {
 		boolean validateMappings();
-
-		boolean transformHbmMappings();
 	}
 
 	public static final Options VALIDATING = new Options() {
@@ -71,22 +66,12 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 		public boolean validateMappings() {
 			return true;
 		}
-
-		@Override
-		public boolean transformHbmMappings() {
-			return false;
-		}
 	};
 
 	public static final Options NON_VALIDATING = new Options() {
 		@Override
 		public boolean validateMappings() {
 			return true;
-		}
-
-		@Override
-		public boolean transformHbmMappings() {
-			return false;
 		}
 	};
 
@@ -131,15 +116,6 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 					}
 					return BOOLEAN.convert( setting );
 				}
-
-				@Override
-				public boolean transformHbmMappings() {
-					final Object setting = settingsAccess.apply( AvailableSettings.TRANSFORM_HBM_XML );
-					if ( setting == null ) {
-						return false;
-					}
-					return BOOLEAN.convert( setting );
-				}
 			};
 
 			this.unsupportedHandlingAccess = () -> {
@@ -178,11 +154,6 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 					public boolean validateMappings() {
 						return false;
 					}
-
-					@Override
-					public boolean transformHbmMappings() {
-						return false;
-					}
 				},
 				unsupportedHandling
 		);
@@ -219,13 +190,6 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 					origin
 			);
 
-			if ( optionsAccess.get().transformHbmMappings() ) {
-				JaxbLogger.JAXB_LOGGER.tracef( "Performing on-the-fly hbm.xml -> mapping.xml transformation - %s ", origin );
-				//noinspection unchecked
-				return new Binding<>( (X) HbmXmlTransformer.transform( hbmBindings, origin, unsupportedHandlingAccess::get ), origin );
-			}
-
-			DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedHbmXmlProcessing( origin.getType(), origin.getName() );
 			//noinspection unchecked
 			return new Binding<>( (X) hbmBindings, origin );
 		}
@@ -241,6 +205,7 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 						mappingJaxbContext(),
 						origin
 				);
+
 				//noinspection unchecked
 				return new Binding<>( (X) bindingRoot, origin );
 			}

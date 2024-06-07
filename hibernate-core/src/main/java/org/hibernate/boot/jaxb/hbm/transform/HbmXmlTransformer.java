@@ -83,6 +83,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmRootEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSecondaryTableType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSetType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSimpleIdType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSubclassEntityBaseDefinition;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSynchronizeType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTimestampAttributeType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmUnionSubclassEntityType;
@@ -155,6 +156,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTransientImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUserTypeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbVersionImpl;
+import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
@@ -170,54 +172,65 @@ import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 
 import static org.hibernate.boot.jaxb.hbm.transform.HbmTransformationLogging.TRANSFORMATION_LOGGER;
-import static org.hibernate.internal.util.StringHelper.coalesce;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
- * Transforms a JAXB binding of a hbm.xml file into a unified orm.xml representation
+ * Transforms {@code hbm.xml} {@linkplain JaxbHbmHibernateMapping JAXB} bindings into
+ * {@code mapping.xml} {@linkplain JaxbEntityMappingsImpl JAXB} bindings
  *
  * @author Steve Ebersole
  * @author Brett Meyer
- *
- * @implNote This transformation happens on the JAXB model level creating
- * a {@link JaxbEntityMappingsImpl} "copy" of the {@link JaxbHbmHibernateMapping}
- * representation
  */
 public class HbmXmlTransformer {
 	/**
-	 * Main entry into hbm.xml transformation
+	 * Transforms a list of {@code hbm.xml} JAXB bindings into a list of {@code mapping.xml} JAXB bindings
 	 *
-	 * @param hbmXmlMapping The hbm.xml mapping to be transformed
-	 * @param origin The origin of the hbm.xml mapping
-	 * @return The transformed representation
+	 * @param hbmXmlBindings The list of {@code hbm.xml} JAXB bindings
+	 * @param unsupportedFeatureHandling How to handle {@code hbm.xml} features we don't transform
+	 *
+	 * @return The list of {@code mapping.xml} JAXB bindings
 	 */
-	public static JaxbEntityMappingsImpl transform(JaxbHbmHibernateMapping hbmXmlMapping, Origin origin, Options options) {
-		return new HbmXmlTransformer( hbmXmlMapping, origin, options ).doTransform();
-	}
+	public static List<Binding<JaxbEntityMappingsImpl>> transform(
+			List<Binding<JaxbHbmHibernateMapping>> hbmXmlBindings,
+			UnsupportedFeatureHandling unsupportedFeatureHandling) {
+		final TransformationState transformationState = new TransformationState( hbmXmlBindings );
+		TransformationPreprocessor.preprocessHbmXml( hbmXmlBindings, transformationState );
 
-	public interface Options {
-		UnsupportedFeatureHandling unsupportedFeatureHandling();
+		for ( int i = 0; i < hbmXmlBindings.size(); i++ ) {
+			final Binding<JaxbHbmHibernateMapping> hbmJaxbBinding = hbmXmlBindings.get( i );
+			final Binding<JaxbEntityMappingsImpl> mappingJaxbBinding = transformationState.getMappingBindings().get( i );
+			final HbmXmlTransformer hbmXmlTransformer = new HbmXmlTransformer(
+					hbmJaxbBinding,
+					mappingJaxbBinding,
+					transformationState,
+					unsupportedFeatureHandling
+			);
+			hbmXmlTransformer.doTransform();
+		}
+
+		return transformationState.getMappingBindings();
 	}
 
 	private final Origin origin;
 	private final JaxbHbmHibernateMapping hbmXmlMapping;
 	private final JaxbEntityMappingsImpl ormRoot;
+	private final TransformationState transformationState;
+	private final UnsupportedFeatureHandling unsupportedFeatureHandling;
 
-	private final Options options;
 
-	public HbmXmlTransformer(JaxbHbmHibernateMapping hbmXmlMapping, Origin origin, Options options) {
-		this.origin = origin;
-		this.hbmXmlMapping = hbmXmlMapping;
-		this.options = options;
-
-		this.ormRoot = new JaxbEntityMappingsImpl();
-		this.ormRoot.setDescription(
-				"mapping.xml document auto-generated from legacy hbm.xml format via transformation - " + origin.getName()
-		);
-
+	private HbmXmlTransformer(
+			Binding<JaxbHbmHibernateMapping> hbmJaxbBinding,
+			Binding<JaxbEntityMappingsImpl> mappingJaxbBinding,
+			TransformationState transformationState,
+			UnsupportedFeatureHandling unsupportedFeatureHandling) {
+		this.origin = hbmJaxbBinding.getOrigin();
+		this.hbmXmlMapping = hbmJaxbBinding.getRoot();
+		this.ormRoot = mappingJaxbBinding.getRoot();
+		this.transformationState = transformationState;
+		this.unsupportedFeatureHandling = unsupportedFeatureHandling;
 	}
 
-	private JaxbEntityMappingsImpl doTransform() {
+	private void doTransform() {
 		TRANSFORMATION_LOGGER.tracef(
 				"Starting hbm.xml transformation - `%s`",
 				origin
@@ -247,7 +260,6 @@ public class HbmXmlTransformer {
 		if ( TRANSFORMATION_LOGGER.isDebugEnabled() ) {
 			dumpTransformed( origin, ormRoot );
 		}
-		return ormRoot;
 	}
 
 	private static void dumpTransformed(Origin origin, JaxbEntityMappingsImpl ormRoot) {
@@ -293,7 +305,7 @@ public class HbmXmlTransformer {
 	}
 
 	private void handleUnsupported(PickHandler pickHandler, String message, Object... messageArgs) {
-		switch ( options.unsupportedFeatureHandling() ) {
+		switch ( unsupportedFeatureHandling ) {
 			case ERROR -> throw new UnsupportedOperationException(
 					String.format(
 							Locale.ROOT,
@@ -807,32 +819,28 @@ public class HbmXmlTransformer {
 		//		2) ?? Have abstract hbm class mappings become MappedSuperclass mappings ??
 
 		for ( JaxbHbmRootEntityType hbmClass : hbmXmlMapping.getClazz() ) {
-			final JaxbEntityImpl entity = new JaxbEntityImpl();
-			ormRoot.getEntities().add( entity );
+			final JaxbEntityImpl entity = transformationState.getEntityXref().get( hbmClass );
 			transferRootEntity( hbmClass, entity );
 		}
 
 		for ( JaxbHbmDiscriminatorSubclassEntityType hbmSubclass : hbmXmlMapping.getSubclass() ) {
-			final JaxbEntityImpl entity = new JaxbEntityImpl();
-			ormRoot.getEntities().add( entity );
+			final JaxbEntityImpl entity = transformationState.getEntityXref().get( hbmSubclass );
 			transferDiscriminatorSubclass( hbmSubclass, entity );
 		}
 
 		for ( JaxbHbmJoinedSubclassEntityType hbmSubclass : hbmXmlMapping.getJoinedSubclass() ) {
-			final JaxbEntityImpl entity = new JaxbEntityImpl();
-			ormRoot.getEntities().add( entity );
+			final JaxbEntityImpl entity = transformationState.getEntityXref().get( hbmSubclass );
 			transferJoinedSubclass( hbmSubclass, entity );
 		}
 
 		for ( JaxbHbmUnionSubclassEntityType hbmSubclass : hbmXmlMapping.getUnionSubclass() ) {
-			final JaxbEntityImpl entity = new JaxbEntityImpl();
-			ormRoot.getEntities().add( entity );
+			final JaxbEntityImpl entity = transformationState.getEntityXref().get( hbmSubclass );
 			transferUnionSubclass( hbmSubclass, entity );
 		}
 
 	}
 
-	private String extractEntityName(EntityInfo entityInfo) {
+	private static String extractEntityName(EntityInfo entityInfo) {
 		if ( entityInfo.getEntityName() != null ) {
 			return entityInfo.getEntityName();
 		}
@@ -901,12 +909,12 @@ public class HbmXmlTransformer {
 		entity.setSqlRestriction( hbmClass.getWhere() );
 
 		if ( !hbmClass.getTuplizer().isEmpty() ) {
-			if ( options.unsupportedFeatureHandling() == UnsupportedFeatureHandling.ERROR ) {
+			if ( unsupportedFeatureHandling == UnsupportedFeatureHandling.ERROR ) {
 				throw new MappingException( "HBM transformation: Tuplizer not supported", origin );
 			}
 
 			TRANSFORMATION_LOGGER.logf(
-					options.unsupportedFeatureHandling() == UnsupportedFeatureHandling.WARN
+					unsupportedFeatureHandling == UnsupportedFeatureHandling.WARN
 							? Logger.Level.WARN
 							: Logger.Level.DEBUG,
 					"Transformation of <tuplizer/> is not supported - `%s`",
@@ -950,26 +958,17 @@ public class HbmXmlTransformer {
 		}
 		
 		for ( JaxbHbmJoinedSubclassEntityType hbmSubclass : hbmClass.getJoinedSubclass() ) {
-			entity.setInheritance( new JaxbInheritanceImpl() );
-			entity.getInheritance().setStrategy( InheritanceType.JOINED );
-
-			final JaxbEntityImpl subclassEntity = new JaxbEntityImpl();
-			ormRoot.getEntities().add( subclassEntity );
+			final JaxbEntityImpl subclassEntity = transformationState.getEntityXref().get( hbmSubclass );
 			transferJoinedSubclass( hbmSubclass, subclassEntity );
 		}
 		
 		for (JaxbHbmUnionSubclassEntityType hbmSubclass : hbmClass.getUnionSubclass() ) {
-			entity.setInheritance( new JaxbInheritanceImpl() );
-			entity.getInheritance().setStrategy( InheritanceType.TABLE_PER_CLASS );
-
-			final JaxbEntityImpl subclassEntity = new JaxbEntityImpl();
-			ormRoot.getEntities().add( subclassEntity );
+			final JaxbEntityImpl subclassEntity = transformationState.getEntityXref().get( hbmSubclass );
 			transferUnionSubclass( hbmSubclass, subclassEntity );
 		}
 		
 		for ( JaxbHbmDiscriminatorSubclassEntityType hbmSubclass : hbmClass.getSubclass() ) {
-			final JaxbEntityImpl subclassEntity = new JaxbEntityImpl();
-			ormRoot.getEntities().add( subclassEntity );
+			final JaxbEntityImpl subclassEntity = transformationState.getEntityXref().get( hbmSubclass );
 			transferDiscriminatorSubclass( hbmSubclass, subclassEntity );
 		}
 		
@@ -1022,6 +1021,19 @@ public class HbmXmlTransformer {
 
 		transfer( hbmClass::getEntityName, entity::setName );
 		transfer( hbmClass::getName, entity::setClazz );
+
+		if ( StringHelper.isEmpty( entity.getExtends() ) ) {
+			if ( hbmClass instanceof JaxbHbmSubclassEntityBaseDefinition hbmSubclass ) {
+				if ( StringHelper.isNotEmpty( hbmSubclass.getExtends() ) ) {
+					entity.setExtends( TransformationState.requireEntityReferenceName(
+							hbmSubclass.getExtends(),
+							hbmXmlMapping,
+							transformationState.getEntityMap(),
+							origin
+					) );
+				}
+			}
+		}
 
 		if ( hbmClass instanceof Discriminatable discriminatable ) {
 			transfer( discriminatable::getDiscriminatorValue, entity::setDiscriminatorValue );
@@ -1081,6 +1093,13 @@ public class HbmXmlTransformer {
 		transferBaseEntityInformation( hbmSubclass, subclassEntity );
 
 		transferEntityElementAttributes( hbmSubclass, subclassEntity );
+
+		if ( !hbmSubclass.getSubclass().isEmpty() ) {
+			for ( JaxbHbmDiscriminatorSubclassEntityType nestedHbmSubclass : hbmSubclass.getSubclass() ) {
+				final JaxbEntityImpl nestedSubclassEntity = transformationState.getEntityXref().get( nestedHbmSubclass );
+				transferDiscriminatorSubclass( nestedHbmSubclass, nestedSubclassEntity );
+			}
+		}
 	}
 
 	private void transferJoinedSubclass(JaxbHbmJoinedSubclassEntityType hbmSubclass, JaxbEntityImpl subclassEntity) {
@@ -1113,11 +1132,8 @@ public class HbmXmlTransformer {
 		}
 		
 		if ( !hbmSubclass.getJoinedSubclass().isEmpty() ) {
-			subclassEntity.setInheritance( new JaxbInheritanceImpl() );
-			subclassEntity.getInheritance().setStrategy( InheritanceType.JOINED );
 			for ( JaxbHbmJoinedSubclassEntityType nestedHbmSubclass : hbmSubclass.getJoinedSubclass() ) {
-				final JaxbEntityImpl nestedSubclassEntity = new JaxbEntityImpl();
-				ormRoot.getEntities().add( nestedSubclassEntity );
+				final JaxbEntityImpl nestedSubclassEntity = transformationState.getEntityXref().get( nestedHbmSubclass );
 				transferJoinedSubclass( nestedHbmSubclass, nestedSubclassEntity );
 			}
 		}
@@ -1284,7 +1300,15 @@ public class HbmXmlTransformer {
 				attributes.getEmbeddedAttributes().add( transformEmbedded( jaxbEmbeddable, hbmComponent ) );
 			}
 			else if ( hbmAttributeMapping instanceof JaxbHbmPropertiesType hbmProperties ) {
-				transferAttributes( hbmProperties.getAttributes(), attributes );
+				// while we could simply "unwrap" the <properties/> itself and inline the attributes,
+				// <properties/> is most often used to create a target for property-ref mappings - that
+				// we could not support without a new sort of annotation - e.g.
+				//
+				// @interface PropertyGroup {
+				// 		String name();
+				//		String[] propertyNames();
+				// }
+				handleUnsupported( "<properties/> mappings not supported for transformation [name=%s]", hbmProperties.getName() );
 			}
 			else if ( hbmAttributeMapping instanceof JaxbHbmDynamicComponentType ) {
 				final String name = ( (JaxbHbmDynamicComponentType) hbmAttributeMapping ).getName();
@@ -2401,11 +2425,8 @@ public class HbmXmlTransformer {
 		}
 
 		if ( !hbmSubclass.getUnionSubclass().isEmpty() ) {
-			subclassEntity.setInheritance( new JaxbInheritanceImpl() );
-			subclassEntity.getInheritance().setStrategy( InheritanceType.TABLE_PER_CLASS );
 			for ( JaxbHbmUnionSubclassEntityType nestedHbmSubclass : hbmSubclass.getUnionSubclass() ) {
-				final JaxbEntityImpl nestedSubclassEntity = new JaxbEntityImpl();
-				ormRoot.getEntities().add( nestedSubclassEntity );
+				final JaxbEntityImpl nestedSubclassEntity = transformationState.getEntityXref().get( nestedHbmSubclass );
 				transferUnionSubclass( nestedHbmSubclass, nestedSubclassEntity );
 			}
 		}

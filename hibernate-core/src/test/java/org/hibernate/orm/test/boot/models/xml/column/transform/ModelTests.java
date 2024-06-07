@@ -12,6 +12,7 @@ import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Property;
 import org.hibernate.models.spi.ClassDetails;
@@ -22,6 +23,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -59,7 +61,7 @@ public class ModelTests {
 		assertThat( transformerAnn.write() ).isEqualTo( "? * 100.00" );
 	}
 
-	@ServiceRegistry
+	@ServiceRegistry(settings = @Setting(name = MappingSettings.TRANSFORM_HBM_XML, value = "true"))
 	@Test
 	void testHbmXml(ServiceRegistryScope scope) {
 		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder( true, true )

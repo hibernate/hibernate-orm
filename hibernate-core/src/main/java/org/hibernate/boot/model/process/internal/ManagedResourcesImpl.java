@@ -16,14 +16,26 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.Internal;
+import org.hibernate.boot.BootLogging;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
+import org.hibernate.boot.jaxb.Origin;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
+import org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer;
+import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.internal.log.DeprecationLogger;
 
 import jakarta.persistence.AttributeConverter;
+
+import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 
 /**
  * @author Steve Ebersole
@@ -42,9 +54,51 @@ public class ManagedResourcesImpl implements ManagedResources {
 		impl.annotatedClassReferences.addAll( sources.getAnnotatedClasses() );
 		impl.annotatedClassNames.addAll( sources.getAnnotatedClassNames() );
 		impl.annotatedPackageNames.addAll( sources.getAnnotatedPackages() );
-		impl.mappingFileBindings.addAll( sources.getXmlBindings() );
+		handleXmlMappings( sources, impl, bootstrapContext );
 		impl.extraQueryImports = sources.getExtraQueryImports();
 		return impl;
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private static void handleXmlMappings(
+			MetadataSources sources,
+			ManagedResourcesImpl impl,
+			BootstrapContext bootstrapContext) {
+		impl.mappingFileBindings.addAll( (List) sources.getMappingXmlBindings() );
+
+		if ( !bootstrapContext.getMetadataBuildingOptions().isXmlMappingEnabled() ) {
+			BootLogging.BOOT_LOGGER.debugf(
+					"Ignoring %s XML mappings due to `%s`",
+					sources.getMappingXmlBindings().size(),
+					MappingSettings.XML_MAPPING_ENABLED
+			);
+			return;
+		}
+
+		final ConfigurationService configurationService = bootstrapContext.getServiceRegistry().getService( ConfigurationService.class );
+		// NOTE : the configurationService nullness checking is here for a few tests using mocks
+		final boolean transformHbm = configurationService != null
+				&& configurationService.getSetting( MappingSettings.TRANSFORM_HBM_XML, BOOLEAN,false );
+
+		if ( !transformHbm ) {
+			// we are not transforming hbm.xml to mapping.xml, so just add the hbm.xml bindings as-is
+			impl.mappingFileBindings.addAll( (List) sources.getHbmXmlBindings() );
+			for ( Binding<JaxbHbmHibernateMapping> hbmXmlBinding : sources.getHbmXmlBindings() ) {
+				final Origin origin = hbmXmlBinding.getOrigin();
+				DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedHbmXmlProcessing( origin.getType(), origin.getName() );
+			}
+		}
+		else {
+			// do the transformations
+			final List<Binding<JaxbEntityMappingsImpl>> transformed = HbmXmlTransformer.transform(
+					sources.getHbmXmlBindings(),
+					UnsupportedFeatureHandling.fromSetting(
+							configurationService.getSettings().get( AvailableSettings.TRANSFORM_HBM_XML_FEATURE_HANDLING ),
+							UnsupportedFeatureHandling.ERROR
+					)
+			);
+			impl.mappingFileBindings.addAll( (List) transformed );
+		}
 	}
 
 	public ManagedResourcesImpl() {

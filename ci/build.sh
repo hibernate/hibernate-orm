@@ -76,6 +76,8 @@ elif [ "$RDBMS" == "cockroachdb" ]; then
   goal="-Pdb=cockroachdb"
 elif [ "$RDBMS" == "altibase" ]; then
   goal="-Pdb=altibase"
+elif [ "$RDBMS" == "informix" ]; then
+  goal="-Pdb=informix"
 fi
 
 # Only run checkstyle in the H2 build,

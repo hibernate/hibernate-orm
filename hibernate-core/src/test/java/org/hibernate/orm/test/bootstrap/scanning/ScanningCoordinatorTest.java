@@ -35,12 +35,18 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
+import org.hibernate.cfg.Environment;
+import org.hibernate.engine.config.internal.ConfigurationServiceInitiator;
+import org.hibernate.engine.config.spi.ConfigurationService;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.Logger;
 import org.hibernate.testing.orm.junit.MessageKeyInspection;
 import org.hibernate.testing.orm.junit.MessageKeyWatcher;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -70,6 +76,7 @@ public class ScanningCoordinatorTest {
 	private BootstrapContext bootstrapContext = Mockito.mock( BootstrapContext.class );
 	private ClassmateContext classmateContext = new ClassmateContext();
 	private XmlMappingBinderAccess xmlMappingBinderAccess = Mockito.mock( XmlMappingBinderAccess.class );
+	private MetadataBuildingOptions metadataBuildingOptions = Mockito.mock( MetadataBuildingOptions.class );
 
 	private ScanEnvironment scanEnvironment = Mockito.mock( ScanEnvironment.class );
 	private StandardServiceRegistry serviceRegistry = Mockito.mock( StandardServiceRegistry.class );
@@ -87,7 +94,11 @@ public class ScanningCoordinatorTest {
 		when( bootstrapContext.getScanEnvironment() ).thenReturn( scanEnvironment );
 		when( bootstrapContext.getClassmateContext() ).thenReturn( classmateContext );
 		when( bootstrapContext.getServiceRegistry() ).thenReturn( serviceRegistry );
+		when( bootstrapContext.getMetadataBuildingOptions() ).thenReturn( metadataBuildingOptions );
+
 		when( serviceRegistry.requireService( ClassLoaderService.class ) ).thenReturn( classLoaderService );
+
+		when( metadataBuildingOptions.isXmlMappingEnabled() ).thenReturn( true );
 
 		when( scanEnvironment.getExplicitlyListedClassNames() ).thenReturn(
 				Arrays.asList( "a.b.C" ) );

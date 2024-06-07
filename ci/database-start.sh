@@ -32,4 +32,6 @@ elif [ "$RDBMS" == 'cockroachdb' ]; then
   bash $DIR/../docker_db.sh cockroachdb
 elif [ "$RDBMS" == 'hana' ]; then
   bash $DIR/../docker_db.sh hana
+elif [ "$RDBMS" == 'informix' ]; then
+  bash $DIR/../docker_db.sh informix
 fi

@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.MappingException;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
@@ -229,6 +230,14 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		List<XClass> clazzHierarchy = new ArrayList<>();
 
 		for ( ClassDetails clazz : classes ) {
+			if ( clazz.isInterface() ) {
+				if ( clazz.hasDirectAnnotationUsage( Entity.class ) ) {
+					throw new MappingException( "Only classes (not interfaces) may be mapped as @Entity : " + clazz.getName() );
+				}
+				if ( clazz.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
+					throw new MappingException( "Only classes (not interfaces) may be mapped as @MappedSuperclass : " + clazz.getName() );
+				}
+			}
 			if ( clazz.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
 				if ( debug ) {
 					log.debugf(

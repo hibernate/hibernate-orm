@@ -7,7 +7,6 @@
 package org.hibernate.community.dialect;
 
 import org.hibernate.boot.Metadata;
-
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -20,6 +19,7 @@ import org.hibernate.community.dialect.unique.InformixUniqueDelegate;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.Replacer;
+import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -237,6 +237,11 @@ public class InformixDialect extends Dialect {
 	@Override
 	public int getDoublePrecision() {
 		return 16;
+	}
+
+	@Override
+	public SelectItemReferenceStrategy getGroupBySelectItemReferenceStrategy() {
+		return SelectItemReferenceStrategy.POSITION;
 	}
 
 	@Override

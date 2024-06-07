@@ -12,6 +12,7 @@ import org.hibernate.boot.models.annotations.internal.BasicJpaAnnotation;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
 
@@ -33,8 +34,12 @@ public class BasicIdAttributeProcessing {
 			AccessType classAccessType,
 			XmlDocumentContext xmlDocumentContext) {
 		final AccessType accessType = coalesce( jaxbId.getAccess(), classAccessType );
+		final String idAttributeName = StringHelper.isNotEmpty( jaxbId.getName() )
+				? jaxbId.getName()
+				: "id";
+
 		final MutableMemberDetails memberDetails = XmlProcessingHelper.getAttributeMember(
-				jaxbId.getName(),
+				idAttributeName,
 				accessType,
 				declarer
 		);

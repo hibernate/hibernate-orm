@@ -576,11 +576,6 @@ public class MetadataBuildingProcess {
 						public boolean validateMappings() {
 							return false;
 						}
-
-						@Override
-						public boolean transformHbmMappings() {
-							return false;
-						}
 					}
 			);
 		}

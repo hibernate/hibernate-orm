@@ -18,6 +18,7 @@ import org.hibernate.community.dialect.sequence.SequenceInformationExtractorInfo
 import org.hibernate.community.dialect.unique.InformixUniqueDelegate;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
@@ -430,6 +431,16 @@ public class InformixDialect extends Dialect {
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
 		return SequenceInformationExtractorInformixDatabaseImpl.INSTANCE;
+	}
+
+	@Override
+	public NullOrdering getNullOrdering() {
+		return NullOrdering.SMALLEST;
+	}
+
+	@Override
+	public boolean supportsNullPrecedence() {
+		return getVersion().isSameOrAfter( 12, 10 );
 	}
 
 	@Override

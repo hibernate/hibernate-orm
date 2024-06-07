@@ -351,25 +351,23 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 					if ( classLoader == null ) {
 						throw persistenceException( "Enhancement requires a temp class loader, but none was given." );
 					}
-					for ( Binding<JaxbBindableMappingDescriptor> binding : metadataSources.getXmlBindings() ) {
-						final JaxbBindableMappingDescriptor root = binding.getRoot();
-						if ( root instanceof JaxbHbmHibernateMapping ) {
-							final JaxbHbmHibernateMapping hibernateMapping = (JaxbHbmHibernateMapping) root;
-							final String packageName = hibernateMapping.getPackage();
-							for ( JaxbHbmRootEntityType clazz : hibernateMapping.getClazz() ) {
-								final String className;
-								if ( packageName == null || packageName.isEmpty() ) {
-									className = clazz.getName();
-								}
-								else {
-									className = packageName + '.' + clazz.getName();
-								}
-								try {
-									classTransformer.discoverTypes( classLoader, className );
-								}
-								catch (EnhancementException ex) {
-									LOG.enhancementDiscoveryFailed( className, ex );
-								}
+
+					for ( Binding<JaxbHbmHibernateMapping> binding : metadataSources.getHbmXmlBindings() ) {
+						final JaxbHbmHibernateMapping hibernateMapping = binding.getRoot();
+						final String packageName = hibernateMapping.getPackage();
+						for ( JaxbHbmRootEntityType clazz : hibernateMapping.getClazz() ) {
+							final String className;
+							if ( packageName == null || packageName.isEmpty() ) {
+								className = clazz.getName();
+							}
+							else {
+								className = packageName + '.' + clazz.getName();
+							}
+							try {
+								classTransformer.discoverTypes( classLoader, className );
+							}
+							catch (EnhancementException ex) {
+								LOG.enhancementDiscoveryFailed( className, ex );
 							}
 						}
 					}

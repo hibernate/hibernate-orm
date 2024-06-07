@@ -10,6 +10,7 @@ import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.function.Supplier;
 
+import org.hibernate.MappingException;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainer;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainerImpl;
@@ -59,7 +60,9 @@ import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 
 import static org.hibernate.boot.models.xml.XmlProcessLogging.XML_PROCESS_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
@@ -123,6 +126,9 @@ public class ManagedTypeProcessor {
 					defaultAccessTypeFromDefaultAccessor( xmlDocumentContext ),
 					AccessType.PROPERTY
 			);
+			if ( classDetails.isInterface() ) {
+				throw new MappingException( "Only classes (not interfaces) may be mapped as @Entity : " + classDetails.getName() );
+			}
 		}
 
 		classDetails.clearMemberAnnotationUsages();

@@ -9,9 +9,12 @@ package org.hibernate.orm.tooling.gradle.misc;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.OutputDirectory;
@@ -19,7 +22,6 @@ import org.gradle.api.tasks.SourceTask;
 import org.gradle.api.tasks.TaskAction;
 
 import org.hibernate.boot.jaxb.Origin;
-import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer;
 import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
@@ -53,6 +55,7 @@ import jakarta.xml.bind.Marshaller;
  * 		replacing the original (destructive).
  * @see org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer
  */
+@CacheableTask
 public abstract class TransformHbmXmlTask extends SourceTask {
 	private final Property<TransformationNaming> renaming;
 	private final Property<UnsupportedFeatureHandling> unsupportedFeatures;
@@ -127,39 +130,45 @@ public abstract class TransformHbmXmlTask extends SourceTask {
 			throw new RuntimeException( "Unable to create JAXB Marshaller", e );
 		}
 
-		getSource().forEach( (hbmXmlFile) -> transformFile( mappingBinder, marshaller, hbmXmlFile ) );
-	}
+		final List<Binding<JaxbHbmHibernateMapping>> hbmBindings = new ArrayList<>();
+		getSource().forEach( (hbmXmlFile) -> {
+			final Origin origin = new OriginImpl( hbmXmlFile );
+			final Binding<JaxbHbmHibernateMapping> hbmBinding = bindMapping( mappingBinder, hbmXmlFile, origin );
+			hbmBindings.add( hbmBinding );
+		} );
 
-	private void transformFile(MappingBinder mappingBinder, Marshaller marshaller, File hbmXmlFile) {
-		final Origin origin = new Origin( SourceType.FILE, hbmXmlFile.getAbsolutePath() );
-		final Binding<JaxbHbmHibernateMapping> binding = bindMapping( mappingBinder, hbmXmlFile, origin );
-		if ( binding == null ) {
-			return;
-		}
+		final List<Binding<JaxbEntityMappingsImpl>> transformedBindings = HbmXmlTransformer.transform(
+				hbmBindings,
+				unsupportedFeatures.get()
+		);
 
-		if ( deleteHbmFiles.getOrElse( false ) ) {
-			final boolean deleted = hbmXmlFile.delete();
-			if ( !deleted ) {
-				getProject().getLogger().warn( "Unable to delete hbm.xml file `{}`", hbmXmlFile.getAbsoluteFile() );
+		for ( int i = 0; i < hbmBindings.size(); i++ ) {
+			final Binding<JaxbHbmHibernateMapping> hbmBinding = hbmBindings.get( i );
+			final Binding<JaxbEntityMappingsImpl> transformedBinding = transformedBindings.get( i );
+
+			final OriginImpl origin = (OriginImpl) hbmBinding.getOrigin();
+			final File hbmXmlFile = origin.getHbmXmlFile();
+
+			if ( deleteHbmFiles.getOrElse( false ) ) {
+				final boolean deleted = hbmXmlFile.delete();
+				if ( !deleted ) {
+					getProject().getLogger().warn( "Unable to delete hbm.xml file `{}`", hbmXmlFile.getAbsoluteFile() );
+				}
 			}
-		}
 
-		final HbmXmlTransformer.Options transformationOptions = unsupportedFeatures::get;
-
-		final JaxbEntityMappingsImpl transformed = HbmXmlTransformer.transform( binding.getRoot(), origin, transformationOptions );
-
-		final String copyName = determineCopyName( hbmXmlFile );
-		final File copyFile = determineCopyFile( copyName, hbmXmlFile );
-		//noinspection ResultOfMethodCallIgnored
-		copyFile.getParentFile().mkdirs();
-		try {
-			marshaller.marshal( transformed, copyFile );
-		}
-		catch (JAXBException e) {
-			throw new RuntimeException(
-					"Unable to marshall mapping JAXB representation to file `" + copyFile.getAbsolutePath() + "`",
-					e
-			);
+			final String copyName = determineCopyName( hbmXmlFile );
+			final File copyFile = determineCopyFile( copyName, hbmXmlFile );
+			//noinspection ResultOfMethodCallIgnored
+			copyFile.getParentFile().mkdirs();
+			try {
+				marshaller.marshal( transformedBinding.getRoot(), copyFile );
+			}
+			catch (JAXBException e) {
+				throw new RuntimeException(
+						"Unable to marshall mapping JAXB representation to file `" + copyFile.getAbsolutePath() + "`",
+						e
+				);
+			}
 		}
 	}
 

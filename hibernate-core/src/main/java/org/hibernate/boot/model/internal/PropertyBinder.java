@@ -292,8 +292,9 @@ public class PropertyBinder {
 								: persistentClasses.get( holder.getEntityName() );
 				binder.bind( containingAnnotation, buildingContext, persistentClass, property );
 			}
-			catch ( Exception e ) {
-				throw new AnnotationException( "error processing @AttributeBinderType annotation '" + containingAnnotation + "'", e );
+			catch (Exception e) {
+				throw new AnnotationException( "error processing @AttributeBinderType annotation '" + containingAnnotation + "' for attribute '"
+						+ property.getName() + "' of class '" + holder.getEntityName() + "'", e );
 			}
 		}
 	}

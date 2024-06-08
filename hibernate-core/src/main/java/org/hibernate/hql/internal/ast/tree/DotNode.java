@@ -25,6 +25,7 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
+import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 
 import antlr.SemanticException;
@@ -401,7 +402,8 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 			property = parentAsDotNode.propertyName;
 
 			if ( generateJoin ) {
-				if ( implicitJoin && ( toOneType.hasNotFoundAction() || toOneType.isNullable() ) ) {
+				if ( implicitJoin && ( toOneType.hasNotFoundAction() || toOneType.isNullable() ||
+						(toOneType instanceof ManyToOneType && ((ManyToOneType) toOneType).isOptional()) ) ) {
 					joinIsNeeded = true;
 				}
 				else {

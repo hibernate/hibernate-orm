@@ -150,6 +150,10 @@ public class CommonPluralAttributeProcessing {
 			columnAnn.apply( jaxbPluralAttribute.getMapKeyColumn(), xmlDocumentContext );
 		}
 
+		if ( jaxbPluralAttribute.getMapKeyType() != null ) {
+			XmlAnnotationHelper.applyMapKeyUserType( jaxbPluralAttribute.getMapKeyType(), memberDetails, xmlDocumentContext );
+		}
+
 		JoinColumnProcessing.applyMapKeyJoinColumns(
 				jaxbPluralAttribute.getMapKeyJoinColumns(),
 				memberDetails,

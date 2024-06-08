@@ -61,6 +61,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmListType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToAnyCollectionElementType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToManyCollectionElementType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToOneType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmMapKeyBasicType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmMapType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
@@ -129,7 +130,6 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbHbmFilterImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbHqlImportImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIdClassImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIdImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbInheritanceImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOneImpl;
@@ -164,7 +164,6 @@ import org.jboss.logging.Logger;
 
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.InheritanceType;
 import jakarta.persistence.TemporalType;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBElement;
@@ -1834,16 +1833,53 @@ public class HbmXmlTransformer {
 		else if ( source.getMapKey() != null ) {
 			if ( ! StringHelper.isEmpty( source.getMapKey().getFormulaAttribute() ) ) {
 				handleUnsupported(
-						"Transformation of formulas within map-keys are not supported - `%s`",
+						"Transformation of formula attribute within map-keys is not supported - `%s`",
 						origin
 				);
 				return;
 			}
 
-			final JaxbMapKeyColumnImpl mapKey = new JaxbMapKeyColumnImpl();
-			mapKey.setName( source.getMapKey().getColumnAttribute() );
-			target.setMapKeyColumn( mapKey );
+			if ( CollectionHelper.isNotEmpty( source.getMapKey().getColumnOrFormula() ) ) {
+				handleUnsupported(
+						"Transformation of column/formula elements within map-keys is not supported - `%s`",
+						origin
+				);
+				return;
+			}
+
+			if ( StringHelper.isNotEmpty( source.getMapKey().getNode() ) ) {
+				handleUnsupported(
+						"Transformation of `node` attribute is not supported - %s",
+						origin
+				);
+				return;
+			}
+
+			final String mapKeyType = resolveMapKeyType( source.getMapKey() );
+			if ( mapKeyType != null ) {
+				final JaxbUserTypeImpl jaxbMapKeyType = new JaxbUserTypeImpl();
+				target.setMapKeyType( jaxbMapKeyType );
+				jaxbMapKeyType.setValue( mapKeyType );
+			}
+
+			if ( StringHelper.isNotEmpty( source.getMapKey().getColumnAttribute() ) ) {
+				final JaxbMapKeyColumnImpl mapKeyColumn = new JaxbMapKeyColumnImpl();
+				mapKeyColumn.setName( source.getMapKey().getColumnAttribute() );
+				target.setMapKeyColumn( mapKeyColumn );
+			}
 		}
+	}
+
+	private String resolveMapKeyType(JaxbHbmMapKeyBasicType mapKey) {
+		if ( StringHelper.isNotEmpty( mapKey.getTypeAttribute() ) ) {
+			return mapKey.getTypeAttribute();
+		}
+
+		if ( mapKey.getType() != null ) {
+			return StringHelper.nullIfEmpty( mapKey.getType().getName() );
+		}
+
+		return null;
 	}
 
 	private Boolean invert(Boolean value) {
@@ -1876,6 +1912,8 @@ public class HbmXmlTransformer {
 			JaxbElementCollectionImpl target) {
 		transferCollectionBasicInfo( hbmCollection, target );
 		transferCollectionTable( hbmCollection, target );
+
+		transferElementTypeInfo( hbmCollection, element, target );
 
 		transferColumnsAndFormulas(
 				new ColumnAndFormulaSource() {
@@ -1918,6 +1956,29 @@ public class HbmXmlTransformer {
 				ColumnDefaultsBasicImpl.INSTANCE,
 				null
 		);
+	}
+
+	private void transferElementTypeInfo(
+			PluralAttributeInfo hbmCollection,
+			JaxbHbmBasicCollectionElementType element,
+			JaxbElementCollectionImpl target) {
+		if ( StringHelper.isNotEmpty( element.getTypeAttribute() ) ) {
+			final JaxbUserTypeImpl jaxbUserType = new JaxbUserTypeImpl();
+			target.setType( jaxbUserType );
+			jaxbUserType.setValue( element.getTypeAttribute() );
+		}
+		else if ( element.getType() != null && StringHelper.isNotEmpty( element.getType().getName() ) ) {
+			final JaxbUserTypeImpl jaxbUserType = new JaxbUserTypeImpl();
+			target.setType( jaxbUserType );
+
+			jaxbUserType.setValue( element.getType().getName() );
+			for ( JaxbHbmConfigParameterType hbmParam : element.getType().getConfigParameters() ) {
+				final JaxbConfigurationParameterImpl param = new JaxbConfigurationParameterImpl();
+				param.setName( hbmParam.getName() );
+				param.setValue( hbmParam.getValue() );
+				jaxbUserType.getParameters().add( param );
+			}
+		}
 	}
 
 	private void transferElementInfo(

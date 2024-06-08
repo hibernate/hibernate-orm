@@ -133,7 +133,6 @@ import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotatio
 import org.hibernate.boot.models.annotations.internal.TableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.TargetXmlAnnotation;
 import org.hibernate.boot.models.annotations.internal.TemporalJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.TypeAnnotation;
 import org.hibernate.boot.models.annotations.internal.UniqueConstraintJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.UuidGeneratorAnnotation;
 import org.hibernate.boot.models.annotations.spi.CustomSqlDetails;
@@ -158,41 +157,6 @@ import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.type.SqlTypes;
-import org.hibernate.type.descriptor.java.BasicJavaType;
-import org.hibernate.type.descriptor.java.BigDecimalJavaType;
-import org.hibernate.type.descriptor.java.BigIntegerJavaType;
-import org.hibernate.type.descriptor.java.BlobJavaType;
-import org.hibernate.type.descriptor.java.BooleanJavaType;
-import org.hibernate.type.descriptor.java.ByteJavaType;
-import org.hibernate.type.descriptor.java.CalendarJavaType;
-import org.hibernate.type.descriptor.java.CharacterJavaType;
-import org.hibernate.type.descriptor.java.ClassJavaType;
-import org.hibernate.type.descriptor.java.ClobJavaType;
-import org.hibernate.type.descriptor.java.CurrencyJavaType;
-import org.hibernate.type.descriptor.java.DateJavaType;
-import org.hibernate.type.descriptor.java.DoubleJavaType;
-import org.hibernate.type.descriptor.java.DurationJavaType;
-import org.hibernate.type.descriptor.java.InetAddressJavaType;
-import org.hibernate.type.descriptor.java.InstantJavaType;
-import org.hibernate.type.descriptor.java.IntegerJavaType;
-import org.hibernate.type.descriptor.java.LocalDateJavaType;
-import org.hibernate.type.descriptor.java.LocalDateTimeJavaType;
-import org.hibernate.type.descriptor.java.LocalTimeJavaType;
-import org.hibernate.type.descriptor.java.LocaleJavaType;
-import org.hibernate.type.descriptor.java.LongJavaType;
-import org.hibernate.type.descriptor.java.NClobJavaType;
-import org.hibernate.type.descriptor.java.OffsetDateTimeJavaType;
-import org.hibernate.type.descriptor.java.OffsetTimeJavaType;
-import org.hibernate.type.descriptor.java.ShortJavaType;
-import org.hibernate.type.descriptor.java.StringJavaType;
-import org.hibernate.type.descriptor.java.TimeZoneJavaType;
-import org.hibernate.type.descriptor.java.UUIDJavaType;
-import org.hibernate.type.descriptor.java.UrlJavaType;
-import org.hibernate.type.descriptor.java.YearJavaType;
-import org.hibernate.type.descriptor.java.ZoneIdJavaType;
-import org.hibernate.type.descriptor.java.ZoneOffsetJavaType;
-import org.hibernate.type.descriptor.java.ZonedDateTimeJavaType;
-import org.hibernate.usertype.UserType;
 
 import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.AttributeOverride;
@@ -203,7 +167,6 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Index;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.SecondaryTable;
-import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -226,6 +189,8 @@ import static org.hibernate.boot.models.JpaAnnotations.EXCLUDE_SUPERCLASS_LISTEN
 import static org.hibernate.boot.models.JpaAnnotations.INDEX;
 import static org.hibernate.boot.models.JpaAnnotations.SECONDARY_TABLE;
 import static org.hibernate.boot.models.JpaAnnotations.UNIQUE_CONSTRAINT;
+import static org.hibernate.boot.models.xml.internal.UserTypeCasesMapKey.MAP_KEY_USER_TYPE_CASES;
+import static org.hibernate.boot.models.xml.internal.UserTypeCasesStandard.STANDARD_USER_TYPE_CASES;
 
 /**
  * Helper for creating annotation from equivalent JAXB
@@ -302,303 +267,191 @@ public class XmlAnnotationHelper {
 			JaxbUserTypeImpl jaxbType,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( jaxbType == null || StringHelper.isEmpty( jaxbType.getValue() ) ) {
-			return;
-		}
-
-		final boolean wasSpecialCase = handleSpecialBasicTypeCases( jaxbType, memberDetails, xmlDocumentContext );
-		if ( wasSpecialCase ) {
-			return;
-		}
-
-		final ClassDetails userTypeImpl = resolveJavaType( jaxbType.getValue(), xmlDocumentContext );
-		assert userTypeImpl.isImplementor( UserType.class );
-		final TypeAnnotation typeAnn = (TypeAnnotation) memberDetails.applyAnnotationUsage(
-				HibernateAnnotations.TYPE,
-				xmlDocumentContext.getModelBuildingContext()
-		);
-		typeAnn.value( userTypeImpl.toJavaClass() );
-		typeAnn.parameters( collectParameters( jaxbType.getParameters(), xmlDocumentContext ) );
+		applyUserType( jaxbType, memberDetails, STANDARD_USER_TYPE_CASES, xmlDocumentContext );
 	}
 
-	private static boolean handleSpecialBasicTypeCases(
+	public static void applyMapKeyUserType(
 			JaxbUserTypeImpl jaxbType,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( jaxbType.getValue().equalsIgnoreCase( "char" )
+		applyUserType( jaxbType, memberDetails, MAP_KEY_USER_TYPE_CASES, xmlDocumentContext );
+	}
+
+	public static void applyUserType(
+			JaxbUserTypeImpl jaxbType,
+			MutableMemberDetails memberDetails,
+			UserTypeCases cases,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbType == null || StringHelper.isEmpty( jaxbType.getValue() ) ) {
+			cases.handleNone( jaxbType, memberDetails, xmlDocumentContext );
+		}
+		else if ( jaxbType.getValue().equalsIgnoreCase( "char" )
 				|| jaxbType.getValue().equalsIgnoreCase( "character" )
 				|| Character.class.getName().equalsIgnoreCase( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, CharacterJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleCharacter( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "string" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "string" )
 				|| String.class.getName().equalsIgnoreCase( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, StringJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleString( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "byte" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "byte" )
 				|| Byte.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, ByteJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleByte( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "boolean" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "boolean" )
 				|| Boolean.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, BooleanJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleBoolean( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "short" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "short" )
 				|| Short.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, ShortJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleShort( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "int" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "int" )
 				|| jaxbType.getValue().equalsIgnoreCase( "integer" )
 				|| Integer.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, IntegerJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleInteger( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "long" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "long" )
 				|| Long.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, LongJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleLong( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "double" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "double" )
 				|| Double.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, DoubleJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleDouble( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "float" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "float" )
 				|| Float.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, DoubleJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleFloat( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "biginteger" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "biginteger" )
 				|| jaxbType.getValue().equalsIgnoreCase( "big_integer" )
 				|| BigInteger.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, BigIntegerJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleBigInteger( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "bigdecimal" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "bigdecimal" )
 				|| jaxbType.getValue().equalsIgnoreCase( "big_decimal" )
 				|| BigDecimal.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, BigDecimalJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleBigDecimal( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "uuid" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "uuid" )
 				|| UUID.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, UUIDJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleUuid( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "url" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "url" )
 				|| URL.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, UrlJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleUrl( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "inet" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "inet" )
 				|| jaxbType.getValue().equalsIgnoreCase( "inetaddress" )
 				|| jaxbType.getValue().equalsIgnoreCase( "inet_address" )
 				|| InetAddress.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, InetAddressJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleInetAddress( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "currency" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "currency" )
 				|| Currency.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, CurrencyJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleCurrency( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "locale" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "locale" )
 				|| Locale.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, LocaleJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleLocale( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "class" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "class" )
 				|| Class.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, ClassJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleClass( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "blob" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "blob" )
 				|| Blob.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, BlobJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleBlob( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "clob" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "clob" )
 				|| Clob.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, ClobJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleClob( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "nclob" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "nclob" )
 				|| NClob.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, NClobJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleNClob( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "instant" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "instant" )
 				|| Instant.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, InstantJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleInstant( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "duration" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "duration" )
 				|| Duration.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, DurationJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleDuration( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "year" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "year" )
 				|| Year.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, YearJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleYear( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "localdatetime" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "localdatetime" )
 				|| jaxbType.getValue().equalsIgnoreCase( "local_date_time" )
 				|| LocalDateTime.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, LocalDateTimeJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleLocalDateTime( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "localdate" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "localdate" )
 				|| jaxbType.getValue().equalsIgnoreCase( "local_date" )
 				|| LocalDate.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, LocalDateJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleLocalDate( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "localtime" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "localtime" )
 				|| jaxbType.getValue().equalsIgnoreCase( "local_time" )
 				|| LocalTime.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, LocalTimeJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleLocalTime( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "zoneddatetime" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "zoneddatetime" )
 				|| jaxbType.getValue().equalsIgnoreCase( "zoned_date_time" )
 				|| ZonedDateTime.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, ZonedDateTimeJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleZonedDateTime( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "offsetdatetime" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "offsetdatetime" )
 				|| jaxbType.getValue().equalsIgnoreCase( "offset_date_time" )
 				|| OffsetDateTime.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, OffsetDateTimeJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleOffsetDateTime( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "offsettime" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "offsettime" )
 				|| jaxbType.getValue().equalsIgnoreCase( "offset_time" )
 				|| OffsetTime.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, OffsetTimeJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleOffsetTime( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "zoneid" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "zoneid" )
 				|| jaxbType.getValue().equalsIgnoreCase( "zone_id" )
 				|| ZoneId.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, ZoneIdJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleZoneId( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "zoneoffset" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "zoneoffset" )
 				|| jaxbType.getValue().equalsIgnoreCase( "zone_offset" )
 				|| ZoneOffset.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, ZoneOffsetJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleZoneOffset( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "timestamp" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "timestamp" )
 				|| jaxbType.getValue().equalsIgnoreCase( "time_stamp" )
 				|| java.util.Date.class.getName().equals( jaxbType.getValue() )
 				|| Timestamp.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, DateJavaType.class, xmlDocumentContext );
-			applyTemporalPrecision( memberDetails, TemporalType.TIMESTAMP, xmlDocumentContext );
-			return true;
+			cases.handleTimestamp( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "date" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "date" )
 				|| java.sql.Date.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, DateJavaType.class, xmlDocumentContext );
-			applyTemporalPrecision( memberDetails, TemporalType.DATE, xmlDocumentContext );
-			return true;
+			cases.handleDate( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "time" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "time" )
 				|| java.sql.Time.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, DateJavaType.class, xmlDocumentContext );
-			applyTemporalPrecision( memberDetails, TemporalType.TIME, xmlDocumentContext );
-			return true;
+			cases.handleTime( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "calendar" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "calendar" )
 				|| jaxbType.getValue().equalsIgnoreCase( "gregoriancalendar" )
 				|| jaxbType.getValue().equalsIgnoreCase( "gregorian_calendar" )
 				|| Calendar.class.getName().equals( jaxbType.getValue() )
 				|| GregorianCalendar.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, CalendarJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleCalendar( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbType.getValue().equalsIgnoreCase( "timezone" )
+		else if ( jaxbType.getValue().equalsIgnoreCase( "timezone" )
 				|| jaxbType.getValue().equalsIgnoreCase( "time_zone" )
 				|| TimeZone.class.getName().equals( jaxbType.getValue() ) ) {
-			applyJavaTypeAnnotation( memberDetails, TimeZoneJavaType.class, xmlDocumentContext );
-			return true;
+			cases.handleTimeZone( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		return false;
-	}
-
-	private static void applyJavaTypeAnnotation(
-			MutableMemberDetails memberDetails,
-			Class<? extends BasicJavaType<?>> descriptor,
-			XmlDocumentContext xmlDocumentContext) {
-		final JavaTypeAnnotation javaTypeAnnotation = (JavaTypeAnnotation) memberDetails.applyAnnotationUsage(
-				HibernateAnnotations.JAVA_TYPE,
-				xmlDocumentContext.getModelBuildingContext()
-		);
-		javaTypeAnnotation.value( descriptor );
-	}
-
-	private static void applyTemporalPrecision(MutableMemberDetails memberDetails, TemporalType temporalType, XmlDocumentContext xmlDocumentContext) {
-		final Temporal directUsage = memberDetails.getDirectAnnotationUsage( Temporal.class );
-		if ( directUsage != null ) {
-			// make sure they match
-			if ( directUsage.value() != temporalType ) {
-				throw new org.hibernate.MappingException( String.format(
-						Locale.ROOT,
-						"Mismatch in expected TemporalType on %s; found %s and %s",
-						memberDetails,
-						directUsage.value(),
-						temporalType
-				) );
-			}
-			return;
+		else {
+			cases.handleGeneral( jaxbType, memberDetails, xmlDocumentContext );
 		}
-
-		final TemporalJpaAnnotation temporalAnnotation = (TemporalJpaAnnotation) memberDetails.applyAnnotationUsage(
-				JpaAnnotations.TEMPORAL,
-				xmlDocumentContext.getModelBuildingContext()
-		);
-		temporalAnnotation.value( temporalType );
 	}
 
 	private static final Parameter[] NO_PARAMETERS = new Parameter[0];

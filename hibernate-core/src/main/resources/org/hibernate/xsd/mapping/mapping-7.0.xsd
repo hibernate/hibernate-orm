@@ -3290,7 +3290,10 @@
                         </xsd:sequence>
                     </xsd:choice>
                     <xsd:choice>
-                        <xsd:element name="map-key-column" type="orm:map-key-column" minOccurs="0"/>
+                        <xsd:sequence>
+                            <xsd:element name="map-key-column" type="orm:map-key-column" minOccurs="0"/>
+                            <xsd:element name="map-key-type" type="orm:user-type" minOccurs="0"/>
+                        </xsd:sequence>
                         <xsd:sequence>
                             <xsd:element name="map-key-join-column" type="orm:map-key-join-column" minOccurs="0" maxOccurs="unbounded"/>
                             <xsd:element name="map-key-foreign-key" type="orm:foreign-key" minOccurs="0"/>

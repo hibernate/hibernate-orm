@@ -402,7 +402,8 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			if ( !hasNonIdentifierPropertyNamedId ) {
 				String idpath1 = extendPath( path, EntityPersister.ENTITY_ID );
 				addPropertyPath( idpath1, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
-				if ( !(idtype.isComponentType() && idtype instanceof EmbeddedComponentType) ) {
+				if ( !(idtype.isComponentType() && idtype instanceof EmbeddedComponentType) ||
+						(idtype instanceof EmbeddedComponentType && ((EmbeddedComponentType) idtype).hasNotNullProperty()) ) {
 					initPropertyPaths( idpath1, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
 				}
 			}

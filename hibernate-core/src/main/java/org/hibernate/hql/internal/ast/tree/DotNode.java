@@ -402,8 +402,9 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 			property = parentAsDotNode.propertyName;
 
 			if ( generateJoin ) {
-				if ( implicitJoin && ( toOneType.hasNotFoundAction() || toOneType.isNullable() ||
-						(toOneType instanceof ManyToOneType && ((ManyToOneType) toOneType).isOptional()) ) ) {
+				if ( implicitJoin && ( toOneType.hasNotFoundAction() || toOneType.isNullable()
+						//|| (toOneType instanceof ManyToOneType && ((ManyToOneType) toOneType).isOptional() && !toOneType.isLogicalOneToOne())
+				) ) {
 					joinIsNeeded = true;
 				}
 				else {

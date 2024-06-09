@@ -788,7 +788,7 @@ public class QuerySqmImpl<R>
 			final NonSelectQueryPlan[] planParts = new NonSelectQueryPlan[valuesList.size()];
 			for ( int i = 0; i < valuesList.size(); i++ ) {
 				final SqmInsertValuesStatement<?> subInsert = insertValues.copyWithoutValues( SqmCopyContext.simpleContext() );
-				subInsert.values( valuesList );
+				subInsert.values( valuesList.get( i ) );
 				planParts[i] = new SimpleInsertQueryPlan( subInsert, domainParameterXref );
 			}
 

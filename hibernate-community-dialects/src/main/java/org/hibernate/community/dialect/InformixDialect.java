@@ -480,6 +480,11 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsValuesListForInsert() {
+		return false;
+	}
+
+	@Override
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return EXTRACTOR;
 	}

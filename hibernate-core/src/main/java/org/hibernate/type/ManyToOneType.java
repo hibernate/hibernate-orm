@@ -38,6 +38,16 @@ public class ManyToOneType extends EntityType {
 	private final NotFoundAction notFoundAction;
 	private boolean isLogicalOneToOne;
 
+	private boolean optional;
+
+	public void setOptional(boolean optional) {
+		this.optional = optional;
+	}
+
+	public boolean isOptional() {
+		return optional;
+	}
+
 	/**
 	 * Creates a many-to-one association type with the given referenced entity.
 	 *

@@ -15,6 +15,7 @@ import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.type.EntityType;
+import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 
 /**
@@ -24,6 +25,16 @@ import org.hibernate.type.Type;
 public class ManyToOne extends ToOne {
 	private NotFoundAction notFoundAction;
 	private boolean isLogicalOneToOne;
+
+	private boolean optional;
+
+	public void setOptional(boolean optional) {
+		this.optional = optional;
+	}
+
+	public boolean isOptional() {
+		return optional;
+	}
 
 	/**
 	 * @deprecated Use {@link ManyToOne#ManyToOne(MetadataBuildingContext, Table)} instead.
@@ -38,7 +49,7 @@ public class ManyToOne extends ToOne {
 	}
 
 	public Type getType() throws MappingException {
-		return getMetadata().getTypeResolver().getTypeFactory().manyToOne(
+		Type type =  getMetadata().getTypeResolver().getTypeFactory().manyToOne(
 				getReferencedEntityName(),
 				referenceToPrimaryKey, 
 				getReferencedPropertyName(),
@@ -48,6 +59,11 @@ public class ManyToOne extends ToOne {
 				getNotFoundAction(),
 				isLogicalOneToOne
 		);
+
+		if(type instanceof ManyToOneType) {
+			((ManyToOneType) type).setOptional(optional);
+		}
+		return type;
 	}
 
 	public void createForeignKey() throws MappingException {

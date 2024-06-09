@@ -402,19 +402,17 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			if ( !hasNonIdentifierPropertyNamedId ) {
 				String idpath1 = extendPath( path, EntityPersister.ENTITY_ID );
 				addPropertyPath( idpath1, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
-				initPropertyPaths( idpath1, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
+				if ( !(idtype.isComponentType() && idtype instanceof EmbeddedComponentType) ||
+						(idtype instanceof EmbeddedComponentType && ((EmbeddedComponentType) idtype).hasNotNullProperty()) ) {
+					initPropertyPaths( idpath1, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
+				}
 			}
 		}
 
-		if ( ( !etype.isNullable() ) ) {
-			if ( idPropName != null ) {
-				String idpath2 = extendPath( path, idPropName );
-				addPropertyPath( idpath2, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
-				initPropertyPaths( idpath2, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
-			}
-			else if ( idtype.isComponentType() && idtype instanceof EmbeddedComponentType ) {
-				initComponentPropertyPaths( path, (CompositeType) idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
-			}
+		if ( !etype.isNullable() && idPropName != null ) {
+			String idpath2 = extendPath( path, idPropName );
+			addPropertyPath( idpath2, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
+			initPropertyPaths( idpath2, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
 		}
 	}
 

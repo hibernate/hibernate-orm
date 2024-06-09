@@ -3068,6 +3068,7 @@ public final class AnnotationBinder {
 		//value.setFetchMode( fetchMode );
 		value.setNotFoundAction( notFoundAction );
 		value.setCascadeDeleteEnabled( cascadeOnDelete );
+		value.setOptional(optional);
 		//value.setLazy( fetchMode != FetchMode.JOIN );
 		if ( !optional ) {
 			for ( Ejb3JoinColumn column : columns ) {

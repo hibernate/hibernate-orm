@@ -206,6 +206,10 @@ The following table illustrates a list of commands for various databases that ca
 |TiDB
 |`./docker_db.sh tidb`
 |`./gradlew test -Pdb=tidb`
+
+|Informix
+|`./docker_db.sh informix`
+|`./gradlew test -Pdb=informix`
 |===
 
 To stop a container started by `docker`, use the command

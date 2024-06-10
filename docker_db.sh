@@ -963,7 +963,7 @@ informix_14_10() {
         echo "Waiting for Informix to start..."
         sleep 30
     done
-    if [ "$n" -ge 5 ]; then
+    if [ "$n" -ge 10 ]; then
       echo "Informix failed to start and configure after 5 minutes"
     else
       echo "Informix successfully started"
@@ -987,7 +987,7 @@ informix_12_10() {
         echo "Waiting for Informix to start..."
         sleep 30
     done
-    if [ "$n" -ge 5 ]; then
+    if [ "$n" -ge 10 ]; then
       echo "Informix failed to start and configure after 5 minutes"
     else
       echo "Informix successfully started"

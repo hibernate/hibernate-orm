@@ -70,7 +70,7 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		if ( getDBUrl() != null ) {
-			sb.append( "Database info:" ).append( "\n\tDatabase JDBC URL [" ).append( getDBUrl() ).append(']');
+			sb.append( "\tDatabase JDBC URL [" ).append( getDBUrl() ).append(']');
 		}
 		if ( getDBDriverName() != null ) {
 			sb.append(sb.length() > 0 ? "\n\t" : "" ).append( "Database driver: " ).append( getDBDriverName() );

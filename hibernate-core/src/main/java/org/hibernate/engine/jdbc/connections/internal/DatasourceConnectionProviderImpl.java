@@ -137,6 +137,6 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 
 	@Override
 	public DatabaseConnectionInfo getDatabaseConnectionInfo() {
-		return new DatabaseConnectionInfoImpl( "Connecting through datasource" + (dataSourceJndiName != null ? dataSourceJndiName : dataSource.toString()) );
+		return new DatabaseConnectionInfoImpl( "Connecting through datasource" + dataSourceJndiName );
 	}
 }

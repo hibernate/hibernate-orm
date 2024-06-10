@@ -35,6 +35,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.internal.EmptyEventManager;
 import org.hibernate.event.spi.EventManager;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.log.ConnectionProviderLogger;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.JpaCompliance;
@@ -148,17 +149,32 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			jdbcEnvironment = getJdbcEnvironmentWithDefaults( configurationValues, registry, dialectFactory );
 		}
 
-		// Standardized DB info logging
-		final ConnectionProvider cp = registry.requireService( ConnectionProvider.class );
-		// Don't want a setter for the version in the interface, so cloning it is
-		DatabaseConnectionInfoImpl clonedDci = new DatabaseConnectionInfoImpl( cp.getDatabaseConnectionInfo() );
-		// most likely, the version hasn't been set yet, at least not for the ConnectionProviders that we currently maintain
-		if ( shouldSetDBVersion(cp.getDatabaseConnectionInfo()) ) {
-			clonedDci.setDbVersion( jdbcEnvironment.getDialect().getVersion() );
-		}
-		log.info( clonedDci );
+		logDbInfo( registry, jdbcEnvironment );
 
 		return jdbcEnvironment;
+	}
+
+	private static void logDbInfo(ServiceRegistryImplementor registry, JdbcEnvironment jdbcEnvironment) {
+		// Standardized DB info logging
+		DatabaseConnectionInfoImpl databaseConnectionInfo = null;
+		if ( !isMultiTenancyEnabled( registry ) ) {
+			final ConnectionProvider cp = registry.requireService( ConnectionProvider.class );
+			// Don't want a setter for the version in the interface, so cloning it is
+			databaseConnectionInfo = new DatabaseConnectionInfoImpl( cp.getDatabaseConnectionInfo() );
+			// most likely, the version hasn't been set yet, at least not for the ConnectionProviders that we currently maintain
+			if ( shouldSetDBVersion( cp.getDatabaseConnectionInfo() ) ) {
+				databaseConnectionInfo.setDbVersion( jdbcEnvironment.getDialect().getVersion() );
+			}
+		}
+		else {
+			final MultiTenantConnectionProvider<?> mcp = registry.getService( MultiTenantConnectionProvider.class );
+			databaseConnectionInfo = new DatabaseConnectionInfoImpl( mcp.getDatabaseConnectionInfo() );
+			// most likely, the version hasn't been set yet, at least not for the ConnectionProviders that we currently maintain
+			if ( shouldSetDBVersion( mcp.getDatabaseConnectionInfo() ) ) {
+				databaseConnectionInfo.setDbVersion( jdbcEnvironment.getDialect().getVersion() );
+			}
+		}
+		ConnectionProviderLogger.INSTANCE.logConnectionDetails( databaseConnectionInfo );
 	}
 
 	private static boolean shouldSetDBVersion(DatabaseConnectionInfo dci) {

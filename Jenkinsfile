@@ -55,7 +55,8 @@ stage('Configure') {
 		// they require the use of -Dnet.bytebuddy.experimental=true.
 		// Make sure to remove that argument as soon as possible
 		// -- generally that requires upgrading bytebuddy after the JDK goes GA.
-		new BuildEnvironment( testJdkVersion: '23', testJdkLauncherArgs: '--enable-preview -Dnet.bytebuddy.experimental=true' )
+		new BuildEnvironment( testJdkVersion: '23', testJdkLauncherArgs: '--enable-preview -Dnet.bytebuddy.experimental=true' ),
+		new BuildEnvironment( testJdkVersion: '24', testJdkLauncherArgs: '--enable-preview -Dnet.bytebuddy.experimental=true' )
 	];
 
 	if ( env.CHANGE_ID ) {

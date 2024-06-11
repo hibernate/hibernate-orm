@@ -16,8 +16,8 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.StandardBasicTypes;
+
+import static org.hibernate.persister.entity.DiscriminatorHelper.getDiscriminatorType;
 
 /**
  * Represents a reference to an embeddable type as a literal.
@@ -32,27 +32,11 @@ public class SqmLiteralEmbeddableType<T>
 	public SqmLiteralEmbeddableType(
 			EmbeddableDomainType<T> embeddableDomainType,
 			NodeBuilder nodeBuilder) {
-		//noinspection unchecked
-		super(
-				(SqmExpressible<? super T>) nodeBuilder.getTypeConfiguration()
-						.getBasicTypeRegistry()
-						.resolve( StandardBasicTypes.CLASS ),
-				nodeBuilder
-		);
+		super( getDiscriminatorType( embeddableDomainType, nodeBuilder), nodeBuilder );
 		this.embeddableDomainType = embeddableDomainType;
 	}
 
 	public EmbeddableDomainType<T> getEmbeddableDomainType() {
-		return embeddableDomainType;
-	}
-
-	@Override
-	public BasicType<T> getNodeType() {
-		return (BasicType<T>) super.getNodeType();
-	}
-
-	@Override
-	public EmbeddableDomainType<T> getExpressible() {
 		return embeddableDomainType;
 	}
 

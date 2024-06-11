@@ -16,9 +16,8 @@ import java.util.function.Function;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.internal.EmbeddableDiscriminatorValueDetailsImpl;
-import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -35,9 +34,9 @@ public class EmbeddableDiscriminatorConverter<O, R> extends DiscriminatorConvert
 			JavaType<O> domainJavaType,
 			BasicType<R> underlyingJdbcMapping,
 			Map<Object, String> valueMappings,
-			SessionFactoryImplementor sessionFactory) {
+			ServiceRegistry serviceRegistry) {
 		final List<EmbeddableDiscriminatorValueDetailsImpl> valueDetailsList = new ArrayList<>( valueMappings.size() );
-		final ClassLoaderService cls = sessionFactory.getServiceRegistry().requireService( ClassLoaderService.class );
+		final ClassLoaderService cls = serviceRegistry.requireService( ClassLoaderService.class );
 		valueMappings.forEach( (value, embeddableClassName) -> valueDetailsList.add( new EmbeddableDiscriminatorValueDetailsImpl(
 				value,
 				cls.classForName( embeddableClassName )

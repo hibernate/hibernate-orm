@@ -171,6 +171,11 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 	}
 
 	@Override
+	public SqmExpression<Class<? extends E>> type() {
+		throw new UnsupportedOperationException( "Cannot access the type of plural valued simple paths" );
+	}
+
+	@Override
 	public <S extends E> SqmTreatedPath<E, S> treatAs(Class<S> treatJavaType) throws PathException {
 		throw new UnsupportedOperationException( "Cannot treat plural valued simple paths" );
 	}

@@ -6,9 +6,6 @@
  */
 package org.hibernate.query.hql.internal;
 
-import java.lang.reflect.Field;
-
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
@@ -193,10 +190,10 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 			if ( importableName != null ) {
 				final ManagedDomainType<?> managedType = jpaMetamodel.managedType( importableName );
 				if ( managedType instanceof EntityDomainType<?> ) {
-					return new SqmLiteralEntityType<>( ( (EntityDomainType<?>) managedType ), nodeBuilder );
+					return new SqmLiteralEntityType<>( (EntityDomainType<?>) managedType, nodeBuilder );
 				}
 				else if ( managedType instanceof EmbeddableDomainType<?> ) {
-					return new SqmLiteralEmbeddableType<>( ( (EmbeddableDomainType<?>) managedType ), nodeBuilder );
+					return new SqmLiteralEmbeddableType<>( (EmbeddableDomainType<?>) managedType, nodeBuilder );
 				}
 			}
 

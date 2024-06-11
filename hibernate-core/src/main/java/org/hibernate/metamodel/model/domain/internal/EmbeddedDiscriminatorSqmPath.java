@@ -35,9 +35,13 @@ public class EmbeddedDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implemen
 		this.embeddableDomainType = embeddableDomainType;
 	}
 
-	@Override
-	public EmbeddableDomainType<T> getExpressible() {
+	public EmbeddableDomainType<T> getEmbeddableDomainType() {
 		return embeddableDomainType;
+	}
+
+	@Override
+	public EmbeddedDiscriminatorSqmPathSource<T> getExpressible() {
+		return (EmbeddedDiscriminatorSqmPathSource<T>) getNodeType();
 	}
 
 	@Override

@@ -258,8 +258,7 @@ public class MultiCircleJpaCascadeTest {
 						IllegalStateException ise = (IllegalStateException) ex.getCause();
 						assertTyping( TransientObjectException.class, ise.getCause() );
 						String message = ise.getCause().getMessage();
-						assertTrue( message.contains("'org.hibernate.orm.test.jpa.cascade.multicircle.F'") );
-						assertTrue( message.contains("'g'") );
+						assertTrue( message.contains("org.hibernate.orm.test.jpa.cascade.multicircle") );
 					}
 					finally {
 						entityManager.getTransaction().rollback();

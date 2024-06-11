@@ -47,12 +47,7 @@ public class SqmLiteralEmbeddableType<T>
 	}
 
 	@Override
-	public BasicType<T> getNodeType() {
-		return (BasicType<T>) super.getNodeType();
-	}
-
-	@Override
-	public EmbeddableDomainType<T> getExpressible() {
+	public EmbeddableDomainType<T> getNodeType() {
 		return embeddableDomainType;
 	}
 

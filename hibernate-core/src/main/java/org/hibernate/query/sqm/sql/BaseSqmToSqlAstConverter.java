@@ -7265,10 +7265,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
 		// The inferred value mapping for literal embeddable types will either be the
 		// discriminator mapping for polymorphic embeddables or the Class<?> basic type
-		final BasicType<?> basicType = inferredValueMapping != null ?
-				(BasicType<?>) inferredValueMapping.getSingleJdbcMapping() :
-				expression.getNodeType();
-		return new EmbeddableTypeLiteral( expression.getExpressible(), basicType );
+		final BasicType<?> basicType = inferredValueMapping != null
+				? (BasicType<?>) inferredValueMapping.getSingleJdbcMapping()
+				: (BasicType<?>) expression.getExpressible();
+		return new EmbeddableTypeLiteral( expression.getNodeType(), basicType );
 	}
 
 	@Override

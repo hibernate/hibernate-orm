@@ -110,11 +110,11 @@ public class ElementCollectionEmbeddableInheritanceTest {
 	public void testType(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			assertThat( session.createQuery(
-					"select type(t.embeddables) from TestEntity t where id = 2",
+					"select type(element(t.embeddables)) from TestEntity t where id = 2",
 					Class.class
 			).getSingleResult() ).isEqualTo( SubChildOneEmbeddable.class );
 			assertThat( session.createQuery(
-					"select t.id from TestEntity t where type(t.embeddables) = SubChildOneEmbeddable",
+					"select t.id from TestEntity t where type(element(t.embeddables)) = SubChildOneEmbeddable",
 					Long.class
 			).getSingleResult() ).isEqualTo( 2L );
 			assertThat( session.createQuery(

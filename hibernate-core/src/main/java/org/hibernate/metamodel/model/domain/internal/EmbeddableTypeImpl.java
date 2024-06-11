@@ -22,6 +22,8 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.metamodel.SingularAttribute;
 
+import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
+
 /**
  * Implementation of {@link jakarta.persistence.metamodel.EmbeddableType}.
  *
@@ -32,21 +34,22 @@ public class EmbeddableTypeImpl<J>
 		extends AbstractManagedType<J>
 		implements EmbeddableDomainType<J>, Serializable {
 	private final boolean isDynamic;
-
-	public EmbeddableTypeImpl(
-			JavaType<J> javaType,
-			boolean isDynamic,
-			JpaMetamodelImplementor domainMetamodel) {
-		this( javaType, null, isDynamic, domainMetamodel );
-	}
+	private final EmbeddedDiscriminatorSqmPathSource<?> discriminatorPathSource;
 
 	public EmbeddableTypeImpl(
 			JavaType<J> javaType,
 			ManagedDomainType<? super J> superType,
+			DomainType<?> discriminatorType,
 			boolean isDynamic,
 			JpaMetamodelImplementor domainMetamodel) {
 		super( javaType.getTypeName(), javaType, superType, domainMetamodel );
 		this.isDynamic = isDynamic;
+		if ( discriminatorType == null ) {
+			this.discriminatorPathSource = null;
+		}
+		else {
+			this.discriminatorPathSource = new EmbeddedDiscriminatorSqmPathSource<>( discriminatorType, this );
+		}
 	}
 
 	@Override
@@ -83,6 +86,10 @@ public class EmbeddableTypeImpl<J>
 		final PersistentAttribute<? super J, ?> attribute = getSqmPathType().findAttribute( name );
 		if ( attribute != null ) {
 			return (SqmPathSource<?>) attribute;
+		}
+
+		if ( name.equals( DISCRIMINATOR_ROLE_NAME ) && discriminatorPathSource != null ) {
+			return discriminatorPathSource;
 		}
 
 		return (SqmPathSource<?>) findSubTypesAttribute( name );

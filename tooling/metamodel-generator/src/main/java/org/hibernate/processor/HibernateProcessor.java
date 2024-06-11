@@ -704,7 +704,12 @@ public class HibernateProcessor extends AbstractProcessor {
 		final ProcessingEnvironment processingEnvironment = context.getProcessingEnvironment();
 		context.getEntityNameMappings().forEach((entityName, className) -> {
 			try (Writer writer = processingEnvironment.getFiler()
-					.createResource(StandardLocation.SOURCE_OUTPUT, ENTITY_INDEX, entityName)
+					.createResource(
+							StandardLocation.SOURCE_OUTPUT,
+							ENTITY_INDEX,
+							entityName,
+							processingEnvironment.getElementUtils().getTypeElement( className )
+					)
 					.openWriter()) {
 				writer.append(className);
 			}
@@ -715,8 +720,12 @@ public class HibernateProcessor extends AbstractProcessor {
 			}
 		});
 		context.getEnumTypesByValue().forEach((valueName, enumTypeNames) -> {
-			try (Writer writer = processingEnvironment.getFiler()
-					.createResource(StandardLocation.SOURCE_OUTPUT, ENTITY_INDEX, '.' + valueName)
+			try (Writer writer = processingEnvironment.getFiler().createResource(
+							StandardLocation.SOURCE_OUTPUT,
+							ENTITY_INDEX,
+							'.' + valueName,
+							processingEnvironment.getElementUtils().getTypeElement( enumTypeNames.iterator().next() )
+					)
 					.openWriter()) {
 				for (String enumTypeName : enumTypeNames) {
 					writer.append(enumTypeName).append(" ");

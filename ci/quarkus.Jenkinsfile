@@ -39,13 +39,13 @@ pipeline {
 						sh "git clone -b 3.8 --single-branch https://github.com/quarkusio/quarkus.git . || git reset --hard && git clean -fx && git pull"
 						sh "sed -i 's@<hibernate-orm.version>.*</hibernate-orm.version>@<hibernate-orm.version>${env.HIBERNATE_VERSION}</hibernate-orm.version>@' bom/application/pom.xml"
 						// Need to override the default maven configuration this way, because there is no other way to do it
-						sh "sed -i 's/-Xmx5g/-Xmx1920m/' ./.mvn/jvm.config"
+						sh "sed -i 's/-Xmx5g/-Xmx2048m/' ./.mvn/jvm.config"
 						sh "echo -e '\\n-XX:MaxMetaspaceSize=768m'>>./.mvn/jvm.config"
 						sh "./mvnw -pl !docs -Dquickly install"
 						// Need to kill the gradle daemons started during the Maven install run
 						sh "sudo pkill -f '.*GradleDaemon.*' || true"
 						// Need to override the default maven configuration this way, because there is no other way to do it
-						sh "sed -i 's/-Xmx1920m/-Xmx1340m/' ./.mvn/jvm.config"
+						sh "sed -i 's/-Xmx2048m/-Xmx1340m/' ./.mvn/jvm.config"
 						sh "sed -i 's/MaxMetaspaceSize=768m/MaxMetaspaceSize=512m/' ./.mvn/jvm.config"
 						def excludes = "'!integration-tests/kafka-oauth-keycloak,!integration-tests/kafka-sasl-elytron,!integration-tests/hibernate-search-orm-opensearch,!integration-tests/maven,!integration-tests/quartz,!integration-tests/reactive-messaging-kafka,!integration-tests/resteasy-reactive-kotlin/standard,!integration-tests/opentelemetry-reactive-messaging,!integration-tests/virtual-threads/kafka-virtual-threads,!integration-tests/smallrye-jwt-oidc-webapp,!docs'"
 						sh "TESTCONTAINERS_RYUK_CONTAINER_PRIVILEGED=true ./mvnw -pl :quarkus-hibernate-orm -amd -pl ${excludes} verify -Dstart-containers -Dtest-containers -Dskip.gradle.build"

@@ -470,6 +470,10 @@ tasks.withType(JavaCompile).configureEach { task ->
     // working directory and prevents from using a relative path to locate a project file.
     // Using a CommandLineArgumentProvider allows build cache hits when the build cache is relocated.
     task.options.compilerArgumentProviders.add(new CompilerStubsArgumentProvider(stubsDir: new File(project.rootDir, "checkerstubs")))
+
+	if (System.getProperty('APT_DEBUG', 'false') == 'true') {
+		task.options.forkOptions.jvmArgs += ['-Xdebug', '-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=9099']
+	}
 }
 
 checkerFramework {

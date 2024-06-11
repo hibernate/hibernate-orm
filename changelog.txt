@@ -3,6 +3,19 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.26.Final (June 11, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32287
+
+** Bug
+    * [HHH-18170] - Subquery randomly generating wrong SQL due to duplicate alias
+    * [HHH-16461] - @Version + session.refresh(entity, LockMode.PESSIMISTIC_WRITE) leads to StaleObjectStateException
+
+** Proposal
+    * [HHH-18141] - Skip optimizeUnloadedDelete(DeleteEvent) on POST_COMMIT_DELETE
+
+
 Changes in 6.2.25.Final (April 25, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

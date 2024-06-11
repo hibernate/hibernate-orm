@@ -688,7 +688,10 @@ public class NativeQueryImpl<R>
 				.createQueryPlan( queryDefinition, getSessionFactory() );
 	}
 
-	private NativeSelectQueryPlan<Long> createCountQueryPlan() {
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected NativeSelectQueryPlan<Long> createCountQueryPlan() {
 		final BasicType<Long> longType = getSessionFactory().getTypeConfiguration().getBasicTypeForJavaType(Long.class);
 		final String sqlString = expandParameterLists();
 		final NativeSelectQueryDefinition<Long> queryDefinition = new NativeSelectQueryDefinition<>() {

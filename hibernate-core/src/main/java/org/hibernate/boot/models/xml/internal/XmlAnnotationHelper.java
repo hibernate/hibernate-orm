@@ -42,6 +42,7 @@ import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.ResultCheckStyle;
+import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAssociationOverrideImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributeOverrideImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbBasicMapping;
@@ -126,6 +127,8 @@ import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnsJpaAn
 import org.hibernate.boot.models.annotations.internal.RowIdAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLJoinTableRestrictionAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLRestrictionAnnotation;
+import org.hibernate.boot.models.annotations.internal.SecondaryRowAnnotation;
+import org.hibernate.boot.models.annotations.internal.SecondaryRowsAnnotation;
 import org.hibernate.boot.models.annotations.internal.SecondaryTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.SecondaryTablesJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation;
@@ -172,10 +175,13 @@ import jakarta.persistence.UniqueConstraint;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 import static org.hibernate.boot.models.HibernateAnnotations.FILTER;
 import static org.hibernate.boot.models.HibernateAnnotations.FILTER_JOIN_TABLE;
 import static org.hibernate.boot.models.HibernateAnnotations.PARAMETER;
+import static org.hibernate.boot.models.HibernateAnnotations.SECONDARY_ROW;
+import static org.hibernate.boot.models.HibernateAnnotations.SECONDARY_ROWS;
 import static org.hibernate.boot.models.HibernateAnnotations.SQL_RESTRICTION;
 import static org.hibernate.boot.models.JpaAnnotations.ASSOCIATION_OVERRIDE;
 import static org.hibernate.boot.models.JpaAnnotations.ASSOCIATION_OVERRIDES;
@@ -1672,9 +1678,16 @@ public class XmlAnnotationHelper {
 				JpaAnnotations.SECONDARY_TABLES,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-
 		final SecondaryTable[] tableUsages = new SecondaryTable[jaxbSecondaryTables.size()];
 		tablesUsage.value( tableUsages );
+
+		final SecondaryRowsAnnotation rowsUsage = (SecondaryRowsAnnotation) target.replaceAnnotationUsage(
+				SECONDARY_ROW,
+				SECONDARY_ROWS,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		final SecondaryRow[] rowUsages = new SecondaryRow[jaxbSecondaryTables.size()];
+		rowsUsage.value( rowUsages );
 
 		for ( int i = 0; i < jaxbSecondaryTables.size(); i++ ) {
 			final SecondaryTableJpaAnnotation tableUsage = SECONDARY_TABLE.createUsage( xmlDocumentContext.getModelBuildingContext() );
@@ -1682,6 +1695,12 @@ public class XmlAnnotationHelper {
 
 			final JaxbSecondaryTableImpl jaxbSecondaryTable = jaxbSecondaryTables.get( i );
 			tableUsage.apply( jaxbSecondaryTable, xmlDocumentContext );
+
+			final SecondaryRowAnnotation rowUsage = SECONDARY_ROW.createUsage( xmlDocumentContext.getModelBuildingContext() );
+			rowUsages[i] = rowUsage;
+			rowUsage.table( tableUsage.name() );
+			rowUsage.optional( jaxbSecondaryTable.isOptional() == TRUE );
+			rowUsage.owned( jaxbSecondaryTable.isOwned() == TRUE );
 		}
 	}
 

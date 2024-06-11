@@ -3,6 +3,24 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.4.9.Final (June 11, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32290
+
+** Bug
+    * [HHH-18170] - Subquery randomly generating wrong SQL due to duplicate alias
+    * [HHH-18036] - Retrieving java.sql.Date from Oracle contains unwanted milliseconds
+    * [HHH-18032] - CompositeId, when the id assigned by PrePersist method an HibernateException: identifier of an instance of _ was altered is thrown
+    * [HHH-18027] - Delete/Update statement with IN clause fails on second invocation
+    * [HHH-18007] - Creating criteria query for a generic identifier with a @MappedSuperclass leads to an exception
+    * [HHH-17943] - Creation of temporary table leads to commit on H2
+    * [HHH-16557] - NaturalIdCache remains with wrong key-value after create-delete-recreate action
+
+** Proposal
+    * [HHH-18141] - Skip optimizeUnloadedDelete(DeleteEvent) on POST_COMMIT_DELETE
+
+
 Changes in 6.4.8.Final (April 26, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

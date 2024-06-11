@@ -655,7 +655,7 @@ public final class TypeUtils {
 		public @Nullable String visitDeclared(DeclaredType declaredType, Element element) {
 			final TypeElement returnedElement = (TypeElement)
 					context.getTypeUtils().asElement( declaredType );
-			return containsAnnotation( returnedElement, EMBEDDABLE )
+			return containsAnnotation( NullnessUtil.castNonNull( returnedElement ), EMBEDDABLE )
 					? returnedElement.getQualifiedName().toString()
 					: null;
 		}

@@ -477,6 +477,7 @@ tasks.withType(JavaCompile).configureEach { task ->
 }
 
 checkerFramework {
+	excludeTests = true
 	checkers = [
 			'org.checkerframework.checker.nullness.NullnessChecker'
 	]

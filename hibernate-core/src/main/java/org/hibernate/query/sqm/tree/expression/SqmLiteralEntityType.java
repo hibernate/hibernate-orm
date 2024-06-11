@@ -17,6 +17,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
+import static org.hibernate.persister.entity.DiscriminatorHelper.getDiscriminatorType;
+
 /**
  * Represents a reference to an entity type as a literal.
  * In a restriction like {@code where TYPE(e) = SomeType},
@@ -32,7 +34,7 @@ public class SqmLiteralEntityType<T>
 	private final EntityDomainType<T> entityType;
 
 	public SqmLiteralEntityType(EntityDomainType<T> entityType, NodeBuilder nodeBuilder) {
-		super( entityType, nodeBuilder );
+		super( getDiscriminatorType( entityType, nodeBuilder ), nodeBuilder );
 		this.entityType = entityType;
 	}
 

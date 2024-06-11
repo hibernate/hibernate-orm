@@ -1130,7 +1130,7 @@ public abstract class MockSessionFactory
 
 	private EmbeddableTypeImpl<?> createEmbeddableDomainType(String entityName, CompositeType compositeType, ManagedDomainType<?> owner) {
 		final JavaType<Object> javaType = new UnknownBasicJavaType<>(Object.class, compositeType.getReturnedClassName());
-		return new EmbeddableTypeImpl<>(javaType, true, metamodel.getJpaMetamodel()) {
+		return new EmbeddableTypeImpl<>( javaType, null, null, true, metamodel.getJpaMetamodel() ) {
 			@Override
 			public PersistentAttribute<Object, Object> findAttribute(String name) {
 				return createAttribute(

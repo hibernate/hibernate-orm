@@ -555,6 +555,8 @@ public class MetadataContext {
 
 		final EmbeddableTypeImpl<?> embeddableType = new EmbeddableTypeImpl<>(
 				javaType,
+				null,
+				null,
 				false,
 				getJpaMetamodel()
 		);

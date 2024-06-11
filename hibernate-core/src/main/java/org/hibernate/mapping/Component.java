@@ -41,21 +41,31 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.mapping.DiscriminatorConverter;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
+import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorConverter;
+import org.hibernate.metamodel.mapping.internal.DiscriminatorTypeImpl;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.persister.entity.DiscriminatorHelper;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.UserComponentType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.usertype.CompositeUserType;
 
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.mapping.MappingHelper.checkPropertyColumnDuplication;
+import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
 
 /**
  * A mapping model object that represents an {@linkplain jakarta.persistence.Embeddable embeddable class}.
@@ -77,6 +87,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private Boolean isGeneric;
 	private String roleName;
 	private Value discriminator;
+	private transient DiscriminatorType<?> discriminatorType;
 	private Map<Object, String> discriminatorValues;
 	private Map<String, String> subclassToSuperclass;
 
@@ -611,6 +622,30 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	public void setDiscriminator(Value discriminator) {
 		this.discriminator = discriminator;
+	}
+
+	public DiscriminatorType<?> getDiscriminatorType() {
+		DiscriminatorType<?> type = discriminatorType;
+		if ( type == null ) {
+			type = discriminatorType = buildDiscriminatorType();
+		}
+		return type;
+	}
+
+	private DiscriminatorType<?> buildDiscriminatorType() {
+		return getBuildingContext().getMetadataCollector().resolveEmbeddableDiscriminatorType( getComponentClass(), () -> {
+			final JavaTypeRegistry javaTypeRegistry = getTypeConfiguration().getJavaTypeRegistry();
+			final JavaType<String> domainJavaType = javaTypeRegistry.resolveDescriptor( Class.class );
+			final BasicType<?> discriminatorType = DiscriminatorHelper.getDiscriminatorType( this );
+			final DiscriminatorConverter<String, ?> converter = EmbeddableDiscriminatorConverter.fromValueMappings(
+					qualify( getComponentClassName(), DISCRIMINATOR_ROLE_NAME ),
+					domainJavaType,
+					discriminatorType,
+					getDiscriminatorValues(),
+					getServiceRegistry()
+			);
+			return new DiscriminatorTypeImpl<>( discriminatorType, converter );
+		} );
 	}
 
 	public boolean isPolymorphic() {

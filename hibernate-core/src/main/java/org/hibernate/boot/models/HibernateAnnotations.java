@@ -533,7 +533,8 @@ public interface HibernateAnnotations {
 	);
 	OrmAnnotationDescriptor<SecondaryRow,SecondaryRowAnnotation> SECONDARY_ROW = new OrmAnnotationDescriptor<>(
 			SecondaryRow.class,
-			SecondaryRowAnnotation.class
+			SecondaryRowAnnotation.class,
+			SECONDARY_ROWS
 	);
 	OrmAnnotationDescriptor<SelectBeforeUpdate,SelectBeforeUpdateAnnotation> SELECT_BEFORE_UPDATE = new OrmAnnotationDescriptor<>(
 			SelectBeforeUpdate.class,

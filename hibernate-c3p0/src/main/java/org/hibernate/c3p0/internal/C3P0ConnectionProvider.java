@@ -124,11 +124,8 @@ public class C3P0ConnectionProvider
 				JdbcSettings.JPA_JDBC_URL
 		);
 
-		dbInfo = new DatabaseConnectionInfoImpl( jdbcUrl, jdbcDriverClass );
-
 		final Properties connectionProps = ConnectionProviderInitiator.getConnectionProperties( props );
 
-		C3P0_MSG_LOGGER.c3p0UsingDriver( jdbcDriverClass, jdbcUrl );
 		C3P0_MSG_LOGGER.connectionProperties( ConfigurationHelper.maskOut( connectionProps, "password" ) );
 
 		autocommit = ConfigurationHelper.getBoolean( JdbcSettings.AUTOCOMMIT, props );
@@ -145,6 +142,8 @@ public class C3P0ConnectionProvider
 				throw new ClassLoadingException( C3P0_MSG_LOGGER.jdbcDriverNotFound( jdbcDriverClass ), e );
 			}
 		}
+
+		dbInfo = new DatabaseConnectionInfoImpl( jdbcUrl, jdbcDriverClass );
 
 		try {
 

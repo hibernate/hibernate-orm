@@ -68,7 +68,7 @@ public class DriverManagerConnectionProviderImpl
 
 	private volatile PoolState state;
 
-	private static DatabaseConnectionInfoImpl dbInfo;
+	private static final DatabaseConnectionInfoImpl dbInfo = new DatabaseConnectionInfoImpl();
 
 	// create the pool ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -135,10 +135,9 @@ public class DriverManagerConnectionProviderImpl
 			}
 		}
 
-		if ( success ) {
-			CONNECTIONS_MESSAGE_LOGGER.loadedDriver( driverClassName );
-		}
-		else {
+		dbInfo.setDriverName( driverClassName );
+
+		if ( !success ) {
 			//we're hoping that the driver is already loaded
 			CONNECTIONS_MESSAGE_LOGGER.noDriver( AvailableSettings.DRIVER );
 			StringBuilder list = new StringBuilder();
@@ -149,7 +148,7 @@ public class DriverManagerConnectionProviderImpl
 				}
 				list.append( drivers.nextElement().getClass().getName() );
 			}
-			CONNECTIONS_MESSAGE_LOGGER.loadedDrivers( list.toString() );
+			dbInfo.setDriverName( list.toString() );
 		}
 
 		if ( url == null ) {
@@ -158,7 +157,7 @@ public class DriverManagerConnectionProviderImpl
 			throw new HibernateException( msg );
 		}
 
-		CONNECTIONS_MESSAGE_LOGGER.usingUrl( url );
+		dbInfo.setUrl( url );
 
 		final Properties connectionProps = ConnectionProviderInitiator.getConnectionProperties( configurationValues );
 
@@ -191,8 +190,6 @@ public class DriverManagerConnectionProviderImpl
 		if ( factory == null ) {
 			factory = ConnectionCreatorFactoryImpl.INSTANCE;
 		}
-
-		dbInfo = new DatabaseConnectionInfoImpl( url, driverClassName );
 
 		return factory.create(
 

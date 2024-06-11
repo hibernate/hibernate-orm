@@ -9,8 +9,10 @@ package org.hibernate.boot.jaxb.hbm.transform;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -216,6 +218,12 @@ public class HbmXmlTransformer {
 	private final TransformationState transformationState;
 	private final UnsupportedFeatureHandling unsupportedFeatureHandling;
 
+	private final Map<String,JaxbEmbeddableImpl> jaxbEmbeddableByClassName = new HashMap<>();
+
+	/**
+	 * Used to handle secondary table transformations
+	 */
+	private String currentTableName = "";
 
 	private HbmXmlTransformer(
 			Binding<JaxbHbmHibernateMapping> hbmJaxbBinding,
@@ -853,6 +861,8 @@ public class HbmXmlTransformer {
 				origin
 		);
 
+		currentTableName = "";
+
 		transferBaseEntityInformation( hbmClass, entity );
 
 		entity.setMutable( hbmClass.isMutable() );
@@ -1089,6 +1099,9 @@ public class HbmXmlTransformer {
 				origin
 		);
 
+
+		currentTableName = "";
+
 		transferBaseEntityInformation( hbmSubclass, subclassEntity );
 
 		transferEntityElementAttributes( hbmSubclass, subclassEntity );
@@ -1107,6 +1120,9 @@ public class HbmXmlTransformer {
 				extractEntityName( hbmSubclass ),
 				origin
 		);
+
+
+		currentTableName = "";
 
 		transferBaseEntityInformation( hbmSubclass, subclassEntity );
 		transferEntityElementAttributes( hbmSubclass, subclassEntity );
@@ -1152,7 +1168,7 @@ public class HbmXmlTransformer {
 			column.setTable( tableName );
 			target.addColumn( column );
 		}
-		else {
+		else if ( !source.getColumnOrFormula().isEmpty() ) {
 			for ( Serializable columnOrFormula : source.getColumnOrFormula() ) {
 				if ( columnOrFormula instanceof String ) {
 					target.addFormula( (String) columnOrFormula );
@@ -1165,6 +1181,13 @@ public class HbmXmlTransformer {
 					target.addColumn( column );
 				}
 			}
+		}
+		else if ( StringHelper.isNotEmpty( tableName ) ) {
+			// this is the case of transforming a <join/> where the property did not specify columns or formula.
+			// we need to create a column still to pass along the secondary table name
+			final TargetColumnAdapter column = target.makeColumnAdapter( columnDefaults );
+			column.setTable( tableName );
+			target.addColumn( column );
 		}
 	}
 
@@ -1455,14 +1478,19 @@ public class HbmXmlTransformer {
 						return hbmProp.isUpdate();
 					}
 				},
-				// todo : need to push the table name down into this method to pass along
-				// todo : need to push the table name down into this method to pass along
-				null
+				currentTableName
 		);
 	}
 
 	private JaxbEmbeddableImpl applyEmbeddable(JaxbEntityMappingsImpl ormRoot, JaxbHbmCompositeAttributeType hbmComponent) {
 		final String embeddableClassName = hbmComponent.getClazz();
+		if ( StringHelper.isNotEmpty( embeddableClassName ) ) {
+			final JaxbEmbeddableImpl existing = jaxbEmbeddableByClassName.get( embeddableClassName );
+			if ( existing != null ) {
+				return existing;
+			}
+		}
+
 		final String embeddableName = determineEmbeddableName( embeddableClassName, hbmComponent.getName() );
 		final JaxbEmbeddableImpl jaxbEmbeddable = convertEmbeddable(
 				embeddableName,
@@ -1470,6 +1498,12 @@ public class HbmXmlTransformer {
 				hbmComponent
 		);
 		ormRoot.getEmbeddables().add( jaxbEmbeddable );
+
+
+		if ( StringHelper.isNotEmpty( embeddableClassName ) ) {
+			jaxbEmbeddableByClassName.put( embeddableClassName, jaxbEmbeddable );
+		}
+
 		return jaxbEmbeddable;
 	}
 
@@ -1485,7 +1519,6 @@ public class HbmXmlTransformer {
 
 		embeddable.setAttributes( new JaxbEmbeddableAttributesContainerImpl() );
 		transferAttributes( hbmComponent.getAttributes(), embeddable.getAttributes() );
-
 		return embeddable;
 	}
 
@@ -1602,7 +1635,7 @@ public class HbmXmlTransformer {
 					}
 				},
 				ColumnDefaultsBasicImpl.INSTANCE,
-				null
+				currentTableName
 		);
 
 		m2o.setName( hbmNode.getName() );
@@ -2371,40 +2404,39 @@ public class HbmXmlTransformer {
 
 	private void transferJoins(JaxbHbmRootEntityType source, JaxbEntityImpl target) {
 		for ( JaxbHbmSecondaryTableType hbmJoin : source.getJoin() ) {
-			if ( !hbmJoin.isInverse() ) {
-				final JaxbSecondaryTableImpl secondaryTable = new JaxbSecondaryTableImpl();
-				secondaryTable.setCatalog( hbmJoin.getCatalog() );
-				secondaryTable.setComment( hbmJoin.getComment() );
-				secondaryTable.setName( hbmJoin.getTable() );
-				secondaryTable.setSchema( hbmJoin.getSchema() );
-				secondaryTable.setOptional( hbmJoin.isOptional() );
-				if ( hbmJoin.getKey() != null ) {
-					final JaxbPrimaryKeyJoinColumnImpl joinColumn = new JaxbPrimaryKeyJoinColumnImpl();
-					joinColumn.setName( hbmJoin.getKey().getColumnAttribute() );
-					secondaryTable.getPrimaryKeyJoinColumn().add( joinColumn );
-				}
-				target.getSecondaryTables().add( secondaryTable );
+			currentTableName = hbmJoin.getTable();
+			assert StringHelper.isNotEmpty( currentTableName );
+
+			final JaxbSecondaryTableImpl secondaryTable = new JaxbSecondaryTableImpl();
+			secondaryTable.setCatalog( hbmJoin.getCatalog() );
+			secondaryTable.setComment( hbmJoin.getComment() );
+			secondaryTable.setName( hbmJoin.getTable() );
+			secondaryTable.setSchema( hbmJoin.getSchema() );
+			secondaryTable.setOptional( hbmJoin.isOptional() );
+			secondaryTable.setOwned( !hbmJoin.isInverse() );
+			if ( hbmJoin.getKey() != null ) {
+				final JaxbPrimaryKeyJoinColumnImpl joinColumn = new JaxbPrimaryKeyJoinColumnImpl();
+				joinColumn.setName( hbmJoin.getKey().getColumnAttribute() );
+				secondaryTable.getPrimaryKeyJoinColumn().add( joinColumn );
 			}
+			target.getSecondaryTables().add( secondaryTable );
 			
 			for ( Serializable attributeMapping : hbmJoin.getAttributes() ) {
 				if ( attributeMapping instanceof JaxbHbmBasicAttributeType ) {
 					final JaxbBasicImpl prop = transformBasicAttribute( (JaxbHbmBasicAttributeType) attributeMapping );
-					if ( prop.getColumn() != null ) {
-						prop.getColumn().setTable( hbmJoin.getTable() );
+					if ( prop.getColumn() == null && prop.getFormula() == null ) {
+						prop.setColumn( new JaxbColumnImpl() );
+						prop.getColumn().setTable( currentTableName );
 					}
 					target.getAttributes().getBasicAttributes().add( prop );
 				}
-				else if ( attributeMapping instanceof JaxbHbmCompositeAttributeType ) {
-					throw new MappingException(
-							"transformation of <component/> as part of <join/> (secondary-table) not yet implemented",
-							origin
-					);
+				else if ( attributeMapping instanceof JaxbHbmCompositeAttributeType hbmComponent ) {
+					final JaxbEmbeddableImpl jaxbEmbeddable = applyEmbeddable( ormRoot, hbmComponent );
+					target.getAttributes().getEmbeddedAttributes().add( transformEmbedded( jaxbEmbeddable, hbmComponent ) );
 				}
-				else if ( attributeMapping instanceof JaxbHbmManyToOneType ) {
-					throw new MappingException(
-							"transformation of <many-to-one/> as part of <join/> (secondary-table) not yet implemented",
-							origin
-					);
+				else if ( attributeMapping instanceof JaxbHbmManyToOneType hbmManyToOne ) {
+					final JaxbManyToOneImpl jaxbManyToOne = transformManyToOne( hbmManyToOne );
+					target.getAttributes().getManyToOneAttributes().add( jaxbManyToOne );
 				}
 				else if ( attributeMapping instanceof JaxbHbmAnyAssociationType ) {
 					throw new MappingException(
@@ -2433,6 +2465,7 @@ public class HbmXmlTransformer {
 			for ( JaxbHbmColumnType hbmColumn : hbmM2O.getColumn() ) {
 				final JaxbJoinColumnImpl joinColumn = new JaxbJoinColumnImpl();
 				joinColumn.setName( hbmColumn.getName() );
+				joinColumn.setTable( currentTableName );
 				joinColumn.setNullable( hbmColumn.isNotNull() == null ? null : !hbmColumn.isNotNull() );
 				joinColumn.setUnique( hbmColumn.isUnique() );
 				m2o.getJoinColumns().add( joinColumn );
@@ -2447,6 +2480,7 @@ public class HbmXmlTransformer {
 			else {
 				joinColumn.setName( hbmM2O.getColumnAttribute() );
 			}
+			joinColumn.setTable( currentTableName );
 			m2o.getJoinColumns().add( joinColumn );
 		}
 
@@ -2468,6 +2502,9 @@ public class HbmXmlTransformer {
 				extractEntityName( hbmSubclass ),
 				origin
 		);
+
+
+		currentTableName = "";
 
 		subclassEntity.setProxy( hbmSubclass.getProxy() );
 		transferBaseEntityInformation( hbmSubclass, subclassEntity );

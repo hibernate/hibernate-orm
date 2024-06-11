@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.Collection;
 
 import org.hibernate.metamodel.UnsupportedMappingException;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.model.domain.AbstractManagedType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
@@ -32,21 +33,22 @@ public class EmbeddableTypeImpl<J>
 		extends AbstractManagedType<J>
 		implements EmbeddableDomainType<J>, Serializable {
 	private final boolean isDynamic;
-
-	public EmbeddableTypeImpl(
-			JavaType<J> javaType,
-			boolean isDynamic,
-			JpaMetamodelImplementor domainMetamodel) {
-		this( javaType, null, isDynamic, domainMetamodel );
-	}
+	private final EmbeddedDiscriminatorSqmPathSource<?> discriminatorPathSource;
 
 	public EmbeddableTypeImpl(
 			JavaType<J> javaType,
 			ManagedDomainType<? super J> superType,
+			DomainType<?> discriminatorType,
 			boolean isDynamic,
 			JpaMetamodelImplementor domainMetamodel) {
 		super( javaType.getTypeName(), javaType, superType, domainMetamodel );
 		this.isDynamic = isDynamic;
+		if ( discriminatorType == null ) {
+			this.discriminatorPathSource = null;
+		}
+		else {
+			this.discriminatorPathSource = new EmbeddedDiscriminatorSqmPathSource<>( discriminatorType, this );
+		}
 	}
 
 	@Override
@@ -85,7 +87,16 @@ public class EmbeddableTypeImpl<J>
 			return (SqmPathSource<?>) attribute;
 		}
 
-		return (SqmPathSource<?>) findSubTypesAttribute( name );
+		final PersistentAttribute<?, ?> subtypeAttribute = findSubTypesAttribute( name );
+		if ( subtypeAttribute != null ) {
+			return (SqmPathSource<?>) subtypeAttribute;
+		}
+
+		if ( EntityDiscriminatorMapping.matchesRoleName( name ) ) {
+			return discriminatorPathSource;
+		}
+
+		return null;
 	}
 
 	@Override

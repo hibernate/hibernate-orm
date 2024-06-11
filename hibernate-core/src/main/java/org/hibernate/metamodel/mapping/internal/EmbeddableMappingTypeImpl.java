@@ -759,14 +759,6 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			scale = column.getScale();
 		}
 
-		final DiscriminatorType<?> discriminatorType = creationContext.getMetadata().resolveEmbeddableDiscriminatorType(
-				bootDescriptor.getComponentClass(),
-				() -> buildDiscriminatorType(
-						bootDescriptor,
-						creationContext
-				)
-		);
-
 		return new ExplicitColumnDiscriminatorMappingImpl(
 				this,
 				name,
@@ -780,24 +772,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				length,
 				precision,
 				scale,
-				discriminatorType
+				bootDescriptor.getDiscriminatorType()
 		);
-	}
-
-	private static DiscriminatorType<?> buildDiscriminatorType(
-			Component bootDescriptor,
-			RuntimeModelCreationContext creationContext) {
-		final JavaTypeRegistry javaTypeRegistry = creationContext.getSessionFactory().getTypeConfiguration().getJavaTypeRegistry();
-		final JavaType<String> domainJavaType = javaTypeRegistry.resolveDescriptor( Class.class );
-		final BasicType<?> discriminatorType = getDiscriminatorType( bootDescriptor );
-		final DiscriminatorConverter<String, ?> converter = EmbeddableDiscriminatorConverter.fromValueMappings(
-				qualify( bootDescriptor.getComponentClassName(), EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
-				domainJavaType,
-				discriminatorType,
-				bootDescriptor.getDiscriminatorValues(),
-				creationContext.getSessionFactory()
-		);
-		return new DiscriminatorTypeImpl<>( discriminatorType, converter );
 	}
 
 	public EmbeddableValuedModelPart getEmbeddedValueMapping() {

@@ -19,21 +19,22 @@ public class AnyDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements Di
 
 	protected AnyDiscriminatorSqmPath(
 			NavigablePath navigablePath,
-			SqmPathSource referencedPathSource,
-			SqmPath lhs,
+			SqmPathSource<T> referencedPathSource,
+			SqmPath<?> lhs,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
 	}
 
 	@Override
 	public AnyDiscriminatorSqmPath<T> copy(SqmCopyContext context) {
-		final AnyDiscriminatorSqmPath existing = context.getCopy( this );
+		final AnyDiscriminatorSqmPath<T> existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
+		//noinspection unchecked
 		return context.registerCopy(
 				this,
-				(AnyDiscriminatorSqmPath) getLhs().copy( context ).type()
+				(AnyDiscriminatorSqmPath<T>) getLhs().copy( context ).type()
 		);
 	}
 

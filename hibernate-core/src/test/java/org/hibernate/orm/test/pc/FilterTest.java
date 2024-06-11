@@ -15,6 +15,7 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
@@ -24,10 +25,13 @@ import jakarta.persistence.NoResultException;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import org.hibernate.FetchNotFoundException;
+import org.hibernate.EntityFilterException;
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.jpa.AvailableHints;
 import org.hibernate.metamodel.CollectionClassification;
@@ -56,7 +60,10 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
     protected Class<?>[] getAnnotatedClasses() {
         return new Class<?>[] {
             Client.class,
-            Account.class
+            Account.class,
+            AccountEager.class,
+            AccountNotFound.class,
+            AccountNotFoundException.class
         };
     }
 
@@ -106,6 +113,21 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
 
             entityManager.persist(client);
             //end::pc-filter-persistence-example[]
+            entityManager.persist(
+                    new AccountEager()
+                            .setId(2L)
+                            .setParentAccount( account1 )
+            );
+            entityManager.persist(
+                    new AccountNotFound()
+                            .setId(2L)
+                            .setParentAccount( account1 )
+            );
+            entityManager.persist(
+                    new AccountNotFoundException()
+                            .setId(2L)
+                            .setParentAccount( account1 )
+            );
         });
     }
 
@@ -113,6 +135,9 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
     public void tearDown() {
         doInJPA(this::entityManagerFactory, entityManager -> {
             entityManager.createQuery( "update Account set parentAccount = null" ).executeUpdate();
+            entityManager.createQuery( "delete from AccountEager" ).executeUpdate();
+            entityManager.createQuery( "delete from AccountNotFound" ).executeUpdate();
+            entityManager.createQuery( "delete from AccountNotFoundException" ).executeUpdate();
             entityManager.createQuery( "delete from Account" ).executeUpdate();
             entityManager.createQuery( "delete from Client" ).executeUpdate();
         });
@@ -273,31 +298,42 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
     @Test
     @JiraKey("HHH-16830")
     public void testApplyToLoadByKeyAssociationFiltering() {
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            Account account = entityManager.find(Account.class, 2L);
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            Account account = entityManager.find( Account.class, 2L );
             assertNotNull( account.getParentAccount() );
-        });
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            entityManager.unwrap(Session.class)
-                    .enableFilter("accountType")
-                    .setParameter("type", "DEBIT");
+        } );
+    }
 
-            FetchNotFoundException exception = assertThrows(
-                    FetchNotFoundException.class,
-                    () -> entityManager.find( Account.class, 2L )
+    @Test
+    @JiraKey("HHH-16830")
+    public void testApplyToLoadByKeyAssociationFilteringLazyInitialization() {
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            entityManager.unwrap( Session.class )
+                    .enableFilter( "accountType" )
+                    .setParameter( "type", "DEBIT" );
+
+            Account account = entityManager.find( Account.class, 2L );
+            EntityNotFoundException exception = assertThrows(
+                    EntityNotFoundException.class,
+                    () -> Hibernate.initialize( account.getParentAccount() )
             );
             // Account with id 1 does not exist
-            assertTrue( exception.getMessage().contains( "`1`" ) );
-        });
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            entityManager.unwrap(Session.class)
-                    .enableFilter("accountType")
-                    .setParameter("type", "DEBIT");
+            assertTrue( exception.getMessage().endsWith( " 1" ) );
+        } );
+    }
+
+    @Test
+    @JiraKey("HHH-16830")
+    public void testApplyToLoadByKeyAssociationFilteringAccountLoadGraphInitializer() {
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            entityManager.unwrap( Session.class )
+                    .enableFilter( "accountType" )
+                    .setParameter( "type", "DEBIT" );
             EntityGraph<Account> entityGraph = entityManager.createEntityGraph( Account.class );
             entityGraph.addAttributeNodes( "parentAccount" );
 
-            FetchNotFoundException exception = assertThrows(
-                    FetchNotFoundException.class,
+            EntityFilterException exception = assertThrows(
+                    EntityFilterException.class,
                     () -> entityManager.find(
                             Account.class,
                             2L,
@@ -305,22 +341,116 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
                     )
             );
             // Account with id 1 does not exist
-            assertTrue( exception.getMessage().contains( "`1`" ) );
-        });
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            entityManager.unwrap(Session.class)
-                    .enableFilter("accountType")
-                    .setParameter("type", "DEBIT");
+            assertTrue( exception.getRole().endsWith( "parentAccount" ) );
+            assertEquals( 1L, exception.getIdentifier() );
+        } );
+    }
 
-            FetchNotFoundException exception = assertThrows(
-                    FetchNotFoundException.class,
+    @Test
+    @JiraKey("HHH-16830")
+    public void testApplyToLoadByKeyAssociationFilteringAccountJoinInitializer() {
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            entityManager.unwrap( Session.class )
+                    .enableFilter( "accountType" )
+                    .setParameter( "type", "DEBIT" );
+
+            EntityFilterException exception = assertThrows(
+                    EntityFilterException.class,
                     () -> entityManager.createQuery(
                             "select a from Account a left join fetch a.parentAccount where a.id = 2",
                             Account.class
                     ).getResultList()
             );
             // Account with id 1 does not exist
-            assertTrue( exception.getMessage().contains( "`1`" ) );
+            assertTrue( exception.getRole().contains( "parentAccount" ) );
+            assertEquals( 1L, exception.getIdentifier() );
+        } );
+    }
+
+    @Test
+    @JiraKey("HHH-16830")
+    public void testApplyToLoadByKeyAssociationFilteringAccountSelectInitializer() {
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            entityManager.unwrap( Session.class )
+                    .enableFilter( "accountType" )
+                    .setParameter( "type", "DEBIT" );
+
+            EntityFilterException exception = assertThrows(
+                    EntityFilterException.class,
+                    () -> entityManager.createQuery(
+                            "select a from AccountEager a where a.id = 2",
+                            AccountEager.class
+                    ).getResultList()
+            );
+            // Account with id 1 does not exist
+            assertTrue( exception.getRole().contains( "parentAccount" ) );
+            assertEquals( 1L, exception.getIdentifier() );
+        } );
+    }
+
+    @Test
+    @JiraKey("HHH-16830")
+    public void testApplyToLoadByKeyAssociationFilteringAccountNotFoundException() {
+        doInJPA(this::entityManagerFactory, entityManager -> {
+            entityManager.unwrap(Session.class)
+                    .enableFilter("accountType")
+                    .setParameter("type", "DEBIT");
+
+            EntityFilterException exception = assertThrows(
+                    EntityFilterException.class,
+                    () -> entityManager.createQuery(
+                            "select a from AccountNotFoundException a where a.id = 2",
+                            AccountNotFoundException.class
+                    ).getSingleResult()
+            );
+            // Account with id 1 does not exist
+            assertTrue( exception.getRole().contains( "parentAccount" ) );
+            assertEquals( 1L, exception.getIdentifier() );
+        });
+        doInJPA(this::entityManagerFactory, entityManager -> {
+            entityManager.unwrap(Session.class)
+                    .enableFilter("accountType")
+                    .setParameter("type", "DEBIT");
+
+            EntityFilterException exception = assertThrows(
+                    EntityFilterException.class,
+                    () -> entityManager.createQuery(
+                            "select a from AccountNotFoundException a left join fetch a.parentAccount where a.id = 2",
+                            AccountNotFoundException.class
+                    ).getSingleResult()
+            );
+            // Account with id 1 does not exist
+            assertTrue( exception.getRole().contains( "parentAccount" ) );
+            assertEquals( 1L, exception.getIdentifier() );
+        });
+    }
+
+    @Test
+    @JiraKey("HHH-16830")
+    public void testApplyToLoadByKeyAssociationFilteringAccountNotFoundIgnore() {
+        doInJPA(this::entityManagerFactory, entityManager -> {
+            entityManager.unwrap(Session.class)
+                    .enableFilter("accountType")
+                    .setParameter("type", "DEBIT");
+
+            AccountNotFound account = entityManager.createQuery(
+                    "select a from AccountNotFound a where a.id = 2",
+                    AccountNotFound.class
+            ).getSingleResult();
+            // No exception, since we use NotFoundAction.IGNORE
+            assertNull( account.getParentAccount() );
+        });
+        doInJPA(this::entityManagerFactory, entityManager -> {
+            entityManager.unwrap(Session.class)
+                    .enableFilter("accountType")
+                    .setParameter("type", "DEBIT");
+
+            AccountNotFound account = entityManager.createQuery(
+                    "select a from AccountNotFound a left join fetch a.parentAccount where a.id = 2",
+                    AccountNotFound.class
+            ).getSingleResult();
+            // No exception, since we use NotFoundAction.IGNORE
+            assertNull( account.getParentAccount() );
         });
     }
 
@@ -586,4 +716,93 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
         }
     }
     //end::pc-filter-resolver-Account-example[]
+
+    @Entity(name = "AccountEager")
+    @Table(name = "account_eager")
+    public static class AccountEager {
+
+        @Id
+        private Long id;
+
+        @ManyToOne
+        private Account parentAccount;
+
+        public Long getId() {
+            return id;
+        }
+
+        public AccountEager setId(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public Account getParentAccount() {
+            return parentAccount;
+        }
+
+        public AccountEager setParentAccount(Account parentAccount) {
+            this.parentAccount = parentAccount;
+            return this;
+        }
+    }
+
+    @Entity(name = "AccountNotFound")
+    @Table(name = "account_not_found")
+    public static class AccountNotFound {
+
+        @Id
+        private Long id;
+
+        @ManyToOne
+        @NotFound(action = NotFoundAction.IGNORE)
+        private Account parentAccount;
+
+        public Long getId() {
+            return id;
+        }
+
+        public AccountNotFound setId(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public Account getParentAccount() {
+            return parentAccount;
+        }
+
+        public AccountNotFound setParentAccount(Account parentAccount) {
+            this.parentAccount = parentAccount;
+            return this;
+        }
+    }
+
+    @Entity(name = "AccountNotFoundException")
+    @Table(name = "account_not_found_exception")
+    public static class AccountNotFoundException {
+
+        @Id
+        private Long id;
+
+        @ManyToOne
+        @NotFound
+        private Account parentAccount;
+
+        public Long getId() {
+            return id;
+        }
+
+        public AccountNotFoundException setId(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public Account getParentAccount() {
+            return parentAccount;
+        }
+
+        public AccountNotFoundException setParentAccount(Account parentAccount) {
+            this.parentAccount = parentAccount;
+            return this;
+        }
+    }
 }

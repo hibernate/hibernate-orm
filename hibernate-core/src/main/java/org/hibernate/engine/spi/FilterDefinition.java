@@ -116,7 +116,7 @@ public class FilterDefinition implements Serializable {
 	 *
 	 * @return The flag value.
 	 */
-	public boolean isApplyToLoadByKey() {
+	public boolean isAppliedToLoadByKey() {
 		return applyToLoadByKey;
 	}
 

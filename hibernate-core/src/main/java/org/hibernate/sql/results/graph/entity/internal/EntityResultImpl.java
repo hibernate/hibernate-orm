@@ -105,6 +105,7 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode
 				null,
 				getRowIdResult(),
 				NotFoundAction.EXCEPTION,
+				false,
 				null,
 				true,
 				creationState

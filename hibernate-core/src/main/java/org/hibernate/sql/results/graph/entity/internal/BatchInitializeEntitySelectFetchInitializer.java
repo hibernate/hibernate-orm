@@ -41,8 +41,9 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
 			DomainResult<?> keyResult,
+			boolean affectedByFilter,
 			AssemblerCreationState creationState) {
-		super( parent, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, creationState );
+		super( parent, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter, creationState );
 	}
 
 	@Override
@@ -73,7 +74,7 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 		super.endLoading( data );
 		final SharedSessionContractImplementor session = data.getRowProcessingState().getSession();
 		for ( EntityKey key : data.toBatchLoad ) {
-			loadInstance( key, toOneMapping, session );
+			loadInstance( key, toOneMapping, affectedByFilter, session );
 		}
 		data.toBatchLoad.clear();
 	}

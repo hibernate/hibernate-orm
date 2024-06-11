@@ -39,6 +39,7 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 	private final EntityResultImpl entityResult;
 	private final DomainResult<?> keyResult;
 	private final NotFoundAction notFoundAction;
+	private final boolean isAffectedByFilter;
 
 	private final String sourceAlias;
 
@@ -47,6 +48,7 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 			ToOneAttributeMapping toOneMapping,
 			TableGroup tableGroup,
 			DomainResult<?> keyResult,
+			boolean isAffectedByFilter,
 			NavigablePath navigablePath,
 			DomainResultCreationState creationState) {
 		this.fetchContainer = toOneMapping;
@@ -54,7 +56,7 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 		this.keyResult = keyResult;
 		this.notFoundAction = toOneMapping.getNotFoundAction();
 		this.sourceAlias = tableGroup.getSourceAlias();
-
+		this.isAffectedByFilter = isAffectedByFilter;
 		this.entityResult = new EntityResultImpl(
 				navigablePath,
 				toOneMapping,
@@ -76,7 +78,7 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 		this.notFoundAction = collectionPart.getNotFoundAction();
 		this.keyResult = null;
 		this.sourceAlias = tableGroup.getSourceAlias();
-
+		this.isAffectedByFilter = false;
 		this.entityResult = new EntityResultImpl(
 				navigablePath,
 				collectionPart,
@@ -96,6 +98,7 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 		this.entityResult = original.entityResult;
 		this.keyResult = original.keyResult;
 		this.notFoundAction = original.notFoundAction;
+		this.isAffectedByFilter = original.isAffectedByFilter;
 		this.sourceAlias = original.sourceAlias;
 	}
 
@@ -153,6 +156,7 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 				keyResult,
 				entityResult.getRowIdResult(),
 				notFoundAction,
+				isAffectedByFilter,
 				parent,
 				false,
 				creationState
@@ -212,6 +216,10 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 
 	protected NotFoundAction getNotFoundAction() {
 		return notFoundAction;
+	}
+
+	protected boolean isAffectedByFilter() {
+		return isAffectedByFilter;
 	}
 
 	protected String getSourceAlias() {

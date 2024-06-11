@@ -46,8 +46,9 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
 			DomainResult<?> keyResult,
+			boolean affectedByFilter,
 			AssemblerCreationState creationState) {
-		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, creationState );
+		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter, creationState );
 		this.parentAttributes = getParentEntityAttributes( referencedModelPart.getAttributeName() );
 		this.referencedModelPartSetter = referencedModelPart.getPropertyAccess().getSetter();
 		this.referencedModelPartType = referencedModelPart.findContainingEntityMapping().getEntityPersister()
@@ -95,7 +96,7 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 			data.toBatchLoad.forEach(
 					(entityKey, parentInfos) -> {
 						final SharedSessionContractImplementor session = data.getRowProcessingState().getSession();
-						final Object instance = loadInstance( entityKey, toOneMapping, session );
+						final Object instance = loadInstance( entityKey, toOneMapping, affectedByFilter, session );
 						for ( ParentInfo parentInfo : parentInfos ) {
 							final Object parentInstance = parentInfo.parentInstance;
 							final EntityEntry entry = session.getPersistenceContext().getEntry( parentInstance );

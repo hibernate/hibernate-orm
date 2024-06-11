@@ -31,6 +31,7 @@ public final class Template {
 	private static final Set<String> KEYWORDS = new HashSet<>();
 	private static final Set<String> BEFORE_TABLE_KEYWORDS = new HashSet<>();
 	private static final Set<String> FUNCTION_KEYWORDS = new HashSet<>();
+	private static final Set<String> LITERAL_PREFIXES = new HashSet<>();
 	public static final String PUNCTUATION = "=><!+-*/()',|&`";
 
 	static {
@@ -82,6 +83,15 @@ public final class Template {
 		FUNCTION_KEYWORDS.add("then");
 		FUNCTION_KEYWORDS.add("else");
 		FUNCTION_KEYWORDS.add("end");
+
+		LITERAL_PREFIXES.add("n");
+		LITERAL_PREFIXES.add("x");
+		LITERAL_PREFIXES.add("varbyte");
+		LITERAL_PREFIXES.add("bx");
+		LITERAL_PREFIXES.add("bytea");
+		LITERAL_PREFIXES.add("date");
+		LITERAL_PREFIXES.add("time");
+		LITERAL_PREFIXES.add("timestamp");
 	}
 
 	public static final String TEMPLATE = "$PlaceHolder$";
@@ -176,6 +186,39 @@ public final class Template {
 					quotedIdentifier = false;
 					isQuoteCharacter = true;
 					isOpenQuote = false;
+				}
+				else if ( LITERAL_PREFIXES.contains( lcToken ) ) {
+					if ( "'".equals( nextToken ) ) {
+						// Don't prefix a literal
+						result.append( token );
+						continue;
+					}
+					else if ( nextToken != null && Character.isWhitespace( nextToken.charAt( 0 ) ) ) {
+						final StringBuilder additionalTokens = new StringBuilder();
+						TimeZoneTokens possibleNextToken = null;
+						do {
+							possibleNextToken = possibleNextToken == null
+									? TimeZoneTokens.getPossibleNextTokens( lcToken )
+									: possibleNextToken.nextToken();
+							do {
+								additionalTokens.append( nextToken );
+								hasMore = tokens.hasMoreTokens();
+								nextToken = tokens.nextToken();
+							} while ( nextToken != null && Character.isWhitespace( nextToken.charAt( 0 ) ) );
+						} while ( nextToken != null && possibleNextToken.isToken( nextToken ) );
+						if ( "'".equals( nextToken ) ) {
+							// Don't prefix a literal
+							result.append( token );
+							result.append( additionalTokens );
+							continue;
+						}
+						else {
+							isOpenQuote = false;
+						}
+					}
+					else {
+						isOpenQuote = false;
+					}
 				}
 				else {
 					isOpenQuote = false;
@@ -356,6 +399,39 @@ public final class Template {
 		}
 
 		return result.toString();
+	}
+
+	private enum TimeZoneTokens {
+		NONE,
+		WITH,
+		TIME,
+		ZONE;
+
+		static TimeZoneTokens getPossibleNextTokens(String lctoken) {
+			switch ( lctoken ) {
+				case "time":
+				case "timestamp":
+					return WITH;
+				default:
+					return NONE;
+			}
+		}
+
+		public TimeZoneTokens nextToken() {
+			if ( this == WITH ) {
+				return TIME;
+			}
+			else if ( this == TIME ) {
+				return ZONE;
+			}
+			else {
+				return NONE;
+			}
+		}
+
+		public boolean isToken(String token) {
+			return this != NONE && name().equalsIgnoreCase( token );
+		}
 	}
 
 	public static List<String> collectColumnNames(

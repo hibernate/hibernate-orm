@@ -160,9 +160,19 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		// processed, so that all entities which will be persisted are
 		// persistent when we do the check (I wonder if we could move this
 		// into Nullability, instead of abusing the Cascade infrastructure)
-		persistenceContext.getEntitiesByKey().forEach( (entry, entity) -> {
-			Cascade.cascade( CascadingActions.CHECK_ON_FLUSH, CascadePoint.BEFORE_FLUSH, session, entry.getPersister(), entity, null );
-		} );
+		for ( Map.Entry<Object, EntityEntry> me : persistenceContext.reentrantSafeEntityEntries() ) {
+			final EntityEntry entry = me.getValue();
+			if ( flushable( entry ) ) {
+				Cascade.cascade(
+						CascadingActions.CHECK_ON_FLUSH,
+						CascadePoint.BEFORE_FLUSH,
+						session,
+						entry.getPersister(),
+						me.getKey(),
+						null
+				);
+			}
+		}
 	}
 
 	private static boolean flushable(EntityEntry entry) {

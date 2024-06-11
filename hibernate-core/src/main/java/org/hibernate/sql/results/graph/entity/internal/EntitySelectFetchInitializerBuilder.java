@@ -32,6 +32,7 @@ public class EntitySelectFetchInitializerBuilder {
 			DomainResult<?> keyResult,
 			NavigablePath navigablePath,
 			boolean selectByUniqueKey,
+			boolean affectedByFilter,
 			AssemblerCreationState creationState) {
 		if ( selectByUniqueKey ) {
 			return new EntitySelectFetchByUniqueKeyInitializer(
@@ -40,6 +41,7 @@ public class EntitySelectFetchInitializerBuilder {
 					navigablePath,
 					entityPersister,
 					keyResult,
+					affectedByFilter,
 					creationState
 			);
 		}
@@ -51,6 +53,7 @@ public class EntitySelectFetchInitializerBuilder {
 					navigablePath,
 					entityPersister,
 					keyResult,
+					affectedByFilter,
 					creationState
 			);
 		}
@@ -63,6 +66,7 @@ public class EntitySelectFetchInitializerBuilder {
 						navigablePath,
 						entityPersister,
 						keyResult,
+						affectedByFilter,
 						creationState
 				);
 			case BATCH_LOAD:
@@ -73,6 +77,7 @@ public class EntitySelectFetchInitializerBuilder {
 							navigablePath,
 							entityPersister,
 							keyResult,
+							affectedByFilter,
 							creationState
 					);
 				}
@@ -83,6 +88,7 @@ public class EntitySelectFetchInitializerBuilder {
 							navigablePath,
 							entityPersister,
 							keyResult,
+							affectedByFilter,
 							creationState
 					);
 				}
@@ -93,6 +99,7 @@ public class EntitySelectFetchInitializerBuilder {
 						navigablePath,
 						entityPersister,
 						keyResult,
+						affectedByFilter,
 						creationState
 				);
 		}

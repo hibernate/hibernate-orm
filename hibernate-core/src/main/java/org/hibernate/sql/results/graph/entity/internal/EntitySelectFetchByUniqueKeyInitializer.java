@@ -6,6 +6,9 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
+import org.hibernate.EntityFilterException;
+import org.hibernate.FetchNotFoundException;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -29,8 +32,9 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
 			DomainResult<?> keyResult,
+			boolean affectedByFilter,
 			AssemblerCreationState creationState) {
-		super( parent, fetchedAttribute, fetchedNavigable, concreteDescriptor, keyResult, creationState );
+		super( parent, fetchedAttribute, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter, creationState );
 		this.fetchedAttribute = fetchedAttribute;
 	}
 
@@ -51,17 +55,30 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		data.setInstance( persistenceContext.getEntity( euk ) );
 		if ( data.getInstance() == null ) {
-			data.setInstance( concreteDescriptor.loadByUniqueKey(
+			final Object instance = concreteDescriptor.loadByUniqueKey(
 					uniqueKeyPropertyName,
 					data.entityIdentifier,
 					session
-			) );
+			);
+			data.setInstance( instance );
 
+			if ( instance == null ) {
+				if ( toOneMapping.getNotFoundAction() != NotFoundAction.IGNORE ) {
+					if ( affectedByFilter ) {
+						throw new EntityFilterException(
+								entityName,
+								data.entityIdentifier,
+								toOneMapping.getNavigableRole().getFullPath()
+						);
+					}
+					if ( toOneMapping.getNotFoundAction() == NotFoundAction.EXCEPTION ) {
+						throw new FetchNotFoundException( entityName, data.entityIdentifier );
+					}
+				}
+			}
 			// If the entity was not in the Persistence Context, but was found now,
 			// add it to the Persistence Context
-			if ( data.getInstance() != null ) {
-				persistenceContext.addEntity( euk, data.getInstance() );
-			}
+			persistenceContext.addEntity( euk, instance );
 		}
 		if ( data.getInstance() != null ) {
 			data.setInstance( persistenceContext.proxyFor( data.getInstance() ) );

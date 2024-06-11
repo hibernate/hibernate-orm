@@ -67,8 +67,9 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
 			DomainResult<?> keyResult,
+			boolean affectedByFilter,
 			AssemblerCreationState creationState) {
-		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, creationState );
+		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter, creationState );
 
 		this.referencedModelPartSetter = referencedModelPart.getAttributeMetadata().getPropertyAccess().getSetter();
 		final String rootEmbeddablePropertyName = getRootEmbeddablePropertyName(
@@ -172,7 +173,7 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 			data.toBatchLoad.forEach(
 					(entityKey, parentInfos) -> {
 						final SharedSessionContractImplementor session = data.getRowProcessingState().getSession();
-						final Object loadedInstance = loadInstance( entityKey, toOneMapping, session );
+						final Object loadedInstance = loadInstance( entityKey, toOneMapping, affectedByFilter, session );
 						for ( ParentInfo parentInfo : parentInfos ) {
 							final PersistenceContext persistenceContext = session.getPersistenceContext();
 							final EntityEntry parentEntityEntry = persistenceContext.getEntry( parentInfo.parentEntityInstance );

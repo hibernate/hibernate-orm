@@ -24,6 +24,7 @@ import java.util.TimeZone;
 
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
+import org.hibernate.EntityFilterException;
 import org.hibernate.FetchNotFoundException;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -2463,6 +2464,13 @@ public class SessionImpl
 			and this associated entity is not found.
 			 */
 			if ( enfe instanceof FetchNotFoundException ) {
+				throw enfe;
+			}
+			/*
+			This may happen if the entity has an associations which is filtered by a FilterDef
+			and this associated entity is not found.
+			 */
+			if ( enfe instanceof EntityFilterException ) {
 				throw enfe;
 			}
 			// DefaultLoadEventListener#returnNarrowedProxy() may throw ENFE (see HHH-7861 for details),

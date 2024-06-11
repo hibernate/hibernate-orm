@@ -21,6 +21,7 @@ import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
@@ -270,7 +271,7 @@ public class ToOneAttributeMapping
 		);
 		if ( bootValue instanceof ManyToOne ) {
 			final ManyToOne manyToOne = (ManyToOne) bootValue;
-			this.notFoundAction = determineNotFoundAction( ( (ManyToOne) bootValue ).getNotFoundAction(), entityMappingType );
+			this.notFoundAction = ( (ManyToOne) bootValue ).getNotFoundAction();
 			if ( manyToOne.isLogicalOneToOne() ) {
 				cardinality = Cardinality.LOGICAL_ONE_TO_ONE;
 			}
@@ -424,7 +425,7 @@ public class ToOneAttributeMapping
 			else {
 				this.bidirectionalAttributePath = SelectablePath.parse( oneToOne.getMappedByProperty() );
 			}
-			notFoundAction = determineNotFoundAction( null, entityMappingType );
+			notFoundAction = null;
 			isKeyTableNullable = isNullable();
 			isOptional = !bootValue.isConstrained();
 			isInternalLoadNullable = isNullable();
@@ -569,16 +570,6 @@ public class ToOneAttributeMapping
 		}
 	}
 
-	private NotFoundAction determineNotFoundAction(NotFoundAction notFoundAction, EntityMappingType entityMappingType) {
-		// When a filter exists that affects a singular association, we have to enable NotFound handling
-		// to force an exception if the filter would result in the entity not being found.
-		// If we silently just read null, this could lead to data loss on flush
-		if ( entityMappingType.getEntityPersister().hasFilterForLoadByKey() && notFoundAction == null ) {
-			return NotFoundAction.EXCEPTION;
-		}
-		return notFoundAction;
-	}
-
 	private static SelectablePath findBidirectionalOneToManyAttributeName(
 			String propertyPath,
 			ManagedMappingType declaringType,
@@ -656,9 +647,6 @@ public class ToOneAttributeMapping
 			if ( ( (ManyToOne) bootValue ).getNotFoundAction() != null ) {
 				return FetchTiming.IMMEDIATE;
 			}
-		}
-		if ( entityMappingType.getEntityPersister().hasFilterForLoadByKey() ) {
-			return FetchTiming.IMMEDIATE;
 		}
 		return mappedFetchTiming;
 	}
@@ -1330,6 +1318,7 @@ public class ToOneAttributeMapping
 						this,
 						tableGroup,
 						keyDomainResult,
+						false,
 						fetchablePath,
 						creationState
 				);
@@ -1371,6 +1360,7 @@ public class ToOneAttributeMapping
 						fetchablePath,
 						domainResult,
 						isSelectByUniqueKey( sideNature ),
+						false,
 						creationState
 				);
 			}
@@ -1419,6 +1409,7 @@ public class ToOneAttributeMapping
 			NavigablePath navigablePath,
 			DomainResult<?> keyResult,
 			boolean selectByUniqueKey,
+			boolean isAffectedByFilter,
 			@SuppressWarnings("unused") DomainResultCreationState creationState) {
 		return new EntityFetchSelectImpl(
 				fetchParent,
@@ -1426,6 +1417,7 @@ public class ToOneAttributeMapping
 				navigablePath,
 				keyResult,
 				selectByUniqueKey,
+				isAffectedByFilter,
 				creationState
 		);
 	}
@@ -1438,6 +1430,7 @@ public class ToOneAttributeMapping
 			ToOneAttributeMapping toOneMapping,
 			TableGroup tableGroup,
 			DomainResult<?> keyResult,
+			boolean isAffectedByFilter,
 			NavigablePath navigablePath,
 			DomainResultCreationState creationState) {
 		return new EntityFetchJoinedImpl(
@@ -1445,6 +1438,7 @@ public class ToOneAttributeMapping
 				toOneMapping,
 				tableGroup,
 				keyResult,
+				isAffectedByFilter,
 				navigablePath,
 				creationState
 		);
@@ -1576,11 +1570,15 @@ public class ToOneAttributeMapping
 
 			return withRegisteredAssociationKeys(
 					() -> {
+						// When a filter exists that affects a singular association, we have to enable NotFound handling
+						// to force an exception if the filter would result in the entity not being found.
+						// If we silently just read null, this could lead to data loss on flush
+						final boolean affectedByEnabledFilters = isAffectedByEnabledFilters( creationState );
 						DomainResult<?> keyResult = null;
 						if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
 							// If the key side is non-nullable we also need to add the keyResult
 							// to be able to manually check invalid foreign key references
-							if ( hasNotFoundAction() || !isInternalLoadNullable ) {
+							if ( hasNotFoundAction() || !isInternalLoadNullable || affectedByEnabledFilters ) {
 								keyResult = foreignKeyDescriptor.createKeyDomainResult(
 										fetchablePath,
 										tableGroup,
@@ -1590,7 +1588,8 @@ public class ToOneAttributeMapping
 							}
 						}
 						else if ( hasNotFoundAction()
-								|| getAssociatedEntityMappingType().getSoftDeleteMapping() != null ) {
+								|| getAssociatedEntityMappingType().getSoftDeleteMapping() != null
+								|| affectedByEnabledFilters ) {
 							// For the target side only add keyResult when a not-found action is present
 							keyResult = foreignKeyDescriptor.createTargetDomainResult(
 									fetchablePath,
@@ -1605,6 +1604,7 @@ public class ToOneAttributeMapping
 								this,
 								tableGroup,
 								keyResult,
+								affectedByEnabledFilters,
 								fetchablePath,
 								creationState
 						);
@@ -1679,6 +1679,7 @@ public class ToOneAttributeMapping
 					fetchablePath,
 					keyResult,
 					selectByUniqueKey,
+					isAffectedByEnabledFilters( creationState ),
 					creationState
 			);
 		}
@@ -1695,6 +1696,12 @@ public class ToOneAttributeMapping
 				selectByUniqueKey,
 				creationState
 		);
+	}
+
+	private boolean isAffectedByEnabledFilters(DomainResultCreationState creationState) {
+		final LoadQueryInfluencers loadQueryInfluencers = creationState.getSqlAstCreationState()
+				.getLoadQueryInfluencers();
+		return entityMappingType.isAffectedByEnabledFilters( loadQueryInfluencers, true );
 	}
 
 	private boolean needsImmediateFetch(FetchTiming fetchTiming) {

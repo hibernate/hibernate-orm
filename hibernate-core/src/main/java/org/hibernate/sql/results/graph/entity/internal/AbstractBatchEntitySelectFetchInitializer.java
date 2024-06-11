@@ -6,7 +6,10 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
+import org.hibernate.EntityFilterException;
+import org.hibernate.FetchNotFoundException;
 import org.hibernate.Hibernate;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -52,8 +55,9 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
 			DomainResult<?> keyResult,
+			boolean affectedByFilter,
 			AssemblerCreationState creationState) {
-		super( parent, toOneMapping, fetchedNavigable, concreteDescriptor, keyResult, creationState );
+		super( parent, toOneMapping, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter, creationState );
 		//noinspection unchecked
 		this.owningEntityInitializer = (EntityInitializer<InitializerData>) Initializer.findOwningEntityInitializer( parent );
 		assert owningEntityInitializer != null : "This initializer requires an owning parent entity initializer";
@@ -231,14 +235,30 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 
 	protected static Object loadInstance(
 			EntityKey entityKey,
-			ToOneAttributeMapping referencedModelPart,
+			ToOneAttributeMapping toOneMapping,
+			boolean affectedByFilter,
 			SharedSessionContractImplementor session) {
-		return session.internalLoad(
+		final Object instance = session.internalLoad(
 				entityKey.getEntityName(),
 				entityKey.getIdentifier(),
 				true,
-				referencedModelPart.isInternalLoadNullable()
+				toOneMapping.isInternalLoadNullable()
 		);
+		if ( instance == null ) {
+			if ( toOneMapping.getNotFoundAction() != NotFoundAction.IGNORE ) {
+				if ( affectedByFilter ) {
+					throw new EntityFilterException(
+							entityKey.getEntityName(),
+							entityKey.getIdentifier(),
+							toOneMapping.getNavigableRole().getFullPath()
+					);
+				}
+				if ( toOneMapping.getNotFoundAction() == NotFoundAction.EXCEPTION ) {
+					throw new FetchNotFoundException( entityKey.getEntityName(), entityKey.getIdentifier() );
+				}
+			}
+		}
+		return instance;
 	}
 
 	protected AttributeMapping[] getParentEntityAttributes(String attributeName) {

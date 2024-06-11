@@ -15,8 +15,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
-import org.checkerframework.checker.units.qual.N;
-
 import static org.hibernate.type.SqlTypes.ENUM;
 
 /**

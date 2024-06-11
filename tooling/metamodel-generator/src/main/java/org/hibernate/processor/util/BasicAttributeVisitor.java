@@ -6,8 +6,8 @@
  */
 package org.hibernate.processor.util;
 
+import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.processor.Context;
-import org.hibernate.processor.util.Constants;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -46,7 +46,7 @@ class BasicAttributeVisitor extends SimpleTypeVisitor8<Boolean, Element> {
 	public Boolean visitArray(ArrayType arrayType, Element element) {
 		final TypeElement componentElement = (TypeElement)
 				context.getTypeUtils().asElement( arrayType.getComponentType() );
-		return BASIC_ARRAY_TYPES.contains( componentElement.getQualifiedName().toString() );
+		return BASIC_ARRAY_TYPES.contains( NullnessUtil.castNonNull( componentElement ).getQualifiedName().toString() );
 	}
 
 	@Override

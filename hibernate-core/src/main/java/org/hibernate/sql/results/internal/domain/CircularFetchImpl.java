@@ -141,6 +141,7 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 				keyResult,
 				navigablePath,
 				selectByUniqueKey,
+				false,
 				creationState
 		);
 	}

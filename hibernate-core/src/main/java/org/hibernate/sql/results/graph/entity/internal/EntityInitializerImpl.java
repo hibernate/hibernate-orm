@@ -9,6 +9,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 import java.util.Collection;
 import java.util.function.BiConsumer;
 
+import org.hibernate.EntityFilterException;
 import org.hibernate.FetchNotFoundException;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
@@ -100,6 +101,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 	private final String sourceAlias;
 	private final @Nullable InitializerParent<?> parent;
 	private final NotFoundAction notFoundAction;
+	private final boolean affectedByFilter;
 	private final boolean isPartOfKey;
 	private final boolean isResultInitializer;
 	private final boolean hasKeyManyToOne;
@@ -141,6 +143,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			@Nullable DomainResult<?> keyResult,
 			@Nullable DomainResult<Object> rowIdResult,
 			NotFoundAction notFoundAction,
+			boolean affectedByFilter,
 			@Nullable InitializerParent<?> parent,
 			boolean isResultInitializer,
 			AssemblerCreationState creationState) {
@@ -249,6 +252,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		this.notFoundAction = notFoundAction;
 
 		this.keyAssembler = keyResult == null ? null : keyResult.createResultAssembler( this, creationState );
+		this.affectedByFilter = affectedByFilter;
 	}
 
 	@Override
@@ -446,6 +450,13 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			final Object fkKeyValue = keyAssembler.assemble( data.getRowProcessingState() );
 			if ( fkKeyValue != null ) {
 				if ( notFoundAction != NotFoundAction.IGNORE ) {
+					if ( affectedByFilter ) {
+						throw new EntityFilterException(
+								getEntityDescriptor().getEntityName(),
+								fkKeyValue,
+								referencedModelPart.getNavigableRole().getFullPath()
+						);
+					}
 					throw new FetchNotFoundException(
 							getEntityDescriptor().getEntityName(),
 							fkKeyValue

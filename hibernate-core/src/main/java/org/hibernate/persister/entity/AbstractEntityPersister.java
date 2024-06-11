@@ -72,7 +72,6 @@ import org.hibernate.classic.Lifecycle;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.internal.CacheHelper;
@@ -280,7 +279,6 @@ import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
@@ -1260,7 +1258,7 @@ public abstract class AbstractEntityPersister
 	public boolean hasFilterForLoadByKey() {
 		if ( filterHelper != null ) {
 			for ( String filterName : filterHelper.getFilterNames() ) {
-				if ( factory.getFilterDefinition( filterName ).isApplyToLoadByKey() ) {
+				if ( factory.getFilterDefinition( filterName ).isAppliedToLoadByKey() ) {
 					return true;
 				}
 			}

@@ -8,6 +8,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.function.BiConsumer;
 
+import org.hibernate.EntityFilterException;
 import org.hibernate.FetchNotFoundException;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.NotFoundAction;
@@ -53,6 +54,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	protected final EntityPersister concreteDescriptor;
 	protected final DomainResultAssembler<?> keyAssembler;
 	protected final ToOneAttributeMapping toOneMapping;
+	protected final boolean affectedByFilter;
 
 	public static class EntitySelectFetchInitializerData extends InitializerData {
 		// per-row state
@@ -70,6 +72,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
 			DomainResult<?> keyResult,
+			boolean affectedByFilter,
 			AssemblerCreationState creationState) {
 		super( creationState );
 		this.parent = parent;
@@ -79,6 +82,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		this.concreteDescriptor = concreteDescriptor;
 		this.keyAssembler = keyResult.createResultAssembler( this, creationState );
 		this.isEnhancedForLazyLoading = concreteDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
+		this.affectedByFilter = affectedByFilter;
 	}
 
 	@Override
@@ -106,8 +110,8 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 			return;
 		}
 
-		RowProcessingState rowProcessingState1 = data.getRowProcessingState();
-		data.entityIdentifier = keyAssembler.assemble( rowProcessingState1 );
+		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		data.entityIdentifier = keyAssembler.assemble( rowProcessingState );
 
 		if ( data.entityIdentifier == null ) {
 			data.setState( State.MISSING );
@@ -192,20 +196,30 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		data.setState( State.INITIALIZED );
 		final String entityName = concreteDescriptor.getEntityName();
 
-		data.setInstance( session.internalLoad(
+		final Object instance = session.internalLoad(
 				entityName,
 				data.entityIdentifier,
 				true,
 				toOneMapping.isInternalLoadNullable()
-		) );
+		);
+		data.setInstance( instance );
 
-		if ( data.getInstance() == null ) {
-			if ( toOneMapping.getNotFoundAction() == NotFoundAction.EXCEPTION ) {
-				throw new FetchNotFoundException( entityName, data.entityIdentifier );
+		if ( instance == null ) {
+			if ( toOneMapping.getNotFoundAction() != NotFoundAction.IGNORE ) {
+				if ( affectedByFilter ) {
+					throw new EntityFilterException(
+							entityName,
+							data.entityIdentifier,
+							toOneMapping.getNavigableRole().getFullPath()
+					);
+				}
+				if ( toOneMapping.getNotFoundAction() == NotFoundAction.EXCEPTION ) {
+					throw new FetchNotFoundException( entityName, data.entityIdentifier );
+				}
 			}
 			rowProcessingState.getSession().getPersistenceContextInternal().claimEntityHolderIfPossible(
 					new EntityKey( data.entityIdentifier, concreteDescriptor ),
-					data.getInstance(),
+					instance,
 					rowProcessingState.getJdbcValuesSourceProcessingState(),
 					this
 			);

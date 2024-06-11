@@ -558,11 +558,12 @@ include::{example-dir-pc}/FilterTest.java[tags=pc-filter-resolver-Account-exampl
 
 [IMPORTANT]
 ====
-Filters apply to entity queries, but not to direct fetching, unless otherwise configured using the `applyToLoadById` flag
+Filters apply to entity queries, but not to direct fetching, unless otherwise configured using the `applyToLoadByKey` flag
 on the `@FilterDef`, that should be set to `true` in order to activate the filter with direct fetching.
+====
 
-Therefore, in the following example, the `activeAccount` filter is not taken into consideration when fetching an entity from the Persistence Context.
-On the other hand, the `minimumAmount` filter is taken into consideration, because its `applyToLoadById` flag is set to `true`.
+In the following example, the `activeAccount` filter is not taken into consideration when fetching an entity from the Persistence Context.
+On the other hand, the `minimumAmount` filter is taken into consideration, because its `applyToLoadByKey` flag is set to `true`.
 
 [[pc-filter-entity-example]]
 .Fetching entities mapped with `@Filter`
@@ -581,9 +582,15 @@ include::{extrasdir}/pc-filter-entity-example.sql[]
 include::{extrasdir}/pc-filter-entity-find-example.sql[]
 ----
 
+[WARNING]
+====
+Using `@NotFound(action = NotFoundAction.IGNORE)` on associations that are filtered via a `FilterDef` with `applyToLoadByKey` set to `true`
+is dangerous, because the association will be set to `null` if the filter excludes the target row.
+On flush, this can lead to the foreign key column be set to `null` and hence lead to data loss.
+====
+
 As you can see from the example above, contrary to an entity query, the `activeAccount` filter does not prevent the entity from being loaded,
 but the `minimumAmount` filter limits the results to the ones with an amount that is greater than the specified one.
-====
 
 Just like with entity queries, collections can be filtered as well, but only if the filter is enabled on the currently running Hibernate `Session`,
 either if the filter is enabled explicitly or by setting `autoEnabled` to `true`.

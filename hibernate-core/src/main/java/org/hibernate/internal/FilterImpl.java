@@ -48,7 +48,7 @@ public class FilterImpl implements Filter, Serializable {
 		this.definition = configuration;
 		filterName = definition.getFilterName();
 		this.autoEnabled = definition.isAutoEnabled();
-		this.applyToLoadByKey = definition.isApplyToLoadByKey();
+		this.applyToLoadByKey = definition.isAppliedToLoadByKey();
 	}
 
 	public FilterDefinition getFilterDefinition() {
@@ -80,7 +80,7 @@ public class FilterImpl implements Filter, Serializable {
 	 *
 	 * @return The flag value.
 	 */
-	public boolean isApplyToLoadByKey() {
+	public boolean isAppliedToLoadByKey() {
 		return applyToLoadByKey;
 	}
 

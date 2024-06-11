@@ -9,6 +9,7 @@ package org.hibernate.orm.test.schemavalidation;
 import java.util.EnumSet;
 import java.util.Map;
 
+import org.hibernate.SessionFactory;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -67,6 +68,24 @@ public class BooleanAsTinyintValidationTests {
 				.requireService( SchemaManagementTool.class )
 				.getSchemaValidator( null )
 				.doValidation( domainModelScope.getDomainModel(), executionOptions, ContributableMatcher.ALL );
+	}
+
+	@Test
+	void testRuntimeUsage(DomainModelScope domainModelScope) {
+		try (SessionFactory sessionFactory = domainModelScope.getDomainModel().buildSessionFactory()) {
+			sessionFactory.inTransaction( (session) -> {
+				session.persist( new Client( 1, "stuff", true ) );
+			} );
+			sessionFactory.inTransaction( (session) -> {
+				session.find( Client.class, 1 );
+			} );
+			sessionFactory.inTransaction( (session) -> {
+				session.createQuery( "from Client", Client.class ).list();
+			} );
+			sessionFactory.inTransaction( (session) -> {
+				session.createNativeQuery( "select * from Client", Client.class ).list();
+			} );
+		}
 	}
 
 	@BeforeEach
@@ -148,6 +167,15 @@ public class BooleanAsTinyintValidationTests {
 		private Integer id;
 		private String name;
 		private boolean active;
+
+		public Client() {
+		}
+
+		public Client(Integer id, String name, boolean active) {
+			this.id = id;
+			this.name = name;
+			this.active = active;
+		}
 	}
 
 }

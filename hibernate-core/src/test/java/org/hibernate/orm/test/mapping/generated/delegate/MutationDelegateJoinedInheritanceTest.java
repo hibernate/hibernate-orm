@@ -21,6 +21,7 @@ import org.hibernate.sql.model.MutationType;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -42,10 +43,12 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Marco Belladelli
  */
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsIdentityColumns.class )
 @DomainModel( annotatedClasses = {
 		MutationDelegateJoinedInheritanceTest.BaseEntity.class,
 		MutationDelegateJoinedInheritanceTest.ChildEntity.class,
+		MutationDelegateJoinedInheritanceTest.NonGeneratedParent.class,
+		MutationDelegateJoinedInheritanceTest.GeneratedChild.class,
 } )
 @SessionFactory( useCollectingStatementInspector = true )
 public class MutationDelegateJoinedInheritanceTest {
@@ -181,6 +184,35 @@ public class MutationDelegateJoinedInheritanceTest {
 		} );
 	}
 
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18259" )
+	public void testGeneratedOnlyOnChild(SessionFactoryScope scope) {
+		final GeneratedValuesMutationDelegate delegate = getDelegate(
+				scope,
+				NonGeneratedParent.class,
+				MutationType.UPDATE
+		);
+		// Mutation delegates only support generated values on the "root" table
+		assertThat( delegate ).isNull();
+
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+
+		scope.inTransaction( session -> {
+			final GeneratedChild generatedChild = new GeneratedChild();
+			generatedChild.setId( 1L );
+			session.persist( generatedChild );
+
+			session.flush();
+
+			assertThat( generatedChild.getName() ).isEqualTo( "child_name" );
+			inspector.assertExecutedCount( 3 );
+			inspector.assertIsInsert( 0 );
+			inspector.assertIsInsert( 1 );
+			inspector.assertIsSelect( 2 );
+		} );
+	}
+
 	private static GeneratedValuesMutationDelegate getDelegate(
 			SessionFactoryScope scope,
 			@SuppressWarnings( "SameParameterValue" ) Class<?> entityClass,
@@ -242,6 +274,34 @@ public class MutationDelegateJoinedInheritanceTest {
 
 		public Date getChildUpdateDate() {
 			return childUpdateDate;
+		}
+	}
+
+	@Entity( name = "NonGeneratedParent" )
+	@Inheritance( strategy = InheritanceType.JOINED )
+	@SuppressWarnings( "unused" )
+	public static class NonGeneratedParent {
+		@Id
+		private Long id;
+
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
+	}
+
+	@Entity( name = "GeneratedChild" )
+	@SuppressWarnings( "unused" )
+	public static class GeneratedChild extends NonGeneratedParent {
+		@Generated( event = EventType.INSERT )
+		@ColumnDefault( "'child_name'" )
+		private String name;
+
+		public String getName() {
+			return name;
 		}
 	}
 }

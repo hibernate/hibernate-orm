@@ -1,4 +1,4 @@
-= Hibernate 6.6.0.Alpha1
+= Hibernate 6.6.0.Final
 Steve Ebersole
 :awestruct-tags: ["Hibernate ORM", "Releases"]
 :awestruct-layout: blog-post
@@ -217,4 +217,17 @@ it was necessary to spell out a custom `@SQLRestriction` and specify the join co
 
 Targeting an `@Any` association is now supported and will default to the appropriate join columns,
 as well as add a `@SQLRestriction` to the `@OneToMany` automatically.
+
+[[apply-filter-to-load-by-key]]
+== `@Filter` support for load by key
+
+Filters can opt in to be applicable also to find by key operations
+like `Session.find()`, lazy initialization and to-one association fetching,
+by setting `@FilterDef(applyToLoadByKey = true)`.
+
+If the target row of an association is filtered by such a load by key enabled filter,
+Hibernate ORM will throw a `EntityFilterException` to prevent potential data loss
+that can happen when flushing an entity that owns such an association.
+
+Also, the `@TenantId` filter was changed to apply to load by key operations by default.
 

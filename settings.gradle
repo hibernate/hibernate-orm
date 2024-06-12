@@ -30,7 +30,7 @@ dependencyResolutionManagement {
             url( rootProject.property( "mavenMirror" ) )
         }
         mavenCentral()
-        if (System.env['JPA_PREVIEW'] != null) {
+        if (System.getProperty('JPA_PREVIEW') != null) {
             // Needed for the RC versions of Jakarta Persistence
             maven {
                 url "https://jakarta.oss.sonatype.org/content/repositories/releases/"

@@ -6,6 +6,8 @@
  */
 package org.hibernate.dialect;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -13,12 +15,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 
-import oracle.jdbc.replay.ReplayStatistics;
-import oracle.jdbc.replay.ReplayableConnection;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
-import static oracle.jdbc.replay.ReplayableConnection.StatisticsReportType.FOR_CURRENT_CONNECTION;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_APPLICATION_CONTINUITY;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_AUTONOMOUS_DATABASE;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_EXTENDED_STRING_SIZE;
@@ -96,38 +95,47 @@ public class OracleServerConfiguration {
 			try {
 				final Connection c = databaseMetaData.getConnection();
 
-				// Use Oracle JDBC replay statistics information to determine if this
-				// connection is protected by Application Continuity
-				try {
-					final ReplayableConnection re = (ReplayableConnection) c;
-					ReplayStatistics stats = re.getReplayStatistics(FOR_CURRENT_CONNECTION);
+				try (final Statement statement = c.createStatement()) {
 
-					final long totalRequests = stats.getTotalRequests();
-					final long protectedCalls = stats.getTotalProtectedCalls();
+					// Use Oracle JDBC replay statistics information to determine if this
+					// connection is protected by Application Continuity
+					try {
+						final Class statisticReportTypeEnum = Class.forName("oracle.jdbc.replay.ReplayableConnection$StatisticsReportType",false, Thread.currentThread().getContextClassLoader());
+						final Field forCurrentConnection = statisticReportTypeEnum.getField("FOR_CURRENT_CONNECTION");
 
-					try (final Statement s = c.createStatement()) {
-						try (final ResultSet r = s.executeQuery("select 1 from dual")) {
+						final Method getReplayStatistics = c.getClass().getMethod("getReplayStatistics", statisticReportTypeEnum);
+
+						Object stats = getReplayStatistics.invoke(c,forCurrentConnection.get(null));
+
+						final Method getTotalRequests = stats.getClass().getMethod("getTotalRequests");
+						final Method getTotalProtectedCalls = stats.getClass().getMethod("getTotalProtectedCalls");
+
+						final Long totalRequestsBefore = (Long)getTotalRequests.invoke(stats);
+						final Long protectedCallsBefore = (Long)getTotalProtectedCalls.invoke(stats);
+
+						try (ResultSet r = statement.executeQuery("select 1")) {
 							r.next();
 						}
+
+						stats = getReplayStatistics.invoke(c,forCurrentConnection.get(null));
+
+						final Long totalRequestsAfter = (Long)getTotalRequests.invoke(stats);
+						final Long protectedCallsAfter = (Long)getTotalProtectedCalls.invoke(stats);
+
+						// Application continuity is enabled on this database service if the number of
+						// total requests and the number of protected calls for this connection have
+						// both increased.
+						applicationContinuity = totalRequestsAfter > totalRequestsBefore && protectedCallsAfter > protectedCallsBefore;
+					}
+					catch(Exception e) {
+						// A ClassCastException or a NullPointerException are expected here in the case
+						// the Connection Factory is not the right one (not Replayable: ClassCastException)
+						// or if the database service has not been configured (server side) to enable
+						// application continuity (NullPointerException).
+						applicationContinuity = false;
 					}
 
-					stats = re.getReplayStatistics(FOR_CURRENT_CONNECTION);
-
-					// Application continuity is enabled on this database service if the number of
-					// total requests and the number of protected calls for this connection have
-					// both increased.
-					applicationContinuity = stats.getTotalRequests() > totalRequests && stats.getTotalProtectedCalls() > protectedCalls;
-				}
-				catch(Exception e) {
-					// A ClassCastException or a NullPointerException are expected here in the case
-					// the Connection Factory is not the right one (not Replayable: ClassCastException)
-					// or if the database service has not been configured (server side) to enable
-					// application continuity (NullPointerException).
-					applicationContinuity = false;
-				}
-
-				// continue the checks...
-				try (final Statement statement = c.createStatement()) {
+					// continue the checks...
 					final ResultSet rs = statement.executeQuery(
 							"select cast('string' as varchar2(32000)), " +
 									"sys_context('USERENV','CLOUD_SERVICE') from dual"

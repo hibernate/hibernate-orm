@@ -1541,14 +1541,6 @@ public class HbmXmlTransformer {
 	}
 
 	private void transferOneToOne(JaxbHbmOneToOneType hbmOneToOne, JaxbAttributesContainer attributes) {
-		if ( !hbmOneToOne.getFormula().isEmpty() || !StringHelper.isEmpty( hbmOneToOne.getFormulaAttribute() ) ) {
-			handleUnsupported(
-					"Transformation of formulas within one-to-ones are not supported - `%s`",
-					origin
-			);
-			return;
-		}
-
 		final JaxbOneToOneImpl oneToOne = new JaxbOneToOneImpl();
 		oneToOne.setAttributeAccessor( hbmOneToOne.getAccess() );
 		oneToOne.setCascade( convertCascadeType( hbmOneToOne.getCascade() ) );
@@ -1558,7 +1550,10 @@ public class HbmXmlTransformer {
 		if (! StringHelper.isEmpty( hbmOneToOne.getPropertyRef() ) ) {
 			final JaxbJoinColumnImpl joinColumn = new JaxbJoinColumnImpl();
 			joinColumn.setReferencedColumnName( hbmOneToOne.getPropertyRef() );
-			oneToOne.getJoinColumn().add( joinColumn );
+			oneToOne.getJoinColumns().add( joinColumn );
+		}
+		for ( String formula : hbmOneToOne.getFormula() ) {
+			oneToOne.getJoinFormulas().add( formula );
 		}
 		oneToOne.setName( hbmOneToOne.getName() );
 		if ( isNotEmpty( hbmOneToOne.getEntityName() ) ) {
@@ -1578,12 +1573,12 @@ public class HbmXmlTransformer {
 		m2o.setAttributeAccessor( hbmNode.getAccess() );
 		m2o.setCascade( convertCascadeType( hbmNode.getCascade() ) );
 		if ( hbmNode.getForeignKey() != null ) {
-			m2o.setForeignKeys( new JaxbForeignKeyImpl() );
+			m2o.setForeignKey( new JaxbForeignKeyImpl() );
 			if ( "none".equalsIgnoreCase( hbmNode.getForeignKey() ) ) {
-				m2o.getForeignKeys().setConstraintMode( ConstraintMode.NO_CONSTRAINT );
+				m2o.getForeignKey().setConstraintMode( ConstraintMode.NO_CONSTRAINT );
 			}
 			else {
-				m2o.getForeignKeys().setName( hbmNode.getForeignKey() );
+				m2o.getForeignKey().setName( hbmNode.getForeignKey() );
 			}
 		}
 
@@ -1628,10 +1623,7 @@ public class HbmXmlTransformer {
 
 					@Override
 					public void addFormula(String formula) {
-						handleUnsupportedContent(
-								"<many-to-one/> [name=" + hbmNode.getName() + "] specified formula [" + formula +
-										"] which is not supported for transformation; skipping"
-						);
+						m2o.getJoinFormulas().add( formula );
 					}
 				},
 				ColumnDefaultsBasicImpl.INSTANCE,
@@ -2459,8 +2451,8 @@ public class HbmXmlTransformer {
 		m2o.setName( hbmM2O.getName() );
 		m2o.setAttributeAccessor( hbmM2O.getAccess() );
 		m2o.setFetch( convert( hbmM2O.getLazy() ) );
-		m2o.setForeignKeys( new JaxbForeignKeyImpl() );
-		m2o.getForeignKeys().setName( hbmM2O.getForeignKey() );
+		m2o.setForeignKey( new JaxbForeignKeyImpl() );
+		m2o.getForeignKey().setName( hbmM2O.getForeignKey() );
 		if ( !hbmM2O.getColumn().isEmpty() ) {
 			for ( JaxbHbmColumnType hbmColumn : hbmM2O.getColumn() ) {
 				final JaxbJoinColumnImpl joinColumn = new JaxbJoinColumnImpl();

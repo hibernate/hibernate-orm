@@ -289,6 +289,12 @@
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbLockableAttribute</inheritance:implements>
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbAssociationAttribute</inheritance:implements>
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbJoinTableCapable</inheritance:implements>
+            <bindings node=".//xsd:element[@name='join-column']">
+                <property name="joinColumns"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='join-formula']">
+                <property name="joinFormulas"/>
+            </bindings>
         </bindings>
 
         <bindings node="//xsd:complexType[@name='many-to-one']">
@@ -301,8 +307,8 @@
             <bindings node=".//xsd:element[@name='join-column']">
                 <property name="joinColumns"/>
             </bindings>
-            <bindings node=".//xsd:element[@name='foreign-key']">
-                <property name="foreignKeys"/>
+            <bindings node=".//xsd:element[@name='join-formula']">
+                <property name="joinFormulas"/>
             </bindings>
         </bindings>
 

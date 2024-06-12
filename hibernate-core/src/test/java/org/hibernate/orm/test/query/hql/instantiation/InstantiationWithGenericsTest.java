@@ -46,6 +46,15 @@ public class InstantiationWithGenericsTest {
 	}
 
 	@Test
+	public void testImplicitConstructor(SessionFactoryScope scope) {
+		scope.inTransaction( session -> assertThat( session.createQuery(
+				"select e.id, e.data from ConcreteEntity e",
+				ConstructorDto.class
+		).getSingleResult() ).extracting( ConstructorDto::getId, ConstructorDto::getData )
+				.containsExactly( 1L, "entity_1" ) );
+	}
+
+	@Test
 	public void testInjection(SessionFactoryScope scope) {
 		scope.inTransaction( session -> assertThat( session.createQuery(
 				"select new InjectionDto(e.id as id, e.data as data) from ConcreteEntity e",

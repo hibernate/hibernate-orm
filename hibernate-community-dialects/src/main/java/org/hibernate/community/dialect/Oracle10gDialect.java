@@ -17,7 +17,7 @@ import org.hibernate.dialect.DatabaseVersion;
  *
  * @author Steve Ebersole
  *
- * @deprecated use {@code OracleDialect(10)}
+ * @deprecated use {@code OracleLegacyDialect(10)}
  */
 @Deprecated
 public class Oracle10gDialect extends OracleLegacyDialect {

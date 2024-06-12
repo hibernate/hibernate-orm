@@ -6,7 +6,6 @@
  */
 package org.hibernate.community.dialect;
 
-import org.hibernate.dialect.DB2zDialect;
 import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
@@ -22,7 +21,7 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
  * DB2 Universal Database for OS/390, also known as DB2/390.
  *
  * @author Kristoffer Dyrkorn
- * @deprecated Use {@link DB2zDialect}
+ * @deprecated Use {@link DB2LegacyDialect}
  */
 @Deprecated
 public class DB2390Dialect extends DB2LegacyDialect {

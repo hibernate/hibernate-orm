@@ -13,7 +13,7 @@ import org.hibernate.dialect.DatabaseVersion;
  *
  * @author Vlad Mihalcea
  *
- * @deprecated use {@code MySQLDialect(550)}
+ * @deprecated use {@code MySQLLegacyDialect(550)}
  */
 @Deprecated
 public class MySQL55Dialect extends MySQLLegacyDialect {

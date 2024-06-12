@@ -13,7 +13,7 @@ import org.hibernate.dialect.DatabaseVersion;
  * 
  * @author edalquist
  *
- * @deprecated use {@code PostgreSQLDialect(820)}
+ * @deprecated use {@code PostgreSQLLegacyDialect(820)}
  */
 @Deprecated
 public class PostgreSQL82Dialect extends PostgreSQLLegacyDialect {

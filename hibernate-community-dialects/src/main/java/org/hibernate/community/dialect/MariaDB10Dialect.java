@@ -9,7 +9,7 @@ package org.hibernate.community.dialect;
 import org.hibernate.dialect.DatabaseVersion;
 
 /**
- * @deprecated use {@code MariaDBDialect(1000)}
+ * @deprecated use {@code MariaDBLegacyDialect(1000)}
  */
 @Deprecated
 public class MariaDB10Dialect extends MariaDBLegacyDialect {

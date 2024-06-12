@@ -9,7 +9,7 @@ package org.hibernate.community.dialect;
 import org.hibernate.dialect.DatabaseVersion;
 
 /**
- * @deprecated use {@code PostgreSQLDialect(810)}
+ * @deprecated use {@code PostgreSQLLegacyDialect(810)}
  */
 @Deprecated
 public class PostgreSQL81Dialect extends PostgreSQLLegacyDialect {

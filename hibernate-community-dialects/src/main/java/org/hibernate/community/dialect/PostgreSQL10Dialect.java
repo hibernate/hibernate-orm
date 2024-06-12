@@ -12,7 +12,7 @@ import org.hibernate.dialect.PostgreSQLDialect;
 /**
  * An SQL dialect for Postgres 10 and later.
  *
- *  @deprecated use {@code PostgreSQLDialect(1000)}
+ *  @deprecated use {@code PostgreSQLLegacyDialect(1000)}
  */
 @Deprecated
 public class PostgreSQL10Dialect extends PostgreSQLDialect {

@@ -14,7 +14,7 @@ import org.hibernate.dialect.DatabaseVersion;
  * 
  * @author edalquist
  *
- * @deprecated use {@code PostgreSQLDialect(900)}
+ * @deprecated use {@code PostgreSQLLegacyDialect(900)}
  */
 @Deprecated
 public class PostgreSQL9Dialect extends PostgreSQLLegacyDialect {

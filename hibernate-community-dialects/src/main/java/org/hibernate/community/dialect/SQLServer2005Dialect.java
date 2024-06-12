@@ -14,7 +14,7 @@ import org.hibernate.dialect.DatabaseVersion;
  * @author Yoryos Valotasios
  * @author Lukasz Antoniak
  *
- * @deprecated use {@code SQLServerDialect(9)}
+ * @deprecated use {@code SQLServerLegacyDialect(9)}
  */
 @Deprecated
 public class SQLServer2005Dialect extends SQLServerLegacyDialect {

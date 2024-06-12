@@ -11,7 +11,7 @@ import org.hibernate.dialect.DatabaseVersion;
 /**
  * A dialect for Oracle 8i databases.
  *
- * @deprecated use {@code OracleDialect(8)}
+ * @deprecated use {@code OracleLegacyDialect(8)}
  */
 @Deprecated
 public class Oracle8iDialect extends OracleLegacyDialect {

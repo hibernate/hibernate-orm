@@ -40,13 +40,13 @@ pipeline {
 		string(
 				name: 'RELEASE_VERSION',
 				defaultValue: '',
-				description: 'The version to be released, e.g. 6.2.1.Final.',
+				description: 'The version to be released, e.g. 6.2.1.Final. Mandatory for manual releases, to prevent mistakes.',
 				trim: true
 		)
 		string(
 				name: 'DEVELOPMENT_VERSION',
 				defaultValue: '',
-				description: 'The next version to be used after the release, e.g. 6.2.2-SNAPSHOT.',
+				description: 'The next version to be used after the release, e.g. 6.2.2-SNAPSHOT. If not set, determined automatically from the release version.',
 				trim: true
 		)
 		booleanParam(
@@ -59,39 +59,53 @@ pipeline {
 		stage('Release check') {
 			steps {
 				script {
-					// Avoid doing a release for commits from a release
-					def lastCommitter = sh(script: 'git show -s --format=\'%an\'', returnStdout: true)
-					def secondLastCommitter = sh(script: 'git show -s --format=\'%an\' HEAD~1', returnStdout: true)
-					if (lastCommitter == 'Hibernate-CI' && secondLastCommitter == 'Hibernate-CI') {
-						print "INFO: Build skipped because last commits were for the previous release"
-						currentBuild.result = 'ABORTED'
-						return
-					}
-
 					dir('.release/scripts') {
 						checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com', url: 'https://github.com/hibernate/hibernate-release-scripts.git']])
 					}
-					// Determine version information for release process
+
+					def manualRelease = currentBuild.getBuildCauses().toString().contains( 'UserIdCause' )
+
 					def currentVersion = Version.parseDevelopmentVersion( sh(
 							script: ".release/scripts/determine-current-version.sh ${env.PROJECT}",
 							returnStdout: true
 					).trim() )
 					echo "Workspace version: ${currentVersion}"
+
 					def releaseVersion
 					def developmentVersion
 
-					if ( params.RELEASE_VERSION == null || params.RELEASE_VERSION.isEmpty() ) {
+					if ( manualRelease ) {
+						echo "Release was requested manually"
+
+						if ( !params.RELEASE_VERSION ) {
+						        throw new IllegalArgumentException( 'Missing value for parameter RELEASE_VERSION. This parameter must be set explicitly to prevent mistakes.' )
+						}
+						releaseVersion = Version.parseReleaseVersion( params.RELEASE_VERSION )
+
+						if ( releaseVersion.toString().startsWith( currentVersion.family + '.' ) ) {
+							throw new IllegalArgumentException( "RELEASE_VERSION = $releaseVersion, which is different from the family of CURRENT_VERSION = $currentVersion. Did you make a mistake?" )
+						}
+					}
+					else {
+						echo "Release was triggered automatically"
+
+						// Avoid doing a release for commits from a release
+						def lastCommitter = sh(script: 'git show -s --format=\'%an\'', returnStdout: true)
+						def secondLastCommitter = sh(script: 'git show -s --format=\'%an\' HEAD~1', returnStdout: true)
+						if (lastCommitter == 'Hibernate-CI' && secondLastCommitter == 'Hibernate-CI') {
+							print "INFO: Build skipped because last commits were for the previous release"
+							currentBuild.result = 'ABORTED'
+							return
+						}
+
 						releaseVersion = Version.parseReleaseVersion( sh(
 								script: ".release/scripts/determine-release-version.sh ${currentVersion}",
 								returnStdout: true
 						).trim() )
 					}
-					else {
-						releaseVersion = Version.parseReleaseVersion( params.RELEASE_VERSION )
-					}
 					echo "Release version: ${releaseVersion}"
 
-					if ( params.DEVELOPMENT_VERSION == null || params.DEVELOPMENT_VERSION.isEmpty() ) {
+					if ( !params.DEVELOPMENT_VERSION ) {
 						developmentVersion = Version.parseDevelopmentVersion( sh(
 								script: ".release/scripts/determine-development-version.sh ${releaseVersion}",
 								returnStdout: true

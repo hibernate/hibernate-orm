@@ -70,20 +70,23 @@ pipeline {
 						checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com', url: 'https://github.com/hibernate/hibernate-release-scripts.git']])
 					}
 					// Determine version information for release process
-					env.CURRENT_VERSION = sh(
+					def currentVersion = sh(
 							script: ".release/scripts/determine-current-version.sh ${env.PROJECT}",
 							returnStdout: true
 					).trim()
+					echo "Workspace version: ${currentVersion}"
 
 					if ( params.RELEASE_VERSION == null || params.RELEASE_VERSION.isEmpty() ) {
 						env.RELEASE_VERSION = sh(
-								script: ".release/scripts/determine-release-version.sh ${env.CURRENT_VERSION}",
+								script: ".release/scripts/determine-release-version.sh ${currentVersion}",
 								returnStdout: true
 						).trim()
 					}
 					else {
 						env.RELEASE_VERSION = params.RELEASE_VERSION
 					}
+					echo "Release version: ${env.RELEASE_VERSION}"
+
 					if ( params.DEVELOPMENT_VERSION == null || params.DEVELOPMENT_VERSION.isEmpty() ) {
 						env.DEVELOPMENT_VERSION = sh(
 								script: ".release/scripts/determine-development-version.sh ${env.RELEASE_VERSION}",
@@ -93,26 +96,17 @@ pipeline {
 					else {
 						env.DEVELOPMENT_VERSION = params.DEVELOPMENT_VERSION
 					}
-					env.VERSION_BASIS = sh(
+					echo "Development version: ${env.DEVELOPMENT_VERSION}"
+
+					def versionBasis = sh(
 							script: ".release/scripts/determine-version-basis.sh ${env.RELEASE_VERSION}",
 							returnStdout: true
 					).trim()
-					env.VERSION_FAMILY = sh(
-							script: ".release/scripts/determine-version-family.sh ${env.RELEASE_VERSION}",
-							returnStdout: true
-					).trim()
-					env.NEXT_VERSION_BASIS = sh(
-							script: ".release/scripts/determine-version-basis.sh ${env.DEVELOPMENT_VERSION}",
-							returnStdout: true
-					).trim()
+
 					env.SCRIPT_OPTIONS = params.RELEASE_DRY_RUN ? "-d" : ""
-					echo "Workspace version: ${env.CURRENT_VERSION}"
-					echo "Release version: ${env.RELEASE_VERSION}"
-					echo "Development version: ${env.DEVELOPMENT_VERSION}"
-					echo "Version family: ${env.VERSION_FAMILY}"
 
 					// Determine version id to check if Jira version exists
-					sh(script: ".release/scripts/determine-jira-version-id.sh ${env.JIRA_KEY} ${env.VERSION_BASIS}", returnStdout: true)
+					sh(script: ".release/scripts/determine-jira-version-id.sh ${env.JIRA_KEY} ${versionBasis}", returnStdout: true)
 				}
 			}
 		}

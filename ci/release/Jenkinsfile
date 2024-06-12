@@ -9,7 +9,9 @@
 /*
  * See https://github.com/hibernate/hibernate-jenkins-pipeline-helpers
  */
-@Library('hibernate-jenkins-pipeline-helpers@1.5') _
+@Library('hibernate-jenkins-pipeline-helpers@1.14') _
+
+import org.hibernate.jenkins.pipeline.helpers.version.Version
 
 // Avoid running the pipeline on branch indexing
 if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
@@ -70,38 +72,39 @@ pipeline {
 						checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com', url: 'https://github.com/hibernate/hibernate-release-scripts.git']])
 					}
 					// Determine version information for release process
-					def currentVersion = sh(
+					def currentVersion = Version.parseDevelopmentVersion( sh(
 							script: ".release/scripts/determine-current-version.sh ${env.PROJECT}",
 							returnStdout: true
-					).trim()
+					).trim() )
 					echo "Workspace version: ${currentVersion}"
+					def releaseVersion
+					def developmentVersion
 
 					if ( params.RELEASE_VERSION == null || params.RELEASE_VERSION.isEmpty() ) {
-						env.RELEASE_VERSION = sh(
+						releaseVersion = Version.parseReleaseVersion( sh(
 								script: ".release/scripts/determine-release-version.sh ${currentVersion}",
 								returnStdout: true
-						).trim()
+						).trim() )
 					}
 					else {
-						env.RELEASE_VERSION = params.RELEASE_VERSION
+						releaseVersion = Version.parseReleaseVersion( params.RELEASE_VERSION )
 					}
-					echo "Release version: ${env.RELEASE_VERSION}"
+					echo "Release version: ${releaseVersion}"
 
 					if ( params.DEVELOPMENT_VERSION == null || params.DEVELOPMENT_VERSION.isEmpty() ) {
-						env.DEVELOPMENT_VERSION = sh(
-								script: ".release/scripts/determine-development-version.sh ${env.RELEASE_VERSION}",
+						developmentVersion = Version.parseDevelopmentVersion( sh(
+								script: ".release/scripts/determine-development-version.sh ${releaseVersion}",
 								returnStdout: true
-						).trim()
+						).trim() )
 					}
 					else {
-						env.DEVELOPMENT_VERSION = params.DEVELOPMENT_VERSION
+						developmentVersion = Version.parseDevelopmentVersion( params.DEVELOPMENT_VERSION )
 					}
-					echo "Development version: ${env.DEVELOPMENT_VERSION}"
+					echo "Development version: ${developmentVersion}"
 
-					def versionBasis = sh(
-							script: ".release/scripts/determine-version-basis.sh ${env.RELEASE_VERSION}",
-							returnStdout: true
-					).trim()
+					env.RELEASE_VERSION = releaseVersion.toString()
+					env.DEVELOPMENT_VERSION = developmentVersion.toString()
+					def versionBasis = releaseVersion.unqualified
 
 					env.SCRIPT_OPTIONS = params.RELEASE_DRY_RUN ? "-d" : ""
 

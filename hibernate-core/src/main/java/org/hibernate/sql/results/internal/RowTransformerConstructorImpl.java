@@ -45,8 +45,8 @@ public class RowTransformerConstructorImpl<T> implements RowTransformer<T> {
 
 	private static Class<?> resolveElementJavaType(TupleElement<?> element) {
 		if ( element instanceof SqmExpressibleAccessor ) {
-			SqmExpressible expressible = ( (SqmExpressibleAccessor) element ).getExpressible();
-			if ( expressible != null ) {
+			final SqmExpressible<?> expressible = ( (SqmExpressibleAccessor<?>) element ).getExpressible();
+			if ( expressible != null && expressible.getExpressibleJavaType() != null ) {
 				return expressible.getExpressibleJavaType().getJavaTypeClass();
 			}
 		}

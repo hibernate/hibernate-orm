@@ -13,6 +13,14 @@
 
 import org.hibernate.jenkins.pipeline.helpers.version.Version
 
+def checkoutReleaseScripts() {
+	dir('.release/scripts') {
+		checkout scmGit(branches: [[name: '*/main']], extensions: [],
+				userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com',
+									 url: 'https://github.com/hibernate/hibernate-release-scripts.git']])
+	}
+}
+
 // Avoid running the pipeline on branch indexing
 if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
 	print "INFO: Build skipped due to trigger being Branch Indexing"
@@ -59,9 +67,7 @@ pipeline {
 		stage('Release check') {
 			steps {
 				script {
-					dir('.release/scripts') {
-						checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com', url: 'https://github.com/hibernate/hibernate-release-scripts.git']])
-					}
+					checkoutReleaseScripts()
 
 					def manualRelease = currentBuild.getBuildCauses().toString().contains( 'UserIdCause' )
 
@@ -130,10 +136,12 @@ pipeline {
 		stage('Release prepare') {
 			steps {
 				script {
-					dir('.release/scripts') {
-						checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com', url: 'https://github.com/hibernate/hibernate-release-scripts.git']])
-					}
-					configFileProvider([configFile(fileId: 'release.config.ssh', targetLocation: "${env.HOME}/.ssh/config"), configFile(fileId: 'release.config.ssh.knownhosts', targetLocation: "${env.HOME}/.ssh/known_hosts")]) {
+					checkoutReleaseScripts()
+
+					configFileProvider([
+							configFile(fileId: 'release.config.ssh', targetLocation: "${env.HOME}/.ssh/config"),
+							configFile(fileId: 'release.config.ssh.knownhosts', targetLocation: "${env.HOME}/.ssh/known_hosts")
+					]) {
 						withCredentials([
 							usernamePassword(credentialsId: 'ossrh.sonatype.org', passwordVariable: 'OSSRH_PASSWORD', usernameVariable: 'OSSRH_USER'),
 							usernamePassword(credentialsId: 'gradle-plugin-portal-api-key', passwordVariable: 'PLUGIN_PORTAL_PASSWORD', usernameVariable: 'PLUGIN_PORTAL_USERNAME'),
@@ -155,10 +163,12 @@ pipeline {
 		stage('Publish release') {
 			steps {
 				script {
-					dir('.release/scripts') {
-						checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com', url: 'https://github.com/hibernate/hibernate-release-scripts.git']])
-					}
-					configFileProvider([configFile(fileId: 'release.config.ssh', targetLocation: "${env.HOME}/.ssh/config"), configFile(fileId: 'release.config.ssh.knownhosts', targetLocation: "${env.HOME}/.ssh/known_hosts")]) {
+					checkoutReleaseScripts()
+
+					configFileProvider([
+							configFile(fileId: 'release.config.ssh', targetLocation: "${env.HOME}/.ssh/config"),
+							configFile(fileId: 'release.config.ssh.knownhosts', targetLocation: "${env.HOME}/.ssh/known_hosts")
+					]) {
 						withCredentials([
 							usernamePassword(credentialsId: 'ossrh.sonatype.org', passwordVariable: 'OSSRH_PASSWORD', usernameVariable: 'OSSRH_USER'),
 							usernamePassword(credentialsId: 'gradle-plugin-portal-api-key', passwordVariable: 'PLUGIN_PORTAL_PASSWORD', usernameVariable: 'PLUGIN_PORTAL_USERNAME'),
@@ -179,10 +189,12 @@ pipeline {
 		stage('Website release') {
 			steps {
 				script {
-					dir('.release/scripts') {
-						checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com', url: 'https://github.com/hibernate/hibernate-release-scripts.git']])
-					}
-					configFileProvider([configFile(fileId: 'release.config.ssh', targetLocation: "${env.HOME}/.ssh/config"), configFile(fileId: 'release.config.ssh.knownhosts', targetLocation: "${env.HOME}/.ssh/known_hosts")]) {
+					checkoutReleaseScripts()
+
+					configFileProvider([
+							configFile(fileId: 'release.config.ssh', targetLocation: "${env.HOME}/.ssh/config"),
+							configFile(fileId: 'release.config.ssh.knownhosts', targetLocation: "${env.HOME}/.ssh/known_hosts")
+					]) {
 						withCredentials([
 								gitUsernamePassword(credentialsId: 'username-and-token.Hibernate-CI.github.com', gitToolName: 'Default')
 						]) {
@@ -204,9 +216,7 @@ pipeline {
 		stage('GitHub release') {
 			steps {
 				script {
-					dir('.release/scripts') {
-						checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com', url: 'https://github.com/hibernate/hibernate-release-scripts.git']])
-					}
+					checkoutReleaseScripts()
 					withCredentials([string(credentialsId: 'Hibernate-CI.github.com', variable: 'GITHUB_API_TOKEN')]) {
 						sh ".release/scripts/github-release.sh ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION}"
 					}

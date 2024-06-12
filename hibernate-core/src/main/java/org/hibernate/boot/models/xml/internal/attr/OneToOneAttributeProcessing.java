@@ -59,7 +59,7 @@ public class OneToOneAttributeProcessing {
 		applyCascading( jaxbOneToOne.getCascade(), memberDetails, xmlDocumentContext );
 
 		TableProcessing.transformJoinTable( jaxbOneToOne.getJoinTable(), memberDetails, xmlDocumentContext );
-		JoinColumnProcessing.applyJoinColumns( jaxbOneToOne.getJoinColumn(), memberDetails, xmlDocumentContext );
+		JoinColumnProcessing.applyJoinColumnsOrFormula( jaxbOneToOne.getJoinColumns(), jaxbOneToOne.getJoinFormulas(), memberDetails, xmlDocumentContext );
 		JoinColumnProcessing.applyPrimaryKeyJoinColumns( jaxbOneToOne.getPrimaryKeyJoinColumn(), memberDetails, xmlDocumentContext );
 
 		if ( jaxbOneToOne.isId() == Boolean.TRUE ) {

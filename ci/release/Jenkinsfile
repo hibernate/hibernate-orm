@@ -95,11 +95,18 @@ pipeline {
 					else {
 						echo "Release was triggered automatically"
 
-						// Avoid doing a release for commits from a release
+						// Avoid doing an automatic release on a non-maintenance branch
+						if ( ! ( env.BRANCH_NAME ==~ /^\d+\.\d+$/ ) ) {
+							print "INFO: Automatic release skipped because the branch name doesn't follow pattern /^\\d+\\.\\d+\$/"
+							currentBuild.result = 'ABORTED'
+							return
+						}
+
+						// Avoid doing an automatic release for commits from a release
 						def lastCommitter = sh(script: 'git show -s --format=\'%an\'', returnStdout: true)
 						def secondLastCommitter = sh(script: 'git show -s --format=\'%an\' HEAD~1', returnStdout: true)
 						if (lastCommitter == 'Hibernate-CI' && secondLastCommitter == 'Hibernate-CI') {
-							print "INFO: Build skipped because last commits were for the previous release"
+							print "INFO: Automatic release skipped because last commits were for the previous release"
 							currentBuild.result = 'ABORTED'
 							return
 						}

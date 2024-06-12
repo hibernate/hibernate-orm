@@ -37,7 +37,7 @@ public @interface ParamDef {
 	 * Generally deduced from the bind value.  Allows to
 	 * specify a specific type to use.
 	 * <p>
-	 * The supplied Class can be one of the following:<ul>
+	 * The supplied {@link Class} may be one of the following:<ul>
 	 *     <li>
 	 *         a {@link org.hibernate.usertype.UserType}
 	 *     </li>
@@ -48,19 +48,21 @@ public @interface ParamDef {
 	 *         a {@link org.hibernate.type.descriptor.java.JavaType}
 	 *     </li>
 	 *     <li>
-	 *         any Java type resolvable from {@link org.hibernate.type.descriptor.java.spi.JavaTypeRegistry}
+	 *         any Java type resolvable from
+	 *         {@link org.hibernate.type.descriptor.java.spi.JavaTypeRegistry}
 	 *     </li>
 	 * </ul>
 	 */
 	Class<?> type();
 
 	/**
-	 * The resolver to use when retrieving the parameter value.
+	 * A class implementing {@link Supplier} which provides arguments
+	 * to this parameter. This is especially useful in the case of
+	 * {@linkplain FilterDef#autoEnabled auto-enabled} filters.
 	 * <p>
-	 * The parameter value can either be defined using the {@link org.hibernate.Filter setParameter}
-	 * method or by providing a resolver, that will be executed to retrieve the value.
-	 * <p>
-	 * The supplied Class must implement {@link Supplier}
+	 * When a resolver is specified for a filter parameter, it's not
+	 * necessary to provide an argument for the parameter by calling
+	 * {@link org.hibernate.Filter#setParameter(String, Object)}.
 	 */
 	Class<? extends Supplier> resolver() default Supplier.class;
 }

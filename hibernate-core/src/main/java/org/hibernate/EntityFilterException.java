@@ -13,12 +13,21 @@ import org.hibernate.annotations.FilterDef;
 import jakarta.persistence.EntityNotFoundException;
 
 /**
- * Exception thrown if a filter would make a to-one association {@code null},
- * which could lead to data loss.
- * Even though filters are applied to load-by-key operations,
- * a to-one association should never refer to an entity that is filtered.
+ * Thrown if an enabled {@linkplain FilterDef filter} would filter out
+ * the target of a {@link jakarta.persistence.ManyToOne @ManyToOne} or
+ * {@link jakarta.persistence.OneToOne @OneToOne} association.
+ * <p>
+ * By default, a filter does not apply to to-one association fetching,
+ * and this exception does not occur. However, if a filter is explicitly
+ * declared {@link FilterDef#applyToLoadByKey applyToLoadByKey = true},
+ * then the filter is applied, and it's possible that a filtered entity
+ * is the target of a to-one association belonging to an unfiltered entity.
+ * Replacing such a filtered object with {@code null} would lead to data
+ * loss, and so filtering never results in such replacement. Instead,
+ * this exception is thrown to indicate the inconsistency of the data
+ * with the filter definition.
  *
- * @see FilterDef#applyToLoadByKey()
+ * @see FilterDef#applyToLoadByKey
  */
 public class EntityFilterException extends EntityNotFoundException {
 	private final String entityName;

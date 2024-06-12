@@ -17,7 +17,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Specifies that an entity or collection is affected by a named
- * filter declared using {@link FilterDef}, and allows the
+ * filter declared using {@link FilterDef @FilterDef}, and allows the
  * {@linkplain FilterDef#defaultCondition default filter condition}
  * to be overridden for the annotated entity or collection role.
  * <p>

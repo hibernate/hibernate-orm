@@ -123,7 +123,7 @@ pipeline {
 					env.SCRIPT_OPTIONS = params.RELEASE_DRY_RUN ? "-d" : ""
 
 					// Determine version id to check if Jira version exists
-					sh(script: ".release/scripts/determine-jira-version-id.sh ${env.JIRA_KEY} ${versionBasis}", returnStdout: true)
+					sh ".release/scripts/determine-jira-version-id.sh ${env.JIRA_KEY} ${versionBasis}"
 				}
 			}
 		}

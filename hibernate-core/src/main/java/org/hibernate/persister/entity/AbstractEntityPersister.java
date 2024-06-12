@@ -4697,7 +4697,7 @@ public abstract class AbstractEntityPersister
 		for ( AttributeMapping generatedAttribute : generatedAttributes ) {
 			// todo (7.0) : support non selectable mappings? Component, ToOneAttributeMapping, ...
 			if ( generatedAttribute.asBasicValuedModelPart() != null
-					&& generatedAttribute.getContainingTableExpression().equals( getSubclassTableName( 0 ) ) ) {
+					&& generatedAttribute.getContainingTableExpression().equals( getRootTableName() ) ) {
 				generatedBasicAttributes.add( generatedAttribute );
 			}
 		}

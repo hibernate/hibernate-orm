@@ -13,6 +13,9 @@ import java.lang.annotation.Retention;
 
 import org.hibernate.Incubating;
 
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+
 /**
  * Allows to specify the target of a foreign-key using a "target attribute" as opposed to
  * join column(s).  E.g.
@@ -54,6 +57,9 @@ import org.hibernate.Incubating;
  *         Employee employee;
  *     }
  * </pre>
+ *
+ * @apiNote As Hibernate allows {@linkplain OneToMany#mappedBy()} and {@linkplain ManyToMany#mappedBy()} to refer
+ * to basic and embedded attributes already, this annotation is mainly useful for mapping to-one associations.
  *
  * @author Steve Ebersole
  */

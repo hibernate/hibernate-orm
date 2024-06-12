@@ -89,9 +89,8 @@ In any case, before the release:
 #### Performing the release
 
 Once you trigger the CI job, it automatically pushes artifacts to the
-[OSSRH repository manager](https://oss.sonatype.org/#stagingRepositories),
-the distribution to [SourceForge](https://sourceforge.net/projects/hibernate/files/hibernate-search/)
-and the documentation to [docs.jboss.org](https://docs.jboss.org/hibernate/search/).
+[OSSRH Maven Repository](https://repo1.maven.org/maven2/org/hibernate/orm/),
+and the documentation to [docs.jboss.org](https://docs.jboss.org/hibernate/orm/).
 
 * Do *not* mark the Jira Release as "released" or close issues,
   the release job does it for you.
@@ -105,7 +104,7 @@ and the documentation to [docs.jboss.org](https://docs.jboss.org/hibernate/searc
   * Note that for new branches where the job has never run, the first run may not ask for parameters and thus may fail:
     that's expected, just run it again.
 * After the job succeeds, check the artifacts are available on Maven Central:
-  https://repo1.maven.org/maven2/org/hibernate/hibernate-core/.
+  https://repo1.maven.org/maven2/org/hibernate/orm/hibernate-core/.
   They should appear after a few minutes, sometimes a few hours.
 
 #### Announcing the release
@@ -128,8 +127,8 @@ and the documentation to [docs.jboss.org](https://docs.jboss.org/hibernate/searc
 If you just released the latest stable, you will need to update other projects:
 
 * Approve and merge automatic updates that dependabot will send (it might take ~24h):
-  * In the [test case templates](https://github.com/hibernate/hibernate-test-case-templates/tree/master/search).
-  * In the [demos](https://github.com/hibernate/hibernate-demos/tree/master/hibernate-search).
+  * In the [test case templates](https://github.com/hibernate/hibernate-test-case-templates/tree/master/orm).
+  * In the [demos](https://github.com/hibernate/hibernate-demos/tree/master/hibernate-orm).
 * **If it's a `.Final` release**, upgrade the Hibernate ORM dependency manually:
   * In the [Quarkus BOM](https://github.com/quarkusio/quarkus/blob/main/bom/application/pom.xml).
   * In any other relevant project.

@@ -49,7 +49,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -650,17 +649,6 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	@Override
 	boolean isEnum(String className) {
 		TypeElement typeElement = elementUtil.getTypeElement( className );
-		int startIdx = 0;
-		int dollarIdx;
-		while ( typeElement == null && ( dollarIdx = className.indexOf( '$', startIdx ) ) != -1 ) {
-			final String potentialBaseTypeName = className.substring( 0, dollarIdx );
-			final TypeElement potentialBaseType = elementUtil.getTypeElement( potentialBaseTypeName );
-			if ( potentialBaseType != null ) {
-				className = potentialBaseTypeName + className.substring( dollarIdx + 1 );
-				typeElement = elementUtil.getTypeElement( className );
-			}
-			startIdx = dollarIdx + 1;
-		}
 		return typeElement != null && typeElement.getKind() == ElementKind.ENUM;
 	}
 

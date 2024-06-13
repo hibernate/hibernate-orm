@@ -378,34 +378,16 @@ public class CascadingActions {
 				Void context,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
-			if ( child != null
-					// a proxy is always non-transient
-					// and ForeignKeys.isTransient()
-					// is not written to expect a proxy
-					&& !isHibernateProxy( child ) ) {
-				// if it's associated with the session
-				// we are good, even if it's not yet
-				// inserted, since ordering problems
-				// are detected and handled elsewhere
-				final EntityEntry entry = session.getPersistenceContextInternal().getEntry( child );
-				if ( !isInManagedState( entry )
-						// TODO: check if it is a merged entity which has not yet been flushed
-						// Currently this throws if you directly reference a new transient
-						// instance after a call to merge() that results in its managed copy
-						// being scheduled for insertion, if the insert has not yet occurred.
-						// This is not terrible: it's more correct to "swap" the reference to
-						// point to the managed instance, but it's probably too heavy-handed.
-						&& ( entry != null && entry.getStatus() == Status.DELETED || isTransient( entityName, child, null, session ) ) ) {
-					throw new TransientObjectException( "persistent instance references an unsaved transient instance of '" +
-									entityName + "' (save the transient instance before flushing)" );
-					//TODO: should be TransientPropertyValueException
+			if ( child != null && isChildTransient( session, child, entityName ) ) {
+				throw new TransientObjectException( "persistent instance references an unsaved transient instance of '"
+						+ entityName + "' (save the transient instance before flushing)" );
+				//TODO: should be TransientPropertyValueException
 //				throw new TransientPropertyValueException(
 //						"object references an unsaved transient instance - save the transient instance before flushing",
 //						entityName,
 //						persister.getEntityName(),
 //						persister.getPropertyNames()[propertyIndex]
 //				);
-				}
 			}
 		}
 
@@ -443,18 +425,31 @@ public class CascadingActions {
 		}
 	};
 
-	private static boolean isInManagedState(EntityEntry entry) {
-		if ( entry == null ) {
+	private static boolean isChildTransient(EventSource session, Object child, String entityName) {
+		if ( isHibernateProxy( child ) ) {
+			// a proxy is always non-transient
+			// and ForeignKeys.isTransient()
+			// is not written to expect a proxy
+			// TODO: but the proxied entity might have been deleted!
 			return false;
 		}
 		else {
-			switch ( entry.getStatus() ) {
-				case MANAGED:
-				case READ_ONLY:
-				case SAVING:
-					return true;
-				default:
-					return false;
+			final EntityEntry entry = session.getPersistenceContextInternal().getEntry( child );
+			if ( entry != null ) {
+				// if it's associated with the session
+				// we are good, even if it's not yet
+				// inserted, since ordering problems
+				// are detected and handled elsewhere
+				return entry.getStatus().isDeletedOrGone();
+			}
+			else {
+				// TODO: check if it is a merged entity which has not yet been flushed
+				// Currently this throws if you directly reference a new transient
+				// instance after a call to merge() that results in its managed copy
+				// being scheduled for insertion, if the insert has not yet occurred.
+				// This is not terrible: it's more correct to "swap" the reference to
+				// point to the managed instance, but it's probably too heavy-handed.
+				return isTransient( entityName, child, null, session );
 			}
 		}
 	}

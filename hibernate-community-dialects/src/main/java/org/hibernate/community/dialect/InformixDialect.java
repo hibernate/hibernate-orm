@@ -714,4 +714,8 @@ public class InformixDialect extends Dialect {
 		return "null::" + typeName;
 	}
 
+	@Override
+	public String getNoColumnsInsertString() {
+		return "values (0)";
+	}
 }

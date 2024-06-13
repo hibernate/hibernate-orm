@@ -23,6 +23,7 @@ import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.internal.TableInsertStandard;
 
 /**
  * A SQL AST translator for Informix.
@@ -172,6 +173,12 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			String nullString = getDialect().getSelectClauseNullString( sqlType, getSessionFactory().getTypeConfiguration() );
 			appendSql( nullString );
 		}
+	}
+
+	@Override
+	protected void renderInsertIntoNoColumns(TableInsertStandard tableInsert) {
+		renderIntoIntoAndTable( tableInsert );
+		appendSql( "values (0)" );
 	}
 
 	private boolean supportsParameterOffsetFetchExpression() {

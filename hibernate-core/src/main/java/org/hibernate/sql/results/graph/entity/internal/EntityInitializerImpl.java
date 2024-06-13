@@ -79,6 +79,7 @@ import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCH
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
+import static org.hibernate.metamodel.mapping.ForeignKeyDescriptor.Nature.TARGET;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
@@ -664,6 +665,14 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 					data.concreteDescriptor.getIdentifier( data.getInstance(), session )
 			);
 			data.entityHolder = session.getPersistenceContextInternal().getEntityHolder( data.entityKey );
+			if ( data.entityHolder == null ) {
+				// Entity was most probably removed in the same session without setting the reference to null
+				resolveKey( data );
+				assert data.getState() == State.MISSING;
+				assert referencedModelPart instanceof ToOneAttributeMapping
+						&& ( (ToOneAttributeMapping) referencedModelPart ).getSideNature() == TARGET;
+				return;
+			}
 			// If the entity initializer is null, we know the entity is fully initialized,
 			// otherwise it will be initialized by some other initializer
 			data.setState( data.entityHolder.getEntityInitializer() == null ? State.INITIALIZED : State.RESOLVED );

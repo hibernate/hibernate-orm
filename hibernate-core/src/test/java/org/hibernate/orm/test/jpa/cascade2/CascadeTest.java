@@ -9,6 +9,8 @@ package org.hibernate.orm.test.jpa.cascade2;
 import org.hibernate.Session;
 
 import org.hibernate.TransientObjectException;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.model.AbstractJPATest;
 import org.junit.jupiter.api.Test;
 
@@ -36,6 +38,11 @@ public class CascadeTest extends AbstractJPATest {
 	@Override
 	protected String[] getOrmXmlFiles() {
 		return new String[] { "org/hibernate/orm/test/jpa/cascade2/ParentChild.hbm.xml" };
+	}
+
+	@Override
+	protected void applySettings(StandardServiceRegistryBuilder builder) {
+		builder.applySetting( AvailableSettings.UNOWNED_ASSOCIATION_TRANSIENT_CHECK, "true" );
 	}
 
 	@Test

@@ -24,7 +24,6 @@ import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.TaskProvider;
-import org.gradle.api.tasks.testing.Test;
 
 /**
  * Models a publishable Jakartafied project
@@ -209,7 +208,7 @@ public class JakartaPublishingPlugin implements Plugin<Project> {
 			}
 		}
 		else {
-			mainJarTask = (TaskProvider) tasks.named( jarTaskName );
+			mainJarTask = tasks.named( jarTaskName, JakartaJarTransformation.class );
 		}
 
 		variantConfig.getOutgoing().artifact(

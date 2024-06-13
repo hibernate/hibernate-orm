@@ -41,7 +41,7 @@ import static org.hibernate.type.SqlTypes.*;
  *
  * @author Christian Beikov
  */
-class SumReturnTypeResolver implements FunctionReturnTypeResolver {
+public class SumReturnTypeResolver implements FunctionReturnTypeResolver {
 
 	private final BasicType<Long> longType;
 	private final BasicType<Double> doubleType;

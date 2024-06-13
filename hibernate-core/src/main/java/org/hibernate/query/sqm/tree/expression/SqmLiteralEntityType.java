@@ -17,12 +17,14 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
+import static org.hibernate.persister.entity.DiscriminatorHelper.getDiscriminatorType;
+
 /**
- * Represents an reference to an entity type as a literal.  This is the JPA
- * terminology for cases when we have something like: {@code ... where TYPE(e) = SomeType}.
- * The token {@code SomeType} is an "entity type literal".
- *
- * An entity type expression can be used to restrict query polymorphism. The TYPE operator returns the exact type of the argument.
+ * Represents a reference to an entity type as a literal.
+ * In a restriction like {@code where TYPE(e) = SomeType},
+ * the token {@code SomeType} is used to restrict query
+ * polymorphism. The {@code TYPE} operator returns the
+ * exact concrete type of the argument.
  *
  * @author Steve Ebersole
  */
@@ -32,7 +34,7 @@ public class SqmLiteralEntityType<T>
 	private final EntityDomainType<T> entityType;
 
 	public SqmLiteralEntityType(EntityDomainType<T> entityType, NodeBuilder nodeBuilder) {
-		super( entityType, nodeBuilder );
+		super( getDiscriminatorType( entityType, nodeBuilder ), nodeBuilder );
 		this.entityType = entityType;
 	}
 

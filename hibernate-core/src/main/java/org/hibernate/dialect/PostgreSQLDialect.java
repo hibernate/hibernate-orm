@@ -90,6 +90,7 @@ import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -152,7 +153,7 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	public PostgreSQLDialect(DialectResolutionInfo info) {
-		this( info, PostgreSQLDriverKind.determineKind( info ) );
+		this( info.makeCopyOrDefault( MINIMUM_VERSION ), PostgreSQLDriverKind.determineKind( info ) );
 		registerKeywords( info );
 	}
 
@@ -280,6 +281,7 @@ public class PostgreSQLDialect extends Dialect {
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
 
 		ddlTypeRegistry.addDescriptor( new NamedNativeEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NamedNativeOrdinalEnumDdlTypeImpl( this ) );
 	}
 
 	@Override
@@ -902,6 +904,11 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean useConnectionToCreateLob() {
+		return false;
+	}
+
+	@Override
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
 		// TODO: adapt this to handle named enum types!
 		// Workaround for postgres bug #1453
@@ -1469,8 +1476,11 @@ public class PostgreSQLDialect extends Dialect {
 				)
 		);
 
-		jdbcTypeRegistry.addDescriptor( new PostgreSQLEnumJdbcType() );
+		jdbcTypeRegistry.addDescriptor( PostgreSQLEnumJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( PostgreSQLOrdinalEnumJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( PostgreSQLUUIDJdbcType.INSTANCE );
+
+		jdbcTypeRegistry.addTypeConstructor( PostgreSQLArrayJdbcTypeConstructor.INSTANCE );
 	}
 
 	@Override

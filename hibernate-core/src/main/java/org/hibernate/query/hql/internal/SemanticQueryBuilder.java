@@ -2603,7 +2603,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				ctx = ctx.getChild( 0 );
 
 				if ( ctx instanceof HqlParser.SimplePathContext ) {
-					return creationContext.getJpaMetamodel().getAllowedEnumLiteralTexts( ctx.getText() );
+					return creationContext.getJpaMetamodel().getEnumTypesForValue( ctx.getText() );
 				}
 			}
 		}
@@ -5256,7 +5256,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 			final List<SqmSelection<?>> selections = subQuery.getQuerySpec().getSelectClause().getSelections();
 			if ( selections.size() == 1 ) {
-				subQuery.applyInferableType( selections.get( 0 ).getNodeType() );
+				subQuery.applyInferableType( selections.get( 0 ).getExpressible().getSqmType() );
 			}
 
 			return subQuery;
@@ -5481,14 +5481,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		consumeManagedTypeReference( ctx.path() );
 
 		final String treatTargetName = ctx.simplePath().getText();
-		final String treatTargetEntityName =
-				getCreationContext().getJpaMetamodel().qualifyImportableName( treatTargetName );
-		if ( treatTargetEntityName == null ) {
+		final String importableName = getCreationContext().getJpaMetamodel().qualifyImportableName( treatTargetName );
+		if ( importableName == null ) {
 			throw new SemanticException( "Could not resolve treat target type '" + treatTargetName + "'", query );
 		}
 
 		final boolean hasContinuation = ctx.getChildCount() == 7;
-		consumer.consumeTreat( treatTargetEntityName, !hasContinuation );
+		consumer.consumeTreat( importableName, !hasContinuation );
 		SqmPath<?> result = (SqmPath<?>) consumer.getConsumedPart();
 
 		if ( hasContinuation ) {

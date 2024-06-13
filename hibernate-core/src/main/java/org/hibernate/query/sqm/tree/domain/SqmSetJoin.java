@@ -9,7 +9,9 @@ package org.hibernate.query.sqm.tree.domain;
 import java.util.Set;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
+import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaExpression;
@@ -116,8 +118,8 @@ public class SqmSetJoin<O, E>
 	}
 
 	@Override
-	public <S extends E> SqmTreatedSetJoin<O,E,S> treatAs(Class<S> treatAsType) {
-		return treatAs( nodeBuilder().getDomainModel().entity( treatAsType ) );
+	public <S extends E> SqmTreatedSetJoin<O,E,S> treatAs(Class<S> treatJavaType) {
+		return treatAs( treatJavaType, null );
 	}
 
 	@Override
@@ -127,7 +129,7 @@ public class SqmSetJoin<O, E>
 
 	@Override
 	public <S extends E> SqmTreatedSetJoin<O,E,S> treatAs(Class<S> treatJavaType, String alias) {
-		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias );
+		return treatAs( treatJavaType, alias, false );
 	}
 
 	@Override
@@ -136,8 +138,18 @@ public class SqmSetJoin<O, E>
 	}
 
 	@Override
-	public <S extends E> SqmTreatedSetJoin<O,E,S> treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
-		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias, fetch );
+	public <S extends E> SqmTreatedSetJoin<O, E, S> treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
+		final ManagedDomainType<S> treatTarget = nodeBuilder().getDomainModel().managedType( treatJavaType );
+		final SqmTreatedSetJoin<O, E, S> treat = findTreat( treatTarget, alias );
+		if ( treat == null ) {
+			if ( treatTarget instanceof TreatableDomainType<?> ) {
+				return addTreat( new SqmTreatedSetJoin<>( this, (TreatableDomainType<S>) treatTarget, alias, fetch ) );
+			}
+			else {
+				throw new IllegalArgumentException( "Not a treatable type: " + treatJavaType.getName() );
+			}
+		}
+		return treat;
 	}
 
 	@Override

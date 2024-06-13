@@ -119,19 +119,6 @@ public class SelfRenderingFunctionSqlAstExpression
 			int jdbcPosition,
 			int valuesArrayPosition,
 			JavaType javaType,
-			TypeConfiguration typeConfiguration) {
-		return new SqlSelectionImpl(
-				jdbcPosition,
-				valuesArrayPosition,
-				this,
-				false
-		);
-	}
-	@Override
-	public SqlSelection createSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			JavaType javaType,
 			boolean virtual,
 			TypeConfiguration typeConfiguration) {
 		return new SqlSelectionImpl(
@@ -174,7 +161,10 @@ public class SelfRenderingFunctionSqlAstExpression
 						.getValuesArrayPosition(),
 				resultVariable,
 				type == null ? null : type.getExpressibleJavaType(),
-				converter
+				converter,
+				null,
+				false,
+				false
 		);
 	}
 

@@ -24,6 +24,7 @@ import org.hibernate.Remove;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
+import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -34,27 +35,37 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
+import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentifierGenerationException;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.mapping.DiscriminatorConverter;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
+import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorConverter;
+import org.hibernate.metamodel.mapping.internal.DiscriminatorTypeImpl;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.persister.entity.DiscriminatorHelper;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.UserComponentType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.usertype.CompositeUserType;
 
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.mapping.MappingHelper.checkPropertyColumnDuplication;
+import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
 
 /**
  * A mapping model object that represents an {@linkplain jakarta.persistence.Embeddable embeddable class}.
@@ -76,6 +87,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private Boolean isGeneric;
 	private String roleName;
 	private Value discriminator;
+	private transient DiscriminatorType<?> discriminatorType;
 	private Map<Object, String> discriminatorValues;
 	private Map<String, String> subclassToSuperclass;
 
@@ -93,7 +105,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	private AggregateColumn aggregateColumn;
 	private AggregateColumn parentAggregateColumn;
-	private String structName;
+	private QualifiedName structName;
 	private String[] structColumnNames;
 	private transient Class<?> componentClass;
 	// lazily computed based on 'properties' field: invalidate by setting to null when properties are modified
@@ -307,11 +319,11 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		this.parentAggregateColumn = parentAggregateColumn;
 	}
 
-	public String getStructName() {
+	public QualifiedName getStructName() {
 		return structName;
 	}
 
-	public void setStructName(String structName) {
+	public void setStructName(QualifiedName structName) {
 		this.structName = structName;
 	}
 
@@ -612,6 +624,30 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		this.discriminator = discriminator;
 	}
 
+	public DiscriminatorType<?> getDiscriminatorType() {
+		DiscriminatorType<?> type = discriminatorType;
+		if ( type == null ) {
+			type = discriminatorType = buildDiscriminatorType();
+		}
+		return type;
+	}
+
+	private DiscriminatorType<?> buildDiscriminatorType() {
+		return getBuildingContext().getMetadataCollector().resolveEmbeddableDiscriminatorType( getComponentClass(), () -> {
+			final JavaTypeRegistry javaTypeRegistry = getTypeConfiguration().getJavaTypeRegistry();
+			final JavaType<String> domainJavaType = javaTypeRegistry.resolveDescriptor( Class.class );
+			final BasicType<?> discriminatorType = DiscriminatorHelper.getDiscriminatorType( this );
+			final DiscriminatorConverter<String, ?> converter = EmbeddableDiscriminatorConverter.fromValueMappings(
+					qualify( getComponentClassName(), DISCRIMINATOR_ROLE_NAME ),
+					domainJavaType,
+					discriminatorType,
+					getDiscriminatorValues(),
+					getServiceRegistry()
+			);
+			return new DiscriminatorTypeImpl<>( discriminatorType, converter );
+		} );
+	}
+
 	public boolean isPolymorphic() {
 		return discriminator != null;
 	}
@@ -680,10 +716,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 		final CompositeNestedGeneratedValueGenerator.GenerationContextLocator locator =
 				new StandardGenerationContextLocator( rootClass.getEntityName() );
-		final CompositeNestedGeneratedValueGenerator generator = new CompositeNestedGeneratedValueGenerator(
-				locator,
-				getType()
-		);
+		final CompositeNestedGeneratedValueGenerator generator =
+				new CompositeNestedGeneratedValueGenerator( locator, getType() );
 
 		final List<Property> properties = getProperties();
 		for ( int i = 0; i < properties.size(); i++ ) {
@@ -784,8 +818,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 		@Override
 		public void initialize(SqlStringGenerationContext context) {
-			if ( subgenerator instanceof IdentifierGenerator ) {
-				( (IdentifierGenerator) subgenerator).initialize( context );
+			if ( subgenerator instanceof Configurable) {
+				( (Configurable) subgenerator).initialize( context );
 			}
 		}
 	}

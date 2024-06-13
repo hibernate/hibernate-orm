@@ -267,7 +267,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		if ( currentClause == Clause.GROUP || currentClause == Clause.ORDER ) {
 			assert sqlAstCreationState.getCurrentSqmQueryPart().isSimpleQueryPart();
 			final SqmQuerySpec<?> querySpec = sqlAstCreationState.getCurrentSqmQueryPart().getFirstQuerySpec();
-			if ( currentClause == Clause.ORDER && !querySpec.groupByClauseContains( navigablePath ) ) {
+			if ( currentClause == Clause.ORDER && !querySpec.groupByClauseContains( navigablePath, sqlAstCreationState ) ) {
 				// We must ensure that the order by expression be expanded but only if the group by
 				// contained the same expression, and that was expanded as well
 				expandToAllColumns = false;

@@ -115,7 +115,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public Object insert(Object entity) {
-		checkOpen();
 		return insert( null, entity );
 	}
 
@@ -125,14 +124,14 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		final EntityPersister persister = getEntityPersister( entityName, entity );
 		final Object id;
 		final Object[] state = persister.getValues( entity );
+		if ( persister.isVersioned() ) {
+			if ( seedVersion( entity, state, persister, this ) ) {
+				persister.setValues( entity, state );
+			}
+		}
 		final Generator generator = persister.getGenerator();
 		if ( !generator.generatedOnExecution( entity, this ) ) {
 			id = ( (BeforeExecutionGenerator) generator).generate( this, entity, null, INSERT );
-			if ( persister.isVersioned() ) {
-				if ( seedVersion( entity, state, persister, this ) ) {
-					persister.setValues( entity, state );
-				}
-			}
 			if ( firePreInsert(entity, id, state, persister) ) {
 				return id;
 			}
@@ -170,7 +169,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public void delete(Object entity) {
-		checkOpen();
 		delete( null, entity );
 	}
 
@@ -205,13 +203,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public void update(Object entity) {
-		checkOpen();
 		update( null, entity );
 	}
 
 	@Override
 	public void upsert(Object entity) {
-		checkOpen();
 		upsert( null, entity );
 	}
 
@@ -527,6 +523,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public void refresh(String entityName, Object entity, LockMode lockMode) {
+		checkOpen();
 		final EntityPersister persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
 		if ( LOG.isTraceEnabled() ) {
@@ -568,6 +565,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public void initializeCollection(PersistentCollection<?> collection, boolean writing)
 			throws HibernateException {
+		checkOpen();
 		final PersistenceContext persistenceContext = getPersistenceContextInternal();
 		final CollectionEntry ce = persistenceContext.getCollectionEntry( collection );
 		if ( ce == null ) {
@@ -767,6 +765,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				}
 			}
 		}
+	}
+
+	@Override
+	public Object getIdentifier(Object entity) throws HibernateException {
+		checkOpen();
+		return getFactory().getPersistenceUnitUtil().getIdentifier(entity);
 	}
 
 	@Override

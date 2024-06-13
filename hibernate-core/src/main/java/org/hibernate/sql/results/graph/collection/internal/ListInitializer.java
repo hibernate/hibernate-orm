@@ -7,7 +7,7 @@
 package org.hibernate.sql.results.graph.collection.internal;
 
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -20,8 +20,9 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerData;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -31,7 +32,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * 
  * @author Steve Ebersole
  */
-public class ListInitializer extends AbstractImmediateCollectionInitializer {
+public class ListInitializer extends AbstractImmediateCollectionInitializer<AbstractImmediateCollectionInitializer.ImmediateCollectionInitializerData> {
 	private static final String CONCRETE_NAME = ListInitializer.class.getSimpleName();
 
 	private final DomainResultAssembler<Integer> listIndexAssembler;
@@ -42,18 +43,18 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer {
 	public ListInitializer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attributeMapping,
-			FetchParentAccess parentAccess,
+			InitializerParent<?> parent,
 			LockMode lockMode,
 			DomainResult<?> collectionKeyResult,
 			DomainResult<?> collectionValueKeyResult,
-			Fetch listIndexFetch,
-			Fetch elementFetch,
 			boolean isResultInitializer,
-			AssemblerCreationState creationState) {
+			AssemblerCreationState creationState,
+			Fetch listIndexFetch,
+			Fetch elementFetch) {
 		super(
 				navigablePath,
 				attributeMapping,
-				parentAccess,
+				parent,
 				lockMode,
 				collectionKeyResult,
 				collectionValueKeyResult,
@@ -72,14 +73,17 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer {
 	}
 
 	@Override
-	protected void forEachAssembler(Consumer<DomainResultAssembler<?>> consumer) {
-		consumer.accept( listIndexAssembler );
-		consumer.accept( elementAssembler );
+	protected void forEachSubInitializer(BiConsumer<Initializer<?>, RowProcessingState> consumer, InitializerData data) {
+		super.forEachSubInitializer( consumer, data );
+		final Initializer<?> initializer = elementAssembler.getInitializer();
+		if ( initializer != null ) {
+			consumer.accept( initializer, data.getRowProcessingState() );
+		}
 	}
 
 	@Override
-	public @Nullable PersistentList<?> getCollectionInstance() {
-		return (PersistentList<?>) super.getCollectionInstance();
+	public @Nullable PersistentList<?> getCollectionInstance(ImmediateCollectionInitializerData data) {
+		return (PersistentList<?>) super.getCollectionInstance( data );
 	}
 
 	@Override
@@ -111,15 +115,39 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer {
 	}
 
 	@Override
-	protected void initializeSubInstancesFromParent(RowProcessingState rowProcessingState) {
-		final Initializer initializer = elementAssembler.getInitializer();
+	protected void initializeSubInstancesFromParent(ImmediateCollectionInitializerData data) {
+		final Initializer<?> initializer = elementAssembler.getInitializer();
 		if ( initializer != null ) {
-			final PersistentList<?> list = getCollectionInstance();
+			final RowProcessingState rowProcessingState = data.getRowProcessingState();
+			final PersistentList<?> list = getCollectionInstance( data );
 			assert list != null;
 			for ( Object element : list ) {
 				initializer.initializeInstanceFromParent( element, rowProcessingState );
 			}
 		}
+	}
+
+	@Override
+	protected void resolveInstanceSubInitializers(ImmediateCollectionInitializerData data) {
+		final Initializer<?> initializer = elementAssembler.getInitializer();
+		if ( initializer != null ) {
+			final RowProcessingState rowProcessingState = data.getRowProcessingState();
+			final PersistentList<?> list = getCollectionInstance( data );
+			assert list != null;
+			for ( Object element : list ) {
+				initializer.resolveInstance( element, rowProcessingState );
+			}
+		}
+	}
+
+	@Override
+	public DomainResultAssembler<?> getIndexAssembler() {
+		return listIndexAssembler;
+	}
+
+	@Override
+	public DomainResultAssembler<?> getElementAssembler() {
+		return elementAssembler;
 	}
 
 	@Override

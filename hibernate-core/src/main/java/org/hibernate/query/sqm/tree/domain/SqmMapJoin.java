@@ -11,7 +11,9 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
+import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaExpression;
@@ -136,7 +138,7 @@ public class SqmMapJoin<O, K, V>
 
 	@Override
 	public <S extends V> SqmTreatedMapJoin<O, K, V, S> treatAs(Class<S> treatJavaType) {
-		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+		return treatAs( treatJavaType, null );
 	}
 
 	@Override
@@ -146,7 +148,7 @@ public class SqmMapJoin<O, K, V>
 
 	@Override
 	public <S extends V> SqmTreatedMapJoin<O, K, V, S> treatAs(Class<S> treatJavaType, String alias) {
-		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias );
+		return treatAs( treatJavaType, alias, false );
 	}
 
 	@Override
@@ -156,7 +158,17 @@ public class SqmMapJoin<O, K, V>
 
 	@Override
 	public <S extends V> SqmTreatedMapJoin<O, K, V, S> treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
-		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias, fetch );
+		final ManagedDomainType<S> treatTarget = nodeBuilder().getDomainModel().managedType( treatJavaType );
+		final SqmTreatedMapJoin<O, K, V, S> treat = findTreat( treatTarget, alias );
+		if ( treat == null ) {
+			if ( treatTarget instanceof TreatableDomainType<?> ) {
+				return addTreat( new SqmTreatedMapJoin<>( this, (TreatableDomainType<S>) treatTarget, alias, fetch ) );
+			}
+			else {
+				throw new IllegalArgumentException( "Not a treatable type: " + treatJavaType.getName() );
+			}
+		}
+		return treat;
 	}
 
 	@Override

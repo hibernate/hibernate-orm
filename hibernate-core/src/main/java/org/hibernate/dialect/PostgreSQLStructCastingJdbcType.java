@@ -89,6 +89,11 @@ public class PostgreSQLStructCastingJdbcType extends AbstractPostgreSQLStructJdb
 				);
 				st.setString( name, stringValue );
 			}
+
+			@Override
+			public Object getBindValue(X value, WrapperOptions options) throws SQLException {
+				return ( (PostgreSQLStructCastingJdbcType) getJdbcType() ).getBindValue( value, options );
+			}
 		};
 	}
 }

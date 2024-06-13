@@ -1,4 +1,4 @@
-= Hibernate 6.6.0.Alpha1
+= Hibernate 6.6.0.Final
 Steve Ebersole
 :awestruct-tags: ["Hibernate ORM", "Releases"]
 :awestruct-layout: blog-post
@@ -200,3 +200,34 @@ create table TestEntity (
 ----
 
 For more detailed information please refer to the link:{user-guide-url}#embeddable-inheritance[Embeddable inheritance] user guide chapter.
+
+[[oracle-vector]]
+== Oracle Vector support
+
+Oracle engineers contributed the support for vector data types and functions to the `hibernate-vector` module
+to use with Oracle database version 23.4 and newer.
+
+For further information about vectors, consult the link:https://docs.oracle.com/en/database/oracle/oracle-database/23/vecse/overview-node.html[Oracle documentation].
+
+[[one-to-many-mapped-by-any]]
+== `@OneToMany(mappedBy)` support for `@Any`
+
+So far, the target of `@OneToMany` had to be a `@ManyToOne`. To map a `@OneToMany` based on an any association,
+it was necessary to spell out a custom `@SQLRestriction` and specify the join columns.
+
+Targeting an `@Any` association is now supported and will default to the appropriate join columns,
+as well as add a `@SQLRestriction` to the `@OneToMany` automatically.
+
+[[apply-filter-to-load-by-key]]
+== `@Filter` support for load by key
+
+Filters can opt in to be applicable also to find by key operations
+like `Session.find()`, lazy initialization and to-one association fetching,
+by setting `@FilterDef(applyToLoadByKey = true)`.
+
+If the target row of an association is filtered by such a load by key enabled filter,
+Hibernate ORM will throw a `EntityFilterException` to prevent potential data loss
+that can happen when flushing an entity that owns such an association.
+
+Also, the `@TenantId` filter was changed to apply to load by key operations by default.
+

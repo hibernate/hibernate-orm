@@ -72,6 +72,10 @@ public interface StatelessSession extends SharedSessionContract {
 	/**
 	 * Insert a record.
 	 * <p>
+	 * If the entity {@code @Id} field is declared to be generated,
+	 * for example, if it is annotated {@code @GeneratedId}, the id
+	 * is generated and assigned to the given instance.
+	 * <p>
 	 * The {@link jakarta.persistence.PostPersist} callback will be
 	 * triggered if the operation is successful.
 	 *
@@ -140,9 +144,20 @@ public interface StatelessSession extends SharedSessionContract {
 	 * Use a SQL {@code merge into} statement to perform an upsert,
 	 * that is, to insert the record if it does not exist, or update
 	 * it if it already exists.
+	 * <p>
+	 * This method never performs id generation, and does not accept
+	 * an entity instance with a null identifier. When id generation
+	 * is required, use {@link #insert(Object)}.
+	 * <p>
+	 * On the other hand, {@code upsert()} does accept an entity
+	 * instance with an assigned identifier value, even if the entity
+	 * {@code @Id} field is declared to be generated, for example, if
+	 * it is annotated {@code @GeneratedId}. Thus, this method may be
+	 * used to import data from an external source.
 	 *
-	 * @param entity a detached entity instance
-	 * @throws TransientObjectException is the entity is transient
+	 * @param entity a detached entity instance, or a new instance
+	 *               with an assigned identifier
+	 * @throws TransientObjectException is the entity has a null id
 	 *
 	 * @since 6.3
 	 */
@@ -154,7 +169,7 @@ public interface StatelessSession extends SharedSessionContract {
 	 *
 	 * @param entityName The entityName for the entity to be merged
 	 * @param entity a detached entity instance
-	 * @throws TransientObjectException is the entity is transient
+	 * @throws TransientObjectException is the entity has a null id
 	 *
 	 * @since 6.3
 	 */
@@ -286,4 +301,15 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @since 6.0
 	 */
 	void fetch(Object association);
+
+	/**
+	 * Return the identifier value of the given entity, which may be detached.
+	 *
+	 * @param entity a persistent instance associated with this session
+	 *
+	 * @return the identifier
+	 *
+	 * @since 6.6
+	 */
+	Object getIdentifier(Object entity);
 }

@@ -6,46 +6,55 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.internal.log.LoggingHelper;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+import org.hibernate.sql.results.graph.InitializerParent;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Andrea Boriero
  */
-public class SelectEagerCollectionInitializer extends AbstractCollectionInitializer {
+public class SelectEagerCollectionInitializer extends AbstractCollectionInitializer<AbstractCollectionInitializer.CollectionInitializerData> {
 
 	public SelectEagerCollectionInitializer(
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedMapping,
-			FetchParentAccess parentAccess,
+			InitializerParent<?> parent,
 			@Nullable DomainResult<?> collectionKeyResult,
 			AssemblerCreationState creationState) {
-		super( fetchedPath, fetchedMapping, parentAccess, collectionKeyResult, false, creationState );
+		super( fetchedPath, fetchedMapping, parent, collectionKeyResult, false, creationState );
 	}
 
 	@Override
-	public void resolveInstance(RowProcessingState rowProcessingState) {
-		resolveInstance( rowProcessingState, true );
+	public void resolveInstance(CollectionInitializerData data) {
+		resolveInstance( data, true );
 	}
 
 	@Override
-	public void initializeInstance(RowProcessingState rowProcessingState) {
+	public void resolveInstance(@Nullable Object instance, CollectionInitializerData data) {
+		resolveInstance( instance, data, true );
 	}
 
 	@Override
-	public void finishUpRow(RowProcessingState rowProcessingState) {
-		super.finishUpRow( rowProcessingState );
-		// Chances are pretty low that we can reuse the collection key,
-		// so set it to null in order to avoid an additional equals collection key comparison
-		collectionKey = null;
-		collectionInstance = null;
+	public void initializeInstanceFromParent(Object parentInstance, CollectionInitializerData data) {
+		final Object instance = getInitializedPart().getValue( parentInstance );
+		if ( collectionAttributeMapping.getCollectionDescriptor()
+				.getCollectionSemantics()
+				.getCollectionClassification() == CollectionClassification.ARRAY ) {
+			data.setCollectionInstance( data.getRowProcessingState().getSession().getPersistenceContextInternal()
+					.getCollectionHolder( instance ) );
+		}
+		else {
+			data.setCollectionInstance( (PersistentCollection<?>) instance );
+		}
+		data.setState( State.INITIALIZED );
+		data.getCollectionInstance().forceInitialization();
 	}
 
 	@Override

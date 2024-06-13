@@ -967,7 +967,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		return aggregateColumn == null
 				? jdbcTypeCode
 				: getDialect().getAggregateSupport()
-				.aggregateComponentSqlTypeCode( aggregateColumn.getSqlTypeCode(), jdbcTypeCode );
+				.aggregateComponentSqlTypeCode( aggregateColumn.getSqlTypeCode( getMetadata() ), jdbcTypeCode );
 	}
 
 	@Override

@@ -7,7 +7,7 @@
 package org.hibernate.sql.results.graph.collection.internal;
 
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.CollectionSemantics;
@@ -20,20 +20,18 @@ import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.graph.collection.CollectionLoadingLogger;
+import org.hibernate.sql.results.graph.InitializerData;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
+import org.hibernate.sql.results.graph.entity.internal.EntityInitializerImpl;
 import org.hibernate.sql.results.internal.LoadingCollectionEntryImpl;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-
-import static org.hibernate.sql.results.graph.collection.CollectionLoadingLogger.COLL_LOAD_LOGGER;
 
 /**
  * Base support for CollectionInitializer implementations that represent
@@ -43,30 +41,35 @@ import static org.hibernate.sql.results.graph.collection.CollectionLoadingLogger
  * @author Steve Ebersole
  * @implNote Mainly an intention contract wrt the immediacy of the fetch.
  */
-public abstract class AbstractImmediateCollectionInitializer extends AbstractCollectionInitializer {
+public abstract class AbstractImmediateCollectionInitializer<Data extends AbstractImmediateCollectionInitializer.ImmediateCollectionInitializerData>
+		extends AbstractCollectionInitializer<Data> {
 
 	/**
 	 * refers to the rows entry in the collection.  null indicates that the collection is empty
 	 */
 	private final @Nullable DomainResultAssembler<?> collectionValueKeyResultAssembler;
 
-	private boolean shallowCached;
+	public static class ImmediateCollectionInitializerData extends CollectionInitializerData {
 
-	// per-row state
+		protected boolean shallowCached;
 
-	/**
-	 * The value of the collection side of the collection key (FK).  Identifies
-	 * inclusion in the collection.  Can be null to indicate that the current row
-	 * does not contain any collection values
-	 */
-	private Object collectionValueKey;
-	private LoadingCollectionEntryImpl responsibility;
+		/**
+		 * The value of the collection side of the collection key (FK).  Identifies
+		 * inclusion in the collection.  Can be null to indicate that the current row
+		 * does not contain any collection values
+		 */
+		protected Object collectionValueKey;
+		protected LoadingCollectionEntryImpl responsibility;
 
+		public ImmediateCollectionInitializerData(RowProcessingState rowProcessingState) {
+			super( rowProcessingState );
+		}
+	}
 
 	public AbstractImmediateCollectionInitializer(
 			NavigablePath collectionPath,
 			PluralAttributeMapping collectionAttributeMapping,
-			FetchParentAccess parentAccess,
+			InitializerParent<?> parent,
 			LockMode lockMode,
 			DomainResult<?> collectionKeyResult,
 			DomainResult<?> collectionValueKeyResult,
@@ -75,7 +78,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 		super(
 				collectionPath,
 				collectionAttributeMapping,
-				parentAccess,
+				parent,
 				collectionKeyResult,
 				isResultInitializer,
 				creationState
@@ -85,209 +88,315 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 				: collectionValueKeyResult.createResultAssembler( this, creationState );
 	}
 
+	@Override
+	protected ImmediateCollectionInitializerData createInitializerData(RowProcessingState rowProcessingState) {
+		return new ImmediateCollectionInitializerData( rowProcessingState );
+	}
+
 	protected abstract String getSimpleConcreteImplName();
 
-	protected abstract void forEachAssembler(Consumer<DomainResultAssembler<?>> consumer);
+	@Override
+	protected void forEachSubInitializer(BiConsumer<Initializer<?>, RowProcessingState> consumer, InitializerData data) {
+		super.forEachSubInitializer( consumer, data );
+		if ( collectionValueKeyResultAssembler != null ) {
+			final Initializer<?> initializer = collectionValueKeyResultAssembler.getInitializer();
+			if ( initializer != null ) {
+				consumer.accept( initializer, data.getRowProcessingState() );
+			}
+		}
+	}
 
 	@Override
 	public void startLoading(RowProcessingState rowProcessingState) {
-		if ( rowProcessingState.isQueryCacheHit() && getInitializingCollectionDescriptor().useShallowQueryCacheLayout() && !parentShallowCached ) {
-			shallowCached = true;
-			// Inform sub-initializers if this is a query cache hit for a shallow entry
-			markSubInitializersAsShallowCached();
+		final ImmediateCollectionInitializerData data = createInitializerData( rowProcessingState );
+		rowProcessingState.setInitializerData( initializerId, data );
+		if ( rowProcessingState.isQueryCacheHit() && getInitializingCollectionDescriptor().useShallowQueryCacheLayout() ) {
+			data.shallowCached = true;
+		}
+		forEachSubInitializer( Initializer::startLoading, data );
+	}
+
+	@Override
+	public void resolveKey(Data data) {
+		if ( data.getState() != State.UNINITIALIZED ) {
+			// already resolved
+			return;
+		}
+		super.resolveKey( data );
+		data.collectionValueKey = null;
+		// Can't resolve any sub-initializers if the collection is shallow cached
+		if ( data.getState() != State.MISSING && !data.shallowCached ) {
+			if ( collectionValueKeyResultAssembler == null ) {
+				// A null collectionValueKeyResultAssembler means that we should use the parent key.
+				// Since this method can only be called when the parent exists, we know the collection is not missing
+				resolveKeySubInitializers( data );
+			}
+			else {
+				resolveCollectionContentKey( data );
+			}
+		}
+	}
+
+	/**
+	 * Returns whether the collection value key is missing.
+	 */
+	private boolean resolveCollectionContentKey(Data data) {
+		assert collectionValueKeyResultAssembler != null;
+		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		//noinspection unchecked
+		final Initializer<InitializerData> initializer = (Initializer<InitializerData>) collectionValueKeyResultAssembler.getInitializer();
+		if ( initializer != null ) {
+			InitializerData subData = initializer.getData( rowProcessingState );
+			initializer.resolveKey( subData );
+			if ( subData.getState() == State.MISSING ) {
+				return true;
+			}
+		}
+		else {
+			data.collectionValueKey = collectionValueKeyResultAssembler.assemble( rowProcessingState );
+			if ( data.collectionValueKey == null ) {
+				return true;
+			}
+		}
+		// If we get here, a collectionValueKey exists or is likely to exist,
+		// so we need to call resolveKey on the index and element initializers of the collection
+		// to initialize this resolved collection instance later
+		resolveKeySubInitializers( data );
+		return false;
+	}
+
+	private void resolveKeySubInitializers(Data data) {
+		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		final DomainResultAssembler<?> indexAssembler = getIndexAssembler();
+		final Initializer<?> indexInitializer;
+		if ( indexAssembler != null && ( indexInitializer = indexAssembler.getInitializer() ) != null ) {
+			indexInitializer.resolveKey( rowProcessingState );
+		}
+		final Initializer<?> elementInitializer = getElementAssembler().getInitializer();
+		if ( elementInitializer != null ) {
+			elementInitializer.resolveKey( rowProcessingState );
 		}
 	}
 
 	@Override
-	public void markShallowCached() {
-		super.markShallowCached();
-		markSubInitializersAsShallowCached();
-	}
-
-	private void markSubInitializersAsShallowCached() {
-		forEachAssembler( assembler -> {
-			final Initializer initializer = assembler.getInitializer();
-			if ( initializer != null ) {
-				initializer.markShallowCached();
-			}
-		} );
-	}
-
-	@Override
-	public void resolveInstance(RowProcessingState rowProcessingState) {
-		if ( state != State.KEY_RESOLVED ) {
+	public void resolveInstance(Data data) {
+		if ( data.getState() != State.KEY_RESOLVED ) {
+			// already resolved
 			return;
 		}
 
-		if ( CollectionLoadingLogger.COLL_LOAD_LOGGER.isTraceEnabled() ) {
-			COLL_LOAD_LOGGER.tracef(
-					"(%s) Beginning Initializer#resolveInstance for collection : %s",
-					getSimpleConcreteImplName(),
-					LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() )
-			);
+		resolveCollectionKey( data, true );
+		if ( data.getState() != State.KEY_RESOLVED ) {
+			return;
 		}
 
-		state = State.RESOLVED;
-		responsibility = null;
+		data.setState( State.RESOLVED );
+		data.responsibility = null;
 
 		// determine the PersistentCollection instance to use and whether
 		// we (this initializer) is responsible for loading its state
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// First, look for a LoadingCollectionEntry
+		final RowProcessingState rowProcessingState = data.getRowProcessingState();
 		final SharedSessionContractImplementor session = rowProcessingState.getSession();
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final LoadingCollectionEntry existingLoadingEntry = persistenceContext.getLoadContexts()
+				.findLoadingCollectionEntry( data.collectionKey );
+		final PersistentCollection<?> existing;
+		final PersistentCollection<?> existingUnowned;
+		if ( existingLoadingEntry != null ) {
+			data.setCollectionInstance( existingLoadingEntry.getCollectionInstance() );
 
-		if ( !shallowCached ) {
-			final LoadingCollectionEntry existingLoadingEntry = persistenceContext.getLoadContexts()
-					.findLoadingCollectionEntry( collectionKey );
-			if ( existingLoadingEntry != null ) {
-				collectionInstance = existingLoadingEntry.getCollectionInstance();
-
-				if ( CollectionLoadingLogger.COLL_LOAD_LOGGER.isDebugEnabled() ) {
-					COLL_LOAD_LOGGER.debugf(
-							"(%s) Found existing loading collection entry [%s]; using loading collection instance - %s",
-							getSimpleConcreteImplName(),
-							LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),
-							toLoggableString( collectionInstance )
-					);
-				}
-
-				if ( existingLoadingEntry.getInitializer() == this ) {
-					// we are responsible for loading the collection values
-					responsibility = (LoadingCollectionEntryImpl) existingLoadingEntry;
-				}
-				else {
-					// the entity is already being loaded elsewhere
-					if ( CollectionLoadingLogger.COLL_LOAD_LOGGER.isDebugEnabled() ) {
-						COLL_LOAD_LOGGER.debugf(
-								"(%s) Collection [%s] being loaded by another initializer [%s] - skipping processing",
-								getSimpleConcreteImplName(),
-								LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),
-								existingLoadingEntry.getInitializer()
-						);
-					}
-					state = State.INITIALIZED;
-				}
-			}
-		}
-		if ( collectionInstance == null ) {
-			final PersistentCollection<?> existing = persistenceContext.getCollection( collectionKey );
-			if ( existing != null ) {
-				collectionInstance = existing;
-
-				// we found the corresponding collection instance on the Session.  If
-				// it is already initialized we have nothing to do
-
-				if ( collectionInstance.wasInitialized() ) {
-					if ( CollectionLoadingLogger.COLL_LOAD_LOGGER.isDebugEnabled() ) {
-						COLL_LOAD_LOGGER.debugf(
-								"(%s) Found existing collection instance [%s] in Session; skipping processing - [%s]",
-								getSimpleConcreteImplName(),
-								LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),
-								toLoggableString( collectionInstance )
-						);
-					}
-					state = State.INITIALIZED;
-				}
-				else if ( !shallowCached ) {
-					takeResponsibility( rowProcessingState, collectionKey );
-				}
+			if ( existingLoadingEntry.getInitializer() == this ) {
+				assert !data.shallowCached;
+				// we are responsible for loading the collection values
+				data.responsibility = (LoadingCollectionEntryImpl) existingLoadingEntry;
 			}
 			else {
-				final PersistentCollection<?> existingUnowned = persistenceContext.useUnownedCollection( collectionKey );
-				if ( existingUnowned != null ) {
-					collectionInstance = existingUnowned;
-
-					// we found the corresponding collection instance as unowned on the Session.  If
-					// it is already initialized we have nothing to do
-
-					if ( collectionInstance.wasInitialized() ) {
-						if ( CollectionLoadingLogger.COLL_LOAD_LOGGER.isDebugEnabled() ) {
-							COLL_LOAD_LOGGER.debugf(
-									"(%s) Found existing unowned collection instance [%s] in Session; skipping processing - [%s]",
-									getSimpleConcreteImplName(),
-									LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),
-									toLoggableString( collectionInstance )
-							);
-						}
-						state = State.INITIALIZED;
-					}
-					else if ( !shallowCached ) {
-						takeResponsibility( rowProcessingState, collectionKey );
-					}
-				}
+				// the entity is already being loaded elsewhere
+				data.setState( State.INITIALIZED );
 			}
 		}
+		else if ( ( existing = persistenceContext.getCollection( data.collectionKey ) ) != null ) {
+			data.setCollectionInstance( existing );
 
-		if ( collectionInstance == null ) {
+			// we found the corresponding collection instance on the Session.  If
+			// it is already initialized we have nothing to do
+
+			if ( data.getCollectionInstance().wasInitialized() ) {
+				data.setState( State.INITIALIZED );
+			}
+			else if ( !data.shallowCached ) {
+				takeResponsibility( data );
+			}
+		}
+		else if ( ( existingUnowned = persistenceContext.useUnownedCollection( data.collectionKey ) ) != null ) {
+			data.setCollectionInstance( existingUnowned );
+
+			// we found the corresponding collection instance as unowned on the Session.  If
+			// it is already initialized we have nothing to do
+
+			if ( data.getCollectionInstance().wasInitialized() ) {
+				data.setState( State.INITIALIZED );
+			}
+			else if ( !data.shallowCached ) {
+				takeResponsibility( data );
+			}
+		}
+		else {
 			final CollectionPersister collectionDescriptor = getCollectionAttributeMapping().getCollectionDescriptor();
 			final CollectionSemantics<?, ?> collectionSemantics = collectionDescriptor.getCollectionSemantics();
 
-			collectionInstance = collectionSemantics.instantiateWrapper(
-					collectionKey.getKey(),
+			data.setCollectionInstance( collectionSemantics.instantiateWrapper(
+					data.collectionKey.getKey(),
 					getInitializingCollectionDescriptor(),
 					session
-			);
+			) );
 
-			if ( CollectionLoadingLogger.COLL_LOAD_LOGGER.isDebugEnabled() ) {
-				COLL_LOAD_LOGGER.debugf(
-						"(%s) Created new collection wrapper [%s] : %s",
-						getSimpleConcreteImplName(),
-						LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),
-						toLoggableString( collectionInstance )
-				);
+			if ( owningEntityInitializer != null ) {
+				assert owningEntityInitializer.getTargetInstance( rowProcessingState ) != null;
+				data.getCollectionInstance().setOwner( owningEntityInitializer.getTargetInstance( rowProcessingState ) );
 			}
 
 			persistenceContext.addUninitializedCollection(
 					collectionDescriptor,
-					collectionInstance,
-					collectionKey.getKey()
+					data.getCollectionInstance(),
+					data.collectionKey.getKey()
 			);
 
-			if ( shallowCached ) {
-				// If this is a query cache hit with the shallow query cache layout,
-				// we have to lazy load the collection instead
-				persistenceContext.addNonLazyCollection( collectionInstance );
+			if ( !data.shallowCached ) {
+				takeResponsibility( data );
+			}
+		}
 
-				final FetchParentAccess entityParentAccess = findFirstEntityDescriptorAccess();
-				if ( entityParentAccess != null ) {
-					entityParentAccess.registerResolutionListener(
-							owner -> collectionInstance.setOwner( owner )
-					);
-				}
+		if ( data.shallowCached ) {
+			assert data.responsibility == null;
+			initializeShallowCached( data );
+		}
+	}
 
-				if ( collectionSemantics.getCollectionClassification() == CollectionClassification.ARRAY ) {
-					session.getPersistenceContext().addCollectionHolder( collectionInstance );
-				}
+	protected void initializeShallowCached(Data data) {
+		assert data.shallowCached;
+		final PersistenceContext persistenceContext = data.getRowProcessingState().getSession()
+				.getPersistenceContextInternal();
+		// If this is a query cache hit with the shallow query cache layout,
+		// we have to lazy load the collection instead
+		data.getCollectionInstance().forceInitialization();
+		if ( collectionAttributeMapping.getCollectionDescriptor()
+				.getCollectionSemantics()
+				.getCollectionClassification() == CollectionClassification.ARRAY ) {
+			persistenceContext.addCollectionHolder( data.getCollectionInstance() );
+		}
+		data.setState( State.INITIALIZED );
+		initializeSubInstancesFromParent( data );
+	}
+
+	@Override
+	protected void setMissing(Data data) {
+		super.setMissing( data );
+		data.collectionValueKey = null;
+		data.responsibility = null;
+	}
+
+	@Override
+	public void resolveInstance(Object instance, Data data) {
+		assert data.getState() == State.UNINITIALIZED || instance == data.getCollectionInstance();
+		if ( instance == null ) {
+			setMissing( data );
+			return;
+		}
+		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		// Check if the given instance is different from the previous row state to avoid creating CollectionKey
+		if ( data.getCollectionInstance() != instance ) {
+			final PersistenceContext persistenceContext = rowProcessingState.getSession().getPersistenceContextInternal();
+			final PersistentCollection<?> persistentCollection;
+			if ( collectionAttributeMapping.getCollectionDescriptor()
+					.getCollectionSemantics()
+					.getCollectionClassification() == CollectionClassification.ARRAY ) {
+				persistentCollection = persistenceContext.getCollectionHolder( instance );
 			}
 			else {
-				takeResponsibility( rowProcessingState, collectionKey );
+				persistentCollection = (PersistentCollection<?>) instance;
+			}
+			data.collectionKeyValue = persistentCollection.getKey();
+			resolveCollectionKey( data, false );
+			data.setCollectionInstance( persistentCollection );
+			data.responsibility = null;
+		}
+		data.collectionValueKey = null;
+		if ( data.getCollectionInstance().wasInitialized() ) {
+			data.setState( State.INITIALIZED );
+			if ( data.shallowCached ) {
+				initializeShallowCached( data );
+			}
+			else {
+				resolveInstanceSubInitializers( data );
+			}
+			if ( rowProcessingState.needsResolveState() ) {
+				// Resolve the state of the identifier if result caching is enabled and this is not a query cache hit
+				if ( collectionKeyResultAssembler != null ) {
+					collectionKeyResultAssembler.resolveState( rowProcessingState );
+				}
+				if ( !getInitializingCollectionDescriptor().useShallowQueryCacheLayout() ) {
+					if ( collectionValueKeyResultAssembler != null ) {
+						collectionValueKeyResultAssembler.resolveState( rowProcessingState );
+					}
+					resolveCollectionContentState( rowProcessingState );
+				}
 			}
 		}
+		else {
+			if ( data.shallowCached ) {
+				data.setState( State.INITIALIZED );
+				initializeShallowCached( data );
+			}
+			else {
+				data.setState( State.RESOLVED );
+				final boolean rowContainsCollectionContent;
+				if ( collectionValueKeyResultAssembler != null ) {
+					rowContainsCollectionContent = resolveCollectionContentKey( data );
+				}
+				else {
+					rowContainsCollectionContent = true;
+				}
+				if ( data.responsibility == null ) {
+					final LoadingCollectionEntry existingLoadingEntry = rowProcessingState.getSession()
+							.getPersistenceContextInternal()
+							.getLoadContexts()
+							.findLoadingCollectionEntry( data.collectionKey );
+					if ( existingLoadingEntry != null ) {
+						if ( existingLoadingEntry.getInitializer() == this ) {
+							// we are responsible for loading the collection values
+							data.responsibility = (LoadingCollectionEntryImpl) existingLoadingEntry;
+						}
+						else {
+							// the collection is already being loaded elsewhere
+							data.setState( State.INITIALIZED );
+							if ( rowContainsCollectionContent  && rowProcessingState.needsResolveState()
+									&& !getInitializingCollectionDescriptor().useShallowQueryCacheLayout() ) {
+								// Resolve the state of the content if result caching is enabled and this is not a query cache hit
+								// and the collection doesn't use a shallow query cache layout
+								resolveCollectionContentState( rowProcessingState );
+							}
+						}
+					}
+					else {
+						takeResponsibility( data );
+					}
+				}
+			}
+		}
+	}
 
-		if ( responsibility != null ) {
-			if ( CollectionLoadingLogger.COLL_LOAD_LOGGER.isDebugEnabled() ) {
-				COLL_LOAD_LOGGER.debugf(
-						"(%s) Responsible for loading collection [%s] : %s",
-						getSimpleConcreteImplName(),
-						LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),
-						toLoggableString( collectionInstance )
-				);
-			}
+	protected abstract void resolveInstanceSubInitializers(Data data);
 
-			final FetchParentAccess entityParentAccess = findFirstEntityDescriptorAccess();
-			if ( entityParentAccess != null ) {
-				entityParentAccess.registerResolutionListener(
-						owner -> collectionInstance.setOwner( owner )
-				);
-			}
+	private void resolveCollectionContentState(RowProcessingState rowProcessingState) {
+		final DomainResultAssembler<?> indexAssembler = getIndexAssembler();
+		if ( indexAssembler != null ) {
+			indexAssembler.resolveState( rowProcessingState );
 		}
-		if ( shallowCached ) {
-			assert responsibility == null;
-			state = State.INITIALIZED;
-			initializeSubInstancesFromParent( rowProcessingState );
-		}
+		getElementAssembler().resolveState( rowProcessingState );
 	}
 
 	/**
@@ -300,66 +409,48 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 				: collectionInstance.getClass().getName() + "@" + System.identityHashCode( collectionInstance );
 	}
 
-	protected void takeResponsibility(RowProcessingState rowProcessingState, CollectionKey collectionKey) {
-		responsibility = new LoadingCollectionEntryImpl(
+	protected void takeResponsibility(Data data) {
+		data.responsibility = new LoadingCollectionEntryImpl(
 				getCollectionAttributeMapping().getCollectionDescriptor(),
 				this,
-				collectionKey.getKey(),
-				collectionInstance
+				data.collectionKey.getKey(),
+				data.getCollectionInstance()
 		);
-		rowProcessingState.getJdbcValuesSourceProcessingState().registerLoadingCollection(
-				collectionKey,
-				responsibility
+		data.getRowProcessingState().getJdbcValuesSourceProcessingState().registerLoadingCollection(
+				data.collectionKey,
+				data.responsibility
 		);
 	}
 
 	@Override
-	public void resolveKey(RowProcessingState rowProcessingState) {
-		if ( state != State.UNINITIALIZED ) {
-			// already resolved
+	public void initializeInstance(Data data) {
+		if ( data.getState() != State.RESOLVED || data.responsibility == null ) {
 			return;
 		}
-		super.resolveKey( rowProcessingState );
-		if ( collectionKey != null ) {
-			if ( collectionValueKeyResultAssembler == null ) {
-				collectionValueKey = collectionKey.getKey();
-			}
-			else {
-				collectionValueKey = collectionValueKeyResultAssembler.assemble( rowProcessingState );
-			}
-		}
-	}
+		data.setState( State.INITIALIZED );
 
-	@Override
-	public void initializeInstance(RowProcessingState rowProcessingState) {
-		if ( state != State.RESOLVED || responsibility == null ) {
-			return;
+		final RowProcessingState initializerRowProcessingState = data.getRowProcessingState();
+		if ( data.collectionValueKey == null && collectionValueKeyResultAssembler != null ) {
+			final Initializer<?> initializer = collectionValueKeyResultAssembler.getInitializer();
+			if ( initializer != null ) {
+				data.collectionValueKey = collectionValueKeyResultAssembler.assemble( initializerRowProcessingState );
+			}
 		}
-		state = State.INITIALIZED;
 
 		// the RHS key value of the association - determines if the row contains an element of the initializing collection
-		if ( collectionValueKey != null ) {
+		if ( collectionValueKeyResultAssembler == null || data.collectionValueKey != null ) {
 			// the row contains an element in the collection...
-			if ( CollectionLoadingLogger.COLL_LOAD_LOGGER.isDebugEnabled() ) {
-				COLL_LOAD_LOGGER.debugf(
-						"(%s) Reading element from row for collection [%s] -> %s",
-						getSimpleConcreteImplName(),
-						LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),
-						toLoggableString( collectionInstance )
-				);
-			}
-
-			responsibility.load(
-					loadingState -> readCollectionRow( collectionKey, loadingState, rowProcessingState )
+			data.responsibility.load(
+					loadingState -> readCollectionRow( data.collectionKey, loadingState, initializerRowProcessingState )
 			);
 		}
 	}
 
 	@Override
-	public void initializeInstanceFromParent(Object parentInstance, RowProcessingState rowProcessingState) {
-		collectionInstance = (PersistentCollection<?>) getInitializedPart().getValue( parentInstance );
-		state = State.INITIALIZED;
-		initializeSubInstancesFromParent( rowProcessingState );
+	public void initializeInstanceFromParent(Object parentInstance, Data data) {
+		data.setCollectionInstance( (PersistentCollection<?>) getInitializedPart().getValue( parentInstance ) );
+		data.setState( State.INITIALIZED );
+		initializeSubInstancesFromParent( data );
 	}
 
 	protected abstract void readCollectionRow(
@@ -367,19 +458,15 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 			List<Object> loadingState,
 			RowProcessingState rowProcessingState);
 
-	protected abstract void initializeSubInstancesFromParent(RowProcessingState rowProcessingState);
+	protected abstract void initializeSubInstancesFromParent(Data data);
+
+	public abstract @Nullable DomainResultAssembler<?> getIndexAssembler();
+
+	public abstract DomainResultAssembler<?> getElementAssembler();
 
 	@Override
-	public void finishUpRow(RowProcessingState rowProcessingState) {
-		super.finishUpRow( rowProcessingState );
-
-		collectionValueKey = null;
+	public void endLoading(Data data) {
+		super.endLoading( data );
+		data.shallowCached = false;
 	}
-
-	@Override
-	public void endLoading(ExecutionContext executionContext) {
-		super.endLoading( executionContext );
-		shallowCached = false;
-	}
-
 }

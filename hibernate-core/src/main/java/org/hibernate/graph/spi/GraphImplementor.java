@@ -14,6 +14,7 @@ import org.hibernate.graph.CannotBecomeEntityGraphException;
 import org.hibernate.graph.CannotContainSubGraphException;
 import org.hibernate.graph.Graph;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
+import org.hibernate.query.sqm.SqmPathSource;
 
 /**
  * Integration version of the {@link Graph} contract
@@ -74,7 +75,12 @@ public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 
 	@SuppressWarnings("unchecked")
 	default <AJ> AttributeNodeImplementor<AJ> findOrCreateAttributeNode(String name) {
-		return findOrCreateAttributeNode( (PersistentAttribute<? extends J,AJ>) getGraphedType().getAttribute( name ) );
+		PersistentAttribute<? super J, ?> attribute = getGraphedType().getAttribute( name );
+		if ( attribute instanceof SqmPathSource && ( (SqmPathSource<?>) attribute ).isGeneric() ) {
+			attribute = getGraphedType().findConcreteGenericAttribute( name );
+		}
+
+		return findOrCreateAttributeNode( (PersistentAttribute<? extends J, AJ>) attribute );
 	}
 
 	<AJ> AttributeNodeImplementor<AJ> findOrCreateAttributeNode(PersistentAttribute<? extends J, AJ> attribute);

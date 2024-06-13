@@ -4,3 +4,4 @@
   Addison-Wesley Professional. 2002.
 - [[[JPwH]]] Christian Bauer & Gavin King. https://www.manning.com/books/java-persistence-with-hibernate-second-edition[Java Persistence with Hibernate, Second Edition]. Manning Publications Co. 2015.
 - [[[jdbc]]] https://download.oracle.com/otndocs/jcp/jdbc-4_2-mrel2-spec/[JDBC Specification - Version 4.2]
+- [[[jdbc]]] https://download.oracle.com/otndocs/jcp/jdbc-4_3-mrel3-spec/[JDBC Specification - Version 4.3]

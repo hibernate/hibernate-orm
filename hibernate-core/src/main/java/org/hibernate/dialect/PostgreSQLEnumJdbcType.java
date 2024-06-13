@@ -32,6 +32,7 @@ import jakarta.persistence.EnumType;
 
 import static java.util.Collections.emptySet;
 import static org.hibernate.type.SqlTypes.NAMED_ENUM;
+import static org.hibernate.type.SqlTypes.OTHER;
 
 /**
  * Represents a named {@code enum} type on PostgreSQL.
@@ -51,8 +52,15 @@ import static org.hibernate.type.SqlTypes.NAMED_ENUM;
  */
 public class PostgreSQLEnumJdbcType implements JdbcType {
 
+	public static final PostgreSQLEnumJdbcType INSTANCE = new PostgreSQLEnumJdbcType();
+
 	@Override
 	public int getJdbcTypeCode() {
+		return OTHER;
+	}
+
+	@Override
+	public int getDefaultSqlTypeCode() {
 		return NAMED_ENUM;
 	}
 
@@ -125,7 +133,7 @@ public class PostgreSQLEnumJdbcType implements JdbcType {
 			Size columnSize,
 			Database database,
 			JdbcTypeIndicators context) {
-		addAuxiliaryDatabaseObjects( javaType, database, context.getEnumeratedType() == EnumType.STRING );
+		addAuxiliaryDatabaseObjects( javaType, database, true );
 	}
 
 	@Override
@@ -134,10 +142,10 @@ public class PostgreSQLEnumJdbcType implements JdbcType {
 			Size columnSize,
 			Database database,
 			TypeConfiguration typeConfiguration) {
-		addAuxiliaryDatabaseObjects( javaType, database, false );
+		addAuxiliaryDatabaseObjects( javaType, database, true );
 	}
 
-	private void addAuxiliaryDatabaseObjects(
+	protected void addAuxiliaryDatabaseObjects(
 			JavaType<?> javaType,
 			Database database,
 			boolean sortEnumValues) {

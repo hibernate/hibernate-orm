@@ -121,6 +121,11 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 	}
 
 	@Override
+	public PluralAttributeMapping getCollectionAttribute() {
+		return collectionDescriptor.getAttributeMapping();
+	}
+
+	@Override
 	public String getFetchableName() {
 		return nature.getName();
 	}
@@ -329,7 +334,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				primaryTableReference,
 				true,
 				sqlAliasBase,
-				(tableExpression) -> getEntityMappingType().containsTableReference( tableExpression ),
+				getEntityMappingType().getRootEntityDescriptor()::containsTableReference,
 				(tableExpression, tg) -> getEntityMappingType().createTableReferenceJoin(
 						tableExpression,
 						sqlAliasBase,

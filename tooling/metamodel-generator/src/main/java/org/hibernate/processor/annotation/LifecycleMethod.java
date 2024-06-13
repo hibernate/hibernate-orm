@@ -18,6 +18,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 	private final boolean addNonnullAnnotation;
 	private final boolean iterateParameter;
 	private final boolean returnArgument;
+	private final boolean hasGeneratedId;
 
 	public LifecycleMethod(
 			AnnotationMetaEntity annotationMetaEntity,
@@ -30,7 +31,8 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 			String operationName,
 			boolean addNonnullAnnotation,
 			boolean iterateParameter,
-			boolean returnArgument) {
+			boolean returnArgument,
+			boolean hasGeneratedId) {
 		super(annotationMetaEntity, method, sessionName, sessionType);
 		this.entity = entity;
 		this.methodName = methodName;
@@ -39,6 +41,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 		this.addNonnullAnnotation = addNonnullAnnotation;
 		this.iterateParameter = iterateParameter;
 		this.returnArgument = returnArgument;
+		this.hasGeneratedId = hasGeneratedId;
 	}
 
 	@Override
@@ -130,6 +133,23 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 						.append("\t\tfor (var _entity : ")
 						.append(parameterName)
 						.append(") {\n\t");
+			}
+			if ( "upsert".equals(operationName) && hasGeneratedId ) {
+				declaration
+						.append("\t\tif (")
+						.append(sessionName)
+						.append(".getIdentifier(")
+						.append(iterateParameter ? "_entity" : parameterName)
+						.append(") == null)\n")
+						.append("\t\t\t")
+						.append(sessionName)
+						.append('.')
+						.append("insert")
+						.append('(')
+						.append(iterateParameter ? "_entity" : parameterName)
+						.append(')')
+						.append(";\n")
+						.append("\t\telse\n\t");
 			}
 			declaration
 					.append("\t\t")

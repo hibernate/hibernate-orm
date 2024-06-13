@@ -17,17 +17,18 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.Session;
+import org.hibernate.SessionException;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.util.PropertiesHelper;
+import org.hibernate.query.Query;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
@@ -37,10 +38,16 @@ import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
+
+import org.junit.After;
+import org.junit.Assert;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Vlad Mihalcea
@@ -82,6 +89,12 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
         }
     }
 
+    @After
+    public void cleanup() {
+        doInSession(FRONT_END_TENANT, session -> session.createMutationQuery( "delete from Person" ).executeUpdate() );
+        doInSession(BACK_END_TENANT, session -> session.createMutationQuery( "delete from Person" ).executeUpdate() );
+    }
+
     //tag::multitenacy-hibernate-MultiTenantConnectionProvider-example[]
 
     protected void registerConnectionProvider(String tenantIdentifier) {
@@ -114,6 +127,63 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
             session.persist(person);
         });
 		//end::multitenacy-multitenacy-hibernate-same-entity-example[]
+    }
+
+    @Test
+    @JiraKey( value = "HHH-17972")
+    public void testChangeTenantWithoutConnectionReuse() {
+        Person person = new Person();
+        person.setId( 1L );
+        person.setName( "John Doe" );
+        Person person2 = new Person();
+        person2.setId( 2L );
+        person2.setName( "Jane Doe" );
+
+        Transaction t;
+        Session session = null;
+        Session newSession = null;
+        try {
+            session = sessionFactory.withOptions().tenantIdentifier( FRONT_END_TENANT ).openSession();
+            t = session.beginTransaction();
+            session.persist( person );
+            t.commit();
+
+            Query<Person> sessionQuery = session.createQuery( "from Person", Person.class );
+            assertEquals( 1, sessionQuery.getResultList().size() );
+            assertEquals( "John Doe", sessionQuery.getResultList().get( 0 ).getName() );
+
+            newSession = session.sessionWithOptions().tenantIdentifier( BACK_END_TENANT ).openSession();
+            t = newSession.beginTransaction();
+            newSession.persist( person2 );
+            t.commit();
+
+            Query<Person> newSessionQuery = newSession.createQuery( "from Person", Person.class );
+            assertEquals( 1, newSessionQuery.getResultList().size() );
+            assertEquals( "Jane Doe", newSessionQuery.getResultList().get( 0 ).getName() );
+        }
+        finally {
+            if (session != null) {
+                session.close();
+            }
+            if (newSession != null) {
+                newSession.close();
+            }
+        }
+    }
+
+    @Test
+    @JiraKey( value = "HHH-17972")
+    public void testChangeTenantWithConnectionReuse() {
+        try (Session session = sessionFactory.withOptions().tenantIdentifier( FRONT_END_TENANT ).openSession()) {
+            Assert.assertThrows( "Cannot redefine the tenant identifier on a child session if the connection is reused",
+                                 SessionException.class,
+                                 () -> session.sessionWithOptions().tenantIdentifier( BACK_END_TENANT ).connection().openSession()
+            );
+            Assert.assertThrows( "Cannot redefine the tenant identifier on a child session if the connection is reused",
+                                 SessionException.class,
+                                 () -> session.sessionWithOptions().connection().tenantIdentifier( BACK_END_TENANT ).openSession()
+            );
+        }
     }
 
     protected Properties properties() {

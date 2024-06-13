@@ -218,7 +218,9 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				jdbcMapping,
-				navigablePath
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -270,7 +272,8 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 				fetchablePath,
 				this,
 				fetchTiming,
-				creationState
+				creationState,
+				!sqlSelection.isVirtual()
 		);
 	}
 

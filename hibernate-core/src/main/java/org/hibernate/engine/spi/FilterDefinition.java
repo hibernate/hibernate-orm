@@ -37,19 +37,27 @@ public class FilterDefinition implements Serializable {
 	private final Map<String, JdbcMapping> explicitParamJaMappings = new HashMap<>();
 	private final Map<String, ManagedBean<? extends Supplier<?>>> parameterResolverMap = new HashMap<>();
 	private final boolean autoEnabled;
+	private final boolean applyToLoadByKey;
 
 	/**
 	 * Construct a new FilterDefinition instance.
 	 *
 	 * @param name The name of the filter for which this configuration is in effect.
 	 */
-	public FilterDefinition(String name, String defaultCondition, @Nullable Map<String, JdbcMapping> explicitParamJaMappings) {
-		this( name, defaultCondition, explicitParamJaMappings, Collections.emptyMap(), false);
+	public FilterDefinition(
+			String name,
+			String defaultCondition,
+			@Nullable Map<String, JdbcMapping> explicitParamJaMappings) {
+		this( name, defaultCondition, explicitParamJaMappings, Collections.emptyMap(), false, false);
 	}
 
 	public FilterDefinition(
-			String name, String defaultCondition, @Nullable Map<String, JdbcMapping> explicitParamJaMappings,
-			Map<String, ManagedBean<? extends Supplier<?>>> parameterResolverMap, boolean autoEnabled) {
+			String name,
+			String defaultCondition,
+			@Nullable Map<String, JdbcMapping> explicitParamJaMappings,
+			Map<String, ManagedBean<? extends Supplier<?>>> parameterResolverMap,
+			boolean autoEnabled,
+			boolean applyToLoadByKey) {
 		this.filterName = name;
 		this.defaultFilterCondition = defaultCondition;
 		if ( explicitParamJaMappings != null ) {
@@ -59,6 +67,7 @@ public class FilterDefinition implements Serializable {
 			this.parameterResolverMap.putAll( parameterResolverMap );
 		}
 		this.autoEnabled = autoEnabled;
+		this.applyToLoadByKey = applyToLoadByKey;
 	}
 
 	/**
@@ -99,6 +108,16 @@ public class FilterDefinition implements Serializable {
 
 	public String getDefaultFilterCondition() {
 		return defaultFilterCondition;
+	}
+
+	/**
+	 * Get a flag that defines if the filter should be applied
+	 * on direct fetches or not.
+	 *
+	 * @return The flag value.
+	 */
+	public boolean isAppliedToLoadByKey() {
+		return applyToLoadByKey;
 	}
 
 	/**

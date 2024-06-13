@@ -34,6 +34,8 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import org.hibernate.SessionFactory;
+import org.hibernate.dialect.function.AvgFunction;
+import org.hibernate.dialect.function.SumReturnTypeResolver;
 import org.hibernate.dialect.function.array.DdlTypeHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
@@ -81,6 +83,7 @@ import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
+import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.SqmQuery;
@@ -201,6 +204,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	private transient BasicType<Integer> integerType;
 	private transient BasicType<Long> longType;
 	private transient BasicType<Character> characterType;
+	private transient FunctionReturnTypeResolver sumReturnTypeResolver;
+	private transient FunctionReturnTypeResolver avgReturnTypeResolver;
 	private final transient Map<Class<? extends HibernateCriteriaBuilder>, HibernateCriteriaBuilder> extensions;
 
 	public SqmCriteriaNodeBuilder(
@@ -248,7 +253,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 
-
 	@Override
 	public BasicType<Boolean> getBooleanType() {
 		final BasicType<Boolean> booleanType = this.booleanType;
@@ -291,6 +295,22 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 							.resolve( StandardBasicTypes.CHARACTER );
 		}
 		return characterType;
+	}
+
+	public FunctionReturnTypeResolver getSumReturnTypeResolver() {
+		final FunctionReturnTypeResolver resolver = sumReturnTypeResolver;
+		if ( resolver == null ) {
+			return this.sumReturnTypeResolver = new SumReturnTypeResolver( getTypeConfiguration() );
+		}
+		return resolver;
+	}
+
+	public FunctionReturnTypeResolver getAvgReturnTypeResolver() {
+		final FunctionReturnTypeResolver resolver = avgReturnTypeResolver;
+		if ( resolver == null ) {
+			return this.avgReturnTypeResolver = new AvgFunction.ReturnTypeResolver( getTypeConfiguration() );
+		}
+		return resolver;
 	}
 
 	@Override

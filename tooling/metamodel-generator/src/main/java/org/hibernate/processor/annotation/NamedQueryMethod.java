@@ -7,6 +7,7 @@
 package org.hibernate.processor.annotation;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.processor.Context;
 import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.Constants;
@@ -18,6 +19,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 import javax.lang.model.element.ModuleElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -194,13 +196,19 @@ class NamedQueryMethod implements MetaAttribute {
 	}
 
 	private @Nullable TypeElement entityType(String entityName) {
+		final Context context = annotationMeta.getContext();
+		final Elements elementUtils = context.getElementUtils();
+		final String qualifiedName = context.qualifiedNameForEntityName(entityName);
+		if ( qualifiedName != null ) {
+			return elementUtils.getTypeElement(qualifiedName);
+		}
 		TypeElement symbol =
 				findEntityByUnqualifiedName( entityName,
-						annotationMeta.getContext().getElementUtils().getModuleElement("") );
+						elementUtils.getModuleElement("") );
 		if ( symbol != null ) {
 			return symbol;
 		}
-		for ( ModuleElement module : annotationMeta.getContext().getElementUtils().getAllModuleElements() ) {
+		for ( ModuleElement module : elementUtils.getAllModuleElements() ) {
 			symbol = findEntityByUnqualifiedName( entityName, module );
 			if ( symbol != null ) {
 				return symbol;

@@ -11,6 +11,7 @@ import org.hibernate.processor.Context;
 import org.hibernate.processor.util.AccessType;
 import org.hibernate.processor.util.AccessTypeInformation;
 import org.hibernate.processor.util.Constants;
+import org.hibernate.processor.util.NullnessUtil;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
@@ -84,8 +85,9 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Nullable
 	@Override
 	public @Nullable AnnotationMetaAttribute visitDeclared(DeclaredType declaredType, Element element) {
 		final TypeElement returnedElement = (TypeElement) typeUtils().asElement( declaredType );
+		assert returnedElement != null;
 		// WARNING: .toString() is necessary here since Name equals does not compare to String
-		final String returnTypeName = returnedElement.getQualifiedName().toString();
+		final String returnTypeName = NullnessUtil.castNonNull( returnedElement ).getQualifiedName().toString();
 		final String collection = Constants.COLLECTIONS.get( returnTypeName );
 		final String targetEntity = getTargetEntity( element.getAnnotationMirrors() );
 		if ( collection != null ) {
@@ -109,7 +111,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Nullable
 					getCollectionElementType( declaredType, returnTypeName, explicitTargetEntity, context );
 			if ( collectionElementType.getKind() == TypeKind.DECLARED ) {
 				final TypeElement collectionElement = (TypeElement) typeUtils().asElement( collectionElementType );
-				setAccessType( collectionElementType, collectionElement );
+				setAccessType( collectionElementType, NullnessUtil.castNonNull( collectionElement ) );
 			}
 		}
 		return createMetaAttribute( declaredType, element, collection, targetEntity );

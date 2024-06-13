@@ -1221,11 +1221,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 		//timestampadd()/timestampdiff() delegated back to the Dialect itself
 		//since there is a great variety of different ways to emulate them
-
-		functionContributions.getFunctionRegistry().register( "timestampadd",
-				new TimestampaddFunction( this, typeConfiguration ) );
-		functionContributions.getFunctionRegistry().register( "timestampdiff",
-				new TimestampdiffFunction( this, typeConfiguration ) );
+		//by default, we don't allow plain parameters for the timestamp argument as most database don't support this
+		functionFactory.timestampaddAndDiff( this, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 		functionContributions.getFunctionRegistry().registerAlternateKey( "dateadd", "timestampadd" );
 		functionContributions.getFunctionRegistry().registerAlternateKey( "datediff", "timestampdiff" );
 
@@ -1591,6 +1588,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * {@link Types#VARBINARY BINARY} and
 	 * {@link Types#LONGVARBINARY LONGVARBINARY} as the same type, since
 	 * Hibernate doesn't really differentiate these types.
+	 * <p>
+	 * On the other hand, integral types are not treated as equivalent,
+	 * instead, {@link #isCompatibleIntegralType(int, int)} is responsible
+	 * for determining if the types are compatible.
 	 *
 	 * @param typeCode1 the first column type info
 	 * @param typeCode2 the second column type info
@@ -1600,14 +1601,37 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public boolean equivalentTypes(int typeCode1, int typeCode2) {
 		return typeCode1==typeCode2
 			|| isNumericOrDecimal(typeCode1) && isNumericOrDecimal(typeCode2)
-//			|| isIntegral(typeCode1) && isIntegral(typeCode2)
 			|| isFloatOrRealOrDouble(typeCode1) && isFloatOrRealOrDouble(typeCode2)
 			|| isVarcharType(typeCode1) && isVarcharType(typeCode2)
 			|| isVarbinaryType(typeCode1) && isVarbinaryType(typeCode2)
+			|| isCompatibleIntegralType(typeCode1, typeCode2)
 			// HHH-17908: Since the runtime can cope with enum on the DDL side,
 			// but varchar on the ORM expectation side, let's treat the types as equivalent
-			|| isEnumType( typeCode1 ) && isVarcharType( typeCode2 )
+			|| isEnumType(typeCode1) && isVarcharType(typeCode2)
 			|| sameColumnType(typeCode1, typeCode2);
+	}
+
+	/**
+	 * Tolerate storing {@code short} in {@code INTEGER} or {@code BIGINT}
+	 * or {@code int} in {@code BIGINT} for the purposes of schema validation
+	 * and migration.
+	 */
+	private boolean isCompatibleIntegralType(int typeCode1, int typeCode2) {
+		switch (typeCode1) {
+			case TINYINT:
+				return typeCode2 == TINYINT
+					|| typeCode2 == SMALLINT
+					|| typeCode2 == INTEGER
+					|| typeCode2 == BIGINT;
+			case SMALLINT:
+				return typeCode2 == SMALLINT
+					|| typeCode2 == INTEGER
+					|| typeCode2 == BIGINT;
+			case INTEGER:
+				return typeCode2 == INTEGER
+					|| typeCode2 == BIGINT;
+		}
+		return false;
 	}
 
 	private boolean sameColumnType(int typeCode1, int typeCode2) {
@@ -2608,6 +2632,23 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			String foreignKeyDefinition) {
 		return " add constraint " + quote( constraintName )
 				+ " " + foreignKeyDefinition;
+	}
+
+	/**
+	 * Does the dialect also need cross-references to get a complete
+	 * list of foreign keys?
+	 */
+	public boolean useCrossReferenceForeignKeys(){
+		return false;
+	}
+
+	/**
+	 * Some dialects require a not null primaryTable filter.
+	 * Sometimes a wildcard entry is sufficient for the like condition.
+	 * @return
+	 */
+	public String getCrossReferenceParentTableFilter(){
+		return null;
 	}
 
 	/**
@@ -3618,6 +3659,20 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public boolean useInputStreamToInsertBlob() {
 		return true;
+	}
+
+	/**
+	 * Should BLOB, CLOB, and NCLOB be created solely using respectively
+	 * {@link Connection#createBlob()}, {@link Connection#createClob()},
+	 * and {@link Connection#createNClob()}.
+	 *
+	 * @return True if BLOB, CLOB, and NCLOB should be created using JDBC
+	 * {@link Connection}.
+	 *
+	 * @since 6.6
+	 */
+	public boolean useConnectionToCreateLob() {
+		return !useInputStreamToInsertBlob();
 	}
 
 	/**

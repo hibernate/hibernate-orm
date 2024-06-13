@@ -34,9 +34,6 @@ public class FlushEvent extends Event implements HibernateMonitoringEvent {
 	@Label("Number Of Processed Collections")
 	public int numberOfCollectionsProcessed;
 
-	@Label("Flush time")
-	public long executionTime;
-
 	@Label("Auto Flush")
 	public boolean isAutoFlush;
 
@@ -44,7 +41,5 @@ public class FlushEvent extends Event implements HibernateMonitoringEvent {
 	public String toString() {
 		return NAME;
 	}
-
-	public transient long startedAt;
 
 }

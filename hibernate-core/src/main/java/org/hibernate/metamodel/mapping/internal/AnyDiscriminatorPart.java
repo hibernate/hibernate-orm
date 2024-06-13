@@ -37,7 +37,6 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
@@ -59,6 +58,8 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 
 	private final String table;
 	private final String column;
+	private final String customReadExpression;
+	private final String customWriteExpression;
 	private final String columnDefinition;
 	private final Long length;
 	private final Integer precision;
@@ -75,7 +76,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			NavigableRole partRole,
 			DiscriminatedAssociationModelPart declaringType,
 			String table,
-			String column,
+			String column, String customReadExpression, String customWriteExpression,
 			String columnDefinition,
 			Long length,
 			Integer precision,
@@ -90,6 +91,8 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 		this.declaringType = declaringType;
 		this.table = table;
 		this.column = column;
+		this.customReadExpression = customReadExpression;
+		this.customWriteExpression = customWriteExpression;
 		this.columnDefinition = columnDefinition;
 		this.length = length;
 		this.precision = precision;
@@ -160,12 +163,12 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 
 	@Override
 	public String getCustomReadExpression() {
-		return null;
+		return customReadExpression;
 	}
 
 	@Override
 	public String getCustomWriteExpression() {
-		return null;
+		return customWriteExpression;
 	}
 
 	@Override
@@ -326,7 +329,8 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 				fetchablePath,
 				this,
 				fetchTiming,
-				creationState
+				creationState,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -351,7 +355,9 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				jdbcMapping(),
-				navigablePath
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 

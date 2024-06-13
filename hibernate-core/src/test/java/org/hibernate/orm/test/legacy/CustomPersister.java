@@ -897,6 +897,11 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
+	public boolean hasFilterForLoadByKey() {
+		return false;
+	}
+
+	@Override
 	public Iterable<UniqueKeyEntry> uniqueKeyEntries() {
 		return Collections.emptyList();
 	}
@@ -937,7 +942,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers loadQueryInfluencers) {
+	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
 		return false;
 	}
 

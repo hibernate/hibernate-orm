@@ -16,7 +16,10 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.hibernate.JDBCException;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
 import org.hibernate.procedure.internal.ScalarDomainResultBuilder;
@@ -51,13 +54,16 @@ public class OutputsImpl implements Outputs {
 
 	private final ResultContext context;
 	private final PreparedStatement jdbcStatement;
+	private final SqlStatementLogger sqlStatementLogger;
+	private final String sql;
 
 	private CurrentReturnState currentReturnState;
 
-	public OutputsImpl(ResultContext context, PreparedStatement jdbcStatement) {
+	public OutputsImpl(ResultContext context, PreparedStatement jdbcStatement, String sql) {
 		this.context = context;
 		this.jdbcStatement = jdbcStatement;
-
+		this.sqlStatementLogger = context.getSession().getJdbcServices().getSqlStatementLogger();
+		this.sql = sql;
 	}
 
 	protected ResultContext getResultContext(){
@@ -65,12 +71,22 @@ public class OutputsImpl implements Outputs {
 	}
 
 	protected void executeStatement() {
+		long executeStartNanos = 0;
+		if ( sqlStatementLogger.getLogSlowQuery() > 0 ) {
+			executeStartNanos = System.nanoTime();
+		}
+		final EventManager eventManager = context.getSession().getEventManager();
+		final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			final boolean isResultSet = jdbcStatement.execute();
 			currentReturnState = buildCurrentReturnState( isResultSet );
 		}
 		catch (SQLException e) {
 			throw convert( e, "Error calling CallableStatement.getMoreResults" );
+		}
+		finally {
+			eventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
+			sqlStatementLogger.logSlowQuery( sql, executeStartNanos, this.context.getSession().getJdbcSessionContext() );
 		}
 	}
 
@@ -177,6 +193,7 @@ public class OutputsImpl implements Outputs {
 				null,
 				null,
 				this.context.getQueryOptions(),
+				true,
 				resultSetMapping.resolve( resultSetAccess, context.getSession().getLoadQueryInfluencers(), getSessionFactory() ),
 				null,
 				executionContext
@@ -186,8 +203,7 @@ public class OutputsImpl implements Outputs {
 
 			//noinspection unchecked
 			final RowReader<Object> rowReader = (RowReader<Object>) ResultsHelper.createRowReader(
-					executionContext,
-					null,
+					getSessionFactory(),
 					RowTransformerStandardImpl.INSTANCE,
 					null,
 					jdbcValues
@@ -224,18 +240,18 @@ public class OutputsImpl implements Outputs {
 							processingOptions
 					);
 			final ArrayList<Object> results = new ArrayList<>();
+			final RowProcessingStateStandardImpl rowProcessingState = new RowProcessingStateStandardImpl(
+					jdbcValuesSourceProcessingState,
+					executionContext,
+					rowReader,
+					jdbcValues
+			);
 			try {
-				final RowProcessingStateStandardImpl rowProcessingState = new RowProcessingStateStandardImpl(
-						jdbcValuesSourceProcessingState,
-						executionContext,
-						rowReader,
-						jdbcValues
-				);
 
-				rowReader.getInitializersList().startLoading( rowProcessingState );
+				rowReader.startLoading( rowProcessingState );
 
 				while ( rowProcessingState.next() ) {
-					results.add( rowReader.readRow( rowProcessingState, processingOptions ) );
+					results.add( rowReader.readRow( rowProcessingState ) );
 					rowProcessingState.finishRowProcessing( true );
 				}
 				if ( resultSetMapping.getNumberOfResultBuilders() == 0
@@ -250,7 +266,7 @@ public class OutputsImpl implements Outputs {
 				return results;
 			}
 			finally {
-				rowReader.finishUp( jdbcValuesSourceProcessingState );
+				rowReader.finishUp( rowProcessingState );
 				jdbcValuesSourceProcessingState.finishUp( results.size() > 1 );
 			}
 		}

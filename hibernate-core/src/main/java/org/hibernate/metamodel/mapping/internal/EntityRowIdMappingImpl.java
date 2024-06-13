@@ -108,7 +108,9 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				rowIdType,
-				navigablePath
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 

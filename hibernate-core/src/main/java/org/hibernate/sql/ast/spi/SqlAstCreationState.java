@@ -30,6 +30,8 @@ public interface SqlAstCreationState {
 
 	LoadQueryInfluencers getLoadQueryInfluencers();
 
+	boolean applyOnlyLoadByKeyFilters();
+
 	void registerLockMode(String identificationVariable, LockMode explicitLockMode);
 
 	/**

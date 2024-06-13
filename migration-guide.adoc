@@ -57,3 +57,28 @@ Support for `array_contains()` to accept an array as element argument is depreca
 To check if an array is a subset of another array, use the `array_includes()` function,
 or the new `INCLUDES` predicate i.e. `array INCLUDES subarray`.
 
+[[merge-versioned-deleted]]
+=== Merge versioned entity when row is deleted
+Previously, merging a detached entity resulted in a SQL `insert` whenever there was no matching row in the database (for example, if the object had been deleted in another transaction).
+This behavior was unexpected and violated the rules of optimistic locking.
+
+An `OptimisticLockException` is now thrown when it is possible to determine that an entity is definitely detached, but there is no matching row.
+For this determination to be possible, the entity must have either:
+
+- a generated `@Id` field, or
+- a non-primitive `@Version` field.
+
+For entities which have neither, it's impossible to distinguish a new instance from a deleted detached instance, and there is no change from the previous behavior.
+
+[[embeddable-treated-paths]]
+== Changes to the `SqmTreatedPath` interface
+
+ORM 6.6 introduced support for `@Embeddable` type inheritance.
+With it, we also enabled the `type()` and `treat()` functions to work with embeddable-typed paths.
+As a consequence, the `SqmTreatedPath#getTreatTarget()` method will now return a generic `ManagedDomainType` object,
+which could in turn be an `EntityDomainType` (as it was before) or also an `EmbeddableDomainType` instance.
+
+[[h2-dialect]]
+== H2 database and bulk mutation strategy
+
+With ORM 6.6 when a bulk mutation involves multiple tables, H2 dialect will make use of global temporary tables instead of local ones.

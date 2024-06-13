@@ -251,6 +251,10 @@ public class DomainResultCreationStateImpl
 		return loadQueryInfluencers;
 	}
 
+	@Override
+	public boolean applyOnlyLoadByKeyFilters() {
+		return true;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SqlAstProcessingState

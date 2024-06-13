@@ -6,14 +6,12 @@
  */
 package org.hibernate.sql.results.jdbc.spi;
 
-import org.hibernate.spi.NavigablePath;
+import org.hibernate.LockMode;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.spi.RowReader;
-
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * State pertaining to the processing of a single "row" of a JdbcValuesSource
@@ -25,6 +23,13 @@ public interface RowProcessingState extends ExecutionContext {
 	 * Access to the state related to the overall processing of the results.
 	 */
 	JdbcValuesSourceProcessingState getJdbcValuesSourceProcessingState();
+
+	LockMode determineEffectiveLockMode(String alias);
+
+	boolean needsResolveState();
+
+	<T extends InitializerData> T getInitializerData(int initializerId);
+	void setInitializerData(int initializerId, InitializerData state);
 
 	/**
 	 * Retrieve the value corresponding to the given SqlSelection as part
@@ -59,21 +64,15 @@ public interface RowProcessingState extends ExecutionContext {
 
 	/**
 	 * Callback at the end of processing the current "row"
-	 *
-	 * @deprecated Use {@link #finishRowProcessing(boolean)} instead
 	 */
-	@Deprecated(forRemoval = true)
-	void finishRowProcessing();
+	void finishRowProcessing(boolean wasAdded);
 
 	/**
-	 * Callback at the end of processing the current "row"
+	 * If this is a row processing state for aggregate components,
+	 * this will return the underlying row processing state.
 	 */
-	default void finishRowProcessing(boolean wasAdded) {
-		finishRowProcessing();
+	default RowProcessingState unwrap() {
+		return this;
 	}
 
-	/**
-	 * Locate the Initializer registered for the given path
-	 */
-	Initializer resolveInitializer(@Nullable NavigablePath path);
 }

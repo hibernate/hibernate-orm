@@ -6,8 +6,10 @@
  */
 package org.hibernate.metamodel.model.domain;
 
-import org.hibernate.query.BindableType;
+import java.util.Collection;
+
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmPathSource;
 
 import jakarta.persistence.metamodel.EmbeddableType;
 
@@ -20,5 +22,16 @@ import jakarta.persistence.metamodel.EmbeddableType;
  * @author Steve Ebersole
  */
 public interface EmbeddableDomainType<J>
-		extends ManagedDomainType<J>, EmbeddableType<J>, SqmExpressible<J> {
+		extends TreatableDomainType<J>, EmbeddableType<J>, SqmExpressible<J> {
+	@Override
+	default EmbeddableDomainType<J> getSqmType() {
+		return this;
+	}
+
+	@Override
+	Collection<? extends EmbeddableDomainType<? extends J>> getSubTypes();
+
+	default boolean isPolymorphic() {
+		return getSuperType() != null || !getSubTypes().isEmpty();
+	}
 }

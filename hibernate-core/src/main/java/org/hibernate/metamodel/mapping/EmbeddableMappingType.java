@@ -6,12 +6,17 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.function.BiConsumer;
 
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.MutableInteger;
+import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.spi.NavigablePath;
@@ -52,16 +57,39 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 		return getDiscriminatorMapping() != null;
 	}
 
+	interface ConcreteEmbeddableType {
+
+		EmbeddableInstantiator getInstantiator();
+
+		int getSubclassId();
+
+		/**
+		 * Returns {@code true} if the provided embeddable class contains the
+		 * specified attribute mapping, {@code false} otherwise.
+		 * @implNote This method always returns {@code true} for non-polymorphic embeddable types
+		 *
+		 * @param attributeMapping the attribute to check
+		 */
+		boolean declaresAttribute(AttributeMapping attributeMapping);
+
+		boolean declaresAttribute(int attributeIndex);
+
+		Object getDiscriminatorValue();
+	}
+
+	default ConcreteEmbeddableType findSubtypeByDiscriminator(Object discriminatorValue) {
+		return null;
+	}
+
+	default ConcreteEmbeddableType findSubtypeBySubclass(String subclassName) {
+		return null;
+	}
+
 	/**
-	 * Returns {@code true} if the provided embeddable class contains the
-	 * specified attribute mapping, {@code false} otherwise.
-	 * @implNote This method always returns {@code true} for non-polymorphic embeddable types
-	 *
-	 * @param embeddableClassName the embeddable subclass in which the attribute must be declared
-	 * @param attributeMapping the attribute to check
+	 * Returns the concrete embeddable subtypes or an empty collection if {@link #isPolymorphic()} is {@code false}.
 	 */
-	default boolean declaresAttribute(String embeddableClassName, AttributeMapping attributeMapping) {
-		return true;
+	default Collection<ConcreteEmbeddableType> getConcreteEmbeddableTypes() {
+		return Collections.emptySet();
 	}
 
 	default SelectableMapping getAggregateMapping() {
@@ -130,9 +158,43 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 		int count = 0;
 		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
 			final AttributeMapping attributeMapping = getAttributeMapping( i );
-			final MappingType mappedType = attributeMapping.getMappedType();
-			if ( mappedType instanceof EmbeddableMappingType ) {
-				final EmbeddableMappingType embeddableMappingType = (EmbeddableMappingType) mappedType;
+			if ( attributeMapping instanceof DiscriminatedAssociationAttributeMapping ) {
+				final DiscriminatedAssociationAttributeMapping discriminatedAssociationAttributeMapping = (DiscriminatedAssociationAttributeMapping) attributeMapping;
+				if ( count == columnIndex ) {
+					return discriminatedAssociationAttributeMapping.getDiscriminatorMapping();
+				}
+				count++;
+				if ( count == columnIndex ) {
+					return discriminatedAssociationAttributeMapping.getKeyPart();
+				}
+				count++;
+			}
+			else if ( attributeMapping instanceof ToOneAttributeMapping ) {
+				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
+				if ( toOneAttributeMapping.getSideNature() == ForeignKeyDescriptor.Nature.KEY ) {
+					final ValuedModelPart keyPart = toOneAttributeMapping.getForeignKeyDescriptor().getKeyPart();
+					if ( keyPart instanceof BasicValuedMapping ) {
+						if ( count == columnIndex ) {
+							return (SelectableMapping) keyPart;
+						}
+						count++;
+					}
+					else if ( keyPart instanceof EmbeddableValuedModelPart ) {
+						final EmbeddableMappingType mappingType = ( (EmbeddableValuedModelPart) keyPart ).getEmbeddableTypeDescriptor();
+						final SelectableMapping selectable = mappingType.getJdbcValueSelectable( columnIndex - count );
+						if ( selectable != null ) {
+							return selectable;
+						}
+						count += mappingType.getJdbcValueCount();
+					}
+					else {
+						throw new UnsupportedOperationException( "Unsupported foreign key part: " + keyPart );
+					}
+				}
+			}
+			else if ( attributeMapping instanceof EmbeddableValuedModelPart ) {
+				final EmbeddableValuedModelPart embeddableValuedModelPart = (EmbeddableValuedModelPart) attributeMapping;
+				final EmbeddableMappingType embeddableMappingType = embeddableValuedModelPart.getMappedType();
 				final SelectableMapping aggregateMapping = embeddableMappingType.getAggregateMapping();
 				if ( aggregateMapping == null ) {
 					final SelectableMapping subSelectable = embeddableMappingType.getJdbcValueSelectable( columnIndex - count );
@@ -150,7 +212,10 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 			}
 			else {
 				if ( count == columnIndex ) {
-					return (SelectableMapping) attributeMapping;
+					if ( attributeMapping instanceof SelectableMapping ) {
+						return (SelectableMapping) attributeMapping;
+					}
+					assert attributeMapping.getJdbcTypeCount() == 0;
 				}
 				count += attributeMapping.getJdbcTypeCount();
 			}

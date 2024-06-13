@@ -28,6 +28,7 @@ import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
@@ -371,11 +372,15 @@ public class EmbeddableBinder {
 			returnedClassOrElement = context.getBootstrapContext().getReflectionManager()
 					.toXClass( compositeUserType.embeddable() );
 		}
+		AggregateComponentBinder.processAggregate(
+				component,
+				propertyHolder,
+				inferredData,
+				returnedClassOrElement,
+				columns,
+				context
+		);
 
-		final XClass annotatedClass = inferredData.getPropertyClass();
-		final List<PropertyData> classElements =
-				collectClassElements( propertyAccessor, context, returnedClassOrElement, annotatedClass, isIdClass );
-		// Main entry point for binding embeddable inheritance
 		bindDiscriminator(
 				component,
 				returnedClassOrElement,
@@ -385,13 +390,24 @@ public class EmbeddableBinder {
 				inheritanceStatePerClass,
 				context
 		);
+
+		final Map<String, String> subclassToSuperclass = component.isPolymorphic() ? new HashMap<>() : null;
+		final XClass annotatedClass = inferredData.getPropertyClass();
+		final List<PropertyData> classElements = collectClassElements(
+				propertyAccessor,
+				context,
+				returnedClassOrElement,
+				annotatedClass,
+				isIdClass,
+				subclassToSuperclass
+		);
+
 		if ( component.isPolymorphic() ) {
 			validateInheritanceIsSupported( subholder, compositeUserType );
 			final BasicType<?> discriminatorType = (BasicType<?>) component.getDiscriminator().getType();
 			// Discriminator values are used to construct the embeddable domain
 			// type hierarchy so order of processing is important
 			final Map<Object, String> discriminatorValues = new TreeMap<>();
-			final Map<String, String> subclassToSuperclass = new HashMap<>();
 			collectDiscriminatorValue( returnedClassOrElement, discriminatorType, discriminatorValues );
 			collectSubclassElements(
 					propertyAccessor,
@@ -405,6 +421,7 @@ public class EmbeddableBinder {
 			component.setDiscriminatorValues( discriminatorValues );
 			component.setSubclassToSuperclass( subclassToSuperclass );
 		}
+
 		final List<PropertyData> baseClassElements =
 				collectBaseClassElements( baseInferredData, propertyAccessor, context, annotatedClass );
 		if ( baseClassElements != null
@@ -447,14 +464,6 @@ public class EmbeddableBinder {
 			processCompositeUserType( component, compositeUserType );
 		}
 
-		AggregateComponentBinder.processAggregate(
-				component,
-				propertyHolder,
-				inferredData,
-				returnedClassOrElement,
-				columns,
-				context
-		);
 		return component;
 	}
 
@@ -528,7 +537,7 @@ public class EmbeddableBinder {
 						discriminatorColumn,
 						discriminatorFormula,
 						overrides == null ? null : overrides[0],
-						columnPrefix + DEFAULT_DISCRIMINATOR_COLUMN_NAME,
+						columnPrefix + "_" + DEFAULT_DISCRIMINATOR_COLUMN_NAME,
 						context
 				);
 			}
@@ -563,6 +572,7 @@ public class EmbeddableBinder {
 		columns.setBuildingContext( context );
 		discriminatorColumn.setParent( columns );
 		final BasicValue discriminatorColumnBinding = new BasicValue( context, component.getTable() );
+		discriminatorColumnBinding.setAggregateColumn( component.getAggregateColumn() );
 		component.setDiscriminator( discriminatorColumnBinding );
 		discriminatorColumn.linkWithValue( discriminatorColumnBinding );
 		discriminatorColumnBinding.setTypeName( discriminatorColumn.getDiscriminatorTypeName() );
@@ -596,20 +606,25 @@ public class EmbeddableBinder {
 			MetadataBuildingContext context,
 			XClass returnedClassOrElement,
 			XClass annotatedClass,
-			boolean isIdClass) {
+			boolean isIdClass,
+			Map<String, String> subclassToSuperclass) {
 		final List<PropertyData> classElements = new ArrayList<>();
 		//embeddable elements can have type defs
 		final PropertyContainer container =
 				new PropertyContainer( returnedClassOrElement, annotatedClass, propertyAccessor );
 		addElementsOfClass( classElements, container, context);
 		//add elements of the embeddable's mapped superclasses
-		XClass superClass = returnedClassOrElement.getSuperclass();
-		while ( isValidSuperclass( superClass, isIdClass ) ) {
+		XClass subclass = returnedClassOrElement;
+		XClass superClass;
+		while ( isValidSuperclass( superClass = subclass.getSuperclass(), isIdClass ) ) {
 			//FIXME: proper support of type variables incl var resolved at upper levels
 			final PropertyContainer superContainer =
 					new PropertyContainer( superClass, annotatedClass, propertyAccessor );
 			addElementsOfClass( classElements, superContainer, context );
-			superClass = superClass.getSuperclass();
+			if ( subclassToSuperclass != null ) {
+				subclassToSuperclass.put( subclass.getName(), superClass.getName() );
+			}
+			subclass = superClass;
 		}
 		return classElements;
 	}
@@ -857,6 +872,10 @@ public class EmbeddableBinder {
 		final Constructor<?> constructor = resolveInstantiator( embeddableClass, context );
 		if ( constructor != null ) {
 			component.setInstantiator( constructor, constructor.getAnnotation( Instantiator.class ).value() );
+		}
+		if ( propertyHolder.isComponent() ) {
+			final ComponentPropertyHolder componentPropertyHolder = (ComponentPropertyHolder) propertyHolder;
+			component.setParentAggregateColumn( componentPropertyHolder.getAggregateColumn() );
 		}
 		return component;
 	}

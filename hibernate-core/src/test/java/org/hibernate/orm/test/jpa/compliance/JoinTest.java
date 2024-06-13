@@ -77,7 +77,7 @@ public class JoinTest {
 
 					entityManager.persist( order1 );
 					entityManager.persist( order2 );
-					entityManager.persist( order2 );
+					entityManager.persist( order3 );
 
 				}
 		);

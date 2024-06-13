@@ -42,8 +42,9 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.IdentifierGeneratorCreator;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
+import org.hibernate.resource.beans.container.spi.BeanContainer;
+import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
 import org.jboss.logging.Logger;
 
@@ -77,15 +78,13 @@ public class GeneratorBinder {
 			Map<String, IdentifierGeneratorDefinition> localGenerators) {
 		LOG.debugf( "#makeIdGenerator(%s, %s, %s, %s, ...)", id, property, generatorType, generatorName );
 
-		final Table table = id.getTable();
-		table.setIdentifierValue( id );
 		//generator settings
 		id.setIdentifierGeneratorStrategy( generatorType );
 
 		final Map<String,Object> parameters = new HashMap<>();
 
 		//always settable
-		parameters.put( PersistentIdentifierGenerator.TABLE, table.getName() );
+		parameters.put( PersistentIdentifierGenerator.TABLE, id.getTable().getName() );
 
 		if ( id.getColumnSpan() == 1 ) {
 			parameters.put( PersistentIdentifierGenerator.PK, id.getColumns().get(0).getName() );
@@ -376,7 +375,10 @@ public class GeneratorBinder {
 		};
 	}
 
-	static IdentifierGeneratorCreator identifierGeneratorCreator(XProperty idProperty, Annotation annotation) {
+	static IdentifierGeneratorCreator identifierGeneratorCreator(
+			XProperty idProperty,
+			Annotation annotation,
+			BeanContainer beanContainer) {
 		final Member member = HCANNHelper.getUnderlyingMember( idProperty );
 		final Class<? extends Annotation> annotationType = annotation.annotationType();
 		final IdGeneratorType idGeneratorType = annotationType.getAnnotation( IdGeneratorType.class );
@@ -387,17 +389,85 @@ public class GeneratorBinder {
 			final Generator generator =
 					instantiateGenerator(
 							annotation,
-							member,
-							annotationType,
+							beanContainer,
 							creationContext,
-							CustomIdGeneratorCreationContext.class,
-							generatorClass
+							generatorClass,
+							member,
+							annotationType
 					);
 			callInitialize( annotation, member, creationContext, generator );
 			callConfigure( creationContext, generator );
 			checkIdGeneratorTiming( annotationType, generator );
 			return generator;
 		};
+	}
+
+	private static Generator instantiateGenerator(
+			Annotation annotation,
+			BeanContainer beanContainer,
+			CustomIdGeneratorCreationContext creationContext,
+			Class<? extends Generator> generatorClass,
+			Member member,
+			Class<? extends Annotation> annotationType) {
+		if ( beanContainer != null ) {
+			return instantiateGeneratorAsBean(
+					annotation,
+					beanContainer,
+					creationContext,
+					generatorClass,
+					member,
+					annotationType
+			);
+		}
+		else {
+			return instantiateGenerator(
+					annotation,
+					member,
+					annotationType,
+					creationContext,
+					CustomIdGeneratorCreationContext.class,
+					generatorClass
+			);
+		}
+	}
+
+	private static Generator instantiateGeneratorAsBean(
+			Annotation annotation,
+			BeanContainer beanContainer,
+			CustomIdGeneratorCreationContext creationContext,
+			Class<? extends Generator> generatorClass,
+			Member member,
+			Class<? extends Annotation> annotationType) {
+		return beanContainer.getBean( generatorClass,
+				new BeanContainer.LifecycleOptions() {
+					@Override
+					public boolean canUseCachedReferences() {
+						return false;
+					}
+					@Override
+					public boolean useJpaCompliantCreation() {
+						return true;
+					}
+				},
+				new BeanInstanceProducer() {
+					@SuppressWarnings( "unchecked" )
+					@Override
+					public <B> B produceBeanInstance(Class<B> beanType) {
+						return (B) instantiateGenerator(
+								annotation,
+								member,
+								annotationType,
+								creationContext,
+								CustomIdGeneratorCreationContext.class,
+								generatorClass
+						);
+					}
+					@Override
+					public <B> B produceBeanInstance(String name, Class<B> beanType) {
+						return produceBeanInstance( beanType );
+					}
+				} )
+				.getBeanInstance();
 	}
 
 	private static <C, G extends Generator> G instantiateGenerator(

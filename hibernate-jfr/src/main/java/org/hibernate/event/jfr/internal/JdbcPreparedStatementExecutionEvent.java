@@ -28,14 +28,9 @@ public class JdbcPreparedStatementExecutionEvent extends Event implements Hibern
 	@Label( "PreparedStatement SQL" )
 	public String sql;
 
-	@Label( "PreparedStatement Execution Time" )
-	public long executionTime;
-
 	@Override
 	public String toString() {
 		return NAME ;
 	}
-
-	public transient long startedAt;
 
 }

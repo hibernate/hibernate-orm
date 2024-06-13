@@ -141,7 +141,7 @@ public class ArrayAggregateTest {
 	@Test
 	public void testCompareAgainstArray(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			List<String[]> results = em.createQuery( "select 1 where array('abc','def',null) is not distinct from (select array_agg(e.theString) within group (order by e.theString asc nulls last) from EntityOfBasics e)", String[].class )
+			List<Integer> results = em.createQuery( "select 1 where array('abc','def',null) is not distinct from (select array_agg(e.theString) within group (order by e.theString asc nulls last) from EntityOfBasics e)", Integer.class )
 					.getResultList();
 			assertEquals( 1, results.size() );
 		} );

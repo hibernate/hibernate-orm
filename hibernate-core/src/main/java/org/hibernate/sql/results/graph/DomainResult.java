@@ -32,6 +32,6 @@ public interface DomainResult<J> extends DomainResultGraphNode {
 	 * Create an assembler (and any initializers) for this result.
 	 */
 	DomainResultAssembler<J> createResultAssembler(
-			FetchParentAccess parentAccess,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState);
 }

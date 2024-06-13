@@ -106,6 +106,46 @@ public class ElementCollectionEmbeddableInheritanceTest {
 		} );
 	}
 
+	@Test
+	public void testType(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			assertThat( session.createQuery(
+					"select type(element(t.embeddables)) from TestEntity t where id = 2",
+					Class.class
+			).getSingleResult() ).isEqualTo( SubChildOneEmbeddable.class );
+			assertThat( session.createQuery(
+					"select t.id from TestEntity t where type(element(t.embeddables)) = SubChildOneEmbeddable",
+					Long.class
+			).getSingleResult() ).isEqualTo( 2L );
+			assertThat( session.createQuery(
+					"select type(e) from TestEntity t join t.embeddables e where id = 2",
+					Class.class
+			).getSingleResult() ).isEqualTo( SubChildOneEmbeddable.class );
+			assertThat( session.createQuery(
+					"select t.id from TestEntity t join t.embeddables e where type(e) = SubChildOneEmbeddable",
+					Long.class
+			).getSingleResult() ).isEqualTo( 2L );
+		} );
+	}
+
+	@Test
+	public void testTreat(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			assertThat( session.createQuery(
+					"select treat(e as SubChildOneEmbeddable) from TestEntity t join t.embeddables e",
+					SubChildOneEmbeddable.class
+			).getSingleResult().getSubChildOneProp() ).isEqualTo( 2.0 );
+			assertThat( session.createQuery(
+					"select t.id from TestEntity t join t.embeddables e where treat(e as SubChildOneEmbeddable).subChildOneProp = 2.0",
+					Long.class
+			).getSingleResult() ).isEqualTo( 2L );
+			assertThat( session.createQuery(
+					"select t.id from TestEntity t join treat(t.embeddables as SubChildOneEmbeddable) e where e.subChildOneProp = 2.0",
+					Long.class
+			).getSingleResult() ).isEqualTo( 2L );
+		} );
+	}
+
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {

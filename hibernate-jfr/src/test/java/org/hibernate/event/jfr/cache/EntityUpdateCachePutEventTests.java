@@ -77,7 +77,7 @@ public class EntityUpdateCachePutEventTests {
 					RecordedEvent event = events.get( 0 );
 					assertThat( event.getEventType().getName() )
 							.isEqualTo( CachePutEvent.NAME );
-					assertThat( event.getLong( "executionTime" ) ).isGreaterThan( 0 );
+					assertThat( event.getDuration() ).isPositive();
 					assertThat( event.getString( "sessionIdentifier" ) )
 							.isEqualTo( session.getSessionIdentifier().toString() );
 					assertThat( event.getString( "entityName" ) ).isEqualTo( TestEntity.class.getName() );
@@ -107,7 +107,7 @@ public class EntityUpdateCachePutEventTests {
 					event = events.get( 0 );
 					assertThat( event.getEventType().getName() )
 							.isEqualTo( CachePutEvent.NAME );
-					assertThat( event.getLong( "executionTime" ) ).isGreaterThan( 0 );
+					assertThat( event.getDuration() ).isPositive();
 					assertThat( event.getString( "sessionIdentifier" ) )
 							.isEqualTo( session.getSessionIdentifier().toString() );
 					assertThat( event.getString( "entityName" ) ).isEqualTo( AnotherTestEntity.class.getName() );

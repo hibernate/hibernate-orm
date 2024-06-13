@@ -19,6 +19,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 public interface JdbcValues {
 	JdbcValuesMapping getValuesMapping();
 
+	boolean usesFollowOnLocking();
+
 	/**
 	 * Advances the "cursor position" and returns a boolean indicating whether
 	 * there is a row available to read via {@link #getCurrentRowValue(int)}.
@@ -74,15 +76,7 @@ public interface JdbcValues {
 	 */
 	Object getCurrentRowValue(int valueIndex);
 
-	/**
-	 * @deprecated Use {@link #finishRowProcessing(RowProcessingState, boolean)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	void finishRowProcessing(RowProcessingState rowProcessingState);
-
-	default void finishRowProcessing(RowProcessingState rowProcessingState, boolean wasAdded) {
-		finishRowProcessing( rowProcessingState );
-	}
+	void finishRowProcessing(RowProcessingState rowProcessingState, boolean wasAdded);
 
 	/**
 	 * Give implementations a chance to finish processing

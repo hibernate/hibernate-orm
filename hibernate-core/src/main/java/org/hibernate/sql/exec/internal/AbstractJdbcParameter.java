@@ -21,19 +21,15 @@ import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
 import org.hibernate.query.BindableType;
 import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.ExecutionException;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.descriptor.java.EnumJavaType;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -65,19 +61,6 @@ public abstract class AbstractJdbcParameter
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitParameter( this );
-	}
-
-	@Override
-	public SqlSelection createSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			JavaType javaType,
-			TypeConfiguration typeConfiguration) {
-		// todo (6.0) : investigate "virtual" or "static" selections
-		//		- anything that is the same for each row always - parameter, literal, etc;
-		//			the idea would be to write the value directly into the JdbcValues array
-		//			and not generating a SQL selection in the query sent to DB
-		return new SqlSelectionImpl( jdbcPosition, valuesArrayPosition, javaType, this, false );
 	}
 
 	@Override

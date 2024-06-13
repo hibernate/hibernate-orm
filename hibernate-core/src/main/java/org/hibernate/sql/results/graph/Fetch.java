@@ -70,5 +70,7 @@ public interface Fetch extends DomainResultGraphNode {
 	/**
 	 * Create the assembler for this fetch
 	 */
-	DomainResultAssembler<?> createAssembler(FetchParentAccess parentAccess, AssemblerCreationState creationState);
+	DomainResultAssembler<?> createAssembler(
+			InitializerParent<?> parent,
+			AssemblerCreationState creationState);
 }

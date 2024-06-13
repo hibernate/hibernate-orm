@@ -198,15 +198,14 @@ public class StandardIdentifierGeneratorFactory
 		throw new UnsupportedOperationException( "No GenerationTypeStrategy specified" );
 	}
 
-	@Override @Deprecated
-	public Dialect getDialect() {
+	private Dialect getDialect() {
 		if ( dialect == null ) {
 			dialect = serviceRegistry.requireService( JdbcEnvironment.class ).getDialect();
 		}
 		return dialect;
 	}
 
-	@Override
+	@Override @Deprecated
 	public Generator createIdentifierGenerator(String strategy, Type type, Properties parameters) {
 		try {
 			final Class<? extends Generator> clazz = getIdentifierGeneratorClass( strategy );
@@ -243,8 +242,7 @@ public class StandardIdentifierGeneratorFactory
 		return true;
 	}
 
-	@Override
-	public Class<? extends Generator> getIdentifierGeneratorClass(String strategy) {
+	private Class<? extends Generator> getIdentifierGeneratorClass(String strategy) {
 		switch ( strategy ) {
 			case "hilo":
 				throw new UnsupportedOperationException( "Support for 'hilo' generator has been removed" );
@@ -257,7 +255,7 @@ public class StandardIdentifierGeneratorFactory
 		}
 	}
 
-	protected Class<? extends Generator> generatorClassForName(String strategy) {
+	private Class<? extends Generator> generatorClassForName(String strategy) {
 		try {
 			Class<? extends Generator> clazz =
 					serviceRegistry.requireService( ClassLoaderService.class )

@@ -7,7 +7,6 @@
 package org.hibernate.sql.results.graph;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -23,7 +22,7 @@ public class UnfetchedResultAssembler<J>  implements DomainResultAssembler<J> {
 	}
 
 	@Override
-	public J assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
+	public J assemble(RowProcessingState rowProcessingState) {
 		return (J) LazyPropertyInitializer.UNFETCHED_PROPERTY;
 	}
 
@@ -31,5 +30,6 @@ public class UnfetchedResultAssembler<J>  implements DomainResultAssembler<J> {
 	public JavaType<J> getAssembledJavaType() {
 		return javaType;
 	}
+
 }
 

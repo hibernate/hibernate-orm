@@ -13,19 +13,19 @@ import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.model.domain.DiscriminatorSqmPath;
+import org.hibernate.metamodel.model.domain.internal.EmbeddedDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.EntityDiscriminatorSqmPath;
-import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.query.sqm.internal.SqmMappingModelHelper.resolveMappingModelExpressible;
 
 /**
  * SqmPathInterpretation and DomainResultProducer implementation for entity discriminator
@@ -58,22 +58,38 @@ public class DiscriminatorPathInterpretation<T> extends AbstractSqmPathInterpret
 	}
 
 	public static SqmPathInterpretation<?> from(
-			EntityDiscriminatorSqmPath path,
+			DiscriminatorSqmPath<?> path,
 			SqmToSqlAstConverter converter) {
-		assert path.getEntityDescriptor().hasSubclasses();
 
 		final NavigablePath navigablePath = path.getNavigablePath();
 		final TableGroup tableGroup = converter.getFromClauseAccess().getTableGroup( navigablePath.getParent() );
 		final ModelPartContainer modelPart = tableGroup.getModelPart();
-		final EntityMappingType entityMapping;
-		if ( modelPart instanceof EntityValuedModelPart ) {
-			entityMapping = ( (EntityValuedModelPart) modelPart ).getEntityMappingType();
+
+		if ( path instanceof EntityDiscriminatorSqmPath<?> ) {
+			assert ((EntityDiscriminatorSqmPath<?>) path).getEntityDescriptor().hasSubclasses();
+			final EntityMappingType entityMapping;
+			if ( modelPart instanceof EntityValuedModelPart ) {
+				entityMapping = ( (EntityValuedModelPart) modelPart ).getEntityMappingType();
+			}
+			else {
+				entityMapping = (EntityMappingType) ( (PluralAttributeMapping) modelPart ).getElementDescriptor().getPartMappingType();
+			}
+			return new DiscriminatorPathInterpretation<>( navigablePath, entityMapping, tableGroup, converter );
 		}
 		else {
-			entityMapping = (EntityMappingType) ( (PluralAttributeMapping) modelPart ).getElementDescriptor().getPartMappingType();
+			final EmbeddedDiscriminatorSqmPath<?> embeddableDiscriminator = (EmbeddedDiscriminatorSqmPath<?>) path;
+			final DiscriminatorMapping discriminator = (DiscriminatorMapping) resolveMappingModelExpressible(
+					embeddableDiscriminator,
+					converter.getCreationContext().getMappingMetamodel(),
+					converter.getFromClauseAccess()::findTableGroup
+			);
+			return new DiscriminatorPathInterpretation<>(
+					navigablePath,
+					discriminator,
+					tableGroup,
+					converter
+			);
 		}
-
-		return new DiscriminatorPathInterpretation<>( navigablePath, entityMapping, tableGroup, converter );
 	}
 
 	public EntityDiscriminatorMapping getDiscriminatorMapping() {
@@ -83,15 +99,6 @@ public class DiscriminatorPathInterpretation<T> extends AbstractSqmPathInterpret
 	@Override
 	public EntityDiscriminatorMapping getExpressionType() {
 		return getDiscriminatorMapping();
-	}
-
-	@Override
-	public SqlSelection createSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			JavaType javaType,
-			TypeConfiguration typeConfiguration) {
-		return new ResultSetMappingSqlSelection( valuesArrayPosition, getDiscriminatorMapping() );
 	}
 
 	@Override

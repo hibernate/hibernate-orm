@@ -13,7 +13,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
-import org.hibernate.metamodel.mapping.DiscriminatorValueDetails;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -124,7 +123,9 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 				resultVariable,
 				discriminatorType.getJavaTypeDescriptor(),
 				discriminatorType.getValueConverter(),
-				navigablePath
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -175,7 +176,10 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 				this,
 				discriminatorType.getValueConverter(),
 				fetchTiming,
-				creationState
+				true,
+				creationState,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 

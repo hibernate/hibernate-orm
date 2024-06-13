@@ -290,7 +290,7 @@ public interface JdbcType extends Serializable {
 	default boolean isDuration() {
 		final int ddlTypeCode = getDefaultSqlTypeCode();
 		return isDurationType( ddlTypeCode )
-				|| isIntervalType( ddlTypeCode );
+			|| isIntervalType( ddlTypeCode );
 	}
 
 	default boolean isArray() {
@@ -401,5 +401,51 @@ public interface JdbcType extends Serializable {
 	@Incubating
 	default String getExtraCreateTableInfo(JavaType<?> javaType, String columnName, String tableName, Database database) {
 		return "";
+	}
+
+	@Incubating
+	default boolean isComparable() {
+		final int code = getDefaultSqlTypeCode();
+		return isCharacterType( code )
+			|| isTemporalType( code )
+			|| isNumericType( code )
+			|| isEnumType( code )
+			// both Java and the SQL database consider
+			// that false < true is a sensible thing
+			|| isBoolean()
+			// both Java and the database consider UUIDs
+			// comparable, so go ahead and accept them
+			|| code == UUID;
+	}
+
+	@Incubating
+	default boolean hasDatePart() {
+		return SqlTypes.hasDatePart( getDefaultSqlTypeCode() );
+	}
+
+	@Incubating
+	default boolean hasTimePart() {
+		return SqlTypes.hasTimePart( getDefaultSqlTypeCode() );
+	}
+
+	@Incubating
+	default boolean isStringLikeExcludingClob() {
+		final int code = getDefaultSqlTypeCode();
+		return isCharacterType( code ) || isEnumType( code );
+	}
+
+	@Incubating
+	default boolean isSpatial() {
+		return isSpatialType( getDefaultSqlTypeCode() );
+	}
+
+	@Incubating
+	default boolean isBoolean() {
+		return getDefaultSqlTypeCode() == BOOLEAN;
+	}
+
+	@Incubating
+	default boolean isSmallInteger() {
+		return isSmallOrTinyInt( getDefaultSqlTypeCode() );
 	}
 }

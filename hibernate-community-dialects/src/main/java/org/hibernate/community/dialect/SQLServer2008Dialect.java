@@ -14,7 +14,7 @@ import org.hibernate.dialect.SQLServerDialect;
  *
  * @author Gavin King
  *
- * @deprecated use {@code SQLServerDialect(10)}
+ * @deprecated use {@code SQLServerLegacyDialect(10)}
  */
 @Deprecated
 public class SQLServer2008Dialect extends SQLServerDialect {

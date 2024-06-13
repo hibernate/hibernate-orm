@@ -17,7 +17,6 @@ import org.hibernate.query.results.BasicValuedFetchBuilder;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultsHelper;
-import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -28,7 +27,6 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 import static org.hibernate.query.results.ResultsHelper.impl;
-import static org.hibernate.query.results.ResultsHelper.jdbcPositionToValuesArrayPosition;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
@@ -118,7 +116,8 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, BasicVal
 				fetchPath,
 				fetchable,
 				FetchTiming.IMMEDIATE,
-				domainResultCreationState
+				domainResultCreationState,
+				!sqlSelection.isVirtual()
 		);
 	}
 

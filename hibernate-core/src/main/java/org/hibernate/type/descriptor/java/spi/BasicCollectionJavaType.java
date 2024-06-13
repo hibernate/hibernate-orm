@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
@@ -445,6 +446,10 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 
 	private C fromCollection(Collection<E> value) {
 		switch ( semantics.getCollectionClassification() ) {
+			case SET:
+				// Keep consistent with CollectionMutabilityPlan::deepCopy
+				//noinspection unchecked
+				return (C) new LinkedHashSet<>( value );
 			case LIST:
 			case BAG:
 				if ( value instanceof ArrayList<?> ) {

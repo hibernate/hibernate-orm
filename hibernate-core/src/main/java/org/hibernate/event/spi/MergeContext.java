@@ -234,12 +234,7 @@ public class MergeContext implements Map<Object,Object> {
 			// this is a new mapping for mergeEntity in mergeToManagedEntityXref
 			if  ( oldMergeEntity != null ) {
 				// oldMergeEntity was a different merge entity with the same corresponding managed entity;
-				entityCopyObserver.entityCopyDetected(
-						managedEntity,
-						mergeEntity,
-						oldMergeEntity,
-						session
-				);
+				entityCopyObserver.entityCopyDetected( managedEntity, mergeEntity, oldMergeEntity, session );
 			}
 			if ( oldOperatedOn != null ) {
 				throw new IllegalStateException(

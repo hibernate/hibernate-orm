@@ -10,7 +10,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.EntityBatchLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -24,9 +24,9 @@ public abstract class AbstractEntityBatchLoader<T>
 
 	private final SingleIdEntityLoaderStandardImpl<T> singleIdLoader;
 
-	public AbstractEntityBatchLoader(EntityMappingType entityDescriptor, SessionFactoryImplementor sessionFactory) {
-		super( entityDescriptor, sessionFactory );
-		singleIdLoader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, sessionFactory );
+	public AbstractEntityBatchLoader(EntityMappingType entityDescriptor, LoadQueryInfluencers loadQueryInfluencers) {
+		super( entityDescriptor, loadQueryInfluencers.getSessionFactory() );
+		this.singleIdLoader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, loadQueryInfluencers );
 	}
 
 	protected abstract void initializeEntities(

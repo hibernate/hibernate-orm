@@ -76,7 +76,7 @@ public class OracleDatabaseCleaner implements DatabaseCleaner {
 										// Exclude the tables with names starting like 'DEF$_'
 										"      AND table_name NOT LIKE 'DEF$\\_%' ESCAPE '\\'" +
 										" UNION ALL " +
-										"SELECT 'DROP SEQUENCE ' || sequence_owner || '.' || sequence_name FROM all_sequences WHERE sequence_owner = sys_context('USERENV', 'SESSION_USER') and sequence_name not like 'ISEQ$$%'"
+										"SELECT 'DROP SEQUENCE ' || sequence_owner || '.' || sequence_name FROM all_sequences WHERE sequence_owner = sys_context('USERENV', 'SESSION_USER') and sequence_name not like 'ISEQ$$%' and sequence_name not like 'MVIEW$%'"
 						);
 					}
 					catch (SQLException sqlException) {

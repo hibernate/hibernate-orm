@@ -263,12 +263,15 @@ public class AttributeFactory {
 			}
 		}
 
+		final DomainType<?> discriminatorType = component.isPolymorphic() ? component.getDiscriminatorType() : null;
 		final EmbeddableTypeImpl<Y> embeddableType = new EmbeddableTypeImpl<>(
 				context.getJavaTypeRegistry().resolveManagedTypeDescriptor( embeddableClass ),
+				null,
+				discriminatorType,
 				false,
 				context.getJpaMetamodel()
 		);
-		context.registerEmbeddableType( embeddableType, component);
+		context.registerEmbeddableType( embeddableType, component );
 
 		if ( component.isPolymorphic() ) {
 			final java.util.Collection<String> embeddableSubclasses = component.getDiscriminatorValues().values();
@@ -283,12 +286,15 @@ public class AttributeFactory {
 					continue;
 				}
 				final Class<?> subclass = cls.classForName( subclassName );
-				context.registerEmbeddableType( new EmbeddableTypeImpl<>(
+				final EmbeddableTypeImpl<?> subType = new EmbeddableTypeImpl<>(
 						context.getJavaTypeRegistry().resolveManagedTypeDescriptor( subclass ),
 						domainTypes.get( component.getSuperclass( subclassName ) ),
+						discriminatorType,
 						false,
 						context.getJpaMetamodel()
-				), component );
+				);
+				domainTypes.put( subclassName, subType );
+				context.registerEmbeddableType( subType, component );
 			}
 		}
 
@@ -298,6 +304,8 @@ public class AttributeFactory {
 	private static <Y> EmbeddableTypeImpl<Y> dynamicEmbeddableType(MetadataContext context, Component component) {
 		final EmbeddableTypeImpl<Y> embeddableType = new EmbeddableTypeImpl<>(
 				context.getJavaTypeRegistry().getDescriptor( java.util.Map.class ),
+				null,
+				null,
 				true,
 				context.getJpaMetamodel()
 		);

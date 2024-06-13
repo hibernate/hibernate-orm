@@ -125,6 +125,7 @@ public class MatchingIdSelectionHelper {
 				mutatingTableGroup,
 				true,
 				executionContext.getSession().getLoadQueryInfluencers().getEnabledFilters(),
+				false,
 				null,
 				sqmConverter
 		);

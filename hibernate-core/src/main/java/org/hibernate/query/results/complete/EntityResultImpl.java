@@ -10,6 +10,7 @@ import java.util.BitSet;
 import java.util.function.Function;
 
 import org.hibernate.LockMode;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
@@ -18,14 +19,14 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.InitializerProducer;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.graph.entity.internal.EntityAssembler;
-import org.hibernate.sql.results.graph.entity.internal.EntityResultInitializer;
+import org.hibernate.sql.results.graph.entity.internal.EntityInitializerImpl;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 
 /**
@@ -42,7 +43,6 @@ public class EntityResultImpl implements EntityResult, InitializerProducer<Entit
 	private final boolean containsCollectionFetches;
 
 	private final String resultAlias;
-	private final LockMode lockMode;
 
 	public EntityResultImpl(
 			NavigablePath navigablePath,
@@ -54,10 +54,11 @@ public class EntityResultImpl implements EntityResult, InitializerProducer<Entit
 		this.navigablePath = navigablePath;
 		this.entityValuedModelPart = entityValuedModelPart;
 		this.resultAlias = resultAlias;
-		this.lockMode = lockMode;
-
 
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
+		if ( resultAlias != null ) {
+			sqlAstCreationState.registerLockMode( resultAlias, lockMode );
+		}
 		sqlAstCreationState.getFromClauseAccess().resolveTableGroup(
 				navigablePath,
 				np -> {
@@ -139,30 +140,34 @@ public class EntityResultImpl implements EntityResult, InitializerProducer<Entit
 
 	@Override
 	public DomainResultAssembler<?> createResultAssembler(
-			FetchParentAccess parentAccess,
+			InitializerParent parent,
 			AssemblerCreationState creationState) {
-		return new EntityAssembler( getResultJavaType(), creationState.resolveInitializer( this, parentAccess, this ).asEntityInitializer() );
+		return new EntityAssembler( getResultJavaType(), creationState.resolveInitializer( this, parent, this ).asEntityInitializer() );
 	}
 
 	@Override
-	public Initializer createInitializer(
+	public Initializer<?> createInitializer(
 			EntityResultImpl resultGraphNode,
-			FetchParentAccess parentAccess,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
-		return resultGraphNode.createInitializer( parentAccess, creationState );
+		return resultGraphNode.createInitializer( parent, creationState );
 	}
 
 	@Override
-	public Initializer createInitializer(
-			FetchParentAccess parentAccess,
+	public Initializer<?> createInitializer(
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
-		return new EntityResultInitializer(
+		return new EntityInitializerImpl(
 				this,
-				getNavigablePath(),
-				lockMode,
+				resultAlias,
 				identifierFetch,
 				discriminatorFetch,
 				null,
+				null,
+				NotFoundAction.EXCEPTION,
+				false,
+				null,
+				true,
 				creationState
 		);
 	}

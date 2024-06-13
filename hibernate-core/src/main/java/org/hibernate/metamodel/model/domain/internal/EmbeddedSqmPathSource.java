@@ -7,8 +7,6 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
-import org.hibernate.metamodel.model.domain.PersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
@@ -38,18 +36,13 @@ public class EmbeddedSqmPathSource<J>
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name, JpaMetamodelImplementor metamodel) {
-		final PersistentAttribute<? super J, ?> attribute = getSqmPathType().findAttribute( name );
-		if ( attribute != null ) {
-			return (SqmPathSource<?>) attribute;
+	public SqmPathSource<?> findSubPathSource(String name) {
+		final SqmPathSource<?> subPathSource = getSqmPathType().findSubPathSource( name );
+		if ( subPathSource != null ) {
+			return subPathSource;
 		}
 
-		return (SqmPathSource<?>) getSqmPathType().findSubTypesAttribute( name );
-	}
-
-	@Override
-	public SqmPathSource<?> findSubPathSource(String name) {
-		return (SqmPathSource<?>) getSqmPathType().findAttribute( name );
+		return null;
 	}
 
 	@Override

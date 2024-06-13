@@ -52,6 +52,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
+import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.FilterHelper;
@@ -64,19 +65,28 @@ import org.hibernate.loader.ast.internal.CollectionLoaderSubSelectFetch;
 import org.hibernate.loader.ast.internal.LoaderSqlAstCreationState;
 import org.hibernate.loader.ast.spi.BatchLoaderFactory;
 import org.hibernate.loader.ast.spi.CollectionLoader;
+import org.hibernate.mapping.Any;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.IndexedCollection;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
+import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.PluralAttributeMappingImpl;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -127,13 +137,17 @@ import org.hibernate.sql.model.jdbc.JdbcDeleteMutation;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.type.AnyType;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
+import org.hibernate.type.MetaType;
 import org.hibernate.type.Type;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.jdbc.Expectations.createExpectation;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
@@ -302,9 +316,37 @@ public abstract class AbstractCollectionPersister
 			spaces[i] = tables.next();
 		}
 
-		if ( StringHelper.isNotEmpty( collectionBootDescriptor.getWhere() ) ) {
+		String where = collectionBootDescriptor.getWhere();
+		/*
+		 * Add the predicate on the role in the WHERE clause before creating the SQL queries.
+		 */
+		if ( mappedByProperty != null && elementType.isEntityType() ) {
+			final String entityName = ( (EntityType) elementType ).getAssociatedEntityName();
+			final PersistentClass persistentClass = creationContext.getBootModel().getEntityBinding( entityName );
+			final Property property = persistentClass.getRecursiveProperty( mappedByProperty );
+			final Value propertyValue = property.getValue();
+			if ( propertyValue instanceof Any ) {
+				final Any any = (Any) propertyValue;
+				final BasicValue discriminatorDescriptor = any.getDiscriminatorDescriptor();
+				final AnyType anyType = any.getType();
+				final MetaType metaType = (MetaType) anyType.getDiscriminatorType();
+				final Object discriminatorValue = metaType.getEntityNameToDiscriminatorValueMap().get( ownerPersister.getEntityName() );
+				final BasicType<Object> discriminatorBaseType = (BasicType<Object>) metaType.getBaseType();
+				final String discriminatorLiteral = discriminatorBaseType.getJdbcLiteralFormatter().toJdbcLiteral(
+						discriminatorValue,
+						creationContext.getDialect(),
+						creationContext.getSessionFactory().getWrapperOptions()
+				);
+				where = getNonEmptyOrConjunctionIfBothNonEmpty(
+						where,
+						discriminatorDescriptor.getColumn().getText() + "=" + discriminatorLiteral
+				);
+			}
+		}
+
+		if ( StringHelper.isNotEmpty( where ) ) {
 			hasWhere = true;
-			sqlWhereString = "(" + collectionBootDescriptor.getWhere() + ")";
+			sqlWhereString = "(" + where + ")";
 			sqlWhereStringTemplate = Template.renderWhereStringTemplate(
 					sqlWhereString,
 					dialect,
@@ -605,8 +647,8 @@ public abstract class AbstractCollectionPersister
 		if ( generator.generatedOnExecution() ) {
 			throw new MappingException("must be an BeforeExecutionGenerator"); //TODO fix message
 		}
-		if ( generator instanceof IdentifierGenerator ) {
-			( (IdentifierGenerator) generator ).initialize( context.getSqlStringGenerationContext() );
+		if ( generator instanceof Configurable ) {
+			( (Configurable) generator ).initialize( context.getSqlStringGenerationContext() );
 		}
 		return (BeforeExecutionGenerator) generator;
 	}
@@ -644,7 +686,7 @@ public abstract class AbstractCollectionPersister
 			collectionLoader = createNamedQueryCollectionLoader( this, getNamedQueryMemento( null ) );
 		}
 		else {
-			collectionLoader = createNamedQueryCollectionLoader( new LoadQueryInfluencers( factory ) );
+			collectionLoader = createCollectionLoader( new LoadQueryInfluencers( factory ) );
 		}
 
 		if ( attributeMapping.getIndexDescriptor() != null ) {
@@ -747,8 +789,8 @@ public abstract class AbstractCollectionPersister
 			}
 		}
 
-		return attributeMapping.isAffectedByInfluencers( influencers )
-				? createNamedQueryCollectionLoader( influencers )
+		return attributeMapping.isAffectedByInfluencers( influencers, true )
+				? createCollectionLoader( influencers )
 				: getCollectionLoader();
 	}
 
@@ -793,7 +835,7 @@ public abstract class AbstractCollectionPersister
 //		return attributeMapping.isNotAffectedByInfluencers( loadQueryInfluencers );
 //	}
 
-	private CollectionLoader createNamedQueryCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
+	private CollectionLoader createCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
 		if ( loadQueryInfluencers.effectivelyBatchLoadable( this ) ) {
 			final int batchSize = loadQueryInfluencers.effectiveBatchSize( this );
 			return factory.getServiceRegistry()
@@ -1181,8 +1223,34 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public void applyBaseRestrictions(Consumer<Predicate> predicateConsumer, TableGroup tableGroup, boolean useQualifier, Map<String, Filter> enabledFilters, Set<String> treatAsDeclarations, SqlAstCreationState creationState) {
-		applyFilterRestrictions( predicateConsumer, tableGroup, useQualifier, enabledFilters, creationState );
+	public void applyBaseRestrictions(
+			Consumer<Predicate> predicateConsumer,
+			TableGroup tableGroup,
+			boolean useQualifier,
+			Map<String, Filter> enabledFilters,
+			Set<String> treatAsDeclarations,
+			SqlAstCreationState creationState) {
+		applyBaseRestrictions(
+				predicateConsumer,
+				tableGroup,
+				useQualifier,
+				enabledFilters,
+				false,
+				treatAsDeclarations,
+				creationState
+		);
+	}
+
+	@Override
+	public void applyBaseRestrictions(
+			Consumer<Predicate> predicateConsumer,
+			TableGroup tableGroup,
+			boolean useQualifier,
+			Map<String, Filter> enabledFilters,
+			boolean onlyApplyLoadByKeyFilters,
+			Set<String> treatAsDeclarations,
+			SqlAstCreationState creationState) {
+		applyFilterRestrictions( predicateConsumer, tableGroup, useQualifier, enabledFilters, onlyApplyLoadByKeyFilters, creationState );
 		applyWhereRestrictions( predicateConsumer, tableGroup, useQualifier, creationState );
 	}
 
@@ -1252,12 +1320,14 @@ public abstract class AbstractCollectionPersister
 			TableGroup tableGroup,
 			boolean useQualifier,
 			Map<String, Filter> enabledFilters,
+			boolean onlyApplyLoadByKeyFilters,
 			SqlAstCreationState creationState) {
 		if ( filterHelper != null ) {
 			filterHelper.applyEnabledFilters(
 					predicateConsumer,
 					getFilterAliasGenerator( tableGroup ),
 					enabledFilters,
+					onlyApplyLoadByKeyFilters,
 					tableGroup,
 					creationState
 			);
@@ -1286,6 +1356,7 @@ public abstract class AbstractCollectionPersister
 					predicateConsumer,
 					aliasGenerator,
 					enabledFilters,
+					false,
 					tableGroup,
 					creationState
 			);
@@ -1557,6 +1628,10 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public Object getElementByIndex(Object key, Object index, SharedSessionContractImplementor session, Object owner) {
+		if ( isAffectedByFilters( new HashSet<>(), attributeMapping.getElementDescriptor(), session.getLoadQueryInfluencers(), true ) ) {
+			return new CollectionElementLoaderByIndex( attributeMapping, session.getLoadQueryInfluencers(), factory )
+					.load( key, index, session );
+		}
 		return collectionElementLoaderByIndex.load( key, index, session );
 	}
 
@@ -1630,14 +1705,60 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
+		return isAffectedByEnabledFilters( influencers, false );
+	}
+
+	@Override
+	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
 		if ( influencers.hasEnabledFilters() ) {
 			final Map<String, Filter> enabledFilters = influencers.getEnabledFilters();
 			return filterHelper != null && filterHelper.isAffectedBy( enabledFilters )
-				|| manyToManyFilterHelper != null && manyToManyFilterHelper.isAffectedBy( enabledFilters );
+					|| manyToManyFilterHelper != null && manyToManyFilterHelper.isAffectedBy( enabledFilters )
+					|| isKeyOrElementAffectedByFilters( new HashSet<>(), influencers, onlyApplyForLoadByKeyFilters);
 		}
 		else {
 			return false;
 		}
+	}
+
+	@Override
+	public boolean isAffectedByEnabledFilters(
+			Set<ManagedMappingType> visitedTypes,
+			LoadQueryInfluencers influencers,
+			boolean onlyApplyForLoadByKeyFilters) {
+		if ( influencers.hasEnabledFilters() ) {
+			final Map<String, Filter> enabledFilters = influencers.getEnabledFilters();
+			return filterHelper != null && filterHelper.isAffectedBy( enabledFilters )
+					|| manyToManyFilterHelper != null && manyToManyFilterHelper.isAffectedBy( enabledFilters )
+					|| isKeyOrElementAffectedByFilters( visitedTypes, influencers, onlyApplyForLoadByKeyFilters);
+		}
+		else {
+			return false;
+		}
+	}
+
+	private boolean isKeyOrElementAffectedByFilters(
+			Set<ManagedMappingType> visitedTypes,
+			LoadQueryInfluencers influencers,
+			boolean onlyApplyForLoadByKey) {
+		return isAffectedByFilters( visitedTypes, attributeMapping.getIndexDescriptor(), influencers, onlyApplyForLoadByKey )
+				|| isAffectedByFilters( visitedTypes, attributeMapping.getElementDescriptor(), influencers, onlyApplyForLoadByKey );
+	}
+
+	private boolean isAffectedByFilters(
+			Set<ManagedMappingType> visitedTypes,
+			CollectionPart collectionPart,
+			LoadQueryInfluencers influencers,
+			boolean onlyApplyForLoadByKey) {
+		if ( collectionPart instanceof EntityCollectionPart ) {
+			return ( (EntityCollectionPart) collectionPart ).getEntityMappingType()
+					.isAffectedByEnabledFilters( visitedTypes, influencers, onlyApplyForLoadByKey );
+		}
+		else if ( collectionPart instanceof EmbeddedCollectionPart ) {
+			final EmbeddableMappingType type = ( (EmbeddedCollectionPart) collectionPart ).getEmbeddableTypeDescriptor();
+			return type.isAffectedByEnabledFilters( visitedTypes, influencers, onlyApplyForLoadByKey );
+		}
+		return false;
 	}
 
 	@Override

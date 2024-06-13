@@ -32,8 +32,8 @@ public class B implements Serializable {
 		this.id = id;
 	}
 
-	@OneToOne(targetEntity=A.class, cascade=CascadeType.ALL,optional = true, orphanRemoval = true)
-	@JoinColumn(name="FK_FOR_B")
+	@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+	@JoinColumn(name = "FK_FOR_B")
 	public A getA() {
 		return a;
 	}

@@ -76,7 +76,7 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 		if ( value == null ) {
 			return null;
 		}
-		if ( Boolean.class.isAssignableFrom( type ) ) {
+		if ( Boolean.class.isAssignableFrom( type ) || type == Object.class ) {
 			return (X) value;
 		}
 		if ( Byte.class.isAssignableFrom( type ) ) {

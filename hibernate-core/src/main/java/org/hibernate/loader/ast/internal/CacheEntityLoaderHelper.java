@@ -356,10 +356,15 @@ public class CacheEntityLoaderHelper {
 		final StatefulPersistenceContext statefulPersistenceContext = (StatefulPersistenceContext) session.getPersistenceContext();
 
 		if ( ( isManagedEntity( entity ) ) ) {
-			statefulPersistenceContext.addReferenceEntry(
+			final EntityHolder entityHolder = statefulPersistenceContext.addEntityHolder(
+					entityKey,
+					entity
+			);
+			final EntityEntry entityEntry = statefulPersistenceContext.addReferenceEntry(
 					entity,
 					Status.READ_ONLY
 			);
+			entityHolder.setEntityEntry( entityEntry );
 		}
 		else {
 			TwoPhaseLoad.addUninitializedCachedEntity(
@@ -470,7 +475,7 @@ public class CacheEntityLoaderHelper {
 			isReadOnly = source.isDefaultReadOnly();
 		}
 
-		persistenceContext.addEntry(
+		EntityEntry entityEntry = persistenceContext.addEntry(
 				entity,
 				( isReadOnly ? Status.READ_ONLY : Status.MANAGED ),
 				values,
@@ -482,6 +487,7 @@ public class CacheEntityLoaderHelper {
 				subclassPersister,
 				false
 		);
+		persistenceContext.getEntityHolder( entityKey ).setEntityEntry( entityEntry );
 		subclassPersister.afterInitialize( entity, source );
 		persistenceContext.initializeNonLazyCollections();
 

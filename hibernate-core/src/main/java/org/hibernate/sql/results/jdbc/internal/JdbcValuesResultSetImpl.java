@@ -41,6 +41,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	private final ResultSetAccess resultSetAccess;
 	private final JdbcValuesMapping valuesMapping;
 	private final ExecutionContext executionContext;
+	private final boolean usesFollowOnLocking;
 
 	private final SqlSelection[] sqlSelections;
 	private final BitSet initializedIndexes;
@@ -56,6 +57,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 			QueryKey queryCacheKey,
 			String queryIdentifier,
 			QueryOptions queryOptions,
+			boolean usesFollowOnLocking,
 			JdbcValuesMapping valuesMapping,
 			JdbcValuesMetadata metadataForCache,
 			ExecutionContext executionContext) {
@@ -69,6 +71,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 		this.resultSetAccess = resultSetAccess;
 		this.valuesMapping = valuesMapping;
 		this.executionContext = executionContext;
+		this.usesFollowOnLocking = usesFollowOnLocking;
 
 		final int rowSize = valuesMapping.getRowSize();
 		this.sqlSelections = new SqlSelection[rowSize];
@@ -338,8 +341,8 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	}
 
 	@Override
-	public void finishRowProcessing(RowProcessingState rowProcessingState) {
-		super.finishRowProcessing( rowProcessingState, false );
+	public boolean usesFollowOnLocking() {
+		return usesFollowOnLocking;
 	}
 
 	@Override

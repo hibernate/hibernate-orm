@@ -42,6 +42,7 @@ public class CompilationStatement extends Statement {
 	private final Class<?> testClass;
 	private final List<Class<?>> testEntities;
 	private final List<Class<?>> preCompileEntities;
+	private final List<String> sources;
 	private final List<String> xmlMappingFiles;
 	private final Map<String, String> processorOptions;
 	private final boolean ignoreCompilationErrors;
@@ -51,6 +52,7 @@ public class CompilationStatement extends Statement {
 			Class<?> testClass,
 			List<Class<?>> testEntities,
 			List<Class<?>> proCompileEntities,
+			List<String> sources,
 			List<String> xmlMappingFiles,
 			Map<String, String> processorOptions,
 			boolean ignoreCompilationErrors) {
@@ -58,6 +60,7 @@ public class CompilationStatement extends Statement {
 		this.testClass = testClass;
 		this.testEntities = testEntities;
 		this.preCompileEntities = proCompileEntities;
+		this.sources = sources;
 		this.xmlMappingFiles = xmlMappingFiles;
 		this.processorOptions = processorOptions;
 		this.ignoreCompilationErrors = ignoreCompilationErrors;
@@ -68,11 +71,11 @@ public class CompilationStatement extends Statement {
 	public void evaluate() throws Throwable {
 		// some test needs to compile some classes prior to the actual classes under test
 		if ( !preCompileEntities.isEmpty() ) {
-			compile( getCompilationUnits( preCompileEntities ) );
+			compile( getCompilationUnits( preCompileEntities, null ) );
 		}
 
 		// now we compile the actual test classes
-		compile( getCompilationUnits( testEntities ) );
+		compile( getCompilationUnits( testEntities, sources ) );
 
 		if ( !ignoreCompilationErrors ) {
 			TestUtil.assertNoCompilationError( compilationDiagnostics );
@@ -81,11 +84,20 @@ public class CompilationStatement extends Statement {
 		originalStatement.evaluate();
 	}
 
-	private List<File> getCompilationUnits(List<Class<?>> classesToCompile) {
+	private List<File> getCompilationUnits(List<Class<?>> classesToCompile, List<String> sources) {
 		List<File> javaFiles = new ArrayList<File>();
 		for ( Class<?> testClass : classesToCompile ) {
 			String pathToSource = getPathToSource( testClass );
 			javaFiles.add( new File( pathToSource ) );
+		}
+		if ( sources != null ) {
+			final var resourcesBaseDir = TestUtil.getResourcesBaseDir( testClass );
+			for ( String source : sources ) {
+				javaFiles.add(
+						new File( resourcesBaseDir,
+										 source.replace( PACKAGE_SEPARATOR, File.separator ) + ".java" ) );
+			}
+
 		}
 		return javaFiles;
 	}

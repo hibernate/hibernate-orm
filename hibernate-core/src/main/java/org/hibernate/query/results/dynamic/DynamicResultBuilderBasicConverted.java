@@ -141,7 +141,10 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 				sqlSelection.getValuesArrayPosition(),
 				columnAlias,
 				basicValueConverter.getDomainJavaType(),
-				basicValueConverter
+				basicValueConverter,
+				null,
+				false,
+				false
 		);
 	}
 

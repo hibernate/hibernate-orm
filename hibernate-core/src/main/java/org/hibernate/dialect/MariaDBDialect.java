@@ -62,7 +62,7 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	public MariaDBDialect(DialectResolutionInfo info) {
-		super( createVersion( info ), MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
+		super( createVersion( info, MINIMUM_VERSION ), MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
 		registerKeywords( info );
 	}
 

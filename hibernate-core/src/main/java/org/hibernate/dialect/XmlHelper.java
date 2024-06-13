@@ -493,7 +493,7 @@ public class XmlHelper {
 			if ( array[i] == null ) {
 				continue;
 			}
-			final ValuedModelPart attributeMapping = getEmbeddedPart( embeddableMappingType, numberOfAttributes, i );
+			final ValuedModelPart attributeMapping = getEmbeddedPart( embeddableMappingType, i );
 			if ( attributeMapping instanceof SelectableMapping ) {
 				final SelectableMapping selectable = (SelectableMapping) attributeMapping;
 				final String tagName = selectable.getSelectableName();

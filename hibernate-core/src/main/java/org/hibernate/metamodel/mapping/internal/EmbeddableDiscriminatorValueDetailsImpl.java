@@ -20,11 +20,15 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
  */
 public class EmbeddableDiscriminatorValueDetailsImpl implements DiscriminatorValueDetails {
 	final Object value;
-	final String embeddableClassName;
+	final Class<?> embeddableClass;
 
-	public EmbeddableDiscriminatorValueDetailsImpl(Object value, String embeddableClassName) {
+	public EmbeddableDiscriminatorValueDetailsImpl(Object value, Class<?> embeddableClass) {
 		this.value = value;
-		this.embeddableClassName = embeddableClassName;
+		this.embeddableClass = embeddableClass;
+	}
+
+	public Class<?> getEmbeddableClass() {
+		return embeddableClass;
 	}
 
 	@Override
@@ -34,7 +38,7 @@ public class EmbeddableDiscriminatorValueDetailsImpl implements DiscriminatorVal
 
 	@Override
 	public String getIndicatedEntityName() {
-		return embeddableClassName;
+		return embeddableClass.getName();
 	}
 
 	@Override

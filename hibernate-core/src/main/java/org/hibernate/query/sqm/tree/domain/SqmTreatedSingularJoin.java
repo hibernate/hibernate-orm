@@ -6,8 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -19,25 +19,25 @@ import org.hibernate.spi.NavigablePath;
  */
 public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,S> implements SqmTreatedPath<T,S> {
 	private final SqmSingularJoin<O,T> wrappedPath;
-	private final EntityDomainType<S> treatTarget;
+	private final TreatableDomainType<S> treatTarget;
 
 	public SqmTreatedSingularJoin(
 			SqmSingularJoin<O,T> wrappedPath,
-			EntityDomainType<S> treatTarget,
+			TreatableDomainType<S> treatTarget,
 			String alias) {
 		this( wrappedPath, treatTarget, alias, false );
 	}
 
 	public SqmTreatedSingularJoin(
 			SqmSingularJoin<O,T> wrappedPath,
-			EntityDomainType<S> treatTarget,
+			TreatableDomainType<S> treatTarget,
 			String alias,
 			boolean fetched) {
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
 				wrappedPath.getNavigablePath().treatAs(
-						treatTarget.getHibernateEntityName(),
+						treatTarget.getTypeName(),
 						alias
 				),
 				(SingularPersistentAttribute<O, S>) wrappedPath.getAttribute(),
@@ -53,7 +53,7 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 	private SqmTreatedSingularJoin(
 			NavigablePath navigablePath,
 			SqmSingularJoin<O,T> wrappedPath,
-			EntityDomainType<S> treatTarget,
+			TreatableDomainType<S> treatTarget,
 			String alias,
 			boolean fetched) {
 		//noinspection unchecked
@@ -96,7 +96,7 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 	}
 
 	@Override
-	public EntityDomainType<S> getTreatTarget() {
+	public TreatableDomainType<S> getTreatTarget() {
 		return treatTarget;
 	}
 
@@ -106,7 +106,7 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 	}
 
 	@Override
-	public EntityDomainType<S> getReferencedPathSource() {
+	public TreatableDomainType<S> getReferencedPathSource() {
 		return treatTarget;
 	}
 
@@ -125,7 +125,7 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 		sb.append( "treat(" );
 		wrappedPath.appendHqlString( sb );
 		sb.append( " as " );
-		sb.append( treatTarget.getName() );
+		sb.append( treatTarget.getTypeName() );
 		sb.append( ')' );
 	}
 }

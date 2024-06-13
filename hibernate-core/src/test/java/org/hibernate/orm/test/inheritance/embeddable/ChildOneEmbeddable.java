@@ -6,6 +6,8 @@
  */
 package org.hibernate.orm.test.inheritance.embeddable;
 
+import org.hibernate.annotations.Imported;
+
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Embeddable;
 

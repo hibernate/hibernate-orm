@@ -32,7 +32,8 @@ public class FilterImpl implements Filter, Serializable {
 	private final String filterName;
 	private final Map<String,Object> parameters = new HashMap<>();
 	private final boolean autoEnabled;
-	
+	private final boolean applyToLoadByKey;
+
 	void afterDeserialize(SessionFactoryImplementor factory) {
 		definition = factory.getFilterDefinition( filterName );
 		validate();
@@ -47,6 +48,7 @@ public class FilterImpl implements Filter, Serializable {
 		this.definition = configuration;
 		filterName = definition.getFilterName();
 		this.autoEnabled = definition.isAutoEnabled();
+		this.applyToLoadByKey = definition.isAppliedToLoadByKey();
 	}
 
 	public FilterDefinition getFilterDefinition() {
@@ -70,7 +72,18 @@ public class FilterImpl implements Filter, Serializable {
 	public boolean isAutoEnabled() {
 		return autoEnabled;
 	}
-	
+
+
+	/**
+	 * Get a flag that defines if the filter should be applied
+	 * on direct fetches or not.
+	 *
+	 * @return The flag value.
+	 */
+	public boolean isAppliedToLoadByKey() {
+		return applyToLoadByKey;
+	}
+
 	public Map<String,?> getParameters() {
 		return parameters;
 	}

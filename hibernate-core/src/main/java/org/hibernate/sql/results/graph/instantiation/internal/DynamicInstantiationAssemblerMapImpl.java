@@ -7,14 +7,16 @@
 
 package org.hibernate.sql.results.graph.instantiation.internal;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -44,7 +46,13 @@ public class DynamicInstantiationAssemblerMapImpl implements DomainResultAssembl
 				throw new IllegalStateException( "Encountered duplicate alias for Map dynamic instantiation argument [" + argumentReader.getAlias() + "]" );
 			}
 		}
+	}
 
+	private DynamicInstantiationAssemblerMapImpl(
+			List<ArgumentReader<?>> argumentReaders,
+			JavaType<Map<?,?>> mapJavaType) {
+		this.mapJavaType = mapJavaType;
+		this.argumentReaders = argumentReaders;
 	}
 
 	@Override
@@ -54,17 +62,23 @@ public class DynamicInstantiationAssemblerMapImpl implements DomainResultAssembl
 
 	@Override
 	public Map<?,?> assemble(
-			RowProcessingState rowProcessingState,
-			JdbcValuesSourceProcessingOptions options) {
+			RowProcessingState rowProcessingState) {
 		final HashMap<String,Object> result = new HashMap<>();
 
 		for ( ArgumentReader<?> argumentReader : argumentReaders ) {
 			result.put(
 					argumentReader.getAlias(),
-					argumentReader.assemble( rowProcessingState, options )
+					argumentReader.assemble( rowProcessingState )
 			);
 		}
 
 		return result;
+	}
+
+	@Override
+	public <X> void forEachResultAssembler(BiConsumer<Initializer<?>, X> consumer, X arg) {
+		for ( ArgumentReader<?> argumentReader : argumentReaders ) {
+			argumentReader.forEachResultAssembler( consumer, arg );
+		}
 	}
 }

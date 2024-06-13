@@ -174,8 +174,8 @@ public class ManyToOneType extends EntityType {
 			);
 			if ( id == null ) {
 				throw new AssertionFailure(
-						"cannot cache a reference to an object with a null id: " + 
-						getAssociatedEntityName()
+						"cannot cache a reference to an object with a null id: " +
+								getAssociatedEntityName()
 				);
 			}
 			return getIdentifierType( session ).disassemble( id, session, owner );
@@ -206,7 +206,7 @@ public class ManyToOneType extends EntityType {
 			Serializable oid,
 			SharedSessionContractImplementor session,
 			Object owner) throws HibernateException {
-		
+
 		//TODO: currently broken for unique-key references (does not detect
 		//      change to unique key property of the associated object)
 
@@ -244,12 +244,7 @@ public class ManyToOneType extends EntityType {
 			Object old,
 			Object current,
 			SharedSessionContractImplementor session) throws HibernateException {
-		if ( isSame( old, current ) ) {
-			return false;
-		}
-		Object oldid = getIdentifier( old, session );
-		Object newid = getIdentifier( current, session );
-		return getIdentifierType( session ).isDirty( oldid, newid, session );
+		return isDirtyManyToOne(old, current, null, session);
 	}
 
 	@Override
@@ -258,18 +253,29 @@ public class ManyToOneType extends EntityType {
 			Object current,
 			boolean[] checkable,
 			SharedSessionContractImplementor session) throws HibernateException {
-		if ( isAlwaysDirtyChecked() ) {
-			return isDirty( old, current, session );
+		return isDirtyManyToOne(old, current, isAlwaysDirtyChecked()? null:checkable, session);
+	}
+
+	private boolean isDirtyManyToOne(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session) {
+		if (isSame(old, current)) {
+			return false;
 		}
-		else {
-			if ( isSame( old, current ) ) {
-				return false;
-			}
-			Object oldid = getIdentifier( old, session );
-			Object newid = getIdentifier( current, session );
-			return getIdentifierType( session ).isDirty( oldid, newid, checkable, session );
+
+		if (old == null || current == null) {
+			return true;
 		}
-		
+
+		if (ForeignKeys.isTransient(getAssociatedEntityName(), current, Boolean.FALSE, session)) {
+			return true;
+		}
+
+		Object oldid = getIdentifier(old, session);
+		Object newid = getIdentifier(current, session);
+		Type identifierType = getIdentifierType(session);
+
+		return checkable == null
+				? identifierType.isDirty(oldid, newid, session)
+				: identifierType.isDirty(oldid, newid, checkable, session);
 	}
 
 }

@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.annotations.*;
 import org.hibernate.boot.internal.AnyKeyType;
+import org.hibernate.boot.internal.CollectionClassification;
 import org.hibernate.boot.models.annotations.internal.*;
 import org.hibernate.boot.models.internal.OrmAnnotationHelper;
 import org.hibernate.models.internal.OrmAnnotationDescriptor;
@@ -134,6 +135,10 @@ public interface HibernateAnnotations {
 	OrmAnnotationDescriptor<CollectionType,CollectionTypeAnnotation> COLLECTION_TYPE = new OrmAnnotationDescriptor<>(
 			CollectionType.class,
 			CollectionTypeAnnotation.class
+	);
+	OrmAnnotationDescriptor<CollectionClassification, CollectionClassificationXmlAnnotation> COLLECTION_CLASSIFICATION = new OrmAnnotationDescriptor<>(
+			CollectionClassification.class,
+			CollectionClassificationXmlAnnotation.class
 	);
 	OrmAnnotationDescriptor<CollectionTypeRegistrations,CollectionTypeRegistrationsAnnotation> COLLECTION_TYPE_REGISTRATIONS = new OrmAnnotationDescriptor<>(
 			CollectionTypeRegistrations.class,

@@ -67,8 +67,6 @@ import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.function.LocatePositionEmulation;
 import org.hibernate.dialect.function.LpadRpadPadEmulation;
 import org.hibernate.dialect.function.SqlFunction;
-import org.hibernate.dialect.function.TimestampaddFunction;
-import org.hibernate.dialect.function.TimestampdiffFunction;
 import org.hibernate.dialect.function.TrimFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupportImpl;
@@ -284,7 +282,7 @@ import static org.hibernate.type.descriptor.converter.internal.EnumHelper.getEnu
  * passed to the constructor, and by the {@link #getVersion()} property.
  * <p>
  * Programs using Hibernate should migrate away from the use of versioned
- * dialect classes like, for example, {@link MySQL8Dialect}. These
+ * dialect classes like, for example, {@code MySQL8Dialect}. These
  * classes are now deprecated and will be removed in a future release.
  * <p>
  * A custom {@code Dialect} may be specified using the configuration
@@ -850,12 +848,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	@Deprecated(forRemoval = true)
 	public String getCheckCondition(String columnName, long[] values) {
-		Long objValues [] = new Long[ values.length ];
-		int i = 0;
-		for( long temp : values){
-			objValues[ i++ ] = temp;
+		Long[] boxedValues = new Long[values.length];
+		for ( int i = 0; i<values.length; i++ ) {
+			boxedValues[i] = values[i];
 		}
-		return getCheckCondition(columnName, objValues);
+		return getCheckCondition( columnName, boxedValues );
 	}
 
 	/**

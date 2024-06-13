@@ -13,11 +13,14 @@ import org.hibernate.mapping.List;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
@@ -31,10 +34,15 @@ import static org.assertj.core.api.Assertions.fail;
 public class ListTests {
 	@Test
 	@DomainModel( xmlMappings = "mappings/models/hbm/list/hbm.xml" )
+
 	void testHbmXml(DomainModelScope domainModelScope) {
 		final PersistentClass rootBinding = domainModelScope.getDomainModel().getEntityBinding( Root.class.getName() );
 		validateTags( rootBinding.getProperty( "tags" ) );
 		validateCategories( rootBinding.getProperty( "categories" ) );
+		Property admins = rootBinding.getProperty( "admins" );
+		Table collectionTable = ( (List) admins.getValue() ).getCollectionTable();
+//		collectionTable.getColumns().
+		Property admins2 = rootBinding.getProperty( "admins2" );
 	}
 
 	@Test

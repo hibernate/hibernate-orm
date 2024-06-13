@@ -30,10 +30,13 @@ public class Root {
 	@ElementCollection
 	@CollectionTable(name="root_categories")
 	@OrderColumn(name = "position")
-	private List<String> categories;
+	private List<Category> categories;
 	@ManyToMany
 	@CollectionTable(name="root_admins")
 	private List<User> admins;
+	@ManyToMany
+	@CollectionTable(name="root_admins_2")
+	private List<User> admins2;
 
 
 	protected Root() {
@@ -49,11 +52,47 @@ public class Root {
 		return id;
 	}
 
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
 	public String getName() {
 		return name;
 	}
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public List<String> getTags() {
+		return tags;
+	}
+
+	public void setTags(List<String> tags) {
+		this.tags = tags;
+	}
+
+	public List<Category> getCategories() {
+		return categories;
+	}
+
+	public void setCategories(List<Category> categories) {
+		this.categories = categories;
+	}
+
+	public List<User> getAdmins() {
+		return admins;
+	}
+
+	public void setAdmins(List<User> admins) {
+		this.admins = admins;
+	}
+
+	public List<User> getAdmins2() {
+		return admins2;
+	}
+
+	public void setAdmins2(List<User> admins2) {
+		this.admins2 = admins2;
 	}
 }

@@ -139,6 +139,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbHqlImportImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIdClassImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIdImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumnImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOneImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyColumnImpl;
@@ -1088,7 +1089,7 @@ public class HbmXmlTransformer {
 
 	private void transferDiscriminatorSubclass(JaxbHbmDiscriminatorSubclassEntityType hbmSubclass, JaxbEntityImpl subclassEntity) {
 		TRANSFORMATION_LOGGER.debugf(
-				"Starting transformation of subclass entity `%` - `%s`",
+				"Starting transformation of subclass entity `%s` - `%s`",
 				extractEntityName( hbmSubclass ),
 				origin
 		);
@@ -1133,11 +1134,23 @@ public class HbmXmlTransformer {
 			subclassEntity.getTable().getCheckConstraints().add( checkConstraint );
 		}
 
-		if ( hbmSubclass.getKey() != null ) {
+		final JaxbHbmKeyType key = hbmSubclass.getKey();
+		if ( key != null ) {
 			final JaxbPrimaryKeyJoinColumnImpl joinColumn = new JaxbPrimaryKeyJoinColumnImpl();
 			// TODO: multiple columns?
-			joinColumn.setName( hbmSubclass.getKey().getColumnAttribute() );
+			joinColumn.setName( key.getColumnAttribute() );
 			subclassEntity.getPrimaryKeyJoinColumns().add( joinColumn );
+			final String foreignKey = key.getForeignKey();
+			if ( StringHelper.isNotEmpty( foreignKey ) ) {
+				final JaxbForeignKeyImpl jaxbForeignKey = new JaxbForeignKeyImpl();
+				joinColumn.setForeignKey( jaxbForeignKey );
+				if ( "none".equals( foreignKey ) ) {
+					jaxbForeignKey.setConstraintMode( ConstraintMode.NO_CONSTRAINT );
+				}
+				else {
+					jaxbForeignKey.setName( foreignKey );
+				}
+			}
 		}
 		
 		if ( !hbmSubclass.getJoinedSubclass().isEmpty() ) {
@@ -1729,63 +1742,79 @@ public class HbmXmlTransformer {
 			final JaxbElementCollectionImpl target) {
 		target.setCollectionTable( new JaxbCollectionTableImpl() );
 
+		final JaxbCollectionTableImpl collectionTable = target.getCollectionTable();
 		if ( isNotEmpty( source.getTable() ) ) {
-			target.getCollectionTable().setName( source.getTable() );
-			target.getCollectionTable().setCatalog( source.getCatalog() );
-			target.getCollectionTable().setSchema( source.getSchema() );
+			collectionTable.setName( source.getTable() );
+			collectionTable.setCatalog( source.getCatalog() );
+			collectionTable.setSchema( source.getSchema() );
 		}
+		final JaxbHbmKeyType key = source.getKey();
+		if ( key != null ) {
+			final String foreignKey = key.getForeignKey();
+			if ( StringHelper.isNotEmpty( foreignKey ) ) {
+				final JaxbForeignKeyImpl jaxbForeignKey = new JaxbForeignKeyImpl();
+				collectionTable.setForeignKeys( jaxbForeignKey );
+				if ( "none".equals( foreignKey ) ) {
+					jaxbForeignKey.setConstraintMode( ConstraintMode.NO_CONSTRAINT );
+				}
+				else {
+					jaxbForeignKey.setName( foreignKey );
+				}
+			}
 
-		transferColumnsAndFormulas(
-				new ColumnAndFormulaSource() {
-					@Override
-					public String getColumnAttribute() {
-						return source.getKey().getColumnAttribute();
-					}
+			transferColumnsAndFormulas(
+					new ColumnAndFormulaSource() {
+						@Override
+						public String getColumnAttribute() {
+							return key.getColumnAttribute();
+						}
 
-					@Override
-					public String getFormulaAttribute() {
-						return null;
-					}
+						@Override
+						public String getFormulaAttribute() {
+							return null;
+						}
 
-					@Override
-					public List<Serializable> getColumnOrFormula() {
-						return new ArrayList<>( source.getKey().getColumn() );
-					}
+						@Override
+						public List<Serializable> getColumnOrFormula() {
+							return new ArrayList<>( key.getColumn() );
+						}
 
-					@Override
-					public SourceColumnAdapter wrap(Serializable column) {
-						return new SourceColumnAdapterJaxbHbmColumnType( (JaxbHbmColumnType) column );
-					}
-				},
-				new ColumnAndFormulaTarget() {
-					@Override
-					public TargetColumnAdapter makeColumnAdapter(ColumnDefaults columnDefaults) {
-						return new TargetColumnAdapterJaxbJoinColumn( columnDefaults );
-					}
+						@Override
+						public SourceColumnAdapter wrap(Serializable column) {
+							return new SourceColumnAdapterJaxbHbmColumnType( (JaxbHbmColumnType) column );
+						}
+					},
+					new ColumnAndFormulaTarget() {
+						@Override
+						public TargetColumnAdapter makeColumnAdapter(ColumnDefaults columnDefaults) {
+							return new TargetColumnAdapterJaxbJoinColumn( columnDefaults );
+						}
 
-					@Override
-					public void addColumn(TargetColumnAdapter column) {
+						@Override
+						public void addColumn(TargetColumnAdapter column) {
+							collectionTable.getJoinColumns()
+									.add( ( (TargetColumnAdapterJaxbJoinColumn) column ).getTargetColumn() );
+						}
 
-					}
+						@Override
+						public void addFormula(String formula) {
+							handleUnsupportedContent(
+									"formula as part of element-collection key is not supported for transformation; skipping"
+							);
+						}
+					},
+					ColumnDefaultsBasicImpl.INSTANCE,
+					source.getTable()
 
-					@Override
-					public void addFormula(String formula) {
-						handleUnsupportedContent(
-								"formula as part of element-collection key is not supported for transformation; skipping"
-						);
-					}
-				},
-				ColumnDefaultsBasicImpl.INSTANCE,
-				source.getTable()
-
-		);
-
-		if ( isNotEmpty( source.getKey().getPropertyRef() ) ) {
-			handleUnsupportedContent(
-					"Foreign-key (<key/>) for persistent collection (name=" + source.getName() +
-							") specified property-ref which is not supported for transformation; " +
-							"transformed <join-column/> will need manual adjustment of referenced-column-name"
 			);
+
+			if ( isNotEmpty( key.getPropertyRef() ) ) {
+				handleUnsupportedContent(
+						"Foreign-key (<key/>) for persistent collection (name=" + source.getName() +
+								") specified property-ref which is not supported for transformation; " +
+								"transformed <join-column/> will need manual adjustment of referenced-column-name"
+				);
+			}
 		}
 	}
 
@@ -2116,15 +2145,64 @@ public class HbmXmlTransformer {
 
 		final JaxbHbmKeyType key = hbmAttributeInfo.getKey();
 		if ( key != null ) {
-			target.setForeignKey( new JaxbForeignKeyImpl() );
-			if ( StringHelper.isNotEmpty( key.getForeignKey() ) ) {
-				target.getForeignKey().setName( key.getForeignKey() );
+			final String foreignKey = key.getForeignKey();
+			if ( StringHelper.isNotEmpty( foreignKey ) ) {
+				final JaxbForeignKeyImpl jaxbForeignKey = new JaxbForeignKeyImpl();
+				target.setForeignKey( jaxbForeignKey );
+				if ( "none".equals( foreignKey ) ) {
+					jaxbForeignKey.setConstraintMode( ConstraintMode.NO_CONSTRAINT );
+				}
+				else {
+					jaxbForeignKey.setName( foreignKey );
+				}
 			}
-//			oneToMany.setCollectionId( ? );
-//			oneToMany.setMappedBy( ?? );
-//			oneToMany.setOnDelete( ?? );
-		}
+//			if ( StringHelper.isNotEmpty( key.getColumnAttribute() ) ) {
+//				final JaxbJoinColumnImpl column = new JaxbJoinColumnImpl();
+//				column.setName( key.getColumnAttribute() );
+//				target.getJoinColumn().add( column );
+//			}
+			transferColumnsAndFormulas(
+					new ColumnAndFormulaSource() {
+						@Override
+						public String getColumnAttribute() {
+							return key.getColumnAttribute();
+						}
 
+						@Override
+						public String getFormulaAttribute() {
+							return null;
+						}
+
+						@Override
+						public List<Serializable> getColumnOrFormula() {
+							return new ArrayList<>(key.getColumn());
+						}
+
+						@Override
+						public SourceColumnAdapter wrap(Serializable column) {
+							return new SourceColumnAdapterJaxbHbmColumnType( (JaxbHbmColumnType) column );
+						}
+					},
+					new ColumnAndFormulaTarget() {
+						@Override
+						public TargetColumnAdapter makeColumnAdapter(ColumnDefaults columnDefaults) {
+							return new TargetColumnAdapterJaxbJoinColumn( columnDefaults );
+						}
+
+						@Override
+						public void addColumn(TargetColumnAdapter column) {
+							target.getJoinColumn().add( ( (TargetColumnAdapterJaxbJoinColumn) column ).getTargetColumn() );
+						}
+
+						@Override
+						public void addFormula(String formula) {
+
+						}
+					},
+					ColumnDefaultsBasicImpl.INSTANCE,
+					currentTableName
+			);
+		}
 		if ( hbmOneToMany.getNotFound() != null ) {
 			target.setNotFound( interpretNotFoundAction( hbmOneToMany.getNotFound() ) );
 		}
@@ -2175,6 +2253,111 @@ public class HbmXmlTransformer {
 		if ( manyToMany.getNotFound() != JaxbHbmNotFoundEnum.EXCEPTION ) {
 			handleUnsupported( "`not-found` not supported for transformation" );
 		}
+
+		final JaxbJoinTableImpl joinTable = new JaxbJoinTableImpl();
+		final String tableName = hbmCollection.getTable();
+		if ( StringHelper.isNotEmpty( tableName ) ) {
+			joinTable.setName( tableName );
+		}
+		target.setJoinTable( joinTable );
+
+		final JaxbHbmKeyType key = hbmCollection.getKey();
+		if ( key != null ) {
+			final String foreignKey = key.getForeignKey();
+			if ( StringHelper.isNotEmpty( foreignKey ) ) {
+				final JaxbForeignKeyImpl jaxbForeignKey = new JaxbForeignKeyImpl();
+				joinTable.setForeignKey( jaxbForeignKey );
+				if ( "none".equals( foreignKey ) ) {
+					jaxbForeignKey.setConstraintMode( ConstraintMode.NO_CONSTRAINT );
+				}
+				else {
+					jaxbForeignKey.setName( foreignKey );
+				}
+			}
+			transferColumnsAndFormulas(
+					new ColumnAndFormulaSource() {
+						@Override
+						public String getColumnAttribute() {
+							return key.getColumnAttribute();
+						}
+
+						@Override
+						public String getFormulaAttribute() {
+							return "";
+						}
+
+						@Override
+						public List<Serializable> getColumnOrFormula() {
+							return new ArrayList<>(key.getColumn());
+						}
+
+						@Override
+						public SourceColumnAdapter wrap(Serializable column) {
+							return new SourceColumnAdapterJaxbHbmColumnType( (JaxbHbmColumnType) column );
+						}
+					},
+					new ColumnAndFormulaTarget() {
+						@Override
+						public TargetColumnAdapter makeColumnAdapter(ColumnDefaults columnDefaults) {
+							return new TargetColumnAdapterJaxbJoinColumn( columnDefaults );
+						}
+
+						@Override
+						public void addColumn(TargetColumnAdapter column) {
+							joinTable.getJoinColumn().add( ( (TargetColumnAdapterJaxbJoinColumn) column ).getTargetColumn() );
+						}
+
+						@Override
+						public void addFormula(String formula) {
+
+						}
+					},
+					ColumnDefaultsBasicImpl.INSTANCE,
+					joinTable.getName()
+			);
+		}
+
+		transferColumnsAndFormulas(
+				new ColumnAndFormulaSource() {
+					@Override
+					public String getColumnAttribute() {
+						return manyToMany.getColumnAttribute();
+					}
+
+					@Override
+					public String getFormulaAttribute() {
+						return manyToMany.getFormulaAttribute();
+					}
+
+					@Override
+					public List<Serializable> getColumnOrFormula() {
+						return manyToMany.getColumnOrFormula();
+					}
+
+					@Override
+					public SourceColumnAdapter wrap(Serializable column) {
+						return new SourceColumnAdapterJaxbHbmColumnType( (JaxbHbmColumnType) column );
+					}
+				},
+				new ColumnAndFormulaTarget() {
+					@Override
+					public TargetColumnAdapter makeColumnAdapter(ColumnDefaults columnDefaults) {
+						return new TargetColumnAdapterJaxbJoinColumn( columnDefaults );
+					}
+
+					@Override
+					public void addColumn(TargetColumnAdapter column) {
+						joinTable.getInverseJoinColumn().add( ( (TargetColumnAdapterJaxbJoinColumn) column ).getTargetColumn() );
+					}
+
+					@Override
+					public void addFormula(String formula) {
+						handleUnsupported( "<many-to-many formula> not supported skipping" );
+					}
+				},
+				ColumnDefaultsBasicImpl.INSTANCE,
+				joinTable.getName()
+		);
 
 		transferCollectionBasicInfo( hbmCollection, target );
 		target.setTargetEntity( StringHelper.isNotEmpty( manyToMany.getClazz() ) ? manyToMany.getClazz() : manyToMany.getEntityName() );
@@ -2445,10 +2628,22 @@ public class HbmXmlTransformer {
 			secondaryTable.setSchema( hbmJoin.getSchema() );
 			secondaryTable.setOptional( hbmJoin.isOptional() );
 			secondaryTable.setOwned( !hbmJoin.isInverse() );
-			if ( hbmJoin.getKey() != null ) {
+			final JaxbHbmKeyType key = hbmJoin.getKey();
+			if ( key != null ) {
 				final JaxbPrimaryKeyJoinColumnImpl joinColumn = new JaxbPrimaryKeyJoinColumnImpl();
-				joinColumn.setName( hbmJoin.getKey().getColumnAttribute() );
+				joinColumn.setName( key.getColumnAttribute() );
 				secondaryTable.getPrimaryKeyJoinColumn().add( joinColumn );
+				final String foreignKey = key.getForeignKey();
+				if ( StringHelper.isNotEmpty( foreignKey ) ) {
+					final JaxbForeignKeyImpl jaxbForeignKey = new JaxbForeignKeyImpl();
+					joinColumn.setForeignKey( jaxbForeignKey );
+					if ( "none".equals( foreignKey ) ) {
+						jaxbForeignKey.setConstraintMode( ConstraintMode.NO_CONSTRAINT );
+					}
+					else {
+						jaxbForeignKey.setName( foreignKey );
+					}
+				}
 			}
 			target.getSecondaryTables().add( secondaryTable );
 			

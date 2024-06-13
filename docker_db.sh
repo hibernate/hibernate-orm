@@ -953,17 +953,19 @@ informix_14_10() {
     # Give the container some time to start
     OUTPUT=
     n=0
-    until [ "$n" -ge 10 ]
+    until [ "$n" -ge 5 ]
     do
-        OUTPUT=$($CONTAINER_CLI logs informix 2>&1)
+        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs informix 2>&1)
         if [[ $OUTPUT == *"Server Started"* ]]; then
+          sleep 15
+          $PRIVILEGED_CLI $CONTAINER_CLI exec informix bash -l -c "echo \"execute function task('create dbspace from storagepool', 'datadbs', '100 MB', '4');execute function task('create sbspace from storagepool', 'sbspace', '20 M', '0');create database dev in datadbs with log nlscase sensitive;\" > post_init.sql;dbaccess sysadmin post_init.sql"
           break;
         fi
         n=$((n+1))
         echo "Waiting for Informix to start..."
         sleep 30
     done
-    if [ "$n" -ge 10 ]; then
+    if [ "$n" -ge 5 ]; then
       echo "Informix failed to start and configure after 5 minutes"
     else
       echo "Informix successfully started"
@@ -977,17 +979,19 @@ informix_12_10() {
     # Give the container some time to start
     OUTPUT=
     n=0
-    until [ "$n" -ge 10 ]
+    until [ "$n" -ge 5 ]
     do
-        OUTPUT=$($CONTAINER_CLI logs informix 2>&1)
+        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs informix 2>&1)
         if [[ $OUTPUT == *"login Information"* ]]; then
+          sleep 15
+          $PRIVILEGED_CLI $CONTAINER_CLI exec informix bash -l -c "echo \"execute function task('create dbspace from storagepool', 'datadbs', '100 MB', '4');execute function task('create sbspace from storagepool', 'sbspace', '20 M', '0');create database dev in datadbs with log nlscase sensitive;\" > post_init.sql;dbaccess sysadmin post_init.sql"
           break;
         fi
         n=$((n+1))
         echo "Waiting for Informix to start..."
         sleep 30
     done
-    if [ "$n" -ge 10 ]; then
+    if [ "$n" -ge 5 ]; then
       echo "Informix failed to start and configure after 5 minutes"
     else
       echo "Informix successfully started"
@@ -1034,6 +1038,9 @@ if [ -z ${1} ]; then
     echo -e "\tsybase"
     echo -e "\ttidb"
     echo -e "\ttidb_5_1"
+    echo -e "\informix"
+    echo -e "\informix_14_10"
+    echo -e "\informix_12_10"
 else
     ${1}
 fi

@@ -19,6 +19,10 @@ env.PROJECT = "orm"
 env.JIRA_KEY = "HHH"
 def RELEASE_ON_PUSH = false // Set to `true` *only* on branches where you want a release on each push.
 
+print "INFO: env.PROJECT = ${env.PROJECT}"
+print "INFO: env.JIRA_KEY = ${env.JIRA_KEY}"
+print "INFO: RELEASE_ON_PUSH = ${RELEASE_ON_PUSH}"
+
 // --------------------------------------------
 // Build conditions
 

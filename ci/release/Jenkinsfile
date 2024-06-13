@@ -13,13 +13,14 @@
 
 import org.hibernate.jenkins.pipeline.helpers.version.Version
 
-def checkoutReleaseScripts() {
-	dir('.release/scripts') {
-		checkout scmGit(branches: [[name: '*/main']], extensions: [],
-				userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com',
-									 url: 'https://github.com/hibernate/hibernate-release-scripts.git']])
-	}
-}
+// --------------------------------------------
+// Global build configuration
+env.PROJECT = "orm"
+env.JIRA_KEY = "HHH"
+def RELEASE_ON_PUSH = false // Set to `true` *only* on branches where you want a release on each push.
+
+// --------------------------------------------
+// Build conditions
 
 // Avoid running the pipeline on branch indexing
 if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
@@ -28,8 +29,28 @@ if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
 	return
 }
 
-env.PROJECT = "orm"
-env.JIRA_KEY = "HHH"
+def manualRelease = currentBuild.getBuildCauses().toString().contains( 'UserIdCause' )
+
+// Only do automatic release on branches where we opted in
+if ( !manualRelease && !RELEASE_ON_PUSH ) {
+	print "INFO: Build skipped because automated releases are disabled on this branch. See constant RELEASE_ON_PUSH in ci/release/Jenkinsfile"
+	currentBuild.result = 'NOT_BUILT'
+	return
+}
+
+// --------------------------------------------
+// Reusable methods
+
+def checkoutReleaseScripts() {
+	dir('.release/scripts') {
+		checkout scmGit(branches: [[name: '*/main']], extensions: [],
+				userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com',
+									 url: 'https://github.com/hibernate/hibernate-release-scripts.git']])
+	}
+}
+
+// --------------------------------------------
+// Pipeline
 
 pipeline {
 	agent {
@@ -69,8 +90,6 @@ pipeline {
 				script {
 					checkoutReleaseScripts()
 
-					def manualRelease = currentBuild.getBuildCauses().toString().contains( 'UserIdCause' )
-
 					def currentVersion = Version.parseDevelopmentVersion( sh(
 							script: ".release/scripts/determine-current-version.sh ${env.PROJECT}",
 							returnStdout: true
@@ -94,13 +113,6 @@ pipeline {
 					}
 					else {
 						echo "Release was triggered automatically"
-
-						// Avoid doing an automatic release on a non-maintenance branch
-						if ( ! ( env.BRANCH_NAME ==~ /^\d+\.\d+$/ ) ) {
-							print "INFO: Automatic release skipped because the branch name doesn't follow pattern /^\\d+\\.\\d+\$/"
-							currentBuild.result = 'ABORTED'
-							return
-						}
 
 						// Avoid doing an automatic release for commits from a release
 						def lastCommitter = sh(script: 'git show -s --format=\'%an\'', returnStdout: true)

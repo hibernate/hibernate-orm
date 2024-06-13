@@ -22,7 +22,7 @@
             <element column="txt" type="string"/>
         </list>
         <list name="categories" table="root_categories">
-            <key column="root_fk"/>
+            <key column="root_fk" foreign-key="none"/>
             <list-index column="position"/>
             <composite-element class="org.hibernate.orm.test.boot.models.hbm.collections.list.Category">
                 <property name="name"/>
@@ -34,9 +34,16 @@
             <list-index/>
             <many-to-many class="org.hibernate.orm.test.boot.models.hbm.collections.list.User" column="user_fk"/>
         </list>
+
+        <list name="admins2" table="root_admins_2">
+            <key column="root_fk"/>
+            <list-index/>
+            <one-to-many class="org.hibernate.orm.test.boot.models.hbm.collections.list.User" />
+        </list>
+
     </class>
 
-    <class name="org.hibernate.orm.test.boot.models.hbm.collections.list.User">
+    <class name="org.hibernate.orm.test.boot.models.hbm.collections.list.User" table="users">
         <id/>
         <property name="name"/>
     </class>

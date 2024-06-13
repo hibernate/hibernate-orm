@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine.internal;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
@@ -296,7 +297,7 @@ public final class ForeignKeys {
 	 * @return {@code true} if the given entity is transient (unsaved)
 	 */
 	public static boolean isTransient(
-			String entityName, Object entity, Boolean assumed, SharedSessionContractImplementor session) {
+			String entityName, Object entity, @Nullable Boolean assumed, SharedSessionContractImplementor session) {
 		if ( entity == UNFETCHED_PROPERTY ) {
 			// an unfetched association can only point to
 			// an entity that already exists in the db

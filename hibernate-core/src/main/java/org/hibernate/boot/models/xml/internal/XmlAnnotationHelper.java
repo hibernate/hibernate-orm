@@ -43,6 +43,7 @@ import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SecondaryRow;
+import org.hibernate.boot.internal.LimitedCollectionClassification;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAssociationOverrideImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributeOverrideImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbBasicMapping;
@@ -94,6 +95,7 @@ import org.hibernate.boot.models.annotations.internal.AttributeOverrideJpaAnnota
 import org.hibernate.boot.models.annotations.internal.AttributeOverridesJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.CascadeAnnotation;
 import org.hibernate.boot.models.annotations.internal.CheckConstraintJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.CollectionClassificationXmlAnnotation;
 import org.hibernate.boot.models.annotations.internal.CollectionIdAnnotation;
 import org.hibernate.boot.models.annotations.internal.CollectionTypeAnnotation;
 import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
@@ -1806,5 +1808,16 @@ public class XmlAnnotationHelper {
 			columns[i] = column;
 		}
 		columnsAnn.value( columns );
+	}
+
+	public static void applyCollectionClassification(
+			LimitedCollectionClassification classification,
+			MutableMemberDetails memberDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		CollectionClassificationXmlAnnotation collectionClassification = (CollectionClassificationXmlAnnotation) memberDetails.applyAnnotationUsage(
+				HibernateAnnotations.COLLECTION_CLASSIFICATION,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		collectionClassification.value( classification );
 	}
 }

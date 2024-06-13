@@ -20,6 +20,7 @@ import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.boot.MappingException;
+import org.hibernate.boot.internal.LimitedCollectionClassification;
 import org.hibernate.boot.jaxb.JaxbLogger;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.hbm.spi.Discriminatable;
@@ -27,6 +28,7 @@ import org.hibernate.boot.jaxb.hbm.spi.EntityInfo;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmAnyAssociationType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmArrayType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmAuxiliaryDatabaseObjectType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmBagCollectionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmBasicAttributeType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmBasicCollectionElementType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCacheInclusionEnum;
@@ -1773,6 +1775,7 @@ public class HbmXmlTransformer {
 				target.setSort( sort );
 			}
 			target.setOrderBy( set.getOrderBy() );
+			target.setClassification( LimitedCollectionClassification.SET );
 		}
 		else if ( source instanceof JaxbHbmMapType map ) {
 			final String sort = map.getSort();
@@ -1782,9 +1785,14 @@ public class HbmXmlTransformer {
 			target.setOrderBy( map.getOrderBy() );
 
 			transferMapKey( (JaxbHbmMapType) source, target );
+			target.setClassification( LimitedCollectionClassification.MAP );
 		}
 		else if ( source instanceof JaxbHbmIdBagCollectionType ) {
 			handleUnsupported( "collection-id is not supported for transformation" );
+
+		}
+		else if ( source instanceof JaxbHbmBagCollectionType ) {
+			target.setClassification( LimitedCollectionClassification.BAG );
 		}
 		else if ( source instanceof JaxbHbmListType ) {
 			transferListIndex(
@@ -1792,6 +1800,7 @@ public class HbmXmlTransformer {
 					( (JaxbHbmListType) source ).getListIndex(),
 					target
 			);
+			target.setClassification( LimitedCollectionClassification.LIST );
 		}
 		else if ( source instanceof JaxbHbmArrayType ) {
 			transferListIndex(
@@ -1799,6 +1808,7 @@ public class HbmXmlTransformer {
 					( (JaxbHbmArrayType) source ).getListIndex(),
 					target
 			);
+			target.setClassification( LimitedCollectionClassification.LIST );
 		}
 		else if ( source instanceof JaxbHbmPrimitiveArrayType ) {
 			transferListIndex(
@@ -1806,6 +1816,7 @@ public class HbmXmlTransformer {
 					( (JaxbHbmPrimitiveArrayType) source ).getListIndex(),
 					target
 			);
+			target.setClassification( LimitedCollectionClassification.LIST );
 		}
 	}
 

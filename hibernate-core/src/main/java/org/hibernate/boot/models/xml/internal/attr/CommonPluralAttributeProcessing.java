@@ -73,6 +73,12 @@ public class CommonPluralAttributeProcessing {
 
 		XmlAnnotationHelper.applyCollectionId( jaxbPluralAttribute.getCollectionId(), memberDetails, xmlDocumentContext );
 
+		XmlAnnotationHelper.applyCollectionClassification(
+				jaxbPluralAttribute.getClassification(),
+				memberDetails,
+				xmlDocumentContext
+		);
+
 		if ( StringHelper.isNotEmpty( jaxbPluralAttribute.getOrderBy() ) ) {
 			final OrderByJpaAnnotation orderByAnn = (OrderByJpaAnnotation) memberDetails.applyAnnotationUsage(
 					JpaAnnotations.ORDER_BY,

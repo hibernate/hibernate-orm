@@ -138,7 +138,7 @@ public interface PluralAttributeMapping
 			TableGroup parentTableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		return new BasicResult( 0, null, getJavaType() );
+		return new BasicResult( 0, null, getJavaType(), null, null, false, false );
 	}
 
 	String getSeparateCollectionTable();
@@ -156,8 +156,16 @@ public interface PluralAttributeMapping
 			TableGroup tableGroup,
 			boolean useQualifier,
 			Map<String, Filter> enabledFilters,
+			boolean onlyApplyLoadByKeyFilters,
 			SqlAstCreationState creationState) {
-		getCollectionDescriptor().applyFilterRestrictions( predicateConsumer, tableGroup, useQualifier, enabledFilters, creationState );
+		getCollectionDescriptor().applyFilterRestrictions(
+				predicateConsumer,
+				tableGroup,
+				useQualifier,
+				enabledFilters,
+				onlyApplyLoadByKeyFilters,
+				creationState
+		);
 	}
 
 	@Override
@@ -166,9 +174,18 @@ public interface PluralAttributeMapping
 			TableGroup tableGroup,
 			boolean useQualifier,
 			Map<String, Filter> enabledFilters,
+			boolean onlyApplyLoadByKeyFilters,
 			Set<String> treatAsDeclarations,
 			SqlAstCreationState creationState) {
-		getCollectionDescriptor().applyBaseRestrictions( predicateConsumer, tableGroup, useQualifier, enabledFilters, treatAsDeclarations, creationState );
+		getCollectionDescriptor().applyBaseRestrictions(
+				predicateConsumer,
+				tableGroup,
+				useQualifier,
+				enabledFilters,
+				onlyApplyLoadByKeyFilters,
+				treatAsDeclarations,
+				creationState
+		);
 	}
 
 	default void applyBaseManyToManyRestrictions(

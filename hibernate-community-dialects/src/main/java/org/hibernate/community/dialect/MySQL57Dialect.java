@@ -7,15 +7,14 @@
 package org.hibernate.community.dialect;
 
 import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.MySQLDialect;
 
 /**
  * @author Gail Badner
  *
- * @deprecated use {@code MySQLDialect(570)}
+ * @deprecated use {@code MySQLLegacyDialect(570)}
  */
 @Deprecated
-public class MySQL57Dialect extends MySQLDialect {
+public class MySQL57Dialect extends MySQLLegacyDialect {
 
 	public MySQL57Dialect() {
 		super( DatabaseVersion.make( 5, 7 ) );

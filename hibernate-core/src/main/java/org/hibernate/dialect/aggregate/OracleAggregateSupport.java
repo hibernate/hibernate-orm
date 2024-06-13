@@ -140,6 +140,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 											"decode(json_value(" + parentPartExpression + columnExpression + "'),'true',1,'false',0,null)"
 									);
 								}
+								// Fall-through intended
 							case TINYINT:
 							case SMALLINT:
 							case INTEGER:
@@ -260,11 +261,6 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 				switch ( sqlTypeCode ) {
 					case CLOB:
 						return "to_clob(" + customWriteExpression + ")";
-					case BOOLEAN:
-						final String sqlTypeName = AbstractSqlAstTranslator.getSqlTypeName( column, typeConfiguration );
-						if ( sqlTypeName.toLowerCase( Locale.ROOT ).trim().startsWith( "number" ) ) {
-							return "decode(" + customWriteExpression + ",1,'true',0,'false',null)";
-						}
 					case ARRAY:
 						final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) jdbcMapping;
 						final OracleArrayJdbcType jdbcType = (OracleArrayJdbcType) pluralType.getJdbcType();
@@ -279,6 +275,12 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 							default:
 								break;
 						}
+					case BOOLEAN:
+						final String sqlTypeName = AbstractSqlAstTranslator.getSqlTypeName( column, typeConfiguration );
+						if ( sqlTypeName.toLowerCase( Locale.ROOT ).trim().startsWith( "number" ) ) {
+							return "decode(" + customWriteExpression + ",1,'true',0,'false',null)";
+						}
+						// Fall-through intended
 					default:
 						return customWriteExpression;
 				}

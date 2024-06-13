@@ -23,6 +23,7 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
+import org.hibernate.query.sqm.SqmPathSource;
 
 import static java.util.Collections.emptyList;
 
@@ -123,7 +124,10 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	@Override
 	@SuppressWarnings("unchecked")
 	public <AJ> AttributeNodeImplementor<AJ> findAttributeNode(String attributeName) {
-		final PersistentAttribute<? super J, ?> attribute = managedType.findAttributeInSuperTypes( attributeName );
+		PersistentAttribute<? super J, ?> attribute = managedType.findAttributeInSuperTypes( attributeName );
+		if ( attribute instanceof SqmPathSource && ( (SqmPathSource<?>) attribute ).isGeneric() ) {
+			attribute = managedType.findConcreteGenericAttribute( attributeName );
+		}
 		return attribute == null ? null : findAttributeNode( (PersistentAttribute<? extends J, AJ>) attribute );
 	}
 

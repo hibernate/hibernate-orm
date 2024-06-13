@@ -116,6 +116,7 @@ public class RestrictedDeleteExecutionDelegate extends AbstractDeleteExecutionDe
 				deletingTableGroup,
 				true,
 				executionContext.getSession().getLoadQueryInfluencers().getEnabledFilters(),
+				false,
 				null,
 				getConverter()
 		);

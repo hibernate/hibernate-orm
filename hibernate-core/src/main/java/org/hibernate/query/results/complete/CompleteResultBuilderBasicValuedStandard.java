@@ -112,7 +112,10 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				columnName,
-				jdbcMapping
+				jdbcMapping,
+				null,
+				false,
+				false
 		);
 	}
 

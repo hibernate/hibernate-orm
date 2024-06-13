@@ -36,11 +36,12 @@ public interface KeyValue extends Value {
 
 	/**
 	 * @deprecated Use {@link #createGenerator(IdentifierGeneratorFactory, Dialect, RootClass)} instead.
+	 *             No longer used except in legacy tests.
 	 *
 	 * @return {@code null} if the {@code Generator} returned by {@link #createGenerator} is not an instance
 	 *         of {@link IdentifierGenerator}.
 	 */
-	@Deprecated(since="6.2")
+	@Deprecated(since="6.2", forRemoval = true)
 	default IdentifierGenerator createIdentifierGenerator(
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect,
@@ -53,11 +54,12 @@ public interface KeyValue extends Value {
 
 	/**
 	 * @deprecated Use {@link #createGenerator(IdentifierGeneratorFactory, Dialect, RootClass)} instead.
+	 *             No longer used except in legacy tests.
 	 *
 	 * @return {@code null} if the {@code Generator} returned by {@link #createGenerator} is not an instance
 	 *         of {@link IdentifierGenerator}.
 	 */
-	@Deprecated(since="6.2")
+	@Deprecated(since="6.2", forRemoval = true)
 	default IdentifierGenerator createIdentifierGenerator(
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect,
@@ -65,11 +67,4 @@ public interface KeyValue extends Value {
 		final Generator generator = createGenerator( identifierGeneratorFactory, dialect, rootClass );
 		return generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null;
 	}
-
-	/**
-	 * @deprecated We need to add {@code Column.isIdentity()}
-	 */
-	@Deprecated(since="6.2")
-	boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect);
-
 }

@@ -137,6 +137,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 							collectionTableGroup,
 							factory.getJdbcServices().getDialect().getDmlTargetColumnQualifierSupport() == DmlTargetColumnQualifierSupport.TABLE_ALIAS,
 							executionContext.getSession().getLoadQueryInfluencers().getEnabledFilters(),
+							false,
 							null,
 							null
 					);

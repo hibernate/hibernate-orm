@@ -123,9 +123,18 @@ public class FilterHelper {
 		return aliasTableMap.size() == 1 && aliasTableMap.containsKey( null );
 	}
 
+	public String[] getFilterNames() {
+		return filterNames;
+	}
+
 	public boolean isAffectedBy(Map<String, Filter> enabledFilters) {
+		return isAffectedBy( enabledFilters, false );
+	}
+
+	public boolean isAffectedBy(Map<String, Filter> enabledFilters, boolean onlyApplyForLoadByKey) {
 		for ( String filterName : filterNames ) {
-			if ( enabledFilters.containsKey( filterName ) ) {
+			Filter filter = enabledFilters.get( filterName );
+			if ( filter != null && ( !onlyApplyForLoadByKey || filter.isAppliedToLoadByKey() ) ) {
 				return true;
 			}
 		}
@@ -144,6 +153,7 @@ public class FilterHelper {
 				rootTableGroup,
 				useIdentificationVariable,
 				loadQueryInfluencers.getEnabledFilters(),
+				astCreationState.applyOnlyLoadByKeyFilters(),
 				null,
 				astCreationState
 		);
@@ -153,11 +163,13 @@ public class FilterHelper {
 			Consumer<Predicate> predicateConsumer,
 			FilterAliasGenerator aliasGenerator,
 			Map<String, Filter> enabledFilters,
+			boolean onlyApplyLoadByKeyFilters,
 			TableGroup tableGroup,
 			SqlAstCreationState creationState) {
 		final FilterPredicate predicate = generateFilterPredicate(
 				aliasGenerator,
 				enabledFilters,
+				onlyApplyLoadByKeyFilters,
 				tableGroup,
 				creationState
 		);
@@ -169,6 +181,7 @@ public class FilterHelper {
 	private FilterPredicate generateFilterPredicate(
 			FilterAliasGenerator aliasGenerator,
 			Map<String, Filter> enabledFilters,
+			boolean onlyApplyLoadByKeyFilters,
 			TableGroup tableGroup,
 			SqlAstCreationState creationState) {
 		final FilterPredicate filterPredicate = new FilterPredicate();
@@ -176,7 +189,7 @@ public class FilterHelper {
 		for ( int i = 0, max = filterNames.length; i < max; i++ ) {
 			final String filterName = filterNames[i];
 			final FilterImpl enabledFilter = (FilterImpl) enabledFilters.get( filterName );
-			if ( enabledFilter != null ) {
+			if ( enabledFilter != null && ( !onlyApplyLoadByKeyFilters || enabledFilter.isAppliedToLoadByKey() ) ) {
 				filterPredicate.applyFragment( render( aliasGenerator, i, tableGroup, creationState ), enabledFilter, parameterNames[i] );
 			}
 		}

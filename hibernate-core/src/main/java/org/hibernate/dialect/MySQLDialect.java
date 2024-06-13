@@ -71,12 +71,15 @@ import org.hibernate.type.NullType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.EnumJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
+import org.hibernate.type.descriptor.jdbc.OrdinalEnumJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import jakarta.persistence.TemporalType;
@@ -149,6 +152,16 @@ public class MySQLDialect extends Dialect {
 					//we set scale > 20
 					size.setScale( Math.min( size.getPrecision(), 20 ) );
 					return size;
+				case BLOB:
+				case NCLOB:
+				case CLOB:
+					return super.resolveSize(
+							jdbcType,
+							javaType,
+							precision,
+							scale,
+							length == null ? getDefaultLobLength() : length
+					);
 				default:
 					return super.resolveSize( jdbcType, javaType, precision, scale, length );
 			}
@@ -188,7 +201,12 @@ public class MySQLDialect extends Dialect {
 		registerKeywords( info );
 	}
 
+	@Deprecated
 	protected static DatabaseVersion createVersion(DialectResolutionInfo info) {
+		return createVersion( info, MINIMUM_VERSION );
+	}
+
+	protected static DatabaseVersion createVersion(DialectResolutionInfo info, DatabaseVersion defaultVersion) {
 		final String versionString = info.getDatabaseVersion();
 		if ( versionString != null ) {
 			final String[] components = versionString.split( "\\." );
@@ -204,7 +222,7 @@ public class MySQLDialect extends Dialect {
 				}
 			}
 		}
-		return info.makeCopyOrDefault( MINIMUM_VERSION );
+		return info.makeCopyOrDefault( defaultVersion );
 	}
 
 	@Override
@@ -418,7 +436,8 @@ public class MySQLDialect extends Dialect {
 						.build()
 		);
 
-		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl(this) );
+		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
 	}
 
 	@Deprecated
@@ -515,8 +534,7 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public long getDefaultLobLength() {
-		//max length for mediumblob or mediumtext
-		return 16_777_215;
+		return Integer.MAX_VALUE;
 	}
 
 	@Override
@@ -689,7 +707,8 @@ public class MySQLDialect extends Dialect {
 				)
 		);
 
-		jdbcTypeRegistry.addDescriptor( new MySQLEnumJdbcType() );
+		jdbcTypeRegistry.addDescriptor( EnumJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( OrdinalEnumJdbcType.INSTANCE );
 	}
 
 	@Override

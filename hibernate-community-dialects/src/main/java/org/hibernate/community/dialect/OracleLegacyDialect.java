@@ -101,7 +101,6 @@ import org.hibernate.type.NullType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
@@ -156,6 +155,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  *
  * @author Steve Ebersole
  * @author Gavin King
+ * @author Loïc Lefèvre
  */
 public class OracleLegacyDialect extends Dialect {
 
@@ -183,6 +183,7 @@ public class OracleLegacyDialect extends Dialect {
 			: new LegacyOracleLimitHandler( getVersion() );
 	private final OracleUserDefinedTypeExporter userDefinedTypeExporter = new OracleUserDefinedTypeExporter( this );
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
+	private final SequenceSupport oracleSequenceSupport = OracleSequenceSupport.getInstance(this);
 
 	public OracleLegacyDialect() {
 		this( DatabaseVersion.make( 8, 0 ) );
@@ -308,7 +309,7 @@ public class OracleLegacyDialect extends Dialect {
 		functionFactory.arrayPrepend_oracle();
 		functionFactory.arrayAppend_oracle();
 		functionFactory.arrayContains_oracle();
-		functionFactory.arrayOverlaps_oracle();
+		functionFactory.arrayIntersects_oracle();
 		functionFactory.arrayGet_oracle();
 		functionFactory.arraySet_oracle();
 		functionFactory.arrayRemove_oracle();
@@ -994,7 +995,7 @@ public class OracleLegacyDialect extends Dialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return OracleSequenceSupport.INSTANCE;
+		return oracleSequenceSupport;
 	}
 
 	@Override
@@ -1562,4 +1563,11 @@ public class OracleLegacyDialect extends Dialect {
 	public boolean supportsFromClauseInUpdate() {
 		return true;
 	}
+
+	@Override
+	public boolean useInputStreamToInsertBlob() {
+		// see HHH-18206
+		return false;
+	}
+
 }

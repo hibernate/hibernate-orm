@@ -251,6 +251,10 @@ public class DomainResultCreationStateImpl
 		return loadQueryInfluencers;
 	}
 
+	@Override
+	public boolean applyOnlyLoadByKeyFilters() {
+		return true;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SqlAstProcessingState
@@ -362,12 +366,12 @@ public class DomainResultCreationStateImpl
 	}
 
 	@Override
-	public ImmutableFetchList visitNestedFetches(FetchParent fetchParent) {
+	public <R> R withNestedFetchParent(FetchParent fetchParent, Function<FetchParent, R> action) {
 		final FetchParent oldNestingFetchParent = this.nestingFetchParent;
 		this.nestingFetchParent = fetchParent;
-		final ImmutableFetchList fetches = visitFetches( fetchParent );
+		final R result = action.apply( fetchParent );
 		this.nestingFetchParent = oldNestingFetchParent;
-		return fetches;
+		return result;
 	}
 
 	@Override

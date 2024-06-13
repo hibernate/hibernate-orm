@@ -39,6 +39,8 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.engine.internal.Collections.skipRemoval;
+
 /**
  * A convenience base class for listeners whose functionality results in flushing.
  *
@@ -144,13 +146,31 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 		LOG.debug( "Processing flush-time cascades" );
 
-		final PersistContext context = getContext();
+		final PersistContext context = getContext( session );
 		//safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
 		for ( Map.Entry<Object,EntityEntry> me : persistenceContext.reentrantSafeEntityEntries() ) {
 //		for ( Map.Entry me : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
 			final EntityEntry entry = me.getValue();
 			if ( flushable( entry ) ) {
 				cascadeOnFlush( session, entry.getPersister(), me.getKey(), context );
+			}
+		}
+
+		// perform these checks after all cascade persist events have been
+		// processed, so that all entities which will be persisted are
+		// persistent when we do the check (I wonder if we could move this
+		// into Nullability, instead of abusing the Cascade infrastructure)
+		for ( Map.Entry<Object, EntityEntry> me : persistenceContext.reentrantSafeEntityEntries() ) {
+			final EntityEntry entry = me.getValue();
+			if ( flushable( entry ) ) {
+				Cascade.cascade(
+						CascadingActions.CHECK_ON_FLUSH,
+						CascadePoint.BEFORE_FLUSH,
+						session,
+						entry.getPersister(),
+						me.getKey(),
+						null
+				);
 			}
 		}
 	}
@@ -167,19 +187,25 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
 		try {
-			Cascade.cascade( getCascadingAction(), CascadePoint.BEFORE_FLUSH, session, persister, object, anything );
+			Cascade.cascade( getCascadingAction(session), CascadePoint.BEFORE_FLUSH, session, persister, object, anything );
 		}
 		finally {
 			persistenceContext.decrementCascadeLevel();
 		}
 	}
 
-	protected PersistContext getContext() {
-		return jpaBootstrap ? PersistContext.create() : null;
+	protected PersistContext getContext(EventSource session) {
+		return jpaBootstrap || isJpaCascadeComplianceEnabled( session ) ? PersistContext.create() : null;
 	}
 
-	protected CascadingAction<PersistContext> getCascadingAction() {
-		return jpaBootstrap ? CascadingActions.PERSIST_ON_FLUSH : CascadingActions.SAVE_UPDATE;
+	protected CascadingAction<PersistContext> getCascadingAction(EventSource session) {
+		return jpaBootstrap || isJpaCascadeComplianceEnabled( session )
+				? CascadingActions.PERSIST_ON_FLUSH
+				: CascadingActions.SAVE_UPDATE;
+	}
+
+	private static boolean isJpaCascadeComplianceEnabled(EventSource session) {
+		return session.getSessionFactory().getSessionFactoryOptions().getJpaCompliance().isJpaCascadeComplianceEnabled();
 	}
 
 	/**
@@ -301,15 +327,17 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 					}
 					if ( ce.isDoremove() ) {
 						interceptor.onCollectionRemove( coll, ce.getLoadedKey() );
-						actionQueue.addAction(
-								new CollectionRemoveAction(
-										coll,
-										ce.getLoadedPersister(),
-										ce.getLoadedKey(),
-										ce.isSnapshotEmpty( coll ),
-										session
-								)
-						);
+						if ( !skipRemoval( session, ce.getLoadedPersister(), ce.getLoadedKey() ) ) {
+							actionQueue.addAction(
+									new CollectionRemoveAction(
+											coll,
+											ce.getLoadedPersister(),
+											ce.getLoadedKey(),
+											ce.isSnapshotEmpty( coll ),
+											session
+									)
+							);
+						}
 					}
 					if ( ce.isDoupdate() ) {
 						interceptor.onCollectionUpdate( coll, ce.getLoadedKey() );
@@ -409,7 +437,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 					}
 					else {
 						//otherwise recreate the mapping between the collection and its key
-						CollectionKey collectionKey = new CollectionKey(
+						final CollectionKey collectionKey = new CollectionKey(
 								collectionEntry.getLoadedPersister(),
 								collectionEntry.getLoadedKey()
 						);

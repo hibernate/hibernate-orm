@@ -180,7 +180,15 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 		// StandardRowReader expects there to be a JavaType as part of the ResultAssembler.
 		assert javaType != null;
 
-		return new BasicResult( sqlSelection.getValuesArrayPosition(), resultAlias, javaType, converter );
+		return new BasicResult(
+				sqlSelection.getValuesArrayPosition(),
+				resultAlias,
+				javaType,
+				converter,
+				null,
+				false,
+				false
+		);
 	}
 
 	@Override

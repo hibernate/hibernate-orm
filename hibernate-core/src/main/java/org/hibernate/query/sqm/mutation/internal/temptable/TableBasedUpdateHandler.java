@@ -151,6 +151,7 @@ public class TableBasedUpdateHandler
 				updatingTableGroup,
 				true,
 				executionContext.getSession().getLoadQueryInfluencers().getEnabledFilters(),
+				false,
 				null,
 				converterDelegate
 		);

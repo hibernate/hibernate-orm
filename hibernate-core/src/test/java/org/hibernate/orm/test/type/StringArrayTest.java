@@ -6,9 +6,6 @@
  */
 package org.hibernate.orm.test.type;
 
-import java.math.BigDecimal;
-
-import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.OracleDialect;
@@ -98,7 +95,6 @@ public class StringArrayTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
 	public void testQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			TypedQuery<TableWithStringArrays> tq = em.createNamedQuery( "TableWithStringArrays.Native.getById", TableWithStringArrays.class );

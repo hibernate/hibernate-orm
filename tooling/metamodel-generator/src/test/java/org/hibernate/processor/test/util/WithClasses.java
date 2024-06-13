@@ -25,4 +25,6 @@ public @interface WithClasses {
 	 * @return an array of classes which should be complied prior to compiling the actual test classes
 	 */
 	Class<?>[] preCompile() default { };
+
+	String[] sources() default {};
 }

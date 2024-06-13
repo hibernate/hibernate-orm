@@ -16,7 +16,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.spi.Status;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -294,8 +294,27 @@ public final class Collections {
 	}
 
 	/**
+	 * Determines if we can skip the explicit SQL delete statement, since
+	 * the rows will be deleted by {@code on delete cascade}.
+	 */
+	public static boolean skipRemoval(EventSource session, CollectionPersister persister, Object key) {
+		if ( persister != null
+				// TODO: same optimization for @OneToMany @OnDelete(action=SET_NULL)
+				&& !persister.isOneToMany() && persister.isCascadeDeleteEnabled() ) {
+			final EntityKey entityKey = session.generateEntityKey( key, persister.getOwnerEntityPersister() );
+			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+			final EntityEntry entry = persistenceContext.getEntry( persistenceContext.getEntity( entityKey ) );
+			return entry == null || entry.getStatus().isDeletedOrGone();
+		}
+		else {
+			return false;
+		}
+	}
+
+	/**
 	 * Disallow instantiation
 	 */
 	private Collections() {
 	}
+
 }

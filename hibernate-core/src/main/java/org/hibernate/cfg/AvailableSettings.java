@@ -6,7 +6,6 @@
  */
 package org.hibernate.cfg;
 
-import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.jpa.LegacySpecHints;
 import org.hibernate.jpa.SpecHints;
 
@@ -134,27 +133,36 @@ public interface AvailableSettings
 	 * The default behavior is to allow refreshing a detached instance unless Hibernate
 	 * is bootstrapped via JPA.
 	 *
+	 * @deprecated Will be removed with no replacement from ORM version 7 onwards
+	 *
 	 * @since 5.2
 	 */
+	@Deprecated(forRemoval = true)
 	String ALLOW_REFRESH_DETACHED_ENTITY = "hibernate.allow_refresh_detached_entity";
+
 	/**
-	 * Setting that specifies how Hibernate will respond when multiple representations of
-	 * the same persistent entity ("entity copy") are detected while merging.
+	 * Specifies how Hibernate should behave when multiple representations of the same
+	 * persistent entity instance, that is, multiple detached objects with the same
+	 * persistent identity, are encountered while cascading a
+	 * {@link org.hibernate.Session#merge(Object) merge()} operation.
 	 * <p>
 	 * The possible values are:
 	 * <ul>
-	 *     <li>disallow (the default): throws {@link IllegalStateException} if an entity
-	 *         copy is detected
-	 *     <li>allow: performs the merge operation on each entity copy that is detected
-	 *     <li>log: (provided for testing only) performs the merge operation on each entity
-	 *         copy that is detected and logs information about the entity copies. This
-	 *         setting requires DEBUG logging be enabled for
+	 *     <li>{@code disallow} (the default): throw {@link IllegalStateException} if
+	 *         multiple copies of the same entity are encountered
+	 *     <li>{@code allow}: perform the merge operation for every copy encountered,
+	 *         making no attempt to reconcile conflicts (this may result in lost updates)
+	 *     <li>{@code log}: (provided for testing only) perform the merge operation for
+	 *         every copy encountered and log information about the copies. This setting
+	 *         requires that {@code DEBUG} logging be enabled for
 	 *         {@link org.hibernate.event.internal.EntityCopyAllowedLoggedObserver}.
 	 * </ul>
 	 * <p>
-	 * Alternatively, the application may customize the behavior by providing an
+	 * Alternatively, the application may customize the behavior by providing a custom
 	 * implementation of {@link org.hibernate.event.spi.EntityCopyObserver} and setting
-	 * the property {@value #MERGE_ENTITY_COPY_OBSERVER} to the class name.
+	 * the property {@value #MERGE_ENTITY_COPY_OBSERVER} to the class name. This, in
+	 * principle, allows the application program to specify rules for reconciling
+	 * conflicts.
 	 * <p>
 	 * When this property is set to {@code allow} or {@code log}, Hibernate will merge
 	 * each entity copy detected while cascading the merge operation. In the process of
@@ -164,6 +172,8 @@ public interface AvailableSettings
 	 * merging an entity copy will be overwritten when another entity copy is merged.
 	 *
 	 * @since 4.3
+	 *
+	 * @see org.hibernate.event.spi.EntityCopyObserver
 	 */
 	@SuppressWarnings("JavaDoc")
 	String MERGE_ENTITY_COPY_OBSERVER = "hibernate.event.merge.entity_copy_observer";
@@ -191,7 +201,7 @@ public interface AvailableSettings
 	 * Setting to identify a {@link org.hibernate.CustomEntityDirtinessStrategy} to use.
 	 * May specify either a class name or an instance.
 	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy)
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyCustomEntityDirtinessStrategy
 	 */
 	String CUSTOM_ENTITY_DIRTINESS_STRATEGY = "hibernate.entity_dirtiness_strategy";
 

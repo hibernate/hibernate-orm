@@ -8,7 +8,6 @@ package org.hibernate.sql.results.graph.tuple;
 
 import org.hibernate.sql.results.ResultsLogger;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -44,8 +43,7 @@ public class TupleResultAssembler<J> implements DomainResultAssembler<J> {
 
 	@Override
 	public J assemble(
-			RowProcessingState rowProcessingState,
-			JdbcValuesSourceProcessingOptions options) {
+			RowProcessingState rowProcessingState) {
 		final Object[] jdbcValues = extractRawValue( rowProcessingState );
 
 		if ( ResultsLogger.RESULTS_MESSAGE_LOGGER.isDebugEnabled() ) {

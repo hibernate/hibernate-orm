@@ -40,7 +40,7 @@ public class FindWithEntityGraphTest {
 					Person person = new Person( 1L, "test" );
 
 					Person child1 = new Person( 2L, "child1" );
-					Person child2 = new Person( 2L, "child2" );
+					Person child2 = new Person( 3L, "child2" );
 					child1.addParent( person );
 					child2.addParent( person );
 					entityManager.persist( person );
@@ -81,7 +81,7 @@ public class FindWithEntityGraphTest {
 		@OneToOne(mappedBy = "person", orphanRemoval = true, cascade = CascadeType.ALL)
 		private PersonContact personContact;
 
-		@OneToMany(mappedBy = "parent")
+		@OneToMany(mappedBy = "parent", orphanRemoval = true, cascade = CascadeType.ALL)
 		private Set<Person> children = new HashSet<>( 0 );
 
 		public Person() {

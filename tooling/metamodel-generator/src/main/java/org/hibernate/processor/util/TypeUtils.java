@@ -39,6 +39,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 import static java.beans.Introspector.decapitalize;
+import static org.hibernate.processor.util.AccessTypeInformation.DEFAULT_ACCESS_TYPE;
 import static org.hibernate.processor.util.Constants.ACCESS;
 import static org.hibernate.processor.util.Constants.BASIC;
 import static org.hibernate.processor.util.Constants.ELEMENT_COLLECTION;
@@ -69,9 +70,6 @@ public final class TypeUtils {
 	public static final String DEFAULT_ANNOTATION_PARAMETER_NAME = "value";
 	private static final Map<TypeKind, String> PRIMITIVE_WRAPPERS = new HashMap<>();
 	private static final Map<TypeKind, String> PRIMITIVES = new HashMap<>();
-
-	private static final String PROPERTY = AccessType.PROPERTY.toString();
-	private static final String FIELD = AccessType.FIELD.toString();
 
 	static {
 		PRIMITIVE_WRAPPERS.put( TypeKind.CHAR, "Character" );
@@ -320,8 +318,7 @@ public final class TypeUtils {
 					// if we end up here we need to recursively look for superclasses
 					AccessType newDefaultAccessType = getDefaultAccessForHierarchy( searchedElement, context );
 					if ( newDefaultAccessType == null ) {
-						//TODO: this default is arbitrary and very questionable!
-						newDefaultAccessType = AccessType.PROPERTY;
+						newDefaultAccessType = DEFAULT_ACCESS_TYPE;
 					}
 					final AccessTypeInformation newAccessTypeInfo =
 							new AccessTypeInformation( qualifiedName, null, newDefaultAccessType );
@@ -362,17 +359,29 @@ public final class TypeUtils {
 	}
 
 	private static void updateEmbeddableAccessTypeForMember(Context context, AccessType defaultAccessType, Element member) {
-		final String embeddedClassName = member.asType().accept( new EmbeddedAttributeVisitor( context ), member );
-		if ( embeddedClassName != null ) {
-			final AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo( embeddedClassName );
-			if ( accessTypeInfo == null ) {
-				final AccessTypeInformation newAccessTypeInfo =
-						new AccessTypeInformation( embeddedClassName, null, defaultAccessType );
-				context.addAccessTypeInformation( embeddedClassName, newAccessTypeInfo );
+		final @Nullable TypeElement embedded = member.asType().accept( new EmbeddedAttributeVisitor( context ), member );
+		if ( embedded != null ) {
+			updateEmbeddableAccessType( context, defaultAccessType, embedded );
+		}
+	}
+
+	private static void updateEmbeddableAccessType(Context context, AccessType defaultAccessType, TypeElement embedded) {
+		final String embeddedClassName = embedded.getQualifiedName().toString();
+		final AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo(embeddedClassName);
+		if ( accessTypeInfo == null ) {
+			final AccessTypeInformation newAccessTypeInfo =
+					new AccessTypeInformation( embeddedClassName, null, defaultAccessType );
+			context.addAccessTypeInformation( embeddedClassName, newAccessTypeInfo );
+			updateEmbeddableAccessType( embedded, context, defaultAccessType );
+			final TypeMirror superclass = embedded.getSuperclass();
+			if ( superclass.getKind() == TypeKind.DECLARED ) {
+				final DeclaredType declaredType = (DeclaredType) superclass;
+				final TypeElement element = (TypeElement) declaredType.asElement();
+				updateEmbeddableAccessType( context, defaultAccessType, element );
 			}
-			else {
-				accessTypeInfo.setDefaultAccessType( defaultAccessType );
-			}
+		}
+		else {
+			accessTypeInfo.setDefaultAccessType(defaultAccessType);
 		}
 	}
 
@@ -457,12 +466,13 @@ public final class TypeUtils {
 	}
 
 	private static @Nullable AccessType getAccessTypeOfIdAnnotation(Element element) {
-		final ElementKind kind = element.getKind();
-		if ( kind == ElementKind.FIELD || kind == ElementKind.METHOD ) {
-			return kind == ElementKind.FIELD ? AccessType.FIELD : AccessType.PROPERTY;
-		}
-		else {
-			return null;
+		switch ( element.getKind() ) {
+			case FIELD:
+				return AccessType.FIELD;
+			case METHOD:
+				return AccessType.PROPERTY;
+			default:
+				return null;
 		}
 	}
 
@@ -478,10 +488,10 @@ public final class TypeUtils {
 			if ( accessType != null ) {
 				final VariableElement enumValue = (VariableElement) accessType.getValue();
 				final Name enumValueName = enumValue.getSimpleName();
-				if ( enumValueName.contentEquals(PROPERTY) ) {
+				if ( enumValueName.contentEquals(AccessType.PROPERTY.name()) ) {
 					return AccessType.PROPERTY;
 				}
-				else if ( enumValueName.contentEquals(FIELD) ) {
+				else if ( enumValueName.contentEquals(AccessType.FIELD.name()) ) {
 					return AccessType.FIELD;
 				}
 			}
@@ -644,7 +654,7 @@ public final class TypeUtils {
 			|| !entityMetaComplete && containsAnnotation( superClassElement, ENTITY, MAPPED_SUPERCLASS );
 	}
 
-	static class EmbeddedAttributeVisitor extends SimpleTypeVisitor8<@Nullable String, Element> {
+	static class EmbeddedAttributeVisitor extends SimpleTypeVisitor8<@Nullable TypeElement, Element> {
 		private final Context context;
 
 		EmbeddedAttributeVisitor(Context context) {
@@ -652,16 +662,14 @@ public final class TypeUtils {
 		}
 
 		@Override
-		public @Nullable String visitDeclared(DeclaredType declaredType, Element element) {
+		public @Nullable TypeElement visitDeclared(DeclaredType declaredType, Element element) {
 			final TypeElement returnedElement = (TypeElement)
 					context.getTypeUtils().asElement( declaredType );
-			return containsAnnotation( returnedElement, EMBEDDABLE )
-					? returnedElement.getQualifiedName().toString()
-					: null;
+			return containsAnnotation( NullnessUtil.castNonNull( returnedElement ), EMBEDDABLE ) ? returnedElement : null;
 		}
 
 		@Override
-		public @Nullable String visitExecutable(ExecutableType executable, Element element) {
+		public @Nullable TypeElement visitExecutable(ExecutableType executable, Element element) {
 			if ( element.getKind().equals( ElementKind.METHOD ) ) {
 				final String string = element.getSimpleName().toString();
 				return isProperty( string, toTypeString( executable.getReturnType() ) )

@@ -6,9 +6,16 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.util.Set;
 import java.util.function.Consumer;
 
+import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -108,6 +115,37 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 			AttributeMapping attributeMapping = attributeMappings.get( i );
 			if ( attributeMapping.hasPartitionedSelectionMapping() ) {
 				return true;
+			}
+		}
+		return false;
+	}
+
+	default boolean isAffectedByEnabledFilters(
+			Set<ManagedMappingType> visitedTypes,
+			LoadQueryInfluencers influencers,
+			boolean onlyApplyForLoadByKey) {
+		if ( !visitedTypes.add( this ) ) {
+			return false;
+		}
+		// we still need to verify collection fields to be eagerly loaded by join
+		final AttributeMappingsList attributeMappings = getAttributeMappings();
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			final AttributeMapping attributeMapping = attributeMappings.get( i );
+			final FetchOptions mappedFetchOptions = attributeMapping.getMappedFetchOptions();
+			if ( mappedFetchOptions.getTiming() == FetchTiming.IMMEDIATE
+					&& mappedFetchOptions.getStyle() == FetchStyle.JOIN ) {
+				if ( attributeMapping instanceof PluralAttributeMapping ) {
+					final CollectionPersister collectionDescriptor = ( (PluralAttributeMapping) attributeMapping ).getCollectionDescriptor();
+					if ( collectionDescriptor.isAffectedByEnabledFilters( visitedTypes, influencers, onlyApplyForLoadByKey ) ) {
+						return true;
+					}
+				}
+				else if ( attributeMapping instanceof ToOneAttributeMapping ) {
+					final EntityMappingType entityMappingType = ( (ToOneAttributeMapping) attributeMapping ).getEntityMappingType();
+					if ( entityMappingType.isAffectedByEnabledFilters( visitedTypes, influencers, onlyApplyForLoadByKey ) ) {
+						return true;
+					}
+				}
 			}
 		}
 		return false;

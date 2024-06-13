@@ -33,7 +33,7 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 		this.idClassType = idClassEmbeddable.getMappedJavaType();
 		this.instantiator = isRecord( idClassType.getJavaTypeClass() ) ?
 				new EmbeddableInstantiatorRecordStandard( idClassType.getJavaTypeClass() ) :
-				new EmbeddableInstantiatorPojoStandard( idClassType, () -> idClassEmbeddable );
+				new EmbeddableInstantiatorPojoStandard( idClassType.getJavaTypeClass(), () -> idClassEmbeddable );
 	}
 
 	@Override

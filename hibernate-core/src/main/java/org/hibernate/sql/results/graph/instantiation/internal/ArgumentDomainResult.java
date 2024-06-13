@@ -10,7 +10,7 @@ import java.util.BitSet;
 
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -40,11 +40,9 @@ public class ArgumentDomainResult<A> implements DomainResult<A> {
 	}
 
 	@Override
-	public ArgumentReader<A> createResultAssembler(
-			FetchParentAccess parentAccess,
-			AssemblerCreationState creationState) {
+	public ArgumentReader<A> createResultAssembler(InitializerParent<?> parent, AssemblerCreationState creationState) {
 		return new ArgumentReader<>(
-				realDomainResult.createResultAssembler( parentAccess, creationState ),
+				realDomainResult.createResultAssembler( parent, creationState ),
 				getResultVariable()
 		);
 	}

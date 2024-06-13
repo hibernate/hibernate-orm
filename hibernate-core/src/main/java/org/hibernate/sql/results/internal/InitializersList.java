@@ -10,17 +10,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.graph.collection.internal.AbstractCollectionInitializer;
-import org.hibernate.sql.results.graph.entity.internal.AbstractBatchEntitySelectFetchInitializer;
-import org.hibernate.sql.results.graph.entity.internal.DiscriminatedEntityInitializer;
-import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchInitializer;
-import org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchInitializer;
+import org.hibernate.sql.results.graph.entity.internal.EntityInitializerImpl;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Internal helper to keep track of the various
@@ -34,82 +26,50 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public final class InitializersList {
 
-	private final Initializer[] initializers;
-	private final Initializer[] sortedNonCollectionsFirst;
-	private final Initializer[] sortedForResolveInstance;
+	private final Initializer<?>[] initializers;
+	private final Initializer<?>[] sortedForResolveInstance;
 	private final boolean hasCollectionInitializers;
-	private final NavigablePathMapToInitializer initializerMap;
 
 	private InitializersList(
-			Initializer[] initializers,
-			Initializer[] sortedNonCollectionsFirst,
-			Initializer[] sortedForResolveInstance,
-			boolean hasCollectionInitializers,
-			NavigablePathMapToInitializer initializerMap) {
+			Initializer<?>[] initializers,
+			Initializer<?>[] sortedForResolveInstance,
+			boolean hasCollectionInitializers) {
 		this.initializers = initializers;
-		this.sortedNonCollectionsFirst = sortedNonCollectionsFirst;
 		this.sortedForResolveInstance = sortedForResolveInstance;
 		this.hasCollectionInitializers = hasCollectionInitializers;
-		this.initializerMap = initializerMap;
+	}
+
+	public Initializer<?>[] getInitializers() {
+		return initializers;
+	}
+
+	public Initializer<?>[] getSortedForResolveInstance() {
+		return sortedForResolveInstance;
 	}
 
 	@Deprecated //for simpler migration to the new SPI
-	public List<Initializer> asList() {
+	public List<Initializer<?>> asList() {
 		return Arrays.asList( initializers );
 	}
 
-	public Initializer resolveInitializer(final @Nullable NavigablePath path) {
-		return initializerMap.get( path );
+	public int size() {
+		return initializers.length;
 	}
 
-	public void finishUpRow(final RowProcessingState rowProcessingState) {
-		for ( Initializer init : initializers ) {
-			init.finishUpRow( rowProcessingState );
-		}
-	}
-
-	public void initializeInstance(final RowProcessingState rowProcessingState) {
-		for ( Initializer init : initializers ) {
-			init.initializeInstance( rowProcessingState );
-		}
-	}
-
-	public void startLoading(final RowProcessingState rowProcessingState) {
-		for ( int i = initializers.length - 1; i >= 0; i-- ) {
-			initializers[i].startLoading( rowProcessingState );
-		}
-	}
-
-	public void endLoading(final ExecutionContext executionContext) {
-		for ( Initializer initializer : initializers ) {
-			initializer.endLoading( executionContext );
-		}
-	}
-
-	public void resolveKeys(final RowProcessingState rowProcessingState) {
-		for ( Initializer init : sortedNonCollectionsFirst ) {
-			init.resolveKey( rowProcessingState );
-		}
-	}
-
-	public void resolveInstances(final RowProcessingState rowProcessingState) {
-		for ( Initializer init : sortedForResolveInstance ) {
-			init.resolveInstance( rowProcessingState );
-		}
-	}
-
-	public boolean hasCollectionInitializers() {
-		return this.hasCollectionInitializers;
-	}
-
-	static class Builder {
-		private ArrayList<Initializer> initializers = new ArrayList<>();
+	public static class Builder {
+		private final ArrayList<Initializer<?>> initializers;
 		int nonCollectionInitializersNum = 0;
 		int resolveFirstNum = 0;
 
-		public Builder() {}
+		public Builder() {
+			initializers = new ArrayList<>();
+		}
 
-		public void addInitializer(final Initializer initializer) {
+		public Builder(int size) {
+			initializers = new ArrayList<>( size );
+		}
+
+		public void addInitializer(final Initializer<?> initializer) {
 			initializers.add( initializer );
 			//in this method we perform these checks merely to learn the sizing hints,
 			//so to not need dynamically scaling collections.
@@ -124,30 +84,17 @@ public final class InitializersList {
 			}
 		}
 
-		private static boolean initializeFirst(final Initializer initializer) {
-			return !( initializer instanceof EntityDelayedFetchInitializer )
-					&& !( initializer instanceof EntitySelectFetchInitializer )
-					&& !( initializer instanceof DiscriminatedEntityInitializer )
-					&& !( initializer instanceof AbstractCollectionInitializer )
-					&& !(initializer instanceof AbstractBatchEntitySelectFetchInitializer );
+		private static boolean initializeFirst(final Initializer<?> initializer) {
+			return initializer instanceof EntityInitializerImpl;
 		}
 
-		InitializersList build(final NavigablePathMapToInitializer initializerMap) {
+		public InitializersList build() {
 			final int size = initializers.size();
-			final Initializer[] sortedNonCollectionsFirst = new Initializer[size];
-			final Initializer[] sortedForResolveInstance = new Initializer[size];
-			int nonCollectionIdx = 0;
-			int collectionIdx = nonCollectionInitializersNum;
+			final Initializer<?>[] sortedForResolveInstance = new Initializer<?>[size];
 			int resolveFirstIdx = 0;
 			int resolveLaterIdx = resolveFirstNum;
-			final Initializer[] originalSortInitializers = toArray( initializers );
-			for ( Initializer initializer : originalSortInitializers ) {
-				if ( initializer.isCollectionInitializer() ) {
-					sortedNonCollectionsFirst[collectionIdx++] = initializer;
-				}
-				else {
-					sortedNonCollectionsFirst[nonCollectionIdx++] = initializer;
-				}
+			final Initializer<?>[] originalSortInitializers = toArray( initializers );
+			for ( Initializer<?> initializer : originalSortInitializers ) {
 				if ( initializeFirst( initializer ) ) {
 					sortedForResolveInstance[resolveFirstIdx++] = initializer;
 				}
@@ -158,15 +105,13 @@ public final class InitializersList {
 			final boolean hasCollectionInitializers = ( nonCollectionInitializersNum != initializers.size() );
 			return new InitializersList(
 					originalSortInitializers,
-					sortedNonCollectionsFirst,
 					sortedForResolveInstance,
-					hasCollectionInitializers,
-					initializerMap
+					hasCollectionInitializers
 			);
 		}
 
-		private Initializer[] toArray(final ArrayList<Initializer> initializers) {
-			return initializers.toArray( new Initializer[initializers.size()] );
+		private Initializer<?>[] toArray(final ArrayList<Initializer<?>> initializers) {
+			return initializers.toArray( new Initializer<?>[initializers.size()] );
 		}
 
 	}

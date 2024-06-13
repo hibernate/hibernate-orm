@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.PropertyValueException;
+import org.hibernate.TransientObjectException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.action.internal.CollectionRecreateAction;
@@ -56,6 +57,7 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
@@ -492,7 +494,17 @@ public class ActionQueue {
 	 */
 	public void executeActions() throws HibernateException {
 		if ( hasUnresolvedEntityInsertActions() ) {
-			throw new IllegalStateException( "About to execute actions, but there are unresolved entity insert actions." );
+			final AbstractEntityInsertAction insertAction =
+					unresolvedInsertions.getDependentEntityInsertActions()
+							.iterator().next();
+			final NonNullableTransientDependencies transientEntities = insertAction.findNonNullableTransientEntities();
+			final Object transientEntity = transientEntities.getNonNullableTransientEntities().iterator().next();
+			final String path = transientEntities.getNonNullableTransientPropertyPaths(transientEntity).iterator().next();
+			//TODO: should be TransientPropertyValueException
+			throw new TransientObjectException( "Persistent instance of '" + insertAction.getEntityName()
+					+ "' with id '" + insertAction.getId()
+					+ "' references an unsaved transient instance via attribute '" + path
+					+ "' (save the transient instance before flushing)" );
 		}
 
 		for ( OrderedActions action : ORDERED_OPERATIONS ) {
@@ -981,7 +993,7 @@ public class ActionQueue {
 		protected SessionImplementor session;
 		// Concurrency handling required when transaction completion process is dynamically registered
 		// inside event listener (HHH-7478).
-		protected Queue<T> processes = new ConcurrentLinkedQueue<>();
+		protected ConcurrentLinkedQueue<@NonNull T> processes = new ConcurrentLinkedQueue<>();
 
 		private AbstractTransactionCompletionProcessQueue(SessionImplementor session) {
 			this.session = session;
@@ -1009,9 +1021,10 @@ public class ActionQueue {
 		}
 
 		public void beforeTransactionCompletion() {
-			while ( !processes.isEmpty() ) {
+			BeforeTransactionCompletionProcess process;
+			while ( ( process = processes.poll() ) != null ) {
 				try {
-					processes.poll().doBeforeTransactionCompletion( session );
+					process.doBeforeTransactionCompletion( session );
 				}
 				catch (HibernateException he) {
 					throw he;
@@ -1039,9 +1052,10 @@ public class ActionQueue {
 		}
 
 		public void afterTransactionCompletion(boolean success) {
-			while ( !processes.isEmpty() ) {
+			AfterTransactionCompletionProcess process;
+			while ( ( process = processes.poll() ) != null ) {
 				try {
-					processes.poll().doAfterTransactionCompletion( success, session );
+					process.doAfterTransactionCompletion( success, session );
 				}
 				catch (CacheException ce) {
 					LOG.unableToReleaseCacheLock( ce );

@@ -37,7 +37,12 @@ public class EmbeddedSqmPathSource<J>
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
-		return (SqmPathSource<?>) getSqmPathType().findAttribute( name );
+		final SqmPathSource<?> subPathSource = getSqmPathType().findSubPathSource( name );
+		if ( subPathSource != null ) {
+			return subPathSource;
+		}
+
+		return null;
 	}
 
 	@Override

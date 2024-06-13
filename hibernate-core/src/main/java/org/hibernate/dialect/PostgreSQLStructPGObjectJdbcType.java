@@ -97,6 +97,11 @@ public class PostgreSQLStructPGObjectJdbcType extends AbstractPostgreSQLStructJd
 				holder.setValue( stringValue );
 				st.setObject( name, holder );
 			}
+
+			@Override
+			public Object getBindValue(X value, WrapperOptions options) throws SQLException {
+				return ( (PostgreSQLStructPGObjectJdbcType) getJdbcType() ).getBindValue( value, options );
+			}
 		};
 	}
 

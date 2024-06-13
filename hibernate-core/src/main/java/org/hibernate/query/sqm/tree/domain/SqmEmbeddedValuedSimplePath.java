@@ -99,17 +99,17 @@ public class SqmEmbeddedValuedSimplePath<T>
 
 	@Override
 	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType) throws PathException {
-		throw new FunctionArgumentException( "Embeddable paths cannot be TREAT-ed" );
+		return getTreatedPath( nodeBuilder().getDomainModel().embeddable( treatJavaType ) );
 	}
 
 	@Override
 	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		throw new FunctionArgumentException( "Embeddable paths cannot be TREAT-ed" );
+		throw new FunctionArgumentException( "Embeddable paths cannot be TREAT-ed to an entity type" );
 	}
 
 	@Override
 	public JavaType<T> getExpressibleJavaType() {
-		return getJavaTypeDescriptor();
+		return super.getExpressible().getExpressibleJavaType();
 	}
 
 	@Override

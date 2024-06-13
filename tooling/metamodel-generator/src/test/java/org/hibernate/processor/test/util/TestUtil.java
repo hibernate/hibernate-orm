@@ -79,9 +79,26 @@ public class TestUtil {
 		);
 	}
 
+	public static void assertPresenceOfFieldInMetamodelFor(String className, String fieldName) {
+		assertPresenceOfFieldInMetamodelFor(
+				className,
+				fieldName,
+				"'" + fieldName + "' should appear in metamodel class"
+		);
+	}
+
 	public static void assertPresenceOfMethodInMetamodelFor(Class<?> clazz, String methodName, Class<?>... params) {
 		assertPresenceOfMethodInMetamodelFor(
 				clazz,
+				methodName,
+				"'" + methodName + "' should appear in metamodel class",
+				params
+		);
+	}
+
+	public static void assertPresenceOfMethodInMetamodelFor(String className, String methodName, Class<?>... params) {
+		assertPresenceOfMethodInMetamodelFor(
+				className,
 				methodName,
 				"'" + methodName + "' should appear in metamodel class",
 				params
@@ -92,9 +109,18 @@ public class TestUtil {
 		assertTrue( buildErrorString( errorString, clazz ), hasFieldInMetamodelFor( clazz, fieldName ) );
 	}
 
+	public static void assertPresenceOfFieldInMetamodelFor(String className, String fieldName, String errorString) {
+		assertTrue( buildErrorString( errorString, className ), hasFieldInMetamodelFor( className, fieldName ) );
+	}
+
 	public static void assertPresenceOfMethodInMetamodelFor(Class<?> clazz, String fieldName, String errorString,
 			Class<?>... params) {
 		assertTrue( buildErrorString( errorString, clazz ), hasMethodInMetamodelFor( clazz, fieldName, params ) );
+	}
+
+	public static void assertPresenceOfMethodInMetamodelFor(String className, String fieldName, String errorString,
+			Class<?>... params) {
+		assertTrue( buildErrorString( errorString, className ), hasMethodInMetamodelFor( className, fieldName, params ) );
 	}
 
 	public static void assertPresenceOfNameFieldInMetamodelFor(Class<?> clazz, String fieldName, String errorString) {
@@ -157,7 +183,7 @@ public class TestUtil {
 		assertEquals( buildErrorString( errorString, clazz ), expectedMapValue, actualMapKeyValue );
 	}
 
-	public static void assertSuperClassRelationShipInMetamodel(Class<?> entityClass, Class<?> superEntityClass) {
+	public static void assertSuperclassRelationshipInMetamodel(Class<?> entityClass, Class<?> superEntityClass) {
 		Class<?> clazz = getMetamodelClassFor( entityClass );
 		Class<?> superClazz = getMetamodelClassFor( superEntityClass );
 		assertEquals(
@@ -182,6 +208,10 @@ public class TestUtil {
 	 */
 	public static void assertMetamodelClassGeneratedFor(Class<?> clazz) {
 		assertNotNull( getMetamodelClassFor( clazz ) );
+	}
+
+	public static void assertMetamodelClassGeneratedFor(String className) {
+		assertNotNull( getMetamodelClassFor( className ) );
 	}
 
 	/**
@@ -227,6 +257,14 @@ public class TestUtil {
 	}
 
 	public static File getSourceBaseDir(Class<?> testClass) {
+		return getBaseDir( testClass, "java" );
+	}
+
+	public static File getResourcesBaseDir(Class<?> testClass) {
+		return getBaseDir( testClass, "resources" );
+	}
+
+	private static File getBaseDir(Class<?> testClass, String type) {
 		ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
 		String currentTestClassName = testClass.getName();
 		int hopsToCompileDirectory = currentTestClassName.split( "\\." ).length;
@@ -238,7 +276,7 @@ public class TestUtil {
 		}
 		final String configurationDirectory = targetDir.getName();
 		final File baseDir = targetDir.getParentFile().getParentFile().getParentFile().getParentFile();
-		final File outBaseDir = new File( baseDir, "src/" + configurationDirectory + "/java" );
+		final File outBaseDir = new File( baseDir, "src/" + configurationDirectory + "/" + type );
 		if ( !outBaseDir.exists() ) {
 			if ( !outBaseDir.mkdirs() ) {
 				fail( "Unable to create test output directory " + outBaseDir );
@@ -281,6 +319,23 @@ public class TestUtil {
 		return null;
 	}
 
+	public static Class<?> getMetamodelClassFor(String className) {
+		assertNotNull( "Class parameter cannot be null", className );
+		String metaModelClassName = getMetaModelClassName( className );
+		try {
+			URL outDirUrl = getOutBaseDir( TestUtil.class ).toURI().toURL();
+			URL[] urls = new URL[1];
+			urls[0] = outDirUrl;
+			URLClassLoader classLoader = new URLClassLoader( urls, TestUtil.class.getClassLoader() );
+			return classLoader.loadClass( metaModelClassName );
+		}
+		catch (Exception e) {
+			fail( metaModelClassName + " was not generated." );
+		}
+		// keep the compiler happy
+		return null;
+	}
+
 	public static File getMetaModelSourceFileFor(Class<?> clazz, boolean prefix) {
 		String metaModelClassName = getMetaModelClassName(clazz, prefix);
 		// generate the file name
@@ -289,10 +344,22 @@ public class TestUtil {
 		return new File( getOutBaseDir( clazz ), fileName );
 	}
 
+	public static File getMetaModelSourceFileFor(String className) {
+		String metaModelClassName = getMetaModelClassName(className );
+		// generate the file name
+		String fileName = metaModelClassName.replace( PACKAGE_SEPARATOR, PATH_SEPARATOR );
+		fileName = fileName.concat( ".java" );
+		return new File( getOutBaseDir( TestUtil.class ), fileName );
+	}
+
 	private static String getMetaModelClassName(Class<?> clazz, boolean prefix) {
 		return prefix
 				? clazz.getPackageName() + '.' + META_MODEL_CLASS_POSTFIX + clazz.getSimpleName()
 				: clazz.getName() + META_MODEL_CLASS_POSTFIX;
+	}
+
+	private static String getMetaModelClassName(String className) {
+		return className + META_MODEL_CLASS_POSTFIX;
 	}
 
 	public static String getMetaModelSourceAsString(Class<?> clazz) {
@@ -300,7 +367,14 @@ public class TestUtil {
 	}
 
 	public static String getMetaModelSourceAsString(Class<?> clazz, boolean prefix) {
-		File sourceFile = getMetaModelSourceFileFor( clazz, prefix );
+		return getSourceFileContent( getMetaModelSourceFileFor( clazz, prefix ) );
+	}
+
+	public static String getMetaModelSourceAsString(String className) {
+		return getSourceFileContent( getMetaModelSourceFileFor( className ) );
+	}
+
+	private static String getSourceFileContent(File sourceFile) {
 		StringBuilder contents = new StringBuilder();
 
 		try {
@@ -340,7 +414,11 @@ public class TestUtil {
 	}
 
 	public static Field getFieldFromMetamodelFor(Class<?> entityClass, String fieldName) {
-		Class<?> metaModelClass = getMetamodelClassFor( entityClass );
+		return getFieldFromMetamodelFor(entityClass.getName(), fieldName);
+	}
+
+	public static Field getFieldFromMetamodelFor(String className, String fieldName) {
+		Class<?> metaModelClass = getMetamodelClassFor( className );
 		try {
 			return metaModelClass.getDeclaredField( fieldName );
 		}
@@ -350,7 +428,11 @@ public class TestUtil {
 	}
 
 	public static Method getMethodFromMetamodelFor(Class<?> entityClass, String methodName, Class<?>... params) {
-		Class<?> metaModelClass = getMetamodelClassFor( entityClass );
+		return getMethodFromMetamodelFor(entityClass.getName(), methodName, params);
+	}
+
+	public static Method getMethodFromMetamodelFor(String className, String methodName, Class<?>... params) {
+		Class<?> metaModelClass = getMetamodelClassFor( className );
 		try {
 			return metaModelClass.getDeclaredMethod( methodName, params );
 		}
@@ -372,8 +454,16 @@ public class TestUtil {
 		return getFieldFromMetamodelFor( clazz, fieldName ) != null;
 	}
 
+	private static boolean hasFieldInMetamodelFor(String className, String fieldName) {
+		return getFieldFromMetamodelFor( className, fieldName ) != null;
+	}
+
 	private static boolean hasMethodInMetamodelFor(Class<?> clazz, String fieldName, Class<?>... params) {
 		return getMethodFromMetamodelFor( clazz, fieldName, params ) != null;
+	}
+
+	private static boolean hasMethodInMetamodelFor(String className, String fieldName, Class<?>... params) {
+		return getMethodFromMetamodelFor( className, fieldName, params ) != null;
 	}
 
 	private static String buildErrorString(String baseError, Class<?> clazz) {
@@ -385,6 +475,18 @@ public class TestUtil {
 		builder.append( "_.java:" );
 		builder.append( "\n" );
 		builder.append( getMetaModelSourceAsString( clazz ) );
+		return builder.toString();
+	}
+
+	private static String buildErrorString(String baseError, String className) {
+		StringBuilder builder = new StringBuilder();
+		builder.append( baseError );
+		builder.append( ".\n\n" );
+		builder.append( "Source code for " );
+		builder.append( className );
+		builder.append( "_.java:" );
+		builder.append( "\n" );
+		builder.append( getMetaModelSourceAsString( className ) );
 		return builder.toString();
 	}
 

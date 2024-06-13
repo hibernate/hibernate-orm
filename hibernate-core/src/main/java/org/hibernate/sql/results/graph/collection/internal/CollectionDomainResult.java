@@ -19,9 +19,9 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.InitializerProducer;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.collection.CollectionResultGraphNode;
@@ -90,25 +90,25 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 
 	@Override
 	public DomainResultAssembler createResultAssembler(
-			FetchParentAccess parentAccess,
+			InitializerParent parent,
 			AssemblerCreationState creationState) {
-		return new CollectionAssembler( loadingAttribute, creationState.resolveInitializer( this, parentAccess, this ).asCollectionInitializer() );
+		return new CollectionAssembler( loadingAttribute, creationState.resolveInitializer( this, parent, this ).asCollectionInitializer() );
 	}
 
 	@Override
-	public CollectionInitializer createInitializer(
+	public CollectionInitializer<?> createInitializer(
 			CollectionDomainResult resultGraphNode,
-			FetchParentAccess parentAccess,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
-		return resultGraphNode.createInitializer( parentAccess, creationState );
+		return resultGraphNode.createInitializer( parent, creationState );
 	}
 
 	@Override
-	public CollectionInitializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
+	public CollectionInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
 		return initializerProducer.produceInitializer(
 				loadingPath,
 				loadingAttribute,
-				parentAccess,
+				parent,
 				LockMode.READ,
 				fkResult,
 				fkResult,

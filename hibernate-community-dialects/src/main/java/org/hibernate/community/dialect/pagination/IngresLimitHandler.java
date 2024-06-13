@@ -66,7 +66,7 @@ public class IngresLimitHandler extends OffsetFetchLimitHandler {
 	};
 
 	private static final Pattern WITH_OPTION_PATTERN =
-			Pattern.compile("\\s+with\\s+(" + String.join("|", WITH_OPTIONS) + ")\\b|\\s*(;|$)");
+			Pattern.compile("\\s+with\\s+(" + String.join("|", WITH_OPTIONS) + ")\\b|\\s*;?\\s*$");
 
 	/**
 	 * The offset/fetch clauses must come before

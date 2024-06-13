@@ -42,6 +42,7 @@ public class EntityBatchLoaderArrayParam<T>
 		implements SqlArrayMultiKeyLoader {
 	private final int domainBatchSize;
 
+	private final LoadQueryInfluencers loadQueryInfluencers;
 	private final BasicEntityIdentifierMapping identifierMapping;
 	private final JdbcMapping arrayJdbcMapping;
 	private final JdbcParameter jdbcParameter;
@@ -63,8 +64,9 @@ public class EntityBatchLoaderArrayParam<T>
 	public EntityBatchLoaderArrayParam(
 			int domainBatchSize,
 			EntityMappingType entityDescriptor,
-			SessionFactoryImplementor sessionFactory) {
-		super( entityDescriptor, sessionFactory );
+			LoadQueryInfluencers loadQueryInfluencers) {
+		super( entityDescriptor, loadQueryInfluencers );
+		this.loadQueryInfluencers = loadQueryInfluencers;
 		this.domainBatchSize = domainBatchSize;
 
 		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
@@ -89,7 +91,7 @@ public class EntityBatchLoaderArrayParam<T>
 		sqlAst = LoaderSelectBuilder.createSelectBySingleArrayParameter(
 				getLoadable(),
 				identifierMapping,
-				new LoadQueryInfluencers( sessionFactory ),
+				loadQueryInfluencers,
 				LockOptions.NONE,
 				jdbcParameter,
 				sessionFactory

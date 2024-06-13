@@ -16,6 +16,8 @@ import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterc
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributesMetadata;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.bytecode.spi.NotInstrumentedException;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -162,7 +164,8 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 
 		// if requested, add the "holder entry" to the PC
 		if ( addEmptyEntry ) {
-			persistenceContext.addEntry(
+			EntityHolder entityHolder = persistenceContext.getEntityHolder( entityKey );
+			EntityEntry entityEntry = persistenceContext.addEntry(
 					entity,
 					Status.MANAGED,
 					// loaded state
@@ -178,6 +181,7 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 					persister,
 					true
 			);
+			entityHolder.setEntityEntry( entityEntry );
 		}
 
 		// inject the interceptor

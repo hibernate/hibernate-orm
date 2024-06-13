@@ -14,13 +14,14 @@ import org.hibernate.sql.ast.SqlTreeCreationLogger;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 /**
  * @author Steve Ebersole
  */
-public class TableGroupJoin implements TableJoin, DomainResultProducer {
+public class TableGroupJoin implements TableJoin, PredicateContainer, DomainResultProducer {
 	private final NavigablePath navigablePath;
 	private final TableGroup joinedGroup;
 
@@ -78,6 +79,7 @@ public class TableGroupJoin implements TableJoin, DomainResultProducer {
 		return predicate;
 	}
 
+	@Override
 	public void applyPredicate(Predicate predicate) {
 		this.predicate = SqlAstTreeHelper.combinePredicates( this.predicate, predicate );
 	}

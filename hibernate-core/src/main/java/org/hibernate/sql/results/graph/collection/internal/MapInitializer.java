@@ -8,7 +8,7 @@ package org.hibernate.sql.results.graph.collection.internal;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentMap;
@@ -20,8 +20,9 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerData;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -34,7 +35,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Steve Ebersole
  */
-public class MapInitializer extends AbstractImmediateCollectionInitializer {
+public class MapInitializer extends AbstractImmediateCollectionInitializer<AbstractImmediateCollectionInitializer.ImmediateCollectionInitializerData> {
 	private static final String CONCRETE_NAME = MapInitializer.class.getSimpleName();
 
 	private final DomainResultAssembler<?> mapKeyAssembler;
@@ -43,18 +44,18 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer {
 	public MapInitializer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attributeMapping,
-			FetchParentAccess parentAccess,
+			InitializerParent<?> parent,
 			LockMode lockMode,
 			DomainResult<?> collectionKeyResult,
 			DomainResult<?> collectionValueKeyResult,
-			Fetch mapKeyFetch,
-			Fetch mapValueFetch,
 			boolean isResultInitializer,
-			AssemblerCreationState creationState) {
+			AssemblerCreationState creationState,
+			Fetch mapKeyFetch,
+			Fetch mapValueFetch) {
 		super(
 				navigablePath,
 				attributeMapping,
-				parentAccess,
+				parent,
 				lockMode,
 				collectionKeyResult,
 				collectionValueKeyResult,
@@ -71,14 +72,21 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer {
 	}
 
 	@Override
-	protected void forEachAssembler(Consumer<DomainResultAssembler<?>> consumer) {
-		consumer.accept( mapKeyAssembler );
-		consumer.accept( mapValueAssembler );
+	protected void forEachSubInitializer(BiConsumer<Initializer<?>, RowProcessingState> consumer, InitializerData data) {
+		super.forEachSubInitializer( consumer, data );
+		final Initializer<?> keyInitializer = mapKeyAssembler.getInitializer();
+		if ( keyInitializer != null ) {
+			consumer.accept( keyInitializer, data.getRowProcessingState() );
+		}
+		final Initializer<?> valueInitializer = mapValueAssembler.getInitializer();
+		if ( valueInitializer != null ) {
+			consumer.accept( valueInitializer, data.getRowProcessingState() );
+		}
 	}
 
 	@Override
-	public @Nullable PersistentMap<?, ?> getCollectionInstance() {
-		return (PersistentMap<?, ?>) super.getCollectionInstance();
+	public @Nullable PersistentMap<?, ?> getCollectionInstance(ImmediateCollectionInitializerData data) {
+		return (PersistentMap<?, ?>) super.getCollectionInstance( data );
 	}
 
 	@Override
@@ -100,11 +108,12 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer {
 	}
 
 	@Override
-	protected void initializeSubInstancesFromParent(RowProcessingState rowProcessingState) {
-		final Initializer keyInitializer = mapKeyAssembler.getInitializer();
-		final Initializer valueInitializer = mapValueAssembler.getInitializer();
+	protected void initializeSubInstancesFromParent(ImmediateCollectionInitializerData data) {
+		final Initializer<?> keyInitializer = mapKeyAssembler.getInitializer();
+		final Initializer<?> valueInitializer = mapValueAssembler.getInitializer();
 		if ( keyInitializer != null || valueInitializer != null ) {
-			final PersistentMap<?, ?> map = getCollectionInstance();
+			final RowProcessingState rowProcessingState = data.getRowProcessingState();
+			final PersistentMap<?, ?> map = getCollectionInstance( data );
 			assert map != null;
 			for ( Map.Entry<?, ?> entry : map.entrySet() ) {
 				if ( keyInitializer != null ) {
@@ -115,6 +124,35 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer {
 				}
 			}
 		}
+	}
+
+	@Override
+	protected void resolveInstanceSubInitializers(ImmediateCollectionInitializerData data) {
+		final Initializer<?> keyInitializer = mapKeyAssembler.getInitializer();
+		final Initializer<?> valueInitializer = mapValueAssembler.getInitializer();
+		if ( keyInitializer != null || valueInitializer != null ) {
+			final RowProcessingState rowProcessingState = data.getRowProcessingState();
+			final PersistentMap<?, ?> map = getCollectionInstance( data );
+			assert map != null;
+			for ( Map.Entry<?, ?> entry : map.entrySet() ) {
+				if ( keyInitializer != null ) {
+					keyInitializer.resolveInstance( entry.getKey(), rowProcessingState );
+				}
+				if ( valueInitializer != null ) {
+					valueInitializer.resolveInstance( entry.getValue(), rowProcessingState );
+				}
+			}
+		}
+	}
+
+	@Override
+	public DomainResultAssembler<?> getIndexAssembler() {
+		return mapKeyAssembler;
+	}
+
+	@Override
+	public DomainResultAssembler<?> getElementAssembler() {
+		return mapValueAssembler;
 	}
 
 	@Override

@@ -6,8 +6,10 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.community.dialect.identity.InformixIdentityColumnSupport;
 import org.hibernate.community.dialect.pagination.FirstLimitHandler;
 import org.hibernate.community.dialect.pagination.SkipFirstLimitHandler;
@@ -16,7 +18,9 @@ import org.hibernate.community.dialect.sequence.SequenceInformationExtractorInfo
 import org.hibernate.community.dialect.unique.InformixUniqueDelegate;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.Replacer;
+import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -25,12 +29,14 @@ import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.mapping.ForeignKey;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.spi.QueryOptions;
@@ -57,6 +63,9 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.internal.StandardForeignKeyExporter;
+import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -88,6 +97,26 @@ public class InformixDialect extends Dialect {
 
 	private final UniqueDelegate uniqueDelegate;
 	private final LimitHandler limitHandler;
+	private final SequenceSupport sequenceSupport;
+	private final StandardForeignKeyExporter foreignKeyExporter = new StandardForeignKeyExporter( this ) {
+		@Override
+		public String[] getSqlCreateStrings(
+				ForeignKey foreignKey,
+				Metadata metadata,
+				SqlStringGenerationContext context) {
+			String[] results = super.getSqlCreateStrings( foreignKey, metadata, context );
+			for ( int i = 0; i < results.length; i++ ) {
+				String result = results[i];
+				if ( result.contains( " on delete " ) ) {
+					String constraintName = "constraint " + foreignKey.getName();
+					result = result.replace( constraintName + " ", "" );
+					result = result + " " + constraintName;
+					results[i] = result;
+				}
+			}
+			return results;
+		}
+	};
 
 	public InformixDialect(DialectResolutionInfo info) {
 		this( info.makeCopyOrDefault( DEFAULT_VERSION ) );
@@ -113,6 +142,7 @@ public class InformixDialect extends Dialect {
 				//version 11 and above, parameters are supported
 				//but I have not tested this at all!
 				: new SkipFirstLimitHandler( getVersion().isSameOrAfter( 11 ) );
+		sequenceSupport = new InformixSequenceSupport( getVersion().isSameOrAfter( 11, 70 ) );
 	}
 
 	@Override
@@ -152,20 +182,20 @@ public class InformixDialect extends Dialect {
 		//float(n) and just always defaults to
 		//double precision.
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( FLOAT, "float($p)", this )
-						.withTypeCapacity( 24, "smallfloat" )
+				CapacityDependentDdlType.builder( FLOAT, "float", this )
+						.withTypeCapacity( 8, "smallfloat" )
 						.build()
 		);
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( VARCHAR, columnType( LONG32VARCHAR ), this )
+				CapacityDependentDdlType.builder( VARCHAR, columnType( LONG32VARCHAR ), "varchar(255)",this )
 						.withTypeCapacity( 255, "varchar($l)" )
 						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
 						.build()
 		);
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( NVARCHAR, columnType( LONG32NVARCHAR ), this )
-						.withTypeCapacity( 255, "varchar($l)" )
+				CapacityDependentDdlType.builder( NVARCHAR, columnType( LONG32NVARCHAR ), "nvarchar(255)", this )
+						.withTypeCapacity( 255, "nvarchar($l)" )
 						.withTypeCapacity( getMaxNVarcharLength(), columnType( NVARCHAR ) )
 						.build()
 		);
@@ -198,6 +228,21 @@ public class InformixDialect extends Dialect {
 	public int getDefaultTimestampPrecision() {
 		//the maximum
 		return 5;
+	}
+
+	@Override
+	public int getFloatPrecision() {
+		return 8;
+	}
+
+	@Override
+	public int getDoublePrecision() {
+		return 16;
+	}
+
+	@Override
+	public SelectItemReferenceStrategy getGroupBySelectItemReferenceStrategy() {
+		return SelectItemReferenceStrategy.POSITION;
 	}
 
 	@Override
@@ -356,6 +401,13 @@ public class InformixDialect extends Dialect {
 				+ " constraint " + constraintName;
 	}
 
+	public Exporter<ForeignKey> getForeignKeyExporter() {
+		if ( getVersion().isSameOrAfter( 12, 10 ) ) {
+			return super.getForeignKeyExporter();
+		}
+		return foreignKeyExporter;
+	}
+
 	/**
 	 * Informix constraint name must be at the end.
 	 * <p>
@@ -368,7 +420,7 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return InformixSequenceSupport.INSTANCE;
+		return sequenceSupport;
 	}
 
 	@Override
@@ -382,8 +434,33 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public NullOrdering getNullOrdering() {
+		return NullOrdering.SMALLEST;
+	}
+
+	@Override
+	public boolean supportsNullPrecedence() {
+		return getVersion().isSameOrAfter( 12, 10 );
+	}
+
+	@Override
 	public LimitHandler getLimitHandler() {
 		return limitHandler;
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeTableName() {
+		return getVersion().isSameOrAfter( 11, 70 );
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeTypeName() {
+		return getVersion().isSameOrAfter( 11, 70 );
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeConstraintName() {
+		return getVersion().isSameOrAfter( 11, 70 );
 	}
 
 	@Override
@@ -400,6 +477,11 @@ public class InformixDialect extends Dialect {
 	@Override
 	public boolean supportsLateral() {
 		return getVersion().isSameOrAfter( 12, 10 );
+	}
+
+	@Override
+	public boolean supportsValuesListForInsert() {
+		return false;
 	}
 
 	@Override
@@ -515,6 +597,26 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public String[] getCreateSchemaCommand(String schemaName) {
+		return new String[] { "create schema authorization " + schemaName };
+	}
+
+	@Override
+	public String[] getDropSchemaCommand(String schemaName) {
+		return new String[] { "" };
+	}
+
+	@Override
+	public boolean useCrossReferenceForeignKeys(){
+		return true;
+	}
+
+	@Override
+	public String getCrossReferenceParentTableFilter(){
+		return "%";
+	}
+
+	@Override
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
 	}
@@ -599,8 +701,21 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
-		String typeName = typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType).getRawTypeName();
+		DdlType descriptor = typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType );
+		if ( descriptor == null ) {
+			return "null";
+		}
+		String typeName = descriptor.getTypeName( Size.length( Size.DEFAULT_LENGTH ) );
+		//trim off the length/precision/scale
+		final int loc = typeName.indexOf( '(' );
+		if ( loc > -1 ) {
+			typeName = typeName.substring( 0, loc );
+		}
 		return "null::" + typeName;
 	}
 
+	@Override
+	public String getNoColumnsInsertString() {
+		return "values (0)";
+	}
 }

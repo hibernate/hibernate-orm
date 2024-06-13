@@ -182,4 +182,12 @@ public interface PersistenceSettings {
 	 */
 	@Deprecated
 	String JPA_TRANSACTION_TYPE = "javax.persistence.transactionType";
+
+	/**
+	 * Specifies whether unowned (i.e. {@code mapped-by}) associations should be considered
+	 * when validating transient entity instance references.
+	 *
+	 * @settingDefault {@code false}
+	 */
+	String UNOWNED_ASSOCIATION_TRANSIENT_CHECK = "hibernate.unowned_association_transient_check";
 }

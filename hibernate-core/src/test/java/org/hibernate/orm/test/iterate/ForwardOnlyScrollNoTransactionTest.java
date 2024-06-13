@@ -3,6 +3,7 @@ package org.hibernate.orm.test.iterate;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.query.spi.QueryImplementor;
@@ -71,7 +72,7 @@ public class ForwardOnlyScrollNoTransactionTest {
 
 		private String name;
 
-		@OneToMany(mappedBy = "father", fetch = FetchType.EAGER)
+		@OneToMany(mappedBy = "father", fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
 		public List<Son> sons = new ArrayList<>();
 
 		public Father() {

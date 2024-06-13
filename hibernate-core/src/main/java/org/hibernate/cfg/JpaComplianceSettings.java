@@ -63,6 +63,20 @@ public interface JpaComplianceSettings {
 	String JPA_QUERY_COMPLIANCE = "hibernate.jpa.compliance.query";
 
 	/**
+	 * Controls whether Hibernate applies cascade
+	 * {@link jakarta.persistence.CascadeType#PERSIST} or
+	 * {@link org.hibernate.annotations.CascadeType#SAVE_UPDATE}
+	 * at flush time. If enabled, Hibernate will cascade the standard
+	 * JPA {@code PERSIST} operation. Otherwise, Hibernate will cascade
+	 * the legacy {@code SAVE_UPDATE} operation.
+	 *
+	 * @settingDefault {@link #JPA_COMPLIANCE}
+	 *
+	 * @since 6.6
+	 */
+	String JPA_CASCADE_COMPLIANCE = "hibernate.jpa.compliance.cascade";
+
+	/**
 	 * Controls whether Hibernate should treat what it would usually consider a
 	 * {@linkplain org.hibernate.collection.spi.PersistentBag "bag"}, that is, a
 	 * list with no index column, whose element order is not persistent, as a true

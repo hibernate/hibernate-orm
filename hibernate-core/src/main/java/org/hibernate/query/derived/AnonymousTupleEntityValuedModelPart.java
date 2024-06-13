@@ -430,7 +430,7 @@ public class AnonymousTupleEntityValuedModelPart
 				primaryTableReference,
 				true,
 				sqlAliasBase,
-				entityMappingType::containsTableReference,
+				entityMappingType.getRootEntityDescriptor()::containsTableReference,
 				(tableExpression, tg) -> entityMappingType.createTableReferenceJoin(
 						tableExpression,
 						sqlAliasBase,
@@ -743,6 +743,11 @@ public class AnonymousTupleEntityValuedModelPart
 
 	@Override
 	public boolean isAffectedByInfluencers(LoadQueryInfluencers influencers) {
+		return false;
+	}
+
+	@Override
+	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
 		return false;
 	}
 

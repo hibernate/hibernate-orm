@@ -28,6 +28,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  * treat them as immutable because we cannot properly check them for changes nor deep copy them.
  *
  * @author Steve Ebersole
+ * @author Loïc Lefèvre
  */
 public class NClobJavaType extends AbstractClassJavaType<NClob> {
 	public static final NClobJavaType INSTANCE = new NClobJavaType();
@@ -105,7 +106,7 @@ public class NClobJavaType extends AbstractClassJavaType<NClob> {
 			else if (NClob.class.isAssignableFrom( type )) {
 				final NClob nclob =  value instanceof WrappedNClob
 						? ( (WrappedNClob) value ).getWrappedNClob()
-						: value;
+						: getOrCreateNClob(value, options);
 				return (X) nclob;
 			}
 		}
@@ -115,6 +116,22 @@ public class NClobJavaType extends AbstractClassJavaType<NClob> {
 		
 		throw unknownUnwrap( type );
 	}
+
+	private NClob getOrCreateNClob(NClob value, WrapperOptions options) throws SQLException {
+		if(options.getDialect().useConnectionToCreateLob()) {
+			if(value.length() == 0) {
+				// empty NClob
+				return options.getLobCreator().createNClob("");
+			}
+			else {
+				return options.getLobCreator().createNClob(value.getSubString(1, (int) value.length()));
+			}
+		}
+		else {
+			return value;
+		}
+	}
+
 
 	public <X> NClob wrap(X value, WrapperOptions options) {
 		if ( value == null ) {

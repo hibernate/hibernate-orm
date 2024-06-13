@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -18,18 +18,18 @@ import org.hibernate.spi.NavigablePath;
  */
 public class SqmTreatedMapJoin<O, K, V, S extends V> extends SqmMapJoin<O, K, S> implements SqmTreatedPath<V, S> {
 	private final SqmMapJoin<O, K, V> wrappedPath;
-	private final EntityDomainType<S> treatTarget;
+	private final TreatableDomainType<S> treatTarget;
 
 	public SqmTreatedMapJoin(
 			SqmMapJoin<O, K, V> wrappedPath,
-			EntityDomainType<S> treatTarget,
+			TreatableDomainType<S> treatTarget,
 			String alias) {
 		this( wrappedPath, treatTarget, alias, false );
 	}
 
 	public SqmTreatedMapJoin(
 			SqmMapJoin<O, K, V> wrappedPath,
-			EntityDomainType<S> treatTarget,
+			TreatableDomainType<S> treatTarget,
 			String alias,
 			boolean fetched) {
 		//noinspection unchecked
@@ -37,7 +37,7 @@ public class SqmTreatedMapJoin<O, K, V, S extends V> extends SqmMapJoin<O, K, S>
 				wrappedPath.getLhs(),
 				wrappedPath.getNavigablePath()
 						.append( CollectionPart.Nature.ELEMENT.getName() )
-						.treatAs( treatTarget.getHibernateEntityName(), alias ),
+						.treatAs( treatTarget.getTypeName(), alias ),
 				( (SqmMapJoin<O, K, S>) wrappedPath ).getModel(),
 				alias,
 				wrappedPath.getSqmJoinType(),
@@ -51,7 +51,7 @@ public class SqmTreatedMapJoin<O, K, V, S extends V> extends SqmMapJoin<O, K, S>
 	private SqmTreatedMapJoin(
 			NavigablePath navigablePath,
 			SqmMapJoin<O, K, V> wrappedPath,
-			EntityDomainType<S> treatTarget,
+			TreatableDomainType<S> treatTarget,
 			String alias,
 			boolean fetched) {
 		//noinspection unchecked
@@ -94,7 +94,7 @@ public class SqmTreatedMapJoin<O, K, V, S extends V> extends SqmMapJoin<O, K, S>
 	}
 
 	@Override
-	public EntityDomainType<S> getTreatTarget() {
+	public TreatableDomainType<S> getTreatTarget() {
 		return treatTarget;
 	}
 
@@ -104,7 +104,7 @@ public class SqmTreatedMapJoin<O, K, V, S extends V> extends SqmMapJoin<O, K, S>
 	}
 
 	@Override
-	public EntityDomainType<S> getReferencedPathSource() {
+	public TreatableDomainType<S> getReferencedPathSource() {
 		return treatTarget;
 	}
 
@@ -127,7 +127,7 @@ public class SqmTreatedMapJoin<O, K, V, S extends V> extends SqmMapJoin<O, K, S>
 		sb.append( "treat(" );
 		wrappedPath.appendHqlString( sb );
 		sb.append( " as " );
-		sb.append( treatTarget.getName() );
+		sb.append( treatTarget.getTypeName() );
 		sb.append( ')' );
 	}
 }

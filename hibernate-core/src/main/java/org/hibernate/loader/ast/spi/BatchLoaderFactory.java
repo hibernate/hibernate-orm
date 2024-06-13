@@ -23,11 +23,26 @@ public interface BatchLoaderFactory extends Service {
 	 *
 	 * @param domainBatchSize The total number of entities (max) that will be need to be initialized
 	 * @param entityDescriptor The entity mapping metadata
+	 * @deprecated Use {@link #createEntityBatchLoader(int, EntityMappingType, LoadQueryInfluencers)} instead
+	 */
+	@Deprecated(forRemoval = true)
+	default <T> EntityBatchLoader<T> createEntityBatchLoader(
+			int domainBatchSize,
+			EntityMappingType entityDescriptor,
+			SessionFactoryImplementor factory) {
+		return createEntityBatchLoader( domainBatchSize, entityDescriptor, new LoadQueryInfluencers( factory ) );
+	}
+
+	/**
+	 * Create a BatchLoader for batch-loadable entities.
+	 *
+	 * @param domainBatchSize The total number of entities (max) that will be need to be initialized
+	 * @param entityDescriptor The entity mapping metadata
 	 */
 	<T> EntityBatchLoader<T> createEntityBatchLoader(
 			int domainBatchSize,
 			EntityMappingType entityDescriptor,
-			SessionFactoryImplementor factory);
+			LoadQueryInfluencers loadQueryInfluencers);
 
 	/**
 	 * Create a BatchLoader for batch-loadable collections.

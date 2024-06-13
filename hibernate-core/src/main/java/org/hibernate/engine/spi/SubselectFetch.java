@@ -151,7 +151,7 @@ public class SubselectFetch {
 		public void addKey(EntityHolder holder) {
 			if ( batchFetchQueue.getSession().getLoadQueryInfluencers()
 					.hasSubselectLoadableCollections( holder.getDescriptor() ) ) {
-				final EntityInitializer entityInitializer = NullnessUtil.castNonNull( holder.getEntityInitializer() );
+				final EntityInitializer<?> entityInitializer = NullnessUtil.castNonNull( holder.getEntityInitializer() );
 				final SubselectFetch subselectFetch = subselectFetches.computeIfAbsent(
 						entityInitializer.getNavigablePath(),
 						navigablePath -> new SubselectFetch(

@@ -14,6 +14,9 @@ import org.hibernate.sql.results.spi.RowTransformer;
 import java.lang.reflect.Constructor;
 import java.util.List;
 
+import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmExpressibleAccessor;
+
 /**
  * {@link RowTransformer} instantiating an arbitrary class
  *
@@ -21,16 +24,14 @@ import java.util.List;
  */
 public class RowTransformerConstructorImpl<T> implements RowTransformer<T> {
 	private final Class<T> type;
-	private final TupleMetadata tupleMetadata;
 	private final Constructor<T> constructor;
 
 	public RowTransformerConstructorImpl(Class<T> type, TupleMetadata tupleMetadata) {
 		this.type = type;
-		this.tupleMetadata = tupleMetadata;
 		final List<TupleElement<?>> elements = tupleMetadata.getList();
 		final Class<?>[] sig = new Class[elements.size()];
 		for (int i = 0; i < elements.size(); i++) {
-			sig[i] = elements.get(i).getJavaType();
+			sig[i] = resolveElementJavaType( elements.get( i ) );
 		}
 		try {
 			constructor = type.getDeclaredConstructor( sig );
@@ -40,6 +41,17 @@ public class RowTransformerConstructorImpl<T> implements RowTransformer<T> {
 			//TODO try again with primitive types
 			throw new InstantiationException( "Cannot instantiate query result type ", type, e );
 		}
+	}
+
+	private static Class<?> resolveElementJavaType(TupleElement<?> element) {
+		if ( element instanceof SqmExpressibleAccessor ) {
+			final SqmExpressible<?> expressible = ( (SqmExpressibleAccessor<?>) element ).getExpressible();
+			if ( expressible != null && expressible.getExpressibleJavaType() != null ) {
+				return expressible.getExpressibleJavaType().getJavaTypeClass();
+			}
+		}
+
+		return element.getJavaType();
 	}
 
 	@Override

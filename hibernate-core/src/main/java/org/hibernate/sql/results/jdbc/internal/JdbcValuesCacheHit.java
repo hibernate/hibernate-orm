@@ -218,6 +218,11 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 	}
 
 	@Override
+	public boolean usesFollowOnLocking() {
+		return true;
+	}
+
+	@Override
 	public Object getCurrentRowValue(int valueIndex) {
 		if ( position >= numberOfRows ) {
 			return null;
@@ -236,12 +241,13 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 	}
 
 	@Override
-	public void finishRowProcessing(RowProcessingState rowProcessingState) {
+	public void finishUp(SharedSessionContractImplementor session) {
+		cachedResults = null;
 	}
 
 	@Override
-	public void finishUp(SharedSessionContractImplementor session) {
-		cachedResults = null;
+	public void finishRowProcessing(RowProcessingState rowProcessingState, boolean wasAdded) {
+		// No-op
 	}
 
 	@Override

@@ -8,18 +8,24 @@ package org.hibernate;
 
 import java.util.Collection;
 
+import org.hibernate.annotations.FilterDef;
 import org.hibernate.engine.spi.FilterDefinition;
 
 /**
- * Allows control over an enabled filter at runtime. In particular, allows
- * {@linkplain #setParameter(String, Object) arguments} to be assigned to
- * parameters declared by the filter.
+ * Allows control over an enabled {@linkplain FilterDef filter} at runtime.
+ * In particular, allows {@linkplain #setParameter(String, Object) arguments}
+ * to be assigned to parameters declared by the filter.
  * <p>
- * A filter may be defined using {@link org.hibernate.annotations.FilterDef}
- * and {@link org.hibernate.annotations.Filter}, and must be explicitly
- * enabled at runtime by calling {@link Session#enableFilter(String)}.
+ * A filter may be defined using the annotations {@link FilterDef @FilterDef}
+ * and {@link org.hibernate.annotations.Filter @Filter}, but must be explicitly
+ * enabled at runtime by calling {@link Session#enableFilter(String)}, unless
+ * the filter is declared as {@linkplain FilterDef#autoEnabled auto-enabled}.
+ * If, in a given session, a filter not declared {@code autoEnabled = true} is
+ * not explicitly enabled by calling {@code enableFilter()}, the filter will
+ * have no effect in that session.
  * <p>
- * Every parameter of the filter must be set immediately after
+ * Every {@linkplain FilterDef#parameters parameter} of the filter must be
+ * supplied an argument by calling {@code setParameter()} immediately after
  * {@code enableFilter()} is called, and before any other operation of the
  * session is invoked.
  *
@@ -95,4 +101,12 @@ public interface Filter {
 	 * @return The flag value
 	 */
 	boolean isAutoEnabled();
+
+	/**
+	 * Get the associated {@link FilterDefinition applyToLoadByKey} of this
+	 * named filter.
+	 *
+	 * @return The flag value
+	 */
+	boolean isAppliedToLoadByKey();
 }

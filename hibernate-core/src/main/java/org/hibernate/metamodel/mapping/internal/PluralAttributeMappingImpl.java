@@ -740,6 +740,7 @@ public class PluralAttributeMappingImpl
 				tableGroup,
 				true,
 				creationState.getLoadQueryInfluencers().getEnabledFilters(),
+				false,
 				null,
 				creationState
 		);
@@ -1002,7 +1003,7 @@ public class PluralAttributeMappingImpl
 		final boolean nestedJoin = joinType != SqlAstJoinType.INNER
 				// For outer joins we need nesting if there might be an on-condition that refers to the element table
 				&& ( addsPredicate
-				|| isAffectedByEnabledFilters( creationState.getLoadQueryInfluencers() )
+				|| isAffectedByEnabledFilters( creationState.getLoadQueryInfluencers(), creationState.applyOnlyLoadByKeyFilters() )
 				|| collectionDescriptor.hasWhereRestrictions() );
 
 		if ( elementDescriptor instanceof TableGroupJoinProducer ) {
@@ -1073,8 +1074,8 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
-	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
-		return getCollectionDescriptor().isAffectedByEnabledFilters( influencers );
+	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
+		return getCollectionDescriptor().isAffectedByEnabledFilters( influencers, onlyApplyForLoadByKeyFilters );
 	}
 
 	@Override

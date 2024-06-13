@@ -19,6 +19,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Date;
@@ -49,6 +50,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
@@ -682,9 +684,15 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			}
 		}
 		else if ( isDuration( secondType ) ) {
-			// it's either addition/subtraction of durations
+			// if firstType is not known, and operator is
+			// addition/subtraction, then this can be
+			// either addition/subtraction of duration
+			// to/from temporal or addition/subtraction of
+			// durations in this case we shall return null;
+			// otherwise, it's either addition/subtraction of durations
 			// or prefix scalar multiplication of a duration
-			return secondType;
+//			return secondType;
+			return firstType == null ? null : secondType;
 		}
 		else if ( firstType==null && getSqlTemporalType( secondType ) != null ) {
 			// subtraction of a date or timestamp from a
@@ -814,6 +822,17 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	public static TemporalType getSqlTemporalType(MappingModelExpressible<?> type) {
 		if ( type instanceof BasicValuedMapping ) {
 			return getSqlTemporalType( ( (BasicValuedMapping) type ).getJdbcMapping().getJdbcType() );
+		}
+		else if ( type instanceof EmbeddableValuedModelPart ) {
+			// Handle the special embeddables for emulated offset/timezone handling
+			final Class<?> javaTypeClass = ( (EmbeddableValuedModelPart) type ).getJavaType().getJavaTypeClass();
+			if ( javaTypeClass == OffsetDateTime.class
+					|| javaTypeClass == ZonedDateTime.class ) {
+				return TemporalType.TIMESTAMP;
+			}
+			else if ( javaTypeClass == OffsetTime.class ) {
+				return TemporalType.TIME;
+			}
 		}
 		return null;
 	}

@@ -33,9 +33,20 @@ public class HSQLArrayToStringFunction extends ArrayToStringFunction {
 			SqlAstTranslator<?> walker) {
 		final Expression arrayExpression = (Expression) sqlAstArguments.get( 0 );
 		final Expression separatorExpression = (Expression) sqlAstArguments.get( 1 );
+		final Expression defaultExpression = sqlAstArguments.size() > 2 ? (Expression) sqlAstArguments.get( 2 ) : null;
 		sqlAppender.append( "case when " );
 		arrayExpression.accept( walker );
-		sqlAppender.append( " is not null then coalesce((select group_concat(t.val order by t.idx separator " );
+		sqlAppender.append( " is not null then coalesce((select group_concat(" );
+		if ( defaultExpression != null ) {
+			sqlAppender.append( "coalesce(" );
+		}
+		sqlAppender.append( "t.val" );
+		if ( defaultExpression != null ) {
+			sqlAppender.append( "," );
+			defaultExpression.accept( walker );
+			sqlAppender.append( ")" );
+		}
+		sqlAppender.append( " order by t.idx separator " );
 		// HSQLDB doesn't like non-literals as separator
 		walker.render( separatorExpression, SqlAstNodeRenderingMode.INLINE_PARAMETERS );
 		sqlAppender.append( ") from unnest(");

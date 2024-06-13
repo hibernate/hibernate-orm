@@ -26,6 +26,7 @@ public class MetadataCopyingTest {
 				existingInstance.getEntityBindingMap(),
 				existingInstance.getComposites(),
 				existingInstance.getGenericComponentsMap(),
+				existingInstance.getEmbeddableDiscriminatorTypesMap(),
 				existingInstance.getMappedSuperclassMap(),
 				existingInstance.getCollectionBindingMap(),
 				existingInstance.getTypeDefinitionMap(),

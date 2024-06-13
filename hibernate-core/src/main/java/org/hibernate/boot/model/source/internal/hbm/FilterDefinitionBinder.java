@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.source.internal.hbm;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 

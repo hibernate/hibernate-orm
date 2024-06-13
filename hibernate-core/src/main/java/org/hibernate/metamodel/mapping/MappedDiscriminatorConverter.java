@@ -72,7 +72,7 @@ public class MappedDiscriminatorConverter<O,R> extends DiscriminatorConverter<O,
 			JavaType<O> domainJavaType,
 			JavaType<R> relationalJavaType,
 			List<DiscriminatorValueDetails> valueMappings) {
-		super( discriminatorRole, domainJavaType, relationalJavaType );
+		super( discriminatorRole.getFullPath(), domainJavaType, relationalJavaType );
 
 		this.discriminatorValueToEntityNameMap = CollectionHelper.concurrentMap( valueMappings.size() );
 		this.entityNameToDiscriminatorValueMap = CollectionHelper.concurrentMap( valueMappings.size() );

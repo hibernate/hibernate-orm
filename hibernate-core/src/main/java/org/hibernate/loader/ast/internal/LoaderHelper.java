@@ -51,8 +51,7 @@ public class LoaderHelper {
 	public static void upgradeLock(Object object, EntityEntry entry, LockOptions lockOptions, EventSource session) {
 		final LockMode requestedLockMode = lockOptions.getLockMode();
 		if ( requestedLockMode.greaterThan( entry.getLockMode() ) ) {
-			// The user requested a "greater" (i.e. more restrictive) form of
-			// pessimistic lock
+			// Request is for a more restrictive lock than the lock already held
 
 			if ( entry.getStatus().isDeletedOrGone()) {
 				throw new ObjectDeletedException(

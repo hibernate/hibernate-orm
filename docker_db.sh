@@ -946,6 +946,62 @@ tidb_5_4() {
     fi
 }
 
+informix() {
+  informix_14_10
+}
+
+informix_14_10() {
+    $PRIVILEGED_CLI $CONTAINER_CLI rm -f informix || true
+    $PRIVILEGED_CLI $CONTAINER_CLI run --name informix --privileged -p 9088:9088 -e LICENSE=accept -d icr.io/informix/informix-developer-database:14.10.FC9W1DE
+    echo "Starting Informix. This can take a few minutes"
+    # Give the container some time to start
+    OUTPUT=
+    n=0
+    until [ "$n" -ge 5 ]
+    do
+        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs informix 2>&1)
+        if [[ $OUTPUT == *"Server Started"* ]]; then
+          sleep 15
+          $PRIVILEGED_CLI $CONTAINER_CLI exec informix bash -l -c "echo \"execute function task('create dbspace from storagepool', 'datadbs', '100 MB', '4');execute function task('create sbspace from storagepool', 'sbspace', '20 M', '0');create database dev in datadbs with log nlscase sensitive;\" > post_init.sql;dbaccess sysadmin post_init.sql"
+          break;
+        fi
+        n=$((n+1))
+        echo "Waiting for Informix to start..."
+        sleep 30
+    done
+    if [ "$n" -ge 5 ]; then
+      echo "Informix failed to start and configure after 5 minutes"
+    else
+      echo "Informix successfully started"
+    fi
+}
+
+informix_12_10() {
+    $PRIVILEGED_CLI $CONTAINER_CLI rm -f informix || true
+    $PRIVILEGED_CLI $CONTAINER_CLI run --name informix --privileged -p 9088:9088 -e LICENSE=accept -d ibmcom/informix-developer-database:12.10.FC12W1DE
+    echo "Starting Informix. This can take a few minutes"
+    # Give the container some time to start
+    OUTPUT=
+    n=0
+    until [ "$n" -ge 5 ]
+    do
+        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs informix 2>&1)
+        if [[ $OUTPUT == *"login Information"* ]]; then
+          sleep 15
+          $PRIVILEGED_CLI $CONTAINER_CLI exec informix bash -l -c "echo \"execute function task('create dbspace from storagepool', 'datadbs', '100 MB', '4');execute function task('create sbspace from storagepool', 'sbspace', '20 M', '0');create database dev in datadbs with log nlscase sensitive;\" > post_init.sql;dbaccess sysadmin post_init.sql"
+          break;
+        fi
+        n=$((n+1))
+        echo "Waiting for Informix to start..."
+        sleep 30
+    done
+    if [ "$n" -ge 5 ]; then
+      echo "Informix failed to start and configure after 5 minutes"
+    else
+      echo "Informix successfully started"
+    fi
+}
+
 if [ -z ${1} ]; then
     echo "No db name provided"
     echo "Provide one of:"
@@ -986,6 +1042,9 @@ if [ -z ${1} ]; then
     echo -e "\tsybase"
     echo -e "\ttidb"
     echo -e "\ttidb_5_4"
+    echo -e "\informix"
+    echo -e "\informix_14_10"
+    echo -e "\informix_12_10"
 else
     ${1}
 fi

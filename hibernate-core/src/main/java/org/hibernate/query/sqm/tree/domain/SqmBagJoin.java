@@ -10,6 +10,8 @@ import java.util.Collection;
 
 import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaCollectionJoin;
@@ -116,8 +118,8 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 	}
 
 	@Override
-	public <S extends E> SqmTreatedBagJoin<O, E, S> treatAs(Class<S> treatAsType) {
-		return treatAs( nodeBuilder().getDomainModel().entity( treatAsType ) );
+	public <S extends E> SqmTreatedBagJoin<O, E, S> treatAs(Class<S> treatJavaType) {
+		return treatAs( treatJavaType, null );
 	}
 
 	@Override
@@ -127,7 +129,7 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 
 	@Override
 	public <S extends E> SqmTreatedBagJoin<O,E,S> treatAs(Class<S> treatJavaType, String alias) {
-		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias );
+		return treatAs( treatJavaType, alias, false );
 	}
 
 	@Override
@@ -136,8 +138,18 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 	}
 
 	@Override
-	public <S extends E> SqmTreatedBagJoin<O,E,S> treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
-		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias, fetch );
+	public <S extends E> SqmTreatedBagJoin<O, E, S> treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
+		final ManagedDomainType<S> treatTarget = nodeBuilder().getDomainModel().managedType( treatJavaType );
+		final SqmTreatedBagJoin<O, E, S> treat = findTreat( treatTarget, alias );
+		if ( treat == null ) {
+			if ( treatTarget instanceof TreatableDomainType<?> ) {
+				return addTreat( new SqmTreatedBagJoin<>( this, (TreatableDomainType<S>) treatTarget, alias, fetch ) );
+			}
+			else {
+				throw new IllegalArgumentException( "Not a treatable type: " + treatJavaType.getName() );
+			}
+		}
+		return treat;
 	}
 
 	@Override

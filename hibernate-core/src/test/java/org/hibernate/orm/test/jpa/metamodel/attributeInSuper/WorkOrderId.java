@@ -6,17 +6,11 @@
  */
 package org.hibernate.orm.test.jpa.metamodel.attributeInSuper;
 
-import java.io.Serializable;
 import jakarta.persistence.Embeddable;
-import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Steve Ebersole
  */
 @Embeddable
-@MappedSuperclass
-public class WorkOrderId implements Serializable {
-	private String workOrder;
-	private Long plantId;
-    /* other stuffs */
+public class WorkOrderId extends AbstractWorkOrderId {
 }

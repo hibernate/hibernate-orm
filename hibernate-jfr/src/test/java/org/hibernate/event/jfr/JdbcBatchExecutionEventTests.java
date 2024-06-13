@@ -58,14 +58,14 @@ public class JdbcBatchExecutionEventTests {
 					RecordedEvent jdbcBatchExecutionEvent = events.get( 0 );
 					assertThat( jdbcBatchExecutionEvent.getEventType().getName() )
 							.isEqualTo( JdbcBatchExecutionEvent.NAME );
-					assertThat( jdbcBatchExecutionEvent.getLong( "executionTime" ) ).isGreaterThan( 0 );
+					assertThat( jdbcBatchExecutionEvent.getDuration() ).isPositive();
 					assertThat( jdbcBatchExecutionEvent.getString( "sql" ).toLowerCase( Locale.ROOT ) )
 							.contains( "insert into " );
 
 					jdbcBatchExecutionEvent = events.get( 1 );
 					assertThat( jdbcBatchExecutionEvent.getEventType().getName() )
 							.isEqualTo( JdbcBatchExecutionEvent.NAME );
-					assertThat( jdbcBatchExecutionEvent.getLong( "executionTime" ) ).isGreaterThan( 0 );
+					assertThat( jdbcBatchExecutionEvent.getDuration() ).isPositive();
 					assertThat( jdbcBatchExecutionEvent.getString( "sql" ).toLowerCase( Locale.ROOT ) )
 							.contains( "insert into " );
 				}

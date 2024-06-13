@@ -187,7 +187,7 @@ stage('Build') {
 									else {
 										lock(label: buildEnv.dbLockableResource, quantity: 1, variable: 'LOCKED_RESOURCE') {
 											if ( buildEnv.dbLockResourceAsHost ) {
-												cmd += " -DdbHost=${LOCKED_RESOURCE}"
+												args += " -DdbHost=${LOCKED_RESOURCE}"
 											}
 											timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
 												ciBuild buildEnv, args

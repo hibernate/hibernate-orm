@@ -750,8 +750,8 @@ The following special functions make it possible to discover or narrow expressio
 |===
 | Special function | Purpose | Signature | JPA standard
 
-| `type()` | The (concrete) entity name | `type(e)` | &check;
-| `treat()` | Narrow an entity type | `treat(e as Entity)` | &check;
+| `type()` | The (concrete) entity or embeddable type | `type(e)` | &check;
+| `treat()` | Narrow an entity or embeddable type | `treat(e as Entity)` | &check;
 | `cast()` | Narrow a basic type | `cast(x as Type)` | &cross;
 | `str()` | Cast to a string | `str(x)` | &cross;
 |===
@@ -761,7 +761,7 @@ Let's see what these functions do.
 [[hql-function-type]]
 ===== `type()`
 
-The function `type()`, applied to an identification variable, evaluates to the entity name of the referenced entity.
+The function `type()`, applied to an identification variable or to an entity-valued or embeddable-valued path expression, evaluates to the concrete type, that is, the Java `Class`, of the referenced entity or embeddable.
 This is mainly useful when dealing with entity inheritance hierarchies.
 
 [[hql-entity-type-exp-example]]
@@ -777,7 +777,7 @@ include::{example-dir-hql}/HQLTest.java[tags=hql-entity-type-exp-example]
 ===== `treat()`
 
 The function `treat()` may be used to narrow the type of an identification variable.
-This is useful when dealing with entity inheritance hierarchies.
+This is useful when dealing with entity or embeddable inheritance hierarchies.
 
 [[hql-treat-example]]
 ====
@@ -1189,10 +1189,12 @@ The following functions deal with SQL array types, which are not supported on ev
 | `array_concat()` | Concatenates array with each other in order
 | `array_prepend()` | Prepends element to array
 | `array_append()` | Appends element to array
-| `array_contains()` | Whether an array contains element(s)
-| `array_contains_nullable()` | Whether an array contains element(s), supporting `null` elements
-| `array_overlaps()` | Whether an array holds at least one element of another array
-| `array_overlaps_nullable()` | Whether an array holds at least one element of another array, supporting `null` elements
+| `array_contains()` | Whether an array contains an element
+| `array_contains_nullable()` | Whether an array contains an element, supporting `null` element
+| `array_includes()` | Whether an array contains another array
+| `array_includes_nullable()` | Whether an array contains another array, supporting `null` elements
+| `array_intersects()` | Whether an array holds at least one element of another array
+| `array_intersects_nullable()` | Whether an array holds at least one element of another array, supporting `null` elements
 | `array_get()` | Accesses the element of an array by index
 | `array_set()` | Creates array copy with given element at given index
 | `array_remove()` | Creates array copy with given element removed
@@ -1202,7 +1204,7 @@ The following functions deal with SQL array types, which are not supported on ev
 | `array_trim()` | Creates array copy trimming the last _N_ elements
 | `array_fill()` | Creates array filled with the same element _N_ times
 | `array_fill_list()` | Like `array_fill`, but returns the result as `List<?>`
-| `array_to_string()` | String representation of non-null array elements
+| `array_to_string()` | String representation of array
 |===
 
 [[hql-array-constructor-functions]]
@@ -1216,6 +1218,17 @@ To retrieve the result as `List<?>`, use the `array_list()` function.
 [source, JAVA, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayConstructorTest.java[tags=hql-array-example]
+----
+====
+
+Alternatively, it's also possible to construct an array with the shorthand bracket syntax `[` and `]`,
+which is syntax sugar that translates to the array constructor function.
+
+[[hql-array-constructor-hql-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayConstructorTest.java[tags=hql-array-hql-example]
 ----
 ====
 
@@ -1233,7 +1246,7 @@ include::{array-example-dir-hql}/ArrayAggregateTest.java[tags=hql-array-agg-exam
 ====
 
 [[hql-array-position-functions]]
-===== `array_position()`
+===== `array_position()` or `position()`
 
 Returns the 1-based position of an element in the array. Returns 0 if the element is not found and `null` if the array is `null`.
 
@@ -1242,6 +1255,17 @@ Returns the 1-based position of an element in the array. Returns 0 if the elemen
 [source, JAVA, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayPositionTest.java[tags=hql-array-position-example]
+----
+====
+
+Alternatively, it is also possible to use the `position()` function,
+which is overloaded to also accept an array argument.
+
+[[hql-array-position-hql-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayPositionTest.java[tags=hql-array-position-hql-example]
 ----
 ====
 
@@ -1260,7 +1284,7 @@ include::{array-example-dir-hql}/ArrayPositionsTest.java[tags=hql-array-position
 ====
 
 [[hql-array-length-functions]]
-===== `array_length()`
+===== `array_length()` or `length()`
 
 Returns size of the passed array. Returns `null` if the array is `null`.
 
@@ -1269,6 +1293,17 @@ Returns size of the passed array. Returns `null` if the array is `null`.
 [source, JAVA, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayLengthTest.java[tags=hql-array-length-example]
+----
+====
+
+Alternatively, it is also possible to use the `length()` function,
+which is overloaded to also accept an array argument.
+
+[[hql-array-length-hql-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayLengthTest.java[tags=hql-array-length-hql-example]
 ----
 ====
 
@@ -1334,7 +1369,7 @@ include::{array-example-dir-hql}/ArrayAppendTest.java[tags=hql-array-append-exam
 [[hql-array-contains-functions]]
 ===== `array_contains()` and `array_contains_nullable()`
 
-Checks if the first array argument contains the element(s) of the second argument.
+Checks if the first array argument contains the element represented by the second argument.
 Returns `null` if the first argument is `null`. The result of the `array_contains` function
 is undefined when the second argument, the element to search, is `null`.
 
@@ -1346,48 +1381,93 @@ include::{array-example-dir-hql}/ArrayContainsTest.java[tags=hql-array-contains-
 ----
 ====
 
-The second argument may be an array of the same type as the first argument.
-The result of `array_contains` is undefined when the second argument is an array that contains a `null` element.
+Alternatively, it's also possible to check for containment with the `contains` predicate,
+where the left hand side of the predicate is the array and the right hand side the value to check.
+This is syntax sugar that translates to the `array_contains` function.
+
+[[hql-array-contains-hql-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayContainsTest.java[tags=hql-array-contains-hql-example]
+----
+====
+
+[[hql-array-includes-functions]]
+===== `array_includes()` and `array_includes_nullable()`
+
+Checks if the first array argument contains the elements of the second array argument.
+Returns `null` if the first argument is `null`. The result of the `array_includes` function
+is undefined when the second argument contains a `null`.
 
 [[hql-array-contains-array-example]]
+[[hql-array-includes-example]]
 ====
 [source, JAVA, indent=0]
 ----
-include::{array-example-dir-hql}/ArrayContainsArrayTest.java[tags=hql-array-contains-array-example]
+include::{array-example-dir-hql}/ArrayIncludesTest.java[tags=hql-array-includes-example]
 ----
 ====
 
-To search for `null` elements, the `array_contains_nullable` function must be used with an array argument.
+To search for `null` elements, the `array_includes_nullable` function must be used.
 
 [[hql-array-contains-array-nullable-example]]
+[[hql-array-includes-nullable-example]]
 ====
 [source, JAVA, indent=0]
 ----
-include::{array-example-dir-hql}/ArrayContainsArrayTest.java[tags=hql-array-contains-array-nullable-example]
+include::{array-example-dir-hql}/ArrayIncludesTest.java[tags=hql-array-includes-nullable-example]
+----
+====
+
+Alternatively, it's also possible to use the `includes` predicate,
+where the left hand side of the predicate is the array and the right hand side the array of values to check.
+This is syntax sugar that translates to the `array_includes` function.
+
+[[hql-array-includes-hql-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayIncludesTest.java[tags=hql-array-includes-hql-example]
 ----
 ====
 
 [[hql-array-overlaps-functions]]
-===== `array_overlaps()` and `array_overlaps_nullable()`
+[[hql-array-intersects-functions]]
+===== `array_intersects()` and `array_intersects_nullable()`
 
 Checks if the first array argument any of the elements of the second array argument.
-Returns `null` if either of the arguments is `null`. The result of `array_overlaps`
+Returns `null` if either of the arguments is `null`. The result of `array_intersects`
 is undefined when the second array argument contains a `null` array element.
-Only `array_overlaps_nullable` is guaranteed to produce correct results for `null` array elements.
+Only `array_intersects_nullable` is guaranteed to produce correct results for `null` array elements.
 
 [[hql-array-overlaps-example]]
+[[hql-array-intersects-example]]
 ====
 [source, JAVA, indent=0]
 ----
-include::{array-example-dir-hql}/ArrayOverlapsTest.java[tags=hql-array-overlaps-example]
+include::{array-example-dir-hql}/ArrayIntersectsTest.java[tags=hql-array-intersects-example]
 ----
 ====
 
 [[hql-array-overlaps-nullable-example]]
+[[hql-array-intersects-nullable-example]]
 ====
 [source, JAVA, indent=0]
 ----
-include::{array-example-dir-hql}/ArrayOverlapsTest.java[tags=hql-array-overlaps-nullable-example]
+include::{array-example-dir-hql}/ArrayIntersectsTest.java[tags=hql-array-intersects-nullable-example]
+----
+====
+
+Alternatively, it's also possible to check for intersection with the `intersects` predicate.
+This is syntax sugar that translates to the `array_intersects` function.
+
+[[hql-array-overlaps-hql-example]]
+[[hql-array-intersects-hql-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayIntersectsTest.java[tags=hql-array-intersects-hql-example]
 ----
 ====
 
@@ -1447,14 +1527,26 @@ include::{array-example-dir-hql}/ArrayRemoveIndexTest.java[tags=hql-array-remove
 [[hql-array-slice-functions]]
 ===== `array_slice()`
 
-Returns the sub-array as specified by the given start and end index. Returns `null` if any of the arguments is `null`
+Returns the sub-array as specified by the given 1-based inclusive start and end index. Returns `null` if any of the arguments is `null`
 and also if the index is out of bounds.
 
-[[hql-array-remove-index-example]]
+[[hql-array-slice-example]]
 ====
 [source, JAVA, indent=0]
 ----
-include::{array-example-dir-hql}/ArrayRemoveIndexTest.java[tags=hql-array-remove-index-example]
+include::{array-example-dir-hql}/ArraySliceTest.java[tags=hql-array-slice-example]
+----
+====
+
+Alternatively, it's also possible to slice an array by specifying the lower and upper bound,
+separated by a colon, as index in the bracket array index syntax `array[lowerIndex:upperIndex]`.
+This is syntax sugar that translates to the `array_slice` function.
+
+[[hql-array-slice-hql-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArraySliceTest.java[tags=hql-array-slice-hql-example]
 ----
 ====
 
@@ -1501,9 +1593,11 @@ include::{array-example-dir-hql}/ArrayFillTest.java[tags=hql-array-fill-example]
 ====
 
 [[hql-array-to-string-functions]]
-===== `array_to_string()`
+===== `array_to_string()` or `cast(array as String)`
 
-Concatenates the non-null array elements with a separator, as specified by the arguments.
+Concatenates the array elements with a separator, as specified by the arguments.
+Null values are filtered, but the optional third argument can be specified to define a default value to use
+when a `null` array element is encountered.
 Returns `null` if the first argument is `null`.
 
 [[hql-array-to-string-example]]
@@ -1511,6 +1605,17 @@ Returns `null` if the first argument is `null`.
 [source, JAVA, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayToStringTest.java[tags=hql-array-to-string-example]
+----
+====
+
+Alternatively, it is also possible to use `cast(array as String)`,
+which is a short version of `concat('[', array_to_string(array, ',', 'null'), ']')`.
+
+[[hql-array-to-string-hql-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayToStringTest.java[tags=hql-array-to-string-hql-example]
 ----
 ====
 
@@ -1772,6 +1877,34 @@ include::{example-dir-hql}/HQLTest.java[tags=hql-in-predicate-example]
 include::{example-dir-hql}/HQLTest.java[tags=hql-collection-expressions-in-example]
 ----
 ====
+
+[[hql-contains-predicate]]
+==== `contains`
+
+The `contains` predicates evaluates to true if the value to its right is contained in the value to its left.
+Currently, this predicate only works with an array typed expression on the left side.
+
+[[hql-contains-predicate-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/predicate_contains_bnf.txt[]
+----
+
+For further details, refer to the <<hql-array-contains-example,`array_contains` section>>.
+
+[[hql-intersects-predicate]]
+==== `intersects`
+
+The `intersects` predicates evaluates to true if the value to its left has at least one element common with the value to its right.
+Currently, this predicate only works with an array typed expressions.
+
+[[hql-intersects-predicate-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/predicate_intersects_bnf.txt[]
+----
+
+For further details, refer to the <<hql-array-intersects-example,`array_intersects` section>>.
 
 [[hql-relational-comparisons-subqueries]]
 ==== Relational operators and subqueries

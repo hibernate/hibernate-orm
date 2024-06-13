@@ -139,4 +139,21 @@ public class ArraySliceTest {
 		} );
 	}
 
+	@Test
+	public void testSliceSyntax(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			//tag::hql-array-slice-hql-example[]
+			List<Tuple> results = em.createQuery( "select e.id, e.theArray[1:1] from EntityWithArrays e order by e.id", Tuple.class )
+					.getResultList();
+			//end::hql-array-slice-hql-example[]
+			assertEquals( 3, results.size() );
+			assertEquals( 1L, results.get( 0 ).get( 0 ) );
+			assertArrayEquals( new String[0], results.get( 0 ).get( 1, String[].class ) );
+			assertEquals( 2L, results.get( 1 ).get( 0 ) );
+			assertArrayEquals( new String[] { "abc" }, results.get( 1 ).get( 1, String[].class ) );
+			assertEquals( 3L, results.get( 2 ).get( 0 ) );
+			assertNull( results.get( 2 ).get( 1, String[].class ) );
+		} );
+	}
+
 }

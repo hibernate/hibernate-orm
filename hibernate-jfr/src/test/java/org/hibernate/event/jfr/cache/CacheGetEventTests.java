@@ -68,7 +68,7 @@ public class CacheGetEventTests {
 					RecordedEvent event = events.get( 0 );
 					assertThat( event.getEventType().getName() )
 							.isEqualTo( CacheGetEvent.NAME );
-					assertThat( event.getLong( "executionTime" ) ).isGreaterThan( 0 );
+					assertThat( event.getDuration() ).isPositive();
 					assertThat( event.getString( "sessionIdentifier" ) )
 							.isEqualTo( session.getSessionIdentifier().toString() );
 					assertThat( event.getString( "entityName" ) )

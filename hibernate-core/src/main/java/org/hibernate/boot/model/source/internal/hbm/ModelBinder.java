@@ -800,8 +800,6 @@ public class ModelBinder {
 			identifierValue.setIdentifierGeneratorParameters( params );
 		}
 
-		identifierValue.getTable().setIdentifierValue( identifierValue );
-
 		if ( isNotEmpty( unsavedValue ) ) {
 			identifierValue.setNullValue( unsavedValue );
 		}

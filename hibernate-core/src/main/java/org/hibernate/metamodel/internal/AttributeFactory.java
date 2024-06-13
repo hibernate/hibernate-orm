@@ -10,10 +10,12 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
+import java.util.HashMap;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.mapping.AggregateColumn;
@@ -255,19 +257,46 @@ public class AttributeFactory {
 		final Class<Y> embeddableClass = (Class<Y>) component.getComponentClass();
 
 		if ( !component.isGeneric() ) {
-			final EmbeddableDomainType<Y> cached = context.locateEmbeddable( embeddableClass, component);
+			final EmbeddableDomainType<Y> cached = context.locateEmbeddable( embeddableClass, component );
 			if ( cached != null ) {
 				return cached;
 			}
 		}
 
+		final DomainType<?> discriminatorType = component.isPolymorphic() ? component.getDiscriminatorType() : null;
 		final EmbeddableTypeImpl<Y> embeddableType = new EmbeddableTypeImpl<>(
 				context.getJavaTypeRegistry().resolveManagedTypeDescriptor( embeddableClass ),
+				null,
+				discriminatorType,
 				false,
 				context.getJpaMetamodel()
 		);
+		context.registerEmbeddableType( embeddableType, component );
 
-		context.registerEmbeddableType( embeddableType, component);
+		if ( component.isPolymorphic() ) {
+			final java.util.Collection<String> embeddableSubclasses = component.getDiscriminatorValues().values();
+			final java.util.Map<String, EmbeddableTypeImpl<?>> domainTypes = new HashMap<>();
+			domainTypes.put( embeddableType.getTypeName(), embeddableType );
+			final ClassLoaderService cls = context.getJpaMetamodel().getServiceRegistry().requireService(
+					ClassLoaderService.class
+			);
+			for ( final String subclassName : embeddableSubclasses ) {
+				if ( domainTypes.containsKey( subclassName ) ) {
+					assert subclassName.equals( embeddableType.getTypeName() );
+					continue;
+				}
+				final Class<?> subclass = cls.classForName( subclassName );
+				final EmbeddableTypeImpl<?> subType = new EmbeddableTypeImpl<>(
+						context.getJavaTypeRegistry().resolveManagedTypeDescriptor( subclass ),
+						domainTypes.get( component.getSuperclass( subclassName ) ),
+						discriminatorType,
+						false,
+						context.getJpaMetamodel()
+				);
+				domainTypes.put( subclassName, subType );
+				context.registerEmbeddableType( subType, component );
+			}
+		}
 
 		return embeddableType;
 	}
@@ -275,6 +304,8 @@ public class AttributeFactory {
 	private static <Y> EmbeddableTypeImpl<Y> dynamicEmbeddableType(MetadataContext context, Component component) {
 		final EmbeddableTypeImpl<Y> embeddableType = new EmbeddableTypeImpl<>(
 				context.getJavaTypeRegistry().getDescriptor( java.util.Map.class ),
+				null,
+				null,
 				true,
 				context.getJpaMetamodel()
 		);

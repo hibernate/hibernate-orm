@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @JiraKey( "HHH-9028" )
 @JiraKey( "HHH-9107" )
-@DomainModel( annotatedClasses = { Cacheable.class, CachedItem1.class, CachedItem2.class } )
+@DomainModel( annotatedClasses = { Cacheable.class, CachedItem1.class, CachedItem2.class, CacheHolder.class } )
 @SessionFactory
 public class PolymorphicCacheTest {
 	@BeforeEach
@@ -39,7 +39,12 @@ public class PolymorphicCacheTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.createQuery( "delete Cacheable" ).executeUpdate() );
+		scope.inTransaction(
+				session -> {
+					session.createMutationQuery("delete from CacheHolder").executeUpdate();
+					session.createMutationQuery( "delete Cacheable" ).executeUpdate();
+				}
+		);
 	}
 
 	@Test
@@ -138,6 +143,29 @@ public class PolymorphicCacheTest {
 				assertThat( cachedItem2 ).isNotNull();
 			} );
 		} );
+	}
+
+	@Test
+	@JiraKey("HHH-10162")
+	public void testPolymorphismAndCacheWithHolder(SessionFactoryScope scope) {
+		scope.inTransaction(
+				s -> {
+					final CachedItem1 item3 = new CachedItem1(3, "name3");
+					final CacheHolder holder = new CacheHolder( "holder", item3 );
+					s.persist( item3 );
+					s.persist( holder );
+				}
+		);
+
+		scope.inTransaction(
+				s -> {
+					CacheHolder cacheHolder = s.get( CacheHolder.class, "holder" );
+					Assertions.assertTrue(
+							cacheHolder.getItem() instanceof CachedItem1,
+							"Relation was not fetched from L2 cache"
+					);
+				}
+		);
 	}
 
 }

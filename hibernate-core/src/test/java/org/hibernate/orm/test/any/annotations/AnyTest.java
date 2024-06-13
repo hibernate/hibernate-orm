@@ -154,7 +154,7 @@ public class AnyTest {
 		scope.inTransaction(
 				session -> {
 					List<PropertySet> propertySets = session.createQuery(
-									"select p from PropertySet p where type(p.generalProperties) = IntegerProperty ",
+									"select p from PropertySet p where type(element(p.generalProperties)) = IntegerProperty ",
 									PropertySet.class ).list();
 					assertEquals( 1, propertySets.size() );
 
@@ -164,7 +164,7 @@ public class AnyTest {
 					assertEquals( "age", propertySet.getGeneralProperties().get( 0 ).getName() );
 
 					propertySets = session.createQuery(
-									"select p from PropertySet p where type(p.generalProperties) = StringProperty ",
+									"select p from PropertySet p where type(element(p.generalProperties)) = StringProperty ",
 									PropertySet.class ).list();
 					assertEquals( 1, propertySets.size() );
 
@@ -182,7 +182,7 @@ public class AnyTest {
 		scope.inTransaction(
 				session -> {
 					List<PropertySet> propertySets = session.createQuery(
-									"select p from PropertySet p where type(p.generalProperties) = :prop ",
+									"select p from PropertySet p where type(element(p.generalProperties)) = :prop ",
 									PropertySet.class )
 							.setParameter( "prop", IntegerProperty.class)
 							.list();
@@ -194,7 +194,7 @@ public class AnyTest {
 					assertEquals( "age", propertySet.getGeneralProperties().get( 0 ).getName() );
 
 					propertySets = session.createQuery(
-									"select p from PropertySet p where type(p.generalProperties) = :prop ",
+									"select p from PropertySet p where type(element(p.generalProperties)) = :prop ",
 									PropertySet.class )
 							.setParameter( "prop", StringProperty.class)
 							.list();

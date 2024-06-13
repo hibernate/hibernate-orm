@@ -438,9 +438,11 @@ syntacticDomainPath
 	| collectionValueNavigablePath
 	| mapKeyNavigablePath
 	| simplePath indexedPathAccessFragment
+	| simplePath slicedPathAccessFragment
 	| toOneFkReference
 	| function pathContinuation
 	| function indexedPathAccessFragment pathContinuation?
+	| function slicedPathAccessFragment
 	;
 
 /**
@@ -461,6 +463,13 @@ generalPathFragment
  */
 indexedPathAccessFragment
 	: LEFT_BRACKET expression RIGHT_BRACKET (DOT generalPathFragment)?
+	;
+
+/**
+ * The slice operator to obtain elements between the lower and upper bound.
+ */
+slicedPathAccessFragment
+	: LEFT_BRACKET expression COLON expression RIGHT_BRACKET
 	;
 
 /**
@@ -664,6 +673,9 @@ predicate
 	| expression NOT? IN inList													# InPredicate
 	| expression NOT? BETWEEN expression AND expression							# BetweenPredicate
 	| expression NOT? (LIKE | ILIKE) expression likeEscape?						# LikePredicate
+	| expression NOT? CONTAINS expression										# ContainsPredicate
+	| expression NOT? INCLUDES expression										# IncludesPredicate
+	| expression NOT? INTERSECTS expression										# IntersectsPredicate
 	| expression comparisonOperator expression									# ComparisonPredicate
 	| EXISTS collectionQuantifier LEFT_PAREN simplePath RIGHT_PAREN				# ExistsCollectionPartPredicate
 	| EXISTS expression															# ExistsPredicate
@@ -695,6 +707,7 @@ inList
 	| LEFT_PAREN (expressionOrPredicate (COMMA expressionOrPredicate)*)? RIGHT_PAREN# ExplicitTupleInList
 	| LEFT_PAREN subquery RIGHT_PAREN												# SubqueryInList
 	| parameter 																	# ParamInList
+	| expression 																	# ArrayInList
 	;
 
 /**
@@ -889,6 +902,7 @@ literal
 	| numericLiteral
 	| binaryLiteral
 	| temporalLiteral
+	| arrayLiteral
 	| generalizedLiteral
 	;
 
@@ -1056,6 +1070,13 @@ jdbcTimeLiteral
 
 genericTemporalLiteralText
 	: STRING_LITERAL
+	;
+
+/**
+ * A generic format for specifying literal values of arbitary types
+ */
+arrayLiteral
+	: LEFT_BRACKET (expression (COMMA expression)*)? RIGHT_BRACKET
 	;
 
 /**
@@ -1631,6 +1652,7 @@ rollup
 	| COLUMN
 	| CONFLICT
 	| CONSTRAINT
+	| CONTAINS
 	| COUNT
 	| CROSS
 	| CUBE
@@ -1682,11 +1704,13 @@ rollup
 	| ILIKE
 	| IN
 	| INDEX
+	| INCLUDES
 	| INDICES
 //	| INNER
 	| INSERT
 	| INSTANT
 	| INTERSECT
+	| INTERSECTS
 	| INTO
 	| IS
 	| JOIN

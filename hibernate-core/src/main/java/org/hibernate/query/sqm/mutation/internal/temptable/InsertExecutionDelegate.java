@@ -78,6 +78,7 @@ import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
+import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -402,7 +403,8 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 									null,
 									identifierMapping,
 									FetchTiming.IMMEDIATE,
-									null
+									null,
+									false
 							)
 					)
 			);

@@ -1,4 +1,4 @@
-= Hibernate 6.6.0.Alpha1
+= Hibernate 6.6.0.Final
 Steve Ebersole
 :awestruct-tags: ["Hibernate ORM", "Releases"]
 :awestruct-layout: blog-post
@@ -97,4 +97,137 @@ class MyEntity {
 class MyEmbeddable { ... }
 
 ----
+
+[[array-syntax-sugar]]
+== Syntax sugar for array functions
+
+Plenty of syntax sugar for array operations was added:
+
+
+|===
+|Function |Syntax sugar |
+
+|`array(1, 2)`
+|`[1, 2]`
+|Shorthand bracket syntax for array construction
+
+|`array_slice(array, 1, 2)`
+|`array[1:2]`
+|Shorthand bracket syntax for array slicing
+
+|`array_length(array)`
+|`length(array)`
+|Overload length function with array_length semantics on array input
+
+|`array_position(array, element)`
+|`position(element in array)`
+|Overload position function with array_position semantics on array input
+
+|`array_to_string(array, ',', 'null')`
+|`cast(array as String)`
+|Support casting array to string
+
+|`array_contains(array, element)`
+|`array contains element` or `element in array`
+|Contains predicate for containment check
+
+|`array_includes(array, array)`
+|`array includes subArray`
+|Predicate to for subset checking
+
+|`array_intersects(array, array(1, 2))`
+|`array intersects [1, 2]`
+|Overlaps predicate for overlaps check
+|===
+
+[[string-syntax-sugar]]
+== Syntax sugar for string functions
+
+The bracket syntax can now also be used for string typed expressions to select a single character by index,
+or obtain a substring by start and end index.
+
+`stringPath[2]` is syntax sugar for `substring(stringPath, 2, 1)` and returns a `Character`.
+`stringPath[2:3]` is syntax sugar for `substring(stringPath, 2, 3-2+1)`,
+where `3-2+1` is the expression to determine the desired string length.
+
+
+[[embeddable-inheritance]]
+== Embeddable Inheritance
+
+Another new feature of this version is discriminator-based inheritance for `@Embeddable` types. An `@Embeddable` class
+may be extended by other `@Embeddable` classes, in which case the `@Embedded` properties using that type will
+rely on an additional discriminator column to store information about the composite value's subtype.
+
+When retrieving the inherited embedded property, Hibernate will read the discriminator value and instantiate the
+correct `@Embeddable` subtype with its corresponding properties.
+
+For example, a mapping like this:
+[source,java]
+----
+@Embeddable
+@DiscriminatorValue( "parent" )
+@DiscriminatorColumn( name = "embeddable_type" )
+class ParentEmbeddable implements Serializable {
+	private String parentProp;
+	// ...
+}
+
+@Embeddable
+@DiscriminatorValue( "child_one" )
+class ChildOneEmbeddable extends ParentEmbeddable {
+	private Integer childOneProp;
+	// ...
+}
+
+@Entity
+class TestEntity {
+	@Embedded
+	private ParentEmbeddable embeddable;
+	// ...
+}
+----
+
+Will result in the following table structure:
+[source,sql]
+----
+create table TestEntity (
+    -- ...
+    embeddable_type varchar(31) not null,
+    parentProp varchar(255),
+    childOneProp integer,
+    -- ...
+)
+----
+
+For more detailed information please refer to the link:{user-guide-url}#embeddable-inheritance[Embeddable inheritance] user guide chapter.
+
+[[oracle-vector]]
+== Oracle Vector support
+
+Oracle engineers contributed the support for vector data types and functions to the `hibernate-vector` module
+to use with Oracle database version 23.4 and newer.
+
+For further information about vectors, consult the link:https://docs.oracle.com/en/database/oracle/oracle-database/23/vecse/overview-node.html[Oracle documentation].
+
+[[one-to-many-mapped-by-any]]
+== `@OneToMany(mappedBy)` support for `@Any`
+
+So far, the target of `@OneToMany` had to be a `@ManyToOne`. To map a `@OneToMany` based on an any association,
+it was necessary to spell out a custom `@SQLRestriction` and specify the join columns.
+
+Targeting an `@Any` association is now supported and will default to the appropriate join columns,
+as well as add a `@SQLRestriction` to the `@OneToMany` automatically.
+
+[[apply-filter-to-load-by-key]]
+== `@Filter` support for load by key
+
+Filters can opt in to be applicable also to find by key operations
+like `Session.find()`, lazy initialization and to-one association fetching,
+by setting `@FilterDef(applyToLoadByKey = true)`.
+
+If the target row of an association is filtered by such a load by key enabled filter,
+Hibernate ORM will throw a `EntityFilterException` to prevent potential data loss
+that can happen when flushing an entity that owns such an association.
+
+Also, the `@TenantId` filter was changed to apply to load by key operations by default.
 

@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.BindableType;
@@ -98,7 +97,6 @@ public class BasicListTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
 	public void testQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			TypedQuery<TableWithIntegerList> tq = em.createNamedQuery( "TableWithIntegerList.JPQL.getByData", TableWithIntegerList.class );
@@ -125,7 +123,7 @@ public class BasicListTest {
 		scope.inSession( em -> {
 			final String op = em.getJdbcServices().getDialect().supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
 			QueryImplementor<TableWithIntegerList> tq = em.createNativeQuery(
-					"SELECT * FROM table_with_integer_list t WHERE the_list " + op + " :data",
+						"SELECT * FROM table_with_integer_list t WHERE the_list " + op + " :data",
 					TableWithIntegerList.class
 			);
 			tq.setParameter( "data", Arrays.asList( 512, 112, null, 0 ), integerListType );

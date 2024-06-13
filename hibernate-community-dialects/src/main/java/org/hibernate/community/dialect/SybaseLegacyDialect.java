@@ -104,7 +104,13 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 				case Types.NCLOB:
 				case Types.CLOB:
 				case Types.BLOB:
-					return Size.length( getDefaultLobLength() );
+					return super.resolveSize(
+							jdbcType,
+							javaType,
+							precision,
+							scale,
+							length == null ? getDefaultLobLength() : length
+					);
 				case Types.FLOAT:
 					// Sybase ASE allows FLOAT with a precision up to 48
 					if ( precision != null ) {

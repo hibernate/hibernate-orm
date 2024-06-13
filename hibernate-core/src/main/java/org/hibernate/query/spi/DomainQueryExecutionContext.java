@@ -38,4 +38,8 @@ public interface DomainQueryExecutionContext {
 	 * The underlying session
 	 */
 	SharedSessionContractImplementor getSession();
+
+	default Class<?> getResultType() {
+		return null;
+	}
 }

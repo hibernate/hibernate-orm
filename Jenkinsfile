@@ -55,7 +55,8 @@ stage('Configure') {
 		// they require the use of -Dnet.bytebuddy.experimental=true.
 		// Make sure to remove that argument as soon as possible
 		// -- generally that requires upgrading bytebuddy after the JDK goes GA.
-		new BuildEnvironment( testJdkVersion: '23', testJdkLauncherArgs: '--enable-preview -Dnet.bytebuddy.experimental=true' )
+		new BuildEnvironment( testJdkVersion: '23', testJdkLauncherArgs: '--enable-preview -Dnet.bytebuddy.experimental=true' ),
+		new BuildEnvironment( testJdkVersion: '24', testJdkLauncherArgs: '--enable-preview -Dnet.bytebuddy.experimental=true' )
 	];
 
 	if ( env.CHANGE_ID ) {
@@ -259,7 +260,8 @@ void ciBuild(buildEnv, String args) {
 			withCredentials([string(credentialsId: 'ge.hibernate.org-access-key-pr',
 					variable: 'DEVELOCITY_ACCESS_KEY')]) {
 				withGradle { // withDevelocity, actually: https://plugins.jenkins.io/gradle/#plugin-content-capturing-build-scans-from-jenkins-pipeline
-					sh './gradlew buildScanPublishPrevious'
+					// Don't fail a build if publishing fails
+					sh './gradlew buildScanPublishPrevious || true'
 				}
 			}
 		})

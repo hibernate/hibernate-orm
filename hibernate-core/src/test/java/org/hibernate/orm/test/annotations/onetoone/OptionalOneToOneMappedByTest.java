@@ -22,6 +22,7 @@ import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
@@ -182,6 +183,8 @@ public class OptionalOneToOneMappedByTest extends BaseCoreFunctionalTestCase {
 //					.uniqueResult();
 
 			session.delete( personAddress );
+			assertNotSame( person, personAddress.getPerson() );
+			personAddress.getPerson().setPersonAddress( null );
 		} );
 	}
 

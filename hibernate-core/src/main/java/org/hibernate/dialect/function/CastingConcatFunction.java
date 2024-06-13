@@ -28,6 +28,7 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.dialect.function.CastFunction.renderCastArrayToString;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 
 public class CastingConcatFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
@@ -97,12 +98,16 @@ public class CastingConcatFunction extends AbstractSqmSelfRenderingFunctionDescr
 
 	private void renderAsString(SqlAppender sqlAppender, SqlAstTranslator<?> translator, Expression expression) {
 		final JdbcMapping sourceMapping = expression.getExpressionType().getSingleJdbcMapping();
+		final CastType sourceType = sourceMapping.getCastType();
 		// No need to cast if we already have a string
-		if ( sourceMapping.getCastType() == CastType.STRING ) {
+		if ( sourceType == CastType.STRING ) {
 			translator.render( expression, argumentRenderingMode );
 		}
+		else if ( sourceType == CastType.OTHER && sourceMapping.getJdbcType().isArray() ) {
+			renderCastArrayToString( sqlAppender, expression, dialect, translator );
+		}
 		else {
-			final String cast = dialect.castPattern( sourceMapping.getCastType(), CastType.STRING );
+			final String cast = dialect.castPattern( sourceType, CastType.STRING );
 			new PatternRenderer( cast.replace( "?2", concatArgumentCastType ), argumentRenderingMode )
 					.render( sqlAppender, Collections.singletonList( expression ), translator );
 		}

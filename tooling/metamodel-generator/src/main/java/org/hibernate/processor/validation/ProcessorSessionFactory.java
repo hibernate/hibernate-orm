@@ -7,6 +7,7 @@
 package org.hibernate.processor.validation;
 
 import jakarta.persistence.AccessType;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.type.BasicType;
@@ -21,6 +22,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
 
+import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -40,7 +42,11 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import javax.tools.StandardLocation;
 import java.beans.Introspector;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -53,6 +59,7 @@ import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.root;
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.internal.util.StringHelper.unroot;
+import static org.hibernate.metamodel.model.domain.internal.JpaMetamodelImpl.addAllowedEnumLiteralsToEnumTypesMap;
 import static org.hibernate.processor.util.Constants.JAVA_OBJECT;
 
 /**
@@ -65,8 +72,11 @@ import static org.hibernate.processor.util.Constants.JAVA_OBJECT;
 @SuppressWarnings("nullness")
 public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
-	public static MockSessionFactory create(ProcessingEnvironment environment) {
-		return instance.make(environment);
+	public static MockSessionFactory create(
+			ProcessingEnvironment environment,
+			Map<String,String> entityNameMappings,
+			Map<String, Set<String>> enumTypesByValue) {
+		return instance.make(environment, entityNameMappings, enumTypesByValue);
 	}
 
 	static final Mocker<ProcessorSessionFactory> instance = Mocker.variadic(ProcessorSessionFactory.class);
@@ -80,10 +90,35 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	private final Elements elementUtil;
 	private final Types typeUtil;
+	private final Filer filer;
+	private final Map<String, String> entityNameMappings;
+	private final Map<String, Set<String>> allowedEnumLiteralsToEnumTypeNames;
 
-	public ProcessorSessionFactory(ProcessingEnvironment processingEnv) {
-		elementUtil = processingEnv.getElementUtils();
-		typeUtil = processingEnv.getTypeUtils();
+	public ProcessorSessionFactory(
+			ProcessingEnvironment processingEnvironment,
+			Map<String,String> entityNameMappings,
+			Map<String, Set<String>> enumTypesByValue) {
+		elementUtil = processingEnvironment.getElementUtils();
+		typeUtil = processingEnvironment.getTypeUtils();
+		filer = processingEnvironment.getFiler();
+		this.entityNameMappings = entityNameMappings;
+		final Map<String, Set<String>> allowedEnumLiteralsToEnumTypeNames = new HashMap<>( enumTypesByValue.size() << 2 );
+		for ( Map.Entry<String, Set<String>> entry : enumTypesByValue.entrySet() ) {
+			final String enumConstantName = entry.getKey();
+			for ( String enumClassName : entry.getValue() ) {
+				final TypeElement enumTypeElement = elementUtil.getTypeElement( enumClassName );
+				if ( enumTypeElement != null ) {
+					addAllowedEnumLiteralsToEnumTypesMap(
+							allowedEnumLiteralsToEnumTypeNames,
+							enumConstantName,
+							enumTypeElement.getSimpleName().toString(),
+							elementUtil.getBinaryName( enumTypeElement ).toString(),
+							enumClassName
+					);
+				}
+			}
+		}
+		this.allowedEnumLiteralsToEnumTypeNames = allowedEnumLiteralsToEnumTypeNames;
 	}
 
 	@Override
@@ -196,28 +231,27 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 				: IntegerJdbcType.INSTANCE;
 	}
 
-	final Map<String, Set<String>> result = new HashMap<>();
+	public static final String ENTITY_INDEX = "entity.index";
 
-	@Override
-	Map<String, Set<String>> getAllowedEnumLiteralTexts() {
-		//TODO: elementUtil.getAllModuleElements();
-		if ( result.isEmpty() ) {
-			for (Element mod : elementUtil.getModuleElement("").getEnclosedElements()) {
-				for (Element element : mod.getEnclosedElements()) {
-					if (element.getKind() == ElementKind.ENUM) {
-						TypeElement typeElement = (TypeElement) element;
-						for (Element member : element.getEnclosedElements()) {
-							if (member.getKind() == ElementKind.ENUM_CONSTANT) {
-								String name = member.getSimpleName().toString();
-								result.computeIfAbsent( name, s -> new HashSet<>() )
-										.add( typeElement.getQualifiedName().toString() );
-							}
-						}
-					}
-				}
-			}
+	@Override @Nullable
+	Set<String> getEnumTypesForValue(String value) {
+		Set<String> result = allowedEnumLiteralsToEnumTypeNames.get( value);
+		if ( result != null ) {
+			return result;
 		}
-		return result;
+		try (Reader reader = filer.getResource(StandardLocation.SOURCE_OUTPUT, ENTITY_INDEX, value)
+				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
+			return Set.of(buffered.readLine().split(" "));
+		}
+		catch (IOException e) {
+		}
+		try (Reader reader = filer.getResource(StandardLocation.CLASS_PATH, ENTITY_INDEX, '.' + value)
+				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
+			return Set.of(buffered.readLine().split(" "));
+		}
+		catch (IOException e) {
+		}
+		return null;
 	}
 
 	private static Type elementCollectionElementType(TypeElement elementType,
@@ -430,6 +464,30 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		if ( cached != null ) {
 			return cached;
 		}
+		String qualifiedName = entityNameMappings.get(entityName);
+		if ( qualifiedName != null ) {
+			TypeElement result = elementUtil.getTypeElement(qualifiedName);
+			entityCache.put(entityName, result);
+			return result;
+		}
+		StandardLocation location = StandardLocation.SOURCE_OUTPUT;
+		try (Reader reader = filer.getResource(location, ENTITY_INDEX, entityName)
+				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
+			TypeElement result = elementUtil.getTypeElement(buffered.readLine());
+			entityCache.put(entityName, result);
+			return result;
+		}
+		catch (IOException e) {
+		}
+		try (Reader reader = filer.getResource(StandardLocation.CLASS_PATH, ENTITY_INDEX, entityName)
+				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
+			TypeElement result = elementUtil.getTypeElement(buffered.readLine());
+			entityCache.put(entityName, result);
+			return result;
+		}
+		catch (IOException e) {
+		}
+
 		TypeElement symbol =
 				findEntityByUnqualifiedName(entityName,
 						elementUtil.getModuleElement(""));
@@ -591,8 +649,79 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	@Override
 	boolean isEnum(String className) {
-		final TypeElement typeElement = elementUtil.getTypeElement(className);
+		TypeElement typeElement = elementUtil.getTypeElement( className );
+		int startIdx = 0;
+		int dollarIdx;
+		while ( typeElement == null && ( dollarIdx = className.indexOf( '$', startIdx ) ) != -1 ) {
+			final String potentialBaseTypeName = className.substring( 0, dollarIdx );
+			final TypeElement potentialBaseType = elementUtil.getTypeElement( potentialBaseTypeName );
+			if ( potentialBaseType != null ) {
+				className = potentialBaseTypeName + className.substring( dollarIdx + 1 );
+				typeElement = elementUtil.getTypeElement( className );
+			}
+			startIdx = dollarIdx + 1;
+		}
 		return typeElement != null && typeElement.getKind() == ElementKind.ENUM;
+	}
+
+	@Override
+	boolean isEnumConstant(String className, String terminal) {
+		final TypeElement typeElement = elementUtil.getTypeElement(className);
+		if (typeElement == null || typeElement.getKind() != ElementKind.ENUM) {
+			return false;
+		}
+		return typeElement.getEnclosedElements()
+				.stream()
+				.filter(e -> terminal.equals(e.getSimpleName().toString()))
+				.anyMatch(e -> e.getKind() == ElementKind.ENUM_CONSTANT);
+	}
+
+	@Override
+	Class<?> javaConstantType(String className, String fieldName) {
+		final TypeElement typeElement = elementUtil.getTypeElement( className );
+		if ( typeElement == null ) {
+			return null;
+		}
+		final TypeMirror typeMirror = typeElement.getEnclosedElements()
+				.stream()
+				.filter( e -> fieldName.equals( e.getSimpleName().toString() ) )
+				.filter( ProcessorSessionFactory::isStaticFinalField )
+				.findFirst().map( Element::asType )
+				.orElse( null );
+		if ( typeMirror == null ) {
+			return null;
+		}
+		try {
+			switch ( typeMirror.getKind() ) {
+				case BYTE:
+					return byte.class;
+				case SHORT:
+					return short.class;
+				case INT:
+					return int.class;
+				case LONG:
+					return long.class;
+				case FLOAT:
+					return float.class;
+				case DOUBLE:
+					return double.class;
+				case BOOLEAN:
+					return boolean.class;
+				case CHAR:
+					return char.class;
+				default:
+					return Class.forName( typeMirror.toString() );
+			}
+		}
+		catch (ClassNotFoundException ignored) {
+			return null;
+		}
+	}
+
+	private static boolean isStaticFinalField(Element e) {
+		return e.getKind() == ElementKind.FIELD
+				&& e.getModifiers().contains( Modifier.STATIC )
+				&& e.getModifiers().contains( Modifier.FINAL );
 	}
 
 	private static boolean isEmbeddableType(TypeElement type) {

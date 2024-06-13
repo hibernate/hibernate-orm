@@ -13,11 +13,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
@@ -101,6 +106,9 @@ public final class Context {
 
 	private String[] includes = {"*"};
 	private String[] excludes = {};
+
+	private final Map<String, String> entityNameMappings = new HashMap<>();
+	private final Map<String, Set<String>> enumTypesByValue = new HashMap<>();
 
 	public Context(ProcessingEnvironment processingEnvironment) {
 		this.processingEnvironment = processingEnvironment;
@@ -447,5 +455,56 @@ public final class Context {
 			|| pattern.endsWith("*") && name.startsWith( pattern.substring(0, pattern.length()-1) )
 			|| pattern.startsWith("*") && name.endsWith( pattern.substring(1) )
 			|| pattern.startsWith("*") && pattern.endsWith("*") && name.contains( pattern.substring(1, pattern.length()-1) );
+	}
+
+	public List<Element> getAllMembers(TypeElement type) {
+		final List<? extends Element> elements = type.getEnclosedElements();
+		final List<Element> list = new ArrayList<>(elements);
+		final TypeMirror superclass = type.getSuperclass();
+		if ( superclass.getKind() == TypeKind.DECLARED ) {
+			final DeclaredType declaredType = (DeclaredType) superclass;
+			final TypeElement typeElement = (TypeElement) declaredType.asElement();
+			for ( Element inherited : getAllMembers(typeElement) ) {
+				if ( notOverridden(type, inherited, elements) ) {
+					list.add( inherited );
+				}
+			}
+		}
+		for (TypeMirror supertype : type.getInterfaces()) {
+			final DeclaredType declaredType = (DeclaredType) supertype;
+			final TypeElement typeElement = (TypeElement) declaredType.asElement();
+			for ( Element inherited : getAllMembers(typeElement) ) {
+				if ( notOverridden(type, inherited, elements) ) {
+					list.add( inherited );
+				}
+			}
+		}
+		return list;
+	}
+
+	private boolean notOverridden(TypeElement type, Element inherited, List<? extends Element> elements) {
+		return !(inherited instanceof ExecutableElement)
+			|| elements.stream().noneMatch(member -> member instanceof ExecutableElement
+				&& getElementUtils().overrides((ExecutableElement) member, (ExecutableElement) inherited, type));
+	}
+
+	public Map<String, String> getEntityNameMappings() {
+		return entityNameMappings;
+	}
+
+	public void addEntityNameMapping(String entityName, String qualifiedName) {
+		entityNameMappings.put( entityName, qualifiedName );
+	}
+
+	public @Nullable String qualifiedNameForEntityName(String entityName) {
+		return entityNameMappings.get(entityName);
+	}
+
+	public Map<String,Set<String>> getEnumTypesByValue() {
+		return enumTypesByValue;
+	}
+
+	public void addEnumValue(String type, String value) {
+		enumTypesByValue.computeIfAbsent( value, s -> new TreeSet<>() ).add( type );
 	}
 }

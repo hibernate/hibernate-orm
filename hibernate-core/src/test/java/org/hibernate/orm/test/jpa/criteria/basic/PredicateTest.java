@@ -31,6 +31,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -334,7 +335,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 		CriteriaQuery<Order> orderCriteria = builder.createQuery( Order.class );
 		Root<Order> orderRoot = orderCriteria.from( Order.class );
 		orderCriteria.select( orderRoot );
-		orderCriteria.where( builder.in( orderRoot.get("creditCard") ) );
+		orderCriteria.where( builder.in( orderRoot.get("id") ) );
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
 		assertTrue( orders.isEmpty() );
@@ -350,10 +351,10 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 		CriteriaQuery<Order> orderCriteria = builder.createQuery( Order.class );
 		Root<Order> orderRoot = orderCriteria.from( Order.class );
 		orderCriteria.select( orderRoot );
-		orderCriteria.where( builder.in( orderRoot.get("creditCard") ).not() );
+		orderCriteria.where( builder.in( orderRoot.get("id") ).not() );
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
-		assertTrue( orders.isEmpty() );
+		assertFalse( orders.isEmpty() );
 		em.getTransaction().commit();
 		em.close();
 	}

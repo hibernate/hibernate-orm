@@ -39,7 +39,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
@@ -378,18 +377,6 @@ public abstract class SimpleValue implements KeyValue {
 		getTable().createUniqueKey( getConstraintColumns(), context );
 	}
 
-	/**
-	 * Returns the cached {@link IdentifierGenerator}, or null if
-	 * {@link #createIdentifierGenerator(IdentifierGeneratorFactory, Dialect, String, String, RootClass)}
-	 * was never completed.
-	 *
-	 * @deprecated not used and no longer supported.
-	 */
-	@Deprecated(since = "6.0")
-	public IdentifierGenerator getIdentifierGenerator() {
-		return (IdentifierGenerator) generator;
-	}
-
 	@Internal
 	public void setCustomIdGeneratorCreator(IdentifierGeneratorCreator customIdGeneratorCreator) {
 		this.customIdGeneratorCreator = customIdGeneratorCreator;
@@ -405,18 +392,32 @@ public abstract class SimpleValue implements KeyValue {
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect,
 			RootClass rootClass) throws MappingException {
-		if ( generator != null ) {
-			return generator;
+		if ( generator == null ) {
+			if ( customIdGeneratorCreator != null ) {
+				generator = customIdGeneratorCreator.createGenerator(
+						new IdGeneratorCreationContext( identifierGeneratorFactory, null, null, rootClass )
+				);
+			}
+			else {
+				generator = createLegacyIdentifierGenerator(this, identifierGeneratorFactory, dialect, null, null, rootClass );
+				if ( generator instanceof IdentityGenerator ) {
+					setColumnToIdentity();
+				}
+			}
 		}
-		else if ( customIdGeneratorCreator != null ) {
-			generator = customIdGeneratorCreator.createGenerator(
-					new IdGeneratorCreationContext( identifierGeneratorFactory, null, null, rootClass )
-			);
-			return generator;
+		return generator;
+	}
+
+	private void setColumnToIdentity() {
+		if ( getColumnSpan() != 1 ) {
+			throw new MappingException( "Identity generation requires exactly one column" );
+		}
+		final Selectable column = getColumn(0);
+		if ( column instanceof Column ) {
+			( (Column) column).setIdentity( true );
 		}
 		else {
-			generator = createLegacyIdentifierGenerator(this, identifierGeneratorFactory, dialect, null, null, rootClass );
-			return generator;
+			throw new MappingException( "Identity generation requires a column" );
 		}
 	}
 
@@ -447,14 +448,6 @@ public abstract class SimpleValue implements KeyValue {
 	 */
 	public void setIdentifierGeneratorStrategy(String identifierGeneratorStrategy) {
 		this.identifierGeneratorStrategy = identifierGeneratorStrategy;
-	}
-
-	@Deprecated
-	@Override
-	public boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect) {
-		return IdentityGenerator.class.isAssignableFrom(
-				identifierGeneratorFactory.getIdentifierGeneratorClass( identifierGeneratorStrategy )
-		);
 	}
 
 	public Map<String, Object> getIdentifierGeneratorParameters() {
@@ -1134,5 +1127,22 @@ public abstract class SimpleValue implements KeyValue {
 		public Property getProperty() {
 			return rootClass.getIdentifierProperty();
 		}
+
+		// we could add these if it helps integrate old infrastructure
+//		@Override
+//		public Properties getParameters() {
+//			final Value value = getProperty().getValue();
+//			if ( !value.isSimpleValue() ) {
+//				throw new IllegalStateException( "not a simple-valued property" );
+//			}
+//			final Dialect dialect = getDatabase().getDialect();
+//			return collectParameters( (SimpleValue) value, dialect, defaultCatalog, defaultSchema, rootClass );
+//		}
+//
+//		@Override
+//		public SqlStringGenerationContext getSqlStringGenerationContext() {
+//			final Database database = getDatabase();
+//			return fromExplicit( database.getJdbcEnvironment(), database, defaultCatalog, defaultSchema );
+//		}
 	}
 }

@@ -543,8 +543,8 @@ public interface EntityMappingType
 	// Loadable
 
 	@Override
-	default boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
-		return getEntityPersister().isAffectedByEnabledFilters( influencers );
+	default boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
+		return getEntityPersister().isAffectedByEnabledFilters( influencers, onlyApplyForLoadByKeyFilters );
 	}
 
 	@Override
@@ -646,8 +646,16 @@ public interface EntityMappingType
 			TableGroup tableGroup,
 			boolean useQualifier,
 			Map<String, Filter> enabledFilters,
+			boolean onlyApplyLoadByKeyFilters,
 			SqlAstCreationState creationState) {
-		getEntityPersister().applyFilterRestrictions( predicateConsumer, tableGroup, useQualifier, enabledFilters, creationState );
+		getEntityPersister().applyFilterRestrictions(
+				predicateConsumer,
+				tableGroup,
+				useQualifier,
+				enabledFilters,
+				onlyApplyLoadByKeyFilters,
+				creationState
+		);
 	}
 
 	@Override
@@ -656,9 +664,18 @@ public interface EntityMappingType
 			TableGroup tableGroup,
 			boolean useQualifier,
 			Map<String, Filter> enabledFilters,
+			boolean onlyApplyLoadByKeyFilters,
 			Set<String> treatAsDeclarations,
 			SqlAstCreationState creationState) {
-		getEntityPersister().applyBaseRestrictions( predicateConsumer, tableGroup, useQualifier, enabledFilters, treatAsDeclarations, creationState );
+		getEntityPersister().applyBaseRestrictions(
+				predicateConsumer,
+				tableGroup,
+				useQualifier,
+				enabledFilters,
+				onlyApplyLoadByKeyFilters,
+				treatAsDeclarations,
+				creationState
+		);
 	}
 
 	@Override

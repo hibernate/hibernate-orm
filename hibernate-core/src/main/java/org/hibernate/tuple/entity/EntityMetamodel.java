@@ -164,6 +164,10 @@ public class EntityMetamodel implements Serializable {
 		// Improves performance of EntityKey#equals by avoiding content check in String#equals
 		name = persistentClass.getEntityName().intern();
 		rootName = persistentClass.getRootClass().getEntityName().intern();
+		// Make sure the hashCodes are cached
+		name.hashCode();
+		rootName.hashCode();
+
 		subclassId = persistentClass.getSubclassId();
 
 		identifierAttribute = PropertyFactory.buildIdentifierAttribute(
@@ -363,7 +367,7 @@ public class EntityMetamodel implements Serializable {
 			if ( cascadeStyles[i] != CascadeStyles.NONE ) {
 				foundCascade = true;
 			}
-			if ( cascadeStyles[i].doCascade(CascadingActions.DELETE) ) {
+			if ( cascadeStyles[i].doCascade(CascadingActions.REMOVE) ) {
 				foundCascadeDelete = true;
 			}
 

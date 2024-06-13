@@ -63,7 +63,6 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	 * contains all columns, including the primary key
 	 */
 	private final Map<String, Column> columns = new LinkedHashMap<>();
-	private KeyValue idValue;
 	private PrimaryKey primaryKey;
 	private final Map<ForeignKeyKey, ForeignKey> foreignKeys = new LinkedHashMap<>();
 	private final Map<String, Index> indexes = new LinkedHashMap<>();
@@ -690,14 +689,6 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 	public int getUniqueInteger() {
 		return uniqueInteger;
-	}
-
-	public void setIdentifierValue(KeyValue idValue) {
-		this.idValue = idValue;
-	}
-
-	public KeyValue getIdentifierValue() {
-		return idValue;
 	}
 
 	@Deprecated(since = "6.2")

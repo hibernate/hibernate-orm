@@ -1,1 +1,2 @@
 org.hibernate.vector.PGVectorTypeContributor
+org.hibernate.vector.OracleVectorTypeContributor

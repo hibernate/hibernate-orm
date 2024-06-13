@@ -8,7 +8,6 @@ package org.hibernate.tool.schema.internal;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.mapping.CheckConstraint;
@@ -28,7 +27,7 @@ import static org.hibernate.type.SqlTypes.isStringType;
 class ColumnDefinitions {
 
 	static boolean hasMatchingType(Column column, ColumnInformation columnInformation, Metadata metadata, Dialect dialect) {
-		boolean typesMatch = dialect.equivalentTypes( column.getSqlTypeCode(metadata), columnInformation.getTypeCode() )
+		final boolean typesMatch = dialect.equivalentTypes( column.getSqlTypeCode( metadata ), columnInformation.getTypeCode() )
 				|| normalize( stripArgs( column.getSqlType( metadata ) ) ).equals( normalize( columnInformation.getTypeName() ) );
 		if ( typesMatch ) {
 			return true;
@@ -43,35 +42,42 @@ class ColumnDefinitions {
 					columnInformation.getDecimalDigits(),
 					metadata.getDatabase().getTypeConfiguration().getJdbcTypeRegistry()
 			);
-			return dialect.equivalentTypes( column.getSqlTypeCode(metadata), jdbcType.getDefaultSqlTypeCode() );
+			return dialect.equivalentTypes( column.getSqlTypeCode( metadata ), jdbcType.getDefaultSqlTypeCode() );
 		}
 	}
 
 	static boolean hasMatchingLength(Column column, ColumnInformation columnInformation, Metadata metadata, Dialect dialect) {
-		int sqlType = columnInformation.getTypeCode();
-		if ( isStringType( sqlType ) ) {
-			final int actualLength = columnInformation.getColumnSize();
-			final Size size = column.getColumnSize( dialect, metadata );
-			final Long requiredLength = size.getLength();
-			return requiredLength == null
-				|| requiredLength == actualLength;
-		}
-		else if ( isNumericOrDecimal( sqlType ) ) {
-			// Postgres, H2, SQL Server, and MySQL agree on the following:
-			final int actualPrecision = columnInformation.getColumnSize();
-			final int actualScale = columnInformation.getDecimalDigits();
-			final Size size = column.getColumnSize( dialect, metadata );
-			final Integer requiredPrecision = size.getPrecision();
-			final Integer requiredScale = size.getScale();
-			return requiredPrecision == null
-				|| requiredScale == null
-				|| requiredScale == actualScale && requiredPrecision == actualPrecision;
-		}
-		// I would really love this to be able to change the binary
-		// precision of a float/double type, but there simply doesn't
-		// seem to be any good way to implement it
-		else {
+		if ( !column.getSqlType( metadata ).contains("(") ) {
+			// the DDL type does not explicitly specify a length,
+			// and so we do not require an exact match
 			return true;
+		}
+		else {
+			int sqlType = columnInformation.getTypeCode();
+			if ( isStringType( sqlType ) ) {
+				final int actualLength = columnInformation.getColumnSize();
+				final Size size = column.getColumnSize( dialect, metadata );
+				final Long requiredLength = size.getLength();
+				return requiredLength == null
+					|| requiredLength == actualLength;
+			}
+			else if ( isNumericOrDecimal( sqlType ) ) {
+				// Postgres, H2, SQL Server, and MySQL agree on the following:
+				final int actualPrecision = columnInformation.getColumnSize();
+				final int actualScale = columnInformation.getDecimalDigits();
+				final Size size = column.getColumnSize( dialect, metadata );
+				final Integer requiredPrecision = size.getPrecision();
+				final Integer requiredScale = size.getScale();
+				return requiredPrecision == null
+					|| requiredScale == null
+					|| requiredScale == actualScale && requiredPrecision == actualPrecision;
+			}
+			// I would really love this to be able to change the binary
+			// precision of a float/double type, but there simply doesn't
+			// seem to be any good way to implement it
+			else {
+				return true;
+			}
 		}
 	}
 
@@ -87,9 +93,9 @@ class ColumnDefinitions {
 	}
 
 
-	static String getColumnDefinition(Column column, Table table, Metadata metadata, Dialect dialect) {
+	static String getColumnDefinition(Column column, Metadata metadata, Dialect dialect) {
 		StringBuilder definition = new StringBuilder();
-		appendColumnDefinition( definition, column, table, metadata, dialect );
+		appendColumnDefinition( definition, column, metadata, dialect );
 		appendComment( definition, column, dialect );
 		return definition.toString();
 	}
@@ -102,7 +108,7 @@ class ColumnDefinitions {
 			Dialect dialect,
 			SqlStringGenerationContext context) {
 		statement.append( column.getQuotedName( dialect ) );
-		appendColumnDefinition( statement, column, table, metadata, dialect );
+		appendColumnDefinition( statement, column, metadata, dialect );
 		appendComment( statement, column, dialect );
 		appendConstraints( statement, column, table, dialect, context );
 	}
@@ -170,10 +176,9 @@ class ColumnDefinitions {
 	private static void appendColumnDefinition(
 			StringBuilder definition,
 			Column column,
-			Table table,
 			Metadata metadata,
 			Dialect dialect) {
-		if ( isIdentityColumn( column, table, metadata, dialect) ) {
+		if ( column.isIdentity() ) {
 			// to support dialects that have their own identity data type
 			if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
 				definition.append( ' ' ).append( column.getSqlType( metadata ) );
@@ -213,41 +218,13 @@ class ColumnDefinitions {
 		}
 	}
 
-	private static boolean isIdentityColumn(Column column, Table table, Metadata metadata, Dialect dialect) {
-		// Try to find out the name of the primary key in case the dialect needs it to create an identity
-		return isPrimaryKeyIdentity( table, metadata, dialect )
-			&& column.getQuotedName( dialect ).equals( getPrimaryKeyColumnName( table, dialect ) );
-	}
-
-	private static String getPrimaryKeyColumnName(Table table, Dialect dialect) {
-		return table.hasPrimaryKey()
-				? table.getPrimaryKey().getColumns().get(0).getQuotedName( dialect )
-				: null;
-	}
-
-	private static boolean isPrimaryKeyIdentity(Table table, Metadata metadata, Dialect dialect) {
-		// TODO: this is the much better form moving forward as we move to metamodel
-		//return hasPrimaryKey
-		//				&& table.getPrimaryKey().getColumnSpan() == 1
-		//				&& table.getPrimaryKey().getColumn( 0 ).isIdentity();
-		MetadataImplementor metadataImplementor = (MetadataImplementor) metadata;
-		return table.hasPrimaryKey()
-			&& table.getIdentifierValue() != null
-			&& table.getIdentifierValue()
-					.isIdentityColumn(
-							metadataImplementor.getMetadataBuildingOptions()
-									.getIdentifierGeneratorFactory(),
-							dialect
-					);
-	}
-
 	private static String normalize(String typeName) {
 		if ( typeName == null ) {
 			return null;
 		}
 		else {
-			final String lowerCaseTypName = typeName.toLowerCase(Locale.ROOT);
-			switch (lowerCaseTypName) {
+			final String lowercaseTypeName = typeName.toLowerCase(Locale.ROOT);
+			switch (lowercaseTypeName) {
 				case "int":
 					return "integer";
 				case "character":
@@ -262,8 +239,12 @@ class ColumnDefinitions {
 					return "blob";
 				case "interval second":
 					return "interval";
+				case "double precision":
+					return "double";
+				// todo: normalize DECIMAL to NUMERIC?
+				//       normalize REAL to FLOAT?
 				default:
-					return lowerCaseTypName;
+					return lowercaseTypeName;
 			}
 		}
 	}

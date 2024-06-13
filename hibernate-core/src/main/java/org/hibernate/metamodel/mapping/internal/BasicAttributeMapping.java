@@ -337,7 +337,9 @@ public class BasicAttributeMapping
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				jdbcMapping,
-				navigablePath
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -391,10 +393,12 @@ public class BasicAttributeMapping
 			DomainResultCreationState creationState) {
 		final int valuesArrayPosition;
 		boolean coerceResultType = false;
+		final SqlSelection sqlSelection;
 		if ( fetchTiming == FetchTiming.DELAYED && isLazy ) {
 			// Lazy property. A valuesArrayPosition of -1 will lead to
 			// returning a domain result assembler that returns LazyPropertyInitializer.UNFETCHED_PROPERTY
 			valuesArrayPosition = -1;
+			sqlSelection = null;
 		}
 		else {
 			final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
@@ -404,7 +408,7 @@ public class BasicAttributeMapping
 
 			assert tableGroup != null;
 
-			final SqlSelection sqlSelection = resolveSqlSelection(
+			sqlSelection = resolveSqlSelection(
 					fetchablePath,
 					tableGroup,
 					fetchParent,
@@ -422,9 +426,12 @@ public class BasicAttributeMapping
 				fetchParent,
 				fetchablePath,
 				this,
+				getJdbcMapping().getValueConverter(),
 				fetchTiming,
+				true,
 				creationState,
-				coerceResultType
+				coerceResultType,
+				sqlSelection != null && !sqlSelection.isVirtual()
 		);
 	}
 

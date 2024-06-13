@@ -40,7 +40,8 @@ public class OracleArrayContainsFunction extends AbstractArrayContainsFunction {
 		);
 		sqlAppender.appendSql( arrayTypeName );
 		if ( needleType == null || needleType instanceof BasicPluralType<?, ?> ) {
-			sqlAppender.append( "_contains(" );
+			LOG.deprecatedArrayContainsWithArray();
+			sqlAppender.append( "_includes(" );
 			haystackExpression.accept( walker );
 			sqlAppender.append( ',' );
 			sqlAstArguments.get( 1 ).accept( walker );

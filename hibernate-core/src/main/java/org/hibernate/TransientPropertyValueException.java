@@ -6,7 +6,7 @@
  */
 package org.hibernate;
 
-import org.hibernate.internal.util.StringHelper;
+import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
  * Thrown when a property cannot be persisted because it is an association
@@ -69,7 +69,7 @@ public class TransientPropertyValueException extends TransientObjectException {
 
 	@Override
 	public String getMessage() {
-		return super.getMessage() + " : "
-				+ StringHelper.qualify( propertyOwnerEntityName, propertyName ) + " -> " + transientEntityName;
+		return super.getMessage() + ": "
+				+ qualify( propertyOwnerEntityName, propertyName ) + " -> " + transientEntityName;
 	}
 }

@@ -36,11 +36,7 @@ public class ManyToOneJoinTest {
 	@AfterEach
 	public void teardDown(SessionFactoryScope scope) {
 		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from TreeType" ).executeUpdate();
-					session.createMutationQuery( "delete from ForestType" ).executeUpdate();
-					session.createMutationQuery( "delete from BiggestForest" ).executeUpdate();
-				}
+				session -> session.getSessionFactory().getSchemaManager().truncateMappedObjects()
 		);
 	}
 

@@ -118,7 +118,7 @@ public class EntityUpdateAction extends EntityAction {
 				: naturalIdMapping.extractNaturalIdFromEntityState( previousState );
 	}
 
-	protected Object[] getState() {
+	public Object[] getState() {
 		return state;
 	}
 
@@ -130,7 +130,7 @@ public class EntityUpdateAction extends EntityAction {
 		return nextVersion;
 	}
 
-	protected int[] getDirtyFields() {
+	public int[] getDirtyFields() {
 		return dirtyFields;
 	}
 	protected boolean hasDirtyCollection() {

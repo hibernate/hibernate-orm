@@ -52,6 +52,7 @@ import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
@@ -351,7 +352,39 @@ public class ActionQueue {
 	 */
 	public void addAction(final EntityUpdateAction action) {
 		OrderedActions.EntityUpdateAction.ensureInitialized( this );
-		updates.add( action );
+		if ( !trySquashEntityUpdateAction(action) ) {
+			updates.add(action);
+		}
+	}
+
+	private boolean trySquashEntityUpdateAction(EntityUpdateAction action) {
+		if ( insertions != null ) {
+			for ( Type type : action.getPersister().getPropertyTypes()) {
+				// avoid potential foreign key violation
+				if ( type instanceof EntityType ) {
+					return false;
+				}
+				else if ( type instanceof ComponentType) {
+					for ( Type t : ((ComponentType) type).getSubtypes() ) {
+						if ( t instanceof EntityType ) {
+							return false;
+						}
+					}
+				}
+			}
+			for (AbstractEntityInsertAction insertAction : insertions) {
+				if (insertAction.getInstance() == action.getInstance()) {
+					final Object[] oldState = insertAction.getState();
+					final Object[] newState = action.getState();
+					final int[] dirtyFields = action.getDirtyFields();
+					for (int i = 0; i < dirtyFields.length; i++) {
+						oldState[dirtyFields[i]] = newState[dirtyFields[i]];
+					}
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	/**

@@ -15,7 +15,6 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
-import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
@@ -157,6 +156,7 @@ public class GeneratedValuesHelper {
 				null,
 				null,
 				QueryOptions.NONE,
+				true,
 				mappingProducer.resolve(
 						directResultSetAccess,
 						session.getLoadQueryInfluencers(),
@@ -194,8 +194,7 @@ public class GeneratedValuesHelper {
 		);
 
 		final RowReader<Object[]> rowReader = ResultsHelper.createRowReader(
-				executionContext,
-				LockOptions.NONE,
+				session.getFactory(),
 				RowTransformerArrayImpl.instance(),
 				Object[].class,
 				jdbcValues

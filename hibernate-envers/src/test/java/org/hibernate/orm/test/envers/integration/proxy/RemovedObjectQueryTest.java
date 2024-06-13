@@ -156,6 +156,7 @@ public class RemovedObjectQueryTest extends BaseEnversJPAFunctionalTestCase {
 		// Revision 9 - removing first object
 		em.getTransaction().begin();
 		setOwningEntity2 = em.find( SetOwningEntity.class, 7 );
+		setOwnedEntity2.getReferencing().remove( setOwningEntity2 );
 		em.remove( setOwningEntity2 );
 		em.getTransaction().commit();
 

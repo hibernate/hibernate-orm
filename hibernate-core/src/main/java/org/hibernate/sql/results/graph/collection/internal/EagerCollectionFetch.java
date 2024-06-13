@@ -20,14 +20,11 @@ import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.sql.results.graph.FetchableContainer;
-import org.hibernate.sql.results.graph.InitializerProducer;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -156,11 +153,11 @@ public class EagerCollectionFetch extends CollectionFetch {
 	}
 
 	@Override
-	public CollectionInitializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
+	public CollectionInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
 		return initializerProducer.produceInitializer(
 				getNavigablePath(),
 				getFetchedMapping(),
-				parentAccess,
+				parent,
 				null,
 				collectionKeyResult,
 				collectionValueKeyResult,
@@ -227,8 +224,8 @@ public class EagerCollectionFetch extends CollectionFetch {
 		if ( collectionKeyResult != null ) {
 			collectionKeyResult.collectValueIndexesToCache( valueIndexes );
 		}
-		collectionValueKeyResult.collectValueIndexesToCache( valueIndexes );
 		if ( !getFetchedMapping().getCollectionDescriptor().useShallowQueryCacheLayout() ) {
+			collectionValueKeyResult.collectValueIndexesToCache( valueIndexes );
 			for ( Fetch fetch : fetches ) {
 				fetch.collectValueIndexesToCache( valueIndexes );
 			}

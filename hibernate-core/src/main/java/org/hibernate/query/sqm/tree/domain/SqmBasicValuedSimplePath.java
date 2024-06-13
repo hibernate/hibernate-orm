@@ -110,17 +110,30 @@ public class SqmBasicValuedSimplePath<T>
 		if ( indexedPath != null ) {
 			return indexedPath;
 		}
-		if ( !( getNodeType().getSqmPathType() instanceof BasicPluralType<?, ?> ) ) {
-			throw new UnsupportedOperationException( "Index access is only supported for basic plural types." );
-		}
+		final DomainType<T> sqmPathType = getNodeType().getSqmPathType();
 		final QueryEngine queryEngine = creationState.getCreationContext().getQueryEngine();
-		final SelfRenderingSqmFunction<?> result = queryEngine.getSqmFunctionRegistry()
-				.findFunctionDescriptor( "array_get" )
-				.generateSqmExpression(
-						asList( this, selector ),
-						null,
-						queryEngine
-				);
+		final SelfRenderingSqmFunction<?> result;
+		if ( sqmPathType instanceof BasicPluralType<?, ?> ) {
+			result = queryEngine.getSqmFunctionRegistry()
+					.findFunctionDescriptor( "array_get" )
+					.generateSqmExpression(
+							asList( this, selector ),
+							null,
+							queryEngine
+					);
+		}
+		else if ( sqmPathType.getRelationalJavaType().getJavaTypeClass() == String.class ) {
+			result = queryEngine.getSqmFunctionRegistry()
+					.findFunctionDescriptor( "substring" )
+					.generateSqmExpression(
+							asList( this, selector, nodeBuilder().literal( 1 ) ),
+							nodeBuilder().getCharacterType(),
+							queryEngine
+					);
+		}
+		else {
+			throw new UnsupportedOperationException( "Index access is only supported for basic plural and string types, but got: " + sqmPathType );
+		}
 		final SqmFunctionPath<Object> path = new SqmFunctionPath<>( result );
 		pathRegistry.register( path );
 		return path;
@@ -162,7 +175,7 @@ public class SqmBasicValuedSimplePath<T>
 
 	@Override
 	public JavaType<T> getExpressibleJavaType() {
-		return getJavaTypeDescriptor();
+		return super.getExpressible().getExpressibleJavaType();
 	}
 
 	@Override

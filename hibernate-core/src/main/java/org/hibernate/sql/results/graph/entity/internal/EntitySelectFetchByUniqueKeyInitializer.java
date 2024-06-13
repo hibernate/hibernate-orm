@@ -6,107 +6,82 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
+import org.hibernate.EntityFilterException;
+import org.hibernate.FetchNotFoundException;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.InitializerParent;
 
 /**
  * @author Andrea Boriero
  */
-public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchInitializer {
+public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchInitializer<EntitySelectFetchInitializer.EntitySelectFetchInitializerData> {
 	private final ToOneAttributeMapping fetchedAttribute;
 
-
 	public EntitySelectFetchByUniqueKeyInitializer(
-			FetchParentAccess parentAccess,
+			InitializerParent<?> parent,
 			ToOneAttributeMapping fetchedAttribute,
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
-			DomainResultAssembler<?> keyAssembler) {
-		super( parentAccess, fetchedAttribute, fetchedNavigable, concreteDescriptor, keyAssembler );
+			DomainResult<?> keyResult,
+			boolean affectedByFilter,
+			AssemblerCreationState creationState) {
+		super( parent, fetchedAttribute, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter, creationState );
 		this.fetchedAttribute = fetchedAttribute;
 	}
 
 	@Override
-	public void resolveInstance(RowProcessingState rowProcessingState) {
-		if ( state != State.UNINITIALIZED ) {
-			return;
-		}
-		state = State.RESOLVED;
-
-		// We can avoid processing further if the parent is already initialized or missing,
-		// as the value produced by this initializer will never be used anyway.
-		if ( parentShallowCached || shouldSkipInitializer( rowProcessingState ) ) {
-			state = State.INITIALIZED;
-			return;
-		}
-
-		entityIdentifier = keyAssembler.assemble( rowProcessingState );
-		if ( entityIdentifier == null ) {
-			state = State.INITIALIZED;
-			return;
-		}
-
-		// Defer the select by default to the initialize phase
-		// We only need to select in this phase if this is part of an identifier or foreign key
-		NavigablePath np = getNavigablePath().getParent();
-		while ( np != null ) {
-			if ( np instanceof EntityIdentifierNavigablePath
-					|| ForeignKeyDescriptor.PART_NAME.equals( np.getLocalName() )
-					|| ForeignKeyDescriptor.TARGET_PART_NAME.equals( np.getLocalName() )) {
-
-				initializeInstance( rowProcessingState );
-				return;
-			}
-			np = np.getParent();
-		}
-	}
-
-	@Override
-	public void initializeInstance(RowProcessingState rowProcessingState) {
-		if ( state != State.RESOLVED ) {
-			return;
-		}
-		state = State.INITIALIZED;
-
+	protected void initialize(EntitySelectFetchInitializerData data) {
 		final String entityName = concreteDescriptor.getEntityName();
 		final String uniqueKeyPropertyName = fetchedAttribute.getReferencedPropertyName();
 
-		final SharedSessionContractImplementor session = rowProcessingState.getSession();
+		final SharedSessionContractImplementor session = data.getRowProcessingState().getSession();
 
 		final EntityUniqueKey euk = new EntityUniqueKey(
 				entityName,
 				uniqueKeyPropertyName,
-				entityIdentifier,
+				data.entityIdentifier,
 				concreteDescriptor.getPropertyType( uniqueKeyPropertyName ),
 				session.getFactory()
 		);
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		entityInstance = persistenceContext.getEntity( euk );
-		if ( entityInstance == null ) {
-			entityInstance = concreteDescriptor.loadByUniqueKey(
+		data.setInstance( persistenceContext.getEntity( euk ) );
+		if ( data.getInstance() == null ) {
+			final Object instance = concreteDescriptor.loadByUniqueKey(
 					uniqueKeyPropertyName,
-					entityIdentifier,
+					data.entityIdentifier,
 					session
 			);
+			data.setInstance( instance );
 
+			if ( instance == null ) {
+				if ( toOneMapping.getNotFoundAction() != NotFoundAction.IGNORE ) {
+					if ( affectedByFilter ) {
+						throw new EntityFilterException(
+								entityName,
+								data.entityIdentifier,
+								toOneMapping.getNavigableRole().getFullPath()
+						);
+					}
+					if ( toOneMapping.getNotFoundAction() == NotFoundAction.EXCEPTION ) {
+						throw new FetchNotFoundException( entityName, data.entityIdentifier );
+					}
+				}
+			}
 			// If the entity was not in the Persistence Context, but was found now,
 			// add it to the Persistence Context
-			if ( entityInstance != null ) {
-				persistenceContext.addEntity( euk, entityInstance );
-			}
+			persistenceContext.addEntity( euk, instance );
 		}
-		if ( entityInstance != null ) {
-			entityInstance = persistenceContext.proxyFor( entityInstance );
+		if ( data.getInstance() != null ) {
+			data.setInstance( persistenceContext.proxyFor( data.getInstance() ) );
 		}
 	}
 

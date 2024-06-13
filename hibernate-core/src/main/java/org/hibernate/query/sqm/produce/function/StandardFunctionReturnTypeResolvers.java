@@ -25,9 +25,13 @@ import org.hibernate.query.sqm.tree.expression.NullSqmExpressible;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.type.SqlTypes.isCharacterOrClobType;
+import static org.hibernate.type.SqlTypes.isNumericType;
 
 /**
  * @author Steve Ebersole
@@ -142,8 +146,7 @@ public class StandardFunctionReturnTypeResolvers {
 	// Internal helpers
 
 	@Internal
-	public static boolean isAssignableTo(
-			ReturnableType<?> defined, ReturnableType<?> implied) {
+	public static boolean isAssignableTo(ReturnableType<?> defined, ReturnableType<?> implied) {
 		if ( implied == null ) {
 			return false;
 		}
@@ -152,19 +155,27 @@ public class StandardFunctionReturnTypeResolvers {
 			return true;
 		}
 
-		if (!(implied instanceof BasicType) || !(defined instanceof BasicType) ) {
+		if ( !( implied instanceof BasicType ) || !( defined instanceof BasicType ) ) {
 			return false;
 		}
+		return isAssignableTo(
+				( (BasicType<?>) defined ).getJdbcMapping(),
+				( (BasicType<?>) implied ).getJdbcMapping()
+		);
+	}
 
+	@Internal
+	public static boolean isAssignableTo(JdbcMapping defined, JdbcMapping implied) {
 		//This list of cases defines legal promotions from a SQL function return
 		//type specified in the function template (i.e. in the Dialect) and a type
 		//that is determined by how the function is used in the HQL query. In essence
 		//the types are compatible if the map to the same JDBC type, of if they are
 		//both numeric types.
-		int impliedTypeCode = ((BasicType<?>) implied).getJdbcMapping().getJdbcType().getDefaultSqlTypeCode();
-		int definedTypeCode = ((BasicType<?>) defined).getJdbcMapping().getJdbcType().getDefaultSqlTypeCode();
+		int impliedTypeCode = implied.getJdbcType().getDefaultSqlTypeCode();
+		int definedTypeCode = defined.getJdbcType().getDefaultSqlTypeCode();
 		return impliedTypeCode == definedTypeCode
-				|| isNumeric( impliedTypeCode ) && isNumeric( definedTypeCode );
+				|| isNumericType( impliedTypeCode ) && isNumericType( definedTypeCode )
+				|| isCharacterOrClobType( impliedTypeCode ) && isCharacterOrClobType( definedTypeCode );
 	}
 
 	@Internal
@@ -202,27 +213,7 @@ public class StandardFunctionReturnTypeResolvers {
 		//that is determined by how the function is used in the HQL query. In essence
 		//the types are compatible if the map to the same JDBC type, of if they are
 		//both numeric types.
-		int impliedTypeCode = implied.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode();
-		int definedTypeCode = defined.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode();
-		return impliedTypeCode == definedTypeCode
-				|| isNumeric( impliedTypeCode ) && isNumeric( definedTypeCode );
-
-	}
-
-	private static boolean isNumeric(int type) {
-		switch ( type ) {
-			case Types.SMALLINT:
-			case Types.TINYINT:
-			case Types.INTEGER:
-			case Types.BIGINT:
-			case Types.FLOAT:
-			case Types.REAL:
-			case Types.DOUBLE:
-			case Types.NUMERIC:
-			case Types.DECIMAL:
-				return true;
-		}
-		return false;
+		return isAssignableTo( defined.getJdbcMapping(), implied.getJdbcMapping() );
 	}
 
 	public static ReturnableType<?> extractArgumentType(

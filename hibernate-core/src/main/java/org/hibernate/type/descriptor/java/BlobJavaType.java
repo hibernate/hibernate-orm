@@ -32,6 +32,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  *
  * @author Steve Ebersole
  * @author Brett Meyer
+ * @author Loïc Lefèvre
  */
 public class BlobJavaType extends AbstractClassJavaType<Blob> {
 	public static final BlobJavaType INSTANCE = new BlobJavaType();
@@ -133,7 +134,7 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 			else if (Blob.class.isAssignableFrom( type )) {
 				final Blob blob =  value instanceof WrappedBlob
 						? ( (WrappedBlob) value ).getWrappedBlob()
-						: value;
+						: getOrCreateBlob(value, options);
 				return (X) blob;
 			}
 		}
@@ -142,6 +143,21 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 		}
 		
 		throw unknownUnwrap( type );
+	}
+
+	private Blob getOrCreateBlob(Blob value, WrapperOptions options) throws SQLException {
+		if(options.getDialect().useConnectionToCreateLob()) {
+			if(value.length() == 0) {
+				// empty Blob
+				return options.getLobCreator().createBlob(new byte[0]);
+			}
+			else {
+				return options.getLobCreator().createBlob(value.getBytes(1, (int) value.length()));
+			}
+		}
+		else {
+			return value;
+		}
 	}
 
 	@Override

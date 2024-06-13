@@ -8,10 +8,11 @@ package org.hibernate.orm.test.jpa.cascade.multicircle;
 
 import jakarta.persistence.RollbackException;
 
+import org.hibernate.SessionFactory;
+import org.hibernate.TransientObjectException;
 import org.hibernate.TransientPropertyValueException;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * <p>
  * All IDs are generated from a sequence.
  * <p>
- * JPA cascade types are used (jakarta.persistence.CascadeType)..
+ * JPA cascade types are used (jakarta.persistence.CascadeType).
  * <p>
  * This test uses the following model:
  *
@@ -88,7 +89,6 @@ public class MultiCircleJpaCascadeTest {
 	private E e;
 	private F f;
 	private G g;
-	private boolean skipCleanup;
 
 	@BeforeEach
 	public void setup() {
@@ -121,51 +121,12 @@ public class MultiCircleJpaCascadeTest {
 		g.setB( b );
 		g.getFCollection().add( f );
 
-		skipCleanup = false;
 	}
 
 	@AfterEach
 	public void cleanup(EntityManagerFactoryScope scope) {
-		if ( !skipCleanup ) {
-			b.setC( null );
-			b.setD( null );
-			b.getGCollection().remove( g );
-
-			c.getBCollection().remove( b );
-			c.getDCollection().remove( d );
-
-			d.getBCollection().remove( b );
-			d.setC( null );
-			d.setE( null );
-			d.getFCollection().remove( f );
-
-			e.getDCollection().remove( d );
-			e.setF( null );
-
-			f.setD( null );
-			f.getECollection().remove( e );
-			f.setG( null );
-
-			g.setB( null );
-			g.getFCollection().remove( f );
-
-			scope.inTransaction(
-					entityManager -> {
-						b = entityManager.merge( b );
-						c = entityManager.merge( c );
-						d = entityManager.merge( d );
-						e = entityManager.merge( e );
-						f = entityManager.merge( f );
-						g = entityManager.merge( g );
-						entityManager.remove( f );
-						entityManager.remove( g );
-						entityManager.remove( b );
-						entityManager.remove( d );
-						entityManager.remove( e );
-						entityManager.remove( c );
-					}
-			);
-		}
+		scope.getEntityManagerFactory().unwrap(SessionFactory.class)
+				.getSchemaManager().truncateMappedObjects();
 	}
 
 	@Test
@@ -181,7 +142,6 @@ public class MultiCircleJpaCascadeTest {
 
 	@Test
 	public void testPersistNoCascadeToTransient(EntityManagerFactoryScope scope) {
-		skipCleanup = true;
 		scope.inEntityManager(
 				entityManager -> {
 					entityManager.getTransaction().begin();
@@ -204,10 +164,7 @@ public class MultiCircleJpaCascadeTest {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-6999")	// remove skipCleanup below when this annotation is removed, added it to avoid failure in the cleanup
-	// fails on d.e; should pass
 	public void testPersistThenUpdate(EntityManagerFactoryScope scope) {
-		skipCleanup = true;
 		scope.inTransaction(
 				entityManager -> {
 					entityManager.persist( b );
@@ -229,10 +186,7 @@ public class MultiCircleJpaCascadeTest {
 	}
 
 	@Test
-	public void testPersistThenUpdateNoCascadeToTransient(EntityManagerFactoryScope scope) {
-		// expected to fail, so nothing will be persisted.
-		skipCleanup = true;
-
+	public void testPersistThenUpdateNoCascadeToTransient1(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {
 					// remove elements from collections and persist
@@ -251,20 +205,62 @@ public class MultiCircleJpaCascadeTest {
 					catch (RollbackException ex) {
 						assertTrue( ex.getCause() instanceof IllegalStateException );
 						IllegalStateException ise = (IllegalStateException) ex.getCause();
-						// should fail on entity g (due to no cascade to f.g);
-						// instead it fails on entity e ( due to no cascade to d.e)
-						// because e is not in the process of being saved yet.
-						// when HHH-6999 is fixed, this test should be changed to
-						// check for g and f.g
-						//noinspection ThrowableResultOfMethodCallIgnored
-						TransientPropertyValueException tpve = assertTyping(
-								TransientPropertyValueException.class,
-								ise.getCause()
-						);
-						assertEquals( E.class.getName(), tpve.getTransientEntityName() );
-						assertEquals( D.class.getName(), tpve.getPropertyOwnerEntityName() );
-						assertEquals( "e", tpve.getPropertyName() );
-					} finally {
+						assertTyping( TransientObjectException.class, ise.getCause() );
+//						String message = ise.getCause().getMessage();
+//						assertTrue( message.contains("'org.hibernate.orm.test.jpa.cascade.multicircle.B'") );
+					}
+					finally {
+						entityManager.getTransaction().rollback();
+						entityManager.close();
+					}
+				}
+		);
+	}
+
+	@Test
+	public void testPersistThenUpdateNoCascadeToTransient2(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(
+				entityManager -> {
+					// remove elements from collections and persist
+					c.getBCollection().clear();
+					c.getDCollection().clear();
+
+					entityManager.getTransaction().begin();
+					entityManager.persist( c );
+					entityManager.persist( b );
+					// now add the elements back
+					c.getBCollection().add( b );
+					c.getDCollection().add( d );
+					entityManager.getTransaction().commit();
+				}
+		);
+	}
+
+	@Test
+	public void testPersistThenUpdateNoCascadeToTransient3(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(
+				entityManager -> {
+					// remove elements from collections and persist
+					c.getBCollection().clear();
+					c.getDCollection().clear();
+					d.getBCollection().clear();
+
+					entityManager.getTransaction().begin();
+					entityManager.persist( c );
+					// now add the elements back
+					c.getDCollection().add( d );
+					try {
+						entityManager.getTransaction().commit();
+						fail( "should have thrown IllegalStateException" );
+					}
+					catch (RollbackException ex) {
+						assertTrue( ex.getCause() instanceof IllegalStateException );
+						IllegalStateException ise = (IllegalStateException) ex.getCause();
+						assertTyping( TransientObjectException.class, ise.getCause() );
+						String message = ise.getCause().getMessage();
+						assertTrue( message.contains("org.hibernate.orm.test.jpa.cascade.multicircle") );
+					}
+					finally {
 						entityManager.getTransaction().rollback();
 						entityManager.close();
 					}

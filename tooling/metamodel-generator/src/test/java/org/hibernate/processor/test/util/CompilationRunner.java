@@ -26,6 +26,7 @@ import org.junit.runners.model.Statement;
 public class CompilationRunner extends BlockJUnit4ClassRunner {
 	private final List<Class<?>> testEntities;
 	private final List<Class<?>> preCompileEntities;
+	private final List<String> sources;
 	private final List<String> mappingFiles;
 	private final Map<String, String> processorOptions;
 	private final String packageName;
@@ -36,6 +37,7 @@ public class CompilationRunner extends BlockJUnit4ClassRunner {
 		super( clazz );
 		this.testEntities = new ArrayList<>();
 		this.preCompileEntities = new ArrayList<>();
+		this.sources = new ArrayList<>();
 		this.mappingFiles = new ArrayList<>();
 		this.processorOptions = new HashMap<>();
 		Package pkg = clazz.getPackage();
@@ -64,6 +66,7 @@ public class CompilationRunner extends BlockJUnit4ClassRunner {
 				getTestClass().getJavaClass(),
 				testEntities,
 				preCompileEntities,
+				sources,
 				mappingFiles,
 				processorOptions,
 				ignoreCompilationErrors
@@ -74,6 +77,7 @@ public class CompilationRunner extends BlockJUnit4ClassRunner {
 		if ( withClasses != null ) {
 			Collections.addAll( testEntities, withClasses.value() );
 			Collections.addAll( preCompileEntities, withClasses.preCompile() );
+			Collections.addAll( sources, withClasses.sources() );
 		}
 	}
 
@@ -116,7 +120,7 @@ public class CompilationRunner extends BlockJUnit4ClassRunner {
 	}
 
 	private boolean annotationProcessorNeedsToRun() {
-		return !testEntities.isEmpty() || !mappingFiles.isEmpty();
+		return !testEntities.isEmpty() || !sources.isEmpty() || !mappingFiles.isEmpty();
 	}
 }
 

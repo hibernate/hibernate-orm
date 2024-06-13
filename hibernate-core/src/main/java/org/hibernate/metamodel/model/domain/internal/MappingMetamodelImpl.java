@@ -490,8 +490,18 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	}
 
 	@Override
+	public <X> ManagedDomainType<X> managedType(String typeName) {
+		return jpaMetamodel.managedType( typeName );
+	}
+
+	@Override
 	public <X> EntityDomainType<X> entity(String entityName) {
 		return jpaMetamodel.entity( entityName );
+	}
+
+	@Override
+	public <X> EmbeddableDomainType<X> embeddable(String embeddableName) {
+		return jpaMetamodel.embeddable( embeddableName );
 	}
 
 	@Override
@@ -520,8 +530,18 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	}
 
 	@Override
-	public Set<String> getAllowedEnumLiteralTexts(String enumValue) {
-		return jpaMetamodel.getAllowedEnumLiteralTexts(enumValue);
+	public Set<String> getEnumTypesForValue(String enumValue) {
+		return jpaMetamodel.getEnumTypesForValue(enumValue);
+	}
+
+	@Override
+	public JavaType<?> getJavaConstantType(String className, String fieldName) {
+		return jpaMetamodel.getJavaConstantType( className, fieldName );
+	}
+
+	@Override
+	public <T> T getJavaConstant(String className, String fieldName) {
+		return jpaMetamodel.getJavaConstant( className, fieldName );
 	}
 
 	@Override
@@ -530,8 +550,8 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	}
 
 	@Override
-	public <E extends Enum<E>> E enumValue(EnumJavaType<E> enumType, String terminal) {
-		return jpaMetamodel.enumValue(enumType, terminal);
+	public <E extends Enum<E>> E enumValue(EnumJavaType<E> enumType, String enumValueName) {
+		return jpaMetamodel.enumValue( enumType, enumValueName );
 	}
 
 	@Override

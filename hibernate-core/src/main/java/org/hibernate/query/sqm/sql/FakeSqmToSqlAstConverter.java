@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.sql;
 
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
@@ -66,6 +67,11 @@ public class FakeSqmToSqlAstConverter extends BaseSemanticQueryWalker implements
 	@Override
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
 		return new LoadQueryInfluencers( getCreationContext().getSessionFactory() );
+	}
+
+	@Override
+	public boolean applyOnlyLoadByKeyFilters() {
+		return false;
 	}
 
 	@Override

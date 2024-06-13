@@ -325,6 +325,8 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 		return false;
 	}
 
+	boolean isUnownedAssociationTransientCheck();
+
 	@Incubating
 	int getPreferredSqlTypeCodeForBoolean();
 

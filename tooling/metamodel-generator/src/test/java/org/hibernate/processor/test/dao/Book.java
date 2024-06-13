@@ -11,4 +11,7 @@ public class Book {
     @NaturalId String author;
     String text;
     int pages;
+    Type type;
+
+    enum Type { Book, Magazine, Journal }
 }

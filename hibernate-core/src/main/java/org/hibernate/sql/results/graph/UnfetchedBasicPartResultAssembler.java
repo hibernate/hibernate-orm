@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.results.graph;
 
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -19,7 +18,7 @@ public class UnfetchedBasicPartResultAssembler<J>  implements DomainResultAssemb
 	}
 
 	@Override
-	public J assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
+	public J assemble(RowProcessingState rowProcessingState) {
 		return null;
 	}
 
@@ -27,4 +26,5 @@ public class UnfetchedBasicPartResultAssembler<J>  implements DomainResultAssemb
 	public JavaType<J> getAssembledJavaType() {
 		return javaType;
 	}
+
 }

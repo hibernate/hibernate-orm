@@ -12,7 +12,7 @@ import org.hibernate.dialect.DatabaseVersion;
  * An SQL dialect for DB2 9.7.
  *
  * @author Gail Badner
- * @deprecated use {@code DB2Dialect(970)}
+ * @deprecated use {@code DB2LegacyDialect(970)}
  */
 @Deprecated
 public class DB297Dialect extends DB2LegacyDialect {

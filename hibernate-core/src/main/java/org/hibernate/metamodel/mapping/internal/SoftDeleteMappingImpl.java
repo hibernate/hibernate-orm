@@ -163,7 +163,14 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping {
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, creationState );
-		return new BasicResult<>( sqlSelection.getValuesArrayPosition(), resultVariable, getJdbcMapping() );
+		return new BasicResult<>(
+				sqlSelection.getValuesArrayPosition(),
+				resultVariable,
+				getJdbcMapping(),
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
+		);
 	}
 
 	private SqlSelection resolveSqlSelection(

@@ -12,7 +12,7 @@ import org.junit.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
 import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
-import static org.hibernate.processor.test.util.TestUtil.assertSuperClassRelationShipInMetamodel;
+import static org.hibernate.processor.test.util.TestUtil.assertSuperclassRelationshipInMetamodel;
 
 /**
  * @author Emmanuel Bernard
@@ -32,15 +32,15 @@ public class InheritanceTest extends CompilationTest {
 	public void testInheritance() throws Exception {
 
 		// entity inheritance
-		assertSuperClassRelationShipInMetamodel( Customer.class, User.class );
+		assertSuperclassRelationshipInMetamodel( Customer.class, User.class );
 
 
 		// mapped super class
-		assertSuperClassRelationShipInMetamodel( House.class, Building.class );
-		assertSuperClassRelationShipInMetamodel( Building.class, Area.class );
+		assertSuperclassRelationshipInMetamodel( House.class, Building.class );
+		assertSuperclassRelationshipInMetamodel( Building.class, Area.class );
 
 		// METAGEN-29
-		assertSuperClassRelationShipInMetamodel( Person.class, AbstractEntity.class );
+		assertSuperclassRelationshipInMetamodel( Person.class, AbstractEntity.class );
 		assertPresenceOfFieldInMetamodelFor( AbstractEntity.class, "id", "Property 'id' should exist" );
 		assertPresenceOfFieldInMetamodelFor( AbstractEntity.class, "foo", "Property should exist - METAGEN-29" );
 		assertAttributeTypeInMetaModelFor(

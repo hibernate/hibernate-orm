@@ -9,6 +9,7 @@ package org.hibernate.orm.test.query.criteria;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.hibernate.annotations.Imported;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
@@ -20,6 +21,7 @@ import org.hibernate.testing.orm.domain.contacts.Address;
 import org.hibernate.testing.orm.domain.contacts.Contact;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -49,7 +51,11 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @DomainModel(
 		standardModels = StandardDomainModel.CONTACTS,
-		annotatedClasses =  {CountQueryTests.LogSupport.class, CountQueryTests.Contract.class}
+		annotatedClasses = {
+				CountQueryTests.LogSupport.class,
+				CountQueryTests.Contract.class,
+				CountQueryTests.SimpleDto.class,
+		}
 )
 @SessionFactory
 public class CountQueryTests {
@@ -191,6 +197,49 @@ public class CountQueryTests {
 		);
 	}
 
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18121" )
+	public void testDistinctDynamicInstantiation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+			final JpaCriteriaQuery<Tuple> cq = cb.createQuery( Tuple.class );
+			final JpaRoot<Contact> root = cq.from( Contact.class );
+			cq.multiselect(
+					root.get( "name" ).get( "last" ),
+					cb.construct(
+							SimpleDto.class,
+							root.get( "name" ).get( "last" )
+					)
+			).distinct( true );
+			final Long count = session.createQuery( cq.createCountQuery() ).getSingleResult();
+			final List<Tuple> resultList = session.createQuery( cq ).getResultList();
+			assertEquals( 1L, count );
+			assertEquals( resultList.size(), count.intValue() );
+		} );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18121" )
+	public void testUnionQuery(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+
+			final JpaCriteriaQuery<String> cq1 = cb.createQuery( String.class );
+			final JpaRoot<Contact> root1 = cq1.from( Contact.class );
+			cq1.multiselect( root1.get( "name" ).get( "first" ) ).where( cb.equal( root1.get( "id" ), 1 ) );
+
+			final JpaCriteriaQuery<String> cq2 = cb.createQuery( String.class );
+			final JpaRoot<Contact> root2 = cq2.from( Contact.class );
+			cq2.select( root2.get( "name" ).get( "first" ) ).where( cb.equal( root2.get( "id" ), 2 ) );
+
+			final JpaCriteriaQuery<String> union = cb.union( cq1, cq2 );
+			final Long count = session.createQuery( union.createCountQuery() ).getSingleResult();
+			final List<String> resultList = session.createQuery( union ).getResultList();
+			assertEquals( 2L, count );
+			assertEquals( resultList.size(), count.intValue() );
+		} );
+	}
+
 	@BeforeEach
 	public void prepareTestData(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
@@ -299,4 +348,12 @@ public class CountQueryTests {
 		private String customerName;
 	}
 
+	@Imported
+	public static class SimpleDto {
+		private String name;
+
+		public SimpleDto(String name) {
+			this.name = name;
+		}
+	}
 }

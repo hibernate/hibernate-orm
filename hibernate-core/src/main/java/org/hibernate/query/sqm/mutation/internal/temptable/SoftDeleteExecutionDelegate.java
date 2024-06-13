@@ -117,6 +117,7 @@ public class SoftDeleteExecutionDelegate extends AbstractDeleteExecutionDelegate
 				deletingTableGroup,
 				true,
 				executionContext.getSession().getLoadQueryInfluencers().getEnabledFilters(),
+				false,
 				null,
 				getConverter()
 		);

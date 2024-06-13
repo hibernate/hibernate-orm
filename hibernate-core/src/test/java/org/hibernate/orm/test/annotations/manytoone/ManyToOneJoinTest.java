@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * @author Emmanuel Bernard
@@ -35,20 +36,7 @@ public class ManyToOneJoinTest {
 	@AfterEach
 	public void teardDown(SessionFactoryScope scope) {
 		scope.inTransaction(
-				session -> {
-					List<ForestType> forestTypes = session.createQuery( "from ForestType" ).list();
-					forestTypes.forEach(
-							forestType -> {
-								forestType.getTrees().forEach(
-										tree ->{
-											session.delete( tree.getForestType() );
-											session.delete( tree );
-										}
-								);
-								session.delete( forestType );
-							}
-					);
-				}
+				session -> session.getSessionFactory().getSchemaManager().truncateMappedObjects()
 		);
 	}
 

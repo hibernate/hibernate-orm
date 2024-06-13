@@ -21,6 +21,7 @@ import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
@@ -64,6 +65,8 @@ import org.hibernate.persister.entity.EntityNameUse;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.spi.TreatedNavigablePath;
@@ -92,9 +95,9 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
@@ -248,7 +251,7 @@ public class ToOneAttributeMapping
 				stateArrayPosition,
 				fetchableIndex,
 				attributeMetadata,
-				adjustFetchTiming( mappedFetchTiming, bootValue ),
+				adjustFetchTiming( mappedFetchTiming, bootValue, entityMappingType ),
 				mappedFetchStyle,
 				declaringType,
 				propertyAccess
@@ -638,7 +641,10 @@ public class ToOneAttributeMapping
 		return null;
 	}
 
-	private static FetchTiming adjustFetchTiming(FetchTiming mappedFetchTiming, ToOne bootValue) {
+	private static FetchTiming adjustFetchTiming(
+			FetchTiming mappedFetchTiming,
+			ToOne bootValue,
+			EntityMappingType entityMappingType) {
 		if ( bootValue instanceof ManyToOne ) {
 			if ( ( (ManyToOne) bootValue ).getNotFoundAction() != null ) {
 				return FetchTiming.IMMEDIATE;
@@ -764,7 +770,7 @@ public class ToOneAttributeMapping
 			targetKeyPropertyNames.add( prefix );
 		}
 		if ( type.isComponentType() ) {
-			final ComponentType componentType = (ComponentType) type;
+			final CompositeType componentType = (CompositeType) type;
 			final String[] propertyNames = componentType.getPropertyNames();
 			final Type[] componentTypeSubtypes = componentType.getSubtypes();
 			for ( int i = 0, propertyNamesLength = propertyNames.length; i < propertyNamesLength; i++ ) {
@@ -1314,6 +1320,7 @@ public class ToOneAttributeMapping
 						this,
 						tableGroup,
 						keyDomainResult,
+						false,
 						fetchablePath,
 						creationState
 				);
@@ -1355,6 +1362,7 @@ public class ToOneAttributeMapping
 						fetchablePath,
 						domainResult,
 						isSelectByUniqueKey( sideNature ),
+						false,
 						creationState
 				);
 			}
@@ -1403,6 +1411,7 @@ public class ToOneAttributeMapping
 			NavigablePath navigablePath,
 			DomainResult<?> keyResult,
 			boolean selectByUniqueKey,
+			boolean isAffectedByFilter,
 			@SuppressWarnings("unused") DomainResultCreationState creationState) {
 		return new EntityFetchSelectImpl(
 				fetchParent,
@@ -1410,6 +1419,7 @@ public class ToOneAttributeMapping
 				navigablePath,
 				keyResult,
 				selectByUniqueKey,
+				isAffectedByFilter,
 				creationState
 		);
 	}
@@ -1422,6 +1432,7 @@ public class ToOneAttributeMapping
 			ToOneAttributeMapping toOneMapping,
 			TableGroup tableGroup,
 			DomainResult<?> keyResult,
+			boolean isAffectedByFilter,
 			NavigablePath navigablePath,
 			DomainResultCreationState creationState) {
 		return new EntityFetchJoinedImpl(
@@ -1429,6 +1440,7 @@ public class ToOneAttributeMapping
 				toOneMapping,
 				tableGroup,
 				keyResult,
+				isAffectedByFilter,
 				navigablePath,
 				creationState
 		);
@@ -1560,11 +1572,15 @@ public class ToOneAttributeMapping
 
 			return withRegisteredAssociationKeys(
 					() -> {
+						// When a filter exists that affects a singular association, we have to enable NotFound handling
+						// to force an exception if the filter would result in the entity not being found.
+						// If we silently just read null, this could lead to data loss on flush
+						final boolean affectedByEnabledFilters = isAffectedByEnabledFilters( creationState );
 						DomainResult<?> keyResult = null;
 						if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
 							// If the key side is non-nullable we also need to add the keyResult
 							// to be able to manually check invalid foreign key references
-							if ( hasNotFoundAction() || !isInternalLoadNullable ) {
+							if ( hasNotFoundAction() || !isInternalLoadNullable || affectedByEnabledFilters ) {
 								keyResult = foreignKeyDescriptor.createKeyDomainResult(
 										fetchablePath,
 										tableGroup,
@@ -1574,7 +1590,8 @@ public class ToOneAttributeMapping
 							}
 						}
 						else if ( hasNotFoundAction()
-								|| getAssociatedEntityMappingType().getSoftDeleteMapping() != null ) {
+								|| getAssociatedEntityMappingType().getSoftDeleteMapping() != null
+								|| affectedByEnabledFilters ) {
 							// For the target side only add keyResult when a not-found action is present
 							keyResult = foreignKeyDescriptor.createTargetDomainResult(
 									fetchablePath,
@@ -1589,6 +1606,7 @@ public class ToOneAttributeMapping
 								this,
 								tableGroup,
 								keyResult,
+								affectedByEnabledFilters,
 								fetchablePath,
 								creationState
 						);
@@ -1663,6 +1681,7 @@ public class ToOneAttributeMapping
 					fetchablePath,
 					keyResult,
 					selectByUniqueKey,
+					isAffectedByEnabledFilters( creationState ),
 					creationState
 			);
 		}
@@ -1679,6 +1698,12 @@ public class ToOneAttributeMapping
 				selectByUniqueKey,
 				creationState
 		);
+	}
+
+	private boolean isAffectedByEnabledFilters(DomainResultCreationState creationState) {
+		final LoadQueryInfluencers loadQueryInfluencers = creationState.getSqlAstCreationState()
+				.getLoadQueryInfluencers();
+		return entityMappingType.isAffectedByEnabledFilters( loadQueryInfluencers, true );
 	}
 
 	private boolean needsImmediateFetch(FetchTiming fetchTiming) {
@@ -1853,7 +1878,7 @@ public class ToOneAttributeMapping
 
 		@Override
 		public DomainResultAssembler createResultAssembler(
-				FetchParentAccess parentAccess,
+				InitializerParent parent,
 				AssemblerCreationState creationState) {
 			return resultAssembler;
 		}
@@ -2072,7 +2097,19 @@ public class ToOneAttributeMapping
 							creationState
 					) );
 
-					// Note specifically we DO NOT apply `@Filter` restrictions
+					// Note specifically we only apply `@Filter` restrictions that are applyToLoadByKey = true
+					// to make the behavior consistent with lazy loading of an association
+					if ( getAssociatedEntityMappingType().getEntityPersister().hasFilterForLoadByKey() ) {
+						getAssociatedEntityMappingType().applyBaseRestrictions(
+								join::applyPredicate,
+								tableGroup,
+								true,
+								creationState.getLoadQueryInfluencers().getEnabledFilters(),
+								creationState.applyOnlyLoadByKeyFilters(),
+								null,
+								creationState
+						);
+					}
 					getAssociatedEntityMappingType().applyWhereRestrictions(
 							join::applyPredicate,
 							tableGroup,
@@ -2310,7 +2347,7 @@ public class ToOneAttributeMapping
 				primaryTableReference,
 				true,
 				sqlAliasBase,
-				(tableExpression) -> getEntityMappingType().containsTableReference( tableExpression ),
+				getEntityMappingType().getRootEntityDescriptor()::containsTableReference,
 				(tableExpression, tg) -> getEntityMappingType().createTableReferenceJoin(
 						tableExpression,
 						sqlAliasBase,
@@ -2397,6 +2434,10 @@ public class ToOneAttributeMapping
 		}
 
 		if ( referencedPropertyName != null ) {
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( domainValue );
+			if ( lazyInitializer != null ) {
+				domainValue = lazyInitializer.getImplementation();
+			}
 			assert getAssociatedEntityMappingType()
 					.getRepresentationStrategy()
 					.getInstantiator()

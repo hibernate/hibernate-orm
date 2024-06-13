@@ -8,7 +8,6 @@ package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -69,6 +68,9 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 
+import org.hibernate.resource.beans.container.spi.BeanContainer;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.usertype.CompositeUserType;
 import org.jboss.logging.Logger;
 
@@ -100,6 +102,7 @@ import static org.hibernate.boot.model.internal.ToOneBinder.bindOneToOne;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.combine;
+import static org.hibernate.resource.beans.internal.Helper.allowExtensionsInCdi;
 
 /**
  * A stateful binder responsible for creating {@link Property} objects.
@@ -983,8 +986,6 @@ public class PropertyBinder {
 			rootClass.setDeclaredVersion( property );
 		}
 
-		final SimpleValue simpleValue = (SimpleValue) property.getValue();
-		simpleValue.setNullValue( "undefined" );
 		rootClass.setOptimisticLockStyle( OptimisticLockStyle.VERSION );
 		if ( LOG.isTraceEnabled() ) {
 			final SimpleValue versionValue = (SimpleValue) rootClass.getVersion().getValue();
@@ -1432,7 +1433,13 @@ public class PropertyBinder {
 					+ "' has too many generator annotations " + combine( idGeneratorAnnotations, generatorAnnotations ) );
 		}
 		if ( !idGeneratorAnnotations.isEmpty() ) {
-			idValue.setCustomIdGeneratorCreator( identifierGeneratorCreator( idProperty, idGeneratorAnnotations.get(0) ) );
+			final Annotation annotation = idGeneratorAnnotations.get(0);
+			final ServiceRegistry serviceRegistry = context.getBootstrapContext().getServiceRegistry();
+			final BeanContainer beanContainer =
+					allowExtensionsInCdi( serviceRegistry )
+							? serviceRegistry.requireService( ManagedBeanRegistry.class ).getBeanContainer()
+							: null;
+			idValue.setCustomIdGeneratorCreator( identifierGeneratorCreator( idProperty, annotation, beanContainer ) );
 		}
 		else if ( !generatorAnnotations.isEmpty() ) {
 //			idValue.setCustomGeneratorCreator( generatorCreator( idProperty, generatorAnnotation ) );
@@ -1459,13 +1466,7 @@ public class PropertyBinder {
 	// at most one annotation for a generator:
 	private static void removeIdGenerators(List<Annotation> generatorAnnotations, List<Annotation> idGeneratorAnnotations) {
 		for ( Annotation id : idGeneratorAnnotations ) {
-			Iterator<Annotation> iterator = generatorAnnotations.iterator();
-			while ( iterator.hasNext() ) {
-				Annotation gen = iterator.next();
-				if ( gen.annotationType().equals( id.annotationType() ) ) {
-					iterator.remove();
-				}
-			}
+			generatorAnnotations.removeIf( gen -> gen.annotationType().equals( id.annotationType() ) );
 		}
 	}
 }

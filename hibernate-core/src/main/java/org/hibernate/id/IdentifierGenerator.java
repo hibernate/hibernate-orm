@@ -114,18 +114,6 @@ public interface IdentifierGenerator extends BeforeExecutionGenerator, Exportabl
 	default void registerExportables(Database database) {}
 
 	/**
-	 * Initializes this instance, in particular pre-generates
-	 * SQL as necessary.
-	 * <p>
-	 * This method is called after
-	 * {@link #registerExportables(Database)},
-	 * and before first use.
-	 *
-	 * @param context A context to help generate SQL strings
-	 */
-	default void initialize(SqlStringGenerationContext context) {}
-
-	/**
 	 * Generate a new identifier.
 	 *
 	 * @param session The session from which the request originates

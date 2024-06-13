@@ -23,6 +23,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 
@@ -271,6 +272,8 @@ public class BatchFetchQueue {
 
 		final LinkedHashSet<EntityKey> set =
 				batchLoadableEntityKeys.get( entityDescriptor.getEntityName() );
+		final EntityPersister entityPersister = entityDescriptor.getEntityPersister();
+		final Type identifierType = entityPersister.getIdentifierType();
 		if ( set != null ) {
 			for ( EntityKey key : set ) {
 				if ( checkForEnd && i == end ) {
@@ -278,12 +281,11 @@ public class BatchFetchQueue {
 					return ids;
 				}
 
-				if ( entityDescriptor.getEntityPersister().getIdentifierType()
-						.isEqual( loadingId, key.getIdentifier() ) ) {
+				if ( identifierType.isEqual( loadingId, key.getIdentifier() ) ) {
 					end = i;
 				}
 				else {
-					if ( !isCached( key, entityDescriptor.getEntityPersister() ) ) {
+					if ( !isCached( key, entityPersister ) ) {
 						ids[i++] = key.getIdentifier();
 					}
 				}

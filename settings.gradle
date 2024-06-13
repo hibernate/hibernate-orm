@@ -20,7 +20,7 @@ pluginManagement {
 plugins {
     id 'org.hibernate.orm.build.env-settings'
     id 'org.hibernate.orm.build.jdks-settings'
-    id 'com.gradle.develocity' version '3.17.2'
+    id 'com.gradle.develocity' version '3.17.4'
     id 'com.gradle.common-custom-user-data-gradle-plugin' version '2.0.1'
 }
 
@@ -30,13 +30,15 @@ dependencyResolutionManagement {
             url( rootProject.property( "mavenMirror" ) )
         }
         mavenCentral()
-        // Needed for the RC versions of Jakarta Persistence
-        maven {
-            url "https://jakarta.oss.sonatype.org/content/repositories/releases/"
-        }
-        // Needed for the SNAPSHOT versions of Jakarta Persistence
-        maven {
-            url "https://jakarta.oss.sonatype.org/content/repositories/snapshots/"
+        if (System.getProperty('JPA_PREVIEW') != null) {
+            // Needed for the RC versions of Jakarta Persistence
+            maven {
+                url "https://jakarta.oss.sonatype.org/content/repositories/releases/"
+            }
+            // Needed for the SNAPSHOT versions of Jakarta Persistence
+            maven {
+                url "https://jakarta.oss.sonatype.org/content/repositories/snapshots/"
+            }
         }
 
         //Allow loading additional dependencies from a local path;
@@ -69,7 +71,7 @@ dependencyResolutionManagement {
             def byteBuddyVersion = version "byteBuddy", "1.14.15"
             def classmateVersion = version "classmate", "1.5.1"
             def geolatteVersion = version "geolatte", "1.8.2"
-            def hcannVersion = version "hcann", "6.0.6.Final"
+            def hcannVersion = version "hcann", "7.0.1.Final"
             def jandexVersion = version "jandex", "3.1.2"
             def jacksonVersion = version "jackson", "2.17.0"
             def jbossLoggingVersion = version "jbossLogging", "3.5.0.Final"
@@ -80,7 +82,7 @@ dependencyResolutionManagement {
             def hikaricpVersion = version "hikaricp", "3.2.0"
             def proxoolVersion = version "proxool", "0.8.3"
             def viburVersion = version "vibur", "25.0"
-	    def ucpVersion = version "ucp", "23.3.0.23.09"
+	        def ucpVersion = version "ucp", "23.4.0.24.05"
 
             def jcacheVersion = version "jcache", "1.0.0"
             def ehcache3Version = version "ehcache3", "3.10.8"
@@ -231,11 +233,11 @@ dependencyResolutionManagement {
             def hanaVersion = version "hana", "2.19.11"
             def h2gisVersion = version "h2gis", overrideableVersion( "gradle.libs.versions.h2gis", "2.2.0" )
             def hsqldbVersion = version "hsqldb", overrideableVersion( "gradle.libs.versions.hsqldb", "2.7.2" )
-            def informixVersion = version "informix", "4.10.12"
+            def informixVersion = version "informix", "4.50.10.1"
             def mariadbVersion = version "mariadb", "3.3.1"
             def mssqlVersion = version "mssql", "12.4.2.jre11"
             def mysqlVersion = version "mysql", "8.2.0"
-            def oracleVersion = version "oracle", "23.3.0.23.09"
+            def oracleVersion = version "oracle", "23.4.0.24.05"
             def oracleLegacyVersion = version "oracleLegacy", "11.2.0.4"
             def pgsqlVersion = version "pgsql", "42.7.1"
             def sybaseVersion = version "sybase", "1.3.1"

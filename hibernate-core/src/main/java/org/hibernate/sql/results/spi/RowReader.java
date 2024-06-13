@@ -8,12 +8,11 @@ package org.hibernate.sql.results.spi;
 
 import java.util.List;
 
-import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.internal.InitializersList;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Coordinates the process of reading a single result values row
@@ -32,43 +31,29 @@ public interface RowReader<R> {
 	Class<R> getDomainResultResultJavaType();
 
 	/**
-	 * The row result Java type, before any transformations.
-	 *
-	 * @apiNote along with {@link #getResultJavaTypes()}, describes the "raw"
-	 * values as determined from the {@link org.hibernate.sql.results.graph.DomainResult}
-	 * references associated with the JdbcValues being processed
-	 */
-	Class<?> getResultJavaType();
-
-	/**
 	 * The individual JavaType for each DomainResult
 	 */
-	List<JavaType<?>> getResultJavaTypes();
+	List<@Nullable JavaType<?>> getResultJavaTypes();
+
+	int getInitializerCount();
 
 	/**
-	 * The initializers associated with this reader.
-	 *
-	 * @see org.hibernate.sql.results.graph.DomainResult
-	 * @deprecated use {@link #getInitializersList()}
+	 * Called before reading the first row.
 	 */
-	@Deprecated
-	List<Initializer> getInitializers();
+	void startLoading(RowProcessingState processingState);
 
 	/**
 	 * The actual coordination of reading a row
 	 */
-	R readRow(RowProcessingState processingState, JdbcValuesSourceProcessingOptions options);
+	R readRow(RowProcessingState processingState);
 
 	/**
 	 * Called at the end of processing all rows
 	 */
-	void finishUp(JdbcValuesSourceProcessingState context);
+	void finishUp(RowProcessingState processingState);
 
-	/**
-	 * The initializers associated with this reader.
-	 *
-	 * @see org.hibernate.sql.results.graph.DomainResult
-	 */
-	InitializersList getInitializersList();
+	@Nullable EntityKey resolveSingleResultEntityKey(RowProcessingState rowProcessingState);
+
+	boolean hasCollectionInitializers();
 
 }

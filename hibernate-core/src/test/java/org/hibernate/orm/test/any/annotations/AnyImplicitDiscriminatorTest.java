@@ -142,7 +142,7 @@ public class AnyImplicitDiscriminatorTest {
 		scope.inTransaction(
 				session -> {
 					List<ImplicitPropertySet> propertySets = session.createQuery(
-									"select p from ImplicitPropertySet p where type(p.generalProperties) = IntegerProperty ",
+									"select p from ImplicitPropertySet p where type(element(p.generalProperties)) = IntegerProperty ",
 							ImplicitPropertySet.class ).list();
 					assertEquals( 1, propertySets.size() );
 
@@ -152,7 +152,7 @@ public class AnyImplicitDiscriminatorTest {
 					assertEquals( "age", propertySet.getGeneralProperties().get( 0 ).getName() );
 
 					propertySets = session.createQuery(
-									"select p from ImplicitPropertySet p where type(p.generalProperties) = StringProperty ",
+									"select p from ImplicitPropertySet p where type(element(p.generalProperties)) = StringProperty ",
 							ImplicitPropertySet.class ).list();
 					assertEquals( 1, propertySets.size() );
 
@@ -170,7 +170,7 @@ public class AnyImplicitDiscriminatorTest {
 		scope.inTransaction(
 				session -> {
 					List<ImplicitPropertySet> propertySets = session.createQuery(
-									"select p from ImplicitPropertySet p where type(p.generalProperties) = :prop ",
+									"select p from ImplicitPropertySet p where type(element(p.generalProperties)) = :prop ",
 									ImplicitPropertySet.class )
 							.setParameter( "prop", IntegerProperty.class)
 							.list();
@@ -182,7 +182,7 @@ public class AnyImplicitDiscriminatorTest {
 					assertEquals( "age", propertySet.getGeneralProperties().get( 0 ).getName() );
 
 					propertySets = session.createQuery(
-									"select p from ImplicitPropertySet p where type(p.generalProperties) = :prop ",
+									"select p from ImplicitPropertySet p where type(element(p.generalProperties)) = :prop ",
 									ImplicitPropertySet.class )
 							.setParameter( "prop", StringProperty.class)
 							.list();

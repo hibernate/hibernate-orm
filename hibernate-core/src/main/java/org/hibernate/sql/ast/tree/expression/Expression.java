@@ -34,21 +34,6 @@ public interface Expression extends SqlAstNode, SqlSelectionProducer {
 			int jdbcPosition,
 			int valuesArrayPosition,
 			JavaType javaType,
-			TypeConfiguration typeConfiguration) {
-		return new SqlSelectionImpl(
-				jdbcPosition,
-				valuesArrayPosition,
-				javaType,
-				this,
-				false
-		);
-	}
-
-	@Override
-	default SqlSelection createSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			JavaType javaType,
 			boolean virtual,
 			TypeConfiguration typeConfiguration) {
 		return new SqlSelectionImpl(
@@ -58,15 +43,6 @@ public interface Expression extends SqlAstNode, SqlSelectionProducer {
 				this,
 				virtual
 		);
-	}
-
-	@Deprecated(forRemoval = true)
-	default SqlSelection createDomainResultSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			JavaType javaType,
-			TypeConfiguration typeConfiguration) {
-		return createDomainResultSqlSelection( jdbcPosition, valuesArrayPosition, javaType, false, typeConfiguration );
 	}
 
 	default SqlSelection createDomainResultSqlSelection(

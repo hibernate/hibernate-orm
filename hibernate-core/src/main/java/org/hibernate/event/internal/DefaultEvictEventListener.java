@@ -127,7 +127,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 		// This is now handled by removeEntity()
 		//session.getPersistenceContext().removeDatabaseSnapshot(key);
 		
-		persistenceContext.removeEntity( key );
+		persistenceContext.removeEntityHolder( key );
 		persistenceContext.removeEntry( object );
 
 		Cascade.cascade( CascadingActions.EVICT, CascadePoint.AFTER_EVICT, session, persister, object );

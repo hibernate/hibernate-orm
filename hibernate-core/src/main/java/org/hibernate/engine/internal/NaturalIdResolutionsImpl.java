@@ -433,6 +433,11 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 
 	@Override
 	public void removeSharedResolution(Object id, Object naturalId, EntityMappingType entityDescriptor) {
+		removeSharedResolution( id, naturalId, entityDescriptor, false );
+	}
+
+	@Override
+	public void removeSharedResolution(Object id, Object naturalId, EntityMappingType entityDescriptor, boolean delayToAfterTransactionCompletion) {
 		final NaturalIdMapping naturalIdMapping = entityDescriptor.getNaturalIdMapping();
 		if ( naturalIdMapping == null ) {
 			// nothing to do
@@ -453,7 +458,18 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		final EntityPersister persister = locatePersisterForKey( entityDescriptor.getEntityPersister() );
 
 		final Object naturalIdCacheKey = cacheAccess.generateCacheKey( naturalId, persister, session() );
-		cacheAccess.evict( naturalIdCacheKey );
+		if ( delayToAfterTransactionCompletion ) {
+			session().asEventSource().getActionQueue().registerProcess(
+				(success, session) -> {
+					if ( success ) {
+						cacheAccess.evict( naturalIdCacheKey );
+					}
+				}
+			);
+		}
+		else {
+			cacheAccess.evict( naturalIdCacheKey );
+		}
 
 //			if ( sessionCachedNaturalIdValues != null
 //					&& !Arrays.equals( sessionCachedNaturalIdValues, deletedNaturalIdValues ) ) {
@@ -479,7 +495,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			cacheResolution( pk, naturalIdValuesFromCurrentObjectState, persister );
 			stashInvalidNaturalIdReference( persister, cachedNaturalIdValues );
 
-			removeSharedResolution( pk, cachedNaturalIdValues, persister );
+			removeSharedResolution( pk, cachedNaturalIdValues, persister, false );
 		}
 	}
 

@@ -10,36 +10,36 @@ import java.util.BitSet;
 
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.FetchableContainer;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.InitializerProducer;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 
 /**
  * @author Andrea Boriero
  * @author Steve Ebersole
  */
-public class EntityFetchJoinedImpl extends AbstractFetchParent implements EntityFetch,
-		InitializerProducer<EntityFetchJoinedImpl> {
+public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, InitializerProducer<EntityFetchJoinedImpl> {
 	private final FetchParent fetchParent;
 	private final EntityValuedFetchable fetchContainer;
 	private final EntityResultImpl entityResult;
 	private final DomainResult<?> keyResult;
 	private final NotFoundAction notFoundAction;
+	private final boolean isAffectedByFilter;
 
 	private final String sourceAlias;
 
@@ -48,15 +48,15 @@ public class EntityFetchJoinedImpl extends AbstractFetchParent implements Entity
 			ToOneAttributeMapping toOneMapping,
 			TableGroup tableGroup,
 			DomainResult<?> keyResult,
+			boolean isAffectedByFilter,
 			NavigablePath navigablePath,
 			DomainResultCreationState creationState) {
-		super( navigablePath );
 		this.fetchContainer = toOneMapping;
 		this.fetchParent = fetchParent;
 		this.keyResult = keyResult;
 		this.notFoundAction = toOneMapping.getNotFoundAction();
 		this.sourceAlias = tableGroup.getSourceAlias();
-
+		this.isAffectedByFilter = isAffectedByFilter;
 		this.entityResult = new EntityResultImpl(
 				navigablePath,
 				toOneMapping,
@@ -73,13 +73,12 @@ public class EntityFetchJoinedImpl extends AbstractFetchParent implements Entity
 			TableGroup tableGroup,
 			NavigablePath navigablePath,
 			DomainResultCreationState creationState) {
-		super( navigablePath );
 		this.fetchContainer = collectionPart;
 		this.fetchParent = fetchParent;
 		this.notFoundAction = collectionPart.getNotFoundAction();
 		this.keyResult = null;
 		this.sourceAlias = tableGroup.getSourceAlias();
-
+		this.isAffectedByFilter = false;
 		this.entityResult = new EntityResultImpl(
 				navigablePath,
 				collectionPart,
@@ -94,22 +93,17 @@ public class EntityFetchJoinedImpl extends AbstractFetchParent implements Entity
 	 * For Hibernate Reactive
 	 */
 	protected EntityFetchJoinedImpl(EntityFetchJoinedImpl original) {
-		super( original.getNavigablePath() );
 		this.fetchContainer = original.fetchContainer;
 		this.fetchParent = original.fetchParent;
 		this.entityResult = original.entityResult;
 		this.keyResult = original.keyResult;
 		this.notFoundAction = original.notFoundAction;
+		this.isAffectedByFilter = original.isAffectedByFilter;
 		this.sourceAlias = original.sourceAlias;
 	}
 
 	@Override
 	public EntityValuedFetchable getEntityValuedModelPart() {
-		return fetchContainer;
-	}
-
-	@Override
-	public FetchableContainer getFetchContainer() {
 		return fetchContainer;
 	}
 
@@ -124,11 +118,6 @@ public class EntityFetchJoinedImpl extends AbstractFetchParent implements Entity
 	}
 
 	@Override
-	public EntityMappingType getReferencedMappingContainer() {
-		return getEntityValuedModelPart().getEntityMappingType();
-	}
-
-	@Override
 	public EntityValuedFetchable getFetchedMapping() {
 		return getEntityValuedModelPart();
 	}
@@ -140,36 +129,36 @@ public class EntityFetchJoinedImpl extends AbstractFetchParent implements Entity
 
 	@Override
 	public DomainResultAssembler<?> createAssembler(
-			FetchParentAccess parentAccess,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
-		return buildEntityAssembler( creationState.resolveInitializer( this, parentAccess, this ).asEntityInitializer() );
+		return buildEntityAssembler( creationState.resolveInitializer( this, parent, this ).asEntityInitializer() );
 	}
 
-	protected EntityAssembler buildEntityAssembler(EntityInitializer entityInitializer) {
+	protected EntityAssembler buildEntityAssembler(EntityInitializer<?> entityInitializer) {
 		return new EntityAssembler( getFetchedMapping().getJavaType(), entityInitializer );
 	}
 
 	@Override
-	public Initializer createInitializer(
+	public Initializer<?> createInitializer(
 			EntityFetchJoinedImpl resultGraphNode,
-			FetchParentAccess parentAccess,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
-		return resultGraphNode.createInitializer( parentAccess, creationState );
+		return resultGraphNode.createInitializer( parent, creationState );
 	}
 
 	@Override
-	public EntityInitializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
-		return new EntityJoinedFetchInitializer(
-				entityResult,
-				getReferencedModePart(),
-				getNavigablePath(),
-				creationState.determineEffectiveLockMode( sourceAlias ),
-				notFoundAction,
-				keyResult,
-				entityResult.getRowIdResult(),
+	public EntityInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
+		return new EntityInitializerImpl(
+				this,
+				sourceAlias,
 				entityResult.getIdentifierFetch(),
 				entityResult.getDiscriminatorFetch(),
-				parentAccess,
+				keyResult,
+				entityResult.getRowIdResult(),
+				notFoundAction,
+				isAffectedByFilter,
+				parent,
+				false,
 				creationState
 		);
 	}
@@ -184,13 +173,33 @@ public class EntityFetchJoinedImpl extends AbstractFetchParent implements Entity
 		return true;
 	}
 
+	public EntityResultImpl getEntityResult() {
+		return entityResult;
+	}
+
+	@Override
+	public NavigablePath getNavigablePath() {
+		return entityResult.getNavigablePath();
+	}
+
+	@Override
+	public ImmutableFetchList getFetches() {
+		return entityResult.getFetches();
+	}
+
+	@Override
+	public Fetch findFetch(Fetchable fetchable) {
+		return entityResult.findFetch( fetchable );
+	}
+
+	@Override
+	public boolean hasJoinFetches() {
+		return entityResult.hasJoinFetches();
+	}
+
 	@Override
 	public boolean containsCollectionFetches() {
 		return entityResult.containsCollectionFetches();
-	}
-
-	public EntityResultImpl getEntityResult() {
-		return entityResult;
 	}
 
 	@Override
@@ -207,6 +216,10 @@ public class EntityFetchJoinedImpl extends AbstractFetchParent implements Entity
 
 	protected NotFoundAction getNotFoundAction() {
 		return notFoundAction;
+	}
+
+	protected boolean isAffectedByFilter() {
+		return isAffectedByFilter;
 	}
 
 	protected String getSourceAlias() {

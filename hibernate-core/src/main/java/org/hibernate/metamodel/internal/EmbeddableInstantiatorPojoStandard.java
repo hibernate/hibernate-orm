@@ -17,7 +17,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.ValueAccess;
-import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Support for instantiating embeddables as POJO representation
@@ -28,11 +27,11 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 	private final Supplier<EmbeddableMappingType> embeddableMappingAccess;
 	private final Constructor<?> constructor;
 
-	public EmbeddableInstantiatorPojoStandard(JavaType<?> javaType, Supplier<EmbeddableMappingType> embeddableMappingAccess) {
-		super( javaType.getJavaTypeClass() );
+	public EmbeddableInstantiatorPojoStandard(Class<?> embeddableClass, Supplier<EmbeddableMappingType> embeddableMappingAccess) {
+		super( embeddableClass );
 
 		this.embeddableMappingAccess = embeddableMappingAccess;
-		this.constructor = resolveConstructor( javaType.getJavaTypeClass() );
+		this.constructor = resolveConstructor( embeddableClass );
 	}
 
 	protected static Constructor<?> resolveConstructor(Class<?> mappedPojoClass) {

@@ -8,19 +8,23 @@ package org.hibernate.orm.test.tenantid;
 
 import org.hibernate.HibernateError;
 import org.hibernate.PropertyValueException;
+import org.hibernate.Session;
 import org.hibernate.StatelessSession;
+import org.hibernate.Transaction;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryProducer;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.binder.internal.TenantIdBinder;
+import org.hibernate.query.Query;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
@@ -36,6 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION;
 import static org.hibernate.internal.util.collections.CollectionHelper.toMap;
 import static org.hibernate.jpa.HibernateHints.HINT_TENANT_ID;
+import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -57,11 +62,15 @@ public class TenantIdTest implements SessionFactoryProducer {
 
     @AfterEach
     public void cleanup(SessionFactoryScope scope) {
-        scope.inTransaction( session -> {
-            session.createQuery("delete from Account").executeUpdate();
-            session.createQuery("delete from Client").executeUpdate();
-            session.createQuery("delete from Record").executeUpdate();
-        });
+        // Use the root tenant to clean up all partitions
+        currentTenant = "root";
+        scope.inTransaction(
+                session -> {
+                    session.createMutationQuery( "delete from Account" ).executeUpdate();
+                    session.createMutationQuery( "delete from Client" ).executeUpdate();
+                    session.createMutationQuery( "delete from Record" ).executeUpdate();
+                }
+        );
     }
 
     @Override
@@ -96,17 +105,18 @@ public class TenantIdTest implements SessionFactoryProducer {
         } );
         scope.inTransaction( session -> {
             assertNotNull( session.find(Account.class, acc.id) );
-            assertEquals( 1, session.createQuery("from Account").getResultList().size() );
+            assertEquals( 1, session.createQuery("from Account", Account.class).getResultList().size() );
         } );
         assertEquals("mine", acc.tenantId);
 
         currentTenant = "yours";
         scope.inTransaction( session -> {
-            assertNotNull( session.find(Account.class, acc.id) );
-            assertEquals( 0, session.createQuery("from Account").getResultList().size() );
+            //HHH-16830 Sessions applies tenantId filter on find()
+            assertNull( session.find(Account.class, acc.id) );
+            assertEquals( 0, session.createQuery("from Account", Account.class).getResultList().size() );
             session.disableFilter(TenantIdBinder.FILTER_NAME);
             assertNotNull( session.find(Account.class, acc.id) );
-            assertEquals( 1, session.createQuery("from Account").getResultList().size() );
+            assertEquals( 1, session.createQuery("from Account", Account.class).getResultList().size() );
         } );
     }
 
@@ -114,7 +124,7 @@ public class TenantIdTest implements SessionFactoryProducer {
     public void testRoot(SessionFactoryScope scope) {
         currentTenant = "root";
         scope.inTransaction( session -> {
-            assertEquals( 0, session.createQuery( "from Account" ).getResultList().size() );
+            assertEquals( 0, session.createQuery( "from Account", Account.class ).getResultList().size() );
         } );
 
         currentTenant = "mine";
@@ -127,14 +137,14 @@ public class TenantIdTest implements SessionFactoryProducer {
         assertEquals( "mine", acc.tenantId );
         scope.inTransaction( session -> {
             assertNotNull( session.find( Account.class, acc.id ) );
-            assertEquals( 1, session.createQuery( "from Account" ).getResultList().size() );
+            assertEquals( 1, session.createQuery( "from Account", Account.class ).getResultList().size() );
         } );
 
         currentTenant = "root";
         // Root tenants should find entities from other tenants
         scope.inTransaction( session -> {
             assertNotNull( session.find( Account.class, acc.id ) );
-            assertEquals( 1, session.createQuery( "from Account" ).getResultList().size() );
+            assertEquals( 1, session.createQuery( "from Account", Account.class ).getResultList().size() );
         } );
 
         // Root tenants should find entities from their own tenant
@@ -147,7 +157,7 @@ public class TenantIdTest implements SessionFactoryProducer {
         assertEquals( "root", rootAcc.tenantId );
         scope.inTransaction( session -> {
             assertNotNull( session.find( Account.class, rootAcc.id ) );
-            assertEquals( 2, session.createQuery( "from Account" ).getResultList().size() );
+            assertEquals( 2, session.createQuery( "from Account", Account.class ).getResultList().size() );
         } );
     }
 
@@ -239,9 +249,9 @@ public class TenantIdTest implements SessionFactoryProducer {
             Record r = em.find( Record.class, record.id );
             assertEquals( "mine", r.state.tenantId );
 
-            // Session seems to not apply tenant-id on #find
+            // HHH-16830 Session applies tenant-id on #find
             Record yours = em.find( Record.class, record2.id );
-            assertEquals( "yours", yours.state.tenantId );
+            assertNull(yours);
 
 
             em.createQuery( "from Record where id = :id", Record.class )
@@ -290,6 +300,40 @@ public class TenantIdTest implements SessionFactoryProducer {
         scope.inStatelessTransaction( session -> {
             assertThat( listAllRecordsForTenant( session ) ).isEmpty();
         } );
+    }
+
+    @Test
+    @JiraKey( value = "HHH-17972")
+    public void testChangeTenantId(SessionFactoryScope scope) {
+        currentTenant = "mine";
+        scope.inSession(
+                session -> {
+                    Query<Client> sessionQuery = session.createQuery( "from Client", Client.class );
+
+                    Transaction t = session.beginTransaction();
+                    session.persist( new Client("Gavin") );
+                    t.commit();
+                    assertEquals(1, sessionQuery.getResultList().size() );
+                    assertEquals( "mine", sessionQuery.getResultList().get( 0 ).tenantId );
+
+                    Session newSession = session.sessionWithOptions().tenantIdentifier( "yours" ).connection().openSession();
+                    Query<Client> newSessionQuery = newSession.createQuery( "from Client", Client.class );
+                    t = newSession.beginTransaction();
+                    newSession.persist( new Client("Jan") );
+                    t.commit();
+
+                    assertEquals(1, newSessionQuery.getResultList().size() );
+                    assertEquals( "yours", newSessionQuery.getResultList().get( 0 ).tenantId );
+
+                    session.disableFilter( TenantIdBinder.FILTER_NAME );
+                    assertEquals(2, sessionQuery.getResultList().size() );
+
+                    newSession.disableFilter( TenantIdBinder.FILTER_NAME );
+                    assertEquals(2, newSessionQuery.getResultList().size() );
+
+                    newSession.close();
+                }
+        );
     }
 
     private static List<Record> listAllRecordsForTenant(StatelessSession session) {

@@ -13,7 +13,7 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 
 /**
@@ -23,14 +23,18 @@ import org.hibernate.sql.results.graph.entity.EntityInitializer;
  */
 public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 
+	private final boolean isAffectedByFilter;
+
 	public EntityFetchSelectImpl(
 			FetchParent fetchParent,
 			ToOneAttributeMapping fetchedAttribute,
 			NavigablePath navigablePath,
 			DomainResult<?> keyResult,
 			boolean selectByUniqueKey,
+			boolean isAffectedByFilter,
 			DomainResultCreationState creationState) {
 		super( navigablePath, fetchedAttribute, fetchParent, keyResult, false, selectByUniqueKey, creationState );
+		this.isAffectedByFilter = isAffectedByFilter;
 	}
 
 	/**
@@ -45,6 +49,7 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 				original.getDiscriminatorFetch(),
 				original.isSelectByUniqueKey()
 		);
+		this.isAffectedByFilter = original.isAffectedByFilter();
 	}
 
 	@Override
@@ -52,15 +57,20 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 		return FetchTiming.IMMEDIATE;
 	}
 
+	public boolean isAffectedByFilter() {
+		return isAffectedByFilter;
+	}
+
 	@Override
-	public EntityInitializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
+	public EntityInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
 		return EntitySelectFetchInitializerBuilder.createInitializer(
-				parentAccess,
+				parent,
 				getFetchedMapping(),
 				getReferencedMappingContainer().getEntityPersister(),
 				getKeyResult(),
 				getNavigablePath(),
 				isSelectByUniqueKey(),
+				isAffectedByFilter(),
 				creationState
 		);
 	}

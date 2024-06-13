@@ -46,6 +46,7 @@ public class EntityBatchLoaderInPredicate<T>
 	private final int domainBatchSize;
 	private final int sqlBatchSize;
 
+	private final LoadQueryInfluencers loadQueryInfluencers;
 	private final JdbcParametersList jdbcParameters;
 	private final SelectStatement sqlAst;
 	private final JdbcOperationQuerySelect jdbcSelectOperation;
@@ -56,8 +57,9 @@ public class EntityBatchLoaderInPredicate<T>
 	public EntityBatchLoaderInPredicate(
 			int domainBatchSize,
 			EntityMappingType entityDescriptor,
-			SessionFactoryImplementor sessionFactory) {
-		super( entityDescriptor, sessionFactory );
+			LoadQueryInfluencers loadQueryInfluencers) {
+		super( entityDescriptor, loadQueryInfluencers );
+		this.loadQueryInfluencers = loadQueryInfluencers;
 		this.domainBatchSize = domainBatchSize;
 		int idColumnCount = entityDescriptor.getEntityPersister().getIdentifierType().getColumnSpan( sessionFactory );
 		this.sqlBatchSize = sessionFactory.getJdbcServices()
@@ -85,7 +87,7 @@ public class EntityBatchLoaderInPredicate<T>
 				identifierMapping,
 				null,
 				sqlBatchSize,
-				new LoadQueryInfluencers( sessionFactory ),
+				loadQueryInfluencers,
 				LockOptions.NONE,
 				jdbcParametersBuilder::add,
 				sessionFactory

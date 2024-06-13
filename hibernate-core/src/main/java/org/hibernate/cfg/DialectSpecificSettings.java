@@ -12,6 +12,7 @@ package org.hibernate.cfg;
  * its underlying JDBC {@link java.sql.Connection}.
  *
  * @author Marco Belladelli
+ * @author Loïc Lefèvre
  */
 public interface DialectSpecificSettings {
 	/**
@@ -27,6 +28,15 @@ public interface DialectSpecificSettings {
 	 * @settingDefault {@code false}
 	 */
 	public static final String ORACLE_EXTENDED_STRING_SIZE = "hibernate.dialect.oracle.extended_string_size";
+
+	/**
+	 * Specifies whether this database is accessed using a database service protected by Application Continuity.
+	 *
+	 * @settingDefault {@code false}
+	 *
+	 * @see <a href="https://docs.oracle.com/en/database/oracle/oracle-database/23/jjdbc/application-continuity.html">Application Continuity for Java</a>
+	 */
+	public static final String ORACLE_APPLICATION_CONTINUITY = "hibernate.dialect.oracle.application_continuity";
 
 	/**
 	 * Specifies whether this database's {@code ansinull} setting is enabled.

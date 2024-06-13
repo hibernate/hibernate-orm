@@ -8,8 +8,11 @@ package org.hibernate.query.sqm.tree.domain;
 
 import java.util.Locale;
 
+import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
@@ -95,7 +98,7 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> {
 
 	@Override
 	public <S extends T> SqmTreatedSingularJoin<O,T,S> treatAs(Class<S> treatJavaType) {
-		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+		return treatAs( treatJavaType, null );
 	}
 
 	@Override
@@ -105,7 +108,7 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> {
 
 	@Override
 	public <S extends T> SqmTreatedSingularJoin<O,T,S> treatAs(Class<S> treatJavaType, String alias) {
-		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias );
+		return treatAs( treatJavaType, alias, false );
 	}
 
 	@Override
@@ -115,7 +118,17 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> {
 
 	@Override
 	public <S extends T> SqmTreatedSingularJoin<O,T,S> treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
-		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias, fetch );
+		final ManagedDomainType<S> treatTarget = nodeBuilder().getDomainModel().managedType( treatJavaType );
+		final SqmTreatedSingularJoin<O, T, S> treat = findTreat( treatTarget, alias );
+		if ( treat == null ) {
+			if ( treatTarget instanceof TreatableDomainType<?> ) {
+				return addTreat( new SqmTreatedSingularJoin<>( this, (TreatableDomainType<S>) treatTarget, alias, fetch ) );
+			}
+			else {
+				throw new IllegalArgumentException( "Not a treatable type: " + treatJavaType.getName() );
+			}
+		}
+		return treat;
 	}
 
 	@Override

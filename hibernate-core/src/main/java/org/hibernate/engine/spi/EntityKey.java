@@ -58,7 +58,7 @@ public final class EntityKey implements Serializable {
 	private int generateHashCode() {
 		int result = 17;
 		final String rootEntityName = persister.getRootEntityName();
-		result = 37 * result + ( rootEntityName != null ? rootEntityName.hashCode() : 0 );
+		result = 37 * result + rootEntityName.hashCode();
 		result = 37 * result + persister.getIdentifierType().getHashCode( identifier, persister.getFactory() );
 		return result;
 	}

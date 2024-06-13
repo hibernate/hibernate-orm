@@ -113,4 +113,16 @@ public class ArrayLengthTest {
 		} );
 	}
 
+	@Test
+	public void testLengthThreeHql(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			//tag::hql-array-length-hql-example[]
+			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where length(e.theArray) = 3", EntityWithArrays.class )
+					.getResultList();
+			//end::hql-array-length-hql-example[]
+			assertEquals( 1, results.size() );
+			assertEquals( 2L, results.get( 0 ).getId() );
+		} );
+	}
+
 }

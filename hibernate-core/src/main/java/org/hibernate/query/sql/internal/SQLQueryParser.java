@@ -7,7 +7,6 @@
 package org.hibernate.query.sql.internal;
 
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import org.hibernate.QueryException;
 import org.hibernate.boot.model.naming.Identifier;
@@ -18,17 +17,16 @@ import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.SQLLoadable;
 
 /**
+ * Substitutes escape sequences of form {@code {alias}},
+ * {@code {alias.field}}, and {@code {alias.*}} in a
+ * native SQL query.
+ *
  * @author Gavin King
  * @author Max Andersen
  * @author Steve Ebersole
  * @author Paul Benedict
  */
 public class SQLQueryParser {
-	private static final Pattern PREPARED_STATEMENT_PATTERN = Pattern.compile( "^\\{.*?\\}$" );
-	private static final String HIBERNATE_PLACEHOLDER_PREFIX = "h-";
-	private static final String DOMAIN_PLACEHOLDER = "h-domain";
-	private static final String CATALOG_PLACEHOLDER = "h-catalog";
-	private static final String SCHEMA_PLACEHOLDER = "h-schema";
 
 	private final SessionFactoryImplementor factory;
 	private final String originalQueryString;
@@ -67,109 +65,142 @@ public class SQLQueryParser {
 	// TODO: should "record" how many properties we have referred to - and if we
 	//       don't get them all we throw an exception! Way better than trial and error ;)
 	protected String substituteBrackets(String sqlQuery) throws QueryException {
-		if ( PREPARED_STATEMENT_PATTERN.matcher( sqlQuery.trim() ).matches() ) {
+		final String trimmed = sqlQuery.trim();
+		if ( trimmed.startsWith("{") && trimmed.endsWith("}") ) {
 			return sqlQuery;
 		}
 
-		final SqlStringGenerationContext sqlStringGenerationContext = factory.getSqlStringGenerationContext();
-		final Identifier defaultCatalog = sqlStringGenerationContext.getDefaultCatalog();
-		final Identifier defaultSchema = sqlStringGenerationContext.getDefaultSchema();
-		final Dialect dialect = sqlStringGenerationContext.getDialect();
-
 		final StringBuilder result = new StringBuilder( sqlQuery.length() + 20 );
 
-		int left, right;
 		// replace {....} with corresponding column aliases
-		for ( int curr = 0; curr < sqlQuery.length(); curr = right + 1 ) {
-			if ( ( left = sqlQuery.indexOf( '{', curr ) ) < 0 ) {
-				// No additional open braces found in the string, append the
-				// rest of the string in its entirety and quit this loop
-				result.append( sqlQuery.substring( curr ) );
-				break;
-			}
-
-			// append everything up until the next encountered open brace
-			result.append( sqlQuery, curr, left );
-
-			if ( ( right = sqlQuery.indexOf( '}', left + 1 ) ) < 0 ) {
-				throw new QueryException( "Unmatched braces for alias path", sqlQuery );
-			}
-
-			final String aliasPath = sqlQuery.substring( left + 1, right );
-			boolean isPlaceholder = aliasPath.startsWith( HIBERNATE_PLACEHOLDER_PREFIX );
-
-			if ( isPlaceholder ) {
-				// Domain replacement
-				switch ( aliasPath ) {
-					case DOMAIN_PLACEHOLDER: {
-						if ( defaultCatalog != null ) {
-							result.append( defaultCatalog.render(dialect) );
-							result.append( "." );
-						}
-						if ( defaultSchema != null ) {
-							result.append( defaultSchema.render(dialect) );
-							result.append( "." );
-						}
-						break;
+		final StringBuilder token = new StringBuilder();
+		boolean singleQuoted = false;
+		boolean doubleQuoted = false;
+		boolean escaped = false;
+		for ( int index = 0; index < sqlQuery.length(); index++ ) {
+			final char ch = sqlQuery.charAt( index );
+			switch (ch) {
+				case '\'':
+					if (!doubleQuoted && !escaped) {
+						singleQuoted = !singleQuoted;
 					}
-					// Schema replacement
-					case SCHEMA_PLACEHOLDER: {
-						if ( defaultSchema != null ) {
-							result.append( defaultSchema.render(dialect) );
-							result.append( "." );
-						}
-						break;
+					result.append(ch);
+					break;
+				case '"':
+					if (!singleQuoted && !escaped) {
+						doubleQuoted = !doubleQuoted;
 					}
-					// Catalog replacement
-					case CATALOG_PLACEHOLDER: {
-						if ( defaultCatalog != null ) {
-							result.append( defaultCatalog.render(dialect) );
-							result.append( "." );
-						}
-						break;
-					}
-					default:
-						throw new QueryException( "Unknown placeholder ", aliasPath );
-				}
-			}
-			else if ( context != null ) {
-				int firstDot = aliasPath.indexOf( '.' );
-				if ( firstDot == -1 ) {
-					if ( context.isEntityAlias( aliasPath ) ) {
-						// it is a simple table alias {foo}
-						result.append( aliasPath );
-						aliasesFound++;
+					result.append(ch);
+					break;
+				case '{':
+					if (!singleQuoted && !doubleQuoted) {
+						escaped = true;
 					}
 					else {
-						// passing through anything we do not know : to support jdbc escape sequences HB-898
-						result.append( '{' ).append( aliasPath ).append( '}' );
+						result.append(ch);
 					}
-				}
-				else {
-					final String aliasName = aliasPath.substring( 0, firstDot );
-					if ( context.isCollectionAlias( aliasName ) ) {
-						// The current alias is referencing the collection to be eagerly fetched
-						String propertyName = aliasPath.substring( firstDot + 1 );
-						result.append( resolveCollectionProperties( aliasName, propertyName ) );
-						aliasesFound++;
-					}
-					else if ( context.isEntityAlias( aliasName ) ) {
-						// it is a property reference {foo.bar}
-						String propertyName = aliasPath.substring( firstDot + 1 );
-						result.append( resolveProperties( aliasName, propertyName ) );
-						aliasesFound++;
+					break;
+				case '}':
+					if (!singleQuoted && !doubleQuoted) {
+						escaped = false;
+						interpretToken( token.toString(), result );
+						token.setLength(0);
 					}
 					else {
-						// passing through anything we do not know : to support jdbc escape sequences HB-898
-						result.append( '{' ).append( aliasPath ).append( '}' );
+						result.append(ch);
 					}
-				}
-			}
-			else {
-				result.append( '{' ).append( aliasPath ).append( '}' );
+					break;
+				default:
+					if ( !escaped ) {
+						result.append(ch);
+					}
+					else {
+						token.append(ch);
+					}
 			}
 		}
 		return result.toString();
+	}
+
+	private void interpretToken(String token, StringBuilder result) {
+		if ( token.startsWith("h-") ) {
+			handlePlaceholder( token, result );
+		}
+		else if ( context != null ) {
+			handleAliases( token, result );
+		}
+		else {
+			result.append( '{' ).append( token ).append( '}' );
+		}
+	}
+
+	private void handleAliases(String token, StringBuilder result) {
+		final int firstDot = token.indexOf( '.' );
+		if ( firstDot == -1 ) {
+			if ( context.isEntityAlias(token) ) {
+				// it is a simple table alias {foo}
+				result.append(token);
+				aliasesFound++;
+			}
+			else {
+				// passing through anything we do not know
+				// to support jdbc escape sequences HB-898
+				result.append( '{' ).append(token).append( '}' );
+			}
+		}
+		else {
+			final String aliasName = token.substring( 0, firstDot );
+			if ( context.isCollectionAlias( aliasName ) ) {
+				// The current alias is referencing the collection to be eagerly fetched
+				String propertyName = token.substring( firstDot + 1 );
+				result.append( resolveCollectionProperties( aliasName, propertyName ) );
+				aliasesFound++;
+			}
+			else if ( context.isEntityAlias( aliasName ) ) {
+				// it is a property reference {foo.bar}
+				String propertyName = token.substring( firstDot + 1 );
+				result.append( resolveProperties( aliasName, propertyName ) );
+				aliasesFound++;
+			}
+			else {
+				// passing through anything we do not know
+				// to support jdbc escape sequences HB-898
+				result.append( '{' ).append(token).append( '}' );
+			}
+		}
+	}
+
+	private void handlePlaceholder(String token, StringBuilder result) {
+		final SqlStringGenerationContext context = factory.getSqlStringGenerationContext();
+		final Identifier defaultCatalog = context.getDefaultCatalog();
+		final Identifier defaultSchema = context.getDefaultSchema();
+		final Dialect dialect = context.getDialect();
+		switch (token) {
+			case "h-domain":
+				if ( defaultCatalog != null ) {
+					result.append( defaultCatalog.render(dialect) );
+					result.append( "." );
+				}
+				if ( defaultSchema != null ) {
+					result.append( defaultSchema.render(dialect) );
+					result.append( "." );
+				}
+				break;
+			case "h-schema":
+				if ( defaultSchema != null ) {
+					result.append( defaultSchema.render(dialect) );
+					result.append( "." );
+				}
+				break;
+			case "h-catalog":
+				if ( defaultCatalog != null ) {
+					result.append( defaultCatalog.render(dialect) );
+					result.append( "." );
+				}
+				break;
+			default:
+				throw new QueryException( "Unknown placeholder ", token);
+		}
 	}
 
 	private String resolveCollectionProperties(
@@ -178,88 +209,66 @@ public class SQLQueryParser {
 		final Map<String, String[]> fieldResults = context.getPropertyResultsMap( aliasName );
 		final SQLLoadableCollection collectionPersister = context.getCollectionPersister( aliasName );
 		final String collectionSuffix = context.getCollectionSuffix( aliasName );
-
 		switch ( propertyName ) {
 			case "*":
 				if ( !fieldResults.isEmpty() ) {
 					throw new QueryException( "Using return-property together with * syntax is not supported" );
 				}
-
-				String selectFragment = collectionPersister.selectFragment( aliasName, collectionSuffix );
 				aliasesFound++;
-				return selectFragment
-						+ ", "
-						+ resolveProperties( aliasName, propertyName );
+				return collectionPersister.selectFragment( aliasName, collectionSuffix )
+						+ ", " + resolveProperties( aliasName, propertyName );
 			case "element.*":
 				return resolveProperties( aliasName, "*" );
-			default: {
-				String[] columnAliases;
-
+			default:
 				// Let return-properties override whatever the persister has for aliases.
-				columnAliases = fieldResults.get( propertyName );
+				String[] columnAliases = fieldResults.get( propertyName );
 				if ( columnAliases == null ) {
-					columnAliases = collectionPersister.getCollectionPropertyColumnAliases(
-							propertyName,
-							collectionSuffix
-					);
+					columnAliases =
+							collectionPersister.getCollectionPropertyColumnAliases( propertyName, collectionSuffix );
 				}
-
-				if ( columnAliases == null || columnAliases.length == 0 ) {
-					throw new QueryException(
-							"No column name found for property [" + propertyName + "] for alias [" + aliasName + "]",
-							originalQueryString
-					);
-				}
-				if ( columnAliases.length != 1 ) {
-					// TODO: better error message since we actually support composites if names are explicitly listed.
-					throw new QueryException(
-							"SQL queries only support properties mapped to a single column - property [" +
-									propertyName + "] is mapped to " + columnAliases.length + " columns.",
-							originalQueryString
-					);
-				}
+				validate( aliasName, propertyName, columnAliases );
 				aliasesFound++;
 				return columnAliases[0];
-			}
 		}
 	}
+
 	private String resolveProperties(String aliasName, String propertyName) {
 		final Map<String, String[]> fieldResults = context.getPropertyResultsMap( aliasName );
 		final SQLLoadable persister = context.getEntityPersister( aliasName );
 		final String suffix = context.getEntitySuffix( aliasName );
-
 		if ( "*".equals( propertyName ) ) {
-			if( !fieldResults.isEmpty() ) {
+			if ( !fieldResults.isEmpty() ) {
 				throw new QueryException( "Using return-property together with * syntax is not supported" );
 			}
 			aliasesFound++;
 			return persister.selectFragment( aliasName, suffix ) ;
 		}
 		else {
-			String[] columnAliases;
-
-			// Let return-propertiess override whatever the persister has for aliases.
-			columnAliases = fieldResults.get( propertyName );
+			// Let return-properties override whatever the persister has for aliases.
+			String[] columnAliases = fieldResults.get( propertyName );
 			if ( columnAliases == null ) {
 				columnAliases = persister.getSubclassPropertyColumnAliases( propertyName, suffix );
 			}
-
-			if ( columnAliases == null || columnAliases.length == 0 ) {
-				throw new QueryException(
-						"No column name found for property [" + propertyName + "] for alias [" + aliasName + "]",
-						originalQueryString
-				);
-			}
-			if ( columnAliases.length != 1 ) {
-				// TODO: better error message since we actually support composites if names are explicitly listed.
-				throw new QueryException(
-						"SQL queries only support properties mapped to a single column - property [" + propertyName + "] is mapped to " + columnAliases.length + " columns.",
-						originalQueryString
-				);
-			}
+			validate( aliasName, propertyName, columnAliases );
 			aliasesFound++;
 			return columnAliases[0];
 		}
 	}
 
+	private void validate(String aliasName, String propertyName, String[] columnAliases) {
+		if ( columnAliases == null || columnAliases.length == 0 ) {
+			throw new QueryException(
+					"No column name found for property [" + propertyName + "] for alias [" + aliasName + "]",
+					originalQueryString
+			);
+		}
+		if ( columnAliases.length != 1 ) {
+			// TODO: better error message since we actually support composites if names are explicitly listed
+			throw new QueryException(
+					"SQL queries only support properties mapped to a single column - property [" +
+							propertyName + "] is mapped to " + columnAliases.length + " columns.",
+					originalQueryString
+			);
+		}
+	}
 }

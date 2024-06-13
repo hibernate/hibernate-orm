@@ -808,14 +808,28 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/**
 	 * Obtain the specified lock level on the given managed instance associated
-	 * with this session. This may be used to:
+	 * with this session. This operation may be used to:
 	 * <ul>
-	 * <li>perform a version check with {@link LockMode#READ}, or
-	 * <li>upgrade to a pessimistic lock with {@link LockMode#PESSIMISTIC_WRITE}).
+	 * <li>perform a version check on an entity read from the second-level cache
+	 *     by requesting {@link LockMode#READ},
+	 * <li>schedule a version check at transaction commit by requesting
+	 *     {@link LockMode#OPTIMISTIC},
+	 * <li>schedule a version increment at transaction commit by requesting
+	 *     {@link LockMode#OPTIMISTIC_FORCE_INCREMENT}
+	 * <li>upgrade to a pessimistic lock with {@link LockMode#PESSIMISTIC_READ}
+	 *     or {@link LockMode#PESSIMISTIC_WRITE}, or
+	 * <li>immediately increment the version of the given instance by requesting
+	 *     {@link LockMode#PESSIMISTIC_FORCE_INCREMENT}.
 	 * </ul>
+	 * <p>
+	 * If the requested lock mode is already held on the given entity, this
+	 * operation has no effect.
 	 * <p>
 	 * This operation cascades to associated instances if the association is
 	 * mapped with {@link org.hibernate.annotations.CascadeType#LOCK}.
+	 * <p>
+	 * The modes {@link LockMode#WRITE} and {@link LockMode#UPGRADE_SKIPLOCKED}
+	 * are not legal arguments to {@code lock()}.
 	 *
 	 * @param object a persistent instance
 	 * @param lockMode the lock level

@@ -381,7 +381,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 		if ( repository ) {
 			final List<ExecutableElement> methodsOfClass =
-					methodsIn( context.getElementUtils().getAllMembers(element) );
+					methodsIn( context.getAllMembers(element) );
 			for ( ExecutableElement method: methodsOfClass ) {
 				if ( containsAnnotation( method, HQL, SQL, JD_QUERY, FIND, JD_FIND ) ) {
 					queryMethods.add( method );
@@ -597,8 +597,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 			}
 			else if ( element.getKind() == ElementKind.INTERFACE
+					&& !jakartaDataRepository
 					&& ( context.usesQuarkusOrm() || context.usesQuarkusReactive() ) ) {
-				// if we don't have a getter, but we're in Quarkus, we know how to find the default sessions
+				// if we don't have a getter, and not a JD repository, but we're in Quarkus, we know how to find the default sessions
 				repository = true;
 				sessionType = setupQuarkusDaoConstructor();
 			}
@@ -1003,8 +1004,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 			final AnnotationValue annotationVal =
 					castNonNull(getAnnotationValue(annotation, "mappedBy"));
-			for ( Element member : context.getElementUtils().getAllMembers(assocTypeElement) ) {
-				if ( propertyName(this, member).contentEquals(mappedBy) ) {
+			for ( Element member : context.getAllMembers(assocTypeElement) ) {
+				if ( propertyName(this, member).contentEquals(mappedBy)
+						&& compatibleAccess(assocTypeElement, member) ) {
 					validateBackRef(memberOfClass, annotation, assocTypeElement, member, annotationVal);
 					return;
 				}
@@ -1014,6 +1016,19 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					annotationVal,
 					"no matching member in '" + assocTypeElement.getSimpleName() + "'",
 					Diagnostic.Kind.ERROR);
+		}
+	}
+
+	private boolean compatibleAccess(TypeElement assocTypeElement, Element member) {
+		final AccessType memberAccessType = determineAnnotationSpecifiedAccessType( member );
+		final AccessType accessType = memberAccessType == null ? getAccessType(assocTypeElement) : memberAccessType;
+		switch ( member.getKind() ) {
+			case FIELD:
+				return accessType == AccessType.FIELD;
+			case METHOD:
+				return accessType == AccessType.PROPERTY;
+			default:
+				return false;
 		}
 	}
 
@@ -1360,11 +1375,24 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 								operation,
 								context.addNonnullAnnotation(),
 								isIterableLifecycleParameter(parameterType),
-								returnArgument
+								returnArgument,
+								hasGeneratedId(declaredType)
 						)
 				);
 			}
 		}
+	}
+
+	private boolean hasGeneratedId(DeclaredType entityType)  {
+		final TypeElement typeElement = (TypeElement) entityType.asElement();
+		for ( Element member : context.getAllMembers(typeElement) ) {
+			if ( hasAnnotation(member, GENERATED_VALUE)
+					&& hasAnnotation(member, ID) ) {
+				return true;
+			}
+			//TODO: look for generator annotations
+		}
+		return false;
 	}
 
 	private static boolean isIterableLifecycleParameter(TypeMirror parameterType) {
@@ -2105,7 +2133,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private AccessType getAccessType(TypeElement entity) {
 		final String entityClassName = entity.getQualifiedName().toString();
-		determineAccessTypeForHierarchy(entity, context );
+		determineAccessTypeForHierarchy( entity, context );
 		return castNonNull( context.getAccessTypeInfo( entityClassName ) ).getAccessType();
 	}
 
@@ -2126,7 +2154,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private @Nullable Element memberMatchingPath(TypeElement entityType, StringTokenizer tokens) {
 		final AccessType accessType = getAccessType(entityType);
 		final String nextToken = tokens.nextToken();
-		for ( Element member : context.getElementUtils().getAllMembers(entityType) ) {
+		for ( Element member : context.getAllMembers(entityType) ) {
 			if ( isIdRef(nextToken) && hasAnnotation( member, ID) ) {
 				return member;
 			}
@@ -2468,7 +2496,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						returnType,
 						true,
 						new ErrorHandler( context, isLocal(method) ? method : element, mirror, value, hql ),
-						ProcessorSessionFactory.create( context.getProcessingEnvironment() )
+						ProcessorSessionFactory.create( context.getProcessingEnvironment(),
+								context.getEntityNameMappings(), context.getEnumTypesByValue() )
 				);
 		if ( statement != null ) {
 			if ( statement instanceof SqmSelectStatement ) {

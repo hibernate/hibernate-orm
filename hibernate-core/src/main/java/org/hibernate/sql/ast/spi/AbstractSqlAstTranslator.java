@@ -115,6 +115,7 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
+import org.hibernate.sql.ast.tree.expression.EmbeddableTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.Every;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -218,6 +219,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -225,6 +227,7 @@ import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.persister.entity.DiscriminatorHelper.jdbcLiteral;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.DIVIDE_PORTABLE;
 import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
 import static org.hibernate.sql.ast.SqlTreePrinter.logSqlAst;
@@ -7203,6 +7206,19 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		appendSql( expression.getEntityTypeDescriptor().getDiscriminatorSQLValue() );
 	}
 
+	@SuppressWarnings( { "rawtypes", "unchecked" } )
+	@Override
+	public void visitEmbeddableTypeLiteral(EmbeddableTypeLiteral expression) {
+		final BasicValueConverter valueConverter = expression.getJdbcMapping().getValueConverter();
+		appendSql( jdbcLiteral(
+				valueConverter != null ?
+						valueConverter.toRelationalValue( expression.getEmbeddableClass() ) :
+						expression.getEmbeddableClass(),
+				expression.getExpressionType().getSingleJdbcMapping().getJdbcLiteralFormatter(),
+				getDialect()
+		) );
+	}
+
 	@Override
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
 		final BinaryArithmeticOperator operator = arithmeticExpression.getOperator();
@@ -7625,7 +7641,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitInListPredicate(InListPredicate inListPredicate) {
 		final List<Expression> listExpressions = inListPredicate.getListExpressions();
 		if ( listExpressions.isEmpty() ) {
-			emptyInList( inListPredicate );
+			appendSql( "1=" + ( inListPredicate.isNegated() ? "1" : "0" ) );
 			return;
 		}
 		Function<Expression, Expression> itemAccessor = Function.identity();
@@ -7730,16 +7746,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( parenthesis ) {
 			appendSql( CLOSE_PARENTHESIS );
 		}
-	}
-
-	protected void emptyInList(InListPredicate inListPredicate) {
-		appendSql("(");
-		appendSql( inListPredicate.isNegated() ? "0" : "1" );
-		appendSql(" = case when ");
-		inListPredicate.getTestExpression().accept( this );
-		appendSql( " is not null then 0");
-//		dialect.appendBooleanValueString( this, inListPredicate.isNegated() );
-		appendSql(" end)");
 	}
 
 	private void appendInClauseSeparator(InListPredicate inListPredicate) {

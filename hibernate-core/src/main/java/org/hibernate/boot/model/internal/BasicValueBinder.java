@@ -1224,6 +1224,11 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 		basicValue = new BasicValue( buildingContext, table );
 
+		if ( columns.getPropertyHolder().isComponent() ) {
+			final ComponentPropertyHolder propertyHolder = (ComponentPropertyHolder) columns.getPropertyHolder();
+			basicValue.setAggregateColumn( propertyHolder.getAggregateColumn() );
+		}
+
 		if ( isNationalized() ) {
 			basicValue.makeNationalized();
 		}

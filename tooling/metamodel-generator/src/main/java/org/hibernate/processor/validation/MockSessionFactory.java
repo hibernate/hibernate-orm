@@ -6,6 +6,7 @@
  */
 package org.hibernate.processor.validation;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.MappingException;
@@ -118,7 +119,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -187,6 +187,7 @@ public abstract class MockSessionFactory
 				this,
 				emptyMap(),
 				emptyList(),
+				emptyMap(),
 				emptyMap(),
 				emptyMap(),
 				emptyMap(),
@@ -288,6 +289,8 @@ public abstract class MockSessionFactory
 	abstract boolean isEnum(String className);
 
 	abstract boolean isEnumConstant(String className, String terminal);
+
+	abstract Class<?> javaConstantType(String className, String fieldName);
 
 	abstract boolean isFieldDefined(String qualifiedClassName, String fieldName);
 
@@ -726,6 +729,11 @@ public abstract class MockSessionFactory
 		public EntityPersister findEntityDescriptor(String entityName) {
 			return createEntityPersister(entityName);
 		}
+
+		@Override
+		public Set<String> getEnumTypesForValue(String enumValue) {
+			return MockSessionFactory.this.getEnumTypesForValue(enumValue);
+		}
 	}
 
 	@Override
@@ -845,6 +853,19 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
+		public JavaType<?> getJavaConstantType(String className, String fieldName) {
+			final Class<?> fieldType = javaConstantType( className, fieldName );
+			return MockSessionFactory.this.getTypeConfiguration()
+					.getJavaTypeRegistry()
+					.getDescriptor( fieldType );
+		}
+
+		@Override
+		public <T> T getJavaConstant(String className, String fieldName) {
+			return null;
+		}
+
+		@Override
 		public <E extends Enum<E>> E enumValue(EnumJavaType<E> enumType, String enumValueName) {
 			if ( !isEnumConstant( enumType.getTypeName(), enumValueName ) ) {
 				throw new IllegalArgumentException( "No enum constant " + enumType.getTypeName() + "." + enumValueName );
@@ -853,8 +874,8 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public Set<String> getAllowedEnumLiteralTexts(String enumValue) {
-			return MockSessionFactory.this.getAllowedEnumLiteralTexts().get(enumValue);
+		public @Nullable Set<String> getEnumTypesForValue(String enumValue) {
+			return MockSessionFactory.this.getEnumTypesForValue(enumValue);
 		}
 
 		@Override
@@ -863,8 +884,8 @@ public abstract class MockSessionFactory
 		}
 	}
 
-	Map<String, Set<String>> getAllowedEnumLiteralTexts() {
-		return emptyMap();
+	@Nullable Set<String> getEnumTypesForValue(String value) {
+		return emptySet();
 	}
 
 	class MockMappedDomainType<X> extends MappedSuperclassTypeImpl<X>{
@@ -1109,7 +1130,7 @@ public abstract class MockSessionFactory
 
 	private EmbeddableTypeImpl<?> createEmbeddableDomainType(String entityName, CompositeType compositeType, ManagedDomainType<?> owner) {
 		final JavaType<Object> javaType = new UnknownBasicJavaType<>(Object.class, compositeType.getReturnedClassName());
-		return new EmbeddableTypeImpl<>(javaType, true, metamodel.getJpaMetamodel()) {
+		return new EmbeddableTypeImpl<>( javaType, null, null, true, metamodel.getJpaMetamodel() ) {
 			@Override
 			public PersistentAttribute<Object, Object> findAttribute(String name) {
 				return createAttribute(

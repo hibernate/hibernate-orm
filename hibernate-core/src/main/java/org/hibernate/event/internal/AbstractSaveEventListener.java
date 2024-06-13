@@ -298,6 +298,9 @@ public abstract class AbstractSaveEventListener<C>
 				persister,
 				false
 		);
+		if ( original.getLoadedState() != null ) {
+			persistenceContext.getEntityHolder( key ).setEntityEntry( original );
+		}
 
 		cascadeBeforeSave( source, persister, entity, context );
 

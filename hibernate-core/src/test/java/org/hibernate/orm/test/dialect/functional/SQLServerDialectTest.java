@@ -25,6 +25,7 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.lock.PessimisticEntityLockException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.query.Query;
 
@@ -37,9 +38,6 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-
-//import org.hibernate.criterion.Order;
-//import org.hibernate.criterion.Projections;
 
 /**
  * used driver hibernate.connection.driver_class com.microsoft.sqlserver.jdbc.SQLServerDriver
@@ -372,14 +370,14 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 		try {
 			s2.buildLockRequest( opt ).lock( kit2 );
 		}
-		catch ( LockTimeoutException e ) {
-			// OK
+		catch ( PessimisticEntityLockException e ) {
+			assertTrue( e.getCause() instanceof LockTimeoutException );
 		}
 		long end = System.currentTimeMillis();
 		thread.join();
 		long differenceInMillis = end - start;
 		assertTrue(
-				"Lock NoWait blocked for " + differenceInMillis + " ms, this is definitely to much for Nowait",
+				"Lock NoWait blocked for " + differenceInMillis + " ms, this is definitely too much for Nowait",
 				differenceInMillis < 2000
 		);
 

@@ -1499,7 +1499,7 @@ Let's pause to remember the annotations we've met so far.
 
 | `@ManyToOne` | Declare the single-valued side of a many-to-one association (the owning side) | &#10004;
 | `@OneToMany` | Declare the many-valued side of a many-to-one association (the unowned side) | &#10004;
-| `@ManyToMany` | Declare either side of a one-to-one association | &#10004;
+| `@ManyToMany` | Declare either side of a many-to-many association | &#10004;
 | `@OneToOne` | Declare either side of a one-to-one association | &#10004;
 | `@MapsId` | Declare that the owning side of a `@OneToOne` association maps the primary key column | &#10004;
 |===

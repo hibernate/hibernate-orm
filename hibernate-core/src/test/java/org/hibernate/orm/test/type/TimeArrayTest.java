@@ -6,12 +6,10 @@
  */
 package org.hibernate.orm.test.type;
 
-import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalTime;
 
-import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.OracleDialect;
@@ -113,7 +111,6 @@ public class TimeArrayTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
 	public void testQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			TypedQuery<TableWithTimeArrays> tq = em.createNamedQuery( "TableWithTimeArrays.JPQL.getByData", TableWithTimeArrays.class );

@@ -13,6 +13,7 @@ import java.util.Map;
 
 import jakarta.persistence.Tuple;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.InstantiationException;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.EntityHolder;
@@ -22,6 +23,7 @@ import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.Query;
+import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.QueryOptions;
@@ -135,11 +137,13 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						jdbcParameterBindings
 				);
 				session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames(), true );
+				//noinspection unchecked
 				return session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 						jdbcSelect,
 						jdbcParameterBindings,
 						listInterpreterExecutionContext( hql, executionContext, jdbcSelect, subSelectFetchKeyHandler ),
 						rowTransformer,
+						(Class<R>) executionContext.getResultType(),
 						uniqueSemantic
 				);
 			}
@@ -196,12 +200,8 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		return new MySqmJdbcExecutionContextAdapter( executionContext, jdbcSelect, subSelectFetchKeyHandler, hql );
 	}
 
-	private static SqmSelection<?> singleSelection(SqmSelectStatement<?> sqm) {
-		final List<SqmSelection<?>> selections = sqm.getQueryPart()
-				.getFirstQuerySpec()
-				.getSelectClause()
-				.getSelections();
-		return selections.size() == 1 ? selections.get( 0 ) : null;
+	private static List<SqmSelection<?>> selections(SqmSelectStatement<?> sqm) {
+		return sqm.getQueryPart().getFirstQuerySpec().getSelectClause().getSelections();
 	}
 
 	private static final Map<Class<?>, Class<?>> WRAPPERS
@@ -231,32 +231,61 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		else {
 			final Class<T> resultType = (Class<T>)
 					WRAPPERS.getOrDefault( resultClass, resultClass );
-			final SqmSelection<?> selection = singleSelection( sqm );
-			if ( isSelectionAssignableToResultType( selection, resultType ) ) {
-				return RowTransformerSingularReturnImpl.instance();
+			final List<SqmSelection<?>> selections = selections( sqm );
+			if ( selections == null ) {
+				throw new AssertionFailure("No selections");
 			}
-			else if ( resultType.isArray() ) {
-				return (RowTransformer<T>) RowTransformerArrayImpl.instance();
-			}
-			else if ( List.class.equals( resultType ) ) {
-				return (RowTransformer<T>) RowTransformerListImpl.instance();
-			}
-			else if ( Tuple.class.equals( resultType ) ) {
-				return (RowTransformer<T>) new RowTransformerJpaTupleImpl( tupleMetadata );
-			}
-			else if ( Map.class.equals( resultType ) ) {
-				return (RowTransformer<T>) new RowTransformerMapImpl( tupleMetadata );
-			}
-			else if ( isClass( resultType ) ) {
-				try {
-					return new RowTransformerConstructorImpl<>( resultType, tupleMetadata );
-				}
-				catch (InstantiationException ie) {
-					return new RowTransformerCheckingImpl<>( resultType );
-				}
-			}
-			else {
-				return new RowTransformerCheckingImpl<>( resultType );
+			switch ( selections.size() ) {
+				case 0:
+					throw new AssertionFailure("No selections");
+				case 1:
+					final SqmSelection<?> selection = selections.get(0);
+					if ( isSelectionAssignableToResultType( selection, resultType ) ) {
+						return RowTransformerSingularReturnImpl.instance();
+					}
+					else if ( resultType.isArray() ) {
+						return (RowTransformer<T>) RowTransformerArrayImpl.instance();
+					}
+					else if ( List.class.equals( resultType ) ) {
+						return (RowTransformer<T>) RowTransformerListImpl.instance();
+					}
+					else if ( Tuple.class.equals( resultType ) ) {
+						return (RowTransformer<T>) new RowTransformerJpaTupleImpl( tupleMetadata );
+					}
+					else if ( Map.class.equals( resultType ) ) {
+						return (RowTransformer<T>) new RowTransformerMapImpl( tupleMetadata );
+					}
+					else if ( isClass( resultType ) ) {
+						try {
+							return new RowTransformerConstructorImpl<>( resultType, tupleMetadata );
+						}
+						catch (InstantiationException ie) {
+							return new RowTransformerCheckingImpl<>( resultType );
+						}
+					}
+					else {
+						return new RowTransformerCheckingImpl<>( resultType );
+					}
+				default:
+					if ( resultType.isArray() ) {
+						return (RowTransformer<T>) RowTransformerArrayImpl.instance();
+					}
+					else if ( List.class.equals( resultType ) ) {
+						return (RowTransformer<T>) RowTransformerListImpl.instance();
+					}
+					else if ( Tuple.class.equals( resultType ) ) {
+						return (RowTransformer<T>) new RowTransformerJpaTupleImpl( tupleMetadata );
+					}
+					else if ( Map.class.equals( resultType ) ) {
+						return (RowTransformer<T>) new RowTransformerMapImpl( tupleMetadata );
+					}
+					else if ( isClass( resultType ) ) {
+						return new RowTransformerConstructorImpl<>( resultType, tupleMetadata );
+					}
+					else {
+						throw new QueryTypeMismatchException( "Result type '" + resultType.getSimpleName()
+								+ "' cannot be used to package the selected expressions" );
+					}
 			}
 		}
 	}

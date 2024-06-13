@@ -217,7 +217,16 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
-		renderComparisonEmulateIntersect( lhs, operator, rhs );
+		if ( operator == ComparisonOperator.DISTINCT_FROM || operator == ComparisonOperator.NOT_DISTINCT_FROM ) {
+			// HANA does not support plain parameters in the select clause of the intersect emulation
+			withParameterRenderingMode(
+					SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER,
+					() -> renderComparisonEmulateIntersect( lhs, operator, rhs )
+			);
+		}
+		else {
+			renderComparisonEmulateIntersect( lhs, operator, rhs );
+		}
 	}
 
 	@Override
@@ -272,5 +281,10 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	@Override
 	public void visitValuesTableReference(ValuesTableReference tableReference) {
 		emulateValuesTableReferenceColumnAliasing( tableReference );
+	}
+
+	@Override
+	protected String getSkipLocked() {
+		return " ignore locked";
 	}
 }

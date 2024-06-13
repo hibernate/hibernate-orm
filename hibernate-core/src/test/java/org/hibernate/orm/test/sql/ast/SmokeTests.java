@@ -29,6 +29,7 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
@@ -173,7 +174,10 @@ public class SmokeTests {
 
 					// ScalarDomainResultImpl creates and caches the assembler at its creation.
 					// this just gets access to that cached one
-					final DomainResultAssembler<?> resultAssembler = domainResult.createResultAssembler( null, null );
+					final DomainResultAssembler<?> resultAssembler = domainResult.createResultAssembler(
+							null,
+							null
+					);
 
 					assertThat( resultAssembler, instanceOf( BasicResultAssembler.class ) );
 

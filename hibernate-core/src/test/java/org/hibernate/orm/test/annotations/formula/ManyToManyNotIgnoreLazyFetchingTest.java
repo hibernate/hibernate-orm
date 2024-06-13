@@ -80,6 +80,7 @@ public class ManyToManyNotIgnoreLazyFetchingTest extends BaseEntityManagerFuncti
 			entityManager.flush();
 
 			entityManager.remove(code);
+			stock1.getCodes().remove( code );
 		} );
 	}
 

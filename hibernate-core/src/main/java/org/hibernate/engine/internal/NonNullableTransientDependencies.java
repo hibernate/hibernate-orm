@@ -67,7 +67,8 @@ public final class NonNullableTransientDependencies {
 	 * @return {@code true} indicates there are no path tracked here currently
 	 */
 	public boolean isEmpty() {
-		return propertyPathsByTransientEntity == null || propertyPathsByTransientEntity.isEmpty();
+		return propertyPathsByTransientEntity == null
+			|| propertyPathsByTransientEntity.isEmpty();
 	}
 
 	/**

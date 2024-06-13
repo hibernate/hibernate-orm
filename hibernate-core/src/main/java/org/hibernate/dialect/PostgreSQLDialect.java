@@ -79,7 +79,6 @@ import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -91,6 +90,7 @@ import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -153,7 +153,7 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	public PostgreSQLDialect(DialectResolutionInfo info) {
-		this( info, PostgreSQLDriverKind.determineKind( info ) );
+		this( info.makeCopyOrDefault( MINIMUM_VERSION ), PostgreSQLDriverKind.determineKind( info ) );
 		registerKeywords( info );
 	}
 
@@ -281,6 +281,7 @@ public class PostgreSQLDialect extends Dialect {
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
 
 		ddlTypeRegistry.addDescriptor( new NamedNativeEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NamedNativeOrdinalEnumDdlTypeImpl( this ) );
 	}
 
 	@Override
@@ -652,7 +653,7 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.arrayPrepend_postgresql();
 		functionFactory.arrayAppend_postgresql();
 		functionFactory.arrayContains_postgresql();
-		functionFactory.arrayOverlaps_postgresql();
+		functionFactory.arrayIntersects_postgresql();
 		functionFactory.arrayGet_bracket();
 		functionFactory.arraySet_unnest();
 		functionFactory.arrayRemove();
@@ -899,6 +900,11 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public boolean useInputStreamToInsertBlob() {
+		return false;
+	}
+
+	@Override
+	public boolean useConnectionToCreateLob() {
 		return false;
 	}
 
@@ -1470,8 +1476,11 @@ public class PostgreSQLDialect extends Dialect {
 				)
 		);
 
-		jdbcTypeRegistry.addDescriptor( new PostgreSQLEnumJdbcType() );
+		jdbcTypeRegistry.addDescriptor( PostgreSQLEnumJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( PostgreSQLOrdinalEnumJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( PostgreSQLUUIDJdbcType.INSTANCE );
+
+		jdbcTypeRegistry.addTypeConstructor( PostgreSQLArrayJdbcTypeConstructor.INSTANCE );
 	}
 
 	@Override

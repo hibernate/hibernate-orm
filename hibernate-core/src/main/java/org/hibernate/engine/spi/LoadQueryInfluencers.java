@@ -49,16 +49,16 @@ public class LoadQueryInfluencers implements Serializable {
 	private CascadingFetchProfile enabledCascadingFetchProfile;
 
 	//Lazily initialized!
-	private HashSet<String> enabledFetchProfileNames;
+	private @Nullable HashSet<String> enabledFetchProfileNames;
 
 	//Lazily initialized!
-	private HashMap<String,Filter> enabledFilters;
+	private @Nullable HashMap<String,Filter> enabledFilters;
 
 	private boolean subselectFetchEnabled;
 
 	private int batchSize = -1;
 
-	private final EffectiveEntityGraph effectiveEntityGraph = new EffectiveEntityGraph();
+	private final EffectiveEntityGraph effectiveEntityGraph;
 
 	private Boolean readOnly;
 
@@ -66,16 +66,18 @@ public class LoadQueryInfluencers implements Serializable {
 		this.sessionFactory = sessionFactory;
 		batchSize = sessionFactory.getSessionFactoryOptions().getDefaultBatchFetchSize();
 		subselectFetchEnabled = sessionFactory.getSessionFactoryOptions().isSubselectFetchEnabled();
+		effectiveEntityGraph = new EffectiveEntityGraph();
 	}
 
 	public LoadQueryInfluencers(SessionFactoryImplementor sessionFactory, SessionCreationOptions options) {
 		this.sessionFactory = sessionFactory;
 		batchSize = options.getDefaultBatchFetchSize();
 		subselectFetchEnabled = options.isSubselectFetchEnabled();
+		effectiveEntityGraph = new EffectiveEntityGraph();
 		for (FilterDefinition filterDefinition : sessionFactory.getAutoEnabledFilters()) {
 			FilterImpl filter = new FilterImpl( filterDefinition );
 			if ( enabledFilters == null ) {
-				this.enabledFilters = new HashMap<>();
+				enabledFilters = new HashMap<>();
 			}
 			enabledFilters.put( filterDefinition.getFilterName(), filter );
 		}
@@ -155,6 +157,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public Map<String,Filter> getEnabledFilters() {
+		final HashMap<String, Filter> enabledFilters = this.enabledFilters;
 		if ( enabledFilters == null ) {
 			return Collections.emptyMap();
 		}
@@ -268,8 +271,14 @@ public class LoadQueryInfluencers implements Serializable {
 
 	@Internal
 	public @Nullable HashSet<String> adjustFetchProfiles(@Nullable Set<String> disabledFetchProfiles, @Nullable Set<String> enabledFetchProfiles) {
-		final HashSet<String> oldFetchProfiles =
-				hasEnabledFetchProfiles() ? new HashSet<>( enabledFetchProfileNames ) : null;
+		final HashSet<String> currentEnabledFetchProfileNames = this.enabledFetchProfileNames;
+		final HashSet<String> oldFetchProfiles;
+		if ( currentEnabledFetchProfileNames == null || currentEnabledFetchProfileNames.isEmpty() ) {
+			oldFetchProfiles = null;
+		}
+		else {
+			oldFetchProfiles = new HashSet<>( currentEnabledFetchProfileNames );
+		}
 		if ( disabledFetchProfiles != null && enabledFetchProfileNames != null ) {
 			enabledFetchProfileNames.removeAll( disabledFetchProfiles );
 		}
@@ -375,5 +384,4 @@ public class LoadQueryInfluencers implements Serializable {
 		}
 		return false;
 	}
-
 }

@@ -25,6 +25,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.Restrictable;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -293,6 +294,17 @@ public interface CollectionPersister extends Restrictable {
 	boolean isAffectedByEnabledFilters(SharedSessionContractImplementor session);
 
 	default boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
+		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
+	}
+
+	default boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
+		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
+	}
+
+	default boolean isAffectedByEnabledFilters(
+			Set<ManagedMappingType> visitedTypes,
+			LoadQueryInfluencers influencers,
+			boolean onlyApplyForLoadByKey) {
 		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
 	}
 

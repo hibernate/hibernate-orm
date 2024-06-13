@@ -8,36 +8,28 @@ package org.hibernate.sql.results.graph.embeddable;
 
 
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.InitializerData;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Special initializer contract for embeddables
  *
  * @author Steve Ebersole
  */
-public interface EmbeddableInitializer extends FetchParentAccess {
+public interface EmbeddableInitializer<Data extends InitializerData> extends InitializerParent<Data> {
 	@Override
 	EmbeddableValuedModelPart getInitializedPart();
 
-	Object getCompositeInstance();
-
-	FetchParentAccess getFetchParentAccess();
-
-	default RowProcessingState wrapProcessingState(RowProcessingState processingState) {
-		final FetchParentAccess fetchParentAccess = getFetchParentAccess();
-		if ( fetchParentAccess != null ) {
-			if ( fetchParentAccess.isEmbeddableInitializer() ) {
-				return ( fetchParentAccess.asEmbeddableInitializer() ).wrapProcessingState( processingState );
-			}
-		}
-		return processingState;
+	Object getCompositeInstance(Data data);
+	default Object getCompositeInstance(RowProcessingState rowProcessingState) {
+		return getCompositeInstance( getData( rowProcessingState ) );
 	}
 
 	@Override
-	default Object getInitializedInstance() {
-		return getCompositeInstance();
-	}
+	@Nullable InitializerParent<?> getParent();
 
 	@Override
 	default boolean isEmbeddableInitializer() {
@@ -45,9 +37,10 @@ public interface EmbeddableInitializer extends FetchParentAccess {
 	}
 
 	@Override
-	default EmbeddableInitializer asEmbeddableInitializer() {
+	default EmbeddableInitializer<?> asEmbeddableInitializer() {
 		return this;
 	}
 
 	void resolveState(RowProcessingState rowProcessingState);
+
 }

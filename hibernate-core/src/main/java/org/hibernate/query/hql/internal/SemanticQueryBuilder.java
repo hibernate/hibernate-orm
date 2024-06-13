@@ -95,6 +95,7 @@ import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.UnknownEntityException;
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.internal.ParameterCollector;
 import org.hibernate.query.sqm.internal.SqmCreationProcessingStateImpl;
@@ -2602,7 +2603,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				ctx = ctx.getChild( 0 );
 
 				if ( ctx instanceof HqlParser.SimplePathContext ) {
-					return creationContext.getJpaMetamodel().getAllowedEnumLiteralTexts( ctx.getText() );
+					return creationContext.getJpaMetamodel().getEnumTypesForValue( ctx.getText() );
 				}
 			}
 		}
@@ -2638,6 +2639,73 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 
 		return null;
+	}
+
+	@Override
+	public SqmPredicate visitContainsPredicate(HqlParser.ContainsPredicateContext ctx) {
+		final boolean negated = ctx.NOT() != null;
+		final SqmExpression<?> lhs = (SqmExpression<?>) ctx.expression( 0 ).accept( this );
+		final SqmExpression<?> rhs = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
+		final SqmExpressible<?> lhsExpressible = lhs.getExpressible();
+		if ( lhsExpressible != null && !( lhsExpressible.getSqmType() instanceof BasicPluralType<?, ?>) ) {
+			throw new SemanticException(
+					"First operand for contains predicate must be a basic plural type expression, but found: " + lhsExpressible.getSqmType(),
+					query
+			);
+		}
+		final SelfRenderingSqmFunction<Boolean> contains = getFunctionDescriptor( "array_contains" ).generateSqmExpression(
+				asList( lhs, rhs ),
+				null,
+				creationContext.getQueryEngine()
+		);
+		return new SqmBooleanExpressionPredicate( contains, negated, creationContext.getNodeBuilder() );
+	}
+
+	@Override
+	public SqmPredicate visitIncludesPredicate(HqlParser.IncludesPredicateContext ctx) {
+		final boolean negated = ctx.NOT() != null;
+		final SqmExpression<?> lhs = (SqmExpression<?>) ctx.expression( 0 ).accept( this );
+		final SqmExpression<?> rhs = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
+		final SqmExpressible<?> lhsExpressible = lhs.getExpressible();
+		final SqmExpressible<?> rhsExpressible = rhs.getExpressible();
+		if ( lhsExpressible != null && !( lhsExpressible.getSqmType() instanceof BasicPluralType<?, ?>) ) {
+			throw new SemanticException(
+					"First operand for includes predicate must be a basic plural type expression, but found: " + lhsExpressible.getSqmType(),
+					query
+			);
+		}
+		if ( rhsExpressible != null && !( rhsExpressible.getSqmType() instanceof BasicPluralType<?, ?>) ) {
+			throw new SemanticException(
+					"Second operand for includes predicate must be a basic plural type expression, but found: " + rhsExpressible.getSqmType(),
+					query
+			);
+		}
+		final SelfRenderingSqmFunction<Boolean> contains = getFunctionDescriptor( "array_includes" ).generateSqmExpression(
+				asList( lhs, rhs ),
+				null,
+				creationContext.getQueryEngine()
+		);
+		return new SqmBooleanExpressionPredicate( contains, negated, creationContext.getNodeBuilder() );
+	}
+
+	@Override
+	public SqmPredicate visitIntersectsPredicate(HqlParser.IntersectsPredicateContext ctx) {
+		final boolean negated = ctx.NOT() != null;
+		final SqmExpression<?> lhs = (SqmExpression<?>) ctx.expression( 0 ).accept( this );
+		final SqmExpression<?> rhs = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
+		final SqmExpressible<?> lhsExpressible = lhs.getExpressible();
+		if ( lhsExpressible != null && !( lhsExpressible.getSqmType() instanceof BasicPluralType<?, ?>) ) {
+			throw new SemanticException(
+					"First operand for intersects predicate must be a basic plural type expression, but found: " + lhsExpressible.getSqmType(),
+					query
+			);
+		}
+		final SelfRenderingSqmFunction<Boolean> contains = getFunctionDescriptor( "array_intersects" ).generateSqmExpression(
+				asList( lhs, rhs ),
+				null,
+				creationContext.getQueryEngine()
+		);
+		return new SqmBooleanExpressionPredicate( contains, negated, creationContext.getNodeBuilder() );
 	}
 
 	@Override
@@ -2804,6 +2872,28 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					negated,
 					creationContext.getNodeBuilder()
 			);
+		}
+		else if ( inListContext instanceof HqlParser.ArrayInListContext ) {
+			if ( getCreationOptions().useStrictJpaCompliance() ) {
+				throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.HQL_COLLECTION_FUNCTION );
+			}
+			final HqlParser.ArrayInListContext arrayInListContext =
+					(HqlParser.ArrayInListContext) inListContext;
+
+			final SqmExpression<?> arrayExpr = (SqmExpression<?>) arrayInListContext.expression().accept( this );
+			final SqmExpressible<?> arrayExpressible = arrayExpr.getExpressible();
+			if ( arrayExpressible != null && !( arrayExpressible.getSqmType() instanceof BasicPluralType<?, ?>) ) {
+				throw new SemanticException(
+						"Right operand for in-array predicate must be a basic plural type expression, but found: " + arrayExpressible.getSqmType(),
+						query
+				);
+			}
+			final SelfRenderingSqmFunction<Boolean> contains = getFunctionDescriptor( "array_contains" ).generateSqmExpression(
+					asList( arrayExpr, testExpression ),
+					null,
+					creationContext.getQueryEngine()
+			);
+			return new SqmBooleanExpressionPredicate( contains, negated, creationContext.getNodeBuilder() );
 		}
 		else {
 			throw new ParsingException( "Unexpected IN predicate type [" + ctx.getClass().getSimpleName() + "] : " + ctx.getText() );
@@ -3439,6 +3529,21 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			}
 			return binaryLiteral( text.append( "'" ).toString() );
 		}
+	}
+
+	@Override
+	public Object visitArrayLiteral(HqlParser.ArrayLiteralContext ctx) {
+		final List<HqlParser.ExpressionContext> expressionContexts = ctx.expression();
+		int count = expressionContexts.size();
+		final List<SqmTypedNode<?>> arguments = new ArrayList<>( count );
+		for ( HqlParser.ExpressionContext expressionContext : expressionContexts ) {
+			arguments.add( (SqmTypedNode<?>) expressionContext.accept( this ) );
+		}
+		return getFunctionDescriptor( "array" ).generateSqmExpression(
+				arguments,
+				null,
+				creationContext.getQueryEngine()
+		);
 	}
 
 	@Override
@@ -4551,14 +4656,24 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitPositionFunction(HqlParser.PositionFunctionContext ctx) {
-		final SqmExpression<?> pattern = (SqmExpression<?>) ctx.positionFunctionPatternArgument().accept( this );
-		final SqmExpression<?> string = (SqmExpression<?>) ctx.positionFunctionStringArgument().accept( this );
+		final SqmExpression<?> patternOrElement = (SqmExpression<?>) ctx.positionFunctionPatternArgument().accept( this );
+		final SqmExpression<?> stringOrArray = (SqmExpression<?>) ctx.positionFunctionStringArgument().accept( this );
 
-		return getFunctionDescriptor("position").generateSqmExpression(
-				asList( pattern, string ),
-				null,
-				creationContext.getQueryEngine()
-		);
+		final SqmExpressible<?> stringOrArrayExpressible = stringOrArray.getExpressible();
+		if ( stringOrArrayExpressible != null && stringOrArrayExpressible.getSqmType() instanceof BasicPluralType<?, ?> ) {
+			return getFunctionDescriptor( "array_position" ).generateSqmExpression(
+					asList( stringOrArray, patternOrElement ),
+					null,
+					creationContext.getQueryEngine()
+			);
+		}
+		else {
+			return getFunctionDescriptor( "position" ).generateSqmExpression(
+					asList( patternOrElement, stringOrArray ),
+					null,
+					creationContext.getQueryEngine()
+			);
+		}
 	}
 
 	@Override
@@ -5141,7 +5256,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 			final List<SqmSelection<?>> selections = subQuery.getQuerySpec().getSelectClause().getSelections();
 			if ( selections.size() == 1 ) {
-				subQuery.applyInferableType( selections.get( 0 ).getNodeType() );
+				subQuery.applyInferableType( selections.get( 0 ).getExpressible().getSqmType() );
 			}
 
 			return subQuery;
@@ -5190,16 +5305,76 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return visitToOneFkReference( ctx.toOneFkReference() );
 		}
 		else if ( ctx.function() != null ) {
-			return visitPathContinuation(
-					visitIndexedPathAccessFragment(
-							(SemanticPathPart) visitFunction( ctx.function() ),
-							ctx.indexedPathAccessFragment()
-					),
-					ctx.pathContinuation()
-			);
+			final HqlParser.SlicedPathAccessFragmentContext slicedFragmentsCtx = ctx.slicedPathAccessFragment();
+			if ( slicedFragmentsCtx != null ) {
+				final List<HqlParser.ExpressionContext> slicedFragments = slicedFragmentsCtx.expression();
+				return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
+						List.of(
+								(SqmTypedNode<?>) visitFunction( ctx.function() ),
+								(SqmTypedNode<?>) slicedFragments.get( 0 ).accept( this ),
+								(SqmTypedNode<?>) slicedFragments.get( 1 ).accept( this )
+						),
+						null,
+						creationContext.getQueryEngine()
+				);
+			}
+			else {
+				return visitPathContinuation(
+						visitIndexedPathAccessFragment(
+								(SemanticPathPart) visitFunction( ctx.function() ),
+								ctx.indexedPathAccessFragment()
+						),
+						ctx.pathContinuation()
+				);
+			}
 		}
 		else if ( ctx.simplePath() != null && ctx.indexedPathAccessFragment() != null ) {
 			return visitIndexedPathAccessFragment( visitSimplePath( ctx.simplePath() ), ctx.indexedPathAccessFragment() );
+		}
+		else if ( ctx.simplePath() != null && ctx.slicedPathAccessFragment() != null ) {
+			final List<HqlParser.ExpressionContext> slicedFragments = ctx.slicedPathAccessFragment().expression();
+			final SqmTypedNode<?> lhs = (SqmTypedNode<?>) visitSimplePath( ctx.simplePath() );
+			final SqmExpressible<?> lhsExpressible = lhs.getExpressible();
+			if ( lhsExpressible != null && lhsExpressible.getSqmType() instanceof BasicPluralType<?, ?> ) {
+				return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
+						List.of(
+								lhs,
+								(SqmTypedNode<?>) slicedFragments.get( 0 ).accept( this ),
+								(SqmTypedNode<?>) slicedFragments.get( 1 ).accept( this )
+						),
+						null,
+						creationContext.getQueryEngine()
+				);
+			}
+			else {
+				final SqmExpression<?> start = (SqmExpression<?>) slicedFragments.get( 0 ).accept( this );
+				final SqmExpression<?> end = (SqmExpression<?>) slicedFragments.get( 1 ).accept( this );
+				return getFunctionDescriptor( "substring" ).generateSqmExpression(
+						List.of(
+								lhs,
+								start,
+								new SqmBinaryArithmetic<>(
+										BinaryArithmeticOperator.ADD,
+										new SqmBinaryArithmetic<>(
+												BinaryArithmeticOperator.SUBTRACT,
+												end,
+												start,
+												creationContext.getJpaMetamodel(),
+												creationContext.getNodeBuilder()
+										),
+										new SqmLiteral<>(
+												1,
+												creationContext.getNodeBuilder().getIntegerType(),
+												creationContext.getNodeBuilder()
+										),
+										creationContext.getJpaMetamodel(),
+										creationContext.getNodeBuilder()
+								)
+						),
+						null,
+						creationContext.getQueryEngine()
+				);
+			}
 		}
 		else {
 			throw new ParsingException( "Illegal domain path '" + ctx.getText() + "'" );
@@ -5306,14 +5481,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		consumeManagedTypeReference( ctx.path() );
 
 		final String treatTargetName = ctx.simplePath().getText();
-		final String treatTargetEntityName =
-				getCreationContext().getJpaMetamodel().qualifyImportableName( treatTargetName );
-		if ( treatTargetEntityName == null ) {
+		final String importableName = getCreationContext().getJpaMetamodel().qualifyImportableName( treatTargetName );
+		if ( importableName == null ) {
 			throw new SemanticException( "Could not resolve treat target type '" + treatTargetName + "'", query );
 		}
 
 		final boolean hasContinuation = ctx.getChildCount() == 7;
-		consumer.consumeTreat( treatTargetEntityName, !hasContinuation );
+		consumer.consumeTreat( importableName, !hasContinuation );
 		SqmPath<?> result = (SqmPath<?>) consumer.getConsumedPart();
 
 		if ( hasContinuation ) {

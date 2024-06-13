@@ -105,13 +105,16 @@ public class SqlAstQueryPartProcessingStateImpl
 			else {
 				throw new IllegalArgumentException( "Illegal expression passed for nested fetching: " + expression );
 			}
-			return expression.createSqlSelection(
-					-1,
-					nestingFetchParent.getReferencedMappingType().getSelectableIndex( selectableName ),
-					javaType,
-					true,
-					typeConfiguration
-			);
+			final int selectableIndex = nestingFetchParent.getReferencedMappingType().getSelectableIndex( selectableName );
+			if ( selectableIndex != -1 ) {
+				return expression.createSqlSelection(
+						-1,
+						selectableIndex,
+						javaType,
+						true,
+						typeConfiguration
+				);
+			}
 		}
 		final Map<Expression, Object> selectionMap;
 		if ( deduplicateSelectionItems ) {

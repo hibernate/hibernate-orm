@@ -10,11 +10,18 @@ import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.MarkerObject;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.sql.InFragment;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
+
+import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
 
 /**
  * Operations needed by persisters for working with discriminators.
@@ -33,6 +40,16 @@ public class DiscriminatorHelper {
 	 */
 	static BasicType<?> getDiscriminatorType(PersistentClass persistentClass) {
 		Type discriminatorType = persistentClass.getDiscriminator().getType();
+		if ( discriminatorType instanceof BasicType ) {
+			return (BasicType<?>) discriminatorType;
+		}
+		else {
+			throw new MappingException( "Illegal discriminator type: " + discriminatorType.getName() );
+		}
+	}
+
+	public static BasicType<?> getDiscriminatorType(Component component) {
+		Type discriminatorType = component.getDiscriminator().getType();
 		if ( discriminatorType instanceof BasicType ) {
 			return (BasicType<?>) discriminatorType;
 		}
@@ -86,7 +103,7 @@ public class DiscriminatorHelper {
 		);
 	}
 
-	private static <T> String jdbcLiteral(
+	public static <T> String jdbcLiteral(
 			T value,
 			JdbcLiteralFormatter<T> formatter,
 			Dialect dialect) {
@@ -96,6 +113,28 @@ public class DiscriminatorHelper {
 		catch (Exception e) {
 			throw new MappingException( "Could not format discriminator value to SQL string", e );
 		}
+	}
+
+	/**
+	 * Utility that computes the node type used in entity or embeddable type literals. Resolves to
+	 * either the {@link org.hibernate.metamodel.mapping.DiscriminatorType}, for polymorphic
+	 * domain types, or to {@link StandardBasicTypes#CLASS Class} for non-inherited ones.
+	 */
+	public static <T> SqmExpressible<? super T> getDiscriminatorType(
+			SqmPathSource<T> domainType,
+			NodeBuilder nodeBuilder) {
+		final SqmPathSource<?> subPathSource = domainType.findSubPathSource( DISCRIMINATOR_ROLE_NAME );
+		final SqmExpressible<?> type;
+		if ( subPathSource != null ) {
+			type = subPathSource.getSqmPathType();
+		}
+		else {
+			type = nodeBuilder.getTypeConfiguration()
+					.getBasicTypeRegistry()
+					.resolve( StandardBasicTypes.CLASS );
+		}
+		//noinspection unchecked
+		return (SqmExpressible<? super T>) type;
 	}
 
 	static String discriminatorLiteral(JdbcLiteralFormatter<Object> formatter, Dialect dialect, Object value) {

@@ -67,6 +67,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
 import jakarta.persistence.TableGenerators;
 
+import static org.hibernate.boot.model.internal.AnnotatedClassType.EMBEDDABLE;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.ENTITY;
 import static org.hibernate.boot.model.internal.FilterDefBinder.bindFilterDefs;
 import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
@@ -74,6 +75,7 @@ import static org.hibernate.boot.model.internal.GeneratorBinder.buildIdGenerator
 import static org.hibernate.boot.model.internal.InheritanceState.getInheritanceStateOfSuperEntity;
 import static org.hibernate.boot.model.internal.InheritanceState.getSuperclassInheritanceState;
 import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.mapping.MetadataSource.ANNOTATIONS;
 
 /**
@@ -403,7 +405,7 @@ public final class AnnotationBinder {
 	private static void handleImport(XClass annotatedClass, MetadataBuildingContext context) {
 		if ( annotatedClass.isAnnotationPresent( Imported.class ) ) {
 			String qualifiedName = annotatedClass.getName();
-			String name = StringHelper.unqualify( qualifiedName );
+			String name = unqualify( qualifiedName );
 			String rename = annotatedClass.getAnnotation( Imported.class ).rename();
 			context.getMetadataCollector().addImport( rename.isEmpty() ? name : rename, qualifiedName );
 		}
@@ -692,18 +694,31 @@ public final class AnnotationBinder {
 					getSuperclassInheritanceState( clazz, inheritanceStatePerClass );
 			final InheritanceState state =
 					new InheritanceState( clazz, inheritanceStatePerClass, buildingContext );
+			final AnnotatedClassType classType = buildingContext.getMetadataCollector().getClassType( clazz );
+			if ( classType == EMBEDDABLE && !clazz.isAnnotationPresent( Imported.class ) ) {
+				final String className = clazz.getName();
+				buildingContext.getMetadataCollector().addImport( unqualify( className ), className );
+			}
 			if ( superclassState != null ) {
 				//the classes are ordered thus preventing an NPE
 				superclassState.setHasSiblings( true );
 				final InheritanceState superEntityState =
 						getInheritanceStateOfSuperEntity( clazz, inheritanceStatePerClass );
-				state.setHasParents( superEntityState != null );
+				if ( superEntityState != null ) {
+					state.setHasParents( true );
+					if ( classType == EMBEDDABLE ) {
+						buildingContext.getMetadataCollector().registerEmbeddableSubclass(
+								superEntityState.getClazz(),
+								clazz
+						);
+					}
+				}
 				logMixedInheritance( clazz, superclassState, state );
 				if ( superclassState.getType() != null ) {
 					state.setType( superclassState.getType() );
 				}
 			}
-			switch ( buildingContext.getMetadataCollector().getClassType( clazz ) ) {
+			switch ( classType ) {
 				case ENTITY:
 				case MAPPED_SUPERCLASS:
 				case EMBEDDABLE:

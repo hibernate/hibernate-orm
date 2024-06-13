@@ -116,6 +116,7 @@ public class LoadUninitializedCollectionTest {
 					 bank.getDepartments().forEach(
 							 department -> entityManager.remove( department )
 					 );
+					 bank.getDepartments().clear();
 					 List<BankAccount> accounts = entityManager.createQuery( "from BankAccount" ).getResultList();
 
 					 accounts.forEach(

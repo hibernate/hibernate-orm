@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.function.Supplier;
 
-import jakarta.persistence.Entity;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
@@ -65,7 +64,6 @@ import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Persister;
 import org.hibernate.annotations.QueryCacheLayout;
-import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
@@ -97,7 +95,6 @@ import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.jdbc.Expectations;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.CheckConstraint;
@@ -133,6 +130,7 @@ import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Index;
@@ -165,6 +163,7 @@ import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinTa
 import static org.hibernate.boot.model.internal.BinderHelper.buildAnyValue;
 import static org.hibernate.boot.model.internal.BinderHelper.checkMappedByType;
 import static org.hibernate.boot.model.internal.BinderHelper.createSyntheticPropertyReference;
+import static org.hibernate.boot.model.internal.BinderHelper.extractFromPackage;
 import static org.hibernate.boot.model.internal.BinderHelper.getCascadeStrategy;
 import static org.hibernate.boot.model.internal.BinderHelper.getFetchMode;
 import static org.hibernate.boot.model.internal.BinderHelper.getOverridableAnnotation;
@@ -177,7 +176,6 @@ import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
 import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
 import static org.hibernate.boot.model.internal.HCANNHelper.findAnnotation;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
-import static org.hibernate.boot.model.internal.BinderHelper.extractFromPackage;
 import static org.hibernate.boot.model.source.internal.hbm.ModelBinder.useEntityWhereClauseForCollections;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
 import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
@@ -520,7 +518,7 @@ public abstract class CollectionBinder {
 			final Class<?> targetElement = elementCollectionAnn.targetClass();
 			collectionBinder.setTargetEntity( reflectionManager.toXClass( targetElement ) );
 			//collectionBinder.setCascadeStrategy( getCascadeStrategy( embeddedCollectionAnn.cascade(), hibernateCascade ) );
-			collectionBinder.setOneToMany( true );
+			collectionBinder.setOneToMany( false );
 		}
 		else if ( manyToManyAnn != null ) {
 			mappedBy = nullIfEmpty( manyToManyAnn.mappedBy() );

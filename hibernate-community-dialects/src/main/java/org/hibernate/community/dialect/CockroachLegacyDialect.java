@@ -62,12 +62,13 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -258,6 +259,8 @@ public class CockroachLegacyDialect extends Dialect {
 		else {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
 		}
+		ddlTypeRegistry.addDescriptor( new NamedNativeEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NamedNativeOrdinalEnumDdlTypeImpl( this ) );
 	}
 
 	@Override
@@ -350,6 +353,8 @@ public class CockroachLegacyDialect extends Dialect {
 		// Don't use this type due to https://github.com/pgjdbc/pgjdbc/issues/2862
 		//jdbcTypeRegistry.addDescriptor( TimestampUtcAsOffsetDateTimeJdbcType.INSTANCE );
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
+			jdbcTypeRegistry.addDescriptor( PostgreSQLEnumJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( PostgreSQLOrdinalEnumJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLUUIDJdbcType.INSTANCE );
 			if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getIntervalJdbcType( serviceRegistry ) );
@@ -402,6 +407,8 @@ public class CockroachLegacyDialect extends Dialect {
 								.getDescriptor( Object.class )
 				)
 		);
+
+		jdbcTypeRegistry.addTypeConstructor( PostgreSQLArrayJdbcTypeConstructor.INSTANCE );
 	}
 
 	@Override
@@ -468,7 +475,7 @@ public class CockroachLegacyDialect extends Dialect {
 		functionFactory.arrayPrepend_postgresql();
 		functionFactory.arrayAppend_postgresql();
 		functionFactory.arrayContains_postgresql();
-		functionFactory.arrayOverlaps_postgresql();
+		functionFactory.arrayIntersects_postgresql();
 		functionFactory.arrayGet_bracket();
 		functionFactory.arraySet_unnest();
 		functionFactory.arrayRemove();
@@ -860,7 +867,7 @@ public class CockroachLegacyDialect extends Dialect {
 					case SECOND:
 					case NANOSECOND:
 					case NATIVE:
-						return "round(extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this ) + ")";
+						return "round(extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this ) + ")::int";
 					default:
 						throw new SemanticException( "unrecognized field: " + unit );
 				}
@@ -1035,6 +1042,11 @@ public class CockroachLegacyDialect extends Dialect {
 
 	@Override
 	public boolean useInputStreamToInsertBlob() {
+		return false;
+	}
+
+	@Override
+	public boolean useConnectionToCreateLob() {
 		return false;
 	}
 

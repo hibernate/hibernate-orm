@@ -740,6 +740,11 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
+		public boolean hasFilterForLoadByKey() {
+			return false;
+		}
+
+		@Override
 		public Iterable<UniqueKeyEntry> uniqueKeyEntries() {
 			return Collections.emptyList();
 		}
@@ -780,7 +785,7 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
+		public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
 			return false;
 		}
 

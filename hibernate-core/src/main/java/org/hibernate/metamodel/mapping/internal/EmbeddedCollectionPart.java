@@ -95,6 +95,11 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	}
 
 	@Override
+	public PluralAttributeMapping getCollectionAttribute() {
+		return collectionDescriptor.getAttributeMapping();
+	}
+
+	@Override
 	public <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,

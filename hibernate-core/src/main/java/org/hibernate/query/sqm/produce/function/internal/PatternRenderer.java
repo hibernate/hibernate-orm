@@ -59,7 +59,6 @@ public class PatternRenderer {
 	 * @param argumentRenderingModes The rendering modes for arguments
 	 */
 	public PatternRenderer(String pattern, SqlAstNodeRenderingMode[] argumentRenderingModes) {
-		final Set<Integer> paramNumbers = new HashSet<>();
 		final List<String> chunkList = new ArrayList<>();
 		final List<Integer> paramList = new ArrayList<>();
 		final StringBuilder chunk = new StringBuilder( 10 );

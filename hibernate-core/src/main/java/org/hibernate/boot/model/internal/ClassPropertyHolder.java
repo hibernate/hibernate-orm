@@ -377,7 +377,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 						else {
 							if ( componentClass == Object.class ) {
 								// Object is not a valid component class, but that is what we get when using a type variable
-								component.getProperties().clear();
+								component.clearProperties();
 							}
 							else {
 								final Iterator<Property> propertyIterator = component.getPropertyIterator();

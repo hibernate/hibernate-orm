@@ -8,7 +8,6 @@ package org.hibernate.mapping;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -61,6 +60,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.usertype.CompositeUserType;
 
+import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -108,10 +108,6 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private QualifiedName structName;
 	private String[] structColumnNames;
 	private transient Class<?> componentClass;
-	// lazily computed based on 'properties' field: invalidate by setting to null when properties are modified
-	private transient List<Selectable> cachedSelectables;
-	// lazily computed based on 'properties' field: invalidate by setting to null when properties are modified
-	private transient List<Column> cachedColumns;
 
 	private transient Generator builtIdentifierGenerator;
 
@@ -186,7 +182,6 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 			}
 			propertyDeclaringClasses.put( p, declaringClass.getName() );
 		}
-		propertiesListModified();
 	}
 
 	public void addProperty(Property p) {
@@ -200,11 +195,6 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		return null;
 	}
 
-	private void propertiesListModified() {
-		this.cachedSelectables = null;
-		this.cachedColumns = null;
-	}
-
 	@Override
 	public void addColumn(Column column) {
 		throw new UnsupportedOperationException("Cant add a column to a component");
@@ -212,33 +202,26 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	@Override
 	public List<Selectable> getSelectables() {
-		if ( cachedSelectables == null ) {
-			final List<Selectable> selectables = properties.stream()
-					.flatMap( p -> p.getSelectables().stream() )
-					.collect( toList() );
-			if ( discriminator != null ) {
-				selectables.addAll( discriminator.getSelectables() );
-			}
-			cachedSelectables = selectables;
+		final List<Selectable> selectables = new ArrayList<>( properties.size() + 2 );
+		for ( Property property : properties ) {
+			selectables.addAll( property.getSelectables() );
 		}
-		return cachedSelectables;
+		if ( discriminator != null ) {
+			selectables.addAll( discriminator.getSelectables() );
+		}
+		return unmodifiableList( selectables );
 	}
 
 	@Override
 	public List<Column> getColumns() {
-		if ( cachedColumns != null ) {
-			return cachedColumns;
+		final List<Column> columns = new ArrayList<>( properties.size() + 2 );
+		for ( Property property : properties ) {
+			columns.addAll( property.getValue().getColumns() );
 		}
-		else {
-			final List<Column> columns = properties.stream()
-					.flatMap( p -> p.getValue().getColumns().stream() )
-					.collect( toList() );
-			if ( discriminator != null ) {
-				columns.addAll( discriminator.getColumns() );
-			}
-			this.cachedColumns = Collections.unmodifiableList( columns );
-			return cachedColumns;
+		if ( discriminator != null ) {
+			columns.addAll( discriminator.getColumns() );
 		}
+		return unmodifiableList( columns );
 	}
 
 	public boolean isEmbedded() {
@@ -763,6 +746,10 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		return propertyNames;
 	}
 
+	public void clearProperties() {
+		properties.clear();
+	}
+
 	public static class StandardGenerationContextLocator
 			implements CompositeNestedGeneratedValueGenerator.GenerationContextLocator {
 		private final String entityName;
@@ -909,7 +896,6 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 				}
 			}
 		}
-		propertiesListModified();
 		return this.originalPropertyOrder = originalPropertyOrder;
 	}
 

@@ -32,7 +32,7 @@ public class FilterDefRegistration {
 	private final String name;
 	private final String defaultCondition;
 	private final boolean autoEnabled;
-
+	private final boolean applyToLoadByKey;
 	private final Map<String, ClassDetails> parameterTypes;
 	private final Map<String, ClassDetails> parameterResolvers;
 
@@ -40,11 +40,13 @@ public class FilterDefRegistration {
 			String name,
 			String defaultCondition,
 			boolean autoEnabled,
+			boolean applyToLoadByKey,
 			Map<String, ClassDetails> parameterTypes,
 			Map<String, ClassDetails> parameterResolvers) {
 		this.name = name;
 		this.defaultCondition = defaultCondition;
 		this.autoEnabled = autoEnabled;
+		this.applyToLoadByKey = applyToLoadByKey;
 		this.parameterTypes = parameterTypes;
 		this.parameterResolvers = parameterResolvers;
 	}
@@ -59,6 +61,10 @@ public class FilterDefRegistration {
 
 	public boolean isAutoEnabled() {
 		return autoEnabled;
+	}
+
+	public boolean isApplyToLoadByKey() {
+		return applyToLoadByKey;
 	}
 
 	public Map<String, ClassDetails> getParameterTypes() {
@@ -104,6 +110,7 @@ public class FilterDefRegistration {
 				getName(),
 				getDefaultCondition(),
 				isAutoEnabled(),
+				isApplyToLoadByKey(),
 				parameterJdbcMappings,
 				parameterResolvers
 		);

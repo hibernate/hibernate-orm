@@ -545,6 +545,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 					usage.name(),
 					usage.defaultCondition(),
 					usage.autoEnabled(),
+					usage.applyToLoadByKey(),
 					paramJdbcMappings,
 					parameterResolvers
 			);
@@ -597,6 +598,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 					filterDefinition.getName(),
 					filterDefinition.getDefaultCondition(),
 					filterDefinition.isAutoEnabled(),
+					filterDefinition.isApplyToLoadByKey(),
 					paramJdbcMappings,
 					parameterResolvers
 			);
@@ -607,6 +609,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			String name,
 			String defaultCondition,
 			boolean autoEnabled,
+			boolean applyToLoadByKey,
 			Map<String, ClassDetails> parameterTypes,
 			Map<String, ClassDetails> parameterResolvers) {
 		if ( filterDefRegistrations == null ) {
@@ -615,7 +618,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 
 		final FilterDefRegistration previousEntry = filterDefRegistrations.put(
 				name,
-				new FilterDefRegistration( name, defaultCondition, autoEnabled, parameterTypes, parameterResolvers )
+				new FilterDefRegistration( name, defaultCondition, autoEnabled, applyToLoadByKey, parameterTypes, parameterResolvers )
 		);
 		if ( previousEntry != null ) {
 			// legacy code simply allows the collision overwriting the previous

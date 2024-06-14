@@ -752,18 +752,6 @@ public abstract class AbstractEntityPersister
 			subclassPropertyFetchModeClosure[j++] = fetchMode;
 		}
 
-		propertyDefinedOnSubclass = toBooleanArray( definedBySubclass );
-
-		// Handle any filters applied to the class level
-		filterHelper = isNotEmpty( persistentClass.getFilters() ) ? new FilterHelper(
-				persistentClass.getFilters(),
-				getEntityNameByTableNameMap(
-						persistentClass,
-						factory.getSqlStringGenerationContext()
-				),
-				factory
-		) : null;
-
 		useReferenceCacheEntries = shouldUseReferenceCacheEntries( creationContext.getSessionFactoryOptions() );
 		useShallowQueryCacheLayout = shouldUseShallowCacheLayout(
 				persistentClass.getQueryCacheLayout(),

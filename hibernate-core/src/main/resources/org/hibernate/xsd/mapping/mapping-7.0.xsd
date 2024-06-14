@@ -2798,6 +2798,7 @@
 
         <xsd:attribute name="name" use="required" type="xsd:string"/>
         <xsd:attribute name="auto-enabled" type="xsd:boolean" default="false"/>
+        <xsd:attribute name="apply-to-load-by-key" type="xsd:boolean" default="false"/>
     </xsd:complexType>
 
     <xsd:complexType name="hbm-filter">

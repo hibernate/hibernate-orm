@@ -1333,37 +1333,30 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 	private static AnnotatedClassType getAnnotatedClassType(ClassDetails clazz) {
-		if ( clazz.isAnnotationPresent( Entity.class ) ) {
-			if ( clazz.isAnnotationPresent( Embeddable.class ) ) {
+		if ( clazz.hasDirectAnnotationUsage( Entity.class ) ) {
+			if ( clazz.hasDirectAnnotationUsage( Embeddable.class ) ) {
 				throw new AnnotationException( "Invalid class annotated both '@Entity' and '@Embeddable': '" + clazz.getName() + "'" );
 			}
-			else if ( clazz.isAnnotationPresent( jakarta.persistence.MappedSuperclass.class ) ) {
+			else if ( clazz.hasDirectAnnotationUsage( jakarta.persistence.MappedSuperclass.class ) ) {
 				throw new AnnotationException( "Invalid class annotated both '@Entity' and '@MappedSuperclass': '" + clazz.getName() + "'" );
 			}
 			return AnnotatedClassType.ENTITY;
 		}
-		else if ( clazz.isAnnotationPresent( Embeddable.class ) ) {
-			if ( clazz.isAnnotationPresent( jakarta.persistence.MappedSuperclass.class ) ) {
+		else if ( clazz.hasDirectAnnotationUsage( Embeddable.class ) ) {
+			if ( clazz.hasDirectAnnotationUsage( jakarta.persistence.MappedSuperclass.class ) ) {
 				throw new AnnotationException( "Invalid class annotated both '@Embeddable' and '@MappedSuperclass': '" + clazz.getName() + "'" );
 			}
 			return AnnotatedClassType.EMBEDDABLE;
 		}
-		else if ( clazz.isAnnotationPresent( jakarta.persistence.MappedSuperclass.class ) ) {
+		else if ( clazz.hasDirectAnnotationUsage( jakarta.persistence.MappedSuperclass.class ) ) {
 			return AnnotatedClassType.MAPPED_SUPERCLASS;
 		}
-		else if ( clazz.isAnnotationPresent( Imported.class ) ) {
+		else if ( clazz.hasDirectAnnotationUsage( Imported.class ) ) {
 			return AnnotatedClassType.IMPORTED;
 		}
 		else {
 			return AnnotatedClassType.NONE;
 		}
-	}
-
-	@Override
-	public AnnotatedClassType addClassType(ClassDetails classDetails) {
-		final AnnotatedClassType type = getAnnotatedClassType2( classDetails );
-		annotatedClassTypeMap.put( classDetails.getName(), type );
-		return type;
 	}
 
 	private static AnnotatedClassType getAnnotatedClassType2(ClassDetails classDetails) {
@@ -1383,18 +1376,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			return AnnotatedClassType.NONE;
 		}
 	}
-
-	@Override
-	public AnnotatedClassType getClassType(ClassDetails classDetails) {
-		final AnnotatedClassType type = annotatedClassTypeMap.get( classDetails.getName() );
-		if ( type == null ) {
-			return addClassType( classDetails );
-		}
-		else {
-			return type;
-		}
-	}
-
 
 	@Override
 	public void addMappedSuperclass(Class<?> type, MappedSuperclass mappedSuperclass) {

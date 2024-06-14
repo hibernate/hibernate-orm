@@ -3,6 +3,39 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 7.0.0.Alpha3 (June 14, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32304
+
+** Bug
+    * [HHH-18135] - GenerationTypeStrategy implementations always throw UnsupportedOperationException
+    * [HHH-18081] - XML  <secondary-table/> element is not added to JdkClassDetails
+    * [HHH-11937] - Remove warnings about "empty composites" being experimental when feature is stabilized
+    * [HHH-11936] - Stabilize "empty composites" feature
+
+** New Feature
+    * [HHH-18231] - SPI for persistence XML parsing
+    * [HHH-18057] - Support for JPA 3.2 column options
+    * [HHH-18056] - Support for JPA 32 table options
+    * [HHH-18055] - Support for JPA 3.2 table comment
+    * [HHH-18054] - Support for JPA 3.2 @CheckConstraint
+    * [HHH-16153] - Support JPA 3.2 `@EnumeratedValue`
+
+** Remove Feature
+    * [HHH-18222] - remove hibernate.create_empty_composites.enabled in Hibernate 7
+    * [HHH-18207] - remove deprecated Dialects
+    * [HHH-18139] - remove IdentifierGeneratorFactory and related code
+
+** Sub-task
+    * [HHH-18095] - Transform hbm.xml column read/write fragments
+    * [HHH-18072] - Transform hbm.xml not-found
+
+** Task
+    * [HHH-18127] - Leverage hibernate-models Annotation-as-Class
+    * [HHH-18096] - Support for JPA 3.2 database generator options
+
+
 Changes in 7.0.0.Alpha2 (May 03, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

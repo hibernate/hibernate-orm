@@ -230,9 +230,9 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 				if ( clazz.hasDirectAnnotationUsage( Entity.class ) ) {
 					throw new MappingException( "Only classes (not interfaces) may be mapped as @Entity : " + clazz.getName() );
 				}
-				if ( clazz.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
-					throw new MappingException( "Only classes (not interfaces) may be mapped as @MappedSuperclass : " + clazz.getName() );
-				}
+//				if ( clazz.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
+//					throw new MappingException( "Only classes (not interfaces) may be mapped as @MappedSuperclass : " + clazz.getName() );
+//				}
 			}
 
 			if ( clazz.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {

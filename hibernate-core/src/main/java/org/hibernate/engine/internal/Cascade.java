@@ -19,14 +19,12 @@ import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.AttributeMappingsList;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.AssociationType;
@@ -172,7 +170,6 @@ public final class Cascade {
 							type,
 							style,
 							propertyName,
-							persister.getAttributeMapping( i ),
 							anything,
 							false
 					);
@@ -214,17 +211,16 @@ public final class Cascade {
 			final Type type,
 			final CascadeStyle style,
 			final String propertyName,
-			final AttributeMapping attributeMapping,
 			final T anything,
 			final boolean isCascadeDeleteEnabled) throws HibernateException {
 
 		if ( child != null ) {
 			if ( type.isAssociationType() ) {
 				final AssociationType associationType = (AssociationType) type;
-				final boolean strictUnowned = eventSource.getSessionFactory()
+				final boolean unownedTransient = eventSource.getSessionFactory()
 						.getSessionFactoryOptions()
 						.isUnownedAssociationTransientCheck();
-				if ( cascadeAssociationNow( action, cascadePoint, associationType, attributeMapping, strictUnowned ) ) {
+				if ( cascadeAssociationNow( action, cascadePoint, associationType, eventSource.getFactory(), unownedTransient ) ) {
 					cascadeAssociation(
 							action,
 							cascadePoint,
@@ -254,7 +250,6 @@ public final class Cascade {
 						parent,
 						child,
 						(CompositeType) type,
-						attributeMapping,
 						anything
 				);
 				if ( componentPath != null ) {
@@ -390,14 +385,14 @@ public final class Cascade {
 			CascadingAction<?> action,
 			CascadePoint cascadePoint,
 			AssociationType associationType,
-			AttributeMapping attributeMapping,
-			boolean isStrictUnownedTransienceEnabled) {
+			SessionFactoryImplementor factory,
+			boolean unownedTransient) {
 		return associationType.getForeignKeyDirection().cascadeNow( cascadePoint )
-				// For check on flush, we should only check owned associations when strictness is enforced
-				&& ( action != CHECK_ON_FLUSH || isStrictUnownedTransienceEnabled || !isUnownedAssociation( associationType, attributeMapping ) );
+				// For check on flush, we should only check unowned associations when strictness is enforced
+				&& ( action != CHECK_ON_FLUSH || unownedTransient || !isUnownedAssociation( associationType, factory ) );
 	}
 
-	private static boolean isUnownedAssociation(AssociationType associationType, AttributeMapping attributeMapping) {
+	private static boolean isUnownedAssociation(AssociationType associationType, SessionFactoryImplementor factory) {
 		if ( associationType.isEntityType() ) {
 			if ( associationType instanceof ManyToOneType ) {
 				final ManyToOneType manyToOne = (ManyToOneType) associationType;
@@ -412,7 +407,7 @@ public final class Cascade {
 		}
 		else if ( associationType.isCollectionType() ) {
 			// for collections, we can ask the persister if we're on the inverse side
-			return ( (PluralAttributeMapping) attributeMapping ).getCollectionDescriptor().isInverse();
+			return ( (CollectionType) associationType ).isInverse( factory );
 		}
 		return false;
 	}
@@ -425,14 +420,10 @@ public final class Cascade {
 			final Object parent,
 			final Object child,
 			final CompositeType componentType,
-			final AttributeMapping attributeMapping,
 			final T anything) {
 		Object[] children = null;
 		final Type[] types = componentType.getSubtypes();
 		final String[] propertyNames = componentType.getPropertyNames();
-		final AttributeMappingsList subMappings = attributeMapping != null ?
-				attributeMapping.asEmbeddedAttributeMapping().getEmbeddableTypeDescriptor().getAttributeMappings() :
-				null;
 		for ( int i = 0; i < types.length; i++ ) {
 			final CascadeStyle componentPropertyStyle = componentType.getCascadeStyle( i );
 			final String subPropertyName = propertyNames[i];
@@ -452,7 +443,6 @@ public final class Cascade {
 						types[i],
 						componentPropertyStyle,
 						subPropertyName,
-						subMappings != null && i < subMappings.size() ? subMappings.get( i ) : null,
 						anything,
 						false
 					);
@@ -594,7 +584,6 @@ public final class Cascade {
 						elemType,
 						style,
 						collectionType.getRole().substring( collectionType.getRole().lastIndexOf('.') + 1 ),
-						null,
 						anything,
 						isCascadeDeleteEnabled
 				);

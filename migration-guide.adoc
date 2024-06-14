@@ -182,7 +182,7 @@ must be explicitly set to true.
 [[hbm-transform]]
 == hbm.xml Transformation
 
-Previous versions of Hibernate performed transformations of `hbm.xml` files (with `` enabled)
+Previous versions of Hibernate performed transformations of `hbm.xml` files (with `hibernate.transform_hbm_xml.enabled=true`)
 one file at a time.  This is now done across the entire set of `hbm.xml` files at once.
 While most users will never see this change, it might impact integrations which tie-in to
 XML processing.

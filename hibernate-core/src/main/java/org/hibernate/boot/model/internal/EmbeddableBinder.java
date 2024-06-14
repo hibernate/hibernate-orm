@@ -418,13 +418,15 @@ public class EmbeddableBinder {
 			);
 		}
 
+		final Map<String, String> subclassToSuperclass = component.isPolymorphic() ? new HashMap<>() : null;
 		final TypeDetails annotatedType = inferredData.getPropertyType();
 		final List<PropertyData> classElements = collectClassElements(
 				propertyAccessor,
 				context,
 				returnedClassOrElement,
 				annotatedType,
-				isIdClass
+				isIdClass,
+				subclassToSuperclass
 		);
 
 		if ( component.isPolymorphic() ) {
@@ -637,9 +639,9 @@ public class EmbeddableBinder {
 				new PropertyContainer( returnedClassOrElement, annotatedClass, propertyAccessor );
 		addElementsOfClass( classElements, container, context);
 		//add elements of the embeddable's mapped superclasses
-		ClassDetails subClass = returnedClassOrElement;
-		XClass superClass;
-		while ( isValidSuperclass( superClass = subclass.getSuperclass(), isIdClass ) ) {
+		ClassDetails subclass = returnedClassOrElement;
+		ClassDetails superClass;
+		while ( isValidSuperclass( superClass = subclass.getSuperClass(), isIdClass ) ) {
 			//FIXME: proper support of type variables incl var resolved at upper levels
 			final PropertyContainer superContainer = new PropertyContainer(
 					superClass,

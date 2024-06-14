@@ -22,8 +22,9 @@ import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkV
 public class FilterDefAnnotation implements FilterDef {
 	private String name;
 	private String defaultCondition;
-	private org.hibernate.annotations.ParamDef[] parameters;
 	private boolean autoEnabled;
+	private boolean applyToLoadByKey;
+	private org.hibernate.annotations.ParamDef[] parameters;
 
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
@@ -40,8 +41,9 @@ public class FilterDefAnnotation implements FilterDef {
 	public FilterDefAnnotation(FilterDef annotation, SourceModelBuildingContext modelContext) {
 		this.name = annotation.name();
 		this.defaultCondition = annotation.defaultCondition();
-		this.parameters = extractJdkValue( annotation, HibernateAnnotations.FILTER_DEF, "parameters", modelContext );
 		this.autoEnabled = annotation.autoEnabled();
+		this.applyToLoadByKey = annotation.applyToLoadByKey();;
+		this.parameters = extractJdkValue( annotation, HibernateAnnotations.FILTER_DEF, "parameters", modelContext );
 	}
 
 	/**
@@ -55,13 +57,19 @@ public class FilterDefAnnotation implements FilterDef {
 				"defaultCondition",
 				modelContext
 		);
-		this.parameters = extractJandexValue( annotation, HibernateAnnotations.FILTER_DEF, "parameters", modelContext );
 		this.autoEnabled = extractJandexValue(
 				annotation,
 				HibernateAnnotations.FILTER_DEF,
 				"autoEnabled",
 				modelContext
 		);
+		this.applyToLoadByKey = extractJandexValue(
+				annotation,
+				HibernateAnnotations.FILTER_DEF,
+				"applyToLoadByKey",
+				modelContext
+		);
+		this.parameters = extractJandexValue( annotation, HibernateAnnotations.FILTER_DEF, "parameters", modelContext );
 	}
 
 	@Override
@@ -90,22 +98,31 @@ public class FilterDefAnnotation implements FilterDef {
 
 
 	@Override
-	public org.hibernate.annotations.ParamDef[] parameters() {
-		return parameters;
-	}
-
-	public void parameters(org.hibernate.annotations.ParamDef[] value) {
-		this.parameters = value;
-	}
-
-
-	@Override
 	public boolean autoEnabled() {
 		return autoEnabled;
 	}
 
 	public void autoEnabled(boolean value) {
 		this.autoEnabled = value;
+	}
+
+
+	@Override
+	public boolean applyToLoadByKey() {
+		return applyToLoadByKey;
+	}
+
+	public void applyToLoadByKey(boolean value) {
+		this.applyToLoadByKey = value;
+	}
+
+	@Override
+	public org.hibernate.annotations.ParamDef[] parameters() {
+		return parameters;
+	}
+
+	public void parameters(org.hibernate.annotations.ParamDef[] value) {
+		this.parameters = value;
 	}
 
 

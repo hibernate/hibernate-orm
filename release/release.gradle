@@ -232,7 +232,7 @@ def releaseChecksTask = tasks.register( "releaseChecks" ) {
             gitBranchLocal = executeGitCommand( 'branch', '--show-current' ).trim()
         }
 
-        if (project.hasProperty('gitRemote') && !project.hasProperty('gitRemote').isEmpty()) {
+        if (project.hasProperty('gitRemote') && !project.property('gitRemote').isEmpty()) {
             gitRemoteLocal = project.property('gitRemote')
         }
         else {

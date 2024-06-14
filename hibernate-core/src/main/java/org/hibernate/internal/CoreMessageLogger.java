@@ -50,7 +50,7 @@ import static org.jboss.logging.Logger.Level.WARN;
  * New messages must be added after the last message defined to ensure message codes are unique.
  */
 @MessageLogger(projectCode = "HHH")
-@ValidIdRange(max = 10000)
+@ValidIdRange(min=2,max = 10000)
 public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = WARN)

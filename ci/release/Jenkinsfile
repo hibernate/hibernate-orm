@@ -111,7 +111,7 @@ pipeline {
 						}
 						releaseVersion = Version.parseReleaseVersion( params.RELEASE_VERSION )
 
-						if ( releaseVersion.toString().startsWith( currentVersion.family + '.' ) ) {
+						if ( !releaseVersion.toString().startsWith( currentVersion.family + '.' ) ) {
 							throw new IllegalArgumentException( "RELEASE_VERSION = $releaseVersion, which is different from the family of CURRENT_VERSION = $currentVersion. Did you make a mistake?" )
 						}
 					}

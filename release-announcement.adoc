@@ -15,7 +15,7 @@ Steve Ebersole
 [[jakarta-data]]
 == Jakarta Data
 
-Hibernate 6.6 includes a complete implementation of the current Jakarta Data 1.0 Release Candidate. As https://in.relation.to/2024/04/18/jakarta-data-1/[discussed here], our implementation:
+Hibernate 6.6 includes a complete implementation of the Jakarta Data 1.0 Release. As https://in.relation.to/2024/04/18/jakarta-data-1/[discussed here], our implementation:
 
 - is based on compile-time code generation via an annotation processor, enabling unprecedented compile-time type safety, and
 - is backed by Hibernate's `StatelessSession`, which has been enhanced especially to meet the needs of Jakarta Data.
@@ -31,10 +31,10 @@ For example, in Gradle:
 
 [source,groovy]
 ----
-implementation 'jakarta.data:jakarta.data-api:1.0.0-RC1'
-implementation 'org.hibernate.orm:hibernate-core:6.6.0.Alpha1'
+implementation 'jakarta.data:jakarta.data-api:1.0.0'
+implementation 'org.hibernate.orm:hibernate-core:6.6.0.Final'
 
-annotationProcessor 'org.hibernate.orm:hibernate-jpamodelgen:6.6.0.Alpha1'
+annotationProcessor 'org.hibernate.orm:hibernate-jpamodelgen:6.6.0.Final'
 ----
 
 For more information, please see the brand-new _Hibernate Data Repositories_ link:{docs-url}/repositories/html_single/Hibernate_Data_Repositories.html[documentation].

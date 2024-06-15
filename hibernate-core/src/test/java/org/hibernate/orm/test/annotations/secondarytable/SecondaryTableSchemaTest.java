@@ -19,6 +19,7 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
+import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
@@ -62,7 +63,7 @@ public class SecondaryTableSchemaTest
 	@Entity(name = "Cluster")
 	@Table(name = "cluster", schema = "schema1")
 	@SecondaryTable(name = "Cluster", schema="schema2", pkJoinColumns = { @PrimaryKeyJoinColumn(name = "clusterid") })
-	@org.hibernate.annotations.Table(appliesTo = "Cluster", optional = false)
+	@SecondaryRow(table = "Cluster", optional = false)
 	@OptimisticLocking(type = OptimisticLockType.DIRTY)
 	@DynamicUpdate
 	public static class Cluster implements Serializable {

@@ -8,7 +8,7 @@ package org.hibernate.orm.test.batch;
 
 import java.util.List;
 
-import org.hibernate.annotations.Table;
+import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -141,7 +141,7 @@ public class OptionalSecondaryTableBatchTest {
 
 	@Entity(name = "Company")
 	@SecondaryTable( name = "company_tax" )
-	@Table( appliesTo = "company_tax", optional = true)
+	@SecondaryRow(table = "company_tax", optional = true)
 	public static class Company {
 
 		@Id

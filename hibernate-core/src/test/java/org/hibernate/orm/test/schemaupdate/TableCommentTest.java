@@ -15,7 +15,7 @@ import java.util.List;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.annotations.Table;
+import jakarta.persistence.Table;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -88,8 +88,7 @@ public class TableCommentTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "TableWithComment")
-	@jakarta.persistence.Table(name = "TABLE_WITH_COMMENT")
-	@Table(appliesTo = "TABLE_WITH_COMMENT", comment = "comment snippet")
+	@Table(name = "TABLE_WITH_COMMENT", comment = "comment snippet")
 	public static class TableWithComment {
 
 		@Id

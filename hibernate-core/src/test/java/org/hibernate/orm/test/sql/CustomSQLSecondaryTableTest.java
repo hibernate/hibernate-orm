@@ -11,17 +11,15 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.NamedNativeQueries;
-import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
 
 import org.hibernate.Session;
-import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLInsert;
+import org.hibernate.annotations.SQLSelect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
@@ -108,20 +106,15 @@ public class CustomSQLSecondaryTableTest extends BaseEntityManagerFunctionalTest
         sql = "UPDATE person_details SET valid = false WHERE person_id = ? "
     )
 
-    @Loader(namedQuery = "find_valid_person")
-    @NamedNativeQueries({
-        @NamedNativeQuery(
-            name = "find_valid_person",
-            query = "SELECT " +
-                    "    p.id, " +
-                    "    p.name, " +
-                    "    pd.image  " +
-                    "FROM person p  " +
-                    "LEFT OUTER JOIN person_details pd ON p.id = pd.person_id  " +
-                    "WHERE p.id = ? AND p.valid = true AND pd.valid = true",
-            resultClass = Person.class
-       )
-    })
+    @SQLSelect(
+        sql = "SELECT " +
+                "    p.id, " +
+                "    p.name, " +
+                "    pd.image  " +
+                "FROM person p  " +
+                "LEFT OUTER JOIN person_details pd ON p.id = pd.person_id  " +
+                "WHERE p.id = ? AND p.valid = true AND pd.valid = true"
+    )
     public static class Person {
 
         @Id

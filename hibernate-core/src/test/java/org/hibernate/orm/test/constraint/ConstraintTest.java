@@ -139,8 +139,8 @@ public class ConstraintTest extends BaseNonConfigCoreFunctionalTestCase {
 		public DataPoint dp;
 		
 		@OneToOne
-		@org.hibernate.annotations.ForeignKey(name = EXPLICIT_FK_NAME_NATIVE)
-		@JoinColumn(name = "explicit_native")
+		@JoinColumn(name = "explicit_native",
+				foreignKey = @jakarta.persistence.ForeignKey(name = EXPLICIT_FK_NAME_NATIVE))
 		public DataPoint explicit_native;
 		
 		@OneToOne

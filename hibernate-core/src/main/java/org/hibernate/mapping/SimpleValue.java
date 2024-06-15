@@ -11,7 +11,6 @@ import java.lang.annotation.Annotation;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -429,11 +428,6 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	public void setForeignKeyName(String foreignKeyName) {
-		// the FK name "none" was a magic value in the hbm.xml
-		// mapping language that indicated to not create a FK
-		if ( "none".equals( foreignKeyName ) ) {
-			foreignKeyEnabled = false;
-		}
 		this.foreignKeyName = foreignKeyName;
 	}
 

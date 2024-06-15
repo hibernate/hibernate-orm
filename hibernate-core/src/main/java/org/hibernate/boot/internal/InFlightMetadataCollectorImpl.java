@@ -1300,9 +1300,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		}
 
 		if ( logicalName == null ) {
-			throw new MappingException(
-					"Unable to find column with physical name " + physicalNameString + " in table " + table.getName()
-			);
+			throw new MappingException( "Unable to find column with physical name '"
+					+ physicalNameString + "' in table '" + table.getName() + "'" );
 		}
 		return logicalName.render();
 	}

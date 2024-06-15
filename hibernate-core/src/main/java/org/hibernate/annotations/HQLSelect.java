@@ -36,9 +36,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author Gavin King
  *
  * @since 6.2
- *
- * @implNote This annotation is just an abbreviation for {@link Loader}
- *           together with {@link NamedQuery}.
  */
 @Target({TYPE, FIELD, METHOD})
 @Retention(RUNTIME)

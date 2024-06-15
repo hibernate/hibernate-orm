@@ -24,12 +24,6 @@ import org.junit.Test;
  * @author Emmanuel Bernard
  */
 public class LoaderTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected String[] getOrmXmlFiles() {
-		return new String[] {
-				"org/hibernate/orm/test/annotations/loader/Loader.hbm.xml"
-		};
-	}
 
 	@Override
 	protected Class[] getAnnotatedClasses() {

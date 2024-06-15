@@ -402,10 +402,6 @@ public interface HibernateAnnotations {
 			ListIndexJdbcTypeCode.class,
 			ListIndexJdbcTypeCodeAnnotation.class
 	);
-	OrmAnnotationDescriptor<Loader, LoaderAnnotation> LOADER = new OrmAnnotationDescriptor<>(
-			Loader.class,
-			LoaderAnnotation.class
-	);
 	OrmAnnotationDescriptor<ManyToAny, ManyToAnyAnnotation> MANY_TO_ANY = new OrmAnnotationDescriptor<>(
 			ManyToAny.class,
 			ManyToAnyAnnotation.class

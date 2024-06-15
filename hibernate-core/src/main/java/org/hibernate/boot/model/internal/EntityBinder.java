@@ -55,7 +55,6 @@ import org.hibernate.annotations.SelectBeforeUpdate;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
-import org.hibernate.annotations.Tables;
 import org.hibernate.annotations.TypeBinderType;
 import org.hibernate.annotations.View;
 import org.hibernate.annotations.Where;
@@ -432,24 +431,8 @@ public class EntityBinder {
 	}
 
 	private void processComplementaryTableDefinitions() {
-		annotatedClass.forEachAnnotationUsage( org.hibernate.annotations.Table.class, getSourceModelContext(), (usage) -> {
-			final Table appliedTable = findTable( usage.appliesTo() );
-
-			final String comment = usage.comment();
-			if ( !comment.isEmpty() ) {
-				appliedTable.setComment( comment );
-			}
-
-			final String checkConstraint = usage.checkConstraint();
-			if ( !checkConstraint.isEmpty() ) {
-				//noinspection deprecation
-				appliedTable.addCheckConstraint( checkConstraint );
-			}
-
-			TableBinder.addIndexes( appliedTable, usage.indexes(), context );
-		} );
-
-		final jakarta.persistence.Table jpaTableUsage = annotatedClass.getAnnotationUsage( jakarta.persistence.Table.class, getSourceModelContext() );
+		final jakarta.persistence.Table jpaTableUsage =
+				annotatedClass.getAnnotationUsage( jakarta.persistence.Table.class, getSourceModelContext() );
 		if ( jpaTableUsage != null ) {
 			final Table table = persistentClass.getTable();
 			TableBinder.addJpaIndexes( table, jpaTableUsage.indexes(), context );
@@ -2065,24 +2048,17 @@ public class EntityBinder {
 	}
 
 	private void setForeignKeyNameIfDefined(Join join) {
-		final String tableName = join.getTable().getQuotedName();
-		final org.hibernate.annotations.Table matchingTable = findMatchingComplementaryTableAnnotation( tableName );
 		final SimpleValue key = (SimpleValue) join.getKey();
-		if ( matchingTable != null && !matchingTable.foreignKey().name().isEmpty() ) {
-			key.setForeignKeyName( matchingTable.foreignKey().name() );
-		}
-		else {
-			final SecondaryTable jpaSecondaryTable = findMatchingSecondaryTable( join );
-			if ( jpaSecondaryTable != null ) {
-				final boolean noConstraintByDefault = context.getBuildingOptions().isNoConstraintByDefault();
-				if ( jpaSecondaryTable.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
-						|| jpaSecondaryTable.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) {
-					key.disableForeignKey();
-				}
-				else {
-					key.setForeignKeyName( nullIfEmpty( jpaSecondaryTable.foreignKey().name() ) );
-					key.setForeignKeyDefinition( nullIfEmpty( jpaSecondaryTable.foreignKey().foreignKeyDefinition() ) );
-				}
+		final SecondaryTable jpaSecondaryTable = findMatchingSecondaryTable( join );
+		if ( jpaSecondaryTable != null ) {
+			final boolean noConstraintByDefault = context.getBuildingOptions().isNoConstraintByDefault();
+			if ( jpaSecondaryTable.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
+					|| jpaSecondaryTable.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) {
+				key.disableForeignKey();
+			}
+			else {
+				key.setForeignKeyName( nullIfEmpty( jpaSecondaryTable.foreignKey().name() ) );
+				key.setForeignKeyDefinition( nullIfEmpty( jpaSecondaryTable.foreignKey().foreignKeyDefinition() ) );
 			}
 		}
 	}
@@ -2103,24 +2079,6 @@ public class EntityBinder {
 			}
 		}
 		return null;
-	}
-
-	private org.hibernate.annotations.Table findMatchingComplementaryTableAnnotation(String tableName) {
-		final org.hibernate.annotations.Table table = annotatedClass.getDirectAnnotationUsage( org.hibernate.annotations.Table.class );
-		if ( table != null && tableName.equals( table.appliesTo() ) ) {
-			return table;
-		}
-		else {
-			final Tables tables = annotatedClass.getAnnotationUsage( Tables.class, getSourceModelContext() );
-			if ( tables != null ) {
-				for (org.hibernate.annotations.Table nested : tables.value()) {
-					if ( tableName.equals( nested.appliesTo() ) ) {
-						return nested;
-					}
-				}
-			}
-			return null;
-		}
 	}
 
 	private SecondaryRow findMatchingSecondaryRowAnnotation(String tableName) {
@@ -2267,15 +2225,10 @@ public class EntityBinder {
 
 	private void handleSecondaryRowManagement(Join join) {
 		final String tableName = join.getTable().getQuotedName();
-		final org.hibernate.annotations.Table matchingTable = findMatchingComplementaryTableAnnotation( tableName );
 		final SecondaryRow matchingRow = findMatchingSecondaryRowAnnotation( tableName );
 		if ( matchingRow != null ) {
 			join.setInverse( !matchingRow.owned() );
 			join.setOptional( matchingRow.optional() );
-		}
-		else if ( matchingTable != null ) {
-			join.setInverse( matchingTable.inverse() );
-			join.setOptional( matchingTable.optional() );
 		}
 		else {
 			//default
@@ -2286,8 +2239,6 @@ public class EntityBinder {
 
 	private void processSecondaryTableCustomSql(Join join) {
 		final String tableName = join.getTable().getQuotedName();
-		final org.hibernate.annotations.Table matchingTable = findMatchingComplementaryTableAnnotation( tableName );
-
 		final SQLInsert sqlInsert = resolveCustomSqlAnnotation( annotatedClass, SQLInsert.class, tableName );
 		if ( sqlInsert != null ) {
 			join.setCustomSQLInsert(
@@ -2298,17 +2249,6 @@ public class EntityBinder {
 			final Class<? extends Expectation> expectationClass = sqlInsert.verify();
 			if ( expectationClass != Expectation.class ) {
 				join.setInsertExpectation( getDefaultSupplier( expectationClass ) );
-			}
-		}
-		else if ( matchingTable != null ) {
-			final SQLInsert matchingTableInsert = matchingTable.sqlInsert();
-			final String matchingTableInsertSql = matchingTableInsert.sql().trim();
-			if ( !matchingTableInsertSql.isEmpty() ) {
-				join.setCustomSQLInsert(
-						matchingTableInsertSql,
-						matchingTableInsert.callable(),
-						fromResultCheckStyle( matchingTableInsert.check() )
-				);
 			}
 		}
 
@@ -2324,17 +2264,6 @@ public class EntityBinder {
 				join.setUpdateExpectation( getDefaultSupplier( expectationClass ) );
 			}
 		}
-		else if ( matchingTable != null ) {
-			final SQLUpdate matchingTableUpdate = matchingTable.sqlUpdate();
-			final String matchingTableUpdateSql = matchingTableUpdate.sql().trim();
-			if ( !matchingTableUpdateSql.isEmpty() ) {
-				join.setCustomSQLUpdate(
-						matchingTableUpdateSql,
-						matchingTableUpdate.callable(),
-						fromResultCheckStyle( matchingTableUpdate.check() )
-				);
-			}
-		}
 
 		final SQLDelete sqlDelete = resolveCustomSqlAnnotation( annotatedClass, SQLDelete.class, tableName );
 		if ( sqlDelete != null ) {
@@ -2346,17 +2275,6 @@ public class EntityBinder {
 			final Class<? extends Expectation> expectationClass = sqlDelete.verify();
 			if ( expectationClass != Expectation.class ) {
 				join.setDeleteExpectation( getDefaultSupplier( expectationClass ) );
-			}
-		}
-		else if ( matchingTable != null ) {
-			final SQLDelete matchingTableDelete = matchingTable.sqlDelete();
-			final String deleteSql = matchingTableDelete.sql().trim();
-			if ( !deleteSql.isEmpty() ) {
-				join.setCustomSQLDelete(
-						deleteSql,
-						matchingTableDelete.callable(),
-						fromResultCheckStyle( matchingTableDelete.check() )
-				);
 			}
 		}
 	}
@@ -2380,24 +2298,6 @@ public class EntityBinder {
 
 	public void setIgnoreIdAnnotations(boolean ignoreIdAnnotations) {
 		this.ignoreIdAnnotations = ignoreIdAnnotations;
-	}
-
-	private Table findTable(String tableName) {
-		for ( Table table : persistentClass.getTableClosure() ) {
-			if ( table.getQuotedName().equals( tableName ) ) {
-				//we are in the correct table to find columns
-				return table;
-			}
-		}
-		//maybe a join/secondary table
-		for ( Join join : secondaryTables.values() ) {
-			if ( join.getTable().getQuotedName().equals( tableName ) ) {
-				return join.getTable();
-			}
-		}
-		throw new AnnotationException( "Entity '" + name
-				+ "' has a '@org.hibernate.annotations.Table' annotation which 'appliesTo' an unknown table named '"
-				+ tableName + "'" );
 	}
 
 	public AccessType getPropertyAccessType() {

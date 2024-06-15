@@ -7,29 +7,31 @@
 
 //$Id$
 package org.hibernate.orm.test.annotations.various;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
+import jakarta.persistence.Table;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
-@org.hibernate.annotations.Table(appliesTo = "Vehicule",
-		indexes = {
-		@Index(name = "improbableindex", columnNames = {"registration", "Conductor_fk"}),
-		@Index(name = "secondone", columnNames = {"Conductor_fk"})
-				}
-)
+@Table(name = "Vehicule",
+		indexes = {@Index(name = "improbableindex", columnList = "registration, Conductor_fk"),
+					@Index(name = "secondone", columnList = "Conductor_fk"),
+					@Index(name = "thirdone", columnList = "currentConductor"),
+					@Index(name = "year_idx", columnList = "`year`"),
+					@Index(name = "forthone", columnList = "previousConductor")})
 public class Vehicule {
 	@Id
 	@GeneratedValue(generator = "gen")
@@ -39,13 +41,10 @@ public class Vehicule {
 	private String registrationNumber;
 	@ManyToOne(optional = false)
 	@JoinColumn(name = "Conductor_fk")
-	@Index(name = "thirdone")
 	private Conductor currentConductor;
-	@Index(name = "year_idx")
 	@Column(name = "`year`")
 	private Integer year;
 	@ManyToOne(optional = true)
-	@Index(name = "forthone")
 	private Conductor previousConductor;
 
 	public String getId() {

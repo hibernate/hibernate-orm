@@ -12,7 +12,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import org.hibernate.HibernateException;
-import org.hibernate.annotations.Loader;
+import org.hibernate.annotations.HQLSelect;
 import org.hibernate.annotations.NamedQuery;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
@@ -43,8 +43,8 @@ public class LoaderWithInvalidQueryTest extends BaseEntityManagerFunctionalTestC
 			HibernateException rootCause = (HibernateException) ExceptionUtil.rootCause( expected );
 			Throwable[] suppressed = rootCause.getSuppressed();
 			assertEquals( 2, suppressed.length );
-			assertTrue( ExceptionUtil.rootCause( suppressed[0] ).getMessage().contains( "Could not resolve attribute 'valid'" ) );
-			assertTrue( ExceptionUtil.rootCause( suppressed[1] ).getMessage().contains( "Could not resolve root entity '_Person'" ) );
+			assertTrue( ExceptionUtil.rootCause( suppressed[0] ).getMessage().contains( "Could not resolve root entity '_Person'" ) );
+			assertTrue( ExceptionUtil.rootCause( suppressed[1] ).getMessage().contains( "Could not resolve attribute 'valid'" ) );
 		}
 	}
 
@@ -54,9 +54,7 @@ public class LoaderWithInvalidQueryTest extends BaseEntityManagerFunctionalTestC
 
 
 	@Entity(name = "Person")
-	@Loader(namedQuery = "invalid_sql")
-	@NamedQuery(
-		name = "invalid_sql",
+	@HQLSelect(
 		query = "SELECT p " +
 				"FROM Person p " +
 				"WHERE p.id = ?1 and p.valid = true"

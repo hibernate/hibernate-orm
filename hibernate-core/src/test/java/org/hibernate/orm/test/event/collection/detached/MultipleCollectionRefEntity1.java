@@ -8,6 +8,7 @@ package org.hibernate.orm.test.event.collection.detached;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -26,8 +27,8 @@ public class MultipleCollectionRefEntity1 implements org.hibernate.orm.test.even
 	private String text;
 
 	@ManyToOne
-	@JoinColumn(name = "MCE_ID", nullable = false, insertable = false, updatable = false)
-	@org.hibernate.annotations.ForeignKey(name = "FK_RE1_MCE")
+	@JoinColumn(name = "MCE_ID", nullable = false, insertable = false, updatable = false,
+			foreignKey = @ForeignKey(name = "FK_RE1_MCE"))
 	private MultipleCollectionEntity multipleCollectionEntity;
 
 	@Column(name = "MCE_ID", insertable = false, updatable = false)

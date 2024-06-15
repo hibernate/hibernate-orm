@@ -248,7 +248,7 @@ The `@SecondaryTable` annotation is even more interesting:
 | `uniqueConstraints` | One or more `@UniqueConstraint` annotations declaring multi-column unique constraints
 | `indexes` | One or more `@Index` annotations each declaring an index
 | `pkJoinColumns` | One or more `@PrimaryKeyJoinColumn` annotations, specifying <<primary-key-column-mappings,primary key column mappings>>
-| `foreignKey` | An `@ForeignKey` annotation specifying the name of the `FOREIGN KEY` constraint on the ``@PrimaryKeyJoinColumn``s
+| `foreignKey` | A `@ForeignKey` annotation specifying the name of the `FOREIGN KEY` constraint on the ``@PrimaryKeyJoinColumn``s
 |===
 
 [TIP]
@@ -322,8 +322,8 @@ Here, there should be a `UNIQUE` constraint on _both_ columns of the association
 | `indexes` | One or more `@Index` annotations each declaring an index
 | `joinColumns` | One or more `@JoinColumn` annotations, specifying <<join-column-mappings,foreign key column mappings>> to the table of the owning side
 | `inverseJoinColumns` | One or more `@JoinColumn` annotations, specifying <<join-column-mappings,foreign key column mappings>> to the table of the unowned side
-| `foreignKey` | An `@ForeignKey` annotation specifying the name of the `FOREIGN KEY` constraint on the ``joinColumns``s
-| `inverseForeignKey` | An `@ForeignKey` annotation specifying the name of the `FOREIGN KEY` constraint on the ``inverseJoinColumns``s
+| `foreignKey` | A `@ForeignKey` annotation specifying the name of the `FOREIGN KEY` constraint on the ``joinColumns``s
+| `inverseForeignKey` | A `@ForeignKey` annotation specifying the name of the `FOREIGN KEY` constraint on the ``inverseJoinColumns``s
 |===
 
 To better understand these annotations, we must first discuss column mappings in general.

@@ -605,7 +605,7 @@ public class ModelBinder {
 				}
 		);
 		keyBinding.sortProperties();
-		keyBinding.setForeignKeyName( entitySource.getExplicitForeignKeyName() );
+		setForeignKeyName( keyBinding, entitySource.getExplicitForeignKeyName() );
 		// model.getKey().setType( new Type( model.getIdentifier() ) );
 		entityDescriptor.createPrimaryKey();
 		entityDescriptor.createForeignKey();
@@ -1685,7 +1685,7 @@ public class ModelBinder {
 		);
 
 		keyBinding.sortProperties();
-		keyBinding.setForeignKeyName( secondaryTableSource.getExplicitForeignKeyName() );
+		setForeignKeyName( keyBinding, secondaryTableSource.getExplicitForeignKeyName() );
 
 		// skip creating primary and foreign keys for a subselect.
 		if ( secondaryTable.getSubselect() == null ) {
@@ -2018,7 +2018,7 @@ public class ModelBinder {
 		}
 
 		if ( isNotEmpty( oneToOneSource.getExplicitForeignKeyName() ) ) {
-			oneToOneBinding.setForeignKeyName( oneToOneSource.getExplicitForeignKeyName() );
+			setForeignKeyName( oneToOneBinding, oneToOneSource.getExplicitForeignKeyName() );
 		}
 
 		oneToOneBinding.setCascadeDeleteEnabled( oneToOneSource.isCascadeDeleteEnabled() );
@@ -2136,9 +2136,7 @@ public class ModelBinder {
 
 		manyToOneBinding.setIgnoreNotFound( manyToOneSource.isIgnoreNotFound() );
 
-		if ( isNotEmpty( manyToOneSource.getExplicitForeignKeyName() ) ) {
-			manyToOneBinding.setForeignKeyName( manyToOneSource.getExplicitForeignKeyName() );
-		}
+		setForeignKeyName( manyToOneBinding, manyToOneSource.getExplicitForeignKeyName() );
 
 		final ManyToOneColumnBinder columnBinder = new ManyToOneColumnBinder(
 				sourceDocument,
@@ -2173,6 +2171,17 @@ public class ModelBinder {
 		}
 
 		manyToOneBinding.setCascadeDeleteEnabled( manyToOneSource.isCascadeDeleteEnabled() );
+	}
+
+	private static void setForeignKeyName(SimpleValue manyToOneBinding, String foreignKeyName) {
+		if ( isNotEmpty( foreignKeyName ) ) {
+			if ( "none".equals( foreignKeyName ) ) {
+				manyToOneBinding.disableForeignKey();
+			}
+			else {
+				manyToOneBinding.setForeignKeyName( foreignKeyName );
+			}
+		}
 	}
 
 	private Property createAnyAssociationAttribute(
@@ -3248,7 +3257,7 @@ public class ModelBinder {
 					getCollectionBinding().getCollectionTable(),
 					keyVal
 			);
-			key.setForeignKeyName( keySource.getExplicitForeignKeyName() );
+			setForeignKeyName( key, keySource.getExplicitForeignKeyName() );
 			key.setCascadeDeleteEnabled( getPluralAttributeSource().getKeySource().isCascadeDeleteEnabled() );
 //
 //			final ImplicitJoinColumnNameSource.Nature implicitNamingNature;
@@ -3434,7 +3443,7 @@ public class ModelBinder {
 								: FetchMode.JOIN
 				);
 
-				elementBinding.setForeignKeyName( elementSource.getExplicitForeignKeyName() );
+				setForeignKeyName( elementBinding, elementSource.getExplicitForeignKeyName() );
 
 				elementBinding.setReferencedEntityName( elementSource.getReferencedEntityName() );
 				if ( isNotEmpty( elementSource.getReferencedEntityAttributeName() ) ) {

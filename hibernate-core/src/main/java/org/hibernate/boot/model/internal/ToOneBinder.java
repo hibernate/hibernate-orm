@@ -622,32 +622,25 @@ public class ToOneBinder {
 				value.disableForeignKey();
 			}
 			else {
-				final org.hibernate.annotations.ForeignKey fk =
-						property.getDirectAnnotationUsage( org.hibernate.annotations.ForeignKey.class );
-				if ( fk != null && isNotEmpty( fk.name() ) ) {
-					value.setForeignKeyName( fk.name() );
+				if ( noConstraint( foreignKey, noConstraintByDefault ) ) {
+					value.disableForeignKey();
 				}
-				else {
-					if ( noConstraint( foreignKey, noConstraintByDefault ) ) {
-						value.disableForeignKey();
-					}
-					else if ( foreignKey != null ) {
-						value.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
-						value.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
-					}
-					else if ( noConstraintByDefault ) {
-						value.disableForeignKey();
-					}
-					else if ( joinColumns != null ) {
-						final ForeignKey joinColumnsForeignKey = joinColumns.foreignKey();
-						value.setForeignKeyName( nullIfEmpty( joinColumnsForeignKey.name() ) );
-						value.setForeignKeyDefinition( nullIfEmpty( joinColumnsForeignKey.foreignKeyDefinition() ) );
-					}
-					else if ( joinColumn != null ) {
-						final ForeignKey joinColumnForeignKey = joinColumn.foreignKey();
-						value.setForeignKeyName( nullIfEmpty( joinColumnForeignKey.name() ) );
-						value.setForeignKeyDefinition( nullIfEmpty( joinColumnForeignKey.foreignKeyDefinition() ) );
-					}
+				else if ( foreignKey != null ) {
+					value.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
+					value.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
+				}
+				else if ( noConstraintByDefault ) {
+					value.disableForeignKey();
+				}
+				else if ( joinColumns != null ) {
+					final ForeignKey joinColumnsForeignKey = joinColumns.foreignKey();
+					value.setForeignKeyName( nullIfEmpty( joinColumnsForeignKey.name() ) );
+					value.setForeignKeyDefinition( nullIfEmpty( joinColumnsForeignKey.foreignKeyDefinition() ) );
+				}
+				else if ( joinColumn != null ) {
+					final ForeignKey joinColumnForeignKey = joinColumn.foreignKey();
+					value.setForeignKeyName( nullIfEmpty( joinColumnForeignKey.name() ) );
+					value.setForeignKeyDefinition( nullIfEmpty( joinColumnForeignKey.foreignKeyDefinition() ) );
 				}
 			}
 		}

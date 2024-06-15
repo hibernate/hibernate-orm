@@ -11,16 +11,17 @@ package org.hibernate.orm.test.annotations.tableperclass;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
-
-import org.hibernate.annotations.Index;
+import jakarta.persistence.Table;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity(name = "xpmComponent")
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+@Table(indexes = @Index(name = "manufacturerPartNumber", columnList = "manufacturerPartNumber"))
 public abstract class Component {
 	private String manufacturerPartNumber;
 	private Long manufacturerId;
@@ -36,7 +37,6 @@ public abstract class Component {
 	}
 
 	@Column(nullable = false)
-	@Index(name = "manufacturerPartNumber")
 	public String getManufacturerPartNumber() {
 		return manufacturerPartNumber;
 	}

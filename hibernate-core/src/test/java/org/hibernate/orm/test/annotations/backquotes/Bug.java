@@ -11,12 +11,14 @@ import java.util.List;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 
-import org.hibernate.annotations.Index;
+import jakarta.persistence.Table;
 
 @Entity
+@Table(indexes = @Index(name="`titleindex`", columnList = "`title`"))
 public class Bug 
 {
 	@Id
@@ -24,7 +26,7 @@ public class Bug
 	private int id;
 	
 	@Column(name="`title`")
-	@Index(name="`titleindex`")
+
 	private String title;
 	
 	@ManyToMany

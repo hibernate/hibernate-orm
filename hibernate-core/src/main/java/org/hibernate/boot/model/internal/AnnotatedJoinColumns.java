@@ -66,7 +66,6 @@ import static org.hibernate.internal.util.StringHelper.qualify;
 public class AnnotatedJoinColumns extends AnnotatedColumns {
 
 	private final List<AnnotatedJoinColumn> columns = new ArrayList<>();
-	private String propertyName; // this is really a .-separated property path
 
 	private String referencedProperty;
 
@@ -105,15 +104,12 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 			}
 		}
 
-		handlePropertyRef( inferredData.getAttributeMember(), parent, context );
+		handlePropertyRef( inferredData.getAttributeMember(), parent );
 
 		return parent;
 	}
 
-	private static void handlePropertyRef(
-			MemberDetails attributeMember,
-			AnnotatedJoinColumns parent,
-			MetadataBuildingContext context) {
+	private static void handlePropertyRef(MemberDetails attributeMember, AnnotatedJoinColumns parent) {
 		final PropertyRef propertyRefUsage = attributeMember.getDirectAnnotationUsage( PropertyRef.class );
 		if ( propertyRefUsage == null ) {
 			return;
@@ -138,7 +134,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 		joinColumns.setPropertyHolder( propertyHolder );
 		joinColumns.setPropertyName( getRelativePath( propertyHolder, inferredData.getPropertyName() ) );
 		AnnotatedJoinColumn.buildJoinFormula( joinFormula, joinColumns );
-		handlePropertyRef( inferredData.getAttributeMember(), joinColumns, context );
+		handlePropertyRef( inferredData.getAttributeMember(), joinColumns );
 		return joinColumns;
 	}
 
@@ -208,7 +204,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 				);
 			}
 		}
-		handlePropertyRef( memberDetails, parent, context );
+		handlePropertyRef( memberDetails, parent );
 		return parent;
 	}
 
@@ -236,7 +232,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 				AnnotatedJoinColumn.buildExplicitJoinTableJoinColumn( parent, propertyHolder, inferredData, joinColumn );
 			}
 		}
-		handlePropertyRef( inferredData.getAttributeMember(), parent, context );
+		handlePropertyRef( inferredData.getAttributeMember(), parent );
 		return parent;
 	}
 
@@ -506,19 +502,6 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 	private boolean isMappedBySide() {
 		return getMappedByTableName() != null
 			|| getMappedByPropertyName() != null;
-	}
-
-	/**
-	 * A property path relative to the {@link #getPropertyHolder() PropertyHolder}.
-	 */
-	@Override
-	public String getPropertyName() {
-		return propertyName;
-	}
-
-	@Override
-	public void setPropertyName(String propertyName) {
-		this.propertyName = propertyName;
 	}
 
 	private ImplicitJoinColumnNameSource.Nature getImplicitNature() {

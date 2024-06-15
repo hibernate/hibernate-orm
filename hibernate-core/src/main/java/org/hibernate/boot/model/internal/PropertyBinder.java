@@ -25,10 +25,6 @@ import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.Parent;
 import org.hibernate.binder.AttributeBinder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
-import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
@@ -79,7 +75,6 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Version;
 
 import static jakarta.persistence.FetchType.LAZY;
-import static java.util.Collections.singletonList;
 import static org.hibernate.boot.model.internal.AnyBinder.bindAny;
 import static org.hibernate.boot.model.internal.BinderHelper.getMappedSuperclassOrNull;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
@@ -90,13 +85,14 @@ import static org.hibernate.boot.model.internal.ClassPropertyHolder.prepareActua
 import static org.hibernate.boot.model.internal.CollectionBinder.bindCollection;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.createCompositeBinder;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.createEmbeddable;
+import static org.hibernate.boot.model.internal.EmbeddableBinder.determineCustomInstantiator;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.isEmbedded;
 import static org.hibernate.boot.model.internal.GeneratorBinder.createIdGeneratorsFromGeneratorAnnotations;
 import static org.hibernate.boot.model.internal.GeneratorBinder.createValueGeneratorFromAnnotations;
+import static org.hibernate.boot.model.internal.NaturalIdBinder.addNaturalIds;
 import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.resolveTimeZoneStorageCompositeUserType;
 import static org.hibernate.boot.model.internal.ToOneBinder.bindManyToOne;
 import static org.hibernate.boot.model.internal.ToOneBinder.bindOneToOne;
-import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.id.IdentifierGeneratorHelper.getForeignId;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
@@ -764,18 +760,14 @@ public class PropertyBinder {
 			MetadataBuildingContext context,
 			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
 			MemberDetails property) {
-		final TypeDetails attributeTypeDetails = inferredData.getAttributeMember().isPlural()
-				? inferredData.getAttributeMember().getType()
-				: inferredData.getClassOrElementType();
+		final TypeDetails attributeTypeDetails =
+				inferredData.getAttributeMember().isPlural()
+						? inferredData.getAttributeMember().getType()
+						: inferredData.getClassOrElementType();
 		final ClassDetails attributeClassDetails = attributeTypeDetails.determineRawClass();
-		final ColumnsBuilder columnsBuilder = new ColumnsBuilder(
-				propertyHolder,
-				nullability,
-				property,
-				inferredData,
-				entityBinder,
-				context
-		).extractMetadata();
+		final ColumnsBuilder columnsBuilder =
+				new ColumnsBuilder( propertyHolder, nullability, property, inferredData, entityBinder, context )
+						.extractMetadata();
 
 		final PropertyBinder propertyBinder = new PropertyBinder();
 		propertyBinder.setName( inferredData.getPropertyName() );
@@ -941,11 +933,6 @@ public class PropertyBinder {
 			|| property.hasDirectAnnotationUsage( ManyToAny.class );
 	}
 
-	private static boolean isForcePersist(MemberDetails property) {
-		return property.hasDirectAnnotationUsage( MapsId.class )
-			|| property.hasDirectAnnotationUsage( Id.class );
-	}
-
 	private static void bindVersionProperty(
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
@@ -1073,7 +1060,7 @@ public class PropertyBinder {
 								inheritanceStatePerClass,
 								null,
 								null,
-								EmbeddableBinder.determineCustomInstantiator( property, returnedClass, context ),
+								determineCustomInstantiator( property, returnedClass, context ),
 								compositeUserType,
 								null,
 								columns
@@ -1117,7 +1104,7 @@ public class PropertyBinder {
 							inheritanceStatePerClass,
 							null,
 							null,
-							EmbeddableBinder.determineCustomInstantiator( property, property.getElementType().determineRawClass(), context ),
+							determineCustomInstantiator( property, property.getElementType().determineRawClass(), context ),
 							compositeUserType,
 							null,
 							columns
@@ -1304,91 +1291,23 @@ public class PropertyBinder {
 		return annotationUsage != null && annotationUsage.fetch() == LAZY;
 	}
 
-	private static void addNaturalIds(
-			boolean inSecondPass,
-			MemberDetails property,
-			AnnotatedColumns columns,
-			AnnotatedJoinColumns joinColumns,
-			MetadataBuildingContext context) {
-		// Natural ID columns must reside in one single UniqueKey within the Table.
-		// For now, simply ensure consistent naming.
-		// TODO: AFAIK, there really isn't a reason for these UKs to be created
-		//       on the SecondPass. This whole area should go away...
-		final NaturalId naturalId = property.getDirectAnnotationUsage( NaturalId.class );
-		if ( naturalId != null ) {
-			final Database database = context.getMetadataCollector().getDatabase();
-			final ImplicitNamingStrategy implicitNamingStrategy = context.getBuildingOptions().getImplicitNamingStrategy();
-			if ( joinColumns != null ) {
-				final Identifier name = implicitNamingStrategy.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {
-					@Override
-					public Identifier getTableName() {
-						return joinColumns.getTable().getNameIdentifier();
-					}
-
-					@Override
-					public List<Identifier> getColumnNames() {
-						return singletonList(toIdentifier("_NaturalID"));
-					}
-
-					@Override
-					public Identifier getUserProvidedIdentifier() {
-						return null;
-					}
-
-					@Override
-					public MetadataBuildingContext getBuildingContext() {
-						return context;
-					}
-				});
-				final String keyName = name.render( database.getDialect() );
-				for ( AnnotatedColumn column : joinColumns.getColumns() ) {
-					column.addUniqueKey( keyName, inSecondPass );
-				}
-			}
-			else {
-				final Identifier name = implicitNamingStrategy.determineUniqueKeyName(new ImplicitUniqueKeyNameSource() {
-					@Override
-					public Identifier getTableName() {
-						return columns.getTable().getNameIdentifier();
-					}
-
-					@Override
-					public List<Identifier> getColumnNames() {
-						return singletonList(toIdentifier("_NaturalID"));
-					}
-
-					@Override
-					public Identifier getUserProvidedIdentifier() {
-						return null;
-					}
-
-					@Override
-					public MetadataBuildingContext getBuildingContext() {
-						return context;
-					}
-				});
-				final String keyName = name.render( database.getDialect() );
-				for ( AnnotatedColumn column : columns.getColumns() ) {
-					column.addUniqueKey( keyName, inSecondPass );
-				}
-			}
-		}
-	}
-
 	private static Class<? extends CompositeUserType<?>> resolveCompositeUserType(
 			PropertyData inferredData,
 			MetadataBuildingContext context) {
-		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+		final SourceModelBuildingContext sourceModelContext =
+				context.getMetadataCollector().getSourceModelBuildingContext();
 		final MemberDetails attributeMember = inferredData.getAttributeMember();
 		final TypeDetails classOrElementType = inferredData.getClassOrElementType();
 		final ClassDetails returnedClass = classOrElementType.determineRawClass();
 
 		if ( attributeMember != null ) {
-			final CompositeType compositeType = attributeMember.locateAnnotationUsage( CompositeType.class, sourceModelContext );
+			final CompositeType compositeType =
+					attributeMember.locateAnnotationUsage( CompositeType.class, sourceModelContext );
 			if ( compositeType != null ) {
 				return compositeType.value();
 			}
-			final Class<? extends CompositeUserType<?>> compositeUserType = resolveTimeZoneStorageCompositeUserType( attributeMember, returnedClass, context );
+			final Class<? extends CompositeUserType<?>> compositeUserType =
+					resolveTimeZoneStorageCompositeUserType( attributeMember, returnedClass, context );
 			if ( compositeUserType != null ) {
 				return compositeUserType;
 			}

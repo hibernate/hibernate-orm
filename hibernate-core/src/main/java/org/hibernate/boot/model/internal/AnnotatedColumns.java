@@ -14,6 +14,7 @@ import java.util.Map;
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Join;
+import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 
 import static java.util.Collections.unmodifiableList;
@@ -65,6 +66,12 @@ public class AnnotatedColumns {
 		this.propertyName = propertyName;
 	}
 
+	Property resolveProperty() {
+		return buildingContext.getMetadataCollector().getEntityBindingMap()
+				.get( propertyHolder.getPersistentClass().getEntityName() )
+				.getReferencedProperty( propertyName );
+	}
+
 	public void setBuildingContext(MetadataBuildingContext buildingContext) {
 		this.buildingContext = buildingContext;
 	}
@@ -106,7 +113,7 @@ public class AnnotatedColumns {
 		final String explicitTableName = firstColumn.getExplicitTableName();
 		//note: checkPropertyConsistency() is responsible for ensuring they all have the same table name
 		return isNotEmpty( explicitTableName )
-				&& !getPropertyHolder().getTable().getName().equals( explicitTableName );
+			&& !getPropertyHolder().getTable().getName().equals( explicitTableName );
 	}
 
 	/**

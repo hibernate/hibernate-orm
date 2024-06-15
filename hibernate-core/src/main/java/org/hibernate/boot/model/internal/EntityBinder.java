@@ -902,32 +902,26 @@ public class EntityBinder {
 			key.disableForeignKey();
 		}
 		else {
-			final org.hibernate.annotations.ForeignKey fk = clazzToProcess.getDirectAnnotationUsage( org.hibernate.annotations.ForeignKey.class);
-			if ( fk != null && isNotEmpty( fk.name() ) ) {
-				key.setForeignKeyName( fk.name() );
+			final ForeignKey foreignKey = clazzToProcess.getDirectAnnotationUsage( ForeignKey.class );
+			if ( noConstraint( foreignKey, noConstraintByDefault ) ) {
+				key.disableForeignKey();
 			}
-			else {
-				final ForeignKey foreignKey = clazzToProcess.getDirectAnnotationUsage( ForeignKey.class );
-				if ( noConstraint( foreignKey, noConstraintByDefault ) ) {
-					key.disableForeignKey();
-				}
-				else if ( foreignKey != null ) {
-					key.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
-					key.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
-				}
-				else if ( noConstraintByDefault ) {
-					key.disableForeignKey();
-				}
-				else if ( pkJoinColumns != null ) {
-					final ForeignKey nestedFk = pkJoinColumns.foreignKey();
-					key.setForeignKeyName( nullIfEmpty( nestedFk.name() ) );
-					key.setForeignKeyDefinition( nullIfEmpty( nestedFk.foreignKeyDefinition() ) );
-				}
-				else if ( pkJoinColumn != null ) {
-					final ForeignKey nestedFk = pkJoinColumn.foreignKey();
-					key.setForeignKeyName( nullIfEmpty( nestedFk.name() ) );
-					key.setForeignKeyDefinition( nullIfEmpty( nestedFk.foreignKeyDefinition() ) );
-				}
+			else if ( foreignKey != null ) {
+				key.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
+				key.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
+			}
+			else if ( noConstraintByDefault ) {
+				key.disableForeignKey();
+			}
+			else if ( pkJoinColumns != null ) {
+				final ForeignKey nestedFk = pkJoinColumns.foreignKey();
+				key.setForeignKeyName( nullIfEmpty( nestedFk.name() ) );
+				key.setForeignKeyDefinition( nullIfEmpty( nestedFk.foreignKeyDefinition() ) );
+			}
+			else if ( pkJoinColumn != null ) {
+				final ForeignKey nestedFk = pkJoinColumn.foreignKey();
+				key.setForeignKeyName( nullIfEmpty( nestedFk.name() ) );
+				key.setForeignKeyDefinition( nullIfEmpty( nestedFk.foreignKeyDefinition() ) );
 			}
 		}
 	}

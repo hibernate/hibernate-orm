@@ -2107,82 +2107,76 @@ public abstract class CollectionBinder {
 		collection.setKey( key );
 
 		if ( property != null ) {
-			final org.hibernate.annotations.ForeignKey fk = property.getDirectAnnotationUsage( org.hibernate.annotations.ForeignKey.class );
-			if ( fk != null && !fk.name().isEmpty() ) {
-				key.setForeignKeyName( fk.name() );
+			final CollectionTable collectionTableAnn = property.getDirectAnnotationUsage( CollectionTable.class );
+			if ( collectionTableAnn != null ) {
+				final ForeignKey foreignKey = collectionTableAnn.foreignKey();
+				final ConstraintMode constraintMode = foreignKey.value();
+				if ( constraintMode == NO_CONSTRAINT
+						|| constraintMode == PROVIDER_DEFAULT && noConstraintByDefault ) {
+					key.disableForeignKey();
+				}
+				else {
+					key.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
+					key.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
+					if ( key.getForeignKeyName() == null
+							&& key.getForeignKeyDefinition() == null
+							&& collectionTableAnn.joinColumns().length == 1 ) {
+						//noinspection unchecked
+						final JoinColumn joinColumn = collectionTableAnn.joinColumns()[0];
+						final ForeignKey nestedForeignKey = joinColumn.foreignKey();
+						key.setForeignKeyName( nullIfEmpty( nestedForeignKey.name() ) );
+						key.setForeignKeyDefinition( nullIfEmpty( nestedForeignKey.foreignKeyDefinition() ) );
+					}
+				}
 			}
 			else {
-				final CollectionTable collectionTableAnn = property.getDirectAnnotationUsage( CollectionTable.class );
-				if ( collectionTableAnn != null ) {
-					final ForeignKey foreignKey = collectionTableAnn.foreignKey();
-					final ConstraintMode constraintMode = foreignKey.value();
-					if ( constraintMode == NO_CONSTRAINT
-							|| constraintMode == PROVIDER_DEFAULT && noConstraintByDefault ) {
+				final JoinTable joinTableAnn = property.getDirectAnnotationUsage( JoinTable.class );
+				if ( joinTableAnn != null ) {
+					final ForeignKey foreignKey = joinTableAnn.foreignKey();
+					String foreignKeyName = foreignKey.name();
+					String foreignKeyDefinition = foreignKey.foreignKeyDefinition();
+					ConstraintMode foreignKeyValue = foreignKey.value();
+					final JoinColumn[] joinColumnAnnotations = joinTableAnn.joinColumns();
+					if ( !ArrayHelper.isEmpty( joinColumnAnnotations ) ) {
+						final JoinColumn joinColumnAnn = joinColumnAnnotations[0];
+						final ForeignKey joinColumnForeignKey = joinColumnAnn.foreignKey();
+						if ( foreignKeyName.isEmpty() ) {
+							foreignKeyName = joinColumnForeignKey.name();
+							foreignKeyDefinition = joinColumnForeignKey.foreignKeyDefinition();
+						}
+						if ( foreignKeyValue != NO_CONSTRAINT ) {
+							foreignKeyValue = joinColumnForeignKey.value();
+						}
+					}
+					if ( foreignKeyValue == NO_CONSTRAINT
+							|| foreignKeyValue == PROVIDER_DEFAULT && noConstraintByDefault ) {
 						key.disableForeignKey();
 					}
 					else {
-						key.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
-						key.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
-						if ( key.getForeignKeyName() == null
-								&& key.getForeignKeyDefinition() == null
-								&& collectionTableAnn.joinColumns().length == 1 ) {
-							//noinspection unchecked
-							final JoinColumn joinColumn = collectionTableAnn.joinColumns()[0];
-							final ForeignKey nestedForeignKey = joinColumn.foreignKey();
-							key.setForeignKeyName( nullIfEmpty( nestedForeignKey.name() ) );
-							key.setForeignKeyDefinition( nullIfEmpty( nestedForeignKey.foreignKeyDefinition() ) );
-						}
+						key.setForeignKeyName( nullIfEmpty( foreignKeyName ) );
+						key.setForeignKeyDefinition( nullIfEmpty( foreignKeyDefinition ) );
 					}
 				}
 				else {
-					final JoinTable joinTableAnn = property.getDirectAnnotationUsage( JoinTable.class );
-					if ( joinTableAnn != null ) {
-						final ForeignKey foreignKey = joinTableAnn.foreignKey();
-						String foreignKeyName = foreignKey.name();
-						String foreignKeyDefinition = foreignKey.foreignKeyDefinition();
-						ConstraintMode foreignKeyValue = foreignKey.value();
-						final JoinColumn[] joinColumnAnnotations = joinTableAnn.joinColumns();
-						if ( !ArrayHelper.isEmpty( joinColumnAnnotations ) ) {
-							final JoinColumn joinColumnAnn = joinColumnAnnotations[0];
-							final ForeignKey joinColumnForeignKey = joinColumnAnn.foreignKey();
-							if ( foreignKeyName.isEmpty() ) {
-								foreignKeyName = joinColumnForeignKey.name();
-								foreignKeyDefinition = joinColumnForeignKey.foreignKeyDefinition();
-							}
-							if ( foreignKeyValue != NO_CONSTRAINT ) {
-								foreignKeyValue = joinColumnForeignKey.value();
-							}
-						}
-						if ( foreignKeyValue == NO_CONSTRAINT
-								|| foreignKeyValue == PROVIDER_DEFAULT && noConstraintByDefault ) {
+					final String propertyPath = qualify( propertyHolder.getPath(), property.getName() );
+					final ForeignKey foreignKey = propertyHolder.getOverriddenForeignKey( propertyPath );
+					if ( foreignKey != null ) {
+						handleForeignKeyConstraint( noConstraintByDefault, key, foreignKey );
+					}
+					else {
+						final OneToMany oneToManyAnn = property.getDirectAnnotationUsage( OneToMany.class );
+						final OnDelete onDeleteAnn = property.getDirectAnnotationUsage( OnDelete.class );
+						if ( oneToManyAnn != null
+								&& !oneToManyAnn.mappedBy().isEmpty()
+								&& ( onDeleteAnn == null || onDeleteAnn.action() != OnDeleteAction.CASCADE ) ) {
+							// foreign key should be up to @ManyToOne side
+							// @OnDelete generate "on delete cascade" foreign key
 							key.disableForeignKey();
 						}
 						else {
-							key.setForeignKeyName( nullIfEmpty( foreignKeyName ) );
-							key.setForeignKeyDefinition( nullIfEmpty( foreignKeyDefinition ) );
-						}
-					}
-					else {
-						final String propertyPath = qualify( propertyHolder.getPath(), property.getName() );
-						final ForeignKey foreignKey = propertyHolder.getOverriddenForeignKey( propertyPath );
-						if ( foreignKey != null ) {
-							handleForeignKeyConstraint( noConstraintByDefault, key, foreignKey );
-						}
-						else {
-							final OneToMany oneToManyAnn = property.getDirectAnnotationUsage( OneToMany.class );
-							final OnDelete onDeleteAnn = property.getDirectAnnotationUsage( OnDelete.class );
-							if ( oneToManyAnn != null
-									&& !oneToManyAnn.mappedBy().isEmpty()
-									&& ( onDeleteAnn == null || onDeleteAnn.action() != OnDeleteAction.CASCADE ) ) {
-								// foreign key should be up to @ManyToOne side
-								// @OnDelete generate "on delete cascade" foreign key
-								key.disableForeignKey();
-							}
-							else {
-								final JoinColumn joinColumnAnn = property.getDirectAnnotationUsage( JoinColumn.class );
-								if ( joinColumnAnn != null ) {
-									handleForeignKeyConstraint( noConstraintByDefault, key, joinColumnAnn.foreignKey() );
-								}
+							final JoinColumn joinColumnAnn = property.getDirectAnnotationUsage( JoinColumn.class );
+							if ( joinColumnAnn != null ) {
+								handleForeignKeyConstraint( noConstraintByDefault, key, joinColumnAnn.foreignKey() );
 							}
 						}
 					}
@@ -2466,37 +2460,31 @@ public abstract class CollectionBinder {
 			collection.setManyToManyOrdering( buildOrderByClauseFromHql( hqlOrderBy, collectionEntity ) );
 		}
 
-		final org.hibernate.annotations.ForeignKey fk = property.getDirectAnnotationUsage( org.hibernate.annotations.ForeignKey.class );
-		if ( fk != null && !fk.name().isEmpty() ) {
-			element.setForeignKeyName( fk.name() );
-		}
-		else {
-			final JoinTable joinTableAnn = property.getDirectAnnotationUsage( JoinTable.class );
-			if ( joinTableAnn != null ) {
-				final ForeignKey inverseForeignKey = joinTableAnn.inverseForeignKey();
-				String foreignKeyName = inverseForeignKey.name();
-				String foreignKeyDefinition = inverseForeignKey.foreignKeyDefinition();
+		final JoinTable joinTableAnn = property.getDirectAnnotationUsage( JoinTable.class );
+		if ( joinTableAnn != null ) {
+			final ForeignKey inverseForeignKey = joinTableAnn.inverseForeignKey();
+			String foreignKeyName = inverseForeignKey.name();
+			String foreignKeyDefinition = inverseForeignKey.foreignKeyDefinition();
 
-				final JoinColumn[] inverseJoinColumns = joinTableAnn.inverseJoinColumns();
-				if ( !ArrayHelper.isEmpty( inverseJoinColumns ) ) {
-					final JoinColumn joinColumnAnn = inverseJoinColumns[0];
-					if ( foreignKeyName.isEmpty() ) {
-						final ForeignKey inverseJoinColumnForeignKey = joinColumnAnn.foreignKey();
-						foreignKeyName = inverseJoinColumnForeignKey.name();
-						foreignKeyDefinition = inverseJoinColumnForeignKey.foreignKeyDefinition();
-					}
+			final JoinColumn[] inverseJoinColumns = joinTableAnn.inverseJoinColumns();
+			if ( !ArrayHelper.isEmpty( inverseJoinColumns ) ) {
+				final JoinColumn joinColumnAnn = inverseJoinColumns[0];
+				if ( foreignKeyName.isEmpty() ) {
+					final ForeignKey inverseJoinColumnForeignKey = joinColumnAnn.foreignKey();
+					foreignKeyName = inverseJoinColumnForeignKey.name();
+					foreignKeyDefinition = inverseJoinColumnForeignKey.foreignKeyDefinition();
 				}
+			}
 
-				final ConstraintMode constraintMode = inverseForeignKey.value();
-				if ( constraintMode == NO_CONSTRAINT
-						|| constraintMode == PROVIDER_DEFAULT
-								&& buildingContext.getBuildingOptions().isNoConstraintByDefault() ) {
-					element.disableForeignKey();
-				}
-				else {
-					element.setForeignKeyName( nullIfEmpty( foreignKeyName ) );
-					element.setForeignKeyDefinition( nullIfEmpty( foreignKeyDefinition ) );
-				}
+			final ConstraintMode constraintMode = inverseForeignKey.value();
+			if ( constraintMode == NO_CONSTRAINT
+					|| constraintMode == PROVIDER_DEFAULT
+							&& buildingContext.getBuildingOptions().isNoConstraintByDefault() ) {
+				element.disableForeignKey();
+			}
+			else {
+				element.setForeignKeyName( nullIfEmpty( foreignKeyName ) );
+				element.setForeignKeyDefinition( nullIfEmpty( foreignKeyDefinition ) );
 			}
 		}
 		return element;

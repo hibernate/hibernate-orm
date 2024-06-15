@@ -278,10 +278,6 @@ public interface HibernateAnnotations {
 			FilterJoinTableAnnotation.class,
 			FILTER_JOIN_TABLES
 	);
-	OrmAnnotationDescriptor<ForeignKey, ForeignKeyAnnotation> FOREIGN_KEY = new OrmAnnotationDescriptor<>(
-			ForeignKey.class,
-			ForeignKeyAnnotation.class
-	);
 	OrmAnnotationDescriptor<Formula,FormulaAnnotation> FORMULA = new OrmAnnotationDescriptor<>(
 			Formula.class,
 			FormulaAnnotation.class

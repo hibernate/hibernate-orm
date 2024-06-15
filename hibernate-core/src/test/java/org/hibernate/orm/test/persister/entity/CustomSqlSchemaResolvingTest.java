@@ -6,11 +6,10 @@
  */
 package org.hibernate.orm.test.persister.entity;
 
-import org.hibernate.annotations.Loader;
-import org.hibernate.annotations.NamedNativeQuery;
 import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLInsert;
+import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
@@ -81,12 +80,7 @@ public class CustomSqlSchemaResolvingTest {
 	}
 
 	@Entity(name = "CardWithCustomSQL")
-	@Loader(namedQuery = "find_foo_by_id")
-	@NamedNativeQuery(
-		name = "find_foo_by_id",
-		query = "SELECT id, name FROM {h-schema}FOO WHERE id = ?",
-		resultClass = CustomEntity.class
-	)
+	@SQLSelect(sql = "SELECT id, name FROM {h-schema}FOO WHERE id = ?")
 	@SQLInsert(sql = "INSERT INTO {h-schema}FOO (name, id) VALUES (?, ?)")
 	@SQLDelete(sql = "DELETE FROM {h-schema}FOO WHERE id = ?", check = ResultCheckStyle.COUNT)
 	@SQLUpdate(sql = "UPDATE {h-schema}FOO SET name = ? WHERE id = ? ")

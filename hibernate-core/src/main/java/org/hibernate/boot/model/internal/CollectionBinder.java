@@ -46,7 +46,6 @@ import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.annotations.ListIndexJavaType;
 import org.hibernate.annotations.ListIndexJdbcType;
 import org.hibernate.annotations.ListIndexJdbcTypeCode;
-import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.MapKeyJavaType;
 import org.hibernate.annotations.MapKeyJdbcType;
@@ -1412,11 +1411,6 @@ public abstract class CollectionBinder {
 			final String loaderName = collection.getRole() + "$HQLSelect";
 			collection.setLoaderName( loaderName );
 			QueryBinder.bindQuery( loaderName, hqlSelect, buildingContext );
-		}
-
-		final Loader loader = property.getDirectAnnotationUsage( Loader.class );
-		if ( loader != null ) {
-			collection.setLoaderName( loader.namedQuery() );
 		}
 	}
 

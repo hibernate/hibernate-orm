@@ -8,7 +8,6 @@ package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
-import org.hibernate.annotations.Table;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
@@ -59,8 +58,8 @@ public interface EntityMutationTarget extends MutationTarget<EntityTableMapping>
 	 * A table is considered potentially skippable if it is defined
 	 * as inverse or as optional.
 	 *
-	 * @see Table#inverse
-	 * @see Table#optional
+	 * @see org.hibernate.annotations.SecondaryRow#owned
+	 * @see org.hibernate.annotations.SecondaryRow#optional
 	 *
 	 * @deprecated No longer called
 	 */

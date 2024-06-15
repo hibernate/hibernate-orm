@@ -624,15 +624,6 @@ public interface HibernateAnnotations {
 			Synchronize.class,
 			SynchronizeAnnotation.class
 	);
-	OrmAnnotationDescriptor<Tables,TablesAnnotation> TABLES = new OrmAnnotationDescriptor<>(
-			Tables.class,
-			TablesAnnotation.class
-	);
-	OrmAnnotationDescriptor<Table, TableAnnotation> TABLE = new OrmAnnotationDescriptor<>(
-			Table.class,
-			TableAnnotation.class,
-			TABLES
-	);
 	OrmAnnotationDescriptor<Target,TargetLegacyAnnotation> TARGET_LEGACY = new OrmAnnotationDescriptor<>(
 			Target.class,
 			TargetLegacyAnnotation.class

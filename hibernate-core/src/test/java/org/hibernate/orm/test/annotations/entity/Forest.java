@@ -11,12 +11,13 @@ package org.hibernate.orm.test.annotations.entity;
 import java.sql.Types;
 import java.util.Set;
 
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.Index;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.OptimisticLockType;
@@ -49,8 +50,7 @@ import jakarta.persistence.Lob;
 @FilterDef(name = "minLength", parameters = {@ParamDef(name = "minLength", type = Integer.class)})
 @Filter(name = "betweenLength")
 @Filter(name = "minLength", condition = ":minLength <= length")
-@org.hibernate.annotations.Table(appliesTo = "Forest",
-		indexes = {@Index(name = "idx", columnNames = {"name", "length"})})
+@Table(indexes = @Index(name = "idx", columnList = "name, length"))
 public class Forest {
 	private Integer id;
 	private String name;

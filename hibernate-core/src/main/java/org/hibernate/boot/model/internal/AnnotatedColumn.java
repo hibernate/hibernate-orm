@@ -18,7 +18,6 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.FractionalSeconds;
 import org.hibernate.annotations.GeneratedColumn;
-import org.hibernate.annotations.Index;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
@@ -1012,26 +1011,9 @@ public class AnnotatedColumn {
 		return columns;
 	}
 
-	public void addIndex(Index index, boolean inSecondPass) {
-		if ( index != null ) {
-			addIndex( index.name(), inSecondPass );
-		}
-	}
-
-	void addIndex(String indexName, boolean inSecondPass) {
-		final IndexOrUniqueKeySecondPass secondPass =
-				new IndexOrUniqueKeySecondPass( indexName, this, getBuildingContext(), false );
-		if ( inSecondPass ) {
-			secondPass.doSecondPass( getBuildingContext().getMetadataCollector().getEntityBindingMap() );
-		}
-		else {
-			getBuildingContext().getMetadataCollector().addSecondPass( secondPass );
-		}
-	}
-
 	void addUniqueKey(String uniqueKeyName, boolean inSecondPass) {
-		final IndexOrUniqueKeySecondPass secondPass =
-				new IndexOrUniqueKeySecondPass( uniqueKeyName, this, getBuildingContext(), true );
+		final UniqueKeySecondPass secondPass =
+				new UniqueKeySecondPass( uniqueKeyName, this, getBuildingContext() );
 		if ( inSecondPass ) {
 			secondPass.doSecondPass( getBuildingContext().getMetadataCollector().getEntityBindingMap() );
 		}

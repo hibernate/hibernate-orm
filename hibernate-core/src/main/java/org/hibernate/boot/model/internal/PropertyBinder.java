@@ -18,7 +18,6 @@ import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AttributeBinderType;
 import org.hibernate.annotations.CompositeType;
 import org.hibernate.annotations.Immutable;
-import org.hibernate.annotations.Index;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.NaturalId;
@@ -817,7 +816,6 @@ public class PropertyBinder {
 				columnsBuilder,
 				propertyBinder
 		);
-		addIndexes( inSecondPass, property, columns, joinColumns );
 		addNaturalIds( inSecondPass, property, columns, joinColumns, context );
 	}
 
@@ -1306,31 +1304,6 @@ public class PropertyBinder {
 		return annotationUsage != null && annotationUsage.fetch() == LAZY;
 	}
 
-	private static void addIndexes(
-			boolean inSecondPass,
-			MemberDetails property,
-			AnnotatedColumns columns,
-			AnnotatedJoinColumns joinColumns) {
-		//process indexes after everything: in second pass, many to one has to be done before indexes
-		final Index index = property.getDirectAnnotationUsage( Index.class );
-		if ( index == null ) {
-			return;
-		}
-
-		if ( joinColumns != null ) {
-			for ( AnnotatedColumn column : joinColumns.getColumns() ) {
-				column.addIndex( index, inSecondPass );
-			}
-		}
-		else {
-			if ( columns != null ) {
-				for ( AnnotatedColumn column : columns.getColumns() ) {
-					column.addIndex( index, inSecondPass );
-				}
-			}
-		}
-	}
-
 	private static void addNaturalIds(
 			boolean inSecondPass,
 			MemberDetails property,
@@ -1340,7 +1313,7 @@ public class PropertyBinder {
 		// Natural ID columns must reside in one single UniqueKey within the Table.
 		// For now, simply ensure consistent naming.
 		// TODO: AFAIK, there really isn't a reason for these UKs to be created
-		// on the SecondPass. This whole area should go away...
+		//       on the SecondPass. This whole area should go away...
 		final NaturalId naturalId = property.getDirectAnnotationUsage( NaturalId.class );
 		if ( naturalId != null ) {
 			final Database database = context.getMetadataCollector().getDatabase();

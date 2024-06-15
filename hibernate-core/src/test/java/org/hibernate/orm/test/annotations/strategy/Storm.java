@@ -12,16 +12,16 @@ import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-
-import org.hibernate.annotations.Index;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
-@Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"start_country", "start_city"})})
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"start_country", "start_city"}),
+		indexes = @Index(name="storm_name_idx", columnList = "stormName"))
 public class Storm {
 	private Integer id;
 	private Location start;
@@ -56,7 +56,6 @@ public class Storm {
 		this.end = end;
 	}
 
-	@Index(name="storm_name_idx")
 	@Column(unique = true)
 	public String getStormName() {
 		return stormName;

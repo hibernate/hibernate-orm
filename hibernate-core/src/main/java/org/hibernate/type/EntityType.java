@@ -302,7 +302,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		if ( original == null ) {
 			return null;
 		}
-		Object cached = copyCache.get( original );
+		final Object cached = copyCache.get( original );
 		if ( cached != null ) {
 			return cached;
 		}
@@ -731,7 +731,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			Object key,
 			SharedSessionContractImplementor session) throws HibernateException {
 		final SessionFactoryImplementor factory = session.getFactory();
-		EntityPersister persister =
+		final EntityPersister persister =
 				factory.getMappingMetamodel()
 						.getEntityDescriptor( entityName );
 

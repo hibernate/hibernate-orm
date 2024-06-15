@@ -8,22 +8,24 @@
 //$Id$
 package org.hibernate.orm.test.annotations.various;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
-import org.hibernate.annotations.Index;
+import jakarta.persistence.Table;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
+@Table(indexes = {@Index(name = "weigth_idx", columnList = "weight"),
+		@Index(name = "agreement_idx", columnList = "agreement_id")})
 public class Truck extends Vehicule {
-	@Index(name = "weigth_idx")
+
 	private int weight;
 
 	@ManyToOne
 	@JoinColumn(name = "agreement_id")
-	@Index(name = "agreement_idx")
 	private ProfessionalAgreement agreement;
 
 	public int getWeight() {

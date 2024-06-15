@@ -705,7 +705,7 @@ public class TableBinder {
 					catch (MappingException ignore) {
 					}
 				}
-				if ( referencedColumn == null ) {
+				if ( referencedColumn == null || columns == null ) {
 					throw me;
 				}
 			}
@@ -862,25 +862,7 @@ public class TableBinder {
 		}
 	}
 
-	static void addIndexes(Table table, org.hibernate.annotations.Index[] indexes, MetadataBuildingContext context) {
-		for ( org.hibernate.annotations.Index indexUsage : indexes ) {
-			final String name = indexUsage.name();
-			final String[] columnNames = indexUsage.columnNames();
-
-			//no need to handle inSecondPass here since it is only called from EntityBinder
-			context.getMetadataCollector().addSecondPass( new IndexOrUniqueKeySecondPass(
-					table,
-					name,
-					columnNames,
-					context
-			) );
-		}
-	}
-
-	static void addJpaIndexes(
-			Table table,
-			jakarta.persistence.Index[] indexes,
-			MetadataBuildingContext context) {
+	static void addJpaIndexes(Table table, Index[] indexes, MetadataBuildingContext context) {
 		new IndexBinder( context ).bindIndexes( table, indexes );
 	}
 

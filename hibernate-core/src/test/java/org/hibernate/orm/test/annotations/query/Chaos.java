@@ -13,14 +13,13 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
+import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
 
 /**
@@ -31,8 +30,7 @@ import org.hibernate.annotations.SQLUpdate;
 @SQLInsert( sql="INSERT INTO CHAOS(name, nick_name, chaos_size, id) VALUES(upper(?),?,?,?)")
 @SQLUpdate( sql="UPDATE CHAOS SET name = upper(?), nick_name = ?, chaos_size = ? WHERE id = ?")
 @SQLDelete( sql="DELETE CHAOS WHERE id = ?")
-@Loader(namedQuery = "chaos")
-@NamedNativeQuery(name="chaos", query="select id, chaos_size, name, lower( nick_name ) as nick_name from CHAOS where id= ?", resultClass = Chaos.class)
+@SQLSelect( sql="select id, chaos_size, name, lower( nick_name ) as nick_name from CHAOS where id= ?" )
 public class Chaos {
 	@Id
 	private Long id;

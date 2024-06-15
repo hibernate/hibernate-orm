@@ -32,7 +32,6 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.HQLSelect;
 import org.hibernate.annotations.Immutable;
-import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.Mutability;
 import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.annotations.OnDelete;
@@ -1347,8 +1346,6 @@ public class EntityBinder {
 
 		ensureNoMutabilityPlan();
 
-		bindCustomLoader();
-
 		registerImportName();
 
 		processNamedEntityGraphs();
@@ -1462,13 +1459,6 @@ public class EntityBinder {
 			final String loaderName = persistentClass.getEntityName() + "$HQLSelect";
 			persistentClass.setLoaderName( loaderName );
 			QueryBinder.bindQuery( loaderName, hqlSelect, context );
-		}
-	}
-
-	private void bindCustomLoader() {
-		final Loader loader = annotatedClass.getAnnotationUsage( Loader.class, getSourceModelContext() );
-		if ( loader != null ) {
-			persistentClass.setLoaderName( loader.namedQuery() );
 		}
 	}
 

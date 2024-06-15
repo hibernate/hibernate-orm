@@ -1011,17 +1011,6 @@ public class AnnotatedColumn {
 		return columns;
 	}
 
-	void addUniqueKey(String uniqueKeyName, boolean inSecondPass) {
-		final UniqueKeySecondPass secondPass =
-				new UniqueKeySecondPass( uniqueKeyName, this, getBuildingContext() );
-		if ( inSecondPass ) {
-			secondPass.doSecondPass( getBuildingContext().getMetadataCollector().getEntityBindingMap() );
-		}
-		else {
-			getBuildingContext().getMetadataCollector().addSecondPass( secondPass );
-		}
-	}
-
 	@Override
 	public String toString() {
 		StringBuilder string = new StringBuilder();

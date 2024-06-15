@@ -20,7 +20,6 @@ import org.hibernate.query.Query;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
@@ -37,7 +36,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
-@SuppressWarnings("unchecked")
 public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 	@After
 	public void cleanupData() {

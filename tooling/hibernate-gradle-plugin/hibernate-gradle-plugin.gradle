@@ -9,7 +9,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
 	id 'java-gradle-plugin'
-	id 'com.gradle.plugin-publish' version '0.20.0'
+	id 'com.gradle.plugin-publish' version '1.2.1'
 
 	id 'checkstyle'
 
@@ -22,11 +22,6 @@ apply from: rootProject.file( 'gradle/javadoc.gradle' )
 apply from: rootProject.file( 'gradle/releasable.gradle' )
 
 description = "Gradle plugin for integrating Hibernate aspects into your build"
-
-ext {
-	pluginId = 'org.hibernate.orm'
-	pluginVersion = project.version
-}
 
 dependencies {
 	implementation project(':hibernate-core')
@@ -48,34 +43,20 @@ dependencies {
 }
 
 gradlePlugin {
-	plugins {
-		ormPlugin {
-			id = project.pluginId
-			implementationClass = 'org.hibernate.orm.tooling.gradle.HibernateOrmPlugin'
-		}
-	}
-}
-
-pluginBundle {
 	website = 'https://github.com/hibernate/hibernate-orm/tree/main/tooling/hibernate-gradle-plugin'
 	vcsUrl = 'https://github.com/hibernate/hibernate-orm/tree/main/tooling/hibernate-gradle-plugin'
-	tags = ['hibernate','orm','bytecode','enhancement','bytebuddy']
-
-	// sigh
-	mavenCoordinates {
-		groupId = project.group.toString()
-		artifactId = project.name
-		version = project.version.toString()
-	}
 
 	plugins {
 		ormPlugin {
-			id = project.pluginId
+			id = "org.hibernate.orm"
+			implementationClass = "org.hibernate.orm.tooling.gradle.HibernateOrmPlugin"
 			displayName = 'Gradle plugin for Hibernate ORM'
 			description = 'Applies Hibernate aspects into the build'
+			tags = ['hibernate','orm','bytecode','enhancement','bytebuddy']
 		}
 	}
 }
+
 
 test {
 	useJUnitPlatform()

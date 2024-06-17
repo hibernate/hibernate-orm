@@ -21,7 +21,7 @@ plugins {
     id 'org.hibernate.orm.build.env-settings'
     id 'org.hibernate.orm.build.jdks-settings'
     id 'com.gradle.develocity' version '3.17.4'
-    id 'com.gradle.common-custom-user-data-gradle-plugin' version '2.0.1'
+    id 'com.gradle.common-custom-user-data-gradle-plugin' version '2.0.2'
 }
 
 dependencyResolutionManagement {

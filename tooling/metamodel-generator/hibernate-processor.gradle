@@ -7,7 +7,7 @@
 description = 'Hibernate compile-time tooling'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
-apply plugin: 'version-injection'
+apply plugin: 'org.hibernate.build.version-injection'
 
 //java {
 //	sourceCompatibility = jdks.versions.baseline.get()

@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.models.xml.internal;
 
-import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -44,6 +43,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.ModelsException;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.internal.ModelsClassLogging;
+import org.hibernate.models.internal.ModifierUtils;
 import org.hibernate.models.internal.RenderingCollectorImpl;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
@@ -60,9 +60,7 @@ import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
 
 import static org.hibernate.boot.models.xml.XmlProcessLogging.XML_PROCESS_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
@@ -76,7 +74,7 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
  * @author Steve Ebersole
  */
 public class ManagedTypeProcessor {
-	private static final int MEMBER_MODIFIERS = buildMemberModifiers();
+	private static final int MEMBER_MODIFIERS = ModifierUtils.DYNAMIC_ATTRIBUTE_MODIFIERS;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Entity
@@ -1006,9 +1004,5 @@ public class ManagedTypeProcessor {
 				);
 			}
 		} );
-	}
-
-	private static int buildMemberModifiers() {
-		return Modifier.fieldModifiers();
 	}
 }

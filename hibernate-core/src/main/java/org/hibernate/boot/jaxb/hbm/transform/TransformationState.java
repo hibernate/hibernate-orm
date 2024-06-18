@@ -13,7 +13,9 @@ import java.util.Map;
 
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmEntityBaseDefinition;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterDefinitionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTypeDefinitionType;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
@@ -29,6 +31,9 @@ class TransformationState {
 
 	private final Map<String, JaxbEntityImpl> entityMap = new HashMap<>();
 	private final Map<JaxbHbmEntityBaseDefinition, JaxbEntityImpl> entityXref = new HashMap<>();
+
+	private final Map<String, JaxbHbmTypeDefinitionType> typeDefMap = new HashMap<>();
+	private final Map<String, JaxbHbmFilterDefinitionType> filterDefMap = new HashMap<>();
 
 	public TransformationState(List<Binding<JaxbHbmHibernateMapping>> hbmBindings) {
 		this.hbmBindings = hbmBindings;
@@ -119,6 +124,7 @@ class TransformationState {
 		return resolved;
 	}
 
+
 	public List<Binding<JaxbHbmHibernateMapping>> getHbmBindings() {
 		return hbmBindings;
 	}
@@ -133,5 +139,13 @@ class TransformationState {
 
 	public Map<JaxbHbmEntityBaseDefinition, JaxbEntityImpl> getEntityXref() {
 		return entityXref;
+	}
+
+	public Map<String, JaxbHbmTypeDefinitionType> getTypeDefinitionMap() {
+		return typeDefMap;
+	}
+
+	public void acceptTypeDefinition(JaxbHbmTypeDefinitionType hbmTypeDef) {
+		typeDefMap.put( hbmTypeDef.getName(), hbmTypeDef );
 	}
 }

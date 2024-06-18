@@ -91,7 +91,7 @@ public interface JaxbPluralAttribute extends JaxbPersistentAttribute, JaxbLockab
 	JaxbCustomSqlImpl getSqlDeleteAll();
 	void setSqlDeleteAll(JaxbCustomSqlImpl sqlDeleteAll);
 
-	List<JaxbHbmFilterImpl> getFilters();
+	List<JaxbFilterImpl> getFilters();
 
 	@Override
 	default Boolean isOptional() {

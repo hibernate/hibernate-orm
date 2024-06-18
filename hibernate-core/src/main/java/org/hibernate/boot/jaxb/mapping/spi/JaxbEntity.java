@@ -112,7 +112,7 @@ public interface JaxbEntity extends JaxbEntityOrMappedSuperclass {
 
 	List<JaxbNamedEntityGraphImpl> getNamedEntityGraphs();
 
-	List<JaxbHbmFilterImpl> getFilters();
+	List<JaxbFilterImpl> getFilters();
 
 	List<JaxbFetchProfileImpl> getFetchProfiles();
 

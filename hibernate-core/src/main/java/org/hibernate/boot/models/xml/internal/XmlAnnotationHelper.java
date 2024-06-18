@@ -10,30 +10,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.net.InetAddress;
-import java.net.URL;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.NClob;
-import java.sql.Timestamp;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.Year;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Currency;
-import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -64,9 +42,9 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerContainerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityOrMappedSuperclass;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbFilterImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbGeneratedValueImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbGenericIdGeneratorImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbHbmFilterImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIdClassImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIndexImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumnImpl;
@@ -292,173 +270,52 @@ public class XmlAnnotationHelper {
 			XmlDocumentContext xmlDocumentContext) {
 		if ( jaxbType == null || StringHelper.isEmpty( jaxbType.getValue() ) ) {
 			cases.handleNone( jaxbType, memberDetails, xmlDocumentContext );
+			return;
 		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "char" )
-				|| jaxbType.getValue().equalsIgnoreCase( "character" )
-				|| Character.class.getName().equalsIgnoreCase( jaxbType.getValue() ) ) {
-			cases.handleCharacter( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "string" )
-				|| String.class.getName().equalsIgnoreCase( jaxbType.getValue() ) ) {
-			cases.handleString( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "byte" )
-				|| Byte.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleByte( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "boolean" )
-				|| Boolean.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleBoolean( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "short" )
-				|| Short.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleShort( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "int" )
-				|| jaxbType.getValue().equalsIgnoreCase( "integer" )
-				|| Integer.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleInteger( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "long" )
-				|| Long.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleLong( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "double" )
-				|| Double.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleDouble( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "float" )
-				|| Float.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleFloat( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "biginteger" )
-				|| jaxbType.getValue().equalsIgnoreCase( "big_integer" )
-				|| BigInteger.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleBigInteger( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "bigdecimal" )
-				|| jaxbType.getValue().equalsIgnoreCase( "big_decimal" )
-				|| BigDecimal.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleBigDecimal( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "uuid" )
-				|| UUID.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleUuid( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "url" )
-				|| URL.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleUrl( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "inet" )
-				|| jaxbType.getValue().equalsIgnoreCase( "inetaddress" )
-				|| jaxbType.getValue().equalsIgnoreCase( "inet_address" )
-				|| InetAddress.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleInetAddress( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "currency" )
-				|| Currency.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleCurrency( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "locale" )
-				|| Locale.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleLocale( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "class" )
-				|| Class.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleClass( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "blob" )
-				|| Blob.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleBlob( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "clob" )
-				|| Clob.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleClob( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "nclob" )
-				|| NClob.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleNClob( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "instant" )
-				|| Instant.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleInstant( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "duration" )
-				|| Duration.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleDuration( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "year" )
-				|| Year.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleYear( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "localdatetime" )
-				|| jaxbType.getValue().equalsIgnoreCase( "local_date_time" )
-				|| LocalDateTime.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleLocalDateTime( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "localdate" )
-				|| jaxbType.getValue().equalsIgnoreCase( "local_date" )
-				|| LocalDate.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleLocalDate( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "localtime" )
-				|| jaxbType.getValue().equalsIgnoreCase( "local_time" )
-				|| LocalTime.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleLocalTime( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "zoneddatetime" )
-				|| jaxbType.getValue().equalsIgnoreCase( "zoned_date_time" )
-				|| ZonedDateTime.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleZonedDateTime( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "offsetdatetime" )
-				|| jaxbType.getValue().equalsIgnoreCase( "offset_date_time" )
-				|| OffsetDateTime.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleOffsetDateTime( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "offsettime" )
-				|| jaxbType.getValue().equalsIgnoreCase( "offset_time" )
-				|| OffsetTime.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleOffsetTime( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "zoneid" )
-				|| jaxbType.getValue().equalsIgnoreCase( "zone_id" )
-				|| ZoneId.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleZoneId( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "zoneoffset" )
-				|| jaxbType.getValue().equalsIgnoreCase( "zone_offset" )
-				|| ZoneOffset.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleZoneOffset( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "timestamp" )
-				|| jaxbType.getValue().equalsIgnoreCase( "time_stamp" )
-				|| java.util.Date.class.getName().equals( jaxbType.getValue() )
-				|| Timestamp.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleTimestamp( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "date" )
-				|| java.sql.Date.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleDate( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "time" )
-				|| java.sql.Time.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleTime( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "calendar" )
-				|| jaxbType.getValue().equalsIgnoreCase( "gregoriancalendar" )
-				|| jaxbType.getValue().equalsIgnoreCase( "gregorian_calendar" )
-				|| Calendar.class.getName().equals( jaxbType.getValue() )
-				|| GregorianCalendar.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleCalendar( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else if ( jaxbType.getValue().equalsIgnoreCase( "timezone" )
-				|| jaxbType.getValue().equalsIgnoreCase( "time_zone" )
-				|| TimeZone.class.getName().equals( jaxbType.getValue() ) ) {
-			cases.handleTimeZone( jaxbType, memberDetails, xmlDocumentContext );
-		}
-		else {
+
+		final SimpleTypeInterpretation interpretation = SimpleTypeInterpretation.interpret( jaxbType.getValue() );
+		if ( interpretation == null ) {
 			cases.handleGeneral( jaxbType, memberDetails, xmlDocumentContext );
+			return;
+		}
+
+		switch ( interpretation ) {
+			case BOOLEAN -> cases.handleBoolean( jaxbType, memberDetails, xmlDocumentContext );
+			case BYTE -> cases.handleByte( jaxbType, memberDetails, xmlDocumentContext );
+			case SHORT -> cases.handleShort( jaxbType, memberDetails, xmlDocumentContext );
+			case INTEGER -> cases.handleInteger( jaxbType, memberDetails, xmlDocumentContext );
+			case LONG -> cases.handleLong( jaxbType, memberDetails, xmlDocumentContext );
+			case DOUBLE -> cases.handleDouble( jaxbType, memberDetails, xmlDocumentContext );
+			case FLOAT -> cases.handleFloat( jaxbType, memberDetails, xmlDocumentContext );
+			case BIG_INTEGER -> cases.handleBigInteger( jaxbType, memberDetails, xmlDocumentContext );
+			case BIG_DECIMAL -> cases.handleBigDecimal( jaxbType, memberDetails, xmlDocumentContext );
+			case CHARACTER -> cases.handleCharacter( jaxbType, memberDetails, xmlDocumentContext );
+			case STRING -> cases.handleString( jaxbType, memberDetails, xmlDocumentContext );
+			case INSTANT -> cases.handleInstant( jaxbType, memberDetails, xmlDocumentContext );
+			case DURATION -> cases.handleDuration( jaxbType, memberDetails, xmlDocumentContext );
+			case YEAR -> cases.handleYear( jaxbType, memberDetails, xmlDocumentContext );
+			case LOCAL_DATE_TIME -> cases.handleLocalDateTime( jaxbType, memberDetails, xmlDocumentContext );
+			case LOCAL_DATE -> cases.handleLocalDate( jaxbType, memberDetails, xmlDocumentContext );
+			case LOCAL_TIME -> cases.handleLocalTime( jaxbType, memberDetails, xmlDocumentContext );
+			case OFFSET_DATE_TIME -> cases.handleOffsetDateTime( jaxbType, memberDetails, xmlDocumentContext );
+			case OFFSET_TIME -> cases.handleOffsetTime( jaxbType, memberDetails, xmlDocumentContext );
+			case ZONED_DATE_TIME -> cases.handleZonedDateTime( jaxbType, memberDetails, xmlDocumentContext );
+			case ZONE_ID -> cases.handleZoneId( jaxbType, memberDetails, xmlDocumentContext );
+			case ZONE_OFFSET -> cases.handleZoneOffset( jaxbType, memberDetails, xmlDocumentContext );
+			case UUID -> cases.handleUuid( jaxbType, memberDetails, xmlDocumentContext );
+			case URL -> cases.handleUrl( jaxbType, memberDetails, xmlDocumentContext );
+			case INET_ADDRESS -> cases.handleInetAddress( jaxbType, memberDetails, xmlDocumentContext );
+			case CURRENCY -> cases.handleCurrency( jaxbType, memberDetails, xmlDocumentContext );
+			case LOCALE -> cases.handleLocale( jaxbType, memberDetails, xmlDocumentContext );
+			case CLASS -> cases.handleClass( jaxbType, memberDetails, xmlDocumentContext );
+			case BLOB -> cases.handleBlob( jaxbType, memberDetails, xmlDocumentContext );
+			case CLOB -> cases.handleClob( jaxbType, memberDetails, xmlDocumentContext );
+			case NCLOB -> cases.handleNClob( jaxbType, memberDetails, xmlDocumentContext );
+			case JDBC_TIMESTAMP -> cases.handleTimestamp( jaxbType, memberDetails, xmlDocumentContext );
+			case JDBC_DATE -> cases.handleDate( jaxbType, memberDetails, xmlDocumentContext );
+			case JDBC_TIME -> cases.handleTime( jaxbType, memberDetails, xmlDocumentContext );
+			case CALENDAR -> cases.handleCalendar( jaxbType, memberDetails, xmlDocumentContext );
+			case TIME_ZONE -> cases.handleTimeZone( jaxbType, memberDetails, xmlDocumentContext );
 		}
 	}
 
@@ -1076,6 +933,18 @@ public class XmlAnnotationHelper {
 		);
 	}
 
+	/**
+	 * Used in cases where we might need to account for legacy "simple type naming" or "named basic types" such as
+	 * {@code type="string"}.
+	 */
+	public static ClassDetails resolveSimpleJavaType(String value, ClassDetailsRegistry classDetailsRegistry) {
+		final SimpleTypeInterpretation simpleInterpretation = SimpleTypeInterpretation.interpret( value );
+		if ( simpleInterpretation != null ) {
+			return classDetailsRegistry.resolveClassDetails( simpleInterpretation.getJavaType().getName() );
+		}
+		return resolveJavaType( null, value, classDetailsRegistry );
+	}
+
 	public static ClassDetails resolveJavaType(String value, ClassDetailsRegistry classDetailsRegistry) {
 		return resolveJavaType( null, value, classDetailsRegistry );
 	}
@@ -1224,7 +1093,7 @@ public class XmlAnnotationHelper {
 	}
 
 	public static void applyFilters(
-			List<JaxbHbmFilterImpl> jaxbFilters,
+			List<JaxbFilterImpl> jaxbFilters,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( CollectionHelper.isEmpty( jaxbFilters ) ) {
@@ -1248,7 +1117,7 @@ public class XmlAnnotationHelper {
 	}
 
 	public static void applyJoinTableFilters(
-			List<JaxbHbmFilterImpl> jaxbFilters,
+			List<JaxbFilterImpl> jaxbFilters,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( CollectionHelper.isEmpty( jaxbFilters ) ) {

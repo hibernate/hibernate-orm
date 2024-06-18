@@ -6,7 +6,7 @@
  */
 package org.hibernate.boot.models.annotations.spi;
 
-import org.hibernate.boot.jaxb.mapping.spi.JaxbHbmFilterImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbFilterImpl;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 
 /**
@@ -18,5 +18,5 @@ import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
  * @author Steve Ebersole
  */
 public interface FilterDetails {
-	void apply(JaxbHbmFilterImpl jaxbFilter, XmlDocumentContext xmlDocumentContext);
+	void apply(JaxbFilterImpl jaxbFilter, XmlDocumentContext xmlDocumentContext);
 }

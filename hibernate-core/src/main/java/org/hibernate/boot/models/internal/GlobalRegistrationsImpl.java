@@ -578,18 +578,17 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 				parameterResolvers = new HashMap<>();
 
 				for ( JaxbFilterDefImpl.JaxbFilterParamImpl jaxbParameter : jaxbParameters ) {
-					final ClassDetails targetClassDetails = XmlAnnotationHelper.resolveJavaType(
+					final ClassDetails targetClassDetails = XmlAnnotationHelper.resolveSimpleJavaType(
 							jaxbParameter.getType(),
 							sourceModelContext.getClassDetailsRegistry()
 					);
 					paramJdbcMappings.put( jaxbParameter.getName(), targetClassDetails );
 
 					if ( isNotEmpty( jaxbParameter.getResolver() ) ) {
-						final ClassDetails resolverClassDetails = XmlAnnotationHelper.resolveJavaType(
-								jaxbParameter.getType(),
-								sourceModelContext.getClassDetailsRegistry()
+						parameterResolvers.put(
+								jaxbParameter.getName(),
+								sourceModelContext.getClassDetailsRegistry().resolveClassDetails( jaxbParameter.getResolver() )
 						);
-						parameterResolvers.put( jaxbParameter.getName(), resolverClassDetails );
 					}
 				}
 			}

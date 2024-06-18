@@ -3214,8 +3214,14 @@ public abstract class AbstractEntityPersister
 				// Return an empty Junction
 				return junction;
 			}
+			
+			if ( hasNotNull ) {
+				junction.add( new NegatedPredicate( new NullnessPredicate( sqlExpression ) ) );			
+			}
+			if ( hasNull ) {
+				junction.add( new NullnessPredicate( sqlExpression ) );				
+			}
 
-			junction.add( new NullnessPredicate( sqlExpression ) );
 			junction.add( predicate );
 			return junction;
 		}

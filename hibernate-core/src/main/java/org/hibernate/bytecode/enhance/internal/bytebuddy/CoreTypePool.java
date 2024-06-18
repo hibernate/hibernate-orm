@@ -15,11 +15,11 @@ import net.bytebuddy.pool.TypePool;
  * A TypePool which only loads, and caches, types whose package
  * name starts with certain chosen prefixes.
  * The default is to only load classes whose package names start with
- * either "jakarta." or "java.".
+ * "java." as that should be safe in any classloader environment.
  * This allows to reuse these caches independently from application
  * code and classloader changes, as during enhancement we frequently
- * encounter such symbols as well, for example triggered by JPA annotations
- * or properties mapped via standard java types and collections.
+ * encounter such symbols as well, for example triggered by properties
+ * mapped via standard java types and collections.
  * Symbols resolved by this pool are backed by loaded classes from
  * ORM's classloader.
  */
@@ -31,12 +31,13 @@ public class CoreTypePool extends TypePool.AbstractBase implements TypePool {
 
 	/**
 	 * Construct a new {@link CoreTypePool} with its default configuration:
-	 * to only load classes whose package names start with either "jakarta."
-	 * or "java."
+	 * to only load classes whose package names start with "java."
 	 */
 	public CoreTypePool() {
-		//By default optimise for jakarta annotations, and java util collections
-		this("jakarta.", "java.", "org.hibernate.annotations.");
+		//By default optimise only types from the JDK as they should be safe to be loaded
+		//in any framework and container.
+		//The list could be tuned further in other environments; see also https://hibernate.atlassian.net/browse/HHH-18108
+		this("java.");
 	}
 
 	/**

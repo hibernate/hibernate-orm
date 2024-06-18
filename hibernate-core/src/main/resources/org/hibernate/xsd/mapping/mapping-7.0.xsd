@@ -411,7 +411,7 @@
             <xsd:element name="named-entity-graph" type="orm:named-entity-graph"
                          minOccurs="0" maxOccurs="unbounded"/>
 
-            <xsd:element name="filter" type="orm:hbm-filter" minOccurs="0" maxOccurs="unbounded" />
+            <xsd:element name="filter" type="orm:filter" minOccurs="0" maxOccurs="unbounded" />
 
             <xsd:element name="fetch-profile" type="orm:fetch-profile" minOccurs="0" maxOccurs="unbounded" />
 
@@ -1599,7 +1599,7 @@
                 <xsd:sequence>
                     <xsd:element name="join-table" type="orm:join-table" minOccurs="0"/>
                     <xsd:element name="sql-join-table-restriction" type="xsd:string" minOccurs="0"/>
-                    <xsd:element name="filter-join-table" type="orm:hbm-filter" minOccurs="0" maxOccurs="unbounded" />
+                    <xsd:element name="filter-join-table" type="orm:filter" minOccurs="0" maxOccurs="unbounded" />
                 </xsd:sequence>
             </xsd:choice>
 
@@ -2034,7 +2034,7 @@
                 <xsd:sequence>
                     <xsd:element name="join-table" type="orm:join-table" minOccurs="0"/>
                     <xsd:element name="sql-join-table-restriction" type="xsd:string" minOccurs="0"/>
-                    <xsd:element name="filter-join-table" type="orm:hbm-filter" minOccurs="0" maxOccurs="unbounded" />
+                    <xsd:element name="filter-join-table" type="orm:filter" minOccurs="0" maxOccurs="unbounded" />
                 </xsd:sequence>
                 <xsd:sequence>
                     <xsd:element name="join-column" type="orm:join-column"
@@ -2801,7 +2801,7 @@
         <xsd:attribute name="apply-to-load-by-key" type="xsd:boolean" default="false"/>
     </xsd:complexType>
 
-    <xsd:complexType name="hbm-filter">
+    <xsd:complexType name="filter">
         <xsd:annotation>
             <xsd:documentation>
                 Applies a filter defined by hbm-filter-def usage
@@ -3308,7 +3308,7 @@
             <xsd:element name="sql-delete" type="orm:custom-sql" minOccurs="0"/>
             <xsd:element name="sql-delete-all" type="orm:custom-sql" minOccurs="0"/>
 
-            <xsd:element name="filter" type="orm:hbm-filter" minOccurs="0" maxOccurs="unbounded" />
+            <xsd:element name="filter" type="orm:filter" minOccurs="0" maxOccurs="unbounded" />
         </xsd:sequence>
     </xsd:group>
 

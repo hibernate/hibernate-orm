@@ -177,7 +177,7 @@ public class XmlProcessingSmokeTests {
 		assertThat( amountFilter.getDefaultCondition() ).isEqualTo( "amount = :amount" );
 		assertThat( amountFilter.getParameterTypes() ).hasSize( 1 );
 		final ClassDetails amountParameterType = amountFilter.getParameterTypes().get( "amount" );
-		assertThat( amountParameterType.getClassName() ).isEqualTo( int.class.getName() );
+		assertThat( amountParameterType.getClassName() ).isEqualTo( Integer.class.getName() );
 
 		final FilterDefRegistration nameFilter = filterDefRegistrations.get( "name_filter" );
 		assertThat( nameFilter.getDefaultCondition() ).isEqualTo( "name = :name" );

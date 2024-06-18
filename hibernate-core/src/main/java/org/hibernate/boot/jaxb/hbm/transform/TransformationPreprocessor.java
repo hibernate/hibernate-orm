@@ -40,8 +40,17 @@ public class TransformationPreprocessor {
 		final EntityMappingConsumer entityMappingConsumer = new EntityMappingConsumer( transformationState );
 		final Map<String, JaxbEntityImpl> rootClassesMap = new HashMap<>();
 
+		collectGlobalState( hbmXmlBindings, transformationState );
 		processStructuredHierarchies( hbmXmlBindings, rootClassesMap, entityMappingConsumer );
 		processSeparatedHierarchies( hbmXmlBindings, rootClassesMap, entityMappingConsumer );
+	}
+
+	private static void collectGlobalState(
+			List<Binding<JaxbHbmHibernateMapping>> hbmXmlBindings,
+			TransformationState transformationState) {
+		hbmXmlBindings.forEach( (hbmBinding) -> {
+			hbmBinding.getRoot().getTypedef().forEach( transformationState::acceptTypeDefinition );
+		} );
 	}
 
 	private static void processStructuredHierarchies(

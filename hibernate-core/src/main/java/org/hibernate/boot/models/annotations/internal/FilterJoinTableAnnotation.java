@@ -9,7 +9,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 
 import org.hibernate.annotations.FilterJoinTable;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbHbmFilterImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbFilterImpl;
 import org.hibernate.boot.models.annotations.spi.FilterDetails;
 import org.hibernate.boot.models.xml.internal.FilterProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
@@ -109,7 +109,7 @@ public class FilterJoinTableAnnotation implements FilterJoinTable, FilterDetails
 	}
 
 	@Override
-	public void apply(JaxbHbmFilterImpl jaxbFilter, XmlDocumentContext xmlDocumentContext) {
+	public void apply(JaxbFilterImpl jaxbFilter, XmlDocumentContext xmlDocumentContext) {
 		name( jaxbFilter.getName() );
 
 		if ( StringHelper.isNotEmpty( jaxbFilter.getCondition() ) ) {

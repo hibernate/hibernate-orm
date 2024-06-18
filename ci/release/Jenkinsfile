@@ -9,7 +9,7 @@
 /*
  * See https://github.com/hibernate/hibernate-jenkins-pipeline-helpers
  */
-@Library('hibernate-jenkins-pipeline-helpers@1.16') _
+@Library('hibernate-jenkins-pipeline-helpers@1.17') _
 
 import org.hibernate.jenkins.pipeline.helpers.version.Version
 
@@ -147,12 +147,10 @@ pipeline {
 
 					env.RELEASE_VERSION = releaseVersion.toString()
 					env.DEVELOPMENT_VERSION = developmentVersion.toString()
-					def tagName = releaseVersion.tagName
-
 					env.SCRIPT_OPTIONS = params.RELEASE_DRY_RUN ? "-d" : ""
 
 					// Determine version id to check if Jira version exists
-					sh ".release/scripts/determine-jira-version-id.sh ${env.JIRA_KEY} ${tagName}"
+					sh ".release/scripts/determine-jira-version-id.sh ${env.JIRA_KEY} ${releaseVersion.withoutFinalQualifier}"
 				}
 			}
 		}

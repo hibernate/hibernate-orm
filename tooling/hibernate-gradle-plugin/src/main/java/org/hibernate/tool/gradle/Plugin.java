@@ -1,11 +1,10 @@
 package org.hibernate.tool.gradle;
 
 import org.gradle.api.Project;
+import org.hibernate.tool.gradle.task.GenerateJavaTask;
 
 public class Plugin implements org.gradle.api.Plugin<Project> {
     public void apply(Project project) {
-         project.getTasks().register("hibernate", task -> {
-            task.doLast(s -> System.out.println("Hello from plugin 'org.hibernate.tool.gradle.Plugin'"));
-        });
+    	project.getTasks().register("hbm2java", GenerateJavaTask.class);
     }
 }

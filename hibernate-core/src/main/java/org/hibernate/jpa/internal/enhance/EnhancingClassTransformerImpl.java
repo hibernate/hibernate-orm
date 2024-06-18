@@ -31,6 +31,9 @@ public class EnhancingClassTransformerImpl implements ClassTransformer {
 	private final ReentrantLock lock = new ReentrantLock();
 	private volatile WeakReference<Entry> entryReference;
 
+	//This list is matching the constants used by CoreTypePool's default constructor
+	private static final String[] NO_TRANSFORM_PREFIXES = { "jakarta/", "java/", "org/hibernate/annotations/" };
+
 	public EnhancingClassTransformerImpl(EnhancementContext enhancementContext) {
 		Objects.requireNonNull( enhancementContext );
 		this.enhancementContext = enhancementContext;
@@ -44,6 +47,16 @@ public class EnhancingClassTransformerImpl implements ClassTransformer {
 			Class<?> classBeingRedefined,
 			ProtectionDomain protectionDomain,
 			byte[] classfileBuffer)  throws TransformerException {
+
+		//Take care to not transform certain types; this is both an optimisation (we can skip this unnecessary work)
+		//and a safety precaution as we otherwise risk attempting to redefine classes which have already been loaded:
+		//see https://hibernate.atlassian.net/browse/HHH-18108
+		//N.B. this className doesn't use the dot-format but the slashes for package separators.
+		for ( String prefix : NO_TRANSFORM_PREFIXES ) {
+			if ( className.startsWith( prefix ) ) {
+				return null;
+			}
+		}
 
 		try {
 			return getEnhancer( loader ).enhance( className, classfileBuffer );

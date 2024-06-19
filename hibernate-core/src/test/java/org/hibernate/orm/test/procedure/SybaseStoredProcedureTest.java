@@ -114,6 +114,21 @@ public class SybaseStoredProcedureTest {
 	}
 
 	@Test
+	public void testStoredProcedureOutParameterDifferentParametersRegistrationOrder(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_count_phones" );
+			query.registerStoredProcedureParameter( "phoneCount", Long.class, ParameterMode.OUT );
+			query.registerStoredProcedureParameter( "personId", Long.class, ParameterMode.IN );
+
+			query.setParameter( "personId", 1L );
+
+			query.execute();
+			Long phoneCount = (Long) query.getOutputParameterValue( "phoneCount" );
+			assertEquals( Long.valueOf( 2 ), phoneCount );
+		} );
+	}
+
+	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.IsJtds.class, reverse = true, comment = "jTDS can't handle calling functions")
 	public void testFunctionReturnValue(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {

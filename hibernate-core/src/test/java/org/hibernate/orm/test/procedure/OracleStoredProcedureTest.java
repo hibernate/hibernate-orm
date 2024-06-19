@@ -71,6 +71,9 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class OracleStoredProcedureTest {
 
 	private Person person1;
+	private static final String CITY = "London";
+	private static final String STREET = "Lollard Street";
+	private static final String ZIP = "SE116UG";
 
 	@Test
 	public void testUnRegisteredParameter(EntityManagerFactoryScope scope) {
@@ -92,17 +95,46 @@ public class OracleStoredProcedureTest {
 	}
 
 	@Test
+	public void testUnRegisteredParameterByName2(EntityManagerFactoryScope scope) {
+		scope.inTransaction( (em) -> {
+			final StoredProcedureQuery function = em.createStoredProcedureQuery( "find_char", Integer.class );
+			function.setHint( QueryHints.CALLABLE_FUNCTION, "true" );
+			// search-string
+			function.registerStoredProcedureParameter( "search_char", String.class, ParameterMode.IN );
+			// source-string
+			function.registerStoredProcedureParameter( "string", String.class, ParameterMode.IN );
+
+			function.setParameter( "search_char", "." );
+			function.setParameter( "string", "org.hibernate.query" );
+
+			final Object singleResult = function.getSingleResult();
+			Assertions.assertThat( singleResult ).isInstanceOf( Integer.class );
+			Assertions.assertThat( singleResult ).isEqualTo( 4 );
+		} );
+	}
+
+	@Test
+	public void testUnRegisteredParameterByNameInvertedParameterRegistrationOrder(EntityManagerFactoryScope scope) {
+		scope.inTransaction( (em) -> {
+			final StoredProcedureQuery function = em.createStoredProcedureQuery( "find_char", Integer.class );
+			function.setHint( QueryHints.CALLABLE_FUNCTION, "true" );
+			// search-string
+			function.registerStoredProcedureParameter( "string", String.class, ParameterMode.IN );
+			// source-string
+			function.registerStoredProcedureParameter( "search_char", String.class, ParameterMode.IN );
+
+			function.setParameter( "string", "org.hibernate.query");
+			function.setParameter( "search_char", "." );
+
+			final Object singleResult = function.getSingleResult();
+			Assertions.assertThat( singleResult ).isInstanceOf( Integer.class );
+			Assertions.assertThat( singleResult ).isEqualTo( 4 );
+		} );
+	}
+
+	@Test
 	@TestForIssue(jiraKey = "HHH-15542")
 	public void testStoredProcedureInAndOutAndRefCursorParameters(EntityManagerFactoryScope scope) {
-		String city = "London";
-		String street = "Lollard Street";
-		String zip = "SE116UG";
-		scope.inTransaction(
-				entityManager -> {
-					Address address = new Address( 1l, street, city, zip );
-					entityManager.persist( address );
-				}
-		);
 		scope.inTransaction(
 				entityManager -> {
 					StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "GET_ADDRESS_BY_NAME" );
@@ -111,15 +143,71 @@ public class OracleStoredProcedureTest {
 					query.registerStoredProcedureParameter( "rec_out", ResultSet.class, ParameterMode.REF_CURSOR );
 					query.registerStoredProcedureParameter( "err_out", String.class, ParameterMode.OUT );
 
-					query.setParameter( "street_in", street )
-							.setParameter( "city_in", city );
+					query.setParameter( "street_in", STREET )
+							.setParameter( "city_in", CITY );
 					query.execute();
 					ResultSet rs = (ResultSet) query.getOutputParameterValue( "rec_out" );
 					try {
 						assertTrue( rs.next() );
-						assertThat( rs.getString( "street" ), is( street ) );
-						assertThat( rs.getString( "city" ), is( city ) );
-						assertThat( rs.getString( "zip" ), is( zip ) );
+						assertThat( rs.getString( "street" ), is( STREET ) );
+						assertThat( rs.getString( "city" ), is( CITY ) );
+						assertThat( rs.getString( "zip" ), is( ZIP ) );
+					}
+					catch (SQLException e) {
+						throw new RuntimeException( e );
+					}
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-18280")
+	public void testStoredProcedureInAndOutAndRefCursorParametersInvertedParamRegistationOrder(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "GET_ADDRESS_BY_NAME" );
+					query.registerStoredProcedureParameter( "city_in", String.class, ParameterMode.IN );
+					query.registerStoredProcedureParameter( "street_in", String.class, ParameterMode.IN );
+					query.registerStoredProcedureParameter( "rec_out", ResultSet.class, ParameterMode.REF_CURSOR );
+					query.registerStoredProcedureParameter( "err_out", String.class, ParameterMode.OUT );
+
+					query.setParameter( "street_in", STREET )
+							.setParameter( "city_in", CITY );
+					query.execute();
+					ResultSet rs = (ResultSet) query.getOutputParameterValue( "rec_out" );
+					try {
+						assertTrue( rs.next() );
+						assertThat( rs.getString( "street" ), is( STREET ) );
+						assertThat( rs.getString( "city" ), is( CITY ) );
+						assertThat( rs.getString( "zip" ), is( ZIP ) );
+					}
+					catch (SQLException e) {
+						throw new RuntimeException( e );
+					}
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-18280")
+	public void testStoredProcedureInAndOutAndRefCursorParametersInvertedParamRegistationOrder2(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "GET_ADDRESS_BY_NAME" );
+					query.registerStoredProcedureParameter( "city_in", String.class, ParameterMode.IN );
+					query.registerStoredProcedureParameter( "street_in", String.class, ParameterMode.IN );
+					query.registerStoredProcedureParameter( "rec_out", ResultSet.class, ParameterMode.REF_CURSOR );
+					query.registerStoredProcedureParameter( "err_out", String.class, ParameterMode.OUT );
+
+					query.setParameter( "city_in", CITY )
+							.setParameter( "street_in", STREET );
+					query.execute();
+					ResultSet rs = (ResultSet) query.getOutputParameterValue( "rec_out" );
+					try {
+						assertTrue( rs.next() );
+						assertThat( rs.getString( "street" ), is( STREET ) );
+						assertThat( rs.getString( "city" ), is( CITY ) );
+						assertThat( rs.getString( "zip" ), is( ZIP ) );
 					}
 					catch (SQLException e) {
 						throw new RuntimeException( e );
@@ -510,6 +598,9 @@ public class OracleStoredProcedureTest {
 			phone2.setValid( false );
 
 			person1.addPhone( phone2 );
+
+			Address address = new Address( 1l, STREET, CITY, ZIP );
+			entityManager.persist( address );
 		} );
 	}
 
@@ -538,6 +629,7 @@ public class OracleStoredProcedureTest {
 				people.forEach( em::remove );
 
 				em.createQuery( "delete IdHolder" ).executeUpdate();
+				em.createQuery( "delete Address" ).executeUpdate();
 			});
 		} );
 	}
@@ -566,7 +658,7 @@ public class OracleStoredProcedureTest {
 		String name;
 	}
 
-	@Entity
+	@Entity(name = "Address")
 	@Table(name="ADDRESS_TABLE")
 	public static class Address{
 		@Id

@@ -176,7 +176,7 @@ public class StructAggregateEmbeddableInheritanceTest implements AdditionalMappi
 			}
 			final ProcedureCall structFunction = session.createStoredProcedureCall( "structProcedure" );
 			final ProcedureParameter<ParentEmbeddable> resultParameter = structFunction.registerParameter(
-					"structType",
+					"result",
 					ParentEmbeddable.class,
 					parameterMode
 			);

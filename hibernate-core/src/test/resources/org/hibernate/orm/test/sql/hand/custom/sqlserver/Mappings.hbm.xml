@@ -185,7 +185,7 @@
 	<sql-query name="simpleScalar" callable="true">
 		<return-scalar column="name" type="string"/>
 		<return-scalar column="`value`" type="long"/>
-		{ call simpleScalar(:number) }
+		{ call simpleScalar(:p_number) }
 	</sql-query>
 
 	<sql-query name="paramhandling" callable="true">
@@ -270,8 +270,8 @@
 
 	<database-object>
 		<create>
-		CREATE PROCEDURE simpleScalar @number int AS
-			SELECT @number as value, 'getAll' as name
+		CREATE PROCEDURE simpleScalar @p_number int AS
+			SELECT @p_number as value, 'getAll' as name
 		</create>
 		<drop>
 		DROP PROCEDURE simpleScalar

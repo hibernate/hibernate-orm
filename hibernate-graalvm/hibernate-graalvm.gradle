@@ -15,4 +15,5 @@ dependencies {
     compileOnly "org.graalvm.sdk:graal-sdk:22.2.0"
 
     testImplementation project( ':hibernate-core' )
+    testImplementation libs.jandex
 }

@@ -1137,12 +1137,6 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) {
-		// Not sure if it's a JDBC driver issue, but it doesn't work
-		return false;
-	}
-
-	@Override
 	public String generatedAs(String generatedAs) {
 		return " as (" + generatedAs + ") persisted";
 	}

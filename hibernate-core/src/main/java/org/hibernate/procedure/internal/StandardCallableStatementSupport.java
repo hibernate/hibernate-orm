@@ -91,12 +91,7 @@ public class StandardCallableStatementSupport extends AbstractStandardCallableSt
 						i + offset,
 						procedureCall
 				);
-				if ( registration.getName() != null ) {
-					buffer.append( ':' ).append( registration.getName() );
-				}
-				else {
-					buffer.append( "?" );
-				}
+				buffer.append( "?" );
 				sep = ',';
 				builder.addParameterRegistration( registration );
 			}

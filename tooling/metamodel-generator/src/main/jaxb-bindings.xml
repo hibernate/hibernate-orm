@@ -1,0 +1,29 @@
+<jaxb:bindings xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+               xmlns:xs="http://www.w3.org/2001/XMLSchema"
+               xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:schemaLocation="https://jakarta.ee/xml/ns/jaxb https://jakarta.ee/xml/ns/jaxb/bindingschema_3_0.xsd"
+               version="2.1" jaxb:extensionBindingPrefixes="xjc">
+    <jaxb:bindings schemaLocation="xsd/orm_3_1.xsd" node="/xs:schema">
+        <jaxb:schemaBindings>
+            <jaxb:package name="org.hibernate.processor.xml.jaxb"/>
+            <jaxb:nameXmlTransform>
+                <jaxb:elementName prefix="Xml"/>
+                <jaxb:modelGroupName prefix="Xml"/>
+                <jaxb:typeName prefix="Xml"/>
+                <jaxb:anonymousTypeName prefix="Xml"/>
+            </jaxb:nameXmlTransform>
+        </jaxb:schemaBindings>
+    </jaxb:bindings>
+    <jaxb:bindings schemaLocation="xsd/persistence_3_0.xsd" node="/xs:schema">
+        <jaxb:schemaBindings>
+            <jaxb:package name="org.hibernate.processor.xml.jaxb"/>
+            <jaxb:nameXmlTransform>
+                <jaxb:elementName prefix="Xml"/>
+                <jaxb:modelGroupName prefix="Xml"/>
+                <jaxb:typeName prefix="Xml"/>
+                <jaxb:anonymousTypeName prefix="Xml"/>
+            </jaxb:nameXmlTransform>
+        </jaxb:schemaBindings>
+    </jaxb:bindings>
+</jaxb:bindings>

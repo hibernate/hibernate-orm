@@ -9,7 +9,6 @@ package org.hibernate.processor.util.xml;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import javax.tools.FileObject;

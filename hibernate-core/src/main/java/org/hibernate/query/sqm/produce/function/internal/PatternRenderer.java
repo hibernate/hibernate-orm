@@ -59,7 +59,6 @@ public class PatternRenderer {
 	 * @param argumentRenderingModes The rendering modes for arguments
 	 */
 	public PatternRenderer(String pattern, SqlAstNodeRenderingMode[] argumentRenderingModes) {
-		final Set<Integer> paramNumbers = new HashSet<>();
 		final List<String> chunkList = new ArrayList<>();
 		final List<Integer> paramList = new ArrayList<>();
 		final StringBuilder chunk = new StringBuilder( 10 );
@@ -98,8 +97,7 @@ public class PatternRenderer {
 					vararg = paramList.size();
 				}
 				else {
-					int paramNumber = Integer.valueOf( index.toString() );
-					paramNumbers.add( paramNumber );
+					int paramNumber = Integer.parseInt( index.toString() );
 					paramList.add( paramNumber );
 					index.setLength(0);
 					if ( paramNumber > max ) {

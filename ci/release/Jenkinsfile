@@ -9,7 +9,7 @@
 /*
  * See https://github.com/hibernate/hibernate-jenkins-pipeline-helpers
  */
-@Library('hibernate-jenkins-pipeline-helpers@1.14') _
+@Library('hibernate-jenkins-pipeline-helpers@1.17') _
 
 import org.hibernate.jenkins.pipeline.helpers.version.Version
 
@@ -111,7 +111,7 @@ pipeline {
 						}
 						releaseVersion = Version.parseReleaseVersion( params.RELEASE_VERSION )
 
-						if ( releaseVersion.toString().startsWith( currentVersion.family + '.' ) ) {
+						if ( !releaseVersion.toString().startsWith( currentVersion.family + '.' ) ) {
 							throw new IllegalArgumentException( "RELEASE_VERSION = $releaseVersion, which is different from the family of CURRENT_VERSION = $currentVersion. Did you make a mistake?" )
 						}
 					}
@@ -147,12 +147,10 @@ pipeline {
 
 					env.RELEASE_VERSION = releaseVersion.toString()
 					env.DEVELOPMENT_VERSION = developmentVersion.toString()
-					def versionBasis = releaseVersion.unqualified
-
 					env.SCRIPT_OPTIONS = params.RELEASE_DRY_RUN ? "-d" : ""
 
 					// Determine version id to check if Jira version exists
-					sh ".release/scripts/determine-jira-version-id.sh ${env.JIRA_KEY} ${versionBasis}"
+					sh ".release/scripts/determine-jira-version-id.sh ${env.JIRA_KEY} ${releaseVersion.withoutFinalQualifier}"
 				}
 			}
 		}
@@ -176,7 +174,9 @@ pipeline {
 								// update changelog from JIRA
 								// tags the version
 								// changes the version to the provided development version
-								sh ".release/scripts/prepare-release.sh ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION}"
+								withEnv(["BRANCH=${env.GIT_BRANCH}"]) {
+									sh ".release/scripts/prepare-release.sh ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION}"
+								}
 							}
 						}
 					}
@@ -202,7 +202,7 @@ pipeline {
 							sshagent(['ed25519.Hibernate-CI.github.com', 'hibernate.filemgmt.jboss.org', 'hibernate-ci.frs.sourceforge.net']) {
 								// performs documentation upload and Sonatype release
 								// push to github
-								sh ".release/scripts/publish.sh ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION}"
+								sh ".release/scripts/publish.sh ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION} ${env.GIT_BRANCH}"
 							}
 						}
 					}

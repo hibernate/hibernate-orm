@@ -840,10 +840,12 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		}
 
 		public boolean equals(Object other) {
+			if ( !( other instanceof ForeignKeyKey ) ) {
+				return false;
+			}
 			ForeignKeyKey fkk = (ForeignKeyKey) other;
-			return fkk != null
-				&& Arrays.equals( fkk.columns, columns )
-				&& Arrays.equals( fkk.referencedColumns, referencedColumns );
+			return Arrays.equals( fkk.columns, columns )
+					&& Arrays.equals( fkk.referencedColumns, referencedColumns );
 		}
 
 		@Override

@@ -162,9 +162,6 @@ public class DdlTypeRegistry implements Serializable {
 				return getTypeName( typeCode, Size.precision( dialect.getFloatPrecision() ) );
 			case SqlTypes.DOUBLE:
 				return getTypeName( typeCode, Size.precision( dialect.getDoublePrecision() ) );
-			case SqlTypes.TIME:
-			case SqlTypes.TIME_WITH_TIMEZONE:
-			case SqlTypes.TIME_UTC:
 			case SqlTypes.TIMESTAMP:
 			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
 			case SqlTypes.TIMESTAMP_UTC:

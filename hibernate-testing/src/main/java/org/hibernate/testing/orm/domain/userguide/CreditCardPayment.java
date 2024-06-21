@@ -6,6 +6,7 @@
  */
 package org.hibernate.testing.orm.domain.userguide;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 
 /**
@@ -14,6 +15,7 @@ import jakarta.persistence.Entity;
 //tag::hql-examples-domain-model-example[]
 @Entity
 public class CreditCardPayment extends Payment {
+	@Column(name = "card_number")
 	String cardNumber;
 
 	public void setCardNumber(String cardNumber) {

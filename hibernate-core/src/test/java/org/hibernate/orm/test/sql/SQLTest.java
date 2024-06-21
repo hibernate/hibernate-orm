@@ -284,7 +284,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::sql-jpa-entity-query-explicit-result-set-example[]
 			List<Person> persons = entityManager.createNativeQuery(
-				"SELECT id, name, nickName, address, createdOn, version " +
+				"SELECT id, name, nick_name, address, created_on, version " +
 				"FROM Person", Person.class)
 			.getResultList();
 			//end::sql-jpa-entity-query-explicit-result-set-example[]
@@ -298,7 +298,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			Session session = entityManager.unwrap(Session.class);
 			//tag::sql-hibernate-entity-query-explicit-result-set-example[]
 			List<Person> persons = session.createNativeQuery(
-				"SELECT id, name, nickName, address, createdOn, version " +
+				"SELECT id, name, nick_name, address, created_on, version " +
 				"FROM Person", Person.class)
 			.list();
 			//end::sql-hibernate-entity-query-explicit-result-set-example[]

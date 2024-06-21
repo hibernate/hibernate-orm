@@ -28,6 +28,12 @@ import org.gradle.api.artifacts.ResolvedConfiguration;
 import org.gradle.api.tasks.TaskAction;
 
 public class RunSqlTask extends DefaultTask {
+	
+	private String sqlToRun = "";
+	
+	public void setSqlToRun(String sqlToRun) {
+		this.sqlToRun = sqlToRun;
+	}
 
 	@TaskAction
 	public void performTask() {
@@ -38,7 +44,7 @@ public class RunSqlTask extends DefaultTask {
 					new URLClassLoader(
 							resolveProjectClassPath(), 
 							oldLoader));
-			runSql("create table foo (id int not null primary key, baz varchar(256))");
+			runSql();
 		} finally {
 			Thread.currentThread().setContextClassLoader(oldLoader);
 			getLogger().lifecycle("Ending Task 'RunSqlTask");
@@ -80,15 +86,15 @@ public class RunSqlTask extends DefaultTask {
 		}
 	}
 	
-	private void runSql(String sql) {
+	private void runSql() {
 		Properties properties = loadPropertiesFile(getPropertyFile());
 		registerDriver(properties.getProperty("hibernate.connection.driver_class"));
 		try {
 			Connection connection = DriverManager
 					.getConnection(properties.getProperty("hibernate.connection.url"), "sa", "");
 			Statement statement = connection.createStatement();
-			getLogger().lifecycle("Running SQL: " + sql);
-			statement.execute(sql);
+			getLogger().lifecycle("Running SQL: " + sqlToRun);
+			statement.execute(sqlToRun);
 			statement.close();
 			connection.close();
 		} catch (SQLException e) {

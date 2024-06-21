@@ -750,8 +750,7 @@ public class EntityBinder {
 		final String table;
 		final String catalog;
 		final UniqueConstraint[] uniqueConstraints;
-		boolean hasTableAnnotation = annotatedClass.isAnnotationPresent( jakarta.persistence.Table.class );
-		if ( hasTableAnnotation ) {
+		if ( annotatedClass.isAnnotationPresent( jakarta.persistence.Table.class ) ) {
 			final jakarta.persistence.Table tableAnnotation = annotatedClass.getAnnotation( jakarta.persistence.Table.class );
 			table = tableAnnotation.name();
 			schema = tableAnnotation.schema();
@@ -771,7 +770,7 @@ public class EntityBinder {
 		}
 		else {
 			// must be a SINGLE_TABLE mapping for a subclass
-			if ( hasTableAnnotation ) {
+			if ( !table.isEmpty() ) {
 				final Table superTable = persistentClass.getRootClass().getTable();
 				if ( !logicalTableName( table, schema, catalog )
 						.equals( superTable.getQualifiedTableName() ) ) {

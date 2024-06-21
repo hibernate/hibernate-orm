@@ -107,6 +107,7 @@ public class Item implements Serializable {
 		this.name = name;
 	}
 
+	@Column(name = "int_val")
 	public Integer getIntVal() {
 		return intVal;
 	}

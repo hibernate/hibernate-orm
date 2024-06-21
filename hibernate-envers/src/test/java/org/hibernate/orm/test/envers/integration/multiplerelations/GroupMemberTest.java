@@ -88,9 +88,9 @@ public class GroupMemberTest extends BaseEnversJPAFunctionalTestCase {
 		return TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
 			final Session session = entityManager.unwrap( Session.class );
 			final Query query = session.createNativeQuery(
-							"SELECT uniqueGroup_id FROM GroupMember_AUD ORDER BY REV DESC"
+							"SELECT unique_group_id FROM GroupMember_AUD ORDER BY REV DESC"
 					)
-					.addScalar( "uniqueGroup_id", StandardBasicTypes.INTEGER )
+					.addScalar( "unique_group_id", StandardBasicTypes.INTEGER )
 					.setMaxResults( 1 );
 			final Object result = query.getSingleResult();
 			assertNotNull( result );
@@ -106,7 +106,7 @@ public class GroupMemberTest extends BaseEnversJPAFunctionalTestCase {
 		private Integer id;
 
 		@ManyToOne
-		@JoinColumn(name = "uniqueGroup_id", insertable = false, updatable = false)
+		@JoinColumn(name = "unique_group_id", insertable = false, updatable = false)
 		private UniqueGroup uniqueGroup;
 
 		@ManyToMany(mappedBy = "members")
@@ -150,7 +150,7 @@ public class GroupMemberTest extends BaseEnversJPAFunctionalTestCase {
 		private Integer id;
 
 		@OneToMany
-		@JoinColumn(name = "uniqueGroup_id")
+		@JoinColumn(name = "unique_group_id")
 		@AuditMappedBy(mappedBy = "uniqueGroup")
 		private Set<GroupMember> members = new HashSet<>();
 

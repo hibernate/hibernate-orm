@@ -8,6 +8,8 @@ package org.hibernate.orm.test.mapping.formula;
 
 import java.util.Collections;
 import java.util.List;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -76,7 +78,7 @@ public class FormulaNativeQueryTest {
 		scope.inTransaction(
 				session -> {
 					Query<Foo> query = session.createNativeQuery(
-							"SELECT ft.*, abs(locationEnd - locationStart) as distance FROM foo_table ft",
+							"SELECT ft.*, abs(location_end - location_start) as distance FROM foo_table ft",
 							Foo.class
 					);
 					List<Foo> list = query.getResultList();
@@ -90,11 +92,11 @@ public class FormulaNativeQueryTest {
 		scope.inTransaction(
 				session -> {
 					NativeQuery query = session.createNativeQuery(
-							"SELECT ft.*, abs(ft.locationEnd - locationStart) as d FROM foo_table ft" );
+							"SELECT ft.*, abs(ft.location_end - location_start) as d FROM foo_table ft" );
 					query.addRoot( "ft", Foo.class )
 							.addProperty( "id", "id" )
-							.addProperty( "locationStart", "locationStart" )
-							.addProperty( "locationEnd", "locationEnd" )
+							.addProperty( "locationStart", "location_start" )
+							.addProperty( "locationEnd", "location_end" )
 							.addProperty( "distance", "d" );
 					List<Foo> list = query.getResultList();
 					assertThat( list, hasSize( 3 ) );
@@ -107,7 +109,7 @@ public class FormulaNativeQueryTest {
 		scope.inTransaction(
 				session -> {
 					NativeQuery query = session.createNativeQuery(
-							"SELECT ft.id as {ft.id}, ft.locationStart as {ft.locationStart}, ft.locationEnd as {ft.locationEnd}, abs(ft.locationEnd - locationStart) as {ft.distance} FROM foo_table ft" )
+							"SELECT ft.id as {ft.id}, ft.location_start as {ft.locationStart}, ft.location_end as {ft.locationEnd}, abs(ft.location_end - location_start) as {ft.distance} FROM foo_table ft" )
 							.addEntity( "ft", Foo.class );
 					query.setProperties( Collections.singletonMap( "distance", "distance" ) );
 					List<Foo> list = query.getResultList();
@@ -153,6 +155,7 @@ public class FormulaNativeQueryTest {
 			this.id = id;
 		}
 
+		@Column(name = "location_start")
 		public int getLocationStart() {
 			return locationStart;
 		}
@@ -160,6 +163,7 @@ public class FormulaNativeQueryTest {
 			this.locationStart = locationStart;
 		}
 
+		@Column(name = "location_end")
 		public int getLocationEnd() {
 			return locationEnd;
 		}
@@ -167,7 +171,7 @@ public class FormulaNativeQueryTest {
 			this.locationEnd = locationEnd;
 		}
 
-		@Formula("abs(locationEnd - locationStart)")
+		@Formula("abs(location_end - location_start)")
 		public int getDistance() {
 			return distance;
 		}

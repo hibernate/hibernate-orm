@@ -393,16 +393,16 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			em.persist( item );
 			// native queries don't seem to flush by default ?!?
 			em.flush();
-			Query q = em.createNativeQuery( "select * from Item i where i.intVal=?" );
+			Query q = em.createNativeQuery( "select * from Item i where i.int_val=?" );
 			q.setParameter( 1, null );
 			List results = q.getResultList();
 			// null != null
 			assertEquals( 0, results.size() );
-			q = em.createNativeQuery( "select * from Item i where i.intVal is null and ? is null" );
+			q = em.createNativeQuery( "select * from Item i where i.int_val is null and ? is null" );
 			q.setParameter( 1, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-			q = em.createNativeQuery( "select * from Item i where i.intVal is null or i.intVal = ?" );
+			q = em.createNativeQuery( "select * from Item i where i.int_val is null or i.int_val = ?" );
 			q.setParameter(1, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
@@ -428,7 +428,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			em.persist( item );
 			// native queries don't seem to flush by default ?!?
 			em.flush();
-			Query q = em.createNativeQuery( "select * from Item i where i.intVal=?" );
+			Query q = em.createNativeQuery( "select * from Item i where i.int_val=?" );
 			Parameter p = new Parameter() {
 				@Override
 				public String getName() {
@@ -450,11 +450,11 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			List results = q.getResultList();
 			// null != null
 			assertEquals( 0, results.size() );
-			q = em.createNativeQuery( "select * from Item i where i.intVal is null and ? is null" );
+			q = em.createNativeQuery( "select * from Item i where i.int_val is null and ? is null" );
 			q.setParameter( p, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-			q = em.createNativeQuery( "select * from Item i where i.intVal is null or i.intVal = ?" );
+			q = em.createNativeQuery( "select * from Item i where i.int_val is null or i.int_val = ?" );
 			q.setParameter( p, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
@@ -479,16 +479,16 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			em.persist( item );
 			// native queries don't seem to flush by default ?!?
 			em.flush();
-			Query q = em.createNativeQuery( "select * from Item i where i.intVal=:iVal" );
+			Query q = em.createNativeQuery( "select * from Item i where i.int_val=:iVal" );
 			q.setParameter( "iVal", null );
 			List results = q.getResultList();
 			// null != null
 			assertEquals( 0, results.size() );
-			q = em.createNativeQuery( "select * from Item i where (i.intVal is null) and (:iVal is null)" );
+			q = em.createNativeQuery( "select * from Item i where (i.int_val is null) and (:iVal is null)" );
 			q.setParameter( "iVal", null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-			q = em.createNativeQuery( "select * from Item i where i.intVal is null or i.intVal = :iVal" );
+			q = em.createNativeQuery( "select * from Item i where i.int_val is null or i.int_val = :iVal" );
 			q.setParameter( "iVal", null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
@@ -514,7 +514,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			em.persist( item );
 			// native queries don't seem to flush by default ?!?
 			em.flush();
-			Query q = em.createNativeQuery( "select * from Item i where i.intVal=:iVal" );
+			Query q = em.createNativeQuery( "select * from Item i where i.int_val=:iVal" );
 			Parameter p = new Parameter() {
 				@Override
 				public String getName() {
@@ -535,11 +535,11 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			Parameter pGotten = q.getParameter( p.getName() );
 			List results = q.getResultList();
 			assertEquals( 0, results.size() );
-			q = em.createNativeQuery( "select * from Item i where (i.intVal is null) and (:iVal is null)" );
+			q = em.createNativeQuery( "select * from Item i where (i.int_val is null) and (:iVal is null)" );
 			q.setParameter( p, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
-			q = em.createNativeQuery( "select * from Item i where i.intVal is null or i.intVal = :iVal" );
+			q = em.createNativeQuery( "select * from Item i where i.int_val is null or i.int_val = :iVal" );
 			q.setParameter( p, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );

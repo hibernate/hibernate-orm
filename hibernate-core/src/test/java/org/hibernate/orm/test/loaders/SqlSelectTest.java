@@ -47,17 +47,17 @@ public class SqlSelectTest {
 
 	@Entity
 	@Table(name = "With_Sql_Select")
-	@SQLSelect(sql = "select * from With_Sql_Select where Sql_Select_id = ?",
+	@SQLSelect(sql = "select * from With_Sql_Select where sql_select_id = ?",
 			querySpaces = "With_Sql_Select")
 	static class WithSqlSelect {
 		@Id @GeneratedValue
-		@Column(name = "Sql_Select_id")
+		@Column(name = "sql_select_id")
 		Long id;
 		String name;
 		@ElementCollection
 		@CollectionTable(name = "With_Uuids",
-				joinColumns = @JoinColumn(name = "Sql_Select_id", referencedColumnName = "Sql_Select_id"))
-		@SQLSelect(sql = "select Random_Uuids as uuid from With_Uuids where Sql_Select_id = ?",
+				joinColumns = @JoinColumn(name = "sql_select_id", referencedColumnName = "sql_select_id"))
+		@SQLSelect(sql = "select Random_Uuids as uuid from With_Uuids where sql_select_id = ?",
 				resultSetMapping = @SqlResultSetMapping(name = "",
 						columns = @ColumnResult(name = "uuid", type = UUID.class)),
 				querySpaces = "With_Uuids")

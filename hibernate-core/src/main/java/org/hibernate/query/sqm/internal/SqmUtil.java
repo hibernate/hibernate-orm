@@ -15,6 +15,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.function.Function;
@@ -43,6 +44,7 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.spi.JdbcParameterBySqmParameterAccess;
@@ -740,6 +742,13 @@ public class SqmUtil {
 
 	public static boolean isHqlTuple(SqmSelection<?> selection) {
 		return selection != null && selection.getSelectableNode() instanceof SqmTuple;
+	}
+
+	public static Class<?> resolveExpressibleJavaTypeClass(final SqmExpression<?> expression) {
+		final SqmExpressible<?> expressible = expression.getExpressible();
+		return expressible == null || expressible.getExpressibleJavaType() == null
+				? null
+				: expressible.getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	private static class CriteriaParameterCollector {

@@ -9,9 +9,10 @@ class PluginTest {
     @Test void pluginRegistersATask() {
         // Create a test project and apply the plugin
         Project project = ProjectBuilder.builder().build();
-        project.getPlugins().apply("org.hibernate.tool");
+        project.getPlugins().apply("org.hibernate.tool.hibernate-tools-gradle");
 
         // Verify the result
-        assertNotNull(project.getTasks().findByName("hibernate"));
+        assertNotNull(project.getTasks().findByName("generateJava"));
+        assertNotNull(project.getTasks().findByName("runSql"));
     }
 }

@@ -90,8 +90,10 @@ public class RunSqlTask extends DefaultTask {
 		Properties properties = loadPropertiesFile(getPropertyFile());
 		registerDriver(properties.getProperty("hibernate.connection.driver_class"));
 		try {
+			String databaseUrl = properties.getProperty("hibernate.connection.url");
+			getLogger().lifecycle("Connecting to database: " + databaseUrl);
 			Connection connection = DriverManager
-					.getConnection(properties.getProperty("hibernate.connection.url"), "sa", "");
+					.getConnection(databaseUrl, "sa", "");
 			Statement statement = connection.createStatement();
 			getLogger().lifecycle("Running SQL: " + sqlToRun);
 			statement.execute(sqlToRun);
@@ -105,7 +107,7 @@ public class RunSqlTask extends DefaultTask {
 	
 	private Driver createDelegatingDriver(Driver driver) {
 		return (Driver)Proxy.newProxyInstance(
-				ClassLoader.getSystemClassLoader(), 
+				DriverManager.class.getClassLoader(), 
 				new Class[] { Driver.class}, 
 				new InvocationHandler() {					
 					@Override
@@ -116,7 +118,7 @@ public class RunSqlTask extends DefaultTask {
 	}
 	
 	private void registerDriver(String driverClassName) {
-		getLogger().lifecycle("Registering the database driver");
+		getLogger().lifecycle("Registering the database driver: " + driverClassName);
 		try {
 			Class<?> driverClass = Thread.currentThread().getContextClassLoader().loadClass(driverClassName);
 			Constructor<?> constructor = driverClass.getDeclaredConstructor();
@@ -126,5 +128,5 @@ public class RunSqlTask extends DefaultTask {
 			throw new RuntimeException(e);
 		}
 	}
-	
+		
 }

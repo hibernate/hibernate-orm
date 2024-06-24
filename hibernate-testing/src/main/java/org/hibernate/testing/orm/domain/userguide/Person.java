@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.ColumnResult;
 import jakarta.persistence.ConstructorResult;
 import jakarta.persistence.ElementCollection;
@@ -52,7 +53,7 @@ import jakarta.persistence.Version;
 		query =
 				"SELECT " +
 						"   name, " +
-						"   nickName " +
+						"   nick_name " +
 						"FROM Person "
 )
 //end::sql-multiple-scalar-values-NamedNativeQuery-example[]
@@ -62,7 +63,7 @@ import jakarta.persistence.Version;
 		query =
 				"select " +
 						"   name, " +
-						"   nickName " +
+						"   nick_name " +
 						"from Person ",
 		resultSetMapping = "name_and_nickName_dto"
 )
@@ -74,9 +75,9 @@ import jakarta.persistence.Version;
 				"select " +
 						"   p.id AS \"id\", " +
 						"   p.name AS \"name\", " +
-						"   p.nickName AS \"nickName\", " +
+						"   p.nick_name AS \"nick_name\", " +
 						"   p.address AS \"address\", " +
-						"   p.createdOn AS \"createdOn\", " +
+						"   p.created_on AS \"created_on\", " +
 						"   p.version AS \"version\" " +
 						"from Person p " +
 						"where p.name LIKE :name",
@@ -90,9 +91,9 @@ import jakarta.persistence.Version;
 				"select " +
 						"   pr.id AS \"pr.id\", " +
 						"   pr.name AS \"pr.name\", " +
-						"   pr.nickName AS \"pr.nickName\", " +
+						"   pr.nick_name AS \"pr.nick_name\", " +
 						"   pr.address AS \"pr.address\", " +
-						"   pr.createdOn AS \"pr.createdOn\", " +
+						"   pr.created_on AS \"pr.created_on\", " +
 						"   pr.version AS \"pr.version\", " +
 						"   ph.id AS \"ph.id\", " +
 						"   ph.person_id AS \"ph.person_id\", " +
@@ -113,9 +114,9 @@ import jakarta.persistence.Version;
 						fields = {
 								@FieldResult( name = "id", column = "pr.id" ),
 								@FieldResult( name = "name", column = "pr.name" ),
-								@FieldResult( name = "nickName", column = "pr.nickName" ),
+								@FieldResult( name = "nickName", column = "pr.nick_name" ),
 								@FieldResult( name = "address", column = "pr.address" ),
-								@FieldResult( name = "createdOn", column = "pr.createdOn" ),
+								@FieldResult( name = "createdOn", column = "pr.created_on" ),
 								@FieldResult( name = "version", column = "pr.version" ),
 						}
 				),
@@ -138,7 +139,7 @@ import jakarta.persistence.Version;
 				targetClass = PersonNames.class,
 				columns = {
 						@ColumnResult(name = "name"),
-						@ColumnResult(name = "nickName")
+						@ColumnResult(name = "nick_name")
 				}
 		)
 )
@@ -193,10 +194,12 @@ public class Person {
 
 	private String name;
 
+	@Column(name = "nick_name")
 	private String nickName;
 
 	private String address;
 
+	@Column(name = "created_on")
 	private LocalDateTime createdOn;
 
 	@OneToMany(mappedBy = "person", cascade = CascadeType.ALL)

@@ -70,7 +70,7 @@ public class LongListTypeContributorTest extends EntityManagerFactoryBasedFuncti
 		inTransaction( em -> {
 
 			SpecialItem item = (SpecialItem) em.createNativeQuery(
-							"SELECT * FROM special_table WHERE longList = ?", SpecialItem.class )
+							"SELECT * FROM special_table WHERE long_list = ?", SpecialItem.class )
 					.setParameter( 1, longList )
 					.getSingleResult();
 
@@ -79,7 +79,7 @@ public class LongListTypeContributorTest extends EntityManagerFactoryBasedFuncti
 
 		inTransaction( em -> {
 			SpecialItem item = (SpecialItem) em.createNativeQuery(
-							"SELECT * FROM special_table WHERE longList = :longList", SpecialItem.class )
+							"SELECT * FROM special_table WHERE long_list = :longList", SpecialItem.class )
 					.setParameter( "longList", longList )
 					.getSingleResult();
 
@@ -95,7 +95,7 @@ public class LongListTypeContributorTest extends EntityManagerFactoryBasedFuncti
 		@Column(length = 30)
 		private String name;
 
-		@Column(columnDefinition = "VARCHAR(255)")
+		@Column(name = "long_list", columnDefinition = "VARCHAR(255)")
 		private LongList longList;
 
 		public SpecialItem() {

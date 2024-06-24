@@ -20,6 +20,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -69,7 +70,7 @@ public class JoinedSubclassNativeQueryTest {
 					// PostgreSQLDialect#getSelectClauseNullString produces e.g. `null::text` which we interpret as parameter,
 					// so workaround this problem by configuring to ignore JDBC parameters
 					session.setProperty( AvailableSettings.NATIVE_IGNORE_JDBC_PARAMETERS, true );
-					Person p = session.createNativeQuery( "select p.*, " + nullColumnString + " as companyName, 0 as clazz_  from Person p", Person.class ).getSingleResult();
+					Person p = session.createNativeQuery( "select p.*, " + nullColumnString + " as company_name, 0 as clazz_  from Person p", Person.class ).getSingleResult();
 					Assertions.assertNotNull( p );
 					Assertions.assertEquals( p.getFirstName(), "Jan" );
 				}
@@ -84,6 +85,7 @@ public class JoinedSubclassNativeQueryTest {
 		private Long id;
 
 		@Basic(optional = false)
+		@Column(name = "first_name")
 		private String firstName;
 
 		public String getFirstName() {
@@ -98,6 +100,7 @@ public class JoinedSubclassNativeQueryTest {
 	@Entity(name = "Employee")
 	public static class Employee extends Person {
 		@Basic(optional = false)
+		@Column(name = "company_name")
 		private String companyName;
 
 		public String getCompanyName() {

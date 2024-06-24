@@ -121,18 +121,18 @@ public class NativeQueryWithDuplicateColumnTest {
 	public static class Book {
 		@Id
 		@GeneratedValue
-		@Column(name = "BOOK_ID")
+		@Column(name = "book_id")
 		private Long id;
 
 		@ManyToOne(targetEntity = Publisher.class, fetch = FetchType.LAZY)
-		@JoinColumn(name = "PUBLISHER_FK")
+		@JoinColumn(name = "publisher_fk")
 		private Publisher publisher;
 
-		@Column(name = "PUBLISHER_FK", nullable = false, insertable = false, updatable = false)
+		@Column(name = "publisher_fk", nullable = false, insertable = false, updatable = false)
 		@Access(AccessType.FIELD)
 		private Long publisherFk;
 
-		@Column(name = "TITLE")
+		@Column(name = "title")
 		private String title;
 
 		public Book() {

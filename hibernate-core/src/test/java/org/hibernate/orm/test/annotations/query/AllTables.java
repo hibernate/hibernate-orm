@@ -26,10 +26,11 @@ import org.hibernate.annotations.Formula;
  public class AllTables {
 
 	@Id
-	@Column(name = "TABLE_NAME", nullable = false)
+	@Column(name = "table_name", nullable = false)
 	private String tableName;
 
 	@Formula(value = "(SYSDATE())")
+	@Column(name = "days_old")
 	private String daysOld;
 
 	public String getTableName() {

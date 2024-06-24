@@ -15,14 +15,14 @@
                 class="org.hibernate.orm.test.annotations.idclass.xml.HabitatSpeciesLink$HabitatSpeciesLinkId"/>
         <named-native-query name="testQuery"
                             result-class="org.hibernate.orm.test.annotations.idclass.xml.HabitatSpeciesLink">
-            <query>select * from HABITAT_SPECIES_LINK link where link.HABITAT_LINK = 1</query>
+            <query>select * from HABITAT_SPECIES_LINK link where link.habitat_link = 1</query>
         </named-native-query>
         <attributes>
             <id name="habitatId">
-                <column name="HABITAT_LINK"/>
+                <column name="habitat_link"/>
             </id>
             <id name="speciesId">
-                <column name="SPECIES_LINK"/>
+                <column name="species_link"/>
             </id>
         </attributes>
     </entity>

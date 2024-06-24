@@ -82,21 +82,21 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class NativeSQLQueriesTest {
 
 	protected String getOrganizationFetchJoinEmploymentSQL() {
-		return "SELECT org.ORGID as {org.id}, " +
-				"        org.NAME as {org.name}, " +
-				"        emp.EMPLOYER as {emp.key}, " +
-				"        emp.EMPID as {emp.element}, " +
+		return "SELECT org.orgid as {org.id}, " +
+				"        org.name as {org.name}, " +
+				"        emp.employer as {emp.key}, " +
+				"        emp.empid as {emp.element}, " +
 				"        {emp.element.*}  " +
 				"FROM ORGANIZATION org " +
-				"    LEFT OUTER JOIN EMPLOYMENT emp ON org.ORGID = emp.EMPLOYER";
+				"    LEFT OUTER JOIN EMPLOYMENT emp ON org.orgid = emp.employer";
 	}
 
 	protected String getOrganizationJoinEmploymentSQL() {
-		return "SELECT org.ORGID as {org.id}, " +
-				"        org.NAME as {org.name}, " +
+		return "SELECT org.orgid as {org.id}, " +
+				"        org.name as {org.name}, " +
 				"        {emp.*}  " +
 				"FROM ORGANIZATION org " +
-				"    LEFT OUTER JOIN EMPLOYMENT emp ON org.ORGID = emp.EMPLOYER";
+				"    LEFT OUTER JOIN EMPLOYMENT emp ON org.orgid = emp.employer";
 	}
 
 	protected String getEmploymentSQL() {
@@ -104,28 +104,28 @@ public class NativeSQLQueriesTest {
 	}
 
 	protected String getEmploymentSQLMixedScalarEntity() {
-		return "SELECT e.*, e.EMPLOYER as employerid  FROM EMPLOYMENT e" ;
+		return "SELECT e.*, e.employer as employerid  FROM EMPLOYMENT e" ;
 	}
 
 	protected String getOrgEmpRegionSQL() {
-		return "select {org.*}, {emp.*}, emp.REGIONCODE " +
+		return "select {org.*}, {emp.*}, emp.region_code " +
 				"from ORGANIZATION org " +
-				"     left outer join EMPLOYMENT emp on org.ORGID = emp.EMPLOYER";
+				"     left outer join EMPLOYMENT emp on org.orgid = emp.employer";
 	}
 
 	protected String getOrgEmpPersonSQL() {
 		return "select {org.*}, {emp.*}, {pers.*} " +
 				"from ORGANIZATION org " +
-				"    join EMPLOYMENT emp on org.ORGID = emp.EMPLOYER " +
-				"    join PERSON pers on pers.PERID = emp.EMPLOYEE ";
+				"    join EMPLOYMENT emp on org.orgid = emp.employer " +
+				"    join PERSON pers on pers.perid = emp.employee ";
 	}
 
 	protected String getDescriptionsSQL() {
-		return "select DESCRIPTION from TEXT_HOLDER";
+		return "select description from TEXT_HOLDER";
 	}
 
 	protected String getPhotosSQL() {
-		return "select PHOTO from IMAGE_HOLDER";
+		return "select photo from IMAGE_HOLDER";
 	}
 
 	@Test
@@ -200,7 +200,7 @@ public class NativeSQLQueriesTest {
 					List l = session.createNativeQuery( getOrgEmpRegionSQL() )
 							.addEntity("org", Organization.class)
 							.addJoin("emp", "org.employments")
-							.addScalar("regionCode", StandardBasicTypes.STRING )
+							.addScalar("region_code", StandardBasicTypes.STRING )
 							.list();
 					assertEquals( 2, l.size() );
 
@@ -217,7 +217,7 @@ public class NativeSQLQueriesTest {
 				session -> {
 					List l = session.createNativeQuery( "select {org.*}, {emp.*} " +
 																"from ORGANIZATION org " +
-																"     left outer join EMPLOYMENT emp on org.ORGID = emp.EMPLOYER, ORGANIZATION org2" )
+																"     left outer join EMPLOYMENT emp on org.orgid = emp.employer, ORGANIZATION org2" )
 							.addEntity("org", Organization.class)
 							.addJoin("emp", "org.employments")
 							.setResultListTransformer( new ResultListTransformer() {
@@ -324,7 +324,7 @@ public class NativeSQLQueriesTest {
 					Map m = (Map) result.get(0);
 					assertEquals( 2, result.size() );
 					assertEquals( 1, m.size() );
-					assertTrue( m.containsKey("NAME") );
+					assertTrue( m.containsKey("name") );
 				}
 		);
 
@@ -581,7 +581,7 @@ public class NativeSQLQueriesTest {
 					m = (Map) list.get(0);
 					assertTrue(m.containsKey("EMPID"));
 					assertTrue(m.containsKey("AMOUNT"));
-					assertTrue(m.containsKey("ENDDATE"));
+					assertTrue(m.containsKey("END_DATE"));
 					assertEquals(8, m.size());
 
 					list = session.createNativeQuery( getEmploymentSQLMixedScalarEntity() ).addScalar( "employerid" ).addEntity( Employment.class ).list();
@@ -686,18 +686,18 @@ public class NativeSQLQueriesTest {
 		scope.inTransaction(
 				session -> {
 					String sql =
-							"SELECT org.ORGID 		as orgid," +
-									"       org.NAME 		as name," +
-									"       emp.EMPID 		as empid," +
-									"       emp.EMPLOYEE 	as employee," +
-									"       emp.EMPLOYER 	as employer," +
-									"       emp.STARTDATE 	as startDate," +
-									"       emp.ENDDATE 	as endDate," +
-									"       emp.REGIONCODE 	as regionCode," +
-									"       emp.AMOUNT 		as AMOUNT," +
-									"       emp.CURRENCY 	as CURRENCY" +
+							"SELECT org.orgid 		as orgid," +
+									"       org.name 		as name," +
+									"       emp.empid 		as empid," +
+									"       emp.employee 	as employee," +
+									"       emp.employer 	as employer," +
+									"       emp.start_date 	as start_date," +
+									"       emp.end_date 	as end_date," +
+									"       emp.region_code 	as region_code," +
+									"       emp.amount 		as amount," +
+									"       emp.currency 	as currency" +
 									" FROM 	ORGANIZATION org" +
-									"    LEFT OUTER JOIN EMPLOYMENT emp ON org.ORGID = emp.EMPLOYER";
+									"    LEFT OUTER JOIN EMPLOYMENT emp ON org.orgid = emp.employer";
 
 					// as a control, lets apply an existing rs mapping
 					NativeQuery sqlQuery = session.createNativeQuery( sql, "org-description" );
@@ -759,7 +759,7 @@ public class NativeSQLQueriesTest {
 					session.flush();
 					session.clear();
 
-					List l = session.createNativeQuery( "select name, id, flength, name as scalarName from Speech", "speech" ).list();
+					List l = session.createNativeQuery( "select name, id, flength, name as scalar_name from Speech", "speech" ).list();
 					assertEquals( l.size(), 1 );
 
 					t.rollback();

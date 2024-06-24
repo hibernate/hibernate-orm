@@ -15,17 +15,17 @@
 	</typedef>
 
     <class name="Widget" table="STRANGE_TYPED_OBJECT">
-        <id name="id" column="ID">
+        <id name="id" column="id">
             <generator class="increment"/>
         </id>
-        <property name="valueOne" column="VALUE_ONE">
+        <property name="valueOne" column="value_one">
 			<type name="org.hibernate.orm.test.typeparameters.DefaultValueIntegerType">
 				<param name="default">1</param>
 			</type>
 		</property>
-        <property name="valueTwo" column="VALUE_TWO" type="nullToTwo"/>
-        <property name="valueThree" column="VALUE_THREE" type="nullToMinusOne"/>
-        <property name="valueFour" column="VALUE_FOUR">
+        <property name="valueTwo" column="value_two" type="nullToTwo"/>
+        <property name="valueThree" column="value_three" type="nullToMinusOne"/>
+        <property name="valueFour" column="value_four">
 			<type name="nullToTwo">
 				<param name="default">-5</param>
 			</type>

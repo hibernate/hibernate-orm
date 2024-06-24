@@ -60,7 +60,7 @@ public class NativeQueryResultBuilderTests {
 	public void fullyImplicitTest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final String sql = "select theString, theInteger, id from EntityOfBasics";
+					final String sql = "select the_string, the_integer, id from EntityOfBasics";
 					final NativeQueryImplementor<?> query = session.createNativeQuery( sql );
 
 					final List<?> results = query.list();
@@ -91,7 +91,7 @@ public class NativeQueryResultBuilderTests {
 							.isNotInstanceOf( SQLServerDialect.class )
 							.isNotInstanceOf( SybaseDialect.class )
 							.isNotInstanceOf( OracleDialect.class );
-					final String sql = "select count(theString) from EntityOfBasics";
+					final String sql = "select count(the_string) from EntityOfBasics";
 					final NativeQueryImplementor<?> query = session.createNativeQuery( sql );
 
 					final List<?> results = query.list();
@@ -109,12 +109,12 @@ public class NativeQueryResultBuilderTests {
 	public void explicitOrderTest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final String sql = "select theString, theInteger, id from EntityOfBasics";
+					final String sql = "select the_string, the_integer, id from EntityOfBasics";
 					final NativeQueryImplementor<?> query = session.createNativeQuery( sql );
 					// notice the reverse order from the select clause
 					query.addScalar( "id" );
-					query.addScalar( "theInteger" );
-					query.addScalar( "theString" );
+					query.addScalar( "the_integer" );
+					query.addScalar( "the_string" );
 
 					final List<?> results = query.list();
 					assertThat( results.size(), is( 1 ) );

@@ -6,6 +6,8 @@
  */
 package org.hibernate.testing.orm.domain.userguide;
 
+import jakarta.persistence.Column;
+
 /**
  * @author Vlad Mihalcea
  */
@@ -13,6 +15,7 @@ public class PersonPhoneCount {
 
 	private final String name;
 
+	@Column(name = "phone_count")
 	private final Number phoneCount;
 
 	public PersonPhoneCount(String name, Number phoneCount) {

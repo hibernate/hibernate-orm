@@ -35,12 +35,13 @@ class RunSqlFunctionalTest {
     }
     
     @Test 
-    void testRunSqlTask() throws IOException {
+    void testRunSql() throws IOException {
+    	// Set up the project
         writeString(getSettingsFile(), "");
         writeString(getBuildFile(),BUILD_FILE_CONTENTS);
         writeString(getHibernatePropertiesFile(), HIBERNATE_PROPERTIES_CONTENTS.replace("${projectDir}", projectDir.getAbsolutePath()));
 
-        // Run the build
+        // Run the 'runSql' task
         GradleRunner runner = GradleRunner.create();
         runner.forwardOutput();
         runner.withPluginClasspath();

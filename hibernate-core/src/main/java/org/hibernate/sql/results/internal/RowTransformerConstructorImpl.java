@@ -17,6 +17,8 @@ import java.util.List;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmExpressibleAccessor;
 
+import static org.hibernate.query.sqm.tree.expression.Compatibility.areAssignmentCompatible;
+
 /**
  * {@link RowTransformer} instantiating an arbitrary class
  *
@@ -33,8 +35,12 @@ public class RowTransformerConstructorImpl<T> implements RowTransformer<T> {
 		for (int i = 0; i < elements.size(); i++) {
 			sig[i] = resolveElementJavaType( elements.get( i ) );
 		}
+		if ( sig.length == 1 && sig[0] == null ) {
+			// Can not (properly) resolve constructor for single null element
+			throw new InstantiationException( "Cannot instantiate query result type, argument types are unknown ", type );
+		}
 		try {
-			constructor = type.getDeclaredConstructor( sig );
+			constructor = findMatchingConstructor( type, sig );
 			constructor.setAccessible( true );
 		}
 		catch (Exception e) {
@@ -52,6 +58,36 @@ public class RowTransformerConstructorImpl<T> implements RowTransformer<T> {
 		}
 
 		return element.getJavaType();
+	}
+
+	private Constructor<T> findMatchingConstructor(Class<T> type, Class<?>[] sig) throws Exception {
+		try {
+			return type.getDeclaredConstructor( sig );
+		}
+		catch (NoSuchMethodException | SecurityException e) {
+			constructor_loop:
+			for ( final Constructor<?> constructor : type.getDeclaredConstructors() ) {
+				final Class<?>[] parameterTypes = constructor.getParameterTypes();
+				if ( parameterTypes.length == sig.length ) {
+					for ( int i = 0; i < sig.length; i++ ) {
+						final Class<?> parameterType = parameterTypes[i];
+						final Class<?> argType = sig[i];
+						final boolean assignmentCompatible;
+						assignmentCompatible =
+								argType == null && !parameterType.isPrimitive()
+								|| areAssignmentCompatible(
+										parameterType,
+										argType
+								);
+						if ( !assignmentCompatible ) {
+							continue constructor_loop;
+						}
+					}
+					return (Constructor<T>) constructor;
+				}
+			}
+			throw e;
+		}
 	}
 
 	@Override

@@ -188,13 +188,12 @@ class ColumnDefinitions {
 			definition.append( ' ' ).append( identityColumnString );
 		}
 		else {
-			final String columnType;
-			columnType = column.getSqlType( metadata );
+			final String columnType = column.getSqlType( metadata );
 			if ( column.getGeneratedAs() == null || dialect.hasDataTypeBeforeGeneratedAs() ) {
 				definition.append( ' ' ).append( columnType );
 			}
 
-			String collation = column.getCollation();
+			final String collation = column.getCollation();
 			if ( collation != null ) {
 				definition.append(" collate ").append( dialect.quoteCollation( collation ) );
 			}

@@ -73,14 +73,15 @@ public class SecondaryTableTest {
 		return expectedTableName;
 	}
 
-	private static boolean isTableCreated(
+	private boolean isTableCreated(
 			File output,
 			String tableName) throws Exception {
-		String[] fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase()
+		final String[] fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase()
 				.split( System.lineSeparator() );
-		for ( int i = 0; i < fileContent.length; i++ ) {
-			String statement = fileContent[i].toUpperCase( Locale.ROOT );
-			if ( statement.contains( "CREATE TABLE " + tableName.toUpperCase( Locale.ROOT ) ) ) {
+		final String createTable = metadata.getDatabase().getDialect().getCreateTableString().toUpperCase( Locale.ROOT ) + " ";
+		for ( final String s : fileContent ) {
+			final String statement = s.toUpperCase( Locale.ROOT );
+			if ( statement.contains( createTable + tableName.toUpperCase( Locale.ROOT ) ) ) {
 				return true;
 			}
 		}

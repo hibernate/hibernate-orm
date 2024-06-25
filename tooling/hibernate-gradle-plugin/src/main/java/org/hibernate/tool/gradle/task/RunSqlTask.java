@@ -26,13 +26,18 @@ import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedConfiguration;
 import org.gradle.api.tasks.TaskAction;
+import org.hibernate.tool.gradle.Extension;
 
 public class RunSqlTask extends DefaultTask {
 	
-	private String sqlToRun = "";
+	String sqlToRun = "";
 	
 	public void setSqlToRun(String sqlToRun) {
 		this.sqlToRun = sqlToRun;
+	}
+	
+	public void initialize(Extension extension) {
+		setSqlToRun(extension.sql);
 	}
 
 	@TaskAction

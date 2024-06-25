@@ -11,7 +11,7 @@ public class Plugin implements org.gradle.api.Plugin<Project> {
     	project.getTasks().register("generateJava", GenerateJavaTask.class);
     	project.getTasks().register("runSql", RunSqlTask.class);
     	RunSqlTask runSqlTask = (RunSqlTask)project.getTasks().getByName("runSql");
-    	project.getTasks().getByName("runSql").doFirst(w -> runSqlTask.setSqlToRun(extension.sql));
+    	runSqlTask.doFirst(w -> runSqlTask.initialize(extension));
     }
     
 }

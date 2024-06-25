@@ -188,7 +188,7 @@ public class TemporaryTableHelper {
 		}
 
 		@Override
-		protected void logWarning(String description, String message) {
+		protected void log(String sqlState, String description, String message) {
 			log.debug( description );
 			log.debug( message );
 		}

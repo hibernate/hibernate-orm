@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.JDBCException;
 import org.hibernate.exception.internal.SQLStateConversionDelegate;
 import org.hibernate.exception.internal.StandardSQLExceptionConverter;
@@ -191,7 +192,8 @@ public class SqlExceptionHelper {
 	public abstract static class WarningHandlerLoggingSupport implements WarningHandler {
 		@Override
 		public final void handleWarning(SQLWarning warning) {
-			logWarning(
+			log(
+					warning.getSQLState(),
 					"SQL Warning Code: " + warning.getErrorCode() + ", SQLState: " + warning.getSQLState(),
 					warning.getMessage()
 			);
@@ -200,10 +202,28 @@ public class SqlExceptionHelper {
 		/**
 		 * Delegate to log common details of a {@linkplain SQLWarning warning}
 		 *
+		 * @param sqlState The SQLState; may be {@code null}.
+		 * The first two characters may help to determine the right logging level:
+		 * some JDBC drivers report success messages (SQLState starting with 00) as SQLWarnings.
 		 * @param description A description of the warning
 		 * @param message The warning message
 		 */
-		protected abstract void logWarning(String description, String message);
+		protected void log(String sqlState, String description, String message) {
+			logWarning( description, message );
+		}
+
+		/**
+		 * Delegate to log common details of a {@linkplain SQLWarning warning}
+		 *
+		 * @param description A description of the warning
+		 * @param message The warning message
+		 *
+		 * @deprecated Implement {@link #log(String, String, String)} instead.
+		 */
+		@Deprecated
+		protected void logWarning(String description, String message) {
+			throw new AssertionFailure( getClass() + " does not implement log(String, String, String) as expected." );
+		}
 	}
 
 	/**
@@ -232,9 +252,21 @@ public class SqlExceptionHelper {
 		}
 
 		@Override
-		protected void logWarning(
-				String description,
-				String message) {
+		protected void log(String sqlState, String description, String message) {
+			if ( sqlState != null && sqlState.startsWith( "00" ) ) {
+				// SQLState starting with 00 means "success"; no need for an actual warning in logs.
+				// See https://en.wikipedia.org/wiki/SQLSTATE
+				LOG.debug( description );
+				LOG.debug( message );
+			}
+			else {
+				logWarning( description, message );
+			}
+		}
+
+		@Override
+		@Deprecated // Kept around in case someone extends this class, since it's non-final and SPI...
+		protected void logWarning(String description, String message) {
 			LOG.warn( description );
 			LOG.warn( message );
 		}

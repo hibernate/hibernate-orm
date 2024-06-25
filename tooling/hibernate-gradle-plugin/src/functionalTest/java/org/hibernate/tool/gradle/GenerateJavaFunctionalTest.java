@@ -99,7 +99,7 @@ public class GenerateJavaFunctionalTest {
 
         // Verify the result
         File generatedSourcesFolder = new File(projectDir, "generated-sources");
-        assertTrue(result.getOutput().contains("Starting POJO export to directory: " + generatedSourcesFolder.getAbsolutePath()));
+        assertTrue(result.getOutput().contains("Starting POJO export to directory: " + generatedSourcesFolder.getCanonicalPath()));
         assertTrue(generatedSourcesFolder.exists());
         assertTrue(generatedSourcesFolder.isDirectory());
         File fooFile = new File(generatedSourcesFolder, "Foo.java");

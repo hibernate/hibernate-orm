@@ -21,6 +21,7 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.NullSqmExpressible;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -30,6 +31,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.query.sqm.internal.TypecheckUtil.isGeneric;
 import static org.hibernate.type.SqlTypes.isCharacterOrClobType;
 import static org.hibernate.type.SqlTypes.isNumericType;
 
@@ -241,7 +243,9 @@ public class StandardFunctionReturnTypeResolvers {
 	}
 
 	private static SqmExpressible<?> getArgumentExpressible(SqmTypedNode<?> specifiedArgument) {
-		final SqmExpressible<?> expressible = specifiedArgument.getNodeType();
+		final SqmExpressible<?> expressible = isGeneric( specifiedArgument )
+				? ( (SqmPath) specifiedArgument.getExpressible() ).getResolvedModel()
+				: specifiedArgument.getNodeType();
 		final SqmExpressible<?> specifiedArgType = expressible instanceof SqmTypedNode<?>
 				? ( (SqmTypedNode<?>) expressible ).getNodeType()
 				: expressible;

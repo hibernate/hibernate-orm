@@ -10,6 +10,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
@@ -96,12 +97,14 @@ public class JpaTableCommentTest {
 			File output,
 			String tableName,
 			String comment) throws Exception {
-		String[] fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase()
+		final String[] fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase()
 				.split( System.lineSeparator() );
-		for ( int i = 0; i < fileContent.length; i++ ) {
-			String statement = fileContent[i].toUpperCase( Locale.ROOT );
-			if ( !metadata.getDatabase().getDialect().getTableComment( "" ).isEmpty()  ) {
-				if ( statement.contains( "CREATE TABLE " + tableName.toUpperCase( Locale.ROOT ) ) ) {
+		final Dialect dialect = metadata.getDatabase().getDialect();
+		final String createTable = dialect.getCreateTableString().toUpperCase( Locale.ROOT ) + " ";
+		for ( final String s : fileContent ) {
+			final String statement = s.toUpperCase( Locale.ROOT );
+			if ( !dialect.getTableComment( "" ).isEmpty() ) {
+				if ( statement.contains( createTable + tableName.toUpperCase( Locale.ROOT ) ) ) {
 					if ( statement.contains( comment.toUpperCase( Locale.ROOT ) ) ) {
 						return true;
 					}

@@ -94,6 +94,10 @@ Beware that default LIST semantics only affects owned collection mappings.
 Unowned mappings like `@ManyToMany(mappedBy = "...")` and `@OneToMany(mappedBy = "...")` do not retain the element
 order by default, and explicitly annotating `@OrderColumn` for `@ManyToMany(mappedBy = "...")` mappings is illegal.
 
+Keep in mind that the value of the expression `nullable` of the annotation `@OrderColumn` is conditionally ignored
+during the binding process as it is determined for the index column automatically.  If the index column belongs to
+the join table it is then force set to be not null, otherwise the value specified is retained.
+
 To retain the order of elements of a `@OneToMany(mappedBy = "...")` the `@OrderColumn` annotation must be applied
 explicitly. In addition to that, it is important that both sides of the relationship, the `@OneToMany(mappedBy = "...")`
 and the `@ManyToOne`, must be kept in sync. Otherwise, the element position will not be updated accordingly.

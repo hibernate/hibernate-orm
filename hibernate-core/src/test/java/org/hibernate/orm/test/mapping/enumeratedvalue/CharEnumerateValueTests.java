@@ -15,7 +15,9 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.type.SqlTypes;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -86,6 +88,7 @@ public class CharEnumerateValueTests {
 
 	@DomainModel(annotatedClasses = Person.class)
 	@SessionFactory
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsColumnCheck.class )
 	@Test
 	void verifyCheckConstraints(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> session.doWork( (connection) -> {
@@ -103,6 +106,7 @@ public class CharEnumerateValueTests {
 	@DomainModel(annotatedClasses = Person.class)
 	@SessionFactory
 	@SkipForDialect( dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase (at least jTDS driver) truncates the value so the constraint is not violated" )
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsColumnCheck.class )
 	@Test
 	void verifyCheckConstraints2(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> session.doWork( (connection) -> {

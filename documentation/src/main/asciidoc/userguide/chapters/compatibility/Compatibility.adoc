@@ -33,7 +33,7 @@ Gradle::
 [source, groovy, subs="+attributes"]
 ----
 dependencies {
-  implementation platform "org.hibernate.orm:hibernate-platform:{fullVersion}"
+  implementation "org.hibernate.orm:hibernate-platform:{fullVersion}"
 
   // use the versions from the platform
   implementation "org.hibernate.orm:hibernate-core"
@@ -52,19 +52,18 @@ Maven::
             <type>pom</type>
             <scope>import</scope>
         </dependency>
+
+        <!-- use the versions from the platform -->
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.transaction</groupId>
+            <artifactId>jakarta.transaction-api</artifactId>
+        </dependency>
     </dependencies>
 </dependencyManagement>
-<!-- use the versions from the platform -->
-<dependencies>
-    <dependency>
-        <groupId>org.hibernate.orm</groupId>
-        <artifactId>hibernate-core</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>jakarta.transaction</groupId>
-        <artifactId>jakarta.transaction-api</artifactId>
-    </dependency>
-</dependencies>
 ----
 
 [[compatibility-database]]

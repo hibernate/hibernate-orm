@@ -13,8 +13,6 @@ import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
-import static org.hibernate.query.sqm.internal.TypecheckUtil.isGeneric;
-
 /**
  * @author Steve Ebersole
  */
@@ -26,11 +24,9 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Sq
 		this(
 				operation,
 				operand,
-				isGeneric( operand ) ?
-						operand.getExpressible() :
-						operand.nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType(
-								operand.getNodeType().getRelationalJavaType().getJavaType()
-						)
+				operand.nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType(
+						operand.getExpressible().getRelationalJavaType().getJavaType()
+				)
 		);
 	}
 

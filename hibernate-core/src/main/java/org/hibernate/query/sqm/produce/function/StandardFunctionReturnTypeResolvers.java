@@ -31,7 +31,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import static org.hibernate.query.sqm.internal.TypecheckUtil.isGeneric;
 import static org.hibernate.type.SqlTypes.isCharacterOrClobType;
 import static org.hibernate.type.SqlTypes.isNumericType;
 
@@ -243,9 +242,7 @@ public class StandardFunctionReturnTypeResolvers {
 	}
 
 	private static SqmExpressible<?> getArgumentExpressible(SqmTypedNode<?> specifiedArgument) {
-		final SqmExpressible<?> expressible = isGeneric( specifiedArgument )
-				? ( (SqmPath) specifiedArgument.getExpressible() ).getResolvedModel()
-				: specifiedArgument.getNodeType();
+		final SqmExpressible<?> expressible = specifiedArgument.getExpressible();
 		final SqmExpressible<?> specifiedArgType = expressible instanceof SqmTypedNode<?>
 				? ( (SqmTypedNode<?>) expressible ).getNodeType()
 				: expressible;

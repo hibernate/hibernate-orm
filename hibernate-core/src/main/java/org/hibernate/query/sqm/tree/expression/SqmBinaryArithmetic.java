@@ -11,12 +11,8 @@ import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
-
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.SUBTRACT;
@@ -39,8 +35,8 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 		//noinspection unchecked
 		super(
 				(SqmExpressible<T>) domainModel.getTypeConfiguration().resolveArithmeticType(
-						getExpressibleNodeType( lhsOperand ),
-						getExpressibleNodeType( rhsOperand ),
+						lhsOperand.getExpressible(),
+						rhsOperand.getExpressible(),
 						operator
 				),
 				nodeBuilder
@@ -54,20 +50,8 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 				( operator == ADD || operator == SUBTRACT ) ) {
 			return;
 		}
-		this.lhsOperand.applyInferableType( getExpressibleNodeType( rhsOperand ) );
-		this.rhsOperand.applyInferableType( getExpressibleNodeType( lhsOperand ) );
-	}
-
-	private static SqmExpressible<?> getExpressibleNodeType(SqmExpression<?> arg) {
-		if ( arg instanceof SqmPath ) {
-			SqmPath path = (SqmPath) arg;
-			if ( path.getModel() instanceof SqmPathSource ) {
-				if ( ( (SqmPathSource) path.getModel() ).isGeneric() ) {
-					return path.getResolvedModel();
-				}
-			}
-		}
-		return arg.getNodeType();
+		this.lhsOperand.applyInferableType( rhsOperand.getExpressible() );
+		this.rhsOperand.applyInferableType( lhsOperand.getExpressible() );
 	}
 
 	public SqmBinaryArithmetic(

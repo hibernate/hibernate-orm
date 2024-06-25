@@ -15,7 +15,10 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.orm.test.mapping.enumeratedvalue.EnumeratedValueTests;
 import org.hibernate.type.SqlTypes;
 
+import org.hibernate.testing.orm.junit.DialectFeatureCheck;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -79,15 +82,16 @@ public class ConvertedEnumCheckConstraintsTests {
 		} );
 	}
 
-	@DomainModel(annotatedClasses = EnumeratedValueTests.Person.class)
+	@DomainModel(annotatedClasses = Person.class)
 	@SessionFactory(useCollectingStatementInspector = true)
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsColumnCheck.class )
 	@Test
 	void verifyCheckConstraints(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> session.doWork( (connection) -> {
 			try (PreparedStatement statement = connection.prepareStatement( "insert into persons (id, gender) values (?, ?)" ) ) {
 				statement.setInt( 1, 100 );
 				// this would work without check constraints or with check constraints based solely on EnumType#STRING
-				statement.setString( 2, "MALE" );
+				statement.setString( 2, "A" );
 				statement.executeUpdate();
 				fail( "Expecting a failure" );
 			}

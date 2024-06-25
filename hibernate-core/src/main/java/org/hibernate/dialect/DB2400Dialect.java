@@ -32,6 +32,11 @@ public class DB2400Dialect extends DB2Dialect {
 	}
 
 	@Override
+	public boolean supportsIfExistsBeforeTableName() {
+		return false;
+	}
+
+	@Override
 	public String getQuerySequencesString() {
 		return null;
 	}

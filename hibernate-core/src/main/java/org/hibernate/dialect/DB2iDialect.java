@@ -88,6 +88,11 @@ public class DB2iDialect extends DB2Dialect {
 	}
 
 	@Override
+	public boolean supportsIfExistsBeforeTableName() {
+		return false;
+	}
+
+	@Override
 	public boolean supportsDistinctFromPredicate() {
 		return true;
 	}

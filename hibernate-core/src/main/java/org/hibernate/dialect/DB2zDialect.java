@@ -96,6 +96,11 @@ public class DB2zDialect extends DB2Dialect {
 	}
 
 	@Override
+	public boolean supportsIfExistsBeforeTableName() {
+		return false;
+	}
+
+	@Override
 	public String getCreateIndexString(boolean unique) {
 		// we only create unique indexes, as opposed to unique constraints,
 		// when the column is nullable, so safe to infer unique => nullable

@@ -409,8 +409,8 @@ public class TypecheckUtil {
 	}
 
 	public static void assertOperable(SqmExpression<?> left, SqmExpression<?> right, BinaryArithmeticOperator op) {
-		final SqmExpressible<?> leftNodeType = isGeneric( left ) ? left.getExpressible() : left.getNodeType();
-		final SqmExpressible<?> rightNodeType = isGeneric( right ) ? right.getExpressible() : right.getNodeType();
+		final SqmExpressible<?> leftNodeType = left.getExpressible();
+		final SqmExpressible<?> rightNodeType = right.getExpressible();
 		if ( leftNodeType != null && rightNodeType != null ) {
 			final Class<?> leftJavaType = leftNodeType.getRelationalJavaType().getJavaTypeClass();
 			final Class<?> rightJavaType = rightNodeType.getRelationalJavaType().getJavaTypeClass();
@@ -508,11 +508,6 @@ public class TypecheckUtil {
 		}
 	}
 
-	public static boolean isGeneric(SqmTypedNode<?> arg) {
-		return arg instanceof SqmPath && ( (SqmPath) arg ).getModel() instanceof SqmPathSource
-				&& ( (SqmPathSource) ( (SqmPath) arg ).getModel() ).isGeneric();
-	}
-
 	public static boolean isNumberArray(SqmExpressible<?> expressible) {
 		final DomainType<?> domainType;
 		if ( expressible != null && ( domainType = expressible.getSqmType() ) != null ) {
@@ -550,9 +545,7 @@ public class TypecheckUtil {
 	}
 
 	public static void assertNumeric(SqmExpression<?> expression, UnaryArithmeticOperator op) {
-		final SqmExpressible<?> nodeType = isGeneric( expression )
-				? expression.getExpressible()
-				: expression.getNodeType();
+		final SqmExpressible<?> nodeType = expression.getExpressible();
 		if ( nodeType != null ) {
 			final DomainType<?> domainType = nodeType.getSqmType();
 			if ( !( domainType instanceof JdbcMapping ) || !( (JdbcMapping) domainType ).getJdbcType().isNumber() ) {

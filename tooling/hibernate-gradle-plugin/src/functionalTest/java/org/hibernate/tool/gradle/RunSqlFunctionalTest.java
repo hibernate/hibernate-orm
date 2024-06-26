@@ -72,7 +72,7 @@ class RunSqlFunctionalTest {
             "  implementation('com.h2database:h2:2.1.214')\n" +
             "}\n" +
             "hibernateTools {\n" +
-            "  sql = 'create table foo (id int not null primary key, baz varchar(256))'\n" +
+            "  sqlToRun = 'create table foo (id int not null primary key, baz varchar(256))'\n" +
             "}\n";
     
     private static final String HIBERNATE_PROPERTIES_CONTENTS = 

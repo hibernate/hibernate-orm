@@ -11,6 +11,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.apache.tools.ant.BuildException;
+import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.ResolvedArtifact;
@@ -26,7 +27,7 @@ import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
 
-public class GenerateJavaTask extends AbstractTask {
+public class GenerateJavaTask extends DefaultTask {
 
 	@TaskAction
 	public void performTask() {

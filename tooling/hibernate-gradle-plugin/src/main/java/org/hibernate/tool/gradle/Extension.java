@@ -4,7 +4,7 @@ import org.gradle.api.Project;
 
 public class Extension {
 	
-	public String sql = "";
+	public String sqlToRun = "";
 	
 	public Extension(Project project) {}
 	

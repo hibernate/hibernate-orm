@@ -33,7 +33,6 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
-import org.hibernate.type.descriptor.java.JavaTypeHelper;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
@@ -44,6 +43,7 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.lastIndexOfLetter;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.safeInterning;
+import static org.hibernate.type.descriptor.java.JavaTypeHelper.isTemporal;
 
 /**
  * A mapping model object representing a {@linkplain jakarta.persistence.Column column}
@@ -311,7 +311,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	private String getSqlTypeName(DdlTypeRegistry ddlTypeRegistry, Dialect dialect, Mapping mapping) {
 		if ( sqlTypeName == null ) {
 			final int typeCode = getSqlTypeCode( mapping );
-			final DdlType descriptor = ddlTypeRegistry.getDescriptor( getSqlTypeCode( mapping ) );
+			final DdlType descriptor = ddlTypeRegistry.getDescriptor( typeCode );
 			if ( descriptor == null ) {
 				throw new MappingException(
 						String.format(
@@ -455,7 +455,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		}
 		if ( type instanceof BasicType ) {
 			final BasicType<?> basicType = (BasicType<?>) type;
-			if ( JavaTypeHelper.isTemporal( basicType.getExpressibleJavaType() ) ) {
+			if ( isTemporal( basicType.getExpressibleJavaType() ) ) {
 				precisionToUse = getTemporalPrecision();
 				lengthToUse = null;
 				scaleToUse = null;
@@ -465,7 +465,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 			throw new AssertionFailure( "no typing information available to determine column size" );
 		}
 		final JdbcMapping jdbcMapping = (JdbcMapping) type;
-		Size size = dialect.getSizeStrategy().resolveSize(
+		final Size size = dialect.getSizeStrategy().resolveSize(
 				jdbcMapping.getJdbcType(),
 				jdbcMapping.getJdbcJavaType(),
 				precisionToUse,

@@ -7,6 +7,7 @@
 package org.hibernate.testing.orm.junit;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Steve Ebersole
@@ -16,9 +17,19 @@ public interface MessageKeyWatcher {
 
 	boolean wasTriggered();
 
-	List<String> getTriggeredMessages();
+	List<LoggingEvent> getTriggeredEvents();
 
-	String getFirstTriggeredMessage();
+	default List<String> getTriggeredMessages() {
+		return getTriggeredEvents().stream().map( LoggingEvent::getMessage ).collect( Collectors.toList() );
+	}
+
+	LoggingEvent getFirstTriggeredEvent();
+
+	default String getFirstTriggeredMessage() {
+		LoggingEvent firstEvent = getFirstTriggeredEvent();
+		return firstEvent == null ? null : firstEvent.getMessage();
+	}
 
 	void reset();
+
 }

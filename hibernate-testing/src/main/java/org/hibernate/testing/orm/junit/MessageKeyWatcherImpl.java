@@ -15,12 +15,12 @@ import org.hibernate.testing.logger.LogListener;
 import org.jboss.logging.Logger;
 
 /**
- * MessageIdWatcher implementation
+ * MessageKeyWatcher implementation
  */
 public class MessageKeyWatcherImpl implements MessageKeyWatcher, LogListener {
 	private final String messageKey;
 	private final List<String> loggerNames = new ArrayList<>();
-	private final List<String> triggeredMessages = new ArrayList<>();
+	private final List<LoggingEvent> triggeredEvents = new ArrayList<>();
 
 	public MessageKeyWatcherImpl(String messageKey) {
 		this.messageKey = messageKey;
@@ -77,36 +77,36 @@ public class MessageKeyWatcherImpl implements MessageKeyWatcher, LogListener {
 
 	@Override
 	public boolean wasTriggered() {
-		return ! triggeredMessages.isEmpty();
+		return ! triggeredEvents.isEmpty();
 	}
 
 	@Override
-	public List<String> getTriggeredMessages() {
-		return triggeredMessages;
+	public List<LoggingEvent> getTriggeredEvents() {
+		return triggeredEvents;
 	}
 
 	@Override
-	public String getFirstTriggeredMessage() {
-		return triggeredMessages.isEmpty() ? null : triggeredMessages.get( 0 );
+	public LoggingEvent getFirstTriggeredEvent() {
+		return triggeredEvents.isEmpty() ? null : triggeredEvents.get( 0 );
 	}
 
 	@Override
 	public void reset() {
-		triggeredMessages.clear();
+		triggeredEvents.clear();
 	}
 
 	@Override
 	public void loggedEvent(Logger.Level level, String renderedMessage, Throwable thrown) {
 		if ( renderedMessage != null ) {
 			if ( renderedMessage.startsWith( messageKey ) ) {
-				triggeredMessages.add( renderedMessage );
+				triggeredEvents.add( new LoggingEventImpl( level, renderedMessage ) );
 			}
 		}
 	}
 
 	@Override
 	public String toString() {
-		return "MessageIdWatcherImpl{" +
+		return "MessageKeyWatcherImpl{" +
 				"messageKey='" + messageKey + '\'' +
 				", loggerNames=" + loggerNames +
 				'}';

@@ -95,96 +95,47 @@ mariadb() {
   mariadb_11_3
 }
 
-mariadb_10_4() {
-    $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:10.4.31 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
-    OUTPUT=
+mariadb_wait_until_start()
+{
     n=0
     until [ "$n" -ge 5 ]
     do
-        # Need to access STDERR. Thanks for the snippet https://stackoverflow.com/a/56577569/412446
-        { OUTPUT="$( { $CONTAINER_CLI logs mariadb; } 2>&1 1>&3 3>&- )"; } 3>&1;
-        if [[ $OUTPUT == *"ready for connections"* ]]; then
+        if $CONTAINER_CLI exec mariadb healthcheck.sh --connect --innodb_initialized; then
           break;
         fi
         n=$((n+1))
         echo "Waiting for MariaDB to start..."
         sleep 3
     done
-    if [ "$n" -ge 5 ]; then
-      echo "MariaDB failed to start and configure after 15 seconds"
-    else
+    if $CONTAINER_CLI exec mariadb healthcheck.sh --connect --innodb_initialized; then
       echo "MariaDB successfully started"
+    else
+      echo "MariaDB failed to start and configure after 15 seconds"
     fi
+}
+
+mariadb_10_4() {
+    $CONTAINER_CLI rm -f mariadb || true
+    $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:10.4.31 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
+    mariadb_wait_until_start
 }
 
 mariadb_10_9() {
     $CONTAINER_CLI rm -f mariadb || true
     $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:10.9.3 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
-    OUTPUT=
-    n=0
-    until [ "$n" -ge 5 ]
-    do
-        # Need to access STDERR. Thanks for the snippet https://stackoverflow.com/a/56577569/412446
-        { OUTPUT="$( { $CONTAINER_CLI logs mariadb; } 2>&1 1>&3 3>&- )"; } 3>&1;
-        if [[ $OUTPUT == *"ready for connections"* ]]; then
-          break;
-        fi
-        n=$((n+1))
-        echo "Waiting for MariaDB to start..."
-        sleep 3
-    done
-    if [ "$n" -ge 5 ]; then
-      echo "MariaDB failed to start and configure after 15 seconds"
-    else
-      echo "MariaDB successfully started"
-    fi
+    mariadb_wait_until_start
 }
 
 mariadb_11_1() {
     $CONTAINER_CLI rm -f mariadb || true
     $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:11.1.2 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
-    OUTPUT=
-    n=0
-    until [ "$n" -ge 5 ]
-    do
-        # Need to access STDERR. Thanks for the snippet https://stackoverflow.com/a/56577569/412446
-        { OUTPUT="$( { $CONTAINER_CLI logs mariadb; } 2>&1 1>&3 3>&- )"; } 3>&1;
-        if [[ $OUTPUT == *"ready for connections"* ]]; then
-          break;
-        fi
-        n=$((n+1))
-        echo "Waiting for MariaDB to start..."
-        sleep 3
-    done
-    if [ "$n" -ge 5 ]; then
-      echo "MariaDB failed to start and configure after 15 seconds"
-    else
-      echo "MariaDB successfully started"
-    fi
+    mariadb_wait_until_start
 }
 
 mariadb_11_3() {
     $CONTAINER_CLI rm -f mariadb || true
     $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:11.3.1-rc --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
-    OUTPUT=
-    n=0
-    until [ "$n" -ge 5 ]
-    do
-        # Need to access STDERR. Thanks for the snippet https://stackoverflow.com/a/56577569/412446
-        { OUTPUT="$( { $CONTAINER_CLI logs mariadb; } 2>&1 1>&3 3>&- )"; } 3>&1;
-        if [[ $OUTPUT == *"ready for connections"* ]]; then
-          break;
-        fi
-        n=$((n+1))
-        echo "Waiting for MariaDB to start..."
-        sleep 3
-    done
-    if [ "$n" -ge 5 ]; then
-      echo "MariaDB failed to start and configure after 15 seconds"
-    else
-      echo "MariaDB successfully started"
-    fi
+    mariadb_wait_until_start
 }
 
 postgresql() {

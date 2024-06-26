@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.Length;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
@@ -176,7 +177,7 @@ public class SybaseASEDialect extends SybaseDialect {
 
 	@Override
 	public long getDefaultLobLength() {
-		return Integer.MAX_VALUE;
+		return Length.LONG32;
 	}
 
 	private static boolean isAnsiNull(DialectResolutionInfo info) {

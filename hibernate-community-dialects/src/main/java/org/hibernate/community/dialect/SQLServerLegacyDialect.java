@@ -289,7 +289,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 		// this is essentially the only legal length for
 		// a "lob" in SQL Server, i.e. the value of MAX
 		// (caveat: for NVARCHAR it is half this value)
-		return Integer.MAX_VALUE;
+		return Length.LONG32;
 	}
 
 	@Override

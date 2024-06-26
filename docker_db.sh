@@ -138,6 +138,12 @@ mariadb_11_4() {
     mariadb_wait_until_start
 }
 
+mariadb_verylatest() {
+    $CONTAINER_CLI rm -f mariadb || true
+    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d quay.io/mariadb-foundation/mariadb-devel:verylatest --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
+    mariadb_wait_until_start
+}
+
 postgresql() {
   postgresql_16
 }
@@ -970,6 +976,7 @@ if [ -z ${1} ]; then
     echo -e "\tedb_12"
     echo -e "\thana"
     echo -e "\tmariadb"
+    echo -e "\tmariadb_verylatest"
     echo -e "\tmariadb_11_4"
     echo -e "\tmariadb_11_1"
     echo -e "\tmariadb_10_11"

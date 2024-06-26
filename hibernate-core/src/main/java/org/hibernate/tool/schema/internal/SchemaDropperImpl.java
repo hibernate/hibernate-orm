@@ -63,6 +63,7 @@ import org.jboss.logging.Logger;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 import static org.hibernate.tool.schema.internal.Helper.applyScript;
+import static org.hibernate.tool.schema.internal.Helper.applySqlString;
 import static org.hibernate.tool.schema.internal.Helper.applySqlStrings;
 import static org.hibernate.tool.schema.internal.Helper.createSqlStringGenerationContext;
 import static org.hibernate.tool.schema.internal.Helper.interpretFormattingEnabled;
@@ -208,6 +209,8 @@ public class SchemaDropperImpl implements SchemaDropper {
 			GenerationTarget... targets) {
 
 		// NOTE : init commands are irrelevant for dropping...
+
+		applySqlString( dialect.getBeforeDropStatement(), formatter, options, targets );
 
 		final SqlStringGenerationContext context = createSqlStringGenerationContext( options, metadata );
 		// Reverse the list on drop to retain possible dependencies

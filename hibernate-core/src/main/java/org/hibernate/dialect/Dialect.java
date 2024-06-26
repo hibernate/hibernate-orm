@@ -2374,13 +2374,27 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * A command to execute before dropping tables.
+	 *
+	 * @return A SQL statement, or {@code null}
+	 */
+	public String getBeforeDropStatement() {
+		return null;
+	}
+
+	/**
 	 * The command used to drop a table with the given name, usually
 	 * {@code drop table tab_name}.
 	 *
 	 * @param tableName The name of the table to drop
 	 *
 	 * @return The {@code drop table} statement as a string
+	 * 
+	 * @deprecated No longer used
+	 *
+	 * @see StandardTableExporter#getSqlDropStrings
 	 */
+	@Deprecated(since = "6.6")
 	public String getDropTableString(String tableName) {
 		final StringBuilder buf = new StringBuilder( "drop table " );
 		if ( supportsIfExistsBeforeTableName() ) {

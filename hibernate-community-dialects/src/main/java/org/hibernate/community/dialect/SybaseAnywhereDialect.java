@@ -9,6 +9,7 @@ package org.hibernate.community.dialect;
 
 import java.util.Map;
 
+import org.hibernate.Length;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.community.dialect.identity.SybaseAnywhereIdentityColumnSupport;
@@ -103,7 +104,7 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 
 	@Override
 	public int getMaxVarcharLength() {
-		return 32_767;
+		return Length.LONG16;
 	}
 
 	@Override

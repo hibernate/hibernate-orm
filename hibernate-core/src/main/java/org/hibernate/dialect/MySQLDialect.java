@@ -17,6 +17,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
+import org.hibernate.Length;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.model.FunctionContributions;
@@ -534,7 +535,7 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public long getDefaultLobLength() {
-		return Integer.MAX_VALUE;
+		return Length.LONG32;
 	}
 
 	@Override

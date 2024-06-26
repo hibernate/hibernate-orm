@@ -120,9 +120,9 @@ mariadb_10_4() {
     mariadb_wait_until_start
 }
 
-mariadb_10_9() {
+mariadb_10_11() {
     $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:10.9.3 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
+    $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:10.11.8 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
     mariadb_wait_until_start
 }
 
@@ -972,7 +972,7 @@ if [ -z ${1} ]; then
     echo -e "\tmariadb"
     echo -e "\tmariadb_11_3"
     echo -e "\tmariadb_11_1"
-    echo -e "\tmariadb_10_9"
+    echo -e "\tmariadb_10_11"
     echo -e "\tmariadb_10_4"
     echo -e "\tmssql"
     echo -e "\tmssql_2022"

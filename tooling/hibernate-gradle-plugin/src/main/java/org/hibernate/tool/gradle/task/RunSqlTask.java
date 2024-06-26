@@ -20,7 +20,6 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.apache.tools.ant.BuildException;
-import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.ResolvedArtifact;
@@ -28,16 +27,10 @@ import org.gradle.api.artifacts.ResolvedConfiguration;
 import org.gradle.api.tasks.TaskAction;
 import org.hibernate.tool.gradle.Extension;
 
-public class RunSqlTask extends DefaultTask {
-	
-	String sqlToRun = "";
-	
-	public void setSqlToRun(String sqlToRun) {
-		this.sqlToRun = sqlToRun;
-	}
+public class RunSqlTask extends AbstractTask {
 	
 	public void initialize(Extension extension) {
-		setSqlToRun(extension.sql);
+		setProperty("sqlToRun", extension.sql);
 	}
 
 	@TaskAction
@@ -100,8 +93,8 @@ public class RunSqlTask extends DefaultTask {
 			Connection connection = DriverManager
 					.getConnection(databaseUrl, "sa", "");
 			Statement statement = connection.createStatement();
-			getLogger().lifecycle("Running SQL: " + sqlToRun);
-			statement.execute(sqlToRun);
+			getLogger().lifecycle("Running SQL: " + getProperty("sqlToRun"));
+			statement.execute(getProperty("sqlToRun"));
 			statement.close();
 			connection.close();
 		} catch (SQLException e) {

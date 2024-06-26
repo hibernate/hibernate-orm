@@ -1,6 +1,7 @@
 package org.hibernate.tool.gradle.task;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.gradle.api.Project;
 import org.gradle.testfixtures.ProjectBuilder;
@@ -15,9 +16,9 @@ public class RunSqlTaskTest {
 		 Extension extension = new Extension(project);
 		 extension.sql = "foo";
 		 RunSqlTask runSqlTask = project.getTasks().create("runSql", RunSqlTask.class);
-		 assertEquals("", runSqlTask.sqlToRun);
+		 assertNull(runSqlTask.getProperty("sqlToRun"));
 		 runSqlTask.initialize(extension);
-		 assertEquals("foo", runSqlTask.sqlToRun);
+		 assertEquals("foo", runSqlTask.getProperty("sqlToRun"));
 	}
 
 }

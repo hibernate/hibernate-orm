@@ -4760,7 +4760,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public int getMaxVarcharLength() {
 		//the longest possible length of a Java string
-		return Integer.MAX_VALUE;
+		return Length.LONG32;
 	}
 
 	/**

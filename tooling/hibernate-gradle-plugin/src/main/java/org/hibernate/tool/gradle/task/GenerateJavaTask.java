@@ -4,17 +4,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.Properties;
-import java.util.Set;
 
 import org.apache.tools.ant.BuildException;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ConfigurationContainer;
-import org.gradle.api.artifacts.ResolvedArtifact;
-import org.gradle.api.artifacts.ResolvedConfiguration;
 import org.gradle.api.tasks.TaskAction;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
@@ -30,18 +22,7 @@ public class GenerateJavaTask extends AbstractTask {
 
 	@TaskAction
 	public void performTask() {
-		getLogger().lifecycle("Starting Task 'GenerateJavaTask'");
-		ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
-		try {
-			Thread.currentThread().setContextClassLoader(
-					new URLClassLoader(
-							resolveProjectClassPath(), 
-							oldLoader));
-			generate();
-		} finally {
-			Thread.currentThread().setContextClassLoader(oldLoader);
-			getLogger().lifecycle("Ending Task 'GenerateJavaTask");
-		}
+		super.perform();
 	}
 
 	private RevengStrategy setupReverseEngineeringStrategy() {
@@ -84,25 +65,7 @@ public class GenerateJavaTask extends AbstractTask {
 		getLogger().lifecycle("POJO export finished");
 	}
 	
-	private URL[] resolveProjectClassPath() {
-		try {
-			ConfigurationContainer cc = getProject().getConfigurations();
-			Configuration defaultConf = cc.getByName("compileClasspath");
-			ResolvedConfiguration resolvedConf = defaultConf.getResolvedConfiguration();
-			Set<ResolvedArtifact> ras = resolvedConf.getResolvedArtifacts();
-			ResolvedArtifact[] resolvedArtifacts = ras.toArray(new ResolvedArtifact[ras.size()]);
-			URL[] urls = new URL[ras.size()];
-			for (int i = 0; i < ras.size(); i++) {
-				urls[i] = resolvedArtifacts[i].getFile().toURI().toURL();
-			}
-			return urls;
-		} catch (MalformedURLException e) {
-			getLogger().error("MalformedURLException while compiling project classpath");
-			throw new RuntimeException(e);
-		}
-	}
-	
-	private void generate() {
+	void doWork() {
 		File propertyFile = getPropertyFile();
 		if (propertyFile.exists()) {
 			executeExporter(

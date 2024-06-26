@@ -784,6 +784,14 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public String getBeforeDropStatement() {
+		// by default, the Postgres driver reports
+		// NOTICE: table "nonexistent" does not exist, skipping
+		// as a JDBC SQLWarning
+		return "set client_min_messages = WARNING";
+	}
+
+	@Override
 	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
 		// would need multiple statements to 'set not null'/'drop not null', 'set default'/'drop default', 'set generated', etc
 		return "alter column " + columnName + " set data type " + columnType;

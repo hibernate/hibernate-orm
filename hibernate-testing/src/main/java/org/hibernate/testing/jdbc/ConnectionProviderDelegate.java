@@ -91,8 +91,8 @@ public class ConnectionProviderDelegate implements
 	}
 
 	@Override
-	public void closeConnection(Connection conn) throws SQLException {
-		connectionProvider.closeConnection( conn );
+	public void closeConnection(Connection connection) throws SQLException {
+		connectionProvider.closeConnection( connection );
 	}
 
 	@Override

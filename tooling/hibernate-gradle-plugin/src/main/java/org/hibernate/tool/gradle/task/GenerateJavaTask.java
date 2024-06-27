@@ -13,7 +13,7 @@ import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.reveng.RevengSettings;
 import org.hibernate.tool.api.reveng.RevengStrategy;
-import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
+import org.hibernate.tool.api.reveng.RevengStrategyFactory;
 
 public class GenerateJavaTask extends AbstractTask {
 
@@ -45,11 +45,12 @@ public class GenerateJavaTask extends AbstractTask {
 	}
 	
 	private RevengStrategy setupReverseEngineeringStrategy() {
-		RevengStrategy result = new DefaultStrategy();
+		RevengStrategy result = RevengStrategyFactory
+				.createReverseEngineeringStrategy(getExtension().revengStrategy);
 		RevengSettings settings = new RevengSettings(result);
 		settings.setDefaultPackageName(getExtension().packageName);
 		result.setSettings(settings);
 		return result;
 	}
-
+	
 }

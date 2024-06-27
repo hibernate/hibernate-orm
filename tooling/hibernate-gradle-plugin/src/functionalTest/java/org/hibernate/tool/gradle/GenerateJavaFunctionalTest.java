@@ -46,7 +46,7 @@ public class GenerateJavaFunctionalTest {
             "  implementation('com.h2database:h2:2.1.214')\n" +
             "}\n" +
             "hibernateTools {\n" +
-            "  packageName = 'foo.model'" +
+            "  packageName = 'foo.model'\n" +
             "}\n";
 
 	@TempDir

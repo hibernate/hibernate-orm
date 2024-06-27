@@ -199,6 +199,8 @@ create table TestEntity (
 )
 ----
 
+You can choose to customize the discriminator column properties using the `@DiscriminatorColumn` annotation on the root embeddable type, and you can pick the discriminator values to use for each subtype with the `@DiscriminatorValue` annotation, just like with entities.
+
 For more detailed information please refer to the link:{user-guide-url}#embeddable-inheritance[Embeddable inheritance] user guide chapter.
 
 [[oracle-vector]]

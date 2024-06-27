@@ -111,7 +111,7 @@ public class QualifiedTableNamingTest extends BaseNonConfigCoreFunctionalTestCas
 		}
 
 		@Override
-		public void closeConnection(Connection conn) throws SQLException {
+		public void closeConnection(Connection connection) {
 		}
 
 		@Override

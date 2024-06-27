@@ -33,6 +33,8 @@ import org.hibernate.service.spi.Stoppable;
 import static org.hibernate.c3p0.internal.C3P0MessageLogger.C3P0_LOGGER;
 import static org.hibernate.c3p0.internal.C3P0MessageLogger.C3P0_MSG_LOGGER;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.extractSetting;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
 
 /**
  * A connection provider that uses a C3P0 connection pool. Hibernate will use this by
@@ -68,33 +70,33 @@ public class C3P0ConnectionProvider
 
 	@Override
 	public Connection getConnection() throws SQLException {
-		final Connection c = ds.getConnection();
-		if ( isolation != null && isolation != c.getTransactionIsolation() ) {
-			c.setTransactionIsolation( isolation );
+		final Connection connection = ds.getConnection();
+		if ( isolation != null && isolation != connection.getTransactionIsolation() ) {
+			connection.setTransactionIsolation( isolation );
 		}
-		if ( c.getAutoCommit() != autocommit ) {
-			c.setAutoCommit( autocommit );
+		if ( connection.getAutoCommit() != autocommit ) {
+			connection.setAutoCommit( autocommit );
 		}
-		return c;
+		return connection;
 	}
 
 	@Override
-	public void closeConnection(Connection conn) throws SQLException {
-		conn.close();
+	public void closeConnection(Connection connection) throws SQLException {
+		connection.close();
 	}
 
 	@Override
 	public boolean isUnwrappableAs(Class<?> unwrapType) {
-		return ConnectionProvider.class.equals( unwrapType ) ||
-				C3P0ConnectionProvider.class.isAssignableFrom( unwrapType ) ||
-				DataSource.class.isAssignableFrom( unwrapType );
+		return ConnectionProvider.class.equals( unwrapType )
+			|| C3P0ConnectionProvider.class.isAssignableFrom( unwrapType )
+			|| DataSource.class.isAssignableFrom( unwrapType );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> unwrapType) {
-		if ( ConnectionProvider.class.equals( unwrapType ) ||
-				C3P0ConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
+		if ( ConnectionProvider.class.equals( unwrapType )
+				|| C3P0ConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
 			return (T) this;
 		}
 		else if ( DataSource.class.isAssignableFrom( unwrapType ) ) {
@@ -124,7 +126,7 @@ public class C3P0ConnectionProvider
 		C3P0_MSG_LOGGER.c3p0UsingDriver( jdbcDriverClass, jdbcUrl );
 		C3P0_MSG_LOGGER.connectionProperties( ConfigurationHelper.maskOut( connectionProps, "password" ) );
 
-		autocommit = ConfigurationHelper.getBoolean( JdbcSettings.AUTOCOMMIT, props );
+		autocommit = getBoolean( JdbcSettings.AUTOCOMMIT, props );
 		C3P0_MSG_LOGGER.autoCommitMode( autocommit );
 
 		if ( jdbcDriverClass == null ) {
@@ -142,12 +144,12 @@ public class C3P0ConnectionProvider
 		try {
 
 			//swaldman 2004-02-07: modify to allow null values to signify fall through to c3p0 PoolConfig defaults
-			final Integer minPoolSize = ConfigurationHelper.getInteger( C3p0Settings.C3P0_MIN_SIZE, props );
-			final Integer maxPoolSize = ConfigurationHelper.getInteger( C3p0Settings.C3P0_MAX_SIZE, props );
-			final Integer maxIdleTime = ConfigurationHelper.getInteger( C3p0Settings.C3P0_TIMEOUT, props );
-			final Integer maxStatements = ConfigurationHelper.getInteger( C3p0Settings.C3P0_MAX_STATEMENTS, props );
-			final Integer acquireIncrement = ConfigurationHelper.getInteger( C3p0Settings.C3P0_ACQUIRE_INCREMENT, props );
-			final Integer idleTestPeriod = ConfigurationHelper.getInteger( C3p0Settings.C3P0_IDLE_TEST_PERIOD, props );
+			final Integer minPoolSize = getInteger( C3p0Settings.C3P0_MIN_SIZE, props );
+			final Integer maxPoolSize = getInteger( C3p0Settings.C3P0_MAX_SIZE, props );
+			final Integer maxIdleTime = getInteger( C3p0Settings.C3P0_TIMEOUT, props );
+			final Integer maxStatements = getInteger( C3p0Settings.C3P0_MAX_STATEMENTS, props );
+			final Integer acquireIncrement = getInteger( C3p0Settings.C3P0_ACQUIRE_INCREMENT, props );
+			final Integer idleTestPeriod = getInteger( C3p0Settings.C3P0_IDLE_TEST_PERIOD, props );
 
 			final Properties c3props = new Properties();
 
@@ -178,7 +180,7 @@ public class C3P0ConnectionProvider
 
 			// revert to traditional hibernate behavior of setting initialPoolSize to minPoolSize
 			// unless otherwise specified with a c3p0.*-style parameter.
-			final Integer initialPoolSize = ConfigurationHelper.getInteger( C3P0_STYLE_INITIAL_POOL_SIZE, props );
+			final Integer initialPoolSize = getInteger( C3P0_STYLE_INITIAL_POOL_SIZE, props );
 			if ( initialPoolSize == null ) {
 				setOverwriteProperty( "", C3P0_STYLE_INITIAL_POOL_SIZE, props, c3props, minPoolSize );
 			}

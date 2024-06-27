@@ -71,17 +71,12 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 
 	@Override
 	public Connection getConnection() throws SQLException {
-		Connection conn = null;
-		if ( hds != null ) {
-			conn = hds.getConnection();
-		}
-
-		return conn;
+		return hds != null ? hds.getConnection() : null;
 	}
 
 	@Override
-	public void closeConnection(Connection conn) throws SQLException {
-		conn.close();
+	public void closeConnection(Connection connection) throws SQLException {
+		connection.close();
 	}
 
 	@Override
@@ -92,15 +87,15 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	@Override
 	public boolean isUnwrappableAs(Class<?> unwrapType) {
 		return ConnectionProvider.class.equals( unwrapType )
-				|| HikariCPConnectionProvider.class.isAssignableFrom( unwrapType )
-				|| DataSource.class.isAssignableFrom( unwrapType );
+			|| HikariCPConnectionProvider.class.isAssignableFrom( unwrapType )
+			|| DataSource.class.isAssignableFrom( unwrapType );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> unwrapType) {
-		if ( ConnectionProvider.class.equals( unwrapType ) ||
-				HikariCPConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
+		if ( ConnectionProvider.class.equals( unwrapType )
+				|| HikariCPConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
 			return (T) this;
 		}
 		else if ( DataSource.class.isAssignableFrom( unwrapType ) ) {
@@ -117,7 +112,6 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 
 	@Override
 	public void stop() {
-		HikariDataSource hds = this.hds;
 		if ( hds != null ) {
 			hds.close();
 		}

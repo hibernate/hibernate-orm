@@ -157,14 +157,14 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 	}
 
 	@Override
-	public void closeConnection(Connection conn) throws SQLException {
-		if ( conn == null ) {
+	public void closeConnection(Connection connection) throws SQLException {
+		if ( connection == null ) {
 			return;
 		}
 
-		if ( nonEnlistedConnections.contains( conn ) ) {
-			nonEnlistedConnections.remove( conn );
-			delegate.closeConnection( conn );
+		if ( nonEnlistedConnections.contains( connection ) ) {
+			nonEnlistedConnections.remove( connection );
+			delegate.closeConnection( connection );
 		}
 
 //		else {

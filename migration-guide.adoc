@@ -58,7 +58,7 @@ To check if an array is a subset of another array, use the `array_includes()` fu
 or the new `INCLUDES` predicate i.e. `array INCLUDES subarray`.
 
 [[merge-versioned-deleted]]
-=== Merge versioned entity when row is deleted
+== Merge versioned entity when row is deleted
 Previously, merging a detached entity resulted in a SQL `insert` whenever there was no matching row in the database (for example, if the object had been deleted in another transaction).
 This behavior was unexpected and violated the rules of optimistic locking.
 

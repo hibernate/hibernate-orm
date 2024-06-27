@@ -40,7 +40,7 @@ public class GenerateJavaTask extends AbstractTask {
 	}
 
 	private File getOutputFolder() {
-		return new File(getProject().getProjectDir(), "generated-sources");
+		return new File(getProject().getProjectDir(), getExtension().outputFolder);
 	}
 	
 	private RevengStrategy setupReverseEngineeringStrategy() {

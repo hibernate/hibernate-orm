@@ -83,7 +83,7 @@ public abstract class AbstractTask extends DefaultTask {
 	}
 	
 	private File getPropertyFile() {
-		String hibernatePropertiesFile = "hibernate.properties";
+		String hibernatePropertiesFile = getExtension().hibernateProperties;
 		SourceSetContainer ssc = getProject().getExtensions().getByType(SourceSetContainer.class);
 		SourceSet ss = ssc.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
 		SourceDirectorySet sds = ss.getResources();

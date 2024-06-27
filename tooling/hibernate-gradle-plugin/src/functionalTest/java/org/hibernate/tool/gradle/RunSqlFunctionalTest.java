@@ -31,7 +31,7 @@ class RunSqlFunctionalTest {
     private File getHibernatePropertiesFile() {
     	File resourcesDir = new File(projectDir, "src/main/resources");
     	resourcesDir.mkdirs();
-    	return new File(resourcesDir, "hibernate.properties");
+    	return new File(resourcesDir, "foo.bar");
     }
     
     @Test 
@@ -73,6 +73,7 @@ class RunSqlFunctionalTest {
             "}\n" +
             "hibernateTools {\n" +
             "  sqlToRun = 'create table foo (id int not null primary key, baz varchar(256))'\n" +
+            "  hibernateProperties = 'foo.bar'" +
             "}\n";
     
     private static final String HIBERNATE_PROPERTIES_CONTENTS = 

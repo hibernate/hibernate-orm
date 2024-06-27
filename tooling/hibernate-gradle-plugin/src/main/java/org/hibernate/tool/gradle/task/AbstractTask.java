@@ -1,10 +1,16 @@
 package org.hibernate.tool.gradle.task;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Properties;
 import java.util.Set;
 
+import org.apache.tools.ant.BuildException;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
@@ -17,6 +23,9 @@ public abstract class AbstractTask extends DefaultTask {
 
 	@Internal
 	private Extension extension = null;
+	
+	@Internal
+	private Properties hibernateProperties = null;
 	
 	public void initialize(Extension extension) {
 		this.extension = extension;
@@ -56,6 +65,36 @@ public abstract class AbstractTask extends DefaultTask {
 		} catch (MalformedURLException e) {
 			getLogger().error("MalformedURLException while compiling project classpath");
 			throw new RuntimeException(e);
+		}
+	}
+	
+	Properties getHibernateProperties() {
+		if (hibernateProperties == null) {
+			loadPropertiesFile(getPropertyFile());
+		}
+		return hibernateProperties;
+	}
+	
+	String getHibernateProperty(String name) {
+		return getHibernateProperties().getProperty(name);
+	}
+	
+	private File getPropertyFile() {
+		return new File(getProject().getProjectDir(), "src/main/resources/hibernate.properties");
+	}
+
+	private void loadPropertiesFile(File propertyFile) {
+		getLogger().lifecycle("Loading the properties file : " + propertyFile.getPath());
+		try (FileInputStream is = new FileInputStream(propertyFile)) {
+			hibernateProperties = new Properties();
+			hibernateProperties.load(is);
+			getLogger().lifecycle("Properties file is loaded");
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			throw new BuildException(propertyFile + " not found.", e);
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new BuildException("Problem while loading " + propertyFile, e);
 		}
 	}
 	

@@ -1,12 +1,8 @@
 package org.hibernate.tool.gradle.task;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.Properties;
 
-import org.apache.tools.ant.BuildException;
 import org.gradle.api.tasks.TaskAction;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
@@ -20,34 +16,6 @@ import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
 
 public class GenerateJavaTask extends AbstractTask {
 
-	private Properties hibernateProperties = null;
-	
-	private Properties getHibernateProperties() {
-		if (hibernateProperties == null) {
-			loadPropertiesFile(getPropertyFile());
-		}
-		return hibernateProperties;
-	}
-	
-	private File getPropertyFile() {
-		return new File(getProject().getProjectDir(), "src/main/resources/hibernate.properties");
-	}
-
-	private void loadPropertiesFile(File propertyFile) {
-		getLogger().lifecycle("Loading the properties file : " + propertyFile.getPath());
-		try (FileInputStream is = new FileInputStream(propertyFile)) {
-			hibernateProperties = new Properties();
-			hibernateProperties.load(is);
-			getLogger().lifecycle("Properties file is loaded");
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			throw new BuildException(propertyFile + " not found.", e);
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new BuildException("Problem while loading " + propertyFile, e);
-		}
-	}
-	
 	@TaskAction
 	public void performTask() {
 		super.perform();

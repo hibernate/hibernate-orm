@@ -16,7 +16,10 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedConfiguration;
+import org.gradle.api.file.SourceDirectorySet;
 import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.hibernate.tool.gradle.Extension;
 
 public abstract class AbstractTask extends DefaultTask {
@@ -64,7 +67,7 @@ public abstract class AbstractTask extends DefaultTask {
 			return urls;
 		} catch (MalformedURLException e) {
 			getLogger().error("MalformedURLException while compiling project classpath");
-			throw new RuntimeException(e);
+			throw new BuildException(e);
 		}
 	}
 	
@@ -80,7 +83,16 @@ public abstract class AbstractTask extends DefaultTask {
 	}
 	
 	private File getPropertyFile() {
-		return new File(getProject().getProjectDir(), "src/main/resources/hibernate.properties");
+		String hibernatePropertiesFile = "hibernate.properties";
+		SourceSetContainer ssc = getProject().getExtensions().getByType(SourceSetContainer.class);
+		SourceSet ss = ssc.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
+		SourceDirectorySet sds = ss.getResources();
+		for (File f : sds.getFiles()) {
+			if (hibernatePropertiesFile.equals(f.getName())) {
+				return f;
+			}
+		}
+		throw new BuildException("File '" + hibernatePropertiesFile + "' could not be found");
 	}
 
 	private void loadPropertiesFile(File propertyFile) {

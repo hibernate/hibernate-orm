@@ -140,8 +140,9 @@ public class TransactionCommitFailureTest {
 		}
 
 		@Override
-		public void closeConnection(Connection conn) throws SQLException {
-			final ConnectionInvocationHandler handler = (ConnectionInvocationHandler) Proxy.getInvocationHandler( conn );
+		public void closeConnection(Connection connection) throws SQLException {
+			final ConnectionInvocationHandler handler = (ConnectionInvocationHandler)
+					Proxy.getInvocationHandler( connection );
 			super.closeConnection( handler.delegate );
 			connectionIsOpen.set( false );
 		}

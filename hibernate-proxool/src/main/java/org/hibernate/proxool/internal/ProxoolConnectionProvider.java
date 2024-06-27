@@ -21,8 +21,6 @@ import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.cfg.ProxoolSettings;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
@@ -34,6 +32,8 @@ import org.logicalcobwebs.proxool.ProxoolFacade;
 import org.logicalcobwebs.proxool.configuration.JAXPConfigurator;
 import org.logicalcobwebs.proxool.configuration.PropertyConfigurator;
 
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.proxool.internal.ProxoolMessageLogger.PROXOOL_LOGGER;
 import static org.hibernate.proxool.internal.ProxoolMessageLogger.PROXOOL_MESSAGE_LOGGER;
 
@@ -63,34 +63,34 @@ public class ProxoolConnectionProvider
 
 	@Override
 	public Connection getConnection() throws SQLException {
-		// get a connection from the pool (thru DriverManager, cfr. Proxool doc)
-		final Connection c = DriverManager.getConnection( proxoolAlias );
+		// get a connection from the pool (through DriverManager, cfr. Proxool doc)
+		final Connection connection = DriverManager.getConnection( proxoolAlias );
 
 		// set the Transaction Isolation if defined
 		if ( isolation != null ) {
-			c.setTransactionIsolation( isolation );
+			connection.setTransactionIsolation( isolation );
 		}
 
 		// toggle autoCommit to false if set
-		if ( c.getAutoCommit() != autocommit ) {
-			c.setAutoCommit( autocommit );
+		if ( connection.getAutoCommit() != autocommit ) {
+			connection.setAutoCommit( autocommit );
 		}
 
 		// return the connection
-		return c;
+		return connection;
 	}
 
 	@Override
 	public boolean isUnwrappableAs(Class<?> unwrapType) {
-		return ConnectionProvider.class.equals( unwrapType ) ||
-				ProxoolConnectionProvider.class.isAssignableFrom( unwrapType );
+		return ConnectionProvider.class.equals( unwrapType )
+			|| ProxoolConnectionProvider.class.isAssignableFrom( unwrapType );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> unwrapType) {
-		if ( ConnectionProvider.class.equals( unwrapType ) ||
-				ProxoolConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
+		if ( ConnectionProvider.class.equals( unwrapType )
+				|| ProxoolConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
 			return (T) this;
 		}
 		else {
@@ -99,13 +99,13 @@ public class ProxoolConnectionProvider
 	}
 
 	@Override
-	public void closeConnection(Connection conn) throws SQLException {
-		conn.close();
+	public void closeConnection(Connection connection) throws SQLException {
+		connection.close();
 	}
 
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
-		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 	}
 
 	@Override
@@ -122,7 +122,7 @@ public class ProxoolConnectionProvider
 		// already has Proxool pools running, and this provider is to just borrow one of these
 		if ( "true".equals( externalConfig ) ) {
 			// Validate that an alias name was provided to determine which pool to use
-			if ( !StringHelper.isNotEmpty( proxoolAlias ) ) {
+			if ( !isNotEmpty( proxoolAlias ) ) {
 				final String msg = PROXOOL_MESSAGE_LOGGER.unableToConfigureProxoolProviderToUseExistingInMemoryPool( ProxoolSettings.PROXOOL_POOL_ALIAS );
 				PROXOOL_LOGGER.error( msg );
 				throw new HibernateException( msg );
@@ -137,11 +137,11 @@ public class ProxoolConnectionProvider
 
 			// Configured using the JAXP Configurator
 		}
-		else if ( StringHelper.isNotEmpty( jaxpFile ) ) {
+		else if ( isNotEmpty( jaxpFile ) ) {
 			PROXOOL_MESSAGE_LOGGER.configuringProxoolProviderUsingJaxpConfigurator( jaxpFile );
 
 			// Validate that an alias name was provided to determine which pool to use
-			if ( !StringHelper.isNotEmpty( proxoolAlias ) ) {
+			if ( !isNotEmpty( proxoolAlias ) ) {
 				final String msg = PROXOOL_MESSAGE_LOGGER.unableToConfigureProxoolProviderToUseJaxp( ProxoolSettings.PROXOOL_POOL_ALIAS );
 				PROXOOL_LOGGER.error( msg );
 				throw new HibernateException( msg );
@@ -162,11 +162,11 @@ public class ProxoolConnectionProvider
 
 			// Configured using the Properties File Configurator
 		}
-		else if ( StringHelper.isNotEmpty( propFile ) ) {
+		else if ( isNotEmpty( propFile ) ) {
 			PROXOOL_MESSAGE_LOGGER.configuringProxoolProviderUsingPropertiesFile( propFile );
 
 			// Validate that an alias name was provided to determine which pool to use
-			if ( !StringHelper.isNotEmpty( proxoolAlias ) ) {
+			if ( !isNotEmpty( proxoolAlias ) ) {
 				final String msg = PROXOOL_MESSAGE_LOGGER.unableToConfigureProxoolProviderToUsePropertiesFile( ProxoolSettings.PROXOOL_POOL_ALIAS );
 				PROXOOL_LOGGER.error( msg );
 				throw new HibernateException( msg );
@@ -190,7 +190,7 @@ public class ProxoolConnectionProvider
 		isolation = ConnectionProviderInitiator.extractIsolation( props );
 		PROXOOL_MESSAGE_LOGGER.jdbcIsolationLevel( ConnectionProviderInitiator.toIsolationNiceName( isolation ) );
 
-		autocommit = ConfigurationHelper.getBoolean( JdbcSettings.AUTOCOMMIT, props );
+		autocommit = getBoolean( JdbcSettings.AUTOCOMMIT, props );
 		PROXOOL_MESSAGE_LOGGER.autoCommitMode( autocommit );
 	}
 

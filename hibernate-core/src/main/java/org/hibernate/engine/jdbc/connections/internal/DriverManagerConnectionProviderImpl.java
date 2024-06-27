@@ -263,11 +263,11 @@ public class DriverManagerConnectionProviderImpl
 	}
 
 	@Override
-	public void closeConnection(Connection conn) throws SQLException {
+	public void closeConnection(Connection connection) throws SQLException {
 		if ( state == null ) {
 			throw new IllegalStateException( "Cannot close a connection as the driver manager is not properly initialized" );
 		}
-		state.closeConnection( conn );
+		state.closeConnection( connection );
 	}
 
 	@Override

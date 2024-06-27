@@ -45,7 +45,7 @@ public class UserSuppliedConnectionProviderImpl implements ConnectionProvider {
 	}
 
 	@Override
-	public void closeConnection(Connection conn) throws SQLException {
+	public void closeConnection(Connection connection) throws SQLException {
 		throw new UnsupportedOperationException( "The application must supply JDBC connections" );
 	}
 

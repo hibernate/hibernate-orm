@@ -62,8 +62,8 @@ public class ViburDBCPConnectionProvider implements ConnectionProvider, Configur
 	}
 
 	@Override
-	public void closeConnection(Connection conn) throws SQLException {
-		conn.close();
+	public void closeConnection(Connection connection) throws SQLException {
+		connection.close();
 	}
 
 	@Override
@@ -81,8 +81,8 @@ public class ViburDBCPConnectionProvider implements ConnectionProvider, Configur
 
 	@Override
 	public boolean isUnwrappableAs(Class<?> unwrapType) {
-		return ConnectionProvider.class.equals( unwrapType ) ||
-				ViburDBCPConnectionProvider.class.isAssignableFrom( unwrapType );
+		return ConnectionProvider.class.equals( unwrapType )
+			|| ViburDBCPConnectionProvider.class.isAssignableFrom( unwrapType );
 	}
 
 	@Override

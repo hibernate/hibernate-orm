@@ -20,33 +20,61 @@ import org.gradle.api.tasks.TaskAction;
 
 public class RunSqlTask extends AbstractTask {
 	
-	@TaskAction
-	public void performTask() {
-		super.perform();
+	private Properties hibernateProperties = null;
+	
+	private String getHibernateProperty(String name) {
+		if (hibernateProperties == null) {
+			loadPropertiesFile(getPropertyFile());
+		}
+		return hibernateProperties.getProperty(name);
 	}
 	
 	private File getPropertyFile() {
 		return new File(getProject().getProjectDir(), "src/main/resources/hibernate.properties");
 	}
 
-	private Properties loadPropertiesFile(File propertyFile) {
+	private void loadPropertiesFile(File propertyFile) {
 		getLogger().lifecycle("Loading the properties file : " + propertyFile.getPath());
 		try (FileInputStream is = new FileInputStream(propertyFile)) {
-			Properties result = new Properties();
-			result.load(is);
-			return result;
+			hibernateProperties = new Properties();
+			hibernateProperties.load(is);
+			getLogger().lifecycle("Properties file is loaded");
 		} catch (FileNotFoundException e) {
+			e.printStackTrace();
 			throw new BuildException(propertyFile + " not found.", e);
 		} catch (IOException e) {
+			e.printStackTrace();
 			throw new BuildException("Problem while loading " + propertyFile, e);
 		}
 	}
 	
+	@TaskAction
+	public void performTask() {
+		super.perform();
+	}
+	
 	void doWork() {
-		Properties properties = loadPropertiesFile(getPropertyFile());
-		registerDriver(properties.getProperty("hibernate.connection.driver_class"));
+		registerDriver();
+		runSql();
+	}
+	
+	private void registerDriver() {
+		String driverClassName = getHibernateProperty("hibernate.connection.driver_class");
+		getLogger().lifecycle("Registering the database driver: " + driverClassName);
 		try {
-			String databaseUrl = properties.getProperty("hibernate.connection.url");
+			Class<?> driverClass = Thread.currentThread().getContextClassLoader().loadClass(driverClassName);
+			Constructor<?> constructor = driverClass.getDeclaredConstructor();
+			DriverManager.registerDriver(createDelegatingDriver((Driver)constructor.newInstance()));
+			getLogger().lifecycle("Database driver is registered");
+		} catch (Exception e) {
+			getLogger().error("Exception while registering the database driver: " + e.getMessage());
+			throw new RuntimeException(e);
+		}
+	}
+	
+	private void runSql() {
+		try {
+			String databaseUrl = getHibernateProperty("hibernate.connection.url");
 			getLogger().lifecycle("Connecting to database: " + databaseUrl);
 			Connection connection = DriverManager
 					.getConnection(databaseUrl, "sa", "");
@@ -60,7 +88,7 @@ public class RunSqlTask extends AbstractTask {
 			throw new RuntimeException(e);
 		}
 	}
-	
+		
 	private Driver createDelegatingDriver(Driver driver) {
 		return (Driver)Proxy.newProxyInstance(
 				DriverManager.class.getClassLoader(), 
@@ -73,16 +101,4 @@ public class RunSqlTask extends AbstractTask {
 				});
 	}
 	
-	private void registerDriver(String driverClassName) {
-		getLogger().lifecycle("Registering the database driver: " + driverClassName);
-		try {
-			Class<?> driverClass = Thread.currentThread().getContextClassLoader().loadClass(driverClassName);
-			Constructor<?> constructor = driverClass.getDeclaredConstructor();
-			DriverManager.registerDriver(createDelegatingDriver((Driver)constructor.newInstance()));
-		} catch (Exception e) {
-			getLogger().error("Exception while registering the database driver: " + e.getMessage());
-			throw new RuntimeException(e);
-		}
-	}
-		
 }

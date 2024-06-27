@@ -7,6 +7,7 @@ public class Extension {
 	public String sqlToRun = "";
 	public String hibernateProperties = "hibernate.properties";
 	public String outputFolder = "generated-sources";
+	public String packageName = "";
 	
 	public Extension(Project project) {}
 	

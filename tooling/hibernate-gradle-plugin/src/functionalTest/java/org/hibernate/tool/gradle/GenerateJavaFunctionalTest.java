@@ -46,6 +46,7 @@ public class GenerateJavaFunctionalTest {
             "  implementation('com.h2database:h2:2.1.214')\n" +
             "}\n" +
             "hibernateTools {\n" +
+            "  packageName = 'foo.model'" +
             "}\n";
 
 	@TempDir
@@ -102,7 +103,7 @@ public class GenerateJavaFunctionalTest {
         assertTrue(result.getOutput().contains("Starting POJO export to directory: " + generatedSourcesFolder.getCanonicalPath()));
         assertTrue(generatedSourcesFolder.exists());
         assertTrue(generatedSourcesFolder.isDirectory());
-        File fooFile = new File(generatedSourcesFolder, "Foo.java");
+        File fooFile = new File(generatedSourcesFolder, "foo/model/Foo.java");
         assertTrue(fooFile.exists());
         assertTrue(fooFile.isFile());
     }

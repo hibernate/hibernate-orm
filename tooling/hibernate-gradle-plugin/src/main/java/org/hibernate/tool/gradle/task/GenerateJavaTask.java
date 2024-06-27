@@ -11,6 +11,7 @@ import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.api.metadata.MetadataConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
+import org.hibernate.tool.api.reveng.RevengSettings;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
 
@@ -44,7 +45,11 @@ public class GenerateJavaTask extends AbstractTask {
 	}
 	
 	private RevengStrategy setupReverseEngineeringStrategy() {
-		return new DefaultStrategy();
+		RevengStrategy result = new DefaultStrategy();
+		RevengSettings settings = new RevengSettings(result);
+		settings.setDefaultPackageName(getExtension().packageName);
+		result.setSettings(settings);
+		return result;
 	}
 
 }

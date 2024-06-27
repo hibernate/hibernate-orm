@@ -33,11 +33,23 @@ public class ImplicitInstantiationTest2 {
 	}
 
 	@Test
-	public void testRecordInstantiationWithoutAlias(SessionFactoryScope scope) {
+	public void testRecordInstantiationCreateSelectionQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					session.persist(new Thing(1L, "thing"));
 					Record result = session.createSelectionQuery("select upper(name) from Thing", Record.class).getSingleResult();
+					assertEquals( result.name(), "THING" );
+					session.getTransaction().setRollbackOnly();
+				}
+		);
+	}
+
+	@Test
+	public void testRecordInstantiationCreateQuery(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.persist(new Thing(1L, "thing"));
+					Record result = session.createQuery("select upper(name) as name from Thing where name is not null", Record.class).getSingleResult();
 					assertEquals( result.name(), "THING" );
 					session.getTransaction().setRollbackOnly();
 				}

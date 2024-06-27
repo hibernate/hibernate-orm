@@ -38,6 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 			SingleTableNotNullDiscriminatorSuperClassTest.RootEntity.class,
 			SingleTableNotNullDiscriminatorSuperClassTest.Val1Entity.class,
 			SingleTableNotNullDiscriminatorSuperClassTest.Val2Entity.class,
+			SingleTableNotNullDiscriminatorSuperClassTest.OtherEntity.class,
 			SingleTableNotNullDiscriminatorSuperClassTest.NotNullEntity.class
 		}
 )
@@ -60,22 +61,18 @@ public class SingleTableNotNullDiscriminatorSuperClassTest {
 
 			Val2Entity val2 = new Val2Entity();
 			val2.setId( 2L );
-
+			
 			RootEntity root = new RootEntity();
 			root.setId( 3L );
 
+			OtherEntity otherEntity = new OtherEntity();
+			otherEntity.setId( 4L );
+			
 			session.persist( val1 );
 			session.persist( val2 );
 			session.persist( root );
+			session.persist( otherEntity );
 
-			session.doWork( connection -> {
-				try (Statement statement = connection.createStatement()) {
-					statement.executeUpdate(
-							"insert into root_ent (DTYPE, id) " +
-									"values ('other', 4)"
-					);
-				}
-			} );
 		} );
 
 		scope.inTransaction( session -> {
@@ -96,7 +93,6 @@ public class SingleTableNotNullDiscriminatorSuperClassTest {
 	}
 
 	@Entity(name = "root_ent")
-	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	@DiscriminatorValue("null")
 	public static class RootEntity {
 
@@ -124,6 +120,11 @@ public class SingleTableNotNullDiscriminatorSuperClassTest {
 	@DiscriminatorValue("val2")
 	public static class Val2Entity extends NotNullEntity {
 
+	}
+
+	@Entity(name = "other_ent")
+	@DiscriminatorValue("other")
+	public static class OtherEntity extends NotNullEntity {
 	}
 
 	@Entity(name = "notnull_ent")

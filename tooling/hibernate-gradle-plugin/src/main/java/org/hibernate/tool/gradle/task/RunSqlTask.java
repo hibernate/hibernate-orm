@@ -22,11 +22,15 @@ public class RunSqlTask extends AbstractTask {
 	
 	private Properties hibernateProperties = null;
 	
-	private String getHibernateProperty(String name) {
+	private Properties getHibernateProperties() {
 		if (hibernateProperties == null) {
 			loadPropertiesFile(getPropertyFile());
 		}
-		return hibernateProperties.getProperty(name);
+		return hibernateProperties;
+	}
+	
+	private String getHibernateProperty(String name) {
+		return getHibernateProperties().getProperty(name);
 	}
 	
 	private File getPropertyFile() {

@@ -20,61 +20,63 @@ import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
 
 public class GenerateJavaTask extends AbstractTask {
 
+	private Properties hibernateProperties = null;
+	
+	private Properties getHibernateProperties() {
+		if (hibernateProperties == null) {
+			loadPropertiesFile(getPropertyFile());
+		}
+		return hibernateProperties;
+	}
+	
+	private File getPropertyFile() {
+		return new File(getProject().getProjectDir(), "src/main/resources/hibernate.properties");
+	}
+
+	private void loadPropertiesFile(File propertyFile) {
+		getLogger().lifecycle("Loading the properties file : " + propertyFile.getPath());
+		try (FileInputStream is = new FileInputStream(propertyFile)) {
+			hibernateProperties = new Properties();
+			hibernateProperties.load(is);
+			getLogger().lifecycle("Properties file is loaded");
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			throw new BuildException(propertyFile + " not found.", e);
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new BuildException("Problem while loading " + propertyFile, e);
+		}
+	}
+	
 	@TaskAction
 	public void performTask() {
 		super.perform();
 	}
 
-	private RevengStrategy setupReverseEngineeringStrategy() {
-		return new DefaultStrategy();
-	}
-
-	private MetadataDescriptor createJdbcDescriptor(RevengStrategy strategy, Properties properties) {
-		properties.put(MetadataConstants.PREFER_BASIC_COMPOSITE_IDS, true);
-		return MetadataDescriptorFactory.createReverseEngineeringDescriptor(strategy, properties);
-	}
-
-	private File getPropertyFile() {
-		return new File(getProject().getProjectDir(), "src/main/resources/hibernate.properties");
-	}
-
-	private Properties loadPropertiesFile(File propertyFile) {
-		try (FileInputStream is = new FileInputStream(propertyFile)) {
-			Properties result = new Properties();
-			result.load(is);
-			return result;
-		} catch (FileNotFoundException e) {
-			throw new BuildException(propertyFile + " not found.", e);
-		} catch (IOException e) {
-			throw new BuildException("Problem while loading " + propertyFile, e);
-		}
-	}
-
-	private File getOutputFolder() {
-		return new File(getProject().getProjectDir(), "generated-sources");
-	}
-
-	private void executeExporter(MetadataDescriptor mdd) {
+	void doWork() {
 		getLogger().lifecycle("Creating POJO exporter");
 		Exporter pojoExporter = ExporterFactory.createExporter(ExporterType.JAVA);
 		File outputFolder = getOutputFolder();
-		pojoExporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, mdd);
+		pojoExporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, createJdbcDescriptor());
 		pojoExporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputFolder);
 		getLogger().lifecycle("Starting POJO export to directory: " + outputFolder + "...");
 		pojoExporter.start();
 		getLogger().lifecycle("POJO export finished");
 	}
+
+	private MetadataDescriptor createJdbcDescriptor() {
+		RevengStrategy strategy = setupReverseEngineeringStrategy();
+		Properties hibernateProperties = getHibernateProperties();
+		hibernateProperties.put(MetadataConstants.PREFER_BASIC_COMPOSITE_IDS, true);
+		return MetadataDescriptorFactory.createReverseEngineeringDescriptor(strategy, hibernateProperties);
+	}
+
+	private File getOutputFolder() {
+		return new File(getProject().getProjectDir(), "generated-sources");
+	}
 	
-	void doWork() {
-		File propertyFile = getPropertyFile();
-		if (propertyFile.exists()) {
-			executeExporter(
-					createJdbcDescriptor(
-							setupReverseEngineeringStrategy(), 
-							loadPropertiesFile(propertyFile)));
-		} else {
-			getLogger().lifecycle("Property file '" + propertyFile + "' cannot be found, aborting...");
-		}		
+	private RevengStrategy setupReverseEngineeringStrategy() {
+		return new DefaultStrategy();
 	}
 
 }

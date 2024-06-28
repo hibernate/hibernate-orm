@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.gradle.api.Project;
 import org.hibernate.tool.gradle.task.AbstractTask;
+import org.hibernate.tool.gradle.task.GenerateCfgTask;
 import org.hibernate.tool.gradle.task.GenerateJavaTask;
 import org.hibernate.tool.gradle.task.RunSqlTask;
 
@@ -11,7 +12,8 @@ public class Plugin implements org.gradle.api.Plugin<Project> {
 	
 	private static Map<String, Class<?>> PLUGIN_TASK_MAP = Map.of(
 			"runSql", RunSqlTask.class,
-			"generateJava", GenerateJavaTask.class
+			"generateJava", GenerateJavaTask.class,
+			"generateCfg", GenerateCfgTask.class
 		);
 	
     @SuppressWarnings("unchecked")

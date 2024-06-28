@@ -14,7 +14,7 @@ import org.gradle.testkit.runner.GradleRunner;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-public class GenerateJavaFunctionalTest {
+public class GenerateCfgFunctionalTest {
 
     private static final String DATABASE_NAME = "bardb";
     private static final String DATABASE_FILE_NAME = DATABASE_NAME + ".mv.db";
@@ -43,9 +43,6 @@ public class GenerateJavaFunctionalTest {
             "}\n" +
             "dependencies {\n" +
             "  implementation('com.h2database:h2:2.1.214')\n" +
-            "}\n" +
-            "hibernateTools {\n" +
-            "  packageName = 'foo.model'\n" +
             "}\n";
 
 	@TempDir
@@ -82,7 +79,7 @@ public class GenerateJavaFunctionalTest {
     }
 	    
     @Test 
-    void testGenerateJava() throws IOException {
+    void testGenerateCfg() throws IOException {
     	// Set up the project
         writeString(getSettingsFile(), "");
         writeString(getBuildFile(),BUILD_FILE_CONTENTS);
@@ -93,18 +90,20 @@ public class GenerateJavaFunctionalTest {
         GradleRunner runner = GradleRunner.create();
         runner.forwardOutput();
         runner.withPluginClasspath();
-        runner.withArguments("generateJava");
+        runner.withArguments("generateCfg");
         runner.withProjectDir(projectDir);
         BuildResult result = runner.build();
 
         // Verify the result
         File generatedSourcesFolder = new File(projectDir, "generated-sources");
-        assertTrue(result.getOutput().contains("Starting Java export to directory: " + generatedSourcesFolder.getCanonicalPath()));
+        assertTrue(result.getOutput().contains("Starting CFG export to directory: " + generatedSourcesFolder.getCanonicalPath()));
         assertTrue(generatedSourcesFolder.exists());
         assertTrue(generatedSourcesFolder.isDirectory());
-        File fooFile = new File(generatedSourcesFolder, "foo/model/Foo.java");
-        assertTrue(fooFile.exists());
-        assertTrue(fooFile.isFile());
+        File cfgFile = new File(generatedSourcesFolder, "hibernate.cfg.xml");
+        assertTrue(cfgFile.exists());
+        assertTrue(cfgFile.isFile());
+        String cfgContents = Files.readString(cfgFile.toPath());
+        assertTrue(cfgContents.contains("<mapping resource=\"Foo.hbm.xml\"/>"));
     }
 
     private void writeString(File file, String string) throws IOException {

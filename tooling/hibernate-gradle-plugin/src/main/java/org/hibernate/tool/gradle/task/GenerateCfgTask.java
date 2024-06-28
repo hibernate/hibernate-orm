@@ -15,7 +15,7 @@ import org.hibernate.tool.api.reveng.RevengSettings;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.RevengStrategyFactory;
 
-public class GenerateJavaTask extends AbstractTask {
+public class GenerateCfgTask extends AbstractTask {
 
 	@TaskAction
 	public void performTask() {
@@ -23,14 +23,14 @@ public class GenerateJavaTask extends AbstractTask {
 	}
 
 	void doWork() {
-		getLogger().lifecycle("Creating Java exporter");
-		Exporter pojoExporter = ExporterFactory.createExporter(ExporterType.JAVA);
+		getLogger().lifecycle("Creating CFG exporter");
+		Exporter cfgExporter = ExporterFactory.createExporter(ExporterType.CFG);
 		File outputFolder = getOutputFolder();
-		pojoExporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, createJdbcDescriptor());
-		pojoExporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputFolder);
-		getLogger().lifecycle("Starting Java export to directory: " + outputFolder + "...");
-		pojoExporter.start();
-		getLogger().lifecycle("Java export finished");
+		cfgExporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, createJdbcDescriptor());
+		cfgExporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputFolder);
+		getLogger().lifecycle("Starting CFG export to directory: " + outputFolder + "...");
+		cfgExporter.start();
+		getLogger().lifecycle("CFG export finished");
 	}
 
 	private MetadataDescriptor createJdbcDescriptor() {
@@ -52,5 +52,4 @@ public class GenerateJavaTask extends AbstractTask {
 		result.setSettings(settings);
 		return result;
 	}
-	
 }

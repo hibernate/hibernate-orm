@@ -75,9 +75,9 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		}
 		else {
 			this.localName = localName;
-			this.identifierForTableGroup = StringHelper.isEmpty( parent.getIdentifierForTableGroup() )
+			this.identifierForTableGroup = StringHelper.isEmpty( parent.getFullPath() )
 					? aliasedLocalName
-					: parent.getIdentifierForTableGroup() + "." + localName;
+					: parent.getFullPath() + "." + localName;
 			this.fullPathCalculator = NavigablePath::calculateNormalFullPath;
 		}
 	}
@@ -344,8 +344,6 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	 * The normal pattern used for the "full path"
 	 */
 	private static String calculateNormalFullPath(@Nullable NavigablePath parent, String localName, @Nullable String alias) {
-		assert parent != null;
-
 		final String parentFullPath = castNonNull( parent ).getFullPath();
 		final String baseFullPath = StringHelper.isEmpty( parentFullPath )
 				? localName

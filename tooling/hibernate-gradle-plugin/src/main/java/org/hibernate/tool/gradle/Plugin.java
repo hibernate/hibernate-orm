@@ -5,6 +5,7 @@ import java.util.Map;
 import org.gradle.api.Project;
 import org.hibernate.tool.gradle.task.AbstractTask;
 import org.hibernate.tool.gradle.task.GenerateCfgTask;
+import org.hibernate.tool.gradle.task.GenerateDaoTask;
 import org.hibernate.tool.gradle.task.GenerateHbmTask;
 import org.hibernate.tool.gradle.task.GenerateJavaTask;
 import org.hibernate.tool.gradle.task.RunSqlTask;
@@ -15,7 +16,8 @@ public class Plugin implements org.gradle.api.Plugin<Project> {
 			"runSql", RunSqlTask.class,
 			"generateJava", GenerateJavaTask.class,
 			"generateCfg", GenerateCfgTask.class,
-			"generateHbm", GenerateHbmTask.class
+			"generateHbm", GenerateHbmTask.class,
+			"generateDao", GenerateDaoTask.class
 		);
 	
     @SuppressWarnings("unchecked")

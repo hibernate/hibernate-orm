@@ -15,6 +15,8 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.TimeZone;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -85,6 +87,7 @@ public class MaterializedNClobBindTest {
 
 	private class MockWrapperOptions implements WrapperOptions {
 		private final boolean useStreamForLobBinding;
+		private final Dialect dialect = new H2Dialect();
 
 		public MockWrapperOptions(boolean useStreamForLobBinding) {
 			this.useStreamForLobBinding = useStreamForLobBinding;
@@ -118,6 +121,11 @@ public class MaterializedNClobBindTest {
 		@Override
 		public TimeZone getJdbcTimeZone() {
 			return null;
+		}
+
+		@Override
+		public Dialect getDialect() {
+			return dialect;
 		}
 	}
 

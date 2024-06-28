@@ -952,7 +952,7 @@ informix() {
 
 informix_14_10() {
     $PRIVILEGED_CLI $CONTAINER_CLI rm -f informix || true
-    $PRIVILEGED_CLI $CONTAINER_CLI run --name informix --privileged -p 9088:9088 -e LICENSE=accept -d icr.io/informix/informix-developer-database:14.10.FC9W1DE
+    $PRIVILEGED_CLI $CONTAINER_CLI run --name informix --privileged -p 9088:9088 -e LICENSE=accept -e GL_USEGLU=1 -d icr.io/informix/informix-developer-database:14.10.FC9W1DE
     echo "Starting Informix. This can take a few minutes"
     # Give the container some time to start
     OUTPUT=
@@ -962,7 +962,7 @@ informix_14_10() {
         OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs informix 2>&1)
         if [[ $OUTPUT == *"Server Started"* ]]; then
           sleep 15
-          $PRIVILEGED_CLI $CONTAINER_CLI exec informix bash -l -c "echo \"execute function task('create dbspace from storagepool', 'datadbs', '100 MB', '4');execute function task('create sbspace from storagepool', 'sbspace', '20 M', '0');create database dev in datadbs with log nlscase sensitive;\" > post_init.sql;dbaccess sysadmin post_init.sql"
+          $PRIVILEGED_CLI $CONTAINER_CLI exec informix bash -l -c "export DB_LOCALE=en_US.utf8;export CLIENT_LOCALE=en_US.utf8;echo \"execute function task('create dbspace from storagepool', 'datadbs', '100 MB', '4');execute function task('create sbspace from storagepool', 'sbspace', '20 M', '0');create database dev in datadbs with log;\" > post_init.sql;dbaccess sysadmin post_init.sql"
           break;
         fi
         n=$((n+1))
@@ -978,7 +978,7 @@ informix_14_10() {
 
 informix_12_10() {
     $PRIVILEGED_CLI $CONTAINER_CLI rm -f informix || true
-    $PRIVILEGED_CLI $CONTAINER_CLI run --name informix --privileged -p 9088:9088 -e LICENSE=accept -d ibmcom/informix-developer-database:12.10.FC12W1DE
+    $PRIVILEGED_CLI $CONTAINER_CLI run --name informix --privileged -p 9088:9088 -e LICENSE=accept -e GL_USEGLU=1 -d ibmcom/informix-developer-database:12.10.FC12W1DE
     echo "Starting Informix. This can take a few minutes"
     # Give the container some time to start
     OUTPUT=
@@ -988,7 +988,7 @@ informix_12_10() {
         OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs informix 2>&1)
         if [[ $OUTPUT == *"login Information"* ]]; then
           sleep 15
-          $PRIVILEGED_CLI $CONTAINER_CLI exec informix bash -l -c "echo \"execute function task('create dbspace from storagepool', 'datadbs', '100 MB', '4');execute function task('create sbspace from storagepool', 'sbspace', '20 M', '0');create database dev in datadbs with log nlscase sensitive;\" > post_init.sql;dbaccess sysadmin post_init.sql"
+          $PRIVILEGED_CLI $CONTAINER_CLI exec informix bash -l -c "export DB_LOCALE=en_US.utf8;export CLIENT_LOCALE=en_US.utf8;echo \"execute function task('create dbspace from storagepool', 'datadbs', '100 MB', '4');execute function task('create sbspace from storagepool', 'sbspace', '20 M', '0');create database dev in datadbs with log;\" > post_init.sql;dbaccess sysadmin post_init.sql"
           break;
         fi
         n=$((n+1))

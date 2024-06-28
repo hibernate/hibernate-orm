@@ -144,36 +144,33 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 		);
 
 		final String jdbcParamName;
-		if ( isNamed && canDoNameParameterBinding( typeToUse, procedureCall ) ) {
-			jdbcParamName = this.name;
-		}
-		else {
-			jdbcParamName = null;
-		}
-
 		final JdbcParameterBinder parameterBinder;
 		final JdbcCallRefCursorExtractorImpl refCursorExtractor;
 		final JdbcCallParameterExtractorImpl<T> parameterExtractor;
 
 		switch ( mode ) {
 			case REF_CURSOR:
+				jdbcParamName = isNamed ? name : null;
 				refCursorExtractor = new JdbcCallRefCursorExtractorImpl( jdbcParamName, startIndex );
 				parameterBinder = null;
 				parameterExtractor = null;
 				break;
 			case IN:
+				jdbcParamName = getJdbcParamName( procedureCall, isNamed, typeToUse );
 				validateBindableType( typeToUse, startIndex );
-				parameterBinder = getParameterBinder( typeToUse, jdbcParamName );
+				parameterBinder = getParameterBinder( typeToUse, getJdbcParamName( procedureCall, isNamed, typeToUse ) );
 				parameterExtractor = null;
 				refCursorExtractor = null;
 				break;
 			case INOUT:
+				jdbcParamName = getJdbcParamName( procedureCall, isNamed, typeToUse );
 				validateBindableType( typeToUse, startIndex );
-				parameterBinder = getParameterBinder( typeToUse, jdbcParamName );
+				parameterBinder = getParameterBinder( typeToUse, getJdbcParamName( procedureCall, isNamed, typeToUse ) );
 				parameterExtractor = new JdbcCallParameterExtractorImpl<>( procedureCall.getProcedureName(), jdbcParamName, startIndex, typeToUse );
 				refCursorExtractor = null;
 				break;
 			default:
+				jdbcParamName = getJdbcParamName( procedureCall, isNamed, typeToUse );
 				validateBindableType( typeToUse, startIndex );
 				parameterBinder = null;
 				parameterExtractor = new JdbcCallParameterExtractorImpl<>( procedureCall.getProcedureName(), jdbcParamName, startIndex, typeToUse );
@@ -182,6 +179,13 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 		}
 
 		return new JdbcCallParameterRegistrationImpl( jdbcParamName, startIndex, mode, typeToUse, parameterBinder, parameterExtractor, refCursorExtractor );
+	}
+
+	private String getJdbcParamName(
+			ProcedureCallImplementor<?> procedureCall,
+			boolean isNamed,
+			OutputableType<T> typeToUse) {
+		return isNamed && canDoNameParameterBinding( typeToUse, procedureCall ) ? this.name : null;
 	}
 
 	private void validateBindableType(BindableType<T> bindableType, int startIndex) {

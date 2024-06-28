@@ -588,7 +588,7 @@ public class NestedStructEmbeddableTest implements AdditionalMappingContributor 
 					}
 					ProcedureCall structFunction = entityManager.createStoredProcedureCall( "structProcedure" );
 					ProcedureParameter<TheStruct> resultParameter = structFunction.registerParameter(
-							"structType",
+							"result",
 							TheStruct.class,
 							parameterMode
 					);

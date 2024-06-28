@@ -18,6 +18,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.PersistentClass;
@@ -36,6 +37,7 @@ import static org.junit.Assert.assertEquals;
  * @author Steve Ebersole
  */
 @SkipForDialect(value = DB2Dialect.class, comment = "DB2 jdbc driver doesn't support setNString")
+@SkipForDialect(value = InformixDialect.class, comment = "Informix jdbc driver doesn't support setNString")
 public class AndNationalizedTests extends BaseUnitTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-9599")

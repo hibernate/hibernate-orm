@@ -20,6 +20,12 @@ import org.gradle.api.file.SourceDirectorySet;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
+import org.hibernate.tool.api.metadata.MetadataConstants;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
+import org.hibernate.tool.api.reveng.RevengSettings;
+import org.hibernate.tool.api.reveng.RevengStrategy;
+import org.hibernate.tool.api.reveng.RevengStrategyFactory;
 import org.hibernate.tool.gradle.Extension;
 
 public abstract class AbstractTask extends DefaultTask {
@@ -80,6 +86,27 @@ public abstract class AbstractTask extends DefaultTask {
 	
 	String getHibernateProperty(String name) {
 		return getHibernateProperties().getProperty(name);
+	}
+	
+	MetadataDescriptor createJdbcDescriptor() {
+		RevengStrategy strategy = setupReverseEngineeringStrategy();
+		Properties hibernateProperties = getHibernateProperties();
+		hibernateProperties.put(MetadataConstants.PREFER_BASIC_COMPOSITE_IDS, true);
+		return MetadataDescriptorFactory.createReverseEngineeringDescriptor(strategy, hibernateProperties);
+	}
+
+	@Internal
+	File getOutputFolder() {
+		return new File(getProject().getProjectDir(), getExtension().outputFolder);
+	}
+	
+	RevengStrategy setupReverseEngineeringStrategy() {
+		RevengStrategy result = RevengStrategyFactory
+				.createReverseEngineeringStrategy(getExtension().revengStrategy);
+		RevengSettings settings = new RevengSettings(result);
+		settings.setDefaultPackageName(getExtension().packageName);
+		result.setSettings(settings);
+		return result;
 	}
 	
 	private File getPropertyFile() {

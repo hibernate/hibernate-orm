@@ -4,13 +4,16 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Field;
 import java.net.URL;
 
 import org.gradle.api.Project;
 import org.gradle.testfixtures.ProjectBuilder;
+import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.gradle.Extension;
+import org.hibernate.tool.internal.reveng.strategy.AbstractStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -61,6 +64,16 @@ public class AbstractTaskTest {
 	void testResolveProjectClassPath() {
 		assertSame(URLS, abstractTask.resolveProjectClassPath());
 	}
+	
+	@Test
+	public void testSetupReverseEngineeringStrategy() throws Exception {
+		extension.revengStrategy = FooStrategy.class.getName();
+		extensionField.set(abstractTask, extension);
+		RevengStrategy revengStrategy = abstractTask.setupReverseEngineeringStrategy();
+		assertTrue(revengStrategy instanceof FooStrategy);
+	}
+	
+	public static class FooStrategy extends AbstractStrategy {}
 	
 	public static class FooTask extends AbstractTask {
 		void doWork() {

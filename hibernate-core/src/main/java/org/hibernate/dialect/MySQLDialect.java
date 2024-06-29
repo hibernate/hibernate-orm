@@ -275,15 +275,15 @@ public class MySQLDialect extends Dialect {
 
 			// on MySQL 8, the nchar/nvarchar types use a deprecated character set
 			case NCHAR:
-				return "char($l) character set utf8";
+				return "char($l) character set utf8mb4";
 			case NVARCHAR:
-				return "varchar($l) character set utf8";
+				return "varchar($l) character set utf8mb4";
 
 			// the maximum long LOB length is 4_294_967_295, bigger than any Java string
 			case BLOB:
 				return "longblob";
 			case NCLOB:
-				return "longtext character set utf8";
+				return "longtext character set utf8mb4";
 			case CLOB:
 				return "longtext";
 
@@ -326,7 +326,7 @@ public class MySQLDialect extends Dialect {
 			case NCHAR:
 			case NVARCHAR:
 			case LONG32NVARCHAR:
-				return "char character set utf8";
+				return "char character set utf8mb4";
 			case BINARY:
 			case VARBINARY:
 			case LONG32VARBINARY:
@@ -382,10 +382,10 @@ public class MySQLDialect extends Dialect {
 								castType( NCHAR ),
 								this
 						)
-						.withTypeCapacity( getMaxVarcharLength(), "varchar($l) character set utf8" )
-						.withTypeCapacity( maxMediumLobLen, "mediumtext character set utf8" );
+						.withTypeCapacity( getMaxVarcharLength(), "varchar($l) character set utf8mb4" )
+						.withTypeCapacity( maxMediumLobLen, "mediumtext character set utf8mb4" );
 		if ( getMaxVarcharLength() < maxLobLen ) {
-			nvarcharBuilder.withTypeCapacity( maxLobLen, "text character set utf8" );
+			nvarcharBuilder.withTypeCapacity( maxLobLen, "text character set utf8mb4" );
 		}
 		ddlTypeRegistry.addDescriptor( nvarcharBuilder.build() );
 
@@ -433,9 +433,9 @@ public class MySQLDialect extends Dialect {
 		ddlTypeRegistry.addDescriptor(
 				CapacityDependentDdlType.builder( NCLOB,
 								columnType( NCLOB ), castType( NCHAR ), this )
-						.withTypeCapacity( maxTinyLobLen, "tinytext character set utf8" )
-						.withTypeCapacity( maxMediumLobLen, "mediumtext character set utf8" )
-						.withTypeCapacity( maxLobLen, "text character set utf8" )
+						.withTypeCapacity( maxTinyLobLen, "tinytext character set utf8mb4" )
+						.withTypeCapacity( maxMediumLobLen, "mediumtext character set utf8mb4" )
+						.withTypeCapacity( maxLobLen, "text character set utf8mb4" )
 						.build()
 		);
 

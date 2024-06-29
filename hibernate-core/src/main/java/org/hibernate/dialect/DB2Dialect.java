@@ -961,6 +961,11 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean useInputStreamToInsertBlob() {
+		return false;
+	}
+
+	@Override
 	public boolean doesReadCommittedCauseWritersToBlockReaders() {
 		return true;
 	}

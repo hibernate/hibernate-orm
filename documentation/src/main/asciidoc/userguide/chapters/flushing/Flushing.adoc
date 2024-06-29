@@ -124,7 +124,7 @@ include::{example-dir-flushing}/AutoFlushTest.java[tags=flushing-auto-flush-sql-
 ====
 
 If you bootstrap Hibernate natively, and not through Jakarta Persistence, by default,
-the `Session` API will trigger a flush automatically when executing a native query.
+the `Session` API won't trigger a flush automatically when executing a native query.
 
 [[flushing-auto-flush-sql-native-example]]
 .Automatic flushing on native SQL using `Session`

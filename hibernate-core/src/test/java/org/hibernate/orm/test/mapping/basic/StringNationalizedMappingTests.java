@@ -69,10 +69,14 @@ public class StringNationalizedMappingTests {
 
 		// and try to use the mapping
 		scope.inTransaction(
-				(session) -> session.persist(new EntityOfStrings(1, "nstring", "nclob"))
+				(session) -> session.persist(new EntityOfStrings(1, "nstring 🦑", "nclob 🦀"))
 		);
 		scope.inTransaction(
-				(session) -> session.get(EntityOfStrings.class, 1)
+				(session) -> {
+					EntityOfStrings entity = session.get(EntityOfStrings.class, 1);
+					assertThat( entity.nstring, is("nstring 🦑") );
+					assertThat( entity.nclobString, is("nclob 🦀") );
+				}
 		);
 	}
 

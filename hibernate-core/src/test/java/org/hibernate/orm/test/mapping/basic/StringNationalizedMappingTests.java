@@ -14,10 +14,12 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -37,6 +39,8 @@ import static org.hamcrest.Matchers.is;
  */
 @DomainModel(annotatedClasses = StringNationalizedMappingTests.EntityOfStrings.class)
 @SessionFactory
+@SkipForDialect(dialectClass = SybaseASEDialect.class,
+		reason = "Error converting characters into server's character set")
 public class StringNationalizedMappingTests {
 
 	@Test

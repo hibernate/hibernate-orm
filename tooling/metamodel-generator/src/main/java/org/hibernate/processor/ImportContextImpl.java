@@ -148,32 +148,15 @@ public class ImportContextImpl implements ImportContext {
 	}
 
 	private String importTypes(String originalArgList) {
+		int index = originalArgList.indexOf( ',' );
 		StringBuilder argList = new StringBuilder();
-		StringBuilder acc = new StringBuilder();
-		StringTokenizer args = new StringTokenizer( originalArgList, "," );
-		while ( args.hasMoreTokens() ) {
-			if ( acc.length() > 0 ) {
-				acc.append( ',' );
-			}
-			acc.append( args.nextToken() );
-			int nesting = 0;
-			for ( int i = 0; i<acc.length(); i++ ) {
-				switch ( acc.charAt(i) ) {
-					case '<':
-						nesting++;
-						break;
-					case '>':
-						nesting--;
-						break;
-				}
-			}
-			if ( nesting == 0 ) {
-				if ( argList.length() > 0 ) {
-					argList.append(',');
-				}
-				argList.append( importType( acc.toString() ) );
-				acc.setLength( 0 );
-			}
+		if ( index < 0 ) {
+			argList.append( importType( originalArgList ) );
+		}
+		else {
+			argList.append( importType( originalArgList.substring( 0, index ) ) );
+			argList.append(',');
+			argList.append( importType( originalArgList.substring( index + 1 ) ) );
 		}
 		return argList.toString();
 	}

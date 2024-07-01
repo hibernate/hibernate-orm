@@ -24,6 +24,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * or {@link org.hibernate.type.SqlTypes#SQLXML} mapped types.
  *
  * @author Christian Beikov
+ * @author Yanming Zhou
  */
 @Incubating
 public abstract class FormatMapperBasedJavaType<T> extends AbstractJavaType<T> implements MutabilityPlan<T> {
@@ -49,6 +50,9 @@ public abstract class FormatMapperBasedJavaType<T> extends AbstractJavaType<T> i
 
 	@Override
 	public String toString(T value) {
+		if ( value == null ) {
+			return null;
+		}
 		return getFormatMapper( typeConfiguration ).toString(
 				value,
 				this,
@@ -58,6 +62,9 @@ public abstract class FormatMapperBasedJavaType<T> extends AbstractJavaType<T> i
 
 	@Override
 	public T fromString(CharSequence string) {
+		if ( string == null ) {
+			return null;
+		}
 		return getFormatMapper( typeConfiguration ).fromString(
 				string,
 				this,

@@ -403,11 +403,11 @@ classes with `@DiscriminatorValue`.
 [IMPORTANT]
 ====
 Embeddable inheritance *IS* also supported for components used in an `@ElementCollection`.
-Embeddable inheritance is *NOT* supported for `@EmbeddedId`, embeddable types used as `@IdClass`
+Embeddable inheritance *is NOT* supported for `@EmbeddedId`, embeddable types used as `@IdClass`
 and embedded properties using a custom `@CompositeType`.
 ====
 
-Note that the `type()` and `treat()` functions are also supported for embeddable inheritance, see <<chapters/jndi/QueryLanguage.adoc#hql-functions-typecasts,types and typecasts>>.
+Of course, the `type()` and `treat()` functions are also supported for embeddable inheritance and can serve to explicitly use the embeddable type information in queries, see <<chapters/jndi/QueryLanguage.adoc#hql-functions-typecasts,types and typecasts>>.
 
 [[embeddable-inheritance-example]]
 .Example mapping of an embeddable inheritance hierarchy

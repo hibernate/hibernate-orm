@@ -70,13 +70,25 @@ For this determination to be possible, the entity must have either:
 
 For entities which have neither, it's impossible to distinguish a new instance from a deleted detached instance, and there is no change from the previous behavior.
 
-[[embeddable-treated-paths]]
-== Changes to the `SqmTreatedPath` interface
+[[mapped-superclass-embeddable]]
+== Explicit validation of annotated class types
+Hibernate has always been lax when it comes to `@Embedded` property types, allowing classes not annotated with `@Embeddable` to still work correctly. This is a nice feature that enables you to map your attributes to classes that you cannot modify to add the annotation, and will continue to work as expected in the future.
 
-ORM 6.6 introduced support for `@Embeddable` type inheritance.
-With it, we also enabled the `type()` and `treat()` functions to work with embeddable-typed paths.
-As a consequence, the `SqmTreatedPath#getTreatTarget()` method will now return a generic `ManagedDomainType` object,
+One consequence of this, though, was letting you use both `@MappedSuperlcass` and `@Embeddable` on the same annotated class as a workaround to enable having subclasses annotated as `@Embeddable` and still use both types in embedded attribute mappings. This has never been officially supported, with things like the JPA static metamodel not working as expected, and starting from 6.6 we will explicitly validate that mapped classes are annotated _either_ `@MappedSuperclass` _or_ `@Embeddable`, _or_ `@Entity`.
+
+Extending a `@MappedSuperclass` annotated class with an `@Embeddable` type is still supported, but we suggest keeping the two annotated class types separate. You can now also take advantage of explicit discriminator column based <<embeddable-inheritance,embeddable inheritance>>.
+
+[[embeddable-inheritance]]
+== Discriminator-based embeddable inheritance
+
+ORM 6.6 introduced support for `@Embeddable` type inheritance, always relying on a discriminator column stored within the entity mappings that contain the polymorphic `@Embedded` property of that type.
+Note that this functionality will be automatically enabled for all `@Embedded` properties whose type (Java class) is extended by subclasses annotated with `@Embeddable`. Previously, `@Embeddable`-annotated subtypes were always ignored, so this should not impact your mappings, unless you were using the "workaround" described in the <<mapped-superclass-embeddable,previous chapter>>.
+
+With embeddable inheritance, we also enabled the `type()` and `treat()` functions to work with embeddable-typed paths.
+As a consequence, the `org.hibernate.query.sqm.tree.domain.SqmTreatedPath#getTreatTarget()` method will now return a generic `ManagedDomainType` object,
 which could in turn be an `EntityDomainType` (as it was before) or also an `EmbeddableDomainType` instance.
+
+You can find more details about embeddable inheritance in the dedicated link:{userGuideBase}#embeddable-inheritance[user guide chapter].
 
 [[h2-dialect]]
 == H2 database and bulk mutation strategy

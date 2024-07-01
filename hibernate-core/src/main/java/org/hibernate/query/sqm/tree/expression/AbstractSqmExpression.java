@@ -10,7 +10,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
 
-import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmTreeCreationLogger;
@@ -94,6 +93,9 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 
 	@Override
 	public <X> SqmExpression<X> as(Class<X> type) {
+		if ( getExpressible().getRelationalJavaType().getJavaType() == type ) {
+			return (SqmExpression<X>) this;
+		}
 		return nodeBuilder().cast( this, type );
 	}
 

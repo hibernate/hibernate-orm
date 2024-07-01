@@ -197,4 +197,9 @@ public class SqmBasicValuedSimplePath<T>
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitBasicValuedPath( this );
 	}
+
+	@Override
+	public JavaType<?> getRelationalJavaType() {
+		return super.getExpressible().getRelationalJavaType();
+	}
 }

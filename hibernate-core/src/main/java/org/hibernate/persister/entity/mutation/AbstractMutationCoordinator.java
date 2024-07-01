@@ -136,6 +136,30 @@ public abstract class AbstractMutationCoordinator {
 		} );
 	}
 
+	protected void handleUpdateValueGeneration(
+			AttributeMapping attributeMapping,
+			MutationGroupBuilder mutationGroupBuilder,
+			UpdateCoordinatorStandard.DirtinessChecker dirtinessChecker,
+			OnExecutionGenerator generator) {
+		final Dialect dialect = factory.getJdbcServices().getDialect();
+		final boolean writePropertyValue = generator.writePropertyValue();
+		final String[] columnValues = writePropertyValue ? null : generator.getReferencedColumnValues( dialect );
+		attributeMapping.forEachUpdatable( (j, mapping) -> {
+			final String tableName = entityPersister.physicalTableNameForMutation( mapping );
+			final ColumnValuesTableMutationBuilder tableUpdateBuilder = mutationGroupBuilder.findTableDetailsBuilder( tableName );
+			if ( !entityPersister().getEntityMetamodel().isDynamicUpdate()
+					|| dirtinessChecker == null
+					|| dirtinessChecker.isDirty( j, attributeMapping ).isDirty() ) {
+				tableUpdateBuilder.addValueColumn(
+						mapping.getSelectionExpression(),
+						writePropertyValue ? "?" : columnValues[j],
+						mapping.getJdbcMapping(),
+						mapping.isLob()
+				);
+			}
+		} );
+	}
+
 	protected void bindPartitionColumnValueBindings(
 			Object[] loadedState,
 			SharedSessionContractImplementor session,

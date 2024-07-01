@@ -18,9 +18,9 @@ import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.NullSqmExpressible;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -241,13 +241,11 @@ public class StandardFunctionReturnTypeResolvers {
 	}
 
 	private static SqmExpressible<?> getArgumentExpressible(SqmTypedNode<?> specifiedArgument) {
-		final SqmExpressible<?> expressible = specifiedArgument.getNodeType();
+		final SqmExpressible<?> expressible = specifiedArgument.getExpressible();
 		final SqmExpressible<?> specifiedArgType = expressible instanceof SqmTypedNode<?>
-				? ( (SqmTypedNode<?>) expressible ).getNodeType()
+				? ( (SqmTypedNode<?>) expressible ).getExpressible()
 				: expressible;
-		return specifiedArgType instanceof SqmPathSource
-				? ( (SqmPathSource<?>) specifiedArgType ).getSqmPathType()
-				: specifiedArgType;
+		return specifiedArgType != null ? specifiedArgType.getSqmType() : null;
 	}
 
 	public static JdbcMapping extractArgumentJdbcMapping(

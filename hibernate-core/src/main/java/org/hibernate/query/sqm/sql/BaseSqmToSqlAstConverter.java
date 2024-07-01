@@ -6562,19 +6562,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		SqmExpression<?> leftOperand = expression.getLeftHandOperand();
 		SqmExpression<?> rightOperand = expression.getRightHandOperand();
 
-		// Need to infer the operand types here first to decide how to transform the expression
-		final FromClauseIndex fromClauseIndex = fromClauseIndexStack.getCurrent();
-		inferrableTypeAccessStack.push( () -> determineValueMapping( rightOperand, fromClauseIndex ) );
-		final MappingModelExpressible<?> leftOperandType = determineValueMapping( leftOperand );
-		inferrableTypeAccessStack.pop();
-		inferrableTypeAccessStack.push( () -> determineValueMapping( leftOperand, fromClauseIndex ) );
-		final MappingModelExpressible<?> rightOperandType = determineValueMapping( rightOperand );
-		inferrableTypeAccessStack.pop();
-
 		final boolean durationToRight = isDuration( rightOperand.getNodeType() );
-		final TypeConfiguration typeConfiguration = getCreationContext().getMappingMetamodel().getTypeConfiguration();
-		final TemporalType temporalTypeToLeft = typeConfiguration.getSqlTemporalType( leftOperandType );
-		final TemporalType temporalTypeToRight = typeConfiguration.getSqlTemporalType( rightOperandType );
+		final TemporalType temporalTypeToLeft = inferTemporalType( leftOperand, rightOperand );
+		final TemporalType temporalTypeToRight = inferTemporalType( rightOperand, leftOperand );
 		final boolean temporalTypeSomewhereToLeft = adjustedTimestamp != null || temporalTypeToLeft != null;
 
 		if ( temporalTypeToLeft != null && durationToRight ) {
@@ -6592,6 +6582,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else {
 			// Infer one operand type through the other
+			final FromClauseIndex fromClauseIndex = fromClauseIndexStack.getCurrent();
 			inferrableTypeAccessStack.push( () -> determineValueMapping( rightOperand, fromClauseIndex ) );
 			final Expression lhs = toSqlExpression( leftOperand.accept( this ) );
 			inferrableTypeAccessStack.pop();
@@ -6617,6 +6608,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						getExpressionType( expression )
 				);
 			}
+		}
+	}
+
+	private TemporalType inferTemporalType(SqmExpression<?> expression, SqmExpression<?> inferrableOperand) {
+		final SqmExpressible<?> nodeType = expression.getNodeType();
+		if ( nodeType != null ) {
+			return getTypeConfiguration().getSqlTemporalType( nodeType );
+		}
+		else {
+			// Need to infer the type here first to determine the correct temporal type
+			final FromClauseIndex fromClauseIndex = fromClauseIndexStack.getCurrent();
+			inferrableTypeAccessStack.push( () -> determineValueMapping( inferrableOperand, fromClauseIndex ) );
+			final MappingModelExpressible<?> mappingType = determineValueMapping( expression );
+			return TypeConfiguration.getSqlTemporalType( mappingType );
 		}
 	}
 

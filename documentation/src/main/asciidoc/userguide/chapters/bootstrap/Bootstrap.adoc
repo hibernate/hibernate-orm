@@ -242,7 +242,7 @@ include::{example-dir-boot}/BootstrapTest.java[tags=bootstrap-jpa-compliant-Enti
 ====
 If you don't want to provide a `persistence.xml` configuration file, Jakarta Persistence allows you to provide all the configuration options in a
 {jpaJavadocUrlPrefix}spi/PersistenceUnitInfo.html[`PersistenceUnitInfo`] implementation and call
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/HibernatePersistenceProvider.html#createContainerEntityManagerFactory-jakarta.persistence.spi.PersistenceUnitInfo-java.util.Map-[`HibernatePersistenceProvider.html#createContainerEntityManagerFactory`].
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/HibernatePersistenceProvider.html#createContainerEntityManagerFactory-jakarta.persistence.spi.PersistenceUnitInfo-java.util.Map-[`HibernatePersistenceProvider#createContainerEntityManagerFactory()`].
 ====
 
 To inject the default Persistence Context, you can use the {jpaJavadocUrlPrefix}PersistenceContext.html[`@PersistenceContext`] annotation.

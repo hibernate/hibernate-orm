@@ -47,6 +47,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
@@ -791,8 +792,12 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	public MappingModelExpressible<?> resolveMappingExpressible(
 			SqmExpressible<?> sqmExpressible,
 			Function<NavigablePath, TableGroup> tableGroupLocator) {
-		if ( sqmExpressible instanceof SqmPath ) {
+		if ( sqmExpressible instanceof SqmPath<?> ) {
 			final SqmPath<?> sqmPath = (SqmPath<?>) sqmExpressible;
+			final DomainType<?> sqmPathType = sqmPath.getResolvedModel().getSqmPathType();
+			if ( sqmPathType instanceof MappingModelExpressible<?> ) {
+				return (MappingModelExpressible<?>) sqmPathType;
+			}
 			final NavigablePath navigablePath = sqmPath.getNavigablePath();
 			if ( navigablePath.getParent() != null ) {
 				final TableGroup parentTableGroup = tableGroupLocator.apply( navigablePath.getParent() );

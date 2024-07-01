@@ -28,6 +28,7 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 
 import java.util.List;
 
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.type.SqlTypes.ROWID;
 
 /**
@@ -153,7 +154,7 @@ public class DB2iDialect extends DB2Dialect {
 
 	@Override
 	public String rowId(String rowId) {
-		return rowId == null || rowId.isEmpty() ? "rowid_" : rowId;
+		return isEmpty( rowId ) ? "rowid_" : rowId;
 	}
 
 	@Override

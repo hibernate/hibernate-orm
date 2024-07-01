@@ -30,6 +30,7 @@ import jakarta.persistence.TemporalType;
 
 import java.util.List;
 
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.type.SqlTypes.ROWID;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
@@ -221,7 +222,7 @@ public class DB2zDialect extends DB2Dialect {
 
 	@Override
 	public String rowId(String rowId) {
-		return rowId == null || rowId.isEmpty() ? "rowid_" : rowId;
+		return isEmpty( rowId ) ? "rowid_" : rowId;
 	}
 
 	@Override

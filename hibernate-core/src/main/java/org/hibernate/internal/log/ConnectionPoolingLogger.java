@@ -55,20 +55,8 @@ public interface ConnectionPoolingLogger extends BasicLogger {
 	String jdbcUrlNotSpecified(String property);
 
 	@LogMessage(level = INFO)
-	@Message(value = "Loaded JDBC driver class: %s", id = 10001005)
-	void loadedDriver(String driverClassName);
-
-	@LogMessage(level = INFO)
 	@Message(value = "No JDBC driver class specified by %s", id = 10001010)
 	void noDriver(String property);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Loaded JDBC drivers: %s", id = 10001011)
-	void loadedDrivers(String loadedDrivers);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Connecting with JDBC URL [%s]", id = 10001012)
-	void usingUrl(String url);
 
 	@LogMessage(level = WARN)
 	@Message(id = 10001006, value = "No JDBC Driver class was specified by property `jakarta.persistence.jdbc.driver`, `hibernate.driver` or `javax.persistence.jdbc.driver`")

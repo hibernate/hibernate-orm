@@ -17,9 +17,12 @@ import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
+import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.dialect.spi.DialectFactory;
@@ -32,6 +35,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.internal.EmptyEventManager;
 import org.hibernate.event.spi.EventManager;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.log.ConnectionProviderLogger;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.JpaCompliance;
@@ -119,8 +123,9 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			}
 		}
 
+		final JdbcEnvironment jdbcEnvironment;
 		if ( allowJdbcMetadataAccess( configurationValues ) ) {
-			return getJdbcEnvironmentUsingJdbcMetadata(
+			jdbcEnvironment = getJdbcEnvironmentUsingJdbcMetadata(
 					configurationValues,
 					registry,
 					dialectFactory,
@@ -130,7 +135,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 					explicitDatabaseVersion);
 		}
 		else if ( explicitDialectConfiguration( explicitDatabaseName, configurationValues ) ) {
-			return getJdbcEnvironmentWithExplicitConfiguration(
+			jdbcEnvironment = getJdbcEnvironmentWithExplicitConfiguration(
 					configurationValues,
 					registry,
 					dialectFactory,
@@ -141,8 +146,39 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			);
 		}
 		else {
-			return getJdbcEnvironmentWithDefaults( configurationValues, registry, dialectFactory );
+			jdbcEnvironment = getJdbcEnvironmentWithDefaults( configurationValues, registry, dialectFactory );
 		}
+
+		logDbInfo( registry, jdbcEnvironment );
+
+		return jdbcEnvironment;
+	}
+
+	private static void logDbInfo(ServiceRegistryImplementor registry, JdbcEnvironment jdbcEnvironment) {
+		// Standardized DB info logging
+		DatabaseConnectionInfoImpl databaseConnectionInfo = null;
+		if ( !isMultiTenancyEnabled( registry ) ) {
+			final ConnectionProvider cp = registry.requireService( ConnectionProvider.class );
+			// Don't want a setter for the version in the interface, so cloning it is
+			databaseConnectionInfo = new DatabaseConnectionInfoImpl( cp.getDatabaseConnectionInfo() );
+			// most likely, the version hasn't been set yet, at least not for the ConnectionProviders that we currently maintain
+			if ( shouldSetDBVersion( cp.getDatabaseConnectionInfo() ) ) {
+				databaseConnectionInfo.setDbVersion( jdbcEnvironment.getDialect().getVersion() );
+			}
+		}
+		else {
+			final MultiTenantConnectionProvider<?> mcp = registry.getService( MultiTenantConnectionProvider.class );
+			databaseConnectionInfo = new DatabaseConnectionInfoImpl( mcp.getDatabaseConnectionInfo() );
+			// most likely, the version hasn't been set yet, at least not for the ConnectionProviders that we currently maintain
+			if ( shouldSetDBVersion( mcp.getDatabaseConnectionInfo() ) ) {
+				databaseConnectionInfo.setDbVersion( jdbcEnvironment.getDialect().getVersion() );
+			}
+		}
+		ConnectionProviderLogger.INSTANCE.logConnectionDetails( databaseConnectionInfo );
+	}
+
+	private static boolean shouldSetDBVersion(DatabaseConnectionInfo dci) {
+		return dci.getDBVersion() == null || dci.getDBVersion().isSame( SimpleDatabaseVersion.ZERO_VERSION );
 	}
 
 	private static JdbcEnvironmentImpl getJdbcEnvironmentWithDefaults(

@@ -30,6 +30,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Database;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.internal.util.securitymanager.SystemSecurityManager;
 import org.hibernate.service.UnknownUnwrapTypeException;
@@ -66,6 +67,8 @@ public class DriverManagerConnectionProviderImpl
 	public static final String CONNECTION_CREATOR_FACTORY ="hibernate.connection.creator_factory_class";
 
 	private volatile PoolState state;
+
+	private static final DatabaseConnectionInfoImpl dbInfo = new DatabaseConnectionInfoImpl();
 
 	// create the pool ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -132,10 +135,9 @@ public class DriverManagerConnectionProviderImpl
 			}
 		}
 
-		if ( success ) {
-			CONNECTIONS_MESSAGE_LOGGER.loadedDriver( driverClassName );
-		}
-		else {
+		dbInfo.setDriverName( driverClassName );
+
+		if ( !success ) {
 			//we're hoping that the driver is already loaded
 			CONNECTIONS_MESSAGE_LOGGER.noDriver( AvailableSettings.DRIVER );
 			StringBuilder list = new StringBuilder();
@@ -146,7 +148,7 @@ public class DriverManagerConnectionProviderImpl
 				}
 				list.append( drivers.nextElement().getClass().getName() );
 			}
-			CONNECTIONS_MESSAGE_LOGGER.loadedDrivers( list.toString() );
+			dbInfo.setDriverName( list.toString() );
 		}
 
 		if ( url == null ) {
@@ -155,7 +157,7 @@ public class DriverManagerConnectionProviderImpl
 			throw new HibernateException( msg );
 		}
 
-		CONNECTIONS_MESSAGE_LOGGER.usingUrl( url );
+		dbInfo.setUrl( url );
 
 		final Properties connectionProps = ConnectionProviderInitiator.getConnectionProperties( configurationValues );
 
@@ -188,7 +190,9 @@ public class DriverManagerConnectionProviderImpl
 		if ( factory == null ) {
 			factory = ConnectionCreatorFactoryImpl.INSTANCE;
 		}
+
 		return factory.create(
+
 				driver,
 				serviceRegistry,
 				url,
@@ -273,6 +277,11 @@ public class DriverManagerConnectionProviderImpl
 	@Override
 	public boolean supportsAggressiveRelease() {
 		return false;
+	}
+
+	@Override
+	public DatabaseConnectionInfo getDatabaseConnectionInfo() {
+		return dbInfo;
 	}
 
 	@Override

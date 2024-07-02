@@ -21,7 +21,9 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.C3p0Settings;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
+import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.UnknownUnwrapTypeException;
@@ -61,6 +63,8 @@ public class C3P0ConnectionProvider
 	//                     hibernate sensibly lets default to minPoolSize, but we'll let users
 	//                     override it with the c3p0-style property if they want.
 	private static final String C3P0_STYLE_INITIAL_POOL_SIZE = "c3p0.initialPoolSize";
+
+	private DatabaseConnectionInfoImpl dbInfo;
 
 	private DataSource ds;
 	private Integer isolation;
@@ -121,9 +125,9 @@ public class C3P0ConnectionProvider
 				JdbcSettings.URL,
 				JdbcSettings.JPA_JDBC_URL
 		);
+
 		final Properties connectionProps = ConnectionProviderInitiator.getConnectionProperties( props );
 
-		C3P0_MSG_LOGGER.c3p0UsingDriver( jdbcDriverClass, jdbcUrl );
 		C3P0_MSG_LOGGER.connectionProperties( ConfigurationHelper.maskOut( connectionProps, "password" ) );
 
 		autocommit = getBoolean( JdbcSettings.AUTOCOMMIT, props );
@@ -140,6 +144,8 @@ public class C3P0ConnectionProvider
 				throw new ClassLoadingException( C3P0_MSG_LOGGER.jdbcDriverNotFound( jdbcDriverClass ), e );
 			}
 		}
+
+		dbInfo = new DatabaseConnectionInfoImpl( jdbcUrl, jdbcDriverClass );
 
 		try {
 
@@ -205,6 +211,11 @@ public class C3P0ConnectionProvider
 	@Override
 	public boolean supportsAggressiveRelease() {
 		return false;
+	}
+
+	@Override
+	public DatabaseConnectionInfo getDatabaseConnectionInfo() {
+		return dbInfo;
 	}
 
 	private void setOverwriteProperty(

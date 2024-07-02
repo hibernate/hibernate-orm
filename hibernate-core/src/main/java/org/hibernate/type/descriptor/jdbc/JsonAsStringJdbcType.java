@@ -120,9 +120,10 @@ public class JsonAsStringJdbcType extends JsonJdbcType implements AdjustableJdbc
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
 					final String json = ( (JsonAsStringJdbcType) getJdbcType() ).toString( value, getJavaType(), options );
-					if (options.getSession().getJdbcServices().getDialect().supportNationalizedMethods()) {
+					if (options.getSession().getJdbcServices().getDialect().supportsNationalizedMethods()) {
 						st.setNString( index, json );
-					} else {
+					}
+					else {
 						st.setString( index, json );
 					}
 				}
@@ -131,9 +132,10 @@ public class JsonAsStringJdbcType extends JsonJdbcType implements AdjustableJdbc
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
 					final String json = ( (JsonAsStringJdbcType) getJdbcType() ).toString( value, getJavaType(), options );
-					if (options.getSession().getJdbcServices().getDialect().supportNationalizedMethods()) {
+					if (options.getSession().getJdbcServices().getDialect().supportsNationalizedMethods()) {
 						st.setNString( name, json );
-					} else {
+					}
+					else {
 						st.setString( name, json );
 					}
 				}
@@ -150,9 +152,10 @@ public class JsonAsStringJdbcType extends JsonJdbcType implements AdjustableJdbc
 			return new BasicExtractor<>( javaType, this ) {
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-					if (options.getSession().getJdbcServices().getDialect().supportNationalizedMethods()) {
+					if (options.getSession().getJdbcServices().getDialect().supportsNationalizedMethods()) {
 						return fromString( rs.getNString( paramIndex ), getJavaType(), options );
-					} else {
+					}
+					else {
 						return fromString( rs.getString( paramIndex ), getJavaType(), options );
 					}
 				}
@@ -160,9 +163,10 @@ public class JsonAsStringJdbcType extends JsonJdbcType implements AdjustableJdbc
 				@Override
 				protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
 						throws SQLException {
-					if (options.getSession().getJdbcServices().getDialect().supportNationalizedMethods()) {
+					if (options.getSession().getJdbcServices().getDialect().supportsNationalizedMethods()) {
 						return fromString( statement.getNString( index ), getJavaType(), options );
-					} else {
+					}
+					else {
 						return fromString( statement.getString( index ), getJavaType(), options );
 					}
 				}
@@ -170,9 +174,10 @@ public class JsonAsStringJdbcType extends JsonJdbcType implements AdjustableJdbc
 				@Override
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 						throws SQLException {
-					if (options.getSession().getJdbcServices().getDialect().supportNationalizedMethods()) {
+					if (options.getSession().getJdbcServices().getDialect().supportsNationalizedMethods()) {
 						return fromString( statement.getNString( name ), getJavaType(), options );
-					} else {
+					}
+					else {
 						return fromString( statement.getString( name ), getJavaType(), options );
 					}
 				}

@@ -130,9 +130,10 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 							getJavaType(),
 							options
 					);
-					if (options.getSession().getJdbcServices().getDialect().supportNationalizedMethods()) {
+					if (options.getSession().getJdbcServices().getDialect().supportsNationalizedMethods()) {
 						st.setNString( index, xml );
-					} else {
+					}
+					else {
 						st.setString( index, xml );
 					}
 				}
@@ -145,9 +146,10 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 							getJavaType(),
 							options
 					);
-					if (options.getSession().getJdbcServices().getDialect().supportNationalizedMethods()) {
+					if (options.getSession().getJdbcServices().getDialect().supportsNationalizedMethods()) {
 						st.setNString( name, xml );
-					} else {
+					}
+					else {
 						st.setString( name, xml );
 					}
 				}
@@ -187,9 +189,10 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-					if (options.getSession().getJdbcServices().getDialect().supportNationalizedMethods()) {
+					if (options.getSession().getJdbcServices().getDialect().supportsNationalizedMethods()) {
 						return getObject( rs.getNString( paramIndex ), options );
-					} else {
+					}
+					else {
 						return getObject( rs.getString( paramIndex ), options );
 					}
 				}
@@ -197,9 +200,10 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 				@Override
 				protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
 						throws SQLException {
-					if (options.getSession().getJdbcServices().getDialect().supportNationalizedMethods()) {
+					if (options.getSession().getJdbcServices().getDialect().supportsNationalizedMethods()) {
 						return getObject( statement.getNString( index ), options );
-					} else {
+					}
+					else {
 						return getObject( statement.getString( index ), options );
 					}
 				}
@@ -207,9 +211,10 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 				@Override
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 						throws SQLException {
-					if (options.getSession().getJdbcServices().getDialect().supportNationalizedMethods()) {
+					if (options.getSession().getJdbcServices().getDialect().supportsNationalizedMethods()) {
 						return getObject( statement.getNString( name ), options );
-					} else {
+					}
+					else {
 						return getObject( statement.getString( name ), options );
 					}
 				}

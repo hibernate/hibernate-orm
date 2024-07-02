@@ -724,7 +724,7 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportNationalizedMethods(){
+	public boolean supportsNationalizedMethods(){
 		return false;
 	}
 
@@ -732,11 +732,6 @@ public class InformixDialect extends Dialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
-		jdbcTypeRegistry.addDescriptor(
-				Types.NCLOB,
-				useInputStreamToInsertBlob()
-						? ClobJdbcType.STREAM_BINDING
-						: ClobJdbcType.CLOB_BINDING
-		);
+		jdbcTypeRegistry.addDescriptor( Types.NCLOB, ClobJdbcType.DEFAULT );
 	}
 }

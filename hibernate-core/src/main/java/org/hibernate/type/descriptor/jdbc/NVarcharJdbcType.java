@@ -107,9 +107,10 @@ public class NVarcharJdbcType implements AdjustableJdbcType {
 		return new BasicBinder<>( javaType, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				if (options.getSession().getJdbcServices().getDialect().supportNationalizedMethods()) {
+				if (options.getSession().getJdbcServices().getDialect().supportsNationalizedMethods()) {
 					st.setNString( index, javaType.unwrap( value, String.class, options ) );
-				} else {
+				}
+				else {
 					st.setString( index, javaType.unwrap( value, String.class, options ) );
 				}
 			}
@@ -117,9 +118,10 @@ public class NVarcharJdbcType implements AdjustableJdbcType {
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				if (options.getSession().getJdbcServices().getDialect().supportNationalizedMethods()) {
+				if (options.getSession().getJdbcServices().getDialect().supportsNationalizedMethods()) {
 					st.setNString( name, javaType.unwrap( value, String.class, options ) );
-				} else {
+				}
+				else {
 					st.setString( name, javaType.unwrap( value, String.class, options ) );
 				}
 			}
@@ -131,27 +133,30 @@ public class NVarcharJdbcType implements AdjustableJdbcType {
 		return new BasicExtractor<>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				if (options.getSession().getJdbcServices().getDialect().supportNationalizedMethods()) {
+				if (options.getSession().getJdbcServices().getDialect().supportsNationalizedMethods()) {
 					return javaType.wrap( rs.getNString( paramIndex ), options );
-				} else {
+				}
+				else {
 					return javaType.wrap( rs.getString( paramIndex ), options );
 				}
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				if (options.getSession().getJdbcServices().getDialect().supportNationalizedMethods()) {
+				if (options.getSession().getJdbcServices().getDialect().supportsNationalizedMethods()) {
 					return javaType.wrap( statement.getNString( index ), options );
-				} else {
+				}
+				else {
 					return javaType.wrap( statement.getString( index ), options );
 				}
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				if (options.getSession().getJdbcServices().getDialect().supportNationalizedMethods()) {
+				if (options.getSession().getJdbcServices().getDialect().supportsNationalizedMethods()) {
 					return javaType.wrap( statement.getNString( name ), options );
-				} else {
+				}
+				else {
 					return javaType.wrap( statement.getString( name ), options );
 				}
 			}

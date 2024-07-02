@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Clob;
@@ -4325,13 +4326,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 	/**
 	 * Checks whether the JDBC driver implements methods for handling nationalized character data types
-	 * getNString()/setNString(),
-	 * getNClob()/setNClob(),
-	 * getNCharacterStream()/setNCharacterStream()
+	 * {@link ResultSet#getNString(int)} / {@link java.sql.PreparedStatement#setNString(int, String)},
+	 * {@link ResultSet#getNClob(int)} /{@link java.sql.PreparedStatement#setNClob(int, NClob)},
+	 * {@link ResultSet#getNCharacterStream(int)} / {@link java.sql.PreparedStatement#setNCharacterStream(int, Reader, long)}
 	 *
 	 * @return {@code true} if the driver implements these methods
 	 */
-	public boolean supportNationalizedMethods(){
+	public boolean supportsNationalizedMethods(){
 		return true;
 	}
 

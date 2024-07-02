@@ -609,7 +609,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			EntityPersister entityDescriptor)
 			throws WrongClassException {
 		if ( discriminatorAssembler == null
-				|| rowProcessingState.isQueryCacheHit() && !entityDescriptor.storeDiscriminatorInShallowQueryCacheLayout() ) {
+				|| rowProcessingState.isQueryCacheHit() && entityDescriptor.useShallowQueryCacheLayout() && !entityDescriptor.storeDiscriminatorInShallowQueryCacheLayout() ) {
 			return entityDescriptor;
 		}
 		else {

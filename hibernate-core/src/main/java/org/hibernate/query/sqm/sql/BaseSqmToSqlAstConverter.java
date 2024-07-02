@@ -119,6 +119,7 @@ import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
+import org.hibernate.query.sqm.function.FunctionRenderingSupport;
 import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
@@ -174,6 +175,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.query.sqm.tree.expression.AsWrapperSqmExpression;
 import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
@@ -432,6 +434,7 @@ import static jakarta.persistence.metamodel.Type.PersistenceType.ENTITY;
 import static java.util.Collections.singletonList;
 import static org.hibernate.boot.model.internal.SoftDeleteHelper.createNonSoftDeletedRestriction;
 import static org.hibernate.generator.EventType.INSERT;
+import static java.util.Arrays.asList;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.MULTIPLY;
@@ -8266,6 +8269,36 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 //		final JavaType jtd = typeConfiguration
 //				.getJavaTypeRegistry()
 //				.getOrMakeJavaDescriptor( namedClass );
+	}
+
+	@Override
+	public Object visitAsWrapperExpression(AsWrapperSqmExpression sqmExpression) {
+		final Expression wrappedExpression = (Expression) sqmExpression.getExpression().accept( this );
+		final JdbcMapping asJdbcMapping = ((BasicValuedMapping) sqmExpression.getNodeType()).getJdbcMapping();
+		if ( areTypeCompatible( wrappedExpression, asJdbcMapping ) ) {
+			return wrappedExpression;
+		}
+		return new SelfRenderingFunctionSqlAstExpression(
+				"cast",
+				(FunctionRenderingSupport) getCreationContext().getSessionFactory()
+						.getQueryEngine().getSqmFunctionRegistry()
+						.findFunctionDescriptor( "cast" ),
+				asList( wrappedExpression, new CastTarget( asJdbcMapping ) ),
+				(ReturnableType<?>) asJdbcMapping,
+				wrappedExpression.getExpressionType()
+		);
+	}
+
+	private static boolean areTypeCompatible(Expression wrappedExpression, JdbcMapping asJdbcMapping) {
+		final JdbcMappingContainer expressionType = wrappedExpression.getExpressionType();
+		if ( expressionType instanceof SqlTypedMapping ) {
+			if ( ( (SqlTypedMapping) expressionType ).getColumnDefinition() == null
+					&& asJdbcMapping.getCastType() == wrappedExpression.getExpressionType().getJdbcMapping( 0 ).getCastType()
+			) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

@@ -94,7 +94,7 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 
 	@Override
 	public <X> SqmExpression<X> as(Class<X> type) {
-		return nodeBuilder().cast( this, type );
+		return new AsWrapperSqmExpression( this, type );
 	}
 
 	@Override

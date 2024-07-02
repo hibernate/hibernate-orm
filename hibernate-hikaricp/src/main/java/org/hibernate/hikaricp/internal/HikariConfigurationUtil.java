@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.HikariCPSettings;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 
@@ -26,7 +27,7 @@ import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderI
  * @author Brett Meyer
  */
 public class HikariConfigurationUtil {
-	public static final String CONFIG_PREFIX = "hibernate.hikari.";
+	public static final String CONFIG_PREFIX = HikariCPSettings.HIKARI_CONFIG_PREFIX + ".";
 
 	/**
 	 * Create/load a HikariConfig from Hibernate properties.

@@ -3,6 +3,15 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.27.Final (July 02, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32314
+
+** Bug
+      * [HHH-17344] - DB2zDialect NullPointerException
+
+
 Changes in 6.2.26.Final (June 11, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

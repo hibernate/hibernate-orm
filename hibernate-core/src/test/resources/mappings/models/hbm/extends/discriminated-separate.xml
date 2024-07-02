@@ -9,7 +9,7 @@
         "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping package="org.hibernate.test.hbm._extends">
+<hibernate-mapping>
     <subclass entity-name="Leaf" discriminator-value="L" extends="Branch">
     </subclass>
 
@@ -17,8 +17,8 @@
     </subclass>
 
     <class entity-name="Root" discriminator-value="R">
-        <id/>
+        <id name="id" type="integer"/>
         <discriminator column="the_type"/>
-        <property name="name"/>
+        <property name="name" type="string"/>
     </class>
 </hibernate-mapping>

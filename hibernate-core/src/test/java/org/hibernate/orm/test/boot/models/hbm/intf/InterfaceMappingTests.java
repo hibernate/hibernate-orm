@@ -18,6 +18,7 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Tests for mapping interfaces as managed classes.
@@ -50,10 +51,9 @@ public class InterfaceMappingTests {
 			final Metadata metadata = new MetadataSources( serviceRegistry )
 					.addResource( "mappings/models/hbm/intf/mapped-interface.hbm.xml" )
 					.buildMetadata();
+			fail( "Expecting a failure" );
 		}
 		catch (MappingException expected) {
-			assertThat( expected.getMessage() ).startsWith( "Only classes (not interfaces) may be mapped as @Entity :" );
-			assertThat( expected.getMessage() ).endsWith( IPerson.class.getName() );
 		}
 	}
 }

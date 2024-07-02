@@ -7,57 +7,49 @@
 package org.hibernate.orm.test.boot.models.xml.dynamic;
 
 import org.hibernate.annotations.RowId;
-import org.hibernate.boot.internal.BootstrapContextImpl;
-import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.orm.test.boot.models.SourceModelTestHelper.createBuildingContext;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 public class RowIdTest {
 	@Test
-	void testSimpleDynamicModel() {
+	@ServiceRegistry
+	void testSimpleDynamicModel(ServiceRegistryScope registryScope) {
 		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder()
 				.addXmlMappings( "mappings/models/dynamic/dynamic-rowid.xml" )
 				.build();
-		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build()) {
-			final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl(
-					serviceRegistry,
-					new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry )
-			);
-			final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext(
-					managedResources,
-					false,
-					new MetadataBuilderImpl.MetadataBuildingOptionsImpl( bootstrapContext.getServiceRegistry() ),
-					bootstrapContext
-			);
-			final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext(
+				managedResources,
+				registryScope.getRegistry()
+		);
+		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
 
-			{
-				final ClassDetails classDetails = classDetailsRegistry.getClassDetails( "EntityWithoutRowId" );
-				final RowId rowId = classDetails.getDirectAnnotationUsage( RowId.class );
-				assertThat( rowId ).isNull();
-			}
+		{
+			final ClassDetails classDetails = classDetailsRegistry.getClassDetails( "EntityWithoutRowId" );
+			final RowId rowId = classDetails.getDirectAnnotationUsage( RowId.class );
+			assertThat( rowId ).isNull();
+		}
 
-			{
-				final ClassDetails classDetails = classDetailsRegistry.getClassDetails( "EntityWithRowIdNoValue" );
-				final RowId rowId = classDetails.getDirectAnnotationUsage( RowId.class );
-				assertThat( rowId.value() ).isEmpty();
-			}
+		{
+			final ClassDetails classDetails = classDetailsRegistry.getClassDetails( "EntityWithRowIdNoValue" );
+			final RowId rowId = classDetails.getDirectAnnotationUsage( RowId.class );
+			assertThat( rowId.value() ).isEmpty();
+		}
 
-			{
-				final ClassDetails classDetails = classDetailsRegistry.getClassDetails( "EntityWithRowId" );
-				final RowId rowId = classDetails.getDirectAnnotationUsage( RowId.class );
-				assertThat( rowId.value() ).isEqualTo( "ROW_ID" );
-			}
+		{
+			final ClassDetails classDetails = classDetailsRegistry.getClassDetails( "EntityWithRowId" );
+			final RowId rowId = classDetails.getDirectAnnotationUsage( RowId.class );
+			assertThat( rowId.value() ).isEqualTo( "ROW_ID" );
 		}
 	}
 }

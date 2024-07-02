@@ -10,8 +10,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Nationalized;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -20,6 +22,8 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
+@SkipForDialect(dialectClass = SybaseASEDialect.class,
+        reason = "Error converting characters into server's character set")
 public class NationalizedTest extends BaseEntityManagerFunctionalTestCase {
 
     @Override
@@ -36,7 +40,7 @@ public class NationalizedTest extends BaseEntityManagerFunctionalTestCase {
             final Product product = new Product();
             product.setId(1);
             product.setName("Mobile phone");
-            product.setWarranty("My product warranty");
+            product.setWarranty("My product®™ warranty 😍");
 
             entityManager.persist(product);
             //end::basic-nationalized-persist-example[]
@@ -46,7 +50,7 @@ public class NationalizedTest extends BaseEntityManagerFunctionalTestCase {
         doInJPA(this::entityManagerFactory, entityManager -> {
             Product product = entityManager.find(Product.class, productId);
 
-            assertEquals("My product warranty", product.getWarranty());
+            assertEquals("My product®™ warranty 😍", product.getWarranty());
         });
     }
 

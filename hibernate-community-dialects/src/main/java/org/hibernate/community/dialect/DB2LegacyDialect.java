@@ -95,7 +95,6 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.CharJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
-import org.hibernate.type.descriptor.jdbc.DecimalJdbcType;
 import org.hibernate.type.descriptor.jdbc.InstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateJdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType;
@@ -866,9 +865,6 @@ public class DB2LegacyDialect extends Dialect {
 			jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, SmallIntJdbcType.INSTANCE );
 			// Binary literals were only added in 11. See https://www.ibm.com/support/knowledgecenter/SSEPGG_11.1.0/com.ibm.db2.luw.sql.ref.doc/doc/r0000731.html#d79816e393
 			jdbcTypeRegistry.addDescriptor( Types.VARBINARY, VarbinaryJdbcType.INSTANCE_WITHOUT_LITERALS );
-			if ( getDB2Version().isBefore( 9, 7 ) ) {
-				jdbcTypeRegistry.addDescriptor( Types.NUMERIC, DecimalJdbcType.INSTANCE );
-			}
 		}
 		// See HHH-12753
 		// It seems that DB2's JDBC 4.0 support as of 9.5 does not
@@ -878,7 +874,6 @@ public class DB2LegacyDialect extends Dialect {
 		jdbcTypeRegistry.addDescriptor( Types.NCHAR, CharJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( Types.NCLOB, ClobJdbcType.STREAM_BINDING );
 		jdbcTypeRegistry.addDescriptor( Types.NVARCHAR, VarcharJdbcType.INSTANCE );
-		jdbcTypeRegistry.addDescriptor( Types.NUMERIC, DecimalJdbcType.INSTANCE );
 
 		jdbcTypeRegistry.addDescriptor( XmlJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( DB2StructJdbcType.INSTANCE );

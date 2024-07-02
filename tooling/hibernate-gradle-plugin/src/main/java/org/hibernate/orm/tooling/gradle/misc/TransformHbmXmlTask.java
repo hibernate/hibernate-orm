@@ -21,6 +21,7 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.SourceTask;
 import org.gradle.api.tasks.TaskAction;
 
+import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer;
@@ -28,7 +29,12 @@ import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.xsd.MappingXsdSupport;
+import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.dialect.Database;
 
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
@@ -57,7 +63,8 @@ import jakarta.xml.bind.Marshaller;
  */
 @CacheableTask
 public abstract class TransformHbmXmlTask extends SourceTask {
-	private final Property<TransformationNaming> renaming;
+	private final TransformationNaming renaming;
+	private final Property<String> targetDatabaseName;
 	private final Property<UnsupportedFeatureHandling> unsupportedFeatures;
 	private final Property<Boolean> deleteHbmFiles;
 
@@ -66,8 +73,10 @@ public abstract class TransformHbmXmlTask extends SourceTask {
 	public TransformHbmXmlTask() {
 		this.outputDirectory = getProject().getObjects().directoryProperty();
 
-		this.renaming = getProject().getObjects().property( TransformationNaming.class );
-		this.renaming.set( new TransformationNaming( getProject().getObjects() ) );
+		this.renaming = new TransformationNaming( getProject().getObjects() );
+
+		this.targetDatabaseName = getProject().getObjects().property( String.class );
+		this.targetDatabaseName.convention( "H2" );
 
 		this.unsupportedFeatures = getProject().getObjects().property( UnsupportedFeatureHandling.class );
 		this.unsupportedFeatures.convention( UnsupportedFeatureHandling.ERROR );
@@ -81,8 +90,17 @@ public abstract class TransformHbmXmlTask extends SourceTask {
 	 */
 	@SuppressWarnings("unused")
 	@Nested
-	public Property<TransformationNaming> getRenaming() {
+	public TransformationNaming getRenaming() {
 		return renaming;
+	}
+
+	/**
+	 * @see Database
+	 */
+	@SuppressWarnings("unused")
+	@Input
+	public Property<String> getTargetDatabaseName() {
+		return targetDatabaseName;
 	}
 
 	/**
@@ -108,7 +126,7 @@ public abstract class TransformHbmXmlTask extends SourceTask {
 	 * E.g. transforming the resource `org/hibernate/test/my_mappings.hbm.xml`
 	 * into `/home/me/hibernate` would transform the HBM mapping and save it
 	 * as `/home/me/hibernate/org/hibernate/test/my_mappings.hbm.xml` (depending
-	 * on {@link #getRenaming() naming} any config
+	 * on {@link #getRenaming() naming} config)
 	 */
 	@OutputDirectory
 	public DirectoryProperty getOutputDirectory() {
@@ -122,14 +140,6 @@ public abstract class TransformHbmXmlTask extends SourceTask {
 				unsupportedFeatures.getOrElse( UnsupportedFeatureHandling.ERROR )
 		);
 
-		final Marshaller marshaller;
-		try {
-			marshaller = mappingBinder.mappingJaxbContext().createMarshaller();
-		}
-		catch (JAXBException e) {
-			throw new RuntimeException( "Unable to create JAXB Marshaller", e );
-		}
-
 		final List<Binding<JaxbHbmHibernateMapping>> hbmBindings = new ArrayList<>();
 		getSource().forEach( (hbmXmlFile) -> {
 			final Origin origin = new OriginImpl( hbmXmlFile );
@@ -137,8 +147,25 @@ public abstract class TransformHbmXmlTask extends SourceTask {
 			hbmBindings.add( hbmBinding );
 		} );
 
+		try ( StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+				.clearSettings()
+				.applySetting( JdbcSettings.JAKARTA_HBM2DDL_DB_NAME, targetDatabaseName.get() )
+				.applySetting( JdbcSettings.ALLOW_METADATA_ON_BOOT, false )
+				.build() ) {
+			performTransformation( hbmBindings, mappingBinder, serviceRegistry );
+		}
+	}
+
+	private void performTransformation(
+			List<Binding<JaxbHbmHibernateMapping>> hbmBindings,
+			MappingBinder mappingBinder, StandardServiceRegistry serviceRegistry) {
+		final MetadataSources metadataSources = new MetadataSources( serviceRegistry );
+		hbmBindings.forEach( metadataSources::addHbmXmlBinding );
+
 		final List<Binding<JaxbEntityMappingsImpl>> transformedBindings = HbmXmlTransformer.transform(
 				hbmBindings,
+				(MetadataImplementor) metadataSources.buildMetadata(),
+				serviceRegistry,
 				unsupportedFeatures.get()
 		);
 
@@ -160,6 +187,16 @@ public abstract class TransformHbmXmlTask extends SourceTask {
 			final File copyFile = determineCopyFile( copyName, hbmXmlFile );
 			//noinspection ResultOfMethodCallIgnored
 			copyFile.getParentFile().mkdirs();
+
+
+			final Marshaller marshaller;
+			try {
+				marshaller = mappingBinder.mappingJaxbContext().createMarshaller();
+			}
+			catch (JAXBException e) {
+				throw new RuntimeException( "Unable to create JAXB Marshaller", e );
+			}
+
 			try {
 				marshaller.marshal( transformedBinding.getRoot(), copyFile );
 			}
@@ -194,11 +231,6 @@ public abstract class TransformHbmXmlTask extends SourceTask {
 
 	private String determineCopyName(File hbmXmlFile) {
 		final String hbmXmlFileName = hbmXmlFile.getName();
-		if ( !renaming.isPresent() ) {
-			return hbmXmlFileName;
-		}
-
-		final TransformationNaming renaming = this.renaming.get();
 		if ( renaming.areNoneDefined() ) {
 			return hbmXmlFileName;
 		}

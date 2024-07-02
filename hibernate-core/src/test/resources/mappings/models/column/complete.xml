@@ -6,9 +6,10 @@
   -->
 <entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                 version="3.2">
+                 version="7.0">
     <package>org.hibernate.orm.test.boot.models.xml.column</package>
     <entity class="AnEntity" metadata-complete="true" access="FIELD">
+        <secondary-table name="tbl"/>
         <attributes>
             <id name="id"/>
             <basic name="name" >

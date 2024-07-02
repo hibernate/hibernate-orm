@@ -6,8 +6,8 @@
   ~ See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
   -->
 <hibernate-mapping xmlns="http://www.hibernate.org/xsd/orm/hbm">
-    <class name="SimpleEntity">
-        <id/>
-        <property name="name" />
+    <class entity-name="SimpleEntity">
+        <id name="id" type="integer"/>
+        <property name="name" type="string"/>
     </class>
 </hibernate-mapping>

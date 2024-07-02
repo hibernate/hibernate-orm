@@ -11,9 +11,9 @@
 
 <hibernate-mapping package="org.hibernate.test.hbm._extends">
     <class entity-name="Root" discriminator-value="R">
-        <id/>
-        <discriminator column="the_type"/>
-        <property name="name"/>
+        <id name="id" type="integer"/>
+        <discriminator column="the_type" type="string"/>
+        <property name="name" type="string"/>
         <subclass entity-name="Branch" discriminator-value="B">
             <subclass entity-name="Leaf" discriminator-value="L">
             </subclass>

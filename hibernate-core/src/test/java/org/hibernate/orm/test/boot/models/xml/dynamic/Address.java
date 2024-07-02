@@ -6,21 +6,18 @@
  */
 package org.hibernate.orm.test.boot.models.xml.dynamic;
 
-import java.util.List;
-
-import org.hibernate.orm.test.boot.models.xml.SimpleEntity;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
 
+/**
+ * @author Steve Ebersole
+ */
 @Entity
-public class Employee {
+public class Address {
 	@Id
-	private String name;
-	@Id
-	private int number;
-
-	@OneToMany
-	private List<Address> addresses;
+	private Integer id;
+	private String street;
+	private String city;
+	private String state;
+	private String zip;
 }

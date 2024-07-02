@@ -9,23 +9,21 @@ package org.hibernate.boot.model.source.internal.annotations;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
-import org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer;
-import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.spi.ManagedResources;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.service.ServiceRegistry;
 
 import static org.hibernate.boot.jaxb.SourceType.OTHER;
 
@@ -78,8 +76,7 @@ public class AdditionalManagedResourcesImpl implements ManagedResources {
 			return Collections.emptyList();
 		}
 
-		//noinspection unchecked,rawtypes
-		return (Collection) xmlMappings;
+		return xmlMappings;
 	}
 
 	@Override
@@ -89,37 +86,18 @@ public class AdditionalManagedResourcesImpl implements ManagedResources {
 
 	public static class Builder {
 		private final MappingBinder mappingBinder;
-		private final boolean transformHbmMappings;
 
 		private List<Class<?>> classes;
 		private List<ClassDetails> classDetails;
 		private List<String> packageNames;
 		private Collection<Binding<JaxbBindableMappingDescriptor>> xmlMappings;
 
-		public Builder(boolean validateMappings, boolean transformHbmMappings) {
-			this( transformHbmMappings, new MappingBinder.Options() {
-				@Override
-				public boolean validateMappings() {
-					return validateMappings;
-				}
-			} );
+		public Builder(ServiceRegistry serviceRegistry) {
+			this.mappingBinder = new MappingBinder( serviceRegistry );
 		}
 
 		public Builder() {
-			this( false, new MappingBinder.Options() {
-				@Override
-				public boolean validateMappings() {
-					return false;
-				}
-			} );
-		}
-
-		public Builder(boolean transformHbmMappings, MappingBinder.Options options) {
-			this.transformHbmMappings = transformHbmMappings;
-			this.mappingBinder = new MappingBinder(
-					(resourceName) -> Builder.class.getClassLoader().getResourceAsStream( resourceName ),
-					options
-			);
+			this( new StandardServiceRegistryBuilder().build() );
 		}
 
 		public Builder addLoadedClasses(List<Class<?>> additionalClasses) {
@@ -159,28 +137,6 @@ public class AdditionalManagedResourcesImpl implements ManagedResources {
 		}
 
 		public ManagedResources build() {
-			if ( CollectionHelper.isNotEmpty( xmlMappings ) ) {
-				if ( transformHbmMappings ) {
-					final List<Binding<JaxbHbmHibernateMapping>> hbmBindings = new ArrayList<>();
-					final Iterator<Binding<JaxbBindableMappingDescriptor>> iterator = xmlMappings.iterator();
-					while ( iterator.hasNext() ) {
-						final Binding<JaxbBindableMappingDescriptor> xmlBinding = iterator.next();
-						if ( xmlBinding.getRoot() instanceof JaxbHbmHibernateMapping ) {
-							//noinspection rawtypes,unchecked
-							hbmBindings.add( (Binding) xmlBinding );
-							iterator.remove();
-						}
-					}
-					if ( !hbmBindings.isEmpty() ) {
-						final List<Binding<JaxbEntityMappingsImpl>> transformed = HbmXmlTransformer.transform(
-								hbmBindings,
-								UnsupportedFeatureHandling.ERROR
-						);
-						//noinspection rawtypes,unchecked
-						xmlMappings.addAll( (List) transformed );
-					}
-				}
-			}
 			return new AdditionalManagedResourcesImpl( classes, classDetails, packageNames, xmlMappings );
 		}
 

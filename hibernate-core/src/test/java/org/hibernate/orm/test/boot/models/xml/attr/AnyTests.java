@@ -51,17 +51,7 @@ public class AnyTests {
 				.addXmlMappings( "mappings/models/attr/any/simple.xml" )
 				.build();
 
-		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl(
-				serviceRegistry,
-				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry )
-		);
-
-		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext(
-				managedResources,
-				false,
-				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( bootstrapContext.getServiceRegistry() ),
-				bootstrapContext
-		);
+		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext( managedResources, serviceRegistry );
 
 		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
 

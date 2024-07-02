@@ -116,7 +116,9 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 			List<JaxbEntityMappingsImpl> additionalJaxbMappings,
 			MetadataBuildingContextRootImpl rootMetadataBuildingContext,
 			MetadataBuildingOptions options) {
-		final AdditionalManagedResourcesImpl.Builder mrBuilder = new AdditionalManagedResourcesImpl.Builder();
+		final AdditionalManagedResourcesImpl.Builder mrBuilder = new AdditionalManagedResourcesImpl.Builder(
+				rootMetadataBuildingContext.getBootstrapContext().getServiceRegistry()
+		);
 		mrBuilder.addLoadedClasses( additionalClasses );
 		mrBuilder.addClassDetails( additionalClassDetails );
 		mrBuilder.addJaxbEntityMappings( additionalJaxbMappings );

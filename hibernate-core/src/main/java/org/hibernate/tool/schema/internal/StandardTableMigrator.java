@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
+import static org.hibernate.tool.schema.internal.ColumnDefinitions.extractType;
 import static org.hibernate.tool.schema.internal.ColumnDefinitions.getColumnDefinition;
 import static org.hibernate.tool.schema.internal.ColumnDefinitions.hasMatchingLength;
 import static org.hibernate.tool.schema.internal.ColumnDefinitions.hasMatchingType;
@@ -93,9 +94,10 @@ public class StandardTableMigrator implements TableMigrator {
 			else if ( dialect.supportsAlterColumnType() ) {
 				if ( !hasMatchingType( column, columnInformation, metadata, dialect )
 						|| !hasMatchingLength( column, columnInformation, metadata, dialect ) ) {
+					final String explicitColumnDefinition = column.getColumnDefinition();
 					final String alterColumn = dialect.getAlterColumnTypeString(
 							column.getQuotedName( dialect ),
-							column.getSqlType(metadata),
+							explicitColumnDefinition != null ? extractType( explicitColumnDefinition ) : column.getSqlType(metadata),
 							getColumnDefinition( column, metadata, dialect )
 					);
 					results.add( alterTable + alterColumn );

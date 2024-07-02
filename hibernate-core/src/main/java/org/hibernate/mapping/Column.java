@@ -53,6 +53,7 @@ import static org.hibernate.type.descriptor.java.JavaTypeHelper.isTemporal;
  */
 public class Column implements Selectable, Serializable, Cloneable, ColumnTypeInformation {
 
+	private String columnDefinition; // column definition specified by user
 	private Long length;
 	private Integer precision;
 	private Integer scale;
@@ -86,6 +87,14 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 
 	public Column(String columnName) {
 		setName( columnName );
+	}
+
+	public String getColumnDefinition() {
+		return columnDefinition;
+	}
+
+	public void setColumnDefinition(String columnDefinition) {
+		this.columnDefinition = columnDefinition;
 	}
 
 	public Long getLength() {

@@ -253,6 +253,7 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 
 	private void applyComponentColumnSizeValueToJoinColumn(Column column, AnnotatedJoinColumn joinColumn) {
 		final Column mappingColumn = joinColumn.getMappingColumn();
+		mappingColumn.setColumnDefinition( column.getColumnDefinition() );
 		mappingColumn.setLength( column.getLength() );
 		mappingColumn.setPrecision( column.getPrecision() );
 		mappingColumn.setScale( column.getScale() );

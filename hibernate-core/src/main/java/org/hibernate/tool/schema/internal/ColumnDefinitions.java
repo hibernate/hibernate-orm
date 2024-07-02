@@ -9,6 +9,7 @@ package org.hibernate.tool.schema.internal;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
@@ -27,8 +28,11 @@ import static org.hibernate.type.SqlTypes.isStringType;
 class ColumnDefinitions {
 
 	static boolean hasMatchingType(Column column, ColumnInformation columnInformation, Metadata metadata, Dialect dialect) {
+		if ( column.getColumnDefinition() != null ) {
+			return isExpected( column.getColumnDefinition(), columnInformation, dialect );
+		}
 		final boolean typesMatch = dialect.equivalentTypes( column.getSqlTypeCode( metadata ), columnInformation.getTypeCode() )
-				|| normalize( stripArgs( column.getSqlType( metadata ) ) ).equals( normalize( columnInformation.getTypeName() ) );
+				|| isExpected( column.getSqlType( metadata ), columnInformation, dialect );
 		if ( typesMatch ) {
 			return true;
 		}
@@ -92,8 +96,11 @@ class ColumnDefinitions {
 		return definition.toString();
 	}
 
-
 	static String getColumnDefinition(Column column, Metadata metadata, Dialect dialect) {
+		String explicitColumnDefinition = column.getColumnDefinition();
+		if ( explicitColumnDefinition != null ) {
+			return explicitColumnDefinition;
+		}
 		StringBuilder definition = new StringBuilder();
 		appendColumnDefinition( definition, column, metadata, dialect );
 		appendComment( definition, column, dialect );
@@ -226,6 +233,8 @@ class ColumnDefinitions {
 			switch (lowercaseTypeName) {
 				case "int":
 					return "integer";
+				case "int unsigned":
+					return "integer unsigned";
 				case "character":
 					return "char";
 				case "character varying":
@@ -248,13 +257,49 @@ class ColumnDefinitions {
 		}
 	}
 
+	private static boolean isExpected(String columnDefinition, ColumnInformation columnInformation, Dialect dialect) {
+		String expectingTypeName = extractTypeName( columnDefinition );
+		if ( dialect instanceof OracleDialect && expectingTypeName.equals( "timestamp with time zone" ) ) {
+			// Fix: found [timestamp (Types#UNKNOWN(-101))], but expecting [timestamp(6) with time zone (Types#TIMESTAMP_UTC)]
+			expectingTypeName = "timestamp";
+		}
+		return expectingTypeName.equals( normalize( columnInformation.getTypeName() ) );
+	}
+
+	static String extractTypeName(String typeExpression) {
+		String sqlType = extractType(typeExpression);
+		String typeName = stripArgs( sqlType );
+		typeName = normalize( typeName );
+		return typeName;
+	}
+
+	static String extractType(String typeExpression) {
+		String sqlType = typeExpression.toLowerCase(Locale.ROOT);
+		sqlType = keepBefore( sqlType, " generated " ); // Strip generated value
+		sqlType = keepBefore( sqlType, " as " ); // Strip generated value
+		sqlType = keepBefore( sqlType, " primary " );
+		sqlType = keepBefore( sqlType, " unique " );
+		sqlType = keepBefore( sqlType, " key " );
+		sqlType = keepBefore( sqlType, " check " );
+		sqlType = keepBefore( sqlType, " default " ); // Strip default value
+		sqlType = keepBefore( sqlType, " not null" );
+		sqlType = keepBefore( sqlType, " null" );
+		sqlType = keepBefore( sqlType, " comment " );
+		return sqlType.trim();
+	}
+
+	private static String keepBefore(String input, String token) {
+		int i = input.indexOf( token );
+		return i > 0 ? input.substring( 0, i ).trim() : input;
+	}
+
 	private static String stripArgs(String typeExpression) {
 		if ( typeExpression == null ) {
 			return null;
 		}
 		else {
 			int i = typeExpression.indexOf('(');
-			return i>0 ? typeExpression.substring(0,i).trim() : typeExpression;
+			return i>0 ? typeExpression.replaceFirst( "\\(.*\\)", "" ).trim() : typeExpression;
 		}
 	}
 }

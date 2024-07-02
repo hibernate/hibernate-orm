@@ -74,7 +74,8 @@ public class AnnotatedColumn {
 	private boolean updatable = true;
 	private String explicitTableName; // the JPA @Column annotation lets you specify a table name
 	private boolean isImplicit;
-	public String sqlType;
+	private String columnDefinition;
+	protected String sqlType;
 	private Long length;
 	private Integer precision;
 	private Integer scale;
@@ -107,6 +108,10 @@ public class AnnotatedColumn {
 
 	public String getLogicalColumnName() {
 		return logicalColumnName;
+	}
+
+	public String getColumnDefinition() {
+		return columnDefinition;
 	}
 
 	public String getSqlType() {
@@ -167,6 +172,10 @@ public class AnnotatedColumn {
 
 	public void setImplicit(boolean implicit) {
 		isImplicit = implicit;
+	}
+
+	public void setColumnDefinition(String columnDefinition) {
+		this.columnDefinition = nullIfEmpty(columnDefinition);
 	}
 
 	public void setSqlType(String sqlType) {
@@ -290,6 +299,7 @@ public class AnnotatedColumn {
 			mappingColumn = new Column();
 			mappingColumn.setExplicit( !isImplicit );
 			redefineColumnName( columnName, propertyName, applyNamingStrategy );
+			mappingColumn.setColumnDefinition( columnDefinition );
 			mappingColumn.setLength( length );
 			if ( precision != null && precision > 0 ) {  //relevant precision
 				mappingColumn.setPrecision( precision );
@@ -769,6 +779,7 @@ public class AnnotatedColumn {
 		final AnnotatedColumn annotatedColumn = new AnnotatedColumn();
 		annotatedColumn.setLogicalColumnName( columnName );
 		annotatedColumn.setImplicit( false );
+		annotatedColumn.setColumnDefinition( column.columnDefinition() );
 		annotatedColumn.setSqlType( sqlType );
 		annotatedColumn.setLength( (long) column.length() );
 		if ( fractionalSeconds != null ) {

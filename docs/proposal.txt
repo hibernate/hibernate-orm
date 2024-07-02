@@ -1,0 +1,8 @@
+I checked and found that hibernateorm does not support tiberoDB. If we implement the functions we need to support tiberoDB, can you reflect it?
+- May I know what functions should be mainly implemented?
+- How should I proceed with the application process for reflection after implementation?
+- Is there any data related to the processing of previous new DB applications?
+
+TiberoDB
+- TiberoDB is a relational database management system (RDBMS) developed by TmaxSoft in Korea.
+- Tibero was developed with the goal of high compatibility with Oracle and designed to be compatible with various database applications used in corporate environments.

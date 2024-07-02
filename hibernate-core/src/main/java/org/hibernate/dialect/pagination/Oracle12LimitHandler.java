@@ -33,10 +33,17 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 
 	@Override
 	public String processSql(String sql, Limit limit, QueryOptions queryOptions) {
+		final boolean hasFirstRow = hasFirstRow( limit );
+		final boolean hasMaxRows = hasMaxRows( limit );
+
+		if ( !hasFirstRow && !hasMaxRows ) {
+			return sql;
+		}
+
 		return processSql(
 				sql,
-				hasFirstRow( limit ),
-				hasMaxRows( limit ),
+				hasFirstRow,
+				hasMaxRows,
 				queryOptions.getLockOptions()
 		);
 	}

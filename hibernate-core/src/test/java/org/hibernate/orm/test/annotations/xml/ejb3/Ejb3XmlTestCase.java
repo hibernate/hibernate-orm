@@ -32,6 +32,8 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 
+import jakarta.persistence.Transient;
+
 import static org.hibernate.models.internal.SimpleClassLoading.SIMPLE_CLASS_LOADING;
 
 /**
@@ -59,14 +61,18 @@ public abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 		final ClassDetails classDetails = getClassDetails( entityClass, xmlResourceName );
 		final FieldDetails fieldByName = classDetails.findFieldByName( fieldName );
 		if ( !fieldByName.getDirectAnnotationUsages().isEmpty() ) {
-			return fieldByName;
+			if ( !fieldByName.hasDirectAnnotationUsage( Transient.class ) ) {
+				return fieldByName;
+			}
 		}
 
 		// look for the getter
 		for ( MethodDetails method : classDetails.getMethods() ) {
 			if ( method.getMethodKind() == MethodDetails.MethodKind.GETTER
 					&& fieldName.equals( method.resolveAttributeName() ) ) {
-				return method;
+				if ( !method.hasDirectAnnotationUsage( Transient.class ) ) {
+					return method;
+				}
 			}
 		}
 

@@ -52,7 +52,6 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 	private final XMLEventFactory xmlEventFactory = XMLEventFactory.newInstance();
 
 	private final Supplier<Options> optionsAccess;
-	private final Supplier<UnsupportedFeatureHandling> unsupportedHandlingAccess;
 
 	private JAXBContext hbmJaxbContext;
 	private JAXBContext entityMappingsJaxbContext;
@@ -84,7 +83,6 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 			Supplier<UnsupportedFeatureHandling> unsupportedHandlingAccess) {
 		super( resourceStreamLocator );
 		this.optionsAccess = optionsAccess;
-		this.unsupportedHandlingAccess = unsupportedHandlingAccess;
 	}
 
 	/**
@@ -104,7 +102,6 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 
 		if ( settingsAccess == null ) {
 			this.optionsAccess = () -> VALIDATING;
-			this.unsupportedHandlingAccess = () -> UnsupportedFeatureHandling.ERROR;
 		}
 		else {
 			this.optionsAccess = () -> new Options() {
@@ -117,11 +114,6 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 					return BOOLEAN.convert( setting );
 				}
 			};
-
-			this.unsupportedHandlingAccess = () -> {
-				final Object setting = settingsAccess.apply( AvailableSettings.TRANSFORM_HBM_XML_FEATURE_HANDLING );
-				return UnsupportedFeatureHandling.fromSetting( setting, UnsupportedFeatureHandling.ERROR );
-			};
 		}
 	}
 
@@ -130,8 +122,7 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 				serviceRegistry.getService( ClassLoaderService.class ),
 				(settingName) -> {
 					final ConfigurationService configurationService;
-					if ( serviceRegistry instanceof ServiceRegistryImplementor ) {
-						final ServiceRegistryImplementor serviceRegistryImplementor = (ServiceRegistryImplementor) serviceRegistry;
+					if ( serviceRegistry instanceof ServiceRegistryImplementor serviceRegistryImplementor ) {
 						configurationService = serviceRegistryImplementor.fromRegistryOrChildren( ConfigurationService.class );
 					}
 					else {

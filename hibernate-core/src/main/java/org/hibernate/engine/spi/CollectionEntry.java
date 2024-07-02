@@ -125,8 +125,8 @@ public final class CollectionEntry implements Serializable {
 		ignore = false;
 
 		loadedKey = collection.getKey();
-		loadedPersister = factory.getRuntimeMetamodels().getMappingMetamodel().getCollectionDescriptor( collection.getRole() );
-		this.role = ( loadedPersister == null ? null : loadedPersister.getRole() );
+		role = collection.getRole();
+		loadedPersister = factory.getRuntimeMetamodels().getMappingMetamodel().getCollectionDescriptor( NullnessUtil.castNonNull( role ) );
 
 		snapshot = collection.getStoredSnapshot();
 	}

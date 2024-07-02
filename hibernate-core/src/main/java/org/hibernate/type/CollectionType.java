@@ -48,6 +48,8 @@ import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 
 import org.jboss.logging.Logger;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
@@ -376,7 +378,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @param session The session from which the request is originating.
 	 * @return The collection owner's key
 	 */
-	public Object getKeyOfOwner(Object owner, SharedSessionContractImplementor session) {
+	public @Nullable Object getKeyOfOwner(Object owner, SharedSessionContractImplementor session) {
 		final EntityEntry entityEntry = session.getPersistenceContextInternal().getEntry( owner );
 		if ( entityEntry == null ) {
 			// This just handles a particular case of component
@@ -387,28 +389,10 @@ public abstract class CollectionType extends AbstractType implements Association
 			return entityEntry.getId();
 		}
 		else {
-			// TODO: at the point where we are resolving collection references, we don't
-			// know if the uk value has been resolved (depends if it was earlier or
-			// later in the mapping document) - now, we could try and use e.getStatus()
-			// to decide to semiResolve(), trouble is that initializeEntity() reuses
-			// the same array for resolved and hydrated values
 			final Object loadedValue = entityEntry.getLoadedValue( foreignKeyPropertyName );
-			final Object id = loadedValue == null
+			return loadedValue == null
 					? entityEntry.getPersister().getPropertyValue( owner, foreignKeyPropertyName )
 					: loadedValue;
-
-			// NOTE VERY HACKISH WORKAROUND!!
-			// TODO: Fix this so it will work for non-POJO entity mode
-			if ( !keyClass( session ).isInstance( id ) ) {
-				throw new UnsupportedOperationException( "Re-work support for semi-resolve" );
-//				id = keyType.semiResolve(
-//						entityEntry.getLoadedValue( foreignKeyPropertyName ),
-//						session,
-//						owner
-//				);
-			}
-
-			return id;
 		}
 	}
 

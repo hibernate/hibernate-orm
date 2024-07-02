@@ -11,10 +11,12 @@
         <id-class class="org.hibernate.orm.test.boot.models.xml.dynamic.EmployeePK"/>
         <attributes>
             <id name="name"/>
-            <id name="number"/>
-            <one-to-many name="oneToMany" fetch="EAGER" not-found="IGNORE">
-                <join-column name="employee_id" insertable="false" updatable="false">
-                    <foreign-key name="employee_fk" constraint-mode="NO_CONSTRAINT"/>
+            <id name="number">
+                <column name="emp_num"/>
+            </id>
+            <one-to-many name="addresses" fetch="EAGER">
+                <join-column name="employee_id" referenced-column-name="emp_num" insertable="false" updatable="false">
+                    <foreign-key name="employee_address_fk" constraint-mode="NO_CONSTRAINT"/>
                     <check-constraint name="employee_id_nn" constraint="employee_id is not null"/>
                 </join-column>
                 <cascade>
@@ -24,6 +26,16 @@
                 </cascade>
                 <on-delete>CASCADE</on-delete>
             </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.boot.models.xml.dynamic.Address" access="FIELD">
+        <attributes>
+            <id name="id"/>
+            <basic name="street"/>
+            <basic name="city"/>
+            <basic name="state"/>
+            <basic name="zip"/>
         </attributes>
     </entity>
 </entity-mappings>

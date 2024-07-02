@@ -13,6 +13,7 @@ import java.util.List;
 import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventReader;
 
+import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
@@ -23,6 +24,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.xsd.MappingXsdSupport;
 import org.hibernate.orm.test.boot.jaxb.JaxbHelper;
 
@@ -59,8 +61,14 @@ public class HbmTransformationJaxbTests {
 					assertThat( hbmMapping ).isNotNull();
 					assertThat( hbmMapping.getClazz() ).hasSize( 1 );
 
+					final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( scope.getRegistry() ).addHbmXmlBinding( new Binding<>(
+							hbmMapping,
+							new Origin( SourceType.RESOURCE, resourceName )
+					) ).buildMetadata();
 					final List<Binding<JaxbEntityMappingsImpl>> transformedBindingList = HbmXmlTransformer.transform(
 							Collections.singletonList( new Binding<>( hbmMapping, new Origin( SourceType.RESOURCE, resourceName ) ) ),
+							metadata,
+							scope.getRegistry(),
 							UnsupportedFeatureHandling.ERROR
 					);
 					final JaxbEntityMappingsImpl transformed = transformedBindingList.get( 0 ).getRoot();

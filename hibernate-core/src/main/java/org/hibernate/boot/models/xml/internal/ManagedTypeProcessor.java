@@ -114,7 +114,7 @@ public class ManagedTypeProcessor {
 			prepareDynamicClass( classDetails, jaxbEntity, xmlDocumentContext );
 		}
 		else {
-			memberAdjuster = ManagedTypeProcessor::adjustNonDynamicTypeMember;
+			memberAdjuster = ManagedTypeProcessor::adjustCompleteNonDynamicTypeMember;
 			final String className = XmlProcessingHelper.determineClassName( jaxbRoot, jaxbEntity );
 			classDetails = (MutableClassDetails) classDetailsRegistry.resolveClassDetails( className );
 			classAccessType = coalesce(
@@ -127,9 +127,14 @@ public class ManagedTypeProcessor {
 			if ( classDetails.isInterface() ) {
 				throw new MappingException( "Only classes (not interfaces) may be mapped as @Entity : " + classDetails.getName() );
 			}
+
+			classDetails.forEachPersistableMember( memberDetails -> {
+				final MutableMemberDetails mutableMemberDetails = (MutableMemberDetails) memberDetails;
+				mutableMemberDetails.clearAnnotationUsages();
+				mutableMemberDetails.addAnnotationUsage( JpaAnnotations.TRANSIENT.createUsage( xmlDocumentContext.getModelBuildingContext() ) );
+			} );
 		}
 
-		classDetails.clearMemberAnnotationUsages();
 		classDetails.clearAnnotationUsages();
 
 		// from here, processing is the same between override and metadata-complete modes (aside from the dynamic model handling)
@@ -189,7 +194,7 @@ public class ManagedTypeProcessor {
 						classDetails.addField( member );
 					} );
 				}
-				else {
+				else if ( attributes.getEmbeddedIdAttribute() != null ) {
 					// <embedded-id/>
 					final JaxbEmbeddedIdImpl embeddedId = attributes.getEmbeddedIdAttribute();
 					final TypeDetails attributeJavaType = determineDynamicAttributeJavaType(
@@ -701,6 +706,18 @@ public class ManagedTypeProcessor {
 			MutableMemberDetails memberDetails,
 			JaxbPersistentAttribute jaxbAttribute,
 			XmlDocumentContext xmlDocumentContext) {
+		CommonAttributeProcessing.applyAttributeAccessor(
+				jaxbAttribute,
+				memberDetails,
+				xmlDocumentContext
+		);
+	}
+
+	private static void adjustCompleteNonDynamicTypeMember(
+			MutableMemberDetails memberDetails,
+			JaxbPersistentAttribute jaxbAttribute,
+			XmlDocumentContext xmlDocumentContext) {
+		memberDetails.removeAnnotationUsage( JpaAnnotations.TRANSIENT );
 		CommonAttributeProcessing.applyAttributeAccessor(
 				jaxbAttribute,
 				memberDetails,

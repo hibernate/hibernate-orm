@@ -26,6 +26,12 @@ import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.cfgxml.spi.MappingReference;
+import org.hibernate.boot.jaxb.Origin;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
+import org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer;
+import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
+import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.TypeContributions;
@@ -59,15 +65,18 @@ import org.hibernate.boot.spi.MetadataSourcesContributor;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.NullnessHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -105,7 +114,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		this( sources, getStandardServiceRegistry( sources.getServiceRegistry() ) );
 	}
 
-	private static StandardServiceRegistry getStandardServiceRegistry(ServiceRegistry serviceRegistry) {
+	public static StandardServiceRegistry getStandardServiceRegistry(ServiceRegistry serviceRegistry) {
 		if ( serviceRegistry == null ) {
 			throw new HibernateException( "ServiceRegistry passed to MetadataBuilder cannot be null" );
 		}
@@ -435,7 +444,52 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			}
 		}
 
-		return MetadataBuildingProcess.build( sources, bootstrapContext, options );
+		final MetadataImplementor bootModel = MetadataBuildingProcess.build( sources, bootstrapContext, options );
+
+		if ( CollectionHelper.isNotEmpty( sources.getHbmXmlBindings() ) ) {
+			final ConfigurationService configurationService = bootstrapContext.getServiceRegistry().getService( ConfigurationService.class );
+			final boolean transformHbm = configurationService != null
+					&& configurationService.getSetting( MappingSettings.TRANSFORM_HBM_XML, BOOLEAN,false );
+
+			if ( !transformHbm ) {
+				for ( Binding<JaxbHbmHibernateMapping> hbmXmlBinding : sources.getHbmXmlBindings() ) {
+					final Origin origin = hbmXmlBinding.getOrigin();
+					DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedHbmXmlProcessing( origin.getType(), origin.getName() );
+				}
+			}
+			else {
+				final List<Binding<JaxbEntityMappingsImpl>> transformed = HbmXmlTransformer.transform(
+						sources.getHbmXmlBindings(),
+						bootModel,
+						bootstrapContext.getServiceRegistry(),
+						UnsupportedFeatureHandling.fromSetting(
+								configurationService.getSettings().get( AvailableSettings.TRANSFORM_HBM_XML_FEATURE_HANDLING ),
+								UnsupportedFeatureHandling.ERROR
+						)
+				);
+
+				final MetadataSources newSources = new MetadataSources( bootstrapContext.getServiceRegistry() );
+				if ( sources.getAnnotatedClasses() != null ) {
+					sources.getAnnotatedClasses().forEach( newSources::addAnnotatedClass );
+				}
+				if ( sources.getAnnotatedClassNames() != null ) {
+					sources.getAnnotatedClassNames().forEach( newSources::addAnnotatedClassName );
+				}
+				if ( sources.getAnnotatedPackages() != null ) {
+					sources.getAnnotatedPackages().forEach( newSources::addPackage );
+				}
+				if ( sources.getExtraQueryImports() != null ) {
+					sources.getExtraQueryImports().forEach( newSources::addQueryImport );
+				}
+				for ( Binding<JaxbEntityMappingsImpl> mappingXmlBinding : transformed ) {
+					newSources.addMappingXmlBinding( mappingXmlBinding );
+				}
+
+				return (MetadataImplementor) newSources.buildMetadata();
+			}
+		}
+
+		return bootModel;
 	}
 
 	@Override

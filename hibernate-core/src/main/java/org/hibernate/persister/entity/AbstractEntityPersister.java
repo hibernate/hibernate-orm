@@ -3215,7 +3215,13 @@ public abstract class AbstractEntityPersister
 				return junction;
 			}
 
-			junction.add( new NullnessPredicate( sqlExpression ) );
+			if ( hasNonNull ) {
+				return new NegatedPredicate( new NullnessPredicate( sqlExpression ) );
+			}
+			if ( hasNull ) {
+				junction.add( new NullnessPredicate( sqlExpression ) );				
+			}
+
 			junction.add( predicate );
 			return junction;
 		}

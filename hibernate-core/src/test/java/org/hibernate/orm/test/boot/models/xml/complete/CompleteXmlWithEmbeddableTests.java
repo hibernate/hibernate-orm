@@ -6,14 +6,7 @@
  */
 package org.hibernate.orm.test.boot.models.xml.complete;
 
-import org.hibernate.boot.internal.BootstrapContextImpl;
-import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
-import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
-import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
-import org.hibernate.boot.models.categorize.spi.ClassAttributeAccessType;
-import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
-import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -22,50 +15,45 @@ import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.AccessType;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Id;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.boot.models.categorize.spi.AttributeMetadata.AttributeNature.BASIC;
-import static org.hibernate.boot.models.categorize.spi.AttributeMetadata.AttributeNature.EMBEDDED;
-import static org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor.processManagedResources;
 import static org.hibernate.orm.test.boot.models.SourceModelTestHelper.createBuildingContext;
 
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 public class CompleteXmlWithEmbeddableTests {
 	@Test
-	void testIt() {
+	@ServiceRegistry
+	void testModel(ServiceRegistryScope registryScope) {
 		final AdditionalManagedResourcesImpl.Builder managedResourcesBuilder = new AdditionalManagedResourcesImpl.Builder();
 		managedResourcesBuilder.addXmlMappings( "mappings/models/complete/simple-person.xml" );
 		final ManagedResources managedResources = managedResourcesBuilder.build();
 
+		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext(
+				managedResources,
+				registryScope.getRegistry()
+		);
+
+		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+		final ClassDetails personClassDetails = classDetailsRegistry.getClassDetails( SimplePerson.class.getName() );
+
+		final FieldDetails idAttribute = personClassDetails.findFieldByName( "id" );
+		assertThat( idAttribute.getDirectAnnotationUsage( Basic.class ) ).isNotNull();
+		assertThat( idAttribute.getDirectAnnotationUsage( Id.class ) ).isNotNull();
+
+		final FieldDetails nameAttribute = personClassDetails.findFieldByName( "name" );
+		assertThat( nameAttribute.getDirectAnnotationUsage( Embedded.class ) ).isNotNull();
+
 		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build()) {
-			final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl(
-					serviceRegistry,
-					new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry )
-			);
-			final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext(
-					managedResources,
-					false,
-					new MetadataBuilderImpl.MetadataBuildingOptionsImpl( bootstrapContext.getServiceRegistry() ),
-					bootstrapContext
-			);
-
-			final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
-			final ClassDetails personClassDetails = classDetailsRegistry.getClassDetails( SimplePerson.class.getName() );
-
-			final FieldDetails idAttribute = personClassDetails.findFieldByName( "id" );
-			assertThat( idAttribute.getDirectAnnotationUsage( Basic.class ) ).isNotNull();
-			assertThat( idAttribute.getDirectAnnotationUsage( Id.class ) ).isNotNull();
-
-			final FieldDetails nameAttribute = personClassDetails.findFieldByName( "name" );
-			assertThat( nameAttribute.getDirectAnnotationUsage( Embedded.class ) ).isNotNull();
 		}
 	}
 }

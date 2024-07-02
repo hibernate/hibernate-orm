@@ -105,8 +105,8 @@ public class BasicTransformationTests {
 		assertThat( transformed.getEmbeddables() ).hasSize( 0 );
 
 		final JaxbEntityImpl ormEntity = transformed.getEntities().get( 0 );
-		assertThat( ormEntity.getName() ).isNull();
-		assertThat( ormEntity.getClazz() ).isEqualTo( "SimpleEntity" );
+		assertThat( ormEntity.getName() ).isEqualTo( "SimpleEntity" );
+		assertThat( ormEntity.getClazz() ).isNull();
 
 		assertThat( ormEntity.getAttributes().getIdAttributes() ).hasSize( 1 );
 		assertThat( ormEntity.getAttributes().getBasicAttributes() ).hasSize( 1 );

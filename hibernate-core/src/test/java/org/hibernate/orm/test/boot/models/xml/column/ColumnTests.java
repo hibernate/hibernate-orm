@@ -27,6 +27,7 @@ import static org.hibernate.orm.test.boot.models.SourceModelTestHelper.createBui
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @ServiceRegistry
 public class ColumnTests {
 	@Test
@@ -35,15 +36,16 @@ public class ColumnTests {
 				.addXmlMappings( "mappings/models/column/complete.xml" )
 				.build();
 		final StandardServiceRegistry serviceRegistry = scope.getRegistry();
+		final MetadataBuilderImpl.MetadataBuildingOptionsImpl metadataBuildingOptions = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
 		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl(
 				serviceRegistry,
-				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry )
+				metadataBuildingOptions
 		);
-
+		metadataBuildingOptions.setBootstrapContext( bootstrapContext );
 		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext(
 				managedResources,
 				false,
-				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( bootstrapContext.getServiceRegistry() ),
+				metadataBuildingOptions,
 				bootstrapContext
 		);
 
@@ -67,15 +69,16 @@ public class ColumnTests {
 				.build();
 
 		final StandardServiceRegistry serviceRegistry = scope.getRegistry();
+		final MetadataBuilderImpl.MetadataBuildingOptionsImpl metadataBuildingOptions = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
 		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl(
 				serviceRegistry,
-				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry )
+				metadataBuildingOptions
 		);
-
+		metadataBuildingOptions.setBootstrapContext( bootstrapContext );
 		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext(
 				managedResources,
 				false,
-				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( bootstrapContext.getServiceRegistry() ),
+				metadataBuildingOptions,
 				bootstrapContext
 		);
 

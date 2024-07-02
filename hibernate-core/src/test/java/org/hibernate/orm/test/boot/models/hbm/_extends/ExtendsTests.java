@@ -8,12 +8,10 @@ package org.hibernate.orm.test.boot.models.hbm._extends;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
-import org.hibernate.cfg.MappingSettings;
 import org.hibernate.orm.test.boot.jaxb.hbm.TransformationHelper;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.InheritanceType;
@@ -25,7 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 public class ExtendsTests {
-	@ServiceRegistry(settings = @Setting(name = MappingSettings.TRANSFORM_HBM_XML, value = "true"))
+
+	@ServiceRegistry()
 	@Test
 	void testDiscriminatedStructured(ServiceRegistryScope registryScope) {
 		final JaxbEntityMappingsImpl transformed = TransformationHelper.transform(
@@ -35,7 +34,7 @@ public class ExtendsTests {
 		verifyHierarchy( transformed, InheritanceType.SINGLE_TABLE );
 	}
 
-	@ServiceRegistry(settings = @Setting(name = MappingSettings.TRANSFORM_HBM_XML, value = "true"))
+	@ServiceRegistry()
 	@Test
 	void testDiscriminatedSeparated(ServiceRegistryScope registryScope) {
 		final JaxbEntityMappingsImpl transformed = TransformationHelper.transform(

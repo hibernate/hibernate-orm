@@ -6,7 +6,7 @@
   -->
 <entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                 version="3.2">
+                 version="7.0">
     <package>org.hibernate.orm.test.boot.models.xml.complete</package>
 
     <entity class="Root" metadata-complete="true" access="FIELD">
@@ -16,7 +16,9 @@
             <id name="id">
                 <column name="pk"/>
             </id>
-            <basic name="name"/>
+            <basic name="name">
+                <type value="string"/>
+            </basic>
         </attributes>
     </entity>
     <entity class="Sub" metadata-complete="true" access="FIELD">
@@ -31,6 +33,7 @@
         <discriminator-column/>
         <attributes>
             <id name="id"/>
+            <embedded name="name"/>
         </attributes>
     </entity>
 
@@ -42,4 +45,11 @@
             <id name="id"/>
         </attributes>
     </entity>
+
+    <embeddable class="Name" metadata-complete="true">
+        <attributes>
+            <basic name="first"/>
+            <basic name="last"/>
+        </attributes>
+    </embeddable>
 </entity-mappings>

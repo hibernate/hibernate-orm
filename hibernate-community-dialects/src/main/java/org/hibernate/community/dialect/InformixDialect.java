@@ -532,6 +532,16 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsLobValueChangePropagation() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsUnboundedLobLocatorMaterialization() {
+		return false;
+	}
+
+	@Override
 	public boolean isCurrentTimestampSelectStringCallable() {
 		return false;
 	}

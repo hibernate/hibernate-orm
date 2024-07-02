@@ -16,6 +16,8 @@ import java.util.List;
 import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventReader;
 
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
@@ -25,6 +27,7 @@ import org.hibernate.boot.jaxb.internal.stax.HbmEventReader;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.xsd.MappingXsdSupport;
 import org.hibernate.orm.test.boot.jaxb.JaxbHelper;
 import org.hibernate.service.ServiceRegistry;
@@ -42,10 +45,7 @@ import static org.hibernate.orm.test.boot.jaxb.JaxbHelper.withStaxEventReader;
  */
 public class TransformationHelper {
 	public static JaxbEntityMappingsImpl transform(String resourceName, ServiceRegistry serviceRegistry) {
-		return transform( resourceName, serviceRegistry.getService( ClassLoaderService.class ) );
-	}
-
-	public static JaxbEntityMappingsImpl transform(String resourceName, ClassLoaderService cls) {
+		final ClassLoaderService cls = serviceRegistry.requireService( ClassLoaderService.class );
 		try ( final InputStream inputStream = cls.locateResourceStream( resourceName ) ) {
 			return withStaxEventReader( inputStream, cls, (staxEventReader) -> {
 				final XMLEventReader reader = new HbmEventReader( staxEventReader, XMLEventFactory.newInstance() );
@@ -60,8 +60,14 @@ public class TransformationHelper {
 					assertThat( hbmMapping ).isNotNull();
 					assertThat( hbmMapping.getClazz() ).hasSize( 1 );
 
+					final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( serviceRegistry ).addHbmXmlBinding( new Binding<>(
+							hbmMapping,
+							new Origin( SourceType.RESOURCE, resourceName )
+					) ).buildMetadata();
 					final List<Binding<JaxbEntityMappingsImpl>> transformed = HbmXmlTransformer.transform(
 							Collections.singletonList( new Binding<>( hbmMapping, new Origin( SourceType.RESOURCE, resourceName ) ) ),
+							metadata,
+							serviceRegistry,
 							UnsupportedFeatureHandling.ERROR
 					);
 

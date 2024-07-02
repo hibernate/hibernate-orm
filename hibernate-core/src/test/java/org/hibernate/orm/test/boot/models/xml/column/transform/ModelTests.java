@@ -7,11 +7,10 @@
 package org.hibernate.orm.test.boot.models.xml.column.transform;
 
 import org.hibernate.annotations.ColumnTransformer;
-import org.hibernate.boot.internal.BootstrapContextImpl;
-import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Property;
@@ -41,17 +40,7 @@ public class ModelTests {
 				.addXmlMappings( "mappings/models/column/transform/mapping.xml" )
 				.build();
 		final StandardServiceRegistry serviceRegistry = scope.getRegistry();
-		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl(
-				serviceRegistry,
-				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry )
-		);
-
-		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext(
-				managedResources,
-				false,
-				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( bootstrapContext.getServiceRegistry() ),
-				bootstrapContext
-		);
+		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext( managedResources, serviceRegistry );
 
 		final ClassDetails classDetails = sourceModelBuildingContext.getClassDetailsRegistry().getClassDetails( Item.class.getName() );
 		final FieldDetails costField = classDetails.findFieldByName( "cost" );
@@ -61,24 +50,19 @@ public class ModelTests {
 		assertThat( transformerAnn.write() ).isEqualTo( "? * 100.00" );
 	}
 
-	@ServiceRegistry(settings = @Setting(name = MappingSettings.TRANSFORM_HBM_XML, value = "true"))
+	@ServiceRegistry(settings = {
+			@Setting(name = MappingSettings.TRANSFORM_HBM_XML, value = "true"),
+			@Setting( name = AvailableSettings.VALIDATE_XML, value = "true")
+	})
 	@Test
 	void testHbmXml(ServiceRegistryScope scope) {
-		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder( true, true )
-				.addXmlMappings( "mappings/models/column/transform/hbm.xml" )
+		final String hbmXmlResourceName = "mappings/models/column/transform/hbm.xml";
+
+		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder( scope.getRegistry() )
+				.addXmlMappings( hbmXmlResourceName )
 				.build();
 		final StandardServiceRegistry serviceRegistry = scope.getRegistry();
-		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl(
-				serviceRegistry,
-				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry )
-		);
-
-		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext(
-				managedResources,
-				false,
-				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( bootstrapContext.getServiceRegistry() ),
-				bootstrapContext
-		);
+		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext( managedResources, serviceRegistry );
 
 		final ClassDetails classDetails = sourceModelBuildingContext.getClassDetailsRegistry().getClassDetails( Item.class.getName() );
 		final FieldDetails costField = classDetails.findFieldByName( "cost" );

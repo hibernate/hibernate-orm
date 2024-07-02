@@ -48,6 +48,7 @@ import org.hibernate.annotations.TimeZoneColumn;
 import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.annotations.Type;
+import org.hibernate.boot.internal.AnyKeyType;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.spi.AccessType;
@@ -896,6 +897,18 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 				return (BasicJavaType) typeConfiguration
 						.getJavaTypeRegistry()
 						.getDescriptor( impl );
+			}
+
+			// mainly used in XML interpretation
+			final AnyKeyType anyKeyTypeAnn = memberDetails.locateAnnotationUsage( AnyKeyType.class, getSourceModelContext() );
+			if ( anyKeyTypeAnn != null ) {
+				final String namedType = anyKeyTypeAnn.value();
+				final BasicType<Object> registeredType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( namedType );
+				if ( registeredType == null ) {
+					throw new MappingException( "Unrecognized @AnyKeyType value - " + namedType );
+				}
+				//noinspection rawtypes
+				return (BasicJavaType) registeredType.getJavaTypeDescriptor();
 			}
 
 			throw new MappingException("Could not determine key type for '@Any' mapping (specify '@AnyKeyJavaType' or '@AnyKeyJavaClass')");

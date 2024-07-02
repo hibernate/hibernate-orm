@@ -19,6 +19,11 @@
                 <join-formula>name</join-formula>
                 <join-formula>'HOME'</join-formula>
             </one-to-one>
+
+            <one-to-one name="mailingAddress">
+                <join-formula>name</join-formula>
+                <join-formula>'HOME'</join-formula>
+            </one-to-one>
         </attributes>
     </entity>
 

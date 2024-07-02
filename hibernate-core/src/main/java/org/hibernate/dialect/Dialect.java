@@ -4324,6 +4324,18 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Checks whether the JDBC driver implements methods for handling nationalized character data types
+	 * getNString()/setNString(),
+	 * getNClob()/setNClob(),
+	 * getNCharacterStream()/setNCharacterStream()
+	 *
+	 * @return {@code true} if the driver implements these methods
+	 */
+	public boolean supportNationalizedMethods(){
+		return true;
+	}
+
+	/**
 	 * How does this dialect support aggregate types like {@link SqlTypes#STRUCT}.
 	 *
 	 * @since 6.2

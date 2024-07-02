@@ -299,8 +299,9 @@ public class StandardServiceRegistryBuilder {
 	/**
 	 * Discard all the settings applied so far.
 	 */
-	public void clearSettings() {
+	public StandardServiceRegistryBuilder clearSettings() {
 		settings.clear();
+		return this;
 	}
 
 	/**

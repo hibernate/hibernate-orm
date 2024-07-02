@@ -119,6 +119,15 @@ public class EntityValuedPathsGroupByOrderByTest {
 		).getSingleResult().get( 1 ) ).isEqualTo( 3L ) );
 	}
 
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18272" )
+	public void testJoinSelectAliasAndGroupByAndOrderBy(SessionFactoryScope scope) {
+		scope.inTransaction( session -> assertThat( session.createQuery(
+				"select b as secondary, sum(a.amount) from EntityA a join a.secondary b where b.id = 1 group by secondary order by secondary",
+				Tuple.class
+		).getSingleResult().get( 1 ) ).isEqualTo( 3L ) );
+	}
+
 	// Implicit join ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Test
@@ -149,6 +158,15 @@ public class EntityValuedPathsGroupByOrderByTest {
 	public void testImplicitJoinSelectAndGroupByAndOrderBy(SessionFactoryScope scope) {
 		scope.inTransaction( session -> assertThat( session.createQuery(
 				"select a.secondary, sum(a.amount) from EntityA a group by a.secondary order by a.secondary",
+				Tuple.class
+		).getSingleResult().get( 1 ) ).isEqualTo( 3L ) );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18272" )
+	public void testImplicitJoinSelectAliasAndGroupByAndOrderBy(SessionFactoryScope scope) {
+		scope.inTransaction( session -> assertThat( session.createQuery(
+				"select a.secondary as a_secondary, sum(a.amount) from EntityA a where a.secondary.id = 1 group by a_secondary order by a_secondary",
 				Tuple.class
 		).getSingleResult().get( 1 ) ).isEqualTo( 3L ) );
 	}

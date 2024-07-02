@@ -86,6 +86,7 @@ import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static java.util.stream.Collectors.toList;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.query.sqm.tree.jpa.ParameterCollector.collectParameters;
 
@@ -220,12 +221,7 @@ public class SqmUtil {
 			return Collections.emptyList();
 		}
 
-		final List<NavigablePath> navigablePaths = new ArrayList<>( expressions.size() );
-		final SqmPathVisitor pathVisitor = new SqmPathVisitor( path -> navigablePaths.add( path.getNavigablePath() ) );
-		for ( SqmExpression<?> expression : expressions ) {
-			expression.accept( pathVisitor );
-		}
-		return navigablePaths;
+		return collectNavigablePaths( expressions );
 	}
 
 	public static List<NavigablePath> getOrderByNavigablePaths(SqmQuerySpec<?> querySpec) {
@@ -234,11 +230,26 @@ public class SqmUtil {
 			return Collections.emptyList();
 		}
 
-		final List<SqmSortSpecification> sortSpecifications = order.getSortSpecifications();
-		final List<NavigablePath> navigablePaths = new ArrayList<>( sortSpecifications.size() );
+		final List<SqmExpression<?>> expressions = order.getSortSpecifications()
+				.stream()
+				.map( SqmSortSpecification::getSortExpression )
+				.collect( toList() );
+		return collectNavigablePaths( expressions );
+	}
+
+	private static List<NavigablePath> collectNavigablePaths(final List<SqmExpression<?>> expressions) {
+		final List<NavigablePath> navigablePaths = new ArrayList<>( expressions.size() );
 		final SqmPathVisitor pathVisitor = new SqmPathVisitor( path -> navigablePaths.add( path.getNavigablePath() ) );
-		for ( SqmSortSpecification sortSpec : sortSpecifications ) {
-			sortSpec.getSortExpression().accept( pathVisitor );
+		for ( final SqmExpression<?> expression : expressions ) {
+			if ( expression instanceof SqmAliasedNodeRef ) {
+				final NavigablePath navigablePath = ( (SqmAliasedNodeRef) expression ).getNavigablePath();
+				if ( navigablePath != null ) {
+					navigablePaths.add( navigablePath );
+				}
+			}
+			else {
+				expression.accept( pathVisitor );
+			}
 		}
 		return navigablePaths;
 	}

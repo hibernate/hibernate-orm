@@ -64,8 +64,6 @@ public class ManagedResourcesImpl implements ManagedResources {
 			MetadataSources sources,
 			ManagedResourcesImpl impl,
 			BootstrapContext bootstrapContext) {
-		impl.mappingFileBindings.addAll( (List) sources.getMappingXmlBindings() );
-
 		if ( !bootstrapContext.getMetadataBuildingOptions().isXmlMappingEnabled() ) {
 			BootLogging.BOOT_LOGGER.debugf(
 					"Ignoring %s XML mappings due to `%s`",
@@ -74,31 +72,7 @@ public class ManagedResourcesImpl implements ManagedResources {
 			);
 			return;
 		}
-
-		final ConfigurationService configurationService = bootstrapContext.getServiceRegistry().getService( ConfigurationService.class );
-		// NOTE : the configurationService nullness checking is here for a few tests using mocks
-		final boolean transformHbm = configurationService != null
-				&& configurationService.getSetting( MappingSettings.TRANSFORM_HBM_XML, BOOLEAN,false );
-
-		if ( !transformHbm ) {
-			// we are not transforming hbm.xml to mapping.xml, so just add the hbm.xml bindings as-is
-			impl.mappingFileBindings.addAll( (List) sources.getHbmXmlBindings() );
-			for ( Binding<JaxbHbmHibernateMapping> hbmXmlBinding : sources.getHbmXmlBindings() ) {
-				final Origin origin = hbmXmlBinding.getOrigin();
-				DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedHbmXmlProcessing( origin.getType(), origin.getName() );
-			}
-		}
-		else {
-			// do the transformations
-			final List<Binding<JaxbEntityMappingsImpl>> transformed = HbmXmlTransformer.transform(
-					sources.getHbmXmlBindings(),
-					UnsupportedFeatureHandling.fromSetting(
-							configurationService.getSettings().get( AvailableSettings.TRANSFORM_HBM_XML_FEATURE_HANDLING ),
-							UnsupportedFeatureHandling.ERROR
-					)
-			);
-			impl.mappingFileBindings.addAll( (List) transformed );
-		}
+		impl.mappingFileBindings.addAll( (List) sources.getXmlBindings() );
 	}
 
 	public ManagedResourcesImpl() {

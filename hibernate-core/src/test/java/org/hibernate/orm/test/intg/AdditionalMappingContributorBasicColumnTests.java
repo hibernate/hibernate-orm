@@ -26,6 +26,7 @@ import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry.JavaService;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.junit.jupiter.api.Test;
 
 public class AdditionalMappingContributorBasicColumnTests {
@@ -37,6 +38,7 @@ public class AdditionalMappingContributorBasicColumnTests {
 					impl = NameColumnOrmXmlContributor.class
 			)
 	)
+	@ServiceRegistry
 	@DomainModel
 	@SuppressWarnings("JUnitMalformedDeclaration")
 	void name(DomainModelScope domainModelScope) {
@@ -50,6 +52,7 @@ public class AdditionalMappingContributorBasicColumnTests {
 					impl = UniqueColumnOrmXmlContributor.class
 			)
 	)
+	@ServiceRegistry
 	@DomainModel
 	@SuppressWarnings("JUnitMalformedDeclaration")
 	void unique(DomainModelScope domainModelScope) {
@@ -63,6 +66,7 @@ public class AdditionalMappingContributorBasicColumnTests {
 					impl = NullableColumnOrmXmlContributor.class
 			)
 	)
+	@ServiceRegistry
 	@DomainModel
 	@SuppressWarnings("JUnitMalformedDeclaration")
 	void nullable(DomainModelScope domainModelScope) {
@@ -76,6 +80,7 @@ public class AdditionalMappingContributorBasicColumnTests {
 					impl = LengthColumnOrmXmlContributor.class
 			)
 	)
+	@ServiceRegistry
 	@DomainModel
 	@SuppressWarnings("JUnitMalformedDeclaration")
 	void length(DomainModelScope domainModelScope) {
@@ -89,6 +94,7 @@ public class AdditionalMappingContributorBasicColumnTests {
 					impl = PrecisionColumnOrmXmlContributor.class
 			)
 	)
+	@ServiceRegistry
 	@DomainModel
 	@SuppressWarnings("JUnitMalformedDeclaration")
 	void precision(DomainModelScope domainModelScope) {
@@ -102,6 +108,7 @@ public class AdditionalMappingContributorBasicColumnTests {
 					impl = ScaleColumnOrmXmlContributor.class
 			)
 	)
+	@ServiceRegistry
 	@DomainModel
 	@SuppressWarnings("JUnitMalformedDeclaration")
 	void scale(DomainModelScope domainModelScope) {

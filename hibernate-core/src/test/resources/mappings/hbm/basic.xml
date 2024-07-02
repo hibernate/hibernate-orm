@@ -22,10 +22,10 @@
             <property name="part1"/>
             <property name="part2"/>
         </component>
-        <many-to-one name="another"/>
+        <many-to-one name="another" class="BasicEntity"/>
         <bag name="others">
             <key/>
-            <one-to-many/>
+            <one-to-many class="BasicEntity"/>
         </bag>
     </class>
 </hibernate-mapping>

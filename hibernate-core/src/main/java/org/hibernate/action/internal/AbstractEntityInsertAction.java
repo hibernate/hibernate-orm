@@ -203,19 +203,16 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 			PersistenceContext persistenceContext) {
 		if ( o instanceof PersistentCollection ) {
 			final CollectionPersister collectionPersister = pluralAttributeMapping.getCollectionDescriptor();
-			final CollectionKey collectionKey = new CollectionKey(
+			final Object key = ( (AbstractEntityPersister) getPersister() ).getCollectionKey(
 					collectionPersister,
-					( (AbstractEntityPersister) getPersister() ).getCollectionKey(
-							collectionPersister,
-							getInstance(),
-							persistenceContext.getEntry( getInstance() ),
-							getSession()
-					)
+					getInstance(),
+					persistenceContext.getEntry( getInstance() ),
+					getSession()
 			);
-			persistenceContext.addCollectionByKey(
-					collectionKey,
-					(PersistentCollection<?>) o
-			);
+			if ( key != null ) {
+				final CollectionKey collectionKey = new CollectionKey( collectionPersister, key );
+				persistenceContext.addCollectionByKey( collectionKey, (PersistentCollection<?>) o );
+			}
 		}
 	}
 

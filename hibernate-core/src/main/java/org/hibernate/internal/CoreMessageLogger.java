@@ -1661,7 +1661,7 @@ public interface CoreMessageLogger extends BasicLogger {
 			+ " This is likely due to unsafe use of the session (e.g. used in multiple threads concurrently, updates during entity lifecycle hooks).",
 			id = 479
 	)
-	String collectionNotProcessedByFlush(String role);
+	String collectionNotProcessedByFlush(@Nullable String role);
 
 	@LogMessage(level = WARN)
 	@Message(value = "A ManagedEntity was associated with a stale PersistenceContext. A ManagedEntity may only be associated with one PersistenceContext at a time; %s", id = 480)

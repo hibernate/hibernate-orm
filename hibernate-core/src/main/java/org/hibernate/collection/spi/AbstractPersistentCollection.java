@@ -40,6 +40,8 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
 /**
@@ -58,16 +60,16 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 	private transient List<DelayedOperation<E>> operationQueue;
 	private transient boolean directlyAccessible;
-	private Object owner;
+	private @Nullable Object owner;
 	private int cachedSize = -1;
 
-	private String role;
-	private Object key;
+	private @Nullable String role;
+	private @Nullable Object key;
 	// collections detect changes made via their public interface and mark
 	// themselves as dirty as a performance optimization
 	private boolean dirty;
 	protected boolean elementRemoved;
-	private Serializable storedSnapshot;
+	private @Nullable Serializable storedSnapshot;
 
 	private String sessionFactoryUuid;
 	private boolean allowLoadOutsideTransaction;
@@ -84,12 +86,12 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	}
 
 	@Override
-	public final String getRole() {
+	public final @Nullable String getRole() {
 		return role;
 	}
 
 	@Override
-	public final Object getKey() {
+	public final @Nullable Object getKey() {
 		return key;
 	}
 
@@ -120,7 +122,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	}
 
 	@Override
-	public final Serializable getStoredSnapshot() {
+	public final @Nullable Serializable getStoredSnapshot() {
 		return storedSnapshot;
 	}
 
@@ -1354,7 +1356,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	}
 
 	@Override
-	public Object getOwner() {
+	public @Nullable Object getOwner() {
 		return owner;
 	}
 

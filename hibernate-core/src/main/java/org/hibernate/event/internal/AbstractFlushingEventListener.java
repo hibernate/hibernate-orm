@@ -443,7 +443,8 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		persistenceContext.forEachCollectionEntry(
 				(persistentCollection, collectionEntry) -> {
 					collectionEntry.postFlush( persistentCollection );
-					if ( collectionEntry.getLoadedPersister() == null ) {
+					final Object key;
+					if ( collectionEntry.getLoadedPersister() == null || ( key = collectionEntry.getLoadedKey() ) == null ) {
 						//if the collection is dereferenced, unset its session reference and remove from the session cache
 						//iter.remove(); //does not work, since the entrySet is not backed by the set
 						persistentCollection.unsetSession( session );
@@ -453,7 +454,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 						//otherwise recreate the mapping between the collection and its key
 						final CollectionKey collectionKey = new CollectionKey(
 								collectionEntry.getLoadedPersister(),
-								collectionEntry.getLoadedKey()
+								key
 						);
 						persistenceContext.addCollectionByKey( collectionKey, persistentCollection );
 					}

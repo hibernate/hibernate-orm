@@ -474,6 +474,51 @@ By default, a flush is triggered:
 - before execution of a query whose result would be affected by the synchronization of dirty state held in memory, or
 - when the program directly calls `flush()`.
 
+In the following code, the flush occurs when the transaction commits:
+
+[source,java]
+----
+session.getTransaction().begin();
+session.persist(author);
+var books =
+        // new Author does not affect results of query for Books
+        session.createSelectionQuery("from Book")
+                // no need to flush
+                .getResultList();
+// flush occurs here, just before transaction commits
+session.getTransaction().commit();
+----
+
+But in this code, the flush occurs when the query is executed:
+
+[source,java]
+----
+session.getTransaction().begin();
+session.persist(book);
+var books =
+        // new Book would affect results of query for Books
+        session.createSelectionQuery("from Book")
+                // flush occurs here, just before query is executed
+                .getResultList();
+// changes were already flushed to database, nothing to flush
+session.getTransaction().commit();
+----
+
+It's always possible to call `flush()` explicitly:
+
+[source,java]
+----
+session.getTransaction().begin();
+session.persist(author);
+session.flush(); // explicit flush
+var books =
+        session.createSelectionQuery("from Book")
+                // nothing to flush
+                .getResultList();
+// nothing to flush
+session.getTransaction().commit();
+----
+
 [NOTE]
 // .SQL execution happens asynchronously
 ====
@@ -488,7 +533,7 @@ For example, to disable flushes that occur before query execution, call:
 entityManager.setFlushMode(FlushModeType.COMMIT);
 ----
 
-Hibernate allows greater control over the flush mode than JPA:
+Hibernate allows greater control over the link:{doc-javadoc-url}org/hibernate/FlushMode.html[flush mode] than JPA:
 
 [source,java]
 ----
@@ -496,6 +541,21 @@ session.setHibernateFlushMode(FlushMode.MANUAL);
 ----
 
 Since flushing is a somewhat expensive operation (the session must dirty-check every entity in the persistence context), setting the flush mode to `COMMIT` can occasionally be a useful optimization.
+But take care--in this mode, queries might return stale data:
+
+[source,java]
+----
+session.getTransaction().begin();
+session.setFlushMode(FlushModeType.COMMIT); // disable AUTO-flush
+session.persist(book);
+var books =
+        // flushing on query execution disabled
+        session.createSelectionQuery("from Book")
+                // no flush, query returns stale results
+                .getResultList();
+// flush occurs here, just before transaction commits
+session.getTransaction().commit();
+----
 
 .Flush modes
 [%breakable,cols="15,15,~"]

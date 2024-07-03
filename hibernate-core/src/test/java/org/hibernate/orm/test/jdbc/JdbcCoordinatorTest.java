@@ -79,7 +79,7 @@ public class JdbcCoordinatorTest {
 		SqlExceptionHelper sqlExceptionHelper = Mockito.mock( SqlExceptionHelper.class );
 		when( jdbcServices.getSqlExceptionHelper() ).thenReturn(
 				sqlExceptionHelper );
-
+		when(sessionOwner.getSqlExceptionHelper()).thenReturn( sqlExceptionHelper );
 		JdbcCoordinatorImpl jdbcCoordinator = new JdbcCoordinatorImpl(
 				null,
 				sessionOwner,

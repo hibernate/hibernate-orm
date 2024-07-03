@@ -244,10 +244,9 @@ public class ForeignKeyProcessor {
 					" references unknown or filtered table " + 
 					TableIdentifier.create(element.getTable()) );
 		} else {		
-			dependentTables.put(element.getName(), deptable);		
-			List<Column> refColumns = getReferencedColums(referencedTable, element);		
-			referencedColumns.put(element.getName(), refColumns );
-			dependentColumns.put(element.getName(), getDependendColumns(refColumns, deptable) );
+			dependentTables.put(element.getName(), deptable);	
+			referencedColumns.put(element.getName(), getReferencedColums(referencedTable, element) );
+			dependentColumns.put(element.getName(), getDependendColumns(deptable, element) );
 		}
 	}
 	
@@ -264,7 +263,8 @@ public class ForeignKeyProcessor {
  				userfkTable.getName());
 	}
 	
-	private List<Column> getDependendColumns(List<Column> userColumns, Table deptable) {
+	private List<Column> getDependendColumns(Table deptable, ForeignKey element) {
+		List<?> userColumns = element.getColumns();
 		List<Column> depColumns = new ArrayList<Column>(userColumns.size() );
 		Iterator<?> colIterator = userColumns.iterator();
 		while(colIterator.hasNext() ) {

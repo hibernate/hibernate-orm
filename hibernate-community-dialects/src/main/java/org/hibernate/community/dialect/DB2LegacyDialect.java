@@ -778,8 +778,21 @@ public class DB2LegacyDialect extends Dialect {
 	}
 
 	@Override
+	public Boolean supportsRefCursors() {
+		// DB2 supports the binding with Types.REF_CURSOR but doesn't support statement.getObject(position, ResultSet.class)
+		return false;
+	}
+
+	@Override
 	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
+		statement.registerOutParameter( col++, Types.REF_CURSOR );
 		return col;
+	}
+
+	@Override
+	public int registerResultSetOutParameter(CallableStatement statement, String name) throws SQLException {
+		statement.registerOutParameter( name, Types.REF_CURSOR );
+		return 1;
 	}
 
 	@Override
@@ -791,6 +804,16 @@ public class DB2LegacyDialect extends Dialect {
 		}
 
 		return ps.getResultSet();
+	}
+
+	@Override
+	public ResultSet getResultSet(CallableStatement statement, int position) throws SQLException {
+		return (ResultSet) statement.getObject( position );
+	}
+
+	@Override
+	public ResultSet getResultSet(CallableStatement statement, String name) throws SQLException {
+		return (ResultSet) statement.getObject( name );
 	}
 
 	@Override

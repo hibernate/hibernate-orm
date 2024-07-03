@@ -72,7 +72,12 @@ public class RevengMetadataBuilder {
 						bootstrapContext,
 						metadataBuildingOptions);
 		handleTypes(bootstrapContext, metadataBuildingOptions);
-		this.metadataBuildingContext = new MetadataBuildingContextRootImpl("tools", bootstrapContext, metadataBuildingOptions, metadataCollector);
+		this.metadataBuildingContext = new MetadataBuildingContextRootImpl(
+				"tools", 
+				bootstrapContext, 
+				metadataBuildingOptions, 
+				metadataCollector, 
+				null);
 		this.binderContext = BinderContext
 				.create(
 						metadataBuildingContext, 

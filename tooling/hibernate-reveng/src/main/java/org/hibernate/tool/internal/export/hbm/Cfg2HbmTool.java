@@ -40,6 +40,8 @@ import org.hibernate.mapping.Value;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
+import org.hibernate.persister.spi.PersisterClassResolver;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.internal.export.common.EntityNameFromValueVisitor;
 import org.hibernate.tool.internal.util.SkipBackRefPropertyIterator;
 
@@ -445,7 +447,9 @@ public class Cfg2HbmTool {
 	}
 
 	public boolean hasCustomEntityPersister(PersistentClass clazz) {
-		Class<?> entityPersisterClass = clazz.getEntityPersisterClass();
+		ServiceRegistry sr = clazz.getServiceRegistry();
+		PersisterClassResolver pcr = sr.getService(PersisterClassResolver.class);
+		Class<?> entityPersisterClass = pcr.getEntityPersisterClass(clazz);
 		if(entityPersisterClass==null) return false;
 		final String name = entityPersisterClass.getName();
 

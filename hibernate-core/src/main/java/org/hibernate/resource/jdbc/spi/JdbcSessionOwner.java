@@ -7,6 +7,7 @@
 package org.hibernate.resource.jdbc.spi;
 
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.event.spi.EventManager;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
@@ -72,4 +73,8 @@ public interface JdbcSessionOwner {
 	Integer getJdbcBatchSize();
 
 	EventManager getEventManager();
+
+	default SqlExceptionHelper getSqlExceptionHelper() {
+		return getJdbcSessionContext().getJdbcServices().getSqlExceptionHelper();
+	}
 }

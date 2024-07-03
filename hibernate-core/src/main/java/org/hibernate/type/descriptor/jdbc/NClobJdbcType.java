@@ -46,7 +46,7 @@ public abstract class NClobJdbcType implements JdbcType {
 		return new BasicExtractor<>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				if (options.getDialect().supportsNationalizedMethods()) {
+				if ( options.getDialect().supportsNationalizedMethods() ) {
 					return javaType.wrap( rs.getNClob( paramIndex ), options );
 				}
 				else {
@@ -57,7 +57,7 @@ public abstract class NClobJdbcType implements JdbcType {
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
 					throws SQLException {
-				if (options.getDialect().supportsNationalizedMethods()) {
+				if ( options.getDialect().supportsNationalizedMethods() ) {
 					return javaType.wrap( statement.getNClob( index ), options );
 				}
 				else {
@@ -68,7 +68,7 @@ public abstract class NClobJdbcType implements JdbcType {
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
-				if (options.getDialect().supportsNationalizedMethods()) {
+				if ( options.getDialect().supportsNationalizedMethods() ) {
 					return javaType.wrap( statement.getNClob( name ), options );
 				}
 				else {
@@ -145,7 +145,7 @@ public abstract class NClobJdbcType implements JdbcType {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					if (options.getDialect().supportsNationalizedMethods()) {
+					if ( options.getDialect().supportsNationalizedMethods() ) {
 						st.setNString( index, javaType.unwrap( value, String.class, options ) );
 					}
 					else {
@@ -156,7 +156,7 @@ public abstract class NClobJdbcType implements JdbcType {
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					if (options.getDialect().supportsNationalizedMethods()) {
+					if ( options.getDialect().supportsNationalizedMethods() ) {
 						st.setNString( name, javaType.unwrap( value, String.class, options ) );
 					}
 					else {
@@ -170,7 +170,7 @@ public abstract class NClobJdbcType implements JdbcType {
 			return new BasicExtractor<>( javaType, this ) {
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-					if (options.getDialect().supportsNationalizedMethods()) {
+					if ( options.getDialect().supportsNationalizedMethods() ) {
 						return javaType.wrap( rs.getNString( paramIndex ), options );
 					}
 					else {
@@ -181,7 +181,7 @@ public abstract class NClobJdbcType implements JdbcType {
 				@Override
 				protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
 						throws SQLException {
-					if (options.getDialect().supportsNationalizedMethods()) {
+					if ( options.getDialect().supportsNationalizedMethods() ) {
 						return javaType.wrap( statement.getNString( index ), options );
 					}
 					else {
@@ -192,7 +192,7 @@ public abstract class NClobJdbcType implements JdbcType {
 				@Override
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 						throws SQLException {
-					if (options.getDialect().supportsNationalizedMethods()) {
+					if ( options.getDialect().supportsNationalizedMethods() ) {
 						return javaType.wrap( statement.getNString( name ), options );
 					}
 					else {
@@ -220,7 +220,7 @@ public abstract class NClobJdbcType implements JdbcType {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					if (options.getDialect().supportsNationalizedMethods()) {
+					if ( options.getDialect().supportsNationalizedMethods() ) {
 						st.setNClob( index, javaType.unwrap( value, NClob.class, options ) );
 					}
 					else {
@@ -231,7 +231,7 @@ public abstract class NClobJdbcType implements JdbcType {
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					if (options.getDialect().supportsNationalizedMethods()) {
+					if ( options.getDialect().supportsNationalizedMethods() ) {
 						st.setNClob( name, javaType.unwrap( value, NClob.class, options ) );
 					}
 					else {
@@ -260,7 +260,7 @@ public abstract class NClobJdbcType implements JdbcType {
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
 					final CharacterStream characterStream = javaType.unwrap( value, CharacterStream.class, options );
-					if (options.getDialect().supportsNationalizedMethods()) {
+					if ( options.getDialect().supportsNationalizedMethods() ) {
 						st.setNCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
 					}
 					else {
@@ -272,7 +272,7 @@ public abstract class NClobJdbcType implements JdbcType {
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
 					final CharacterStream characterStream = javaType.unwrap( value, CharacterStream.class, options );
-					if (options.getDialect().supportsNationalizedMethods()) {
+					if ( options.getDialect().supportsNationalizedMethods() ) {
 						st.setNCharacterStream( name, characterStream.asReader(), characterStream.getLength() );
 					}
 					else {
@@ -300,7 +300,7 @@ public abstract class NClobJdbcType implements JdbcType {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					if (options.getDialect().supportsNationalizedMethods()) {
+					if ( options.getDialect().supportsNationalizedMethods() ) {
 						st.setNString( index, javaType.unwrap( value, String.class, options ) );
 					}
 					else {
@@ -311,7 +311,7 @@ public abstract class NClobJdbcType implements JdbcType {
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					if (options.getDialect().supportsNationalizedMethods()) {
+					if ( options.getDialect().supportsNationalizedMethods() ) {
 						st.setNString( name, javaType.unwrap( value, String.class, options ) );
 					}
 					else {
@@ -326,7 +326,7 @@ public abstract class NClobJdbcType implements JdbcType {
 			return new BasicExtractor<>( javaType, this ) {
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-					if (options.getDialect().supportsNationalizedMethods()) {
+					if ( options.getDialect().supportsNationalizedMethods() ) {
 						return javaType.wrap( rs.getNString( paramIndex ), options );
 					}
 					else {
@@ -337,7 +337,7 @@ public abstract class NClobJdbcType implements JdbcType {
 				@Override
 				protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
 						throws SQLException {
-					if (options.getDialect().supportsNationalizedMethods()) {
+					if ( options.getDialect().supportsNationalizedMethods() ) {
 						return javaType.wrap( statement.getNString( index ), options );
 					}
 					else {
@@ -348,7 +348,7 @@ public abstract class NClobJdbcType implements JdbcType {
 				@Override
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 						throws SQLException {
-					if (options.getDialect().supportsNationalizedMethods()) {
+					if ( options.getDialect().supportsNationalizedMethods() ) {
 						return javaType.wrap( statement.getNString( name ), options );
 					}
 					else {

@@ -9,7 +9,6 @@ import org.hibernate.InstantiationException;
 import org.hibernate.sql.results.spi.RowTransformer;
 
 import java.lang.reflect.Constructor;
-import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.query.sqm.SqmExpressible;
@@ -33,6 +32,10 @@ public class RowTransformerConstructorImpl<T> implements RowTransformer<T> {
 		for (int i = 0; i < elements.size(); i++) {
 			sig[i] = resolveElementJavaType( elements.get( i ) );
 		}
+		if ( sig.length == 1 && sig[0] == null ) {
+			// Can not (properly) resolve constructor for single null element
+			throw new InstantiationException( "Cannot instantiate query result type, argument types are unknown ", type );
+		}
 		try {
 			constructor = findMatchingConstructor( type, sig );
 			constructor.setAccessible( true );
@@ -54,9 +57,7 @@ public class RowTransformerConstructorImpl<T> implements RowTransformer<T> {
 		return element.getJavaType();
 	}
 
-	private Constructor<T> findMatchingConstructor(
-			Class<T> type,
-			Class<?>[] sig) throws NoSuchMethodException {
+	private Constructor<T> findMatchingConstructor(Class<T> type, Class<?>[] sig) throws Exception {
 		try {
 			return type.getDeclaredConstructor( sig );
 		}
@@ -82,7 +83,7 @@ public class RowTransformerConstructorImpl<T> implements RowTransformer<T> {
 					return (Constructor<T>) constructor;
 				}
 			}
-			throw new NoSuchMethodException();
+			throw e;
 		}
 	}
 

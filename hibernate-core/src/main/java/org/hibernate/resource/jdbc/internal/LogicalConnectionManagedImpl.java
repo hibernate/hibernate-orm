@@ -54,8 +54,8 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	public LogicalConnectionManagedImpl(
 			JdbcConnectionAccess jdbcConnectionAccess,
 			JdbcSessionContext jdbcSessionContext,
-			ResourceRegistry resourceRegistry,
-			JdbcServices jdbcServices) {
+			SqlExceptionHelper sqlExceptionHelper,
+			ResourceRegistry resourceRegistry) {
 		this.jdbcConnectionAccess = jdbcConnectionAccess;
 		this.observer = jdbcSessionContext.getObserver();
 		this.resourceRegistry = resourceRegistry;
@@ -64,7 +64,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 				jdbcSessionContext.getPhysicalConnectionHandlingMode(),
 				jdbcConnectionAccess );
 
-		this.sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();
+		this.sqlExceptionHelper = sqlExceptionHelper;
 
 		if ( connectionHandlingMode.getAcquisitionMode() == IMMEDIATELY ) {
 			acquireConnectionIfNeeded();
@@ -80,6 +80,19 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 							"SQL operations outside of any JDBC/SQL transaction."
 			);
 		}
+	}
+
+	public LogicalConnectionManagedImpl(
+			JdbcConnectionAccess jdbcConnectionAccess,
+			JdbcSessionContext jdbcSessionContext,
+			ResourceRegistry resourceRegistry,
+			JdbcServices jdbcServices) {
+		this(
+				jdbcConnectionAccess,
+				jdbcSessionContext,
+				jdbcServices.getSqlExceptionHelper(),
+				resourceRegistry
+		);
 	}
 
 	private PhysicalConnectionHandlingMode determineConnectionHandlingMode(

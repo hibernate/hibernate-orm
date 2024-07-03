@@ -50,7 +50,7 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 	public JtaIsolationDelegate(JdbcSessionOwner jdbcSessionOwner, TransactionManager transactionManager) {
 		this(
 				jdbcSessionOwner.getJdbcConnectionAccess(),
-				jdbcSessionOwner.getJdbcSessionContext().getJdbcServices().getSqlExceptionHelper(),
+				jdbcSessionOwner.getSqlExceptionHelper(),
 				transactionManager
 		);
 	}

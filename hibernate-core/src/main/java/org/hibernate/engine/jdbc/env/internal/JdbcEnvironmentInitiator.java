@@ -17,10 +17,8 @@ import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
-import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -36,7 +34,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.internal.EmptyEventManager;
 import org.hibernate.event.spi.EventManager;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.log.ConnectionProviderLogger;
+import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.JpaCompliance;
@@ -169,7 +167,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		// most likely, the version hasn't been set yet, at least not for the ConnectionProviders that we currently maintain
 		databaseConnectionInfo.setDBVersion( jdbcEnvironment.getDialect().getVersion() );
 
-		ConnectionProviderLogger.INSTANCE.logConnectionDetails( databaseConnectionInfo );
+		ConnectionInfoLogger.INSTANCE.logConnectionInfoDetails( databaseConnectionInfo.getDBInfoAsString() );
 	}
 
 	private static JdbcEnvironmentImpl getJdbcEnvironmentWithDefaults(

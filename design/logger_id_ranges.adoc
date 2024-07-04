@@ -73,8 +73,8 @@ public interface MappingModelCreationLogger extends BasicLogger {
 
 
 |[[connections-pooling]]org.hibernate.orm.connections.pooling
-|<<ConnectionPoolingLogger>>
-|Logging related to connection pooling
+|<<ConnectionInfoLogger>>
+|Logging related to connections and connection pooling
 
 |org.hibernate.orm.boot
 |n/a
@@ -93,9 +93,9 @@ public interface MappingModelCreationLogger extends BasicLogger {
 |Sub-system (?)
 
 
-|[[ConnectionPoolingLogger]]10001001
+|[[ConnectionInfoLogger]]10001001
 |10001500
-|org.hibernate.internal.log.ConnectionPoolingLogger
+|org.hibernate.internal.log.ConnectionInfoLogger
 | <<connections-pooling>>
 
 |1

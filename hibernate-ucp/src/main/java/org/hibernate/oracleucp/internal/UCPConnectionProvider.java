@@ -23,12 +23,11 @@ import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiato
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
+import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
-
-import org.jboss.logging.Logger;
 
 import oracle.ucp.UniversalConnectionPoolException;
 import oracle.ucp.admin.UniversalConnectionPoolManager;
@@ -41,10 +40,10 @@ import org.hibernate.cfg.AvailableSettings;
 public class UCPConnectionProvider implements ConnectionProvider, Configurable, Stoppable {
 
 	private static final long serialVersionUID = 1L;
-	private static final Logger LOGGER = Logger.getLogger( "UCPConnectionProvider.class" );
 	private PoolDataSource ucpDS = null;
 	private UniversalConnectionPoolManager poolManager = null;
-	private static final String CONFIG_PREFIX = "hibernate.oracleucp.";
+	private static final String UCP_CONFIG_PREFIX = "hibernate.oracleucp";
+	private static final String CONFIG_PREFIX = UCP_CONFIG_PREFIX + ".";
 	private boolean autoCommit;
 	private Integer isolation;
 
@@ -54,7 +53,7 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 	@Override
 	public void configure(Map props) throws HibernateException {
 		try {
-			LOGGER.trace( "Configuring oracle UCP" );
+			ConnectionInfoLogger.INSTANCE.configureConnectionPool( "Ucp" );
 
 			isolation = ConnectionProviderInitiator.extractIsolation( props );
 			autoCommit = ConfigurationHelper.getBoolean( AvailableSettings.AUTOCOMMIT, props );
@@ -74,11 +73,9 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 					.setDBMaxPoolSize( String.valueOf(ucpDS.getMaxPoolSize()) );
 		}
 		catch (Exception e) {
-			LOGGER.debug( "oracle UCP Configuration failed" );
+			ConnectionInfoLogger.INSTANCE.unableToInstantiateConnectionPool( e );
 			throw new HibernateException( e );
 		}
-
-		LOGGER.trace( "oracle UCP Configured" );
 	}
 	
 	private void configureDataSource(PoolDataSource ucpDS, Properties ucpProps) {
@@ -226,13 +223,14 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 	@Override
 	public void stop() {
 		if(this.ucpDS!=null && ucpDS.getConnectionPoolName() != null) {
+			ConnectionInfoLogger.INSTANCE.cleaningUpConnectionPool( UCP_CONFIG_PREFIX + " [" + ucpDS.getConnectionPoolName() + "]" );
 			try {
 				UniversalConnectionPoolManager poolManager = UniversalConnectionPoolManagerImpl.
 						getUniversalConnectionPoolManager();
 				poolManager.destroyConnectionPool(ucpDS.getConnectionPoolName());
 			}
 			catch (UniversalConnectionPoolException e) {
-				LOGGER.debug("Unable to destroy UCP connection pool");
+				ConnectionInfoLogger.INSTANCE.unableToDestroyConnectionPool( e );
 			}
 		}
 	}

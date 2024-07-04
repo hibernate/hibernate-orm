@@ -16,11 +16,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
+import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
-
-import org.jboss.logging.Logger;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -34,8 +33,6 @@ import com.zaxxer.hikari.HikariDataSource;
 public class HikariCPConnectionProvider implements ConnectionProvider, Configurable, Stoppable {
 
 	private static final long serialVersionUID = -9131625057941275711L;
-
-	private static final Logger LOGGER = Logger.getLogger( HikariCPConnectionProvider.class );
 
 	/**
 	 * HikariCP configuration.
@@ -56,7 +53,7 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	@Override
 	public void configure(Map<String, Object> props) throws HibernateException {
 		try {
-			LOGGER.debug( "Configuring HikariCP" );
+			ConnectionInfoLogger.INSTANCE.configureConnectionPool( "HikariCP" );
 
 			hcfg = HikariConfigurationUtil.loadConfiguration( props );
 			hds = new HikariDataSource( hcfg );
@@ -70,10 +67,9 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 					.setDBMaxPoolSize( String.valueOf(hcfg.getMaximumPoolSize()) );
 		}
 		catch (Exception e) {
+			ConnectionInfoLogger.INSTANCE.unableToInstantiateConnectionPool( e );
 			throw new HibernateException( e );
 		}
-
-		LOGGER.debug( "HikariCP Configured" );
 	}
 
 	// *************************************************************************
@@ -129,6 +125,7 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	@Override
 	public void stop() {
 		if ( hds != null ) {
+			ConnectionInfoLogger.INSTANCE.cleaningUpConnectionPool( "HikariCP" );
 			hds.close();
 		}
 	}

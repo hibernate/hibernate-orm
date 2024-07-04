@@ -23,6 +23,7 @@ import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiato
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
+import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
@@ -37,7 +38,6 @@ import org.logicalcobwebs.proxool.configuration.PropertyConfigurator;
 
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
-import static org.hibernate.proxool.internal.ProxoolMessageLogger.PROXOOL_LOGGER;
 import static org.hibernate.proxool.internal.ProxoolMessageLogger.PROXOOL_MESSAGE_LOGGER;
 
 /**
@@ -115,6 +115,8 @@ public class ProxoolConnectionProvider
 
 	@Override
 	public void configure(Map<String, Object> props) {
+		ConnectionInfoLogger.INSTANCE.configureConnectionPool( "Proxool" );
+
 		// Get the configurator files (if available)
 		final String jaxpFile = (String) props.get( ProxoolSettings.PROXOOL_XML );
 		final String propFile = (String) props.get( ProxoolSettings.PROXOOL_PROPERTIES );
@@ -129,8 +131,8 @@ public class ProxoolConnectionProvider
 		if ( "true".equals( externalConfig ) ) {
 			// Validate that an alias name was provided to determine which pool to use
 			if ( !isNotEmpty( proxoolAlias ) ) {
-				final String msg = PROXOOL_MESSAGE_LOGGER.unableToConfigureProxoolProviderToUseExistingInMemoryPool( ProxoolSettings.PROXOOL_POOL_ALIAS );
-				PROXOOL_LOGGER.error( msg );
+				final String msg = "Cannot configure Proxool Provider to use an existing in memory pool without the " +
+						ProxoolSettings.PROXOOL_POOL_ALIAS + " property set.";
 				throw new HibernateException( msg );
 			}
 			// Append the stem to the proxool pool alias
@@ -148,8 +150,7 @@ public class ProxoolConnectionProvider
 
 			// Validate that an alias name was provided to determine which pool to use
 			if ( !isNotEmpty( proxoolAlias ) ) {
-				final String msg = PROXOOL_MESSAGE_LOGGER.unableToConfigureProxoolProviderToUseJaxp( ProxoolSettings.PROXOOL_POOL_ALIAS );
-				PROXOOL_LOGGER.error( msg );
+				final String msg = "Cannot configure Proxool Provider to use JAXP without the " + ProxoolSettings.PROXOOL_POOL_ALIAS + " property set.";
 				throw new HibernateException( msg );
 			}
 
@@ -157,8 +158,7 @@ public class ProxoolConnectionProvider
 				JAXPConfigurator.configure( getConfigStreamReader( jaxpFile ), false );
 			}
 			catch (ProxoolException e) {
-				final String msg = PROXOOL_MESSAGE_LOGGER.unableToLoadJaxpConfiguratorFile( jaxpFile );
-				PROXOOL_LOGGER.error( msg, e );
+				final String msg = "Proxool Provider unable to load JAXP configurator file: " + jaxpFile;
 				throw new HibernateException( msg, e );
 			}
 
@@ -173,8 +173,7 @@ public class ProxoolConnectionProvider
 
 			// Validate that an alias name was provided to determine which pool to use
 			if ( !isNotEmpty( proxoolAlias ) ) {
-				final String msg = PROXOOL_MESSAGE_LOGGER.unableToConfigureProxoolProviderToUsePropertiesFile( ProxoolSettings.PROXOOL_POOL_ALIAS );
-				PROXOOL_LOGGER.error( msg );
+				final String msg = "Cannot configure Proxool Provider to use Properties File without the " + ProxoolSettings.PROXOOL_POOL_ALIAS + " property set.";
 				throw new HibernateException( msg );
 			}
 
@@ -182,8 +181,7 @@ public class ProxoolConnectionProvider
 				PropertyConfigurator.configure( getConfigProperties( propFile ) );
 			}
 			catch (ProxoolException e) {
-				final String msg = PROXOOL_MESSAGE_LOGGER.unableToLoadPropertyConfiguratorFile( propFile );
-				PROXOOL_LOGGER.error( msg, e );
+				final String msg = "Proxool Provider unable to load Property configurator file: " + propFile;
 				throw new HibernateException( msg, e );
 			}
 
@@ -241,6 +239,7 @@ public class ProxoolConnectionProvider
 		}
 
 		// We have created the pool ourselves, so shut it down
+		ConnectionInfoLogger.INSTANCE.cleaningUpConnectionPool( "proxool" );
 		try {
 			if ( ProxoolFacade.getAliases().length == 1 ) {
 				ProxoolFacade.shutdown( 0 );
@@ -252,9 +251,7 @@ public class ProxoolConnectionProvider
 		catch (Exception e) {
 			// If you're closing down the ConnectionProvider chances are an
 			// is not a real big deal, just warn
-			final String msg = PROXOOL_MESSAGE_LOGGER.exceptionClosingProxoolPool();
-			PROXOOL_LOGGER.warn( msg, e );
-			throw new HibernateException( msg, e );
+			ConnectionInfoLogger.INSTANCE.unableToDestroyConnectionPool( e );
 		}
 	}
 

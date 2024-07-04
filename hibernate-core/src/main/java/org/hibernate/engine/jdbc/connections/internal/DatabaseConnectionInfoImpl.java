@@ -18,6 +18,7 @@ import static org.hibernate.dialect.SimpleDatabaseVersion.NO_VERSION;
  */
 public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 
+	// Means either the value was not explicitly set, or simply not offered by the connection provider
 	public static final String DEFAULT = "undefined/unknown";
 
 	protected String dbUrl = DEFAULT;
@@ -86,7 +87,12 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 	}
 
 	private boolean checkValidInteger(String integerString) {
-		return checkValidString( integerString ) && Integer.parseInt( integerString, 10 ) >= 0;
+		try {
+			return checkValidString( integerString ) && Integer.parseInt( integerString, 10 ) >= 0;
+		}
+		catch (NumberFormatException e) {
+			return false;
+		}
 	}
 
 	private boolean checkValidString(String value) {
@@ -101,7 +107,8 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 		return DEFAULT.equalsIgnoreCase( value );
 	}
 
-	public String toString() {
+	@Override
+	public String getDBInfoAsString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append( "\tDatabase JDBC URL [" ).append( dbUrl ).append(']');
 		sb.append(sb.length() > 0 ? "\n\t" : "" ).append( "Database driver: " ).append( dbDriverName );

@@ -26,5 +26,5 @@ public interface DatabaseConnectionInfo {
 
 	DatabaseConnectionInfo setDBMaxPoolSize(String maxPoolSize);
 
-	String toString();
+	String getDBInfoAsString();
 }

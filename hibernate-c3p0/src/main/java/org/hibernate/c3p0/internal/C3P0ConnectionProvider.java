@@ -24,15 +24,14 @@ import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiato
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
+import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.internal.util.PropertiesHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 
-import static org.hibernate.c3p0.internal.C3P0MessageLogger.C3P0_LOGGER;
 import static org.hibernate.c3p0.internal.C3P0MessageLogger.C3P0_MSG_LOGGER;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.extractSetting;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
@@ -111,6 +110,8 @@ public class C3P0ConnectionProvider
 
 	@Override
 	public void configure(Map<String, Object> props) {
+		ConnectionInfoLogger.INSTANCE.configureConnectionPool( "C3p0" );
+
 		final String jdbcDriverClass = extractSetting(
 				props,
 				JdbcSettings.JAKARTA_JDBC_DRIVER,
@@ -126,19 +127,17 @@ public class C3P0ConnectionProvider
 
 		final Properties connectionProps = ConnectionProviderInitiator.getConnectionProperties( props );
 
-		C3P0_MSG_LOGGER.connectionProperties( ConfigurationHelper.maskOut( connectionProps, "password" ) );
-
 		autocommit = getBoolean( JdbcSettings.AUTOCOMMIT, props );
 
 		if ( jdbcDriverClass == null ) {
-			C3P0_MSG_LOGGER.jdbcDriverNotSpecified();
+			ConnectionInfoLogger.INSTANCE.jdbcDriverNotSpecified();
 		}
 		else {
 			try {
 				serviceRegistry.requireService( ClassLoaderService.class ).classForName( jdbcDriverClass );
 			}
 			catch (ClassLoadingException e) {
-				throw new ClassLoadingException( C3P0_MSG_LOGGER.jdbcDriverNotFound( jdbcDriverClass ), e );
+				throw new ClassLoadingException( "JDBC Driver class " + jdbcDriverClass + " not found", e );
 			}
 		}
 
@@ -197,8 +196,8 @@ public class C3P0ConnectionProvider
 			ds = DataSources.pooledDataSource( unpooled, allProps );
 		}
 		catch (Exception e) {
-			C3P0_LOGGER.error( C3P0_MSG_LOGGER.unableToInstantiateC3p0ConnectionPool(), e );;
-			throw new HibernateException( C3P0_MSG_LOGGER.unableToInstantiateC3p0ConnectionPool(), e );
+			ConnectionInfoLogger.INSTANCE.unableToInstantiateConnectionPool( e );
+			throw new HibernateException( e );
 		}
 
 		isolation = ConnectionProviderInitiator.extractIsolation( props );
@@ -247,12 +246,12 @@ public class C3P0ConnectionProvider
 
 	@Override
 	public void stop() {
+		ConnectionInfoLogger.INSTANCE.cleaningUpConnectionPool( C3p0Settings.C3P0_CONFIG_PREFIX );
 		try {
 			DataSources.destroy( ds );
 		}
 		catch (SQLException sqle) {
-			C3P0_MSG_LOGGER.unableToDestroyC3p0ConnectionPool( sqle );
-			throw new HibernateException( "Unable to destroy the connection pool", sqle );
+			ConnectionInfoLogger.INSTANCE.unableToDestroyConnectionPool( sqle );
 		}
 	}
 

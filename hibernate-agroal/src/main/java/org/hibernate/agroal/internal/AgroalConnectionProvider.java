@@ -21,6 +21,7 @@ import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiato
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
+import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
@@ -31,8 +32,6 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
-
-import org.jboss.logging.Logger;
 
 import static org.hibernate.cfg.AgroalSettings.AGROAL_CONFIG_PREFIX;
 
@@ -62,7 +61,6 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 
 	public static final String CONFIG_PREFIX = AGROAL_CONFIG_PREFIX + ".";
 	private static final long serialVersionUID = 1L;
-	private static final Logger LOGGER = Logger.getLogger( AgroalConnectionProvider.class );
 	private AgroalDataSource agroalDataSource = null;
 	private DatabaseConnectionInfo dbInfo;
 
@@ -93,7 +91,7 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 
 	@Override
 	public void configure(Map<String, Object> props) throws HibernateException {
-		LOGGER.debug( "Configuring Agroal" );
+		ConnectionInfoLogger.INSTANCE.configureConnectionPool( "Agroal" );
 		try {
 			AgroalPropertiesReader agroalProperties = new AgroalPropertiesReader( CONFIG_PREFIX )
 					.readProperties( (Map) props ); //TODO: this is a garbage cast
@@ -122,9 +120,9 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 					.setDBMaxPoolSize( String.valueOf(acpc.maxSize()) );
 		}
 		catch ( Exception e ) {
+			ConnectionInfoLogger.INSTANCE.unableToInstantiateConnectionPool( e );
 			throw new HibernateException( e );
 		}
-		LOGGER.debug( "Agroal Configured" );
 	}
 
 	// --- ConnectionProvider
@@ -177,6 +175,8 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 	@Override
 	public void stop() {
 		if ( agroalDataSource != null ) {
+			ConnectionInfoLogger.INSTANCE.cleaningUpConnectionPool( agroalDataSource.getConfiguration().connectionPoolConfiguration().
+																			connectionFactoryConfiguration().jdbcUrl() );
 			agroalDataSource.close();
 		}
 	}

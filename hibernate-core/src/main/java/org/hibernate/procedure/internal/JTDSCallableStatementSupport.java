@@ -69,8 +69,8 @@ public class JTDSCallableStatementSupport extends AbstractStandardCallableStatem
 						i + offset,
 						procedureCall
 				);
-				if ( registration.getName() != null ) {
-					buffer.append( '@' ).append( registration.getName() ).append( "=?" );
+				if ( parameter.getName() != null ) {
+					buffer.append( '@' ).append( parameter.getName() ).append( "=?" );
 				}
 				else {
 					buffer.append( "?" );

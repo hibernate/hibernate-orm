@@ -54,6 +54,8 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
+import org.hibernate.procedure.internal.SQLServerCallableStatementSupport;
+import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
@@ -1122,7 +1124,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) {
-		// Not sure if it's a JDBC driver issue, but it doesn't work
 		return false;
 	}
 
@@ -1168,4 +1169,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	public boolean supportsFromClauseInUpdate() {
 		return true;
 	}
+
+	@Override
+	public CallableStatementSupport getCallableStatementSupport() {
+		return SQLServerCallableStatementSupport.INSTANCE;
+	}
+
 }

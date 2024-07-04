@@ -1502,12 +1502,6 @@ public class OracleLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) {
-		// Not sure if it's a JDBC driver issue, but it doesn't work
-		return false;
-	}
-
-	@Override
 	public ResultSet getResultSet(CallableStatement statement, String name) throws SQLException {
 		return (ResultSet) statement.getObject( name );
 	}

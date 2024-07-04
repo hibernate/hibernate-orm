@@ -10,6 +10,7 @@ package org.hibernate.vibur.internal;
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
+import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
@@ -48,7 +49,9 @@ import static org.hibernate.cfg.AvailableSettings.*;
  * @see ConnectionProvider
  */
 public class ViburDBCPConnectionProvider implements ConnectionProvider, Configurable, Stoppable {
-	private static final String VIBUR_PREFIX = "hibernate.vibur.";
+
+	private static final String VIBUR_CONFIG_PREFIX = "hibernate.vibur";
+	private static final String VIBUR_PREFIX = VIBUR_CONFIG_PREFIX + ".";
 
 	private ViburDBCPDataSource dataSource = null;
 
@@ -56,6 +59,8 @@ public class ViburDBCPConnectionProvider implements ConnectionProvider, Configur
 
 	@Override
 	public void configure(Map<String, Object> configurationValues) {
+		ConnectionInfoLogger.INSTANCE.configureConnectionPool( "Vibur" );
+
 		dataSource = new ViburDBCPDataSource( transform( configurationValues ) );
 		dataSource.start();
 
@@ -81,6 +86,7 @@ public class ViburDBCPConnectionProvider implements ConnectionProvider, Configur
 	@Override
 	public void stop() {
 		if ( dataSource != null ) {
+			ConnectionInfoLogger.INSTANCE.cleaningUpConnectionPool( VIBUR_CONFIG_PREFIX );
 			dataSource.terminate();
 			dataSource = null;
 		}

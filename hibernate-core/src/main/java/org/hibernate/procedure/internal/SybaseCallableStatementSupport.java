@@ -80,10 +80,12 @@ public class SybaseCallableStatementSupport extends AbstractStandardCallableStat
 						i + offset,
 						procedureCall
 				);
-				if ( registration.getName() != null ) {
-					throw new QueryException( "The JDBC driver does not support named parameters" );
+				if ( parameter.getName() != null ) {
+					buffer.append("@").append( parameter.getName() ).append( " = ?" );
 				}
-				buffer.append( "?" );
+				else {
+					buffer.append( "?" );
+				}
 				sep = ',';
 				builder.addParameterRegistration( registration );
 			}

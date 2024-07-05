@@ -234,7 +234,7 @@ dependencyResolutionManagement {
             def h2gisVersion = version "h2gis", overrideableVersion( "gradle.libs.versions.h2gis", "2.2.0" )
             def hsqldbVersion = version "hsqldb", overrideableVersion( "gradle.libs.versions.hsqldb", "2.7.2" )
             def informixVersion = version "informix", "4.50.10.1"
-            def mariadbVersion = version "mariadb", "3.3.1"
+            def mariadbVersion = version "mariadb", "3.4.0"
             def mssqlVersion = version "mssql", "12.4.2.jre11"
             def mysqlVersion = version "mysql", "8.2.0"
             def oracleVersion = version "oracle", "23.4.0.24.05"

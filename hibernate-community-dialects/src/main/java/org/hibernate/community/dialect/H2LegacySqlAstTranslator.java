@@ -411,4 +411,9 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	protected boolean supportsJoinInMutationStatementSubquery() {
 		return false;
 	}
+
+	@Override
+	public boolean supportsFilterClause() {
+		return getDialect().getVersion().isSameOrAfter( 1, 4, 197 );
+	}
 }

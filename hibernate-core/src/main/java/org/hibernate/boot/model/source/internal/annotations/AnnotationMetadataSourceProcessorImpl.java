@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
+import jakarta.persistence.Entity;
 import jakarta.persistence.MappedSuperclass;
 import org.hibernate.annotations.common.reflection.MetadataProviderInjector;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
@@ -31,13 +34,8 @@ import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware.JpaOrmXmlPers
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
-
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Converter;
-import jakarta.persistence.Entity;
 
 /**
  * @author Steve Ebersole
@@ -263,23 +261,16 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		}
 	}
 
-	private List<XClass> orderAndFillHierarchy(List<XClass> original) {
-		List<XClass> copy = new ArrayList<>( original.size() );
-		insertMappedSuperclasses( original, copy );
-
-		// order the hierarchy
-		List<XClass> workingCopy = new ArrayList<>( copy );
-		List<XClass> newList = new ArrayList<>( copy.size() );
-		while ( !workingCopy.isEmpty() ) {
-			XClass clazz = workingCopy.get( 0 );
-			orderHierarchy( workingCopy, newList, copy, clazz );
-		}
-		return newList;
-	}
-
-	private void insertMappedSuperclasses(List<XClass> original, List<XClass> copy) {
+	/**
+	 * @return a partially ordered list so entry's ancestors always show up earlier
+	 */
+	private List<XClass> orderAndFillHierarchy(List<XClass> classes) {
 		final boolean debug = log.isDebugEnabled();
-		for ( XClass clazz : original ) {
+
+		LinkedHashSet<XClass> orderedClasses = CollectionHelper.linkedSetOfSize( classes.size() * 2 );
+		List<XClass> clazzHierarchy = new ArrayList<>();
+
+		for ( XClass clazz : classes ) {
 			if ( clazz.isAnnotationPresent( MappedSuperclass.class ) ) {
 				if ( debug ) {
 					log.debugf(
@@ -289,32 +280,31 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 				}
 			}
 			else {
-				copy.add( clazz );
+				if ( orderedClasses.contains( clazz ) ) {
+					continue;
+				}
+
+				clazzHierarchy.clear();
+				clazzHierarchy.add( clazz );
+
 				XClass superClass = clazz.getSuperclass();
 				while ( superClass != null
-						&& !reflectionManager.equals( superClass, Object.class )
-						&& !copy.contains( superClass ) ) {
+						&& !reflectionManager.equals( superClass, Object.class ) ) {
 					if ( superClass.isAnnotationPresent( Entity.class )
 							|| superClass.isAnnotationPresent( MappedSuperclass.class ) ) {
-						copy.add( superClass );
+						if ( orderedClasses.contains( superClass ) ) {
+							break;
+						}
+						clazzHierarchy.add( superClass );
 					}
 					superClass = superClass.getSuperclass();
 				}
-			}
-		}
-	}
-
-	private void orderHierarchy(List<XClass> copy, List<XClass> newList, List<XClass> original, XClass clazz) {
-		if ( clazz != null && !reflectionManager.equals( clazz, Object.class ) ) {
-			//process superclass first
-			orderHierarchy( copy, newList, original, clazz.getSuperclass() );
-			if ( original.contains( clazz ) ) {
-				if ( !newList.contains( clazz ) ) {
-					newList.add( clazz );
+				for (int i = clazzHierarchy.size() - 1; i >= 0; i-- ) {
+					orderedClasses.add( clazzHierarchy.get(i) );
 				}
-				copy.remove( clazz );
 			}
 		}
+		return new ArrayList<>( orderedClasses );
 	}
 
 	@Override

@@ -173,7 +173,7 @@ stage('Build') {
 							}
 						}
 						stage('Test') {
-              String args = "${buildEnv.additionalOptions ?: ''} ${state[buildEnv.tag]['additionalOptions'] ?: ''}"
+							String args = "${buildEnv.additionalOptions ?: ''} ${state[buildEnv.tag]['additionalOptions'] ?: ''}"
 							withEnv(["RDBMS=${buildEnv.dbName}"]) {
 								tryFinally({
 									if (buildEnv.dbLockableResource == null) {

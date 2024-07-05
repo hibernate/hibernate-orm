@@ -85,7 +85,7 @@ public class DB2CallableStatementSupport extends AbstractStandardCallableStateme
 						procedureCall
 				);
 				if ( parameter.getName() != null ) {
-					buffer.append( ':' ).append( parameter.getName() );
+					buffer.append( parameter.getName() ).append( " => ?" );
 				}
 				else {
 					buffer.append( "?" );

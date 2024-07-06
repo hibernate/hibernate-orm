@@ -163,7 +163,7 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public SessionFactoryBuilder applyDelayedEntityLoaderCreations(boolean delay) {
+	public T applyDelayedEntityLoaderCreations(boolean delay) {
 		delegate.applyDelayedEntityLoaderCreations( delay );
 		return getThis();
 	}
@@ -181,7 +181,7 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public SessionFactoryBuilder applySubselectFetchEnabled(boolean enabled) {
+	public T applySubselectFetchEnabled(boolean enabled) {
 		delegate.applySubselectFetchEnabled( enabled );
 		return getThis();
 	}
@@ -247,13 +247,13 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public SessionFactoryBuilder applyQueryCacheLayout(CacheLayout cacheLayout) {
+	public T applyQueryCacheLayout(CacheLayout cacheLayout) {
 		delegate.applyQueryCacheLayout( cacheLayout );
 		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyTimestampsCacheFactory(TimestampsCacheFactory factory) {
+	public T applyTimestampsCacheFactory(TimestampsCacheFactory factory) {
 		delegate.applyTimestampsCacheFactory( factory );
 		return getThis();
 	}
@@ -319,7 +319,7 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public SessionFactoryBuilder applyConnectionProviderDisablesAutoCommit(boolean providerDisablesAutoCommit) {
+	public T applyConnectionProviderDisablesAutoCommit(boolean providerDisablesAutoCommit) {
 		delegate.applyConnectionProviderDisablesAutoCommit( providerDisablesAutoCommit );
 		return getThis();
 	}
@@ -339,7 +339,7 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public SessionFactoryBuilder applyCollectionsInDefaultFetchGroup(boolean enabled) {
+	public T applyCollectionsInDefaultFetchGroup(boolean enabled) {
 		delegate.applyCollectionsInDefaultFetchGroup( enabled );
 		return getThis();
 	}
@@ -357,37 +357,37 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public SessionFactoryBuilder enableJpaQueryCompliance(boolean enabled) {
+	public T enableJpaQueryCompliance(boolean enabled) {
 		delegate.enableJpaQueryCompliance( enabled );
 		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder enableJpaOrderByMappingCompliance(boolean enabled) {
+	public T enableJpaOrderByMappingCompliance(boolean enabled) {
 		delegate.enableJpaOrderByMappingCompliance( enabled );
 		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder enableJpaTransactionCompliance(boolean enabled) {
+	public T enableJpaTransactionCompliance(boolean enabled) {
 		delegate.enableJpaTransactionCompliance( enabled );
 		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder enableJpaCascadeCompliance(boolean enabled) {
+	public T enableJpaCascadeCompliance(boolean enabled) {
 		delegate.enableJpaCascadeCompliance( enabled );
 		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder enableJpaListCompliance(boolean enabled) {
+	public T enableJpaListCompliance(boolean enabled) {
 		delegate.enableJpaListCompliance( enabled );
 		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder enableJpaClosedCompliance(boolean enabled) {
+	public T enableJpaClosedCompliance(boolean enabled) {
 		delegate.enableJpaClosedCompliance( enabled );
 		return getThis();
 	}
@@ -411,13 +411,13 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public SessionFactoryBuilder applyJsonFormatMapper(FormatMapper jsonFormatMapper) {
+	public T applyJsonFormatMapper(FormatMapper jsonFormatMapper) {
 		delegate.applyJsonFormatMapper( jsonFormatMapper );
 		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyXmlFormatMapper(FormatMapper xmlFormatMapper) {
+	public T applyXmlFormatMapper(FormatMapper xmlFormatMapper) {
 		delegate.applyXmlFormatMapper( xmlFormatMapper );
 		return getThis();
 	}

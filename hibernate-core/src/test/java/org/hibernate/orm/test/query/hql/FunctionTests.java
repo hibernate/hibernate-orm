@@ -1301,6 +1301,8 @@ public class FunctionTests {
 	// really this could and should be made work on these dialects
 	@SkipForDialect(dialectClass = DerbyDialect.class)
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
+	@SkipForDialect(dialectClass = AltibaseDialect.class,
+			reason = "Altibase timestampadd does not support seconds with fractional part")
 	public void testAddSecondsWithFractionalPart(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1711,6 +1713,8 @@ public class FunctionTests {
 			reason = "numeric overflow")
 	@SkipForDialect( dialectClass = TiDBDialect.class,
 			reason = "Bug in the TiDB timestampadd function (https://github.com/pingcap/tidb/issues/41052)")
+	@SkipForDialect( dialectClass = AltibaseDialect.class,
+	        reason = "exceeds timestampadd limit in Altibase")
 	public void testDurationArithmeticOverflowing(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

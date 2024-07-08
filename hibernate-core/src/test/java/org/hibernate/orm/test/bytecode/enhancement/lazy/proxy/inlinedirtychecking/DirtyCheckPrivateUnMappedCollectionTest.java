@@ -26,9 +26,9 @@ import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -53,7 +53,7 @@ import org.junit.jupiter.api.Test;
 @SessionFactory
 @BytecodeEnhanced
 @CustomEnhancementContext({ DirtyCheckEnhancementContext.class })
-@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 public class DirtyCheckPrivateUnMappedCollectionTest {
 
 	@BeforeAll

@@ -613,18 +613,8 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return true;
-	}
-
-	@Override
 	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
 		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInSubQuery() {
-		return true;
 	}
 
 	@Override

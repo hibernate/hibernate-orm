@@ -6,18 +6,26 @@
  */
 package org.hibernate.community.dialect;
 
-import java.sql.*;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+import java.sql.Types;
 import java.time.temporal.TemporalAccessor;
 import java.util.Date;
 import java.util.TimeZone;
 
-import jakarta.persistence.TemporalType;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.community.dialect.sequence.*;
-import org.hibernate.dialect.*;
-import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.community.dialect.pagination.AltibaseLimitHandler;
+import org.hibernate.community.dialect.sequence.AltibaseSequenceSupport;
+import org.hibernate.community.dialect.sequence.SequenceInformationExtractorAltibaseDatabaseImpl;
+import org.hibernate.dialect.BooleanDecoder;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.NationalizationSupport;
+import org.hibernate.dialect.NullOrdering;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.OracleTruncFunction;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -30,8 +38,12 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.query.sqm.*;
+import org.hibernate.query.sqm.CastType;
+import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -46,7 +58,22 @@ import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.type.SqlTypes.*;
+import jakarta.persistence.TemporalType;
+
+import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BIT;
+import static org.hibernate.type.SqlTypes.BOOLEAN;
+import static org.hibernate.type.SqlTypes.DOUBLE;
+import static org.hibernate.type.SqlTypes.FLOAT;
+import static org.hibernate.type.SqlTypes.LONGVARBINARY;
+import static org.hibernate.type.SqlTypes.LONGVARCHAR;
+import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.TIME;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIMESTAMP;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
@@ -217,6 +244,20 @@ public class AltibaseDialect extends Dialect {
 				new OracleTruncFunction( functionContributions.getTypeConfiguration() )
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
+
+		// Use `numor`, `numand`, and `numxor` because bitwise operators work only in binary columns in Altibase.
+		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "bitand", "numand(?1,?2)" )
+							.setExactArgumentCount( 2 )
+							.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+							.register();
+		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "bitor", "numor(?1,?2)" )
+							.setExactArgumentCount( 2 )
+							.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+							.register();
+		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "bitxor", "numxor(?1,?2)" )
+							.setExactArgumentCount( 2 )
+							.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+							.register();
 	}
 
 	@Override
@@ -236,12 +277,13 @@ public class AltibaseDialect extends Dialect {
 
 	@Override
 	public String currentLocalTime() {
-		return currentTimestamp();
+		return currentLocalTimestamp();
 	}
 
 	@Override
 	public String currentLocalTimestamp() {
-		return currentTimestamp();
+		// Drop microseconds, because sysdate comes with microseconds.
+		return "trunc(sysdate,'second')";
 	}
 
 	@Override
@@ -260,9 +302,13 @@ public class AltibaseDialect extends Dialect {
 		};
 	}
 
+	/**
+	 * In Altibase, `timestampadd` and `datediff` with microseconds have limitations,
+	 * so use seconds as the native precision.
+	 */
 	@Override
 	public long getFractionalSecondPrecisionInNanos() {
-		return 1_000; //microseconds
+		return 1_000_000_000; //seconds
 	}
 
 	/**
@@ -305,7 +351,7 @@ public class AltibaseDialect extends Dialect {
 			case NANOSECOND:
 				return "timestampadd(MICROSECOND,(?2)/1e3,?3)";
 			case NATIVE:
-				return "timestampadd(MICROSECOND, ?2, ?3)";
+				return "timestampadd(SECOND, ?2, ?3)";
 			default:
 				return "timestampadd(?1, ?2, ?3)";
 		}
@@ -315,11 +361,10 @@ public class AltibaseDialect extends Dialect {
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		switch (unit) {
 			case SECOND:
+			case NATIVE:
 				return "datediff(?2, ?3, 'SECOND')";
 			case NANOSECOND:
 				return "datediff(?2, ?3, 'MICROSECOND')*1e3";
-			case NATIVE:
-				return "datediff(?2, ?3, 'MICROSECOND')";
 			default:
 				return "datediff(?2, ?3, '?1')";
 		}

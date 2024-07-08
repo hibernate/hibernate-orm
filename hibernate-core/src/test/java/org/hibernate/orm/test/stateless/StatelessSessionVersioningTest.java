@@ -7,7 +7,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -20,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SessionFactory
 @DomainModel(annotatedClasses = {StatelessSessionVersioningTest.IdentityVersioned.class,
 		StatelessSessionVersioningTest.UUIDVersioned.class})
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 public class StatelessSessionVersioningTest {
 	@Test void testIdentity(SessionFactoryScope scope) {
 		Dialect dialect = scope.getMetadataImplementor().getDatabase().getDialect();

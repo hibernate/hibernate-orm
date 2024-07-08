@@ -19,6 +19,7 @@ import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 import org.hibernate.sql.ast.tree.expression.Literal;
@@ -205,6 +206,14 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			appendSql( "update " );
 			renderFromClauseSpaces( updateStatement.getFromClause() );
 		}
+	}
+
+	@Override
+	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
+		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
+			appendSql( "floor" );
+		}
+		super.visitBinaryArithmeticExpression(arithmeticExpression);
 	}
 
 	@Override

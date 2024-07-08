@@ -114,13 +114,15 @@ public class DdlTypeImpl implements DdlType {
 		}
 		else {
 			//use the given length/precision/scale
-			if ( precision != null && scale == null ) {
+			final Size size = dialect.getSizeStrategy()
+					.resolveSize( jdbcType, javaType, precision, scale, length );
+			if ( size.getPrecision() != null && size.getScale() == null ) {
 				//needed for cast(x as BigInteger(p))
-				scale = javaType.getDefaultSqlScale( dialect, jdbcType );
+				size.setScale( javaType.getDefaultSqlScale( dialect, jdbcType ) );
 			}
 			return castTypeNamePattern == null
-					? getTypeName( length, precision, scale )
-					: replace( castTypeNamePattern, length, precision, scale );
+					? getTypeName( size.getLength(), size.getPrecision(), size.getScale() )
+					: replace( castTypeNamePattern, size.getLength(), size.getPrecision(), size.getScale() );
 		}
 	}
 

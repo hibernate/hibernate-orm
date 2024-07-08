@@ -18,7 +18,7 @@ import org.hibernate.sql.ast.spi.SqlAppender;
  * @author Marco Belladelli
  * @deprecated Use {@link org.hibernate.dialect.H2JsonJdbcType} instead
  */
-@Deprecated(forRemoval = true, since = "6.6")
+@Deprecated(forRemoval = true, since = "6.5")
 public class H2FormatJsonJdbcType extends JsonJdbcType {
 	/**
 	 * Singleton access

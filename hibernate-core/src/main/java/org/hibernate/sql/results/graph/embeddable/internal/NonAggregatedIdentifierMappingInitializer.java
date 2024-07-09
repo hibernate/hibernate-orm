@@ -8,6 +8,7 @@ package org.hibernate.sql.results.graph.embeddable.internal;
 
 import java.util.ArrayList;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -95,6 +96,15 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 			InitializerParent<?> parent,
 			AssemblerCreationState creationState,
 			boolean isResultInitializer) {
+		this( resultDescriptor, parent, creationState, isResultInitializer, Function.identity() );
+	}
+
+	protected NonAggregatedIdentifierMappingInitializer(
+			EmbeddableResultGraphNode resultDescriptor,
+			InitializerParent<?> parent,
+			AssemblerCreationState creationState,
+			boolean isResultInitializer,
+			Function<Fetch, Fetch> fetchConverter) {
 		super( creationState );
 		this.navigablePath = resultDescriptor.getNavigablePath();
 		this.embedded = (NonAggregatedIdentifierMapping) resultDescriptor.getReferencedMappingContainer();
@@ -107,7 +117,7 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 		this.hasIdClass = embedded.hasContainingClass() && virtualIdEmbeddable != representationEmbeddable;
 
 		this.sessionFactory = creationState.getSqlAstCreationContext().getSessionFactory();
-		this.assemblers = createAssemblers( this, resultDescriptor, creationState, virtualIdEmbeddable );
+		this.assemblers = createAssemblers( this, resultDescriptor, creationState, virtualIdEmbeddable, fetchConverter );
 		final ArrayList<Initializer<?>> initializers = new ArrayList<>( assemblers.length );
 		for ( DomainResultAssembler<?> assembler : assemblers ) {
 			final Initializer<?> initializer = assembler.getInitializer();
@@ -125,12 +135,13 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 			InitializerParent<?> parent,
 			EmbeddableResultGraphNode resultDescriptor,
 			AssemblerCreationState creationState,
-			EmbeddableMappingType embeddableTypeDescriptor) {
+			EmbeddableMappingType embeddableTypeDescriptor,
+			Function<Fetch, Fetch> fetchConverter) {
 		final int size = embeddableTypeDescriptor.getNumberOfFetchables();
 		final DomainResultAssembler<?>[] assemblers = new DomainResultAssembler[size];
 		for ( int i = 0; i < size; i++ ) {
 			final Fetchable stateArrayContributor = embeddableTypeDescriptor.getFetchable( i );
-			final Fetch fetch = resultDescriptor.findFetch( stateArrayContributor );
+			final Fetch fetch = fetchConverter.apply( resultDescriptor.findFetch( stateArrayContributor ) );
 
 			final DomainResultAssembler<?> stateAssembler = fetch == null
 					? new NullValueAssembler<>( stateArrayContributor.getJavaType() )
@@ -338,6 +349,13 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 	@Override
 	public boolean isPartOfKey() {
 		return true;
+	}
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected Initializer<InitializerData>[] getInitializers() {
+		return initializers;
 	}
 
 	@Override

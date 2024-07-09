@@ -64,6 +64,13 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 			super( rowProcessingState );
 		}
 
+		/*
+		 * Used by Hibernate Reactive
+		 */
+		public EntitySelectFetchInitializerData(EntitySelectFetchInitializerData original) {
+			super( original );
+			this.entityIdentifier = original.entityIdentifier;
+		}
 	}
 
 	public EntitySelectFetchInitializer(
@@ -312,4 +319,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		return "EntitySelectFetchInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
 	}
 
+	public DomainResultAssembler<?> getKeyAssembler() {
+		return keyAssembler;
+	}
 }

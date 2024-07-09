@@ -119,6 +119,17 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 		}
 	}
 
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected NonAggregatedIdentifierMappingImpl(NonAggregatedIdentifierMappingImpl original) {
+		super( original );
+		entityDescriptor = original.entityDescriptor;
+		virtualIdEmbeddable = original.virtualIdEmbeddable;
+		idClassEmbeddable = original.idClassEmbeddable;
+		identifierValueMapper = original.identifierValueMapper;
+	}
+
 	@Override
 	public EmbeddableMappingType getMappedType() {
 		return virtualIdEmbeddable;

@@ -72,6 +72,16 @@ public abstract class AbstractCompositeIdentifierMapping
 		this.sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 	}
 
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected AbstractCompositeIdentifierMapping(AbstractCompositeIdentifierMapping original) {
+		this.navigableRole = original.navigableRole;
+		this.entityMapping = original.entityMapping;
+		this.tableExpression = original.tableExpression;
+		this.sessionFactory = original.sessionFactory;
+	}
+
 	@Override
 	public boolean hasContainingClass() {
 		return true;

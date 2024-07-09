@@ -142,6 +142,6 @@ public class CalendarDateJavaType extends AbstractTemporalJavaType<Calendar> {
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
-		return dialect.getDefaultTimestampPrecision();
+		return 0;
 	}
 }

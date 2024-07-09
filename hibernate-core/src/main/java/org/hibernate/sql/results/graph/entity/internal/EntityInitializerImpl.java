@@ -143,6 +143,23 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		public EntityInitializerData(RowProcessingState rowProcessingState) {
 			super( rowProcessingState );
 		}
+
+		/*
+		 * Used by Hibernate Reactive
+		 */
+		public EntityInitializerData(EntityInitializerData original) {
+			super( original );
+			this.shallowCached = original.shallowCached;
+			this.lockMode = original.lockMode;
+			this.uniqueKeyAttributePath = original.uniqueKeyAttributePath;
+			this.uniqueKeyPropertyTypes = original.uniqueKeyPropertyTypes;
+			this.canUseEmbeddedIdentifierInstanceAsEntity = original.canUseEmbeddedIdentifierInstanceAsEntity;
+			this.hasCallbackActions = original.hasCallbackActions;
+			this.concreteDescriptor = original.concreteDescriptor;
+			this.entityKey = original.entityKey;
+			this.entityInstanceForNotify = original.entityInstanceForNotify;
+			this.entityHolder = original.entityHolder;
+		}
 	}
 
 	public EntityInitializerImpl(
@@ -473,7 +490,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		}
 	}
 
-	private void resolveKeySubInitializers(EntityInitializerData data) {
+	protected void resolveKeySubInitializers(EntityInitializerData data) {
 		final RowProcessingState rowProcessingState = data.getRowProcessingState();
 		for ( Initializer<?> initializer : subInitializers[data.concreteDescriptor.getSubclassId()] ) {
 			if ( initializer != null ) {
@@ -714,7 +731,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		}
 	}
 
-	private boolean useEmbeddedIdentifierInstanceAsEntity(EntityInitializerData data) {
+	protected boolean useEmbeddedIdentifierInstanceAsEntity(EntityInitializerData data) {
 		return data.canUseEmbeddedIdentifierInstanceAsEntity
 				&& ( data.concreteDescriptor = determineConcreteEntityDescriptor( data.getRowProcessingState(), discriminatorAssembler, entityDescriptor ) ) != null
 				&& data.concreteDescriptor.isInstance( data.getRowProcessingState().getEntityId() );
@@ -939,7 +956,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		return null;
 	}
 
-	private void upgradeLockMode(EntityInitializerData data) {
+	protected void upgradeLockMode(EntityInitializerData data) {
 		final RowProcessingState rowProcessingState = data.getRowProcessingState();
 		if ( data.lockMode != LockMode.NONE && rowProcessingState.upgradeLocks() ) {
 			final EntityEntry entry = data.entityHolder.getEntityEntry();
@@ -1117,7 +1134,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		return entity == null || entity == data.entityInstanceForNotify;
 	}
 
-	private void initializeEntityInstance(EntityInitializerData data) {
+	protected void initializeEntityInstance(EntityInitializerData data) {
 		final RowProcessingState rowProcessingState = data.getRowProcessingState();
 		final Object entityIdentifier = data.entityKey.getIdentifier();
 		final SharedSessionContractImplementor session = rowProcessingState.getSession();
@@ -1379,7 +1396,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		return values;
 	}
 
-	private void resolveState(EntityInitializerData data) {
+	protected void resolveState(EntityInitializerData data) {
 		final RowProcessingState rowProcessingState = data.getRowProcessingState();
 		for ( final DomainResultAssembler<?> assembler : assemblers[data.concreteDescriptor.getSubclassId()] ) {
 			if ( assembler != null ) {
@@ -1527,16 +1544,31 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 	// For Hibernate Reactive
 	//#########################
 
-	protected DomainResultAssembler<?> getVersionAssembler() {
+	protected @Nullable DomainResultAssembler<?> getVersionAssembler() {
 		return versionAssembler;
 	}
 
-	protected DomainResultAssembler<Object> getRowIdAssembler() {
+	protected @Nullable DomainResultAssembler<Object> getRowIdAssembler() {
 		return rowIdAssembler;
 	}
 
-	protected DomainResultAssembler<?>[][] getAssemblers() {
+	protected @Nullable DomainResultAssembler<?>[][] getAssemblers() {
 		return assemblers;
 	}
 
+	protected @Nullable BasicResultAssembler<?> getDiscriminatorAssembler() {
+		return discriminatorAssembler;
+	}
+
+	protected boolean isKeyManyToOne() {
+		return hasKeyManyToOne;
+	}
+
+	protected Initializer<?>[][] getSubInitializers() {
+		return subInitializers;
+	}
+
+	public @Nullable DomainResultAssembler<?> getKeyAssembler() {
+		return keyAssembler;
+	}
 }

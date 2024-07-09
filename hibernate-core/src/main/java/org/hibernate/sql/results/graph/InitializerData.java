@@ -6,9 +6,13 @@
  */
 package org.hibernate.sql.results.graph;
 
+import java.util.Objects;
+
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static java.util.Objects.requireNonNull;
 
 public abstract class InitializerData {
 	protected final RowProcessingState rowProcessingState;
@@ -17,6 +21,16 @@ public abstract class InitializerData {
 
 	public InitializerData(RowProcessingState rowProcessingState) {
 		this.rowProcessingState = rowProcessingState;
+	}
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	public InitializerData(InitializerData original) {
+		requireNonNull( original );
+		this.rowProcessingState = original.rowProcessingState;
+		this.state = original.state;
+		this.instance = original.instance;
 	}
 
 	public RowProcessingState getRowProcessingState() {

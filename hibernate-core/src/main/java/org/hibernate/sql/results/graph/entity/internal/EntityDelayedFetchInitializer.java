@@ -315,4 +315,7 @@ public class EntityDelayedFetchInitializer
 		return identifierAssembler;
 	}
 
+	protected @Nullable BasicResultAssembler<?> getDiscriminatorAssembler() {
+		return discriminatorAssembler;
+	}
 }

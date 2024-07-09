@@ -426,6 +426,16 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	@Override
+	String findEntityName(String typeName) {
+		for ( final Map.Entry<String, String> e : entityNameMappings.entrySet() ) {
+			if ( typeName.equals( e.getKey() ) || typeName.equals( e.getValue() ) ) {
+				return e.getKey();
+			}
+		}
+		return null;
+	}
+
+	@Override
 	String qualifyName(String entityName) {
 		TypeElement entityClass = findEntityClass(entityName);
 		return entityClass == null ? null : entityClass.getSimpleName().toString();

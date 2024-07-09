@@ -71,7 +71,9 @@ class NamedQueryMethod implements MetaAttribute {
 				.append(sessionVariableName)
 				.append(".createNamedQuery(")
 				.append(fieldName())
-				.append(")");
+				.append(", ")
+				.append( annotationMeta.importType( resultType( select, annotationMeta.getContext() ) ) )
+				.append( ".class)");
 		for ( SqmParameter<?> param : sortedParameters ) {
 			declaration
 					.append("\n\t\t\t.setParameter(")

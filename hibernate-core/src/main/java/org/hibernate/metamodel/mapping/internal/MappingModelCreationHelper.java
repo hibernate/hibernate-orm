@@ -444,12 +444,10 @@ public class MappingModelCreationHelper {
 		}
 	}
 
-	@SuppressWarnings("rawtypes")
 	public static AttributeMetadata getAttributeMetadata(PropertyAccess propertyAccess) {
 		return new SimpleAttributeMetadata( propertyAccess, ImmutableMutabilityPlan.INSTANCE, false, true, false, false, true, null);// todo (6.0) : not sure if CascadeStyle=null is correct
 	}
 
-	@SuppressWarnings("rawtypes")
 	public static PluralAttributeMapping buildPluralAttributeMapping(
 			String attrName,
 			int stateArrayPosition,
@@ -681,7 +679,6 @@ public class MappingModelCreationHelper {
 				style,
 				collectionDescriptor.getCollectionType(),
 				collectionDescriptor.isLazy(),
-				collectionDescriptor.getRole(),
 				sessionFactory
 		);
 
@@ -1361,7 +1358,7 @@ public class MappingModelCreationHelper {
 
 		if ( bootMapKeyDescriptor instanceof Component ) {
 			final Component component = (Component) bootMapKeyDescriptor;
-			final CompositeType compositeType = (CompositeType) component.getType();
+			final CompositeType compositeType = component.getType();
 
 
 			final EmbeddableMappingTypeImpl mappingType = EmbeddableMappingTypeImpl.from(
@@ -1876,17 +1873,16 @@ public class MappingModelCreationHelper {
 					);
 
 			final FetchTiming fetchTiming;
-			final String role = declaringType.getNavigableRole().toString() + "." + bootProperty.getName();
 			final boolean lazy = value.isLazy();
 			if ( lazy && entityPersister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
 				if ( value.isUnwrapProxy() ) {
-					fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
+					fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, lazy, sessionFactory );
 				}
 				else if ( value instanceof ManyToOne && value.isNullable() && ( (ManyToOne) value ).isIgnoreNotFound() ) {
 					fetchTiming = FetchTiming.IMMEDIATE;
 				}
 				else {
-					fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
+					fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, lazy, sessionFactory );
 				}
 			}
 			else if ( !lazy
@@ -1904,7 +1900,7 @@ public class MappingModelCreationHelper {
 				}
 			}
 			else {
-				fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
+				fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, lazy, sessionFactory );
 			}
 
 			final ToOneAttributeMapping attributeMapping = mappingConverter.apply( new ToOneAttributeMapping(

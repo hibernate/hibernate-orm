@@ -705,6 +705,11 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public String currentTime() {
+		return currentTimestamp();
+	}
+
+	@Override
 	public String currentTimestamp() {
 		return "current";
 	}

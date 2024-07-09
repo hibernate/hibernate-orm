@@ -20,6 +20,8 @@ import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.Metamodel;
+
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.orm.test.jpa.metamodel.Address;
@@ -38,8 +40,8 @@ import org.hibernate.orm.test.jpa.metamodel.Spouse;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -229,7 +231,7 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = CockroachDialect.class, strictMatching = true)
+	@SkipForDialect(dialectClass = CockroachDialect.class)
 	public void testDateTimeFunctions() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -255,6 +257,7 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class, majorVersion = 11, minorVersion = 70, reason = "Informix does not support count literals")
 	public void testFunctionDialectFunctions() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

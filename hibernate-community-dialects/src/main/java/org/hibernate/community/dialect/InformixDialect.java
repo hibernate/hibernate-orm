@@ -278,8 +278,7 @@ public class InformixDialect extends Dialect {
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 		functionFactory.instr();
 		functionFactory.substr();
-		functionFactory.substring_substr();
-		//also natively supports ANSI-style substring()
+		functionFactory.substringFromFor();
 		functionFactory.trunc();
 		functionFactory.trim2();
 		functionFactory.space();

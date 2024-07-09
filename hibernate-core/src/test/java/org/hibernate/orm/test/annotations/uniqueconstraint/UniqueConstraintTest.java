@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.annotations.uniqueconstraint;
 
 import org.hibernate.JDBCException;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SybaseDialect;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -27,6 +28,9 @@ import static org.junit.Assert.fail;
  */
 @DomainModel( annotatedClasses = { Room.class, Building.class, House.class } )
 @SessionFactory
+@SkipForDialect( dialectClass = InformixDialect.class,
+		matchSubTypes = true,
+		reason = "Informix does not properly support unique constraints on nullable columns" )
 @SkipForDialect( dialectClass = SybaseDialect.class,
         matchSubTypes = true,
         reason = "Sybase does not properly support unique constraints on nullable columns" )

@@ -11,10 +11,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.hibernate.community.dialect.InformixDialect;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,6 +41,7 @@ import static org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator.safeRandom
 )
 @SessionFactory
 @TestForIssue(jiraKey = "HHH-15417")
+@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not support unique / primary constraints on binary columns")
 public class UUIDTypeConverterTest {
 
 	@AfterEach

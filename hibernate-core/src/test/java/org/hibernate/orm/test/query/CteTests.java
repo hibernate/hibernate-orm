@@ -268,11 +268,11 @@ public class CteTests {
 
 			final QueryImplementor<String> query = session.createQuery(
 					"select c.name.first from Contact c where c.id in (" +
-							"with contacts as (" +
+							"with cte as (" +
 							"select c.id id, c.name.first firstName from Contact c " +
 							"where c.id in (1,2)" +
 							") " +
-							"select c.id from contacts c" +
+							"select c.id from cte c" +
 							")",
 					String.class
 			);

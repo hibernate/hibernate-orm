@@ -167,6 +167,17 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		);
 	}
 
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected SimpleForeignKeyDescriptor(SimpleForeignKeyDescriptor original) {
+		keySide = original.keySide;
+		targetSide = original.targetSide;
+		refersToPrimaryKey = original.refersToPrimaryKey;
+		hasConstraint = original.hasConstraint;
+		associationKey = original.associationKey;
+	}
+
 	@Override
 	public String getKeyTable() {
 		return keySide.getModelPart().getContainingTableExpression();

@@ -2428,16 +2428,13 @@ public class ToOneAttributeMapping
 		return foreignKeyDescriptor.breakDownJdbcValues( value, offset, x, y, valueConsumer, session );
 	}
 
-	private Object extractValue(Object domainValue, SharedSessionContractImplementor session) {
+	protected Object extractValue(Object domainValue, SharedSessionContractImplementor session) {
 		if ( domainValue == null ) {
 			return null;
 		}
 
 		if ( referencedPropertyName != null ) {
-			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( domainValue );
-			if ( lazyInitializer != null ) {
-				domainValue = lazyInitializer.getImplementation();
-			}
+			domainValue = lazyInitialize( domainValue );
 			assert getAssociatedEntityMappingType()
 					.getRepresentationStrategy()
 					.getInstantiator()
@@ -2448,7 +2445,19 @@ public class ToOneAttributeMapping
 		return foreignKeyDescriptor.getAssociationKeyFromSide( domainValue, sideNature.inverse(), session );
 	}
 
-	private static Object extractAttributePathValue(Object domainValue, EntityMappingType entityType, String attributePath) {
+	/**
+	 * For Hibernate Reactive, because it doesn't support lazy initialization, it will override this method and skip it
+	 * when possible.
+	 */
+	protected Object lazyInitialize(Object domainValue) {
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( domainValue );
+		if ( lazyInitializer != null ) {
+			return lazyInitializer.getImplementation();
+		}
+		return domainValue;
+	}
+
+	protected static Object extractAttributePathValue(Object domainValue, EntityMappingType entityType, String attributePath) {
 		if ( ! attributePath.contains( "." ) ) {
 			return entityType.findAttributeMapping( attributePath ).getValue( domainValue );
 		}

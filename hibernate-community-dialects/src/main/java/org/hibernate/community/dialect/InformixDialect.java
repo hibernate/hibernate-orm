@@ -74,7 +74,9 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.internal.StandardForeignKeyExporter;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
+import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
@@ -857,6 +859,17 @@ public class InformixDialect extends Dialect {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
 		jdbcTypeRegistry.addDescriptor( Types.NCLOB, ClobJdbcType.DEFAULT );
 		typeContributions.contributeJdbcType( VarcharUUIDJdbcType.INSTANCE );
+		typeContributions.contributeJdbcType( ObjectNullAsBinaryTypeJdbcType.INSTANCE );
+
+		// Until we remove StandardBasicTypes, we have to keep this
+		typeContributions.contributeType(
+				new JavaObjectType(
+						ObjectNullAsBinaryTypeJdbcType.INSTANCE,
+						typeContributions.getTypeConfiguration()
+								.getJavaTypeRegistry()
+								.getDescriptor( Object.class )
+				)
+		);
 	}
 
 	@Override

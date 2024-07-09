@@ -280,6 +280,8 @@ public abstract class MockSessionFactory
 
 	abstract boolean isEntityDefined(String entityName);
 
+	abstract String findEntityName(String typeName);
+
 	abstract String qualifyName(String entityName);
 
 	abstract boolean isAttributeDefined(String entityName, String fieldName);
@@ -799,6 +801,12 @@ public abstract class MockSessionFactory
 			else {
 				return null;
 			}
+		}
+
+		@Override
+		public <X> ManagedDomainType<X> managedType(String typeName) {
+			final String entityName = findEntityName( typeName );
+			return entityName == null ? null : entity( entityName );
 		}
 
 		@Override

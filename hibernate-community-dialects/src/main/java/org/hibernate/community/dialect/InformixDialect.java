@@ -52,6 +52,7 @@ import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableIn
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
@@ -70,6 +71,7 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.internal.StandardForeignKeyExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -79,6 +81,7 @@ import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.FLOAT;
@@ -298,6 +301,19 @@ public class InformixDialect extends Dialect {
 		}
 		functionContributions.getFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
 		functionContributions.getFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
+		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "matches" )
+				.setInvariantType( functionContributions.getTypeConfiguration()
+										   .getBasicTypeRegistry()
+										   .resolve( StandardBasicTypes.STRING ) )
+				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver(
+						StandardFunctionArgumentTypeResolvers.impliedOrInvariant(
+								functionContributions.getTypeConfiguration(),
+								STRING
+						)
+				)
+				.setArgumentListSignature( "(STRING string, STRING length)" )
+				.register();
 		if ( supportsWindowFunctions() ) {
 			functionFactory.windowFunctions();
 		}

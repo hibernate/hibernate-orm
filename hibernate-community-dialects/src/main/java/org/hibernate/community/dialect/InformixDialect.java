@@ -62,6 +62,7 @@ import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -305,6 +306,7 @@ public class InformixDialect extends Dialect {
 		super.initializeFunctionRegistry(functionContributions);
 
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		functionFactory.aggregates( this, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 		functionFactory.instr();
 		functionFactory.substr();
 		functionFactory.substringFromFor();

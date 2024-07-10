@@ -268,10 +268,10 @@ public class Cfg2HbmTool {
 	}
 
     public boolean isNamedQueries(Metadata md) {
-    	final ArrayList<NamedHqlQueryDefinition> list = new ArrayList<NamedHqlQueryDefinition>();
-    	Consumer<NamedHqlQueryDefinition> consumer = new Consumer<NamedHqlQueryDefinition>() {
+    	final ArrayList<NamedHqlQueryDefinition<?>> list = new ArrayList<NamedHqlQueryDefinition<?>>();
+    	Consumer<NamedHqlQueryDefinition<?>> consumer = new Consumer<NamedHqlQueryDefinition<?>>() {
 			@Override
-			public void accept(NamedHqlQueryDefinition namedHqlQueryDefinition) {
+			public void accept(NamedHqlQueryDefinition<?> namedHqlQueryDefinition) {
 				list.add(namedHqlQueryDefinition);
 			}
 		};
@@ -280,10 +280,10 @@ public class Cfg2HbmTool {
 	}
 
 	public boolean isNamedSQLQueries(Metadata md) {
-	   	final ArrayList<NamedNativeQueryDefinition> list = new ArrayList<NamedNativeQueryDefinition>();
-    	Consumer<NamedNativeQueryDefinition> consumer = new Consumer<NamedNativeQueryDefinition>() {
+	   	final ArrayList<NamedNativeQueryDefinition<?>> list = new ArrayList<NamedNativeQueryDefinition<?>>();
+    	Consumer<NamedNativeQueryDefinition<?>> consumer = new Consumer<NamedNativeQueryDefinition<?>>() {
 			@Override
-			public void accept(NamedNativeQueryDefinition namedHqlQueryDefinition) {
+			public void accept(NamedNativeQueryDefinition<?> namedHqlQueryDefinition) {
 				list.add(namedHqlQueryDefinition);
 			}
 		};

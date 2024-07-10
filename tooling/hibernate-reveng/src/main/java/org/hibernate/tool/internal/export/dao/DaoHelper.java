@@ -9,11 +9,11 @@ import org.hibernate.boot.query.NamedHqlQueryDefinition;
 
 public class DaoHelper {
 	
-	public static Iterable<NamedHqlQueryDefinition> getNamedHqlQueryDefinitions(Metadata metadata) {
-		List<NamedHqlQueryDefinition> result = new ArrayList<NamedHqlQueryDefinition>();
-		metadata.visitNamedHqlQueryDefinitions(new Consumer<NamedHqlQueryDefinition>() {			
+	public static Iterable<NamedHqlQueryDefinition<?>> getNamedHqlQueryDefinitions(Metadata metadata) {
+		List<NamedHqlQueryDefinition<?>> result = new ArrayList<NamedHqlQueryDefinition<?>>();
+		metadata.visitNamedHqlQueryDefinitions(new Consumer<NamedHqlQueryDefinition<?>>() {			
 			@Override
-			public void accept(NamedHqlQueryDefinition t) {
+			public void accept(NamedHqlQueryDefinition<?> t) {
 				result.add(t);
 			}
 		});

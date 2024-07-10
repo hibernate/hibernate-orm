@@ -31,7 +31,6 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	private final String localName;
 	private final @Nullable String alias;
 	private final String identifierForTableGroup;
-	private final FullPathCalculator fullPathCalculator;
 	private final int hashCode;
 
 	public NavigablePath(String localName) {
@@ -43,8 +42,6 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		this.alias = alias = StringHelper.nullIfEmpty( alias );
 		this.localName = rootName;
 		this.identifierForTableGroup = rootName;
-
-		this.fullPathCalculator = NavigablePath::calculateRootFullPath;
 
 		this.hashCode = localName.hashCode() + ( alias == null ? 0 : alias.hashCode() );
 	}
@@ -71,17 +68,20 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		if ( IDENTIFIER_MAPPER_PROPERTY.equals( localName ) ) {
 			this.localName = "";
 			this.identifierForTableGroup = parent.getFullPath();
-			this.fullPathCalculator = NavigablePath::calculateIdMapperFullPath;
 		}
 		else {
 			this.localName = localName;
-			this.identifierForTableGroup = StringHelper.isEmpty( parent.getIdentifierForTableGroup() )
+			final String parentFullPath = parent.getFullPath();
+			this.identifierForTableGroup = StringHelper.isEmpty( parentFullPath )
 					? aliasedLocalName
-					: parent.getIdentifierForTableGroup() + "." + localName;
-			this.fullPathCalculator = NavigablePath::calculateNormalFullPath;
+					: parentFullPath + "." + localName;
 		}
 	}
 
+	/**
+	 * @deprecated Since {@link FullPathCalculator} is no longer used
+	 */
+	@Deprecated( since = "6.6", forRemoval = true )
 	public NavigablePath(
 			@Nullable NavigablePath parent,
 			String localName,
@@ -89,12 +89,20 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 			String identifierForTableGroup,
 			FullPathCalculator fullPathCalculator,
 			int hashCode) {
+		this( parent, localName, alias, identifierForTableGroup, hashCode );
+	}
+
+	public NavigablePath(
+			@Nullable NavigablePath parent,
+			String localName,
+			@Nullable String alias,
+			String identifierForTableGroup,
+			int hashCode) {
 		this.parent = parent;
 		this.localName = localName;
 		this.hashCode = hashCode;
 		this.alias = StringHelper.nullIfEmpty( alias );
 		this.identifierForTableGroup = identifierForTableGroup;
-		this.fullPathCalculator = fullPathCalculator;
 	}
 
 	@Override
@@ -316,7 +324,7 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 
 	@Override
 	public String getFullPath() {
-		return fullPathCalculator.calculateFullPath( parent, localName, alias );
+		return alias == null ? identifierForTableGroup : identifierForTableGroup + "(" + alias + ")";
 	}
 
 	@Override
@@ -326,15 +334,21 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 
 	/**
 	 * Effectively a tri-function
+	 *
+	 * @deprecated No longer used
 	 */
 	@FunctionalInterface
+	@Deprecated( since = "6.6", forRemoval = true )
 	protected interface FullPathCalculator extends Serializable {
 		String calculateFullPath(@Nullable NavigablePath parent, String localName, @Nullable String alias);
 	}
 
 	/**
 	 * The pattern used for root NavigablePaths
+	 *
+	 * @deprecated No longer used
 	 */
+	@Deprecated( since = "6.6", forRemoval = true )
 	protected static String calculateRootFullPath(@Nullable NavigablePath parent, String rootName, @Nullable String alias) {
 		assert parent == null;
 		return alias == null ? rootName : rootName + "(" + alias + ")";
@@ -342,10 +356,11 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 
 	/**
 	 * The normal pattern used for the "full path"
+	 *
+	 * @deprecated No longer used
 	 */
+	@Deprecated( since = "6.6", forRemoval = true )
 	private static String calculateNormalFullPath(@Nullable NavigablePath parent, String localName, @Nullable String alias) {
-		assert parent != null;
-
 		final String parentFullPath = castNonNull( parent ).getFullPath();
 		final String baseFullPath = StringHelper.isEmpty( parentFullPath )
 				? localName
@@ -355,7 +370,10 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 
 	/**
 	 * Pattern used for `_identifierMapper`
+	 *
+	 * @deprecated No longer used
 	 */
+	@Deprecated( since = "6.6", forRemoval = true )
 	protected static String calculateIdMapperFullPath(@Nullable NavigablePath parent, String localName, @Nullable String alias) {
 		return parent != null ? parent.getFullPath() : "";
 	}

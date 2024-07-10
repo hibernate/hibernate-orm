@@ -30,12 +30,15 @@ public class TreatedNavigablePath extends NavigablePath {
 				"#" + entityTypeName,
 				alias,
 				"treat(" + parent + " as " + entityTypeName + ")",
-				TreatedNavigablePath::calculateTreatedFullPath,
 				1
 		);
 		assert !( parent instanceof TreatedNavigablePath );
 	}
 
+	/**
+	 * @deprecated No longer used
+	 */
+	@Deprecated( since = "6.6", forRemoval = true )
 	protected static String calculateTreatedFullPath(@Nullable NavigablePath parent, String localName, @Nullable String alias) {
 		return alias == null
 				? "treat(" + parent + " as " + localName + ")"

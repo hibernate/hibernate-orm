@@ -303,6 +303,8 @@ public class InformixDialect extends Dialect {
 		functionFactory.monthsBetween();
 		functionFactory.stddev();
 		functionFactory.variance();
+		functionFactory.bitLength_pattern( "length(?1)*8" );
+		
 		if ( getVersion().isSameOrAfter( 12 ) ) {
 			functionFactory.locate_charindex();
 		}

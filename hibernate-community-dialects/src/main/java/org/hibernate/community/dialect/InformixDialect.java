@@ -285,12 +285,15 @@ public class InformixDialect extends Dialect {
 		functionFactory.stddev();
 		functionFactory.variance();
 		functionFactory.bitLength_pattern( "length(?1)*8" );
-		
+
 		if ( getVersion().isBefore( 12 ) ) {
-			functionContributions.getFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
+			functionContributions.getFunctionRegistry().register(
+					"coalesce",
+					new NvlCoalesceEmulation( SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS )
+			);
 		}
 		else {
-			functionFactory.coalesce(SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS);
+			functionFactory.coalesce( SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS );
 			functionFactory.locate_charindex();
 		}
 		functionContributions.getFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );

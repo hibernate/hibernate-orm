@@ -16,6 +16,7 @@ import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeReso
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 
 import java.util.List;
 
@@ -31,13 +32,20 @@ import static java.util.Arrays.asList;
 public class NvlCoalesceEmulation
 		extends AbstractSqmFunctionDescriptor {
 
+	private final SqlAstNodeRenderingMode inferenceArgumentRenderingMode;
+
 	public NvlCoalesceEmulation() {
+		this( SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public NvlCoalesceEmulation(SqlAstNodeRenderingMode inferenceArgumentRenderingMode) {
 		super(
 				"coalesce",
 				StandardArgumentsValidators.min( 2 ),
 				StandardFunctionReturnTypeResolvers.useFirstNonNull(),
 				StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE
 		);
+		this.inferenceArgumentRenderingMode = inferenceArgumentRenderingMode;
 	}
 
 	@Override
@@ -50,6 +58,7 @@ public class NvlCoalesceEmulation
 				queryEngine.getSqmFunctionRegistry()
 						.namedDescriptorBuilder("nvl")
 						.setExactArgumentCount(2)
+						.setArgumentRenderingMode( inferenceArgumentRenderingMode )
 						.descriptor();
 
 		int pos = arguments.size();

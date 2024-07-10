@@ -303,8 +303,9 @@ public class InformixDialect extends Dialect {
 		functionContributions.getFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
 		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "matches" )
 				.setInvariantType( functionContributions.getTypeConfiguration()
-										   .getBasicTypeRegistry()
-										   .resolve( StandardBasicTypes.STRING ) )
+						.getBasicTypeRegistry()
+						.resolve( StandardBasicTypes.STRING )
+				)
 				.setExactArgumentCount( 2 )
 				.setArgumentTypeResolver(
 						StandardFunctionArgumentTypeResolvers.impliedOrInvariant(

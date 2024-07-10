@@ -25,6 +25,7 @@ import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.NvlCoalesceEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -285,12 +286,13 @@ public class InformixDialect extends Dialect {
 		functionFactory.variance();
 		functionFactory.bitLength_pattern( "length(?1)*8" );
 		
-		if ( getVersion().isSameOrAfter( 12 ) ) {
+		if ( getVersion().isBefore( 12 ) ) {
+			functionContributions.getFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
+		}
+		else {
+			functionFactory.coalesce(SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS);
 			functionFactory.locate_charindex();
 		}
-
-		//coalesce() and nullif() both supported since Informix 12
-
 		functionContributions.getFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
 		functionContributions.getFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
 		if ( supportsWindowFunctions() ) {

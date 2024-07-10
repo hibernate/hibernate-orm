@@ -1566,9 +1566,14 @@ public class CommonFunctionFactory {
 	}
 
 	public void coalesce() {
+		coalesce( SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public void coalesce( SqlAstNodeRenderingMode inferenceArgumentRenderingMode ) {
 		functionRegistry.namedDescriptorBuilder( "coalesce" )
 				.setMinArgumentCount( 1 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentRenderingMode( inferenceArgumentRenderingMode )
 				.register();
 	}
 

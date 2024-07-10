@@ -257,6 +257,7 @@ public class InformixDialect extends Dialect {
 		super.initializeFunctionRegistry(functionContributions);
 
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		functionFactory.aggregates( this, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 		functionFactory.instr();
 		functionFactory.substr();
 		functionFactory.substringFromFor();

@@ -402,7 +402,7 @@ public abstract class AbstractIdentifiableType<J>
 	private SqmPathSource<?> interpretIdDescriptor() {
 		log.tracef( "Interpreting domain-model identifier descriptor" );
 
-		if ( getSuperType() != null ) {
+		if ( getSuperType() != null && getSuperType().getIdentifierDescriptor() != null ) {
 			return getSuperType().getIdentifierDescriptor();
 		}
 		else if ( id != null ) {

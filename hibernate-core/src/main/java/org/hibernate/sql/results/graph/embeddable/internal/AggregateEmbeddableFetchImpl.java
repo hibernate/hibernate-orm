@@ -35,6 +35,8 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
  * A Fetch for an embeddable that is mapped as aggregate e.g. STRUCT, JSON or XML.
  * This is only used when {@link EmbeddableMappingType#shouldSelectAggregateMapping()} returns <code>true</code>.
@@ -143,7 +145,8 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent
 				final NavigablePath navigablePath = tableGroupJoin.getNavigablePath();
 				if ( tableGroupJoin.getJoinedGroup().isFetched()
 						&& fetchable.getFetchableName().equals( navigablePath.getLocalName() )
-						&& tableGroupJoin.getJoinedGroup().getModelPart() == fetchable ) {
+						&& tableGroupJoin.getJoinedGroup().getModelPart() == fetchable
+						&& castNonNull( navigablePath.getParent() ).equals( getNavigablePath() ) ) {
 					return navigablePath;
 				}
 			}

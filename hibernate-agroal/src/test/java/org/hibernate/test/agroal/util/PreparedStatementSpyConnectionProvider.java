@@ -44,10 +44,10 @@ public class PreparedStatementSpyConnectionProvider extends AgroalConnectionProv
 	}
 
 	@Override
-	public void closeConnection(Connection conn) throws SQLException {
-		acquiredConnections.remove( conn );
-		releasedConnections.add( conn );
-		super.closeConnection( spyContext.getSpiedInstance( conn ) );
+	public void closeConnection(Connection connection) throws SQLException {
+		acquiredConnections.remove( connection );
+		releasedConnections.add( connection );
+		super.closeConnection( spyContext.getSpiedInstance( connection ) );
 	}
 
 	@Override

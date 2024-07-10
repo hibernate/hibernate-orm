@@ -25,6 +25,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
+import javax.lang.model.element.QualifiedNameable;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
@@ -338,9 +339,9 @@ public class HibernateProcessor extends AbstractProcessor {
 	}
 
 	private boolean included(Element element) {
-		if ( element instanceof TypeElement) {
-			final TypeElement typeElement = (TypeElement) element;
-			return context.isIncluded( typeElement.getQualifiedName().toString() );
+		if ( element instanceof TypeElement || element instanceof PackageElement ) {
+			final QualifiedNameable nameable = (QualifiedNameable) element;
+			return context.isIncluded( nameable.getQualifiedName().toString() );
 		}
 		else {
 			return false;

@@ -17,6 +17,7 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.hibernate.Length;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -390,13 +391,13 @@ public class OracleDialect extends Dialect {
 	@Override
 	public int getMaxVarcharLength() {
 		//with MAX_STRING_SIZE=EXTENDED, changes to 32_767
-		return extended ? 32_767 : 4000;
+		return extended ? Length.LONG16 : 4000;
 	}
 
 	@Override
 	public int getMaxVarbinaryLength() {
 		//with MAX_STRING_SIZE=EXTENDED, changes to 32_767
-		return extended ? 32_767 : 2000;
+		return extended ? Length.LONG16 : 2000;
 	}
 
 	@Override

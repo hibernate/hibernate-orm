@@ -63,8 +63,10 @@ include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-persist-native-exa
 `org.hibernate.Session` also has a method named persist which follows the exact semantics defined in the Jakarta Persistence specification for the persist method.
 It is this `org.hibernate.Session` method to which the Hibernate `jakarta.persistence.EntityManager` implementation delegates.
 
-If the `DomesticCat` entity type has a generated identifier, the value is associated with the instance when the save or persist is called.
-If the identifier is not automatically generated, the manually assigned (usually natural) key value has to be set on the instance before the save or persist methods are called.
+Instances of entity types using <<identifiers-generators,generated identifiers>> will be automatically associated with
+an identifier value when the save or persist operation is called.
+If an entity type does not rely on a <<identifiers-generators,generated id>>, then an identifier value
+(usually natural) must be manually assigned to the entity instance before the save or persist operations can be called.
 
 [[pc-remove]]
 === Deleting (removing) entities

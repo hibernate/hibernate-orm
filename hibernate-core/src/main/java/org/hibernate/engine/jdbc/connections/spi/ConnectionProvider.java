@@ -45,12 +45,12 @@ public interface ConnectionProvider extends Service, Wrapped {
 	/**
 	 * Release a connection from Hibernate use.
 	 *
-	 * @param conn The JDBC connection to release
+	 * @param connection The JDBC connection to release
 	 *
 	 * @throws SQLException Indicates a problem closing the connection
 	 * @throws org.hibernate.HibernateException Indicates a problem otherwise releasing a connection.
 	 */
-	void closeConnection(Connection conn) throws SQLException;
+	void closeConnection(Connection connection) throws SQLException;
 
 	/**
 	 * Does this connection provider support aggressive release of JDBC connections and later

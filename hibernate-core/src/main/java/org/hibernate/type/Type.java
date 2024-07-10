@@ -154,7 +154,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException A problem occurred performing the comparison
 	 */
-	boolean isSame(Object x, Object y) throws HibernateException;
+	boolean isSame(@Nullable Object x, @Nullable Object y) throws HibernateException;
 
 	/**
 	 * Compare two instances of the class mapped by this type for persistence "equality",
@@ -173,7 +173,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException A problem occurred performing the comparison
 	 */
-	boolean isEqual(Object x, Object y) throws HibernateException;
+	boolean isEqual(@Nullable Object x, @Nullable Object y) throws HibernateException;
 
 	/**
 	 * Compare two instances of the class mapped by this type for persistence "equality",
@@ -193,7 +193,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException A problem occurred performing the comparison
 	 */
-	boolean isEqual(Object x, Object y, SessionFactoryImplementor factory) throws HibernateException;
+	boolean isEqual(@Nullable Object x, @Nullable Object y, SessionFactoryImplementor factory) throws HibernateException;
 
 	/**
 	 * Get a hash code, consistent with persistence "equality". For most types this could
@@ -229,9 +229,9 @@ public interface Type extends Serializable {
 	 *
 	 * @see java.util.Comparator#compare(Object, Object)
 	 */
-	int compare(Object x, Object y);
+	int compare(@Nullable Object x, @Nullable Object y);
 
-	int compare(Object x, Object y, SessionFactoryImplementor sessionFactory);
+	int compare(@Nullable Object x, @Nullable Object y, SessionFactoryImplementor sessionFactory);
 
 	/**
 	 * Should the parent be considered dirty, given both the old and current value?
@@ -244,7 +244,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException A problem occurred performing the checking
 	 */
-	boolean isDirty(Object old, Object current, SharedSessionContractImplementor session) throws HibernateException;
+	boolean isDirty(@Nullable Object old, @Nullable Object current, SharedSessionContractImplementor session) throws HibernateException;
 
 	/**
 	 * Should the parent be considered dirty, given both the old and current value?
@@ -258,7 +258,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException A problem occurred performing the checking
 	 */
-	boolean isDirty(Object oldState, Object currentState, boolean[] checkable, SharedSessionContractImplementor session)
+	boolean isDirty(@Nullable Object oldState, @Nullable Object currentState, boolean[] checkable, SharedSessionContractImplementor session)
 			throws HibernateException;
 
 	/**
@@ -277,8 +277,8 @@ public interface Type extends Serializable {
 	 * @throws HibernateException A problem occurred performing the checking
 	 */
 	boolean isModified(
-			Object dbState,
-			Object currentState,
+			@Nullable Object dbState,
+			@Nullable Object currentState,
 			boolean[] checkable,
 			SharedSessionContractImplementor session)
 			throws HibernateException;
@@ -300,7 +300,7 @@ public interface Type extends Serializable {
 	 */
 	void nullSafeSet(
 			PreparedStatement st,
-			Object value,
+			@Nullable Object value,
 			int index,
 			boolean[] settable,
 			SharedSessionContractImplementor session)
@@ -320,7 +320,7 @@ public interface Type extends Serializable {
 	 * @throws HibernateException An error from Hibernate
 	 * @throws SQLException An error from the JDBC driver
 	 */
-	void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
+	void nullSafeSet(PreparedStatement st, @Nullable Object value, int index, SharedSessionContractImplementor session)
 	throws HibernateException, SQLException;
 
 	/**
@@ -353,7 +353,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 */
-	Object deepCopy(Object value, SessionFactoryImplementor factory)
+	@Nullable Object deepCopy(@Nullable Object value, SessionFactoryImplementor factory)
 			throws HibernateException;
 
 	/**
@@ -392,7 +392,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 */
-	default Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+	default @Nullable Serializable disassemble(@Nullable Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
 		return disassemble( value, null, null );
 	}
 
@@ -410,7 +410,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 */
-	Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException;
+	@Nullable Serializable disassemble(@Nullable Object value, @Nullable SharedSessionContractImplementor session, @Nullable Object owner) throws HibernateException;
 
 	/**
 	 * Reconstruct the object from its disassembled state. This function is the inverse of
@@ -424,7 +424,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 */
-	Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) throws HibernateException;
+	@Nullable Object assemble(@Nullable Serializable cached, SharedSessionContractImplementor session, Object owner) throws HibernateException;
 
 	/**
 	 * Called before assembling a query result set from the query cache, to allow batch
@@ -432,7 +432,9 @@ public interface Type extends Serializable {
 	 *
 	 * @param cached The key
 	 * @param session The originating session
+	 * @deprecated Is not called anymore
 	 */
+	@Deprecated(forRemoval = true, since = "6.6")
 	void beforeAssemble(Serializable cached, SharedSessionContractImplementor session);
 
 	/**
@@ -452,9 +454,9 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 */
-	Object replace(
-			Object original,
-			Object target,
+	@Nullable Object replace(
+			@Nullable Object original,
+			@Nullable Object target,
 			SharedSessionContractImplementor session,
 			Object owner,
 			Map<Object, Object> copyCache) throws HibernateException;
@@ -477,9 +479,9 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 */
-	Object replace(
-			Object original,
-			Object target,
+	@Nullable Object replace(
+			@Nullable Object original,
+			@Nullable Object target,
 			SharedSessionContractImplementor session,
 			Object owner,
 			Map<Object, Object> copyCache,
@@ -494,5 +496,5 @@ public interface Type extends Serializable {
 	 *
 	 * @return array indicating column nullness for a value instance
 	 */
-	boolean[] toColumnNullness(Object value, Mapping mapping);
+	boolean[] toColumnNullness(@Nullable Object value, Mapping mapping);
 }

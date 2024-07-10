@@ -49,10 +49,9 @@ public class C3P0ProxyConnectionProvider extends C3P0ConnectionProvider {
 	}
 
 	@Override
-	public void closeConnection(Connection conn) throws SQLException {
-		Connection originalConnection = connectionSpyMap.get( conn );
-
-		super.closeConnection( originalConnection != null ? originalConnection : conn );
+	public void closeConnection(Connection connection) throws SQLException {
+		final Connection originalConnection = connectionSpyMap.get( connection );
+		super.closeConnection( originalConnection != null ? originalConnection : connection);
 	}
 
 	public Map<Connection, Connection> getConnectionSpyMap() {

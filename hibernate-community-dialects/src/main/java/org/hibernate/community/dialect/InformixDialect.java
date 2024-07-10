@@ -6,6 +6,8 @@
  */
 package org.hibernate.community.dialect;
 
+import java.sql.Types;
+
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -65,6 +67,8 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.internal.StandardForeignKeyExporter;
 import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
@@ -532,6 +536,16 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsLobValueChangePropagation() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsUnboundedLobLocatorMaterialization() {
+		return false;
+	}
+
+	@Override
 	public boolean isCurrentTimestampSelectStringCallable() {
 		return false;
 	}
@@ -717,5 +731,17 @@ public class InformixDialect extends Dialect {
 	@Override
 	public String getNoColumnsInsertString() {
 		return "values (0)";
+	}
+
+	@Override
+	public boolean supportsNationalizedMethods(){
+		return false;
+	}
+
+	@Override
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes( typeContributions, serviceRegistry );
+		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
+		jdbcTypeRegistry.addDescriptor( Types.NCLOB, ClobJdbcType.DEFAULT );
 	}
 }

@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Clob;
@@ -2374,13 +2375,27 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * A command to execute before dropping tables.
+	 *
+	 * @return A SQL statement, or {@code null}
+	 */
+	public String getBeforeDropStatement() {
+		return null;
+	}
+
+	/**
 	 * The command used to drop a table with the given name, usually
 	 * {@code drop table tab_name}.
 	 *
 	 * @param tableName The name of the table to drop
 	 *
 	 * @return The {@code drop table} statement as a string
+	 * 
+	 * @deprecated No longer used
+	 *
+	 * @see StandardTableExporter#getSqlDropStrings
 	 */
+	@Deprecated(since = "6.6")
 	public String getDropTableString(String tableName) {
 		final StringBuilder buf = new StringBuilder( "drop table " );
 		if ( supportsIfExistsBeforeTableName() ) {
@@ -4357,6 +4372,18 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Checks whether the JDBC driver implements methods for handling nationalized character data types
+	 * {@link ResultSet#getNString(int)} / {@link java.sql.PreparedStatement#setNString(int, String)},
+	 * {@link ResultSet#getNClob(int)} /{@link java.sql.PreparedStatement#setNClob(int, NClob)},
+	 * {@link ResultSet#getNCharacterStream(int)} / {@link java.sql.PreparedStatement#setNCharacterStream(int, Reader, long)}
+	 *
+	 * @return {@code true} if the driver implements these methods
+	 */
+	public boolean supportsNationalizedMethods(){
+		return true;
+	}
+
+	/**
 	 * How does this dialect support aggregate types like {@link SqlTypes#STRUCT}.
 	 *
 	 * @since 6.2
@@ -4760,7 +4787,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public int getMaxVarcharLength() {
 		//the longest possible length of a Java string
-		return Integer.MAX_VALUE;
+		return Length.LONG32;
 	}
 
 	/**

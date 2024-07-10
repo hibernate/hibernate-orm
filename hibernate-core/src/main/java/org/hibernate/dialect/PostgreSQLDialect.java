@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
+import org.hibernate.Length;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
@@ -298,7 +299,7 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public int getMaxVarbinaryLength() {
 		//postgres has no varbinary-like type
-		return Integer.MAX_VALUE;
+		return Length.LONG32;
 	}
 
 	@Override
@@ -780,6 +781,14 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public boolean supportsIfExistsAfterAlterTable() {
 		return true;
+	}
+
+	@Override
+	public String getBeforeDropStatement() {
+		// by default, the Postgres driver reports
+		// NOTICE: table "nonexistent" does not exist, skipping
+		// as a JDBC SQLWarning
+		return "set client_min_messages = WARNING";
 	}
 
 	@Override

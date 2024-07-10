@@ -8320,14 +8320,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			else if ( needsTupleComparisonEmulation( operator ) ) {
 				rhsTuple = SqlTupleContainer.getSqlTuple( rhsExpression );
 				assert rhsTuple != null;
-				// Some DBs like Oracle support tuples only for the IN subquery predicate
-				if ( ( operator == ComparisonOperator.EQUAL || operator == ComparisonOperator.NOT_EQUAL ) && supportsRowValueConstructorSyntaxInInSubQuery() ) {
+				// If the DB supports tuples in the IN list predicate, use that syntax as it's more concise
+				if ( ( operator == ComparisonOperator.EQUAL || operator == ComparisonOperator.NOT_EQUAL ) && supportsRowValueConstructorSyntaxInInList() ) {
 					comparisonPredicate.getLeftHandExpression().accept( this );
 					if ( operator == ComparisonOperator.NOT_EQUAL ) {
 						appendSql( " not" );
 					}
 					appendSql( " in (" );
-					renderExpressionsAsSubquery( rhsTuple.getExpressions() );
+					rhsTuple.accept( this );
 					appendSql( CLOSE_PARENTHESIS );
 				}
 				else {

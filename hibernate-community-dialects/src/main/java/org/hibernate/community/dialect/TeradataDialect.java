@@ -637,7 +637,7 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return TopLimitHandler.INSTANCE;
+		return new TopLimitHandler( false );
 	}
 
 }

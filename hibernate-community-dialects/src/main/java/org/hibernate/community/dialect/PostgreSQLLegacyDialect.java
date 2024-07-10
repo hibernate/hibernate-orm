@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
+import org.hibernate.Length;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
@@ -280,7 +281,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	@Override
 	public int getMaxVarbinaryLength() {
 		//postgres has no varbinary-like type
-		return Integer.MAX_VALUE;
+		return Length.LONG32;
 	}
 
 	@Override

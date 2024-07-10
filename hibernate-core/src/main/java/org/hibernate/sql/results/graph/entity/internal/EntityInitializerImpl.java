@@ -609,7 +609,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			EntityPersister entityDescriptor)
 			throws WrongClassException {
 		if ( discriminatorAssembler == null
-				|| rowProcessingState.isQueryCacheHit() && !entityDescriptor.storeDiscriminatorInShallowQueryCacheLayout() ) {
+				|| rowProcessingState.isQueryCacheHit() && entityDescriptor.useShallowQueryCacheLayout() && !entityDescriptor.storeDiscriminatorInShallowQueryCacheLayout() ) {
 			return entityDescriptor;
 		}
 		else {
@@ -944,6 +944,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 				assert data.entityHolder.getEntityInitializer() == this;
 				// If this initializer owns the entity, we have to remove the entity holder,
 				// because the subsequent loading process will claim the entity
+				rowProcessingState.getJdbcValuesSourceProcessingState().getLoadingEntityHolders().remove( data.entityHolder );
 				session.getPersistenceContextInternal().removeEntityHolder( data.entityKey );
 				return session.internalLoad(
 						data.concreteDescriptor.getEntityName(),

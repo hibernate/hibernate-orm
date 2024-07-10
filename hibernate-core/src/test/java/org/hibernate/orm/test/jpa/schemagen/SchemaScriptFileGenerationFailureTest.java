@@ -19,9 +19,11 @@ import jakarta.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.testing.TestForIssue;
@@ -63,6 +65,8 @@ public class SchemaScriptFileGenerationFailureTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12192")
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true,
+			reason = "on postgres we send 'set client_min_messages = WARNING'")
 	public void testErrorMessageContainsTheFailingDDLCommand() {
 		try {
 			entityManagerFactoryBuilder.generateSchema();

@@ -14,6 +14,7 @@ import io.agroal.api.configuration.supplier.AgroalPropertiesReader;
 import io.agroal.api.security.NamePrincipal;
 import io.agroal.api.security.SimplePassword;
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.AgroalSettings;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -43,15 +44,17 @@ import java.util.function.Function;
  *     hibernate.connection.isolation
  * </pre>
  *
- * Other configuration options are available, using the <pre>hibernate.agroal</pre> prefix ( @see AgroalPropertiesReader )
+ * Other configuration options are available, using the {@code hibernate.agroal} prefix
  *
+ * @see AgroalSettings
+ * @see AgroalPropertiesReader
  * @see AvailableSettings#CONNECTION_PROVIDER
  *
  * @author Luis Barreiro
  */
 public class AgroalConnectionProvider implements ConnectionProvider, Configurable, Stoppable {
 
-	public static final String CONFIG_PREFIX = "hibernate.agroal.";
+	public static final String CONFIG_PREFIX = AgroalSettings.AGROAL_CONFIG_PREFIX + ".";
 	private static final long serialVersionUID = 1L;
 	private static final Logger LOGGER = Logger.getLogger( AgroalConnectionProvider.class );
 	private AgroalDataSource agroalDataSource = null;
@@ -106,8 +109,8 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 	}
 
 	@Override
-	public void closeConnection(Connection conn) throws SQLException {
-		conn.close();
+	public void closeConnection(Connection connection) throws SQLException {
+		connection.close();
 	}
 
 	@Override

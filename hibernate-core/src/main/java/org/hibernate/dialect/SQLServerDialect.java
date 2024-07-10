@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
+import org.hibernate.Length;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
@@ -298,7 +299,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		// this is essentially the only legal length for
 		// a "lob" in SQL Server, i.e. the value of MAX
 		// (caveat: for NVARCHAR it is half this value)
-		return Integer.MAX_VALUE;
+		return Length.LONG32;
 	}
 
 	@Override

@@ -926,12 +926,20 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		s.flush();
 
-		Number count = (Number) s.createQuery( "select count(distinct case when bodyWeight > 100 then description else null end) from Human" ).uniqueResult();
-		assertEquals( 1, count.intValue() );
-		count = (Number) s.createQuery( "select count(case when bodyWeight > 100 then description else null end) from Human" ).uniqueResult();
-		assertEquals( 2, count.intValue() );
-		count = (Number) s.createQuery( "select count(distinct case when bodyWeight > 100 then nickName else null end) from Human" ).uniqueResult();
-		assertEquals( 2, count.intValue() );
+		if ( !( getDialect() instanceof InformixDialect && getDialect().getVersion().isBefore( 11, 70 ) ) ) {
+			Number count = (Number) s.createQuery(
+							"select count(distinct case when bodyWeight > 100 then description else null end) from Human" )
+					.uniqueResult();
+			assertEquals( 1, count.intValue() );
+			count = (Number) s.createQuery(
+							"select count(case when bodyWeight > 100 then description else null end) from Human" )
+					.uniqueResult();
+			assertEquals( 2, count.intValue() );
+			count = (Number) s.createQuery(
+							"select count(distinct case when bodyWeight > 100 then nickName else null end) from Human" )
+					.uniqueResult();
+			assertEquals( 2, count.intValue() );
+		}
 
 		t.rollback();
 		s.close();

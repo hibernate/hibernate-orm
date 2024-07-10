@@ -56,6 +56,7 @@ import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -274,7 +275,7 @@ public class InformixDialect extends Dialect {
 		functionFactory.initcap();
 		functionFactory.yearMonthDay();
 		functionFactory.ceiling_ceil();
-		functionFactory.concat_pipeOperator();
+		functionFactory.concat_pipeOperator( SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS );
 		functionFactory.ascii();
 		functionFactory.char_chr();
 		functionFactory.addMonths();

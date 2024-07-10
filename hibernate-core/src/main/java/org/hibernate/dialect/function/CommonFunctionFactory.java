@@ -1342,6 +1342,10 @@ public class CommonFunctionFactory {
 	 * Almost every database
 	 */
 	public void concat_pipeOperator() {
+		concat_pipeOperator( SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public void concat_pipeOperator( SqlAstNodeRenderingMode inferenceArgumentRenderingMode ) {
 		functionRegistry.patternDescriptorBuilder( "concat", "(?1||?2...)" )
 				.setInvariantType(stringType)
 				.setMinArgumentCount( 1 )
@@ -1349,6 +1353,7 @@ public class CommonFunctionFactory {
 						StandardFunctionArgumentTypeResolvers.impliedOrInvariant( typeConfiguration, STRING )
 				)
 				.setArgumentListSignature( "(STRING string0[, STRING string1[, ...]])" )
+				.setArgumentRenderingMode( inferenceArgumentRenderingMode )
 				.register();
 	}
 

@@ -303,7 +303,9 @@ public class InformixDialect extends Dialect {
 		functionFactory.monthsBetween();
 		functionFactory.stddev();
 		functionFactory.variance();
-		functionFactory.locate_positionSubstring();
+		if ( getVersion().isSameOrAfter( 12 ) ) {
+			functionFactory.locate_charindex();
+		}
 
 		//coalesce() and nullif() both supported since Informix 12
 

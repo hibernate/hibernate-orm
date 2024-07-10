@@ -30,6 +30,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Tuple;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,6 +45,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		standardModels = StandardDomainModel.CONTACTS,
 		annotatedClasses = {
 				CountQueryTests.SimpleDto.class,
+				CountQueryTests.BaseAttribs.class,
+				CountQueryTests.IdBased.class,
+				CountQueryTests.ParentEntity.class,
+				CountQueryTests.ChildEntity.class,
 		}
 )
 @SessionFactory
@@ -200,6 +208,22 @@ public class CountQueryTests {
 		} );
 	}
 
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18357" )
+	public void testJoinedEntityPath(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+			verifyCount( session, cb.createQuery(
+					"select c.id, c.parent from ChildEntity c",
+					Tuple.class
+			) );
+			verifyCount( session, cb.createQuery(
+					"select distinct c.id, c.parent from ChildEntity c",
+					Tuple.class
+			) );
+		} );
+	}
+
 	@BeforeEach
 	public void prepareTestData(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
@@ -273,6 +297,15 @@ public class CountQueryTests {
 			session.persist( c4 );
 			session.persist( c8 );
 			session.persist( c7 );
+
+			final ParentEntity p1 = new ParentEntity( "parent_1", 1L );
+			final ParentEntity p2 = new ParentEntity( "parent_2", 2L );
+			final ChildEntity c1 = new ChildEntity( "child_1", 1L, p1 );
+			final ChildEntity c2 = new ChildEntity( "child_2", 2L, p2 );
+			session.persist( p1 );
+			session.persist( p2 );
+			session.persist( c1 );
+			session.persist( c2 );
 		} );
 	}
 
@@ -287,6 +320,8 @@ public class CountQueryTests {
 		scope.inTransaction( (session) -> {
 			session.createMutationQuery( "update Contact set alternativeContact = null" ).executeUpdate();
 			session.createMutationQuery( "delete Contact" ).executeUpdate();
+			session.createMutationQuery( "delete ChildEntity" ).executeUpdate();
+			session.createMutationQuery( "delete ParentEntity" ).executeUpdate();
 		} );
 	}
 
@@ -296,6 +331,56 @@ public class CountQueryTests {
 
 		public SimpleDto(String name) {
 			this.name = name;
+		}
+	}
+
+	@MappedSuperclass
+	static class BaseAttribs {
+		private String description;
+
+		public BaseAttribs() {
+		}
+
+		public BaseAttribs(String description) {
+			this.description = description;
+		}
+	}
+
+	@MappedSuperclass
+	static class IdBased extends BaseAttribs {
+		@Id
+		private Long id;
+
+		public IdBased() {
+		}
+
+		public IdBased(String description, Long id) {
+			super( description );
+			this.id = id;
+		}
+	}
+
+	@Entity( name = "ParentEntity" )
+	static class ParentEntity extends IdBased {
+		public ParentEntity() {
+		}
+
+		public ParentEntity(String description, Long id) {
+			super( description, id );
+		}
+	}
+
+	@Entity( name = "ChildEntity" )
+	static class ChildEntity extends IdBased {
+		@ManyToOne
+		private ParentEntity parent;
+
+		public ChildEntity() {
+		}
+
+		public ChildEntity(String description, Long id, ParentEntity parent) {
+			super( description, id );
+			this.parent = parent;
 		}
 	}
 }

@@ -104,6 +104,7 @@ import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.generator.Generator;
@@ -625,8 +626,10 @@ public class CteInsertHandler implements InsertHandler {
 				select,
 				jdbcParameterBindings,
 				SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( executionContext ),
-				row -> row[0],
-				ListResultsConsumer.UniqueSemantic.NONE
+				RowTransformerSingularReturnImpl.instance(),
+				null,
+				ListResultsConsumer.UniqueSemantic.NONE,
+				1
 		);
 		return ( (Number) list.get( 0 ) ).intValue();
 	}
@@ -635,7 +638,6 @@ public class CteInsertHandler implements InsertHandler {
 			SessionFactoryImplementor factory,
 			MultiTableSqmMutationConverter sqmConverter) {
 		final SqmExpression<?> arg = new SqmStar( factory.getNodeBuilder() );
-		final TypeConfiguration typeConfiguration = factory.getJpaMetamodel().getTypeConfiguration();
 		return factory.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( "count" ).generateSqmExpression(
 				arg,
 				null,

@@ -32,6 +32,7 @@ public class RowTransformerSingularReturnImpl<R> implements RowTransformer<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public R transformRow(Object[] row) {
+		assert row.length == 1;
 		return (R) row[0];
 	}
 

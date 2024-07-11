@@ -197,6 +197,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
 import jakarta.persistence.TemporalType;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.lang.Math.ceil;
 import static java.lang.Math.log;
@@ -3189,7 +3190,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public IdentifierHelper buildIdentifierHelper(
 			IdentifierHelperBuilder builder,
-			DatabaseMetaData dbMetaData) throws SQLException {
+			@Nullable DatabaseMetaData dbMetaData) throws SQLException {
 		builder.applyIdentifierCasing( dbMetaData );
 		builder.applyReservedWords( sqlKeywords );
 		builder.setNameQualifierSupport( getNameQualifierSupport() );
@@ -4356,7 +4357,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *                      an exception. Just rethrow and Hibernate will
 	 *                      handle it.
 	 */
-	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) throws SQLException {
+	public boolean supportsNamedParameters(@Nullable DatabaseMetaData databaseMetaData) throws SQLException {
 		return databaseMetaData != null && databaseMetaData.supportsNamedParameters();
 	}
 

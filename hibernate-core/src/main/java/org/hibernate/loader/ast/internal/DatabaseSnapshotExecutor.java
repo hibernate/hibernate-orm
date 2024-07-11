@@ -177,7 +177,9 @@ class DatabaseSnapshotExecutor {
 				jdbcParameterBindings,
 				new BaseExecutionContext( session ),
 				RowTransformerDatabaseSnapshotImpl.instance(),
-				ListResultsConsumer.UniqueSemantic.FILTER
+				null,
+				ListResultsConsumer.UniqueSemantic.FILTER,
+				1
 		);
 
 		final int size = list.size();

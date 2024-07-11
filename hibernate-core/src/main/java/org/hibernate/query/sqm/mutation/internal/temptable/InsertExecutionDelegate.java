@@ -417,7 +417,9 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 					JdbcParameterBindings.NO_BINDINGS,
 					executionContext,
 					null,
-					ListResultsConsumer.UniqueSemantic.NONE
+					null,
+					ListResultsConsumer.UniqueSemantic.NONE,
+					rows
 			);
 			entityTableToRootIdentity = new LinkedHashMap<>( list.size() );
 			for ( Object o : list ) {

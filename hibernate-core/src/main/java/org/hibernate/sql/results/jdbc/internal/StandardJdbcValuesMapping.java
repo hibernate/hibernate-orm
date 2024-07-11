@@ -35,6 +35,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingResolution;
  * @author Steve Ebersole
  */
 public class StandardJdbcValuesMapping implements JdbcValuesMapping {
+
 	private final List<SqlSelection> sqlSelections;
 	private final List<DomainResult<?>> domainResults;
 	private JdbcValuesMappingResolutionImpl resolution;

@@ -32,12 +32,16 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.SqmTranslation;
+import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -109,16 +113,18 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						jdbcParameterBindings
 				);
 				session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames(), true );
+				final Expression fetchExpression = sqmInterpretation.selectStatement.getQueryPart()
+						.getFetchClauseExpression();
+				final int resultCountEstimate = fetchExpression != null
+						? interpretIntExpression( fetchExpression, jdbcParameterBindings )
+						: -1;
 				return session.getFactory().getJdbcServices().getJdbcSelectExecutor().executeQuery(
 						jdbcSelect,
 						jdbcParameterBindings,
 						listInterpreterExecutionContext( hql, executionContext, jdbcSelect, subSelectFetchKeyHandler ),
 						rowTransformer,
 						null,
-						sql -> executionContext.getSession()
-								.getJdbcCoordinator()
-								.getStatementPreparer()
-								.prepareQueryStatement( sql, false, null ),
+						resultCountEstimate,
 						resultsConsumer
 				);
 			}
@@ -137,6 +143,11 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						jdbcParameterBindings
 				);
 				session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames(), true );
+				final Expression fetchExpression = sqmInterpretation.selectStatement.getQueryPart()
+						.getFetchClauseExpression();
+				final int resultCountEstimate = fetchExpression != null
+						? interpretIntExpression( fetchExpression, jdbcParameterBindings )
+						: -1;
 				//noinspection unchecked
 				return session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 						jdbcSelect,
@@ -144,7 +155,8 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						listInterpreterExecutionContext( hql, executionContext, jdbcSelect, subSelectFetchKeyHandler ),
 						rowTransformer,
 						(Class<R>) executionContext.getResultType(),
-						uniqueSemantic
+						uniqueSemantic,
+						resultCountEstimate
 				);
 			}
 			finally {
@@ -167,12 +179,18 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						.getJdbcServices()
 						.getJdbcSelectExecutor();
 				session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames(), true );
+				final Expression fetchExpression = sqmInterpretation.selectStatement.getQueryPart()
+						.getFetchClauseExpression();
+				final int resultCountEstimate = fetchExpression != null
+						? interpretIntExpression( fetchExpression, jdbcParameterBindings )
+						: -1;
 				return jdbcSelectExecutor.scroll(
 						jdbcSelect,
 						scrollMode,
 						jdbcParameterBindings,
 						new SqmJdbcExecutionContextAdapter( executionContext, jdbcSelect ),
-						rowTransformer
+						rowTransformer,
+						resultCountEstimate
 				);
 			}
 			finally {
@@ -198,6 +216,20 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			JdbcOperationQuerySelect jdbcSelect,
 			SubselectFetch.RegistrationHandler subSelectFetchKeyHandler) {
 		return new MySqmJdbcExecutionContextAdapter( executionContext, jdbcSelect, subSelectFetchKeyHandler, hql );
+	}
+
+	protected static int interpretIntExpression(Expression expression, JdbcParameterBindings jdbcParameterBindings) {
+		if ( expression instanceof Literal ) {
+			return ( (Number) ( (Literal) expression ).getLiteralValue() ).intValue();
+		}
+		else if ( expression instanceof JdbcParameter ) {
+			return (int) jdbcParameterBindings.getBinding( (JdbcParameter) expression ).getBindValue();
+		}
+		else if ( expression instanceof SqmParameterInterpretation ) {
+			return (int) jdbcParameterBindings.getBinding( (JdbcParameter) ( (SqmParameterInterpretation) expression ).getResolvedExpression() )
+					.getBindValue();
+		}
+		return -1;
 	}
 
 	private static List<SqmSelection<?>> selections(SqmSelectStatement<?> sqm) {

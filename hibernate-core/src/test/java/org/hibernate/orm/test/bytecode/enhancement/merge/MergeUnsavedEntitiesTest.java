@@ -1,17 +1,24 @@
 package org.hibernate.orm.test.bytecode.enhancement.merge;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -19,13 +26,13 @@ import jakarta.persistence.Table;
 import static jakarta.persistence.CascadeType.MERGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.jupiter.api.Test;
-
 
 @DomainModel(
 		annotatedClasses = {
 				MergeUnsavedEntitiesTest.Parent.class,
-				MergeUnsavedEntitiesTest.Child.class
+				MergeUnsavedEntitiesTest.Child.class,
+				MergeUnsavedEntitiesTest.Book.class,
+				MergeUnsavedEntitiesTest.BookNote.class,
 		}
 )
 @SessionFactory
@@ -74,6 +81,43 @@ public class MergeUnsavedEntitiesTest {
 
 				}
 		);
+	}
+
+	@Test
+	public void testMergeParentWithoutChildren(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Parent parent = new Parent( 1l, 2l );
+					session.merge( parent );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					Parent parent = session.find( Parent.class, 1l );
+					assertThat( parent.getChildren()).isEmpty();
+				}
+		);
+	}
+
+	@Test
+	@Jira("HHH-18177")
+	public void testMergeTransientInstanceWithGeneratedId(SessionFactoryScope scope) {
+		Book merged = scope.fromTransaction(
+				session -> {
+					Book book = new Book( "9788806257231" );
+					return session.merge( book );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					Book book = session.get( Book.class, merged.getId() );
+					assertThat( book ).isNotNull();
+					assertThat( book.getBookNotes() ).isEmpty();
+				}
+		);
+
 	}
 
 	@Entity(name = "Parent")
@@ -169,6 +213,65 @@ public class MergeUnsavedEntitiesTest {
 		public String getName() {
 			return name;
 		}
+	}
+
+	@Entity(name = "Book")
+	public static class Book {
+
+		@Id
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		private Long id;
+
+		private String isbn;
+
+		@OneToMany(mappedBy = "book", orphanRemoval = true, fetch = FetchType.LAZY)
+		private Set<BookNote> bookNotes = new HashSet<>();
+
+		public Book() {
+		}
+
+		public Book(String isbn) {
+			this.isbn = isbn;
+		}
+
+		public Long getId() {
+			return id;
+		}
+
+		public String getIsbn() {
+			return isbn;
+		}
+
+		public Set<BookNote> getBookNotes() {
+			return bookNotes;
+		}
+	}
+
+	@Entity(name = "BookNote")
+	public class BookNote {
+
+		@Id
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		private Long id;
+
+		@ManyToOne(fetch = FetchType.LAZY)
+		@JoinColumn(name = "BookID")
+		private Book book;
+
+		private String note;
+
+		public Long getId() {
+			return id;
+		}
+
+		public Book getBook() {
+			return book;
+		}
+
+		public String getNote() {
+			return note;
+		}
+
 	}
 
 }

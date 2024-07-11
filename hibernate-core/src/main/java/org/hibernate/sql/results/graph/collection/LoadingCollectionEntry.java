@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.graph.collection;
 
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.collection.spi.PersistentCollection;
@@ -43,6 +44,13 @@ public interface LoadingCollectionEntry {
 	 * Callback for row loading.  Allows delayed List creation
 	 */
 	void load(Consumer<List<Object>> loadingEntryConsumer);
+
+	/**
+	 * Callback for row loading.  Allows delayed List creation
+	 */
+	default <T> void load(T arg1, BiConsumer<T, List<Object>> loadingEntryConsumer) {
+		load( list -> loadingEntryConsumer.accept( arg1, list ) );
+	}
 
 	/**
 	 * Complete the load

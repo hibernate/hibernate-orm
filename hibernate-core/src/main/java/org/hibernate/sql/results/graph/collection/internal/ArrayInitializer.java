@@ -13,7 +13,6 @@ import java.util.function.BiConsumer;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentArrayHolder;
-import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
@@ -86,10 +85,8 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer<Abs
 	}
 
 	@Override
-	protected void readCollectionRow(
-			CollectionKey collectionKey,
-			List<Object> loadingState,
-			RowProcessingState rowProcessingState) {
+	protected void readCollectionRow(ImmediateCollectionInitializerData data, List<Object> loadingState) {
+		final RowProcessingState rowProcessingState = data.getRowProcessingState();
 		final Integer indexValue = listIndexAssembler.assemble( rowProcessingState );
 		if ( indexValue == null ) {
 			throw new HibernateException( "Illegal null value for array index encountered while reading: "

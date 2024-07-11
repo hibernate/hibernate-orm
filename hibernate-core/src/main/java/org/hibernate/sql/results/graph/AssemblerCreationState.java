@@ -21,6 +21,10 @@ public interface AssemblerCreationState {
 		return false;
 	}
 
+	default boolean containsMultipleCollectionFetches() {
+		return true;
+	}
+
 	int acquireInitializerId();
 
 	Initializer<?> resolveInitializer(

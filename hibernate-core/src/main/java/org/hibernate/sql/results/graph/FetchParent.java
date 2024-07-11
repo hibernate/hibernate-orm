@@ -95,6 +95,10 @@ public interface FetchParent extends DomainResultGraphNode {
 
 	boolean containsCollectionFetches();
 
+	default int getCollectionFetchesCount() {
+		return getFetches().getCollectionFetchesCount();
+	}
+
 	@Override
 	default void collectValueIndexesToCache(BitSet valueIndexes) {
 		for ( Fetch fetch : getFetches() ) {

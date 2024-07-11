@@ -117,6 +117,24 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 		}
 	}
 
+	@Override
+	public void resolveFromPreviousRow(Data data) {
+		if ( data.getState() == State.UNINITIALIZED ) {
+			if ( data.collectionKey == null ) {
+				setMissing( data );
+			}
+			else {
+				if ( collectionKeyResultAssembler != null ) {
+					final Initializer<?> initializer = collectionKeyResultAssembler.getInitializer();
+					if ( initializer != null ) {
+						initializer.resolveFromPreviousRow( data.getRowProcessingState() );
+					}
+				}
+				data.setState( State.RESOLVED );
+			}
+		}
+	}
+
 	protected void setMissing(Data data) {
 		data.setState( State.MISSING );
 		data.collectionKey = null;

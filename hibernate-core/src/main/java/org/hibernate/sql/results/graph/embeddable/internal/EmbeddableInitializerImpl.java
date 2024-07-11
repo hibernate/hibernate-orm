@@ -262,6 +262,22 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 	}
 
 	@Override
+	public void resolveFromPreviousRow(EmbeddableInitializerData data) {
+		if ( data.getState() == State.UNINITIALIZED ) {
+			if ( data.getInstance() == null ) {
+				data.setState( State.MISSING );
+			}
+			else {
+				final RowProcessingState rowProcessingState = data.getRowProcessingState();
+				for ( Initializer<InitializerData> initializer : subInitializers[data.getSubclassId()] ) {
+					initializer.resolveFromPreviousRow( rowProcessingState );
+				}
+				data.setState( State.INITIALIZED );
+			}
+		}
+	}
+
+	@Override
 	public void resolveInstance(EmbeddableInitializerData data) {
 		if ( data.getState() != State.KEY_RESOLVED ) {
 			return;

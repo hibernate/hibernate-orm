@@ -9,49 +9,42 @@ package org.hibernate.sql.results.spi;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.SelectionQuery;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 
 /**
- * Used beneath {@link SelectionQuery#getResultCount()}.
+ * Reads rows without producing a result.
  *
- * @since 6.5
- *
- * @author Gavin King
+ * @since 6.6
  */
 @Incubating
-public class SingleResultConsumer<T> implements ResultsConsumer<T, T> {
+public class ManagedResultConsumer implements ResultsConsumer<Void, Object> {
 
-	private static final SingleResultConsumer<?> INSTANCE = new SingleResultConsumer<>();
-
-	public static <T> SingleResultConsumer<T> instance() {
-		//noinspection unchecked
-		return (SingleResultConsumer<T>) INSTANCE;
-	}
+	public static final ManagedResultConsumer INSTANCE = new ManagedResultConsumer();
 
 	@Override
-	public T consume(
+	public Void consume(
 			JdbcValues jdbcValues,
 			SharedSessionContractImplementor session,
 			JdbcValuesSourceProcessingOptions processingOptions,
 			JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState,
 			RowProcessingStateStandardImpl rowProcessingState,
-			RowReader<T> rowReader) {
+			RowReader<Object> rowReader) {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		RuntimeException ex = null;
 		persistenceContext.beforeLoad();
 		persistenceContext.getLoadContexts().register( jdbcValuesSourceProcessingState );
 		try {
 			rowReader.startLoading( rowProcessingState );
-			rowProcessingState.next();
-			final T result = rowReader.readRow( rowProcessingState );
-			rowProcessingState.finishRowProcessing( true );
+			while ( rowProcessingState.next() ) {
+				rowReader.readRow( rowProcessingState );
+				rowProcessingState.finishRowProcessing( true );
+			}
 			rowReader.finishUp( rowProcessingState );
 			jdbcValuesSourceProcessingState.finishUp( true );
-			return result;
+		return null;
 		}
 		catch (RuntimeException e) {
 			ex = e;

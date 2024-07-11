@@ -33,6 +33,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Steve Ebersole
  */
 public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
+
+	/**
+	 * Let's be reasonable, a row estimate greater than 1M rows is probably either a mis-estimation or bug,
+	 * so let's set 2^20 which is a bit above 1M as maximum collection size.
+	 */
+	private static final int INITIAL_COLLECTION_SIZE_LIMIT = 1 << 20;
+
 	private static final ListResultsConsumer<?> NEVER_DE_DUP_CONSUMER = new ListResultsConsumer<>( UniqueSemantic.NEVER );
 	private static final ListResultsConsumer<?> ALLOW_DE_DUP_CONSUMER = new ListResultsConsumer<>( UniqueSemantic.ALLOW );
 	private static final ListResultsConsumer<?> IGNORE_DUP_CONSUMER = new ListResultsConsumer<>( UniqueSemantic.NONE );
@@ -98,11 +105,12 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 	}
 
 	private static class Results<R> {
-		private final List<R> results = new ArrayList<>();
+		private final List<R> results;
 		private final JavaType<R> resultJavaType;
 
-		public Results(JavaType<R> resultJavaType) {
+		public Results(JavaType<R> resultJavaType, int initialSize) {
 			this.resultJavaType = resultJavaType;
+			this.results = initialSize > 0 ? new ArrayList<>( initialSize ) : new ArrayList<>();
 		}
 
 		public boolean addUnique(R result) {
@@ -127,10 +135,11 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 	private static class EntityResult<R> extends Results<R> {
 		private static final Object DUMP_VALUE = new Object();
 
-		private final IdentityHashMap<R, Object> added = new IdentityHashMap<>();
+		private final IdentityHashMap<R, Object> added;
 
-		public EntityResult(JavaType<R> resultJavaType) {
-			super( resultJavaType );
+		public EntityResult(JavaType<R> resultJavaType, int initialSize) {
+			super( resultJavaType, initialSize );
+			added = initialSize > 0 ? new IdentityHashMap<>( initialSize ) : new IdentityHashMap<>();
 		}
 
 		public boolean addUnique(R result) {
@@ -153,6 +162,9 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final TypeConfiguration typeConfiguration = session.getTypeConfiguration();
 		final QueryOptions queryOptions = rowProcessingState.getQueryOptions();
+
+		rowReader.startLoading( rowProcessingState );
+
 		RuntimeException ex = null;
 		persistenceContext.beforeLoad();
 		persistenceContext.getLoadContexts().register( jdbcValuesSourceProcessingState );
@@ -164,15 +176,16 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			);
 
 			final boolean isEntityResultType = domainResultJavaType instanceof EntityJavaType;
+			final int initialCollectionSize = Math.min( jdbcValues.getResultCountEstimate(), INITIAL_COLLECTION_SIZE_LIMIT );
 
 			final Results<R> results;
 			if ( isEntityResultType
 					&& ( uniqueSemantic == UniqueSemantic.ALLOW
 						|| uniqueSemantic == UniqueSemantic.FILTER ) ) {
-				results = new EntityResult<>( domainResultJavaType );
+				results = new EntityResult<>( domainResultJavaType, initialCollectionSize );
 			}
 			else {
-				results = new Results<>( domainResultJavaType );
+				results = new Results<>( domainResultJavaType, initialCollectionSize );
 			}
 
 			int readRows = 0;

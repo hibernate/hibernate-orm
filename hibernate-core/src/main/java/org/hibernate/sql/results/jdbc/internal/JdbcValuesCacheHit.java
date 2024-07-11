@@ -27,12 +27,15 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 	private final JdbcValuesMapping resolvedMapping;
 	private final int[] valueIndexesToCacheIndexes;
 	private final int offset;
+	private final int resultCount;
 	private int position = -1;
 
 	public JdbcValuesCacheHit(List<?> cachedResults, JdbcValuesMapping resolvedMapping) {
+		// See QueryCachePutManagerEnabledImpl for what is being put into the cached results
 		this.cachedResults = cachedResults;
 		this.offset = !cachedResults.isEmpty() && cachedResults.get( 0 ) instanceof JdbcValuesMetadata ? 1 : 0;
-		this.numberOfRows = cachedResults.size() - offset;
+		this.numberOfRows = cachedResults.size() - offset - 1;
+		this.resultCount = cachedResults.isEmpty() ? 0 : (int) cachedResults.get( cachedResults.size() - 1 );
 		this.resolvedMapping = resolvedMapping;
 
 		final BitSet valueIndexesToCache = new BitSet();
@@ -252,4 +255,9 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 
 	@Override
 	public void setFetchSize(int fetchSize) {}
+
+	@Override
+	public int getResultCountEstimate() {
+		return resultCount;
+	}
 }

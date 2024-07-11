@@ -52,6 +52,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 	private final Limit limit;
 	private final LimitHandler limitHandler;
 	private final boolean usesFollowOnLocking;
+	private final int resultCountEstimate;
 
 	private PreparedStatement preparedStatement;
 	private ResultSet resultSet;
@@ -60,13 +61,15 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 			JdbcOperationQuerySelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
-			Function<String, PreparedStatement> statementCreator) {
+			Function<String, PreparedStatement> statementCreator,
+			int resultCountEstimate) {
 		super( executionContext.getSession() );
 		this.jdbcParameterBindings = jdbcParameterBindings;
 		this.executionContext = executionContext;
 		this.jdbcSelect = jdbcSelect;
 		this.statementCreator = statementCreator;
 		this.sqlStatementLogger = executionContext.getSession().getJdbcServices().getSqlStatementLogger();
+		this.resultCountEstimate = resultCountEstimate;
 
 		final QueryOptions queryOptions = executionContext.getQueryOptions();
 		if ( queryOptions == null ) {
@@ -333,5 +336,19 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 		}
 
 		logicalConnection.afterStatement();
+	}
+
+	@Override
+	public int getResultCountEstimate() {
+		if ( limit != null && limit.getMaxRows() != null ) {
+			return limit.getMaxRows();
+		}
+		if ( jdbcSelect.getLimitParameter() != null ) {
+			return (int) jdbcParameterBindings.getBinding( jdbcSelect.getLimitParameter() ).getBindValue();
+		}
+		if ( resultCountEstimate > 0 ) {
+			return resultCountEstimate;
+		}
+		return super.getResultCountEstimate();
 	}
 }

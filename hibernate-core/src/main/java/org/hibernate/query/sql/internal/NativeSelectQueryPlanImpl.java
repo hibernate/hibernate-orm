@@ -95,10 +95,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 				SqmJdbcExecutionContextAdapter.usingLockingAndPaging( executionContext ),
 				null,
 				null,
-				sqlString -> executionContext.getSession()
-						.getJdbcCoordinator()
-						.getStatementPreparer()
-						.prepareQueryStatement( sqlString, false, null ),
+				-1,
 				resultsConsumer
 		);
 	}
@@ -183,7 +180,8 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 				scrollMode,
 				jdbcParameterBindings,
 				SqmJdbcExecutionContextAdapter.usingLockingAndPaging( executionContext ),
-				null
+				null,
+				-1
 		);
 	}
 }

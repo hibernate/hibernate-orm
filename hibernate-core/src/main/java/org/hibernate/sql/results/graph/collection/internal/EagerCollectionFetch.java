@@ -210,6 +210,11 @@ public class EagerCollectionFetch extends CollectionFetch {
 	}
 
 	@Override
+	public int getCollectionFetchesCount() {
+		return 1 + super.getCollectionFetchesCount();
+	}
+
+	@Override
 	public JavaType<?> getResultJavaType() {
 		return getFetchedMapping().getJavaType();
 	}

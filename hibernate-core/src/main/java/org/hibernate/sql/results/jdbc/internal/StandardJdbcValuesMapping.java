@@ -109,6 +109,7 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 		private int initializerId;
 		boolean hasCollectionInitializers;
 		Boolean dynamicInstantiation;
+		Boolean containsMultipleCollectionFetches;
 
 		public AssemblerCreationStateImpl(
 				JdbcValuesMapping jdbcValuesMapping,
@@ -125,6 +126,20 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 						.anyMatch( domainResult -> domainResult instanceof DynamicInstantiationResult );
 			}
 			return dynamicInstantiation;
+		}
+
+		@Override
+		public boolean containsMultipleCollectionFetches() {
+			if ( containsMultipleCollectionFetches == null ) {
+				int collectionFetchesCount = 0;
+				for ( DomainResult<?> domainResult : jdbcValuesMapping.getDomainResults() ) {
+					if ( domainResult instanceof FetchParent ) {
+						collectionFetchesCount += ( (FetchParent) domainResult ).getCollectionFetchesCount();
+					}
+				}
+				containsMultipleCollectionFetches = collectionFetchesCount > 1;
+			}
+			return containsMultipleCollectionFetches;
 		}
 
 		@Override

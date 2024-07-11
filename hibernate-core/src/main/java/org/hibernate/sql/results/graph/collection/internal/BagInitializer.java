@@ -13,7 +13,6 @@ import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentBag;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.collection.spi.PersistentIdentifierBag;
-import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
@@ -82,10 +81,8 @@ public class BagInitializer extends AbstractImmediateCollectionInitializer<Abstr
 	}
 
 	@Override
-	protected void readCollectionRow(
-			CollectionKey collectionKey,
-			List<Object> loadingState,
-			RowProcessingState rowProcessingState) {
+	protected void readCollectionRow(ImmediateCollectionInitializerData data, List<Object> loadingState) {
+		final RowProcessingState rowProcessingState = data.getRowProcessingState();
 		if ( collectionIdAssembler != null ) {
 			final Object collectionId = collectionIdAssembler.assemble( rowProcessingState );
 			if ( collectionId == null ) {

@@ -660,7 +660,7 @@ public abstract class AbstractEntityPersister
 				else {
 					final Column column = (Column) selectable;
 					colNames[k] = column.getQuotedName( dialect );
-					colWriters[k] = column.getWriteExpr( prop.getValue().getSelectableType( factory, k ), dialect );
+					colWriters[k] = column.getWriteExpr( prop.getValue().getSelectableType( creationContext.getMetadata(), k ), dialect );
 				}
 			}
 			propertyColumnNames[i] = colNames;

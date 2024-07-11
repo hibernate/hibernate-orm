@@ -15,6 +15,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * if required.
  *
  * @author Steve Ebersole
+ * @author Réda Housni Alaoui
  */
 public interface JdbcValues {
 	JdbcValuesMapping getValuesMapping();
@@ -79,7 +80,15 @@ public interface JdbcValues {
 	void finishRowProcessing(RowProcessingState rowProcessingState, boolean wasAdded);
 
 	/**
-	 * Give implementations a chance to finish processing
+	 * Called before {@link #finishUp(SharedSessionContractImplementor)}
+	 * to give implementations to react to the successful processing end.
+	 */
+	void finishSuccessfulProcessing(SharedSessionContractImplementor session);
+
+	/**
+	 * Give implementations a chance to finish processing.
+	 * Unlike {@link #finishSuccessfulProcessing(SharedSessionContractImplementor)},
+	 * this method will be called even in case of unsuccessful processing.
 	 */
 	void finishUp(SharedSessionContractImplementor session);
 

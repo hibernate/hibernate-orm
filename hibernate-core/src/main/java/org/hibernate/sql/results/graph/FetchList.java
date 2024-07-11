@@ -79,4 +79,20 @@ public interface FetchList extends Iterable<Fetch> {
 		return false;
 	}
 
+	default int getCollectionFetchesCount() {
+		int collectionFetchesCount = 0;
+		for ( Fetch fetch : this ) {
+			if ( fetch instanceof EagerCollectionFetch ) {
+				collectionFetchesCount++;
+			}
+			else {
+				final FetchParent fetchParent = fetch.asFetchParent();
+				if ( fetchParent != null ) {
+					collectionFetchesCount += fetchParent.getCollectionFetchesCount();
+				}
+			}
+		}
+		return collectionFetchesCount;
+	}
+
 }

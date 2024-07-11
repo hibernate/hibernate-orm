@@ -103,6 +103,23 @@ public class EntityDelayedFetchInitializer
 	}
 
 	@Override
+	public void resolveFromPreviousRow(EntityDelayedFetchInitializerData data) {
+		if ( data.getState() == State.UNINITIALIZED ) {
+			if ( data.entityIdentifier == null ) {
+				data.setState( State.MISSING );
+				data.setInstance( null );
+			}
+			else {
+				final Initializer<?> initializer = identifierAssembler.getInitializer();
+				if ( initializer != null ) {
+					initializer.resolveFromPreviousRow( data.getRowProcessingState() );
+				}
+				data.setState( State.RESOLVED );
+			}
+		}
+	}
+
+	@Override
 	public void resolveInstance(EntityDelayedFetchInitializerData data) {
 		if ( data.getState() != State.KEY_RESOLVED ) {
 			return;

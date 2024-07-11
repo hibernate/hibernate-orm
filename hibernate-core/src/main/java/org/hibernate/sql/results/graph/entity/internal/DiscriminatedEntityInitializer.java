@@ -127,6 +127,23 @@ public class DiscriminatedEntityInitializer
 	}
 
 	@Override
+	public void resolveFromPreviousRow(DiscriminatedEntityInitializerData data) {
+		if ( data.getState() == State.UNINITIALIZED ) {
+			if ( data.entityIdentifier == null ) {
+				data.setState( State.MISSING );
+				data.setInstance( null );
+			}
+			else {
+				final Initializer<?> initializer = keyValueAssembler.getInitializer();
+				if ( initializer != null ) {
+					initializer.resolveFromPreviousRow( data.getRowProcessingState() );
+				}
+				data.setState( State.INITIALIZED );
+			}
+		}
+	}
+
+	@Override
 	public void resolveInstance(DiscriminatedEntityInitializerData data) {
 		if ( data.getState() != State.KEY_RESOLVED ) {
 			return;

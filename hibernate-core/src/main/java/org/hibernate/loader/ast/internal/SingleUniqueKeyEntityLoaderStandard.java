@@ -35,6 +35,7 @@ import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 import static java.util.Collections.singletonList;
@@ -128,8 +129,10 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 				jdbcSelect,
 				jdbcParameterBindings,
 				new SingleUKEntityLoaderExecutionContext( uniqueKeyAttributePath, ukValue, session, readOnly ),
-				row -> row[0],
-				ListResultsConsumer.UniqueSemantic.FILTER
+				RowTransformerSingularReturnImpl.instance(),
+				null,
+				ListResultsConsumer.UniqueSemantic.FILTER,
+				1
 		);
 
 		switch ( list.size() ) {
@@ -183,8 +186,10 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 				jdbcSelect,
 				jdbcParameterBindings,
 				new NoCallbackExecutionContext( session ),
-				row -> row[0],
-				ListResultsConsumer.UniqueSemantic.FILTER
+				RowTransformerSingularReturnImpl.instance(),
+				null,
+				ListResultsConsumer.UniqueSemantic.FILTER,
+				1
 		);
 
 		assert list.size() == 1;

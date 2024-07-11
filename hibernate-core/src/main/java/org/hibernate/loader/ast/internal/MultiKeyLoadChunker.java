@@ -19,6 +19,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
+import org.hibernate.sql.results.spi.ManagedResultConsumer;
 
 /**
  * When the number of ids to initialize exceeds a certain threshold, IN-predicate based
@@ -149,12 +150,14 @@ public class MultiKeyLoadChunker<K> {
 			return;
 		}
 
-		session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
+		session.getFactory().getJdbcServices().getJdbcSelectExecutor().executeQuery(
 				jdbcSelect,
 				jdbcParameterBindings,
 				sqlExecutionContextCreator.createContext( jdbcParameterBindings, session ),
 				RowTransformerStandardImpl.instance(),
-				ListResultsConsumer.UniqueSemantic.FILTER
+				null,
+				nonNullCounter,
+				ManagedResultConsumer.INSTANCE
 		);
 
 		boundaryListener.chunkBoundaryNotification( startIndex, nonNullCounter );

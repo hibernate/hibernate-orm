@@ -150,7 +150,9 @@ public class CollectionElementLoaderByIndex implements Loader {
 				jdbcParameterBindings,
 				new BaseExecutionContext( session ),
 				RowTransformerStandardImpl.instance(),
-				ListResultsConsumer.UniqueSemantic.FILTER
+				null,
+				ListResultsConsumer.UniqueSemantic.FILTER,
+				1
 		);
 
 		if ( list.isEmpty() ) {

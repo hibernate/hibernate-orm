@@ -57,6 +57,7 @@ import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
@@ -206,14 +207,16 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 				select,
 				jdbcParameterBindings,
 				SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( executionContext ),
-				row -> row[0],
-				ListResultsConsumer.UniqueSemantic.NONE
+				RowTransformerSingularReturnImpl.instance(),
+				null,
+				ListResultsConsumer.UniqueSemantic.NONE,
+				1
 		);
 		return ( (Number) list.get( 0 ) ).intValue();
 	}
 
 	/**
-	 * Used by Hibernate Raective
+	 * Used by Hibernate Reactive
 	 */
 	protected Expression createCountStar(
 			SessionFactoryImplementor factory,

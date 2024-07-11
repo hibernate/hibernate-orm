@@ -39,7 +39,7 @@ import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
-import org.hibernate.sql.results.spi.ListResultsConsumer;
+import org.hibernate.sql.results.spi.ManagedResultConsumer;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -190,12 +190,14 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 				jdbcParameterBindings
 		);
 
-		session.getJdbcServices().getJdbcSelectExecutor().list(
+		session.getJdbcServices().getJdbcSelectExecutor().executeQuery(
 				jdbcSelectOperation,
 				jdbcParameterBindings,
 				new ExecutionContextWithSubselectFetchHandler( session, subSelectFetchableKeysHandler ),
 				RowTransformerStandardImpl.instance(),
-				ListResultsConsumer.UniqueSemantic.FILTER
+				null,
+				idsToLoadFromDatabase.size(),
+				ManagedResultConsumer.INSTANCE
 		);
 
 		for ( int i = 0; i < idsToLoadFromDatabaseResultIndexes.size(); i++ ) {

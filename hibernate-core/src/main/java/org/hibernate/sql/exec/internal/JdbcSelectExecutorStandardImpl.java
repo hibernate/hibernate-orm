@@ -70,6 +70,28 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			Class<R> domainResultType,
 			Function<String, PreparedStatement> statementCreator,
 			ResultsConsumer<T, R> resultsConsumer) {
+		return executeQuery(
+				jdbcSelect,
+				jdbcParameterBindings,
+				executionContext,
+				rowTransformer,
+				domainResultType,
+				-1,
+				statementCreator,
+				resultsConsumer
+		);
+	}
+
+	@Override
+	public <T, R> T executeQuery(
+			JdbcOperationQuerySelect jdbcSelect,
+			JdbcParameterBindings jdbcParameterBindings,
+			ExecutionContext executionContext,
+			RowTransformer<R> rowTransformer,
+			Class<R> domainResultType,
+			int resultCountEstimate,
+			Function<String, PreparedStatement> statementCreator,
+			ResultsConsumer<T, R> resultsConsumer) {
 		final PersistenceContext persistenceContext = executionContext.getSession().getPersistenceContext();
 		boolean defaultReadOnlyOrig = persistenceContext.isDefaultReadOnly();
 		Boolean readOnly = executionContext.getQueryOptions().isReadOnly();
@@ -85,6 +107,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 					executionContext,
 					rowTransformer,
 					domainResultType,
+					resultCountEstimate,
 					statementCreator,
 					resultsConsumer
 			);
@@ -102,6 +125,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
 			Class<R> domainResultType,
+			int resultCountEstimate,
 			Function<String, PreparedStatement> statementCreator,
 			ResultsConsumer<T, R> resultsConsumer) {
 
@@ -109,7 +133,8 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				jdbcSelect,
 				jdbcParameterBindings,
 				executionContext,
-				statementCreator
+				statementCreator,
+				resultCountEstimate
 		);
 		final JdbcValues jdbcValues = resolveJdbcValuesSource(
 				executionContext.getQueryIdentifier( deferredResultSetAccess.getFinalSql() ),
@@ -197,8 +222,6 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				rowReader,
 				jdbcValues
 		);
-
-		rowReader.startLoading( rowProcessingState );
 
 		final T result = resultsConsumer.consume(
 				jdbcValues,

@@ -50,6 +50,7 @@ import static org.hibernate.pretty.MessageHelper.infoString;
 public class DefaultRefreshEventListener implements RefreshEventListener {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultRefreshEventListener.class );
 
+	@Override
 	public void onRefresh(RefreshEvent event) throws HibernateException {
 		onRefresh( event, RefreshContext.create() );
 	}
@@ -59,6 +60,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 	 *
 	 * @param event The refresh event to be handled.
 	 */
+	@Override
 	public void onRefresh(RefreshEvent event, RefreshContext refreshedAlready) {
 		final EventSource source = event.getSession();
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();

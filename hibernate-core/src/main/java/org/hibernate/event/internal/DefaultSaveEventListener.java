@@ -23,6 +23,7 @@ import org.hibernate.event.spi.SaveOrUpdateEvent;
 @Deprecated(since="6")
 public class DefaultSaveEventListener extends DefaultSaveOrUpdateEventListener {
 
+	@Override
 	protected Object performSaveOrUpdate(SaveOrUpdateEvent event) {
 		// this implementation is supposed to tolerate incorrect unsaved-value
 		// mappings, for the purpose of backward-compatibility
@@ -32,6 +33,7 @@ public class DefaultSaveEventListener extends DefaultSaveOrUpdateEventListener {
 				: entityIsTransient( event );
 	}
 
+	@Override
 	protected boolean reassociateIfUninitializedProxy(Object object, SessionImplementor source) {
 		if ( !Hibernate.isInitialized( object ) ) {
 			throw new PersistentObjectException("uninitialized proxy passed to save()");

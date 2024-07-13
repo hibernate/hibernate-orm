@@ -53,6 +53,7 @@ public class DefaultSaveOrUpdateEventListener
 	 *
 	 * @param event The update event to be handled.
 	 */
+	@Override
 	public void onSaveOrUpdate(SaveOrUpdateEvent event) {
 		final Object object = event.getObject();
 		final Object requestedId = event.getRequestedId();

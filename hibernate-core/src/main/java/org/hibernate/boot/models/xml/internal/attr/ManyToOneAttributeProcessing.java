@@ -64,7 +64,7 @@ public class ManyToOneAttributeProcessing {
 		// todo (7.0) : cascades?
 
 		TableProcessing.transformJoinTable( jaxbManyToOne.getJoinTable(), memberDetails, xmlDocumentContext );
-		JoinColumnProcessing.applyJoinColumnsOrFormula( jaxbManyToOne.getJoinColumns(), jaxbManyToOne.getJoinFormulas(), memberDetails, xmlDocumentContext );
+		JoinColumnProcessing.applyJoinColumnsOrFormulas( jaxbManyToOne.getJoinColumnOrJoinFormula(), memberDetails, xmlDocumentContext );
 		if ( jaxbManyToOne.getPropertyRef() != null ) {
 			final PropertyRefAnnotation propertyRefUsage = (PropertyRefAnnotation) memberDetails.applyAnnotationUsage(
 					HibernateAnnotations.PROPERTY_REF,

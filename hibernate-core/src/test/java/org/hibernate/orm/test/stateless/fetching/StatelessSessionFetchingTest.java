@@ -12,6 +12,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
@@ -39,7 +40,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 )
 @ServiceRegistry(
-		settings = @Setting(name = AvailableSettings.PHYSICAL_NAMING_STRATEGY, value = "org.hibernate.orm.test.stateless.fetching.TestingNamingStrategy")
+		settings = {
+				@Setting(name = AvailableSettings.PHYSICAL_NAMING_STRATEGY, value = "org.hibernate.orm.test.stateless.fetching.TestingNamingStrategy"),
+				@Setting(name = MappingSettings.TRANSFORM_HBM_XML, value = "true")
+		}
 )
 @SessionFactory
 public class StatelessSessionFetchingTest {

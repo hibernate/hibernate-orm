@@ -6,8 +6,10 @@
  */
 package org.hibernate.boot.models.xml.internal.db;
 
+import java.io.Serializable;
 import java.util.List;
 
+import org.hibernate.MappingException;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyJoinColumnImpl;
@@ -25,7 +27,6 @@ import org.hibernate.boot.models.annotations.internal.MapKeyJoinColumnsJpaAnnota
 import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnsJpaAnnotation;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.MutableMemberDetails;
 
@@ -82,37 +83,46 @@ public class JoinColumnProcessing {
 		return joinColumns;
 	}
 
-	public static void applyJoinColumnsOrFormula(
-			List<JaxbJoinColumnImpl> jaxbJoinColumns,
-			List<String> jaxbJoinFormulas,
+	public static void applyJoinColumnsOrFormulas(
+			List<Serializable> jaxbJoinColumnsOrFormulas,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbJoinFormulas ) ) {
-			applyJoinColumns( jaxbJoinColumns, memberDetails, xmlDocumentContext );
+		if ( CollectionHelper.isEmpty( jaxbJoinColumnsOrFormulas ) ) {
+			return;
 		}
 		else {
-
+			memberDetails.removeAnnotationUsage( JpaAnnotations.JOIN_COLUMN );
+			memberDetails.removeAnnotationUsage( JpaAnnotations.JOIN_COLUMNS );
 			final JoinColumnsOrFormulasAnnotation joinColumnsOrFormulasUsage = (JoinColumnsOrFormulasAnnotation) memberDetails.replaceAnnotationUsage(
 					HibernateAnnotations.JOIN_COLUMN_OR_FORMULA,
 					HibernateAnnotations.JOIN_COLUMNS_OR_FORMULAS,
 					xmlDocumentContext.getModelBuildingContext()
 			);
 
-			final JoinColumn[] joinColumns = transformJoinColumnList( jaxbJoinColumns, xmlDocumentContext );
-			final JoinColumnOrFormula[] values = new JoinColumnOrFormula[ jaxbJoinColumns.size() + jaxbJoinFormulas.size() ];
-			joinColumnsOrFormulasUsage.value( values );
+			final JoinColumnOrFormula[] joinColumnOrFormulaList = new JoinColumnOrFormula[jaxbJoinColumnsOrFormulas.size()];
+			joinColumnsOrFormulasUsage.value( joinColumnOrFormulaList );
 
-			for ( int i = 0; i < joinColumns.length; i++ ) {
-				final JoinColumnOrFormulaAnnotation joinColumnOrFormula = HibernateAnnotations.JOIN_COLUMN_OR_FORMULA.createUsage( xmlDocumentContext.getModelBuildingContext() );
-				joinColumnOrFormula.column( joinColumns[i] );
-			}
+			for ( int i = 0; i < jaxbJoinColumnsOrFormulas.size(); i++ ) {
+				final JoinColumnOrFormulaAnnotation joinColumnOrFormulaUsage = HibernateAnnotations.JOIN_COLUMN_OR_FORMULA.createUsage(
+						xmlDocumentContext.getModelBuildingContext() );
+				joinColumnOrFormulaList[i] = joinColumnOrFormulaUsage;
 
-			for ( int i = 0; i < jaxbJoinFormulas.size(); i++ ) {
-				final JoinFormulaAnnotation joinFormula = HibernateAnnotations.JOIN_FORMULA.createUsage( xmlDocumentContext.getModelBuildingContext() );
-				joinFormula.value( jaxbJoinFormulas.get( i ) );
-				final JoinColumnOrFormulaAnnotation joinColumnOrFormula = HibernateAnnotations.JOIN_COLUMN_OR_FORMULA.createUsage( xmlDocumentContext.getModelBuildingContext() );
-				joinColumnOrFormula.formula( joinFormula );
-				values[joinColumns.length + i] = joinColumnOrFormula;
+				final Serializable jaxbJoinColumnOrFormula = jaxbJoinColumnsOrFormulas.get( i );
+				if ( jaxbJoinColumnOrFormula instanceof JaxbJoinColumnImpl jaxbJoinColumn ) {
+					final JoinColumnJpaAnnotation joinColumnUsage = JpaAnnotations.JOIN_COLUMN.createUsage(
+							xmlDocumentContext.getModelBuildingContext() );
+					joinColumnOrFormulaUsage.column( joinColumnUsage );
+					joinColumnUsage.apply( jaxbJoinColumn, xmlDocumentContext );
+				}
+				else if ( jaxbJoinColumnOrFormula instanceof String jaxbJoinFormula ) {
+					final JoinFormulaAnnotation joinFormulaUsage = HibernateAnnotations.JOIN_FORMULA.createUsage(
+							xmlDocumentContext.getModelBuildingContext() );
+					joinColumnOrFormulaUsage.formula( joinFormulaUsage );
+					joinFormulaUsage.value( jaxbJoinFormula );
+				}
+				else {
+					throw new MappingException( "Unexpected join-column-or-formula type : " + jaxbJoinColumnOrFormula );
+				}
 			}
 		}
 	}

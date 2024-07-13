@@ -809,7 +809,7 @@ public abstract class MockSessionFactory
 
 		@Override
 		public <X> ManagedDomainType<X> managedType(String typeName) {
-			final String entityName = findEntityName( typeName );
+			final String entityName = qualifyName( typeName );
 			//noinspection unchecked
 			return entityName == null ? null : (ManagedDomainType<X>) entity( entityName );
 		}

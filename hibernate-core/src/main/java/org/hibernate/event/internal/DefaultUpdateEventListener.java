@@ -24,6 +24,7 @@ import org.hibernate.persister.entity.EntityPersister;
 @Deprecated(since="6")
 public class DefaultUpdateEventListener extends DefaultSaveOrUpdateEventListener {
 
+	@Override
 	protected Object performSaveOrUpdate(SaveOrUpdateEvent event) {
 		// this implementation is supposed to tolerate incorrect unsaved-value
 		// mappings, for the purpose of backward-compatibility
@@ -46,6 +47,7 @@ public class DefaultUpdateEventListener extends DefaultSaveOrUpdateEventListener
 	 * If the user specified an id, assign it to the instance and use that, 
 	 * otherwise use the id already assigned to the instance
 	 */
+	@Override
 	protected Object getUpdateId(Object entity, EntityPersister persister, Object requestedId, SessionImplementor session)
 			throws HibernateException {
 		if ( requestedId == null ) {

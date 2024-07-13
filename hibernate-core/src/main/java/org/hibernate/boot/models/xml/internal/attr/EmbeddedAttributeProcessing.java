@@ -42,7 +42,7 @@ public class EmbeddedAttributeProcessing {
 				declarer
 		);
 
-		final EmbeddedJpaAnnotation embeddedAnn = (EmbeddedJpaAnnotation) memberDetails.applyAnnotationUsage(
+		memberDetails.applyAnnotationUsage(
 				JpaAnnotations.EMBEDDED,
 				xmlDocumentContext.getModelBuildingContext()
 		);

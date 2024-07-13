@@ -6,12 +6,13 @@
  */
 package org.hibernate.boot.jaxb.hbm.transform;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
-import org.hibernate.boot.internal.MetadataImpl;
+import org.hibernate.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.Collection;
@@ -21,17 +22,22 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ToOne;
 import org.hibernate.service.ServiceRegistry;
 
 /**
  * @author Steve Ebersole
  */
 public class BootModelPreprocessor {
+	private static final Map<String,String> entityByNameMap = new HashMap<>();
+
 	static void preprocessBooModel(
 			List<Binding<JaxbHbmHibernateMapping>> hbmXmlBindings,
 			MetadataImplementor bootModel,
 			ServiceRegistry serviceRegistry,
 			TransformationState transformationState) {
+		entityByNameMap.clear();
+
 		bootModel.getEntityBindings().forEach( (persistentClass) -> {
 			final Table table = TransformationHelper.determineEntityTable( persistentClass );
 			final EntityTypeInfo entityTypeInfo = new EntityTypeInfo( table, persistentClass );
@@ -45,6 +51,19 @@ public class BootModelPreprocessor {
 			EntityTypeInfo entityTypeInfo,
 			MetadataImplementor bootModel,
 			TransformationState transformationState) {
+		if ( persistentClass.getClassName() != null ) {
+			final String previous = entityByNameMap.put( persistentClass.getClassName(), persistentClass.getEntityName() );
+			if ( previous != null ) {
+				throw new MappingException( String.format(
+						Locale.ROOT,
+						"Entity class [%s] mapped multiple times with different entity-names [%s, %s]; while this was supported in legacy hbm.xml, it is no longer supported in mapping.xml",
+						persistentClass.getClassName(),
+						previous,
+						persistentClass.getEntityName()
+				) );
+			}
+		}
+
 		if ( persistentClass instanceof RootClass rootClass ) {
 			if ( persistentClass.getIdentifierProperty() != null ) {
 				if ( persistentClass.getIdentifierProperty().getValue() instanceof Component component ) {
@@ -102,6 +121,10 @@ public class BootModelPreprocessor {
 				final String componentRole = entityName + "." + property.getName() + ".value";
 				buildComponentEntries( componentRole, element, transformationState );
 			}
+		}
+		else if ( property.getValue() instanceof ToOne toOne ) {
+			// could be the target of an inverse mapping, and we will need this information for transforming to mapped-by
+			transformationState.registerMappableAttributesByColumns( entityName, property.getName(), toOne.getSelectables() );
 		}
 	}
 

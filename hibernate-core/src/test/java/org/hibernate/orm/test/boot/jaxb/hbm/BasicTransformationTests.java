@@ -89,8 +89,8 @@ public class BasicTransformationTests {
 
 		final JaxbEmbeddableImpl jaxbEmbeddable = transformed.getEmbeddables().get( 0 );
 		assertThat( jaxbEmbeddable.isMetadataComplete() ).isTrue();
-		assertThat( jaxbEmbeddable.getName() ).isEqualTo( "composition_1" );
-		assertThat( jaxbEmbeddable.getClazz() ).isNull();
+		assertThat( jaxbEmbeddable.getName() ).isEqualTo( "org.hibernate.orm.test.boot.jaxb.hbm.BasicComposition" );
+		assertThat( jaxbEmbeddable.getClazz() ).isEqualTo( "org.hibernate.orm.test.boot.jaxb.hbm.BasicComposition" );
 
 		TransformationHelper.verifyTransformation( transformed );
 	}

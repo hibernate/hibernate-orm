@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <bindings xmlns="https://jakarta.ee/xml/ns/jaxb"
-        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-        xmlns:inheritance="http://jaxb2-commons.dev.java.net/basic/inheritance"
-        extensionBindingPrefixes="inheritance"
-        version="3.0">
+          xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+          xmlns:jaxb="https://jakarta.ee/xml/ns/jaxb"
+          jaxb:extensionBindingPrefixes="inheritance simplify"
+          xmlns:inheritance="http://jaxb2-commons.dev.java.net/basic/inheritance"
+          xmlns:simplify="http://jaxb2-commons.dev.java.net/basic/simplify"
+          version="3.0">
 
     <bindings schemaLocation="../resources/org/hibernate/xsd/mapping/mapping-7.0.xsd" node="/xsd:schema">
         <schemaBindings>
@@ -289,12 +291,6 @@
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbLockableAttribute</inheritance:implements>
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbAssociationAttribute</inheritance:implements>
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbJoinTableCapable</inheritance:implements>
-            <bindings node=".//xsd:element[@name='join-column']">
-                <property name="joinColumns"/>
-            </bindings>
-            <bindings node=".//xsd:element[@name='join-formula']">
-                <property name="joinFormulas"/>
-            </bindings>
         </bindings>
 
         <bindings node="//xsd:complexType[@name='many-to-one']">
@@ -304,12 +300,6 @@
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbNotFoundCapable</inheritance:implements>
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbAssociationAttribute</inheritance:implements>
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbJoinTableCapable</inheritance:implements>
-            <bindings node=".//xsd:element[@name='join-column']">
-                <property name="joinColumns"/>
-            </bindings>
-            <bindings node=".//xsd:element[@name='join-formula']">
-                <property name="joinFormulas"/>
-            </bindings>
         </bindings>
 
         <bindings node="//xsd:complexType[@name='hbm-any-mapping']">

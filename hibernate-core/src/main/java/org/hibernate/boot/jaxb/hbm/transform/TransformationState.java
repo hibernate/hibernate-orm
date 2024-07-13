@@ -7,6 +7,7 @@
 package org.hibernate.boot.jaxb.hbm.transform;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.boot.jaxb.hbm.spi.EntityInfo;
@@ -15,6 +16,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTypeDefinitionType;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
+import org.hibernate.mapping.Selectable;
 
 /**
  * @author Steve Ebersole
@@ -32,6 +34,8 @@ public class TransformationState {
 	private final Map<String, JaxbEmbeddableImpl> embeddableByName = new HashMap<>();
 	private final Map<String, JaxbEmbeddableImpl> embeddableByRole = new HashMap<>();
 	private final Map<String, ComponentTypeInfo> embeddableInfoByRole = new HashMap<>();
+
+	private final Map<String,Map<List<Selectable>,String>> mappableAttributesByColumnsByEntity = new HashMap<>();
 
 	private final Map<String, JaxbHbmTypeDefinitionType> typeDefMap = new HashMap<>();
 
@@ -72,6 +76,25 @@ public class TransformationState {
 
 	public Map<String, ComponentTypeInfo> getEmbeddableInfoByRole() {
 		return embeddableInfoByRole;
+	}
+
+	public Map<String, Map<List<Selectable>, String>> getMappableAttributesByColumnsByEntity() {
+		return mappableAttributesByColumnsByEntity;
+	}
+
+	public Map<List<Selectable>, String> getMappableAttributesByColumns(String entityName) {
+		return mappableAttributesByColumnsByEntity.get( entityName );
+	}
+
+	public void registerMappableAttributesByColumns(
+			String entityName,
+			String attributeName,
+			List<Selectable> selectables) {
+		final Map<List<Selectable>, String> attributeByColumnsMap = mappableAttributesByColumnsByEntity.computeIfAbsent(
+				entityName,
+				s -> new HashMap<>()
+		);
+		attributeByColumnsMap.put( selectables, attributeName );
 	}
 
 	public Map<String, JaxbHbmTypeDefinitionType> getTypeDefMap() {

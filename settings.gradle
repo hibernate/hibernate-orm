@@ -69,7 +69,7 @@ dependencyResolutionManagement {
         }
         libs {
             def antlrVersion = version "antlr", "4.13.0"
-            def byteBuddyVersion = version "byteBuddy", "1.14.15"
+            def byteBuddyVersion = version "byteBuddy", "1.14.18"
             def classmateVersion = version "classmate", "1.5.1"
             def geolatteVersion = version "geolatte", "1.8.2"
             def hibernateModelsVersion = version "hibernateModels", "0.8.5"

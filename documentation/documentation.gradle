@@ -4,9 +4,9 @@ import org.asciidoctor.gradle.jvm.AsciidoctorTask
 import org.asciidoctor.gradle.jvm.pdf.AsciidoctorPdfTask
 
 plugins {
-	id 'org.asciidoctor.jvm.convert' version '3.3.2'
-	id 'org.asciidoctor.jvm.pdf' version '3.3.2'
-	id "org.asciidoctor.jvm.gems" version "3.3.2"
+	id 'org.asciidoctor.jvm.convert' version '4.0.2'
+	id 'org.asciidoctor.jvm.pdf' version '4.0.2'
+	id "org.asciidoctor.jvm.gems" version "4.0.2"
 	id "org.hibernate.orm.build.settings-doc"
 }
 

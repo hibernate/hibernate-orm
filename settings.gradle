@@ -68,7 +68,7 @@ dependencyResolutionManagement {
         }
         libs {
             def antlrVersion = version "antlr", "4.13.0"
-            def byteBuddyVersion = version "byteBuddy", "1.14.15"
+            def byteBuddyVersion = version "byteBuddy", "1.14.18"
             def classmateVersion = version "classmate", "1.5.1"
             def geolatteVersion = version "geolatte", "1.9.1"
             def hcannVersion = version "hcann", "7.0.1.Final"

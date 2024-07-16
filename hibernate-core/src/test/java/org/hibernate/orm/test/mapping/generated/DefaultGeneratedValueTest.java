@@ -25,7 +25,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import org.hibernate.HibernateError;
 import org.hibernate.Session;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
@@ -36,16 +35,23 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.generator.internal.CurrentTimestampGeneration;
+import org.hibernate.orm.test.annotations.MutableClock;
+import org.hibernate.orm.test.annotations.MutableClockSettingProvider;
 import org.hibernate.tuple.ValueGenerator;
 
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SettingProvider;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -65,9 +71,19 @@ import static org.junit.Assert.assertTrue;
 @SkipForDialect( dialectClass = TiDBDialect.class, reason = "See HHH-10196" )
 @DomainModel( annotatedClasses = DefaultGeneratedValueTest.TheEntity.class )
 @SessionFactory
+@ServiceRegistry(settingProviders = @SettingProvider(settingName = CurrentTimestampGeneration.CLOCK_SETTING_NAME, provider = MutableClockSettingProvider.class))
 public class DefaultGeneratedValueTest {
+
+	private MutableClock clock;
+
+	@BeforeEach
+	public void setup(SessionFactoryScope scope) {
+		clock = CurrentTimestampGeneration.getClock( scope.getSessionFactory() );
+		clock.reset();
+	}
+
 	@Test
-	@TestForIssue( jiraKey = "HHH-2907" )
+	@JiraKey( "HHH-2907" )
 	public void testGeneration(SessionFactoryScope scope) {
 		final TheEntity created = scope.fromTransaction( (s) -> {
 			final TheEntity theEntity = new TheEntity( 1 );
@@ -153,8 +169,7 @@ public class DefaultGeneratedValueTest {
 		assertNotNull( created.vmCreatedSqlTimestamp );
 		assertNotNull( created.updated );
 
-		//We need to wait a little to make sure the timestamps produced are different
-		waitALittle();
+		clock.tick();
 
 		scope.inTransaction( (s) -> {
 			final TheEntity theEntity = s.get( TheEntity.class, 1 );
@@ -260,12 +275,4 @@ public class DefaultGeneratedValueTest {
 		}
 	}
 
-	private static void waitALittle() {
-		try {
-			Thread.sleep( 10 );
-		}
-		catch (InterruptedException e) {
-			throw new HibernateError( "Unexpected wakeup from test sleep" );
-		}
-	}
 }

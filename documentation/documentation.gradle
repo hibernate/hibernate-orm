@@ -3,6 +3,16 @@ import java.util.function.Function
 import org.asciidoctor.gradle.jvm.AsciidoctorTask
 import org.asciidoctor.gradle.jvm.pdf.AsciidoctorPdfTask
 
+buildscript {
+	configurations.all {
+		resolutionStrategy.dependencySubstitution {
+			substitute module( 'com.burgstaller:okhttp-digest:1.10' ) using module(
+					'io.github.rburgst:okhttp-digest:1.21'
+			) because 'okhttp-digest only version 1.21 is available on Maven Central. Old version was on jcenter, which asciidoctor-gradle-plugin depends on transitively through simplified-jruby-gradle-plugin via http-builder-ng-okhttp '
+		}
+	}
+}
+
 plugins {
 	id 'org.asciidoctor.jvm.convert' version '4.0.2'
 	id 'org.asciidoctor.jvm.pdf' version '4.0.2'

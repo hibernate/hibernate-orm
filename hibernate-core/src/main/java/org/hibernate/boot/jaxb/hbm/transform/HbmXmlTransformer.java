@@ -1398,14 +1398,15 @@ public class HbmXmlTransformer {
 				);
 			}
 			else if ( hbmAttributeMapping instanceof JaxbHbmOneToOneType hbmOneToOne ) {
-				transferOneToOne( hbmOneToOne, attributes );
+				final PropertyInfo propertyInfo = managedTypeInfo.propertyInfoMap().get( hbmOneToOne.getName() );
+				transferOneToOne( hbmOneToOne, propertyInfo, attributes );
 			}
 			else if ( hbmAttributeMapping instanceof JaxbHbmManyToOneType hbmManyToOne ) {
-				final PropertyInfo propertyInfo = managedTypeInfo.propertyInfoMap().get( hbmManyToOne.getName() );
-				attributes.getManyToOneAttributes().add( transformManyToOne( hbmManyToOne, propertyInfo ) );
+				transferManyToOne( managedTypeInfo, attributes, hbmManyToOne );
 			}
 			else if ( hbmAttributeMapping instanceof JaxbHbmAnyAssociationType any ) {
-				attributes.getAnyMappingAttributes().add( transformAnyAttribute( any ) );
+				final PropertyInfo propertyInfo = managedTypeInfo.propertyInfoMap().get( any.getName() );
+				attributes.getAnyMappingAttributes().add( transformAnyAttribute( any, propertyInfo ) );
 
 			}
 			else if ( hbmAttributeMapping instanceof PluralAttributeInfo hbmCollection ) {
@@ -1440,7 +1441,7 @@ public class HbmXmlTransformer {
 			JaxbBasicImpl basic,
 			PropertyInfo propertyInfo) {
 		basic.setName( hbmProp.getName() );
-		basic.setOptional( hbmProp.isNotNull() == null || !hbmProp.isNotNull() );
+		basic.setOptional( propertyInfo.bootModelProperty().isOptional() );
 		basic.setFetch( FetchType.EAGER );
 		basic.setAttributeAccessor( hbmProp.getAccess() );
 		basic.setOptimisticLock( hbmProp.isOptimisticLock() );
@@ -1506,7 +1507,7 @@ public class HbmXmlTransformer {
 				new ColumnDefaults() {
 					@Override
 					public Boolean isNullable() {
-						return invert( hbmProp.isNotNull() );
+						return propertyInfo.bootModelProperty().isOptional();
 					}
 
 					@Override
@@ -1642,9 +1643,10 @@ public class HbmXmlTransformer {
 		return embedded;
 	}
 
-	private void transferOneToOne(JaxbHbmOneToOneType hbmOneToOne, JaxbAttributesContainer attributes) {
+	private void transferOneToOne(JaxbHbmOneToOneType hbmOneToOne, PropertyInfo propertyInfo, JaxbAttributesContainer attributes) {
 		final JaxbOneToOneImpl oneToOne = new JaxbOneToOneImpl();
 		oneToOne.setAttributeAccessor( hbmOneToOne.getAccess() );
+		oneToOne.setOptional( propertyInfo.bootModelProperty().isOptional() );
 		oneToOne.setCascade( convertCascadeType( hbmOneToOne.getCascade() ) );
 		oneToOne.setOrphanRemoval( isOrphanRemoval( hbmOneToOne.getCascade() ) );
 		oneToOne.setForeignKey( new JaxbForeignKeyImpl() );
@@ -1670,10 +1672,19 @@ public class HbmXmlTransformer {
 		attributes.getOneToOneAttributes().add( oneToOne );
 	}
 
+	private void transferManyToOne(
+			ManagedTypeInfo managedTypeInfo,
+			JaxbAttributesContainer attributes,
+			JaxbHbmManyToOneType hbmManyToOne) {
+		final PropertyInfo propertyInfo = managedTypeInfo.propertyInfoMap().get( hbmManyToOne.getName() );
+		final JaxbManyToOneImpl jaxbManyToOne = transformManyToOne( hbmManyToOne, propertyInfo );
+		attributes.getManyToOneAttributes().add( jaxbManyToOne );
+	}
+
 	private JaxbManyToOneImpl transformManyToOne(JaxbHbmManyToOneType hbmNode, PropertyInfo propertyInfo) {
 		final JaxbManyToOneImpl jaxbManyToOne = new JaxbManyToOneImpl();
 		jaxbManyToOne.setName( hbmNode.getName() );
-		jaxbManyToOne.setOptional( hbmNode.isNotNull() == null || !hbmNode.isNotNull() );
+		jaxbManyToOne.setOptional( propertyInfo.bootModelProperty().isOptional() );
 		if ( isNotEmpty( hbmNode.getEntityName() ) ) {
 			jaxbManyToOne.setTargetEntity( hbmNode.getEntityName() );
 		}
@@ -1740,12 +1751,13 @@ public class HbmXmlTransformer {
 	}
 
 
-	private JaxbAnyMappingImpl transformAnyAttribute(JaxbHbmAnyAssociationType source) {
+	private JaxbAnyMappingImpl transformAnyAttribute(JaxbHbmAnyAssociationType source, PropertyInfo propertyInfo) {
 		final JaxbAnyMappingImpl target = new JaxbAnyMappingImpl();
 
 		target.setName( source.getName() );
 		target.setAttributeAccessor( source.getAccess() );
 		target.setOptimisticLock( source.isOptimisticLock() );
+		target.setOptional( propertyInfo.bootModelProperty().isOptional() );
 
 		// todo : cascade
 		// todo : discriminator column
@@ -3087,12 +3099,12 @@ public class HbmXmlTransformer {
 
 					@Override
 					public List<JaxbManyToOneImpl> getManyToOneAttributes() {
-						return null;
+						return naturalId.getManyToOneAttributes();
 					}
 
 					@Override
 					public List<JaxbAnyMappingImpl> getAnyMappingAttributes() {
-						return null;
+						return naturalId.getAnyMappingAttributes();
 					}
 
 					@Override

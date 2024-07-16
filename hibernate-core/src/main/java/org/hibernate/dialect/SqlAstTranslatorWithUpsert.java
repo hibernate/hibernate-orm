@@ -215,7 +215,7 @@ public class SqlAstTranslatorWithUpsert<T extends JdbcOperation> extends Abstrac
 					appendSql(" and ");
 				}
 				binding.getColumnReference().appendColumnForWrite( this, "t" );
-				appendSql("<=");
+				appendSql("=");
 				binding.getValueExpression().accept( this );
 			}
 		}

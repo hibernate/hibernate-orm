@@ -145,11 +145,13 @@ public class GeneratedWritableDelegateTest {
 		scope.inTransaction( s -> {
 			s.createNativeMutationQuery( "create or replace function fun_upper_name() returns trigger as " + TRIGGER )
 					.executeUpdate();
+			s.createNativeMutationQuery( "drop trigger if exists upper_name_1 on values_only" ).executeUpdate();
+			s.createNativeMutationQuery( "drop trigger if exists upper_name_2 on values_and_identity" ).executeUpdate();
 			s.createNativeMutationQuery(
-					"create or replace trigger upper_name_1 before insert or update on values_only for each row execute procedure fun_upper_name()"
+					"create trigger upper_name_1 before insert or update on values_only for each row execute procedure fun_upper_name()"
 			).executeUpdate();
 			s.createNativeMutationQuery(
-					"create or replace trigger upper_name_2 before insert or update on values_and_identity for each row execute procedure fun_upper_name()"
+					"create trigger upper_name_2 before insert or update on values_and_identity for each row execute procedure fun_upper_name()"
 			).executeUpdate();
 		} );
 	}

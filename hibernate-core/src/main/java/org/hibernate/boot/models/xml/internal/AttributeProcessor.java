@@ -24,6 +24,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToOneImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistentAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAnyMappingImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTransientImpl;
+import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.xml.internal.attr.AnyMappingAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.attr.BasicAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing;
@@ -66,7 +67,25 @@ public class AttributeProcessor {
 
 		XmlAnnotationHelper.applyNaturalIdCache( jaxbNaturalId, mutableClassDetails, xmlDocumentContext );
 
-		processBaseAttributes( jaxbNaturalId, mutableClassDetails, classAccessType, memberAdjuster, xmlDocumentContext );
+		processBaseAttributes(
+				jaxbNaturalId,
+				mutableClassDetails,
+				classAccessType,
+				new MemberAdjuster() {
+					@Override
+					public <M extends MutableMemberDetails> void adjust(
+							M member,
+							JaxbPersistentAttribute jaxbPersistentAttribute,
+							XmlDocumentContext xmlDocumentContext) {
+						memberAdjuster.adjust( member, jaxbPersistentAttribute, xmlDocumentContext );
+						member.applyAnnotationUsage( HibernateAnnotations.NATURAL_ID, xmlDocumentContext.getModelBuildingContext() );
+						if ( !jaxbNaturalId.isMutable() ) {
+							member.applyAnnotationUsage( HibernateAnnotations.IMMUTABLE, xmlDocumentContext.getModelBuildingContext() );
+						}
+					}
+				},
+				xmlDocumentContext
+		);
 	}
 
 	public static void processBaseAttributes(

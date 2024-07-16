@@ -254,7 +254,7 @@ public class DB2StoredProcedureTest {
 								"    SELECT COUNT(*) INTO phoneCount  " +
 								"    FROM phone  " +
 								"    WHERE person_id = personId; " +
-								"END;"
+								"END"
 				);
 				statement.executeUpdate(
 						"CREATE OR REPLACE PROCEDURE sp_person_phones( " +
@@ -266,7 +266,7 @@ public class DB2StoredProcedureTest {
 								"    FROM phone " +
 								"    WHERE person_id = personId; " +
 								"    OPEN personPhones; " +
-								"END;"
+								"END"
 				);
 				statement.executeUpdate(
 						"CREATE OR REPLACE FUNCTION fn_count_phones( " +
@@ -278,7 +278,7 @@ public class DB2StoredProcedureTest {
 								"    FROM phone " +
 								"    WHERE person_id = personId; " +
 								"    RETURN phoneCount; " +
-								"END;"
+								"END"
 				);
 				statement.executeUpdate(
 						"CREATE OR REPLACE FUNCTION fn_person_and_phones(personId INTEGER) " +
@@ -293,7 +293,7 @@ public class DB2StoredProcedureTest {
 								"                \"ph.id\"           BIGINT, " +
 								"                \"ph.person_id\"    BIGINT, " +
 								"                \"ph.phone_number\" VARCHAR(255), " +
-								"                \"ph.valid\"        BOOLEAN " +
+								"                \"ph.valid\"        SMALLINT " +
 								"            ) " +
 								"    BEGIN ATOMIC " +
 								"    RETURN SELECT pr.id AS \"pr.id\", " +
@@ -309,7 +309,7 @@ public class DB2StoredProcedureTest {
 								"            FROM person pr " +
 								"                     JOIN phone ph ON pr.id = ph.person_id " +
 								"            WHERE pr.id = personId; " +
-								"    END; " );
+								"    END " );
 				statement.executeUpdate(
 						"CREATE OR REPLACE " +
 								"PROCEDURE singleRefCursor(OUT p_recordset CURSOR) " +
@@ -318,7 +318,7 @@ public class DB2StoredProcedureTest {
 								"    SELECT 1 as id " +
 								"    FROM sysibm.dual; " +
 								"    OPEN p_recordset; " +
-								"  END; "
+								"  END "
 				);
 				statement.executeUpdate(
 						"CREATE OR REPLACE " +
@@ -329,11 +329,11 @@ public class DB2StoredProcedureTest {
 								"    FROM sysibm.dual; " +
 								"	 SELECT 1 INTO p_value FROM sysibm.dual; " +
 								"    OPEN p_recordset; " +
-								"  END; "
+								"  END"
 				);
 				statement.executeUpdate(
 						"CREATE OR REPLACE PROCEDURE sp_phone_validity ( " +
-								"   IN validity BOOLEAN, " +
+								"   IN validity SMALLINT, " +
 								"   OUT personPhones CURSOR ) " +
 								"BEGIN " +
 								"    SET personPhones = CURSOR FOR " +
@@ -341,11 +341,11 @@ public class DB2StoredProcedureTest {
 								"    FROM phone " +
 								"    WHERE valid = validity; " +
 								"    OPEN personPhones; " +
-								"END;"
+								"END"
 				);
 				statement.executeUpdate(
 						"CREATE OR REPLACE PROCEDURE sp_votes ( " +
-								"   IN validity BOOLEAN, " +
+								"   IN validity CHAR(1), " +
 								"   OUT votes CURSOR ) " +
 								"BEGIN " +
 								"    SET votes = CURSOR FOR " +
@@ -353,12 +353,8 @@ public class DB2StoredProcedureTest {
 								"    FROM vote " +
 								"    WHERE vote_choice = validity; " +
 								"    OPEN votes; " +
-								"END;"
+								"END"
 				);
-			}
-			catch (final SQLException e) {
-				System.err.println( "Error exporting procedure and function definitions to DB2 database : " + e.getMessage() );
-				e.printStackTrace( System.err );
 			}
 		} ) );
 

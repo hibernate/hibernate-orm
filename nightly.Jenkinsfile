@@ -32,7 +32,6 @@ stage('Configure') {
 		new BuildEnvironment( dbName: 'mariadb_10_4' ),
 		new BuildEnvironment( dbName: 'postgresql_12' ),
 		new BuildEnvironment( dbName: 'edb_12' ),
-		new BuildEnvironment( dbName: 'oracle_21' ), // Did not find an image for Oracle-XE 19c
 		new BuildEnvironment( dbName: 'db2_10_5', longRunning: true ),
 		new BuildEnvironment( dbName: 'mssql_2017' ), // Unfortunately there is no SQL Server 2008 image, so we have to test with 2017
 // 		new BuildEnvironment( dbName: 'sybase_16' ), // There only is a Sybase ASE 16 image, so no pint in testing that nightly
@@ -136,13 +135,6 @@ stage('Build') {
 									docker.image('quay.io/enterprisedb/edb-postgres-advanced:12.16-3.3-postgis').pull()
 									sh "./docker_db.sh edb_12"
 									state[buildEnv.tag]['containerName'] = "edb"
-									break;
-								case "oracle_21":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('gvenzl/oracle-xe:21.3.0').pull()
-									}
-									sh "./docker_db.sh oracle_21"
-									state[buildEnv.tag]['containerName'] = "oracle"
 									break;
 								case "db2_10_5":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {

@@ -21,12 +21,12 @@ import org.junit.jupiter.api.Test;
 
 @Jpa(
     annotatedClasses = {
-      EntityGraphEmbeddedEntityAttributesTest.TrackedProduct.class,
-      EntityGraphEmbeddedEntityAttributesTest.Tracking.class,
-      EntityGraphEmbeddedEntityAttributesTest.UserForTracking.class,
+      EntityGraphEmbeddedAttributesTest.TrackedProduct.class,
+      EntityGraphEmbeddedAttributesTest.Tracking.class,
+      EntityGraphEmbeddedAttributesTest.UserForTracking.class,
     })
 @JiraKey("HHH-18391")
-class EntityGraphEmbeddedEntityAttributesTest {
+class EntityGraphEmbeddedAttributesTest {
 
   private static final int TRACKED_PRODUCT_ID = 1;
 
@@ -34,37 +34,37 @@ class EntityGraphEmbeddedEntityAttributesTest {
   public void beforeEach(EntityManagerFactoryScope scope) {
     scope.inTransaction(
         entityManager -> {
-          EntityGraphEmbeddedEntityAttributesTest.UserForTracking creator =
-              new EntityGraphEmbeddedEntityAttributesTest.UserForTracking(1, "foo");
+          EntityGraphEmbeddedAttributesTest.UserForTracking creator =
+              new EntityGraphEmbeddedAttributesTest.UserForTracking(1, "foo");
           entityManager.persist(creator);
 
-          EntityGraphEmbeddedEntityAttributesTest.UserForTracking modifier =
-              new EntityGraphEmbeddedEntityAttributesTest.UserForTracking(2, "bar");
+          EntityGraphEmbeddedAttributesTest.UserForTracking modifier =
+              new EntityGraphEmbeddedAttributesTest.UserForTracking(2, "bar");
           entityManager.persist(modifier);
 
-          EntityGraphEmbeddedEntityAttributesTest.Tracking tracking =
-              new EntityGraphEmbeddedEntityAttributesTest.Tracking(creator, modifier);
+          EntityGraphEmbeddedAttributesTest.Tracking tracking =
+              new EntityGraphEmbeddedAttributesTest.Tracking(creator, modifier);
 
-          EntityGraphEmbeddedEntityAttributesTest.TrackedProduct product =
-              new EntityGraphEmbeddedEntityAttributesTest.TrackedProduct(
+          EntityGraphEmbeddedAttributesTest.TrackedProduct product =
+              new EntityGraphEmbeddedAttributesTest.TrackedProduct(
                   TRACKED_PRODUCT_ID, UUID.randomUUID().toString(), tracking);
           entityManager.persist(product);
         });
   }
 
   @Test
-  @DisplayName("Entity fetch graph is well applied on embedded entity attributes")
+  @DisplayName("Entity fetch graph is well applied on Embedded attributes")
   void testFetchGraph(EntityManagerFactoryScope scope) {
     scope.inTransaction(
         entityManager -> {
-          EntityGraph<EntityGraphEmbeddedEntityAttributesTest.TrackedProduct> trackedProductGraph =
+          EntityGraph<EntityGraphEmbeddedAttributesTest.TrackedProduct> trackedProductGraph =
               entityManager.createEntityGraph(
-                  EntityGraphEmbeddedEntityAttributesTest.TrackedProduct.class);
+                  EntityGraphEmbeddedAttributesTest.TrackedProduct.class);
           trackedProductGraph.addSubgraph("tracking").addAttributeNodes("creator");
 
-          EntityGraphEmbeddedEntityAttributesTest.TrackedProduct product =
+          EntityGraphEmbeddedAttributesTest.TrackedProduct product =
               entityManager.find(
-                  EntityGraphEmbeddedEntityAttributesTest.TrackedProduct.class,
+                  EntityGraphEmbeddedAttributesTest.TrackedProduct.class,
                   TRACKED_PRODUCT_ID,
                   Map.of("javax.persistence.fetchgraph", trackedProductGraph));
 
@@ -74,18 +74,18 @@ class EntityGraphEmbeddedEntityAttributesTest {
   }
 
   @Test
-  @DisplayName("Entity load graph is well applied on embedded entity attributes")
+  @DisplayName("Entity load graph is well applied on Embedded attributes")
   void testLoadGraph(EntityManagerFactoryScope scope) {
     scope.inTransaction(
         entityManager -> {
-          EntityGraph<EntityGraphEmbeddedEntityAttributesTest.TrackedProduct> trackedProductGraph =
+          EntityGraph<EntityGraphEmbeddedAttributesTest.TrackedProduct> trackedProductGraph =
               entityManager.createEntityGraph(
-                  EntityGraphEmbeddedEntityAttributesTest.TrackedProduct.class);
+                  EntityGraphEmbeddedAttributesTest.TrackedProduct.class);
           trackedProductGraph.addSubgraph("tracking").addAttributeNodes("creator");
 
-          EntityGraphEmbeddedEntityAttributesTest.TrackedProduct product =
+          EntityGraphEmbeddedAttributesTest.TrackedProduct product =
               entityManager.find(
-                  EntityGraphEmbeddedEntityAttributesTest.TrackedProduct.class,
+                  EntityGraphEmbeddedAttributesTest.TrackedProduct.class,
                   TRACKED_PRODUCT_ID,
                   Map.of("javax.persistence.loadgraph", trackedProductGraph));
 

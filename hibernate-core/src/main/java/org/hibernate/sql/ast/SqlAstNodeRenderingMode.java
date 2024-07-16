@@ -54,5 +54,12 @@ public enum SqlAstNodeRenderingMode {
 	 * such that it doesn't appear as plain parameter.
 	 * <code>null</code> literals will be wrapped in a cast.
 	 */
-	NO_UNTYPED
+	NO_UNTYPED,
+
+	/**
+	 * Wrap all nested parameters with a database specific wrapping strategy,
+	 * defaulting to wrapping via a subquery e.g. {@code (select ?)}.
+	 * This is useful for certain databases that don't support parameters directly within certain functions, like Informix.
+	 */
+	WRAP_ALL_PARAMETERS
 }

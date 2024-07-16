@@ -33,12 +33,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Gavin King
  */
-@DomainModel(
-		xmlMappings = {
-				"org/hibernate/orm/test/mapping/inheritance/discriminator/SimpleInheritance.hbm.xml",
-				"org/hibernate/orm/test/mapping/inheritance/discriminator/Person.hbm.xml"
-		}
-)
+@DomainModel( xmlMappings = "org/hibernate/orm/test/mapping/inheritance/discriminator/SimpleInheritance.hbm.xml")
 @SessionFactory
 public class SimpleInheritanceTest {
 

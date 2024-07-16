@@ -61,13 +61,18 @@ public class PostgresPlusLegacyDialect extends PostgreSQLLegacyDialect {
 		functionFactory.sysdate();
 		functionFactory.systimestamp();
 
-		functionFactory.bitand();
-		functionFactory.bitor();
-		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "bitxor", "(bitor(?1,?2)-bitand(?1,?2))" )
-				.setExactArgumentCount( 2 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
-				.register();
-
+		if ( getVersion().isSameOrAfter( 14 ) ) {
+			// Support for these functions were apparently only added in version 14
+			functionFactory.bitand();
+			functionFactory.bitor();
+			functionContributions.getFunctionRegistry().patternDescriptorBuilder(
+							"bitxor",
+							"(bitor(?1,?2)-bitand(?1,?2))"
+					)
+					.setExactArgumentCount( 2 )
+					.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+					.register();
+		}
 	}
 
 	@Override

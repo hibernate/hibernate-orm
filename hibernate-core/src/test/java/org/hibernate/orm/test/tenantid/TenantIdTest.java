@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.tenantid;
 
-import org.hibernate.HibernateError;
 import org.hibernate.PropertyValueException;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
@@ -24,13 +23,18 @@ import org.hibernate.testing.orm.junit.SessionFactoryProducer;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.binder.internal.TenantIdBinder;
+import org.hibernate.generator.internal.CurrentTimestampGeneration;
+import org.hibernate.orm.test.annotations.MutableClock;
+import org.hibernate.orm.test.annotations.MutableClockSettingProvider;
 import org.hibernate.query.Query;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
 
+import org.hibernate.testing.orm.junit.SettingProvider;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.EntityManager;
@@ -54,11 +58,19 @@ import java.util.List;
 @ServiceRegistry(
         settings = {
                 @Setting(name = JAKARTA_HBM2DDL_DATABASE_ACTION, value = "create-drop")
-        }
+        },
+        settingProviders = @SettingProvider(settingName = CurrentTimestampGeneration.CLOCK_SETTING_NAME, provider = MutableClockSettingProvider.class)
 )
 public class TenantIdTest implements SessionFactoryProducer {
 
     String currentTenant;
+    MutableClock clock;
+
+    @BeforeEach
+    public void setup(SessionFactoryScope scope) {
+        clock = CurrentTimestampGeneration.getClock( scope.getSessionFactory() );
+        clock.reset();
+    }
 
     @AfterEach
     public void cleanup(SessionFactoryScope scope) {
@@ -211,8 +223,7 @@ public class TenantIdTest implements SessionFactoryProducer {
         assertEquals( "mine", record.state.tenantId );
         assertNotNull( record.state.updated );
 
-        //We need to wait a little to make sure the timestamps produced are different
-        waitALittle();
+        clock.tick();
 
         scope.inTransaction( s -> {
             Record r = s.find( Record.class, record.id );
@@ -341,14 +352,5 @@ public class TenantIdTest implements SessionFactoryProducer {
         JpaCriteriaQuery<Record> criteriaQuery = criteriaBuilder.createQuery( Record.class );
         JpaRoot<Record> from = criteriaQuery.from( Record.class );
         return session.createQuery( criteriaQuery ).getResultList();
-    }
-
-    private static void waitALittle() {
-        try {
-            Thread.sleep( 10 );
-        }
-        catch (InterruptedException e) {
-            throw new HibernateError( "Unexpected wakeup from test sleep" );
-        }
     }
 }

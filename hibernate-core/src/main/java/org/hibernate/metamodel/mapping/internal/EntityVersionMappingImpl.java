@@ -97,7 +97,8 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 						.getRepresentationStrategy()
 						.resolvePropertyAccess( bootEntityDescriptor.getVersion() )
 						.getGetter(),
-				templateInstanceAccess
+				templateInstanceAccess,
+				creationProcess.getCreationContext().getSessionFactory()
 		);
 	}
 

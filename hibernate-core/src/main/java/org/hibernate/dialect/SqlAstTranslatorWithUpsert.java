@@ -191,6 +191,7 @@ public class SqlAstTranslatorWithUpsert<T extends JdbcOperation> extends Abstrac
 
 	protected void renderMergeUpdate(OptionalTableUpdate optionalTableUpdate) {
 		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
+		final List<ColumnValueBinding> optimisticLockBindings = optionalTableUpdate.getOptimisticLockBindings();
 
 		appendSql( " when matched then update set " );
 		for ( int i = 0; i < valueBindings.size(); i++ ) {
@@ -201,6 +202,22 @@ public class SqlAstTranslatorWithUpsert<T extends JdbcOperation> extends Abstrac
 			binding.getColumnReference().appendColumnForWrite( this, "t" );
 			appendSql( "=" );
 			binding.getColumnReference().appendColumnForWrite( this, "s" );
+		}
+		renderMatchedWhere( optimisticLockBindings );
+	}
+
+	private void renderMatchedWhere(List<ColumnValueBinding> optimisticLockBindings) {
+		if ( !optimisticLockBindings.isEmpty() ) {
+			appendSql( " where " );
+			for (int i = 0; i < optimisticLockBindings.size(); i++) {
+				final ColumnValueBinding binding = optimisticLockBindings.get( i );
+				if ( i>0 ) {
+					appendSql(" and ");
+				}
+				binding.getColumnReference().appendColumnForWrite( this, "t" );
+				appendSql("=");
+				binding.getValueExpression().accept( this );
+			}
 		}
 	}
 }

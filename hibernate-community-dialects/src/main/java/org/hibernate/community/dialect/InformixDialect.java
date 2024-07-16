@@ -280,7 +280,6 @@ public class InformixDialect extends Dialect {
 		functionFactory.initcap();
 		functionFactory.yearMonthDay();
 		functionFactory.ceiling_ceil();
-		functionFactory.concat_pipeOperator( SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS );
 		functionFactory.ascii();
 		functionFactory.char_chr();
 		functionFactory.addMonths();

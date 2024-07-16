@@ -521,7 +521,7 @@ public class HbmXmlTransformer {
 
 		if ( !hbmSubclass.getSubclass().isEmpty() ) {
 			for ( JaxbHbmDiscriminatorSubclassEntityType nestedHbmSubclass : hbmSubclass.getSubclass() ) {
-				final String nestedSubclassEntityName = TransformationHelper.determineEntityName( hbmSubclass, hbmXmlBinding.getRoot() );
+				final String nestedSubclassEntityName = TransformationHelper.determineEntityName( nestedHbmSubclass, hbmXmlBinding.getRoot() );
 				final JaxbEntityImpl nestedSubclassSubclassEntity = transformationState.getMappingEntityByName().get( nestedSubclassEntityName );
 				final EntityTypeInfo nestedSubclassInfo = transformationState.getEntityInfoByName().get( nestedSubclassEntityName );
 				transferDiscriminatorSubclass( nestedHbmSubclass, nestedSubclassSubclassEntity, nestedSubclassInfo );
@@ -561,7 +561,7 @@ public class HbmXmlTransformer {
 
 		if ( !hbmSubclass.getJoinedSubclass().isEmpty() ) {
 			for ( JaxbHbmJoinedSubclassEntityType nestedHbmSubclass : hbmSubclass.getJoinedSubclass() ) {
-				final String nestedSubclassEntityName = TransformationHelper.determineEntityName( hbmSubclass, hbmXmlBinding.getRoot() );
+				final String nestedSubclassEntityName = TransformationHelper.determineEntityName( nestedHbmSubclass, hbmXmlBinding.getRoot() );
 				final JaxbEntityImpl nestedSubclassSubclassEntity = transformationState.getMappingEntityByName().get( nestedSubclassEntityName );
 				final EntityTypeInfo nestedSubclassInfo = transformationState.getEntityInfoByName().get( nestedSubclassEntityName );
 				transferJoinedSubclass( nestedHbmSubclass, nestedSubclassSubclassEntity, nestedSubclassInfo );
@@ -583,7 +583,7 @@ public class HbmXmlTransformer {
 
 		if ( !hbmSubclass.getUnionSubclass().isEmpty() ) {
 			for ( JaxbHbmUnionSubclassEntityType nestedHbmSubclass : hbmSubclass.getUnionSubclass() ) {
-				final String nestedSubclassEntityName = TransformationHelper.determineEntityName( hbmSubclass, hbmXmlBinding.getRoot() );
+				final String nestedSubclassEntityName = TransformationHelper.determineEntityName( nestedHbmSubclass, hbmXmlBinding.getRoot() );
 				final JaxbEntityImpl nestedSubclassSubclassEntity = transformationState.getMappingEntityByName().get( nestedSubclassEntityName );
 				final EntityTypeInfo nestedSubclassInfo = transformationState.getEntityInfoByName().get( nestedSubclassEntityName );
 				transferUnionSubclass( nestedHbmSubclass, nestedSubclassSubclassEntity, nestedSubclassInfo );
@@ -1357,8 +1357,18 @@ public class HbmXmlTransformer {
 			EntityInfo hbmEntity,
 			JaxbEntityImpl mappingEntity,
 			EntityTypeInfo entityTypeInfo) {
-		mappingEntity.setAttributes( new JaxbAttributesContainerImpl() );
-		transferBaseAttributes( entityTypeInfo.getPersistentClass().getEntityName(), hbmEntity.getAttributes(), entityTypeInfo, mappingEntity.getAttributes() );
+		try {
+			mappingEntity.setAttributes( new JaxbAttributesContainerImpl() );
+			transferBaseAttributes(
+					entityTypeInfo.getPersistentClass().getEntityName(),
+					hbmEntity.getAttributes(),
+					entityTypeInfo,
+					mappingEntity.getAttributes()
+			);
+		}
+		catch (Exception e) {
+			throw new TransformationException( "Error processing entity attributes : " + entityTypeInfo.getPersistentClass().getEntityName(), e, origin() );
+		}
 	}
 
 	private void transferBaseAttributes(
@@ -1368,14 +1378,28 @@ public class HbmXmlTransformer {
 			JaxbAttributesContainer attributes) {
 		for ( Object hbmAttributeMapping : hbmAttributeMappings ) {
 			if ( hbmAttributeMapping instanceof JaxbHbmBasicAttributeType basic ) {
-				final PropertyInfo propertyInfo = managedTypeInfo.propertyInfoMap().get( basic.getName() );
-				attributes.getBasicAttributes().add( transformBasicAttribute( basic, propertyInfo ) );
+				try {
+					final PropertyInfo propertyInfo = managedTypeInfo.propertyInfoMap().get( basic.getName() );
+					attributes.getBasicAttributes().add( transformBasicAttribute( basic, propertyInfo ) );
+				}
+				catch (Exception e) {
+					throw new TransformationException( "Error transforming <property/> : " + basic.getName(), e, origin() );
+				}
 			}
 			else if ( hbmAttributeMapping instanceof JaxbHbmCompositeAttributeType hbmComponent ) {
-				final String componentRole = roleBase + "." + hbmComponent.getName();
-				final ComponentTypeInfo componentTypeInfo = transformationState.getEmbeddableInfoByRole().get( componentRole );
-				final JaxbEmbeddableImpl jaxbEmbeddable = applyEmbeddable( roleBase, hbmComponent, componentTypeInfo );
-				attributes.getEmbeddedAttributes().add( transformEmbedded( jaxbEmbeddable, hbmComponent ) );
+				try {
+					final String componentRole = roleBase + "." + hbmComponent.getName();
+					final ComponentTypeInfo componentTypeInfo = transformationState.getEmbeddableInfoByRole().get( componentRole );
+					final JaxbEmbeddableImpl jaxbEmbeddable = applyEmbeddable(
+							roleBase,
+							hbmComponent,
+							componentTypeInfo
+					);
+					attributes.getEmbeddedAttributes().add( transformEmbedded( jaxbEmbeddable, hbmComponent ) );
+				}
+				catch (Exception e) {
+					throw new TransformationException( "Error transforming <component/> : " + hbmComponent.getName(), e, origin() );
+				}
 			}
 			else if ( hbmAttributeMapping instanceof JaxbHbmPropertiesType hbmProperties ) {
 				// while we could simply "unwrap" the <properties/> itself and inline the attributes,
@@ -1398,30 +1422,64 @@ public class HbmXmlTransformer {
 				);
 			}
 			else if ( hbmAttributeMapping instanceof JaxbHbmOneToOneType hbmOneToOne ) {
-				final PropertyInfo propertyInfo = managedTypeInfo.propertyInfoMap().get( hbmOneToOne.getName() );
-				transferOneToOne( hbmOneToOne, propertyInfo, attributes );
+				try {
+					final PropertyInfo propertyInfo = managedTypeInfo.propertyInfoMap().get( hbmOneToOne.getName() );
+					transferOneToOne( hbmOneToOne, propertyInfo, attributes );
+				}
+				catch (Exception e) {
+					throw new TransformationException( "Error transforming <one-to-one/> : " + hbmOneToOne.getName(), e, origin() );
+				}
 			}
 			else if ( hbmAttributeMapping instanceof JaxbHbmManyToOneType hbmManyToOne ) {
-				transferManyToOne( managedTypeInfo, attributes, hbmManyToOne );
+				try {
+					transferManyToOne( managedTypeInfo, attributes, hbmManyToOne );
+				}
+				catch (Exception e) {
+					throw new TransformationException( "Error transforming <many-to-one/> : " + hbmManyToOne.getName(), e, origin() );
+				}
 			}
 			else if ( hbmAttributeMapping instanceof JaxbHbmAnyAssociationType any ) {
-				final PropertyInfo propertyInfo = managedTypeInfo.propertyInfoMap().get( any.getName() );
-				attributes.getAnyMappingAttributes().add( transformAnyAttribute( any, propertyInfo ) );
-
+				try {
+					final PropertyInfo propertyInfo = managedTypeInfo.propertyInfoMap().get( any.getName() );
+					attributes.getAnyMappingAttributes().add( transformAnyAttribute( any, propertyInfo ) );
+				}
+				catch (Exception e) {
+					throw new TransformationException( "Error transforming <any/> : " + any.getName(), e, origin() );
+				}
 			}
 			else if ( hbmAttributeMapping instanceof PluralAttributeInfo hbmCollection ) {
 				final PropertyInfo propertyInfo = managedTypeInfo.propertyInfoMap().get( hbmCollection.getName() );
 				if ( hbmCollection.getElement() != null || hbmCollection.getCompositeElement() != null ) {
-					attributes.getElementCollectionAttributes().add( transformElementCollection( roleBase, hbmCollection, propertyInfo ) );
+					try {
+						attributes.getElementCollectionAttributes().add( transformElementCollection( roleBase, hbmCollection, propertyInfo ) );
+					}
+					catch (Exception e) {
+						throw new TransformationException( "Error transforming element-collection : " + hbmCollection.getName(), e, origin() );
+					}
 				}
 				else if ( hbmCollection.getOneToMany() != null ) {
-					attributes.getOneToManyAttributes().add( transformOneToMany( hbmCollection, propertyInfo ) );
+					try {
+						attributes.getOneToManyAttributes().add( transformOneToMany( hbmCollection, propertyInfo ) );
+					}
+					catch (Exception e) {
+						throw new TransformationException( "Error transforming one-to-many : " + hbmCollection.getName(), e, origin() );
+					}
 				}
 				else if ( hbmCollection.getManyToMany() != null ) {
-					attributes.getManyToManyAttributes().add( transformManyToMany( hbmCollection, propertyInfo ) );
+					try {
+						attributes.getManyToManyAttributes().add( transformManyToMany( hbmCollection, propertyInfo ) );
+					}
+					catch (Exception e) {
+						throw new TransformationException( "Error transforming many-to-many : " + hbmCollection.getName(), e, origin() );
+					}
 				}
 				else if ( hbmCollection.getManyToAny() != null ) {
-					attributes.getPluralAnyMappingAttributes().add( transformPluralAny( hbmCollection ) );
+					try {
+						attributes.getPluralAnyMappingAttributes().add( transformPluralAny( hbmCollection ) );
+					}
+					catch (Exception e) {
+						throw new TransformationException( "Error transforming many-to-any : " + hbmCollection.getName(), e, origin() );
+					}
 				}
 				else {
 					throw new UnsupportedOperationException( "Unexpected node type - " + hbmCollection );

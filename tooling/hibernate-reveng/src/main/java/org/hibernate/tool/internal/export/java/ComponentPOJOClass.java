@@ -73,7 +73,7 @@ public class ComponentPOJOClass extends BasicPOJOClass {
 	}
 	
 	public Iterator<Property> getAllPropertiesIterator() {
-		return clazz.getPropertyIterator();
+		return clazz.getProperties().iterator();
 	}
 
 	public boolean isComponent() {

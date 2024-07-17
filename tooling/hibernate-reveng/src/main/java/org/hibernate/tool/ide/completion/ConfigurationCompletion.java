@@ -298,7 +298,7 @@ public class ConfigurationCompletion {
         if (idx != -1) {
             attributeName = attributeName.substring(0, idx);
         }
-        Iterator<?> names = t.getPropertyIterator();
+        Iterator<?> names = t.getProperties().iterator();
         while ( names.hasNext() ) {
 			Property element = (Property) names.next();
 			String name = element.getName();
@@ -313,7 +313,7 @@ public class ConfigurationCompletion {
         if (t == null) {
             return;
         }
-        Iterator<?> props = t.getPropertyIterator();
+        Iterator<?> props = t.getProperties().iterator();
         while ( props.hasNext() ) {
 			Property element = (Property) props.next();			
 			String candidate = element.getName();

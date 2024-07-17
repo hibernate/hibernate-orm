@@ -348,7 +348,7 @@ abstract public class BasicPOJOClass implements POJOClass, MetaAttributeConstant
 		if ( property.isComposite() ) {
 			annotations.append( "@" + importType("jakarta.persistence.AttributeOverrides") +"( {" );
 			Component component = (Component) property.getValue();
-			Iterator<?> subElements = component.getPropertyIterator();
+			Iterator<?> subElements = component.getProperties().iterator();
 			buildRecursiveAttributeOverride( subElements, null, property, annotations );
 			annotations.setLength( annotations.length() - 2 );
 			annotations.append( " } )" );
@@ -390,7 +390,7 @@ abstract public class BasicPOJOClass implements POJOClass, MetaAttributeConstant
 				}
 				path = path + subProperty.getName();
 				Component component = (Component) subProperty.getValue();
-				buildRecursiveAttributeOverride( component.getPropertyIterator(), path, subProperty, annotations );
+				buildRecursiveAttributeOverride( component.getProperties().iterator(), path, subProperty, annotations );
 			}
 			else {
 				Selectable selectable = subProperty.getColumns().get(0);
@@ -821,7 +821,7 @@ abstract public class BasicPOJOClass implements POJOClass, MetaAttributeConstant
 				return true;
 			} else if (field.getValue() instanceof Component) {
 				Component c = (Component) field.getValue();
-				Iterator<?> it = c.getPropertyIterator();
+				Iterator<?> it = c.getProperties().iterator();
 				while ( it.hasNext() ) {
 					Property prop = (Property) it.next();
 					if(isRequiredInConstructor(prop)) {

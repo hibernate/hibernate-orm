@@ -467,7 +467,7 @@ public class Cfg2HbmTool {
 	}
 
 	public Iterator<?> getProperties(Component v) {
-		return new SkipBackRefPropertyIterator(v.getPropertyIterator());
+		return new SkipBackRefPropertyIterator(v.getProperties().iterator());
 	}
 
 	public Iterator<?> getProperties(PersistentClass pc) {

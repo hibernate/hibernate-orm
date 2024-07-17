@@ -64,6 +64,7 @@ public class GeneratedValuesHelper {
 	 * for the specified {@link ResultSet}.
 	 *
 	 * @param resultSet The result set from which to extract the generated values
+	 * @param statement The prepared statement the result set was generated from
 	 * @param persister The entity type which we're reading the generated values for
 	 * @param session The session
 	 *
@@ -114,6 +115,7 @@ public class GeneratedValuesHelper {
 	 * using the {@link JdbcValuesMappingProducer} provided in input.
 	 *
 	 * @param resultSet the result set containing the generated values
+	 * @param statement The prepared statement the result set was generated from
 	 * @param persister the current entity persister
 	 * @param mappingProducer the mapping producer to use when reading generated values
 	 * @param session the current session

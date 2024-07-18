@@ -1173,7 +1173,8 @@ public class HbmXmlTransformer {
 			ColumnAndFormulaTarget target,
 			ColumnDefaults columnDefaults,
 			String table) {
-		for ( Selectable selectable : value.getSelectables() ) {
+		for ( int i = 0; i < value.getSelectables().size(); i++ ) {
+			final Selectable selectable = value.getSelectables().get( i );
 			if ( selectable instanceof Formula formula ) {
 				target.addFormula( formula.getFormula() );
 			}
@@ -1181,10 +1182,16 @@ public class HbmXmlTransformer {
 				final TargetColumnAdapter targetColumnAdapter = target.makeColumnAdapter( columnDefaults );
 				targetColumnAdapter.setName( column.getQuotedName() );
 				targetColumnAdapter.setTable( table );
-				// todo (7.0) : account for #insert, #update, etc
+				targetColumnAdapter.setLength( convertColumnLength( column.getLength() ) );
+				targetColumnAdapter.setPrecision( column.getPrecision() );
+				targetColumnAdapter.setScale( column.getScale() );
 				target.addColumn( targetColumnAdapter );
 			}
 		}
+	}
+
+	private Integer convertColumnLength(Long length) {
+		return length == null ? null : length.intValue();
 	}
 
 	private void transferColumnsAndFormulas(
@@ -1709,10 +1716,9 @@ public class HbmXmlTransformer {
 		oneToOne.setOrphanRemoval( isOrphanRemoval( hbmOneToOne.getCascade() ) );
 		oneToOne.setForeignKey( new JaxbForeignKeyImpl() );
 		oneToOne.getForeignKey().setName( hbmOneToOne.getForeignKey() );
-		if (! StringHelper.isEmpty( hbmOneToOne.getPropertyRef() ) ) {
-			final JaxbJoinColumnImpl joinColumn = new JaxbJoinColumnImpl();
-			joinColumn.setReferencedColumnName( hbmOneToOne.getPropertyRef() );
-			oneToOne.getJoinColumnOrJoinFormula().add( joinColumn );
+		if ( StringHelper.isNotEmpty( hbmOneToOne.getPropertyRef() ) ) {
+			oneToOne.setPropertyRef( new JaxbPropertyRefImpl() );
+			oneToOne.getPropertyRef().setName( hbmOneToOne.getPropertyRef() );
 		}
 		for ( String formula : hbmOneToOne.getFormula() ) {
 			oneToOne.getJoinColumnOrJoinFormula().add( formula );
@@ -1780,7 +1786,7 @@ public class HbmXmlTransformer {
 						jaxbManyToOne.getJoinColumnOrJoinFormula().add( formula );
 					}
 				},
-				ColumnDefaultsBasicImpl.INSTANCE,
+				new ColumnDefaultsProperty( manyToOneProperty ),
 				propertyInfo.tableName()
 		);
 
@@ -3001,7 +3007,7 @@ public class HbmXmlTransformer {
 		hbmCompositeId.getKeyPropertyOrKeyManyToOne().forEach( (hbmIdProperty) -> {
 			if ( hbmIdProperty instanceof JaxbHbmCompositeKeyBasicAttributeType hbmKeyProperty ) {
 				final PropertyInfo keyPropertyInfo = componentTypeInfo.propertyInfoMap().get( hbmKeyProperty.getName() );
-				mappingXmlEntity.getAttributes().getIdAttributes().add( transformNonAggregatedIdProperty(
+				mappingXmlEntity.getAttributes().getIdAttributes().add( transformNonAggregatedKeyProperty(
 						hbmKeyProperty,
 						keyPropertyInfo
 				) );
@@ -3022,7 +3028,7 @@ public class HbmXmlTransformer {
 		throw new UnsupportedOperationException( "Not implemented yet" );
 	}
 
-	private JaxbIdImpl transformNonAggregatedIdProperty(
+	private JaxbIdImpl transformNonAggregatedKeyProperty(
 			JaxbHbmCompositeKeyBasicAttributeType hbmIdProperty,
 			PropertyInfo idPropertyInfo) {
 		final JaxbIdImpl jaxbBasic = new JaxbIdImpl();
@@ -3058,7 +3064,8 @@ public class HbmXmlTransformer {
 
 					@Override
 					public List<Serializable> getColumnOrFormula() {
-						return Collections.emptyList();
+						//noinspection unchecked,rawtypes
+						return (List) hbmIdProperty.getColumn();
 					}
 
 					@Override

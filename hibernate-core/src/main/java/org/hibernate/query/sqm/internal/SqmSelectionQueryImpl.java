@@ -107,11 +107,11 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
 
 		this.expectedResultType = expectedResultType;
-//		visitQueryReturnType( sqm.getQueryPart(), expectedResultType, getSessionFactory() );
+		visitQueryReturnType( sqm.getQueryPart(), expectedResultType, getSessionFactory() );
 		this.resultType = determineResultType( sqm );
+		this.tupleMetadata = buildTupleMetadata( sqm, expectedResultType );
 
 		setComment( hql );
-		this.tupleMetadata = buildTupleMetadata( sqm, expectedResultType );
 	}
 
 	private Class<?> determineResultType(SqmSelectStatement<?> sqm) {

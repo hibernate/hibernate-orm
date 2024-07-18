@@ -30,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = SimpleEntity.class )
+@DomainModel( annotatedClasses = {SimpleEntity.class, Dto.class, Dto2.class } )
 @SessionFactory
 public class BasicCriteriaResultTests {
 	@BeforeEach

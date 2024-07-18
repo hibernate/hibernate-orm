@@ -80,7 +80,7 @@ public class RevengMetadataCollector {
 	}
 	
 	private Table createTable(String catalog, String schema, String name) {
-		Table table = new Table();
+		Table table = new Table("Hibernate Tools");
 		table.setAbstract(false);
 		table.setName(name);
 		table.setSchema(schema);

@@ -75,7 +75,7 @@ public class OverrideBinder {
 			ArrayList<Element> tables, 
 			OverrideRepository repository) {	
 		for (Element element : tables) {
-			Table table = new Table();
+			Table table = new Table("Hibernate Tools");
 			table.setCatalog(getAttribute(element, "catalog"));
 			table.setSchema(getAttribute(element, "schema"));
 			table.setName(getAttribute(element, "name"));
@@ -154,7 +154,7 @@ public class OverrideBinder {
 				List<Column> localColumns = new ArrayList<Column>();
 				localColumns.add(column);
 				List<Column> foreignColumns = new ArrayList<Column>();				
-				Table foreignTable = new Table();
+				Table foreignTable = new Table("Hibernate Tools");
 				foreignTable.setName(foreignTableName);
 				foreignTable.setCatalog(
 						element.hasAttribute("foreign-catalog") ?
@@ -192,7 +192,7 @@ public class OverrideBinder {
 			String constraintName = getAttribute(element, "constraint-name");
 			String foreignTableName = getAttribute(element, "foreign-table");
 			if (foreignTableName != null) {
-				Table foreignTable = new Table();
+				Table foreignTable = new Table("hibernate tools");
 				foreignTable.setName(foreignTableName);
 				foreignTable.setCatalog(
 						element.hasAttribute("foreign-catalog") ? 

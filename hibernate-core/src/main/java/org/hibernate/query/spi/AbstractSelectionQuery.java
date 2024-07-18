@@ -19,19 +19,6 @@ import java.util.Spliterator;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.EntityGraph;
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.NoResultException;
-import jakarta.persistence.Parameter;
-import jakarta.persistence.TemporalType;
-import jakarta.persistence.Tuple;
-import jakarta.persistence.TupleElement;
-import jakarta.persistence.criteria.CompoundSelection;
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -48,6 +35,10 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
+import org.hibernate.metamodel.model.domain.SimpleDomainType;
+import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.QueryParameter;
@@ -77,6 +68,19 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.TupleElement;
+import jakarta.persistence.criteria.CompoundSelection;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static org.hibernate.CacheMode.fromJpaModes;
 import static org.hibernate.FlushMode.fromJpaFlushMode;
@@ -84,12 +88,12 @@ import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
-import static org.hibernate.jpa.QueryHints.HINT_CACHEABLE;
-import static org.hibernate.jpa.QueryHints.HINT_CACHE_MODE;
-import static org.hibernate.jpa.QueryHints.HINT_CACHE_REGION;
-import static org.hibernate.jpa.QueryHints.HINT_FETCH_SIZE;
-import static org.hibernate.jpa.QueryHints.HINT_FOLLOW_ON_LOCKING;
-import static org.hibernate.jpa.QueryHints.HINT_READONLY;
+import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
+import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
+import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
+import static org.hibernate.jpa.HibernateHints.HINT_FETCH_SIZE;
+import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_LOCKING;
+import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
 import static org.hibernate.query.sqm.internal.SqmUtil.isHqlTuple;
 import static org.hibernate.query.sqm.internal.SqmUtil.isSelectionAssignableToResultType;
 
@@ -255,7 +259,8 @@ public abstract class AbstractSelectionQuery<R>
 	protected abstract String getQueryString();
 
 	/**
-	 * Used during handling of Criteria queries
+	 * Used to validate that the specified query return type is valid (i.e. the user
+	 * did not pass {@code Integer.class} when the selection is an entity)
 	 */
 	protected void visitQueryReturnType(
 			SqmQueryPart<R> queryPart,
@@ -298,53 +303,77 @@ public abstract class AbstractSelectionQuery<R>
 			SqmQuerySpec<T> querySpec,
 			Class<T> expectedResultClass,
 			SessionFactoryImplementor sessionFactory) {
-		if ( !isResultTypeAlwaysAllowed( expectedResultClass ) ) {
-			final List<SqmSelection<?>> selections = querySpec.getSelectClause().getSelections();
-			if ( selections.size() == 1 ) {
-				// we have one item in the select list,
-				// the type has to match (no instantiation)
-				final SqmSelection<?> sqmSelection = selections.get( 0 );
-				final SqmSelectableNode<?> selectableNode = sqmSelection.getSelectableNode();
-				if ( selectableNode.isCompoundSelection() ) {
-					final Class<?> expectedSelectItemType = expectedResultClass.isArray()
-							? expectedResultClass.getComponentType()
-							: expectedResultClass;
-					for ( JpaSelection<?> selection : selectableNode.getSelectionItems() ) {
-						verifySelectionType( expectedSelectItemType, sessionFactory, (SqmSelectableNode<?>) selection );
-					}
-				}
-				else {
-					verifySelectionType( expectedResultClass, sessionFactory, sqmSelection.getSelectableNode() );
+		if ( isResultTypeAlwaysAllowed( expectedResultClass ) ) {
+			// the result-class is always safe to use (Object, ...)
+			return;
+		}
+
+		final List<SqmSelection<?>> selections = querySpec.getSelectClause().getSelections();
+		if ( selections.size() == 1 ) {
+			final SqmSelection<?> sqmSelection = selections.get( 0 );
+			final SqmSelectableNode<?> selectableNode = sqmSelection.getSelectableNode();
+			if ( selectableNode.isCompoundSelection() ) {
+				final Class<?> expectedSelectItemType = expectedResultClass.isArray()
+						? expectedResultClass.getComponentType()
+						: expectedResultClass;
+				for ( JpaSelection<?> selection : selectableNode.getSelectionItems() ) {
+					verifySelectionType( expectedSelectItemType, sessionFactory, (SqmSelectableNode<?>) selection );
 				}
 			}
-			else if ( expectedResultClass.isArray() ) {
-				final Class<?> componentType = expectedResultClass.getComponentType();
-				for ( SqmSelection<?> selection : selections ) {
-					verifySelectionType( componentType, sessionFactory, selection.getSelectableNode() );
-				}
+			else {
+				verifySingularSelectionType( expectedResultClass, sessionFactory, sqmSelection );
 			}
-			// else, let's assume we can instantiate it!
+		}
+		else if ( expectedResultClass.isArray() ) {
+			final Class<?> componentType = expectedResultClass.getComponentType();
+			for ( SqmSelection<?> selection : selections ) {
+				verifySelectionType( componentType, sessionFactory, selection.getSelectableNode() );
+			}
 		}
 	}
 
-	private static <T> void verifySelectionType(
+	/**
+	 * Special case for a single, non-compound selection-item.  It is essentially
+	 * a special case of {@linkplain #verifySelectionType} which additionally
+	 * handles the case where the type of the selection-item can be used to
+	 * instantiate the result-class (result-class has a matching constructor).
+	 *
+	 * @apiNote We don't want to hoist this into {@linkplain #verifySelectionType}
+	 * itself because this can only happen for the root non-compound case, and we
+	 * want to avoid the try/catch otherwise
+	 */
+	private static <T> void verifySingularSelectionType(
 			Class<T> expectedResultClass,
 			SessionFactoryImplementor sessionFactory,
 			SqmSelection<?> sqmSelection) {
-		// special case for parameters in the select list
-		final SqmSelectableNode<?> selection = sqmSelection.getSelectableNode();
-		if ( selection instanceof SqmParameter ) {
-			final SqmParameter<?> sqmParameter = (SqmParameter<?>) selection;
-			final SqmExpressible<?> nodeType = sqmParameter.getNodeType();
-			// we may not yet know a selection type
-			if ( nodeType == null || nodeType.getExpressibleJavaType() == null ) {
-				// we can't verify the result type up front
-				return;
+		final SqmSelectableNode<?> selectableNode = sqmSelection.getSelectableNode();
+		try {
+			verifySelectionType( expectedResultClass, sessionFactory, selectableNode );
+		}
+		catch (QueryTypeMismatchException mismatchException) {
+			// Check for special case of a single selection item and implicit instantiation.
+			// See if the selected type can be used to instantiate the expected-type
+			final JavaType<?> javaTypeDescriptor = selectableNode.getJavaTypeDescriptor();
+			if ( javaTypeDescriptor != null ) {
+				final Class<?> selectedJavaType = javaTypeDescriptor.getJavaTypeClass();
+				// ignore the exception if the expected type has a constructor accepting the selected item type
+				if ( hasMatchingConstructor( expectedResultClass, selectedJavaType ) ) {
+					// ignore it
+				}
+				else {
+					throw mismatchException;
+				}
 			}
 		}
+	}
 
-		if ( !sessionFactory.getSessionFactoryOptions().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
-			verifyResultType( expectedResultClass, selection.getExpressible() );
+	private static <T> boolean hasMatchingConstructor(Class<T> expectedResultClass, Class<?> selectedJavaType) {
+		try {
+			expectedResultClass.getDeclaredConstructor( selectedJavaType );
+			return true;
+		}
+		catch (NoSuchMethodException e) {
+			return false;
 		}
 	}
 
@@ -384,24 +413,58 @@ public abstract class AbstractSelectionQuery<R>
 			|| expectedResultClass == Tuple.class;
 	}
 
-	protected static <T> void verifyResultType(Class<T> resultClass, @Nullable SqmExpressible<?> sqmExpressible) {
-		if ( sqmExpressible != null ) {
-			final JavaType<?> expressibleJavaType = sqmExpressible.getExpressibleJavaType();
-			assert expressibleJavaType != null;
-			final Class<?> javaTypeClass = expressibleJavaType.getJavaTypeClass();
-			if ( javaTypeClass != Object.class && !resultClass.isAssignableFrom( javaTypeClass ) ) {
-				if ( expressibleJavaType instanceof PrimitiveJavaType ) {
-					final PrimitiveJavaType<?> javaType = (PrimitiveJavaType<?>) expressibleJavaType;
-					if ( javaType.getPrimitiveClass() != resultClass ) {
-						throwQueryTypeMismatchException( resultClass, sqmExpressible );
-					}
-				}
-				else if ( !isMatchingDateType( javaTypeClass, resultClass, sqmExpressible ) ) {
-					throwQueryTypeMismatchException( resultClass, sqmExpressible );
-				}
-				// else special case, we are good
-			}
+	protected static <T> void verifyResultType(Class<T> resultClass, @Nullable SqmExpressible<?> selectionExpressible) {
+		if ( selectionExpressible == null ) {
+			// nothing we can validate
+			return;
 		}
+
+		final JavaType<?> selectionExpressibleJavaType = selectionExpressible.getExpressibleJavaType();
+		assert selectionExpressibleJavaType != null;
+
+		final Class<?> selectionExpressibleJavaTypeClass = selectionExpressibleJavaType.getJavaTypeClass();
+		if ( selectionExpressibleJavaTypeClass == Object.class ) {
+
+		}
+		if ( selectionExpressibleJavaTypeClass != Object.class ) {
+			// performs a series of opt-out checks for validity... each if branch and return indicates a valid case
+			if ( resultClass.isAssignableFrom( selectionExpressibleJavaTypeClass ) ) {
+				return;
+			}
+
+			if ( selectionExpressibleJavaType instanceof PrimitiveJavaType ) {
+				final PrimitiveJavaType<?> primitiveJavaType = (PrimitiveJavaType<?>) selectionExpressibleJavaType;
+				if ( primitiveJavaType.getPrimitiveClass() == resultClass ) {
+					return;
+				}
+			}
+
+			if ( isMatchingDateType( selectionExpressibleJavaTypeClass, resultClass, selectionExpressible ) ) {
+				return;
+			}
+
+			if ( isEntityIdType( selectionExpressible, resultClass ) ) {
+				return;
+			}
+
+			throwQueryTypeMismatchException( resultClass, selectionExpressible );
+		}
+	}
+
+	private static <T> boolean isEntityIdType(SqmExpressible<?> selectionExpressible, Class<T> resultClass) {
+		if ( selectionExpressible instanceof IdentifiableDomainType ) {
+			final IdentifiableDomainType<?> identifiableDomainType = (IdentifiableDomainType<?>) selectionExpressible;
+			final SimpleDomainType<?> idType = identifiableDomainType.getIdType();
+			return resultClass.isAssignableFrom( idType.getBindableJavaType() );
+		}
+		else if ( selectionExpressible instanceof EntitySqmPathSource ) {
+			final EntitySqmPathSource<?> entityPath = (EntitySqmPathSource<?>) selectionExpressible;
+			final EntityDomainType<?> entityType = entityPath.getSqmPathType();
+			final SimpleDomainType<?> idType = entityType.getIdType();
+			return resultClass.isAssignableFrom( idType.getBindableJavaType() );
+		}
+
+		return false;
 	}
 
 	// Special case for date because we always report java.util.Date as expression type
@@ -785,7 +848,7 @@ public abstract class AbstractSelectionQuery<R>
 		super.collectHints( hints );
 
 		if ( isReadOnly() ) {
-			hints.put( HINT_READONLY, true );
+			hints.put( HINT_READ_ONLY, true );
 		}
 
 		putIfNotNull( hints, HINT_FETCH_SIZE, getFetchSize() );

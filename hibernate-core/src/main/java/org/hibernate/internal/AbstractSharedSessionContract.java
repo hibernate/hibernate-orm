@@ -828,12 +828,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	protected <R> HqlInterpretation<R> interpretHql(String hql, Class<R> resultType) {
 		final QueryEngine queryEngine = getFactory().getQueryEngine();
-		return queryEngine.getInterpretationCache()
-				.resolveHqlInterpretation(
-						hql,
-						resultType,
-						queryEngine.getHqlTranslator()
-				);
+		return queryEngine.interpretHql( hql, resultType );
 	}
 
 	protected static void checkSelectionQuery(String hql, HqlInterpretation<?> hqlInterpretation) {

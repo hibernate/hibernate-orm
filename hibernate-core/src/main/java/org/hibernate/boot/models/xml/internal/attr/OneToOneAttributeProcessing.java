@@ -7,9 +7,11 @@
 package org.hibernate.boot.models.xml.internal.attr;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToOneImpl;
+import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.XmlAnnotations;
 import org.hibernate.boot.models.annotations.internal.OneToOneJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.PropertyRefAnnotation;
 import org.hibernate.boot.models.annotations.internal.TargetXmlAnnotation;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
@@ -61,6 +63,14 @@ public class OneToOneAttributeProcessing {
 		TableProcessing.transformJoinTable( jaxbOneToOne.getJoinTable(), memberDetails, xmlDocumentContext );
 		JoinColumnProcessing.applyJoinColumnsOrFormulas( jaxbOneToOne.getJoinColumnOrJoinFormula(), memberDetails, xmlDocumentContext );
 		JoinColumnProcessing.applyPrimaryKeyJoinColumns( jaxbOneToOne.getPrimaryKeyJoinColumn(), memberDetails, xmlDocumentContext );
+
+		if ( jaxbOneToOne.getPropertyRef() != null ) {
+			final PropertyRefAnnotation propertyRefUsage = (PropertyRefAnnotation) memberDetails.applyAnnotationUsage(
+					HibernateAnnotations.PROPERTY_REF,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			propertyRefUsage.value( jaxbOneToOne.getPropertyRef().getName() );
+		}
 
 		if ( jaxbOneToOne.isId() == Boolean.TRUE ) {
 			memberDetails.applyAnnotationUsage(

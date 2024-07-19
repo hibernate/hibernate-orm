@@ -80,6 +80,7 @@ public class SchemaCreateHelper {
 		);
 	}
 
+	@AllowSysOut
 	public static void createOnlyToStdOut(Metadata metadata, ServiceRegistry serviceRegistry) {
 		createOnlyToWriter( metadata, serviceRegistry, new OutputStreamWriter( System.out ) );
 	}

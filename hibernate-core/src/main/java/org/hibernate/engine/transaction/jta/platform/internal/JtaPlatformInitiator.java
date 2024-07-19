@@ -48,7 +48,7 @@ public class JtaPlatformInitiator implements StandardServiceInitiator<JtaPlatfor
 		}
 
 		if ( platform == null ) {
-			LOG.debug( "No JtaPlatform was specified, checking resolver" );
+			LOG.debug( "No JtaPlatform was specified, checking fallback provider" );
 			platform = getFallbackProvider( configurationValues, registry );
 		}
 

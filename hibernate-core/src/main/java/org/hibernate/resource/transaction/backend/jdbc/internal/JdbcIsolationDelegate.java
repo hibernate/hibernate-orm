@@ -37,7 +37,7 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 	public JdbcIsolationDelegate(JdbcSessionOwner jdbcSessionOwner) {
 		this(
 				jdbcSessionOwner.getJdbcConnectionAccess(),
-				jdbcSessionOwner.getJdbcSessionContext().getJdbcServices().getSqlExceptionHelper()
+				jdbcSessionOwner.getSqlExceptionHelper()
 		);
 	}
 

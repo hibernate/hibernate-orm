@@ -63,6 +63,7 @@ import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
+import org.hibernate.sql.results.graph.collection.internal.AbstractImmediateCollectionInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.graph.internal.AbstractInitializer;
@@ -106,6 +107,14 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 	private final boolean isPartOfKey;
 	private final boolean isResultInitializer;
 	private final boolean hasKeyManyToOne;
+	/**
+	 * Indicates whether there is a high chance of the previous row to have the same entity key as the current row
+	 * and hence enable a check in the {@link #resolveKey(RowProcessingState)} phase which compare the previously read
+	 * identifier with the current row identifier. If it matches, the state from the previous row processing can be reused.
+	 * In addition to that, all direct sub-initializers can be informed about the reuse by calling {@link Initializer#resolveFromPreviousRow(RowProcessingState)},
+	 * so that these initializers can avoid unnecessary processing as well.
+	 */
+	private final boolean previousRowReuse;
 
 	private final @Nullable DomainResultAssembler<?> keyAssembler;
 	private final @Nullable DomainResultAssembler<?> identifierAssembler;
@@ -133,6 +142,23 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 
 		public EntityInitializerData(RowProcessingState rowProcessingState) {
 			super( rowProcessingState );
+		}
+
+		/*
+		 * Used by Hibernate Reactive
+		 */
+		public EntityInitializerData(EntityInitializerData original) {
+			super( original );
+			this.shallowCached = original.shallowCached;
+			this.lockMode = original.lockMode;
+			this.uniqueKeyAttributePath = original.uniqueKeyAttributePath;
+			this.uniqueKeyPropertyTypes = original.uniqueKeyPropertyTypes;
+			this.canUseEmbeddedIdentifierInstanceAsEntity = original.canUseEmbeddedIdentifierInstanceAsEntity;
+			this.hasCallbackActions = original.hasCallbackActions;
+			this.concreteDescriptor = original.concreteDescriptor;
+			this.entityKey = original.entityKey;
+			this.entityInstanceForNotify = original.entityInstanceForNotify;
+			this.entityHolder = original.entityHolder;
 		}
 	}
 
@@ -163,6 +189,15 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		this.parent = parent;
 		this.isResultInitializer = isResultInitializer;
 		this.isPartOfKey = Initializer.isPartOfKey( navigablePath, parent );
+		// If the parent already has previous row reuse enabled, we can skip that here
+		this.previousRowReuse = !isPreviousRowReuse( parent ) && (
+				// If this entity domain result contains a collection join fetch, this usually means that the entity data is
+				// duplicate in the result data for every collection element. Since collections usually have more than one element,
+				// optimizing the resolving of the entity data is very beneficial.
+				resultDescriptor.containsCollectionFetches()
+						// Result duplication generally also happens if more than one collection is join fetched,
+						|| creationState.containsMultipleCollectionFetches()
+		);
 
 		assert identifierFetch != null || isResultInitializer : "Identifier must be fetched, unless this is a result initializer";
 		if ( identifierFetch == null ) {
@@ -256,6 +291,21 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		this.affectedByFilter = affectedByFilter;
 	}
 
+	private static boolean isPreviousRowReuse(@Nullable InitializerParent<?> parent) {
+		// Traverse up the parents to find out if one of our parents has row reuse enabled
+		while ( parent != null ) {
+			if ( parent instanceof EntityInitializerImpl ) {
+				return ( (EntityInitializerImpl) parent ).isPreviousRowReuse();
+			}
+			// Immediate collections don't reuse previous rows for elements, so we can safely assume false
+			if ( parent instanceof AbstractImmediateCollectionInitializer<?> ) {
+				return false;
+			}
+			parent = parent.getParent();
+		}
+		return false;
+	}
+
 	@Override
 	protected EntityInitializerData createInitializerData(RowProcessingState rowProcessingState) {
 		return new EntityInitializerData( rowProcessingState );
@@ -299,6 +349,10 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		}
 		data.setState( State.KEY_RESOLVED );
 
+		final EntityKey oldEntityKey = data.entityKey;
+		final Object oldEntityInstance = data.getInstance();
+		final Object oldEntityInstanceForNotify = data.entityInstanceForNotify;
+		final EntityHolder oldEntityHolder = data.entityHolder;
 		// reset row state
 		data.concreteDescriptor = null;
 		data.entityKey = null;
@@ -344,6 +398,20 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			}
 		}
 
+		if ( oldEntityKey != null && previousRowReuse && oldEntityInstance != null
+				&& entityDescriptor.getIdentifierType().isEqual( oldEntityKey.getIdentifier(), id ) ) {
+			// The row we read previously referred to this entity already, so we can safely assume it's initialized.
+			// Unfortunately we can't set the state to INITIALIZED though, as that has other implications,
+			// but RESOLVED is fine, since the EntityEntry is marked as initialized which skips instance initialization
+			data.setState( State.RESOLVED );
+			data.entityKey = oldEntityKey;
+			data.setInstance( oldEntityInstance );
+			data.entityInstanceForNotify = oldEntityInstanceForNotify;
+			data.concreteDescriptor = oldEntityKey.getPersister();
+			data.entityHolder = oldEntityHolder;
+			notifySubInitializersToReusePreviousRowInstance( data );
+			return;
+		}
 		resolveEntityKey( data, id );
 		if ( !entityKeyOnly ) {
 			// Resolve the entity instance early as we have no key many-to-one
@@ -413,7 +481,16 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		}
 	}
 
-	private void resolveKeySubInitializers(EntityInitializerData data) {
+	private void notifySubInitializersToReusePreviousRowInstance(EntityInitializerData data) {
+		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		for ( Initializer<?> initializer : subInitializers[data.concreteDescriptor.getSubclassId()] ) {
+			if ( initializer != null ) {
+				initializer.resolveFromPreviousRow( rowProcessingState );
+			}
+		}
+	}
+
+	protected void resolveKeySubInitializers(EntityInitializerData data) {
 		final RowProcessingState rowProcessingState = data.getRowProcessingState();
 		for ( Initializer<?> initializer : subInitializers[data.concreteDescriptor.getSubclassId()] ) {
 			if ( initializer != null ) {
@@ -463,6 +540,20 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 							fkKeyValue
 					);
 				}
+			}
+		}
+	}
+
+	@Override
+	public void resolveFromPreviousRow(EntityInitializerData data) {
+		if ( data.getState() == State.UNINITIALIZED ) {
+			final EntityKey entityKey = data.entityKey;
+			if ( entityKey == null ) {
+				setMissing( data );
+			}
+			else {
+				data.setState( State.RESOLVED );
+				notifySubInitializersToReusePreviousRowInstance( data );
 			}
 		}
 	}
@@ -640,7 +731,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		}
 	}
 
-	private boolean useEmbeddedIdentifierInstanceAsEntity(EntityInitializerData data) {
+	protected boolean useEmbeddedIdentifierInstanceAsEntity(EntityInitializerData data) {
 		return data.canUseEmbeddedIdentifierInstanceAsEntity
 				&& ( data.concreteDescriptor = determineConcreteEntityDescriptor( data.getRowProcessingState(), discriminatorAssembler, entityDescriptor ) ) != null
 				&& data.concreteDescriptor.isInstance( data.getRowProcessingState().getEntityId() );
@@ -865,7 +956,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		return null;
 	}
 
-	private void upgradeLockMode(EntityInitializerData data) {
+	protected void upgradeLockMode(EntityInitializerData data) {
 		final RowProcessingState rowProcessingState = data.getRowProcessingState();
 		if ( data.lockMode != LockMode.NONE && rowProcessingState.upgradeLocks() ) {
 			final EntityEntry entry = data.entityHolder.getEntityEntry();
@@ -1043,7 +1134,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		return entity == null || entity == data.entityInstanceForNotify;
 	}
 
-	private void initializeEntityInstance(EntityInitializerData data) {
+	protected void initializeEntityInstance(EntityInitializerData data) {
 		final RowProcessingState rowProcessingState = data.getRowProcessingState();
 		final Object entityIdentifier = data.entityKey.getIdentifier();
 		final SharedSessionContractImplementor session = rowProcessingState.getSession();
@@ -1305,7 +1396,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		return values;
 	}
 
-	private void resolveState(EntityInitializerData data) {
+	protected void resolveState(EntityInitializerData data) {
 		final RowProcessingState rowProcessingState = data.getRowProcessingState();
 		for ( final DomainResultAssembler<?> assembler : assemblers[data.concreteDescriptor.getSubclassId()] ) {
 			if ( assembler != null ) {
@@ -1384,6 +1475,10 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		return isPartOfKey;
 	}
 
+	public boolean isPreviousRowReuse() {
+		return previousRowReuse;
+	}
+
 	@Override
 	public EntityPersister getConcreteDescriptor(EntityInitializerData data) {
 		assert data.getState() != State.UNINITIALIZED;
@@ -1449,16 +1544,31 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 	// For Hibernate Reactive
 	//#########################
 
-	protected DomainResultAssembler<?> getVersionAssembler() {
+	protected @Nullable DomainResultAssembler<?> getVersionAssembler() {
 		return versionAssembler;
 	}
 
-	protected DomainResultAssembler<Object> getRowIdAssembler() {
+	protected @Nullable DomainResultAssembler<Object> getRowIdAssembler() {
 		return rowIdAssembler;
 	}
 
-	protected DomainResultAssembler<?>[][] getAssemblers() {
+	protected @Nullable DomainResultAssembler<?>[][] getAssemblers() {
 		return assemblers;
 	}
 
+	protected @Nullable BasicResultAssembler<?> getDiscriminatorAssembler() {
+		return discriminatorAssembler;
+	}
+
+	protected boolean isKeyManyToOne() {
+		return hasKeyManyToOne;
+	}
+
+	protected Initializer<?>[][] getSubInitializers() {
+		return subInitializers;
+	}
+
+	public @Nullable DomainResultAssembler<?> getKeyAssembler() {
+		return keyAssembler;
+	}
 }

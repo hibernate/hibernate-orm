@@ -330,8 +330,14 @@ Now for the gotchas:
 
 1. Hibernate will only do this for an entity which is currently associated with a persistence context.
    Once the session ends, and the persistence context is cleaned up, the proxy is no longer fetchable, and instead its methods throw the hated `LazyInitializationException`.
-2. A round trip to the database to fetch the state of a single entity instance is just about _the least efficient_ way to access data.
+2. For a polymorphic association, Hibernate does not know the concrete type of the referenced entity when the proxy is instantiated, and so operations like `instanceof` and typecasts do not work correctly when applied to a proxy.
+3. A round trip to the database to fetch the state of a single entity instance is just about _the least efficient_ way to access data.
    It almost inevitably leads to the infamous _N+1 selects_ problem we'll discuss later when we talk about how to <<association-fetching,optimize association fetching>>.
+
+[TIP]
+====
+The link:{doc-javadoc-url}org/hibernate/annotations/ConcreteProxy.html[`@ConcreteProxy`] annotation solves gotcha 2, but at the cost of performance (extra joins), and so its use is not generally recommended, except in very special circumstances.
+====
 
 [TIP]
 // .Strive to avoid triggering lazy fetching

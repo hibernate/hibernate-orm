@@ -92,8 +92,8 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			this.logicalConnection = new LogicalConnectionManagedImpl(
 					owner.getJdbcConnectionAccess(),
 					owner.getJdbcSessionContext(),
-					resourceRegistry,
-					jdbcServices
+					owner.getSqlExceptionHelper(),
+					resourceRegistry
 			);
 		}
 		this.owner = owner;

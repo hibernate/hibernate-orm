@@ -59,6 +59,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	 *
 	 * @param event The load event to be handled.
 	 */
+	@Override
 	public void onLoad(LoadEvent event, LoadType loadType) throws HibernateException {
 		final EntityPersister persister = getPersister( event );
 		if ( persister == null ) {

@@ -206,7 +206,7 @@ public class ManipulationCriteriaTest extends AbstractMetamodelSpecificTest {
 
 	@Test
 	// MySQL does not allow "delete/update from" and subqueries to use the same table
-	@SkipForDialect(dialectClass = MySQLDialect.class)
+	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true)
 	public void testDeleteWithUnCorrelatedSubquery() {
 		CriteriaBuilder builder = entityManagerFactory().getCriteriaBuilder();
 		EntityManager em = getOrCreateEntityManager();

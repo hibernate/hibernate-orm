@@ -8,6 +8,7 @@ package org.hibernate.orm.test.annotations;
 
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -25,9 +26,10 @@ import jakarta.persistence.TemporalType;
 import org.hibernate.Session;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.generator.internal.CurrentTimestampGeneration;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -41,26 +43,32 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-11867")
+@JiraKey("HHH-11867")
 public class UpdateTimeStampInheritanceTest extends BaseEntityManagerFunctionalTestCase {
-	private static final long SLEEP_MILLIS = 25;
-
 	private static final String customerId = "1";
+	private static final MutableClock clock = new MutableClock();
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Customer.class, AbstractPerson.class, Address.class };
 	}
 
+	@Override
+	protected void addConfigOptions(Map options) {
+		super.addConfigOptions( options );
+		options.put( CurrentTimestampGeneration.CLOCK_SETTING_NAME, clock );
+	}
+
 	@Before
 	public void setUp() {
+		clock.reset();
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Customer customer = new Customer();
 			customer.setId( customerId );
 			customer.addAddress( "address" );
 			entityManager.persist( customer );
 		} );
-		sleep( SLEEP_MILLIS );
+		clock.tick();
 	}
 
 	@Test
@@ -72,6 +80,7 @@ public class UpdateTimeStampInheritanceTest extends BaseEntityManagerFunctionalT
 			assertModifiedAtWasNotUpdated( customer );
 			customer.setName( "xyz" );
 		} );
+		clock.tick();
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Customer customer = entityManager.find( Customer.class, customerId );
@@ -90,6 +99,7 @@ public class UpdateTimeStampInheritanceTest extends BaseEntityManagerFunctionalT
 			assertModifiedAtWasNotUpdated( customer );
 			customer.setEmail( "xyz@" );
 		} );
+		clock.tick();
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Customer customer = entityManager.find( Customer.class, customerId );
@@ -110,6 +120,7 @@ public class UpdateTimeStampInheritanceTest extends BaseEntityManagerFunctionalT
 			a.setStreet( "Lollard street" );
 			customer.setWorkAddress( a );
 		} );
+		clock.tick();
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Customer customer = entityManager.find( Customer.class, customerId );
@@ -130,6 +141,7 @@ public class UpdateTimeStampInheritanceTest extends BaseEntityManagerFunctionalT
 			a.setStreet( "Lollard Street" );
 			customer.setHomeAddress( a );
 		} );
+		clock.tick();
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Customer customer = entityManager.find( Customer.class, customerId );
@@ -150,6 +162,7 @@ public class UpdateTimeStampInheritanceTest extends BaseEntityManagerFunctionalT
 			adresses.add( "another address" );
 			customer.setAdresses( adresses );
 		} );
+		clock.tick();
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Customer customer = entityManager.find( Customer.class, customerId );
@@ -169,6 +182,7 @@ public class UpdateTimeStampInheritanceTest extends BaseEntityManagerFunctionalT
 			Set<String> books = new HashSet<>();
 			customer.setBooks( books );
 		} );
+		clock.tick();
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Customer customer = entityManager.find( Customer.class, customerId );

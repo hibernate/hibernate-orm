@@ -386,21 +386,24 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 
 			final BindingGroup bindingGroup = jdbcValueBindings.getBindingGroup( tableMapping.getTableName() );
 			if ( bindingGroup != null ) {
-				bindingGroup.forEachBinding( (binding) -> {
-					try {
-						binding.getValueBinder().bind(
-								insertStatement,
-								binding.getValue(),
-								binding.getPosition(),
-								session
-						);
-					}
-					catch (SQLException e) {
-						throw session.getJdbcServices().getSqlExceptionHelper().convert(
-								e,
-								"Unable to bind parameter for upsert insert",
-								jdbcInsert.getSqlString()
-						);
+				bindingGroup.forEachBinding( binding -> {
+					// Skip parameter bindings for e.g. optimistic version check
+					if ( binding.getPosition() <= jdbcInsert.getParameterBinders().size() ) {
+						try {
+							binding.getValueBinder().bind(
+									insertStatement,
+									binding.getValue(),
+									binding.getPosition(),
+									session
+							);
+						}
+						catch (SQLException e) {
+							throw session.getJdbcServices().getSqlExceptionHelper().convert(
+									e,
+									"Unable to bind parameter for upsert insert",
+									jdbcInsert.getSqlString()
+							);
+						}
 					}
 				} );
 			}

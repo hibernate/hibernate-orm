@@ -12,7 +12,6 @@ import java.util.function.BiConsumer;
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
@@ -27,7 +26,6 @@ import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
-import org.hibernate.sql.results.graph.entity.internal.EntityInitializerImpl;
 import org.hibernate.sql.results.internal.LoadingCollectionEntryImpl;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
@@ -42,12 +40,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @implNote Mainly an intention contract wrt the immediacy of the fetch.
  */
 public abstract class AbstractImmediateCollectionInitializer<Data extends AbstractImmediateCollectionInitializer.ImmediateCollectionInitializerData>
-		extends AbstractCollectionInitializer<Data> {
+		extends AbstractCollectionInitializer<Data> implements BiConsumer<Data, List<Object>> {
 
 	/**
 	 * refers to the rows entry in the collection.  null indicates that the collection is empty
 	 */
-	private final @Nullable DomainResultAssembler<?> collectionValueKeyResultAssembler;
+	protected final @Nullable DomainResultAssembler<?> collectionValueKeyResultAssembler;
 
 	public static class ImmediateCollectionInitializerData extends CollectionInitializerData {
 
@@ -137,6 +135,14 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 		}
 	}
 
+	@Override
+	public void resolveFromPreviousRow(Data data) {
+		super.resolveFromPreviousRow( data );
+		if ( data.getState() == State.RESOLVED ) {
+			resolveKeySubInitializers( data );
+		}
+	}
+
 	/**
 	 * Returns whether the collection value key is missing.
 	 */
@@ -185,7 +191,12 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 			return;
 		}
 
-		resolveCollectionKey( data, true );
+		// Being a result initializer means that this collection initializer is for lazy loading,
+		// which has a very high chance that a collection resolved of the previous row is the same for the current row,
+		// so pass that flag as indicator whether to check previous row state.
+		// Note that we don't need to check previous rows in other cases,
+		// because the previous row checks are done by the owner of the collection initializer already.
+		resolveCollectionKey( data, isResultInitializer );
 		if ( data.getState() != State.KEY_RESOLVED ) {
 			return;
 		}
@@ -429,20 +440,17 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 		}
 		data.setState( State.INITIALIZED );
 
-		final RowProcessingState initializerRowProcessingState = data.getRowProcessingState();
 		if ( data.collectionValueKey == null && collectionValueKeyResultAssembler != null ) {
 			final Initializer<?> initializer = collectionValueKeyResultAssembler.getInitializer();
 			if ( initializer != null ) {
-				data.collectionValueKey = collectionValueKeyResultAssembler.assemble( initializerRowProcessingState );
+				data.collectionValueKey = collectionValueKeyResultAssembler.assemble( data.getRowProcessingState() );
 			}
 		}
 
 		// the RHS key value of the association - determines if the row contains an element of the initializing collection
 		if ( collectionValueKeyResultAssembler == null || data.collectionValueKey != null ) {
 			// the row contains an element in the collection...
-			data.responsibility.load(
-					loadingState -> readCollectionRow( data.collectionKey, loadingState, initializerRowProcessingState )
-			);
+			data.responsibility.load( data, this );
 		}
 	}
 
@@ -453,10 +461,12 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 		initializeSubInstancesFromParent( data );
 	}
 
-	protected abstract void readCollectionRow(
-			CollectionKey collectionKey,
-			List<Object> loadingState,
-			RowProcessingState rowProcessingState);
+	@Override
+	public void accept(Data data, List<Object> objects) {
+		readCollectionRow( data, objects );
+	}
+
+	protected abstract void readCollectionRow(Data data, List<Object> loadingState);
 
 	protected abstract void initializeSubInstancesFromParent(Data data);
 

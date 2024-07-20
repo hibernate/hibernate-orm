@@ -64,6 +64,13 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 			super( rowProcessingState );
 		}
 
+		/*
+		 * Used by Hibernate Reactive
+		 */
+		public EntitySelectFetchInitializerData(EntitySelectFetchInitializerData original) {
+			super( original );
+			this.entityIdentifier = original.entityIdentifier;
+		}
 	}
 
 	public EntitySelectFetchInitializer(
@@ -102,6 +109,23 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
+	}
+
+	@Override
+	public void resolveFromPreviousRow(Data data) {
+		if ( data.getState() == State.UNINITIALIZED ) {
+			if ( data.entityIdentifier == null ) {
+				data.setState( State.MISSING );
+				data.setInstance( null );
+			}
+			else {
+				final Initializer<?> initializer = keyAssembler.getInitializer();
+				if ( initializer != null ) {
+					initializer.resolveFromPreviousRow( data.getRowProcessingState() );
+				}
+				data.setState( State.INITIALIZED );
+			}
+		}
 	}
 
 	@Override
@@ -295,4 +319,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		return "EntitySelectFetchInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
 	}
 
+	public DomainResultAssembler<?> getKeyAssembler() {
+		return keyAssembler;
+	}
 }

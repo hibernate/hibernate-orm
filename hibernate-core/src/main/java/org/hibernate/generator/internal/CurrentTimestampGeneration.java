@@ -7,11 +7,13 @@
 package org.hibernate.generator.internal;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.SessionFactory;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.CurrentTimestamp;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
@@ -36,7 +38,6 @@ import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.Year;
 import java.time.YearMonth;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
@@ -44,7 +45,9 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.IntFunction;
+import java.util.function.BiFunction;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.generator.EventTypeSets.INSERT_AND_UPDATE;
 import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
@@ -68,24 +71,34 @@ import static org.hibernate.generator.EventTypeSets.fromArray;
  * @author Gavin King
  */
 public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnExecutionGenerator {
+
+	/**
+	 * Configuration property name to set a custom {@link Clock} for Hibernate ORM to use when generating VM based
+	 * timestamp values for e.g. {@link CurrentTimestamp}, {@link CreationTimestamp}, {@link UpdateTimestamp}
+	 * and {@link org.hibernate.type.descriptor.java.VersionJavaType} methods.
+	 *
+	 * @since 6.6
+	 */
+	public static final String CLOCK_SETTING_NAME = "hibernate.testing.clock";
+
 	private final EnumSet<EventType> eventTypes;
 
 	private final CurrentTimestampGeneratorDelegate delegate;
-	private static final Map<Class<?>, IntFunction<CurrentTimestampGeneratorDelegate>> GENERATOR_PRODUCERS = new HashMap<>();
+	private static final Map<Class<?>, BiFunction<@Nullable Clock, Integer, CurrentTimestampGeneratorDelegate>> GENERATOR_PRODUCERS = new HashMap<>();
 	private static final Map<Key, CurrentTimestampGeneratorDelegate> GENERATOR_DELEGATES = new ConcurrentHashMap<>();
 
 	static {
 		GENERATOR_PRODUCERS.put(
 				Date.class,
-				precision -> {
-					final Clock clock = ClockHelper.forPrecision( precision, 3 );
+				(baseClock, precision) -> {
+					final Clock clock = ClockHelper.forPrecision( baseClock, precision, 3 );
 					return () -> new Date( clock.millis() );
 				}
 		);
 		GENERATOR_PRODUCERS.put(
 				Calendar.class,
-				precision -> {
-					final Clock clock = ClockHelper.forPrecision( precision, 3 );
+				(baseClock, precision) -> {
+					final Clock clock = ClockHelper.forPrecision( baseClock, precision, 3 );
 					return () -> {
 						Calendar calendar = Calendar.getInstance();
 						calendar.setTimeInMillis( clock.millis() );
@@ -95,78 +108,78 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 		);
 		GENERATOR_PRODUCERS.put(
 				java.sql.Date.class,
-				precision -> () -> new java.sql.Date( System.currentTimeMillis() )
+				(baseClock, precision) -> () -> new java.sql.Date( baseClock == null ? System.currentTimeMillis() : baseClock.millis() )
 		);
 
 		GENERATOR_PRODUCERS.put(
 				Time.class,
-				precision -> {
-					final Clock clock = ClockHelper.forPrecision( precision, 3 );
+				(baseClock, precision) -> {
+					final Clock clock = ClockHelper.forPrecision( baseClock, precision, 3 );
 					return () -> new Time( clock.millis() );
 				}
 		);
 		GENERATOR_PRODUCERS.put(
 				Timestamp.class,
-				precision -> {
-					final Clock clock = ClockHelper.forPrecision( precision, 9 );
+				(baseClock, precision) -> {
+					final Clock clock = ClockHelper.forPrecision( baseClock, precision, 9 );
 					return () -> Timestamp.from( clock.instant() );
 				}
 		);
 		GENERATOR_PRODUCERS.put(
 				Instant.class,
-				precision -> {
-					final Clock clock = ClockHelper.forPrecision( precision, 9 );
+				(baseClock, precision) -> {
+					final Clock clock = ClockHelper.forPrecision( baseClock, precision, 9 );
 					return clock::instant;
 				}
 		);
 		GENERATOR_PRODUCERS.put(
 				LocalDate.class,
-				precision -> LocalDate::now
+				(baseClock, precision) -> () -> LocalDate.now( baseClock == null ? Clock.systemDefaultZone() : baseClock )
 		);
 		GENERATOR_PRODUCERS.put(
 				LocalDateTime.class,
-				precision -> {
-					final Clock clock = ClockHelper.forPrecision( precision, 9 );
+				(baseClock, precision) -> {
+					final Clock clock = ClockHelper.forPrecision( baseClock, precision, 9 );
 					return () -> LocalDateTime.now( clock );
 				}
 		);
 		GENERATOR_PRODUCERS.put(
 				LocalTime.class,
-				precision -> {
-					final Clock clock = ClockHelper.forPrecision( precision, 9 );
+				(baseClock, precision) -> {
+					final Clock clock = ClockHelper.forPrecision( baseClock, precision, 9 );
 					return () -> LocalTime.now( clock );
 				}
 		);
 		GENERATOR_PRODUCERS.put(
 				MonthDay.class,
-				precision -> MonthDay::now
+				(baseClock, precision) -> () -> MonthDay.now( baseClock == null ? Clock.systemDefaultZone() : baseClock )
 		);
 		GENERATOR_PRODUCERS.put(
 				OffsetDateTime.class,
-				precision -> {
-					final Clock clock = ClockHelper.forPrecision( precision, 9 );
+				(baseClock, precision) -> {
+					final Clock clock = ClockHelper.forPrecision( baseClock, precision, 9 );
 					return () -> OffsetDateTime.now( clock );
 				}
 		);
 		GENERATOR_PRODUCERS.put(
 				OffsetTime.class,
-				precision -> {
-					final Clock clock = ClockHelper.forPrecision( precision, 9 );
+				(baseClock, precision) -> {
+					final Clock clock = ClockHelper.forPrecision( baseClock, precision, 9 );
 					return () -> OffsetTime.now( clock );
 				}
 		);
 		GENERATOR_PRODUCERS.put(
 				Year.class,
-				precision -> Year::now
+				(baseClock, precision) -> () -> Year.now( baseClock == null ? Clock.systemDefaultZone() : baseClock )
 		);
 		GENERATOR_PRODUCERS.put(
 				YearMonth.class,
-				precision -> YearMonth::now
+				(baseClock, precision) -> () -> YearMonth.now( baseClock == null ? Clock.systemDefaultZone() : baseClock )
 		);
 		GENERATOR_PRODUCERS.put(
 				ZonedDateTime.class,
-				precision -> {
-					final Clock clock = ClockHelper.forPrecision( precision, 9 );
+				(baseClock, precision) -> {
+					final Clock clock = ClockHelper.forPrecision( baseClock, precision, 9 );
 					return () -> ZonedDateTime.now( clock );
 				}
 		);
@@ -208,16 +221,19 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 						context.getDatabase().getDialect(),
 						basicValue.getMetadata()
 				);
-				final Key key = new Key( propertyType, size.getPrecision() == null ? 0 : size.getPrecision() );
+				final Clock baseClock = context.getServiceRegistry()
+						.requireService( ConfigurationService.class )
+						.getSetting( CLOCK_SETTING_NAME, value -> (Clock) value );
+				final Key key = new Key( propertyType, baseClock, size.getPrecision() == null ? 0 : size.getPrecision() );
 				final CurrentTimestampGeneratorDelegate delegate = GENERATOR_DELEGATES.get( key );
 				if ( delegate != null ) {
 					return delegate;
 				}
-				final IntFunction<CurrentTimestampGeneratorDelegate> producer = GENERATOR_PRODUCERS.get( key.clazz );
+				final BiFunction<@Nullable Clock, Integer, CurrentTimestampGeneratorDelegate> producer = GENERATOR_PRODUCERS.get( key.clazz );
 				if ( producer == null ) {
 					return null;
 				}
-				final CurrentTimestampGeneratorDelegate generatorDelegate = producer.apply( key.precision );
+				final CurrentTimestampGeneratorDelegate generatorDelegate = producer.apply( key.clock, key.precision );
 				final CurrentTimestampGeneratorDelegate old = GENERATOR_DELEGATES.putIfAbsent(
 						key,
 						generatorDelegate
@@ -228,6 +244,10 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 			default:
 				throw new AssertionFailure("unknown source");
 		}
+	}
+
+	public static <T extends Clock> T getClock(SessionFactory sessionFactory) {
+		return (T) sessionFactory.getProperties().get( CLOCK_SETTING_NAME );
 	}
 
 	@Override
@@ -267,10 +287,12 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 
 	private static class Key {
 		private final Class<?> clazz;
+		private final @Nullable Clock clock;
 		private final int precision;
 
-		public Key(Class<?> clazz, int precision) {
+		public Key(Class<?> clazz, @Nullable Clock clock, int precision) {
 			this.clazz = clazz;
+			this.clock = clock;
 			this.precision = precision;
 		}
 
@@ -288,12 +310,13 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 			if ( precision != key.precision ) {
 				return false;
 			}
-			return clazz.equals( key.clazz );
+			return clock == key.clock && clazz.equals( key.clazz );
 		}
 
 		@Override
 		public int hashCode() {
 			int result = clazz.hashCode();
+			result = 31 * result + ( clock == null ? 0 : clock.hashCode() );
 			result = 31 * result + precision;
 			return result;
 		}

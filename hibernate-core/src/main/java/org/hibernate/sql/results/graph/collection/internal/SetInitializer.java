@@ -11,7 +11,6 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentSet;
-import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
@@ -77,10 +76,8 @@ public class SetInitializer extends AbstractImmediateCollectionInitializer<Abstr
 	}
 
 	@Override
-	protected void readCollectionRow(
-			CollectionKey collectionKey,
-			List<Object> loadingState,
-			RowProcessingState rowProcessingState) {
+	protected void readCollectionRow(ImmediateCollectionInitializerData data, List<Object> loadingState) {
+		final RowProcessingState rowProcessingState = data.getRowProcessingState();
 		final Object element = elementAssembler.assemble( rowProcessingState );
 		if ( element == null ) {
 			// If element is null, then NotFoundAction must be IGNORE

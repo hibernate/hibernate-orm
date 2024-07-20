@@ -718,25 +718,22 @@ public abstract class AbstractCollectionPersister
 
 		MODEL_MUTATION_LOGGER.debugf( "Static SQL for collection: %s", getRole() );
 
-		if ( getRowMutationOperations().hasInsertRow() ) {
-			final String insertRowSql = getRowMutationOperations().getInsertRowOperation().getSqlString();
-			if ( insertRowSql != null ) {
-				MODEL_MUTATION_LOGGER.debugf( " Row insert: %s", insertRowSql );
-			}
+		final JdbcMutationOperation insertRowOperation = getRowMutationOperations().getInsertRowOperation();
+		final String insertRowSql = insertRowOperation != null ? insertRowOperation.getSqlString() : null;
+		if ( insertRowSql != null ) {
+			MODEL_MUTATION_LOGGER.debugf( " Row insert: %s", insertRowSql );
 		}
 
-		if ( getRowMutationOperations().hasUpdateRow() ) {
-			final String updateRowSql = getRowMutationOperations().getUpdateRowOperation().getSqlString();
-			if ( updateRowSql != null ) {
-				MODEL_MUTATION_LOGGER.debugf( " Row update: %s", updateRowSql );
-			}
+		final JdbcMutationOperation updateRowOperation = getRowMutationOperations().getUpdateRowOperation();
+		final String updateRowSql = updateRowOperation != null ? updateRowOperation.getSqlString() : null;
+		if ( updateRowSql != null ) {
+			MODEL_MUTATION_LOGGER.debugf( " Row update: %s", updateRowSql );
 		}
 
-		if ( getRowMutationOperations().hasDeleteRow() ) {
-			final String deleteRowSql = getRowMutationOperations().getDeleteRowOperation().getSqlString();
-			if ( deleteRowSql != null ) {
-				MODEL_MUTATION_LOGGER.debugf( " Row delete: %s", deleteRowSql );
-			}
+		final JdbcMutationOperation deleteRowOperation = getRowMutationOperations().getDeleteRowOperation();
+		final String deleteRowSql = deleteRowOperation != null ? deleteRowOperation.getSqlString() : null;
+		if ( deleteRowSql != null ) {
+			MODEL_MUTATION_LOGGER.debugf( " Row delete: %s", deleteRowSql );
 		}
 
 		final String deleteAllSql = getRemoveCoordinator().getSqlString();

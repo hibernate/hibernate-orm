@@ -86,7 +86,7 @@ public interface Initializer<Data extends InitializerData> {
 		// by default - nothing to do
 
 	/**
-	 * Step 1 - Resolve the key value for this initializer for the current
+	 * Step 1.1 - Resolve the key value for this initializer for the current
 	 * row and then recurse to the sub-initializers.
 	 *
 	 * After this point, the initializer knows whether further processing is necessary
@@ -96,6 +96,20 @@ public interface Initializer<Data extends InitializerData> {
 
 	default void resolveKey(RowProcessingState rowProcessingState) {
 		resolveKey( getData( rowProcessingState ) );
+	}
+
+	/**
+	 * Step 1.2 - Special variant of {@link #resolveKey(InitializerData)} that allows the reuse of key value
+	 * and instance value from the previous row.
+	 *
+	 * @implSpec Defaults to simply delegating to {@link #resolveKey(InitializerData)}.
+	 */
+	default void resolveFromPreviousRow(Data data) {
+		resolveKey( data );
+	}
+
+	default void resolveFromPreviousRow(RowProcessingState rowProcessingState) {
+		resolveFromPreviousRow( getData( rowProcessingState ) );
 	}
 
 	/**

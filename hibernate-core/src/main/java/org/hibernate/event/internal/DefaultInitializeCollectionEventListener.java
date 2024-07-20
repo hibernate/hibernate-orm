@@ -35,6 +35,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 	/**
 	 * called by a collection that wants to initialize itself
 	 */
+	@Override
 	public void onInitializeCollection(InitializeCollectionEvent event) throws HibernateException {
 		final PersistentCollection<?> collection = event.getCollection();
 		final SessionImplementor source = event.getSession();

@@ -42,7 +42,7 @@ public class PreUpdateEventListenerVetoTest extends BaseSessionFactoryFunctional
 			ExampleEntity entity = new ExampleEntity();
 			entity.id = EXAMPLE_ID_VALUE;
 			entity.name = "old_name";
-			session.save( entity );
+			session.persist( entity );
 		} );
 	}
 
@@ -53,7 +53,7 @@ public class PreUpdateEventListenerVetoTest extends BaseSessionFactoryFunctional
 			ExampleEntity entity = session.byId( ExampleEntity.class ).load( EXAMPLE_ID_VALUE );
 
 			entity.name = "new_name";
-			session.update( entity );
+			entity = session.merge( entity );
 
 			final Long versionBeforeFlush = entity.version;
 

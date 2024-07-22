@@ -70,7 +70,7 @@ public class TypedManyToOneTest {
 			final Customer merged = s.merge( cust );
 			Address shipAddress = merged.getShippingAddress();
 			merged.setShippingAddress(null);
-			s.delete("ShippingAddress", shipAddress);
+			s.remove( shipAddress );
 			s.flush();
 			assertNull( s.get( "ShippingAddress", shipAddress.getAddressId() ) );
 			s.remove( merged );

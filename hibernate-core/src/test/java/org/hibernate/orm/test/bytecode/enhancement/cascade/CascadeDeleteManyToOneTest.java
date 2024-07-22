@@ -85,7 +85,7 @@ public class CascadeDeleteManyToOneTest {
 					assertThat( managedChild.getParent() ).isNotInstanceOf( HibernateProxy.class );
 					assertFalse( Hibernate.isInitialized( managedChild.getParent() ) );
 
-					s.delete( managedChild );
+					s.remove( managedChild );
 				}
 		);
 
@@ -122,7 +122,7 @@ public class CascadeDeleteManyToOneTest {
 
 		// Delete the detached Child with initialized parent
 		scope.inTransaction(
-				(s) -> s.delete( detachedChild )
+				(s) -> s.remove( detachedChild )
 		);
 
 		// Explicitly check that both got deleted
@@ -144,7 +144,7 @@ public class CascadeDeleteManyToOneTest {
 
 		// Delete the Child
 		scope.inTransaction( s -> {
-					s.delete( originalChild );
+					s.remove( originalChild );
 				}
 		);
 		// Explicitly check that both got deleted

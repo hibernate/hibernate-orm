@@ -88,7 +88,7 @@ public class DeleteTransientEntityTest {
 				session -> {
 					Person p = new Person();
 					p.getAddresses().add( address );
-					session.delete( p );
+					session.remove( p );
 				}
 		);
 
@@ -117,7 +117,7 @@ public class DeleteTransientEntityTest {
 					Address address = session.get( Address.class, id );
 					Person p = new Person();
 					p.getAddresses().add( address );
-					session.delete( p );
+					session.remove( p );
 				}
 		);
 
@@ -138,7 +138,7 @@ public class DeleteTransientEntityTest {
 				session -> {
 					address.setInfo( "123 Main St." );
 					p.getAddresses().add( address );
-					session.save( p );
+					session.persist( p );
 				}
 		);
 
@@ -147,7 +147,7 @@ public class DeleteTransientEntityTest {
 					Suite suite = new Suite();
 					address.getSuites().add( suite );
 					p.getAddresses().clear();
-					session.saveOrUpdate( p );
+					session.merge( p );
 				}
 		);
 
@@ -173,7 +173,7 @@ public class DeleteTransientEntityTest {
 		scope.inTransaction(
 				session -> {
 
-					session.save( address );
+					session.persist( address );
 				}
 		);
 
@@ -183,7 +183,7 @@ public class DeleteTransientEntityTest {
 					note.setDescription( "a description" );
 					suite.getNotes().add( note );
 					address.getSuites().clear();
-					session.saveOrUpdate( address );
+					session.merge( address );
 				}
 		);
 

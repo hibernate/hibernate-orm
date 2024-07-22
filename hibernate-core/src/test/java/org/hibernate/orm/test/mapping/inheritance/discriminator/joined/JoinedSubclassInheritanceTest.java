@@ -37,7 +37,7 @@ public class JoinedSubclassInheritanceTest {
 	@Test
 	public void testConfiguredDiscriminatorValue(SessionFactoryScope scope) {
 		final ChildEntity childEntity = new ChildEntity( 1, "Child" );
-		scope.inTransaction( session -> session.save( childEntity ) );
+		scope.inTransaction( session -> session.persist( childEntity ) );
 
 		scope.inTransaction( session -> {
 			ChildEntity ce = session.find( ChildEntity.class, 1 );

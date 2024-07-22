@@ -62,8 +62,8 @@ public class SubclassTest {
 					checkClassType( f2, doc, folder );
 					f2 = result.get( 1 );
 					checkClassType( f2, doc, folder );
-					session.delete( result.get( 0 ) );
-					session.delete( result.get( 1 ) );
+					session.remove( result.get( 0 ) );
+					session.remove( result.get( 1 ) );
 				}
 		);
 	}

@@ -6,64 +6,64 @@
  */
 package org.hibernate.orm.test.annotations.onetoone.hhh4851;
 
-import org.junit.Test;
-
 import org.hibernate.PropertyValueException;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-import static org.junit.Assert.fail;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Fail.fail;
+
 
 /**
  * @author Emmanuel Bernard
  */
-@TestForIssue( jiraKey = "HHH-4851" )
-public class HHH4851Test extends BaseCoreFunctionalTestCase {
-	@Test
-	public void testHHH4851() throws Exception {
-		Session session = openSession();
-		Transaction trx = session.beginTransaction();
-		Owner org = new Owner();
-		org.setName( "root" );
-		session.saveOrUpdate( org );
-
-		ManagedDevice lTerminal = new ManagedDevice();
-		lTerminal.setName( "test" );
-		lTerminal.setOwner( org );
-		session.saveOrUpdate( lTerminal );
-
-		Device terminal = new Device();
-		terminal.setTag( "test" );
-		terminal.setOwner( org );
-		try {
-			session.saveOrUpdate( terminal );
-		}
-		catch ( PropertyValueException e ) {
-			fail( "not-null checking should not be raised: " + e.getMessage() );
-		}
-		trx.commit();
-		session.close();
-	}
-
-	@Override
-	protected void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.CHECK_NULLABILITY, true );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
+@JiraKey("HHH-4851")
+@DomainModel(
+		annotatedClasses = {
 				Hardware.class,
 				DeviceGroupConfig.class,
 				Hardware.class,
 				ManagedDevice.class,
 				Device.class,
 				Owner.class
-		};
+		}
+)
+@SessionFactory
+@ServiceRegistry(
+		settings = @Setting(name = Environment.CHECK_NULLABILITY, value = "true")
+)
+public class HHH4851Test {
+
+	@Test
+	public void testHHH4851(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Owner org = new Owner();
+					org.setName( "root" );
+					session.persist( org );
+
+					ManagedDevice lTerminal = new ManagedDevice();
+					lTerminal.setName( "test" );
+					lTerminal.setOwner( org );
+					session.persist( lTerminal );
+
+					Device terminal = new Device();
+					terminal.setTag( "test" );
+					terminal.setOwner( org );
+					try {
+						session.merge( terminal );
+					}
+					catch (PropertyValueException e) {
+						fail( "not-null checking should not be raised: " + e.getMessage() );
+					}
+				}
+		);
 	}
+
 }

@@ -86,7 +86,7 @@ public class DiscriminatorQueryUsageTests {
 
 	@BeforeEach
 	public void createTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.save( new ChildEntity( 1, "Child" ) ) );
+		scope.inTransaction( (session) -> session.persist( new ChildEntity( 1, "Child" ) ) );
 	}
 
 	@AfterEach

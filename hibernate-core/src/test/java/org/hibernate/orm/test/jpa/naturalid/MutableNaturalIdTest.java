@@ -69,7 +69,7 @@ public class MutableNaturalIdTest extends AbstractJPATest {
 				session -> {
 					ClassWithIdentityColumn e = new ClassWithIdentityColumn();
 					e.setName( "Dampf" );
-					session.save( e );
+					session.persist( e );
 					e.setName( "Klein" );
 					assertNotNull( session.bySimpleNaturalId( ClassWithIdentityColumn.class ).load( "Klein" ) );
 				}

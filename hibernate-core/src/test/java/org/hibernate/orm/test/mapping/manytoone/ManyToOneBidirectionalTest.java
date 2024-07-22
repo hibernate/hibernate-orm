@@ -37,9 +37,9 @@ public class ManyToOneBidirectionalTest {
 					EntityTest entity3 = new EntityTest( 3, "e3" );
 					entity.setEntity2( entity2 );
 					entity2.setEntity( entity3 );
-					session.save( entity3 );
-					session.save( entity2 );
-					session.save( entity );
+					session.persist( entity3 );
+					session.persist( entity2 );
+					session.persist( entity );
 				}
 		);
 	}

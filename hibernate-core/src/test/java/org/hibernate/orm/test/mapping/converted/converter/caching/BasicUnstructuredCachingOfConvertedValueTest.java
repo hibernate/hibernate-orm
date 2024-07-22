@@ -55,7 +55,7 @@ public class BasicUnstructuredCachingOfConvertedValueTest {
 
 		scope.inTransaction(
 				(session) -> {
-					session.save( new Address( 1, "123 Main St.", null, PostalArea._78729 ) );
+					session.persist( new Address( 1, "123 Main St.", null, PostalArea._78729 ) );
 				}
 		);
 

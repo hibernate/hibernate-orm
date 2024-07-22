@@ -54,13 +54,13 @@ public abstract class AbstractCollectionChangeTest extends BaseEnversFunctionalT
 		Name n = new Name();
 		n.setName( "name1" );
 		p.getNames().add( n );
-		session.saveOrUpdate( p );
+		session.persist( p );
 		session.getTransaction().commit();
 
 		// Rev 2
 		session.getTransaction().begin();
 		n.setName( "Changed name" );
-		session.saveOrUpdate( p );
+		session.merge( p );
 		session.getTransaction().commit();
 
 		// Rev 3
@@ -79,8 +79,8 @@ public abstract class AbstractCollectionChangeTest extends BaseEnversFunctionalT
 		parent.setName( "P1" );
 		child1.setParent( parent );
 		parent.getChildren().add( child1 );
-		session.saveOrUpdate( child1 );
-		session.saveOrUpdate( parent );
+		session.persist( child1 );
+		session.persist( parent );
 		session.getTransaction().commit();
 
 		// Rev 5
@@ -88,8 +88,8 @@ public abstract class AbstractCollectionChangeTest extends BaseEnversFunctionalT
 		Child child2 = new Child();
 		parent.getChildren().add( child2 );
 		child2.setParent( parent );
-		session.saveOrUpdate( child2 );
-		session.saveOrUpdate( parent );
+		session.persist( child2 );
+		session.persist( parent );
 		session.getTransaction().commit();
 
 		parentId = parent.getId();
@@ -98,13 +98,13 @@ public abstract class AbstractCollectionChangeTest extends BaseEnversFunctionalT
 		session.getTransaction().begin();
 		House house = new House();
 		house.getColors().add( "Red" );
-		session.saveOrUpdate( house );
+		session.persist( house );
 		session.getTransaction().commit();
 
 		// Rev 7
 		session.getTransaction().begin();
 		house.getColors().add( "Blue" );
-		session.saveOrUpdate( house );
+		session.merge( house );
 		session.getTransaction().commit();
 
 		houseId = house.getId();

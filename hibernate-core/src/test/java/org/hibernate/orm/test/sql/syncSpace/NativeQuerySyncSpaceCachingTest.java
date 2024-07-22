@@ -6,24 +6,26 @@
  */
 package org.hibernate.orm.test.sql.syncSpace;
 
-import java.util.Map;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.cache.spi.CacheImplementor;
+import org.hibernate.cfg.AvailableSettings;
+
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import org.hibernate.Session;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.cfg.AvailableSettings;
-
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
  * Tests of how sync-spaces for a native query affect caching
@@ -31,115 +33,123 @@ import static org.junit.Assert.assertTrue;
  * @author Samuel Fung
  * @author Steve Ebersole
  */
-public class NativeQuerySyncSpaceCachingTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		super.addSettings( settings );
-		settings.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, true );
+@DomainModel(
+		annotatedClasses = {
+				NativeQuerySyncSpaceCachingTest.Customer.class,
+				NativeQuerySyncSpaceCachingTest.Address.class
+		}
+)
+@SessionFactory()
+@ServiceRegistry(
+		settings = @Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true")
+)
+public class NativeQuerySyncSpaceCachingTest {
+
+	@BeforeEach
+	public void before(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Customer customer = new Customer( 1, "Samuel" );
+					session.persist( customer );
+				}
+		);
 	}
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Customer.class, Address.class };
-	}
-
-	@Before
-	public void before() {
-		Session session = sessionFactory().openSession();
-		session.beginTransaction();
-		Customer customer = new Customer( 1, "Samuel" );
-		session.saveOrUpdate( customer );
-		session.getTransaction().commit();
-		session.close();
-	}
-
-	@After
-	public void after() {
-		Session session = sessionFactory().openSession();
-		session.beginTransaction();
-		session.createQuery( "delete Customer" ).executeUpdate();
-		session.getTransaction().commit();
-		session.close();
-	}
-
-	@Test
-	public void testSelectAnotherEntityWithNoSyncSpaces() {
-		assertTrue( sessionFactory().getCache().containsEntity( Customer.class, 1 ) );
-
-		Session session = openSession();
-		session.createNativeQuery( "select * from Address" ).list();
-		session.close();
-
-		assertTrue( sessionFactory().getCache().containsEntity( Customer.class, 1 ) );
+	@AfterEach
+	public void after(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session ->
+						session.createQuery( "delete Customer" ).executeUpdate()
+		);
 	}
 
 	@Test
-	public void testUpdateAnotherEntityWithNoSyncSpaces() {
-		assertTrue( sessionFactory().getCache().containsEntity( Customer.class, 1 ) );
+	public void testSelectAnotherEntityWithNoSyncSpaces(SessionFactoryScope scope) {
+		final CacheImplementor cache = scope.getSessionFactory().getCache();
+		assertThat( cache.containsEntity( Customer.class, 1 ) ).isTrue();
 
-		Session session = openSession();
-		session.beginTransaction();
-		session.createNativeQuery( "update Address set id = id" ).executeUpdate();
-		session.getTransaction().commit();
-		session.close();
+		scope.inSession(
+				session ->
+						session.createNativeQuery( "select * from Address" ).list()
+		);
+
+		assertThat( cache.containsEntity( Customer.class, 1 ) ).isTrue();
+	}
+
+	@Test
+	public void testUpdateAnotherEntityWithNoSyncSpaces(SessionFactoryScope scope) {
+		final CacheImplementor cache = scope.getSessionFactory().getCache();
+		assertThat( cache.containsEntity( Customer.class, 1 ) ).isTrue();
+
+		scope.inTransaction(
+				session ->
+						session.createNativeQuery( "update Address set id = id" ).executeUpdate()
+		);
 
 		// NOTE false here because executeUpdate is different than selects
-		assertFalse( sessionFactory().getCache().containsEntity( Customer.class, 1 ) );
+		assertThat( cache.containsEntity( Customer.class, 1 ) ).isFalse();
 	}
 
 	@Test
-	public void testUpdateAnotherEntityWithSyncSpaces() {
-		assertTrue( sessionFactory().getCache().containsEntity( Customer.class, 1 ) );
+	public void testUpdateAnotherEntityWithSyncSpaces(SessionFactoryScope scope) {
+		final CacheImplementor cache = scope.getSessionFactory().getCache();
+		assertThat( cache.containsEntity( Customer.class, 1 ) ).isTrue();
 
-		Session session = openSession();
-		session.beginTransaction();
-		session.createNativeQuery( "update Address set id = id" ).addSynchronizedEntityClass( Address.class ).executeUpdate();
-		session.getTransaction().commit();
-		session.close();
+		scope.inTransaction(
+				session ->
+						session.createNativeQuery( "update Address set id = id" )
+								.addSynchronizedEntityClass( Address.class )
+								.executeUpdate()
+		);
 
-		assertTrue( sessionFactory().getCache().containsEntity( Customer.class, 1 ) );
+		assertThat( cache.containsEntity( Customer.class, 1 ) ).isTrue();
 	}
 
 	@Test
-	public void testSelectCachedEntityWithNoSyncSpaces() {
-		assertTrue( sessionFactory().getCache().containsEntity( Customer.class, 1 ) );
+	public void testSelectCachedEntityWithNoSyncSpaces(SessionFactoryScope scope) {
+		final CacheImplementor cache = scope.getSessionFactory().getCache();
+		assertThat( cache.containsEntity( Customer.class, 1 ) ).isTrue();
 
-		Session session = openSession();
-		session.createNativeQuery( "select * from Customer" ).list();
-		session.close();
+		scope.inSession(
+				session ->
+						session.createNativeQuery( "select * from Customer" ).list()
+		);
 
-		assertTrue( sessionFactory().getCache().containsEntity( Customer.class, 1 ) );
+		assertThat( cache.containsEntity( Customer.class, 1 ) ).isTrue();
 	}
 
 	@Test
-	public void testUpdateCachedEntityWithNoSyncSpaces() {
-		assertTrue( sessionFactory().getCache().containsEntity( Customer.class, 1 ) );
+	public void testUpdateCachedEntityWithNoSyncSpaces(SessionFactoryScope scope) {
+		final CacheImplementor cache = scope.getSessionFactory().getCache();
+		assertThat( cache.containsEntity( Customer.class, 1 ) ).isTrue();
 
-		Session session = openSession();
-		session.beginTransaction();
-		session.createNativeQuery( "update Customer set id = id" ).executeUpdate();
-		session.getTransaction().commit();
-		session.close();
+		scope.inTransaction(
+				session ->
+						session.createNativeQuery( "update Customer set id = id" ).executeUpdate()
+
+		);
 
 		// NOTE false here because executeUpdate is different than selects
-		assertFalse( sessionFactory().getCache().containsEntity( Customer.class, 1 ) );
+		assertThat( cache.containsEntity( Customer.class, 1 ) ).isFalse();
 	}
 
 	@Test
-	public void testUpdateCachedEntityWithSyncSpaces() {
-		assertTrue( sessionFactory().getCache().containsEntity( Customer.class, 1 ) );
+	public void testUpdateCachedEntityWithSyncSpaces(SessionFactoryScope scope) {
+		final CacheImplementor cache = scope.getSessionFactory().getCache();
+		assertThat( cache.containsEntity( Customer.class, 1 ) ).isTrue();
 
-		Session session = openSession();
-		session.beginTransaction();
-		session.createNativeQuery( "update Customer set id = id" ).addSynchronizedEntityClass( Customer.class ).executeUpdate();
-		session.getTransaction().commit();
-		session.close();
+		scope.inTransaction(
+				session ->
+						session.createNativeQuery( "update Customer set id = id" )
+								.addSynchronizedEntityClass( Customer.class )
+								.executeUpdate()
+		);
 
-		assertFalse( sessionFactory().getCache().containsEntity( Customer.class, 1 ) );
+		assertThat( cache.containsEntity( Customer.class, 1 ) ).isFalse();
 	}
 
-	@Entity( name = "Customer" )
-	@Table(name="Customer")
+	@Entity(name = "Customer")
+	@Table(name = "Customer")
 	@Cacheable
 	@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 	public static class Customer {
@@ -173,8 +183,8 @@ public class NativeQuerySyncSpaceCachingTest extends BaseNonConfigCoreFunctional
 		}
 	}
 
-	@Entity( name = "Address" )
-	@Table(name="Address")
+	@Entity(name = "Address")
+	@Table(name = "Address")
 	public static class Address {
 		@Id
 		private int id;

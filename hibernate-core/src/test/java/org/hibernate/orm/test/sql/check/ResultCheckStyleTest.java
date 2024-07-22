@@ -28,7 +28,7 @@ public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		ExceptionCheckingEntity e = new ExceptionCheckingEntity();
 		e.setName( "dummy" );
-		s.save( e );
+		s.persist( e );
 		try {
 			s.flush();
 			fail( "expection flush failure!" );
@@ -47,7 +47,7 @@ public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		ParamCheckingEntity e = new ParamCheckingEntity();
 		e.setName( "dummy" );
-		s.save( e );
+		s.persist( e );
 		try {
 			s.flush();
 			fail( "expection flush failure!" );
@@ -61,14 +61,14 @@ public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testUpdateFailureWithExceptionChecking() {
+	public void testMergeFailureWithExceptionChecking() {
 		Session s = openSession();
 		s.beginTransaction();
 		ExceptionCheckingEntity e = new ExceptionCheckingEntity();
 		e.setId( Long.valueOf( 1 ) );
 		e.setName( "dummy" );
-		s.update( e );
 		try {
+			s.merge( e );
 			s.flush();
 			fail( "expection flush failure!" );
 		}
@@ -87,8 +87,8 @@ public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
 		ParamCheckingEntity e = new ParamCheckingEntity();
 		e.setId( Long.valueOf( 1 ) );
 		e.setName( "dummy" );
-		s.update( e );
 		try {
+			s.merge( e );
 			s.flush();
 			fail( "expection flush failure!" );
 		}
@@ -107,7 +107,7 @@ public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
 		ExceptionCheckingEntity e = new ExceptionCheckingEntity();
 		e.setId( Long.valueOf( 1 ) );
 		e.setName( "dummy" );
-		s.delete( e );
+		s.remove( e );
 		try {
 			s.flush();
 			fail( "expection flush failure!" );
@@ -127,7 +127,7 @@ public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
 		ParamCheckingEntity e = new ParamCheckingEntity();
 		e.setId( Long.valueOf( 1 ) );
 		e.setName( "dummy" );
-		s.delete( e );
+		s.remove( e );
 		try {
 			s.flush();
 			fail( "expection flush failure!" );

@@ -52,7 +52,7 @@ public class TempTest {
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			session.delete( session.load( Client.class, 1 ) );
+			session.remove( session.load( Client.class, 1 ) );
 		} );
 	}
 

@@ -53,46 +53,10 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 					return s.merge( entity );
 				}
 			};
-	private static EntityOperation SAVE_OPERATION =
-			new EntityOperation() {
-				@Override
-				public boolean isLegacy() {
-					return true;
-				}
-
-				@Override
-				public Object doEntityOperation(Object entity, Session s) {
-					s.save( entity );
-					return entity;
-				}
-			};
-	private static EntityOperation SAVE_UPDATE_OPERATION =
-			new EntityOperation() {
-				@Override
-				public boolean isLegacy() {
-					return true;
-				}
-
-				@Override
-				public Object doEntityOperation(Object entity, Session s) {
-					s.saveOrUpdate( entity );
-					return entity;
-				}
-			};
 
 	@Test
 	public void testMergeEntityWithNonNullableTransientEntity(SessionFactoryScope scope) {
 		testEntityWithNonNullableTransientEntity( scope, MERGE_OPERATION );
-	}
-
-	@Test
-	public void testSaveEntityWithNonNullableTransientEntity(SessionFactoryScope scope) {
-		testEntityWithNonNullableTransientEntity( scope, SAVE_OPERATION );
-	}
-
-	@Test
-	public void testSaveUpdateEntityWithNonNullableTransientEntity(SessionFactoryScope scope) {
-		testEntityWithNonNullableTransientEntity( scope, SAVE_UPDATE_OPERATION );
 	}
 
 	private void testEntityWithNonNullableTransientEntity(SessionFactoryScope scope, EntityOperation operation) {
@@ -136,16 +100,6 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 		testEntityWithNonNullableEntityNull( scope, MERGE_OPERATION );
 	}
 
-	@Test
-	public void testSaveEntityWithNonNullableEntityNull(SessionFactoryScope scope) {
-		testEntityWithNonNullableEntityNull( scope, SAVE_OPERATION );
-	}
-
-	@Test
-	public void testSaveUpdateEntityWithNonNullableEntityNull(SessionFactoryScope scope) {
-		testEntityWithNonNullableEntityNull( scope, SAVE_UPDATE_OPERATION );
-	}
-
 	private void testEntityWithNonNullableEntityNull(SessionFactoryScope scope, EntityOperation operation) {
 		Route route = getUpdatedDetachedEntity( scope );
 
@@ -181,18 +135,9 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 		testEntityWithNonNullablePropSetToNull( scope, MERGE_OPERATION );
 	}
 
-	@Test
-	public void testSaveEntityWithNonNullablePropSetToNull(SessionFactoryScope scope) {
-		testEntityWithNonNullablePropSetToNull( scope, SAVE_OPERATION );
-	}
+	void testEntityWithNonNullablePropSetToNull(SessionFactoryScope scope, EntityOperation operation) {
+		final Route route = getUpdatedDetachedEntity( scope );;
 
-	@Test
-	public void testSaveUpdateEntityWithNonNullablePropSetToNull(SessionFactoryScope scope) {
-		testEntityWithNonNullablePropSetToNull( scope, SAVE_UPDATE_OPERATION );
-	}
-
-	private void testEntityWithNonNullablePropSetToNull(SessionFactoryScope scope, EntityOperation operation) {
-		Route route = getUpdatedDetachedEntity( scope );
 		Node node = (Node) route.getNodes().iterator().next();
 		node.setName( null );
 
@@ -226,11 +171,6 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 		testRoute( MERGE_OPERATION, scope );
 	}
 
-	// skip SAVE_OPERATION since Route is not transient
-	@Test
-	public void testSaveUpdateRoute(SessionFactoryScope scope) {
-		testRoute( SAVE_UPDATE_OPERATION, scope );
-	}
 
 	private void testRoute( EntityOperation operation, SessionFactoryScope scope) {
 
@@ -257,16 +197,6 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 	@Test
 	public void testMergePickupNode(SessionFactoryScope scope) {
 		testPickupNode( scope, MERGE_OPERATION );
-	}
-
-	@Test
-	public void testSavePickupNode(SessionFactoryScope scope) {
-		testPickupNode( scope, SAVE_OPERATION );
-	}
-
-	@Test
-	public void testSaveUpdatePickupNode(SessionFactoryScope scope) {
-		testPickupNode( scope, SAVE_UPDATE_OPERATION );
 	}
 
 	private void testPickupNode(SessionFactoryScope scope, EntityOperation operation) {
@@ -307,16 +237,6 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 	@Test
 	public void testMergeDeliveryNode(SessionFactoryScope scope) {
 		testDeliveryNode( scope, MERGE_OPERATION );
-	}
-
-	@Test
-	public void testSaveDeliveryNode(SessionFactoryScope scope) {
-		testDeliveryNode( scope, SAVE_OPERATION );
-	}
-
-	@Test
-	public void testSaveUpdateDeliveryNode(SessionFactoryScope scope) {
-		testDeliveryNode( scope, SAVE_UPDATE_OPERATION );
 	}
 
 	private void testDeliveryNode(SessionFactoryScope scope, EntityOperation operation) {
@@ -360,15 +280,6 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 		testTour( scope, MERGE_OPERATION );
 	}
 
-	@Test
-	public void testSaveTour(SessionFactoryScope scope) {
-		testTour( scope, SAVE_OPERATION );
-	}
-
-	@Test
-	public void testSaveUpdateTour(SessionFactoryScope scope) {
-		testTour( scope, SAVE_UPDATE_OPERATION );
-	}
 
 	private void testTour(SessionFactoryScope scope, EntityOperation operation) {
 
@@ -395,16 +306,6 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 	@Test
 	public void testMergeTransport(SessionFactoryScope scope) {
 		testTransport( scope, MERGE_OPERATION );
-	}
-
-	@Test
-	public void testSaveTransport(SessionFactoryScope scope) {
-		testTransport( scope, SAVE_OPERATION );
-	}
-
-	@Test
-	public void testSaveUpdateTransport(SessionFactoryScope scope) {
-		testTransport( scope, SAVE_UPDATE_OPERATION );
 	}
 
 	private void testTransport(SessionFactoryScope scope, EntityOperation operation) {
@@ -439,12 +340,55 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 		);
 	}
 
-	private Node getSimpleUpdatedDetachedEntity() {
+//	private Node getSimpleUpdatedDetachedEntity() {
+//
+//		Node deliveryNode = new Node();
+//		deliveryNode.setName( "deliveryNodeB" );
+//		return deliveryNode;
+//	}
 
-		Node deliveryNode = new Node();
-		deliveryNode.setName( "deliveryNodeB" );
-		return deliveryNode;
-	}
+//	private Route createEntity() {
+//
+//		Route route = new Route();
+//		route.setName( "routeA" );
+//
+//		route.setName( "new routeA" );
+//		route.setTransientField( "sfnaouisrbn" );
+//
+//		Tour tour = new Tour();
+//		tour.setName( "tourB" );
+//
+//		Transport transport = new Transport();
+//		transport.setName( "transportB" );
+//
+//		Node pickupNode = new Node();
+//		pickupNode.setName( "pickupNodeB" );
+//
+//		Node deliveryNode = new Node();
+//		deliveryNode.setName( "deliveryNodeB" );
+//
+//		pickupNode.setRoute( route );
+//		pickupNode.setTour( tour );
+//		pickupNode.getPickupTransports().add( transport );
+//		pickupNode.setTransientField( "pickup node aaaaaaaaaaa" );
+//
+//		deliveryNode.setRoute( route );
+//		deliveryNode.setTour( tour );
+//		deliveryNode.getDeliveryTransports().add( transport );
+//		deliveryNode.setTransientField( "delivery node aaaaaaaaa" );
+//
+//		tour.getNodes().add( pickupNode );
+//		tour.getNodes().add( deliveryNode );
+//
+//		route.getNodes().add( pickupNode );
+//		route.getNodes().add( deliveryNode );
+//
+//		transport.setPickupNode( pickupNode );
+//		transport.setDeliveryNode( deliveryNode );
+//		transport.setTransientField( "aaaaaaaaaaaaaa" );
+//
+//		return route;
+//	}
 
 	private Route getUpdatedDetachedEntity(SessionFactoryScope scope) {
 
@@ -453,7 +397,7 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 				session -> {
 					route.setName( "routeA" );
 
-					session.save( route );
+					session.persist( route );
 				}
 		);
 
@@ -568,15 +512,6 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 		testData3Nodes( scope, MERGE_OPERATION );
 	}
 
-	@Test
-	public void testSaveData3Nodes(SessionFactoryScope scope) {
-		testData3Nodes( scope, SAVE_OPERATION );
-	}
-
-	@Test
-	public void testSaveUpdateData3Nodes(SessionFactoryScope scope) {
-		testData3Nodes( scope, SAVE_UPDATE_OPERATION );
-	}
 
 	private void testData3Nodes(SessionFactoryScope scope, EntityOperation operation) {
 
@@ -585,7 +520,7 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 				session -> {
 					r.setName( "routeA" );
 
-					session.save( r );
+					session.persist( r );
 				}
 		);
 
@@ -669,7 +604,7 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 				}
 			}
 			else {
-				Assertions.assertTrue( ( ex instanceof JDBCException ) || ( ex.getCause() instanceof JDBCException ) );
+				Assertions.assertTrue( ( ex instanceof JDBCException ) || ( ex.getCause() instanceof JDBCException ), ex.getMessage() );
 			}
 		}
 		else {

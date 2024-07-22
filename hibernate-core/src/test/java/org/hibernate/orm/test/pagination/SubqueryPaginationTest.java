@@ -57,7 +57,7 @@ public class SubqueryPaginationTest {
                     entityContainingLists.addComponent( new SimpleComponent( "first-a2", "first-another-a2" ) );
                     entityContainingLists.addComponent( new SimpleComponent( "first-a3", "first-another-a2" ) );
 
-                    session.save( entityContainingLists );
+                    session.persist( entityContainingLists );
                 }
         );
     }

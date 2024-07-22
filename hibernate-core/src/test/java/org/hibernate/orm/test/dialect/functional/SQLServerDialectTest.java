@@ -383,7 +383,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 
 		s2.getTransaction().rollback();
 		s.getTransaction().begin();
-		s.delete( kit );
+		s.remove( kit );
 		s.getTransaction().commit();
 	}
 

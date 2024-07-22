@@ -44,9 +44,9 @@ public class MapElementFormulaTest {
 				session -> {
 					Group g = session.get( Group.class, "users" );
 					assertEquals( 1, g.getUsers().size() );
-					session.delete( g );
-					session.delete( g.getUsers().get( "Gavin" ) );
-					session.delete( session.get( User.class, "turin" ) );
+					session.remove( g );
+					session.remove( g.getUsers().get( "Gavin" ) );
+					session.remove( session.get( User.class, "turin" ) );
 				}
 		);
 	}

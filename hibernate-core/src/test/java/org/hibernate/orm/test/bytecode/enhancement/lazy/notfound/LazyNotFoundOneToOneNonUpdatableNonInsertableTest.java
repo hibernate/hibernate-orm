@@ -52,7 +52,7 @@ public class LazyNotFoundOneToOneNonUpdatableNonInsertableTest {
 				}
 		);
 
-		scope.inTransaction( session -> session.delete( session.get( Lazy.class, ID ) ) );
+		scope.inTransaction( session -> session.remove( session.get( Lazy.class, ID ) ) );
 
 		scope.inTransaction( session -> {
 					User user = session.find( User.class, ID );

@@ -70,10 +70,10 @@ public class KeyManyToOneTest {
 			Order order = new Order( cust, 1 );
 			cust.getOrders().add( order );
 			getStatistics( scope ).clear();
-			s.save( cust );
+			s.persist( cust );
 			s.flush();
 			assertThat( getStatistics( scope ).getEntityInsertCount(), is( 2L ) );
-			s.delete( cust );
+			s.remove( cust );
 		} );
 	}
 
@@ -83,7 +83,7 @@ public class KeyManyToOneTest {
 		Order order = new Order( cust, 1 );
 		scope.inTransaction( s -> {
 			cust.getOrders().add( order );
-			s.save( cust );
+			s.persist( cust );
 		} );
 
 		scope.inTransaction( s -> {
@@ -94,7 +94,7 @@ public class KeyManyToOneTest {
 		} );
 
 		scope.inTransaction( s -> {
-			s.delete( cust );
+			s.remove( cust );
 		} );
 	}
 
@@ -105,7 +105,7 @@ public class KeyManyToOneTest {
 					Customer cust = new Customer( "Acme, Inc." );
 					Order order = new Order( cust, 1 );
 					cust.getOrders().add( order );
-					session.save( cust );
+					session.persist( cust );
 					return cust;
 				}
 		);
@@ -124,7 +124,7 @@ public class KeyManyToOneTest {
 					assertThat( cust.getOrders().size(), is( 1 ) );
 					session.clear();
 
-					session.delete( cust );
+					session.remove( cust );
 				}
 		);
 	}

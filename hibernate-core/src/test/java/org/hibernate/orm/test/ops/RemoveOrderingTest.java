@@ -42,8 +42,8 @@ public class RemoveOrderingTest {
 
 					company = person.employer;
 
-					session.delete( company );
-					session.delete( person );
+					session.remove( company );
+					session.remove( person );
 					session.flush();
 
 					session.persist( person );

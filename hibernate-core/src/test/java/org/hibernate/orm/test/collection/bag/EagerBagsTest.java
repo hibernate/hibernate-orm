@@ -52,15 +52,15 @@ public class EagerBagsTest {
 					a.addAttribute( b );
 					a.addAttribute( b1 );
 
-					session.save( c );
-					session.save( c1 );
-					session.save( c2 );
-					session.save( c3 );
+					session.persist( c );
+					session.persist( c1 );
+					session.persist( c2 );
+					session.persist( c3 );
 
-					session.save( b );
-					session.save( b1 );
+					session.persist( b );
+					session.persist( b1 );
 
-					session.save( a );
+					session.persist( a );
 				}
 		);
 	}

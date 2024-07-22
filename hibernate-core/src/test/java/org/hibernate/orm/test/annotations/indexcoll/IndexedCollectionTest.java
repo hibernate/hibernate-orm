@@ -135,9 +135,9 @@ public class IndexedCollectionTest {
 						result = w.getDrawers();
 						assertEquals( 2, result.size() );
 						assertEquals( d1.getId(), result.get( 1 ).getId() );
-						s.delete( result.get( 0 ) );
-						s.delete( result.get( 1 ) );
-						s.delete( w );
+						s.remove( result.get( 0 ) );
+						s.remove( result.get( 1 ) );
+						s.remove( w );
 						s.flush();
 						tx.rollback();
 					}
@@ -193,9 +193,9 @@ public class IndexedCollectionTest {
 						result = d.getDresses();
 						assertEquals( 2, result.size() );
 						assertEquals( d1.getId(), result.get( 1 ).getId() );
-						s.delete( result.get( 0 ) );
-						s.delete( result.get( 1 ) );
-						s.delete( d );
+						s.remove( result.get( 0 ) );
+						s.remove( result.get( 1 ) );
+						s.remove( d );
 						s.flush();
 						tx.rollback();
 					}
@@ -254,9 +254,9 @@ public class IndexedCollectionTest {
 						hibernate = s.get( Software.class, "Hibernate" );
 						assertEquals( 3, hibernate.getVersions().size(), "So effect on collection changes" );
 						for ( Version v : hibernate.getVersions().values() ) {
-							s.delete( v );
+							s.remove( v );
 						}
-						s.delete( hibernate );
+						s.remove( hibernate );
 
 						s.flush();
 
@@ -311,7 +311,7 @@ public class IndexedCollectionTest {
 						book = s.get( AddressBook.class, book.getId() );
 						assertEquals( 2, book.getEntries().size() );
 						assertNull( book.getEntries().get( fake ) );
-						s.delete( book );
+						s.remove( book );
 
 						s.flush();
 						tx.rollback();
@@ -367,7 +367,7 @@ public class IndexedCollectionTest {
 						assertEquals( heleneEntry.getCity(), book.getEntries().get( helene ).getCity() );
 						assertEquals( "M", book.getEntries().get( helene ).getDirectory().getName() );
 
-						s.delete( book );
+						s.remove( book );
 						tx.rollback();
 					}
 					catch (Exception e) {
@@ -421,7 +421,7 @@ public class IndexedCollectionTest {
 						book = s.get( AddressBook.class, book.getId() );
 						assertEquals( 2, book.getEntries().size() );
 						assertNull( book.getEntries().get( fake ) );
-						s.delete( book );
+						s.remove( book );
 						tx.rollback();
 					}
 					catch (Exception e) {
@@ -456,8 +456,8 @@ public class IndexedCollectionTest {
 						News news = lemonde.getNews().get( airplane.getTitle() );
 						assertNotNull( news );
 						assertEquals( airplane.getTitle(), news.getTitle() );
-						s.delete( lemonde );
-						s.delete( news );
+						s.remove( lemonde );
+						s.remove( news );
 
 						s.getTransaction().rollback();
 					}
@@ -493,8 +493,8 @@ public class IndexedCollectionTest {
 						News news = schwartz.getProvidedNews().get( hibernate1.getId() );
 						assertNotNull( news );
 						assertEquals( hibernate1.getTitle(), news.getTitle() );
-						s.delete( schwartz );
-						s.delete( news );
+						s.remove( schwartz );
+						s.remove( news );
 
 						s.getTransaction().rollback();
 					}
@@ -527,7 +527,7 @@ public class IndexedCollectionTest {
 						Painting painting = picasso.getPaintings().get( famille.getName() );
 						assertNotNull( painting );
 						assertEquals( painting.getName(), famille.getName() );
-						s.delete( picasso );
+						s.remove( picasso );
 						tx.rollback();
 					}
 					catch (Exception e) {
@@ -856,9 +856,9 @@ public class IndexedCollectionTest {
 
 						hibernate = s.get( Software.class, "Hibernate" );
 						for ( Version v : hibernate.getVersions().values() ) {
-							s.delete( v );
+							s.remove( v );
 						}
-						s.delete( hibernate );
+						s.remove( hibernate );
 						tx.rollback();
 					}
 					catch (Exception e) {

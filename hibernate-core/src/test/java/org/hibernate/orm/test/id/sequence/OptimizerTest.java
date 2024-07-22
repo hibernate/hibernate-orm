@@ -38,7 +38,7 @@ public class OptimizerTest {
 				session -> {
 					for ( int i = 0; i < 100; i++ ) {
 						TheEntity entity = new TheEntity( Integer.toString( i ) );
-						session.save( entity );
+						session.persist( entity );
 					}
 				}
 		);

@@ -190,10 +190,10 @@ public class RefreshUpdatedDataTest {
 		inTransaction(
 				sessionFactory,
 				s -> {
-					s.delete( s.getReference( ReadWriteCacheableItem.class, 1L ) );
-					s.delete( s.getReference( ReadWriteVersionedCacheableItem.class, 1L ) );
-					s.delete( s.getReference( NonStrictReadWriteCacheableItem.class, 1L ) );
-					s.delete( s.getReference( NonStrictReadWriteVersionedCacheableItem.class, 1L ) );
+					s.remove( s.getReference( ReadWriteCacheableItem.class, 1L ) );
+					s.remove( s.getReference( ReadWriteVersionedCacheableItem.class, 1L ) );
+					s.remove( s.getReference( NonStrictReadWriteCacheableItem.class, 1L ) );
+					s.remove( s.getReference( NonStrictReadWriteVersionedCacheableItem.class, 1L ) );
 				}
 		);
 	}

@@ -148,7 +148,7 @@ public class SimpleUpdateTestWithLazyLoadingAndInlineDirtyTracking {
 			assertEquals( 1, stats.getPrepareStatementCount() );
 			assertThat( loadedChild.getParent().getName(), is( parentName ) );
 			assertEquals( 1, stats.getPrepareStatementCount() );
-			s.save( parent );
+			s.persist( parent );
 		} );
 
 		scope.inTransaction( s -> {

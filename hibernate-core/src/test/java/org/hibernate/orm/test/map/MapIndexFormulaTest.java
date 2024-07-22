@@ -89,7 +89,7 @@ public class MapIndexFormulaTest {
 					Map smap = ( (User) g.getUsers().get( "gavin" ) ).getSession();
 					assertEquals( 1, smap.size() );
 					User gavin = (User) g.getUsers().put( "gavin", turin );
-					session.delete( gavin );
+					session.remove( gavin );
 					assertEquals(
 							0l,
 							session.createQuery( "select count(*) from SessionAttribute" ).uniqueResult()
@@ -109,8 +109,8 @@ public class MapIndexFormulaTest {
 							1l,
 							session.createQuery( "select count(*) from User" ).uniqueResult()
 					);
-					session.delete( g );
-					session.delete( t );
+					session.remove( g );
+					session.remove( t );
 					assertEquals(
 							0l,
 							session.createQuery( "select count(*) from User" ).uniqueResult()

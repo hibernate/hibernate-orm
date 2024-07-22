@@ -56,10 +56,10 @@ public class EntityWithOneToOneJoinTableTest {
 		entity.setOther( other );
 
 		scope.inTransaction( session -> {
-			session.save( other );
+			session.persist( other );
 		} );
 		scope.inTransaction( session -> {
-			session.save( entity );
+			session.persist( entity );
 		} );
 
 		scope.inTransaction(
@@ -80,8 +80,8 @@ public class EntityWithOneToOneJoinTableTest {
 					);
 
 					entity2.setOther( other2 );
-					session.save( other2 );
-					session.save( entity2 );
+					session.persist( other2 );
+					session.persist( entity2 );
 				}
 		);
 	}
@@ -247,8 +247,8 @@ public class EntityWithOneToOneJoinTableTest {
 
 		scope.inTransaction(
 				session -> {
-					session.save( other );
-					session.save( entity );
+					session.persist( other );
+					session.persist( entity );
 				}
 		);
 
@@ -264,7 +264,7 @@ public class EntityWithOneToOneJoinTableTest {
 		scope.inTransaction(
 				session -> {
 					EntityWithOneToOneJoinTable loaded = session.get( EntityWithOneToOneJoinTable.class, 3 );
-					session.save( anOther );
+					session.persist( anOther );
 					loaded.setOther( anOther );
 				}
 		);

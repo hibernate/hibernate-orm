@@ -106,7 +106,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		Query q = s.createQuery( "from " + Death.class.getName() );
 		death = (Death) q.uniqueResult();
 		assertEquals( "Well, haven't seen it", death.howDoesItHappen );
-		s.delete( death );
+		s.remove( death );
 		tx.commit();
 		s.close();
 	}
@@ -140,8 +140,8 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 //		crit.createCriteria( "owner" ).add( Restrictions.eq( "name", "kitty" ) );
 //		life = (Life) crit.uniqueResult();
 		assertEquals( "Long long description", life.fullDescription );
-		s.delete( life.owner );
-		s.delete( life );
+		s.remove( life.owner );
+		s.remove( life );
 		tx.commit();
 		s.close();
 	}
@@ -154,8 +154,8 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		SysUserOrm u=new SysUserOrm();
 		u.setGroups( new ArrayList<>() );
 		u.getGroups().add( g );
-		s.save( g );
-		s.save( u );
+		s.persist( g );
+		s.persist( u );
 		s.getTransaction().commit();
 		s.close();
 	}

@@ -36,12 +36,12 @@ public class IndicesTest extends BaseNonConfigCoreFunctionalTestCase {
             Project project = new Project(1);
             Role role = new Role(1);
             
-            session.save( project );
-            session.save( role );
+            session.persist( project );
+            session.persist( role );
 
             Person person = new Person(1, project, role);
             
-            session.save( person );
+            session.persist( person );
         });
     }
     

@@ -48,7 +48,7 @@ public abstract class AbstractCompositeIdAndNaturalIdTest {
 				(session) -> {
 					// prepare some test data...
 					Account account = new Account( new AccountId( 1 ), NATURAL_ID_VALUE );
-					session.save( account );
+					session.persist( account );
 				}
 		);
 	}

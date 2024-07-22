@@ -84,7 +84,7 @@ public class ListDelayedOperationTest {
 				session -> {
 					Parent parent = session.get( Parent.class, parentId );
 					parent.getChildren().clear();
-					session.delete( parent );
+					session.remove( parent );
 				}
 		);
 

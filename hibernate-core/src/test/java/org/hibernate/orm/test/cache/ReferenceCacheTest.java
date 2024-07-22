@@ -54,7 +54,7 @@ public class ReferenceCacheTest extends BaseCoreFunctionalTestCase {
 		// save a reference in one session
 		Session s = openSession();
 		s.beginTransaction();
-		s.save( myReferenceData );
+		s.persist( myReferenceData );
 		s.getTransaction().commit();
 		s.close();
 
@@ -82,7 +82,7 @@ public class ReferenceCacheTest extends BaseCoreFunctionalTestCase {
 		// cleanup
 		s = openSession();
 		s.beginTransaction();
-		s.delete( myReferenceData );
+		s.remove( myReferenceData );
 		s.getTransaction().commit();
 		s.close();
 	}

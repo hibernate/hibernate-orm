@@ -101,7 +101,7 @@ public class TimestampPropertyTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( eQueriedWithTimestamp )
+						session.remove( eQueriedWithTimestamp )
 		);
 	}
 
@@ -148,7 +148,7 @@ public class TimestampPropertyTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( eQueriedWithTimestamp )
+						session.remove( eQueriedWithTimestamp )
 		);
 	}
 

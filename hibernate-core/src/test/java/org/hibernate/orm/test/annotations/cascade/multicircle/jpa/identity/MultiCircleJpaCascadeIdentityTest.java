@@ -143,18 +143,18 @@ public class MultiCircleJpaCascadeIdentityTest {
 
 		scope.inTransaction(
 				session -> {
-					b = (EntityB) session.merge( b );
-					c = (EntityC) session.merge( c );
-					d = (EntityD) session.merge( d );
-					e = (EntityE) session.merge( e );
-					f = (EntityF) session.merge( f );
-					g = (EntityG) session.merge( g );
-					session.delete( f );
-					session.delete( g );
-					session.delete( b );
-					session.delete( d );
-					session.delete( e );
-					session.delete( c );
+					b = session.merge( b );
+					c = session.merge( c );
+					d = session.merge( d );
+					e = session.merge( e );
+					f = session.merge( f );
+					g = session.merge( g );
+					session.remove( f );
+					session.remove( g );
+					session.remove( b );
+					session.remove( d );
+					session.remove( e );
+					session.remove( c );
 				}
 		);
 	}

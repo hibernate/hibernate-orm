@@ -35,12 +35,12 @@ public class CompositeIdTypeBindingTest extends BaseCoreFunctionalTestCase {
 		EmployeeGroup employeegroup = new EmployeeGroup( new EmployeeGroupId( "a", "b" ) );
 		employeegroup.addEmployee( new Employee( "stliu" ) );
 		employeegroup.addEmployee( new Employee( "david" ) );
-		session.save( employeegroup );
+		session.persist( employeegroup );
 
 		employeegroup = new EmployeeGroup( new EmployeeGroupId( "c", "d" ) );
 		employeegroup.addEmployee( new Employee( "gail" ) );
 		employeegroup.addEmployee( new Employee( "steve" ) );
-		session.save( employeegroup );
+		session.persist( employeegroup );
 
 		session.getTransaction().commit();
 		session.close();

@@ -54,7 +54,7 @@ public class TimestampTest {
 				session -> {
 					User u = session.get( User.class, "gavin" );
 					assertEquals( u.getPerson().getName(), "Gavin King" );
-					session.delete( u );
+					session.remove( u );
 				}
 		);
 
@@ -83,7 +83,7 @@ public class TimestampTest {
 				session -> {
 					User u = session.get( User.class, "gavin" );
 					assertEquals( u.getPassword(), "$ecret" );
-					session.delete( u );
+					session.remove( u );
 				}
 		);
 	}

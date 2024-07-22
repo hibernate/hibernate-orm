@@ -35,7 +35,7 @@ public class PartiallyGeneratedComponentTest {
 	public void testPartialComponentGeneration(SessionFactoryScope scope) {
 		ComponentOwner owner = new ComponentOwner( "initial" );
 		scope.inTransaction(
-				s -> s.save( owner )
+				s -> s.persist( owner )
 		);
 
 		assertNotNull( owner.getComponent(), "expecting insert value generation" );
@@ -58,7 +58,7 @@ public class PartiallyGeneratedComponentTest {
 				s -> {
 					ComponentOwner _owner = s.get( ComponentOwner.class, owner.getId() );
 					assertEquals( previousValue2, _owner.getComponent().getGenerated(), "expecting update value generation" );
-					s.delete( _owner );
+					s.remove( _owner );
 				}
 		);
 	}

@@ -78,7 +78,7 @@ public class PropertyRefTest {
 					List results = session.createQuery( "from Person" ).list();
 					Iterator itr = results.iterator();
 					while ( itr.hasNext() ) {
-						session.delete( itr.next() );
+						session.remove( itr.next() );
 					}
 				}
 		);
@@ -108,7 +108,7 @@ public class PropertyRefTest {
 
 		scope.inTransaction(
 				session ->
-						session.update( g )
+						session.merge( g )
 		);
 
 		// test retrieval of the group
@@ -117,7 +117,7 @@ public class PropertyRefTest {
 					Group group = (Group) session.createQuery( "from Group g left join fetch g.users" ).uniqueResult();
 					assertTrue( Hibernate.isInitialized( group.getUsers() ) );
 					assertEquals( 2, group.getUsers().size() );
-					session.delete( group );
+					session.remove( group );
 					session.createQuery( "delete Person" ).executeUpdate();
 				}
 		);
@@ -135,16 +135,16 @@ public class PropertyRefTest {
 					a.setCountry( "USA" );
 					p.setAddress( a );
 					a.setPerson( p );
-					session.save( p );
+					session.persist( p );
 					Person p2 = new Person();
 					p2.setName( "Max" );
 					p2.setUserId( "max" );
-					session.save( p2 );
+					session.persist( p2 );
 					Account act = new Account();
 					act.setType( 'c' );
 					act.setUser( p2 );
 					p2.getAccounts().add( act );
-					session.save( act );
+					session.persist( act );
 					session.flush();
 					session.clear();
 
@@ -225,7 +225,7 @@ public class PropertyRefTest {
 					a.setCountry( "USA" );
 					p.setAddress( a );
 					a.setPerson( p );
-					s.save( p );
+					s.persist( p );
 
 					s.flush();
 					s.clear();

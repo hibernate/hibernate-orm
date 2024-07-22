@@ -61,7 +61,7 @@ public class VersionedNoCascadeDereferencedCollectionTest extends AbstractDerefe
 		scope.inTransaction(
 				session -> {
 					assertNull( versionedNoCascadeOne.getManies() );
-					session.save( versionedNoCascadeOne );
+					session.persist( versionedNoCascadeOne );
 					assertNull( versionedNoCascadeOne.getManies() );
 					EntityEntry eeOne = getEntityEntry( session, versionedNoCascadeOne );
 					assertNull( eeOne.getLoadedValue( "manies" ) );
@@ -141,7 +141,7 @@ public class VersionedNoCascadeDereferencedCollectionTest extends AbstractDerefe
 		scope.inTransaction(
 				session -> {
 					assertNull( versionedNoCascadeOne.getManies() );
-					session.save( versionedNoCascadeOne );
+					session.persist( versionedNoCascadeOne );
 					assertNull( versionedNoCascadeOne.getManies() );
 					EntityEntry eeOne = getEntityEntry( session, versionedNoCascadeOne );
 					assertNull( eeOne.getLoadedValue( "manies" ) );
@@ -227,7 +227,7 @@ public class VersionedNoCascadeDereferencedCollectionTest extends AbstractDerefe
 		scope.inTransaction(
 				session -> {
 					assertNull( versionedNoCascadeOne.getManies() );
-					session.save( versionedNoCascadeOne );
+					session.persist( versionedNoCascadeOne );
 					assertNull( versionedNoCascadeOne.getManies() );
 					EntityEntry eeOne = getEntityEntry( session, versionedNoCascadeOne );
 					assertNull( eeOne.getLoadedValue( "manies" ) );
@@ -323,44 +323,4 @@ public class VersionedNoCascadeDereferencedCollectionTest extends AbstractDerefe
 		);
 	}
 
-	@Test
-	public void testSaveOrUpdateNullCollection(SessionFactoryScope scope) {
-		VersionedNoCascadeOne versionedNoCascadeOne = new VersionedNoCascadeOne();
-		scope.inTransaction(
-				session -> {
-					assertNull( versionedNoCascadeOne.getManies() );
-					session.save( versionedNoCascadeOne );
-					assertNull( versionedNoCascadeOne.getManies() );
-					EntityEntry eeOne = getEntityEntry( session, versionedNoCascadeOne );
-					assertNull( eeOne.getLoadedValue( "manies" ) );
-					session.flush();
-					assertNull( versionedNoCascadeOne.getManies() );
-					assertNull( eeOne.getLoadedValue( "manies" ) );
-				}
-		);
-
-		scope.inTransaction(
-				session -> {
-					session.saveOrUpdate( versionedNoCascadeOne );
-
-					// Ensure one.getManies() is still null.
-					assertNull( versionedNoCascadeOne.getManies() );
-
-					// Ensure the EntityEntry loaded state contains null for the manies collection.
-					EntityEntry eeOne = getEntityEntry( session, versionedNoCascadeOne );
-					assertNull( eeOne.getLoadedValue( "manies" ) );
-
-					session.flush();
-
-					// Ensure one.getManies() is still null.
-					assertNull( versionedNoCascadeOne.getManies() );
-
-					// Ensure the same EntityEntry is being used.
-					assertSame( eeOne, getEntityEntry( session, versionedNoCascadeOne ) );
-
-					// Ensure the EntityEntry loaded state still contains null for the manies collection.
-					assertNull( eeOne.getLoadedValue( "manies" ) );
-				}
-		);
-	}
 }

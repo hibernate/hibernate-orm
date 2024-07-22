@@ -61,7 +61,7 @@ public class ComponentJoinsTest extends BaseCoreFunctionalTestCase {
 	public void dummy() {
 		Session session = openSession();
 		session.beginTransaction();
-		session.save( new Person( 1, "Steve", "Ebersone" ) );
+		session.persist( new Person( 1, "Steve", "Ebersone" ) );
 		session.getTransaction().commit();
 		session.close();
 

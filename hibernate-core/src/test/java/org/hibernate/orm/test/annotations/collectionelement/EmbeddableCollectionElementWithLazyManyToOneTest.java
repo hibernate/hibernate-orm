@@ -64,7 +64,7 @@ public class EmbeddableCollectionElementWithLazyManyToOneTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( p )
+						session.remove( p )
 		);
 	}
 
@@ -91,7 +91,7 @@ public class EmbeddableCollectionElementWithLazyManyToOneTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( p )
+						session.remove( p )
 		);
 	}
 
@@ -121,7 +121,7 @@ public class EmbeddableCollectionElementWithLazyManyToOneTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( p )
+						session.remove( p )
 		);
 	}
 
@@ -147,7 +147,7 @@ public class EmbeddableCollectionElementWithLazyManyToOneTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( p )
+						session.remove( p )
 		);
 	}
 

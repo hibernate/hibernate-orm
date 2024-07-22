@@ -169,7 +169,9 @@ public class SessionWithSharedConnectionTest {
 //		assertTrue( ((SessionImplementor) secondSession).isFlushBeforeCompletionEnabled() );
 
 		// now try it out
-		Integer id = (Integer) secondSession.save( new IrrelevantEntity() );
+		IrrelevantEntity irrelevantEntity = new IrrelevantEntity();
+		secondSession.persist( irrelevantEntity );
+		Integer id = irrelevantEntity.getId();
 		session.getTransaction().commit();
 		assertFalse( ((SessionImplementor) session).isClosed() );
 		assertTrue( ((SessionImplementor) secondSession).isClosed() );
@@ -182,7 +184,7 @@ public class SessionWithSharedConnectionTest {
 		session.getTransaction().begin();
 		IrrelevantEntity it = session.byId( IrrelevantEntity.class ).load( id );
 		assertNotNull( it );
-		session.delete( it );
+		session.remove( it );
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -215,7 +217,7 @@ public class SessionWithSharedConnectionTest {
 
 		IrrelevantEntity irrelevantEntityMainSession = new IrrelevantEntity();
 		irrelevantEntityMainSession.setName( "main session" );
-		session.save( irrelevantEntityMainSession );
+		session.persist( irrelevantEntityMainSession );
 
 		//open secondary session to also insert an entity
 		Session secondSession = session.sessionWithOptions()
@@ -226,7 +228,7 @@ public class SessionWithSharedConnectionTest {
 
 		IrrelevantEntity irrelevantEntitySecondarySession = new IrrelevantEntity();
 		irrelevantEntitySecondarySession.setName( "secondary session" );
-		secondSession.save( irrelevantEntitySecondarySession );
+		secondSession.persist( irrelevantEntitySecondarySession );
 
 		session.getTransaction().commit();
 		

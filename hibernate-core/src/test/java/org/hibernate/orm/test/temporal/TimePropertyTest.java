@@ -104,7 +104,7 @@ public class TimePropertyTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( eQueried )
+						session.remove( eQueried )
 		);
 	}
 

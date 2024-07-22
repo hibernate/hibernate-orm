@@ -88,7 +88,7 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 				s -> {
 					User u = s.get(User.class, "gavin");
 					assertEquals( u.getPerson().getName(), "Gavin King" );
-					s.delete(u);
+					s.remove(u);
 				}
 		);
 
@@ -123,7 +123,7 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 					assertEquals( u.getPerson().getAddress(), "Phipps Place" );
 					assertEquals( u.getPerson().getPreviousAddress(), "Karbarook Ave" );
 					assertEquals( u.getPassword(), "$ecret" );
-					s.delete(u);
+					s.remove(u);
 				}
 		);
 	}
@@ -144,7 +144,7 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 					u.getPerson().setAddress( "Cedar Park" );
 					s.flush();
 					assertEquals( intialUpdateCount + 1, sessionFactory().getStatistics().getEntityUpdateCount() );
-					s.delete( u );
+					s.remove( u );
 				}
 		);
 	}
@@ -158,13 +158,13 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 					emp.setPerson( new Person() );
 					emp.getPerson().setName( "steve" );
 					emp.getPerson().setDob( new Date() );
-					s.save( emp );
+					s.persist( emp );
 
 					s.createQuery( "from Employee e where e.person = :p and 1 = 1 and 2=2" ).setParameter( "p", emp.getPerson() ).list();
 					s.createQuery( "from Employee e where :p = e.person" ).setParameter( "p", emp.getPerson() ).list();
 					s.createQuery( "from Employee e where e.person = ('', '', current_timestamp, 0.0, 'steve', '', 0)" ).list();
 
-					s.delete( emp );
+					s.remove( emp );
 				}
 		);
 	}
@@ -184,9 +184,9 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 					emp.setPerson( new Person() );
 					emp.getPerson().setName( "steve" );
 					emp.getPerson().setDob( new Date() );
-					s.save( emp );
+					s.persist( emp );
 					s.createQuery( "from Employee e where e.person = (current_timestamp, 'steve')" ).list();
-					s.delete( emp );
+					s.remove( emp );
 				}
 		);
 	}
@@ -264,7 +264,7 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 							( (Number)s.createNativeQuery("select height_centimeters from T_USER where T_USER.userName='steve'").uniqueResult() )
 									.doubleValue();
 					assertEquals(2.54d, heightViaSql, 0.01d);
-					s.delete(u);
+					s.remove(u);
 				}
 		);
 	}
@@ -390,7 +390,7 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 		assertNull(dr.getOptionalComponent());
 
 		inTransaction(
-				s -> s.delete( emp6 )
+				s -> s.remove( emp6 )
 		);
 	}
 }

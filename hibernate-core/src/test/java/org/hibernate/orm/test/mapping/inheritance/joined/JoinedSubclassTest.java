@@ -70,9 +70,9 @@ public class JoinedSubclassTest {
 			yomomma.setName( "mum" );
 			yomomma.setSex( 'F' );
 
-			s.save( yomomma );
-			s.save( mark );
-			s.save( joe );
+			s.persist( yomomma );
+			s.persist( mark );
+			s.persist( joe );
 
 			assertEquals( s.createQuery( "from Person" ).list().size(), 3 );
 			assertEquals( s.createQuery( "from Person p where p.class = Customer" ).list().size(), 1 );
@@ -128,9 +128,9 @@ public class JoinedSubclassTest {
 //		s.createCriteria( Person.class ).add(
 //                Restrictions.in( "address", mark.getAddress(), joe.getAddress() ) ).list();
 
-			s.delete( mark );
-			s.delete( joe );
-			s.delete( yomomma );
+			s.remove( mark );
+			s.remove( joe );
+			s.remove( yomomma );
 			assertTrue( s.createQuery( "from Person" ).list().isEmpty() );
 		} );
 	}
@@ -243,8 +243,8 @@ public class JoinedSubclassTest {
 									.uniqueResult()
 							).doubleValue();
 					assertEquals( 1d, expiryViaSql, 0.01d );
-					session.delete( p );
-					session.delete( e );
+					session.remove( p );
+					session.remove( e );
 				}
 		);
 	}

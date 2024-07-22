@@ -15,6 +15,8 @@ import java.util.EnumSet;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.TimeZone;
+
+import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.PersistenceException;
 
 import org.hibernate.HibernateException;
@@ -77,7 +79,7 @@ public class EntityTest {
 					firstOne.setName( "AF3202" );
 					firstOne.setDuration( new Long( 1000000 ) );
 					firstOne.setDurationInSec( 2000 );
-					session.save( firstOne );
+					session.persist( firstOne );
 					session.flush();
 				}
 		);
@@ -105,7 +107,7 @@ public class EntityTest {
 					firstOne.setName( "AF3202" );
 					firstOne.setDuration( Long.valueOf( 1000000 ) );
 					firstOne.setDurationInSec( 2000 );
-					session.save( firstOne );
+					session.persist( firstOne );
 					session.flush();
 				}
 		);
@@ -118,7 +120,7 @@ public class EntityTest {
 					firstOne.setName( null );
 
 					try {
-						session.save( firstOne );
+						session.persist( firstOne );
 						tx.commit();
 						fail( "Name column should be not null" );
 					}
@@ -179,9 +181,9 @@ public class EntityTest {
 					sky.month = "January";
 
 					try {
-						session.save( sky );
+						session.persist( sky );
 						session.flush();
-						session.save( sameSky );
+						session.persist( sameSky );
 						tx.commit();
 						fail( "unique constraints not respected" );
 					}
@@ -221,10 +223,10 @@ public class EntityTest {
 		scope.inTransaction(
 				session -> {
 
-					session.save( sky );
+					session.persist( sky );
 					session.flush();
 
-					session.save( otherSky );
+					session.persist( otherSky );
 				}
 		);
 
@@ -232,7 +234,7 @@ public class EntityTest {
 				session -> {
 					Transaction tx = session.beginTransaction();
 					try {
-						session.save( sameSky );
+						session.persist( sameSky );
 						tx.commit();
 						fail( "unique constraints not respected" );
 					}
@@ -255,7 +257,7 @@ public class EntityTest {
 					firstOne.setId( Long.valueOf( 2 ) );
 					firstOne.setName( "AF3202" );
 					firstOne.setDuration( Long.valueOf( 500 ) );
-					session.save( firstOne );
+					session.persist( firstOne );
 					session.flush();
 				}
 		);
@@ -270,8 +272,7 @@ public class EntityTest {
 				session -> {
 					Flight _concurrentOne = session.get( Flight.class, Long.valueOf( 2 ) );
 					_concurrentOne.setDuration( Long.valueOf( 1000 ) );
-					session.update( _concurrentOne );
-					return _concurrentOne;
+					return session.merge( _concurrentOne );
 				}
 		);
 
@@ -283,12 +284,12 @@ public class EntityTest {
 				session -> {
 					Transaction tx = session.beginTransaction();
 					firstOne.setName( "Second access" );
-					session.update( firstOne );
 					try {
+						session.merge( firstOne );
 						tx.commit();
 						fail( "Optimistic locking should work" );
 					}
-					catch (PersistenceException expected) {
+					catch (OptimisticLockException expected) {
 						if ( expected.getCause() instanceof StaleStateException ) {
 							//expected
 						}
@@ -315,7 +316,7 @@ public class EntityTest {
 		sky.month = "1";
 
 		scope.inTransaction(
-				session -> session.save( sky )
+				session -> session.persist( sky )
 		);
 
 		sky.area = "London";
@@ -370,7 +371,7 @@ public class EntityTest {
 					assertNotNull( _airFrance );
 					assertEquals( Long.valueOf( 10 ), _airFrance.getDuration() );
 					assertFalse( 25 == _airFrance.getFactor( false ) );
-					session.delete( _airFrance );
+					session.remove( _airFrance );
 				}
 		);
 	}
@@ -407,7 +408,7 @@ public class EntityTest {
 					);
 					assertEquals( df.format( airFrance.getBuyDate() ), df.format( copyAirFrance.getBuyDate() ) );
 
-					session.delete( copyAirFrance );
+					session.remove( copyAirFrance );
 				}
 		);
 	}

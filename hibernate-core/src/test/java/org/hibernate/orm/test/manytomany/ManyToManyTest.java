@@ -134,7 +134,7 @@ public class ManyToManyTest {
 
 		scope.inTransaction(
 				s -> {
-					s.delete( user );
+					s.remove( user );
 					s.flush();
 					s.createQuery( "delete from Group" ).executeUpdate();
 				}

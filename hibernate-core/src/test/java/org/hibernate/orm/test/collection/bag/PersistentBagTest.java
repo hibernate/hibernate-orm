@@ -47,7 +47,7 @@ public class PersistentBagTest {
 
 		scope.inTransaction(
 				session -> {
-					session.save( parent );
+					session.persist( parent );
 					session.flush();
 					// at this point, the list on parent has now been replaced with a PersistentBag...
 					PersistentBag children = (PersistentBag) parent.getChildren();
@@ -66,7 +66,7 @@ public class PersistentBagTest {
 					assertFalse( children.isDirty() );
 
 					children.clear();
-					session.delete( child );
+					session.remove( child );
 					assertTrue( children.isDirty() );
 
 					session.flush();
@@ -74,7 +74,7 @@ public class PersistentBagTest {
 					children.clear();
 					assertFalse( children.isDirty() );
 
-					session.delete( parent );
+					session.remove( parent );
 				}
 		);
 	}
@@ -110,7 +110,7 @@ public class PersistentBagTest {
 				session -> {
 					Order order = session.get( Order.class, orderId );
 					assertEquals( 2, order.getItems().size() );
-					session.delete( order );
+					session.remove( order );
 				}
 		);
 	}

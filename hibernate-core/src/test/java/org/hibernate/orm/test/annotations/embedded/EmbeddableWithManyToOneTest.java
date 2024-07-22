@@ -51,8 +51,8 @@ public class EmbeddableWithManyToOneTest {
 					entityTest2.setEmbeddedAttribute( embeddable );
 
 					entity.setEntity2( entityTest2 );
-					session.save( entity );
-					session.save( entityTest2 );
+					session.persist( entity );
+					session.persist( entityTest2 );
 				}
 		);
 	}
@@ -104,9 +104,9 @@ public class EmbeddableWithManyToOneTest {
 					entityTest2.setEmbeddedAttribute( embeddable );
 
 					entity.setEntity2( entityTest2 );
-					session.save( entity );
-					session.save( entity3 );
-					session.save( entityTest2 );
+					session.persist( entity );
+					session.persist( entity3 );
+					session.persist( entityTest2 );
 				}
 		);
 		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
@@ -143,10 +143,10 @@ public class EmbeddableWithManyToOneTest {
 					entityTest.setEmbeddedAttribute( embeddable );
 
 					entity.setEntity2( entityTest );
-					session.save( entity );
-					session.save( entity3 );
-					session.save( entityTest );
-					session.save( entityTest2 );
+					session.persist( entity );
+					session.persist( entity3 );
+					session.persist( entityTest );
+					session.persist( entityTest2 );
 				}
 		);
 		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();

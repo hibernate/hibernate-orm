@@ -84,7 +84,7 @@ public class CascadeDeleteCollectionWithCollectionInDefaultFetchGroupFalseTest {
                     .uniqueResult();
             checkInterceptor( scope, loadedParent, false );
             assertFalse( Hibernate.isPropertyInitialized( loadedParent, "children" ) );
-            s.delete( loadedParent );
+            s.remove( loadedParent );
         } );
         // If the lazy relation is not fetch on cascade there is a constraint violation on commit
     }
@@ -100,7 +100,7 @@ public class CascadeDeleteCollectionWithCollectionInDefaultFetchGroupFalseTest {
             checkInterceptor( scope, loadedParent, false );
             loadedParent.getChildren();
             assertTrue( Hibernate.isPropertyInitialized( loadedParent, "children" ) );
-            s.delete( loadedParent );
+            s.remove( loadedParent );
         } );
         // If the lazy relation is not fetch on cascade there is a constraint violation on commit
     }
@@ -118,7 +118,7 @@ public class CascadeDeleteCollectionWithCollectionInDefaultFetchGroupFalseTest {
 
         // Delete the detached Parent with uninitialized children
         scope.inTransaction( s -> {
-             s.delete( detachedParent );
+             s.remove( detachedParent );
         } );
         // If the lazy relation is not fetch on cascade there is a constraint violation on commit
     }
@@ -141,7 +141,7 @@ public class CascadeDeleteCollectionWithCollectionInDefaultFetchGroupFalseTest {
 
         // Delete the detached Parent with initialized children
         scope.inTransaction( s -> {
-            s.delete( detachedParent );
+            s.remove( detachedParent );
         } );
         // If the lazy relation is not fetch on cascade there is a constraint violation on commit
     }
@@ -157,7 +157,7 @@ public class CascadeDeleteCollectionWithCollectionInDefaultFetchGroupFalseTest {
 
         // Delete the Parent
         scope.inTransaction( s -> {
-            s.delete( originalParent );
+            s.remove( originalParent );
         } );
         // If the lazy relation is not fetch on cascade there is a constraint violation on commit
     }

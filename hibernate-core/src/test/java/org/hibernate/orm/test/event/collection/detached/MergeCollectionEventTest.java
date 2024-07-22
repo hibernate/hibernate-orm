@@ -92,7 +92,7 @@ public class MergeCollectionEventTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		Character paul = new Character( 1, "Paul Atreides" );
-		s.save( paul );
+		s.persist( paul );
 		s.getTransaction().commit();
 		s.close();
 
@@ -105,7 +105,7 @@ public class MergeCollectionEventTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 		Character paulo = new Character( 2, "Paulo Atreides" );
-		s.save( paulo );
+		s.persist( paulo );
 		s.getTransaction().commit();
 		s.close();
 
@@ -118,7 +118,7 @@ public class MergeCollectionEventTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 		Alias alias1 = new Alias( 1, "Paul Muad'Dib" );
-		s.save( alias1 );
+		s.persist( alias1 );
 		s.getTransaction().commit();
 		s.close();
 
@@ -131,7 +131,7 @@ public class MergeCollectionEventTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 		Alias alias2 = new Alias( 2, "Usul" );
-		s.save( alias2 );
+		s.persist( alias2 );
 		s.getTransaction().commit();
 		s.close();
 

@@ -35,10 +35,10 @@ public class ProxyNarrowingTest {
 		Integer entityReferenceId = scope.fromTransaction(
 				session -> {
 					ConcreteEntity entity = new ConcreteEntity();
-					session.save( entity );
+					session.persist( entity );
 
 					LazyAbstractEntityReference reference = new LazyAbstractEntityReference( entity );
-					session.save( reference );
+					session.persist( reference );
 					Integer id = reference.getId();
 
 					session.flush();
@@ -73,8 +73,8 @@ public class ProxyNarrowingTest {
 					assertTrue( session.contains( concreteEntityProxy ) );
 
 					// clean up
-					session.delete( reference );
-					session.delete( concreteEntityProxy );
+					session.remove( reference );
+					session.remove( concreteEntityProxy );
 				}
 		);
 	}

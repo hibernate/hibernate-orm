@@ -82,8 +82,8 @@ public class IdTest {
 					Furniture furFromDb = session.get( Furniture.class, fur.getId() );
 					assertNotNull( systemfromDb );
 					assertNotNull( furFromDb );
-					session.delete( systemfromDb );
-					session.delete( furFromDb );
+					session.remove( systemfromDb );
+					session.remove( furFromDb );
 				}
 		);
 	}
@@ -125,9 +125,9 @@ public class IdTest {
 
 		scope.inTransaction(
 				session -> {
-					session.delete( session.get( Ball.class, 1 ) );
-					session.delete( session.get( Dog.class, 1 ) );
-					session.delete( session.get( Computer.class, 1L ) );
+					session.remove( session.get( Ball.class, 1 ) );
+					session.remove( session.get( Dog.class, 1 ) );
+					session.remove( session.get( Computer.class, 1L ) );
 				}
 		);
 	}
@@ -144,7 +144,7 @@ public class IdTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( session.get( Shoe.class, b.getId() ) )
+						session.remove( session.get( Shoe.class, b.getId() ) )
 		);
 	}
 
@@ -160,7 +160,7 @@ public class IdTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( session.get( Store.class, b.getId() ) )
+						session.remove( session.get( Store.class, b.getId() ) )
 		);
 	}
 
@@ -176,7 +176,7 @@ public class IdTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( session.get( Department.class, b.getId() ) )
+						session.remove( session.get( Department.class, b.getId() ) )
 		);
 	}
 
@@ -194,7 +194,7 @@ public class IdTest {
 				session -> {
 					Home reloadedHome = session.get( Home.class, h.getId() );
 					assertEquals( h.getId(), reloadedHome.getId() );
-					session.delete( reloadedHome );
+					session.remove( reloadedHome );
 				}
 		);
 	}
@@ -213,7 +213,7 @@ public class IdTest {
 				session -> {
 					Home reloadedHome = session.get( Home.class, h.getId() );
 					assertEquals( h.getId(), reloadedHome.getId() );
-					session.delete( reloadedHome );
+					session.remove( reloadedHome );
 				}
 		);
 	}
@@ -231,7 +231,7 @@ public class IdTest {
 
 					christmasTree = session.get( FirTree.class, christmasTree.getId() );
 					assertNotNull( christmasTree );
-					session.delete( christmasTree );
+					session.remove( christmasTree );
 				}
 		);
 	}
@@ -273,7 +273,7 @@ public class IdTest {
 					// reattach by saveOrUpdate
 					session.beginTransaction();
 					fb.setClub( "Bimbo FC SA" );
-					session.saveOrUpdate( fb );
+					session.merge( fb );
 					session.getTransaction().commit();
 
 					// clean up
@@ -282,8 +282,8 @@ public class IdTest {
 					fpk = new FootballerPk( "David", "Beckam" );
 					fb = session.get( Footballer.class, fpk );
 					assertEquals( "Bimbo FC SA", fb.getClub() );
-					session.delete( fb );
-					session.delete( keeper );
+					session.remove( fb );
+					session.remove( keeper );
 				}
 		);
 	}

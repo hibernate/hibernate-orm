@@ -74,7 +74,7 @@ public class DynamicMapOneToOneTest {
 					assertNotNull( person, "could not locate person" );
 					assertNotNull( person.get( "address" ), "could not locate persons address" );
 
-					session.delete( "Person", person );
+					session.remove( person );
 
 					return aStats;
 				}

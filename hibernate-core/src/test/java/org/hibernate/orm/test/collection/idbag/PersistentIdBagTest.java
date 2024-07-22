@@ -39,7 +39,7 @@ public class PersistentIdBagTest {
 
 		scope.inTransaction(
 				session -> {
-					session.save( parent );
+					session.persist( parent );
 					session.flush();
 					// at this point, the list on parent has now been replaced with a PersistentBag...
 					PersistentIdentifierBag children = (PersistentIdentifierBag) parent.getChildren();
@@ -58,7 +58,7 @@ public class PersistentIdBagTest {
 					assertFalse( children.isDirty() );
 
 					children.clear();
-					session.delete( child );
+					session.remove( child );
 					assertTrue( children.isDirty() );
 
 					session.flush();
@@ -66,7 +66,7 @@ public class PersistentIdBagTest {
 					children.clear();
 					assertFalse( children.isDirty() );
 
-					session.delete( parent );
+					session.remove( parent );
 				}
 		);
 	}

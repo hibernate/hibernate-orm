@@ -46,7 +46,7 @@ public class CompositeDerivedIdentityTest {
 
 		scope.inTransaction(
 				session -> {
-					session.save( product );
+					session.persist( product );
 				}
 		);
 
@@ -56,7 +56,7 @@ public class CompositeDerivedIdentityTest {
 
 		scope.inTransaction(
 				session -> {
-					session.save( order );
+					session.persist( order );
 				}
 		);
 
@@ -66,7 +66,7 @@ public class CompositeDerivedIdentityTest {
 				session -> {
 					Order o = session.get( Order.class, orderId );
 					assertEquals( 1, o.getLineItems().size() );
-					session.delete( o );
+					session.remove( o );
 				}
 		);
 	}
@@ -79,7 +79,7 @@ public class CompositeDerivedIdentityTest {
 
 		scope.inTransaction(
 				session ->
-						session.save( product )
+						session.persist( product )
 		);
 
 		Order order = new Order();
@@ -88,7 +88,7 @@ public class CompositeDerivedIdentityTest {
 
 		scope.inTransaction(
 				session ->
-						session.save( order )
+						session.persist( order )
 		);
 
 		scope.inTransaction(

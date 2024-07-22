@@ -44,8 +44,8 @@ public class ManyToManyWhereTest {
 					// create advertisements
 					Advertisement advertisement1 = new Advertisement();
 					Advertisement advertisement2 = new Advertisement();
-					session.saveOrUpdate( advertisement1 );
-					session.saveOrUpdate( advertisement2 );
+					session.persist( advertisement1 );
+					session.persist( advertisement2 );
 					// create attachment relationships to advertisements
 					Attachment a1 = new Attachment();
 					a1.setFileName( "memo.txt" );
@@ -56,8 +56,8 @@ public class ManyToManyWhereTest {
 					a2.setAdvertisements( new LinkedHashSet<>( Arrays.asList( advertisement1, advertisement2 ) ) );
 					advertisement1.setAttachments( new HashSet<>( Arrays.asList( a1, a2 ) ) );
 					advertisement2.setAttachments( new HashSet<>( Arrays.asList( a1, a2 ) ) );
-					session.saveOrUpdate( a1 );
-					session.saveOrUpdate( a2 );
+					session.persist( a1 );
+					session.persist( a2 );
 				}
 		);
 

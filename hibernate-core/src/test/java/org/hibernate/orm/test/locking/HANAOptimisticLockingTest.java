@@ -50,7 +50,11 @@ public class HANAOptimisticLockingTest {
 	private void testWithSpecifiedLockMode(SessionFactoryScope scope, LockModeType lockModeType) {
 		// makes sure we have an entity to actually query
 		Object id = scope.fromTransaction(
-				session -> session.save( new SomeEntity() )
+				session -> {
+					SomeEntity someEntity = new SomeEntity();
+					session.persist( someEntity );
+					return someEntity.getId();
+				}
 		);
 
 		// tests that both the query execution doesn't throw a SQL syntax (which is the main bug) and that

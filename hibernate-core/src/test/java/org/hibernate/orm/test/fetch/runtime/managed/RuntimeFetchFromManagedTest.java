@@ -128,10 +128,10 @@ public class RuntimeFetchFromManagedTest extends BaseNonConfigCoreFunctionalTest
 		inTransaction(
 				session -> {
 					final ChildEntity child = new ChildEntity( 1, "child" );
-					session.save( child );
+					session.persist( child );
 
 					final RootEntity root = new RootEntity( 2, "root", child );
-					session.save( root );
+					session.persist( root );
 				}
 		);
 	}

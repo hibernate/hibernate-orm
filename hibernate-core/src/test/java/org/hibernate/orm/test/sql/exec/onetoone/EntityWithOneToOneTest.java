@@ -58,8 +58,8 @@ public class EntityWithOneToOneTest {
 		entity.setOther( other );
 
 		scope.inTransaction( session -> {
-			session.save( other );
-			session.save( entity );
+			session.persist( other );
+			session.persist( entity );
 		} );
 	}
 
@@ -116,9 +116,9 @@ public class EntityWithOneToOneTest {
 					assertThat( loaded.getName(), equalTo( "first" ) );
 					assert loaded.getOther() != null;
 					assertThat( loaded.getOther().getId(), equalTo( 2 ) );
-					session.delete( loaded.getOther() );
+					session.remove( loaded.getOther() );
 					loaded.setOther( other );
-					session.save( other );
+					session.persist( other );
 				}
 		);
 

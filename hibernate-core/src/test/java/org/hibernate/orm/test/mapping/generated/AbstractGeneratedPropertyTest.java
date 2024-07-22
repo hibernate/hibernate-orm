@@ -43,7 +43,7 @@ public abstract class AbstractGeneratedPropertyTest extends BaseCoreFunctionalTe
 			entity.setName( "entity-1" );
 			Session s = openSession();
 			Transaction t = s.beginTransaction();
-			s.save( entity );
+			s.persist( entity );
 			s.flush();
 			assertNotNull( "no timestamp retrieved", entity.getLastModified() );
 			t.commit();
@@ -62,7 +62,7 @@ public abstract class AbstractGeneratedPropertyTest extends BaseCoreFunctionalTe
 
 			s = openSession();
 			t = s.beginTransaction();
-			s.delete( entity );
+			s.remove( entity );
 			t.commit();
 			s.close();
 		}

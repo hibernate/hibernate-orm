@@ -42,7 +42,7 @@ public class CollectionAliasTest {
 					);
 					aTable.getTablebs().add( tableB );
 					tableB.setTablea( aTable );
-					session.save( aTable );
+					session.persist( aTable );
 				}
 		);
 

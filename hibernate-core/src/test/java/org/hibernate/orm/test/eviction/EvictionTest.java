@@ -30,7 +30,7 @@ public class EvictionTest extends BaseCoreFunctionalTestCase {
 	public void testNormalUsage() {
 		Session session = openSession();
 		session.beginTransaction();
-		session.save( new IsolatedEvictableEntity( 1 ) );
+		session.persist( new IsolatedEvictableEntity( 1 ) );
 		session.getTransaction().commit();
 		session.close();
 
@@ -45,7 +45,7 @@ public class EvictionTest extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		session.delete( entity );
+		session.remove( entity );
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -80,7 +80,7 @@ public class EvictionTest extends BaseCoreFunctionalTestCase {
 	public void testEvictingDetachedEntity() {
 		Session session = openSession();
 		session.beginTransaction();
-		session.save( new IsolatedEvictableEntity( 1 ) );
+		session.persist( new IsolatedEvictableEntity( 1 ) );
 		session.getTransaction().commit();
 		session.close();
 
@@ -99,7 +99,7 @@ public class EvictionTest extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		session.delete( entity );
+		session.remove( entity );
 		session.getTransaction().commit();
 		session.close();
 	}

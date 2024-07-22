@@ -23,7 +23,7 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 import junit.framework.Assert;
 
@@ -31,7 +31,7 @@ import junit.framework.Assert;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @author Lukasz Zuchowski (author at zuchos dot com)
  */
-@TestForIssue(jiraKey = "HHH-8049")
+@JiraKey("HHH-8049")
 public class AuditedDynamicComponentTest extends BaseEnversFunctionalTestCase {
 
 	@Override
@@ -78,7 +78,7 @@ public class AuditedDynamicComponentTest extends BaseEnversFunctionalTestCase {
 
 		// Revision 1
 		session.getTransaction().begin();
-		session.save( simpleEntity );
+		session.persist( simpleEntity );
 		session.getTransaction().commit();
 
 		// Revision 2
@@ -88,44 +88,44 @@ public class AuditedDynamicComponentTest extends BaseEnversFunctionalTestCase {
 		entity.getCustomFields().put( "prop2", 0.1f );
 		entity.getCustomFields().put( "prop3", simpleEntity );
 		entity.getCustomFields().put( "prop4", true );
-		session.save( entity );
+		session.persist( entity );
 		session.getTransaction().commit();
 
 		// revision 3
 		session.getTransaction().begin();
 		SimpleEntity simpleEntity2 = new SimpleEntity( 2L, "Not so simple entity" );
-		session.save( simpleEntity2 );
-		entity = (AuditedDynamicComponentEntity) session.get( AuditedDynamicComponentEntity.class, entity.getId() );
+		session.persist( simpleEntity2 );
+		entity = session.get( AuditedDynamicComponentEntity.class, entity.getId() );
 		entity.getCustomFields().put( "prop3", simpleEntity2 );
-		session.update( entity );
+		session.merge( entity );
 		session.getTransaction().commit();
 
 		// Revision 4
 		session.getTransaction().begin();
-		entity = (AuditedDynamicComponentEntity) session.get( AuditedDynamicComponentEntity.class, entity.getId() );
+		entity = session.get( AuditedDynamicComponentEntity.class, entity.getId() );
 		entity.getCustomFields().put( "prop1", 2 );
 		entity.getCustomFields().put( "prop4", false );
-		session.update( entity );
+		session.merge( entity );
 		session.getTransaction().commit();
 
 		// Revision 5
 		session.getTransaction().begin();
-		entity = (AuditedDynamicComponentEntity) session.load( AuditedDynamicComponentEntity.class, entity.getId() );
+		entity = session.getReference( AuditedDynamicComponentEntity.class, entity.getId() );
 		entity.getCustomFields().remove( "prop2" );
-		session.update( entity );
+		session.merge( entity );
 		session.getTransaction().commit();
 
 		// Revision 6
 		session.getTransaction().begin();
-		entity = (AuditedDynamicComponentEntity) session.load( AuditedDynamicComponentEntity.class, entity.getId() );
+		entity = session.getReference( AuditedDynamicComponentEntity.class, entity.getId() );
 		entity.getCustomFields().clear();
-		session.update( entity );
+		session.merge( entity );
 		session.getTransaction().commit();
 
 		// Revision 7
 		session.getTransaction().begin();
-		entity = (AuditedDynamicComponentEntity) session.load( AuditedDynamicComponentEntity.class, entity.getId() );
-		session.delete( entity );
+		entity = session.getReference( AuditedDynamicComponentEntity.class, entity.getId() );
+		session.remove( entity );
 		session.getTransaction().commit();
 
 		session.close();

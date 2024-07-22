@@ -49,7 +49,7 @@ public class EnumIdTest {
 							mercury.getPlanet()
 					);
 					assertNotNull( mercuryFromDb );
-					session.delete( mercuryFromDb );
+					session.remove( mercuryFromDb );
 				}
 		);
 

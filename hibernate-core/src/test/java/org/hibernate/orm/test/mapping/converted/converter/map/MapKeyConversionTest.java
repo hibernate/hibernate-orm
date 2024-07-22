@@ -53,7 +53,7 @@ public class MapKeyConversionTest extends BaseNonConfigCoreFunctionalTestCase {
 		session = openSession();
 		session.getTransaction().begin();
 		customer = session.get( Customer.class, 1 );
-		session.delete( customer );
+		session.remove( customer );
 		session.getTransaction().commit();
 		session.close();
 	}

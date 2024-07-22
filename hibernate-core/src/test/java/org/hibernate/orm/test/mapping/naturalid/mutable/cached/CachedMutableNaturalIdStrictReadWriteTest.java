@@ -43,7 +43,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 		statistics.clear();
 
 		scope.inTransaction(
-				(session) -> session.save( new AllCached( "IT" ) )
+				(session) -> session.persist( new AllCached( "IT" ) )
 		);
 
 		final NaturalIdStatistics naturalIdStatistics = statistics.getNaturalIdStatistics( AllCached.class.getName() );
@@ -57,7 +57,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 		statistics.clear();
 
 		scope.inTransaction(
-				(session) -> session.save( new Another( "it" ) )
+				(session) -> session.persist( new Another( "it" ) )
 		);
 
 		scope.inTransaction(
@@ -80,7 +80,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 					final Transaction transaction = session.getTransaction();
 					transaction.begin();
 
-					session.save( new Another( "it" ) );
+					session.persist( new Another( "it" ) );
 					session.flush();
 
 					transaction.rollback();
@@ -103,7 +103,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 		statistics.clear();
 
 		scope.inTransaction(
-				(session) -> session.save( new Another( "it" ) )
+				(session) -> session.persist( new Another( "it" ) )
 		);
 
 		scope.inTransaction(
@@ -134,7 +134,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 		statistics.clear();
 
 		scope.inTransaction(
-				(session) -> session.save( new Another( "it" ) )
+				(session) -> session.persist( new Another( "it" ) )
 		);
 
 		scope.inTransaction(
@@ -173,7 +173,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 				(session) -> {
 					Another it = new Another( "it" );
 					// schedules an InsertAction
-					session.save( it );
+					session.persist( it );
 
 					// schedules an UpdateAction
 					// 	- without bug-fix this will re-cache natural-id with identical key and at same time invalidate it
@@ -199,7 +199,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 
 		scope.inTransaction(
 				(session) -> {
-					session.save( new Another( "IT" ) );
+					session.persist( new Another( "IT" ) );
 				}
 		);
 

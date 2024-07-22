@@ -92,7 +92,7 @@ public class ExtraLazyTest {
 					assertNull( session.get( Document.class, "HiA2" ) );
 					gavin.getDocuments().clear();
 					assertTrue( Hibernate.isInitialized( gavin.getDocuments() ) );
-					session.delete( gavin );
+					session.remove( gavin );
 				}
 		);
 	}
@@ -125,9 +125,9 @@ public class ExtraLazyTest {
 					assertNull( turin.getSession().get( "foo" ) );
 					assertFalse( Hibernate.isInitialized( gavin.getSession() ) );
 					assertFalse( Hibernate.isInitialized( turin.getSession() ) );
-					session.delete( gavin );
-					session.delete( turin );
-					session.delete( g );
+					session.remove( gavin );
+					session.remove( turin );
+					session.remove( g );
 				}
 		);
 	}
@@ -168,9 +168,9 @@ public class ExtraLazyTest {
 					User gavin = session.get( User.class, "gavin" );
 					assertFalse( gavin.getSession().containsKey( "foo" ) );
 					assertFalse( Hibernate.isInitialized( gavin.getSession() ) );
-					session.delete( gavin );
-					session.delete( turin );
-					session.delete( g );
+					session.remove( gavin );
+					session.remove( turin );
+					session.remove( g );
 				}
 		);
 	}
@@ -208,7 +208,7 @@ public class ExtraLazyTest {
 					Map smap = ( (User) g.getUsers().get( "gavin" ) ).getSession();
 					assertThat( smap.size(), is( 1 ) );
 					User gavin = (User) g.getUsers().put( "gavin", user2 );
-					session.delete( gavin );
+					session.remove( gavin );
 					assertThat(
 							session.createQuery( "select count(*) from SessionAttribute" ).uniqueResult(),
 							is( 0L )
@@ -224,8 +224,8 @@ public class ExtraLazyTest {
 					Map smap = turin.getSession();
 					assertThat( smap.size(), is( 0 ) );
 					assertThat( session.createQuery( "select count(*) from User" ).uniqueResult(), is( 1L ) );
-					session.delete( g );
-					session.delete( turin );
+					session.remove( g );
+					session.remove( turin );
 					assertThat( session.createQuery( "select count(*) from User" ).uniqueResult(), is( 0L ) );
 				}
 		);
@@ -312,7 +312,7 @@ public class ExtraLazyTest {
 					child.setFirstName( "Ben" );
 					parent.getChildren().put( child.getFirstName(), child );
 					child.setParent( parent );
-					session.save( parent );
+					session.persist( parent );
 				}
 		);
 

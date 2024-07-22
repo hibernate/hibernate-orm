@@ -47,7 +47,7 @@ public class SubQueryImplicitJoinReferenceTest {
         entity.setData( "Test" );
 
         // Persist the entities
-        scope.inTransaction( session -> { session.save( revEntity ); session.save( entity ); } );
+        scope.inTransaction( session -> { session.persist( revEntity ); session.persist( entity ); } );
     }
 
     @Test

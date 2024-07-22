@@ -166,14 +166,14 @@ public class ManyToOnePropertyAccessByFieldTest {
 		Office office = buildOffice( "second office", "Fab", officePhones );
 		scope.inTransaction(
 				session -> {
-					session.save( office );
+					session.persist( office );
 				}
 		);
 
 		scope.inTransaction(
 				session -> {
 					Office result = session.find( Office.class, office.id );
-					session.delete( result );
+					session.remove( result );
 				}
 		);
 
@@ -242,7 +242,7 @@ public class ManyToOnePropertyAccessByFieldTest {
 					Office office = buildOffice( "second office", "Fab", officePhones );
 
 
-					session.save( office );
+					session.persist( office );
 
 					List<Office> offices = new ArrayList<>();
 					offices.add( office );

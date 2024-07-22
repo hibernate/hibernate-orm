@@ -81,7 +81,7 @@
                      column="routeID"
                      unique="false"
                      not-null="false"
-                     cascade="merge,refresh,persist,save-update,save-update"
+                     cascade="merge,refresh,persist,save-update"
                      lazy="false"/>
     </class>
 

@@ -42,7 +42,7 @@ public class EmbeddableWithPluralAttributeTest {
 					B b = B.buildB();
 					a.b = b;
 
-					session.save( a );
+					session.persist( a );
 				}
 		);
 	}

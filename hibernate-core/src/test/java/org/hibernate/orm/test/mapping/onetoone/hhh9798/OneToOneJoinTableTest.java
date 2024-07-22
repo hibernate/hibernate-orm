@@ -34,13 +34,13 @@ public class OneToOneJoinTableTest {
 						Transaction tx = session.beginTransaction();
 
 						Item someItem = new Item( "Some Item" );
-						session.save( someItem );
+						session.persist( someItem );
 
 						Shipment shipment1 = new Shipment( someItem );
-						session.save( shipment1 );
+						session.persist( shipment1 );
 
 						Shipment shipment2 = new Shipment( someItem );
-						session.save( shipment2 );
+						session.persist( shipment2 );
 
 						tx.commit();
 

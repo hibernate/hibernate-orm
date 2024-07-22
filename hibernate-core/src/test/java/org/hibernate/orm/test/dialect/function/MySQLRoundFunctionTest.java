@@ -41,7 +41,7 @@ public class MySQLRoundFunctionTest extends BaseCoreFunctionalTestCase {
 		product.setPrice( new BigDecimal( 1.298 ) );
 		Session s=openSession();
 		Transaction tx=s.beginTransaction();
-		s.save( product );
+		s.persist( product );
 		tx.commit();
 		s.close();
 		s=openSession();

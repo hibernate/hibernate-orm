@@ -57,7 +57,7 @@ public class AltibaseFunctionsTest {
 					}
 					person.setBinaryData( session.getLobHelper().createBlob(arry) );
 					person.setComments( session.getLobHelper().createClob("blahblah") );
-					session.save( person );
+					session.persist( person );
 				}
 		);
 	}

@@ -76,7 +76,7 @@ public class CustomSqlSchemaResolvingIdentityTest {
 
 		scope.inTransaction( session -> {
 			CustomEntity entity = session.find( CustomEntity.class, _entitty.id );
-			session.delete( entity );
+			session.remove( entity );
 		} );
 
 		scope.inTransaction( session -> {

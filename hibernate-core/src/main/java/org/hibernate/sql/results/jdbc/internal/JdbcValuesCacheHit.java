@@ -20,6 +20,7 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
  * An {@link AbstractJdbcValues} implementation for cases where we had a cache hit.
  *
  * @author Steve Ebersole
+ * @author Réda Housni Alaoui
  */
 public class JdbcValuesCacheHit extends AbstractJdbcValues {
 	private List<?> cachedResults;
@@ -238,6 +239,11 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 		else {
 			return ( (Object[]) row )[valueIndexesToCacheIndexes[valueIndex]];
 		}
+	}
+
+	@Override
+	public void finishSuccessfulProcessing(SharedSessionContractImplementor session) {
+		// No-op
 	}
 
 	@Override

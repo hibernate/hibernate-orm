@@ -31,6 +31,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * ResultsConsumer for creating a List of results
  *
  * @author Steve Ebersole
+ * @author Réda Housni Alaoui
  */
 public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 	private static final ListResultsConsumer<?> NEVER_DE_DUP_CONSUMER = new ListResultsConsumer<>( UniqueSemantic.NEVER );
@@ -210,6 +211,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 
 			rowReader.finishUp( rowProcessingState );
 			jdbcValuesSourceProcessingState.finishUp( readRows > 1 );
+			jdbcValues.finishSuccessfulProcessing( session );
 
 			//noinspection unchecked
 			final ResultListTransformer<R> resultListTransformer =

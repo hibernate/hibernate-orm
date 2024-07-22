@@ -20,6 +20,7 @@ import org.hibernate.sql.results.spi.RowReader;
  * {@link ScrollableResultsImpl} and {@link FetchingScrollableResultsImpl}
  *
  * @author Steve Ebersole
+ * @author Réda Housni Alaoui
  */
 public abstract class AbstractScrollableResults<R> implements ScrollableResultsImplementor<R> {
 	private final JdbcValues jdbcValues;
@@ -98,6 +99,7 @@ public abstract class AbstractScrollableResults<R> implements ScrollableResultsI
 		}
 
 		rowReader.finishUp( rowProcessingState );
+		jdbcValues.finishSuccessfulProcessing( persistenceContext );
 		jdbcValues.finishUp( persistenceContext );
 
 		getPersistenceContext().getJdbcCoordinator().afterStatementExecution();

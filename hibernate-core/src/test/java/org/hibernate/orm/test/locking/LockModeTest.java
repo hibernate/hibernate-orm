@@ -69,7 +69,9 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	@BeforeEach
 	public void prepareTest() throws Exception {
 		doInHibernate( this::sessionFactory, session -> {
-			id = (Long) session.save( new A( "it" ) );
+			A a = new A( "it" );
+			session.persist( a );
+			id = a.getId();
 		} );
 	}
 

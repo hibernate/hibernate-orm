@@ -37,8 +37,8 @@ public abstract class AbstractManyToManyAssociationClassTest {
 				session -> {
 					user = new User( "user" );
 					group = new Group( "group" );
-					session.save( user );
-					session.save( group );
+					session.persist( user );
+					session.persist( group );
 					membership = createMembership( "membership" );
 					addMembership( user, group, membership );
 				}
@@ -219,8 +219,8 @@ public abstract class AbstractManyToManyAssociationClassTest {
 	public void testDeleteDetached(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.delete( user );
-					session.delete( group );
+					session.remove( user );
+					session.remove( group );
 				}
 		);
 

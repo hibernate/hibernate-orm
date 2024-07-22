@@ -95,7 +95,7 @@ public class OneToOneLinkTest {
 					assertTrue( Hibernate.isInitialized( e.getPerson() ) );
 					assertTrue( Hibernate.isInitialized( e.getPerson().getCustomer() ) );
 					assertNotNull( e.getPerson().getCustomer() );
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}

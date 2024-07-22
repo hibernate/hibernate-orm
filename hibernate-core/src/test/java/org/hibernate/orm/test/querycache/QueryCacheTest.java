@@ -30,8 +30,8 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.Type;
 
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -92,7 +92,7 @@ public class QueryCacheTest {
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5426")
+	@JiraKey("HHH-5426")
 	public void testInvalidationFromBulkHQL(SessionFactoryScope scope) {
 		scope.getSessionFactory().getCache().evictQueryRegions();
 		scope.getSessionFactory().getStatistics().clear();
@@ -132,7 +132,7 @@ public class QueryCacheTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "JBPAPP-4224")
+	@JiraKey("JBPAPP-4224")
 	public void testHitCacheInSameSession(SessionFactoryScope scope) {
 		scope.getSessionFactory().getCache().evictQueryRegions();
 		scope.getSessionFactory().getStatistics().clear();
@@ -180,7 +180,7 @@ public class QueryCacheTest {
 		scope.inTransaction(
 				session -> {
 					for ( Object obj : list ) {
-						session.delete( obj );
+						session.remove( obj );
 					}
 				}
 		);
@@ -206,7 +206,7 @@ public class QueryCacheTest {
 					Item i = new Item();
 					i.setName( "widget" );
 					i.setDescription( "A really top-quality, full-featured widget." );
-					session.save( i );
+					session.persist( i );
 				}
 		);
 
@@ -335,7 +335,7 @@ public class QueryCacheTest {
 					session.createQuery( queryString ).setCacheable( true ).list();
 					Item i = session.get( Item.class, item.getId() );
 
-					session.delete( i );
+					session.remove( i );
 				}
 		);
 
@@ -376,7 +376,7 @@ public class QueryCacheTest {
 				session -> {
 					item.setName( "widget" );
 					item.setDescription( "A really top-quality, full-featured widget." );
-					session.save( item );
+					session.persist( item );
 				}
 		);
 
@@ -386,7 +386,7 @@ public class QueryCacheTest {
 					assertEquals( 1, result.size() );
 					Item i = session.get( Item.class, item.getId() );
 					assertEquals( "widget", i.getName() );
-					session.delete( i );
+					session.remove( i );
 				}
 		);
 	}
@@ -405,7 +405,7 @@ public class QueryCacheTest {
 					session.createQuery( queryString ).setCacheable( true ).list();
 					item.setName( "widget" );
 					item.setDescription( "A really top-quality, full-featured widget." );
-					session.save( item );
+					session.persist( item );
 				}
 		);
 
@@ -513,7 +513,7 @@ public class QueryCacheTest {
 					assertEquals( 3, qs.getCacheMissCount() );
 					assertEquals( 3, qs.getCachePutCount() );
 
-					session.delete( i );
+					session.remove( i );
 				}
 		);
 
@@ -525,7 +525,7 @@ public class QueryCacheTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4459")
+	@JiraKey("HHH-4459")
 	public void testGetByCompositeId(SessionFactoryScope scope) {
 
 		scope.inSession(
@@ -578,7 +578,7 @@ public class QueryCacheTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-3051")
+	@JiraKey("HHH-3051")
 	public void testScalarSQLQuery(SessionFactoryScope scope) {
 		scope.getSessionFactory().getCache().evictQueryRegions();
 		scope.getSessionFactory().getStatistics().clear();
@@ -634,7 +634,7 @@ public class QueryCacheTest {
 //	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9962")
+	@JiraKey("HHH-9962")
 	/* Test courtesy of Giambattista Bloisi */
 	public void testDelayedLoad(SessionFactoryScope scope) throws InterruptedException, ExecutionException {
 		DelayLoadOperations interceptor = new DelayLoadOperations();
@@ -731,6 +731,17 @@ public class QueryCacheTest {
 
 		@Override
 		public boolean onLoad(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) {
+			onLoad();
+			return true;
+		}
+
+		@Override
+		public boolean onLoad(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types){
+			onLoad();
+			return true;
+		}
+
+		private void onLoad() {
 			// Synchronize load and update activities
 			try {
 				if ( waitLatch != null ) {
@@ -744,8 +755,9 @@ public class QueryCacheTest {
 				Thread.currentThread().interrupt();
 				throw new RuntimeException( e );
 			}
-			return true;
 		}
+
+
 
 		public void blockOnLoad() {
 			blockLatch = new CountDownLatch( 1 );

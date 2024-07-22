@@ -41,7 +41,7 @@ public class BidirectionalOneToManyCascadeTest {
 		scope.inTransaction(
 				session -> {
 					List parents = session.createQuery( "from Parent" ).list();
-					parents.forEach( parent -> session.delete( parent ) );
+					parents.forEach( parent -> session.remove( parent ) );
 				}
 		);
 	}
@@ -58,7 +58,7 @@ public class BidirectionalOneToManyCascadeTest {
 					Child child = new Child();
 					child.setParent( parent );
 					parent.setChildren( Collections.singleton( child ) );
-					session.save( parent );
+					session.persist( parent );
 				}
 		);
 
@@ -84,7 +84,7 @@ public class BidirectionalOneToManyCascadeTest {
 					Child child = new Child();
 					child.setParent( parent );
 					parent.setChildren( Collections.singleton( child ) );
-					session.save( child );
+					session.persist( child );
 				}
 		);
 
@@ -111,7 +111,7 @@ public class BidirectionalOneToManyCascadeTest {
 					DeleteOrphanChild child = new DeleteOrphanChild();
 					child.setParent( parent );
 					parent.setDeleteOrphanChildren( Collections.singleton( child ) );
-					session.save( parent );
+					session.persist( parent );
 				}
 		);
 
@@ -137,7 +137,7 @@ public class BidirectionalOneToManyCascadeTest {
 					DeleteOrphanChild child = new DeleteOrphanChild();
 					child.setParent( parent );
 					parent.setDeleteOrphanChildren( Collections.singleton( child ) );
-					session.save( child );
+					session.persist( child );
 				}
 		);
 

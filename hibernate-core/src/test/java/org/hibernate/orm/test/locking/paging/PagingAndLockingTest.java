@@ -39,10 +39,10 @@ public class PagingAndLockingTest extends BaseCoreFunctionalTestCase {
 	public void createTestData() {
 		inTransaction(
 				session -> {
-					session.save( new Door( 1, "Front" ) );
-					session.save( new Door( 2, "Back" ) );
-					session.save( new Door( 3, "Garage" ) );
-					session.save( new Door( 4, "French" ) );
+					session.persist( new Door( 1, "Front" ) );
+					session.persist( new Door( 2, "Back" ) );
+					session.persist( new Door( 3, "Garage" ) );
+					session.persist( new Door( 4, "French" ) );
 
 				}
 		);

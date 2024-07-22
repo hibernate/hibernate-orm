@@ -69,21 +69,21 @@ public class HHH3949Test {
             Person person1 = new Person( "Johnny" );
             Person person2 = new Person( "Ricky" );
             Person person3 = new Person( "Rosy" );
-            s.save( person1 );
-            s.save( person2 );
-            s.save( person3 );
+            s.persist( person1 );
+            s.persist( person2 );
+            s.persist( person3 );
 
             Vehicle vehicle1 = new Vehicle( "Volkswagen Golf" );
             vehicle1.setDriver( person1 );
-            s.save( vehicle1 );
+            s.persist( vehicle1 );
 
             Vehicle vehicle2 = new Vehicle( "Subaru Impreza" );
             vehicle2.setDriver( person2 );
             person2.setVehicle( vehicle2 );
-            s.save( vehicle2 );
+            s.persist( vehicle2 );
 
             Vehicle vehicle3 = new Vehicle( "Renault Truck" );
-            s.save( vehicle3 );
+            s.persist( vehicle3 );
         } );
     }
 

@@ -56,7 +56,7 @@ public class BasicAttributesLazyGroupTest {
 					Review review = new Review();
 					review.setComment( "My first review" );
 					review.setRating( Rating.ONE );
-					session.save( review );
+					session.persist( review );
 				}
 		);
 	}

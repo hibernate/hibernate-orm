@@ -76,9 +76,9 @@ public class LazyOneToOneTest {
 					assertEquals( p.getEmployee().getEmployments().size(), 1 );
 					Person p2 =  session.get( Person.class, "Emmanuel" );
 					assertNull( p2.getEmployee() );
-					session.delete( p2 );
-					session.delete( old );
-					session.delete( p );
+					session.remove( p2 );
+					session.remove( old );
+					session.remove( p );
 				}
 		);
 	}

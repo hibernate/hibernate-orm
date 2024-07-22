@@ -80,7 +80,7 @@ public class EmbeddableAsParameterTest {
 							33
 
 					);
-					session.save( person );
+					session.persist( person );
 				} );
 	}
 

@@ -47,7 +47,9 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 	public void testOnlyCustomStrategy() {
 		Session session = openSession();
 		session.beginTransaction();
-		Long id = (Long) session.save( new Thing( INITIAL_NAME ) );
+		Thing t = new Thing( INITIAL_NAME );
+		session.persist( t );
+		Long id = t.getId();
 		session.getTransaction().commit();
 		session.close();
 
@@ -69,7 +71,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		session.beginTransaction();
 		thing = session.get( Thing.class, id );
 		assertEquals( SUBSEQUENT_NAME, thing.getName() );
-		session.delete( thing );
+		session.remove( thing );
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -78,7 +80,9 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 	public void testCustomStrategyWithFlushInterceptor() {
 		Session session = openSession();
 		session.beginTransaction();
-		Long id = (Long) session.save( new Thing( INITIAL_NAME ) );
+		Thing t = new Thing( INITIAL_NAME );
+		session.persist( t );
+		Long id = t.getId();
 		session.getTransaction().commit();
 		session.close();
 
@@ -101,7 +105,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		session.beginTransaction();
 		thing = session.get( Thing.class, id );
 		assertEquals( SUBSEQUENT_NAME, thing.getName() );
-		session.delete( thing );
+		session.remove( thing );
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -110,7 +114,9 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 	public void testOnlyCustomStrategyConsultedOnNonDirty() {
 		Session session = openSession();
 		session.beginTransaction();
-		Long id = (Long) session.save( new Thing( INITIAL_NAME ) );
+		Thing t = new Thing( INITIAL_NAME );
+		session.persist( t );
+		Long id = t.getId();
 		session.getTransaction().commit();
 		session.close();
 

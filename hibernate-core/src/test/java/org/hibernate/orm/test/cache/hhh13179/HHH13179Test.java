@@ -6,164 +6,125 @@
  */
 package org.hibernate.orm.test.cache.hhh13179;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.CacheRegionStatistics;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
  * Check that second level caching works for hbm mapped joined subclass inheritance structures
  */
-@TestForIssue(jiraKey = "HHH-13179")
-public class HHH13179Test extends BaseCoreFunctionalTestCase {
-
-	// Add your entities here.
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				JoinedSubclassPerson.class,
-				JoinedSubclassUIPerson.class,
-				JoinedSubclassNonUIPerson.class,
-				UnionSubclassPerson.class,
-				UnionSubclassUIPerson.class,
-				UnionSubclassNonUIPerson.class,
-				DiscriminatorSubclassPerson.class,
-				DiscriminatorSubclassUIPerson.class,
-				DiscriminatorSubclassNonUIPerson.class
-		};
-	}
-
-	// If you use *.hbm.xml mappings, instead of annotations, add the mappings here.
-	@Override
-	protected String[] getMappings() {
-		return new String[] {
+@JiraKey("HHH-13179")
+@DomainModel(
+		xmlMappings = {
 				"org/hibernate/orm/test/cache/hhh13179/JoinedSubclassPerson.hbm.xml",
 				"org/hibernate/orm/test/cache/hhh13179/UnionSubclassPerson.hbm.xml",
 				"org/hibernate/orm/test/cache/hhh13179/DiscriminatorSubclassPerson.hbm.xml"
-		};
-	}
+		}
+)
+@SessionFactory(generateStatistics = true)
+public class HHH13179Test {
 
-	// If those mappings reside somewhere other than resources/org/hibernate/test, change this.
-	@Override
-	protected String getBaseForMappings() {
-		return "";
-	}
-
-	// Add in any settings that are specific to your test.  See resources/hibernate.properties for the defaults.
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-
-		configuration.setProperty( AvailableSettings.SHOW_SQL, true );
-		configuration.setProperty( AvailableSettings.FORMAT_SQL, true );
-		configuration.setProperty( AvailableSettings.GENERATE_STATISTICS, true );
-	}
 
 	@Test
-	public void testJoinedSubclassCaching() {
+	public void testJoinedSubclassCaching(SessionFactoryScope scope) {
 		// BaseCoreFunctionalTestCase automatically creates the SessionFactory and provides the Session.
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-
 		String regionName = JoinedSubclassPerson.class.getName();
+		scope.inTransaction(
+				session -> {
+					CacheRegionStatistics cacheRegionStatistics = session.getSessionFactory()
+							.getStatistics()
+							.getCacheRegionStatistics(
+									regionName );
+					assertThat( cacheRegionStatistics.getPutCount() ).as( "Cache put should be 0" ).isEqualTo( 0 );
 
-		// sanity check
-		CacheRegionStatistics cacheRegionStatistics = s.getSessionFactory().getStatistics().getCacheRegionStatistics(
-				regionName );
-		Assert.assertEquals( "Cache put should be 0", 0, cacheRegionStatistics.getPutCount() );
+					JoinedSubclassPerson person1 = new JoinedSubclassUIPerson();
+					person1.setOid( 1L );
+					session.persist( person1 );
+				}
+		);
 
-		JoinedSubclassPerson person1 = new JoinedSubclassUIPerson();
-		person1.setOid( 1L );
-		s.save( person1 );
+		scope.inTransaction(
+				session -> {
+					JoinedSubclassPerson person2 = session.get( JoinedSubclassPerson.class, 1L );
 
-		tx.commit();
+					CacheRegionStatistics cacheRegionStatistics = session.getSessionFactory()
+							.getStatistics()
+							.getCacheRegionStatistics( regionName );
+					assertThat( cacheRegionStatistics.getHitCount() ).as( "Cache hit should be 1" ).isEqualTo( 1 );
+					assertThat( cacheRegionStatistics.getPutCount() ).as( "Cache put should be 1" ).isEqualTo( 1 );
+				}
+		);
 
-		s.close();
-
-		s = openSession();
-		tx = s.beginTransaction();
-
-		JoinedSubclassPerson person2 = s.get( JoinedSubclassPerson.class, 1L );
-
-		cacheRegionStatistics = s.getSessionFactory().getStatistics().getCacheRegionStatistics( regionName );
-		Assert.assertEquals( "Cache hit should be 1", 1, cacheRegionStatistics.getHitCount() );
-		Assert.assertEquals( "Cache put should be 1", 1, cacheRegionStatistics.getPutCount() );
-
-		tx.commit();
-		s.close();
 	}
 
 	@Test
-	public void testUnionSubclassCaching() {
+	public void testUnionSubclassCaching(SessionFactoryScope scope) {
 		// BaseCoreFunctionalTestCase automatically creates the SessionFactory and provides the Session.
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-
 		String regionName = UnionSubclassPerson.class.getName();
+		scope.inTransaction(
+				session -> {
+					CacheRegionStatistics cacheRegionStatistics = session.getSessionFactory()
+							.getStatistics()
+							.getCacheRegionStatistics(
+									regionName );
+					assertThat( cacheRegionStatistics.getPutCount() ).as( "Cache put should be 0" ).isEqualTo( 0 );
 
-		// sanity check
-		CacheRegionStatistics cacheRegionStatistics = s.getSessionFactory().getStatistics().getCacheRegionStatistics(
-				regionName );
-		Assert.assertEquals( "Cache put should be 0", 0, cacheRegionStatistics.getPutCount() );
+					UnionSubclassPerson person1 = new UnionSubclassUIPerson();
+					person1.setOid( 1L );
+					session.persist( person1 );
+				}
+		);
 
-		UnionSubclassPerson person1 = new UnionSubclassUIPerson();
-		person1.setOid( 1L );
-		s.save( person1 );
+		scope.inTransaction(
+				session -> {
+					UnionSubclassPerson person2 = session.get( UnionSubclassPerson.class, 1L );
 
-		tx.commit();
-
-		s.close();
-
-		s = openSession();
-		tx = s.beginTransaction();
-
-		UnionSubclassPerson person2 = s.get( UnionSubclassPerson.class, 1L );
-
-		cacheRegionStatistics = s.getSessionFactory().getStatistics().getCacheRegionStatistics( regionName );
-		Assert.assertEquals( "Cache hit should be 1", 1, cacheRegionStatistics.getHitCount() );
-		Assert.assertEquals( "Cache put should be 1", 1, cacheRegionStatistics.getPutCount() );
-
-		tx.commit();
-		s.close();
+					CacheRegionStatistics cacheRegionStatistics = session.getSessionFactory()
+							.getStatistics()
+							.getCacheRegionStatistics( regionName );
+					assertThat( cacheRegionStatistics.getHitCount() ).as( "Cache hit should be 1" ).isEqualTo( 1 );
+					assertThat( cacheRegionStatistics.getPutCount() ).as( "Cache put should be 1" ).isEqualTo( 1 );
+				}
+		);
 	}
 
 	@Test
-	public void testDiscriminatorSubclassCaching() {
+	public void testDiscriminatorSubclassCaching(SessionFactoryScope scope) {
 		// BaseCoreFunctionalTestCase automatically creates the SessionFactory and provides the Session.
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-
 		String regionName = DiscriminatorSubclassPerson.class.getName();
 
-		// sanity check
-		CacheRegionStatistics cacheRegionStatistics = s.getSessionFactory().getStatistics().getCacheRegionStatistics(
-				regionName );
-		Assert.assertEquals( "Cache put should be 0", 0, cacheRegionStatistics.getPutCount() );
+		scope.inTransaction(
+				session -> {
+					CacheRegionStatistics cacheRegionStatistics = session.getSessionFactory()
+							.getStatistics()
+							.getCacheRegionStatistics(
+									regionName );
+					assertThat( cacheRegionStatistics.getPutCount() ).as( "Cache put should be 0" ).isEqualTo( 0 );
 
-		DiscriminatorSubclassPerson person1 = new DiscriminatorSubclassUIPerson();
-		person1.setOid( 1L );
-		s.save( person1 );
+					DiscriminatorSubclassPerson person1 = new DiscriminatorSubclassUIPerson();
+					person1.setOid( 1L );
+					session.persist( person1 );
 
-		tx.commit();
+				}
+		);
 
-		s.close();
 
-		s = openSession();
-		tx = s.beginTransaction();
+		scope.inTransaction(
+				session -> {
+					session.get( DiscriminatorSubclassPerson.class, 1L );
 
-		DiscriminatorSubclassPerson person2 = s.get( DiscriminatorSubclassPerson.class, 1L );
-
-		cacheRegionStatistics = s.getSessionFactory().getStatistics().getCacheRegionStatistics( regionName );
-		Assert.assertEquals( "Cache hit should be 1", 1, cacheRegionStatistics.getHitCount() );
-		Assert.assertEquals( "Cache put should be 1", 1, cacheRegionStatistics.getPutCount() );
-
-		tx.commit();
-		s.close();
+					CacheRegionStatistics cacheRegionStatistics = session.getSessionFactory()
+							.getStatistics()
+							.getCacheRegionStatistics( regionName );
+					assertThat( cacheRegionStatistics.getHitCount() ).as( "Cache hit should be 1" ).isEqualTo( 1 );
+					assertThat( cacheRegionStatistics.getPutCount() ).as( "Cache put should be 1" ).isEqualTo( 1 );
+				}
+		);
 	}
 }

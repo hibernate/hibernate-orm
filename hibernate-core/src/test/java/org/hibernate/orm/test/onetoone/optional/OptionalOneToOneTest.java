@@ -37,7 +37,7 @@ public class OptionalOneToOneTest {
 				session -> {
 					Person me = new Person();
 					me.name = "Steve";
-					session.save( me );
+					session.persist( me );
 					return me.name;
 				}
 		);
@@ -46,7 +46,7 @@ public class OptionalOneToOneTest {
 				session -> {
 					Person me = session.load( Person.class, name );
 					assertNull( me.address );
-					session.delete( me );
+					session.remove( me );
 				}
 		);
 	}

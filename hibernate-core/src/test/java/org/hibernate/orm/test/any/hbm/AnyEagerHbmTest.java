@@ -39,7 +39,7 @@ public class AnyEagerHbmTest {
 					final PropertySet propertySet = new PropertySet( "string" );
 					final Property property = new StringProperty( "name", "Alex" );
 					propertySet.setSomeProperty( property );
-					session.save( propertySet );
+					session.persist( propertySet );
 				}
 		);
 	}

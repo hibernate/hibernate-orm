@@ -69,10 +69,10 @@ public class GenericsTest {
 			s = scope.getSessionFactory().openSession();
 			tx = s.beginTransaction();
 			white = s.get( Paper.class, white.getId() );
-			s.delete( white.getType() );
-			s.delete( white.getOwner() );
-			s.delete( white.getValue() );
-			s.delete( white );
+			s.remove( white.getType() );
+			s.remove( white.getOwner() );
+			s.remove( white.getValue() );
+			s.remove( white );
 			tx.commit();
 			//s.close();
 			assertFalse( s.isOpen() );

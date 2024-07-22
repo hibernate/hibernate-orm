@@ -30,9 +30,9 @@ public class BigIntegerSequenceGeneratorTest {
 		scope.inTransaction(
 				(session) -> {
 					Entity entity = new Entity( "BigInteger + sequence #1" );
-					session.save( entity );
+					session.persist( entity );
 					Entity entity2 = new Entity( "BigInteger + sequence #2" );
-					session.save( entity2 );
+					session.persist( entity2 );
 
 					// previously these checks were commented out due to the comment...
 

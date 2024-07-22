@@ -109,12 +109,12 @@ public class LazyBasicFieldAccessTest {
 
         scope.inTransaction( s -> {
             entity.description = "desc1";
-            s.update( entity );
+            LazyEntity merged = s.merge( entity );
 
-            checkDirtyTracking( entity, "description" );
+            checkDirtyTracking( merged, "description" );
 
-            assertEquals( "desc1", entity.description );
-            assertTrue( isPropertyInitialized( entity, "description" ) );
+            assertEquals( "desc1", merged.description );
+            assertTrue( isPropertyInitialized( merged, "description" ) );
         } );
 
         scope.inTransaction( s -> {
@@ -124,7 +124,7 @@ public class LazyBasicFieldAccessTest {
 
         scope.inTransaction( s -> {
             entity.description = "desc2";
-            LazyEntity mergedEntity = (LazyEntity) s.merge( entity );
+            LazyEntity mergedEntity = s.merge( entity );
 
             //Assert.assertFalse( Hibernate.isPropertyInitialized( entity, "description" ) );
             checkDirtyTracking( mergedEntity, "description" );

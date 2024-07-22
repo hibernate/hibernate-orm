@@ -56,7 +56,7 @@ public class RefreshTest {
 				batch.createJob().processingInstructions = "I know you can do it!";
 
 				// write the stuff to the database; at this stage all job.status values are zero
-				session.save( batch );
+				session.persist( batch );
 			}
 		);
 

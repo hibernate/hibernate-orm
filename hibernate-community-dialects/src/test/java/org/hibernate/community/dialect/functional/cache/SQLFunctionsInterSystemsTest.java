@@ -57,7 +57,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testDialectSQLFunctions() throws Exception {
+	public void testDialectSQLFunctions() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 
@@ -66,7 +66,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		simple.setAddress("Simple Address");
 		simple.setPay(new Float(45.8));
 		simple.setCount(2);
-		s.save( simple );
+		s.persist( simple );
 
 		// Test to make sure allocating a specified object operates correctly.
 		assertTrue(
@@ -88,7 +88,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		assertEquals("round(45.8) result was incorrect ", new Float(46), ( (Object[]) rset.get(0) )[3] );
 
 		simple.setPay(new Float(-45.8));
-		s.update(simple);
+		simple = s.merge(simple);
 
 		// Test type conversions while using nested functions (Float to Int).
 		rset = s.createQuery( "select abs(round(s.pay,0)) from Simple s" ).list();
@@ -101,7 +101,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 
 		// Test the oracle standard NVL funtion as a test of multi-param functions...
 		simple.setPay(null);
-		s.update(simple);
+		simple = s.merge(simple);
 		Double value = (Double) s.createQuery("select mod( nvl(s.pay, 5000), 2 ) from Simple as s where s.id = 10").list().get(0);
 		assertTrue( 0 == value.intValue() );
 
@@ -111,17 +111,17 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 				.get(0);
 		assertTrue( 0 == value.intValue() );
 
-        s.delete(simple);
+        s.remove(simple);
 		t.commit();
 		s.close();
 	}
 
-	public void testSetProperties() throws Exception {
+	public void testSetProperties()  {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Simple simple = new Simple( Long.valueOf( 10 ) );
 		simple.setName("Simple 1");
-		s.save( simple );
+		s.persist( simple );
 		Query q = s.createQuery("from Simple s where s.name=:name and s.count=:count");
 		q.setProperties(simple);
 		assertTrue( q.list().get(0)==simple );
@@ -145,18 +145,18 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		q = s.createQuery("from Simple s where s.name in (:stuff)");
 		q.setProperties(single);
 		assertTrue( q.list().get(0)==simple );
-		s.delete(simple);
+		s.remove(simple);
 		t.commit();
 		s.close();
 	}
 
-	public void testBroken() throws Exception {
+	public void testBroken() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Broken b = new Fixed();
 		b.setId( Long.valueOf( 123 ));
 		b.setOtherId("foobar");
-		s.save(b);
+		s.persist(b);
 		s.flush();
 		b.setTimestamp( new Date() );
 		t.commit();
@@ -164,52 +164,52 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.update(b);
+		b = s.merge(b);
 		t.commit();
 		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
-		b = (Broken) s.load( Broken.class, b );
+		b = s.getReference( Broken.class, b );
 		t.commit();
 		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete(b);
+		s.remove(b);
 		t.commit();
 		s.close();
 	}
 
-	public void testNothinToUpdate() throws Exception {
+	public void testNothinToUpdate() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Simple simple = new Simple( Long.valueOf(10) );
 		simple.setName("Simple 1");
-		s.save( simple );
+		s.persist( simple );
 		t.commit();
 		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.update( simple );
+		simple = s.merge( simple );
 		t.commit();
 		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.update( simple );
-		s.delete(simple);
+		simple = s.merge( simple );
+		s.remove(simple);
 		t.commit();
 		s.close();
 	}
 
-	public void testCachedQuery() throws Exception {
+	public void testCachedQuery() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Simple simple = new Simple( Long.valueOf(10) );
 		simple.setName("Simple 1");
-		s.save( simple );
+		s.persist( simple );
 		t.commit();
 		s.close();
 
@@ -248,8 +248,8 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.update( simple );
-		s.delete(simple);
+		simple = s.merge( simple );
+		s.remove(simple);
 		t.commit();
 		s.close();
 
@@ -264,12 +264,12 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	public void testCachedQueryRegion() throws Exception {
+	public void testCachedQueryRegion() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Simple simple = new Simple( Long.valueOf(10) );
 		simple.setName("Simple 1");
-		s.save( simple );
+		s.persist( simple );
 		t.commit();
 		s.close();
 
@@ -300,8 +300,8 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.update( simple );
-		s.delete(simple);
+		simple = s.merge( simple );
+		s.remove(simple);
 		t.commit();
 		s.close();
 
@@ -322,7 +322,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 			Transaction t = s.beginTransaction();
 			Simple simple = new Simple( Long.valueOf( 10 ) );
 			simple.setName( "Simple 1" );
-			s.save( simple );
+			s.persist( simple );
 
 			s.createQuery( "from Simple s where repeat('foo', 3) = 'foofoofoo'" ).list();
 			s.createQuery( "from Simple s where repeat(s.name, 3) = 'foofoofoo'" ).list();
@@ -351,7 +351,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 			other.setName( "Simple 2" );
 			other.setCount( 12 );
 			simple.setOther( other );
-			s.save( other );
+			s.persist( other );
 			//s.find("from Simple s where s.name ## 'cat|rat|bag'");
 			assertTrue(
 					s.createQuery( "from Simple s where upper( s.other.name ) ='SIMPLE 2'" ).list().size() == 1
@@ -373,7 +373,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 			);
 			Simple min = new Simple( Long.valueOf( 30 ) );
 			min.setCount( -1 );
-			s.save( min );
+			s.persist( min );
 
 			assertTrue(
 					s.createQuery( "from Simple s where s.count > ( select min(sim.count) from Simple sim )" )
@@ -447,7 +447,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 			assertTrue( q.list().size() == 1 );
 
 
-			q = s.createQuery( "from Simple s where s.name in (:name_list) and s.count > :count" );
+			q = s.createQuery( "from Simple s where s.name in (:name_list) and s.count > :count", Simple.class );
 			HashSet set = new HashSet();
 			set.add( "Simple 1" );
 			set.add( "foo" );
@@ -460,9 +460,9 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 				sr.get();
 			}
 
-			s.delete( other );
-			s.delete( simple );
-			s.delete( min );
+			s.remove( other );
+			s.remove( simple );
+			s.remove( min );
 			t.commit();
 		}
 
@@ -474,7 +474,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		Blobber b = new Blobber();
 		b.setBlob( s.getLobHelper().createBlob( "foo/bar/baz".getBytes() ) );
 		b.setClob( s.getLobHelper().createClob("foo/bar/baz") );
-		s.save(b);
+		s.persist(b);
 		//s.refresh(b);
 		//assertTrue( b.getClob() instanceof ClobImpl );
 		s.flush();
@@ -489,9 +489,9 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		b = (Blobber) s.load( Blobber.class, new Integer( b.getId() ) );
+		b = s.getReference( Blobber.class, b.getId() );
 		Blobber b2 = new Blobber();
-		s.save(b2);
+		s.persist(b2);
 		b2.setBlob( b.getBlob() );
 		b.setBlob(null);
 		//assertTrue( b.getClob().getSubString(1, 3).equals("fab") );
@@ -503,7 +503,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		b = (Blobber) s.load( Blobber.class, new Integer( b.getId() ) );
+		b = s.getReference( Blobber.class, b.getId() );
 		b.setClob( s.getLobHelper().createClob("xcvfxvc xcvbx cvbx cvbx cvbxcvbxcvbxcvb") );
 		s.flush();
 		s.getTransaction().commit();
@@ -511,7 +511,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		b = (Blobber) s.load( Blobber.class, new Integer( b.getId() ) );
+		b = s.getReference( Blobber.class, b.getId() );
 		assertTrue( b.getClob().getSubString(1, 7).equals("xcvfxvc") );
 		//b.getClob().setString(5, "1234567890");
 		s.flush();
@@ -519,7 +519,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	public void testSqlFunctionAsAlias() throws Exception {
+	public void testSqlFunctionAsAlias() {
 		String functionName = locateAppropriateDialectFunctionNameForAliasTest();
 		if (functionName == null) {
             log.info("Dialect does not list any no-arg functions");
@@ -533,7 +533,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		Transaction t = s.beginTransaction();
 		Simple simple = new Simple( Long.valueOf(10) );
 		simple.setName("Simple 1");
-		s.save( simple );
+		s.persist( simple );
 		t.commit();
 		s.close();
 
@@ -542,7 +542,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		List result = s.createQuery( query ).list();
 		assertTrue( result.size() == 1 );
 		assertTrue(result.get(0) instanceof Simple);
-		s.delete( result.get(0) );
+		s.remove( result.get(0) );
 		t.commit();
 		s.close();
 	}
@@ -564,7 +564,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		Transaction t = s.beginTransaction();
 		Simple simple = new Simple( Long.valueOf(10) );
 		simple.setName("Simple 1");
-		s.save( simple );
+		s.persist( simple );
 		t.commit();
 		s.close();
 
@@ -588,7 +588,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		t = s.beginTransaction();
 		Simple simple2 = new Simple( Long.valueOf(12) );
 		simple2.setCount(133);
-		s.save( simple2 );
+		s.persist( simple2 );
 		t.commit();
 		s.close();
 
@@ -606,7 +606,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		list = q.setCacheable(true).list();
 		assertTrue( list.size()==2 );
 		for ( Object o : list ) {
-			s.delete( o );
+			s.remove( o );
 		}
 		t.commit();
 		s.close();
@@ -676,7 +676,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
         object.setDateText( "1977-07-03" );
         object.setDate1( testvalue );
         object.setDate3( testvalue3 );
-        s.save( object );
+        s.persist( object );
         s.getTransaction().commit();
         s.close();
 

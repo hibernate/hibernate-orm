@@ -85,7 +85,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 					assertEquals( dpOrig.getDescription(), dp.getDescription() );
 					assertEquals( dpOrig.getX(), dp.getX() );
 					assertEquals( dpOrig.getY(), dp.getY() );
-					session.delete( dp );
+					session.remove( dp );
 				}
 		);
 	}
@@ -132,7 +132,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 					assertEquals( dpOrig.getDescription(), dp.getDescription() );
 					assertEquals( dpOrig.getX(), dp.getX() );
 					assertEquals( dpOrig.getY(), dp.getY() );
-					session.delete( dp );
+					session.remove( dp );
 				}
 		);
 	}
@@ -219,7 +219,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 					assertEquals( dpOrig.getDescription(), dp.getDescription() );
 					assertEquals( dpOrig.getX(), dp.getX() );
 					assertEquals( dpOrig.getY(), dp.getY() );
-					session.delete( dp );
+					session.remove( dp );
 				}
 		);
 	}
@@ -309,7 +309,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 					assertEquals( dpOrig.getDescription(), dp.getDescription() );
 					assertEquals( dpOrig.getX(), dp.getX() );
 					assertEquals( dpOrig.getY(), dp.getY() );
-					session.delete( dp );
+					session.remove( dp );
 				}
 		);
 	}
@@ -348,7 +348,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 					assertEquals( dpOrig.getDescription(), dp.getDescription() );
 					assertEquals( dpOrig.getX(), dp.getX() );
 					assertEquals( dpOrig.getY(), dp.getY() );
-					session.delete( dp );
+					session.remove( dp );
 				}
 		);
 	}
@@ -387,7 +387,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 					assertEquals( "changed", dp.getDescription() );
 					assertEquals( dpOrig.getX(), dp.getX() );
 					assertEquals( dpOrig.getY(), dp.getY() );
-					session.delete( dp );
+					session.remove( dp );
 				}
 		);
 	}
@@ -436,7 +436,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 					assertEquals( dpOrig.getDescription(), dp.getDescription() );
 					assertEquals( dpOrig.getX(), dp.getX() );
 					assertEquals( dpOrig.getY(), dp.getY() );
-					session.delete( dp );
+					session.remove( dp );
 				}
 		);
 	}
@@ -483,7 +483,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 					assertEquals( dpOrig.getDescription(), dp.getDescription() );
 					assertEquals( dpOrig.getX(), dp.getX() );
 					assertEquals( dpOrig.getY(), dp.getY() );
-					session.delete( dp );
+					session.remove( dp );
 				}
 		);
 	}
@@ -528,7 +528,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 					assertEquals( "changed", dp.getDescription() );
 					assertEquals( dpOrig.getX(), dp.getX() );
 					assertEquals( dpOrig.getY(), dp.getY() );
-					session.delete( dp );
+					session.remove( dp );
 				}
 		);
 	}
@@ -573,7 +573,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 					assertEquals( "changed", dp.getDescription() );
 					assertEquals( dpOrig.getX(), dp.getX() );
 					assertEquals( dpOrig.getY(), dp.getY() );
-					session.delete( dp );
+					session.remove( dp );
 				}
 		);
 	}
@@ -616,7 +616,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 					assertEquals( dpOrig.getDescription(), dp.getDescription() );
 					assertEquals( dpOrig.getX(), dp.getX() );
 					assertEquals( dpOrig.getY(), dp.getY() );
-					session.delete( dp );
+					session.remove( dp );
 				}
 		);
 	}
@@ -658,7 +658,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 					assertEquals( "changed", dp.getDescription() );
 					assertEquals( dpOrig.getX(), dp.getX() );
 					assertEquals( dpOrig.getY(), dp.getY() );
-					session.delete( dp );
+					session.remove( dp );
 				}
 		);
 	}
@@ -701,7 +701,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 					assertEquals( dpOrig.getDescription(), dp.getDescription() );
 					assertEquals( dpOrig.getX(), dp.getX() );
 					assertEquals( dpOrig.getY(), dp.getY() );
-					session.delete( dp );
+					session.remove( dp );
 				}
 		);
 	}
@@ -743,7 +743,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 					assertEquals( "changed", dp.getDescription() );
 					assertEquals( dpOrig.getX(), dp.getX() );
 					assertEquals( dpOrig.getY(), dp.getY() );
-					session.delete( dp );
+					session.remove( dp );
 				}
 		);
 	}
@@ -803,7 +803,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		scope.inTransaction(
 				session -> {
 					DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
-					session.delete( dp );
+					session.remove( dp );
 				}
 		);
 	}
@@ -863,13 +863,13 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		scope.inTransaction(
 				session -> {
 					DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
-					session.delete( dp );
+					session.remove( dp );
 				}
 		);
 	}
 
 	@Test
-	public void testReadOnlyChangedEvictedUpdate(SessionFactoryScope scope) {
+	public void testReadOnlyChangedEvictedMerge(SessionFactoryScope scope) {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE, scope );
 
 		scope.inSession(
@@ -888,9 +888,9 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 						assertEquals( "changed", dp.getDescription() );
 						session.evict( dp );
 						assertFalse( session.contains( dp ) );
-						session.update( dp );
-						checkReadOnly( session, dp, false );
-						assertEquals( "changed", dp.getDescription() );
+						DataPoint merged = session.merge( dp );
+						assertEquals( false, session.isReadOnly( merged ));
+						assertEquals( "changed", merged.getDescription() );
 						session.flush();
 						session.getTransaction().commit();
 					}
@@ -910,7 +910,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 					assertEquals( dpOrig.getId(), dp.getId() );
 					assertEquals( dpOrig.getX(), dp.getX() );
 					assertEquals( dpOrig.getY(), dp.getY() );
-					session.delete( dp );
+					session.remove( dp );
 				}
 		);
 	}
@@ -953,7 +953,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 					assertEquals( "changed", dp.getDescription() );
 					assertEquals( dpOrig.getX(), dp.getX() );
 					assertEquals( dpOrig.getY(), dp.getY() );
-					session.delete( dp );
+					session.remove( dp );
 				}
 		);
 	}
@@ -999,13 +999,13 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 					assertEquals( "changed", dp.getDescription() );
 					assertEquals( dpOrig.getX(), dp.getX() );
 					assertEquals( dpOrig.getY(), dp.getY() );
-					session.delete( dp );
+					session.remove( dp );
 				}
 		);
 	}
 
 	@Test
-	public void testReadOnlyModifiedUpdate(SessionFactoryScope scope) {
+	public void testReadOnlyModifiedMerge(SessionFactoryScope scope) {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE, scope );
 
 		scope.inSession(
@@ -1023,7 +1023,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 						assertTrue( Hibernate.isInitialized( dp ) );
 						assertEquals( "changed", dp.getDescription() );
 						checkReadOnly( session, dp, true );
-						session.update( dp );
+						session.merge( dp );
 						session.flush();
 						session.getTransaction().commit();
 					}
@@ -1042,7 +1042,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 					assertEquals( dpOrig.getDescription(), dp.getDescription() );
 					assertEquals( dpOrig.getX(), dp.getX() );
 					assertEquals( dpOrig.getY(), dp.getY() );
-					session.delete( dp );
+					session.remove( dp );
 				}
 		);
 	}
@@ -1062,7 +1062,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 						session.setReadOnly( dp, true );
 						checkReadOnly( session, dp, true );
 						assertFalse( Hibernate.isInitialized( dp ) );
-						session.delete( dp );
+						session.remove( dp );
 						session.flush();
 						session.getTransaction().commit();
 					}
@@ -1091,7 +1091,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		dp.setDescription( "original" );
 		dp.setX( new BigDecimal( 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
 		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-		s.save( dp );
+		s.persist( dp );
 		t.commit();
 		s.close();
 
@@ -1121,7 +1121,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		t = s.beginTransaction();
 		dp = s.get( DataPoint.class, dp.getId() );
 		assertEquals( "original", dp.getDescription() );
-		s.delete( dp );
+		s.remove( dp );
 		t.commit();
 		s.close();
 	}
@@ -1135,7 +1135,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		dp.setDescription( "original" );
 		dp.setX( new BigDecimal( 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
 		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-		s.save( dp );
+		s.persist( dp );
 		t.commit();
 		s.close();
 
@@ -1151,7 +1151,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.setCacheMode( CacheMode.IGNORE );
 		t = s.beginTransaction();
 		dp = s.get( DataPoint.class, dp.getId() );
-		s.delete( dp );
+		s.remove( dp );
 		s.flush();
 		try {
 			s.refresh( dp );
@@ -1171,7 +1171,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		DataPoint dpProxyInit = s.load( DataPoint.class, dp.getId() );
 		assertEquals( "original", dp.getDescription() );
 		assertEquals( "original", dpProxyInit.getDescription() );
-		s.delete( dpProxyInit );
+		s.remove( dpProxyInit );
 		t.commit();
 		s.close();
 
@@ -1218,7 +1218,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		dp.setDescription( "original" );
 		dp.setX( new BigDecimal( 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
 		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-		s.save( dp );
+		s.persist( dp );
 		t.commit();
 		s.close();
 
@@ -1248,7 +1248,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		t = s.beginTransaction();
 		dp = s.get( DataPoint.class, dp.getId() );
 		assertEquals( "original", dp.getDescription() );
-		s.delete( dp );
+		s.remove( dp );
 		t.commit();
 		s.close();
 	}
@@ -1297,7 +1297,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		assertEquals( dpOrig.getDescription(), dp.getDescription() );
 		assertEquals( dpOrig.getX(), dp.getX() );
 		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
+		s.remove( dp );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -1347,7 +1347,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		assertEquals( dpOrig.getDescription(), dp.getDescription() );
 		assertEquals( dpOrig.getX(), dp.getX() );
 		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
+		s.remove( dp );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -1397,7 +1397,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		assertEquals( dpOrig.getDescription(), dp.getDescription() );
 		assertEquals( dpOrig.getX(), dp.getX() );
 		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
+		s.remove( dp );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -1448,7 +1448,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		assertEquals( dpOrig.getDescription(), dp.getDescription() );
 		assertEquals( dpOrig.getX(), dp.getX() );
 		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
+		s.remove( dp );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -1495,7 +1495,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		assertEquals( dpOrig.getDescription(), dp.getDescription() );
 		assertEquals( dpOrig.getX(), dp.getX() );
 		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
+		s.remove( dp );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -1539,7 +1539,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		assertEquals( dpOrig.getDescription(), dp.getDescription() );
 		assertEquals( dpOrig.getX(), dp.getX() );
 		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
+		s.remove( dp );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -1583,7 +1583,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		assertEquals( "changed", dp.getDescription() );
 		assertEquals( dpOrig.getX(), dp.getX() );
 		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
+		s.remove( dp );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -1633,7 +1633,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		assertEquals( "changed again", dp.getDescription() );
 		assertEquals( dpOrig.getX(), dp.getX() );
 		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
+		s.remove( dp );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -1664,7 +1664,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		finally {
 			s = openSession( scope );
 			s.beginTransaction();
-			s.delete( dp );
+			s.remove( dp );
 			s.getTransaction().commit();
 			s.close();
 		}
@@ -1698,7 +1698,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		finally {
 			s = openSession( scope );
 			s.beginTransaction();
-			s.delete( dp );
+			s.remove( dp );
 			s.getTransaction().commit();
 			s.close();
 		}
@@ -1730,7 +1730,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 			assertFalse( ( (HibernateProxy) dp ).getHibernateLazyInitializer().isReadOnlySettingAvailable() );
 		}
 		finally {
-			s.delete( dp );
+			s.remove( dp );
 			s.getTransaction().commit();
 			s.close();
 		}
@@ -1760,7 +1760,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 			assertFalse( ( (HibernateProxy) dp ).getHibernateLazyInitializer().isReadOnlySettingAvailable() );
 		}
 		finally {
-			s.delete( dp );
+			s.remove( dp );
 			s.getTransaction().commit();
 			s.close();
 		}
@@ -1792,7 +1792,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		finally {
 			s = openSession( scope );
 			s.beginTransaction();
-			s.delete( dp );
+			s.remove( dp );
 			s.getTransaction().commit();
 			s.close();
 		}
@@ -1826,7 +1826,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		finally {
 			s = openSession( scope );
 			s.beginTransaction();
-			s.delete( dp );
+			s.remove( dp );
 			s.getTransaction().commit();
 			s.close();
 		}
@@ -1861,7 +1861,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		finally {
 			s = openSession( scope );
 			s.beginTransaction();
-			s.delete( dp );
+			s.remove( dp );
 			s.getTransaction().commit();
 			s.close();
 		}
@@ -1893,7 +1893,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 			assertFalse( ( (HibernateProxy) dp ).getHibernateLazyInitializer().isReadOnlySettingAvailable() );
 		}
 		finally {
-			s.delete( dp );
+			s.remove( dp );
 			s.getTransaction().commit();
 			s.close();
 		}
@@ -1923,7 +1923,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 			assertFalse( ( (HibernateProxy) dp ).getHibernateLazyInitializer().isReadOnlySettingAvailable() );
 		}
 		finally {
-			s.delete( dp );
+			s.remove( dp );
 			s.getTransaction().commit();
 			s.close();
 		}
@@ -1941,7 +1941,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		dp.setX( new BigDecimal( 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
 		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
 		dp.setDescription( "original" );
-		s.save( dp );
+		s.persist( dp );
 		s.getTransaction().commit();
 		s.close();
 		return dp;

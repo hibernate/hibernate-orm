@@ -45,7 +45,7 @@ public class SharedRegionTest extends BaseNonConfigCoreFunctionalTestCase {
 		// create a StateCodes
 		Session s = openSession();
 		s.beginTransaction();
-		s.save( new StateCodes( 1 ) );
+		s.persist( new StateCodes( 1 ) );
 		s.getTransaction().commit();
 		s.close();
 

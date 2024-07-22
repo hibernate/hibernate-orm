@@ -95,10 +95,10 @@ public class JoinedInheritanceEagerTest {
 					EntityD entityD = session.get( EntityD.class, 2L );
 					EntityC entityC = session.get( EntityC.class, 1L );
 
-					session.delete( entityD );
-					session.delete( entityC );
-					session.delete( entityA );
-					session.delete( entityB );
+					session.remove( entityD );
+					session.remove( entityC );
+					session.remove( entityA );
+					session.remove( entityB );
 				}
 		);
 	}

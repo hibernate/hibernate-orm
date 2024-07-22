@@ -32,19 +32,19 @@ public class SubselectTest extends BaseCoreFunctionalTestCase {
 		Item item = new Item();
 		item.setName("widget");
 		item.setId(itemId);
-		s.save(item);
+		s.persist(item);
 		
 		Bid bid1 = new Bid();
 		bid1.setAmount(100.0);
 		bid1.setItemId(itemId);
 		bid1.setId(1);
-		s.save(bid1);
+		s.persist(bid1);
 		
 		Bid bid2 = new Bid();
 		bid2.setAmount(200.0);
 		bid2.setItemId(itemId);
 		bid2.setId(2);
-		s.save(bid2);
+		s.persist(bid2);
 		
 		//Because we use 'synchronize' annotation, this query should trigger session flush
 		Query query = s.createQuery("from HighestBid b where b.name = :name");

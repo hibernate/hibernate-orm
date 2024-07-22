@@ -39,7 +39,7 @@ public class SimpleOpsTest extends AbstractOperationTestCase {
 					SimpleEntity entity = new SimpleEntity();
 					entity.setId( id );
 					entity.setName( "name" );
-					session.save( entity );
+					session.persist( entity );
 				}
 		);
 
@@ -98,7 +98,7 @@ public class SimpleOpsTest extends AbstractOperationTestCase {
 					SimpleEntity entity = session.get( SimpleEntity.class, id );
 					assertThat( entity.getId(), is( 1L ) );
 					assertThat( entity.getName(), is( "another new name" ) );
-					session.delete( entity );
+					session.remove( entity );
 				}
 		);
 

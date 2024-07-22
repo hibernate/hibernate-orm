@@ -75,7 +75,7 @@ public class UnconstrainedTest {
 					Person p = session.get( Person.class, "gavin" );
 					assertTrue( Hibernate.isInitialized( p.getEmployee() ) );
 					assertNotNull( p.getEmployee() );
-					session.delete( p );
+					session.remove( p );
 				}
 		);
 	}
@@ -121,7 +121,7 @@ public class UnconstrainedTest {
 //							.uniqueResult();
 					assertTrue( Hibernate.isInitialized( p.getEmployee() ) );
 					assertNotNull( p.getEmployee() );
-					session.delete( p );
+					session.remove( p );
 				}
 		);
 	}
@@ -142,7 +142,7 @@ public class UnconstrainedTest {
 					Person p = session.get( Person.class, "gavin" );
 					assertTrue( Hibernate.isInitialized( p.getEmployee() ) );
 					assertNotNull( p.getEmployee() );
-					session.delete( p );
+					session.remove( p );
 				}
 		);
 	}

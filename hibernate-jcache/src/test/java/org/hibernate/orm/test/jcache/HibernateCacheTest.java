@@ -93,7 +93,7 @@ public class HibernateCacheTest extends BaseFunctionalTest {
 		// cleanup
 		s = sessionFactory().openSession();
 		t = s.beginTransaction();
-		s.delete( i );
+		s.remove( i );
 		t.commit();
 		s.close();
 	}
@@ -115,7 +115,7 @@ public class HibernateCacheTest extends BaseFunctionalTest {
 		VersionedItem item = new VersionedItem();
 		item.setName( "steve" );
 		item.setDescription( "steve's item" );
-		s.save( item );
+		s.persist( item );
 		txn.commit();
 		s.close();
 
@@ -127,7 +127,7 @@ public class HibernateCacheTest extends BaseFunctionalTest {
 		try {
 			s = sessionFactory().openSession();
 			txn = s.beginTransaction();
-			s.update( item );
+			s.merge( item );
 			txn.commit();
 			s.close();
 			fail( "expected stale write to fail" );
@@ -191,8 +191,8 @@ public class HibernateCacheTest extends BaseFunctionalTest {
 		// cleanup
 		s = sessionFactory().openSession();
 		txn = s.beginTransaction();
-		item = s.load( VersionedItem.class, item.getId() );
-		s.delete( item );
+		item = s.getReference( VersionedItem.class, item.getId() );
+		s.remove( item );
 		txn.commit();
 		s.close();
 

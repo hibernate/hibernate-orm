@@ -63,8 +63,8 @@ public class DerivedIdentityEmbeddedIdParentIdClassTest {
 					d = session.get( Dependent.class, dId );
 					assertNotNull( d.emp );
 					assertEquals( e.empId.firstName, d.emp.empId.firstName );
-					session.delete( d );
-					session.delete( d.emp );
+					session.remove( d );
+					session.remove( d.emp );
 				}
 		);
 	}

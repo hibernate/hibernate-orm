@@ -63,8 +63,8 @@ public class DerivedIdentityIdClassParentIdClassDepTest {
 					assertNotNull( d.emp );
 					assertEquals( e.firstName, d.emp.firstName );
 
-					session.delete( d );
-					session.delete( d.emp );
+					session.remove( d );
+					session.remove( d.emp );
 				}
 		);
 	}

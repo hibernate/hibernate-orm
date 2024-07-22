@@ -76,8 +76,8 @@ public class DbVersionTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete( s.load( User.class, steve.getId() ) );
-		s.delete( s.load( Group.class, admin.getId() ) );
+		s.remove( s.load( User.class, steve.getId() ) );
+		s.remove( s.load( Group.class, admin.getId() ) );
 		t.commit();
 		s.close();
 	}
@@ -120,8 +120,8 @@ public class DbVersionTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete( s.load( User.class, steve.getId() ) );
-		s.delete( s.load( Permission.class, perm.getId() ) );
+		s.remove( s.load( User.class, steve.getId() ) );
+		s.remove( s.load( Permission.class, perm.getId() ) );
 		t.commit();
 		s.close();
 	}

@@ -51,7 +51,7 @@ public class EmbeddableIntegratorTest {
 				Investor myInv = getInvestor();
 				myInv.setId( 1L );
 
-				sess.save( myInv );
+				sess.persist( myInv );
 				sess.flush();
 				fail( "A JDBCException expected" );
 
@@ -85,7 +85,7 @@ public class EmbeddableIntegratorTest {
 				Investor myInv = getInvestor();
 				myInv.setId( 2L );
 
-				sess.save( myInv );
+				sess.persist( myInv );
 				sess.flush();
 				sess.clear();
 

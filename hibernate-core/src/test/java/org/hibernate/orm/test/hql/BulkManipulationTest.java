@@ -149,7 +149,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		Truck truck = new Truck();
 		truck.setVin( "123t" );
 		truck.setOwner( "Steve" );
-		s.save( truck );
+		s.persist( truck );
 
 		// manually flush the session to ensure the insert happens
 		s.flush();
@@ -596,7 +596,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		s.save( zoo );
+		s.persist( zoo );
 		t.commit();
 		s.close();
 
@@ -633,7 +633,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		Transaction t = s.beginTransaction();
 
 		IntegerVersioned entity = new IntegerVersioned( "int-vers" );
-		s.save( entity );
+		s.persist( entity );
 		s.createQuery( "select id, name, version from IntegerVersioned" ).list();
 		t.commit();
 		s.close();
@@ -676,7 +676,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		Transaction t = s.beginTransaction();
 
 		TimestampVersioned entity = new TimestampVersioned( "int-vers" );
-		s.save( entity );
+		s.persist( entity );
 		s.createQuery( "select id, name, version from TimestampVersioned" ).list();
 		t.commit();
 		s.close();
@@ -772,12 +772,12 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		Transaction t = s.beginTransaction();
 		Human joe = new Human();
 		joe.setName( new Name( "Joe", 'Q', "Public" ) );
-		s.save( joe );
+		s.persist( joe );
 		Human doll = new Human();
 		doll.setName( new Name( "Kyu", 'P', "Doll" ) );
 		doll.setFriends( new ArrayList() );
 		doll.getFriends().add( joe );
-		s.save( doll );
+		s.persist( doll );
 		t.commit();
 		s.close();
 
@@ -792,8 +792,8 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 				")";
 		int count = s.createQuery( updateQryString ).executeUpdate();
 		assertEquals( 1, count );
-		s.delete( doll );
-		s.delete( joe );
+		s.remove( doll );
+		s.remove( joe );
 		t.commit();
 		s.close();
 
@@ -806,7 +806,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		other.setName( "many-to-many-association" );
 		entity.getManyToManyAssociatedEntities().add( other );
 		entity.addAssociation( "one-to-many-association" );
-		s.save( entity );
+		s.persist( entity );
 		t.commit();
 		s.close();
 
@@ -834,8 +834,8 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 			count = s.createQuery( updateQryString ).executeUpdate();
 			assertEquals( 1, count );
 		}
-		s.delete( entity.getManyToManyAssociatedEntities().iterator().next() );
-		s.delete( entity );
+		s.remove( entity.getManyToManyAssociatedEntities().iterator().next() );
+		s.remove( entity );
 		t.commit();
 		s.close();
 	}
@@ -846,7 +846,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		Transaction t = s.beginTransaction();
 
 		IntegerVersioned entity = new IntegerVersioned( "int-vers" );
-		s.save( entity );
+		s.persist( entity );
 		t.commit();
 		s.close();
 
@@ -862,7 +862,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		entity = (IntegerVersioned) s.load( IntegerVersioned.class, entity.getId() );
 		assertEquals( "version not incremented", initialVersion + 1, entity.getVersion() );
 
-		s.delete( entity );
+		s.remove( entity );
 		t.commit();
 		s.close();
 	}
@@ -873,7 +873,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		Transaction t = s.beginTransaction();
 
 		TimestampVersioned entity = new TimestampVersioned( "ts-vers" );
-		s.save( entity );
+		s.persist( entity );
 		t.commit();
 		s.close();
 
@@ -897,7 +897,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		entity = (TimestampVersioned) s.load( TimestampVersioned.class, entity.getId() );
 		assertTrue( "version not incremented", entity.getVersion().after( initialVersion ) );
 
-		s.delete( entity );
+		s.remove( entity );
 		t.commit();
 		s.close();
 	}
@@ -910,7 +910,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		Human human = new Human();
 		human.setName( new Name( "Stevee", 'X', "Ebersole" ) );
 
-		s.save( human );
+		s.persist( human );
 		s.flush();
 
 		t.commit();
@@ -1172,15 +1172,15 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		owner.addAssociation( "assoc-1" );
 		owner.addAssociation( "assoc-2" );
 		owner.addAssociation( "assoc-3" );
-		s.save( owner );
+		s.persist( owner );
 		SimpleEntityWithAssociation owner2 = new SimpleEntityWithAssociation( "myEntity-2" );
 		owner2.addAssociation( "assoc-1" );
 		owner2.addAssociation( "assoc-2" );
 		owner2.addAssociation( "assoc-3" );
 		owner2.addAssociation( "assoc-4" );
-		s.save( owner2 );
+		s.persist( owner2 );
 		SimpleEntityWithAssociation owner3 = new SimpleEntityWithAssociation( "myEntity-3" );
-		s.save( owner3 );
+		s.persist( owner3 );
 		s.getTransaction().commit();
 		s.close();
 
@@ -1422,13 +1422,13 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		crop.setName( "crop1" );
 		farm1.setCrops( new ArrayList() );
 		farm1.getCrops().add( crop );
-		s.save( farm1 );
+		s.persist( farm1 );
 
 		Farm farm2 = new Farm();
 		farm2.setName( "farm2" );
 		farm2.setCrops( new ArrayList() );
 		farm2.getCrops().add( crop );
-		s.save( farm2 );
+		s.persist( farm2 );
 
 		s.flush();
 
@@ -1455,13 +1455,13 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 
 		Human friend = new Human();
 		friend.setName( new Name( "Bob", 'B', "Bobbert" ) );
-		s.save( friend );
+		s.persist( friend );
 
 		Human brett = new Human();
 		brett.setName( new Name( "Brett", 'E', "Meyer" ) );
 		brett.setFriends( new ArrayList() );
 		brett.getFriends().add( friend );
-		s.save( brett );
+		s.persist( brett );
 
 		s.flush();
 
@@ -1489,7 +1489,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 					farm.setAccreditations( new HashSet<>() );
 					farm.getAccreditations().add( Farm.Accreditation.ORGANIC );
 					farm.getAccreditations().add( Farm.Accreditation.SUSTAINABLE );
-					s.save( farm );
+					s.persist( farm );
 				}
 		);
 
@@ -1539,7 +1539,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 					Human human = new Human();
 					human.setNickNames( new TreeSet() );
 					human.getNickNames().add( "Johnny" );
-					s.save( human );
+					s.persist( human );
 				}
 		);
 
@@ -1612,20 +1612,20 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 						catepillar.setMother( butterfly );
 						butterfly.addOffspring( catepillar );
 
-						s.save( frog );
-						s.save( polliwog );
-						s.save( butterfly );
-						s.save( catepillar );
+						s.persist( frog );
+						s.persist( polliwog );
+						s.persist( butterfly );
+						s.persist( catepillar );
 
 						Dog dog = new Dog();
 						dog.setBodyWeight( 200 );
 						dog.setDescription( "dog" );
-						s.save( dog );
+						s.persist( dog );
 
 						Cat cat = new Cat();
 						cat.setBodyWeight( 100 );
 						cat.setDescription( "cat" );
-						s.save( cat );
+						s.persist( cat );
 
 						zoo = new Zoo();
 						zoo.setName( "Zoo" );
@@ -1645,36 +1645,36 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 						addr.setPostalCode( "2000" );
 						pettingZoo.setAddress( addr );
 
-						s.save( zoo );
-						s.save( pettingZoo );
+						s.persist( zoo );
+						s.persist( pettingZoo );
 
 						Joiner joiner = new Joiner();
 						joiner.setJoinedName( "joined-name" );
 						joiner.setName( "name" );
-						s.save( joiner );
+						s.persist( joiner );
 
 						Car car = new Car();
 						car.setVin( "123c" );
 						car.setOwner( "Kirsten" );
-						s.save( car );
+						s.persist( car );
 
 						Truck truck = new Truck();
 						truck.setVin( "123t" );
 						truck.setOwner( "Steve" );
-						s.save( truck );
+						s.persist( truck );
 
 						SUV suv = new SUV();
 						suv.setVin( "123s" );
 						suv.setOwner( "Joe" );
-						s.save( suv );
+						s.persist( suv );
 
 						Pickup pickup = new Pickup();
 						pickup.setVin( "123p" );
 						pickup.setOwner( "Cecelia" );
-						s.save( pickup );
+						s.persist( pickup );
 
 						BooleanLiteralEntity bool = new BooleanLiteralEntity();
-						s.save( bool );
+						s.persist( bool );
 					}
 			);
 		}

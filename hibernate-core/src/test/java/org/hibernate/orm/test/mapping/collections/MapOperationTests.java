@@ -63,7 +63,7 @@ public class MapOperationTests {
 					entityContainingMaps.addComponentByBasic( "the stuff", new SimpleComponent( "the stuff - 1", "the stuff - 2" ) );
 					entityContainingMaps.addComponentByBasic( "the other stuff", new SimpleComponent( "the other stuff - 1", "the other stuff - 2" ) );
 
-					session.save( entityContainingMaps );
+					session.persist( entityContainingMaps );
 				}
 		);
 	}
@@ -76,7 +76,7 @@ public class MapOperationTests {
 		scope.inTransaction(
 				session -> {
 					final EntityOfMaps entity = session.load( EntityOfMaps.class, 1 );
-					session.delete( entity );
+					session.remove( entity );
 				}
 		);
 
@@ -110,7 +110,7 @@ public class MapOperationTests {
 							EntityOfMaps.class
 					).getSingleResult();
 
-					session.delete( entity );
+					session.remove( entity );
 				}
 		);
 

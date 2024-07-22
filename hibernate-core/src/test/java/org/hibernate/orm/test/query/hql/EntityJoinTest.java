@@ -286,11 +286,11 @@ public class EntityJoinTest {
         scope.inTransaction(
                 (session) -> {
                     final Customer customer = new Customer( 1, "Acme" );
-                    session.save( customer );
-                    session.save( new User( 1, "steve", customer ) );
-                    session.save( new User( 2, "jane" ) );
-                    session.save( new FinancialRecord( 1, customer, "steve" ) );
-                    session.save( new FinancialRecord( 2, customer, null ) );
+                    session.persist( customer );
+                    session.persist( new User( 1, "steve", customer ) );
+                    session.persist( new User( 2, "jane" ) );
+                    session.persist( new FinancialRecord( 1, customer, "steve" ) );
+                    session.persist( new FinancialRecord( 2, customer, null ) );
                 }
         );
     }

@@ -82,9 +82,9 @@ public class EntityGraphFunctionalTests {
 					final User buttercup = new User( "Buttercup", "wishee" );
 					final User humperdink = new User( "Humperdink", "buffoon" );
 
-					session.save( wesley );
-					session.save( buttercup );
-					session.save( humperdink );
+					session.persist( wesley );
+					session.persist( buttercup );
+					session.persist( humperdink );
 
 					final Issue flameSpurt = new Issue( 1, "Flame Spurt", wesley );
 					final Issue lightningSand = new Issue( 2, "Lightning Sand", buttercup );
@@ -94,9 +94,9 @@ public class EntityGraphFunctionalTests {
 					lightningSand.setAssignee( wesley );
 					rous.setAssignee( wesley );
 
-					session.save( flameSpurt );
-					session.save( lightningSand );
-					session.save( rous );
+					session.persist( flameSpurt );
+					session.persist( lightningSand );
+					session.persist( rous );
 
 					flameSpurt.addComment( "There is a popping sound preceding each", wesley );
 					rous.addComment( "I don't think they exist", wesley );

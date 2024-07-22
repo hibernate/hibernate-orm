@@ -47,7 +47,7 @@ public class EnumIdTest {
 				session -> {
 					PlanetCheatSheet mercuryFromDb = session.get( PlanetCheatSheet.class, mercury.getPlanet() );
 					assertNotNull( mercuryFromDb );
-					session.delete( mercuryFromDb );
+					session.remove( mercuryFromDb );
 				}
 		);
 

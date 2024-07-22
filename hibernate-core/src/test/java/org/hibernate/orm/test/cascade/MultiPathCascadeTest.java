@@ -51,7 +51,7 @@ public class MultiPathCascadeTest {
 
 		scope.inTransaction(
 				session ->
-						session.save( a )
+						session.persist( a )
 		);
 
 		// modify detached entity
@@ -73,7 +73,7 @@ public class MultiPathCascadeTest {
 
 		scope.inTransaction(
 				session ->
-						session.save( a )
+						session.persist( a )
 		);
 
 		// modify detached entity
@@ -91,29 +91,6 @@ public class MultiPathCascadeTest {
 	}
 
 	@Test
-	public void testMultiPathUpdateModifiedDetached(SessionFactoryScope scope) {
-		// persist a simple A in the database
-
-		A a = new A();
-		a.setData( "Anna" );
-
-		scope.inTransaction(
-				session ->
-						session.save( a )
-		);
-
-		// modify detached entity
-		modifyEntity( a );
-
-		scope.inTransaction(
-				session ->
-						session.update( a )
-		);
-
-		verifyModifications( scope, a.getId() );
-	}
-
-	@Test
 	public void testMultiPathGetAndModify(SessionFactoryScope scope) {
 		// persist a simple A in the database
 
@@ -122,7 +99,7 @@ public class MultiPathCascadeTest {
 
 		scope.inTransaction(
 				session ->
-						session.save( a )
+						session.persist( a )
 		);
 
 		scope.inTransaction(
@@ -145,7 +122,7 @@ public class MultiPathCascadeTest {
 
 		scope.inTransaction(
 				session ->
-						session.save( a )
+						session.persist( a )
 		);
 
 		// modify detached entity
@@ -196,7 +173,7 @@ public class MultiPathCascadeTest {
 
 		scope.inTransaction(
 				session ->
-						session.save( a )
+						session.persist( a )
 		);
 
 		// modify detached entity
@@ -246,7 +223,7 @@ public class MultiPathCascadeTest {
 
 		scope.inTransaction(
 				session ->
-						session.save( a )
+						session.persist( a )
 		);
 
 		// modify detached entity

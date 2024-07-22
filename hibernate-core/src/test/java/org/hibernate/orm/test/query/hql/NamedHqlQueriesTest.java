@@ -61,8 +61,8 @@ public class NamedHqlQueriesTest {
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.save( GOD_OF_WAR );
-					session.save( THE_LAST_OF_US );
+					session.persist( GOD_OF_WAR );
+					session.persist( THE_LAST_OF_US );
 				} );
 	}
 
@@ -71,7 +71,7 @@ public class NamedHqlQueriesTest {
 		scope.inTransaction(
 				session -> session.createQuery( "from VideoGame vg", VideoGame.class )
 						.list()
-						.forEach(session::delete)
+						.forEach(session::remove)
 		);
 	}
 

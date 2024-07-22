@@ -199,12 +199,12 @@ public class SmokeTests {
 					simpleEntity.setName( "Fab" );
 					simpleEntity.setGender2( Gender.MALE );
 					simpleEntity.setComponent( new Component( "a1", "a2" ) );
-					session.save( simpleEntity );
+					session.persist( simpleEntity );
 					OtherEntity otherEntity = new OtherEntity();
 					otherEntity.setId( 2 );
 					otherEntity.setName( "Bar" );
 					otherEntity.setSimpleEntity( simpleEntity );
-					session.save( otherEntity );
+					session.persist( otherEntity );
 				}
 		);
 	}

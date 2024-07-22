@@ -107,7 +107,7 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 		Session session = openSession();
 		session.beginTransaction();
 		Person p = new Person( "Abe", "Lincoln" );
-		session.save( p );
+		session.persist( p );
 		session.getTransaction().commit();
 
 		final Session session2 = openSession();
@@ -144,7 +144,7 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		session.delete( p );
+		session.remove( p );
 		session.getTransaction().commit();
 		session.close();
 	}

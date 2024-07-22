@@ -46,8 +46,8 @@ public class DynamicBatchFetchTestCase {
 
 			IntStream.range( 0, numberOfCountries ).forEach( i -> {
 				Country c = new Country( "Country " + i );
-				session.save( c );
-				session.save( new City( "City " + i, c ) );
+				session.persist( c );
+				session.persist( new City( "City " + i, c ) );
 			} );
 		} );
 

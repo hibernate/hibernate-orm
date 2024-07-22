@@ -59,8 +59,8 @@ public class MapProxySerializationTest {
 			c1.put( "id", 1L );
 			c1.put( "parent", entity );
 
-			s.save( "SimpleEntity", entity );
-			s.save( "ChildEntity", c1 );
+			s.persist( "SimpleEntity", entity );
+			s.persist( "ChildEntity", c1 );
 		} );
 	}
 

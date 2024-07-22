@@ -39,10 +39,10 @@ public class ABCTest {
 		scope.inTransaction(
 				session -> {
 					D d = new D( did );
-					session.save( d );
+					session.persist( d );
 					A a = new A();
 					a.setName( "a" );
-					session.save( a );
+					session.persist( a );
 					d.setReverse( a );
 					d.inverse = a;
 				}
@@ -100,9 +100,9 @@ public class ABCTest {
 					c.setName( "c1" );
 					c.setBName( "a funny name" );
 					c.setD( d );
-					session.save( c );
+					session.persist( c );
 					d.setId( c.getId() );
-					session.save( d );
+					session.persist( d );
 
 					assertThat( session.createQuery( "from C2 c where 1=1 or 1=1" ).list().size(), is( 0 ) );
 				}
@@ -154,8 +154,8 @@ public class ABCTest {
 				session -> {
 					List<C1> bs = session.createQuery( "from B" ).list();
 					for ( C1 b : bs ) {
-						session.delete( b );
-						session.delete( b.getD() );
+						session.remove( b );
+						session.remove( b.getD() );
 					}
 				}
 		);
@@ -168,10 +168,10 @@ public class ABCTest {
 					assertNull( session.get( D.class, 1L ) );
 					D d = new D();
 					d.setId( 1L );
-					session.save( d );
+					session.persist( d );
 					session.flush();
 					assertNotNull( session.get( D.class, 1L ) );
-					session.delete( d );
+					session.remove( d );
 					session.flush();
 				}
 		);

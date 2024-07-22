@@ -36,7 +36,7 @@ public class UpdateEntitiesWithPackageNamesStartingWithKeywordsTest extends Base
 
 			session.getTransaction().begin();
 			try {
-				session.save( entity );
+				session.persist( entity );
 				session.getTransaction().commit();
 			}
 			catch (Exception e) {
@@ -85,7 +85,7 @@ public class UpdateEntitiesWithPackageNamesStartingWithKeywordsTest extends Base
 
 			session.getTransaction().begin();
 			try {
-				session.save( entity );
+				session.persist( entity );
 				session.getTransaction().commit();
 			}
 			catch (Exception e) {

@@ -71,7 +71,7 @@ public class MultiLoadTest {
 				session -> {
 					session.setCacheMode( CacheMode.IGNORE );
 					for ( int i = 1; i <= 60; i++ ) {
-						session.save( new SimpleEntity( i, "Entity #" + i ) );
+						session.persist( new SimpleEntity( i, "Entity #" + i ) );
 					}
 				}
 		);
@@ -122,7 +122,7 @@ public class MultiLoadTest {
 				session -> {
 					// delete one of them (but do not flush)...
 					SimpleEntity s4 = session.load(SimpleEntity.class, 5);
-					session.delete( s4 );
+					session.remove( s4 );
 
 					assertFalse( Hibernate.isInitialized( s4 ) );
 
@@ -142,7 +142,7 @@ public class MultiLoadTest {
 					// delete one of them (but do not flush)...
 					SimpleEntity s4 = session.load( SimpleEntity.class, 5 );
 					Hibernate.initialize( s4 );
-					session.delete( s4 );
+					session.remove( s4 );
 
 					// as a baseline, assert based on how load() handles it
 					SimpleEntity s5 = session.load( SimpleEntity.class, 5 );
@@ -159,7 +159,7 @@ public class MultiLoadTest {
 					// delete one of them (but do not flush)...
 					SimpleEntity s4 = session.load( SimpleEntity.class, 5 );
 					Hibernate.initialize( s4 );
-					session.delete( s4 );
+					session.remove( s4 );
 
 					// and then, assert how get() handles it
 					SimpleEntity s5 = session.get( SimpleEntity.class, 5 );
@@ -176,7 +176,7 @@ public class MultiLoadTest {
 					// delete one of them (but do not flush)...
 					SimpleEntity s4 = session.load( SimpleEntity.class, 5 );
 					Hibernate.initialize( s4 );
-					session.delete( s4 );
+					session.remove( s4 );
 
 					// finally assert how multiLoad handles it
 					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids( 56 ) );
@@ -191,7 +191,7 @@ public class MultiLoadTest {
 		scope.inTransaction(
 				session -> {
 					// delete one of them (but do not flush)...
-					session.delete( session.load( SimpleEntity.class, 5 ) );
+					session.remove( session.load( SimpleEntity.class, 5 ) );
 
 					// and then, assert how get() handles it
 					SimpleEntity s5 = session.get( SimpleEntity.class, 5 );

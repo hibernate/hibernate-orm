@@ -68,7 +68,7 @@ public class CascadeMergeToChildBeforeParentTest {
 		scope.inTransaction(
 				session -> {
 					r.setName( "routeA" );
-					session.save( r );
+					session.persist( r );
 				}
 		);
 
@@ -118,7 +118,7 @@ public class CascadeMergeToChildBeforeParentTest {
 				session -> {
 					r.setName( "routeA" );
 
-					session.save( r );
+					session.persist( r );
 				}
 		);
 
@@ -183,7 +183,7 @@ public class CascadeMergeToChildBeforeParentTest {
 				session -> {
 					r.setName( "routeA" );
 
-					session.save( r );
+					session.persist( r );
 				}
 		);
 

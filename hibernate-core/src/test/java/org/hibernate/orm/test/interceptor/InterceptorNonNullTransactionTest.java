@@ -117,7 +117,7 @@ public class InterceptorNonNullTransactionTest extends BaseJpaOrNativeBootstrapF
 		assertNull( interceptor.afterTransactionCompletionAssertionPassed );
 
 		SimpleEntity entity = new SimpleEntity( "Hello World" );
-		session.save( entity );
+		session.persist( entity );
 
 		interceptor.reset();
 
@@ -155,7 +155,7 @@ public class InterceptorNonNullTransactionTest extends BaseJpaOrNativeBootstrapF
 		assertNull( interceptor.afterTransactionCompletionAssertionPassed );
 
 		SimpleEntity entity = new SimpleEntity( "Hello World" );
-		session.save( entity );
+		session.persist( entity );
 
 		interceptor.reset();
 

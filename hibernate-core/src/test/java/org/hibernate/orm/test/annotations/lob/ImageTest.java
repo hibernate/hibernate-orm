@@ -46,7 +46,7 @@ public class ImageTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		ImageHolder entity = new ImageHolder();
-		s.save(entity);
+		s.persist(entity);
 		s.getTransaction().commit();
 		s.close();
 
@@ -97,11 +97,11 @@ public class ImageTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		entity = (ImageHolder) s.get(ImageHolder.class, entity.getId());
+		entity = s.get( ImageHolder.class, entity.getId());
 		Assert.assertNull( entity.getLongByteArray() );
 		Assert.assertNull( entity.getDog() );
 		Assert.assertNull( entity.getPicByteArray() );
-		s.delete(entity);
+		s.remove(entity);
 		s.getTransaction().commit();
 		s.close();
 	}

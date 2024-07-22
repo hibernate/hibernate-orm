@@ -105,7 +105,7 @@ public class ParentChildWithSameSecondaryTableTest {
 		scope.inTransaction(
 				session -> {
 
-					session.delete( session.get( EntityC.class, 1L ) );
+					session.remove( session.get( EntityC.class, 1L ) );
 				}
 		);
 	}

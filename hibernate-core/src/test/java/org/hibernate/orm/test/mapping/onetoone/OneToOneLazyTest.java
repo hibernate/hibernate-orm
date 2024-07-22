@@ -43,8 +43,8 @@ public class OneToOneLazyTest {
 					Title title = new Title( 1L );
 					Book book = new Book( 2L, title );
 
-					sesison.save( title );
-					sesison.save( book );
+					sesison.persist( title );
+					sesison.persist( book );
 				}
 		);
 	}

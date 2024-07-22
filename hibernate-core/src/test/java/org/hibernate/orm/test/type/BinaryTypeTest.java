@@ -37,7 +37,7 @@ public class BinaryTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 			image.id = 1L;
 			image.content = new byte[] {1, 2, 3};
 
-			s.save( image );
+			s.persist( image );
 			s.getTransaction().commit();
 		}
 		catch (Exception e) {

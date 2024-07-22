@@ -36,18 +36,18 @@ public class OneToOneJoinTableTest {
 		Long id = scope.fromTransaction( s -> {
 			Event childEvent = new Event();
 			childEvent.setDescription( "childEvent" );
-			s.save( childEvent );
+			s.persist( childEvent );
 
 			Event parentEvent = new Event();
 			parentEvent.setDescription( "parentEvent" );
-			s.save( parentEvent );
+			s.persist( parentEvent );
 
 			OtherEntity otherEntity = new OtherEntity();
 			otherEntity.setId( "123" );
-			s.save( otherEntity );
+			s.persist( otherEntity );
 
 			childEvent.setOther( otherEntity );
-			s.save( childEvent );
+			s.persist( childEvent );
 			s.flush();
 
 			// Test updates and deletes

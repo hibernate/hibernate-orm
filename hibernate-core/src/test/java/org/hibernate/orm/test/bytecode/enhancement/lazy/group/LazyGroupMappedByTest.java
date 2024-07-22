@@ -72,7 +72,7 @@ public class LazyGroupMappedByTest {
 					from.setToRelation( to );
 					to.setFromRelation( from );
 
-					session.save( from );
+					session.persist( from );
 					session.flush();
 
 					return from.getId();

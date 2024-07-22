@@ -269,8 +269,8 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( ee );
 		er = ee.getEmployers().iterator().next();
 		assertTrue( "second join non lazy", Hibernate.isInitialized( er ) );
-		s.delete( er );
-		s.delete( ee );
+		s.remove( er );
+		s.remove( ee );
 		tx.commit();
 		s.close();
 	}
@@ -415,8 +415,8 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		er = ee.getEmployers().iterator().next();
 		assertTrue( "second join non lazy", Hibernate.isInitialized( er ) );
 		assertEquals( 1, er.getEmployees().size() );
-		s.delete( er );
-		s.delete( ee );
+		s.remove( er );
+		s.remove( ee );
 		tx.commit();
 		s.close();
 	}
@@ -620,8 +620,8 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		Zone a = new Zone();
 		InspectorPrefixes ip = new InspectorPrefixes( "dgi" );
 		Transaction tx = s.beginTransaction();
-		s.save( a );
-		s.save( ip );
+		s.persist( a );
+		s.persist( ip );
 		ip.getAreas().add( a );
 		tx.commit();
 		s.close();
@@ -631,8 +631,8 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( ip );
 		assertEquals( 1, ip.getAreas().size() );
 		assertEquals( a.getId(), ip.getAreas().get( 0 ).getId() );
-		s.delete( ip );
-		s.delete( ip.getAreas().get( 0 ) );
+		s.remove( ip );
+		s.remove( ip.getAreas().get( 0 ) );
 		tx.commit();
 		s.close();
 	}
@@ -644,8 +644,8 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		InspectorPrefixes ip = new InspectorPrefixes( "dgi" );
 		ip.setName( "Inspector" );
 		Transaction tx = s.beginTransaction();
-		s.save( a );
-		s.save( ip );
+		s.persist( a );
+		s.persist( ip );
 		ip.getDesertedAreas().add( a );
 		tx.commit();
 		s.close();
@@ -655,8 +655,8 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( ip );
 		assertEquals( 1, ip.getDesertedAreas().size() );
 		assertEquals( a.getId(), ip.getDesertedAreas().get( 0 ).getId() );
-		s.delete( ip );
-		s.delete( ip.getDesertedAreas().get( 0 ) );
+		s.remove( ip );
+		s.remove( ip.getDesertedAreas().get( 0 ) );
 		tx.commit();
 		s.close();
 	}

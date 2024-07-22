@@ -29,12 +29,12 @@ public class AbstractCompositeIdTest  {
 
 		scope.inTransaction(
 				session -> {
-					session.save( myInterface );
+					session.persist( myInterface );
 					session.flush();
 
 					session.createQuery( "from MyInterface" ).list();
 
-					session.delete( myInterface );
+					session.remove( myInterface );
 				}
 		);
 

@@ -36,8 +36,8 @@ public class FetchWithRootGraphTest {
 					for ( long i = 0; i < 10; ++i ) {
 						SimpleEntity sim = new SimpleEntity( i, "Entity #" + i );
 						EntityWithReference ref = new EntityWithReference( i, sim );
-						session.save( sim );
-						session.save( ref );
+						session.persist( sim );
+						session.persist( ref );
 					}
 				}
 		);

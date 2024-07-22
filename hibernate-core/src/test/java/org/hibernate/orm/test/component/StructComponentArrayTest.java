@@ -46,7 +46,7 @@ public class StructComponentArrayTest {
 					book.publishers = new Publisher[] { ebookPublisher, paperPublisher };
 					book.labels = List.of( new Label( "kind", "Technical" ), new Label( "level", "Beginner" ) );
 
-					session.save( book );
+					session.persist( book );
 				}
 		);
 	}

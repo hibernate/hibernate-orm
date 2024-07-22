@@ -52,7 +52,7 @@ public class BasicGetLoadAccessTest {
 		// create a row
 		scope.inTransaction(
 				session ->
-						session.save( new User( "steve" ) )
+						session.persist( new User( "steve" ) )
 		);
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

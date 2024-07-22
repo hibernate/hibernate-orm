@@ -70,11 +70,11 @@ public class OneToManyTest {
 					card.getFields().forEach(
 							cardField -> {
 								Key key = cardField.key;
-								session.delete( cardField );
-								session.delete( key );
+								session.remove( cardField );
+								session.remove( key );
 							}
 					);
-					session.delete( card );
+					session.remove( card );
 				}
 		);
 	}

@@ -173,10 +173,10 @@ public class OnDemandLoadWithCollectionInDefaultFetchGroupFalseTest {
     public void cleanup(SessionFactoryScope scope) throws Exception {
         scope.inTransaction( s -> {
             Store store = s.find( Store.class, 1L );
-            s.delete( store );
+            s.remove( store );
 
             Product product= s.find( Product.class, "007" );
-            s.delete( product );
+            s.remove( product );
         } );
     }
 

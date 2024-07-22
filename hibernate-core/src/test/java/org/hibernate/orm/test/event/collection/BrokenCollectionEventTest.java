@@ -73,10 +73,10 @@ public class BrokenCollectionEventTest extends BaseCoreFunctionalTestCase {
 					for ( Iterator it = parents.iterator(); it.hasNext(); ) {
 						ParentWithCollection parent = ( ParentWithCollection ) it.next();
 						parent.clearChildren();
-						s.delete( parent );
+						s.remove( parent );
 					}
 					for ( Iterator it = children.iterator(); it.hasNext(); ) {
-						s.delete( it.next() );
+						s.remove( it.next() );
 					}
 				}
 		);
@@ -101,7 +101,7 @@ public class BrokenCollectionEventTest extends BaseCoreFunctionalTestCase {
 		Transaction tx = s.beginTransaction();
 		Collection oldCollection = parent.getChildren();
 		parent.newChildren( null );
-		s.update( parent );
+		s.merge( parent );
 		tx.commit();
 		s.close();
 		int index = 0;
@@ -271,7 +271,7 @@ public class BrokenCollectionEventTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		ParentWithCollection parent = createParent( parentName );
-		s.save( parent );
+		s.persist( parent );
 		tx.commit();
 		s.close();
 		return parent;
@@ -282,7 +282,7 @@ public class BrokenCollectionEventTest extends BaseCoreFunctionalTestCase {
 		Transaction tx = s.beginTransaction();
 		ParentWithCollection parent = createParent( parentName );
 		parent.setChildren( createCollection() );
-		s.save( parent );
+		s.persist( parent );
 		tx.commit();
 		s.close();
 		return parent;
@@ -294,7 +294,7 @@ public class BrokenCollectionEventTest extends BaseCoreFunctionalTestCase {
 		ParentWithCollection parent = createParent( parentName );
 		parent.setChildren( createCollection() );
 		parent.addChild( ChildName );
-		s.save( parent );
+		s.persist( parent );
 		tx.commit();
 		s.close();
 		return parent;

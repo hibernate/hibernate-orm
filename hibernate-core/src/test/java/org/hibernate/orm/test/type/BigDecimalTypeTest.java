@@ -44,7 +44,7 @@ public class BigDecimalTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 			account.id = 1L;
 			account.balance = balance;
 
-			s.save( account );
+			s.persist( account );
 			s.getTransaction().commit();
 		}
 		catch (Exception e) {

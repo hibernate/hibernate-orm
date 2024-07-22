@@ -49,8 +49,8 @@ public class EntityWithOneBidirectionalJoinTableAssociationTest {
 					Parent parent = new Parent( 1, "Hibernate" );
 					Child child = new Child( 2, parent );
 					child.setName( "Acme" );
-					session.save( parent );
-					session.save( child );
+					session.persist( parent );
+					session.persist( child );
 				} );
 	}
 

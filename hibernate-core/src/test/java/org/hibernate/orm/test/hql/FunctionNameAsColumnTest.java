@@ -118,7 +118,7 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 					EntityWithFunctionAsColumnHolder holder2 = new EntityWithFunctionAsColumnHolder();
 					holder2.getEntityWithArgFunctionAsColumns().add( e2 );
 					holder1.setNextHolder( holder2 );
-					s.save( holder1 );
+					s.persist( holder1 );
 				}
 		);
 
@@ -161,7 +161,7 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 					EntityWithFunctionAsColumnHolder holder2 = new EntityWithFunctionAsColumnHolder();
 					holder2.getEntityWithArgFunctionAsColumns().add( e2 );
 					holder1.setNextHolder( holder2 );
-					s.save( holder1 );
+					s.persist( holder1 );
 				}
 		);
 
@@ -219,7 +219,7 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 					EntityWithFunctionAsColumnHolder holder2 = new EntityWithFunctionAsColumnHolder();
 					holder2.getEntityWithNoArgFunctionAsColumns().add( e2 );
 					holder1.setNextHolder( holder2 );
-					s.save( holder1 );
+					s.persist( holder1 );
 				}
 		);
 
@@ -274,7 +274,7 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 					holder1.getEntityWithNoArgFunctionAsColumns().add( e1 );
 					holder2.getEntityWithNoArgFunctionAsColumns().add( e2 );
 					holder1.setNextHolder( holder2 );
-					s.save( holder1 );
+					s.persist( holder1 );
 				}
 		);
 
@@ -333,7 +333,7 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 					EntityWithFunctionAsColumnHolder holder2 = new EntityWithFunctionAsColumnHolder();
 					holder2.getEntityWithNoArgFunctionAsColumns().add( e2 );
 					holder1.setNextHolder( holder2 );
-					s.save( holder1 );
+					s.persist( holder1 );
 				}
 		);
 

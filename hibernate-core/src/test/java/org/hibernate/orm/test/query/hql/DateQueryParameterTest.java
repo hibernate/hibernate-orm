@@ -40,7 +40,7 @@ public class DateQueryParameterTest {
 				session -> {
 					final DateEntity entity = new DateEntity();
 					entity.setTimestamp( new Date(timestamp2) );
-					session.save( entity );
+					session.persist( entity );
 				}
 		);
 
@@ -48,7 +48,7 @@ public class DateQueryParameterTest {
 				session -> {
 					final DateEntity entity = new DateEntity();
 					entity.setTimestamp( new Date(timestamp4) );
-					session.save( entity );
+					session.persist( entity );
 				}
 		);
 

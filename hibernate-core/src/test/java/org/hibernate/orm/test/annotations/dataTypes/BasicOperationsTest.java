@@ -73,8 +73,8 @@ public class BasicOperationsTest {
 					session.doWork( new ValidateRowCount( session, SOME_ENTITY_TABLE_NAME, 0 ) );
 					session.doWork( new ValidateRowCount( session, SOME_OTHER_ENTITY_TABLE_NAME, 0 ) );
 
-					session.save( someEntity );
-					session.save( someOtherEntity );
+					session.persist( someEntity );
+					session.persist( someOtherEntity );
 				}
 		);
 
@@ -86,8 +86,8 @@ public class BasicOperationsTest {
 					try {
 						session.beginTransaction();
 
-						session.delete( someEntity );
-						session.delete( someOtherEntity );
+						session.remove( someEntity );
+						session.remove( someOtherEntity );
 						session.getTransaction().commit();
 					}
 					finally {

@@ -120,7 +120,7 @@ public class GetLoadTest {
 
 		Employer e = scope.fromTransaction(
 				session -> {
-					session.delete( emp );
+					session.remove( emp );
 					return session.get( Employer.class, emp.getId() );
 				}
 		);

@@ -93,7 +93,7 @@ public class LockRefreshTest extends BaseNonConfigCoreFunctionalTestCase {
 					final Employee employee = session.get( Employee.class, "Jane" );
 					session.lock( employee, lockModeType );
 					session.refresh( employee );
-					session.delete( employee );
+					session.remove( employee );
 				}
 		);
 

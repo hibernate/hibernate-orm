@@ -53,10 +53,10 @@ public class EventManager {
 		theEvent.setDate(theDate);
 		theEvent.setOrganizer(organizer);
 
-		Long eventId = (Long)session.save(theEvent);
+		session.persist( theEvent );
 
 		session.getTransaction().commit();
-		return eventId;
+		return theEvent.getId();
 	}
 
 	public Long createAndStorePerson(String firstName, String lastName) {
@@ -69,10 +69,10 @@ public class EventManager {
 		person.setFirstname(firstName);
 		person.setLastname(lastName);
 
-		Long personId = (Long)session.save(person);
+		session.persist(person);
 
 		session.getTransaction().commit();
-		return personId;
+		return person.getId();
 	}
 
 	public Long createAndStorePerson(Person person) {
@@ -81,10 +81,10 @@ public class EventManager {
 
 		session.beginTransaction();
 
-		Long personId = (Long)session.save(person);
+		session.persist(person);
 
 		session.getTransaction().commit();
-		return personId;
+		return person.getId();
 	}
 
 	public List listEvents() {
@@ -178,10 +178,10 @@ public class EventManager {
 		Person aPerson = (Person)session.load(Person.class, personId);
 		account.setPerson(aPerson);
 
-		Long accountId = (Long)session.save(account);
+		session.persist(account);
 
 		session.getTransaction().commit();
-		return accountId;
+		return account.getId();
 	}
 
 	public Account getAccount(Long accountId) {
@@ -238,16 +238,16 @@ public class EventManager {
 		// delete all existing calendars
 		List calendars = session.createQuery("from HolidayCalendar").setCacheable(true).list();
 		for (ListIterator li = calendars.listIterator(); li.hasNext(); ) {
-			session.delete(li.next());
+			session.remove(li.next());
 		}
 
 		HolidayCalendar calendar = new HolidayCalendar();
 		calendar.init();
 
-		Long calendarId = (Long)session.save(calendar);
+		session.persist(calendar);
 
 		session.getTransaction().commit();
-		return calendarId;
+		return calendar.getId();
 	}
 
 	public HolidayCalendar getHolidayCalendar() {

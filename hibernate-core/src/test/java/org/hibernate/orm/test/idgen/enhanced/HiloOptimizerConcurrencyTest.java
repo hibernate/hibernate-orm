@@ -69,7 +69,7 @@ public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTes
 			try {
 				session1.beginTransaction();
 				HibPerson p = new HibPerson();
-				session1.save( p );
+				session1.persist( p );
 			}
 			finally {
 				session1.getTransaction().commit();
@@ -82,7 +82,7 @@ public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTes
 			try {
 				session2.beginTransaction();
 				HibPerson p = new HibPerson();
-				session2.save( p );
+				session2.persist( p );
 			}
 			finally {
 				session2.getTransaction().commit();
@@ -99,7 +99,7 @@ public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTes
 						try {
 							session1.beginTransaction();
 							HibPerson p = new HibPerson();
-							session1.save( p );
+							session1.persist( p );
 						}
 						finally {
 							session1.getTransaction().commit();
@@ -110,7 +110,7 @@ public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTes
 					try {
 						session1.beginTransaction();
 						HibPerson p = new HibPerson();
-						session1.save( p );
+						session1.persist( p );
 					}
 					finally {
 						session1.getTransaction().commit();
@@ -130,7 +130,7 @@ public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTes
 					try {
 						session2.beginTransaction();
 						HibPerson p = new HibPerson();
-						session2.save( p );
+						session2.persist( p );
 					}
 					finally {
 						session2.getTransaction().commit();
@@ -180,7 +180,7 @@ public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTes
 			try {
 				session1.beginTransaction();
 				HibPerson p = new HibPerson();
-				session1.save( p );
+				session1.persist( p );
 			}
 			finally {
 				session1.getTransaction().commit();
@@ -193,7 +193,7 @@ public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTes
 			session2.beginTransaction();
 			try {
 				HibPerson p = new HibPerson();
-				session2.save( p );
+				session2.persist( p );
 			}
 			finally {
 				session2.getTransaction().commit();
@@ -203,7 +203,7 @@ public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTes
 				session1.beginTransaction();
 				try {
 					HibPerson p = new HibPerson();
-					session1.save( p );
+					session1.persist( p );
 				}
 				finally {
 					session1.getTransaction().commit();
@@ -212,7 +212,7 @@ public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTes
 			session2.beginTransaction();
 			try {
 				HibPerson p = new HibPerson();
-				session2.save( p );
+				session2.persist( p );
 			}
 			finally {
 				session2.getTransaction().commit();
@@ -220,7 +220,7 @@ public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTes
 			session1.beginTransaction();
 			try {
 				HibPerson p = new HibPerson();
-				session1.save( p );
+				session1.persist( p );
 			}
 			finally {
 				session1.getTransaction().commit();

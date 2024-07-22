@@ -60,7 +60,7 @@ public class MultiPathCascadeTest {
 
 		scope.inTransaction(
 				session ->
-						session.save( a )
+						session.persist( a )
 		);
 
 		// modify detached entity
@@ -82,7 +82,7 @@ public class MultiPathCascadeTest {
 
 		scope.inTransaction(
 				session ->
-						session.save( a )
+						session.persist( a )
 		);
 
 		// modify detached entity
@@ -108,18 +108,18 @@ public class MultiPathCascadeTest {
 
 		scope.inTransaction(
 				session ->
-						session.save( a )
+						session.persist( a )
 		);
 
 		// modify detached entity
 		modifyEntity( a );
 
-		scope.inTransaction(
+		A merged = scope.fromTransaction(
 				session ->
-						session.update( a )
+						session.merge( a )
 		);
 
-		verifyModifications( scope, a.getId() );
+		verifyModifications( scope, merged.getId() );
 	}
 
 	@Test
@@ -131,7 +131,7 @@ public class MultiPathCascadeTest {
 
 		scope.inTransaction(
 				session ->
-						session.save( a )
+						session.persist( a )
 		);
 
 		scope.inTransaction(
@@ -154,7 +154,7 @@ public class MultiPathCascadeTest {
 
 		scope.inTransaction(
 				session ->
-						session.save( a )
+						session.persist( a )
 		);
 
 		// modify detached entity
@@ -205,7 +205,7 @@ public class MultiPathCascadeTest {
 
 		scope.inTransaction(
 				session ->
-						session.save( a )
+						session.persist( a )
 		);
 
 		// modify detached entity
@@ -255,7 +255,7 @@ public class MultiPathCascadeTest {
 
 		scope.inTransaction(
 				session ->
-						session.save( a )
+						session.persist( a )
 		);
 
 		// modify detached entity

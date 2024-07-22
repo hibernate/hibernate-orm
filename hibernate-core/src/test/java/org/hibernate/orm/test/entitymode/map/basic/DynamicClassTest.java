@@ -62,7 +62,7 @@ public class DynamicClassTest extends BaseCoreFunctionalTestCase {
 		cars.put("models", models);
 		models.add(hsv);
 		models.add(monaro);
-		s.save("ProductLine", cars);
+		s.persist("ProductLine", cars);
 		t.commit();
 		s.close();
 
@@ -91,7 +91,7 @@ public class DynamicClassTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 		cars = (Map) s.createQuery("from ProductLine pl order by pl.description").uniqueResult();
-		s.delete(cars);
+		s.remove(cars);
 		t.commit();
 		s.close();
 	}

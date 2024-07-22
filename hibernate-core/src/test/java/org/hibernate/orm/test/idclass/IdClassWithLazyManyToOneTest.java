@@ -46,8 +46,8 @@ public class IdClassWithLazyManyToOneTest {
 				session -> {
 					Subsystem subsystem = new Subsystem( "1", "Linux" );
 					SystemUser systemUser = new SystemUser( subsystem, "admin", "Andrea" );
-					session.save( subsystem );
-					session.save( systemUser );
+					session.persist( subsystem );
+					session.persist( systemUser );
 
 				}
 		);

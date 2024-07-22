@@ -104,10 +104,10 @@ public class MappedSuperclassWithIdOnSubclassesTest {
 				session -> {
 					session.createQuery( "from DomesticCustomer", DomesticCustomer.class )
 							.list()
-							.forEach( cust -> session.delete( cust ) );
+							.forEach( cust -> session.remove( cust ) );
 					session.createQuery( "from ForeignCustomer", ForeignCustomer.class )
 							.list()
-							.forEach( cust -> session.delete( cust ) );
+							.forEach( cust -> session.remove( cust ) );
 				}
 		);
 	}

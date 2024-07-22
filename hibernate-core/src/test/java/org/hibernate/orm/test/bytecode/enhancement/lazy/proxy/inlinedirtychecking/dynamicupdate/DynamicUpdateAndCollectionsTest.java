@@ -87,10 +87,10 @@ public class DynamicUpdateAndCollectionsTest {
 					order.setNote( "it is a sample" );
 					order.setCustomer( customer );
 
-					session.save( user );
-					session.save( role );
-					session.save( customer );
-					session.save( order );
+					session.persist( user );
+					session.persist( role );
+					session.persist( customer );
+					session.persist( order );
 				}
 		);
 	}
@@ -157,7 +157,7 @@ public class DynamicUpdateAndCollectionsTest {
 					Role role = new Role();
 					role.setName( "superuser" );
 					user.addRole( role );
-					session.save( role );
+					session.persist( role );
 				}
 		);
 
@@ -176,7 +176,7 @@ public class DynamicUpdateAndCollectionsTest {
 					User user = samplingOrder.getCustomer().getUser();
 					Role role = new Role();
 					user.getRoles().add( role );
-					session.save( role );
+					session.persist( role );
 				}
 		);
 
@@ -194,7 +194,7 @@ public class DynamicUpdateAndCollectionsTest {
 					User user = session.createQuery( "from User", User.class ).list().get( 0 );
 					Role role = new Role();
 					user.getRoles().add( role );
-					session.save( role );
+					session.persist( role );
 				}
 		);
 

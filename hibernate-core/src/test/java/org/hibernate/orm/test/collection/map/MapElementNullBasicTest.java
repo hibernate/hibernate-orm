@@ -49,7 +49,7 @@ public class MapElementNullBasicTest {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
 					assertEquals( 0, getCollectionElementRows( entityId, scope ).size() );
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}
@@ -78,7 +78,7 @@ public class MapElementNullBasicTest {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
 					assertEquals( 0, getCollectionElementRows( entityId, scope ).size() );
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}
@@ -107,7 +107,7 @@ public class MapElementNullBasicTest {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
 					assertEquals( 0, getCollectionElementRows( entityId, scope ).size() );
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}
@@ -147,7 +147,7 @@ public class MapElementNullBasicTest {
 					assertEquals( 1, e.aCollection.size() );
 					assertEquals( 1, getCollectionElementRows( entityId, scope ).size() );
 					assertEquals( "not null", e.aCollection.get( "abc" ) );
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}

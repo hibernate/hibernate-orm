@@ -45,7 +45,7 @@ public class OneToOneJoinTableNonOptionalTest {
 		scope.inTransaction(
 				(session) -> {
 					Show show = new Show();
-					session.save( show );
+					session.persist( show );
 				}
 		);
 
@@ -53,7 +53,7 @@ public class OneToOneJoinTableNonOptionalTest {
 			scope.inTransaction(
 					(session) -> {
 						ShowDescription showDescription = new ShowDescription();
-						session.save( showDescription );
+						session.persist( showDescription );
 					}
 			);
 			fail();

@@ -66,8 +66,8 @@ public class BatchedManyToManyTest {
 
 		scope.inTransaction(
 				session -> {
-					session.save( me );
-					session.save( you );
+					session.persist( me );
+					session.persist( you );
 				}
 		);
 	}
@@ -80,7 +80,7 @@ public class BatchedManyToManyTest {
 					// User is the non-inverse side...
 					List<User> users = session.createQuery( "from User" ).list();
 					for ( User user : users ) {
-						session.delete( user );
+						session.remove( user );
 					}
 					session.flush();
 					session.createQuery( "delete Group" ).executeUpdate();

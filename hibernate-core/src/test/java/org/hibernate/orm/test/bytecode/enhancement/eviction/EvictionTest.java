@@ -85,7 +85,7 @@ public class EvictionTest {
             assertNull( managedParent.$$_hibernate_getPreviousManagedEntity() );
             assertNull( managedParent.$$_hibernate_getNextManagedEntity() );
 
-            s.delete( managedParent );
+            s.remove( managedParent );
         } );
     }
 

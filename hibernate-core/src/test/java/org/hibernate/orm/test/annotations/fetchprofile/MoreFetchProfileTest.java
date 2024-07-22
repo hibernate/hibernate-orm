@@ -60,12 +60,12 @@ public class MoreFetchProfileTest extends BaseCoreFunctionalTestCase {
 		}
 		final Order order = c.getOrders().iterator().next();
 		c.getOrders().remove( order );
-		s.delete( c );
+		s.remove( c );
 		final Order lastOrder = c.getLastOrder();
 		c.setLastOrder( null );
-		s.delete( order.getCountry() );
-		s.delete( lastOrder );
-		s.delete( order );
+		s.remove( order.getCountry() );
+		s.remove( lastOrder );
+		s.remove( order );
 
 		transaction.commit();
 		s.close();

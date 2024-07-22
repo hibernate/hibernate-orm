@@ -42,7 +42,7 @@ public class ParameterCollectionTest extends BaseCoreFunctionalTestCase {
 			try {
 				for ( int i = 0; i < 20; i++ ) {
 					Person p1 = new Person( i, "p" + i );
-					session.save( p1 );
+					session.persist( p1 );
 				}
 				session.getTransaction().commit();
 			}

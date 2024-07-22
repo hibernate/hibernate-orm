@@ -42,7 +42,7 @@ public class MergeTest {
 				session -> {
 					List<Order> orders = session.createQuery( "from Order" ).list();
 					orders.forEach( order ->
-											session.delete( order )
+											session.remove( order )
 					);
 				}
 		);

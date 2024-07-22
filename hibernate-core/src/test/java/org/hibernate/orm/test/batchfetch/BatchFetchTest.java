@@ -58,7 +58,7 @@ public class BatchFetchTest {
 					Model hsv = new Model( cars );
 					hsv.setName( "hsv" );
 					hsv.setDescription( "Holden Commodore HSV" );
-					session.save( cars );
+					session.persist( cars );
 
 					ossProductLine.setDescription( "OSS" );
 					Model jboss = new Model( ossProductLine );
@@ -70,7 +70,7 @@ public class BatchFetchTest {
 					Model cache = new Model( ossProductLine );
 					cache.setName( "JBossCache" );
 					cache.setDescription( "JBoss TreeCache" );
-					session.save( ossProductLine );
+					session.persist( ossProductLine );
 				}
 		);
 
@@ -127,8 +127,8 @@ public class BatchFetchTest {
 					ProductLine oss = list.get( 1 );
 					assertEquals( cars.getModels().size(), 2 );
 					assertEquals( oss.getModels().size(), 3 );
-					session.delete( cars );
-					session.delete( oss );
+					session.remove( cars );
+					session.remove( oss );
 				}
 		);
 	}
@@ -140,7 +140,7 @@ public class BatchFetchTest {
 		scope.inTransaction(
 				session -> {
 					for ( int i = 0; i < size; i++ ) {
-						session.save( new BatchLoadableEntity( i ) );
+						session.persist( new BatchLoadableEntity( i ) );
 					}
 				}
 		);

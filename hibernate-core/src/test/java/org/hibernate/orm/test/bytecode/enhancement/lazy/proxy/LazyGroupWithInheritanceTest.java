@@ -213,45 +213,45 @@ public class LazyGroupWithInheritanceTest {
 					final Address austin = new Address( 1, "Austin" );
 					final Address london = new Address( 2, "London" );
 
-					session.save( austin );
-					session.save( london );
+					session.persist( austin );
+					session.persist( london );
 
 					final ForeignCustomer acme = new ForeignCustomer( 1, "Acme", london, "1234" );
 					final ForeignCustomer acmeBrick = new ForeignCustomer( 2, "Acme Brick", london, "9876", acme );
 
 					final ForeignCustomer freeBirds = new ForeignCustomer( 3, "Free Birds", austin, "13579" );
 
-					session.save( acme );
-					session.save( acmeBrick );
-					session.save( freeBirds );
+					session.persist( acme );
+					session.persist( acmeBrick );
+					session.persist( freeBirds );
 
 					final Order order1 = new Order( 1, "some text", freeBirds );
 					freeBirds.getOrders().add( order1 );
-					session.save( order1 );
+					session.persist( order1 );
 
 					final OrderSupplemental orderSupplemental = new OrderSupplemental( 1, 1 );
 					order1.setSupplemental( orderSupplemental );
 					final OrderSupplemental2 orderSupplemental2_1 = new OrderSupplemental2( 2, 2 );
 					order1.setSupplemental2( orderSupplemental2_1 );
 					orderSupplemental2_1.setOrder( order1 );
-					session.save( orderSupplemental );
-					session.save( orderSupplemental2_1 );
+					session.persist( orderSupplemental );
+					session.persist( orderSupplemental2_1 );
 
 					final Order order2 = new Order( 2, "some text", acme );
 					acme.getOrders().add( order2 );
-					session.save( order2 );
+					session.persist( order2 );
 
 					final OrderSupplemental2 orderSupplemental2_2 = new OrderSupplemental2( 3, 3 );
 					order2.setSupplemental2( orderSupplemental2_2 );
 					orderSupplemental2_2.setOrder( order2 );
-					session.save( orderSupplemental2_2 );
+					session.persist( orderSupplemental2_2 );
 
 					final CreditCardPayment payment1 = new CreditCardPayment( 1, 1F, "1" );
-					session.save( payment1 );
+					session.persist( payment1 );
 					order1.getPayments().add( payment1 );
 
 					final DebitCardPayment payment2 = new DebitCardPayment( 2, 2F, "2" );
-					session.save( payment2 );
+					session.persist( payment2 );
 					order1.getPayments().add( payment2 );
 
 

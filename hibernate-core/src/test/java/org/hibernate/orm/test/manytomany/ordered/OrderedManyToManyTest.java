@@ -128,11 +128,11 @@ public class OrderedManyToManyTest {
 		// clean up
 		scope.inTransaction(
 				s -> {
-					s.delete( gavin );
-					s.delete( steve );
-					s.delete( max );
-					s.delete( emmanuel );
-					s.delete( hibernate );
+					s.remove( gavin );
+					s.remove( steve );
+					s.remove( max );
+					s.remove( emmanuel );
+					s.remove( hibernate );
 				}
 		);
 	}

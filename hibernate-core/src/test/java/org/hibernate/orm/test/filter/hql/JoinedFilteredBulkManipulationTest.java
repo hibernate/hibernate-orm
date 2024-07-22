@@ -52,10 +52,10 @@ public class JoinedFilteredBulkManipulationTest extends AbstractStatefulStateles
 	@BeforeEach
 	void setUp() {
 		scope.inTransaction( session -> {
-			session.save( new Employee( "John", 'M', "john", new Date() ) );
-			session.save( new Employee( "Jane", 'F', "jane", new Date() ) );
-			session.save( new Customer( "Charlie", 'M', "charlie", "Acme" ) );
-			session.save( new Customer( "Wanda", 'F', "wanda", "ABC" ) );
+			session.persist( new Employee( "John", 'M', "john", new Date() ) );
+			session.persist( new Employee( "Jane", 'F', "jane", new Date() ) );
+			session.persist( new Customer( "Charlie", 'M', "charlie", "Acme" ) );
+			session.persist( new Customer( "Wanda", 'F', "wanda", "ABC" ) );
 		} );
 	}
 

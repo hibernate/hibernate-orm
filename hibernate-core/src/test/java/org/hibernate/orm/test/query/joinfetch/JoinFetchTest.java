@@ -227,7 +227,7 @@ public class JoinFetchTest {
 		} );
 
 
-		scope.inTransaction( (s) -> s.delete( group ) );
+		scope.inTransaction( (s) -> s.remove( group ) );
 	}
 
 }

@@ -73,7 +73,7 @@ public class TypedOneToOneTest {
 					assertEquals( "30326", cust.getShippingAddress().getZip() );
 					assertEquals( "BILLING", cust.getBillingAddress().getAddressId().getType() );
 					assertEquals( "SHIPPING", cust.getShippingAddress().getAddressId().getType() );
-					session.delete( cust );
+					session.remove( cust );
 				}
 		);
 	}
@@ -101,7 +101,7 @@ public class TypedOneToOneTest {
 					Customer cust = results.get( 0 );
 					assertNull( cust.getShippingAddress() );
 					assertNull( cust.getBillingAddress() );
-					session.delete( cust );
+					session.remove( cust );
 				}
 		);
 	}

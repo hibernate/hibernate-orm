@@ -39,8 +39,8 @@ public class BasicSessionTest {
     @Test
     public void test(SessionFactoryScope scope) {
         scope.inTransaction( s -> {
-            s.save( new MyEntity( 1L ) );
-            s.save( new MyEntity( 2L ) );
+            s.persist( new MyEntity( 1L ) );
+            s.persist( new MyEntity( 2L ) );
         } );
 
         MyEntity[] entities = new MyEntity[2];

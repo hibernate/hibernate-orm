@@ -78,7 +78,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
 		Transaction t = s.beginTransaction();
-		s.save( cOrig );
+		s.persist( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		s.setDefaultReadOnly( true );
 		assertTrue( s.isDefaultReadOnly() );
@@ -175,7 +175,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
 		Transaction t = s.beginTransaction();
-		s.save( cOrig );
+		s.persist( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		s.setDefaultReadOnly( true );
 		assertTrue( s.isDefaultReadOnly() );
@@ -265,7 +265,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
 		Transaction t = s.beginTransaction();
-		s.save( cOrig );
+		s.persist( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		s.setDefaultReadOnly( true );
 		assertTrue( s.isDefaultReadOnly() );
@@ -356,7 +356,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
 		Transaction t = s.beginTransaction();
-		s.save( cOrig );
+		s.persist( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		s.setDefaultReadOnly( true );
 		assertTrue( s.isDefaultReadOnly() );
@@ -450,7 +450,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
 		Transaction t = s.beginTransaction();
-		s.save( cOrig );
+		s.persist( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		s.setDefaultReadOnly( true );
 		assertTrue( s.isDefaultReadOnly() );
@@ -541,7 +541,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
 		Transaction t = s.beginTransaction();
-		s.save( cOrig );
+		s.persist( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		s.setDefaultReadOnly( true );
 		assertTrue( s.isDefaultReadOnly() );
@@ -634,7 +634,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
 		Transaction t = s.beginTransaction();
-		s.save( cOrig );
+		s.persist( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		s.setDefaultReadOnly( true );
 		assertTrue( s.isDefaultReadOnly() );
@@ -721,7 +721,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
 		Transaction t = s.beginTransaction();
-		s.save( cOrig );
+		s.persist( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		s.setDefaultReadOnly( true );
 		assertTrue( s.isDefaultReadOnly() );
@@ -796,7 +796,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
 		Transaction t = s.beginTransaction();
-		s.save( cOrig );
+		s.persist( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		s.setDefaultReadOnly( true );
 		assertTrue( s.isDefaultReadOnly() );
@@ -884,7 +884,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
 		Transaction t = s.beginTransaction();
-		s.save( cOrig );
+		s.persist( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		s.setDefaultReadOnly( true );
 		assertTrue( s.isDefaultReadOnly() );
@@ -958,7 +958,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
 		Transaction t = s.beginTransaction();
-		s.save( cOrig );
+		s.persist( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		s.setDefaultReadOnly( true );
 		assertTrue( s.isDefaultReadOnly() );

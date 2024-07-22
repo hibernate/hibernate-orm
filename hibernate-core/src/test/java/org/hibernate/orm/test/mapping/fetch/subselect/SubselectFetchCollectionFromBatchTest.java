@@ -88,8 +88,8 @@ public class SubselectFetchCollectionFromBatchTest {
 			group2.addEmployee(employee3);
 			group2.addEmployee( employee4 );
 
-			s.save( group1 );
-			s.save( group2 );
+			s.persist( group1 );
+			s.persist( group2 );
 
 			return new EmployeeGroup[] { group1, group2 };
 		});
@@ -147,8 +147,8 @@ public class SubselectFetchCollectionFromBatchTest {
 			group2.addEmployee(employee3);
 			group2.addEmployee( employee4 );
 
-			s.save( group1 );
-			s.save( group2 );
+			s.persist( group1 );
+			s.persist( group2 );
 
 			return new Long[] { group1.id, group2.id };
 		} );
@@ -215,8 +215,8 @@ public class SubselectFetchCollectionFromBatchTest {
 			group2.getLead().addCollaborator( new Employee( "group2 lead's collaborator#1" ) );
 			group2.getLead().addCollaborator( new Employee( "group2 lead's collaborator#2" ) );
 
-			s.save( group1 );
-			s.save( group2 );
+			s.persist( group1 );
+			s.persist( group2 );
 
 			return new Long[] { group1.id, group2.id };
 		} );

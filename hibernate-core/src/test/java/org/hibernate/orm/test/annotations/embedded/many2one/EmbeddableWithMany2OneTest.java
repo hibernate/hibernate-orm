@@ -62,10 +62,10 @@ public class EmbeddableWithMany2OneTest {
 					session.createQuery( "from Person p where p.address.country.id = 'US'" )
 							.list();
 					Person p = session.load( Person.class, person.getId() );
-					session.delete( p );
+					session.remove( p );
 					List countries = session.createQuery( "from Country" ).list();
 					assertEquals( 1, countries.size() );
-					session.delete( countries.get( 0 ) );
+					session.remove( countries.get( 0 ) );
 				}
 		);
 	}

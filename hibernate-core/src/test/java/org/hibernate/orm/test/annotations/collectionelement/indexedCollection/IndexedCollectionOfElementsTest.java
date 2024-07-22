@@ -35,7 +35,7 @@ public class IndexedCollectionOfElementsTest {
 
 		scope.inTransaction(
 				session -> {
-					session.save( sale );
+					session.persist( sale );
 					session.flush();
 					session.get( Sale.class, sale.getId() );
 					assertEquals( 1, sale.getContacts().size() );

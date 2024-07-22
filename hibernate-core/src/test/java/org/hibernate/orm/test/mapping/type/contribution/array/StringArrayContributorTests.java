@@ -48,9 +48,9 @@ public class StringArrayContributorTests {
 	public void simpleTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			// save one with tags
-			session.save( new Post( 1, "with tags", "tag1", "tag2" ) );
+			session.persist( new Post( 1, "with tags", "tag1", "tag2" ) );
 			// and one without (null)
-			session.save( new Post( 2, "no tags" ) );
+			session.persist( new Post( 2, "no tags" ) );
 		} );
 
 		scope.inTransaction( (session) -> {

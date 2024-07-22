@@ -297,7 +297,7 @@ public class HQLScrollFetchTest {
 		scope.inTransaction(
 				session -> {
 					Parent p0 = new Parent( "parent0" );
-					session.save( p0 );
+					session.persist( p0 );
 				}
 		);
 
@@ -329,7 +329,7 @@ public class HQLScrollFetchTest {
 		scope.inTransaction(
 				session -> {
 					Parent p0 = new Parent( "parent0" );
-					session.save( p0 );
+					session.persist( p0 );
 				}
 		);
 
@@ -376,12 +376,12 @@ public class HQLScrollFetchTest {
 					Child child_2_2 = new Child( "cchild2-2" );
 					Child child_2_3 = new Child( "zchild2-3" );
 
-					session.save( child_1_1 );
-					session.save( child_2_1 );
-					session.save( child_1_2 );
-					session.save( child_2_2 );
-					session.save( child_1_3 );
-					session.save( child_2_3 );
+					session.persist( child_1_1 );
+					session.persist( child_2_1 );
+					session.persist( child_1_2 );
+					session.persist( child_2_2 );
+					session.persist( child_1_3 );
+					session.persist( child_2_3 );
 
 					session.flush();
 
@@ -389,13 +389,13 @@ public class HQLScrollFetchTest {
 					p1.addChild( child_1_1 );
 					p1.addChild( child_1_2 );
 					p1.addChild( child_1_3 );
-					session.save( p1 );
+					session.persist( p1 );
 
 					Parent p2 = new Parent( "parent2" );
 					p2.addChild( child_2_1 );
 					p2.addChild( child_2_2 );
 					p2.addChild( child_2_3 );
-					session.save( p2 );
+					session.persist( p2 );
 				}
 		);
 	}
@@ -406,7 +406,7 @@ public class HQLScrollFetchTest {
 				session -> {
 					List list = session.createQuery( "from Parent" ).list();
 					for ( Iterator i = list.iterator(); i.hasNext(); ) {
-						session.delete( i.next() );
+						session.remove( i.next() );
 					}
 				}
 		);

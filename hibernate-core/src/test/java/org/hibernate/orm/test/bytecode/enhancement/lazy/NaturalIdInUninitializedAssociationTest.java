@@ -121,7 +121,7 @@ public class NaturalIdInUninitializedAssociationTest {
 	public void cleanUpTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.delete( session.get( AnEntity.class, 3 ) );
+					session.remove( session.get( AnEntity.class, 3 ) );
 				}
 		);
 	}

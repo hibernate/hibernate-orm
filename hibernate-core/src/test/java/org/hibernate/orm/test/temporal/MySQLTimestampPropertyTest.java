@@ -86,7 +86,7 @@ public class MySQLTimestampPropertyTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( eQueriedWithTimestamp )
+						session.remove( eQueriedWithTimestamp )
 		);
 	}
 
@@ -133,7 +133,7 @@ public class MySQLTimestampPropertyTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( eQueriedWithTimestamp )
+						session.remove( eQueriedWithTimestamp )
 		);
 	}
 
@@ -180,7 +180,7 @@ public class MySQLTimestampPropertyTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( eQueriedWithTimestamp )
+						session.remove( eQueriedWithTimestamp )
 		);
 	}
 

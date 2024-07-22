@@ -79,7 +79,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		try {
 			Session s = getSessionUnderTest();
 			Silly silly = new Silly( "silly" );
-			s.save( silly );
+			s.persist( silly );
 
 			// this should cause the CM to obtain a connection, and then release it
 			s.flush();
@@ -87,7 +87,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 			// We should be able to serialize the session at this point...
 			SerializationHelper.serialize( s );
 
-			s.delete( silly );
+			s.remove( silly );
 			s.flush();
 
 			release( s );
@@ -103,7 +103,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		Session s = getSessionUnderTest();
 
 		Silly silly = new Silly( "silly" );
-		s.save( silly );
+		s.persist( silly );
 
 		// this should cause the CM to obtain a connection, and then release it
 		s.flush();
@@ -131,7 +131,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		}
 		SerializationHelper.serialize( s );
 
-		s.delete( silly );
+		s.remove( silly );
 		s.flush();
 
 		release( s );
@@ -143,7 +143,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		prepare();
 		Session s = getSessionUnderTest();
 		Silly silly = new Silly( "silly" );
-		s.save( silly );
+		s.persist( silly );
 		s.flush();
 
 		try (ScrollableResults sr = s.createQuery( "from Silly" ).scroll()) {
@@ -160,7 +160,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 			assertEquals( silly, sr2.get() );
 		}
 
-		s.delete( silly );
+		s.remove( silly );
 		s.flush();
 
 		release( s );
@@ -175,14 +175,14 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		Session session = sessionFactory().withOptions().connection( originalConnection ).openSession();
 
 		Silly silly = new Silly( "silly" );
-		session.save( silly );
+		session.persist( silly );
 
 		// this will cause the connection manager to cycle through the aggressive release logic;
 		// it should not release the connection since we explicitly suplied it ourselves.
 		session.flush();
 		assertTrue( session.isConnected() );
 
-		session.delete( silly );
+		session.remove( silly );
 		session.flush();
 
 		release( session );
@@ -202,7 +202,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 			Other other = new Other( "other-" + i );
 			Silly silly = new Silly( "silly-" + i, other );
 			entities.add( silly );
-			s.save( silly );
+			s.persist( silly );
 		}
 		s.flush();
 

@@ -71,7 +71,7 @@ public class SybaseTimestampComparisonAnnotationsTest extends BaseCoreFunctional
 
 		s = openSession();
 		s.getTransaction().begin();
-		s.delete( thing );
+		s.remove( thing );
 		s.getTransaction().commit();
 		s.close();
 	}

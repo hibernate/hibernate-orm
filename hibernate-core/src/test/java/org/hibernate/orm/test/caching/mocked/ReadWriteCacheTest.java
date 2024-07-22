@@ -80,7 +80,7 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 		doInHibernate( this::sessionFactory, session -> {
 			log.info( "Delete Book" );
 			Book book = session.get( Book.class, bookId );
-			session.delete( book );
+			session.remove( book );
 			interceptTransaction.set( true );
 		} );
 
@@ -161,7 +161,7 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 			log.info( "Update Book" );
 			Book book = session.get( Book.class, bookId );
 			book.setTitle( UPDATED_TITLE );
-			session.save( book );
+			session.persist( book );
 			interceptTransaction.set( true );
 		} );
 
@@ -251,7 +251,7 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 		Book book = new Book();
 		book.setId( bookId );
 		book.setTitle( ORIGINAL_TITLE );
-		session.save( book );
+		session.persist( book );
 	}
 
 	private Consumer<Configuration> getCacheConfig() {

@@ -38,7 +38,7 @@ public class BasicTableTest {
 					int count = 5;
 					for ( int i = 0; i < count; i++ ) {
 						final Entity entity = new Entity( "" + ( i + 1 ) );
-						s.save( entity );
+						s.persist( entity );
 						long expectedId = i + 1;
 						assertEquals( expectedId, entity.getId().longValue() );
 						assertEquals( expectedId, generator.getTableAccessCount() );

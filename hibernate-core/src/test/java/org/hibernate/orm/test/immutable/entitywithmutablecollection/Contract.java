@@ -82,7 +82,7 @@ public class Contract implements Serializable {
 		this.type = type;
 	}
 
-	public List getVariations() {
+	public List<ContractVariation> getVariations() {
 		return variations;
 	}
 
@@ -111,7 +111,7 @@ public class Contract implements Serializable {
 		subcontract.setParent( this );
 	}
 
-	public Set getParties() {
+	public Set<Party> getParties() {
 		return parties;
 	}
 

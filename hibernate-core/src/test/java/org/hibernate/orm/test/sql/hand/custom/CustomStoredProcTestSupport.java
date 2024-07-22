@@ -105,10 +105,10 @@ public abstract class CustomStoredProcTestSupport extends CustomSQLTestSupport {
 		ProcedureCall namedQuery = s.createNamedStoredProcedureQuery( "selectAllEmployments" );
 		List list = namedQuery.getResultList();
 		assertTrue( list.get( 0 ) instanceof Employment );
-		s.delete( emp );
-		s.delete( ifa );
-		s.delete( jboss );
-		s.delete( gavin );
+		s.remove( emp );
+		s.remove( ifa );
+		s.remove( jboss );
+		s.remove( gavin );
 
 		t.commit();
 		s.close();

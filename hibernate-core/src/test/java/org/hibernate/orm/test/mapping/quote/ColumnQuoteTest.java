@@ -38,7 +38,7 @@ public class ColumnQuoteTest {
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Product product = new Product( testProductId, fieldWithHibernateQuotingValue, fieldWithJpaQuotingValue );
-			session.save( product );
+			session.persist( product );
 		} );
 		scope.getSessionFactory().getQueryEngine().getInterpretationCache().close();
 	}

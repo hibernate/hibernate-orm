@@ -797,12 +797,6 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public <X> ManagedDomainType<X> managedType(String typeName) {
-			final String entityName = findEntityName( typeName );
-			return entityName == null ? null : entity( entityName );
-		}
-
-		@Override
 		public String qualifyImportableName(String queryName) {
 			if (isClassDefined(queryName)) {
 				return queryName;

@@ -546,17 +546,7 @@ public class HbmXmlTransformer {
 			// todo (7.0) : formula and multiple columns
 			joinColumn.setName( key.getColumnAttribute() );
 			subclassEntity.getPrimaryKeyJoinColumns().add( joinColumn );
-			final String foreignKey = key.getForeignKey();
-			if ( StringHelper.isNotEmpty( foreignKey ) ) {
-				final JaxbForeignKeyImpl jaxbForeignKey = new JaxbForeignKeyImpl();
-				joinColumn.setForeignKey( jaxbForeignKey );
-				if ( "none".equals( foreignKey ) ) {
-					jaxbForeignKey.setConstraintMode( ConstraintMode.NO_CONSTRAINT );
-				}
-				else {
-					jaxbForeignKey.setName( foreignKey );
-				}
-			}
+			joinColumn.setForeignKey( transformForeignKey( key.getForeignKey() ) );
 		}
 
 		if ( !hbmSubclass.getJoinedSubclass().isEmpty() ) {
@@ -1790,15 +1780,7 @@ public class HbmXmlTransformer {
 				propertyInfo.tableName()
 		);
 
-		if ( hbmNode.getForeignKey() != null ) {
-			jaxbManyToOne.setForeignKey( new JaxbForeignKeyImpl() );
-			if ( "none".equalsIgnoreCase( hbmNode.getForeignKey() ) ) {
-				jaxbManyToOne.getForeignKey().setConstraintMode( ConstraintMode.NO_CONSTRAINT );
-			}
-			else {
-				jaxbManyToOne.getForeignKey().setName( hbmNode.getForeignKey() );
-			}
-		}
+		jaxbManyToOne.setForeignKey( transformForeignKey( hbmNode.getForeignKey() ) );
 
 		if ( hbmNode.getNotFound() != null ) {
 			jaxbManyToOne.setNotFound( interpretNotFoundAction( hbmNode.getNotFound() ) );
@@ -1872,18 +1854,7 @@ public class HbmXmlTransformer {
 		}
 		final JaxbHbmKeyType key = source.getKey();
 		if ( key != null ) {
-			final String foreignKey = key.getForeignKey();
-			if ( StringHelper.isNotEmpty( foreignKey ) ) {
-				final JaxbForeignKeyImpl jaxbForeignKey = new JaxbForeignKeyImpl();
-				collectionTable.setForeignKeys( jaxbForeignKey );
-				if ( "none".equals( foreignKey ) ) {
-					jaxbForeignKey.setConstraintMode( ConstraintMode.NO_CONSTRAINT );
-				}
-				else {
-					jaxbForeignKey.setName( foreignKey );
-				}
-			}
-
+			collectionTable.setForeignKeys( transformForeignKey( key.getForeignKey() ) );
 			transferColumnsAndFormulas(
 					new ColumnAndFormulaSource() {
 						@Override
@@ -2277,22 +2248,7 @@ public class HbmXmlTransformer {
 			//transferCollectionTable( source, oneToMany )
 
 			if ( key != null ) {
-				final String foreignKey = key.getForeignKey();
-				if ( StringHelper.isNotEmpty( foreignKey ) ) {
-					final JaxbForeignKeyImpl jaxbForeignKey = new JaxbForeignKeyImpl();
-					target.setForeignKey( jaxbForeignKey );
-					if ( "none".equals( foreignKey ) ) {
-						jaxbForeignKey.setConstraintMode( ConstraintMode.NO_CONSTRAINT );
-					}
-					else {
-						jaxbForeignKey.setName( foreignKey );
-					}
-				}
-//			if ( StringHelper.isNotEmpty( key.getColumnAttribute() ) ) {
-//				final JaxbJoinColumnImpl column = new JaxbJoinColumnImpl();
-//				column.setName( key.getColumnAttribute() );
-//				target.getJoinColumn().add( column );
-//			}
+				target.setForeignKey( transformForeignKey( key.getForeignKey() ) );
 				transferColumnsAndFormulas(
 						new ColumnAndFormulaSource() {
 							@Override
@@ -2474,17 +2430,7 @@ public class HbmXmlTransformer {
 
 		final JaxbHbmKeyType key = hbmCollection.getKey();
 		if ( key != null ) {
-			final String foreignKey = key.getForeignKey();
-			if ( StringHelper.isNotEmpty( foreignKey ) ) {
-				final JaxbForeignKeyImpl jaxbForeignKey = new JaxbForeignKeyImpl();
-				joinTable.setForeignKey( jaxbForeignKey );
-				if ( "none".equals( foreignKey ) ) {
-					jaxbForeignKey.setConstraintMode( ConstraintMode.NO_CONSTRAINT );
-				}
-				else {
-					jaxbForeignKey.setName( foreignKey );
-				}
-			}
+			joinTable.setForeignKey( transformForeignKey( key.getForeignKey() ) );
 			transferColumnsAndFormulas(
 					new ColumnAndFormulaSource() {
 						@Override
@@ -2975,17 +2921,24 @@ public class HbmXmlTransformer {
 				null
 		);
 
-		if ( hbmKeyManyToOne.getForeignKey() != null ) {
-			jaxbKyManyToOne.setForeignKey( new JaxbForeignKeyImpl() );
-			if ( "none".equalsIgnoreCase( hbmKeyManyToOne.getForeignKey() ) ) {
-				jaxbKyManyToOne.getForeignKey().setConstraintMode( ConstraintMode.NO_CONSTRAINT );
-			}
-			else {
-				jaxbKyManyToOne.getForeignKey().setName( hbmKeyManyToOne.getForeignKey() );
-			}
-		}
+		jaxbKyManyToOne.setForeignKey( transformForeignKey( hbmKeyManyToOne.getForeignKey() ) );
 
 		return jaxbKyManyToOne;
+	}
+
+	private JaxbForeignKeyImpl transformForeignKey(String hbmForeignKeyName) {
+		if ( StringHelper.isEmpty( hbmForeignKeyName ) ) {
+			return null;
+		}
+
+		final JaxbForeignKeyImpl jaxbForeignKey = new JaxbForeignKeyImpl();
+		if ( "none".equalsIgnoreCase( hbmForeignKeyName ) ) {
+			jaxbForeignKey.setConstraintMode( ConstraintMode.NO_CONSTRAINT );
+		}
+		else {
+			jaxbForeignKey.setName( hbmForeignKeyName );
+		}
+		return jaxbForeignKey;
 	}
 
 	private void transferNonAggregatedCompositeId(
@@ -3279,7 +3232,7 @@ public class HbmXmlTransformer {
 		}
 	}
 
-	private static void transferSecondaryTable(JaxbHbmSecondaryTableType hbmJoin, JaxbEntityImpl mappingEntity) {
+	private void transferSecondaryTable(JaxbHbmSecondaryTableType hbmJoin, JaxbEntityImpl mappingEntity) {
 		final JaxbSecondaryTableImpl secondaryTable = new JaxbSecondaryTableImpl();
 		secondaryTable.setCatalog( hbmJoin.getCatalog() );
 		secondaryTable.setComment( hbmJoin.getComment() );
@@ -3292,17 +3245,8 @@ public class HbmXmlTransformer {
 			final JaxbPrimaryKeyJoinColumnImpl joinColumn = new JaxbPrimaryKeyJoinColumnImpl();
 			joinColumn.setName( key.getColumnAttribute() );
 			secondaryTable.getPrimaryKeyJoinColumn().add( joinColumn );
-			final String foreignKey = key.getForeignKey();
-			if ( StringHelper.isNotEmpty( foreignKey ) ) {
-				final JaxbForeignKeyImpl jaxbForeignKey = new JaxbForeignKeyImpl();
-				joinColumn.setForeignKey( jaxbForeignKey );
-				if ( "none".equals( foreignKey ) ) {
-					jaxbForeignKey.setConstraintMode( ConstraintMode.NO_CONSTRAINT );
-				}
-				else {
-					jaxbForeignKey.setName( foreignKey );
-				}
-			}
+
+			joinColumn.setForeignKey( transformForeignKey( key.getForeignKey() ) );
 		}
 		mappingEntity.getSecondaryTables().add( secondaryTable );
 	}

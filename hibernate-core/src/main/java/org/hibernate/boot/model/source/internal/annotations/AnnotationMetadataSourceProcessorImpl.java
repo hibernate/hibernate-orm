@@ -228,15 +228,13 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	private void insertMappedSuperclasses(LinkedHashSet<ClassDetails> original, LinkedHashSet<ClassDetails> copy) {
 		final boolean debug = log.isDebugEnabled();
 
-		LinkedHashSet<XClass> orderedClasses = CollectionHelper.linkedSetOfSize( classes.size() * 2 );
-		List<XClass> clazzHierarchy = new ArrayList<>();
-
-		for ( ClassDetails clazz : classes ) {
+		for ( ClassDetails clazz : original ) {
 			if ( clazz.isInterface() ) {
 				if ( clazz.hasDirectAnnotationUsage( Entity.class ) ) {
 					throw new MappingException( "Only classes (not interfaces) may be mapped as @Entity : " + clazz.getName() );
 				}
 			}
+
 			if ( clazz.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
 				if ( debug ) {
 					log.debugf(
@@ -246,22 +244,14 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 				}
 			}
 			else {
-				if ( orderedClasses.contains( clazz ) ) {
-					continue;
-				}
-
-				clazzHierarchy.clear();
-				clazzHierarchy.add( clazz );
-
+				copy.add( clazz );
 				ClassDetails superClass = clazz.getSuperClass();
 				while ( superClass != null
-						&& !Object.class.getName().equals( superClass.getName() ) ) {
+						&& !Object.class.getName().equals( superClass.getName() )
+						&& !copy.contains( superClass ) ) {
 					if ( superClass.hasDirectAnnotationUsage( Entity.class )
 							|| superClass.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
-						if ( orderedClasses.contains( superClass ) ) {
-							break;
-						}
-						clazzHierarchy.add( superClass );
+						copy.add( superClass );
 					}
 					superClass = superClass.getSuperClass();
 				}
@@ -277,9 +267,9 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 				if ( !newList.contains( clazz ) ) {
 					newList.add( clazz );
 				}
+				copy.remove( clazz );
 			}
 		}
-		return new ArrayList<>( orderedClasses );
 	}
 
 	@Override

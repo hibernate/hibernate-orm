@@ -61,7 +61,7 @@ public class PersistentListTest {
 					root.getChildren().add( child2 );
 					child2.setParent( root );
 
-					session.save( root );
+					session.persist( root );
 				}
 		);
 
@@ -99,7 +99,7 @@ public class PersistentListTest {
 								assertEquals( Integer.valueOf( 1 ), valueMap.get( "c2" ) );
 							}
 					);
-					session2.delete( root );
+					session2.remove( root );
 
 				}
 		);
@@ -122,7 +122,7 @@ public class PersistentListTest {
 					order.addLineItem( "abc", 2 );
 					order.addLineItem( "def", 200 );
 					order.addLineItem( "ghi", 13 );
-					session.save( order );
+					session.persist( order );
 				}
 		);
 
@@ -159,7 +159,7 @@ public class PersistentListTest {
 								assertEquals( Integer.valueOf( 2 ), valueMap.get( "ghi" ) );
 							}
 					);
-					session2.delete( order );
+					session2.remove( order );
 				}
 		);
 	}
@@ -174,7 +174,7 @@ public class PersistentListTest {
 
 		scope.inTransaction(
 				session -> {
-					session.save( parent );
+					session.persist( parent );
 					session.flush();
 					// at this point, the list on parent has now been replaced with a PersistentList...
 					PersistentList children = (PersistentList) parent.getChildren();
@@ -193,7 +193,7 @@ public class PersistentListTest {
 					assertFalse( children.isDirty() );
 
 					children.clear();
-					session.delete( child );
+					session.remove( child );
 					assertTrue( children.isDirty() );
 
 					session.flush();
@@ -201,7 +201,7 @@ public class PersistentListTest {
 					children.clear();
 					assertFalse( children.isDirty() );
 
-					session.delete( parent );
+					session.remove( parent );
 				}
 		);
 	}

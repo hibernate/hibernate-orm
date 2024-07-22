@@ -123,7 +123,7 @@ public class QueryExecutionTest extends BaseNonConfigCoreFunctionalTestCase {
 				session -> {
 					final Customer customer = session.byId( Customer.class ).load( 1 );
 					if ( customer != null ) {
-						session.delete( customer );
+						session.remove( customer );
 					}
 				}
 		);

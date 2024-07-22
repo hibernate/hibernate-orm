@@ -41,17 +41,15 @@ public class HbmMappingJoinClassTest {
 			TaskStatus taskStatus = new TaskStatus();
 			taskStatus.setName( "Enabled" );
 			taskStatus.setDisplayName( "Enabled" );
-			session.save( taskStatus );
+			session.persist( taskStatus );
 
 			for ( long i = 0; i < 10; i++ ) {
 				SettlementTask settlementTask = new SettlementTask();
-				settlementTask.setId( i );
 				Settlement settlement = new Settlement();
 				settlementTask.setLinked( settlement );
 				settlementTask.setStatus( taskStatus );
 
 				Claim claim = new Claim();
-				claim.setId( i );
 				settlement.setClaim( claim );
 
 				for ( int j = 0; j < 2; j++ ) {
@@ -63,9 +61,9 @@ public class HbmMappingJoinClassTest {
 					settlement.getExtensions().add( gapAssessmentExtension );
 					settlement.getExtensions().add( ewtAssessmentExtension );
 				}
-				session.save( claim );
-				session.save( settlement );
-				session.save( settlementTask );
+				session.persist( claim );
+				session.persist( settlement );
+				session.persist( settlementTask );
 			}
 		} );
 	}

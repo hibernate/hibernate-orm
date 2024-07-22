@@ -94,8 +94,8 @@ public class BatchFetchNotFoundIgnoreDynamicStyleTest {
 				session -> {
 					// delete 2nd and 8th Task so that the non-found Task entities will be queried
 					// in 2 different batches.
-					session.delete( tasks.get( 1 ) );
-					session.delete( tasks.get( 7 ) );
+					session.remove( tasks.get( 1 ) );
+					session.remove( tasks.get( 7 ) );
 				}
 		);
 
@@ -136,7 +136,7 @@ public class BatchFetchNotFoundIgnoreDynamicStyleTest {
 				session -> {
 					// delete all but last Task entity
 					for ( int i = 0; i < 7; i++ ) {
-						session.delete( tasks.get( i ) );
+						session.remove( tasks.get( i ) );
 					}
 				}
 		);
@@ -178,7 +178,7 @@ public class BatchFetchNotFoundIgnoreDynamicStyleTest {
 		scope.inTransaction(
 				session -> {
 					// delete task so it is not found later when getting the Employee.
-					session.delete( tasks.get( 0 ) );
+					session.remove( tasks.get( 0 ) );
 				}
 		);
 

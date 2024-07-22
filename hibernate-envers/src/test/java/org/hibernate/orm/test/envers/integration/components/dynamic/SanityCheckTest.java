@@ -40,10 +40,10 @@ public class SanityCheckTest extends BaseEnversFunctionalTestCase {
 
 		PlainEntity plainEntity = getPlainEntity( manyToOne, manyToMany, oneToOne );
 
-		session.save( manyToMany );
-		session.save( manyToOne );
-		session.save( oneToOne );
-		session.save( plainEntity );
+		session.persist( manyToMany );
+		session.persist( manyToOne );
+		session.persist( oneToOne );
+		session.persist( plainEntity );
 
 		session.getTransaction().commit();
 		session.getTransaction().begin();

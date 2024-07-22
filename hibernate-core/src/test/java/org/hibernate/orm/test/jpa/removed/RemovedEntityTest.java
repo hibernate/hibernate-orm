@@ -36,7 +36,7 @@ public class RemovedEntityTest extends AbstractJPATest {
 
 		boolean contains = fromTransaction(
 				session -> {
-					session.delete( item );
+					session.remove( item );
 					return session.contains( item );
 				}
 		);
@@ -58,7 +58,7 @@ public class RemovedEntityTest extends AbstractJPATest {
 
 		Item item = fromTransaction(
 				session -> {
-					session.delete( it );
+					session.remove( it );
 					return session.get( Item.class, id );
 				}
 		);
@@ -83,7 +83,7 @@ public class RemovedEntityTest extends AbstractJPATest {
 					Item item = session.get( Item.class, id );
 					String sessionAsString = session.toString();
 
-					session.delete( item );
+					session.remove( item );
 
 					Item item2 = session.get( Item.class, id );
 					assertNull( item2, "expecting removed entity to be returned as null from get()" );
@@ -108,7 +108,7 @@ public class RemovedEntityTest extends AbstractJPATest {
 		// clean up
 		inTransaction(
 				session ->
-						session.delete( item )
+						session.remove( item )
 		);
 	}
 
@@ -124,7 +124,7 @@ public class RemovedEntityTest extends AbstractJPATest {
 					session.persist( item );
 
 					// delete cascades to part also
-					session.delete( item );
+					session.remove( item );
 					assertFalse( session.contains( item ), "the item is contained in the session after deletion" );
 					assertFalse( session.contains( part ), "the part is contained in the session after deletion" );
 
@@ -138,7 +138,7 @@ public class RemovedEntityTest extends AbstractJPATest {
 		// clean up
 		inTransaction(
 				session ->
-						session.delete( item )
+						session.remove( item )
 		);
 	}
 
@@ -155,7 +155,7 @@ public class RemovedEntityTest extends AbstractJPATest {
 					session.persist( item );
 
 					// delete the part
-					session.delete( child );
+					session.remove( child );
 					assertFalse(
 							session.contains( child ),
 							"the child is contained in the session, since it is deleted"
@@ -173,7 +173,7 @@ public class RemovedEntityTest extends AbstractJPATest {
 		// clean up
 		inTransaction(
 				session ->
-						session.delete( item )
+						session.remove( item )
 		);
 	}
 }

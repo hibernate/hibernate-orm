@@ -42,7 +42,7 @@ public class CustomStrategyTest {
 	public void testUsage(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Node node = new Node();
-			session.save( node );
+			session.persist( node );
 			assertThat(node.id, notNullValue());
 			assertThat(node.id.variant(), is(2));
 			assertThat(node.id.version(), is(1));

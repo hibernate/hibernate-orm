@@ -89,7 +89,7 @@ public class CollectionCacheEvictionWithoutMappedByTest extends BaseCoreFunction
 
 		people = session.get( People.class, people.id );
 		Person person = new Person();
-		session.save( person );
+		session.persist( person );
 		people.people.add( person );
 
 		session.getTransaction().commit();
@@ -113,7 +113,7 @@ public class CollectionCacheEvictionWithoutMappedByTest extends BaseCoreFunction
 
 		people = session.get( People.class, people.id );
 		Person person = people.people.remove( 0 );
-		session.delete( person );
+		session.remove( person );
 
 		session.getTransaction().commit();
 		session.close();

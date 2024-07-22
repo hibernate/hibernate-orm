@@ -31,7 +31,7 @@ public class IdClassWithOneAttributeTest {
 					SystemUser systemUser = new SystemUser();
 					systemUser.setId( pk );
 					systemUser.setName( "Andrea" );
-					session.save( systemUser );
+					session.persist( systemUser );
 				}
 		);
 	}

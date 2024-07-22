@@ -56,9 +56,9 @@ public class ManyToOneEmbeddedIdWithLazyToOneFKTest {
 					System system = new System( 1, "sub1" );
 					system.setUser( user );
 
-					session.save( subsystem );
-					session.save( user );
-					session.save( system );
+					session.persist( subsystem );
+					session.persist( user );
+					session.persist( system );
 				}
 		);
 	}

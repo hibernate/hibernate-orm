@@ -48,8 +48,8 @@ public class SubselectTest extends BaseCoreFunctionalTestCase {
 					x23y4.setIdentity( "x23y4$$hu%3" );
 					x23y4.setPlanet( "Mars" );
 					x23y4.setSpecies( "martian" );
-					s.save( gavin );
-					s.save( x23y4 );
+					s.persist( gavin );
+					s.persist( x23y4 );
 					s.flush();
 					List<Being> beings = (List<Being>) s.createQuery( "from Being" ).list();
 					for ( Being being : beings ) {
@@ -69,8 +69,8 @@ public class SubselectTest extends BaseCoreFunctionalTestCase {
 					gavin.setAddress( "Atlanta, GA" );
 					gav = (Being) s.createQuery( "from Being b where b.location like '%GA%'" ).uniqueResult();
 					assertEquals( gav.getLocation(), gavin.getAddress() );
-					s.delete( gavin );
-					s.delete( x23y4 );
+					s.remove( gavin );
+					s.remove( x23y4 );
 					assertTrue( s.createQuery( "from Being" ).list().isEmpty() );
 
 				}
@@ -95,8 +95,8 @@ public class SubselectTest extends BaseCoreFunctionalTestCase {
 					x23y4.setPlanet( "Mars" );
 					x23y4.setSpecies( "martian" );
 					x23y4.setHeightInches( ALIEN_INCHES );
-					s.save( gavin );
-					s.save( x23y4 );
+					s.persist( gavin );
+					s.persist( x23y4 );
 					s.flush();
 
 					// Test value conversion during insert
@@ -137,8 +137,8 @@ public class SubselectTest extends BaseCoreFunctionalTestCase {
 							.setParameter( 2, ALIEN_INCHES + 0.01d )
 							.uniqueResult();
 					assertEquals( ALIEN_INCHES, b.getHeightInches(), 0.01d );
-					s.delete( gavin );
-					s.delete( x23y4 );
+					s.remove( gavin );
+					s.remove( x23y4 );
 				}
 		);
 	}

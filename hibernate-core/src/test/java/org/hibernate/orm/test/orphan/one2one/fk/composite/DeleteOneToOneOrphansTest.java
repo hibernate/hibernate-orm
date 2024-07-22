@@ -35,7 +35,7 @@ public class DeleteOneToOneOrphansTest {
 				session -> {
 					Employee emp = new Employee();
 					emp.setInfo( new EmployeeInfo( 1L, 1L ) );
-					session.save( emp );
+					session.persist( emp );
 				}
 		);
 	}

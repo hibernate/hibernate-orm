@@ -51,7 +51,7 @@ public class ListIndexReferenceFromListElementTest {
 					LocalOrder localOrder = new LocalOrder();
 					localOrder.makeLineItem( "Shoes" );
 					localOrder.makeLineItem( "Socks" );
-					session.save( localOrder );
+					session.persist( localOrder );
 				}
 		);
 	}

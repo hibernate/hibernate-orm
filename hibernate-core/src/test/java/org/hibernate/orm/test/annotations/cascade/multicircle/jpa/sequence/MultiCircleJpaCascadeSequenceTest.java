@@ -147,12 +147,12 @@ public class MultiCircleJpaCascadeSequenceTest {
 					e = (E) session.merge( e );
 					f = (F) session.merge( f );
 					g = (G) session.merge( g );
-					session.delete( f );
-					session.delete( g );
-					session.delete( b );
-					session.delete( d );
-					session.delete( e );
-					session.delete( c );
+					session.remove( f );
+					session.remove( g );
+					session.remove( b );
+					session.remove( d );
+					session.remove( e );
+					session.remove( c );
 				}
 		);
 	}

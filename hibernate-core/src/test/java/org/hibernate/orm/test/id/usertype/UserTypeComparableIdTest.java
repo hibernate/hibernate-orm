@@ -60,8 +60,8 @@ public class UserTypeComparableIdTest {
 
 		scope.inTransaction(
 				session -> {
-					session.delete( session.get( SomeEntity.class, e1.getCustomId() ) );
-					session.delete( session.get( SomeEntity.class, e2.getCustomId() ) );
+					session.remove( session.get( SomeEntity.class, e1.getCustomId() ) );
+					session.remove( session.get( SomeEntity.class, e2.getCustomId() ) );
 				}
 		);
 	}

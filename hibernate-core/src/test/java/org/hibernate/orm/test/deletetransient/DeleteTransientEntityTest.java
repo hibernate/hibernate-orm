@@ -38,7 +38,7 @@ public class DeleteTransientEntityTest extends BaseCoreFunctionalTestCase {
 	public void testTransientEntityDeletionNoCascades() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		s.delete( new Address() );
+		s.remove( new Address() );
 		t.commit();
 		s.close();
 	}
@@ -50,7 +50,7 @@ public class DeleteTransientEntityTest extends BaseCoreFunctionalTestCase {
 		Transaction t = s.beginTransaction();
 		Person p = new Person();
 		p.getAddresses().add( new Address() );
-		s.delete( p );
+		s.remove( p );
 		t.commit();
 		s.close();
 	}
@@ -64,7 +64,7 @@ public class DeleteTransientEntityTest extends BaseCoreFunctionalTestCase {
 		Person p2 = new Person();
 		p1.getFriends().add( p2 );
 		p2.getFriends().add( p1 );
-		s.delete( p1 );
+		s.remove( p1 );
 		t.commit();
 		s.close();
 	}
@@ -76,7 +76,7 @@ public class DeleteTransientEntityTest extends BaseCoreFunctionalTestCase {
 		Transaction t = s.beginTransaction();
 		Address address = new Address();
 		address.setInfo( "123 Main St." );
-		s.save( address );
+		s.persist( address );
 		t.commit();
 		s.close();
 
@@ -84,7 +84,7 @@ public class DeleteTransientEntityTest extends BaseCoreFunctionalTestCase {
 		t = s.beginTransaction();
 		Person p = new Person();
 		p.getAddresses().add( address );
-		s.delete( p );
+		s.remove( p );
 		t.commit();
 		s.close();
 
@@ -103,16 +103,16 @@ public class DeleteTransientEntityTest extends BaseCoreFunctionalTestCase {
 		Transaction t = s.beginTransaction();
 		Address address = new Address();
 		address.setInfo( "123 Main St." );
-		s.save( address );
+		s.persist( address );
 		t.commit();
 		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
-		address = ( Address ) s.get( Address.class, address.getId() );
+		address = s.get( Address.class, address.getId() );
 		Person p = new Person();
 		p.getAddresses().add( address );
-		s.delete( p );
+		s.remove( p );
 		t.commit();
 		s.close();
 
@@ -133,7 +133,7 @@ public class DeleteTransientEntityTest extends BaseCoreFunctionalTestCase {
 		Address address = new Address();
 		address.setInfo( "123 Main St." );
 		p.getAddresses().add( address );
-		s.save( p );
+		s.persist( p );
 		t.commit();
 		s.close();
 
@@ -142,7 +142,7 @@ public class DeleteTransientEntityTest extends BaseCoreFunctionalTestCase {
 		Suite suite = new Suite();
 		address.getSuites().add( suite );
 		p.getAddresses().clear();
-		s.saveOrUpdate( p );
+		p = s.merge( p );
 		t.commit();
 		s.close();
 
@@ -154,7 +154,7 @@ public class DeleteTransientEntityTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, count.longValue() );
 		count = ( Long ) s.createQuery( "select count(*) from Suite" ).list().get( 0 );
 		assertEquals( 0, count.longValue() );
-		s.delete( p );
+		s.remove( p );
 		t.commit();
 		s.close();
 	}
@@ -168,7 +168,7 @@ public class DeleteTransientEntityTest extends BaseCoreFunctionalTestCase {
 		address.setInfo( "123 Main St." );
 		Suite suite = new Suite();
 		address.getSuites().add( suite );
-		s.save( address );
+		s.persist( address );
 		t.commit();
 		s.close();
 
@@ -179,7 +179,7 @@ public class DeleteTransientEntityTest extends BaseCoreFunctionalTestCase {
 		note.setDescription( "a description" );
 		suite.getNotes().add( note );
 		address.getSuites().clear();
-		s.saveOrUpdate( address );
+		address = s.merge( address );
 		t.commit();
 		s.close();
 
@@ -189,7 +189,7 @@ public class DeleteTransientEntityTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "all-delete-orphan not cascaded properly to cleared persistent collection entities", 0, count.longValue() );
 		count = ( Long ) s.createQuery( "select count(*) from Note" ).list().get( 0 );
 		assertEquals( 0, count.longValue() );
-		s.delete( address );
+		s.remove( address );
 		t.commit();
 		s.close();
 	}

@@ -114,7 +114,7 @@ public class JoinedSubclassTest {
 		scope.inTransaction(
 				session -> {
 					Sweater toDelete = session.get( Sweater.class, sw.getId() );
-					session.delete( toDelete );
+					session.remove( toDelete );
 				}
 		);
 	}
@@ -225,32 +225,32 @@ public class JoinedSubclassTest {
 		scope.inTransaction(
 				session -> {
 					session.createQuery( "from Customer" ).list().forEach(
-							customer -> session.delete( customer )
+							customer -> session.remove( customer )
 					);
 
 					session.createQuery( "from Client" ).list().forEach(
-							client -> session.delete( client )
+							client -> session.remove( client )
 					);
 
 					session.createQuery( "from Account" ).list().forEach(
-							account -> session.delete( account )
+							account -> session.remove( account )
 					);
 
 					session.createQuery( "from ProgramExecution" ).list().forEach(
-							programExecution -> session.delete( programExecution )
+							programExecution -> session.remove( programExecution )
 					);
 
 					session.createQuery( "from Alarm" ).list().forEach(
-							alarm -> session.delete( alarm )
+							alarm -> session.remove( alarm )
 					);
 
 					session.createQuery( "from EventInformation" ).list().forEach(
-							eventInformation -> session.delete( eventInformation )
+							eventInformation -> session.remove( eventInformation )
 					);
 
 
 					session.createQuery( "from File" ).list().forEach(
-							file -> session.delete( file )
+							file -> session.remove( file )
 					);
 				}
 		);

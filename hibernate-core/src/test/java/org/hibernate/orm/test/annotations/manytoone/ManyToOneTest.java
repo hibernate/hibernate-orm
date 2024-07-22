@@ -157,7 +157,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		customer = s.get( Customer.class, customer.getId() );
-		s.delete( customer );
+		s.remove( customer );
 		tx.commit();
 		s.close();
 	}
@@ -196,7 +196,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		s.delete( s.get( Discount.class, discount.getId() ) );
+		s.remove( s.get( Discount.class, discount.getId() ) );
 		tx.commit();
 		s.close();
 	}

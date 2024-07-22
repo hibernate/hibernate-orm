@@ -37,7 +37,7 @@ public class LocalDateTimeVersionTest extends BaseNonConfigCoreFunctionalTestCas
 		Session session = openSession();
 		session.getTransaction().begin();
 		TheEntity e = new TheEntity( 1 );
-		session.save( e );
+		session.persist( e );
 		session.getTransaction().commit();
 		session.close();
 
@@ -51,7 +51,7 @@ public class LocalDateTimeVersionTest extends BaseNonConfigCoreFunctionalTestCas
 		session = openSession();
 		session.getTransaction().begin();
 		e = session.byId( TheEntity.class ).load( 1 );
-		session.delete( e );
+		session.remove( e );
 		session.getTransaction().commit();
 		session.close();
 	}

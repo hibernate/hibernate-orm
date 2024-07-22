@@ -118,9 +118,10 @@ public class LazyLoadingTest {
 		final Object clientId = scope.fromTransaction(
 				session -> {
 					Address address = new Address();
-					session.save( address );
+					session.persist( address );
 					Client client = new Client( address );
-					return session.save( client );
+					session.persist( client );
+					return client.getId();
 				}
 		);
 
@@ -155,12 +156,12 @@ public class LazyLoadingTest {
 	public void testGetIdManyToOne(SessionFactoryScope scope) {
 		Serializable accountId = scope.fromTransaction( session -> {
 			Address address = new Address();
-			session.save( address );
+			session.persist( address );
 			Client client = new Client( address );
 			Account account = new Account();
 			client.addAccount( account );
-			session.save( account );
-			session.save( client );
+			session.persist( account );
+			session.persist( client );
 			return account.getId();
 		} );
 

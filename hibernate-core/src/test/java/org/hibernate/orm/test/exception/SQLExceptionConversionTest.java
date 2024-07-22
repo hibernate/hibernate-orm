@@ -116,7 +116,7 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 
 		final User user = new User();
 		user.setUsername( "Lukasz" );
-		session.save( user );
+		session.persist( user );
 		session.flush();
 
 		session.doWork(

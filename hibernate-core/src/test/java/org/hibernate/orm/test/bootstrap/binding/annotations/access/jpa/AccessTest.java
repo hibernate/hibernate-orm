@@ -74,7 +74,7 @@ public class AccessTest {
 					User user = session.get( User.class, john.getId() );
 					assertEquals( 1, user.getFriends().size(), "Wrong number of friends" );
 					assertNull( user.firstname );
-					session.delete( user );
+					session.remove( user );
 					tx.commit();
 				}
 		);
@@ -98,7 +98,7 @@ public class AccessTest {
 					Furniture retrievedFurniture = session.get( Furniture.class, fur.getId() );
 					assertFalse( retrievedFurniture.isAlive );
 					assertNotNull( retrievedFurniture.getColor() );
-					session.delete( retrievedFurniture );
+					session.remove( retrievedFurniture );
 					tx.commit();
 				}
 		);
@@ -119,7 +119,7 @@ public class AccessTest {
 					tx = session.beginTransaction();
 					Furniture retrievedFurniture = session.get( Furniture.class, fur.getId() );
 					assertNotNull( retrievedFurniture.getGod() );
-					session.delete( retrievedFurniture );
+					session.remove( retrievedFurniture );
 					tx.commit();
 				}
 		);
@@ -140,7 +140,7 @@ public class AccessTest {
 					tx = session.beginTransaction();
 					Furniture retrievedFurniture = session.get( Furniture.class, fur.getId() );
 					assertEquals( 5, retrievedFurniture.weight );
-					session.delete( retrievedFurniture );
+					session.remove( retrievedFurniture );
 					tx.commit();
 				}
 		);
@@ -162,7 +162,7 @@ public class AccessTest {
 					tx = session.beginTransaction();
 					Chair retrievedChair = session.get( Chair.class, chair.getId() );
 					assertNull( retrievedChair.getPillow() );
-					session.delete( retrievedChair );
+					session.remove( retrievedChair );
 					tx.commit();
 				}
 		);
@@ -183,7 +183,7 @@ public class AccessTest {
 					BigBed retievedBed = session.get( BigBed.class, bed.getId() );
 					assertEquals( 5, retievedBed.size );
 					assertNull( retievedBed.getQuality() );
-					session.delete( retievedBed );
+					session.remove( retievedBed );
 					tx.commit();
 				}
 		);
@@ -204,7 +204,7 @@ public class AccessTest {
 					Gardenshed retrievedGardenshed = session.get( Gardenshed.class, gs.getId() );
 					assertEquals( 4, retrievedGardenshed.floors );
 					assertEquals( 6, retrievedGardenshed.getFloors() );
-					session.delete( retrievedGardenshed );
+					session.remove( retrievedGardenshed );
 					tx.commit();
 				}
 		);
@@ -234,7 +234,7 @@ public class AccessTest {
 					catch (RuntimeException e) {
 						// success
 					}
-					session.delete( retrievedCircle );
+					session.remove( retrievedCircle );
 					tx.commit();
 				}
 		);
@@ -262,7 +262,7 @@ public class AccessTest {
 					catch (RuntimeException e) {
 						// success
 					}
-					session.delete( retrievedsquare );
+					session.remove( retrievedsquare );
 					tx.commit();
 				}
 		);

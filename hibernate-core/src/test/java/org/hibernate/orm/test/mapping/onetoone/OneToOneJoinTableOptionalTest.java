@@ -41,14 +41,14 @@ public class OneToOneJoinTableOptionalTest {
 		scope.inTransaction(
 				(session) -> {
 					Show show = new Show();
-					session.save( show );
+					session.persist( show );
 				}
 		);
 
 		scope.inTransaction(
 				(session) -> {
 					ShowDescription showDescription = new ShowDescription();
-					session.save( showDescription );
+					session.persist( showDescription );
 				}
 		);
 	}

@@ -180,10 +180,10 @@ public class JoinedSubclassOneToOneTest {
 					assertNull( p.mailingAddress );
 
 					session.clear();
-					session.delete( p );
-					session.delete( p.address );
-					session.delete( org );
-					session.delete( a2 );
+					session.remove( p );
+					session.remove( p.address );
+					session.remove( org );
+					session.remove( a2 );
 					session.flush();
 				}
 		);

@@ -247,7 +247,7 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 		Session sessionUnderTest = getSessionUnderTest();
 
 		Silly silly = new Silly( "tester" );
-		sessionUnderTest.save( silly );
+		sessionUnderTest.persist( silly );
 		sessionUnderTest.flush();
 
 		try (ScrollableResults sr = sessionUnderTest.createQuery( "from Silly" ).scroll()) {
@@ -257,7 +257,7 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 			checkSerializedState( sessionUnderTest );
 
 			reconnect( sessionUnderTest );
-			sessionUnderTest.delete( silly );
+			sessionUnderTest.remove( silly );
 			sessionUnderTest.flush();
 
 			release( sessionUnderTest );

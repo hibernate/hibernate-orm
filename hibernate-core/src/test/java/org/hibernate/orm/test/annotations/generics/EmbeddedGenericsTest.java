@@ -71,7 +71,7 @@ public class EmbeddedGenericsTest {
 				session -> {
 					Classes.PopularBook retrieved = session.get( Classes.PopularBook.class, b.id );
 					assertEquals( "Second", retrieved.editions.iterator().next().name );
-					session.delete( retrieved );
+					session.remove( retrieved );
 				}
 		);
 	}

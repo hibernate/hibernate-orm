@@ -15,7 +15,7 @@ import org.hibernate.annotations.SelectBeforeUpdate;
 import org.hibernate.envers.Audited;
 import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
 
@@ -24,7 +24,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-11056")
+@JiraKey("HHH-11056")
 public class SelectBeforeUpdateTest extends BaseEnversFunctionalTestCase {
 
 	@Override
@@ -40,13 +40,13 @@ public class SelectBeforeUpdateTest extends BaseEnversFunctionalTestCase {
 
 		// Revision 1 - insert new entities.
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.save( author );
-			session.save( book );
+			session.persist( author );
+			session.persist( book );
 		} );
 
 		// Revision 2 - update detached with no changes.
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.update( book );
+			session.merge( book );
 		} );
 	}
 
@@ -58,14 +58,14 @@ public class SelectBeforeUpdateTest extends BaseEnversFunctionalTestCase {
 
 		// Revision 1 - insert new entities.
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.save( author );
-			session.save( book );
+			session.persist( author );
+			session.persist( book );
 		} );
 
 		// Revision 2 - update detached with changes.
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
 			book.setName( "Book2Updated" );
-			session.update( book );
+			session.merge( book );
 		} );
 	}
 
@@ -77,19 +77,19 @@ public class SelectBeforeUpdateTest extends BaseEnversFunctionalTestCase {
 
 		// Revision 1 - insert new entities.
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.save( author );
-			session.save( book );
+			session.persist( author );
+			session.persist( book );
 		} );
 
 		// Revision 2 - update detached with no changes.
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.update( book );
+			session.merge( book );
 		} );
 
 		// Revision 3 - update detached with changes.
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
 			book.setName( "Book3Updated" );
-			session.update( book );
+			session.merge( book );
 		} );
 	}
 
@@ -101,19 +101,19 @@ public class SelectBeforeUpdateTest extends BaseEnversFunctionalTestCase {
 
 		// Revision 1 - insert new entities.
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.save( author );
-			session.save( book );
+			session.persist( author );
+			session.persist( book );
 		} );
 
 		// Revision 2 - update detached with changes.
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
 			book.setName( "Book4Updated" );
-			session.update( book );
+			session.merge( book );
 		} );
 
 		// Revision 3 - update detached with no changes.
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.update( book );
+			session.merge( book );
 		} );
 	}
 

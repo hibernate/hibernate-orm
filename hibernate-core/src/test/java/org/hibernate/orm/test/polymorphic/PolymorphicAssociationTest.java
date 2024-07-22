@@ -50,9 +50,9 @@ public class PolymorphicAssociationTest {
 
 			level3.setName( "initial-name" );
 
-			session.save( level1 );
-			session.save( level2 );
-			session.save( level3 );
+			session.persist( level1 );
+			session.persist( level2 );
+			session.persist( level3 );
 		} );
 	}
 

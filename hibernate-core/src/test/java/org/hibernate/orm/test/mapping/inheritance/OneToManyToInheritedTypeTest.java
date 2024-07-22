@@ -49,10 +49,10 @@ public class OneToManyToInheritedTypeTest {
 					entity.addSuperType( superType );
 					entity.addSuperType( typeB );
 					entity.addSuperType( typeA );
-					session.save( superType );
-					session.save( typeB );
-					session.save( typeA );
-					session.save( entity );
+					session.persist( superType );
+					session.persist( typeB );
+					session.persist( typeA );
+					session.persist( entity );
 				}
 		);
 	}

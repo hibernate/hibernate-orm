@@ -73,8 +73,8 @@ public class LazyCollectionDeletedTest {
             details.post = post;
             details.details = "Some data";
             post.additionalDetails = details;
-
-            postId = (Long) s.save( post );
+            s.persist( post );
+            postId = post.id;
         } );
     }
 

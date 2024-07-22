@@ -91,7 +91,7 @@ public class InsertedDataTest {
 				sessionFactory,
 				s -> {
 					CacheableItem item = new CacheableItem( "data" );
-					s.save( item );
+					s.persist( item );
 				}
 		);
 
@@ -108,7 +108,7 @@ public class InsertedDataTest {
 				sessionFactory,
 				s -> {
 					CacheableEmbeddedIdItem item = new CacheableEmbeddedIdItem( new PK( 2l ), "data" );
-					s.save( item );
+					s.persist( item );
 				}
 		);
 
@@ -124,7 +124,7 @@ public class InsertedDataTest {
 				sessionFactory,
 				s -> {
 					CacheableItem item = new CacheableItem( "data" );
-					s.save( item );
+					s.persist( item );
 					s.flush();
 					s.getTransaction().markRollbackOnly();
 				}
@@ -142,7 +142,7 @@ public class InsertedDataTest {
 				sessionFactory,
 				s -> {
 					CacheableItem item = new CacheableItem( "data" );
-					s.save( item );
+					s.persist( item );
 					s.flush();
 					item.setName( "new data" );
 				}
@@ -161,7 +161,7 @@ public class InsertedDataTest {
 				sessionFactory,
 				s -> {
 					CacheableItem item = new CacheableItem( "data" );
-					s.save( item );
+					s.persist( item );
 					s.flush();
 					item.setName( "new data" );
 					s.getTransaction().markRollbackOnly();
@@ -180,7 +180,7 @@ public class InsertedDataTest {
 				sessionFactory,
 				s -> {
 					CacheableItem item = new CacheableItem( "data" );
-					s.save( item );
+					s.persist( item );
 					s.flush();
 					s.refresh( item );
 				}
@@ -199,7 +199,7 @@ public class InsertedDataTest {
 				sessionFactory,
 				s -> {
 					CacheableItem item = new CacheableItem( "data" );
-					s.save( item );
+					s.persist( item );
 					s.flush();
 					s.refresh( item );
 					s.getTransaction().markRollbackOnly();
@@ -243,7 +243,7 @@ public class InsertedDataTest {
 				sessionFactory,
 				s -> {
 					CacheableItem item = new CacheableItem( "data" );
-					s.save( item );
+					s.persist( item );
 					s.flush();
 					s.clear();
 				}
@@ -261,7 +261,7 @@ public class InsertedDataTest {
 				sessionFactory,
 				s -> {
 					CacheableEmbeddedIdItem item = new CacheableEmbeddedIdItem( new PK( 2l ), "data" );
-					s.save( item );
+					s.persist( item );
 					s.flush();
 					s.clear();
 				}
@@ -279,7 +279,7 @@ public class InsertedDataTest {
 				sessionFactory,
 				s -> {
 					CacheableItem item = new CacheableItem( "data" );
-					s.save( item );
+					s.persist( item );
 					s.flush();
 					s.clear();
 					item = s.get( CacheableItem.class, item.getId() );
@@ -307,7 +307,7 @@ public class InsertedDataTest {
 				sessionFactory,
 				s -> {
 					CacheableEmbeddedIdItem item = new CacheableEmbeddedIdItem( new PK( 2l ), "data" );
-					s.save( item );
+					s.persist( item );
 					s.flush();
 					s.clear();
 					item = s.get( CacheableEmbeddedIdItem.class, item.getId() );

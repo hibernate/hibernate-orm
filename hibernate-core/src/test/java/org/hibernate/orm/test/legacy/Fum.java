@@ -86,7 +86,7 @@ public class Fum implements Lifecycle, Serializable {
 		try {
 			Iterator iter = friends.iterator();
 			while ( iter.hasNext() ) {
-				s.delete( iter.next() );
+				s.remove( iter.next() );
 			}
 		}
 		catch (Exception e) {
@@ -105,7 +105,7 @@ public class Fum implements Lifecycle, Serializable {
 		try {
 			Iterator iter = friends.iterator();
 			while ( iter.hasNext() ) {
-				s.save( iter.next() );
+				s.persist( iter.next() );
 			}
 		}
 		catch (Exception e) {

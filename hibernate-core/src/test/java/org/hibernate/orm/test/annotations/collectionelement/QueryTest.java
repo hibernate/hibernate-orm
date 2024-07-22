@@ -36,14 +36,14 @@ public class QueryTest {
 					entityWithAnElementCollection.addSomeString( "abc" );
 					entityWithAnElementCollection.addSomeString( "efg" );
 
-					session.save( entityWithAnElementCollection );
+					session.persist( entityWithAnElementCollection );
 
 					EntityWithAnElementCollection entityWithAnElementCollection2 = new EntityWithAnElementCollection();
 					entityWithAnElementCollection2.setId( 2L );
 					entityWithAnElementCollection2.addSomeString( "hil" );
 					entityWithAnElementCollection2.addSomeString( "mnp" );
 
-					session.save( entityWithAnElementCollection2 );
+					session.persist( entityWithAnElementCollection2 );
 				}
 		);
 	}

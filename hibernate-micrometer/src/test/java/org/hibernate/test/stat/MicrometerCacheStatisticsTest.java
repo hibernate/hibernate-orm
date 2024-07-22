@@ -144,7 +144,7 @@ public class MicrometerCacheStatisticsTest extends BaseNonConfigCoreFunctionalTe
 		Session session = openSession();
 		session.beginTransaction();
 		Person person = new Person( 1, "testAcct");
-		session.save( person );
+		session.persist( person );
 		session.getTransaction().commit();
 		session.close();
 
@@ -171,7 +171,7 @@ public class MicrometerCacheStatisticsTest extends BaseNonConfigCoreFunctionalTe
 		// clean up
 		session = openSession();
 		session.beginTransaction();
-		session.delete( person );
+		session.remove( person );
 		session.getTransaction().commit();
 		session.close();
 

@@ -56,9 +56,9 @@ public class OneToManyEmbeddedIdFKTest {
 					system.addUser( superUser );
 					system.addUser( user );
 
-					session.save( superUser );
-					session.save( user );
-					session.save( system );
+					session.persist( superUser );
+					session.persist( user );
+					session.persist( system );
 				}
 		);
 	}

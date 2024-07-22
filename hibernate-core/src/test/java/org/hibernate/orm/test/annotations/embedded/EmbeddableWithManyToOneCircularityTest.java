@@ -49,8 +49,8 @@ public class EmbeddableWithManyToOneCircularityTest {
 					entityTest2.setEmbeddedAttribute( embeddable );
 
 					entity.setEntity2( entityTest2 );
-					session.save( entity );
-					session.save( entityTest2 );
+					session.persist( entity );
+					session.persist( entityTest2 );
 				}
 		);
 	}

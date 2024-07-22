@@ -34,7 +34,7 @@ public abstract class AbstractAssociationCollectionEventTest extends AbstractCol
 		parent = ( ParentWithCollection ) s.get( parent.getClass(), parent.getId() );
 		child = ( ChildEntity ) s.get( child.getClass(), child.getId() );
 		parent.removeChild( child );
-		s.delete( parent );
+		s.remove( parent );
 		tx.commit();
 		s.close();
 		int index = 0;

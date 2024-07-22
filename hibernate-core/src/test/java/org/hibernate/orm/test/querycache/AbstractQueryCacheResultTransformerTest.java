@@ -149,7 +149,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 					courseMeetingExpected2 = new CourseMeeting( courseExpected, "Tuesday", 2, "1313 Mockingbird Lane" );
 					courseExpected.getCourseMeetings().add( courseMeetingExpected1 );
 					courseExpected.getCourseMeetings().add( courseMeetingExpected2 );
-					s.save( courseExpected );
+					s.persist( courseExpected );
 
 					yogiExpected = new Student();
 					yogiExpected.setName( new PersonName( "Yogi", "The", "Bear" ) );
@@ -158,7 +158,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 					List yogiSecretCodes = new ArrayList();
 					yogiSecretCodes.add( 0 );
 					yogiExpected.setSecretCodes( yogiSecretCodes );
-					s.save( yogiExpected );
+					s.persist( yogiExpected );
 
 					Address address1 = new Address(
 							yogiExpected,
@@ -180,8 +180,8 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 					);
 					yogiExpected.getAddresses().put( address1.getAddressType(), address1 );
 					yogiExpected.getAddresses().put( address2.getAddressType(), address2 );
-					s.save( address1 );
-					s.save( address2 );
+					s.persist( address1 );
+					s.persist( address2 );
 
 					shermanExpected = new Student();
 					shermanExpected.setName( new PersonName( "Sherman", null, "Grote" ) );
@@ -190,7 +190,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 					shermanSecretCodes.add( 1 );
 					shermanSecretCodes.add( 2 );
 					shermanExpected.setSecretCodes( shermanSecretCodes );
-					s.save( shermanExpected );
+					s.persist( shermanExpected );
 
 					shermanEnrolmentExpected = new Enrolment();
 					shermanEnrolmentExpected.setCourse( courseExpected );
@@ -200,7 +200,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 					shermanEnrolmentExpected.setStudent( shermanExpected );
 					shermanEnrolmentExpected.setStudentNumber( shermanExpected.getStudentNumber() );
 					shermanExpected.getEnrolments().add( shermanEnrolmentExpected );
-					s.save( shermanEnrolmentExpected );
+					s.persist( shermanEnrolmentExpected );
 
 					yogiEnrolmentExpected = new Enrolment();
 					yogiEnrolmentExpected.setCourse( courseExpected );
@@ -210,7 +210,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 					yogiEnrolmentExpected.setStudent( yogiExpected );
 					yogiEnrolmentExpected.setStudentNumber( yogiExpected.getStudentNumber() );
 					yogiExpected.getEnrolments().add( yogiEnrolmentExpected );
-					s.save( yogiEnrolmentExpected );
+					s.persist( yogiEnrolmentExpected );
 				}
 		);
 	}
@@ -218,13 +218,13 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 	protected void deleteData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				s -> {
-					s.delete( yogiExpected );
-					s.delete( shermanExpected );
-					s.delete( yogiEnrolmentExpected );
-					s.delete( shermanEnrolmentExpected );
-					s.delete( courseMeetingExpected1 );
-					s.delete( courseMeetingExpected2 );
-					s.delete( courseExpected );
+					s.remove( yogiExpected );
+					s.remove( shermanExpected );
+					s.remove( yogiEnrolmentExpected );
+					s.remove( shermanEnrolmentExpected );
+					s.remove( courseMeetingExpected1 );
+					s.remove( courseMeetingExpected2 );
+					s.remove( courseExpected );
 				}
 		);
 	}

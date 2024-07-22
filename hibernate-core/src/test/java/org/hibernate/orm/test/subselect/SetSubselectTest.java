@@ -44,20 +44,20 @@ public class SetSubselectTest extends BaseCoreFunctionalTestCase {
 			b.setName( "Camilleri" );
 			b.setId( 1 );
 
-			s.save( b );
+			s.persist( b );
 
 			Book book = new Book();
 			book.setId( 2 );
 			book.setAuthorId( 1 );
 			book.setTitle( "Il sognaglio" );
-			s.save( book );
+			s.persist( book );
 
 			Book book2 = new Book();
 			book2.setId( 3 );
 			book2.setAuthorId( 1 );
 			book2.setTitle( "Il casellante" );
 
-			s.save( book2 );
+			s.persist( book2 );
 
 			s.getTransaction().commit();
 		}

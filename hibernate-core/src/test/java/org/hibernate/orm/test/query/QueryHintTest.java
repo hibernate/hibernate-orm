@@ -82,7 +82,7 @@ public class QueryHintTest {
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			session.createQuery( "from Contact" ).list().forEach( session::delete );
+			session.createQuery( "from Contact" ).list().forEach( session::remove );
 		} );
 	}
 

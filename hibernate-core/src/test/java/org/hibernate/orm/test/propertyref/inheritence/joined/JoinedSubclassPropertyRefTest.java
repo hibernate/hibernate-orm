@@ -68,7 +68,7 @@ public class JoinedSubclassPropertyRefTest {
 		);
 
 		scope.inTransaction(
-				session -> session.delete( person )
+				session -> session.remove( person )
 		);
 	}
 

@@ -34,7 +34,7 @@ public class DeleteOneToOneOrphansTest {
 		scope.inTransaction(
 				session -> {
 					Employee emp = new Employee();
-					session.save( emp );
+					session.persist( emp );
 					emp.setInfo( new EmployeeInfo( emp.getId() ) );
 				}
 		);

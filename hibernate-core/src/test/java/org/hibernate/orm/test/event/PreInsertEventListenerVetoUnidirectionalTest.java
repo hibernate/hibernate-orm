@@ -58,7 +58,7 @@ public class PreInsertEventListenerVetoUnidirectionalTest extends BaseCoreFuncti
             Child child = new Child();
             child.setParent( parent );
 
-            session.save( child );
+            session.persist( child );
         } );
 
         fail( "Should have thrown EntityActionVetoException!" );

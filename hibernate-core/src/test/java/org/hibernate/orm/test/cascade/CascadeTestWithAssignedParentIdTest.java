@@ -42,7 +42,7 @@ public class CascadeTestWithAssignedParentIdTest {
 					parent.setChildren( Collections.singleton( child ) );
 					parent.setId( Long.valueOf( 123L ) );
 					// this should figure out that the parent needs saving first since id is assigned.
-					session.save( child );
+					session.persist( child );
 				}
 		);
 

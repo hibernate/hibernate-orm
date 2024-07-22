@@ -80,15 +80,15 @@ public class StatelessSessionQueryTest {
 		scope.inTransaction(
 				session -> {
 					Country usa = new Country();
-					session.save( usa );
+					session.persist( usa );
 					list.add( usa );
 					Org disney = new Org();
 					disney.setCountry( usa );
-					session.save( disney );
+					session.persist( disney );
 					list.add( disney );
 					Contact waltDisney = new Contact();
 					waltDisney.setOrg( disney );
-					session.save( waltDisney );
+					session.persist( waltDisney );
 					list.add( waltDisney );
 				}
 		);
@@ -99,7 +99,7 @@ public class StatelessSessionQueryTest {
 		scope.inTransaction(
 				session -> {
 					for ( Object obj : list ) {
-						session.delete( obj );
+						session.remove( obj );
 					}
 				}
 		);

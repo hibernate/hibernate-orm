@@ -47,14 +47,14 @@ public class InterfaceProxyTest {
 			try {
 				doc.setName( "Hibernate in Action" );
 				doc.setContent( session.getLobHelper().createBlob( "blah blah blah".getBytes() ) );
-				session.save( doc );
+				session.persist( doc );
 				doc2.setName( "Secret" );
 				doc2.setContent( session.getLobHelper().createBlob( "wxyz wxyz".getBytes() ) );
 				// SybaseASE15Dialect only allows 7-bits in a byte to be inserted into a tinyint
 				// column (0 <= val < 128)
 				doc2.setPermissionBits( (byte) 127 );
 				doc2.setOwner( "gavin" );
-				session.save( doc2 );
+				session.persist( doc2 );
 				session.getTransaction().commit();
 			}
 			finally {

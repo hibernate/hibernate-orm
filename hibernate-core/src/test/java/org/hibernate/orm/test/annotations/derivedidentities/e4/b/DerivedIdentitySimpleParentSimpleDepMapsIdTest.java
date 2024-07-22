@@ -109,8 +109,8 @@ public class DerivedIdentitySimpleParentSimpleDepMapsIdTest extends BaseNonConfi
 
 		s = openSession();
 		s.beginTransaction();
-		s.delete( medicalHistory );
-		s.delete( person );
+		s.remove( medicalHistory );
+		s.remove( person );
 		s.getTransaction().commit();
 		s.close();
 	}

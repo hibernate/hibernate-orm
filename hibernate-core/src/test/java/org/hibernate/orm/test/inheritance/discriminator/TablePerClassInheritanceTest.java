@@ -79,7 +79,7 @@ public class TablePerClassInheritanceTest {
 		scope.inTransaction(
 				session -> {
 					List<Person> people = session.createQuery( "FROM Person p", Person.class ).getResultList();
-					people.forEach( person -> session.delete( person ) );
+					people.forEach( person -> session.remove( person ) );
 
 				}
 		);

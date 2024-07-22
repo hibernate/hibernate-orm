@@ -45,7 +45,7 @@ public class NativeSqlAndQuotedIdentifiersTest extends BaseCoreFunctionalTestCas
 		if( sessionFactory()==null)return;
 		Session session = sessionFactory().openSession();
 		session.beginTransaction();
-		session.save( new Person( "me" ) );
+		session.persist( new Person( "me" ) );
 		session.getTransaction().commit();
 		session.close();
 	}

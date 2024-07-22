@@ -72,7 +72,7 @@ public class JtaAfterCompletionTest extends BaseSessionFactoryFunctionalTest {
 			session = sessionFactory.openSession();
 
 			SimpleEntity entity = new SimpleEntity( "Hello World" );
-			session.save( entity );
+			session.persist( entity );
 
 			// Register before and after callback handlers
 			// The before causes the original thread to wait until Reaper aborts the transaction

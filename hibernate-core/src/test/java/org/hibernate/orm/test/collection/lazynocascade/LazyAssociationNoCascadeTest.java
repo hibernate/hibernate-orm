@@ -34,7 +34,7 @@ public class LazyAssociationNoCascadeTest {
 				session -> {
 					session.beginTransaction();
 					try {
-						session.save( parent );
+						session.persist( parent );
 						session.getTransaction().commit();
 						session.clear();
 

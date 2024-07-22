@@ -56,13 +56,13 @@ public class EagerToOneWithSelectFetchModeTests {
 		scope.inTransaction( session -> {
 			SimpleEntity manyToOneSimpleEntity = new SimpleEntity( 1, "manyToOne" );
 			SimpleEntity oneToOneSimpleEntity = new SimpleEntity( 2, "oneToOne" );
-			session.save( manyToOneSimpleEntity );
-			session.save( oneToOneSimpleEntity );
+			session.persist( manyToOneSimpleEntity );
+			session.persist( oneToOneSimpleEntity );
 
 			RootEntity rootEntity = new RootEntity( 1, "root" );
 			rootEntity.manyToOneSimpleEntity = manyToOneSimpleEntity;
 			rootEntity.oneToOneSimpleEntity = oneToOneSimpleEntity;
-			session.save( rootEntity );
+			session.persist( rootEntity );
 		} );
 	}
 

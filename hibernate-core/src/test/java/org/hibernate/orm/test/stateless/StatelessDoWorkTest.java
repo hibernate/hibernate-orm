@@ -54,7 +54,7 @@ public class StatelessDoWorkTest {
 		scope.inTransaction(
 				session -> {
 					TestEntity entity = new TestEntity( PERSISTED_TEST_ENTITY_ID, EXPECTED_ENTITY_NAME );
-					session.save( entity );
+					session.persist( entity );
 				}
 		);
 	}

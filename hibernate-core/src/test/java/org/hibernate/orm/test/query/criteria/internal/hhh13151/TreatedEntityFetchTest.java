@@ -46,7 +46,7 @@ public class TreatedEntityFetchTest extends BaseCoreFunctionalTestCase {
 	public void prepareEntities() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
-		s.save( new SubEntity().setSubField( new SideEntity( "testName" ) ) );
+		s.persist( new SubEntity().setSubField( new SideEntity( "testName" ) ) );
 		tx.commit();
 		s.close();
 	}

@@ -46,7 +46,7 @@ public class HiLoForcedTableSequenceTest {
 				(s) -> {
 					for ( int i = 0; i < increment; i++ ) {
 						final Entity entity = new Entity( "" + ( i + 1 ) );
-						s.save( entity );
+						s.persist( entity );
 
 						long expectedId = i + 1;
 						assertThat( entity.getId().longValue(), is( expectedId ) );
@@ -57,7 +57,7 @@ public class HiLoForcedTableSequenceTest {
 
 					// now force a "clock over"
 					final Entity entity = new Entity( "" + increment );
-					s.save( entity );
+					s.persist( entity );
 
 					long expectedId = optimizer.getIncrementSize() + 1;
 					assertThat( entity.getId().longValue(), is( expectedId ) );

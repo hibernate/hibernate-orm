@@ -34,27 +34,27 @@ public class UnidirCollectionWithMultipleOwnerTest {
 					try {
 						Father father = new Father();
 						Mother mother = new Mother();
-						session.save( father );
-						//s.save( mother );
+						session.persist( father );
+						//s.persist( mother );
 						Son son = new Son();
 						father.getOrderedSons().add( son );
 						son.setFather( father );
 						mother.getSons().add( son );
 						son.setMother( mother );
-						session.save( mother );
-						session.save( father );
+						session.persist( mother );
+						session.persist( father );
 						tx.commit();
 
 						session.clear();
 
 						tx = session.beginTransaction();
 						son = session.get( Son.class, son.getId() );
-						session.delete( son );
+						session.remove( son );
 						session.flush();
 						father = session.get( Father.class, father.getId() );
 						mother = session.get( Mother.class, mother.getId() );
-						session.delete( father );
-						session.delete( mother );
+						session.remove( father );
+						session.remove( mother );
 						tx.commit();
 					}
 					catch (Exception e) {

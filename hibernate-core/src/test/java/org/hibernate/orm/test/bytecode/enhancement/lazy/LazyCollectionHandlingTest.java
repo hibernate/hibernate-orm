@@ -37,7 +37,7 @@ public class LazyCollectionHandlingTest {
 	public void test(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			JafSid sid = new JafSid();
-			s.save( sid );
+			s.persist( sid );
 
 			s.flush();
 			s.clear();

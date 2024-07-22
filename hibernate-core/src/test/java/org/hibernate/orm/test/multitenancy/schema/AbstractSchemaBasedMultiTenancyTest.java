@@ -161,7 +161,7 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 	public void testBasicExpectedBehavior() {
 		Customer steve = doInHibernateSessionBuilder( this::jboss, session -> {
 			Customer _steve = new Customer( 1L, "steve" );
-			session.save( _steve );
+			session.persist( _steve );
 			return _steve;
 		} );
 
@@ -171,7 +171,7 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		} );
 
 		doInHibernateSessionBuilder( this::jboss, session -> {
-			session.delete( steve );
+			session.remove( steve );
 		} );
 	}
 
@@ -180,14 +180,14 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		// create a customer 'steve' in jboss
 		Customer steve = doInHibernateSessionBuilder( this::jboss, session -> {
 			Customer _steve = new Customer( 1L, "steve" );
-			session.save( _steve );
+			session.persist( _steve );
 			return _steve;
 		} );
 
 		// now, create a customer 'john' in acme
 		Customer john = doInHibernateSessionBuilder( this::acme, session -> {
 			Customer _john = new Customer( 1L, "john" );
-			session.save( _john );
+			session.persist( _john );
 			return _john;
 		} );
 
@@ -232,11 +232,11 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		} );
 
 		doInHibernateSessionBuilder( this::jboss, session -> {
-			session.delete( steve );
+			session.remove( steve );
 		} );
 
 		doInHibernateSessionBuilder( this::acme, session -> {
-			session.delete( john );
+			session.remove( john );
 		} );
 	}
 
@@ -244,24 +244,24 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 	public void testTableIdentifiers() {
 		Invoice orderJboss = doInHibernateSessionBuilder( this::jboss, session -> {
 			Invoice _orderJboss = new Invoice();
-			session.save( _orderJboss );
+			session.persist( _orderJboss );
 			Assert.assertEquals( Long.valueOf( 1 ), _orderJboss.getId() );
 			return _orderJboss;
 		} );
 
 		Invoice orderAcme = doInHibernateSessionBuilder( this::acme, session -> {
 			Invoice _orderAcme = new Invoice();
-			session.save( _orderAcme );
+			session.persist( _orderAcme );
 			Assert.assertEquals( Long.valueOf( 1 ), _orderAcme.getId() );
 			return _orderAcme;
 		} );
 
 		doInHibernateSessionBuilder( this::jboss, session -> {
-			session.delete( orderJboss );
+			session.remove( orderJboss );
 		} );
 
 		doInHibernateSessionBuilder( this::acme, session -> {
-			session.delete( orderAcme );
+			session.remove( orderAcme );
 		} );
 
 		sessionFactory.getStatistics().clear();

@@ -63,11 +63,11 @@ public class IdBagTest {
 					gavin.getGroups().remove( plebs );
 					//gavin.getGroups().add(banned);
 
-					s.delete( plebs );
-					s.delete( banned );
-					s.delete( s.load( Group.class, "moderators" ) );
-					s.delete( admins );
-					s.delete( gavin );
+					s.remove( plebs );
+					s.remove( banned );
+					s.remove( s.load( Group.class, "moderators" ) );
+					s.remove( admins );
+					s.remove( gavin );
 				}
 		);
 	}
@@ -95,9 +95,9 @@ public class IdBagTest {
 					assertEquals( 2, gavin.getGroups().size() );
 					assertEquals( "admins", ( (Group) gavin.getGroups().get( 0 ) ).getName() );
 
-					session.delete( gavin.getGroups().get( 0 ) );
-					session.delete( gavin.getGroups().get( 1 ) );
-					session.delete( gavin );
+					session.remove( gavin.getGroups().get( 0 ) );
+					session.remove( gavin.getGroups().get( 1 ) );
+					session.remove( gavin );
 				}
 		);
 	}

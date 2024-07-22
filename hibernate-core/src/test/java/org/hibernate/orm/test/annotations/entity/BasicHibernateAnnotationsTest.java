@@ -84,7 +84,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		s.delete( s.get( Forest.class, forest.getId() ) );
+		s.remove( s.get( Forest.class, forest.getId() ) );
 		tx.commit();
 		s.close();
 	}
@@ -131,7 +131,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		s.delete( s.get( Forest.class, forest.getId() ) );
+		s.remove( s.get( Forest.class, forest.getId() ) );
 		tx.commit();
 		s.close();
 	}
@@ -218,10 +218,10 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		f = (Forest) s.get( Forest.class, f.getId() );
+		f = s.get( Forest.class, f.getId() );
 		assertNotNull( f );
 		assertEquals( description, f.getLongDescription() );
-		s.delete( f );
+		s.remove( f );
 		tx.commit();
 		s.close();
 
@@ -622,10 +622,10 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		airFrance = (Flight) s.get( Flight.class, airFrance.getId() );
+		airFrance = s.get( Flight.class, airFrance.getId() );
 		assertNotNull( airFrance );
 		assertEquals( 10000000, airFrance.getMaxAltitudeInMilimeter() );
-		s.delete( airFrance );
+		s.remove( airFrance );
 		tx.commit();
 		s.close();
 	}
@@ -646,11 +646,11 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		contactDetails = 
-			(ContactDetails) s.get( ContactDetails.class, contactDetails.getId() );
+			s.get( ContactDetails.class, contactDetails.getId() );
 		assertNotNull( contactDetails );
 		assertEquals( "999999", contactDetails.getLocalPhoneNumber().getNumber() );
 		assertEquals( "041111111", contactDetails.getOverseasPhoneNumber().getNumber() );
-		s.delete(contactDetails);
+		s.remove(contactDetails);
 		tx.commit();
 		s.close();
 	

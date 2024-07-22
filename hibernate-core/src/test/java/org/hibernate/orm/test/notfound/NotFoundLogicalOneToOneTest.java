@@ -50,7 +50,7 @@ public class NotFoundLogicalOneToOneTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( euro )
+						session.remove( euro )
 		);
 
 		scope.inTransaction(
@@ -58,7 +58,7 @@ public class NotFoundLogicalOneToOneTest {
 					Coin coin = session.get( Coin.class, fiveC.getId() );
 					assertNull( coin.getCurrency() );
 
-					session.delete( coin );
+					session.remove( coin );
 				}
 		);
 	}

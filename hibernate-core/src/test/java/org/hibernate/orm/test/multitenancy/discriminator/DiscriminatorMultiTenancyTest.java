@@ -132,7 +132,7 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 
 		doInHibernate( "jboss", session -> {
 			Customer steve = new Customer( 1L, "steve" );
-			session.save( steve );
+			session.persist( steve );
 		} );
 
 		sessionFactory.getStatistics().clear();
@@ -178,7 +178,7 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 
 		doInHibernate( "jboss", session -> {
 			Customer customer = session.load( Customer.class, 1L );
-			session.delete( customer );
+			session.remove( customer );
 		} );
 	}
 

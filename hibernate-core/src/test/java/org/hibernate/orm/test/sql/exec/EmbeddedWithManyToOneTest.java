@@ -55,8 +55,8 @@ public class EmbeddedWithManyToOneTest {
 					PK userKey = new PK( subsystem, "Fab" );
 					SystemUser user = new SystemUser( 1, userKey, "Fab" );
 
-					session.save( subsystem );
-					session.save( user );
+					session.persist( subsystem );
+					session.persist( user );
 				}
 		);
 	}

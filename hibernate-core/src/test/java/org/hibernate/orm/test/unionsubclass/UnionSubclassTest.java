@@ -63,7 +63,7 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 		inTransaction(
 				s -> {
 					Location mel = new Location( "Earth" );
-					s.save( mel );
+					s.persist( mel );
 
 					Human gavin = new Human();
 					gavin.setIdentity( "gavin" );
@@ -83,8 +83,8 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 					criteria.from( Human.class );
 					Human gavin = s.createQuery( criteria ).uniqueResult();
 					assertEquals( 2, gavin.getInfo().size() );
-					s.delete( gavin );
-					s.delete( gavin.getLocation() );
+					s.remove( gavin );
+					s.remove( gavin.getLocation() );
 				}
 		);
 	}
@@ -94,7 +94,7 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 		inTransaction(
 				s -> {
 					Location mel = new Location( "Earth" );
-					s.save( mel );
+					s.persist( mel );
 
 					Human gavin = new Human();
 					gavin.setIdentity( "gavin" );
@@ -123,9 +123,9 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 					for ( Human h : list ) {
 						assertTrue( Hibernate.isInitialized( h.getLocation() ) );
 						assertTrue( Hibernate.isInitialized( h.getLocation().getBeings() ) );
-						s.delete( h );
+						s.remove( h );
 					}
-					s.delete( s.get( Location.class, mel.getId() ) );
+					s.remove( s.get( Location.class, mel.getId() ) );
 				}
 		);
 	}
@@ -136,8 +136,8 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 				s -> {
 					Location mel = new Location( "Melbourne, Australia" );
 					Location mars = new Location( "Mars" );
-					s.save( mel );
-					s.save( mars );
+					s.persist( mel );
+					s.persist( mars );
 
 					Human gavin = new Human();
 					gavin.setIdentity( "gavin" );
@@ -203,9 +203,9 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 					criteria.orderBy( criteriaBuilder.asc( root.get( "identity" ) ) );
 					x23y4 = s.createQuery( criteria ).list().get( 0 );
 //					x23y4 = (Alien) s.createCriteria( Alien.class ).addOrder( Order.asc( "identity" ) ).list().get( 0 );
-					s.delete( x23y4.getHive() );
-					s.delete( s.get( Location.class, mel.getId() ) );
-					s.delete( s.get( Location.class, mars.getId() ) );
+					s.remove( x23y4.getHive() );
+					s.remove( s.get( Location.class, mel.getId() ) );
+					s.remove( s.get( Location.class, mars.getId() ) );
 					assertTrue( s.createQuery( "from Being" ).list().isEmpty() );
 				}
 		);
@@ -217,8 +217,8 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 				s -> {
 					Location mel = new Location( "Melbourne, Australia" );
 					Location mars = new Location( "Mars" );
-					s.save( mel );
-					s.save( mars );
+					s.persist( mel );
+					s.persist( mars );
 
 					Human gavin = new Human();
 					gavin.setIdentity( "gavin" );
@@ -242,7 +242,7 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 					thing.setDescription( "some thing" );
 					thing.setOwner( gavin );
 					gavin.getThings().add( thing );
-					s.save( thing );
+					s.persist( thing );
 					s.flush();
 
 					s.clear();
@@ -303,14 +303,14 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 					assertEquals( "x23y4$$hu%3", thing.getOwner().getIdentity()
 					);
 
-					s.delete( thing );
+					s.remove( thing );
 					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 					CriteriaQuery<Alien> criteria = criteriaBuilder.createQuery( Alien.class );
 					criteria.from( Alien.class );
 					x23y4 = s.createQuery( criteria ).uniqueResult();
-					s.delete( x23y4.getHive() );
-					s.delete( s.get( Location.class, mel.getId() ) );
-					s.delete( s.get( Location.class, mars.getId() ) );
+					s.remove( x23y4.getHive() );
+					s.remove( s.get( Location.class, mel.getId() ) );
+					s.remove( s.get( Location.class, mars.getId() ) );
 					assertTrue( s.createQuery( "from Being" ).list().isEmpty() );
 
 				}
@@ -324,9 +324,9 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 					Location mel = new Location( "Melbourne, Australia" );
 					Location atl = new Location( "Atlanta, GA" );
 					Location mars = new Location( "Mars" );
-					s.save( mel );
-					s.save( atl );
-					s.save( mars );
+					s.persist( mel );
+					s.persist( atl );
+					s.persist( mars );
 
 					Human gavin = new Human();
 					gavin.setIdentity( "gavin" );
@@ -417,14 +417,14 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 
 					atl.addBeing( gavin );
 					assertEquals( 1, s.createQuery( "from Human h where h.location.name like '%GA'" ).list().size() );
-					s.delete( gavin );
+					s.remove( gavin );
 
 					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 					CriteriaQuery<Alien> criteria = criteriaBuilder.createQuery( Alien.class );
 					criteria.from( Alien.class );
 
 					x23y4 = s.createQuery( criteria ).uniqueResult();
-					s.delete( x23y4.getHive() );
+					s.remove( x23y4.getHive() );
 					assertTrue( s.createQuery( "from Being" ).list().isEmpty() );
 
 					s.createQuery( "delete from Location" ).executeUpdate();
@@ -458,9 +458,9 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 					q.setParameter( "name2", "steve" );
 					final List result = q.list();
 					assertEquals( 2, result.size() );
-					s.delete( result.get( 0 ) );
-					s.delete( result.get( 1 ) );
-					s.delete( ( (Human) result.get( 0 ) ).getLocation() );
+					s.remove( result.get( 0 ) );
+					s.remove( result.get( 1 ) );
+					s.remove( ( (Human) result.get( 0 ) ).getLocation() );
 				}
 		);
 	}

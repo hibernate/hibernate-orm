@@ -90,8 +90,8 @@ public class SimpleBatchFetchTests {
 			group2.addEmployee(employee3);
 			group2.addEmployee( employee4 );
 
-			session.save( group1 );
-			session.save( group2 );
+			session.persist( group1 );
+			session.persist( group2 );
 		} );
 	}
 

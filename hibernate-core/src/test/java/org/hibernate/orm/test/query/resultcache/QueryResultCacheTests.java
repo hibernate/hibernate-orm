@@ -191,7 +191,7 @@ public class QueryResultCacheTests {
 	@BeforeEach
 	public void prepareTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				session -> session.save(
+				session -> session.persist(
 						new AggregateEntity(
 								1,
 								"aggregate",

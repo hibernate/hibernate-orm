@@ -45,8 +45,8 @@ public class ArrayTest {
 					assertEquals( 1, retrieved.getBs().length );
 					assertNotNull( retrieved.getBs()[0] );
 
-					session.delete( retrieved );
-					session.delete( retrieved.getBs()[0] );
+					session.remove( retrieved );
+					session.remove( retrieved.getBs()[0] );
 				}
 		);
 	}

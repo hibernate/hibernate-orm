@@ -42,7 +42,7 @@ public class FetchingTest extends BaseCoreFunctionalTestCase {
 		p = (Person) s.createQuery( "from Person p where p.firstName = :name" )
 				.setParameter( "name", "Gavin" ).uniqueResult();
 		assertFalse( Hibernate.isInitialized( p.getStays() ) );
-		s.delete( p );
+		s.remove( p );
 		tx.commit();
 		s.close();
 	}
@@ -67,7 +67,7 @@ public class FetchingTest extends BaseCoreFunctionalTestCase {
 		assertFalse( Hibernate.isInitialized( p.getOrderedStay() ) );
 		assertEquals( "A380", p.getOrderedStay().get(0).getVessel() );
 		assertFalse( Hibernate.isInitialized( p.getOrderedStay() ) );
-		s.delete( p );
+		s.remove( p );
 		tx.commit();
 		s.close();
 	}
@@ -105,7 +105,7 @@ public class FetchingTest extends BaseCoreFunctionalTestCase {
 						"FetchMode.JOIN should overrides lazy options",
 						Hibernate.isInitialized( stay3.getVeryOldPerson() )
 				);
-				s.delete( stay3.getVeryOldPerson() );
+				s.remove( stay3.getVeryOldPerson() );
 				tx.commit();
 			}finally {
 				if ( tx.isActive() ) {

@@ -70,9 +70,9 @@ public class SubclassPropertyRefTest {
 					Customer c = (Customer) session.createQuery( "from Customer" ).uniqueResult();
 					assertSame(  a.getCustomer(), c );
 					assertSame(  a.getPerson(), c );
-					session.delete( a );
-					session.delete( a.getCustomer() );
-					session.delete( a.getPerson() );
+					session.remove( a );
+					session.remove( a.getCustomer() );
+					session.remove( a.getPerson() );
 				}
 		);
 	}

@@ -43,7 +43,7 @@ public class EntityNonEntityTest extends BaseCoreFunctionalTestCase {
 		assertTrue( "mapped superclass under entity", gsm.isNumeric );
 		assertNull( "non entity under entity", gsm.brand );
 		assertEquals( "leaf entity", 900, gsm.frequency );
-		s.delete( gsm );
+		s.remove( gsm );
 		tx.commit();
 		s.close();
 	}

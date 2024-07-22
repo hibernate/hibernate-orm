@@ -74,50 +74,6 @@ public class OptionalSecondaryTableBatchTest {
 		} );
 	}
 
-	@Test
-	public void testSaveOrUpdate(SessionFactoryScope scope) {
-		final List<Company> companies = scope.fromTransaction( (session) -> {
-			//noinspection CodeBlock2Expr
-			return session.createQuery( "from Company", Company.class ).list();
-		} );
-
-		scope.inTransaction( (session) -> {
-			for ( int i = 0 ; i < companies.size() ; i++ ) {
-				final Company company = companies.get( i );
-				company.taxNumber = 2 * i;
-				session.saveOrUpdate( company );
-			}
-		} );
-
-		scope.inTransaction( (session) -> {
-			for ( int i = 0 ; i < companies.size() ; i++ ) {
-				assertThat( session.get( Company.class, companies.get( i ).id ).taxNumber ).isEqualTo( 2 * i );
-			}
-		} );
-	}
-
-	@Test
-	public void testUpdate(SessionFactoryScope scope) {
-		final List<Company> companies = scope.fromTransaction( (session) -> {
-			//noinspection CodeBlock2Expr
-			return session.createQuery( "from Company", Company.class ).list();
-		} );
-
-		scope.inTransaction( (session) -> {
-			for ( int i = 0 ; i < companies.size() ; i++ ) {
-				final Company company = companies.get( i );
-				company.taxNumber = 2 * i;
-				session.update( company );
-			}
-		} );
-
-		scope.inTransaction( (session) -> {
-			for ( int i = 0; i < companies.size(); i++ ) {
-				assertThat( session.get( Company.class, companies.get( i ).id ).taxNumber ).isEqualTo( 2 * i );
-			}
-		} );
-	}
-
 
 	@BeforeEach
 	public void setupTestData(SessionFactoryScope scope) {

@@ -33,7 +33,7 @@ public class StatelessSessionInsertTest {
 					msg.setId( messageId );
 					msg.setContent( "message_content" );
 					msg.setSubject( "message_subject" );
-					session.save( msg );
+					session.persist( msg );
 				}
 		);
 

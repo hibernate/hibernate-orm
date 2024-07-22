@@ -74,7 +74,7 @@ public class CascadeDeleteCollectionTest {
                     .uniqueResult();
             checkInterceptor( scope, loadedParent, false );
             assertFalse( Hibernate.isInitialized( loadedParent.getChildren() ) );
-            s.delete( loadedParent );
+            s.remove( loadedParent );
         } );
         // If the lazy relation is not fetch on cascade there is a constraint violation on commit
     }
@@ -90,7 +90,7 @@ public class CascadeDeleteCollectionTest {
             checkInterceptor( scope, loadedParent, false );
             loadedParent.getChildren().size();
             assertTrue( Hibernate.isInitialized( loadedParent.getChildren() ) );
-            s.delete( loadedParent );
+            s.remove( loadedParent );
         } );
         // If the lazy relation is not fetch on cascade there is a constraint violation on commit
     }
@@ -108,7 +108,7 @@ public class CascadeDeleteCollectionTest {
 
         // Delete the detached Parent with uninitialized children
         scope.inTransaction( s -> {
-             s.delete( detachedParent );
+             s.remove( detachedParent );
         } );
         // If the lazy relation is not fetch on cascade there is a constraint violation on commit
     }
@@ -129,7 +129,7 @@ public class CascadeDeleteCollectionTest {
 
         // Delete the detached Parent with initialized children
         scope.inTransaction( s -> {
-            s.delete( detachedParent );
+            s.remove( detachedParent );
         } );
         // If the lazy relation is not fetch on cascade there is a constraint violation on commit
     }
@@ -145,7 +145,7 @@ public class CascadeDeleteCollectionTest {
 
         // Delete the Parent
         scope.inTransaction( s -> {
-            s.delete( originalParent );
+            s.remove( originalParent );
         } );
         // If the lazy relation is not fetch on cascade there is a constraint violation on commit
     }

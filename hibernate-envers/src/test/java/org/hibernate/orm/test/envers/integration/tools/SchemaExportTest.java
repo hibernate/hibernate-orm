@@ -36,7 +36,7 @@ public class SchemaExportTest extends BaseEnversFunctionalTestCase {
 		Session session = getSession();
 		session.getTransaction().begin();
 		StrTestEntity entity = new StrTestEntity( "data" );
-		session.save( entity );
+		session.persist( entity );
 		session.getTransaction().commit();
 
 		id = entity.getId();

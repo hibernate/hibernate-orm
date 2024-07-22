@@ -39,7 +39,7 @@ public abstract class LongByteArrayTest {
 		Long id = scope.fromTransaction(
 				session -> {
 					LongByteArrayHolder entity = new LongByteArrayHolder();
-					session.save( entity );
+					session.persist( entity );
 					return entity.getId();
 				}
 		);
@@ -88,7 +88,7 @@ public abstract class LongByteArrayTest {
 		scope.inTransaction(
 				session -> {
 					longByteArrayHolder.setLongByteArray( empty );
-					session.save( longByteArrayHolder );
+					session.persist( longByteArrayHolder );
 				}
 		);
 
@@ -121,7 +121,7 @@ public abstract class LongByteArrayTest {
 					LongByteArrayHolder entity = session.get( LongByteArrayHolder.class, id );
 					Assertions.assertEquals( ARRAY_SIZE, entity.getLongByteArray().length );
 					assertEquals( value, entity.getLongByteArray() );
-					session.delete( entity );
+					session.remove( entity );
 				}
 		);
 	}

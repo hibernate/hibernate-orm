@@ -128,7 +128,7 @@ public class StatsTest {
 //		assertEquals( 1, sf.getStatistics().getCollectionLoadCount() );
 //		assertEquals( "Should do explicit collection load, not part of the first one", 1, sf.getStatistics().getCollectionFetchCount() );
 //		for ( Object o : europe2.getCountries() ) {
-//			s.delete( o );
+//			s.remove( o );
 //		}
 //		cleanDb( s );
 //		tx.commit();

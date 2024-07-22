@@ -36,7 +36,7 @@ public class ProxiedGetLoadAccessTest {
 		// create a row
 		scope.inTransaction(
 				session ->
-						session.save( new UserImpl( "steve" ) )
+						session.persist( new UserImpl( "steve" ) )
 		);
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

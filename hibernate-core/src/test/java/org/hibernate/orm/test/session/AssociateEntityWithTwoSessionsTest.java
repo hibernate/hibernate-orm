@@ -12,6 +12,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
+import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.proxy.AbstractLazyInitializer;
@@ -67,7 +68,7 @@ public class AssociateEntityWithTwoSessionsTest {
 
 			try {
 				scope.inTransaction( _entityManager -> {
-					_entityManager.unwrap( Session.class ).update( location1 );
+					_entityManager.unwrap( Session.class ).lock( location1, LockMode.NONE );
 				} );
 
 				fail("Should have thrown a HibernateException");

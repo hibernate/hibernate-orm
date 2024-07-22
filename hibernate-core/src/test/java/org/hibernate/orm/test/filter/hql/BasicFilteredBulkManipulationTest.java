@@ -45,9 +45,9 @@ public class BasicFilteredBulkManipulationTest extends AbstractStatefulStateless
 	void testBasicFilteredHqlDelete(
 			BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( session -> {
-			session.save( new Person( "Steve", 'M' ) );
-			session.save( new Person( "Emmanuel", 'M' ) );
-			session.save( new Person( "Gail", 'F' ) );
+			session.persist( new Person( "Steve", 'M' ) );
+			session.persist( new Person( "Emmanuel", 'M' ) );
+			session.persist( new Person( "Gail", 'F' ) );
 		} );
 		inTransaction.accept(scope, session -> {
 			session.enableFilter( "sex" ).setParameter( "sexCode", 'M' );
@@ -60,8 +60,8 @@ public class BasicFilteredBulkManipulationTest extends AbstractStatefulStateless
 	@MethodSource("transactionKind")
 	void testBasicFilteredHqlUpdate(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( session -> {
-			session.save( new Person( "Shawn", 'M' ) );
-			session.save( new Person( "Sally", 'F' ) );
+			session.persist( new Person( "Shawn", 'M' ) );
+			session.persist( new Person( "Sally", 'F' ) );
 		} );
 
 		inTransaction.accept(scope, session -> {

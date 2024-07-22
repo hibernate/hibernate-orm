@@ -48,8 +48,8 @@ public class MergeDetachedNonCascadedCollectionInEmbeddableTest {
 			entity.setGrouping( new Grouping() );
 			Thing thing = new Thing();
 			entity.getGrouping().getThings().add( thing );
-			session.save( thing );
-			session.save( entity );
+			session.persist( thing );
+			session.persist( entity );
 			return entity;
 		} );
 

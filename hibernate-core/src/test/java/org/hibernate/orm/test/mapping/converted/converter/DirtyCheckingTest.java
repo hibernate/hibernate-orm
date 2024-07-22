@@ -36,7 +36,7 @@ public class DirtyCheckingTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		Session session = openSession();
 		session.getTransaction().begin();
-		session.save( simpleEntity );
+		session.persist( simpleEntity );
 		session.getTransaction().commit();
 		session.close();
 
@@ -51,7 +51,7 @@ public class DirtyCheckingTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.getTransaction().begin();
 		loaded = session.byId( SomeEntity.class ).load( 1L );
 		assertEquals( "Steve", loaded.getName().getText() );
-		session.delete( loaded );
+		session.remove( loaded );
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -64,7 +64,7 @@ public class DirtyCheckingTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		Session session = openSession();
 		session.getTransaction().begin();
-		session.save( simpleEntity );
+		session.persist( simpleEntity );
 		session.getTransaction().commit();
 		session.close();
 
@@ -79,7 +79,7 @@ public class DirtyCheckingTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.getTransaction().begin();
 		loaded = session.byId( SomeEntity.class ).load( 1L );
 		assertEquals( "Steve", loaded.getName().getText() );
-		session.delete( loaded );
+		session.remove( loaded );
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -93,7 +93,7 @@ public class DirtyCheckingTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		Session session = openSession();
 		session.getTransaction().begin();
-		session.save( simpleEntity );
+		session.persist( simpleEntity );
 		session.getTransaction().commit();
 		session.close();
 
@@ -108,7 +108,7 @@ public class DirtyCheckingTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.getTransaction().begin();
 		loaded = session.byId( SomeEntity.class ).load( 1L );
 		assertEquals( 2, loaded.getNumber().intValue() );
-		session.delete( loaded );
+		session.remove( loaded );
 		session.getTransaction().commit();
 		session.close();
 	}

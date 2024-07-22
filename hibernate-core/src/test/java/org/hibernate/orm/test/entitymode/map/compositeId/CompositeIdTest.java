@@ -34,7 +34,7 @@ public class CompositeIdTest {
 					id.put( "id2", "2" );
 					id.put( "name", "Fab" );
 
-					session.save( "CompId", id );
+					session.persist( "CompId", id );
 				}
 		);
 

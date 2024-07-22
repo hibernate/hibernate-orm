@@ -52,9 +52,9 @@ public class EntityWithTwoBidirectionalAssociationsOneWithJoinTableTest {
 					child.setName( "Acme" );
 					Child2 child2 = new Child2( 3, parent );
 					child2.setName( "Fab" );
-					session.save( parent );
-					session.save( child );
-					session.save( child2 );
+					session.persist( parent );
+					session.persist( child );
+					session.persist( child2 );
 				} );
 	}
 

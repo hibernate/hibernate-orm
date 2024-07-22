@@ -36,8 +36,8 @@ public class DiscriminatorTests extends BaseSessionFactoryFunctionalTest {
 	public void setUpTestData() {
 		inTransaction(
 				session -> {
-					session.save( new ForeignVendor( 1, "ForeignVendor", "Vendor, Inc." ) );
-					session.save( new DomesticVendor( 2, "DomesticVendor", "Vendor, Inc." ) );
+					session.persist( new ForeignVendor( 1, "ForeignVendor", "Vendor, Inc." ) );
+					session.persist( new DomesticVendor( 2, "DomesticVendor", "Vendor, Inc." ) );
 				}
 		);
 	}

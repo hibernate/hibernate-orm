@@ -73,7 +73,7 @@ public class DirtyCheckPrivateUnMappedCollectionTest {
 					Measurement measurementDescriptor = new Measurement();
 					measurementDescriptor.addTag( tag );
 
-					session.save( measurementDescriptor );
+					session.persist( measurementDescriptor );
 				}
 		);
 	}

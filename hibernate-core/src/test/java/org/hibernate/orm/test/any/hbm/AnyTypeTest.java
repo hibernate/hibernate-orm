@@ -40,8 +40,8 @@ public class AnyTypeTest {
 
 		scope.inTransaction(
 				session -> {
-					session.saveOrUpdate( person );
-					session.saveOrUpdate( address );
+					session.persist( person );
+					session.persist( address );
 				}
 		);
 	}

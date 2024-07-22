@@ -59,7 +59,7 @@ public class TupleTest {
 							Long.MAX_VALUE,
 							"aaa"
 					);
-					session.save( entity );
+					session.persist( entity );
 				}
 		);
 	}

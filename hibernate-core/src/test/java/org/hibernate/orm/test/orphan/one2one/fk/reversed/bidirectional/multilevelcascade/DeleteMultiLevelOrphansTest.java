@@ -58,7 +58,7 @@ public class DeleteMultiLevelOrphansTest {
 
 		scope.inTransaction(
 				session ->
-						session.save( preisregelung )
+						session.persist( preisregelung )
 		);
 	}
 

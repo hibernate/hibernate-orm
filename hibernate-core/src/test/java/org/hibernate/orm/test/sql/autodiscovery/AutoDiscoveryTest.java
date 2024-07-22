@@ -54,8 +54,8 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 	public void testAutoDiscoveryWithDuplicateColumnLabels() {
 		Session session = openSession();
 		session.beginTransaction();
-		session.save( new User( "steve" ) );
-		session.save( new User( "stliu" ) );
+		session.persist( new User( "steve" ) );
+		session.persist( new User( "stliu" ) );
 		session.getTransaction().commit();
 		session.close();
 
@@ -95,9 +95,9 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 		User u = new User( "steve" );
 		Group g = new Group( "developer" );
 		Membership m = new Membership( u, g );
-		session.save( u );
-		session.save( g );
-		session.save( m );
+		session.persist( u );
+		session.persist( g );
+		session.persist( m );
 		session.getTransaction().commit();
 		session.close();
 
@@ -107,9 +107,9 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 		Object[] row = (Object[]) result.get( 0 );
 		Assert.assertEquals( "steve", row[0] );
 		Assert.assertEquals( "developer", row[1] );
-		session.delete( m );
-		session.delete( u );
-		session.delete( g );
+		session.remove( m );
+		session.remove( u );
+		session.remove( g );
 		session.getTransaction().commit();
 		session.close();
 	}

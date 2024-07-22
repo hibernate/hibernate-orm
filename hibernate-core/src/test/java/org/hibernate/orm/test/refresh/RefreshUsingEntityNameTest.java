@@ -30,7 +30,7 @@ public class RefreshUsingEntityNameTest {
 		customer = new Customer();
 		scope.inTransaction(
 				session ->
-						session.save( "CustomName", customer )
+						session.persist( "CustomName", customer )
 		);
 	}
 

@@ -34,7 +34,7 @@ public class ElementCollectionOrphanTest {
 					EnrollableClass aClass = new EnrollableClass();
 					aClass.setId( "123" );
 					aClass.setName( "Math" );
-					session.save( aClass );
+					session.persist( aClass );
 
 					Student aStudent = new Student();
 					aStudent.setId( "s1" );
@@ -51,7 +51,7 @@ public class ElementCollectionOrphanTest {
 					enrClass.setClassStartTime( 130 );
 					enrClass.setSeat( seat );
 					aStudent.setEnrolledClasses( Collections.singleton( enrClass ) );
-					session.save( aStudent );
+					session.persist( aStudent );
 				}
 		);
 	}

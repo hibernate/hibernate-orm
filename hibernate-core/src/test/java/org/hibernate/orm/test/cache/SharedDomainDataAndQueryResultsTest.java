@@ -397,7 +397,7 @@ public class SharedDomainDataAndQueryResultsTest extends BaseNonConfigCoreFuncti
 				this::sessionFactory, session -> {
 					List<Dog> dogs = session.createQuery( "from Dog", Dog.class ).getResultList();
 					for ( Dog dog : dogs ) {
-						session.delete( dog );
+						session.remove( dog );
 					}
 				}
 		);

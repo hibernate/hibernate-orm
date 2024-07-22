@@ -126,7 +126,7 @@ public class SubclassTest {
 					assertEquals( 10000, p.getAltitude() );
 					assertEquals( "0123456789", p.getSerial() );
 					assertNotEquals( 3000, p.getMetricAltitude() );
-					s.delete( p );
+					s.remove( p );
 
 				}
 		);
@@ -155,10 +155,10 @@ public class SubclassTest {
 					assertEquals( 1, result.size() );
 					Noise w = (Noise) result.get( 0 );
 					assertNull( w.getType() );
-					s.delete( w );
+					s.remove( w );
 					result = createQueryForClass( s, Rock.class ).list();
 					assertEquals( 1, result.size() );
-					s.delete( result.get( 0 ) );
+					s.remove( result.get( 0 ) );
 					result = createQueryForClass( s, Funk.class ).list();
 					assertEquals( 0, result.size() );
 				}

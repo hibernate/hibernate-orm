@@ -28,7 +28,7 @@ public class DeleteTest extends AbstractOperationTestCase {
 					VersionedEntity p = new VersionedEntity( "root", "root" );
 					p.getChildren().add( c );
 					c.setParent( p );
-					session.save( p );
+					session.persist( p );
 				}
 		);
 
@@ -37,7 +37,7 @@ public class DeleteTest extends AbstractOperationTestCase {
 		scope.inTransaction(
 				session -> {
 					VersionedEntity loadedParent = session.get( VersionedEntity.class, "root" );
-					session.delete( loadedParent );
+					session.remove( loadedParent );
 				}
 		);
 
@@ -58,7 +58,7 @@ public class DeleteTest extends AbstractOperationTestCase {
 
 		scope.inTransaction(
 				session ->
-						session.delete( node )
+						session.remove( node )
 		);
 
 		assertUpdateCount( 0, scope );
@@ -83,7 +83,7 @@ public class DeleteTest extends AbstractOperationTestCase {
 		scope.inTransaction(
 				session -> {
 					Node parent = session.get( Node.class, "parent" );
-					session.delete( parent );
+					session.remove( parent );
 				}
 		);
 

@@ -84,7 +84,7 @@ public class OptimisticLockTest {
 					document.setSummary( "Very boring book about persistence" );
 					document.setText( "blah blah yada yada yada" );
 					document.setPubDate( new PublicationDate( 2004 ) );
-					session.save( entityName, document );
+					session.persist( entityName, document );
 					return document;
 				}
 		);
@@ -116,7 +116,7 @@ public class OptimisticLockTest {
 		scope.inTransaction(
 				session -> {
 					Document document = (Document) session.load( entityName, doc.getId() );
-					session.delete( entityName, document );
+					session.remove( document );
 				}
 		);
 	}
@@ -130,7 +130,7 @@ public class OptimisticLockTest {
 					document.setSummary( "Very boring book about persistence" );
 					document.setText( "blah blah yada yada yada" );
 					document.setPubDate( new PublicationDate( 2004 ) );
-					session.save( entityName, document );
+					session.persist( entityName, document );
 					session.flush();
 					document.setSummary( "A modern classic" );
 					session.flush();
@@ -153,7 +153,7 @@ public class OptimisticLockTest {
 					);
 
 					try {
-						mainSession.delete( document );
+						mainSession.remove( document );
 						mainSession.flush();
 						fail( "expecting opt lock failure" );
 					}
@@ -171,7 +171,7 @@ public class OptimisticLockTest {
 		scope.inTransaction(
 				session -> {
 					Document document = (Document) session.load( entityName, doc.getId() );
-					session.delete( entityName, document );
+					session.remove( document );
 				}
 		);
 	}

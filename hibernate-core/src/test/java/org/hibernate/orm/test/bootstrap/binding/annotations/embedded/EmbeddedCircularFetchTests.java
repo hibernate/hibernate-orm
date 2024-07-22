@@ -60,7 +60,7 @@ public class EmbeddedCircularFetchTests {
 				session -> {
 					RootEntity root = new RootEntity();
 					root.id = 1;
-					session.save( root );
+					session.persist( root );
 
 					LeafEntity leafEntity1 = new LeafEntity();
 					leafEntity1.id = 10;
@@ -68,8 +68,8 @@ public class EmbeddedCircularFetchTests {
 					LeafEntity leafEntity2 = new LeafEntity();
 					leafEntity2.id = 11;
 
-					session.save( leafEntity1 );
-					session.save( leafEntity2 );
+					session.persist( leafEntity1 );
+					session.persist( leafEntity2 );
 
 					leafEntity2.rootEntity = root;
 					leafEntity1.rootEntity = root;

@@ -109,7 +109,7 @@ public class VersionTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete(gavin);
+		s.remove(gavin);
 		t.commit();
 		s.close();
 	}
@@ -148,7 +148,7 @@ public class VersionTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete(gavin);
+		s.remove(gavin);
 		t.commit();
 		s.close();
 	}

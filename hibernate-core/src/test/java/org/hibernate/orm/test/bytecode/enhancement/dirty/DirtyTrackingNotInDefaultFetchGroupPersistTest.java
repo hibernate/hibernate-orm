@@ -66,7 +66,7 @@ public class DirtyTrackingNotInDefaultFetchGroupPersistTest {
 		} );
 		scope.inTransaction( session -> {
 			hentity.bumpNumber();
-			session.saveOrUpdate( hentity );
+			session.merge( hentity );
 		} );
 	}
 

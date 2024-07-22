@@ -218,8 +218,8 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 				assertNotNull( party.partyAffiliate );
 				assertEquals( party.partyId, party.partyAffiliate.partyId );
 
-				s.delete( party );
-				s.delete( party.partyAffiliate );
+				s.remove( party );
+				s.remove( party.partyAffiliate );
 				tx.commit();
 			}
 			catch (Exception e) {
@@ -267,8 +267,8 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 				assertNotNull( zip.trousers );
 				assertEquals( trousers.id, zip.trousers.id );
 
-				s.delete( zip );
-				s.delete( zip.trousers );
+				s.remove( zip );
+				s.remove( zip.trousers );
 				tx.commit();
 			}
 			catch (Exception e) {

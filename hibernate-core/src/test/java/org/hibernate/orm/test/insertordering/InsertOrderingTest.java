@@ -51,8 +51,8 @@ public class InsertOrderingTest {
 					for ( int i = 0; i < iterations; i++ ) {
 						User user = new User( "user-" + i );
 						Group group = new Group( "group-" + i );
-						session.save( user );
-						session.save( group );
+						session.persist( user );
+						session.persist( group );
 						user.addMembership( group );
 					}
 					StatsBatch.reset();
@@ -73,7 +73,7 @@ public class InsertOrderingTest {
 					Iterator users = session.createQuery(
 							"from User u left join fetch u.memberships m left join fetch m.group" ).list().iterator();
 					while ( users.hasNext() ) {
-						session.delete( users.next() );
+						session.remove( users.next() );
 					}
 				}
 		);

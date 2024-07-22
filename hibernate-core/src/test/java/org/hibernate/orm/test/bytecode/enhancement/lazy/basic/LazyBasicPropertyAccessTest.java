@@ -106,12 +106,12 @@ public class LazyBasicPropertyAccessTest {
 
         scope.inTransaction( s -> {
             entity.setDescription( "desc1" );
-            s.update( entity );
+            LazyEntity merged = s.merge( entity );
 
-            checkDirtyTracking( entity, "description" );
+            checkDirtyTracking( merged, "description" );
 
-            assertEquals( "desc1", entity.getDescription() );
-            assertTrue( isPropertyInitialized( entity, "description" ) );
+            assertEquals( "desc1", merged.getDescription() );
+            assertTrue( isPropertyInitialized( merged, "description" ) );
         } );
 
         scope.inTransaction( s -> {
@@ -121,7 +121,7 @@ public class LazyBasicPropertyAccessTest {
 
         scope.inTransaction( s -> {
             entity.setDescription( "desc2" );
-            LazyEntity mergedEntity = (LazyEntity) s.merge( entity );
+            LazyEntity mergedEntity = s.merge( entity );
 
             // Assert.assertFalse( isPropertyInitialized( entity, "description" ) );
             checkDirtyTracking( mergedEntity, "description" );

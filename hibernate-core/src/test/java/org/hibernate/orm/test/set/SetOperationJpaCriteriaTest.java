@@ -40,9 +40,9 @@ public class SetOperationJpaCriteriaTest {
     public void createTestData(SessionFactoryScope scope) {
         scope.inTransaction(
                 session -> {
-                    session.save( new EntityOfLists( 1, "first" ) );
-                    session.save( new EntityOfLists( 2, "second" ) );
-                    session.save( new EntityOfLists( 3, "third" ) );
+                    session.persist( new EntityOfLists( 1, "first" ) );
+                    session.persist( new EntityOfLists( 2, "second" ) );
+                    session.persist( new EntityOfLists( 3, "third" ) );
                 }
         );
     }

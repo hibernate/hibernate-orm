@@ -80,8 +80,8 @@ public class EntityWithMutableAttributesTest {
 
 					user.setRole( role );
 
-					session.save( role );
-					session.save( user );
+					session.persist( role );
+					session.persist( user );
 				}
 		);
 	}

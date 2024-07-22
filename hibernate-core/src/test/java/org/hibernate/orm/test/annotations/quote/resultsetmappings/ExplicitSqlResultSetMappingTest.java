@@ -33,7 +33,7 @@ public class ExplicitSqlResultSetMappingTest extends BaseCoreFunctionalTestCase 
 		char close = getDialect().closeQuote();
 		queryString="select t."+open+"NAME"+close+" as "+open+"QuotEd_nAMe"+close+" from "+open+"MY_ENTITY_TABLE"+close+" t";
 		inTransaction(
-				s -> s.save( new MyEntity( "mine" ) )
+				s -> s.persist( new MyEntity( "mine" ) )
 
 		);
 	}

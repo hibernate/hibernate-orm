@@ -42,7 +42,7 @@ public class EntityWithNotAggregateIdTest {
 				session -> {
 					entity.setId( entityId );
 					entity.setData( "test" );
-					session.save( entity );
+					session.persist( entity );
 				}
 		);
 	}

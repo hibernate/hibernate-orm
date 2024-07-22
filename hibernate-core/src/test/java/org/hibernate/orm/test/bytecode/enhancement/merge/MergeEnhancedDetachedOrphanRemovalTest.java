@@ -36,7 +36,7 @@ public class MergeEnhancedDetachedOrphanRemovalTest {
 		final Root entity = scope.fromTransaction( session -> {
 			Root root = new Root();
 			root.setName( "new" );
-			session.save( root );
+			session.persist( root );
 			return root;
 		} );
 
@@ -56,7 +56,7 @@ public class MergeEnhancedDetachedOrphanRemovalTest {
 			Leaf leaf = new Leaf();
 			leaf.setRoot( root );
 			root.getLeaves().add( leaf );
-			session.save( root );
+			session.persist( root );
 			return root;
 		} );
 

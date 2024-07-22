@@ -50,7 +50,7 @@ public class StructComponentOneToManyMappedByTest {
 					book1.title = "Main book";
 					book1.author = new Author( "Abc" );
 
-					session.save( book1 );
+					session.persist( book1 );
 
 					Book book2 = new Book();
 					book2.id = 2L;
@@ -58,7 +58,7 @@ public class StructComponentOneToManyMappedByTest {
 					book2.mainBook = book1;
 					book2.author = new Author( "Abc" );
 
-					session.save( book2 );
+					session.persist( book2 );
 				}
 		);
 	}

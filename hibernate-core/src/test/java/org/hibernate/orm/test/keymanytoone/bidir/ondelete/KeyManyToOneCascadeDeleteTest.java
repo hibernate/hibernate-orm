@@ -48,15 +48,15 @@ public class KeyManyToOneCascadeDeleteTest {
 					order1.setItem( "laptop" );
 					Order order2 = new Order( customer, 2L );
 					order2.setItem( "printer" );
-					session.save( customer );
-					session.save( order1 );
-					session.save( order2 );
+					session.persist( customer );
+					session.persist( order1 );
+					session.persist( order2 );
 					session.getTransaction().commit();
 
 					// Removing customer cascades to associated orders.
 					session.getTransaction().begin();
 					customer = session.get( Customer.class, customer.getId() );
-					session.delete( customer );
+					session.remove( customer );
 					session.getTransaction().commit();
 
 					session.getTransaction().begin();

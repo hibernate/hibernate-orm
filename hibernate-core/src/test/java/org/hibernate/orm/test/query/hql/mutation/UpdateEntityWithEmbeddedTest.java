@@ -32,7 +32,7 @@ public class UpdateEntityWithEmbeddedTest {
 				(session) -> {
 					Logo logo = new Logo( "logo1", "png" );
 					Company company = new Company( 1l, logo );
-					session.save( company );
+					session.persist( company );
 				}
 		);
 	}

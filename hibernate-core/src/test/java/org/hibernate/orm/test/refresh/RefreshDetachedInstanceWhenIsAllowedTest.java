@@ -32,7 +32,7 @@ public class RefreshDetachedInstanceWhenIsAllowedTest {
 		testEntity = new TestEntity();
 		scope.inTransaction(
 				session ->
-						session.save( testEntity )
+						session.persist( testEntity )
 		);
 	}
 

@@ -8,6 +8,15 @@ package org.hibernate.orm.test.annotations.selectbeforeupdate;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import org.hibernate.annotations.SelectBeforeUpdate;
+
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
@@ -18,143 +27,142 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
-import org.hibernate.annotations.SelectBeforeUpdate;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
  * @author Chris Cranford
  */
-public class UpdateDetachedTest extends BaseCoreFunctionalTestCase{
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Foo.class, Bar.class };
-	}
+@DomainModel(
+		annotatedClasses = {
+				MergeDetachedTest.Foo.class,
+				MergeDetachedTest.Bar.class
+		}
+)
+@SessionFactory
+public class MergeDetachedTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5908")
-	public void testUpdateDetachedUnchanged() {
+	@JiraKey("HHH-5908")
+	public void testUpdateDetachedUnchanged(SessionFactoryScope scope) {
 		final Bar bar = new Bar( 1, "Bar" );
 		final Foo foo = new Foo( 1, "Foo", bar );
 
 		// this should generate versions
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.save( bar );
-			session.save( foo );
+		scope.inTransaction( session -> {
+			session.persist( bar );
+			session.persist( foo );
 		} );
 
 		// this shouldn't generate a new version.
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.update( foo );
-		} );
+		Foo merged = scope.fromTransaction( session ->
+													session.merge( foo )
+		);
 
-		assertEquals( Integer.valueOf( 0 ), bar.getVersion() );
-		assertEquals( Integer.valueOf( 0 ), foo.getVersion() );
+		assertThat( bar.getVersion() ).isEqualTo( 0 );
+		assertThat( merged.getVersion() ).isEqualTo( 0 );
 
 		// this should generate a new version
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			foo.setName( "FooChanged" );
-			session.update( foo );
+		Foo merged2 = scope.fromTransaction( session -> {
+			merged.setName( "FooChanged" );
+			return session.merge( merged );
 		} );
 
-		assertEquals( Integer.valueOf( 0 ), bar.getVersion() );
-		assertEquals( Integer.valueOf( 1 ), foo.getVersion() );
+		assertThat( bar.getVersion() ).isEqualTo( 0 );
+		assertThat( merged2.getVersion() ).isEqualTo( 1 );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5908")
-	public void testUpdateDetachedChanged() {
+	@JiraKey("HHH-5908")
+	public void testUpdateDetachedChanged(SessionFactoryScope scope) {
 		final Bar bar = new Bar( 2, "Bar" );
 		final Foo foo = new Foo( 2, "Foo", bar );
 
 		// this should generate versions
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.save( bar );
-			session.save( foo );
+		scope.inTransaction( session -> {
+			session.persist( bar );
+			session.persist( foo );
 		} );
 
 		// this should generate a new version
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+		Foo merged = scope.fromTransaction( session -> {
 			foo.setName( "FooChanged" );
-			session.update( foo );
+			return session.merge( foo );
 		} );
 
-		assertEquals( Integer.valueOf( 0 ), bar.getVersion() );
-		assertEquals( Integer.valueOf( 1 ), foo.getVersion() );
+		assertThat( bar.getVersion() ).isEqualTo( 0 );
+		assertThat( merged.getVersion() ).isEqualTo( 1 );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5908")
-	public void testUpdateDetachedUnchangedAndChanged() {
+	@JiraKey("HHH-5908")
+	public void testUpdateDetachedUnchangedAndChanged(SessionFactoryScope scope) {
 		final Bar bar = new Bar( 3, "Bar" );
 		final Foo foo = new Foo( 3, "Foo", bar );
 
 		// this should generate versions
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.save( bar );
-			session.save( foo );
+		scope.inTransaction( session -> {
+			session.persist( bar );
+			session.persist( foo );
 		} );
 
 		// this shouldn't generate a new version.
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.update( foo );
-		} );
+		Foo merged = scope.fromTransaction(
+				session ->
+						session.merge( foo )
+		);
 
 		// this should generate a new version
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			foo.setName( "FooChanged" );
-			session.update( foo );
+		Foo merged2 = scope.fromTransaction( session -> {
+			merged.setName( "FooChanged" );
+			return session.merge( merged );
 		} );
 
-		assertEquals( Integer.valueOf( 0 ), bar.getVersion() );
-		assertEquals( Integer.valueOf( 1 ), foo.getVersion() );
+		assertThat( bar.getVersion() ).isEqualTo( 0 );
+		assertThat( merged2.getVersion() ).isEqualTo( 1 );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5908")
-	public void testUpdateDetachedChangedAndUnchanged() {
+	@JiraKey("HHH-5908")
+	public void testUpdateDetachedChangedAndUnchanged(SessionFactoryScope scope) {
 		final Bar bar = new Bar( 4, "Bar" );
 		final Foo foo = new Foo( 4, "Foo", bar );
 
 		// this should generate versions
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.save( bar );
-			session.save( foo );
+		scope.inTransaction( session -> {
+			session.persist( bar );
+			session.persist( foo );
 		} );
 
 		// this should generate a new version
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+		Foo merged = scope.fromTransaction( session -> {
 			foo.setName( "FooChanged" );
-			session.update( foo );
+			return session.merge( foo );
 		} );
 
 		// this shouldn't generate a new version.
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.update( foo );
-		} );
+		Foo merged2 = scope.fromTransaction(
+				session ->
+						session.merge( merged )
+		);
 
-		assertEquals( Integer.valueOf( 0 ), bar.getVersion() );
-		assertEquals( Integer.valueOf( 1 ), foo.getVersion() );
+		assertThat( bar.getVersion() ).isEqualTo( 0 );
+		assertThat( merged2.getVersion() ).isEqualTo( 1 );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14319")
-	public void testUpdateDetachedWithAttachedPersistentSet() {
+	@JiraKey("HHH-14319")
+	public void testUpdateDetachedWithAttachedPersistentSet(SessionFactoryScope scope) {
 		final Bar bar = new Bar( 5, "Bar" );
 		final Set<Comment> comments = new HashSet<>();
 		comments.add( new Comment( "abc", "me" ) );
 		bar.comments = comments;
 
 		// this should generate versions
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.save( bar );
+		scope.inTransaction( session -> {
+			session.persist( bar );
 		} );
-		final Bar loadedBar = TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+
+		final Bar loadedBar = scope.fromTransaction( session -> {
 			// We set the comments to the hash set and leave it "dirty"
 			Bar b = session.find( Bar.class, bar.getId() );
 			b.comments = comments;
@@ -167,10 +175,10 @@ public class UpdateDetachedTest extends BaseCoreFunctionalTestCase{
 
 			// It's vital that we try merging a detached instance
 			session.detach( b );
-			return (Bar) session.merge( b );
+			return session.merge( b );
 		} );
 
-		assertEquals( 1, loadedBar.comments.size() );
+		assertThat( loadedBar.comments.size() ).isEqualTo( 1 );
 	}
 
 	@Entity(name = "Foo")

@@ -42,7 +42,7 @@ public class AttributeOverridingTest {
 					book.setEbookPublisher( ebookPublisher );
 					book.setPaperBackPublisher( paperPublisher );
 
-					session.save( book );
+					session.persist( book );
 				}
 		);
 	}

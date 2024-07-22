@@ -192,17 +192,17 @@ public class MergeProxyTest {
 						if ( i % 2 == 0 ) {
 							final Instruction instr = new Instruction( i, "Instruction #" + i );
 							activity.setInstruction( instr );
-							session.save( instr );
+							session.persist( instr );
 						}
 						else {
 							final WebApplication webApplication = new WebApplication( i, "http://" + i + ".com" );
 							webApplication.setName( "name #" + i );
 							activity.setWebApplication( webApplication );
 							webApplication.getActivities().add( activity );
-							session.save( webApplication );
+							session.persist( webApplication );
 						}
 
-						session.save( activity );
+						session.persist( activity );
 					}
 				}
 		);

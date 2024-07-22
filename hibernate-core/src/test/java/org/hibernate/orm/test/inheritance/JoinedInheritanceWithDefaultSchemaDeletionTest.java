@@ -41,9 +41,9 @@ public class JoinedInheritanceWithDefaultSchemaDeletionTest {
 					Employee employee = new Employee( 2, "Chris", "Software Engineer" );
 					Customer customer = new Customer( 3, "Miriam", "" );
 
-					session.save( person );
-					session.save( employee );
-					session.save( customer );
+					session.persist( person );
+					session.persist( employee );
+					session.persist( customer );
 				}
 		);
 	}

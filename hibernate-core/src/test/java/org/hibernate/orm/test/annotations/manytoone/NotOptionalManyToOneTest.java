@@ -41,8 +41,8 @@ public class NotOptionalManyToOneTest {
 					Child child = new Child( 1, "Luigi" );
 					Parent parent = new Parent( 2, "Roberto", child );
 
-					session.save( child );
-					session.save( parent );
+					session.persist( child );
+					session.persist( parent );
 				}
 		);
 	}

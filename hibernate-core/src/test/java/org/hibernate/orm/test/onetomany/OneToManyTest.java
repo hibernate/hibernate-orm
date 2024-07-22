@@ -37,7 +37,7 @@ public class OneToManyTest {
 					p.setName( "Parent" );
 					p.getChildren().add( c );
 					c.setParent( p );
-					session.save( p );
+					session.persist( p );
 					session.flush();
 
 					p.getChildren().remove( c );
@@ -49,17 +49,18 @@ public class OneToManyTest {
 				}
 		);
 
-		scope.inTransaction(
+		Child merged = scope.fromTransaction(
 				session -> {
 					c.setParent( null );
-					session.update( c );
+					return session.merge( c );
+
 				}
 		);
 
 		scope.inTransaction(
 				session -> {
-					c.setParent( p );
-					session.update( c );
+					merged.setParent( p );
+					session.merge( merged );
 				}
 		);
 

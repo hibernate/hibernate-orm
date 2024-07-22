@@ -52,7 +52,7 @@ public class SubqueryLimitOffsetTest {
 							Long.MAX_VALUE,
 							"some"
 					);
-					session.save( entity );
+					session.persist( entity );
 
 					SimpleEntity second_entity = new SimpleEntity(
 							2,
@@ -62,7 +62,7 @@ public class SubqueryLimitOffsetTest {
 							Long.MAX_VALUE,
 							"some"
 					);
-					session.save( second_entity );
+					session.persist( second_entity );
 
 				} );
 	}
@@ -72,7 +72,7 @@ public class SubqueryLimitOffsetTest {
 		scope.inTransaction(
 				session -> session.createQuery( "from SimpleEntity e" )
 						.list()
-						.forEach( simpleEntity -> session.delete( simpleEntity ) )
+						.forEach( simpleEntity -> session.remove( simpleEntity ) )
 		);
 	}
 }

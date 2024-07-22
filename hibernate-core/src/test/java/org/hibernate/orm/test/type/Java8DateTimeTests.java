@@ -56,7 +56,7 @@ public class Java8DateTimeTests extends BaseNonConfigCoreFunctionalTestCase {
 
 		Session s = openSession();
 		s.beginTransaction();
-		s.save( theEntity );
+		s.persist( theEntity );
 		s.getTransaction().commit();
 		s.close();
 
@@ -65,7 +65,7 @@ public class Java8DateTimeTests extends BaseNonConfigCoreFunctionalTestCase {
 		theEntity = s.get( TheEntity.class, 1 );
 		dump( entityBinding, theEntity );
 		assertNotNull( theEntity );
-		s.delete( theEntity );
+		s.remove( theEntity );
 		s.getTransaction().commit();
 		s.close();
 	}

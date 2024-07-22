@@ -82,7 +82,7 @@ public class ManyToOneTest {
 					AnotherSimpleEntity anotherSimpleEntity = new AnotherSimpleEntity();
 					anotherSimpleEntity.setId( 3 );
 					anotherSimpleEntity.setName( "other" );
-					session.save( anotherSimpleEntity );
+					session.persist( anotherSimpleEntity );
 					otherEntity.setAnotherSimpleEntity( anotherSimpleEntity );
 				}
 		);
@@ -145,7 +145,7 @@ public class ManyToOneTest {
 					AnotherSimpleEntity anotherSimpleEntity = new AnotherSimpleEntity();
 					anotherSimpleEntity.setId( 3 );
 					anotherSimpleEntity.setName( "other" );
-					session.save( anotherSimpleEntity );
+					session.persist( anotherSimpleEntity );
 					otherEntity.setAnotherSimpleEntity( anotherSimpleEntity );
 				}
 		);
@@ -241,7 +241,7 @@ public class ManyToOneTest {
 					AnotherSimpleEntity anotherSimpleEntity = new AnotherSimpleEntity();
 					anotherSimpleEntity.setId( 3 );
 					anotherSimpleEntity.setName( "other" );
-					session.save( anotherSimpleEntity );
+					session.persist( anotherSimpleEntity );
 					otherEntity.setAnotherSimpleEntity( anotherSimpleEntity );
 				}
 		);
@@ -311,12 +311,12 @@ public class ManyToOneTest {
 					SimpleEntity simpleEntity = new SimpleEntity();
 					simpleEntity.setId( 1 );
 					simpleEntity.setName( "Fab" );
-					session.save( simpleEntity );
+					session.persist( simpleEntity );
 					OtherEntity otherEntity = new OtherEntity();
 					otherEntity.setId( 2 );
 					otherEntity.setName( "Bar" );
 					otherEntity.setSimpleEntity( simpleEntity );
-					session.save( otherEntity );
+					session.persist( otherEntity );
 				}
 		);
 	}

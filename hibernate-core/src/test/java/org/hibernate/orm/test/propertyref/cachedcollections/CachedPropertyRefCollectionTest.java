@@ -39,7 +39,7 @@ public class CachedPropertyRefCollectionTest {
 				session -> {
 					mo = new ManagedObject( "test", "test" );
 					mo.getMembers().add( "members" );
-					session.save( mo );
+					session.persist( mo );
 				}
 		);
 	}
@@ -48,7 +48,7 @@ public class CachedPropertyRefCollectionTest {
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session ->
-						session.delete( mo )
+						session.remove( mo )
 		);
 	}
 

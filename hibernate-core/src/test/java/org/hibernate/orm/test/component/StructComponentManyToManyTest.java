@@ -47,14 +47,14 @@ public class StructComponentManyToManyTest {
 					book1.title = "Main book";
 					book1.author = new Author( "Abc", null );
 
-					session.save( book1 );
+					session.persist( book1 );
 
 					Book book2 = new Book();
 					book2.id = 2L;
 					book2.title = "Second book";
 					book2.author = new Author( "Abc", book1 );
 
-					session.save( book2 );
+					session.persist( book2 );
 				}
 		);
 	}

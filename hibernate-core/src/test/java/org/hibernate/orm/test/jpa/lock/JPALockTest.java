@@ -95,7 +95,7 @@ public class JPALockTest extends AbstractJPATest {
 		Long itemId = fromTransaction(
 				session -> {
 					it.setName( initialName );
-					session.save( it );
+					session.persist( it );
 					return it.getId();
 				}
 		);
@@ -155,7 +155,7 @@ public class JPALockTest extends AbstractJPATest {
 
 		inTransaction(
 				session ->
-						session.delete( item )
+						session.remove( item )
 		);
 	}
 
@@ -190,7 +190,7 @@ public class JPALockTest extends AbstractJPATest {
 		inTransaction(
 				session -> {
 					it.setName( initialName );
-					session.save( it );
+					session.persist( it );
 				}
 		);
 
@@ -270,7 +270,7 @@ public class JPALockTest extends AbstractJPATest {
 
 		inTransaction(
 				session -> {
-					session.delete( item );
+					session.remove( item );
 				}
 		);
 	}

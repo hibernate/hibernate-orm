@@ -126,8 +126,8 @@ public class RefreshUpdatedDataTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		s.delete( readWriteCacheableItem );
-		s.delete( readWriteVersionedCacheableItem );
+		s.remove( readWriteCacheableItem );
+		s.remove( readWriteVersionedCacheableItem );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -182,7 +182,7 @@ public class RefreshUpdatedDataTest extends BaseCoreFunctionalTestCase {
 		assertEquals( version, readWriteVersionedCacheableItem.version );
 		assertEquals( 2, readWriteVersionedCacheableItem.getTags().size() );
 
-		s2.delete( readWriteVersionedCacheableItem );
+		s2.remove( readWriteVersionedCacheableItem );
 		s2.getTransaction().commit();
 		s2.close();
 	}

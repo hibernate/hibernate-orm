@@ -32,10 +32,10 @@ public class ForeignGeneratorViaMapsIdTest extends BaseNonConfigCoreFunctionalTe
 		s.persist( d );
 		s.flush();
 		s.clear();
-		d = (MedicalHistory) s.get( MedicalHistory.class, e.id);
+		d = s.get( MedicalHistory.class, e.id);
 		assertEquals( e.id, d.id );
-		s.delete( d );
-		s.delete( d.patient );
+		s.remove( d );
+		s.remove( d.patient );
 		s.getTransaction().rollback();
 		s.close();
 	}

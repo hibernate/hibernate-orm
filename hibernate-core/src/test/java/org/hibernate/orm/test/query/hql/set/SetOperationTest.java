@@ -44,14 +44,14 @@ public class SetOperationTest {
     public void createTestData(SessionFactoryScope scope) {
         scope.inTransaction(
                 session -> {
-                    session.save( new EntityOfLists( 1, "first" ) );
-                    session.save( new EntityOfLists( 2, "second" ) );
-                    session.save( new EntityOfLists( 3, "third" ) );
+                    session.persist( new EntityOfLists( 1, "first" ) );
+                    session.persist( new EntityOfLists( 2, "second" ) );
+                    session.persist( new EntityOfLists( 3, "third" ) );
                     EntityWithManyToOneSelfReference first = new EntityWithManyToOneSelfReference( 1, "first", 123 );
                     EntityWithManyToOneSelfReference second = new EntityWithManyToOneSelfReference( 2, "second", 123 );
-                    session.save( first );
+                    session.persist( first );
                     first.setOther( first );
-                    session.save( second );
+                    session.persist( second );
                     second.setOther( second );
                 }
         );

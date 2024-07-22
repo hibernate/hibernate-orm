@@ -33,7 +33,7 @@ public class LazyKeyManyToOneTest {
 				session -> {
 					List<Customer> customers = session.createQuery( "from Customer" ).list();
 					customers.forEach(
-							customer -> session.delete( customer )
+							customer -> session.remove( customer )
 					);
 				}
 		);
@@ -46,7 +46,7 @@ public class LazyKeyManyToOneTest {
 		cust.getOrders().add( order );
 
 		scope.inTransaction(
-				session -> session.save( cust )
+				session -> session.persist( cust )
 		);
 
 		scope.inTransaction(
@@ -71,7 +71,7 @@ public class LazyKeyManyToOneTest {
 					Order order = new Order( new Order.Id( cust, 1 ) );
 					cust.getOrders().add( order );
 					statistics.clear();
-					session.save( cust );
+					session.persist( cust );
 					session.flush();
 					assertEquals( 2, statistics.getEntityInsertCount() );
 				}
@@ -86,7 +86,7 @@ public class LazyKeyManyToOneTest {
 		customer.getOrders().add( order );
 
 		scope.inTransaction(
-				session -> session.save( customer )
+				session -> session.persist( customer )
 		);
 
 		scope.inTransaction(

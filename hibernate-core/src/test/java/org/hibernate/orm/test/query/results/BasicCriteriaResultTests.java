@@ -36,7 +36,7 @@ public class BasicCriteriaResultTests {
 	@BeforeEach
 	public void prepareTestData(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			session.save( new SimpleEntity( 1, "first", new SimpleComposite( "a", "b" ) ) );
+			session.persist( new SimpleEntity( 1, "first", new SimpleComposite( "a", "b" ) ) );
 		});
 	}
 

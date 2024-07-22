@@ -121,7 +121,7 @@ public class ImmutableManyToOneNaturalIdHbmTest {
 		scope.inTransaction(
 				(s) -> {
 					try {
-						s.saveOrUpdate( child );
+						s.merge( child );
 						s.flush();
 						fail( "should have failed because immutable natural ID was altered");
 					}
@@ -151,7 +151,7 @@ public class ImmutableManyToOneNaturalIdHbmTest {
         Child c2 = new Child( 2, "joey", p );
         p.getChildren().add( c2 );
 
-        scope.inTransaction( (session) -> session.update( p ) );
+        scope.inTransaction( (session) -> session.merge( p ) );
     }
 
 }

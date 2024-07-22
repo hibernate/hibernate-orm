@@ -165,7 +165,7 @@ public class ImmutableEntityNaturalIdTest {
 					assertEquals( "Cache put should be one after second query", 1, stats.getNaturalIdCachePutCount() );
 
 					// Try Deleting
-					session.delete( building );
+					session.remove( building );
 
 					// third query
 					naturalIdLoader.load();
@@ -219,7 +219,7 @@ public class ImmutableEntityNaturalIdTest {
 					Building building = naturalIdLoader.getReference();
 					assertNotNull( building );
 
-					s.delete( building );
+					s.remove( building );
 					building = naturalIdLoader.load();
 //org.hibernate.ObjectNotFoundException: No row with the given identifier exists: [org.hibernate.test.naturalid.immutableentity.Building#1]
 //		at org.hibernate.internal.SessionFactoryImpl$1$1.handleEntityNotFound(SessionFactoryImpl.java:247)

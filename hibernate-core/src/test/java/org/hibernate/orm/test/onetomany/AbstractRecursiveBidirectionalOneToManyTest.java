@@ -76,7 +76,7 @@ public abstract class AbstractRecursiveBidirectionalOneToManyTest extends BaseSe
 					node1.addSubNode( node2 );
 					node2.addSubNode( node3 );
 
-					session.save( node1 );
+					session.persist( node1 );
 				}
 		);
 	}
@@ -155,8 +155,8 @@ public abstract class AbstractRecursiveBidirectionalOneToManyTest extends BaseSe
 		inTransaction(
 				session -> {
 					session.setCacheMode( getSessionCacheMode() );
-					Node node1 = (Node) session.get( Node.class, Integer.valueOf( 1 ) );
-					session.delete( node1 );
+					Node node1 = session.get( Node.class, Integer.valueOf( 1 ) );
+					session.remove( node1 );
 				}
 		);
 	}

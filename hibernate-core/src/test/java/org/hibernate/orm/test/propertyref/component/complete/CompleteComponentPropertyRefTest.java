@@ -74,8 +74,8 @@ public class CompleteComponentPropertyRefTest {
 					assertEquals( "Gavin", a.getOwner().getIdentity().getName() );
 					assertTrue( Hibernate.isInitialized( a.getOwner() ) );
 
-					session.delete( a );
-					session.delete( a.getOwner() );
+					session.remove( a );
+					session.remove( a.getOwner() );
 				}
 		);
 	}

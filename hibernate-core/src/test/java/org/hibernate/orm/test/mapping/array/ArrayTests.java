@@ -57,7 +57,7 @@ public class ArrayTests {
 		scope.inTransaction(
 				session -> {
 					Employee employee = new Employee( 2, "Andrea" );
-					session.save( employee );
+					session.persist( employee );
 				}
 		);
 
@@ -115,7 +115,7 @@ public class ArrayTests {
 				session -> {
 					Employee employee = new Employee( 1, "Koen" );
 					employee.setToDoList( new String[] { "metro", "boulot", "dodo" } );
-					session.save( employee );
+					session.persist( employee );
 				}
 		);
 	}

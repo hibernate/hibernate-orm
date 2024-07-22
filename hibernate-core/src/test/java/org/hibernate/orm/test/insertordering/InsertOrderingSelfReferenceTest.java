@@ -50,7 +50,7 @@ public class InsertOrderingSelfReferenceTest extends BaseInsertOrderingTest {
 	public void testReferenceItself() {
 		sessionFactoryScope().inTransaction( session -> {
 			Placeholder placeholder = new Placeholder();
-			session.save( placeholder );
+			session.persist( placeholder );
 
 			OutputParameter outputParameter1 = new OutputParameter();
 
@@ -58,16 +58,16 @@ public class InsertOrderingSelfReferenceTest extends BaseInsertOrderingTest {
 			outputParameter1.children.add( childOutputParameter );
 			childOutputParameter.parent = outputParameter1;
 
-			session.save( outputParameter1 );
+			session.persist( outputParameter1 );
 
 			Placeholder placeholder2 = new Placeholder();
-			session.save( placeholder2 );
+			session.persist( placeholder2 );
 
 			InputParameter inputParameter = new InputParameter();
-			session.save( inputParameter );
+			session.persist( inputParameter );
 
 			OutputParameter outputParameter2 = new OutputParameter();
-			session.save( outputParameter2 );
+			session.persist( outputParameter2 );
 
 			clearBatches();
 		} );

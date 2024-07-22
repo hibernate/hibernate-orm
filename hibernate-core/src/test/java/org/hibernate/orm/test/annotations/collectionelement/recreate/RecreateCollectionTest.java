@@ -48,12 +48,12 @@ public class RecreateCollectionTest {
 					Poi poi1 = new Poi( "Poi 1" );
 					Poi poi2 = new Poi( "Poi 2" );
 
-					session.save( poi1 );
-					session.save( poi2 );
+					session.persist( poi1 );
+					session.persist( poi2 );
 
 					RaceExecution race = new RaceExecution();
 
-					session.save( race );
+					session.persist( race );
 
 					Date currentTime = new Date();
 

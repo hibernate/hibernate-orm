@@ -53,8 +53,8 @@ public class IndexTest {
 					tank.setRegistrationNumber( "324VX43" );
 					session.persist( tank );
 					session.flush();
-					session.delete( tank );
-					session.delete( emmanuel );
+					session.remove( tank );
+					session.remove( emmanuel );
 				}
 		);
 	}
@@ -77,9 +77,9 @@ public class IndexTest {
 					truck.setCurrentConductor( cond );
 					session.persist( truck );
 					session.flush();
-					session.delete( truck );
-					session.delete( agreement );
-					session.delete( cond );
+					session.remove( truck );
+					session.remove( agreement );
+					session.remove( cond );
 				}
 		);
 	}

@@ -83,7 +83,7 @@ public class StoreAndRetrieveTests extends SpatialSessionFactoryAware {
 		for ( TestDataElement element : testData ) {
 			GeomEntityLike entity = createFrom( element, entityClass, session.getJdbcServices().getDialect() );
 			stored.put( entity.getId(), entity );
-			session.save( entity );
+			session.persist( entity );
 		}
 	}
 
@@ -100,7 +100,7 @@ public class StoreAndRetrieveTests extends SpatialSessionFactoryAware {
 		GeomEntity entity = new GeomEntity();
 		entity.setId( 1 );
 		entity.setType( "NULL Test" );
-		session.save( entity );
+		session.persist( entity );
 	}
 
 	private void retrieveAndCompareNullGeometry(SessionImplementor session) {

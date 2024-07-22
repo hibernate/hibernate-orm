@@ -62,7 +62,7 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		// save a reference in one session
 		Session s = openSession();
 		s.beginTransaction();
-		s.save( myReferenceData );
+		s.persist( myReferenceData );
 		s.getTransaction().commit();
 		s.close();
 
@@ -92,7 +92,7 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		// cleanup
 		s = openSession();
 		s.beginTransaction();
-		s.delete( myReferenceData );
+		s.remove( myReferenceData );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -106,8 +106,8 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		// save a reference in one session
 		Session s1 = openSession();
 		s1.beginTransaction();
-		s1.save( myReferenceData );
-		s1.save( myOtherReferenceData );
+		s1.persist( myReferenceData );
+		s1.persist( myOtherReferenceData );
 		s1.getTransaction().commit();
 		s1.close();
 
@@ -199,13 +199,13 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		assertEquals( Status.READ_ONLY, myOtherReferenceData.$$_hibernate_getEntityEntry().getStatus() );
 
 		// delete myReferenceData from s1
-		s1.delete( myReferenceData );
+		s1.remove( myReferenceData );
 
 		assertEquals( Status.DELETED, myReferenceData.$$_hibernate_getEntityEntry().getStatus() );
 		assertEquals( Status.READ_ONLY, myOtherReferenceData.$$_hibernate_getEntityEntry().getStatus() );
 
 		// delete myOtherReferenceData from s2
-		s2.delete( myOtherReferenceData );
+		s2.remove( myOtherReferenceData );
 
 		assertEquals( Status.DELETED, myReferenceData.$$_hibernate_getEntityEntry().getStatus() );
 		assertEquals( Status.DELETED, myOtherReferenceData.$$_hibernate_getEntityEntry().getStatus() );

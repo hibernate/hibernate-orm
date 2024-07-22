@@ -34,7 +34,7 @@ public class TestBasicOps {
 		Query q = new Query( new Location( "first", Location.Type.COUNTY ) );
 		scope.inTransaction(
 				session ->
-						session.save( q )
+						session.persist( q )
 		);
 
 		scope.inTransaction(
@@ -43,7 +43,7 @@ public class TestBasicOps {
 					assertEquals( 1, q1.getIncludedLocations().size() );
 					Location l = q1.getIncludedLocations().iterator().next();
 					assertEquals( Location.Type.COUNTY, l.getType() );
-					session.delete( q1 );
+					session.remove( q1 );
 				}
 		);
 	}
@@ -54,13 +54,13 @@ public class TestBasicOps {
 		scope.inTransaction(
 				session -> {
 					Query q = new Query( new Location( null, Location.Type.COMMUNE ) );
-					session.save( q );
+					session.persist( q );
 					session.getTransaction().commit();
 					session.clear();
 
 					Transaction transaction = session.beginTransaction();
 					q.getIncludedLocations().add( new Location( null, Location.Type.COUNTY ) );
-					session.update( q );
+					session.merge( q );
 					transaction.commit();
 					session.clear();
 
@@ -74,14 +74,14 @@ public class TestBasicOps {
 					Iterator<Location> itr = q.getIncludedLocations().iterator();
 					itr.next();
 					itr.remove();
-					session.update( q );
+					session.merge( q );
 					transaction.commit();
 					session.clear();
 
 					session.beginTransaction();
 					q = session.get( Query.class, q.getId() );
 					assertEquals( 1, q.getIncludedLocations().size() );
-					session.delete( q );
+					session.remove( q );
 				}
 		);
 	}

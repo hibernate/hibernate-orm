@@ -179,8 +179,8 @@ public class ScrollableCollectionFetchingTest {
 					daughter.setMother( mother );
 					mother.addOffspring( daughter );
 
-					session.save( mother );
-					session.save( daughter );
+					session.persist( mother );
+					session.persist( daughter );
 				}
 		);
 
@@ -433,12 +433,12 @@ public class ScrollableCollectionFetchingTest {
 						grandDaughter.setMother( daughter );
 						daughter.addOffspring( grandDaughter );
 
-						session.save( mother );
-						session.save( another );
-						session.save( son );
-						session.save( daughter );
-						session.save( grandson );
-						session.save( grandDaughter );
+						session.persist( mother );
+						session.persist( another );
+						session.persist( son );
+						session.persist( daughter );
+						session.persist( grandson );
+						session.persist( grandDaughter );
 					}
 			);
 

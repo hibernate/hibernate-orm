@@ -55,9 +55,9 @@ public class PropertyDefaultMappingsTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.clear();
 		tx = s.beginTransaction();
-		wm = (WashingMachine) s.get( WashingMachine.class, wm.getId() );
+		wm = s.get( WashingMachine.class, wm.getId() );
 		assertFalse( "transient should not be persistent", wm.isActive() );
-		s.delete( wm );
+		s.remove( wm );
 		tx.commit();
 		s.close();
 	}

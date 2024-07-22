@@ -49,7 +49,7 @@ public class ListElementNullBasicTest {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
 					assertEquals( 0, getCollectionElementRows( entityId, scope ).size() );
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}
@@ -78,7 +78,7 @@ public class ListElementNullBasicTest {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
 					assertEquals( 0, getCollectionElementRows( entityId, scope ).size() );
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}
@@ -108,7 +108,7 @@ public class ListElementNullBasicTest {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
 					assertEquals( 0, getCollectionElementRows( entityId, scope ).size() );
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}
@@ -150,7 +150,7 @@ public class ListElementNullBasicTest {
 					assertEquals( 2, getCollectionElementRows( e.id, scope ).size() );
 					assertEquals( "not null", e.aCollection.get( 0 ) );
 					assertEquals( "ghi", e.aCollection.get( 1 ) );
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}

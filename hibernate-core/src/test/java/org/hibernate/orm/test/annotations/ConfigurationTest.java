@@ -109,7 +109,7 @@ public class ConfigurationTest {
 			Transaction tx = s.beginTransaction();
 			boat = (Boat) s.get( Boat.class, boat.getId() );
 			assertTrue( 34 != boat.getWeight(), "Annotation has precedence" );
-			s.delete( boat );
+			s.remove( boat );
 			//s.getTransaction().commit();
 			tx.commit();
 			s.close();

@@ -62,7 +62,7 @@ public class SybaseASEFunctionTest {
 					Product product = new Product();
 					product.setPrice(new BigDecimal("0.5"));
 					product.setDate( Calendar.getInstance().getTime() );
-					session.save( product );
+					session.persist( product );
 				}
 		);
 	}

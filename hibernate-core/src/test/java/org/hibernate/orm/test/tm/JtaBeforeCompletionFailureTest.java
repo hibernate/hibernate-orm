@@ -49,7 +49,7 @@ public class JtaBeforeCompletionFailureTest extends BaseSessionFactoryFunctional
 	public void setUp() {
 		inTransaction(
 				session ->
-						session.save( newEntity( 1 ) )
+						session.persist( newEntity( 1 ) )
 		);
 
 	}
@@ -73,7 +73,7 @@ public class JtaBeforeCompletionFailureTest extends BaseSessionFactoryFunctional
 
 		try (Session session = sessionFactory().openSession()) {
 
-			session.save( newEntity( 2 ) );
+			session.persist( newEntity( 2 ) );
 
 			// complete the transaction ("CMT" style) - this leads to the managed flush
 			// which should lead to the UK violation

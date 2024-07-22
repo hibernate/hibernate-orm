@@ -75,9 +75,9 @@ public class DiscriminatorTest {
 					yomomma.setName( "mum" );
 					yomomma.setSex( 'F' );
 
-					s.save( yomomma );
-					s.save( mark );
-					s.save( joe );
+					s.persist( yomomma );
+					s.persist( mark );
+					s.persist( joe );
 
 					try {
 						s.createQuery( "from java.io.Serializable" ).list();
@@ -114,9 +114,9 @@ public class DiscriminatorTest {
 
 					mark.setZip( "30306" );
 					assertThat( s.createQuery( "from Person p where p.address.zip = '30306'" ).list().size(), is( 1 ) );
-					s.delete( mark );
-					s.delete( joe );
-					s.delete( yomomma );
+					s.remove( mark );
+					s.remove( joe );
+					s.remove( yomomma );
 					assertTrue( s.createQuery( "from Person" ).list().isEmpty() );
 				}
 		);
@@ -130,7 +130,7 @@ public class DiscriminatorTest {
 					employee.setName( "Steve" );
 					employee.setSex( 'M' );
 					employee.setTitle( "grand poobah" );
-					s.save( employee );
+					s.persist( employee );
 				}
 		);
 
@@ -150,7 +150,7 @@ public class DiscriminatorTest {
 		);
 
 		scope.inTransaction(
-				session -> session.delete( employee )
+				session -> session.remove( employee )
 		);
 	}
 
@@ -192,8 +192,8 @@ public class DiscriminatorTest {
 		assertEquals( result.size(), 1 );
 		assertEquals( result.get(0), new BigDecimal(1000) );*/
 
-					s.delete( p );
-					s.delete( q );
+					s.remove( p );
+					s.remove( q );
 
 				}
 		);
@@ -207,7 +207,7 @@ public class DiscriminatorTest {
 					e.setName( "Steve" );
 					e.setSex( 'M' );
 					e.setTitle( "grand poobah" );
-					s.save( e );
+					s.persist( e );
 				}
 		);
 
@@ -266,7 +266,7 @@ public class DiscriminatorTest {
 		);
 
 		scope.inTransaction(
-				s -> s.delete( e )
+				s -> s.remove( e )
 		);
 	}
 
@@ -278,7 +278,7 @@ public class DiscriminatorTest {
 					e.setName( "Steve" );
 					e.setSex( 'M' );
 					e.setTitle( "grand poobah" );
-					s.save( e );
+					s.persist( e );
 				}
 		);
 
@@ -309,7 +309,7 @@ public class DiscriminatorTest {
 		);
 
 		scope.inTransaction(
-				s -> s.delete( e )
+				s -> s.remove( e )
 		);
 	}
 }

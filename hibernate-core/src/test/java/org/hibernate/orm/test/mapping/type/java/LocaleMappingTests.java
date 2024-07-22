@@ -87,8 +87,8 @@ public class LocaleMappingTests {
 		final LocaleMappingTestEntity entity2 = new LocaleMappingTestEntity( 2, Locale.FRENCH, "Salut" );
 
 		scope.inTransaction( (session) -> {
-			session.save( entity );
-			session.save( entity2 );
+			session.persist( entity );
+			session.persist( entity2 );
 		} );
 
 		try {
@@ -102,8 +102,8 @@ public class LocaleMappingTests {
 					.containsExactly( 2 ) );
 		}
 		finally {
-			scope.inTransaction( session -> session.delete( entity ) );
-			scope.inTransaction( session -> session.delete( entity2 ) );
+			scope.inTransaction( session -> session.remove( entity ) );
+			scope.inTransaction( session -> session.remove( entity2 ) );
 		}
 	}
 

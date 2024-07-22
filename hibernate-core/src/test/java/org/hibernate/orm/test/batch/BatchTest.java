@@ -79,7 +79,7 @@ public class BatchTest extends BaseCoreFunctionalTestCase {
 			DataPoint dp = new DataPoint();
 			dp.setX( new BigDecimal( i * 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
 			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-			s.save( dp );
+			s.persist( dp );
 			if ( ( i + 1 ) % nBeforeFlush == 0 ) {
 				s.flush();
 				s.clear();
@@ -114,7 +114,7 @@ public class BatchTest extends BaseCoreFunctionalTestCase {
 				.scroll( ScrollMode.FORWARD_ONLY )) {
 			while ( sr.next() ) {
 				DataPoint dp = (DataPoint) sr.get();
-				s.delete( dp );
+				s.remove( dp );
 				if ( ++i % nBeforeFlush == 0 ) {
 					s.flush();
 					s.clear();

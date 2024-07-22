@@ -51,7 +51,7 @@ public class ProxyInterfaceClassLoaderTest extends BaseCoreFunctionalTestCase {
 		Assert.assertTrue( "Loaded entity is not an instance of the proxy interface", IPerson.class.isInstance( lp ) );
 		Assert.assertFalse( "Proxy class was not created", Person.class.isInstance( lp ) );
 
-		s.delete( lp );
+		s.remove( lp );
 		t.commit();
 		s.close();
 	}

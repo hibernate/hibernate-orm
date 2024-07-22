@@ -55,8 +55,8 @@ public class DerivedIdentitySimpleParentIdClassDepTest {
 					assertEquals( e.empId, d.getEmp().empId );
 					assertEquals( e.empName, d.getEmp().empName );
 					assertEquals( e.nickname, d.getEmp().nickname );
-					session.delete( d );
-					session.delete( d.getEmp() );
+					session.remove( d );
+					session.remove( d.getEmp() );
 				}
 		);
 	}
@@ -78,8 +78,8 @@ public class DerivedIdentitySimpleParentIdClassDepTest {
 					assertEquals( 1, depList.size() );
 					Object newDependent = depList.get( 0 );
 					assertSame( d, newDependent );
-					session.delete( d );
-					session.delete( d.getEmp() );
+					session.remove( d );
+					session.remove( d.getEmp() );
 				}
 		);
 	}

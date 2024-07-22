@@ -42,14 +42,14 @@ public class UnexpectedDeleteTest3 {
         scope.inTransaction( s -> {
             Child child = new Child();
             child.setId( 2L );
-            s.save( child );
+            s.persist( child );
 
             Parent parent = new Parent();
             parent.setId( 1L );
             parent.setNames( Collections.singleton( "name" ) );
             parent.addChild( child );
 
-            s.save( parent );
+            s.persist( parent );
         } );
     }
 
@@ -60,12 +60,12 @@ public class UnexpectedDeleteTest3 {
            
             Child child = new Child();
             child.setId( 1L );
-            s.save( child );
+            s.persist( child );
             parent.addChild( child );
 
             // We need to leave at least one attribute unfetchd
             //parent.getNames().size();
-            s.save( parent );
+            s.persist( parent );
         } );
 
         scope.inTransaction( s -> {

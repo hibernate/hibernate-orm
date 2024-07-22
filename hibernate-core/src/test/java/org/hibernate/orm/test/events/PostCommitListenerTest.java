@@ -29,6 +29,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -86,7 +87,7 @@ public class PostCommitListenerTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1582")
+	@JiraKey( "HHH-1582")
 	public void testPostCommitInsertListenerSuccess() {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();
@@ -94,7 +95,7 @@ public class PostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		IrrelevantEntity irrelevantEntity = new IrrelevantEntity();
 		irrelevantEntity.setName( "Irrelevant" );
 
-		session.save( irrelevantEntity );
+		session.persist( irrelevantEntity );
 		session.flush();
 		transaction.commit();
 		session.close();
@@ -104,7 +105,7 @@ public class PostCommitListenerTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1582")
+	@JiraKey( "HHH-1582")
 	public void testPostCommitInsertListenerRollback() {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();
@@ -112,7 +113,7 @@ public class PostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		IrrelevantEntity irrelevantEntity = new IrrelevantEntity();
 		irrelevantEntity.setName( "Irrelevant" );
 
-		session.save( irrelevantEntity );
+		session.persist( irrelevantEntity );
 		session.flush();
 		transaction.rollback();
 		session.close();
@@ -122,7 +123,7 @@ public class PostCommitListenerTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1582")
+	@JiraKey( "HHH-1582")
 	public void testPostCommitUpdateListenerSuccess() {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();
@@ -130,14 +131,14 @@ public class PostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		IrrelevantEntity irrelevantEntity = new IrrelevantEntity();
 		irrelevantEntity.setName( "Irrelevant" );
 
-		session.save( irrelevantEntity );
+		session.persist( irrelevantEntity );
 		session.flush();
 		transaction.commit();
 
 		session = openSession();
 		transaction = session.beginTransaction();
 		irrelevantEntity.setName( "Irrelevant 2" );
-		session.update( irrelevantEntity );
+		session.merge( irrelevantEntity );
 		session.flush();
 		transaction.commit();
 
@@ -148,7 +149,7 @@ public class PostCommitListenerTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1582")
+	@JiraKey( "HHH-1582")
 	public void testPostCommitUpdateListenerRollback() {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();
@@ -156,7 +157,7 @@ public class PostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		IrrelevantEntity irrelevantEntity = new IrrelevantEntity();
 		irrelevantEntity.setName( "Irrelevant" );
 
-		session.save( irrelevantEntity );
+		session.persist( irrelevantEntity );
 		session.flush();
 		transaction.commit();
 		session.close();
@@ -164,7 +165,7 @@ public class PostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		session = openSession();
 		transaction = session.beginTransaction();
 		irrelevantEntity.setName( "Irrelevant 2" );
-		session.update( irrelevantEntity );
+		session.merge( irrelevantEntity );
 		session.flush();
 		transaction.rollback();
 
@@ -175,7 +176,7 @@ public class PostCommitListenerTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1582")
+	@JiraKey( "HHH-1582")
 	public void testPostCommitDeleteListenerSuccess() {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();
@@ -183,14 +184,14 @@ public class PostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		IrrelevantEntity irrelevantEntity = new IrrelevantEntity();
 		irrelevantEntity.setName( "Irrelevant" );
 
-		session.save( irrelevantEntity );
+		session.persist( irrelevantEntity );
 		session.flush();
 		transaction.commit();
 		session.close();
 
 		session = openSession();
 		transaction = session.beginTransaction();
-		session.delete( irrelevantEntity );
+		session.remove( irrelevantEntity );
 		session.flush();
 		transaction.commit();
 
@@ -201,7 +202,7 @@ public class PostCommitListenerTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1582")
+	@JiraKey( "HHH-1582")
 	public void testPostCommitDeleteListenerRollback() {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();
@@ -209,14 +210,14 @@ public class PostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		IrrelevantEntity irrelevantEntity = new IrrelevantEntity();
 		irrelevantEntity.setName( "Irrelevant" );
 
-		session.save( irrelevantEntity );
+		session.persist( irrelevantEntity );
 		session.flush();
 		transaction.commit();
 		session.close();
 
 		session = openSession();
 		transaction = session.beginTransaction();
-		session.delete( irrelevantEntity );
+		session.remove( irrelevantEntity );
 		session.flush();
 		transaction.rollback();
 

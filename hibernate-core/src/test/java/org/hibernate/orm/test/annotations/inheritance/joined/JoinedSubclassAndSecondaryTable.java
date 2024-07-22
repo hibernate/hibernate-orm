@@ -43,7 +43,7 @@ public class JoinedSubclassAndSecondaryTable {
 		scope.inTransaction(
 				sesison ->
 						sesison.createQuery( "from Pool" ).list().forEach(
-								pool -> sesison.delete( pool )
+								pool -> sesison.remove( pool )
 						)
 		);
 	}

@@ -254,7 +254,7 @@ public class OneToManySizeTest {
 		scope.inTransaction(
 				(session) -> {
 					for ( Company company : session.createQuery( "from Company", Company.class ).list() ) {
-						session.delete( company );
+						session.remove( company );
 					}
 				}
 		);

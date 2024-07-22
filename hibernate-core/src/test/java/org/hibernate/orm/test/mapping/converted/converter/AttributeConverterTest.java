@@ -310,7 +310,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		try (SessionFactory sf = cfg.buildSessionFactory()) {
 			Session session = sf.openSession();
 			session.beginTransaction();
-			session.save( new Tester4( 1L, "steve", 200 ) );
+			session.persist( new Tester4( 1L, "steve", 200 ) );
 			session.getTransaction().commit();
 			session.close();
 
@@ -331,9 +331,9 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 			session = sf.openSession();
 			session.beginTransaction();
-			t4 = (Tester4) session.get( Tester4.class, 1L );
+			t4 = session.get( Tester4.class, 1L );
 			assertEquals( 300, t4.code.longValue() );
-			session.delete( t4 );
+			session.remove( t4 );
 			session.getTransaction().commit();
 			session.close();
 		}
@@ -383,7 +383,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		try (SessionFactory sf = cfg.buildSessionFactory()) {
 			Session session = sf.openSession();
 			session.beginTransaction();
-			session.save( new IrrelevantInstantEntity( 1L ) );
+			session.persist( new IrrelevantInstantEntity( 1L ) );
 			session.getTransaction().commit();
 			session.close();
 
@@ -397,7 +397,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 			session = sf.openSession();
 			session.beginTransaction();
-			session.delete( e );
+			session.remove( e );
 			session.getTransaction().commit();
 			session.close();
 		}
@@ -416,7 +416,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		try (SessionFactory sf = cfg.buildSessionFactory()) {
 			Session session = sf.openSession();
 			session.beginTransaction();
-			session.save( new Tester4( 1L, "George", 150, ConvertibleEnum.DEFAULT ) );
+			session.persist( new Tester4( 1L, "George", 150, ConvertibleEnum.DEFAULT ) );
 			session.getTransaction().commit();
 			session.close();
 
@@ -437,9 +437,9 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 			session = sf.openSession();
 			session.beginTransaction();
-			t4 = (Tester4) session.get( Tester4.class, 1L );
+			t4 = session.get( Tester4.class, 1L );
 			assertEquals( ConvertibleEnum.VALUE, t4.convertibleEnum );
-			session.delete( t4 );
+			session.remove( t4 );
 			session.getTransaction().commit();
 			session.close();
 		}
@@ -503,7 +503,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 				s = sf.openSession();
 				s.beginTransaction();
-				s.delete( entity );
+				s.remove( entity );
 				s.getTransaction().commit();
 				s.close();
 			}

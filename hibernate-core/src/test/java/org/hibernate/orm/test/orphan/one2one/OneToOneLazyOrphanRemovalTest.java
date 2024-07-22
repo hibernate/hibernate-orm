@@ -6,24 +6,24 @@
  */
 package org.hibernate.orm.test.orphan.one2one;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
-
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-9663")
+@JiraKey("HHH-9663")
 @DomainModel(
 		annotatedClasses = {
 				OneToOneLazyOrphanRemovalTest.Car.class,
@@ -54,9 +54,9 @@ public class OneToOneLazyOrphanRemovalTest {
 			final Engine engine = new Engine( 1, 275 );
 			final Car car = new Car( 1, engine, color );
 
-			session.save( engine );
-			session.save( color );
-			session.save( car );
+			session.persist( engine );
+			session.persist( color );
+			session.persist( car );
 		} );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -64,7 +64,7 @@ public class OneToOneLazyOrphanRemovalTest {
 		scope.inTransaction( session -> {
 			final Car car = session.find( Car.class, 1 );
 			car.setEngine( null );
-			session.update( car );
+			session.merge( car );
 		} );
 
 		scope.inTransaction( session -> {
@@ -80,7 +80,7 @@ public class OneToOneLazyOrphanRemovalTest {
 		scope.inTransaction( session -> {
 			final Car car = session.find( Car.class, 1 );
 			car.setPaintColor( null );
-			session.update( car );
+			session.merge( car );
 		} );
 
 		scope.inTransaction( session -> {

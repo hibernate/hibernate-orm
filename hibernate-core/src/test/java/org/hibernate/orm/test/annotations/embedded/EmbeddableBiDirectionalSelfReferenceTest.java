@@ -51,7 +51,7 @@ public class EmbeddableBiDirectionalSelfReferenceTest {
 					embeddable.setStringField( "Fab" );
 					entity.setEmbeddedAttribute( embeddable );
 
-					session.save( entity );
+					session.persist( entity );
 				}
 		);
 	}
@@ -62,7 +62,7 @@ public class EmbeddableBiDirectionalSelfReferenceTest {
 				session -> {
 					List<EntityTest> results = session.createQuery( "from EntityTest" ).list();
 					results.forEach(
-							result -> session.delete( result )
+							result -> session.remove( result )
 					);
 				}
 		);
@@ -105,9 +105,9 @@ public class EmbeddableBiDirectionalSelfReferenceTest {
 					embeddable2.setStringField( "Acme2" );
 					entity2.setEmbeddedAttribute( embeddable2 );
 
-					session.save( entity );
-					session.save( entity2 );
-					session.save( entity3 );
+					session.persist( entity );
+					session.persist( entity2 );
+					session.persist( entity3 );
 				}
 		);
 

@@ -56,8 +56,8 @@ public class OneToManySelfReferenceTest {
 
 					parent.addChid( child );
 
-					session.save( parent );
-					session.save( child );
+					session.persist( parent );
+					session.persist( child );
 				}
 		);
 	}

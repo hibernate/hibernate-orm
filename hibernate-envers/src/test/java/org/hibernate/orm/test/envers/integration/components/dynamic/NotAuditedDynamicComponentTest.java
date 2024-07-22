@@ -12,14 +12,14 @@ import org.hibernate.Session;
 import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 import junit.framework.Assert;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-8049")
+@JiraKey("HHH-8049")
 public class NotAuditedDynamicComponentTest extends BaseEnversFunctionalTestCase {
 	@Override
 	protected String[] getMappings() {
@@ -36,27 +36,27 @@ public class NotAuditedDynamicComponentTest extends BaseEnversFunctionalTestCase
 		NotAuditedDynamicMapComponent entity = new NotAuditedDynamicMapComponent( 1L, "static field value" );
 		entity.getCustomFields().put( "prop1", 13 );
 		entity.getCustomFields().put( "prop2", 0.1f );
-		session.save( entity );
+		session.persist( entity );
 		session.getTransaction().commit();
 
 		// No revision
 		session.getTransaction().begin();
-		entity = (NotAuditedDynamicMapComponent) session.get( NotAuditedDynamicMapComponent.class, entity.getId() );
+		entity = session.get( NotAuditedDynamicMapComponent.class, entity.getId() );
 		entity.getCustomFields().put( "prop1", 0 );
-		session.update( entity );
+		session.merge( entity );
 		session.getTransaction().commit();
 
 		// Revision 2
 		session.getTransaction().begin();
-		entity = (NotAuditedDynamicMapComponent) session.get( NotAuditedDynamicMapComponent.class, entity.getId() );
+		entity = session.get( NotAuditedDynamicMapComponent.class, entity.getId() );
 		entity.setNote( "updated note" );
-		session.update( entity );
+		session.merge( entity );
 		session.getTransaction().commit();
 
 		// Revision 3
 		session.getTransaction().begin();
-		entity = (NotAuditedDynamicMapComponent) session.load( NotAuditedDynamicMapComponent.class, entity.getId() );
-		session.delete( entity );
+		entity = session.getReference( NotAuditedDynamicMapComponent.class, entity.getId() );
+		session.remove( entity );
 		session.getTransaction().commit();
 
 		session.close();

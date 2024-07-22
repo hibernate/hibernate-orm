@@ -42,7 +42,7 @@ public class DynamicJoinedInheritanceTests {
 			entity.put( "id", 1 );
 			entity.put( "name", "sub" );
 			entity.put( "subText", "" );
-			session.save( "Sub", entity );
+			session.persist( "Sub", entity );
 		} );
 	}
 

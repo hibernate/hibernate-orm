@@ -27,7 +27,7 @@ public class EmbeddedAndNaturalIdTest extends BaseCoreFunctionalTestCase {
 		A account = new A( new AId( 1 ), "testCode" );
 		inTransaction(
 				session ->
-					session.save( account )
+					session.persist( account )
 		);
 	}
 

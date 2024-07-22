@@ -27,7 +27,7 @@ public class JoinedSubclassWithRootInterfaceTest {
 		scope.inTransaction( session -> {
 			final TestEntityImpl testEntity = new TestEntityImpl();
 			testEntity.setId( 1 );
-			session.save( testEntity );
+			session.persist( testEntity );
 		} );
 	}
 }

@@ -25,11 +25,12 @@ import org.hibernate.orm.test.envers.Priority;
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 /**
  * @author Chris Cranford
  */
-@TestForIssue( jiraKey = "HHH-13817" )
+@JiraKey( "HHH-13817" )
 public class AssociationRevisionsOfEntitiesQueryTest extends BaseEnversFunctionalTestCase {
     @Override
     protected Class[] getAnnotatedClasses() {
@@ -42,11 +43,11 @@ public class AssociationRevisionsOfEntitiesQueryTest extends BaseEnversFunctiona
         doInHibernate( this::sessionFactory, session -> {
             final TemplateType type1 = new TemplateType( 1, "Type1" );
             final TemplateType type2 = new TemplateType( 2, "Type2" );
-            session.save( type1 );
-            session.save( type2 );
+            session.persist( type1 );
+            session.persist( type2 );
 
             final Template template = new Template( 1, "Template1", type1 );
-            session.save( template );
+            session.persist( template );
         } );
 
         doInHibernate( this::sessionFactory, session -> {
@@ -54,7 +55,7 @@ public class AssociationRevisionsOfEntitiesQueryTest extends BaseEnversFunctiona
             final Template template = session.find( Template.class, 1 );
             template.setName( "Template1-Updated" );
             template.setTemplateType( type );
-            session.update( template );
+            session.merge( template );
         } );
 
         doInHibernate( this::sessionFactory, session -> {

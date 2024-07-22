@@ -130,10 +130,10 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 		//rev 1
 		Session session = openSession();
 		session.getTransaction().begin();
-		session.save( manyToOne );
-		session.save( oneToOne );
-		session.save( manyToManyEntity );
-		session.save( advancedEntity );
+		session.persist( manyToOne );
+		session.persist( oneToOne );
+		session.persist( manyToManyEntity );
+		session.persist( advancedEntity );
 		session.getTransaction().commit();
 
 		//rev 2
@@ -141,21 +141,21 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 		InternalComponent internalComponent = (InternalComponent) advancedEntity.getDynamicConfiguration()
 				.get( INTERNAL_COMPONENT );
 		internalComponent.setProperty( "new value" );
-		session.save( advancedEntity );
+		session.persist( advancedEntity );
 		session.getTransaction().commit();
 
 		//rev 3
 		session.getTransaction().begin();
 		List<String> internalList = (List) advancedEntity.getDynamicConfiguration().get( INTERNAL_LIST );
 		internalList.add( "four" );
-		session.save( advancedEntity );
+		session.persist( advancedEntity );
 		session.getTransaction().commit();
 
 		//rev 4
 		session.getTransaction().begin();
 		Map<String, String> map = (Map) advancedEntity.getDynamicConfiguration().get( INTERNAL_MAP );
 		map.put( "three", "3" );
-		session.save( advancedEntity );
+		session.persist( advancedEntity );
 		session.getTransaction().commit();
 
 		//rev 5
@@ -164,15 +164,15 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 				.get( INTERNAL_MAP_WITH_MANY_TO_MANY );
 		ManyToManyEntity manyToManyEntity2 = new ManyToManyEntity( 2L, "new value" );
 		mapWithManyToMany.put( "entity2", manyToManyEntity2 );
-		session.save( manyToManyEntity2 );
-		session.save( advancedEntity );
+		session.persist( manyToManyEntity2 );
+		session.persist( advancedEntity );
 		session.getTransaction().commit();
 
 		//rev 6
 		session.getTransaction().begin();
 		mapWithManyToMany = (Map) advancedEntity.getDynamicConfiguration().get( INTERNAL_MAP_WITH_MANY_TO_MANY );
 		mapWithManyToMany.clear();
-		session.save( advancedEntity );
+		session.persist( advancedEntity );
 		session.getTransaction().commit();
 
 		//rev 7
@@ -180,20 +180,20 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 		Set<InternalComponent> internalComponentSet = (Set) advancedEntity.getDynamicConfiguration()
 				.get( INTERNAL_SET_OF_COMPONENTS );
 		internalComponentSet.add( new InternalComponent( "drei" ) );
-		session.save( advancedEntity );
+		session.persist( advancedEntity );
 		session.getTransaction().commit();
 
 		//rev 8
 		session.getTransaction().begin();
 		advancedEntity.getDynamicConfiguration().put( AGE_USER_TYPE, new Age( 19 ) );
-		session.save( advancedEntity );
+		session.persist( advancedEntity );
 		session.getTransaction().commit();
 
 		//rev 9
 		session.getTransaction().begin();
 		List<Age> ages = (List<Age>) advancedEntity.getDynamicConfiguration().get( INTERNAL_LIST_OF_USER_TYPES );
 		ages.add( new Age( 4 ) );
-		session.save( advancedEntity );
+		session.persist( advancedEntity );
 		session.getTransaction().commit();
 
 		//rev this, should not create revision

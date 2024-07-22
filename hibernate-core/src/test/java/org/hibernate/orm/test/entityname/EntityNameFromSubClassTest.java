@@ -37,7 +37,7 @@ public class EntityNameFromSubClassTest extends BaseCoreFunctionalTestCase {
 		Car golf = new Car();
 		golf.setOwner("stliu");
 		stliu.getCars().add(golf);
-		s.save(stliu);
+		s.persist(stliu);
 		s.getTransaction().commit();
 		s.close();
 		

@@ -43,9 +43,9 @@ public class UnexpectedDeleteTest2 {
             Bar bar = new Bar();
             Foo foo1 = new Foo();
             Foo foo2 = new Foo();
-            s.save( bar );
-            s.save( foo1 );
-            s.save( foo2 );
+            s.persist( bar );
+            s.persist( foo1 );
+            s.persist( foo2 );
 
             bar.foos.add( foo1 );
             bar.foos.add( foo2 );

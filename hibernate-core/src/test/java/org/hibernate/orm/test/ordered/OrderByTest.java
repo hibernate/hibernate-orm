@@ -101,7 +101,7 @@ public class OrderByTest {
 		assertEquals( iter.next(), "jboss.com" );
 		assertFalse( iter.hasNext() );*/
 
-					sess.delete( s );
+					sess.remove( s );
 				}
 		);
 	}

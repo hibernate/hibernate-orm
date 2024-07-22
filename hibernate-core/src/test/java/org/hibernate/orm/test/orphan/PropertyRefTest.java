@@ -44,14 +44,14 @@ public class PropertyRefTest {
 				session -> {
 					user.addMail( "test" );
 					user.addMail( "test" );
-					session.save( user );
+					session.persist( user );
 				}
 		);
 
 		scope.inTransaction(
 				session -> {
 					User u = session.load( User.class, user.getId() );
-					session.delete( u );
+					session.remove( u );
 				}
 		);
 

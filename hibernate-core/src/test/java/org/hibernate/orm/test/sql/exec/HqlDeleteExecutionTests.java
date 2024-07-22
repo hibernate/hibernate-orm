@@ -74,7 +74,7 @@ public class HqlDeleteExecutionTests {
 	public void testSimpleMultiTableRestrictedDeleteResults(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.save(
+					session.persist(
 							new SecondaryTableTests.SimpleEntityWithSecondaryTables(
 									1,
 									"first",
@@ -82,7 +82,7 @@ public class HqlDeleteExecutionTests {
 									"1 - cfdjdjvokfobkofbvovoijjbvoijofjdbiof"
 							)
 					);
-					session.save(
+					session.persist(
 							new SecondaryTableTests.SimpleEntityWithSecondaryTables(
 									2,
 									"second",
@@ -90,7 +90,7 @@ public class HqlDeleteExecutionTests {
 									"2 - s3o2rj9 fcojv9j gj9jfv943jv29j9j4"
 							)
 					);
-					session.save(
+					session.persist(
 							new SecondaryTableTests.SimpleEntityWithSecondaryTables(
 									3,
 									"third",
@@ -132,10 +132,10 @@ public class HqlDeleteExecutionTests {
 	public void testJoinedSubclassRootRestrictedDeleteResults(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.save(
+					session.persist(
 							new JoinedInheritanceTest.ForeignCustomer( 1, "Adventures Abroad", "123" )
 					);
-					session.save(
+					session.persist(
 							new JoinedInheritanceTest.DomesticCustomer( 2, "Domestic Wonders", "456" )
 					);
 				}
@@ -188,10 +188,10 @@ public class HqlDeleteExecutionTests {
 	public void testJoinedSubclassLeafRestrictedDeleteResult(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.save(
+					session.persist(
 							new JoinedInheritanceTest.ForeignCustomer( 1, "Adventures Abroad", "123" )
 					);
-					session.save(
+					session.persist(
 							new JoinedInheritanceTest.DomesticCustomer( 2, "Domestic Wonders", "456" )
 					);
 				}

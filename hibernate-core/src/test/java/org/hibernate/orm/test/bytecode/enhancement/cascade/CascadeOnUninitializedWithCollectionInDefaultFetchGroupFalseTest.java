@@ -143,7 +143,7 @@ public class CascadeOnUninitializedWithCollectionInDefaultFetchGroupFalseTest {
 					final SQLStatementInspector statementInspector = extractFromSession( session );
 					statementInspector.clear();
 
-					session.delete( detachedPerson );
+					session.remove( detachedPerson );
 
 					// 1) select Person#addresses
 					// 2) select Person#primaryAddress
@@ -197,7 +197,7 @@ public class CascadeOnUninitializedWithCollectionInDefaultFetchGroupFalseTest {
 
 		// deleting detachedPerson should result in detachedPerson.address being initialized,
 		// so that the DELETE operation can be cascaded to it.
-		scope.inTransaction( session -> session.delete( detachedPerson ) );
+		scope.inTransaction( session -> session.remove( detachedPerson ) );
 
 		// both the Person and its Address should be deleted
 		scope.inTransaction( session -> {

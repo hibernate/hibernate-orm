@@ -33,7 +33,7 @@ public class EmbeddableWithOne2ManyTest {
 		// but i cannot do this checking until HHH-4599 is done.
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from Person p join p.name.aliases a where a.source = 'FBI'" )
+					session.createQuery( "from Person p join p.name.aliases a where a.source = 'FBI'", Person.class )
 							.list();
 				}
 		);
@@ -53,9 +53,9 @@ public class EmbeddableWithOne2ManyTest {
 		);
 		scope.inTransaction(
 				session -> {
-					Person p = (Person) session.load( Person.class, person.getId() );
-					session.delete( p );
-					List aliases = session.createQuery( "from Alias" ).list();
+					Person p = session.getReference( Person.class, person.getId() );
+					session.remove( p );
+					List<Alias> aliases = session.createQuery( "from Alias", Alias.class ).list();
 					assertEquals( 0, aliases.size() );
 				}
 		);

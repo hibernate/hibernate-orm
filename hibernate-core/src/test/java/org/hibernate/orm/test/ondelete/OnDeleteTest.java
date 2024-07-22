@@ -71,7 +71,7 @@ public class OnDeleteTest {
 					joe.setSalesperson( mark );
 					mark.getCustomers().add( joe );
 
-					session.save( mark );
+					session.persist( mark );
 
 					session.getTransaction().commit();
 
@@ -83,7 +83,7 @@ public class OnDeleteTest {
 					statistics.clear();
 
 					Transaction t = session.beginTransaction();
-					session.delete( mark );
+					session.remove( mark );
 					t.commit();
 
 					assertThat( statistics.getEntityDeleteCount(), is( 2L ) );

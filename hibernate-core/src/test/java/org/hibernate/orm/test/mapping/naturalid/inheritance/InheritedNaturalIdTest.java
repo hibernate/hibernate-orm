@@ -58,7 +58,7 @@ public class InheritedNaturalIdTest {
 	@BeforeEach
 	public void prepareTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.save( new User( ORIGINAL ) )
+				(session) -> session.persist( new User( ORIGINAL ) )
 		);
 	}
 
@@ -102,7 +102,7 @@ public class InheritedNaturalIdTest {
 					final Principal p = session.bySimpleNaturalId( Principal.class ).load( ORIGINAL );
 					assertNotNull( p );
 
-					session.delete( p );
+					session.remove( p );
 					session.flush();
 				}
 		);

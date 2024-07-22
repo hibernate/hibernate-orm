@@ -122,7 +122,7 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 		// lastly, clean up...
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete( s.load( User.class, steve.getId() ) );
+		s.remove( s.load( User.class, steve.getId() ) );
 		t.commit();
 		s.close();
 	}
@@ -191,8 +191,8 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete( s.load( User.class, steve.getId() ) );
-		s.delete( s.load( Group.class, admin.getId() ) );
+		s.remove( s.load( User.class, steve.getId() ) );
+		s.remove( s.load( Group.class, admin.getId() ) );
 		t.commit();
 		s.close();
 	}
@@ -245,8 +245,8 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete( s.load( User.class, steve.getId() ) );
-		s.delete( s.load( Permission.class, perm.getId() ) );
+		s.remove( s.load( User.class, steve.getId() ) );
+		s.remove( s.load( Permission.class, perm.getId() ) );
 		t.commit();
 		s.close();
 	}
@@ -297,7 +297,7 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.getTransaction().begin();
-		s.delete( user );
+		s.remove( user );
 		s.getTransaction().commit();
 		s.close();
 	}

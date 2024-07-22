@@ -53,7 +53,8 @@ public class TypeParameterTest {
 				session -> {
 					Widget obj = new Widget();
 					obj.setValueThree( 5 );
-					return session.save( obj );
+					session.persist( obj );
+					return obj.getId();
 				}
 		);
 
@@ -131,7 +132,7 @@ public class TypeParameterTest {
 					obj.setValueThree( 9 );
 					obj.setValueFour( 10 );
 					obj.setString( "all-normal" );
-					session.save( obj );
+					session.persist( obj );
 
 					obj = new Widget();
 					obj.setValueOne( 1 );
@@ -139,7 +140,7 @@ public class TypeParameterTest {
 					obj.setValueThree( -1 );
 					obj.setValueFour( -5 );
 					obj.setString( "all-default" );
-					session.save( obj );
+					session.persist( obj );
 				}
 		);
 	}

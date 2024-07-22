@@ -71,7 +71,7 @@ public class LegacyParameterTests {
 					Human human1 = new Human();
 					human1.setId( 2L );
 					human1.setNickName( null );
-					s.save( human1 );
+					s.persist( human1 );
 
 					parameters = new HashMap<>();
 
@@ -235,7 +235,7 @@ public class LegacyParameterTests {
 					human.setId( 1L );
 					human.setNickName( "nick" );
 					human.setIntValue( 1 );
-					s.save( human );
+					s.persist( human );
 				}
 		);
 	}

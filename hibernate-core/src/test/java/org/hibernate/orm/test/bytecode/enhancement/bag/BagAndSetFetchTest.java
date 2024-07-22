@@ -67,20 +67,20 @@ public class BagAndSetFetchTest {
 					a.addAttribute( b );
 					a.addAttribute( b1 );
 
-					session.save( c );
-					session.save( c1 );
-					session.save( c2 );
-					session.save( c3 );
-					session.save( c4 );
+					session.persist( c );
+					session.persist( c1 );
+					session.persist( c2 );
+					session.persist( c3 );
+					session.persist( c4 );
 
-					session.save( d );
-					session.save( d1 );
-					session.save( d2 );
+					session.persist( d );
+					session.persist( d1 );
+					session.persist( d2 );
 
-					session.save( b );
-					session.save( b1 );
+					session.persist( b );
+					session.persist( b1 );
 
-					session.save( a );
+					session.persist( a );
 				}
 		);
 

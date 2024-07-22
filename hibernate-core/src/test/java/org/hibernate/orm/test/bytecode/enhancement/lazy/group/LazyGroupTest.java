@@ -82,8 +82,8 @@ public class LazyGroupTest {
             c2.alternateParent = p1;
             p1.alternateChildren.add( c2 );
 
-            s.save( p1 );
-            s.save( p2 );
+            s.persist( p1 );
+            s.persist( p2 );
         } );
     }
 

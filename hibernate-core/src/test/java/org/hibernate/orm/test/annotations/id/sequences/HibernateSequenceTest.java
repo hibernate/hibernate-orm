@@ -58,7 +58,7 @@ public class HibernateSequenceTest {
 		scope.inTransaction(
 				session -> {
 					entity.setText( "sample text" );
-					session.save( entity );
+					session.persist( entity );
 				}
 		);
 

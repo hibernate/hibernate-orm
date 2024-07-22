@@ -89,7 +89,7 @@ public class CompositeKeyDeleteTest extends BaseCoreFunctionalTestCase {
       Assert.assertEquals(2, list.size());
       CustomerInventoryTwo ci = list.get(1);
       list.remove(ci);
-      s.delete(ci);
+      s.remove(ci);
       s.flush();
       
       tx.commit();//fail

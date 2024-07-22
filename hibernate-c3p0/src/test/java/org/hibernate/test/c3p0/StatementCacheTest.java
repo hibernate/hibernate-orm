@@ -33,10 +33,10 @@ public class StatementCacheTest extends BaseCoreFunctionalTestCase {
 					//save 2 new entities, one valid, one invalid (neither should be persisted)
 					IrrelevantEntity irrelevantEntity = new IrrelevantEntity();
 					irrelevantEntity.setName( "valid 1" );
-					session.save( irrelevantEntity );
+					session.persist( irrelevantEntity );
 					//name is required
 					irrelevantEntity = new IrrelevantEntity();
-					session.save( irrelevantEntity );
+					session.persist( irrelevantEntity );
 					try {
 						session.flush();
 						Assert.fail( "Validation exception did not occur" );
@@ -53,7 +53,7 @@ public class StatementCacheTest extends BaseCoreFunctionalTestCase {
 					//save a new entity and commit it
 					IrrelevantEntity irrelevantEntity = new IrrelevantEntity();
 					irrelevantEntity.setName( "valid 2" );
-					session.save( irrelevantEntity );
+					session.persist( irrelevantEntity );
 					session.flush();
 				}
 		);

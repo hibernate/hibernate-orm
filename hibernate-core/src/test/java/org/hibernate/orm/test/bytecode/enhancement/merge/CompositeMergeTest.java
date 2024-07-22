@@ -92,7 +92,7 @@ public class CompositeMergeTest {
         checkDirtyTracking( parent[1], "address.country" );
 
         scope.inTransaction( s -> {
-            s.saveOrUpdate( parent[1] );
+            s.merge( parent[1] );
             checkDirtyTracking( parent[1], "address.country" );
         } );
 

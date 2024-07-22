@@ -33,7 +33,7 @@ public class NamedNativeQueryTest extends BaseCoreFunctionalTestCase {
 		Session session = openSession();
 		session.getTransaction().begin();
 		FromEntity fromEntity = new FromEntity( name, lastName );
-		session.save( fromEntity );
+		session.persist( fromEntity );
 		session.getTransaction().commit();
 		session.close();
 		return fromEntity;
@@ -44,7 +44,7 @@ public class NamedNativeQueryTest extends BaseCoreFunctionalTestCase {
 
 		Session session = openSession();
 		session.getTransaction().begin();
-		session.save( destinationEntity );
+		session.persist( destinationEntity );
 		session.getTransaction().commit();
 		session.close();
 		return destinationEntity;

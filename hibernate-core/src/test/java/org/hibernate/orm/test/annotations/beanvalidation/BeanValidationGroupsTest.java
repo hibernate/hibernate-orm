@@ -47,7 +47,7 @@ public class BeanValidationGroupsTest extends BaseCoreFunctionalTestCase {
 			fail( "invalid object should not be validated" );
 		}
 		try {
-			s.delete( ch );
+			s.remove( ch );
 			s.flush();
 			fail( "invalid object should not be persisted" );
 		}

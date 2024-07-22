@@ -60,7 +60,7 @@ public class LazyNotFoundOneToOneTest {
 				}
 		);
 
-		scope.inTransaction( session -> session.delete( session.get( Lazy.class, ID ) ) );
+		scope.inTransaction( session -> session.remove( session.get( Lazy.class, ID ) ) );
 
 		scope.inTransaction( session -> {
 					SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getSessionFactory()

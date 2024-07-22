@@ -45,11 +45,11 @@ public class EmbeddableIndexTest {
 		scope.inTransaction(
 				session -> {
 					TheOne one = new TheOne( "1" );
-					session.save( one );
+					session.persist( one );
 
 					TheMapKey theMapKey = new TheMapKey( one );
 					TheMany theMany = new TheMany( theMapKey );
-					session.save( theMany );
+					session.persist( theMany );
 
 					Map<TheMapKey, TheMany> map = new HashMap<>();
 					map.put( theMapKey, theMany );

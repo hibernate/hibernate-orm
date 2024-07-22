@@ -94,7 +94,7 @@ public class DiscriminatorQueryUsageTests {
 			e.setSex( 'M' );
 			e.setTitle( "Gangster of love" );
 
-			session.save( e );
+			session.persist( e );
 
 			return e;
 		} );

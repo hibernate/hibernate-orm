@@ -436,7 +436,7 @@ public class CMTTest {
 			s = sessionFactory.openSession();
 			item = (Map) s.createQuery( "from Item" ).uniqueResult();
 			assertNotNull( item );
-			s.delete( item );
+			s.remove( item );
 			transactionManager.commit();
 			assertFalse( s.isOpen() );
 

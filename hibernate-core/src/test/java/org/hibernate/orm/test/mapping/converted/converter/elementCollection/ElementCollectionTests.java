@@ -79,7 +79,7 @@ public class ElementCollectionTests {
 
 		sfScope.inTransaction(
 				(session) -> {
-					session.save( entity );
+					session.persist( entity );
 				}
 		);
 

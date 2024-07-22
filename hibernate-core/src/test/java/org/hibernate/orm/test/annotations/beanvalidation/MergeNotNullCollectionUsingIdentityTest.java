@@ -74,7 +74,7 @@ public class MergeNotNullCollectionUsingIdentityTest extends BaseCoreFunctionalT
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete( parent );
+		s.remove( parent );
 		t.commit();
 		s.close();
 	}
@@ -93,7 +93,7 @@ public class MergeNotNullCollectionUsingIdentityTest extends BaseCoreFunctionalT
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete( parent );
+		s.remove( parent );
 		t.commit();
 		s.close();
 	}

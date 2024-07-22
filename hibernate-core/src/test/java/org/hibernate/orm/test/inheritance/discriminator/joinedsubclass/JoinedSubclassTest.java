@@ -44,8 +44,8 @@ public class JoinedSubclassTest {
 		subSubEntity.setSubSubString( EXPECTED_SUB_SUB_STRING_VALUE );
 		scope.inTransaction(
 				session -> {
-					session.save( subEntity );
-					session.save( subSubEntity );
+					session.persist( subEntity );
+					session.persist( subSubEntity );
 				}
 		);
 		subSubEntityId = subSubEntity.getId();

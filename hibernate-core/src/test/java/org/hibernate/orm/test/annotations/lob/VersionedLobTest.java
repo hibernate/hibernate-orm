@@ -70,7 +70,7 @@ public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCo
 		assertEquals( loadedBook.getVersion(), Integer.valueOf( 0 ) );
 		s.flush();
 		assertEquals( loadedBook.getVersion(), Integer.valueOf( 0 ) );
-		s.delete( loadedBook );
+		s.remove( loadedBook );
 		tx.commit();
 		s.close();
 
@@ -97,7 +97,7 @@ public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCo
 		assertEquals( b2.getVersion(), Integer.valueOf( 0 ) );
 		s.flush();
 		assertEquals( b2.getVersion(), Integer.valueOf( 0 ) );
-		s.delete( b2 );
+		s.remove( b2 );
 		tx.commit();
 		s.close();
 	}
@@ -123,7 +123,7 @@ public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCo
 		assertEquals( b2.getVersion(), Integer.valueOf( 0 ) );
 		s.flush();
 		assertEquals( b2.getVersion(), Integer.valueOf( 0 ) );
-		s.delete( b2 );
+		s.remove( b2 );
 		tx.commit();
 		s.close();
 	}
@@ -150,7 +150,7 @@ public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCo
 		assertEquals( recompiled.getVersion(), Integer.valueOf( 0 ) );
 		s.flush();
 		assertEquals( recompiled.getVersion(), Integer.valueOf( 0 ) );
-		s.delete( recompiled );
+		s.remove( recompiled );
 		tx.commit();
 		s.close();
 	}
@@ -178,7 +178,7 @@ public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCo
 		assertEquals( recompiled.getVersion(), Integer.valueOf( 0 ) );
 		s.flush();
 		assertEquals( recompiled.getVersion(), Integer.valueOf( 0 ) );
-		s.delete( recompiled );
+		s.remove( recompiled );
 		tx.commit();
 		s.close();
 	}

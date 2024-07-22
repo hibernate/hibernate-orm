@@ -382,7 +382,7 @@ public class EntityResultTests extends AbstractUsageTest {
 					entityOfBasics.setTheTimestamp( THEN_TIMESTAMP );
 					entityOfBasics.setTheInstant( THEN );
 
-					session.save( entityOfBasics );
+					session.persist( entityOfBasics );
 
 					// embedded values
 					final EntityWithEmbedded entityWithEmbedded = new EntityWithEmbedded(

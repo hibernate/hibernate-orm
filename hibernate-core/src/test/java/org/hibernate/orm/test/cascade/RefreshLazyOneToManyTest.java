@@ -43,10 +43,10 @@ public class RefreshLazyOneToManyTest extends BaseCoreFunctionalTestCase {
 	public void testRefreshCascade() {
 		doInHibernate( this::sessionFactory, session -> {
 			Invoice invoice = new Invoice( "An invoice for John Smith" );
-			session.save( invoice );
+			session.persist( invoice );
 
-			session.save( new Line( "1 pen - 5€", invoice ) );
-			session.save( new Tax( "21%", invoice ) );
+			session.persist( new Line( "1 pen - 5€", invoice ) );
+			session.persist( new Tax( "21%", invoice ) );
 		} );
 
 		doInHibernate( this::sessionFactory, session -> {

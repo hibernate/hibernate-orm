@@ -62,19 +62,19 @@ public class BatchFetchReferencedColumnNameTest {
 		scope.inTransaction( session -> {
 			Parent p = new Parent();
 			p.setId( 1L );
-			session.save( p );
+			session.persist( p );
 
 			Child c1 = new Child();
 			c1.setCreatedOn( ZonedDateTime.now() );
 			c1.setParentId( 1L );
 			c1.setId( 10L );
-			session.save( c1 );
+			session.persist( c1 );
 
 			Child c2 = new Child();
 			c2.setCreatedOn( ZonedDateTime.now() );
 			c2.setParentId( 1L );
 			c2.setId( 11L );
-			session.save( c2 );
+			session.persist( c2 );
 		} );
 
 		scope.inTransaction( session -> {

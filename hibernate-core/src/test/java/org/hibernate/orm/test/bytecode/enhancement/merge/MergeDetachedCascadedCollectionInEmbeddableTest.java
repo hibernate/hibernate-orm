@@ -53,7 +53,7 @@ public class MergeDetachedCascadedCollectionInEmbeddableTest {
 			entity.name = "new";
 			entity.setGrouping( new Grouping() );
 			entity.getGrouping().getThings().add( new Thing() );
-			session.save( entity );
+			session.persist( entity );
 			return entity;
 		} );
 

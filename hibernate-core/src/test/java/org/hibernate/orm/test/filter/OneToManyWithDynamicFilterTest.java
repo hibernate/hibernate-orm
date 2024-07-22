@@ -68,7 +68,7 @@ public class OneToManyWithDynamicFilterTest extends AbstractStatefulStatelessFil
 			revision.addArticleTradings( articleTrading );
 			revision.setDeletionTimestamp( Timestamp.valueOf( "9999-12-31 00:00:00" ) );
 			revision.setDeleted( true );
-			session.save( revision );
+			session.persist( revision );
 		} );
 	}
 

@@ -42,7 +42,7 @@ public class TestCollectionInitializingDuringFlush extends BaseCoreFunctionalTes
 		author.setPublisher( publisher );
 		publisher.getAuthors().add( author );
 		author.getBooks().add( new Book( "Reflections on a Wimpy Kid", author ) );
-		s.save( author );
+		s.persist( author );
 		s.getTransaction().commit();
 		s.clear();
 
@@ -56,7 +56,7 @@ public class TestCollectionInitializingDuringFlush extends BaseCoreFunctionalTes
 
 		s = openSession();
 		s.beginTransaction();
-		s.delete( author );
+		s.remove( author );
 		s.getTransaction().commit();
 		s.clear();
 

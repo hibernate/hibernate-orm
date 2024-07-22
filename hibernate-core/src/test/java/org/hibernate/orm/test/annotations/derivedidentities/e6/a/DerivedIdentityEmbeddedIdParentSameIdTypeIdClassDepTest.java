@@ -59,8 +59,8 @@ public class DerivedIdentityEmbeddedIdParentSameIdTypeIdClassDepTest {
 					d = session.get( MedicalHistory.class, pId );
 					assertEquals( pId.firstName, d.patient.id.firstName );
 
-					session.delete( d );
-					session.delete( d.patient );
+					session.remove( d );
+					session.remove( d.patient );
 				}
 		);
 	}

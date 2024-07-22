@@ -170,19 +170,19 @@ public class MergeMultipleEntityCopiesCustomTest {
 				session -> {
 					for ( Hoarder hoarder : (List<Hoarder>) session.createQuery( "from Hoarder" ).list() ) {
 						hoarder.getItems().clear();
-						session.delete( hoarder );
+						session.remove( hoarder );
 					}
 
 					for ( Category category : (List<Category>) session.createQuery( "from Category" ).list() ) {
 						if ( category.getExampleItem() != null ) {
 							category.setExampleItem( null );
-							session.delete( category );
+							session.remove( category );
 						}
 					}
 
 					for ( Item item : (List<Item>) session.createQuery( "from Item" ).list() ) {
 						item.setCategory( null );
-						session.delete( item );
+						session.remove( item );
 					}
 
 					session.createQuery( "delete from Item" ).executeUpdate();

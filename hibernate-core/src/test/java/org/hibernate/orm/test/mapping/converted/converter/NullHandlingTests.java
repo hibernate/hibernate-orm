@@ -43,7 +43,7 @@ public class NullHandlingTests extends BaseCoreFunctionalTestCase {
 		session.beginTransaction();
 		// at this point TheEntity.sex is null
 		// lets make sure that the converter is given a chance to adjust that to UNKNOWN...
-		session.save( theEntity );
+		session.persist( theEntity );
 		session.getTransaction().commit();
 		session.close();
 
@@ -78,7 +78,7 @@ public class NullHandlingTests extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		session.delete( theEntity );
+		session.remove( theEntity );
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -111,7 +111,7 @@ public class NullHandlingTests extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		session.delete( theEntity );
+		session.remove( theEntity );
 		session.getTransaction().commit();
 		session.close();
 	}

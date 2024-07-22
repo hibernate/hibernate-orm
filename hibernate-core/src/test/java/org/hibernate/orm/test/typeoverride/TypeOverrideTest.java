@@ -99,7 +99,7 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 		Entity e = new Entity( "name" );
 		inTransaction(
 				session ->
-						session.save( e )
+						session.persist( e )
 		);
 
 		inTransaction(
@@ -107,7 +107,7 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 					Entity entity = session.get( Entity.class, e.getId() );
 					assertFalse( entity.getName().startsWith( StoredPrefixedStringType.PREFIX ) );
 					assertEquals( "name", entity.getName() );
-					session.delete( entity );
+					session.remove( entity );
 				}
 		);
 	}
@@ -118,7 +118,7 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 		Entity e = new Entity( "name " );
 		inTransaction(
 				session ->
-						session.save( e )
+						session.persist( e )
 		);
 
 		inTransaction(
@@ -131,7 +131,7 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 
 		inTransaction(
 				session ->
-						session.delete( e )
+						session.remove( e )
 		);
 	}
 }

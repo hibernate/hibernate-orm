@@ -30,9 +30,9 @@ public class BigIntegerIncrementGeneratorTest {
 		scope.inTransaction(
 				(session) -> {
 					Entity entity = new Entity( "BigInteger + increment #1" );
-					session.save( entity );
+					session.persist( entity );
 					Entity entity2 = new Entity( "BigInteger + increment #2" );
-					session.save( entity2 );
+					session.persist( entity2 );
 
 					session.flush();
 

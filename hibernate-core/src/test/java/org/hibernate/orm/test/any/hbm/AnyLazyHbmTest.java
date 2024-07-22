@@ -40,7 +40,7 @@ public class AnyLazyHbmTest {
 					LazyPropertySet set = new LazyPropertySet( "string" );
 					Property property = new StringProperty( "name", "Alex" );
 					set.setSomeProperty( property );
-					session.save( set );
+					session.persist( set );
 				}
 		);
 	}

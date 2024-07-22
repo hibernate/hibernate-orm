@@ -61,7 +61,7 @@ public class ByteTest {
 					assertNotNull( entity );
 					assertEquals( TEST_VALUE, entity.getByteData() );
 					entity.setByteData( Byte.MIN_VALUE );
-					session.update( entity );
+					session.persist( entity );
 				}
 		);
 
@@ -75,7 +75,7 @@ public class ByteTest {
 					assertNotNull( entity );
 					assertEquals( Byte.MIN_VALUE, entity.getByteData() );
 					entity.setByteData( Byte.MAX_VALUE );
-					session.update( entity );
+					session.merge( entity );
 				}
 		);
 

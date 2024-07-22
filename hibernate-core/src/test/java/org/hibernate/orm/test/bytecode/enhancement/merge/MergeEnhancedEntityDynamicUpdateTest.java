@@ -120,7 +120,7 @@ public class MergeEnhancedEntityDynamicUpdateTest extends BaseCoreFunctionalTest
     @After
     public void cleanup() {
         doInHibernate( this::sessionFactory, s -> {
-            s.delete( person );
+            s.remove( person );
         } );
         doInHibernate( this::sessionFactory, s -> {
             s.createQuery( "delete from NullablePerson" );

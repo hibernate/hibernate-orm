@@ -22,7 +22,7 @@ public abstract class AbstractUsageTest {
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.save( new SimpleEntityWithNamedMappings( 1, "test", "notes" ) );
+					session.persist( new SimpleEntityWithNamedMappings( 1, "test", "notes" ) );
 				}
 		);
 	}

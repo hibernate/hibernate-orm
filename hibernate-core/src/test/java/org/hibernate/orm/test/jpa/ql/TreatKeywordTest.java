@@ -71,9 +71,9 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		DiscriminatorEntity root = new DiscriminatorEntity( 1, "root" );
-		s.save( root );
+		s.persist( root );
 		DiscriminatorEntitySubclass child = new DiscriminatorEntitySubclass( 2, "child", root );
-		s.save( child );
+		s.persist( child );
 		s.getTransaction().commit();
 		s.close();
 
@@ -100,8 +100,8 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		s.delete( root );
-		s.delete( child );
+		s.remove( root );
+		s.remove( child );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -112,9 +112,9 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		JoinedEntity root = new JoinedEntity( 1, "root" );
-		s.save( root );
+		s.persist( root );
 		JoinedEntitySubclass child = new JoinedEntitySubclass( 2, "child", root );
-		s.save( child );
+		s.persist( child );
 		s.getTransaction().commit();
 		s.close();
 
@@ -144,8 +144,8 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		s.delete( child );
-		s.delete( root );
+		s.remove( child );
+		s.remove( root );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -156,11 +156,11 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		JoinedEntity root = new JoinedEntity( 1, "root" );
-		s.save( root );
+		s.persist( root );
 		JoinedEntitySubclass child1 = new JoinedEntitySubclass( 2, "child1", root );
-		s.save( child1 );
+		s.persist( child1 );
 		JoinedEntitySubclass2 child2 = new JoinedEntitySubclass2( 3, "child2", root );
-		s.save( child2 );
+		s.persist( child2 );
 		s.getTransaction().commit();
 		s.close();
 
@@ -185,9 +185,9 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		s.delete( child1 );
-		s.delete( child2 );
-		s.delete( root );
+		s.remove( child1 );
+		s.remove( child2 );
+		s.remove( root );
 		s.getTransaction().commit();
 		s.close();
 	}

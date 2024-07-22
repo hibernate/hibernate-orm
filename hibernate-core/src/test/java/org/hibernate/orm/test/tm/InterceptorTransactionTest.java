@@ -174,7 +174,7 @@ public class InterceptorTransactionTest extends BaseJpaOrNativeBootstrapFunction
 		assertNull( interceptor.afterTransactionCompletionAssertionPassed );
 
 		SimpleEntity entity = new SimpleEntity( "Hello World" );
-		session.save( entity );
+		session.persist( entity );
 
 		interceptor.reset();
 
@@ -205,7 +205,7 @@ public class InterceptorTransactionTest extends BaseJpaOrNativeBootstrapFunction
 		assertNull( interceptor.afterTransactionCompletionAssertionPassed );
 
 		SimpleEntity entity = new SimpleEntity( "Hello World" );
-		session.save( entity );
+		session.persist( entity );
 
 		interceptor.reset();
 
@@ -248,7 +248,7 @@ public class InterceptorTransactionTest extends BaseJpaOrNativeBootstrapFunction
 		assertNull( interceptor.afterTransactionCompletionAssertionPassed );
 
 		SimpleEntity entity = new SimpleEntity( "Hello World" );
-		session.save( entity );
+		session.persist( entity );
 
 		interceptor.reset();
 

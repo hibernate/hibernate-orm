@@ -37,7 +37,7 @@ public class ConverterAndLobTest {
 		PostalAreaConverter.clearCounts();
 
 		scope.inTransaction(
-				(session) -> session.save( new Address( 1, "123 Main St.", null, PostalArea._78729 ) )
+				(session) -> session.persist( new Address( 1, "123 Main St.", null, PostalArea._78729 ) )
 		);
 
 		assertThat( PostalAreaConverter.toDatabaseCallCount, is(1) );

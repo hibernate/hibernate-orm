@@ -74,7 +74,7 @@ public class DefaultGeneratedValueIdentityTest extends BaseCoreFunctionalTestCas
 	@Test
 	@TestForIssue( jiraKey = "HHH-12671" )
 	public void testGenerationWithIdentityInsert() {
-		final TheEntity theEntity = new TheEntity( 1 );
+		final TheEntity theEntity = new TheEntity();
 
 		doInHibernate( this::sessionFactory, session -> {
 			assertNull( theEntity.createdDate );
@@ -96,7 +96,7 @@ public class DefaultGeneratedValueIdentityTest extends BaseCoreFunctionalTestCas
 			assertNull( theEntity.dbCreatedDate );
 
 			assertNull( theEntity.name );
-			session.save( theEntity );
+			session.persist( theEntity );
 
 			assertNotNull( theEntity.createdDate );
 			assertNotNull( theEntity.alwaysDate );
@@ -122,7 +122,7 @@ public class DefaultGeneratedValueIdentityTest extends BaseCoreFunctionalTestCas
 		assertEquals( "Bob", theEntity.name );
 
 		doInHibernate( this::sessionFactory, session -> {
-			TheEntity _theEntity = session.get( TheEntity.class, 1 );
+			TheEntity _theEntity = session.get( TheEntity.class, theEntity.id );
 			assertNotNull( _theEntity.createdDate );
 			assertNotNull( _theEntity.alwaysDate );
 			assertNotNull( _theEntity.vmCreatedDate );

@@ -38,10 +38,10 @@ public class ManyToOneReferencedColumnNameTest extends BaseCoreFunctionalTestCas
 		wi.setQtyInStock( new BigDecimal( 2 ) );
 		Session s = openSession();
 		s.getTransaction().begin();
-		s.save( i );
-		s.save( v );
-		s.save( ic );
-		s.save( wi );
+		s.persist( i );
+		s.persist( v );
+		s.persist( ic );
+		s.persist( wi );
 		s.flush();
 		s.getTransaction().rollback();
 		s.close();

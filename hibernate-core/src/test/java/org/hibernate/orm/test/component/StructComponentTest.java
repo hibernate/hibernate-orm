@@ -43,7 +43,7 @@ public class StructComponentTest {
 					book.ebookPublisher = ebookPublisher;
 					book.paperBackPublisher = paperPublisher;
 
-					session.save( book );
+					session.persist( book );
 				}
 		);
 	}

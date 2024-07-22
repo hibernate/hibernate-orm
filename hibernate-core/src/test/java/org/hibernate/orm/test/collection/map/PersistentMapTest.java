@@ -69,7 +69,7 @@ public class PersistentMapTest {
 
 		scope.inTransaction(
 				session -> {
-					session.save( parent );
+					session.persist( parent );
 					session.flush();
 					// at this point, the map on parent has now been replaced with a PersistentMap...
 					PersistentMap children = (PersistentMap) parent.getChildren();
@@ -93,7 +93,7 @@ public class PersistentMapTest {
 					assertTrue( children.isDirty() );
 
 					children.clearDirty();
-					session.delete( child );
+					session.remove( child );
 					children.clear();
 					assertTrue( children.isDirty() );
 					session.flush();
@@ -101,7 +101,7 @@ public class PersistentMapTest {
 					children.clear();
 					assertFalse( children.isDirty() );
 
-					session.delete( parent );
+					session.remove( parent );
 				}
 		);
 	}
@@ -112,7 +112,7 @@ public class PersistentMapTest {
 		Parent p = new Parent( "p1" );
 		scope.inTransaction(
 				session -> {
-					session.save( p );
+					session.persist( p );
 				}
 		);
 
@@ -129,7 +129,7 @@ public class PersistentMapTest {
 		assertEquals( 2, parent.getChildren().size() );
 
 		scope.inTransaction(
-				session -> session.delete( parent )
+				session -> session.remove( parent )
 		);
 	}
 
@@ -140,7 +140,7 @@ public class PersistentMapTest {
 		parent.addChild( child );
 
 		scope.inTransaction(
-				session -> session.save( parent )
+				session -> session.persist( parent )
 		);
 
 		// Now reload the parent and test removing the child
@@ -162,8 +162,8 @@ public class PersistentMapTest {
 				session -> {
 					Parent p = session.get( Parent.class, parent.getName() );
 					assertTrue( p.getChildren().isEmpty() );
-					session.delete( child2 );
-					session.delete( p );
+					session.remove( child2 );
+					session.remove( p );
 				}
 		);
 	}
@@ -187,7 +187,7 @@ public class PersistentMapTest {
 					List<User> list = q.list();
 
 					assertEquals( 1, list.size() );
-					session.delete( list.get( 0 ) );
+					session.remove( list.get( 0 ) );
 				}
 		);
 	}
@@ -212,7 +212,7 @@ public class PersistentMapTest {
 
 						user = session.get( User.class, user.id );
 						user.userDatas.clear();
-						session.update( user );
+						session.merge( user );
 
 						Query<UserData> q = session.createQuery( "DELETE FROM " + UserData.class.getName() + " d WHERE d.user = :user" );
 						q.setParameter( "user", user );
@@ -277,7 +277,7 @@ select
 					localizedString = multilingualString.getMap().get( "English Pig Latin" );
 					assertEquals( "English Pig Latin", localizedString.getLanguage() );
 					assertEquals( "amenay", localizedString.getText() );
-					session.delete( multilingualString );
+					session.remove( multilingualString );
 				}
 		);
 	}
@@ -320,8 +320,8 @@ select
 					localizedString = m.getMap().get( "English Pig Latin" );
 					assertEquals( "English Pig Latin", localizedString.getLanguage() );
 					assertEquals( "amenay", localizedString.getText() );
-					session.delete( parent );
-					session.delete( m );
+					session.remove( parent );
+					session.remove( m );
 				}
 		);
 	}
@@ -352,7 +352,7 @@ select
 		scope.inTransaction(
 				session -> {
 					User u = session.get( User.class, user.id );
-					session.delete( u );
+					session.remove( u );
 					session.createQuery( "delete from " + User.class.getName() ).executeUpdate();
 
 				}
@@ -385,7 +385,7 @@ select
 		scope.inTransaction(
 				session -> {
 					User user = session.get( User.class, userId );
-					session.delete( user );
+					session.remove( user );
 					session.createQuery( "delete from " + User.class.getName() ).executeUpdate();
 				}
 		);

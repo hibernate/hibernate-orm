@@ -42,7 +42,7 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 					assertNotNull( f );
 					assertEquals( "Channel", f.getSea() );
 					assertEquals( 2, f.getSize() );
-					s.delete( f );
+					s.remove( f );
 				}
 		);
 	}
@@ -67,8 +67,8 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 					assertNotNull( f );
 					assertEquals( country, f.getCountry() );
 					assertEquals( 2, f.getSize() );
-					s.delete( f );
-					s.delete( f.getCountry() );
+					s.remove( f );
+					s.remove( f.getCountry() );
 				}
 		);
 	}

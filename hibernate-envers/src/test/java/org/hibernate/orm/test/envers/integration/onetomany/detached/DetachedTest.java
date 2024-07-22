@@ -40,9 +40,9 @@ public class DetachedTest extends BaseEnversFunctionalTestCase {
 		session.getTransaction().begin();
 		ListRefCollEntity parent = new ListRefCollEntity( 1, "initial data" );
 		StrTestEntity child = new StrTestEntity( "data" );
-		session.save( child );
+		session.persist( child );
 		parent.setCollection( Arrays.asList( child ) );
-		session.save( parent );
+		session.persist( parent );
 		session.getTransaction().commit();
 
 		session.close();
@@ -51,7 +51,7 @@ public class DetachedTest extends BaseEnversFunctionalTestCase {
 		// Revision 2 - updating detached entity
 		session.getTransaction().begin();
 		parent.setData( "modified data" );
-		session.update( parent );
+		session.merge( parent );
 		session.getTransaction().commit();
 
 		session.close();

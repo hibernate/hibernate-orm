@@ -60,7 +60,7 @@ public class OrphanTest {
 
 					prod.getParts().remove( part );
 
-					session.delete( prod );
+					session.remove( prod );
 				}
 		);
 
@@ -99,7 +99,7 @@ public class OrphanTest {
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}
@@ -130,7 +130,7 @@ public class OrphanTest {
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}
@@ -166,79 +166,7 @@ public class OrphanTest {
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
-				}
-		);
-	}
-
-	@Test
-	@SuppressWarnings("unchecked")
-	public void testOrphanDeleteOnSaveOrUpdate(SessionFactoryScope scope) {
-		Product prod = new Product();
-		Part part = new Part();
-		scope.inTransaction(
-				session -> {
-					prod.setName( "Widget" );
-					part.setName( "Widge" );
-					part.setDescription( "part if a Widget" );
-					prod.getParts().add( part );
-					Part part2 = new Part();
-					part2.setName( "Get" );
-					part2.setDescription( "another part if a Widget" );
-					prod.getParts().add( part2 );
-					session.persist( prod );
-				}
-		);
-
-		prod.getParts().remove( part );
-
-		scope.inTransaction(
-				session ->
-						session.saveOrUpdate( prod )
-		);
-
-		scope.inTransaction(
-				session -> {
-					assertNull( session.get( Part.class, "Widge" ) );
-					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
-				}
-		);
-	}
-
-	@Test
-	@SuppressWarnings("unchecked")
-	public void testOrphanDeleteOnSaveOrUpdateAfterSerialization(SessionFactoryScope scope) {
-		Product prod = new Product();
-		Part part = new Part();
-		scope.inTransaction(
-				session -> {
-					prod.setName( "Widget" );
-					part.setName( "Widge" );
-					part.setDescription( "part if a Widget" );
-					prod.getParts().add( part );
-					Part part2 = new Part();
-					part2.setName( "Get" );
-					part2.setDescription( "another part if a Widget" );
-					prod.getParts().add( part2 );
-					session.persist( prod );
-				}
-		);
-
-		prod.getParts().remove( part );
-
-		Product cloned = (Product) SerializationHelper.clone( prod );
-
-		scope.inTransaction(
-				session ->
-					session.saveOrUpdate( cloned )
-		);
-
-		scope.inTransaction(
-				session -> {
-					assertNull( session.get( Part.class, "Widge" ) );
-					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}
@@ -279,7 +207,7 @@ public class OrphanTest {
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}
@@ -315,7 +243,7 @@ public class OrphanTest {
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}
@@ -346,7 +274,7 @@ public class OrphanTest {
 		scope.inTransaction(
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}
@@ -384,7 +312,7 @@ public class OrphanTest {
 		scope.inTransaction(
 				session -> {
 					assertNotNull( session.get( Part.class, "Widge" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}

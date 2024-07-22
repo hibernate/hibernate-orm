@@ -6,17 +6,17 @@
  */
 package org.hibernate.orm.test.orphan.one2one;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
-
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-9663")
+@JiraKey("HHH-9663")
 @DomainModel(
 		annotatedClasses = {
 				OneToOneLazyNonOptionalOrphanRemovalTest.Car.class,
@@ -39,9 +39,9 @@ public class OneToOneLazyNonOptionalOrphanRemovalTest {
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "delete from Car" ).executeUpdate();
-					session.createQuery( "delete from Engine" ).executeUpdate();
-					session.createQuery( "delete from PaintColor" ).executeUpdate();
+					session.createMutationQuery( "delete from Car" ).executeUpdate();
+					session.createMutationQuery( "delete from Engine" ).executeUpdate();
+					session.createMutationQuery( "delete from PaintColor" ).executeUpdate();
 				}
 		);
 	}
@@ -56,10 +56,10 @@ public class OneToOneLazyNonOptionalOrphanRemovalTest {
 			final Engine engine2 = new Engine( 2, 295 );
 			final Car car = new Car( 1, engine1, color );
 
-			session.save( engine1 );
-			session.save( engine2 );
-			session.save( color );
-			session.save( car );
+			session.persist( engine1 );
+			session.persist( engine2 );
+			session.persist( color );
+			session.persist( car );
 		} );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -68,7 +68,7 @@ public class OneToOneLazyNonOptionalOrphanRemovalTest {
 			final Car car = session.find( Car.class, 1 );
 			final Engine engine = session.find( Engine.class, 2 );
 			car.setEngine( engine );
-			session.update( car );
+			session.merge( car );
 		} );
 
 		scope.inTransaction( session -> {
@@ -85,8 +85,8 @@ public class OneToOneLazyNonOptionalOrphanRemovalTest {
 			final PaintColor color = new PaintColor( 2, "Blue" );
 			final Car car = session.find( Car.class, 1 );
 			car.setPaintColor( color );
-			session.save( color );
-			session.update( car );
+			session.persist( color );
+			session.merge( car );
 		} );
 
 		scope.inTransaction( session -> {

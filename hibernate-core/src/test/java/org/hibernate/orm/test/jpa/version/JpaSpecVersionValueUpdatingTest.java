@@ -30,7 +30,7 @@ public class JpaSpecVersionValueUpdatingTest extends BaseCoreFunctionalTestCase 
 		session.beginTransaction();
 		Customer customer = new Customer();
 		customer.id = 1L;
-		session.save( customer );
+		session.persist( customer );
 		session.getTransaction().commit();
 		session.close();
 
@@ -38,13 +38,13 @@ public class JpaSpecVersionValueUpdatingTest extends BaseCoreFunctionalTestCase 
 
 		session = openSession();
 		session.beginTransaction();
-		customer = (Customer) session.get( Customer.class, 1L );
+		customer = session.get( Customer.class, 1L );
 		assertEquals( initial, customer.version );
 		Order order = new Order();
 		order.id = 1L;
 		order.customer = customer;
 		customer.orders.add( order );
-		session.save( order );
+		session.persist( order );
 		session.getTransaction().commit();
 		session.close();
 
@@ -52,13 +52,13 @@ public class JpaSpecVersionValueUpdatingTest extends BaseCoreFunctionalTestCase 
 
 		session = openSession();
 		session.beginTransaction();
-		customer = (Customer) session.get( Customer.class, 1L );
+		customer = session.get( Customer.class, 1L );
 		assertEquals( initial, customer.version );
 		Order order2 = new Order();
 		order2.id = 2L;
 		order2.customer = customer;
 		customer.orders.add( order2 );
-		session.save( order2 );
+		session.persist( order2 );
 		session.getTransaction().commit();
 		session.close();
 
@@ -66,9 +66,9 @@ public class JpaSpecVersionValueUpdatingTest extends BaseCoreFunctionalTestCase 
 
 		session = openSession();
 		session.beginTransaction();
-		customer = (Customer) session.load( Customer.class, 1L );
+		customer = session.load( Customer.class, 1L );
 		assertEquals( initial, customer.version );
-		session.delete( customer );
+		session.remove( customer );
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -80,7 +80,7 @@ public class JpaSpecVersionValueUpdatingTest extends BaseCoreFunctionalTestCase 
 
 		Session session = openSession();
 		session.beginTransaction();
-		session.save( customer );
+		session.persist( customer );
 		session.getTransaction().commit();
 		session.close();
 
@@ -113,9 +113,9 @@ public class JpaSpecVersionValueUpdatingTest extends BaseCoreFunctionalTestCase 
 
 		session = openSession();
 		session.beginTransaction();
-		customer = (Customer) session.load( Customer.class, 1L );
+		customer = session.load( Customer.class, 1L );
 		assertEquals( initial, customer.version );
-		session.delete( customer );
+ 		session.remove( customer );
 		session.getTransaction().commit();
 		session.close();
 	}

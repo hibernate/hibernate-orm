@@ -27,7 +27,7 @@ public class JoinedSubclassHierarchyWithIdentityGenerationTest {
 	public void shouldPersistDebtorAccountWhenParentServiceAgreementPersisted(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(s) -> {
-					s.save( new Sub() );
+					s.persist( new Sub() );
 				}
 		);
 	}

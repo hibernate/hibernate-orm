@@ -141,18 +141,18 @@ public class MultiCircleNonJpaCascadeSequenceTest {
 
 		scope.inTransaction(
 				session -> {
-					b = (B) session.merge( b );
-					c = (C) session.merge( c );
-					d = (D) session.merge( d );
-					e = (E) session.merge( e );
-					f = (F) session.merge( f );
-					g = (G) session.merge( g );
-					session.delete( f );
-					session.delete( g );
-					session.delete( b );
-					session.delete( d );
-					session.delete( e );
-					session.delete( c );
+					b = session.merge( b );
+					c = session.merge( c );
+					d = session.merge( d );
+					e = session.merge( e );
+					f = session.merge( f );
+					g = session.merge( g );
+					session.remove( f );
+					session.remove( g );
+					session.remove( b );
+					session.remove( d );
+					session.remove( e );
+					session.remove( c );
 				}
 		);
 	}
@@ -167,28 +167,10 @@ public class MultiCircleNonJpaCascadeSequenceTest {
 	}
 
 	@Test
-	public void testSave(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> session.save( b )
-		);
-
-		check( scope );
-	}
-
-	@Test
-	public void testSaveOrUpdate(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> session.saveOrUpdate( b )
-		);
-
-		check( scope );
-	}
-
-	@Test
 	public void testMerge(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					b = (B) session.merge( b );
+					b = session.merge( b );
 					c = b.getC();
 					d = b.getD();
 					e = d.getE();

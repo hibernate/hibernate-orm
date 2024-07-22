@@ -36,14 +36,14 @@ public class HbmTest {
 		scope.inTransaction(
 				session -> {
 					session.createQuery( "from Government" ).list().forEach( gov -> {
-						session.delete( gov );
+						session.remove( gov );
 
 					} );
 					session.createQuery( "from PrimeMinister" ).list().forEach( p -> {
-						session.delete( p );
+						session.remove( p );
 					} );
-					session.createQuery( "delete from EarthSky" ).executeUpdate();
-					session.createQuery( "delete from CloudType" ).executeUpdate();
+					session.createMutationQuery( "delete from EarthSky" ).executeUpdate();
+					session.createMutationQuery( "delete from CloudType" ).executeUpdate();
 				}
 		);
 	}
@@ -54,11 +54,11 @@ public class HbmTest {
 				session -> {
 					Government gov = new Government();
 					gov.setName( "Liberals" );
-					session.save( gov );
+					session.persist( gov );
 					PrimeMinister pm = new PrimeMinister();
 					pm.setName( "Murray" );
 					pm.setCurrentGovernment( gov );
-					session.save( pm );
+					session.persist( pm );
 				}
 		);
 	}
@@ -71,8 +71,8 @@ public class HbmTest {
 					gov.setName( "Liberals" );
 					Government gov2 = new Government();
 					gov2.setName( "Liberals2" );
-					session.save( gov );
-					session.save( gov2 );
+					session.persist( gov );
+					session.persist( gov2 );
 					PrimeMinister pm = new PrimeMinister();
 					pm.setName( "Murray" );
 					pm.setCurrentGovernment( gov );
@@ -81,7 +81,7 @@ public class HbmTest {
 					pm.getGovernments().add( gov );
 					gov.setPrimeMinister( pm );
 					gov2.setPrimeMinister( pm );
-					session.save( pm );
+					session.persist( pm );
 					session.flush();
 				}
 		);

@@ -66,7 +66,7 @@ public class InsertOrderingWithSecondaryTable extends BaseInsertOrderingTest {
 			area2.setShape( circle );
 			top.getGeographicAreas().add( area2 );
 
-			session.save( top );
+			session.persist( top );
 
 			clearBatches();
 		} );

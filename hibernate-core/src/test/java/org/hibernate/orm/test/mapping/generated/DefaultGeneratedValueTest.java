@@ -100,7 +100,7 @@ public class DefaultGeneratedValueTest {
 			assertNull( theEntity.vmCreatedSqlZonedDateTime );
 
 			assertNull( theEntity.name );
-			s.save( theEntity );
+			s.persist( theEntity );
 			//TODO: Actually the values should be non-null after save
 			assertNull( theEntity.createdDate );
 			assertNull( theEntity.alwaysDate );
@@ -145,7 +145,7 @@ public class DefaultGeneratedValueTest {
 			assertNotNull( theEntity.vmCreatedSqlZonedDateTime );
 			assertEquals( "Bob", theEntity.name );
 
-			s.delete( theEntity );
+			s.remove( theEntity );
 		} );
 	}
 
@@ -155,7 +155,7 @@ public class DefaultGeneratedValueTest {
 		final TheEntity created = scope.fromTransaction( (s) -> {
 			TheEntity theEntity = new TheEntity( 1 );
 			assertNull( theEntity.updated );
-			s.save( theEntity );
+			s.persist( theEntity );
 			assertNull( theEntity.updated );
 
 			return theEntity;

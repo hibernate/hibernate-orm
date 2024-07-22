@@ -38,7 +38,7 @@ public class IdClassMappedSuperclassTest {
 					Simple simple = new Simple();
 					simple.setSimpleId( "1" );
 					simple.setCategoryId( "2" );
-					session.save( simple );
+					session.persist( simple );
 
 					session.getTransaction().commit();
 

@@ -86,7 +86,7 @@ public class UnionSubclassFilterTest {
 		scope.inTransaction(
 				s -> {
 					for ( Object entity : s.createQuery( "from Person" ).list() ) {
-						s.delete( entity );
+						s.remove( entity );
 					}
 				}
 		);
@@ -126,9 +126,9 @@ public class UnionSubclassFilterTest {
 		ups.setCompany( "UPS" );
 		ups.setRegion( "US" );
 
-		s.save( john );
-		s.save( cust );
-		s.save( ups );
+		s.persist( john );
+		s.persist( cust );
+		s.persist( ups );
 
 		s.flush();
 	}

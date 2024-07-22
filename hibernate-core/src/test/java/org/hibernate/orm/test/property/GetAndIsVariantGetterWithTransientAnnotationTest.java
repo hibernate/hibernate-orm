@@ -39,7 +39,7 @@ public class GetAndIsVariantGetterWithTransientAnnotationTest {
 			TestEntity entity = new TestEntity();
 			entity.setId( 1L );
 			entity.setChecked( true );
-			session1.save( entity );
+			session1.persist( entity );
 		} );
 
 		scope.inTransaction( session1 -> {
@@ -64,7 +64,7 @@ public class GetAndIsVariantGetterWithTransientAnnotationTest {
 			SecondTestEntity entity = new SecondTestEntity();
 			entity.setId( 1L );
 			entity.setChecked( true );
-			session1.save( entity );
+			session1.persist( entity );
 		} );
 
 		scope.inTransaction( session1 -> {

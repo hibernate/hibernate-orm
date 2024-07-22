@@ -76,7 +76,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		}
 		catch (NoSuchMethodException e) {}
 
-		s.delete(dp);
+		s.remove(dp);
 		t.commit();
 		s.close();
 
@@ -104,7 +104,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		catch (Exception e) {
 			assertTrue( e.getClass()==Exception.class );
 		}
-		s.delete(dp);
+		s.remove(dp);
 		t.commit();
 		s.close();
 	}
@@ -131,7 +131,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		catch (Exception e) {
 			assertTrue( e.getClass()==Exception.class );
 		}
-		s.delete(dp);
+		s.remove(dp);
 		t.commit();
 		s.close();
 	}
@@ -158,7 +158,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		catch (Exception e) {
 			assertTrue( e.getClass()==Exception.class );
 		}
-		s.delete(dp);
+		s.remove(dp);
 		t.commit();
 		s.close();
 	}
@@ -182,7 +182,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete( dp );
+		s.remove( dp );
 		t.commit();
 		s.close();
 	}
@@ -208,7 +208,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete( dp );
+		s.remove( dp );
 		t.commit();
 		s.close();
 	}
@@ -256,7 +256,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		assertSame(none, snone);
 		assertTrue(snone instanceof HibernateProxy);
 
-		sclone.delete(dp);
+		sclone.remove(dp);
 
 		t.commit();
 		sclone.close();
@@ -308,7 +308,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		dp2 = (DataPoint) s.createQuery("from DataPoint").uniqueResult();
 		assertSame(dp, dp2);
 		assertTrue( Hibernate.isInitialized(dp) );
-		s.delete( dp );
+		s.remove( dp );
 		t.commit();
 		s.close();
 	}
@@ -358,7 +358,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		dp2 = (DataPoint) s.createQuery("from DataPoint").uniqueResult();
 		assertSame(dp, dp2);
 		assertTrue( Hibernate.isInitialized(dp) );
-		s.delete( dp );
+		s.remove( dp );
 		t.commit();
 		s.close();
 	}
@@ -406,7 +406,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		container.setInfo( new Info( "blah blah blah" ) );
 		container.getDataPoints().add( new DataPoint( new BigDecimal( 1 ), new BigDecimal( 1 ), "first data point" ) );
 		container.getDataPoints().add( new DataPoint( new BigDecimal( 2 ), new BigDecimal( 2 ), "second data point" ) );
-		s.save( container );
+		s.persist( container );
 		t.commit();
 		s.close();
 
@@ -437,7 +437,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 			// expected result
 		}
 
-		s.delete( c );
+		s.remove( c );
 
 		t.commit();
 		s.close();
@@ -463,7 +463,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 				dp.setY( new BigDecimal( dp_indx ) );
 				container.getDataPoints().add( dp );
 			}
-			s.save( container );
+			s.persist( container );
 			lastContainerId = container.getId();
 		}
 		t.commit();
@@ -480,7 +480,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 				.setParameter( "l", lastContainerId.longValue() )
 				.list();
 		Container container = ( Container ) all.get( 0 );
-		s.delete( container );
+		s.remove( container );
 		// force a snapshot retrieval of the proxied container
 		SessionImpl sImpl = ( SessionImpl ) s;
         sImpl.getPersistenceContext().getDatabaseSnapshot(
@@ -533,7 +533,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		s.refresh( dp, LockOptions.UPGRADE );
 		assertSame( LockOptions.UPGRADE.getLockMode(), s.getCurrentLockMode( dp ) );
 
-		s.delete( dp );
+		s.remove( dp );
 		t.commit();
 		s.close();
 	}
@@ -551,7 +551,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		s.refresh( dp, LockOptions.UPGRADE );
 		assertSame( LockOptions.UPGRADE.getLockMode(), s.getCurrentLockMode( dp ) );
 
-		s.delete( dp );
+		s.remove( dp );
 		t.commit();
 		s.close();
 	}
@@ -580,7 +580,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		dp.getX();
 		assertSame( LockOptions.UPGRADE.getLockMode(), s.getCurrentLockMode( dp ) );
 
-		s.delete( dp );
+		s.remove( dp );
 		t.commit();
 		s.close();
 	}
@@ -596,7 +596,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		s.buildLockRequest( LockOptions.UPGRADE ).lock( dp );
 		assertSame( LockOptions.UPGRADE.getLockMode(), s.getCurrentLockMode( dp ) );
 
-		s.delete( dp );
+		s.remove( dp );
 		t.commit();
 		s.close();
 	}

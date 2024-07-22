@@ -53,7 +53,7 @@ public class ListOperationTests {
 					entityContainingLists.addComponent( new SimpleComponent( "first-a1", "first-another-a1" ) );
 					entityContainingLists.addComponent( new SimpleComponent( "first-a2", "first-another-a2" ) );
 
-					session.save( entityContainingLists );
+					session.persist( entityContainingLists );
 				}
 		);
 	}

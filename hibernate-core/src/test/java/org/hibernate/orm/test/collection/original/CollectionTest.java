@@ -78,7 +78,7 @@ public class CollectionTest {
 					assertFalse( Hibernate.isInitialized( u.getSessionAttributeNames() ) );
 					assertTrue( Hibernate.isInitialized( u.getSessionData() ) );
 
-					s.delete( u );
+					s.remove( u );
 				}
 		);
 	}
@@ -121,7 +121,7 @@ public class CollectionTest {
 		scope.inTransaction(
 				s -> {
 					User u2 = findUser( s );
-					s.delete( u2 );
+					s.remove( u2 );
 					s.flush();
 				}
 		);
@@ -151,7 +151,7 @@ public class CollectionTest {
 					assertTrue( Hibernate.isInitialized( u2.getEmailAddresses() ) );
 					assertFalse( Hibernate.isInitialized( u2.getPermissions() ) );
 					assertEquals( 2, u2.getEmailAddresses().size() );
-					s.delete( u2 );
+					s.remove( u2 );
 				}
 		);
 	}
@@ -178,20 +178,20 @@ public class CollectionTest {
 		u.getEmailAddresses().remove( 0 );
 		u.getEmailAddresses().remove( 2 );
 
-		scope.inTransaction(
-				s -> s.update( u )
+		User merged = scope.fromTransaction(
+				s -> s.merge( u )
 		);
 
-		u.getSessionData().clear();
-		u.getEmailAddresses().add( 0, new Email( "gavin@nospam.com" ) );
-		u.getEmailAddresses().add( new Email( "gavin.king@jboss.com" ) );
+		merged.getSessionData().clear();
+		merged.getEmailAddresses().add( 0, new Email( "gavin@nospam.com" ) );
+		merged.getEmailAddresses().add( new Email( "gavin.king@jboss.com" ) );
 
 		scope.inTransaction(
-				s -> s.update( u )
+				s -> s.merge( merged )
 		);
 
 		scope.inTransaction(
-				s -> s.delete( u )
+				s -> s.remove( merged )
 		);
 	}
 
@@ -233,7 +233,7 @@ public class CollectionTest {
 					assertEquals( 2, u2.getEmailAddresses().size() );
 					assertEquals( "new foo value", u2.getSessionData().get( "foo" ) );
 					assertEquals( "gavin@hibernate.org", ( (Email) u2.getEmailAddresses().get( 1 ) ).getAddress() );
-					s.delete( u2 );
+					s.remove( u2 );
 				}
 		);
 	}
@@ -257,7 +257,7 @@ public class CollectionTest {
 					m.setMammalName3( "name3" );
 					m.setZoo( zoo );
 					zoo.getAnimals().add( m );
-					s.save( zoo );
+					s.persist( zoo );
 				}
 		);
 
@@ -265,7 +265,7 @@ public class CollectionTest {
 				s -> {
 					Zoo found = s.get( Zoo.class, zoo.getId() );
 					found.getAnimals().size();
-					s.delete( found );
+					s.remove( found );
 				}
 		);
 	}

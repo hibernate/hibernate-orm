@@ -62,7 +62,7 @@ public class VersionedCascadeDereferencedCollectionTest extends AbstractDerefere
 		scope.inTransaction(
 				session -> {
 					assertNull( versionedCascadeOne.getManies() );
-					session.save( versionedCascadeOne );
+					session.persist( versionedCascadeOne );
 					assertNull( versionedCascadeOne.getManies() );
 					EntityEntry eeOne = getEntityEntry( session, versionedCascadeOne );
 					assertNull( eeOne.getLoadedValue( "manies" ) );
@@ -142,7 +142,7 @@ public class VersionedCascadeDereferencedCollectionTest extends AbstractDerefere
 		scope.inTransaction(
 				session -> {
 					assertNull( versionedCascadeOne.getManies() );
-					session.save( versionedCascadeOne );
+					session.persist( versionedCascadeOne );
 					assertNull( versionedCascadeOne.getManies() );
 					EntityEntry eeOne = getEntityEntry( session, versionedCascadeOne );
 					assertNull( eeOne.getLoadedValue( "manies" ) );
@@ -224,7 +224,7 @@ public class VersionedCascadeDereferencedCollectionTest extends AbstractDerefere
 		scope.inTransaction(
 				session -> {
 					assertNull( versionedCascadeOne.getManies() );
-					session.save( versionedCascadeOne );
+					session.persist( versionedCascadeOne );
 					assertNull( versionedCascadeOne.getManies() );
 					EntityEntry eeOne = getEntityEntry( session, versionedCascadeOne );
 					assertNull( eeOne.getLoadedValue( "manies" ) );
@@ -317,44 +317,4 @@ public class VersionedCascadeDereferencedCollectionTest extends AbstractDerefere
 		);
 	}
 
-	@Test
-	public void testSaveOrUpdateNullCollection(SessionFactoryScope scope) {
-		VersionedCascadeOne one = new VersionedCascadeOne();
-		scope.inTransaction(
-				session -> {
-					assertNull( one.getManies() );
-					session.save( one );
-					assertNull( one.getManies() );
-					EntityEntry eeOne = getEntityEntry( session, one );
-					assertNull( eeOne.getLoadedValue( "manies" ) );
-					session.flush();
-					assertNull( one.getManies() );
-					assertNull( eeOne.getLoadedValue( "manies" ) );
-				}
-		);
-
-		scope.inTransaction(
-				session -> {
-					session.saveOrUpdate( one );
-
-					// Ensure one.getManies() is still null.
-					assertNull( one.getManies() );
-
-					// Ensure the EntityEntry loaded state contains null for the manies collection.
-					EntityEntry eeOne = getEntityEntry( session, one );
-					assertNull( eeOne.getLoadedValue( "manies" ) );
-
-					session.flush();
-
-					// Ensure one.getManies() is still null.
-					assertNull( one.getManies() );
-
-					// Ensure the same EntityEntry is being used.
-					assertSame( eeOne, getEntityEntry( session, one ) );
-
-					// Ensure the EntityEntry loaded state still contains null for the manies collection.
-					assertNull( eeOne.getLoadedValue( "manies" ) );
-				}
-		);
-	}
 }

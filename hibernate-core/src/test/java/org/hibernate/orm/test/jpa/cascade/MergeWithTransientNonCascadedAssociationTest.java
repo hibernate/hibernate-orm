@@ -60,7 +60,7 @@ public class MergeWithTransientNonCascadedAssociationTest {
 				entityManager -> {
 					person.address = null;
 					entityManager.unwrap( Session.class ).lock( person, LockMode.NONE );
-					entityManager.unwrap( Session.class ).delete( person );
+					entityManager.unwrap( Session.class ).remove( person );
 				}
 		);
 	}

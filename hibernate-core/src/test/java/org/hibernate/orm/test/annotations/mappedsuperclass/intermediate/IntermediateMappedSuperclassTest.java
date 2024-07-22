@@ -33,7 +33,7 @@ public class IntermediateMappedSuperclassTest {
 		scope.inTransaction(
 				session -> {
 					session.createQuery( "from Account" ).list().forEach(
-							account -> session.delete( account )
+							account -> session.remove( account )
 					);
 				}
 		);
@@ -45,7 +45,7 @@ public class IntermediateMappedSuperclassTest {
 		SavingsAccount savingsAccount = new SavingsAccount( "123", withdrawalLimit );
 		scope.inTransaction(
 				session -> {
-					session.save( savingsAccount );
+					session.persist( savingsAccount );
 				}
 		);
 

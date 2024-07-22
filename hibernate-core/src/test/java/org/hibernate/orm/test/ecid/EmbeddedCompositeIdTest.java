@@ -63,8 +63,8 @@ public class EmbeddedCompositeIdTest {
 
 		scope.inTransaction(
 				session -> {
-					session.delete( c );
-					session.delete( uc );
+					session.remove( c );
+					session.remove( uc );
 				}
 		);
 	}
@@ -93,7 +93,7 @@ public class EmbeddedCompositeIdTest {
 					Course cid = new Course( "EN-101", "BA", null );
 					Course c = session.get( Course.class, cid );
 					assertEquals( newDesc, c.getDescription(), "description not merged" );
-					session.delete( c );
+					session.remove( c );
 				}
 		);
 	}
@@ -158,14 +158,14 @@ public class EmbeddedCompositeIdTest {
 
 		scope.inTransaction(
 				session -> {
-					session.saveOrUpdate( courses.get( 0 ) );
-					session.saveOrUpdate( courses.get( 1 ) );
+					session.merge( courses.get( 0 ) );
+					session.merge( courses.get( 1 ) );
 				}
 		);
 
 		scope.inTransaction(
 				session ->
-						courses.forEach( course -> session.delete( c ) )
+						courses.forEach( course -> session.remove( c ) )
 		);
 	}
 }

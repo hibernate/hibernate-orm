@@ -60,7 +60,7 @@ public class ClobLocatorTest {
 				session -> {
 					LobHolder entity = new LobHolder();
 					entity.setClobLocator( session.getLobHelper().createClob( original ) );
-					session.save( entity );
+					session.persist( entity );
 					return entity.getId();
 				}
 		);
@@ -158,7 +158,7 @@ public class ClobLocatorTest {
 								assertEquals( empty.length(), entity.getClobLocator().length() );
 								assertEquals( empty, extractData( entity.getClobLocator() ) );
 							}
-							session.delete( entity );
+							session.remove( entity );
 						}
 						catch (Exception e) {
 							fail( e );
@@ -181,7 +181,7 @@ public class ClobLocatorTest {
 				session -> {
 					LobHolder entity = new LobHolder();
 					entity.setClobLocator( session.getLobHelper().createClob( original ) );
-					session.save( entity );
+					session.persist( entity );
 					return entity.getId();
 				}
 		);
@@ -199,7 +199,7 @@ public class ClobLocatorTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( lobHolder )
+						session.remove( lobHolder )
 		);
 	}
 

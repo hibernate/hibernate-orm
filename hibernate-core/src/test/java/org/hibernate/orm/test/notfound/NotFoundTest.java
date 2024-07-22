@@ -53,13 +53,13 @@ public class NotFoundTest {
 
 		scope.inTransaction( session -> {
 			Currency _euro = session.get( Currency.class, euro.getId() );
-			session.delete( _euro );
+			session.remove( _euro );
 		} );
 
 		scope.inTransaction( session -> {
 			Coin _fiveCents = session.get( Coin.class, fiveCents.getId() );
 			assertNull( _fiveCents.getCurrency() );
-			session.delete( _fiveCents );
+			session.remove( _fiveCents );
 		} );
 	}
 

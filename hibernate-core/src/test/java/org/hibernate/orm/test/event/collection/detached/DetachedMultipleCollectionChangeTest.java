@@ -74,7 +74,7 @@ public class DetachedMultipleCollectionChangeTest extends BaseCoreFunctionalTest
 		MultipleCollectionEntity mce = new MultipleCollectionEntity();
 		mce.setText("MultipleCollectionEntity-1");
 
-		s.save(mce);
+		s.persist(mce);
 		s.getTransaction().commit();
 
 		checkListener(listeners, listeners.getPreCollectionRecreateListener(),

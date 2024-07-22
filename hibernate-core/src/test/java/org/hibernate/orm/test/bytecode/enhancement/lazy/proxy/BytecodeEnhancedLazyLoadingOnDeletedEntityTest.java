@@ -75,7 +75,7 @@ public class BytecodeEnhancedLazyLoadingOnDeletedEntityTest {
 		} );
 		assertThatThrownBy( () -> scope.inTransaction( session -> {
 			AssociationOwner owner = session.load( AssociationOwner.class, 1 );
-			session.delete( owner );
+			session.remove( owner );
 			session.flush();
 			owner.getNonOwners().size();
 		} ) )
@@ -93,7 +93,7 @@ public class BytecodeEnhancedLazyLoadingOnDeletedEntityTest {
 		} );
 		assertThatThrownBy( () -> scope.inTransaction( session -> {
 			AssociationNonOwner nonOwner = session.load( AssociationNonOwner.class, 1 );
-			session.delete( nonOwner );
+			session.remove( nonOwner );
 			session.flush();
 			nonOwner.getOwners().size();
 		} ) )

@@ -72,7 +72,7 @@ public class SetOperationTests {
 					entity.addComponent( new SimpleComponent( "the stuff - 1", "the stuff - 2" ) );
 					entity.addComponent( new SimpleComponent( "other stuff - 1", "other stuff - 2" ) );
 
-					session.save( entity );
+					session.persist( entity );
 				}
 		);
 	}
@@ -141,7 +141,7 @@ public class SetOperationTests {
 		scope.inTransaction(
 				session -> {
 					final EntityOfSets entity = session.load( EntityOfSets.class, 1 );
-					session.delete( entity );
+					session.remove( entity );
 				}
 		);
 

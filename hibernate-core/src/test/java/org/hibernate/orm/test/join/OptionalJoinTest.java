@@ -46,7 +46,7 @@ public class OptionalJoinTest {
 					// create a new thing with a non-null name
 					Thing thing = new Thing();
 					thing.setName( "one" );
-					session.save( thing );
+					session.persist( thing );
 				}
 		);
 
@@ -59,7 +59,6 @@ public class OptionalJoinTest {
 					assertEquals( "ONE", thing.getNameUpper() );
 					// give it a new non-null name and save it
 					thing.setName( "one_changed" );
-					session.update( thing );
 				}
 		);
 
@@ -70,52 +69,10 @@ public class OptionalJoinTest {
 					Thing thing = things.get( 0 );
 					assertEquals( "one_changed", thing.getName() );
 					assertEquals( "ONE_CHANGED", thing.getNameUpper() );
-					session.delete( thing );
+					session.remove( thing );
 				}
 		);
 
-	}
-
-	@Test
-	public void testUpdateNonNullOptionalJoinToDiffNonNullDetached(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					// create a new thing with a non-null name
-					Thing thing = new Thing();
-					thing.setName( "one" );
-					session.save( thing );
-				}
-		);
-
-		Thing aThing = scope.fromTransaction(
-				session -> {
-					List<Thing> things = session.createQuery( "from Thing" ).list();
-					assertEquals( 1, things.size() );
-					Thing thing = things.get( 0 );
-					assertEquals( "one", thing.getName() );
-					assertEquals( "ONE", thing.getNameUpper() );
-					return thing;
-				}
-		);
-
-		// change detached thing name to a new non-null name and save it
-		aThing.setName( "one_changed" );
-
-		scope.inTransaction(
-				session ->
-						session.update( aThing )
-		);
-
-		scope.inTransaction(
-				session -> {
-					List<Thing> things = session.createQuery( "from Thing" ).list();
-					assertEquals( 1, things.size() );
-					Thing thing = things.get( 0 );
-					assertEquals( "one_changed", thing.getName() );
-					assertEquals( "ONE_CHANGED", thing.getNameUpper() );
-					session.delete( thing );
-				}
-		);
 	}
 
 	@Test
@@ -125,7 +82,7 @@ public class OptionalJoinTest {
 					// create a new thing with a non-null name
 					Thing thing = new Thing();
 					thing.setName( "one" );
-					session.save( thing );
+					session.persist( thing );
 				}
 		);
 
@@ -156,88 +113,10 @@ public class OptionalJoinTest {
 					Thing thing = things.get( 0 );
 					assertEquals( "one_changed", thing.getName() );
 					assertEquals( "ONE_CHANGED", thing.getNameUpper() );
-					session.delete( thing );
+					session.remove( thing );
 				}
 		);
 
-	}
-
-	@Test
-	public void testUpdateNonNullOptionalJoinToNull(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					// create a new thing with a non-null name
-					Thing thing = new Thing();
-					thing.setName( "one" );
-					session.save( thing );
-				}
-		);
-
-		scope.inTransaction(
-				session -> {
-					List<Thing> things = session.createQuery( "from Thing" ).list();
-					assertEquals( 1, things.size() );
-					Thing thing = things.get( 0 );
-					assertEquals( "one", thing.getName() );
-					assertEquals( "ONE", thing.getNameUpper() );
-					// give it a null name and save it
-					thing.setName( null );
-					session.update( thing );
-				}
-		);
-
-		scope.inTransaction(
-				session -> {
-					List<Thing> things = session.createQuery( "from Thing" ).list();
-					assertEquals( 1, things.size() );
-					Thing thing = things.get( 0 );
-					assertNull( thing.getName() );
-					assertNull( thing.getNameUpper() );
-					session.delete( thing );
-				}
-		);
-	}
-
-	@Test
-	public void testUpdateNonNullOptionalJoinToNullDetached(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					// create a new thing with a non-null name
-					Thing thing = new Thing();
-					thing.setName( "one" );
-					session.save( thing );
-				}
-		);
-
-		Thing aThing = scope.fromTransaction(
-				session -> {
-					List<Thing> things = session.createQuery( "from Thing" ).list();
-					assertEquals( 1, things.size() );
-					Thing thing = things.get( 0 );
-					assertEquals( "one", thing.getName() );
-					assertEquals( "ONE", thing.getNameUpper() );
-					return thing;
-				}
-		);
-
-		// give detached thing a null name and save it
-		aThing.setName( null );
-
-		scope.inTransaction(
-				session ->
-						session.update( aThing )
-		);
-
-		scope.inTransaction(
-				session -> {
-					List<Thing> things = session.createQuery( "from Thing" ).list();
-					assertEquals( 1, things.size() );
-					Thing thing = things.get( 0 );
-					assertNull( thing.getName() );
-					assertNull( thing.getNameUpper() );
-					session.delete( thing );
-				}
-		);
 	}
 
 	@Test
@@ -247,7 +126,7 @@ public class OptionalJoinTest {
 					// create a new thing with a non-null name
 					Thing thing = new Thing();
 					thing.setName( "one" );
-					session.save( thing );
+					session.persist( thing );
 				}
 		);
 
@@ -277,7 +156,7 @@ public class OptionalJoinTest {
 					Thing thing = things.get( 0 );
 					assertNull( thing.getName() );
 					assertNull( thing.getNameUpper() );
-					session.delete( thing );
+					session.remove( thing );
 				}
 		);
 	}
@@ -289,7 +168,7 @@ public class OptionalJoinTest {
 					// create a new thing with a null name
 					Thing thing = new Thing();
 					thing.setName( null );
-					session.save( thing );
+					session.persist( thing );
 				}
 		);
 
@@ -302,7 +181,6 @@ public class OptionalJoinTest {
 					assertNull( thing.getName() );
 					// change name to a non-null value
 					thing.setName( "two" );
-					session.update( thing );
 				}
 		);
 
@@ -313,50 +191,7 @@ public class OptionalJoinTest {
 					Thing thing = things.get( 0 );
 					assertEquals( "two", thing.getName() );
 					assertEquals( "TWO", thing.getNameUpper() );
-					session.delete( thing );
-				}
-		);
-	}
-
-	@Test
-	public void testUpdateNullOptionalJoinToNonNullDetached(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					// create a new thing with a null name
-					Thing thing = new Thing();
-					thing.setName( null );
-					session.save( thing );
-				}
-		);
-
-		Thing aThing = scope.fromTransaction(
-				session -> {
-					List<Thing> things = session.createQuery( "from Thing" ).list();
-					assertEquals( 1, things.size() );
-					Thing thing = things.get( 0 );
-					assertNull( thing.getName() );
-					assertNull( thing.getNameUpper() );
-					return thing;
-				}
-		);
-
-
-		// change detached thing name to a non-null value
-		aThing.setName( "two" );
-
-		scope.inTransaction(
-				session ->
-						session.update( aThing )
-		);
-
-		scope.inTransaction(
-				session -> {
-					List<Thing> things = session.createQuery( "from Thing" ).list();
-					assertEquals( 1, things.size() );
-					Thing thing = things.get( 0 );
-					assertEquals( "two", thing.getName() );
-					assertEquals( "TWO", thing.getNameUpper() );
-					session.delete( thing );
+					session.remove( thing );
 				}
 		);
 	}
@@ -368,7 +203,7 @@ public class OptionalJoinTest {
 					// create a new thing with a null name
 					Thing thing = new Thing();
 					thing.setName( null );
-					session.save( thing );
+					session.persist( thing );
 				}
 		);
 
@@ -389,7 +224,7 @@ public class OptionalJoinTest {
 
 		scope.inTransaction(
 				session ->
-						session.update( aThing )
+						session.merge( aThing )
 		);
 
 		scope.inTransaction(
@@ -399,7 +234,7 @@ public class OptionalJoinTest {
 					Thing thing = things.get( 0 );
 					assertEquals( "two", thing.getName() );
 					assertEquals( "TWO", thing.getNameUpper() );
-					session.delete( thing );
+					session.remove( thing );
 				}
 		);
 	}

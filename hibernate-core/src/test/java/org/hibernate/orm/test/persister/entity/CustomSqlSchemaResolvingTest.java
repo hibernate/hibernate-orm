@@ -70,7 +70,7 @@ public class CustomSqlSchemaResolvingTest {
 
 		scope.inTransaction( session -> {
 			CustomEntity entity = session.find( CustomEntity.class, 1 );
-			session.delete( entity );
+			session.remove( entity );
 		} );
 
 		scope.inTransaction( session -> {

@@ -44,7 +44,7 @@ public class CreateTest extends AbstractOperationTestCase {
 					VersionedEntity child = new VersionedEntity( "c1", "child-1" );
 					root.getChildren().add( child );
 					child.setParent( root );
-					session.save( root );
+					session.persist( root );
 				}
 		);
 
@@ -54,7 +54,7 @@ public class CreateTest extends AbstractOperationTestCase {
 
 		scope.inTransaction(
 				session ->
-						session.delete( root )
+						session.remove( root )
 		);
 
 		assertUpdateCount( 0, scope );

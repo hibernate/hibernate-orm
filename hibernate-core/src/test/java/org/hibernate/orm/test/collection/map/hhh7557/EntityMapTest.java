@@ -41,7 +41,7 @@ public class EntityMapTest {
 					addMapEntry( session, mapHolder, "A", "1" );
 					addMapEntry( session, mapHolder, "B", "2" );
 					addMapEntry( session, mapHolder, "C", "3" );
-					session.save( mapHolder );
+					session.persist( mapHolder );
 					// Verify there are 3 entries in the map
 					assertEquals( 3, mapHolder.getMap().size() );
 				}
@@ -74,9 +74,9 @@ public class EntityMapTest {
 
 	private void addMapEntry(Session session, MapHolder mapHolder, String key, String value) {
 		MapValue entityValue = new MapValue( value );
-		session.save( entityValue );
+		session.persist( entityValue );
 		MapKey entityKey = new MapKey( key, entityValue );
-		session.save( entityKey );
+		session.persist( entityKey );
 		mapHolder.getMap().put( entityKey, entityValue );
 	}
 

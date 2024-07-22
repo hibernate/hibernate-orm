@@ -61,7 +61,7 @@ public class OneToManyPersistAndLoadTest {
 		scope.inTransaction(
 				session -> {
 					Parent parent = session.get( Parent.class, 1l );
-					session.delete( parent );
+					session.remove( parent );
 				}
 		);
 	}

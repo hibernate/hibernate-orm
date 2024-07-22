@@ -51,10 +51,9 @@ public class IdentityGeneratedKeysTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		MyEntity myEntity = new MyEntity( "test" );
-		Long id = ( Long ) s.save( myEntity );
-		assertNotNull( "identity column did not force immediate insert", id );
-		assertEquals( id, myEntity.getId() );
-		s.delete( myEntity );
+		s.persist(myEntity);
+		assertNotNull( "identity column did not force immediate insert", myEntity.getId() );
+		s.remove( myEntity );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -63,13 +62,6 @@ public class IdentityGeneratedKeysTest extends BaseCoreFunctionalTestCase {
 	public void testPersistOutsideTransaction() {
 		Session s = openSession();
 		try {
-			// first test save() which should force an immediate insert...
-			MyEntity myEntity1 = new MyEntity( "test-save" );
-			Long id = (Long) s.save( myEntity1 );
-			assertNotNull( "identity column did not force immediate insert", id );
-			assertEquals( id, myEntity1.getId() );
-
-			// next test persist() which should cause a delayed insert...
 			long initialInsertCount = sessionFactory().getStatistics().getEntityInsertCount();
 			MyEntity myEntity2 = new MyEntity( "test-persist" );
 			s.persist( myEntity2 );

@@ -61,10 +61,10 @@ public class SelectBeforeUpdateEmbeddedTest extends BaseCoreFunctionalTestCase {
 	private void testSelectBeforeUpdate() {
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
 			final Person john = new Person( 1, "John", new Address() );
-			session.save( john );
+			session.persist( john );
 
 			final Person mary = new Person( 2, "Mary", null );
-			session.save( mary );
+			session.persist( mary );
 		} );
 
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
@@ -92,13 +92,13 @@ public class SelectBeforeUpdateEmbeddedTest extends BaseCoreFunctionalTestCase {
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
 			i.reset();
 			john.setAddress( null );
-			session.update( john );
+			session.merge( john );
 			session.flush();
 			assertEquals( 0, i.getCalls() );
 
 			i.reset();
 			mary.setAddress( new Address() );
-			session.update( mary );
+			session.merge( mary );
 			session.flush();
 			assertEquals( 0, i.getCalls() );
 

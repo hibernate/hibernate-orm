@@ -41,7 +41,7 @@ public class HiLoTableTest {
 				(s) -> {
 					for ( int i = 0; i < increment; i++ ) {
 						final Entity entity = new Entity( "" + ( i + 1 ) );
-						s.save( entity );
+						s.persist( entity );
 						assertEquals( 1, generator.getTableAccessCount() ); // initialization
 						assertEquals( 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() ); // initialization
 						assertEquals( i + 1, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
@@ -50,7 +50,7 @@ public class HiLoTableTest {
 
 					// now force a "clock over"
 					final Entity entity = new Entity( "" + increment );
-					s.save( entity );
+					s.persist( entity );
 					assertEquals( 2, generator.getTableAccessCount() ); // initialization
 					assertEquals( 2, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() ); // initialization
 					assertEquals( increment + 1, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );

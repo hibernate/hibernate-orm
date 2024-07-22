@@ -109,8 +109,8 @@ public class DerivedIdentitySimpleParentSimpleDepTest {
 				session -> {
 					FinancialHistory history = session.get( FinancialHistory.class, "aaa" );
 					if ( history != null ) {
-						session.delete( history );
-						session.delete( history.patient );
+						session.remove( history );
+						session.remove( history.patient );
 					}
 				}
 		);
@@ -119,8 +119,8 @@ public class DerivedIdentitySimpleParentSimpleDepTest {
 				session -> {
 					MedicalHistory history = session.get( MedicalHistory.class, "aaa" );
 					if ( history != null ) {
-						session.delete( history );
-						session.delete( history.patient );
+						session.remove( history );
+						session.remove( history.patient );
 					}
 				}
 		);

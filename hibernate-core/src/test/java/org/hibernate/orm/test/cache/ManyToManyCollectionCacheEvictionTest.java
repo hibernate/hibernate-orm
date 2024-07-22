@@ -60,11 +60,11 @@ public class ManyToManyCollectionCacheEvictionTest extends BaseCoreFunctionalTes
 		s.beginTransaction();
 
 		Application application = new Application();
-		s.save( application );
+		s.persist( application );
 
 		Customer customer = new Customer();
 		customer.applications.add( application );
-		s.save( customer );
+		s.persist( customer );
 
 		s.getTransaction().commit();
 		s.close();
@@ -82,7 +82,7 @@ public class ManyToManyCollectionCacheEvictionTest extends BaseCoreFunctionalTes
 
 		Customer customer2 = new Customer();
 		customer2.applications.add( application );
-		s.save( customer2 );
+		s.persist( customer2 );
 
 		s.getTransaction().commit();
 		s.close();

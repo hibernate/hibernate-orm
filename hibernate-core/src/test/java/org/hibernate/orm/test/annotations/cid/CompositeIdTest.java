@@ -148,8 +148,8 @@ public class CompositeIdTest {
 					//FIXME mke it work in unambigious cases
 					//		assertNotNull(c.id.parent.id);
 					//		assertEquals(p.id.getFirstName(), c.id.parent.id.getFirstName());
-					session.delete( c );
-					session.delete( c.id.parent );
+					session.remove( c );
+					session.remove( c.id.parent );
 				}
 		);
 	}
@@ -231,8 +231,8 @@ public class CompositeIdTest {
 					//FIXME mke it work in unambigious cases
 //		assertNotNull(c.id.parent.id);
 //		assertEquals(p.id.getFirstName(), c.id.parent.id.getFirstName());
-					session.delete( c );
-					session.delete( c.id.parent );
+					session.remove( c );
+					session.remove( c.id.parent );
 				}
 		);
 	}
@@ -262,9 +262,9 @@ public class CompositeIdTest {
 					assertEquals( channel.id, mag.id.channel.id );
 					assertNotNull( mag.id.presenter );
 					assertEquals( pres.name, mag.id.presenter.name );
-					session.delete( mag );
-					session.delete( mag.id.channel );
-					session.delete( mag.id.presenter );
+					session.remove( mag );
+					session.remove( mag.id.channel );
+					session.remove( mag.id.presenter );
 				}
 		);
 	}
@@ -423,9 +423,9 @@ public class CompositeIdTest {
 					assertNotNull( program.id.presenter );
 					assertNotNull( program.text );
 					assertEquals( pres.name, program.id.presenter.name );
-					session.delete( program );
-					session.delete( program.id.channel );
-					session.delete( program.id.presenter );
+					session.remove( program );
+					session.remove( program.id.channel );
+					session.remove( program.id.presenter );
 				}
 		);
 	}
@@ -454,9 +454,9 @@ public class CompositeIdTest {
 					assertNotNull( program.presenter );
 					assertNotNull( program.text );
 					assertEquals( pres.name, program.presenter.name );
-					session.delete( program );
-					session.delete( program.channel );
-					session.delete( program.presenter );
+					session.remove( program );
+					session.remove( program.channel );
+					session.remove( program.presenter );
 				}
 		);
 	}

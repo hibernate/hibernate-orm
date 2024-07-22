@@ -181,14 +181,12 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 	@TestForIssue(jiraKey = "HHH-12290")
 	public void testParameterCollectionParenthesesAndPositional() {
 		final Item item = new Item( "Mouse" );
-		item.setId( 1L );
 		final Item item2 = new Item( "Computer" );
-		item2.setId( 2L );
 
 		inTransaction(
 				s -> {
-					s.save( item );
-					s.save( item2 );
+					s.persist( item );
+					s.persist( item2 );
 				}
 		);
 
@@ -214,7 +212,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 		);
 
 		inTransaction(
-				s -> s.createQuery( "select i from Item i" ).list().forEach( result -> s.delete( result ) )
+				s -> s.createQuery( "select i from Item i" ).list().forEach( result -> s.remove( result ) )
 		);
 
 	}

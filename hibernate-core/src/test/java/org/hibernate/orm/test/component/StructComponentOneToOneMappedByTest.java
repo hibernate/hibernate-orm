@@ -48,8 +48,8 @@ public class StructComponentOneToOneMappedByTest {
 					book.title = "Hibernate 6";
 					book.author = new Author( "Steve", bookDetails );
 
-					session.save( book );
-					session.save( bookDetails );
+					session.persist( book );
+					session.persist( bookDetails );
 				}
 		);
 	}

@@ -59,7 +59,7 @@ public class PersistentSetTest {
 
 		scope.inTransaction(
 				session -> {
-					session.save( parent );
+					session.persist( parent );
 					session.flush();
 					// at this point, the set on parent has now been replaced with a PersistentSet...
 					PersistentSet children = (PersistentSet) parent.getChildren();
@@ -88,7 +88,7 @@ public class PersistentSetTest {
 					assertTrue( children.isEmpty() );
 
 					children.clear();
-					session.delete( child );
+					session.remove( child );
 					assertTrue( children.isDirty() );
 
 					session.flush();
@@ -96,7 +96,7 @@ public class PersistentSetTest {
 					children.clear();
 					assertFalse( children.isDirty() );
 
-					session.delete( parent );
+					session.remove( parent );
 				}
 		);
 	}
@@ -109,7 +109,7 @@ public class PersistentSetTest {
 					Child child = new Child( "c1" );
 					p.getChildren().add( child );
 					child.setParent( p );
-					session.save( p );
+					session.persist( p );
 				}
 		);
 
@@ -132,7 +132,7 @@ public class PersistentSetTest {
 				session -> {
 					Parent parent = session.get( Parent.class, "p1" );
 					assertEquals( 1, parent.getChildren().size() );
-					session.delete( parent );
+					session.remove( parent );
 				}
 		);
 	}
@@ -145,7 +145,7 @@ public class PersistentSetTest {
 					Child child = new Child( "c1" );
 					parent.getChildren().add( child );
 					child.setParent( parent );
-					session.save( parent );
+					session.persist( parent );
 				}
 		);
 
@@ -171,7 +171,7 @@ public class PersistentSetTest {
 		scope.inTransaction(
 				session -> {
 					assertEquals( 1, parent.getChildren().size() );
-					session.delete( parent );
+					session.remove( parent );
 				}
 		);
 	}
@@ -185,7 +185,7 @@ public class PersistentSetTest {
 
 		scope.inTransaction(
 				session -> {
-					session.save( container );
+					session.persist( container );
 					session.flush();
 					// at this point, the set on container has now been replaced with a PersistentSet...
 					PersistentSet children = (PersistentSet) container.getContents();
@@ -221,7 +221,7 @@ public class PersistentSetTest {
 					children.clear();
 					assertFalse( children.isDirty() );
 
-					session.delete( container );
+					session.remove( container );
 				}
 		);
 	}
@@ -234,7 +234,7 @@ public class PersistentSetTest {
 				session -> {
 					Container.Content c1 = new Container.Content( "c1" );
 					container.getContents().add( c1 );
-					session.save( container );
+					session.persist( container );
 				}
 		);
 
@@ -260,7 +260,7 @@ public class PersistentSetTest {
 				session -> {
 					Container c = session.get( Container.class, container.getId() );
 					assertEquals( 1, container.getContents().size() );
-					session.delete( container );
+					session.remove( container );
 				}
 		);
 
@@ -274,7 +274,7 @@ public class PersistentSetTest {
 				session -> {
 					Container.Content c1 = new Container.Content( "c1" );
 					c.getContents().add( c1 );
-					session.save( c );
+					session.persist( c );
 				}
 		);
 
@@ -299,7 +299,7 @@ public class PersistentSetTest {
 				session -> {
 					Container c1 = session.get( Container.class, c.getId() );
 					assertEquals( 1, c1.getContents().size() );
-					session.delete( c1 );
+					session.remove( c1 );
 				}
 		);
 	}
@@ -317,7 +317,7 @@ public class PersistentSetTest {
 		otherChild.setParent( p1 );
 
 		scope.inTransaction(
-				session -> session.save( p1 )
+				session -> session.persist( p1 )
 		);
 
 		scope.inTransaction(
@@ -372,7 +372,7 @@ public class PersistentSetTest {
 							.uniqueResult();
 					assertTrue( child.getParent().getChildren().contains( child ) );
 
-					session.delete( child.getParent() );
+					session.remove( child.getParent() );
 				}
 		);
 	}
@@ -388,7 +388,7 @@ public class PersistentSetTest {
 		otherChild.setParent( p );
 
 		scope.inTransaction(
-				session -> session.save( p )
+				session -> session.persist( p )
 		);
 
 		scope.inTransaction(
@@ -424,7 +424,7 @@ public class PersistentSetTest {
 					child = (Child) session.createQuery( "from Child where name = 'c1'" ).uniqueResult();
 					assertTrue( child.getParent().getChildren().contains( child ) );
 
-					session.delete( child.getParent() );
+					session.remove( child.getParent() );
 				}
 		);
 	}

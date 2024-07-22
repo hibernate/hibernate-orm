@@ -55,7 +55,7 @@ public class NonTransactionalDataAccessTest extends BaseCoreFunctionalTestCase {
 		final MyEntity entity = new MyEntity( "entity" );
 		inTransaction(
 				session -> {
-					session.save( entity );
+					session.persist( entity );
 				}
 		);
 	}

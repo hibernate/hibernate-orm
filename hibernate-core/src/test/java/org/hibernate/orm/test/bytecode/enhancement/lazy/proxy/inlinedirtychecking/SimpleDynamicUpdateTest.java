@@ -82,8 +82,8 @@ public class SimpleDynamicUpdateTest {
 
 					user.setRole( role );
 
-					session.save( role );
-					session.save( user );
+					session.persist( role );
+					session.persist( user );
 				}
 		);
 	}
@@ -174,7 +174,7 @@ public class SimpleDynamicUpdateTest {
 					role.setId( 3 );
 					role.setName( "user" );
 					entity.setRole( role );
-					session.save( role );
+					session.persist( role );
 				}
 		);
 

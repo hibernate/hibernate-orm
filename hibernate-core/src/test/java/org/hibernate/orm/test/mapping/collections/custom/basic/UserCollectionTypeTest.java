@@ -62,7 +62,7 @@ public abstract class UserCollectionTypeTest extends BaseNonConfigCoreFunctional
 		);
 
 		inTransaction(
-				s -> s.delete( u )
+				s -> s.remove( u )
 		);
 	}
 

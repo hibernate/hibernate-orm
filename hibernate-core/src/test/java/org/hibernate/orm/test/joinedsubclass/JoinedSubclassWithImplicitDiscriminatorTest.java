@@ -81,20 +81,20 @@ public class JoinedSubclassWithImplicitDiscriminatorTest {
 	public void basicUsageTest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.save( new Cat( 1 ) );
-					session.save( new Dog( 2 ) );
+					session.persist( new Cat( 1 ) );
+					session.persist( new Dog( 2 ) );
 				}
 		);
 
 		scope.inTransaction(
 				session -> {
 					session.createQuery( "from Animal" ).list();
-					Cat cat = (Cat) session.get( Cat.class, 1 );
+					Cat cat = session.get( Cat.class, 1 );
 					assertNotNull( cat );
-					session.delete( cat );
-					Dog dog = (Dog) session.get( Dog.class, 2 );
+					session.remove( cat );
+					Dog dog = session.get( Dog.class, 2 );
 					assertNotNull( dog );
-					session.delete( dog );
+					session.remove( dog );
 				}
 		);
 	}

@@ -41,7 +41,7 @@ public class HANAFunctionsTest extends BaseCoreFunctionalTestCase {
 		product.setPrice( new BigDecimal( 1.298 ) );
 		try ( Session s = openSession() ) {
 			Transaction tx = s.beginTransaction();
-			s.save( product );
+			s.persist( product );
 			tx.commit();
 		}
 	}

@@ -37,7 +37,7 @@ public class SaveEntityTest {
 	public void testSave(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(s) -> {
-					s.save( new Company() );
+					s.persist( new Company() );
 				}
 		);
 	}

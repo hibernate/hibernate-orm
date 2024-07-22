@@ -34,8 +34,8 @@ public class MappedByFetchProfileFunctionTest extends BaseCoreFunctionalTestCase
 
 		address = session.get(Address.class, address.getId());
 		assertTrue(Hibernate.isInitialized(address.getCustomer()));
-		session.delete(address.getCustomer());
-		session.delete(address);
+		session.remove(address.getCustomer());
+		session.remove(address);
 
 		transaction.commit();
 		session.close();

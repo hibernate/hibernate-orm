@@ -40,8 +40,8 @@ public class ScrollableTest extends BaseCoreFunctionalTestCase {
 		try (Session session = openSession()) {
 			session.getTransaction().begin();
 			try {
-				session.save( new MyEntity( 1L, "entity_1" ) );
-				session.save( new MyEntity( 2L, "entity_2" ) );
+				session.persist( new MyEntity( 1L, "entity_1" ) );
+				session.persist( new MyEntity( 2L, "entity_2" ) );
 				session.getTransaction().commit();
 			}
 			catch (Exception e) {

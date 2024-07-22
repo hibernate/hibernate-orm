@@ -41,7 +41,7 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 	}
 
 	@Test
-	public void testUpdate() {
+	public void testMerge() {
 		// prepare some test data...
 		User user = new User();
 		inTransaction(
@@ -49,26 +49,26 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 					user.setUserName( "steve" );
 					user.setEmail( "steve@hibernate.org" );
 					user.setPassword( "brewhaha" );
-					session.save( user );
+					session.persist( user );
 				}
 		);
 
 		// 'user' is now a detached entity, so lets change a property and reattch...
 		user.setPassword( "homebrew" );
-		inTransaction(
+		User merged = fromTransaction(
 				session ->
-						session.update( user )
+						session.merge( user )
 		);
 
 		// clean up
 		inTransaction(
 				session ->
-						session.delete( user )
+						session.remove( merged )
 		);
 	}
 
 	@Test
-	public void testNaturalIdCheck() throws Exception {
+	public void testNaturalIdCheck()  {
 		sessionFactoryScope().inSession(
 				session -> {
 					Transaction t = session.beginTransaction();
@@ -85,7 +85,7 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 						t.rollback();
 					}
 					u.setUserName( "steve" );
-					session.delete( u );
+					session.remove( u );
 					session.close();
 				}
 		);

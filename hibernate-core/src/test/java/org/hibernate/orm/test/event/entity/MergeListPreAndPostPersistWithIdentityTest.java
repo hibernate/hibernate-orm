@@ -71,7 +71,7 @@ public class MergeListPreAndPostPersistWithIdentityTest extends BaseCoreFunction
 
 		s = openSession();
 		s.getTransaction().begin();
-		s.delete( order );
+		s.remove( order );
 		s.getTransaction().commit();
 		s.close();
 	}

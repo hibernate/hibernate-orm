@@ -35,7 +35,7 @@ public class InvocationTargetExceptionTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		Bean bean = new Bean();
 		bean.setSomeString( "my-bean" );
-		s.save( bean );
+		s.persist( bean );
 		s.getTransaction().commit();
 		s.close();
 
@@ -54,7 +54,7 @@ public class InvocationTargetExceptionTest extends BaseCoreFunctionalTestCase {
 			fail( "unexpected exception type : " + t );
 		}
 
-		s.delete( bean );
+		s.remove( bean );
 		s.getTransaction().commit();
 		s.close();
 	}

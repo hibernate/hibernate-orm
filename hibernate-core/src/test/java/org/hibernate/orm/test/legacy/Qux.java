@@ -43,7 +43,7 @@ public class Qux implements Lifecycle {
 		created=true;
 		try {
 			foo = new Foo();
-			session.save(foo);
+			session.persist(foo);
 		}
 		catch (Exception e) {
 			throw new CallbackException(e);
@@ -55,12 +55,12 @@ public class Qux implements Lifecycle {
 	public boolean onDelete(Session session) throws CallbackException {
 		deleted=true;
 		try {
-			session.delete(foo);
+			session.remove(foo);
 		}
 		catch (Exception e) {
 			throw new CallbackException(e);
 		}
-		//if (child!=null) session.delete(child);
+		//if (child!=null) session.remove(child);
 		return NO_VETO;
 	}
 

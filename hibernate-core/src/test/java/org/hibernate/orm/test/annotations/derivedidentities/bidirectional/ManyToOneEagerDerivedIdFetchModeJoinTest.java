@@ -138,7 +138,7 @@ public class ManyToOneEagerDerivedIdFetchModeJoinTest {
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			session.delete( session.find( Foo.class, foo.id ) );
+			session.remove( session.find( Foo.class, foo.id ) );
 		} );
 		this.foo = null;
 	}

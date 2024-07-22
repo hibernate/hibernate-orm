@@ -197,9 +197,9 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 					System system = new System( 1, "QA" );
 					system.setDataCenterUser( user );
 
-					session.save( dataCenter );
-					session.save( user );
-					session.save( system );
+					session.persist( dataCenter );
+					session.persist( user );
+					session.persist( system );
 				}
 		);
 	}

@@ -70,8 +70,8 @@ public class LazyLoadingTest {
 	public void cleanUpData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.delete( session.get( Store.class, 1 ) );
-					session.delete( session.get( Product.class, "007" ) );
+					session.remove( session.get( Store.class, 1 ) );
+					session.remove( session.get( Product.class, "007" ) );
 				}
 		);
 	}

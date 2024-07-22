@@ -44,7 +44,7 @@ public class LobAsLastValueTest {
 					new String( details ),
 					new String( title )
 			);
-			session.save( entity );
+			session.persist( entity );
 		} );
 	}
 

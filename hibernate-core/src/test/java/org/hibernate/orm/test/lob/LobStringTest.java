@@ -62,7 +62,7 @@ public class LobStringTest {
 			entity.setFirstLobField( value1 );
 			entity.setSecondLobField( value2 );
 			entity.setClobField( session.getLobHelper().createClob( value2 ) );
-			session.save( entity );
+			session.persist( entity );
 		} );
 
 		scope.inTransaction( session -> {

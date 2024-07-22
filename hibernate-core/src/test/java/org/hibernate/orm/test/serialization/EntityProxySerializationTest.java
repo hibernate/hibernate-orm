@@ -77,9 +77,9 @@ public class EntityProxySerializationTest {
 			c2.setId( 2L );
 			c2.setParent( entity );
 
-			s.save( entity );
-			s.save( c1 );
-			s.save( c2 );
+			s.persist( entity );
+			s.persist( c1 );
+			s.persist( c2 );
 		} );
 	}
 

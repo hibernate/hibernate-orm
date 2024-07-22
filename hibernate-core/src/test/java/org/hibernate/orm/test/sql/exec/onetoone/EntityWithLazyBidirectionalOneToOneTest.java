@@ -60,8 +60,8 @@ public class EntityWithLazyBidirectionalOneToOneTest {
 			);
 
 			entity.setOther( other );
-			session.save( other );
-			session.save( entity );
+			session.persist( other );
+			session.persist( entity );
 		} );
 
 		EntityWithLazyOneToOne entity = new EntityWithLazyOneToOne( 3, "second", Integer.MAX_VALUE );
@@ -78,8 +78,8 @@ public class EntityWithLazyBidirectionalOneToOneTest {
 			);
 
 			entity.setOther( other );
-			session.save( other );
-			session.save( entity );
+			session.persist( other );
+			session.persist( entity );
 		} );
 	}
 

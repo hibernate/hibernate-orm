@@ -84,10 +84,10 @@ public class EntitySharedInCollectionAndToOneTest {
 					final CodeTableItem item2 = new CodeTableItem( 2, 1, "second" );
 					final CodeTableItem item3 = new CodeTableItem( 3, 1, "third" );
 
-					session.save( codeTable1 );
-					session.save( item1 );
-					session.save( item2 );
-					session.save( item3 );
+					session.persist( codeTable1 );
+					session.persist( item1 );
+					session.persist( item2 );
+					session.persist( item3 );
 
 					codeTable1.getCodeTableItems().add( item1 );
 					item1.setCodeTable( codeTable1 );
@@ -104,8 +104,8 @@ public class EntitySharedInCollectionAndToOneTest {
 					final CodeTable codeTable2 = new CodeTable( 2, 1 );
 					final CodeTableItem item4 = new CodeTableItem( 4, 1, "fourth" );
 
-					session.save( codeTable2 );
-					session.save( item4 );
+					session.persist( codeTable2 );
+					session.persist( item4 );
 
 					codeTable2.getCodeTableItems().add( item4 );
 					item4.setCodeTable( codeTable2 );
@@ -121,7 +121,7 @@ public class EntitySharedInCollectionAndToOneTest {
 //		inTransaction(
 //				session -> {
 //					for ( CodeTable codeTable : session.createQuery( "from CodeTable", CodeTable.class ).list() ) {
-//						session.delete( codeTable );
+//						session.remove( codeTable );
 //					}
 //				}
 //		);

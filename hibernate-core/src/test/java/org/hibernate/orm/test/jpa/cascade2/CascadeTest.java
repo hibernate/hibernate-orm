@@ -56,7 +56,7 @@ public class CascadeTest extends AbstractJPATest {
 				Parent p = new Parent( "parent" );
 				Child c = new Child( "child" );
 				c.setParent( p );
-				s.save( c );
+				s.persist( c );
 				s.getTransaction().commit();
 				fail( "expecting TransientObjectException on flush" );
 			}
@@ -330,10 +330,10 @@ public class CascadeTest extends AbstractJPATest {
 			p.setInfo( pi );
 			pi.setOwner( p );
 			assertNull( pi.getId() );
-			s.save( p );
-			s.save ( pi );
-			s.save( c );
-			s.save( ci );
+			s.persist( p );
+			s.persist ( pi );
+			s.persist( c );
+			s.persist( ci );
 			s.getTransaction().commit();
 			assertEquals( p.getId(), pi.getId() );
 		}

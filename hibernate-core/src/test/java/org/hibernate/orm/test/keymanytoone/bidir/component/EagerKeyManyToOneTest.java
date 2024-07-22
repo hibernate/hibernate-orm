@@ -73,7 +73,7 @@ public class EagerKeyManyToOneTest {
 				session -> {
 					List<Customer> customers = session.createQuery( "from Customer" ).list();
 					customers.forEach(
-							customer -> session.delete( customer )
+							customer -> session.remove( customer )
 					);
 				}
 		);
@@ -91,7 +91,7 @@ public class EagerKeyManyToOneTest {
 					Customer cust = new Customer( "Acme, Inc." );
 					Order order = new Order( new Order.Id( cust, 1 ) );
 					cust.getOrders().add( order );
-					s.save( cust );
+					s.persist( cust );
 					s.flush();
 					assertEquals( 2, statistics.getEntityInsertCount() );
 				}
@@ -108,7 +108,7 @@ public class EagerKeyManyToOneTest {
 					Customer cust = new Customer( "Acme, Inc." );
 					Order order = new Order( new Order.Id( cust, 1 ) );
 					cust.getOrders().add( order );
-					s.save( cust );
+					s.persist( cust );
 				}
 		);
 
@@ -159,7 +159,7 @@ public class EagerKeyManyToOneTest {
 		Order order = new Order( new Order.Id( customer, 1 ) );
 		customer.getOrders().add( order );
 		scope.inTransaction(
-				session -> session.save( customer )
+				session -> session.persist( customer )
 		);
 
 		scope.inTransaction(

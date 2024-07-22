@@ -35,7 +35,7 @@ public class CreateDeleteTest {
 					session.setHibernateFlushMode( FlushMode.COMMIT );
 					RootEntity entity = new RootEntity();
 					session.persist( entity );
-					session.delete( entity );
+					session.remove( entity );
 				} );
 	}
 

@@ -26,20 +26,20 @@ public class MapKeyEnumeratedTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		User user = new User("User1", SocialNetwork.STUB_NETWORK_NAME, "facebookId");
-		s.save( user );
+		s.persist( user );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
-		user = (User) s.get( User.class, user.getId() );
+		user = s.get( User.class, user.getId() );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
-		user = (User) s.get( User.class, user.getId() );
-		s.delete( user );
+		user = s.get( User.class, user.getId() );
+		s.remove( user );
 		s.getTransaction().commit();
 		s.close();
 	}

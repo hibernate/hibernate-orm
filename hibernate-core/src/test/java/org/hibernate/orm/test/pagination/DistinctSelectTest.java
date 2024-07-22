@@ -50,13 +50,13 @@ public class DistinctSelectTest extends BaseCoreFunctionalTestCase {
 		for (int i = 0; i < 5; i++) {
 			Tag tag = new Tag("Tag: " + SafeRandomUUIDGenerator.safeRandomUUID());
 			tags.add(tag);
-			s.save(tag);
+			s.persist(tag);
 		}
 
 		for (int i = 0; i < NUM_OF_USERS; i++) {
 			Entry e = new Entry("Entry: " + SafeRandomUUIDGenerator.safeRandomUUID());
 			e.getTags().addAll(tags);
-			s.save(e);
+			s.persist(e);
 		}
 		t.commit();
 		s.close();

@@ -45,7 +45,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		CacheableItem item = new CacheableItem( "data" );
-		s.save( item );
+		s.persist( item );
 		s.getTransaction().commit();
 		s.close();
 
@@ -66,7 +66,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		CacheableItem item = new CacheableItem( "data" );
-		s.save( item );
+		s.persist( item );
 		s.flush();
 		s.getTransaction().rollback();
 		s.close();
@@ -82,7 +82,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		CacheableItem item = new CacheableItem( "data" );
-		s.save( item );
+		s.persist( item );
 		s.flush();
 		item.setName( "new data" );
 		s.getTransaction().commit();
@@ -106,7 +106,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		CacheableItem item = new CacheableItem( "data" );
-		s.save( item );
+		s.persist( item );
 		s.flush();
 		item.setName( "new data" );
 		s.getTransaction().rollback();
@@ -129,7 +129,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		CacheableItem item = new CacheableItem( "data" );
-		s.save( item );
+		s.persist( item );
 		s.flush();
 		s.refresh( item );
 		s.getTransaction().commit();
@@ -152,7 +152,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		CacheableItem item = new CacheableItem( "data" );
-		s.save( item );
+		s.persist( item );
 		s.flush();
 		s.refresh( item );
 		s.getTransaction().rollback();
@@ -179,7 +179,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		CacheableItem item = new CacheableItem( "data" );
-		s.save( item );
+		s.persist( item );
 		s.flush();
 		s.clear();
 		s.getTransaction().commit();
@@ -202,7 +202,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		CacheableItem item = new CacheableItem( "data" );
-		s.save( item );
+		s.persist( item );
 		s.flush();
 		s.clear();
 		item = (CacheableItem) s.get( CacheableItem.class, item.getId() );

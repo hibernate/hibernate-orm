@@ -49,7 +49,7 @@ public class JoinedInheritanceOptimisticForceIncrementTest extends BaseNonConfig
 		doInHibernate(
 				this::sessionFactory,
 				session -> {
-					session.delete( session.get( Employee.class, 1L ) );
+					session.remove( session.get( Employee.class, 1L ) );
 				}
 		);
 	}

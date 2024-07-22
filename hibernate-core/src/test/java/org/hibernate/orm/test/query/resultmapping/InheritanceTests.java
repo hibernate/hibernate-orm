@@ -43,7 +43,7 @@ public class InheritanceTests {
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.save( new Child( 1L, "test", 123 ) );
+					session.persist( new Child( 1L, "test", 123 ) );
 				}
 		);
 	}

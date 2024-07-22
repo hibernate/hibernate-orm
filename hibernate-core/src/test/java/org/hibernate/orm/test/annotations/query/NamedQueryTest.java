@@ -48,7 +48,7 @@ public class NamedQueryTest {
 				session -> {
 					for ( String title : GAME_TITLES ) {
 						Game game = new Game( title );
-						session.save( game );
+						session.persist( game );
 					}
 				} );
 	}

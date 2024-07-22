@@ -49,7 +49,7 @@ public class SellCarTest extends BaseCoreFunctionalTestCase {
     private void prepareData() {
         Session session = openSession();
         Transaction tx = session.beginTransaction();
-        session.save( createData() );
+        session.persist( createData() );
         tx.commit();
         session.close();
     }

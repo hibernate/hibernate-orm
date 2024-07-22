@@ -72,7 +72,7 @@ public class GeneratedValueTest {
 				Session s = sf.openSession();
 				s.beginTransaction();
 				try {
-					s.save( theEntity );
+					s.persist( theEntity );
 					s.getTransaction().commit();
 					s.close();
 
@@ -81,7 +81,7 @@ public class GeneratedValueTest {
 					s = sf.openSession();
 					s.beginTransaction();
 
-					s.delete( theEntity );
+					s.remove( theEntity );
 					s.getTransaction().commit();
 				}
 				catch (Exception e) {

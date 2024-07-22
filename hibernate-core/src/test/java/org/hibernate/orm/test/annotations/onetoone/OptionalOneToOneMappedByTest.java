@@ -83,7 +83,7 @@ public class OptionalOneToOneMappedByTest extends BaseCoreFunctionalTestCase {
 			);
 			assertNull( affiliate.party );
 
-			session.delete( affiliate );
+			session.remove( affiliate );
 		} );
 	}
 
@@ -122,7 +122,7 @@ public class OptionalOneToOneMappedByTest extends BaseCoreFunctionalTestCase {
 			);
 			assertNull( personAddress.getPerson() );
 
-			session.delete( personAddress );
+			session.remove( personAddress );
 		} );
 	}
 
@@ -182,7 +182,7 @@ public class OptionalOneToOneMappedByTest extends BaseCoreFunctionalTestCase {
 //					.add( Restrictions.eq( "personAddress", personAddress ) )
 //					.uniqueResult();
 
-			session.delete( personAddress );
+			session.remove( personAddress );
 			assertNotSame( person, personAddress.getPerson() );
 			personAddress.getPerson().setPersonAddress( null );
 		} );

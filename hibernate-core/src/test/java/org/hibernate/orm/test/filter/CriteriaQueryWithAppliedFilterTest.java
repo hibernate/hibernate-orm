@@ -62,7 +62,7 @@ public class CriteriaQueryWithAppliedFilterTest extends AbstractStatefulStateles
 			student.setStatus( "active" );
 			student.setAge( 21 );
 			student.setAddress( new Address( "London", "Lollard St" ) );
-			session.save( student );
+			session.persist( student );
 
 			final Student student2 = new Student();
 			student2.setId( new Identifier( 4, new Identifier2( 4, 6L ) ) );
@@ -70,7 +70,7 @@ public class CriteriaQueryWithAppliedFilterTest extends AbstractStatefulStateles
 			student2.setStatus( "active" );
 			student2.setAge( 27 );
 			student2.setAddress( new Address( "London", "Oxford St" ) );
-			session.save( student2 );
+			session.persist( student2 );
 	   });
 	}
 

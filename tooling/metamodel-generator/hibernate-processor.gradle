@@ -1,3 +1,5 @@
+import de.thetaphi.forbiddenapis.gradle.CheckForbiddenApis
+
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -197,4 +199,17 @@ publishing {
 			}
 		}
 	}
+}
+
+
+tasks.forbiddenApisJakartaData {
+	enabled = false
+}
+
+tasks.forbiddenApisQuarkusOrmPanache {
+	enabled = false
+}
+
+tasks.forbiddenApisQuarkusHrPanache {
+	enabled = false
 }

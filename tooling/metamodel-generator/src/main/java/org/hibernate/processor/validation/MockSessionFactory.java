@@ -808,6 +808,13 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
+		public <X> ManagedDomainType<X> managedType(String typeName) {
+			final String entityName = findEntityName( typeName );
+			//noinspection unchecked
+			return entityName == null ? null : (ManagedDomainType<X>) entity( entityName );
+		}
+
+		@Override
 		public <X> ManagedDomainType<X> findManagedType(Class<X> cls) {
 			throw new UnsupportedOperationException("operation not supported");
 		}

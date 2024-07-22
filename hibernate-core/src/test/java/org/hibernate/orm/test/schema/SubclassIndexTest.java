@@ -8,19 +8,36 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import org.hibernate.AnnotationException;
+import org.hibernate.boot.MetadataSources;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
+
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey("HHH-18288")
-@SessionFactory
-@DomainModel(annotatedClasses = {SubclassIndexTest.Foo.class, SubclassIndexTest.Bar.class})
 public class SubclassIndexTest {
 
-	@Test void test(SessionFactoryScope scope) {
-		scope.getSessionFactory();
+	@Test
+	@ServiceRegistry
+	void test(ServiceRegistryScope registryScope) {
+		try {
+			new MetadataSources( registryScope.getRegistry() )
+					.addAnnotatedClasses( Foo.class, Bar.class )
+					.buildMetadata();
+			fail( "Expecting exception" );
+		}
+		catch (AnnotationException expected) {
+			assertThat( expected.getMessage() ).contains( "is a subclass in a 'SINGLE_TABLE' hierarchy and may not be annotated '@Table'" );
+		}
 	}
 
 	@Entity

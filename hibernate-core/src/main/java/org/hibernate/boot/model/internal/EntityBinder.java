@@ -750,7 +750,8 @@ public class EntityBinder {
 		final String table;
 		final String catalog;
 		final UniqueConstraint[] uniqueConstraints;
-		if ( annotatedClass.isAnnotationPresent( jakarta.persistence.Table.class ) ) {
+		final boolean hasTableAnnotation = annotatedClass.isAnnotationPresent( jakarta.persistence.Table.class );
+		if ( hasTableAnnotation ) {
 			final jakarta.persistence.Table tableAnnotation = annotatedClass.getAnnotation( jakarta.persistence.Table.class );
 			table = tableAnnotation.name();
 			schema = tableAnnotation.schema();
@@ -769,15 +770,11 @@ public class EntityBinder {
 			createTable( inheritanceState, superEntity, schema, table, catalog, uniqueConstraints );
 		}
 		else {
-			// must be a SINGLE_TABLE mapping for a subclass
-			if ( !table.isEmpty() ) {
-				final Table superTable = persistentClass.getRootClass().getTable();
-				if ( !logicalTableName( table, schema, catalog )
-						.equals( superTable.getQualifiedTableName() ) ) {
-					throw new AnnotationException( "Entity '" + annotatedClass.getName()
-							+ "' is a subclass in a 'SINGLE_TABLE' hierarchy and may not be annotated '@Table'"
-							+ " (the root class declares the table mapping for the hierarchy)");
-				}
+			// if we get here we have SINGLE_TABLE inheritance
+			if ( hasTableAnnotation ) {
+				throw new AnnotationException( "Entity '" + annotatedClass.getName()
+						+ "' is a subclass in a 'SINGLE_TABLE' hierarchy and may not be annotated '@Table'"
+						+ " (the root class declares the table mapping for the hierarchy)");
 			}
 			// we at least need to properly set up the EntityTableXref
 			bindTableForDiscriminatedSubclass( superEntity.getEntityName() );

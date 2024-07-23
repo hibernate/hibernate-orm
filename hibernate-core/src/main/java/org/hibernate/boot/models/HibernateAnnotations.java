@@ -323,10 +323,6 @@ public interface HibernateAnnotations {
 			Imported.class,
 			ImportedAnnotation.class
 	);
-	OrmAnnotationDescriptor<IndexColumn,IndexColumnAnnotation> INDEX_COLUMN = new OrmAnnotationDescriptor<>(
-			IndexColumn.class,
-			IndexColumnAnnotation.class
-	);
 	OrmAnnotationDescriptor<Instantiator,InstantiatorAnnotation> INSTANTIATOR = new OrmAnnotationDescriptor<>(
 			Instantiator.class,
 			InstantiatorAnnotation.class

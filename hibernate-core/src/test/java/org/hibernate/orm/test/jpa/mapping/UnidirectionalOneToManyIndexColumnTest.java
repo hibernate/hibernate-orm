@@ -8,30 +8,31 @@ package org.hibernate.orm.test.jpa.mapping;
 
 import java.util.ArrayList;
 import java.util.List;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
 
-import org.hibernate.annotations.IndexColumn;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.core.Is.is;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderColumn;
+import jakarta.persistence.Table;
+
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 
 /**
  * @author Andrea Boriero
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( value = "HHH-1268")
 @Jpa(
 		annotatedClasses = {
@@ -96,7 +97,7 @@ public class UnidirectionalOneToManyIndexColumnTest {
 		private int id;
 
 		@OneToMany(targetEntity = Child.class, cascade = CascadeType.ALL)
-		@IndexColumn(name = "position")
+		@OrderColumn(name = "position")
 		private List<Child> children = new ArrayList<>();
 
 		public int getId() {

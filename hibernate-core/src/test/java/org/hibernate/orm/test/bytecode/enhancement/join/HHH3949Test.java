@@ -9,8 +9,6 @@ package org.hibernate.orm.test.bytecode.enhancement.join;
 import java.util.List;
 
 import org.hibernate.Session;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
@@ -20,6 +18,8 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -36,9 +36,7 @@ import static org.hibernate.Hibernate.isPropertyInitialized;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( "HHH-3949" )
 @DomainModel(
         annotatedClasses = {
@@ -201,7 +199,6 @@ public class HHH3949Test {
         String name;
 
         @OneToOne( optional = true, mappedBy = "driver", fetch = FetchType.LAZY )
-        @LazyToOne( LazyToOneOption.NO_PROXY )
         Vehicle vehicle;
 
         Person() {

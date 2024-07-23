@@ -6,14 +6,15 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,11 +27,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
 
-
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey("HHH-13380")
 @DomainModel(
         annotatedClasses = {
@@ -100,7 +98,6 @@ public class LazyOneToManyWithEqualsImplementationTest {
         public String getTitle() { return title; }
 
         @ManyToOne(fetch = FetchType.LAZY)
-        @LazyToOne(LazyToOneOption.NO_PROXY)
         private Person person;
         public Person getPerson() { return person; }
 

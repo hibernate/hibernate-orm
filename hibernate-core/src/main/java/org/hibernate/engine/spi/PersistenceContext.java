@@ -524,11 +524,11 @@ public interface PersistenceContext {
 	@Incubating
 	EntityHolder addEntityHolder(EntityKey key, Object entity);
 
-	EntityHolder getEntityHolder(EntityKey key);
+	@Nullable EntityHolder getEntityHolder(EntityKey key);
 
 	boolean containsEntityHolder(EntityKey key);
 
-	EntityHolder removeEntityHolder(EntityKey key);
+	@Nullable EntityHolder removeEntityHolder(EntityKey key);
 
 	@Incubating
 	void postLoad(JdbcValuesSourceProcessingState processingState, Consumer<EntityHolder> loadedConsumer);
@@ -567,7 +567,7 @@ public interface PersistenceContext {
 	 * Doubly internal
 	 */
 	@Internal
-	Map<PersistentCollection<?>,CollectionEntry> getCollectionEntries();
+	@Nullable Map<PersistentCollection<?>,CollectionEntry> getCollectionEntries();
 
 	/**
 	 * Execute some action on each entry of the collectionEntries map, optionally iterating on a defensive copy.

@@ -145,8 +145,7 @@ public final class Collections {
 			Object entity,
 			SessionImplementor session) {
 		collection.setOwner( entity );
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		final CollectionEntry ce = persistenceContext.getCollectionEntry( collection );
+		final CollectionEntry ce = session.getPersistenceContextInternal().getCollectionEntry( collection );
 
 		if ( ce == null ) {
 			// refer to comment in StatefulPersistenceContext.addCollection()

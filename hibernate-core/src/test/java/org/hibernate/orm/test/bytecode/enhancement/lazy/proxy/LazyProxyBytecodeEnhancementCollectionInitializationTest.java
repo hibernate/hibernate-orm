@@ -76,7 +76,7 @@ public class LazyProxyBytecodeEnhancementCollectionInitializationTest {
 			Parent parent = s.getReference( Parent.class, 1 );
 			assertThat( Hibernate.isPropertyInitialized( parent, "children") ).isFalse();
 			assertThat( s.unwrap( SessionImplementor.class ).getPersistenceContext().getCollectionEntries() )
-					.isEmpty();
+					.isNullOrEmpty();
 
 			// Accessing a collection property on a lazy proxy initializes the property and instantiates the collection,
 			// but does not initialize the collection.

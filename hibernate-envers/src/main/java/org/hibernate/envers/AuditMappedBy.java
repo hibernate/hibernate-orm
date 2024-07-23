@@ -35,9 +35,8 @@ public @interface AuditMappedBy {
 
 	/**
 	 * Name of the property in the related entity which maps to the position column. Should be specified only
-	 * for indexed collection, when @{@link org.hibernate.annotations.IndexColumn} or
-	 * {@link jakarta.persistence.OrderColumn} is used on the collection.  The property should be mapped with
-	 * {@code @Column(insertable=false, updatable=false)}.
+	 * for indexed collection, when {@link jakarta.persistence.OrderColumn} is used on the collection.  The
+	 * property should be mapped with {@code @Column(insertable=false, updatable=false)}.
 	 */
 	String positionMappedBy() default "";
 }

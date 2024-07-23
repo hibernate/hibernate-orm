@@ -2109,9 +2109,6 @@ The query `from java.lang.Object` is completely legal. (But not very useful!)
 It returns every object of every mapped entity type.
 ====
 
-This behavior may be slightly adjusted using the `@Polymorphism` annotation.
-
-See <<chapters/domain/inheritance.adoc#entity-inheritance-polymorphism>> for more.
 
 [[hql-derived-root]]
 ==== Derived roots

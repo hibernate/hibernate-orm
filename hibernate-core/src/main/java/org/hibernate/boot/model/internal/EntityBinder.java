@@ -37,8 +37,6 @@ import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
-import org.hibernate.annotations.Polymorphism;
-import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.annotations.Proxy;
 import org.hibernate.annotations.QueryCacheLayout;
 import org.hibernate.annotations.RowId;
@@ -138,8 +136,6 @@ import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.UniqueConstraint;
 
 import static jakarta.persistence.InheritanceType.SINGLE_TABLE;
-import static org.hibernate.annotations.PolymorphismType.EXPLICIT;
-import static org.hibernate.annotations.PolymorphismType.IMPLICIT;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.MAPPED_SUPERCLASS;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.buildDiscriminatorColumn;
@@ -186,7 +182,6 @@ public class EntityBinder {
 	private String name;
 	private ClassDetails annotatedClass;
 	private PersistentClass persistentClass;
-	private PolymorphismType polymorphismType;
 	private boolean lazy;
 	private ClassDetails proxyClass;
 	private String where;
@@ -1293,11 +1288,6 @@ public class EntityBinder {
 				: optimisticLockingAnn.type() ) );
 	}
 
-	private void bindPolymorphism() {
-		final Polymorphism polymorphismAnn = annotatedClass.getAnnotationUsage( Polymorphism.class, getSourceModelContext() );
-		polymorphismType = polymorphismAnn == null ? IMPLICIT : polymorphismAnn.type();
-	}
-
 	private void bindEntityAnnotation() {
 		final Entity entity = annotatedClass.getAnnotationUsage( Entity.class, getSourceModelContext() );
 		if ( entity == null ) {
@@ -1317,7 +1307,6 @@ public class EntityBinder {
 		bindEntityAnnotation();
 		bindRowManagement();
 		bindOptimisticLocking();
-		bindPolymorphism();
 		bindProxy();
 		bindConcreteProxy();
 		bindWhere();
@@ -1379,7 +1368,6 @@ public class EntityBinder {
 	private void bindRootEntity() {
 		final RootClass rootClass = (RootClass) persistentClass;
 		rootClass.setMutable( isMutable() );
-		rootClass.setExplicitPolymorphism( polymorphismType == EXPLICIT );
 		if ( isNotEmpty( where ) ) {
 			rootClass.setWhere( where );
 		}

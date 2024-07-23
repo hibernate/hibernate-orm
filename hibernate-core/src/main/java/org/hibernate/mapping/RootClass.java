@@ -47,7 +47,6 @@ public class RootClass extends PersistentClass implements TableOwner, SoftDeleta
 	private Value discriminator;
 	private boolean mutable = true;
 	private boolean embeddedIdentifier;
-	private boolean explicitPolymorphism;
 	private boolean forceDiscriminator;
 	private boolean concreteProxy;
 	private String where;
@@ -124,6 +123,10 @@ public class RootClass extends PersistentClass implements TableOwner, SoftDeleta
 		return polymorphic;
 	}
 
+	/**
+	 * @deprecated No longer supported
+	 */
+	@Deprecated
 	public void setPolymorphic(boolean polymorphic) {
 		this.polymorphic = polymorphic;
 	}
@@ -152,11 +155,6 @@ public class RootClass extends PersistentClass implements TableOwner, SoftDeleta
 	public void addSubclass(Subclass subclass) throws MappingException {
 		super.addSubclass( subclass );
 		setPolymorphic( true );
-	}
-
-	@Override
-	public boolean isExplicitPolymorphism() {
-		return explicitPolymorphism;
 	}
 
 	@Override
@@ -215,8 +213,11 @@ public class RootClass extends PersistentClass implements TableOwner, SoftDeleta
 		this.embeddedIdentifier = embeddedIdentifier;
 	}
 
+	/**
+	 * @deprecated No longer supported
+	 */
+	@Deprecated
 	public void setExplicitPolymorphism(boolean explicitPolymorphism) {
-		this.explicitPolymorphism = explicitPolymorphism;
 	}
 
 	public void setIdentifier(KeyValue identifier) {

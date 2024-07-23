@@ -29,8 +29,8 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;
@@ -41,9 +41,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparing;
+import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectationConstructor;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.root;
-import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectationConstructor;
 import static org.hibernate.mapping.MappingHelper.checkPropertyColumnDuplication;
 import static org.hibernate.sql.Template.collectColumnNames;
 
@@ -342,7 +342,13 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 
 	public abstract PersistentClass getSuperclass();
 
-	public abstract boolean isExplicitPolymorphism();
+	/**
+	 * @deprecated No longer supported
+	 */
+	@Deprecated
+	public boolean isExplicitPolymorphism() {
+		return false;
+	}
 
 	public abstract boolean isDiscriminatorInsertable();
 

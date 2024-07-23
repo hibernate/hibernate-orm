@@ -135,7 +135,6 @@ public class EntityMetamodel implements Serializable {
 
 	private final boolean polymorphic;
 	private final String superclass;  // superclass entity-name
-	private final boolean explicitPolymorphism;
 	private final boolean inherited;
 	private final boolean hasSubclasses;
 	private final Set<String> subclassEntityNames;
@@ -431,7 +430,6 @@ public class EntityMetamodel implements Serializable {
 		dynamicInsert = persistentClass.useDynamicInsert();
 
 		polymorphic = persistentClass.isPolymorphic();
-		explicitPolymorphism = persistentClass.isExplicitPolymorphism();
 		inherited = persistentClass.isInherited();
 		superclass = inherited ?
 				persistentClass.getSuperclass().getEntityName() :
@@ -732,8 +730,12 @@ public class EntityMetamodel implements Serializable {
 		return superclass;
 	}
 
+	/**
+	 * @deprecated No longer supported
+	 */
+	@Deprecated
 	public boolean isExplicitPolymorphism() {
-		return explicitPolymorphism;
+		return false;
 	}
 
 	public boolean isInherited() {

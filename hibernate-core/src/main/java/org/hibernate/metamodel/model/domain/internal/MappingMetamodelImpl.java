@@ -758,30 +758,23 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 		for ( EntityPersister checkPersister : entityPersisters().values() ) {
 			final String checkQueryableEntityName = ((EntityMappingType) checkPersister).getEntityName();
 			final boolean isMappedClass = clazz.getName().equals( checkQueryableEntityName );
-			if ( checkPersister.isExplicitPolymorphism() ) {
-				if ( isMappedClass ) {
-					return new String[] { clazz.getName() }; // NOTE EARLY EXIT
-				}
+			if ( isMappedClass ) {
+				results.add( checkQueryableEntityName );
 			}
 			else {
-				if ( isMappedClass ) {
-					results.add( checkQueryableEntityName );
-				}
-				else {
-					final Class<?> mappedClass = checkPersister.getMappedClass();
-					if ( mappedClass != null && clazz.isAssignableFrom( mappedClass ) ) {
-						final boolean assignableSuperclass;
-						if ( checkPersister.isInherited() ) {
-							final String superTypeName = checkPersister.getSuperMappingType().getEntityName();
-							final Class<?> mappedSuperclass = getEntityDescriptor( superTypeName ).getMappedClass();
-							assignableSuperclass = clazz.isAssignableFrom( mappedSuperclass );
-						}
-						else {
-							assignableSuperclass = false;
-						}
-						if ( !assignableSuperclass ) {
-							results.add( checkQueryableEntityName );
-						}
+				final Class<?> mappedClass = checkPersister.getMappedClass();
+				if ( mappedClass != null && clazz.isAssignableFrom( mappedClass ) ) {
+					final boolean assignableSuperclass;
+					if ( checkPersister.isInherited() ) {
+						final String superTypeName = checkPersister.getSuperMappingType().getEntityName();
+						final Class<?> mappedSuperclass = getEntityDescriptor( superTypeName ).getMappedClass();
+						assignableSuperclass = clazz.isAssignableFrom( mappedSuperclass );
+					}
+					else {
+						assignableSuperclass = false;
+					}
+					if ( !assignableSuperclass ) {
+						results.add( checkQueryableEntityName );
 					}
 				}
 			}

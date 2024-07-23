@@ -11,8 +11,6 @@ package org.hibernate.orm.test.annotations.entity;
 import java.sql.Types;
 import java.util.Set;
 
-import jakarta.persistence.Index;
-import jakarta.persistence.Table;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
@@ -23,8 +21,6 @@ import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.annotations.ParamDef;
-import org.hibernate.annotations.Polymorphism;
-import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.annotations.SelectBeforeUpdate;
 import org.hibernate.annotations.Where;
 
@@ -33,7 +29,9 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
 
 /**
  * Use hibernate specific annotations
@@ -45,7 +43,6 @@ import jakarta.persistence.Lob;
 @SelectBeforeUpdate
 @DynamicInsert @DynamicUpdate
 @OptimisticLocking(type = OptimisticLockType.ALL)
-@Polymorphism(type = PolymorphismType.EXPLICIT)
 @Where(clause = "1=1")
 @FilterDef(name = "minLength", parameters = {@ParamDef(name = "minLength", type = Integer.class)})
 @Filter(name = "betweenLength")

@@ -232,7 +232,10 @@ public interface EntityMappingType
 
 	/**
 	 * Is this class explicit polymorphism only?
+	 *
+	 * @deprecated No longer supported
 	 */
+	@Deprecated
 	boolean isExplicitPolymorphism();
 
 	/**

@@ -715,12 +715,6 @@
                       printMethod="org.hibernate.boot.jaxb.mapping.internal.OnDeleteActionMarshalling.toXml" />
         </bindings>
 
-        <bindings node="//xsd:simpleType[@name='polymorphism-type']">
-            <javaType name="org.hibernate.annotations.PolymorphismType"
-                      parseMethod="org.hibernate.boot.jaxb.mapping.internal.PolymorphismTypeMarshalling.fromXml"
-                      printMethod="org.hibernate.boot.jaxb.mapping.internal.PolymorphismTypeMarshalling.toXml" />
-        </bindings>
-
         <bindings node="//xsd:simpleType[@name='temporal-type']">
             <javaType name="jakarta.persistence.TemporalType"
                       parseMethod="org.hibernate.boot.jaxb.mapping.internal.TemporalTypeMarshalling.fromXml"

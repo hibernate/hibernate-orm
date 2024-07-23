@@ -295,7 +295,7 @@ public class InformixDialect extends Dialect {
 			);
 		}
 		else {
-			functionFactory.coalesce( SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS );
+			functionFactory.coalesce( SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS );
 			functionFactory.locate_charindex();
 		}
 		functionContributions.getFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );

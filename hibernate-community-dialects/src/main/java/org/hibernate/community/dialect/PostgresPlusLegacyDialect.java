@@ -73,6 +73,15 @@ public class PostgresPlusLegacyDialect extends PostgreSQLLegacyDialect {
 					.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 					.register();
 		}
+		else {
+			functionContributions.getFunctionRegistry().patternDescriptorBuilder(
+							"bitxor",
+							"((?1|?2)-(?1&?2))"
+					)
+					.setExactArgumentCount( 2 )
+					.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+					.register();
+		}
 	}
 
 	@Override

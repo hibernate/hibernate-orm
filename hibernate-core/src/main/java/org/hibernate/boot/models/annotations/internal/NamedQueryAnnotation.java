@@ -8,8 +8,6 @@ package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
 
-import org.hibernate.CacheMode;
-import org.hibernate.annotations.CacheModeType;
 import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.NamedQuery;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedQueryImpl;
@@ -40,7 +38,6 @@ public class NamedQueryAnnotation implements NamedQuery {
 	String comment;
 	CacheStoreMode cacheStoreMode;
 	CacheRetrieveMode cacheRetrieveMode;
-	CacheModeType cacheMode;
 	boolean readOnly;
 
 	public NamedQueryAnnotation(SourceModelBuildingContext modelContext) {
@@ -53,7 +50,6 @@ public class NamedQueryAnnotation implements NamedQuery {
 		comment = "";
 		cacheStoreMode = CacheStoreMode.USE;
 		cacheRetrieveMode = CacheRetrieveMode.USE;
-		cacheMode = CacheModeType.NORMAL;
 		readOnly = false;
 	}
 
@@ -69,7 +65,6 @@ public class NamedQueryAnnotation implements NamedQuery {
 		this.comment = annotation.comment();
 		this.cacheStoreMode = annotation.cacheStoreMode();
 		this.cacheRetrieveMode = annotation.cacheRetrieveMode();
-		this.cacheMode = annotation.cacheMode();
 		this.readOnly = annotation.readOnly();
 	}
 
@@ -85,7 +80,6 @@ public class NamedQueryAnnotation implements NamedQuery {
 		this.comment = extractJandexValue( annotation, NAMED_QUERY, "comment", modelContext );
 		this.cacheStoreMode = extractJandexValue( annotation, NAMED_QUERY, "cacheStoreMode", modelContext );
 		this.cacheRetrieveMode = extractJandexValue( annotation, NAMED_QUERY, "cacheRetrieveMode", modelContext );
-		this.cacheMode = extractJandexValue( annotation, NAMED_QUERY, "cacheMode", modelContext );
 		this.readOnly = extractJandexValue( annotation, NAMED_QUERY, "readOnly", modelContext );
 	}
 
@@ -196,15 +190,6 @@ public class NamedQueryAnnotation implements NamedQuery {
 	}
 
 	@Override
-	public CacheModeType cacheMode() {
-		return cacheMode;
-	}
-
-	public void cacheMode(CacheModeType value) {
-		this.cacheMode = value;
-	}
-
-	@Override
 	public boolean readOnly() {
 		return readOnly;
 	}
@@ -226,9 +211,13 @@ public class NamedQueryAnnotation implements NamedQuery {
 					cacheRegion( jaxbNamedQuery.getCacheRegion() );
 				}
 
-				final CacheMode cacheMode = jaxbNamedQuery.getCacheMode();
-				if ( cacheMode != null && cacheMode != CacheMode.IGNORE ) {
-					cacheMode( CacheModeType.fromCacheMode( cacheMode ) );
+				if ( jaxbNamedQuery.getCacheMode() != null ) {
+					if ( jaxbNamedQuery.getCacheMode().isGetEnabled() ) {
+						cacheRetrieveMode( CacheRetrieveMode.USE );
+					}
+					if ( jaxbNamedQuery.getCacheMode().isPutEnabled() ) {
+						cacheStoreMode( CacheStoreMode.USE );
+					}
 				}
 			}
 		}

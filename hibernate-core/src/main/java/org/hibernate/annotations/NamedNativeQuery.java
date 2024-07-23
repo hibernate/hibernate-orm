@@ -133,20 +133,6 @@ public @interface NamedNativeQuery {
 	CacheRetrieveMode cacheRetrieveMode() default CacheRetrieveMode.USE;
 
 	/**
-	 * The cache interaction mode for this query.
-	 *
-	 * @deprecated use {@link #cacheStoreMode()} and
-	 *            {@link #cacheRetrieveMode()} since
-	 *            {@link CacheModeType} is deprecated
-	 *
-	 * @see org.hibernate.jpa.HibernateHints#HINT_CACHE_MODE
-	 */
-	@Deprecated(since = "6.2") @Remove
-	//TODO: actually, we won't remove it, we'll change its
-	//      type to CacheMode and then un-deprecate it
-	CacheModeType cacheMode() default CacheModeType.NORMAL;
-
-	/**
 	 * Whether the results should be loaded in read-only mode.
 	 * Default is {@code false}.
 	 *

@@ -95,9 +95,6 @@ public class PluralAttributeMappingImpl
 
 	@SuppressWarnings("rawtypes")
 	private final CollectionMappingType collectionMappingType;
-	private final int stateArrayPosition;
-	private final PropertyAccess propertyAccess;
-	private final AttributeMetadata attributeMetadata;
 	private final String referencedPropertyName;
 	private final String mapKeyPropertyName;
 
@@ -137,11 +134,8 @@ public class PluralAttributeMappingImpl
 			CascadeStyle cascadeStyle,
 			ManagedMappingType declaringType,
 			CollectionPersister collectionDescriptor) {
-		super( attributeName, fetchableIndex, declaringType );
-		this.propertyAccess = propertyAccess;
-		this.attributeMetadata = attributeMetadata;
+		super( attributeName, fetchableIndex, declaringType, attributeMetadata, stateArrayPosition, propertyAccess );
 		this.collectionMappingType = collectionMappingType;
-		this.stateArrayPosition = stateArrayPosition;
 		this.elementDescriptor = elementDescriptor;
 		this.indexDescriptor = indexDescriptor;
 		this.identifierDescriptor = identifierDescriptor;
@@ -201,10 +195,7 @@ public class PluralAttributeMappingImpl
 	 */
 	protected PluralAttributeMappingImpl(PluralAttributeMappingImpl original) {
 		super( original );
-		this.propertyAccess = original.propertyAccess;
-		this.attributeMetadata = original.attributeMetadata;
 		this.collectionMappingType = original.collectionMappingType;
-		this.stateArrayPosition = original.stateArrayPosition;
 		this.elementDescriptor = original.elementDescriptor;
 		this.indexDescriptor = original.indexDescriptor;
 		this.identifierDescriptor = original.identifierDescriptor;
@@ -353,21 +344,6 @@ public class PluralAttributeMappingImpl
 	@Override
 	public boolean containsTableReference(String tableExpression) {
 		return tableExpression.equals( separateCollectionTable );
-	}
-
-	@Override
-	public int getStateArrayPosition() {
-		return stateArrayPosition;
-	}
-
-	@Override
-	public AttributeMetadata getAttributeMetadata() {
-		return attributeMetadata;
-	}
-
-	@Override
-	public PropertyAccess getPropertyAccess() {
-		return propertyAccess;
 	}
 
 	@Override

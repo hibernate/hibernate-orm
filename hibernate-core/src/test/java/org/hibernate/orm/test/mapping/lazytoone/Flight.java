@@ -12,10 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.LazyToOne;
-
 import static jakarta.persistence.FetchType.LAZY;
-import static org.hibernate.annotations.LazyToOneOption.NO_PROXY;
 
 /**
  * @author Steve Ebersole
@@ -33,7 +30,6 @@ public class Flight {
 	private Airport origination;
 
 	@ManyToOne( fetch = LAZY )
-	@LazyToOne( NO_PROXY )
 	private Airport destination;
 
 	public Flight() {

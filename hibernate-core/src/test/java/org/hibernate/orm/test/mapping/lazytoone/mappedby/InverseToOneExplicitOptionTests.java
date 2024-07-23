@@ -6,13 +6,7 @@
  */
 package org.hibernate.orm.test.mapping.lazytoone.mappedby;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
-
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.LazyToOne;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
@@ -29,16 +23,21 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.annotations.LazyToOneOption.NO_PROXY;
 import static org.junit.Assert.assertTrue;
 
 /**
  * Baseline test for inverse (mappedBy) to-one, using an explicit @LazyToOne(NO_PROXY)
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = {
 				InverseToOneExplicitOptionTests.Customer.class, InverseToOneExplicitOptionTests.SupplementalInfo.class
@@ -217,7 +216,6 @@ public class InverseToOneExplicitOptionTests {
 		private Integer id;
 
 		@OneToOne( fetch = LAZY, mappedBy = "supplementalInfo", optional = false )
-		@LazyToOne( value = NO_PROXY )
 		private Customer customer;
 
 		private String something;

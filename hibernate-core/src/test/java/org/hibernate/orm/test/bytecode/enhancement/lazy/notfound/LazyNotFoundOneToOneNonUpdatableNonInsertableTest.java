@@ -6,9 +6,16 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.notfound;
 
-/**
- * @author Gail Badner
- */
+import org.hibernate.Hibernate;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
+
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -18,22 +25,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
-import org.hibernate.Hibernate;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
-import org.hibernate.annotations.NotFound;
-import org.hibernate.annotations.NotFoundAction;
-
-import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.jupiter.api.Test;
-
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey("HHH-12226")
 @DomainModel(
 		annotatedClasses = {
@@ -80,7 +74,6 @@ public class LazyNotFoundOneToOneNonUpdatableNonInsertableTest {
 		private Integer id;
 
 		@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, optional = true)
-		@LazyToOne(value = LazyToOneOption.NO_PROXY)
 		@NotFound(action = NotFoundAction.IGNORE)
 		@JoinColumn(
 				name = "id",

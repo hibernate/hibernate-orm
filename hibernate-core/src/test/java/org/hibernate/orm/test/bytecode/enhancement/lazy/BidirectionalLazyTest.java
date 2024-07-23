@@ -8,17 +8,9 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
 import java.util.HashSet;
 import java.util.Set;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
@@ -38,6 +30,13 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -51,6 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @author Gail Badner
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey("HHH-13241")
 @DomainModel(
 		annotatedClasses = {
@@ -357,7 +357,6 @@ public class BidirectionalLazyTest {
 		}
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		@JoinColumn(name = "employer_name")
 		public Employer getEmployer() {
 			return employer;

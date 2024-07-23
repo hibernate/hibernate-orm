@@ -7,16 +7,12 @@
 package org.hibernate.orm.test.mapping.generated;
 
 import java.sql.Timestamp;
-import jakarta.persistence.Basic;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 import org.hibernate.HibernateError;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.CurrentTimestamp;
-import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.generator.EventType;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -25,6 +21,11 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Basic;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -94,9 +95,9 @@ public class InDbGenerationsWithAnnotationsTests {
 		@Basic
 		public String name;
 
-		@CurrentTimestamp( timing = GenerationTiming.INSERT )
+		@CurrentTimestamp(event = EventType.INSERT)
 		public Timestamp createdOn;
-		@CurrentTimestamp( timing = GenerationTiming.ALWAYS )
+		@CurrentTimestamp
 		public Timestamp lastUpdatedOn;
 
 		public AuditedEntity() {

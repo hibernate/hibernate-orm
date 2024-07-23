@@ -4,6 +4,7 @@ import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
+import org.hibernate.generator.EventType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -19,9 +20,9 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.annotations.GenerationTime.ALWAYS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @SessionFactory
 @DomainModel(annotatedClasses = CustomSqlGeneratedTest.Custom.class)
 public class CustomSqlGeneratedTest {
@@ -63,9 +64,9 @@ public class CustomSqlGeneratedTest {
         Long id;
         @Version @Column(name = "revision")
         int version;
-        @Generated(value = ALWAYS, writable = true)
+        @Generated(event = { EventType.INSERT, EventType.UPDATE}, writable = true)
         String name;
-        @Generated(value = ALWAYS, writable = true)
+        @Generated(event = { EventType.INSERT, EventType.UPDATE}, writable = true)
         @Column(table = "CustomSecondary")
         String text;
     }

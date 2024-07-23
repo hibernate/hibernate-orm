@@ -12,7 +12,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import org.hibernate.annotations.ValueGenerationType;
-import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.generator.EventType;
 
 /**
  * Proposal for making {@link org.hibernate.annotations.Generated} work for update (they don't work in 5.x either)
@@ -28,7 +28,7 @@ public @interface ProposedGenerated {
 	/**
 	 * When the generation should occur
 	 */
-	GenerationTiming timing();
+	EventType[] timing();
 
 	/**
 	 * Value to use as the value for the column reference in the SQL.

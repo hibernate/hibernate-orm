@@ -6,31 +6,36 @@
  */
 package org.hibernate.orm.test.annotations;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.reflect.Member;
+import java.util.Date;
+import java.util.EnumSet;
+
+import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.ValueGenerationType;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.EventTypeSets;
+import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.generator.OnExecutionGenerator;
+
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import org.hibernate.annotations.GenerationTime;
-import org.hibernate.annotations.NaturalId;
-import org.hibernate.annotations.ValueGenerationType;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.tuple.AnnotationValueGeneration;
-import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.ValueGenerator;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.util.Date;
-
+@SuppressWarnings("JUnitMalformedDeclaration")
 @Jpa(annotatedClasses = DatabaseTimestampsColumnTest.Person.class)
 public class DatabaseTimestampsColumnTest {
 
     @Entity(name = "Person")
-    public class Person {
+    public static class Person {
 
         @Id
         @GeneratedValue
@@ -40,15 +45,15 @@ public class DatabaseTimestampsColumnTest {
         private String name;
 
         @Column(nullable = false)
-        @Timestamp(GenerationTime.INSERT)
+        @Timestamp
         private Date creationDate;
 
         @Column(nullable = true)
-        @Timestamp(GenerationTime.UPDATE)
+        @Timestamp(EventType.UPDATE)
         private Date editionDate;
 
         @Column(nullable = false, name="version")
-        @Timestamp(GenerationTime.ALWAYS)
+        @Timestamp({ EventType.INSERT, EventType.UPDATE })
         private Date timestamp;
 
         public String getName() {
@@ -74,36 +79,33 @@ public class DatabaseTimestampsColumnTest {
 
     @ValueGenerationType(generatedBy = TimestampValueGeneration.class)
     @Retention(RetentionPolicy.RUNTIME)
-    public @interface Timestamp { GenerationTime value(); }
+    public @interface Timestamp { EventType[] value() default EventType.INSERT; }
 
-    public static class TimestampValueGeneration
-            implements AnnotationValueGeneration<Timestamp> {
+    public static class TimestampValueGeneration implements OnExecutionGenerator {
+        private EnumSet<EventType> events;
 
-        private GenerationTiming timing;
+        public TimestampValueGeneration(Timestamp annotation, Member member, GeneratorCreationContext context) {
+            events = EventTypeSets.fromArray( annotation.value() );
+        }
 
         @Override
-        public void initialize(Timestamp annotation, Class<?> propertyType) {
-            timing = annotation.value().getEquivalent();
+        public EnumSet<EventType> getEventTypes() {
+            return events;
         }
 
-        public GenerationTiming getGenerationTiming() {
-            return timing;
-        }
-
-        public ValueGenerator<?> getValueGenerator() {
-            return null;
-        }
-
-        public boolean referenceColumnInSql() {
+        @Override
+        public boolean referenceColumnsInSql(Dialect dialect) {
             return true;
         }
 
-        public String getDatabaseGeneratedReferencedColumnValue() {
-            return "current_timestamp";
+        @Override
+        public String[] getReferencedColumnValues(Dialect dialect) {
+            return new String[] { dialect.currentTimestamp() };
         }
 
-        public String getDatabaseGeneratedReferencedColumnValue(Dialect dialect) {
-            return dialect.currentTimestamp();
+        @Override
+        public boolean writePropertyValue() {
+            return false;
         }
     }
 

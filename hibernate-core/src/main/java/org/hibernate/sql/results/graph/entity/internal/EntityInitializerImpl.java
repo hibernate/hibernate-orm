@@ -72,6 +72,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -124,6 +125,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 
 	private final DomainResultAssembler<?>[][] assemblers;
 	private final Initializer<?>[][] subInitializers;
+	private final MutabilityPlan<Object>[][] updatableAttributeMutabilityPlans;
 
 	public static class EntityInitializerData extends InitializerData {
 
@@ -235,10 +237,13 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		final Collection<EntityMappingType> subMappingTypes = rootEntityDescriptor.getSubMappingTypes();
 		final DomainResultAssembler<?>[][] assemblers = new DomainResultAssembler[subMappingTypes.size() + 1][];
 		final Initializer<?>[][] subInitializers = new Initializer<?>[subMappingTypes.size() + 1][];
+		final MutabilityPlan[][] updatableAttributeMutabilityPlans = new MutabilityPlan[subMappingTypes.size() + 1][];
 		assemblers[rootEntityDescriptor.getSubclassId()] = new DomainResultAssembler[rootEntityDescriptor.getNumberOfFetchables()];
+		updatableAttributeMutabilityPlans[rootEntityDescriptor.getSubclassId()] = new MutabilityPlan[rootEntityDescriptor.getNumberOfAttributeMappings()];
 
 		for ( EntityMappingType subMappingType : subMappingTypes ) {
 			assemblers[subMappingType.getSubclassId()] = new DomainResultAssembler[subMappingType.getNumberOfFetchables()];
+			updatableAttributeMutabilityPlans[subMappingType.getSubclassId()] = new MutabilityPlan[subMappingType.getNumberOfAttributeMappings()];
 		}
 
 		final int size = entityDescriptor.getNumberOfFetchables();
@@ -262,8 +267,13 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			}
 
 			assemblers[subclassId][stateArrayPosition] = stateAssembler;
+			final AttributeMetadata attributeMetadata = attributeMapping.getAttributeMetadata();
+			if ( attributeMetadata.isUpdatable() ) {
+				updatableAttributeMutabilityPlans[subclassId][stateArrayPosition] = attributeMetadata.getMutabilityPlan();
+			}
 			for ( EntityMappingType subMappingType : declaringType.getSubMappingTypes() ) {
 				assemblers[subMappingType.getSubclassId()][stateArrayPosition] = stateAssembler;
+				updatableAttributeMutabilityPlans[subMappingType.getSubclassId()][stateArrayPosition] = updatableAttributeMutabilityPlans[subclassId][stateArrayPosition];
 				if ( subInitializer != null ) {
 					if ( subInitializers[subMappingType.getSubclassId()] == null ) {
 						subInitializers[subMappingType.getSubclassId()] = new Initializer<?>[size];
@@ -285,6 +295,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 
 		this.assemblers = assemblers;
 		this.subInitializers = subInitializers;
+		this.updatableAttributeMutabilityPlans = updatableAttributeMutabilityPlans;
 		this.notFoundAction = notFoundAction;
 
 		this.keyAssembler = keyResult == null ? null : keyResult.createResultAssembler( this, creationState );
@@ -591,24 +602,16 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		return isResultInitializer;
 	}
 
-	private static void deepCopy(ManagedMappingType containerDescriptor, Object[] source, Object[] target) {
-		final int numberOfAttributeMappings = containerDescriptor.getNumberOfAttributeMappings();
-		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
-			final AttributeMapping attributeMapping = containerDescriptor.getAttributeMapping( i );
-			final AttributeMetadata attributeMetadata = attributeMapping.getAttributeMetadata();
-			if ( attributeMetadata.isUpdatable() ) {
-				final int position = attributeMapping.getStateArrayPosition();
-				target[position] = copy( attributeMetadata, source[position] );
+	private void deepCopy(EntityPersister containerDescriptor, Object[] source, Object[] target) {
+		final MutabilityPlan<Object>[] updatableAttributeMutabilityPlan = updatableAttributeMutabilityPlans[containerDescriptor.getSubclassId()];
+		for ( int i = 0; i < updatableAttributeMutabilityPlan.length; i++ ) {
+			final Object sourceValue = source[i];
+			if ( updatableAttributeMutabilityPlan[i] != null
+					&& sourceValue != LazyPropertyInitializer.UNFETCHED_PROPERTY
+					&& sourceValue != PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+				target[i] = updatableAttributeMutabilityPlan[i].deepCopy( source[i] );
 			}
 		}
-	}
-
-	@SuppressWarnings("unchecked")
-	private static Object copy(AttributeMetadata attributeMetadata, Object sourceValue) {
-		return sourceValue == LazyPropertyInitializer.UNFETCHED_PROPERTY
-				|| sourceValue == PropertyAccessStrategyBackRefImpl.UNKNOWN
-				? sourceValue
-				: attributeMetadata.getMutabilityPlan().deepCopy( sourceValue );
 	}
 
 	@Override

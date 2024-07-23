@@ -24,7 +24,7 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 
 	private final LinkedHashMap<IdentityKey<K>,V> map;
 
-	private transient Entry<IdentityKey<K>,V>[] entryArray = null;
+	private transient Entry<K,V>[] entryArray = null;
 
 	/**
 	 * Return a new instance of this class, with iteration
@@ -151,15 +151,14 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 		return set;
 	}
 
-	@SuppressWarnings( {"unchecked"})
-	public Entry[] entryArray() {
+	public Entry<K,V>[] entryArray() {
 		if ( entryArray == null ) {
 			entryArray = new Entry[ map.size() ];
 			final Iterator<Entry<IdentityKey<K>, V>> itr = map.entrySet().iterator();
 			int i = 0;
 			while ( itr.hasNext() ) {
 				final Entry<IdentityKey<K>, V> me = itr.next();
-				entryArray[i++] = new IdentityMapEntry( me.getKey().key, me.getValue() );
+				entryArray[i++] = new IdentityMapEntry<>( me.getKey().key, me.getValue() );
 			}
 		}
 		return entryArray;

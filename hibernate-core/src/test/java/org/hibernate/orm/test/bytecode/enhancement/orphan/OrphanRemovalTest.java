@@ -4,7 +4,6 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.LazyGroup;
-import org.hibernate.annotations.LazyToOne;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -25,9 +24,9 @@ import jakarta.persistence.Version;
 import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hibernate.annotations.FetchMode.SELECT;
-import static org.hibernate.annotations.LazyToOneOption.NO_PROXY;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = {
 				OrphanRemovalTest.Entity1.class,
@@ -86,7 +85,6 @@ public class OrphanRemovalTest {
 		protected int lockVersion;
 
 		@OneToOne(fetch = LAZY, cascade = ALL, orphanRemoval = true, mappedBy = "parent")
-		@LazyToOne(NO_PROXY)
 		@LazyGroup("group2")
 		@Fetch(SELECT)
 		protected Entity2 child;
@@ -114,7 +112,6 @@ public class OrphanRemovalTest {
 	public static class Entity2 {
 		@Id
 		@OneToOne(fetch = LAZY, optional = false)
-		@LazyToOne(NO_PROXY)
 		@LazyGroup("owner")
 		@JoinColumn(name = "parentid", nullable = false, updatable = false, columnDefinition = "smallint")
 		@Fetch(SELECT)

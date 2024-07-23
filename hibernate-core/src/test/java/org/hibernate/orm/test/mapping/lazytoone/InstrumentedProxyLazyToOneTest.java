@@ -30,6 +30,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * Same as {@link InstrumentedLazyToOneTest} except here we enable bytecode-enhanced proxies
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = {
 				Airport.class, Flight.class

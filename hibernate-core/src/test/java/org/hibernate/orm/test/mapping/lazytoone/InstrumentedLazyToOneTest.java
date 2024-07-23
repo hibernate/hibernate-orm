@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
  * Same as {@link LazyToOneTest} except here we have bytecode-enhanced entities
  * via {@link BytecodeEnhanced}
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = {
 				Airport.class, Flight.class

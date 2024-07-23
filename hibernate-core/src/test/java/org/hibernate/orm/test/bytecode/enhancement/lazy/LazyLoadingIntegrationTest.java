@@ -6,8 +6,9 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
@@ -28,8 +29,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils.checkDirtyTracking;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -120,7 +119,6 @@ public class LazyLoadingIntegrationTest {
         Long id;
 
         @ManyToOne( cascade = CascadeType.ALL, fetch = FetchType.LAZY )
-        @LazyToOne( LazyToOneOption.NO_PROXY )
         Parent parent;
 
         String name;

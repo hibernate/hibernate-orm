@@ -15,6 +15,9 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
 
 import java.io.Serializable;
+
+import org.hibernate.annotations.LazyGroup;
+
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -24,10 +27,6 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.LazyGroup;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
 
 @Entity(name = "RoleEntity")
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
@@ -39,13 +38,11 @@ public class RoleEntity extends ModelEntity implements Serializable {
 	Short value;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@LazyToOne(LazyToOneOption.PROXY)
 	@LazyGroup("Key")
 	@JoinColumn
 	protected AbstractKey key = null;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@LazyToOne(LazyToOneOption.PROXY)
 	@LazyGroup("Key")
 	@JoinColumn
 	protected SpecializedKey specializedKey = null;

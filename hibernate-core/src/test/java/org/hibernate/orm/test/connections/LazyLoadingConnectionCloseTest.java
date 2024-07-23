@@ -15,14 +15,12 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.util.connections.ConnectionCheckingConnectionProvider;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -41,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Selaron
  */
-@TestForIssue(jiraKey = "HHH-4808")
+@JiraKey("HHH-4808")
 public class LazyLoadingConnectionCloseTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	private ConnectionCheckingConnectionProvider connectionProvider;
@@ -279,7 +277,6 @@ public class LazyLoadingConnectionCloseTest extends EntityManagerFactoryBasedFun
 
 		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumn
-		@LazyToOne(LazyToOneOption.PROXY)
 		public SimpleEntity getParent() {
 			return parent;
 		}

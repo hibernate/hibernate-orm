@@ -37,6 +37,7 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
@@ -658,7 +659,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				if ( !attributeMapping.isPluralAttributeMapping() ) {
 					final Object attributeValue = domainValue == null
 							? null
-							: attributeMapping.getPropertyAccess().getGetter().get( domainValue );
+							: getValue( domainValue, i );
 					span += attributeMapping.breakDownJdbcValues(
 							attributeValue,
 							offset + span,

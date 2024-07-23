@@ -2485,7 +2485,7 @@ public class ModelBinder {
 				);
 			}
 			if ( timing != GenerationTiming.NEVER ) {
-				property.setValueGeneratorCreator(context -> new GeneratedGeneration( timing.getEquivalent() ) );
+				property.setValueGeneratorCreator(context -> new GeneratedGeneration( timing.getEventTypes() ) );
 
 				// generated properties can *never* be insertable...
 				if ( property.isInsertable() && timing.includesInsert() ) {

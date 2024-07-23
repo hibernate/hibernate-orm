@@ -2482,7 +2482,6 @@ Hibernate supports multiple ways to mark an attribute as generated:
     * `@CreationTimestamp` - <<mapping-generated-CreationTimestamp>>
     * `@UpdateTimestamp` - <<mapping-generated-UpdateTimestamp>>
     * `@Generated` - <<mapping-generated-Generated>>
-    * `@GeneratorType` - is deprecated and not covered here
 * Using a custom generation strategy - <<mapping-generated-custom>>
 
 
@@ -2565,7 +2564,7 @@ include::{example-dir-basic-mapping}/generated/GeneratedTest.java[tags=mapping-g
 [[mapping-generated-custom]]
 ===== Custom generation strategy
 
-Hibernate also supports value generation via a pluggable API using `@ValueGenerationType` and `AnnotationValueGeneration`
+Hibernate also supports value generation via a pluggable API using `@ValueGenerationType` and `AnnotationBasedGenerator`
 allowing users to define any generation strategy they wish.
 
 Let's look at an example of generating UUID values.  First the attribute mapping
@@ -2604,7 +2603,7 @@ include::{example-dir-generated}/temporals/GeneratedUuidTests.java[tags=mapping-
 ====
 
 See https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ValueGenerationType.html[`@ValueGenerationType`]
-and https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tuple/AnnotationValueGeneration.html[`AnnotationValueGeneration`]
+and https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/generator/AnnotationValueGeneration.html[`AnnotationBasedGenerator`]
 for details of each contract
 
 

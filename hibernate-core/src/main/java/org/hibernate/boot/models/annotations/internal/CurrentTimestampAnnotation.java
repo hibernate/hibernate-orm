@@ -15,20 +15,20 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.jboss.jandex.AnnotationInstance;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
+import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.generator.EventType.UPDATE;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
 public class CurrentTimestampAnnotation implements CurrentTimestamp {
 	private org.hibernate.generator.EventType[] event;
-	private org.hibernate.tuple.GenerationTiming timing;
 	private org.hibernate.annotations.SourceType source;
 
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
 	public CurrentTimestampAnnotation(SourceModelBuildingContext modelContext) {
-		this.event = new org.hibernate.generator.EventType[0];
-		this.timing = org.hibernate.tuple.GenerationTiming.ALWAYS;
+		this.event = new org.hibernate.generator.EventType[] {INSERT, UPDATE};
 		this.source = org.hibernate.annotations.SourceType.DB;
 	}
 
@@ -37,7 +37,6 @@ public class CurrentTimestampAnnotation implements CurrentTimestamp {
 	 */
 	public CurrentTimestampAnnotation(CurrentTimestamp annotation, SourceModelBuildingContext modelContext) {
 		this.event = annotation.event();
-		this.timing = annotation.timing();
 		this.source = annotation.source();
 	}
 
@@ -46,7 +45,6 @@ public class CurrentTimestampAnnotation implements CurrentTimestamp {
 	 */
 	public CurrentTimestampAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
 		this.event = extractJandexValue( annotation, HibernateAnnotations.CURRENT_TIMESTAMP, "event", modelContext );
-		this.timing = extractJandexValue( annotation, HibernateAnnotations.CURRENT_TIMESTAMP, "timing", modelContext );
 		this.source = extractJandexValue( annotation, HibernateAnnotations.CURRENT_TIMESTAMP, "source", modelContext );
 	}
 
@@ -63,17 +61,6 @@ public class CurrentTimestampAnnotation implements CurrentTimestamp {
 	public void event(org.hibernate.generator.EventType[] value) {
 		this.event = value;
 	}
-
-
-	@Override
-	public org.hibernate.tuple.GenerationTiming timing() {
-		return timing;
-	}
-
-	public void timing(org.hibernate.tuple.GenerationTiming value) {
-		this.timing = value;
-	}
-
 
 	@Override
 	public org.hibernate.annotations.SourceType source() {

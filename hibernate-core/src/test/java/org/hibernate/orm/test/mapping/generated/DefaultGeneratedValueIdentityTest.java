@@ -8,6 +8,7 @@ package org.hibernate.orm.test.mapping.generated;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.reflect.Member;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -22,25 +23,20 @@ import java.time.YearMonth;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import java.util.EnumSet;
 
-import org.hibernate.Session;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
-import org.hibernate.annotations.GeneratorType;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.ValueGenerationType;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.tuple.AnnotationValueGeneration;
-import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.ValueGenerator;
+import org.hibernate.generator.AnnotationBasedGenerator;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.generator.OnExecutionGenerator;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
@@ -48,6 +44,12 @@ import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
@@ -149,12 +151,12 @@ public class DefaultGeneratedValueIdentityTest extends BaseCoreFunctionalTestCas
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		private Integer id;
 
-		@Generated( GenerationTime.INSERT )
+		@Generated
 		@ColumnDefault( "CURRENT_TIMESTAMP" )
 		@Column( nullable = false )
 		private Date createdDate;
 
-		@Generated( GenerationTime.ALWAYS )
+		@Generated(event = { EventType.INSERT, EventType.UPDATE})
 		@ColumnDefault( "CURRENT_TIMESTAMP" )
 		@Column( nullable = false )
 		private Calendar alwaysDate;
@@ -210,7 +212,7 @@ public class DefaultGeneratedValueIdentityTest extends BaseCoreFunctionalTestCas
 		@UpdateTimestamp
 		private Timestamp updated;
 
-		@GeneratorType( type = MyVmValueGenerator.class, when = GenerationTime.INSERT )
+		@StaticGeneration
 		private String name;
 
 		@SuppressWarnings("unused")
@@ -224,42 +226,30 @@ public class DefaultGeneratedValueIdentityTest extends BaseCoreFunctionalTestCas
 		}
 	}
 
-	public static class MyVmValueGenerator implements ValueGenerator<String> {
-
-		@Override
-		public String generateValue(Session session, Object owner) {
-			return "Bob";
-		}
-	}
-
 	@ValueGenerationType(generatedBy = FunctionCreationValueGeneration.class)
 	@Retention(RetentionPolicy.RUNTIME)
 	public @interface FunctionCreationTimestamp {
 	}
 
-	public static class FunctionCreationValueGeneration
-			implements AnnotationValueGeneration<FunctionCreationTimestamp> {
+	public static class FunctionCreationValueGeneration implements OnExecutionGenerator {
+		@Override
+		public EnumSet<EventType> getEventTypes() {
+			return EnumSet.of( EventType.INSERT );
+		}
 
 		@Override
-		public void initialize(FunctionCreationTimestamp annotation, Class<?> propertyType) {
-		}
-
-		public GenerationTiming getGenerationTiming() {
-			// its creation...
-			return GenerationTiming.INSERT;
-		}
-
-		public ValueGenerator<?> getValueGenerator() {
-			// no in-memory generation
-			return null;
-		}
-
-		public boolean referenceColumnInSql() {
+		public boolean referenceColumnsInSql(Dialect dialect) {
 			return true;
 		}
 
-		public String getDatabaseGeneratedReferencedColumnValue() {
-			return "current_timestamp";
+		@Override
+		public boolean writePropertyValue() {
+			return false;
+		}
+
+		@Override
+		public String[] getReferencedColumnValues(Dialect dialect) {
+			return new String[] { "current_timestamp" };
 		}
 	}
 

@@ -382,10 +382,6 @@ public interface HibernateAnnotations {
 			LazyGroup.class,
 			LazyGroupAnnotation.class
 	);
-	OrmAnnotationDescriptor<LazyToOne, LazyToOneAnnotation> LAZY_TO_ONE = new OrmAnnotationDescriptor<>(
-			LazyToOne.class,
-			LazyToOneAnnotation.class
-	);
 	OrmAnnotationDescriptor<ListIndexBase, ListIndexBaseAnnotation> LIST_INDEX_BASE = new OrmAnnotationDescriptor<>(
 			ListIndexBase.class,
 			ListIndexBaseAnnotation.class

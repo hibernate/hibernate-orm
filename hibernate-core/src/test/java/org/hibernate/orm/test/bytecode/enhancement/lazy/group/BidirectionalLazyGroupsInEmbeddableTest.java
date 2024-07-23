@@ -6,24 +6,10 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.group;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-
 import java.util.HashSet;
 import java.util.Set;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-
 import org.hibernate.annotations.LazyGroup;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 
@@ -37,6 +23,16 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+
 /**
  * Tests removing non-owning side of the bidirectional association,
  * where owning side is in an embeddable.
@@ -45,6 +41,7 @@ import org.junit.jupiter.api.Test;
  *
  * @author Gail Badner
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey("HHH-13241")
 @DomainModel(
 		annotatedClasses = {
@@ -206,7 +203,6 @@ public class BidirectionalLazyGroupsInEmbeddableTest {
 		private Employer employer;
 
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		@LazyGroup("EmployerForEmployee")
 		@JoinColumn(name = "employer_name")
 		public Employer getEmployer() {

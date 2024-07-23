@@ -7,8 +7,13 @@
 
 //$Id$
 package org.hibernate.orm.test.annotations.fetch;
+
 import java.io.Serializable;
 import java.util.Date;
+
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -17,11 +22,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
 
 /**
  * @author Emmanuel Bernard
@@ -105,8 +105,7 @@ public class Stay implements Serializable {
 		this.person = person;
 	}
 
-	@ManyToOne(cascade = CascadeType.ALL)
-	@LazyToOne(LazyToOneOption.PROXY)
+	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@Fetch(FetchMode.SELECT)
 	@JoinColumn(name = "oldperson")
 	public Person getOldPerson() {
@@ -118,7 +117,6 @@ public class Stay implements Serializable {
 	}
 
 	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	@LazyToOne(LazyToOneOption.PROXY)
 	@Fetch(FetchMode.JOIN)
 	@JoinColumn(name = "veryoldperson")
 	public Person getVeryOldPerson() {

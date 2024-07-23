@@ -6,12 +6,20 @@
  */
 package org.hibernate.orm.test.joinfetch.enhanced;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
+
+import org.hibernate.Hibernate;
+import org.hibernate.annotations.LazyGroup;
+
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
@@ -22,18 +30,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.Hibernate;
-import org.hibernate.annotations.LazyGroup;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
-import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey("HHH-12298")
 @DomainModel(
 		annotatedClasses = {
@@ -90,7 +90,6 @@ public class JoinFetchWithEnhancementTest {
 		}
 
 		@OneToMany(targetEntity=OtherEntity.class, mappedBy="employee", fetch=FetchType.LAZY)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		@LazyGroup("pOtherEntites")
 		@Access(AccessType.PROPERTY)
 		public Set<OtherEntity> getOtherEntities() {
@@ -117,7 +116,6 @@ public class JoinFetchWithEnhancementTest {
 		private String id;
 
 		@ManyToOne
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		@LazyGroup("Employee")
 		@JoinColumn(name = "Employee_Id")
 		private Employee employee = null;

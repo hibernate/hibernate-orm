@@ -197,7 +197,7 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 			final Object[] propertyValues = new Object[embeddableTypeDescriptor.getNumberOfAttributeMappings()];
 			for ( int i = 0; i < propertyValues.length; i++ ) {
 				final AttributeMapping attributeMapping = embeddableTypeDescriptor.getAttributeMapping( i );
-				final Object o = attributeMapping.getPropertyAccess().getGetter().get( entity );
+				final Object o = attributeMapping.getValue( entity );
 				if ( o == null ) {
 					final AttributeMapping idClassAttributeMapping = identifierValueMapper.getAttributeMapping( i );
 					if ( idClassAttributeMapping.getPropertyAccess().getGetter().getReturnTypeClass().isPrimitive() ) {
@@ -241,7 +241,7 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 		for ( int position = 0; position < propertyValues.length; position++ ) {
 			final AttributeMapping attribute = embeddableTypeDescriptor.getAttributeMapping( position );
 			final AttributeMapping mappedIdAttributeMapping = identifierValueMapper.getAttributeMapping( position );
-			Object o = mappedIdAttributeMapping.getPropertyAccess().getGetter().get( id );
+			Object o = mappedIdAttributeMapping.getValue( id );
 			if ( attribute instanceof ToOneAttributeMapping && !( mappedIdAttributeMapping instanceof ToOneAttributeMapping ) ) {
 				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attribute;
 				final EntityPersister entityPersister = toOneAttributeMapping.getEntityMappingType()
@@ -256,9 +256,7 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 					if ( o == null ) {
 						o = entityDescriptor
 								.findAttributeMapping( toOneAttributeMapping.getAttributeName() )
-								.getPropertyAccess()
-								.getGetter()
-								.get( entity );
+								.getValue( entity );
 					}
 				}
 			}

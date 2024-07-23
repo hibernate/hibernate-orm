@@ -1103,7 +1103,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	@Deprecated
 	public Map<PersistentCollection<?>,CollectionEntry> getCollectionEntries() {
-		return getOrInitializeCollectionEntries();
+		return collectionEntries;
 	}
 
 	@Override

@@ -164,7 +164,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 
 		for ( int i = 0; i < propertyValues.length; i++ ) {
 			final AttributeMapping attributeMapping = virtualIdEmbeddable.getAttributeMapping( i );
-			final Object o = attributeMapping.getPropertyAccess().getGetter().get( entity );
+			final Object o = attributeMapping.getValue( entity );
 			if ( o == null ) {
 				final AttributeMapping idClassAttributeMapping = getAttributeMapping( i );
 				if ( idClassAttributeMapping.getPropertyAccess().getGetter().getReturnTypeClass().isPrimitive() ) {
@@ -209,7 +209,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		virtualIdEmbeddable.forEachAttribute(
 				(position, virtualIdAttribute) -> {
 					final AttributeMapping idClassAttribute = attributeMappings.get( position );
-					final Object o = idClassAttribute.getPropertyAccess().getGetter().get( id );
+					final Object o = idClassAttribute.getValue( id );
 					if ( virtualIdAttribute instanceof ToOneAttributeMapping && !( idClassAttribute instanceof ToOneAttributeMapping ) ) {
 						final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) virtualIdAttribute;
 						final EntityPersister entityPersister = toOneAttributeMapping.getEntityMappingType()

@@ -14,6 +14,7 @@ import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.internal.Collections;
@@ -21,6 +22,7 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
+import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -35,6 +37,7 @@ import org.hibernate.event.spi.FlushEvent;
 import org.hibernate.event.spi.PersistContext;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.EntityPrinter;
+import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.jboss.logging.Logger;
@@ -183,7 +186,12 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		// and reset reached, doupdate, etc.
 
 		LOG.debug( "Dirty checking collections" );
-		persistenceContext.forEachCollectionEntry( (pc,ce) -> ce.preFlush( pc ), true );
+		final Map<PersistentCollection<?>, CollectionEntry> collectionEntries = persistenceContext.getCollectionEntries();
+		if ( collectionEntries != null ) {
+			for ( Map.Entry<PersistentCollection<?>, CollectionEntry> entry : ( (IdentityMap<PersistentCollection<?>, CollectionEntry>) collectionEntries ).entryArray() ) {
+				entry.getValue().preFlush( entry.getKey() );
+			}
+		}
 	}
 
 	/**
@@ -263,14 +271,20 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 			throws HibernateException {
 		LOG.trace( "Processing unreferenced collections" );
 
-		final int count = persistenceContext.getCollectionEntriesSize();
-
-		persistenceContext.forEachCollectionEntry(
-				(persistentCollection, collectionEntry) -> {
-					if ( !collectionEntry.isReached() && !collectionEntry.isIgnore() ) {
-						Collections.processUnreachableCollection( persistentCollection, session );
-					}
-				}, true );
+		final Map<PersistentCollection<?>, CollectionEntry> collectionEntries = persistenceContext.getCollectionEntries();
+		final int count;
+		if ( collectionEntries == null ) {
+			count = 0;
+		}
+		else {
+			count = collectionEntries.size();
+			for ( Map.Entry<PersistentCollection<?>, CollectionEntry> me : ( (IdentityMap<PersistentCollection<?>, CollectionEntry>) collectionEntries ).entryArray() ) {
+				final CollectionEntry ce = me.getValue();
+				if ( !ce.isReached() && !ce.isIgnore() ) {
+					Collections.processUnreachableCollection( me.getKey(), session );
+				}
+			}
+		}
 
 		// Schedule updates to collections:
 

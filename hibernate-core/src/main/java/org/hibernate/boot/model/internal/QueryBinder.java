@@ -13,10 +13,8 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
-import org.hibernate.annotations.CacheModeType;
 import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.HQLSelect;
 import org.hibernate.annotations.SQLSelect;
@@ -236,7 +234,7 @@ public abstract class QueryBinder {
 				.setResultClass( resultClass )
 				.setCacheable( namedNativeQuery.cacheable() )
 				.setCacheRegion( nullIfEmpty( namedNativeQuery.cacheRegion() ) )
-				.setCacheMode( getCacheMode( namedNativeQuery.cacheRetrieveMode(), namedNativeQuery.cacheStoreMode(), namedNativeQuery.cacheMode() ) )
+				.setCacheMode( getCacheMode( namedNativeQuery.cacheRetrieveMode(), namedNativeQuery.cacheStoreMode() ) )
 				.setTimeout( timeout < 0 ? null : timeout )
 				.setFetchSize( fetchSize < 0 ? null : fetchSize )
 				.setFlushMode( getFlushMode( namedNativeQuery.flushMode() ) )
@@ -380,7 +378,7 @@ public abstract class QueryBinder {
 				.setResultClass( (Class<Object>) namedQuery.resultClass() )
 				.setCacheable( namedQuery.cacheable() )
 				.setCacheRegion( nullIfEmpty( namedQuery.cacheRegion() ) )
-				.setCacheMode( getCacheMode( namedQuery.cacheRetrieveMode(), namedQuery.cacheStoreMode(), namedQuery.cacheMode() ) )
+				.setCacheMode( getCacheMode( namedQuery.cacheRetrieveMode(), namedQuery.cacheStoreMode() ) )
 				.setTimeout( timeout < 0 ? null : timeout )
 				.setFetchSize( fetchSize < 0 ? null : fetchSize )
 				.setFlushMode( getFlushMode( namedQuery.flushMode() ) )
@@ -396,45 +394,19 @@ public abstract class QueryBinder {
 		context.getMetadataCollector().addNamedQuery( hqlQueryDefinition );
 	}
 
-	private static CacheMode getCacheMode(CacheRetrieveMode cacheRetrieveMode, CacheStoreMode cacheStoreMode, CacheModeType cacheModeType) {
+	private static CacheMode getCacheMode(CacheRetrieveMode cacheRetrieveMode, CacheStoreMode cacheStoreMode) {
 		final CacheMode cacheMode = CacheMode.fromJpaModes( cacheRetrieveMode, cacheStoreMode );
-		return cacheMode == null || cacheMode == CacheMode.NORMAL
-				? interpretCacheMode( cacheModeType )
-				: cacheMode;
+		return cacheMode == null ? CacheMode.NORMAL : cacheMode;
 	}
 
 	private static FlushMode getFlushMode(FlushModeType flushModeType) {
-		switch ( flushModeType ) {
-			case ALWAYS:
-				return FlushMode.ALWAYS;
-			case AUTO:
-				return FlushMode.AUTO;
-			case COMMIT:
-				return FlushMode.COMMIT;
-			case MANUAL:
-				return FlushMode.MANUAL;
-			case PERSISTENCE_CONTEXT:
-				return null;
-			default:
-				throw new AssertionFailure( "Unknown FlushModeType: " + flushModeType );
-		}
-	}
-
-	private static CacheMode interpretCacheMode(CacheModeType cacheModeType) {
-		switch ( cacheModeType ) {
-			case GET:
-				return CacheMode.GET;
-			case IGNORE:
-				return CacheMode.IGNORE;
-			case NORMAL:
-				return CacheMode.NORMAL;
-			case PUT:
-				return CacheMode.PUT;
-			case REFRESH:
-				return CacheMode.REFRESH;
-			default:
-				throw new AssertionFailure( "Unknown cacheModeType: " + cacheModeType );
-		}
+		return switch ( flushModeType ) {
+			case ALWAYS -> FlushMode.ALWAYS;
+			case AUTO -> FlushMode.AUTO;
+			case COMMIT -> FlushMode.COMMIT;
+			case MANUAL -> FlushMode.MANUAL;
+			case PERSISTENCE_CONTEXT -> null;
+		};
 	}
 
 	public static void bindNamedStoredProcedureQuery(

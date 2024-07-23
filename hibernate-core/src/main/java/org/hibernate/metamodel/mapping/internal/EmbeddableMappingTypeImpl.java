@@ -681,47 +681,6 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	}
 
 	@Override
-	public <X, Y> int forEachJdbcValue(
-			Object value,
-			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
-		int span = 0;
-		if ( value == null ) {
-			for ( int i = 0; i < attributeMappings.size(); i++ ) {
-				final AttributeMapping attributeMapping = attributeMappings.get( i );
-				if ( attributeMapping instanceof PluralAttributeMapping ) {
-					continue;
-				}
-				span += attributeMapping.forEachJdbcValue( null, span + offset, x, y, valuesConsumer, session );
-			}
-			if ( isPolymorphic() ) {
-				span += discriminatorMapping.forEachJdbcValue( null, offset + span, x, y, valuesConsumer, session );
-			}
-		}
-		else {
-			final ConcreteEmbeddableType concreteEmbeddableType = findSubtypeBySubclass( value.getClass().getName() );
-			for ( int i = 0; i < attributeMappings.size(); i++ ) {
-				final AttributeMapping attributeMapping = attributeMappings.get( i );
-				if ( attributeMapping instanceof PluralAttributeMapping ) {
-					continue;
-				}
-				final Object attributeValue = concreteEmbeddableType == null || !concreteEmbeddableType.declaresAttribute( attributeMapping )
-						? null
-						: getValue( value, i );
-				span += attributeMapping.forEachJdbcValue( attributeValue, span + offset, x, y, valuesConsumer, session );
-			}
-			if ( isPolymorphic() ) {
-				final Object d = concreteEmbeddableType == null ? null : concreteEmbeddableType.getDiscriminatorValue();
-				span += discriminatorMapping.forEachJdbcValue( d, offset + span, x, y, valuesConsumer, session );
-			}
-		}
-		return span;
-	}
-
-	@Override
 	public <X, Y> int decompose(
 			Object domainValue,
 			int offset,

@@ -6,16 +6,21 @@
  */
 package org.hibernate.orm.test.mapping.generated;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import java.lang.reflect.Member;
+import java.util.EnumSet;
 
-import org.hibernate.Session;
-import org.hibernate.annotations.GenerationTime;
-import org.hibernate.annotations.GeneratorType;
+import org.hibernate.annotations.ValueGenerationType;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.EventTypeSets;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.tuple.ValueGenerator;
 
 import org.junit.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
@@ -81,12 +86,30 @@ public class GeneratorTypeTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
-	public static class LoggedUserGenerator implements ValueGenerator<String> {
-		
+	@ValueGenerationType( generatedBy = LoggedUserGenerator.class)
+	public @interface CurrentUserGeneration {
+		EventType[] timing() default EventType.INSERT;
+	}
+
+	public static class LoggedUserGenerator implements BeforeExecutionGenerator {
+		private final EnumSet<EventType> events;
+
+		public LoggedUserGenerator(CurrentUserGeneration annotation, Member member, GeneratorCreationContext context) {
+			this.events = EventTypeSets.fromArray( annotation.timing() );
+		}
+
 		@Override
-		public String generateValue(
-				Session session, Object owner) {
+		public Object generate(
+				SharedSessionContractImplementor session,
+				Object owner,
+				Object currentValue,
+				EventType eventType) {
 			return CurrentUser.INSTANCE.get();
+		}
+
+		@Override
+		public EnumSet<EventType> getEventTypes() {
+			return events;
 		}
 	}
 	
@@ -100,10 +123,10 @@ public class GeneratorTypeTest extends BaseEntityManagerFunctionalTestCase {
 
 		private String lastName;
 
-		@GeneratorType(type = LoggedUserGenerator.class, when = GenerationTime.INSERT)
+		@CurrentUserGeneration
 		private String createdBy;
 
-		@GeneratorType(type = LoggedUserGenerator.class, when = GenerationTime.ALWAYS)
+		@CurrentUserGeneration( timing = {EventType.INSERT, EventType.UPDATE} )
 		private String updatedBy;
 
 	//end::mapping-generated-GeneratorType-example[]

@@ -7,7 +7,6 @@
 package org.hibernate.generator.internal;
 
 import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.OnExecutionGenerator;
@@ -32,16 +31,14 @@ public class GeneratedGeneration implements OnExecutionGenerator {
 	private final boolean writable;
 	private final String[] sql;
 
-	public GeneratedGeneration(GenerationTime event) {
-		eventTypes = event.eventTypes();
+	public GeneratedGeneration(EnumSet<EventType> eventTypes) {
+		this.eventTypes = eventTypes;
 		writable = false;
 		sql = null;
 	}
 
 	public GeneratedGeneration(Generated annotation) {
-		eventTypes = annotation.value() == GenerationTime.INSERT
-				? fromArray( annotation.event() )
-				: annotation.value().eventTypes();
+		eventTypes = fromArray( annotation.event() );
 		sql = isEmpty( annotation.sql() ) ? null : new String[] { annotation.sql() };
 		writable = annotation.writable() || sql != null;
 	}

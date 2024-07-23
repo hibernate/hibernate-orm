@@ -14,9 +14,6 @@ import static org.hibernate.generator.EventType.UPDATE;
 
 /**
  * For convenience, enumerates the possible combinations of {@link EventType}.
- * <p>
- * This list supersedes the enumerations {@link org.hibernate.annotations.GenerationTime}
- * and {@link org.hibernate.tuple.GenerationTiming} from older versions of Hibernate.
  *
  * @author Gavin King
  *

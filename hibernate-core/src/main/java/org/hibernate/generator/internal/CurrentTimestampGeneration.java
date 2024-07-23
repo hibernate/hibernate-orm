@@ -6,25 +6,6 @@
  */
 package org.hibernate.generator.internal;
 
-import org.hibernate.AssertionFailure;
-import org.hibernate.SessionFactory;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.CurrentTimestamp;
-import org.hibernate.annotations.SourceType;
-import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.jdbc.Size;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.generator.EventType;
-import org.hibernate.generator.OnExecutionGenerator;
-import org.hibernate.generator.BeforeExecutionGenerator;
-import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.generator.GeneratorCreationContext;
-import org.hibernate.mapping.BasicValue;
-import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.type.descriptor.java.ClockHelper;
-
 import java.lang.reflect.Member;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -46,6 +27,24 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
+
+import org.hibernate.AssertionFailure;
+import org.hibernate.SessionFactory;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.CurrentTimestamp;
+import org.hibernate.annotations.SourceType;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.jdbc.Size;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.mapping.BasicValue;
+import org.hibernate.type.descriptor.java.ClockHelper;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -187,9 +186,7 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 
 	public CurrentTimestampGeneration(CurrentTimestamp annotation, Member member, GeneratorCreationContext context) {
 		delegate = getGeneratorDelegate( annotation.source(), member, context );
-		eventTypes = annotation.timing() == GenerationTiming.ALWAYS
-				? fromArray( annotation.event() )
-				: annotation.timing().getEquivalent().eventTypes();
+		eventTypes = fromArray( annotation.event() );
 	}
 
 	public CurrentTimestampGeneration(CreationTimestamp annotation, Member member, GeneratorCreationContext context) {

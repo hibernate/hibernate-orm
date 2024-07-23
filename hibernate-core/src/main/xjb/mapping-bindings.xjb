@@ -740,7 +740,7 @@
         </bindings>
 
         <bindings node="//xsd:simpleType[@name='basic-generation-timing-type']">
-            <javaType name="org.hibernate.tuple.GenerationTiming"
+            <javaType name="org.hibernate.boot.jaxb.mapping.GenerationTiming"
                       parseMethod="org.hibernate.boot.jaxb.mapping.internal.GenerationTimingMarshalling.fromXml"
                       printMethod="org.hibernate.boot.jaxb.mapping.internal.GenerationTimingMarshalling.toXml" />
         </bindings>

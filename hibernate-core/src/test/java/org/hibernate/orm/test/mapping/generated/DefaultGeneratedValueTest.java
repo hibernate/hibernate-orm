@@ -20,28 +20,19 @@ import java.time.YearMonth;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
-import org.hibernate.Session;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
-import org.hibernate.annotations.GeneratorType;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.generator.EventType;
 import org.hibernate.generator.internal.CurrentTimestampGeneration;
 import org.hibernate.orm.test.annotations.MutableClock;
 import org.hibernate.orm.test.annotations.MutableClockSettingProvider;
-import org.hibernate.tuple.ValueGenerator;
 
-
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -49,10 +40,14 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SettingProvider;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -60,8 +55,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Test for the generation of column values using different
- * {@link org.hibernate.tuple.ValueGeneration} implementations.
+ * Test for the generation of column values using different value generation strategies.
  *
  * @author Steve Ebersole
  * @author Gunnar Morling
@@ -69,9 +63,10 @@ import static org.junit.Assert.assertTrue;
 @SkipForDialect( dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "CURRENT_TIMESTAMP not supported as default value in Sybase" )
 @SkipForDialect( dialectClass = MySQLDialect.class, reason = "See HHH-10196" )
 @SkipForDialect( dialectClass = TiDBDialect.class, reason = "See HHH-10196" )
+@ServiceRegistry(settingProviders = @SettingProvider(settingName = CurrentTimestampGeneration.CLOCK_SETTING_NAME, provider = MutableClockSettingProvider.class))
 @DomainModel( annotatedClasses = DefaultGeneratedValueTest.TheEntity.class )
 @SessionFactory
-@ServiceRegistry(settingProviders = @SettingProvider(settingName = CurrentTimestampGeneration.CLOCK_SETTING_NAME, provider = MutableClockSettingProvider.class))
+@SuppressWarnings("JUnitMalformedDeclaration")
 public class DefaultGeneratedValueTest {
 
 	private MutableClock clock;
@@ -155,7 +150,7 @@ public class DefaultGeneratedValueTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-2907")
+	@JiraKey("HHH-2907")
 	public void testUpdateTimestampGeneration(SessionFactoryScope scope) {
 		final TheEntity created = scope.fromTransaction( (s) -> {
 			TheEntity theEntity = new TheEntity( 1 );
@@ -195,12 +190,12 @@ public class DefaultGeneratedValueTest {
 		@Id
 		private Integer id;
 
-		@Generated( GenerationTime.INSERT )
+		@Generated
 		@ColumnDefault( "CURRENT_TIMESTAMP" )
 		@Column( nullable = false )
 		private Date createdDate;
 
-		@Generated( GenerationTime.ALWAYS )
+		@Generated( event = { EventType.INSERT, EventType.UPDATE } )
 		@ColumnDefault( "CURRENT_TIMESTAMP" )
 		@Column( nullable = false )
 		private Calendar alwaysDate;
@@ -253,7 +248,7 @@ public class DefaultGeneratedValueTest {
 		@UpdateTimestamp
 		private Timestamp updated;
 
-		@GeneratorType( type = MyVmValueGenerator.class, when = GenerationTime.INSERT )
+		@StaticGeneration( value = "Bob" )
 		private String name;
 
 		@SuppressWarnings("unused")
@@ -266,13 +261,4 @@ public class DefaultGeneratedValueTest {
 			this.id = id;
 		}
 	}
-
-	public static class MyVmValueGenerator implements ValueGenerator<String> {
-
-		@Override
-		public String generateValue(Session session, Object owner) {
-			return "Bob";
-		}
-	}
-
 }

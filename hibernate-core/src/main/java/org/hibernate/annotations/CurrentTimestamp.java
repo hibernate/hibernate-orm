@@ -9,10 +9,8 @@ package org.hibernate.annotations;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import org.hibernate.Remove;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.internal.CurrentTimestampGeneration;
-import org.hibernate.tuple.GenerationTiming;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
@@ -23,7 +21,7 @@ import static org.hibernate.generator.EventType.UPDATE;
 
 /**
  * Specifies that the annotated field of property is a generated timestamp,
- * and also specifies the {@linkplain #timing() timing} of the timestamp
+ * and also specifies the {@linkplain #event() timing} of the timestamp
  * generation, and whether it is generated in Java or by the database:
  * <ul>
  * <li>{@link SourceType#VM source = VM} indicates that the virtual machine
@@ -75,17 +73,6 @@ public @interface CurrentTimestamp {
 	 * explicitly specify {@link EventType#INSERT event = INSERT}.
 	 */
 	EventType[] event() default {INSERT, UPDATE};
-
-	/**
-	 * Determines when the timestamp is generated. But default, it is updated
-	 * when any SQL {@code insert} or {@code update} statement is executed.
-	 * If it should be generated just once, on the initial SQL {@code insert},
-	 * explicitly specify {@link GenerationTiming#INSERT timing = INSERT}.
-	 *
-	 * @deprecated This was introduced in error
-	 */
-	@Deprecated(since = "6.2") @Remove
-	GenerationTiming timing() default GenerationTiming.ALWAYS;
 
 	/**
 	 * Specifies how the timestamp is generated. By default, it is generated

@@ -9,6 +9,11 @@ package org.hibernate.orm.test.envers.entities.onetomany.detached.inheritance;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.hibernate.envers.AuditMappedBy;
+import org.hibernate.envers.Audited;
+import org.hibernate.orm.test.envers.integration.onetomany.detached.InheritanceIndexedJoinColumnBidirectionalList;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -16,12 +21,8 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.IndexColumn;
-import org.hibernate.envers.AuditMappedBy;
-import org.hibernate.envers.Audited;
-import org.hibernate.orm.test.envers.integration.onetomany.detached.InheritanceIndexedJoinColumnBidirectionalList;
 
 /**
  * Entity for {@link InheritanceIndexedJoinColumnBidirectionalList} test.
@@ -42,7 +43,7 @@ public abstract class ParentIndexedListJoinColumnBidirectionalRefIngEntity {
 
 	@OneToMany
 	@JoinColumn(name = "indexed_join_column")
-	@IndexColumn(name = "indexed_index")
+	@OrderColumn(name = "indexed_index")
 	@AuditMappedBy(mappedBy = "owner", positionMappedBy = "position")
 	private List<ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity> references;
 

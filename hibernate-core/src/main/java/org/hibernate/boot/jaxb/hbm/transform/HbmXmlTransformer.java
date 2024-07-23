@@ -19,7 +19,6 @@ import java.util.function.Consumer;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.internal.LimitedCollectionClassification;
 import org.hibernate.boot.jaxb.Origin;
@@ -80,7 +79,6 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOnDeleteEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOneToManyCollectionElementType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOneToOneType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOuterJoinEnum;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmPolymorphismEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmPrimitiveArrayType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmPropertiesType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmQueryParamType;
@@ -139,7 +137,6 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbGenericIdGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbHqlImportImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIdImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbInheritanceImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOneImpl;
@@ -430,7 +427,6 @@ public class HbmXmlTransformer {
 		mappingEntity.setOptimisticLocking( hbmClass.getOptimisticLock() );
 
 		mappingEntity.setDiscriminatorValue( hbmClass.getDiscriminatorValue() );
-		mappingEntity.setPolymorphism( convert( hbmClass.getPolymorphism() ) );
 
 		transferDiscriminator( hbmClass, mappingEntity, entityInfo );
 		transferEntityAttributes( hbmClass, mappingEntity, entityInfo );
@@ -1131,14 +1127,6 @@ public class HbmXmlTransformer {
 		}
 
 		throw new IllegalArgumentException( "Unrecognized cache-inclusions value : " + hbmInclusion );
-	}
-
-	@SuppressWarnings("deprecation")
-	private static PolymorphismType convert(JaxbHbmPolymorphismEnum polymorphism) {
-		if ( polymorphism == null ) {
-			return null;
-		}
-		return polymorphism == JaxbHbmPolymorphismEnum.EXPLICIT ? PolymorphismType.EXPLICIT : PolymorphismType.IMPLICIT;
 	}
 
 	private void transferResultSetMappings(String namePrefix, ResultSetMappingContainer container) {

@@ -192,11 +192,6 @@ public class Subclass extends PersistentClass {
 	}
 
 	@Override
-	public boolean isExplicitPolymorphism() {
-		return getSuperclass().isExplicitPolymorphism();
-	}
-
-	@Override
 	public boolean isConcreteProxy() {
 		return getRootClass().isConcreteProxy();
 	}

@@ -529,7 +529,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 		else {
 			for ( int i = 0; i < getNumberOfAttributeMappings(); i++ ) {
 				final AttributeMapping attributeMapping = getAttributeMapping( i );
-				final Object attributeValue = attributeMapping.getPropertyAccess().getGetter().get( domainValue );
+				final Object attributeValue = attributeMapping.getValue( domainValue );
 				span += attributeMapping.breakDownJdbcValues(
 						attributeValue,
 						offset + span,

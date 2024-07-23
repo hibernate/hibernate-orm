@@ -185,7 +185,7 @@ public abstract class AbstractCompositeIdentifierMapping
 		else {
 			for ( int i = 0; i < size; i++ ) {
 				final AttributeMapping attributeMapping = embeddableTypeDescriptor.getAttributeMapping( i );
-				final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
+				final Object o = embeddableTypeDescriptor.getValue( value, i );
 				if ( attributeMapping instanceof ToOneAttributeMapping ) {
 					final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
 					final ForeignKeyDescriptor fkDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();

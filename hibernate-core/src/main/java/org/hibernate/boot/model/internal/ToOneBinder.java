@@ -16,8 +16,6 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchProfileOverride;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDelete;
@@ -58,7 +56,6 @@ import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
 import static org.hibernate.boot.model.internal.BinderHelper.noConstraint;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
-import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
@@ -415,21 +412,7 @@ public class ToOneBinder {
 
 	private static boolean isEager(MemberDetails property, PropertyData inferredData, PropertyHolder propertyHolder) {
 		final FetchType fetchType = getJpaFetchType( property );
-
-		final LazyToOne lazyToOneAnnotationUsage = property.getDirectAnnotationUsage( LazyToOne.class );
-		if ( lazyToOneAnnotationUsage != null ) {
-			final LazyToOneOption option = lazyToOneAnnotationUsage.value();
-			boolean eager = option == LazyToOneOption.FALSE;
-			if ( eager && fetchType == LAZY ) {
-				// conflicts with non-default setting
-				throw new AnnotationException("Association '" + getPath(propertyHolder, inferredData)
-						+ "' is marked 'fetch=LAZY' and '@LazyToOne(FALSE)'");
-			}
-			return eager;
-		}
-		else {
-			return fetchType == EAGER;
-		}
+		return fetchType == EAGER;
 	}
 
 	private static FetchType getJpaFetchType(MemberDetails property) {

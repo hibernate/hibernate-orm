@@ -17,12 +17,9 @@ import org.junit.jupiter.api.Test;
  *
  * @author Jan-Oliver Lustig, Sebastian Viefhaus
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey("HHH-11986")
-@DomainModel(
-		annotatedClasses = {
-				LGMB_From.class, LGMB_To.class
-		}
-)
+@DomainModel(annotatedClasses = {LGMB_From.class, LGMB_To.class})
 @SessionFactory
 @BytecodeEnhanced
 public class LazyGroupMappedByTest {

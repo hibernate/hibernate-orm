@@ -6,13 +6,7 @@
  */
 package org.hibernate.orm.test.mapping.lazytoone.onetoone;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
-
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.LazyToOne;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
@@ -30,6 +24,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -38,12 +37,12 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.annotations.LazyToOneOption.NO_PROXY;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Baseline test for uni-directional one-to-one, using an explicit @LazyToOne(NO_PROXY) and allowing enhanced proxies
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = {
 				OneToOneExplicitOptionTests.Customer.class, OneToOneExplicitOptionTests.SupplementalInfo.class
@@ -229,7 +228,6 @@ public class OneToOneExplicitOptionTests {
 		private Integer id;
 
 		@OneToOne( fetch = LAZY, optional = false )
-		@LazyToOne( value = NO_PROXY )
 		private Customer customer;
 
 		private String something;

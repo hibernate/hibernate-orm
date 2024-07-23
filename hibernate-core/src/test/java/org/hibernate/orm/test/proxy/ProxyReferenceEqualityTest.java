@@ -7,21 +7,20 @@
 package org.hibernate.orm.test.proxy;
 
 import java.util.List;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
-
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -29,7 +28,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Christian Beikov
  */
-@TestForIssue(jiraKey = "HHH-9638")
+@SuppressWarnings("JUnitMalformedDeclaration")
+@JiraKey("HHH-9638")
 @DomainModel(
 		annotatedClasses = {
 				ProxyReferenceEqualityTest.A.class,
@@ -38,8 +38,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 )
 @SessionFactory
 public class ProxyReferenceEqualityTest {
-
-
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope){
 		scope.inTransaction(
@@ -74,7 +72,6 @@ public class ProxyReferenceEqualityTest {
 		Long id;
 
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		B b;
 
 		String name;

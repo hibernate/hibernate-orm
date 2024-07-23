@@ -10,7 +10,6 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.annotations.CacheModeType;
 import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.NamedNativeQuery;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeQueryImpl;
@@ -44,7 +43,6 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 	String comment;
 	CacheStoreMode cacheStoreMode;
 	CacheRetrieveMode cacheRetrieveMode;
-	CacheModeType cacheMode;
 	boolean readOnly;
 	String[] querySpaces;
 	boolean callable;
@@ -60,7 +58,6 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 		comment = "";
 		cacheStoreMode = CacheStoreMode.USE;
 		cacheRetrieveMode = CacheRetrieveMode.USE;
-		cacheMode = CacheModeType.NORMAL;
 		readOnly = false;
 		querySpaces = new String[0];
 		callable = false;
@@ -79,7 +76,6 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 		this.comment = annotation.comment();
 		this.cacheStoreMode = annotation.cacheStoreMode();
 		this.cacheRetrieveMode = annotation.cacheRetrieveMode();
-		this.cacheMode = annotation.cacheMode();
 		this.readOnly = annotation.readOnly();
 		this.querySpaces = annotation.querySpaces();
 		this.callable = annotation.callable();
@@ -98,7 +94,6 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 		this.comment = extractJandexValue( annotation, NAMED_NATIVE_QUERY, "comment", modelContext );
 		this.cacheStoreMode = extractJandexValue( annotation, NAMED_NATIVE_QUERY, "cacheStoreMode", modelContext );
 		this.cacheRetrieveMode = extractJandexValue( annotation, NAMED_NATIVE_QUERY, "cacheRetrieveMode", modelContext );
-		this.cacheMode = extractJandexValue( annotation, NAMED_NATIVE_QUERY, "cacheMode", modelContext );
 		this.readOnly = extractJandexValue( annotation, NAMED_NATIVE_QUERY, "readOnly", modelContext );
 		this.querySpaces = extractJandexValue( annotation, NAMED_NATIVE_QUERY, "querySpaces", modelContext );
 		this.callable = extractJandexValue( annotation, NAMED_NATIVE_QUERY, "callable", modelContext );
@@ -217,15 +212,6 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 
 	public void cacheRetrieveMode(CacheRetrieveMode value) {
 		this.cacheRetrieveMode = value;
-	}
-
-	@Override
-	public CacheModeType cacheMode() {
-		return cacheMode;
-	}
-
-	public void cacheMode(CacheModeType value) {
-		this.cacheMode = value;
 	}
 
 	@Override

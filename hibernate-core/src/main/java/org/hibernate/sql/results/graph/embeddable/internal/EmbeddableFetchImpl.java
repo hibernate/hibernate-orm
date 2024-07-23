@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.graph.embeddable.internal;
 
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.graph.spi.GraphHelper;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -175,7 +176,8 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 
 	@Override
 	public boolean appliesTo(GraphImplementor<?> graphImplementor, JpaMetamodel metamodel) {
-		return getFetchParent().appliesTo( graphImplementor, metamodel );
+		// We use managedType here since this fetch could correspond to an entity type if the embeddable is an id-class
+		return GraphHelper.appliesTo( graphImplementor, metamodel.managedType( getResultJavaType().getTypeName() ) );
 	}
 
 	@Override

@@ -22,8 +22,6 @@ public abstract class AbstractSingularAttributeMapping
 		extends AbstractStateArrayContributorMapping
 		implements SingularAttributeMapping {
 
-	private final PropertyAccess propertyAccess;
-
 	public AbstractSingularAttributeMapping(
 			String name,
 			int stateArrayPosition,
@@ -32,8 +30,7 @@ public abstract class AbstractSingularAttributeMapping
 			FetchOptions mappedFetchOptions,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess) {
-		super( name, attributeMetadata, mappedFetchOptions, stateArrayPosition, fetchableIndex, declaringType );
-		this.propertyAccess = propertyAccess;
+		super( name, attributeMetadata, mappedFetchOptions, stateArrayPosition, fetchableIndex, declaringType, propertyAccess );
 	}
 
 	public AbstractSingularAttributeMapping(
@@ -45,8 +42,7 @@ public abstract class AbstractSingularAttributeMapping
 			FetchStyle fetchStyle,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess) {
-		super( name, attributeMetadata, fetchTiming, fetchStyle, stateArrayPosition, fetchableIndex, declaringType );
-		this.propertyAccess = propertyAccess;
+		super( name, attributeMetadata, fetchTiming, fetchStyle, stateArrayPosition, fetchableIndex, declaringType, propertyAccess );
 	}
 
 	/**
@@ -54,12 +50,6 @@ public abstract class AbstractSingularAttributeMapping
 	 */
 	protected AbstractSingularAttributeMapping( AbstractSingularAttributeMapping original ) {
 		super( original );
-		this.propertyAccess = original.propertyAccess;
-	}
-
-	@Override
-	public PropertyAccess getPropertyAccess() {
-		return propertyAccess;
 	}
 
 	@Override

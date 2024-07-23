@@ -10,6 +10,7 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.results.graph.FetchOptions;
 
 /**
@@ -19,10 +20,8 @@ public abstract class AbstractStateArrayContributorMapping
 		extends AbstractAttributeMapping
 		implements FetchOptions {
 
-	private final AttributeMetadata attributeMetadata;
 	private final FetchTiming fetchTiming;
 	private final FetchStyle fetchStyle;
-	private final int stateArrayPosition;
 
 	public AbstractStateArrayContributorMapping(
 			String name,
@@ -31,12 +30,11 @@ public abstract class AbstractStateArrayContributorMapping
 			FetchStyle fetchStyle,
 			int stateArrayPosition,
 			int fetchableIndex,
-			ManagedMappingType declaringType) {
-		super( name, fetchableIndex, declaringType );
-		this.attributeMetadata = attributeMetadata;
+			ManagedMappingType declaringType,
+			PropertyAccess propertyAccess) {
+		super( name, fetchableIndex, declaringType, attributeMetadata, stateArrayPosition, propertyAccess );
 		this.fetchTiming = fetchTiming;
 		this.fetchStyle = fetchStyle;
-		this.stateArrayPosition = stateArrayPosition;
 	}
 
 	public AbstractStateArrayContributorMapping(
@@ -45,7 +43,8 @@ public abstract class AbstractStateArrayContributorMapping
 			FetchOptions mappedFetchOptions,
 			int stateArrayPosition,
 			int fetchableIndex,
-			ManagedMappingType declaringType) {
+			ManagedMappingType declaringType,
+			PropertyAccess propertyAccess) {
 		this(
 				name,
 				attributeMetadata,
@@ -53,7 +52,8 @@ public abstract class AbstractStateArrayContributorMapping
 				mappedFetchOptions.getStyle(),
 				stateArrayPosition,
 				fetchableIndex,
-				declaringType
+				declaringType,
+				propertyAccess
 		);
 	}
 
@@ -62,21 +62,8 @@ public abstract class AbstractStateArrayContributorMapping
 	 */
 	protected AbstractStateArrayContributorMapping(AbstractStateArrayContributorMapping original) {
 		super( original );
-		this.attributeMetadata = original.attributeMetadata;
 		this.fetchTiming = original.fetchTiming;
 		this.fetchStyle = original.fetchStyle;
-		this.stateArrayPosition = original.stateArrayPosition;
-	}
-
-
-	@Override
-	public int getStateArrayPosition() {
-		return stateArrayPosition;
-	}
-
-	@Override
-	public AttributeMetadata getAttributeMetadata() {
-		return attributeMetadata;
 	}
 
 	@Override

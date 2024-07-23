@@ -412,7 +412,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public @Nullable EntityHolderImpl getEntityHolder(EntityKey key) {
+	public EntityHolderImpl getEntityHolder(EntityKey key) {
 		return entitiesByKey == null ? null : entitiesByKey.get( key );
 	}
 
@@ -525,7 +525,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public @Nullable EntityHolderImpl removeEntityHolder(EntityKey key) {
+	public EntityHolderImpl removeEntityHolder(EntityKey key) {
 		final EntityHolderImpl holder;
 		if ( entitiesByKey != null ) {
 			holder = entitiesByKey.remove( key );
@@ -1316,7 +1316,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 */
 	@Override
 	@Deprecated
-	public @Nullable Map<PersistentCollection<?>,CollectionEntry> getCollectionEntries() {
+	public Map<PersistentCollection<?>,CollectionEntry> getCollectionEntries() {
 		return collectionEntries;
 	}
 

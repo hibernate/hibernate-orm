@@ -398,18 +398,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			return ((Object[]) component)[i];
 		}
 		else {
-			final EmbeddableMappingType embeddableMappingType = embeddableTypeDescriptor();
-			if ( embeddableMappingType.isPolymorphic() ) {
-				final EmbeddableMappingType.ConcreteEmbeddableType concreteEmbeddableType = embeddableMappingType.findSubtypeBySubclass(
-						component.getClass().getName()
-				);
-				return concreteEmbeddableType.declaresAttribute( i )
-						? embeddableMappingType.getValue( component, i )
-						: null;
-			}
-			else {
-				return embeddableMappingType.getValue( component, i );
-			}
+			return embeddableTypeDescriptor().getValue( component, i );
 		}
 	}
 

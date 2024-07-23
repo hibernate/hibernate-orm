@@ -500,10 +500,6 @@ public interface HibernateAnnotations {
 			PartitionKey.class,
 			PartitionKeyAnnotation.class
 	);
-	OrmAnnotationDescriptor<Polymorphism,PolymorphismAnnotation> POLYMORPHISM = new OrmAnnotationDescriptor<>(
-			Polymorphism.class,
-			PolymorphismAnnotation.class
-	);
 	OrmAnnotationDescriptor<Proxy,ProxyAnnotation> PROXY = new OrmAnnotationDescriptor<>(
 			Proxy.class,
 			ProxyAnnotation.class

@@ -266,7 +266,10 @@ public class ModelBinder {
 		rootEntityDescriptor.setOptimisticLockStyle( hierarchySource.getOptimisticLockStyle() );
 		rootEntityDescriptor.setMutable( hierarchySource.isMutable() );
 		rootEntityDescriptor.setWhere( hierarchySource.getWhere() );
-		rootEntityDescriptor.setExplicitPolymorphism( hierarchySource.isExplicitPolymorphism() );
+
+		if ( hierarchySource.isExplicitPolymorphism() ) {
+			DEPRECATION_LOGGER.warn( "Implicit/explicit polymorphism no longer supported" );
+		}
 
 		bindEntityIdentifier(
 				mappingDocument,

@@ -243,9 +243,8 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 		// As people should be able to just run native queries and work with tuples
 		if ( resultBuilders != null ) {
 			final Set<String> knownDuplicateAliases = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
-			if ( resultBuilders.size() == 1 && domainResults.size()  == 1 && domainResults.get( 0 ) instanceof EntityResult ) {
+			if ( resultBuilders.size() == 1 && domainResults.size()  == 1 && domainResults.get( 0 ) instanceof EntityResult entityResult ) {
 				// Special case for result set mappings that just fetch a single polymorphic entity
-				final EntityResult entityResult = (EntityResult) domainResults.get( 0 );
 				final EntityPersister persister = entityResult.getReferencedMappingContainer().getEntityPersister();
 				final boolean polymorphic = persister.getEntityMetamodel().isPolymorphic();
 				// We only need to check for duplicate aliases if we have join fetches,

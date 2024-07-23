@@ -562,28 +562,19 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 					// we should add it to the collecting set of matching descriptors.  it should
 					// be added aside from a few cases...
 
-					// it should not be added if its direct super (if one) is defined without
-					// explicit-polymorphism.  The super itself will get added and the initializers
-					// for entity mappings already handle loading subtypes - adding it would be redundant
+					// if the managed-type has a super type and the java type is assignable from the super type,
+					// do not add the managed-type as the super itself will get added and the initializers for
+					// entity mappings already handle loading subtypes - adding it would be redundant and lead to
+					// incorrect results
 					final ManagedDomainType<?> superType = managedType.getSuperType();
 					if ( superType != null
 							&& superType.getPersistenceType() == Type.PersistenceType.ENTITY
 							&& javaType.isAssignableFrom( superType.getJavaType() ) ) {
-						final EntityDomainType<?> domainType = (EntityDomainType<?>) superType;
-						final EntityMappingType superMapping = getMappingMetamodel()
-								.getEntityDescriptor( domainType.getHibernateEntityName() );
-						if ( !superMapping.isExplicitPolymorphism() ) {
-							continue;
-						}
+						continue;
 					}
 
-					// it should not be added if it is mapped with explicit polymorphism itself
-					final EntityMappingType entityPersister = getMappingMetamodel()
-							.getEntityDescriptor( managedType.getTypeName() );
-					if ( !entityPersister.isExplicitPolymorphism() ) {
-						// aside from these special cases, add it
-						matchingDescriptors.add( (EntityDomainType<? extends T>) managedType );
-					}
+					// otherwise, add it
+					matchingDescriptors.add( (EntityDomainType<? extends T>) managedType );
 				}
 			}
 

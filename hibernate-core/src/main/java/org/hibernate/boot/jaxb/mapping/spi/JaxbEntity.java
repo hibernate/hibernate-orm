@@ -8,7 +8,6 @@ package org.hibernate.boot.jaxb.mapping.spi;
 
 import java.util.List;
 
-import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.engine.OptimisticLockStyle;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -81,9 +80,6 @@ public interface JaxbEntity extends JaxbEntityOrMappedSuperclass {
 
 	@Nullable String getProxy();
 	void setProxy(@Nullable String value);
-
-	@Nullable PolymorphismType getPolymorphism();
-	void setPolymorphism(@Nullable PolymorphismType value);
 
 	@Nullable String getDiscriminatorValue();
 	void setDiscriminatorValue(@Nullable String value);

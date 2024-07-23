@@ -51,6 +51,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.Setter;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.type.AnyType;
@@ -70,6 +71,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType {
 	final protected MutableAttributeMappingList attributeMappings;
 	protected SelectableMappings selectableMappings;
+	protected Getter[] getterCache;
+	protected Setter[] setterCache;
 
 	public AbstractEmbeddableMapping(MutableAttributeMappingList attributeMappings) {
 		this.attributeMappings = attributeMappings;
@@ -78,6 +81,16 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 	@Override
 	public JavaType<?> getMappedJavaType() {
 		return getRepresentationStrategy().getMappedJavaType();
+	}
+
+	@Override
+	public Object getValue(Object instance, int position) {
+		return getterCache[position].get( instance );
+	}
+
+	@Override
+	public void setValue(Object instance, int position, Object value) {
+		setterCache[position].set( instance, value );
 	}
 
 	@Override
@@ -93,10 +106,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 
 		final Object[] results = new Object[getNumberOfAttributeMappings()];
 		for ( int i = 0; i < results.length; i++ ) {
-			final Getter getter = getAttributeMapping( i ).getAttributeMetadata()
-					.getPropertyAccess()
-					.getGetter();
-			results[i] = getter.get( compositeInstance );
+			results[i] = getValue( compositeInstance, i );
 		}
 		return results;
 	}
@@ -109,7 +119,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		}
 		else {
 			for ( int i = 0; i < values.length; i++ ) {
-				getAttributeMapping( i ).getPropertyAccess().getSetter().set( component, values[i] );
+				setValue( component, i,values[i] );
 			}
 		}
 	}
@@ -215,6 +225,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			}
 			mappings.add( attributeMapping );
 		}
+		buildGetterSetterCache();
 		return true;
 	}
 
@@ -686,7 +697,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				if ( attributeMapping instanceof PluralAttributeMapping ) {
 					continue;
 				}
-				final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
+				final Object o = getValue( value, i );
 				span += attributeMapping.forEachJdbcValue( o, span + offset, x, y, valuesConsumer, session );
 			}
 		}
@@ -722,8 +733,22 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		);
 
 		this.selectableMappings = new SelectableMappingsImpl( selectableMappings.toArray( new SelectableMapping[0] ) );
+		buildGetterSetterCache();
 
 		return true;
+	}
+
+	protected void buildGetterSetterCache() {
+		final int propertySpan = attributeMappings.size();
+		final Getter[] getterCache = new Getter[propertySpan];
+		final Setter[] setterCache = new Setter[propertySpan];
+		for ( int i = 0; i < propertySpan; i++ ) {
+			final PropertyAccess propertyAccess = attributeMappings.get( i ).getPropertyAccess();
+			getterCache[i] = propertyAccess.getGetter();
+			setterCache[i] = propertyAccess.getSetter();
+		}
+		this.getterCache = getterCache;
+		this.setterCache = setterCache;
 	}
 
 	private static MutabilityPlan<?> getMutabilityPlan(boolean updateable) {

@@ -248,14 +248,31 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 	}
 
 	@Override
+	public boolean areEqual(Object one, Object other, SharedSessionContractImplementor session) {
+		final IdClassEmbeddable idClassEmbeddable = idMapping.getIdClassEmbeddable();
+		if ( idClassEmbeddable != null ) {
+			return idClassEmbeddable.areEqual( one, other, session );
+		}
+		else {
+			final AttributeMappingsList attributeMappings = getAttributeMappings();
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final AttributeMapping attribute = attributeMappings.get( i );
+				if ( !attribute.areEqual( attribute.getValue( one ), attribute.getValue( other ), session ) ) {
+					return false;
+				}
+			}
+			return true;
+		}
+	}
+
+	@Override
 	public int compare(Object value1, Object value2) {
 		final IdClassEmbeddable idClassEmbeddable = idMapping.getIdClassEmbeddable();
 		if ( idClassEmbeddable != null ) {
 			final AttributeMappingsList attributeMappings = idClassEmbeddable.getAttributeMappings();
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
-				final AttributeMapping attributeMapping = attributeMappings.get( i );
-				final Getter getter = attributeMapping.getPropertyAccess().getGetter();
-				final int comparison = attributeMapping.compare( getter.get( value1 ), getter.get( value2 ) );
+				final AttributeMapping attribute = attributeMappings.get( i );
+				final int comparison = attribute.compare( attribute.getValue( value1 ), attribute.getValue( value2 ) );
 				if ( comparison != 0 ) {
 					return comparison;
 				}

@@ -86,10 +86,16 @@ public final class Cascade {
 				LOG.tracev( "Processing cascade {0} for: {1}", action, persister.getEntityName() );
 			}
 			final PersistenceContext persistenceContext = eventSource.getPersistenceContextInternal();
-			final EntityEntry entry = persistenceContext.getEntry( parent );
-			if ( entry != null && entry.getLoadedState() == null && entry.getStatus() == Status.MANAGED && persister.getBytecodeEnhancementMetadata()
-					.isEnhancedForLazyLoading() ) {
-				return;
+			final boolean enhancedForLazyLoading = persister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
+			final EntityEntry entry;
+			if ( enhancedForLazyLoading ) {
+				entry = persistenceContext.getEntry( parent );
+			if ( entry != null && entry.getLoadedState() == null && entry.getStatus() == Status.MANAGED  ) {
+					return;
+				}
+			}
+			else {
+				entry = null;
 			}
 			final Type[] types = persister.getPropertyTypes();
 			final String[] propertyNames = persister.getPropertyNames();
@@ -107,6 +113,7 @@ public final class Cascade {
 				if ( style.doCascade( action ) ) {
 					final Object child;
 					if ( isUninitializedProperty  ) {
+						assert enhancedForLazyLoading;
 						// parent is a bytecode enhanced entity.
 						// Cascade to an uninitialized, lazy value only if
 						// parent is managed in the PersistenceContext.
@@ -216,7 +223,7 @@ public final class Cascade {
 			final String propertyName,
 			final T anything,
 			final boolean isCascadeDeleteEnabled) throws HibernateException {
-		
+
 		if ( child != null ) {
 			if ( type.isAssociationType() ) {
 				final AssociationType associationType = (AssociationType) type;
@@ -378,7 +385,7 @@ public final class Cascade {
 	 * @return True if the attribute represents a logical one to one association
 	 */
 	private static boolean isLogicalOneToOne(Type type) {
-		return type.isEntityType() && ( (EntityType) type ).isLogicalOneToOne();
+		return type instanceof EntityType && ( (EntityType) type ).isLogicalOneToOne();
 	}
 
 	private static boolean cascadeAssociationNow(final CascadePoint cascadePoint, AssociationType associationType) {

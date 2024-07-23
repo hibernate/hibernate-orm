@@ -294,10 +294,6 @@ public interface HibernateAnnotations {
 			GeneratedColumn.class,
 			GeneratedColumnAnnotation.class
 	);
-	OrmAnnotationDescriptor<GeneratorType,GeneratorTypeAnnotation> GENERATOR_TYPE = new OrmAnnotationDescriptor<>(
-			GeneratorType.class,
-			GeneratorTypeAnnotation.class
-	);
 	OrmAnnotationDescriptor<GenericGenerators,GenericGeneratorsAnnotation> GENERIC_GENERATORS = new OrmAnnotationDescriptor<>(
 			GenericGenerators.class,
 			GenericGeneratorsAnnotation.class

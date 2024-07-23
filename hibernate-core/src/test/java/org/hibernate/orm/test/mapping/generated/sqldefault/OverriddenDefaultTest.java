@@ -1,25 +1,27 @@
 package org.hibernate.orm.test.mapping.generated.sqldefault;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import java.math.BigDecimal;
+
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
 import org.hibernate.dialect.H2Dialect;
+
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Gavin King
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = OverriddenDefaultTest.OrderLine.class)
 @SessionFactory
 public class OverriddenDefaultTest {
@@ -65,7 +67,7 @@ public class OverriddenDefaultTest {
         private BigDecimal unitPrice;
         @Id @ColumnDefault("1")
         private int quantity;
-        @Generated(GenerationTime.INSERT)
+        @Generated
         @ColumnDefault("'new'")
         @DialectOverride.ColumnDefault(dialect = H2Dialect.class,
                 sameOrAfter = @DialectOverride.Version(major=1, minor=4),

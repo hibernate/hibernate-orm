@@ -6,7 +6,7 @@
  */
 package org.hibernate.boot.jaxb.mapping.internal;
 
-import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.boot.jaxb.mapping.GenerationTiming ;
 
 /**
  * JAXB marshalling for {@link GenerationTiming}

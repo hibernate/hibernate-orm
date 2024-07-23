@@ -10,6 +10,7 @@ import java.lang.annotation.Annotation;
 
 import org.hibernate.annotations.Generated;
 import org.hibernate.boot.models.HibernateAnnotations;
+import org.hibernate.generator.EventType;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -20,7 +21,6 @@ import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJand
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
 public class GeneratedAnnotation implements Generated {
 	private org.hibernate.generator.EventType[] event;
-	private org.hibernate.annotations.GenerationTime value;
 	private String sql;
 	private boolean writable;
 
@@ -28,8 +28,7 @@ public class GeneratedAnnotation implements Generated {
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
 	public GeneratedAnnotation(SourceModelBuildingContext modelContext) {
-		this.event = new org.hibernate.generator.EventType[0];
-		this.value = org.hibernate.annotations.GenerationTime.INSERT;
+		this.event = new org.hibernate.generator.EventType[] { EventType.INSERT };
 		this.sql = "";
 		this.writable = false;
 	}
@@ -39,7 +38,6 @@ public class GeneratedAnnotation implements Generated {
 	 */
 	public GeneratedAnnotation(Generated annotation, SourceModelBuildingContext modelContext) {
 		this.event = annotation.event();
-		this.value = annotation.value();
 		this.sql = annotation.sql();
 		this.writable = annotation.writable();
 	}
@@ -49,7 +47,6 @@ public class GeneratedAnnotation implements Generated {
 	 */
 	public GeneratedAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
 		this.event = extractJandexValue( annotation, HibernateAnnotations.GENERATED, "event", modelContext );
-		this.value = extractJandexValue( annotation, HibernateAnnotations.GENERATED, "value", modelContext );
 		this.sql = extractJandexValue( annotation, HibernateAnnotations.GENERATED, "sql", modelContext );
 		this.writable = extractJandexValue( annotation, HibernateAnnotations.GENERATED, "writable", modelContext );
 	}
@@ -66,16 +63,6 @@ public class GeneratedAnnotation implements Generated {
 
 	public void event(org.hibernate.generator.EventType[] value) {
 		this.event = value;
-	}
-
-
-	@Override
-	public org.hibernate.annotations.GenerationTime value() {
-		return value;
-	}
-
-	public void value(org.hibernate.annotations.GenerationTime value) {
-		this.value = value;
 	}
 
 

@@ -281,8 +281,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	private Object extractIdentifier(Object entity, SessionFactoryImplementor factory) {
-		final EntityPersister concretePersister =
-				factory.getMappingMetamodel().getEntityDescriptor( associatedEntityName );
+		final EntityPersister concretePersister = getAssociatedEntityPersister( factory );
 		return concretePersister == null
 				? null
 				: concretePersister.getIdentifier( entity, null );
@@ -345,21 +344,28 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	@Override
 	public int getHashCode(Object x, SessionFactoryImplementor factory) {
 		final EntityPersister persister = getAssociatedEntityPersister( factory );
-		final Object id;
-		final LazyInitializer lazyInitializer = extractLazyInitializer( x );
-		if ( lazyInitializer != null ) {
-			id = lazyInitializer.getInternalIdentifier();
-		}
-		else {
-			final Class<?> mappedClass = persister.getMappedClass();
-			if ( mappedClass.isAssignableFrom( x.getClass() ) ) {
-				id = persister.getIdentifier( x, null );
+		if ( isReferenceToPrimaryKey() ) {
+			final Object id;
+			final LazyInitializer lazyInitializer = extractLazyInitializer( x );
+			if ( lazyInitializer != null ) {
+				id = lazyInitializer.getInternalIdentifier();
 			}
 			else {
-				id = x;
+				final Class<?> mappedClass = persister.getMappedClass();
+				if ( mappedClass.isAssignableFrom( x.getClass() ) ) {
+					id = persister.getIdentifier( x, null );
+				}
+				else {
+					id = x;
+				}
 			}
+			return persister.getIdentifierType().getHashCode( id, factory );
 		}
-		return persister.getIdentifierType().getHashCode( id, factory );
+		else {
+			assert uniqueKeyPropertyName != null;
+			final Type keyType = persister.getPropertyType( uniqueKeyPropertyName );
+			return keyType.getHashCode( x, factory );
+		}
 	}
 
 	@Override

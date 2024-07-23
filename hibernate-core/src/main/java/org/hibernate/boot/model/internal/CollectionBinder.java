@@ -474,7 +474,6 @@ public abstract class CollectionBinder {
 			MemberDetails property) {
 		return IndexColumn.fromAnnotations(
 				property.getDirectAnnotationUsage( OrderColumn.class ),
-				property.getDirectAnnotationUsage( org.hibernate.annotations.IndexColumn.class ),
 				property.getDirectAnnotationUsage( ListIndexBase.class ),
 				propertyHolder,
 				inferredData,
@@ -1074,7 +1073,6 @@ public abstract class CollectionBinder {
 
 		if ( java.util.List.class.isAssignableFrom( semanticJavaType ) ) {
 			if ( property.hasDirectAnnotationUsage( OrderColumn.class )
-					|| property.hasDirectAnnotationUsage( org.hibernate.annotations.IndexColumn.class )
 					|| property.hasDirectAnnotationUsage( ListIndexBase.class )
 					|| property.hasDirectAnnotationUsage( ListIndexJdbcType.class )
 					|| property.hasDirectAnnotationUsage( ListIndexJdbcTypeCode.class )

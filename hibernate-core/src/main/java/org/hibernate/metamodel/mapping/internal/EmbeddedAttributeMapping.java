@@ -143,7 +143,9 @@ public class EmbeddedAttributeMapping
 			MappingModelCreationProcess creationProcess) {
 		super(
 				inverseModelPart.getFetchableName(),
-				-1,
+				inverseModelPart.asAttributeMapping() != null
+						? inverseModelPart.asAttributeMapping().getStateArrayPosition()
+						: -1,
 				inverseModelPart.getFetchableKey(),
 				inverseModelPart.asAttributeMapping() != null
 						? inverseModelPart.asAttributeMapping().getAttributeMetadata()

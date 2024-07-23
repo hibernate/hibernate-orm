@@ -424,9 +424,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			return ( (Object[]) component )[i];
 		}
 		else {
-			return mappingModelPart
-					.getEmbeddableTypeDescriptor()
-					.getValue( component, i );
+			return embeddableTypeDescriptor().getValue( component, i );
 		}
 	}
 

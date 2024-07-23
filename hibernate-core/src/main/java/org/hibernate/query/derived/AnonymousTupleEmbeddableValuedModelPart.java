@@ -235,28 +235,22 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 
 	@Override
 	public Object[] getValues(Object instance) {
-		return existingModelPartContainer.getEmbeddableTypeDescriptor()
-				.getValues( instance );
+		return existingModelPartContainer.getEmbeddableTypeDescriptor().getValues( instance );
 	}
 
 	@Override
 	public Object getValue(Object instance, int position) {
-		return existingModelPartContainer.getEmbeddableTypeDescriptor()
-				.getAttributeMapping( position )
-				.getValue( instance );
+		return existingModelPartContainer.getEmbeddableTypeDescriptor().getValue( instance, position );
 	}
 
 	@Override
 	public void setValues(Object instance, Object[] resolvedValues) {
-		existingModelPartContainer.getEmbeddableTypeDescriptor()
-						.setValues( instance, resolvedValues );
+		existingModelPartContainer.getEmbeddableTypeDescriptor().setValues( instance, resolvedValues );
 	}
 
 	@Override
 	public void setValue(Object instance, int position, Object value) {
-		existingModelPartContainer.getEmbeddableTypeDescriptor()
-				.getAttributeMapping( position )
-				.setValue( instance, value );
+		existingModelPartContainer.getEmbeddableTypeDescriptor().setValue( instance, position, value );
 	}
 
 	@Override

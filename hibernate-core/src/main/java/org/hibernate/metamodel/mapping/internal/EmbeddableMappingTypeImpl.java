@@ -658,7 +658,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				if ( !attributeMapping.isPluralAttributeMapping() ) {
 					final Object attributeValue = domainValue == null
 							? null
-							: attributeMapping.getPropertyAccess().getGetter().get( domainValue );
+							: getValue( domainValue, i );
 					span += attributeMapping.breakDownJdbcValues(
 							attributeValue,
 							offset + span,

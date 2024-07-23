@@ -6,23 +6,22 @@
  */
 package org.hibernate.orm.test.envers.integration.basic;
 
+import org.hibernate.annotations.Generated;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.envers.Audited;
+import org.hibernate.mapping.Table;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
+
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.TestForIssue;
+import org.junit.ComparisonFailure;
+import org.junit.Test;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-
-import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.envers.Audited;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.mapping.Table;
-import org.junit.ComparisonFailure;
-import org.junit.Test;
-
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
 
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.engine.jdbc.Size.DEFAULT_LENGTH;
@@ -119,7 +118,7 @@ public class BasicTypeColumnDefinitionTest extends BaseEnversJPAFunctionalTestCa
 		@GeneratedValue
 		private Integer id;
 
-		@Generated(GenerationTime.INSERT)
+		@Generated
 		@Column(name = "caseNumber", columnDefinition = "integer not null auto_increment")
 		private Integer caseNumber;
 

@@ -8,15 +8,11 @@ package org.hibernate.orm.test.mapping.generated;
 
 import java.time.Instant;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
 import org.hibernate.HibernateError;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.generator.EventType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -26,11 +22,16 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( annotatedClasses = GeneratedAnnotationTests.AuditedEntity.class )
 @SessionFactory
 @RequiresDialect(value = PostgreSQLDialect.class, comment = "To write a trigger only once")
@@ -108,10 +109,10 @@ public class GeneratedAnnotationTests {
 		@Id
 		public Integer id;
 		public String name;
-		@Generated( GenerationTime.INSERT )
+		@Generated
 		@ColumnDefault( "current_timestamp" )
 		public Instant createdAt;
-		@Generated( GenerationTime.ALWAYS )
+		@Generated( event = { EventType.INSERT, EventType.UPDATE } )
 		@ColumnDefault( "current_timestamp" )
 		public Instant lastUpdatedAt;
 

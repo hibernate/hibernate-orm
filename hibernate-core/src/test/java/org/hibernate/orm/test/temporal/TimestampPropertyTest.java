@@ -12,7 +12,6 @@ import java.util.Date;
 
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.query.Query;
@@ -43,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  *
  * @author Gail Badner
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "CURRENT_TIMESTAMP not supported as default value in MySQL")
 @SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "CURRENT_TIMESTAMP not supported as default value in Sybase")
 @DomainModel(
@@ -163,7 +163,7 @@ public class TimestampPropertyTest {
 		private Date ts;
 
 		@Temporal(value = TemporalType.TIMESTAMP)
-		@Generated(value = GenerationTime.INSERT)
+		@Generated
 		@ColumnDefault(value = "CURRENT_TIMESTAMP")
 		private Date tsColumnDefault;
 	}

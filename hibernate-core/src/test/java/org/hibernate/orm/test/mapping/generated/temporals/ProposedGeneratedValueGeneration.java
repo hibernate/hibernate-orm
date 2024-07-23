@@ -6,10 +6,15 @@
  */
 package org.hibernate.orm.test.mapping.generated.temporals;
 
+import java.lang.reflect.Member;
+import java.util.EnumSet;
+
+import org.hibernate.dialect.Dialect;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.EventTypeSets;
+import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.tuple.AnnotationValueGeneration;
-import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.ValueGenerator;
 
 /**
  * Proposal for making `@GeneratedValueGeneration` work for update (they don't work in 5.x either)
@@ -18,37 +23,32 @@ import org.hibernate.tuple.ValueGenerator;
  *
  * @author Steve Ebersole
  */
-public class ProposedGeneratedValueGeneration implements AnnotationValueGeneration<ProposedGenerated> {
-	private GenerationTiming timing;
-	private String defaultValue;
+public class ProposedGeneratedValueGeneration implements OnExecutionGenerator {
+	private final EnumSet<EventType> timing;
+	private final String defaultValue;
 
-	@Override
-	public void initialize(ProposedGenerated annotation, Class propertyType) {
-		timing = annotation.timing();
-
-		final String defaultValue = annotation.sqlDefaultValue();
-		this.defaultValue = StringHelper.isEmpty( defaultValue )
-				? null
-				: defaultValue;
+	public ProposedGeneratedValueGeneration(ProposedGenerated annotation, Member member, GeneratorCreationContext context) {
+		timing = EventTypeSets.fromArray( annotation.timing() );
+		defaultValue = StringHelper.nullIfEmpty( annotation.sqlDefaultValue() );
 	}
 
 	@Override
-	public GenerationTiming getGenerationTiming() {
+	public EnumSet<EventType> getEventTypes() {
 		return timing;
 	}
 
 	@Override
-	public ValueGenerator<?> getValueGenerator() {
-		return null;
-	}
-
-	@Override
-	public boolean referenceColumnInSql() {
+	public boolean referenceColumnsInSql(Dialect dialect) {
 		return defaultValue != null;
 	}
 
 	@Override
-	public String getDatabaseGeneratedReferencedColumnValue() {
-		return defaultValue;
+	public boolean writePropertyValue() {
+		return false;
+	}
+
+	@Override
+	public String[] getReferencedColumnValues(Dialect dialect) {
+		return new String[] { defaultValue };
 	}
 }

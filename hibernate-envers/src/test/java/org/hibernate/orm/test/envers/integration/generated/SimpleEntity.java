@@ -6,14 +6,13 @@
  */
 package org.hibernate.orm.test.envers.integration.generated;
 
+import org.hibernate.annotations.Generated;
+import org.hibernate.envers.Audited;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-
-import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
-import org.hibernate.envers.Audited;
 
 /**
  * @author Chris Cranford
@@ -27,7 +26,7 @@ public class SimpleEntity {
 
 	private String data;
 
-	@Generated(GenerationTime.INSERT)
+	@Generated
 	@Column(columnDefinition = "integer default 1")
 	private int caseNumberInsert;
 

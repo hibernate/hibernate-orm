@@ -7,12 +7,13 @@
 
 //$Id$
 package org.hibernate.orm.test.annotations.various;
+
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-
-import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
 
 /**
  * @author Emmanuel Bernard
@@ -20,12 +21,13 @@ import org.hibernate.annotations.GenerationTime;
 @Entity
 public class Antenna {
 	@Id public Integer id;
-	@Generated(GenerationTime.ALWAYS) @Column()
+	@Generated(event = { EventType.INSERT, EventType.UPDATE})
+	@Column()
 	public String longitude;
 
-	@Generated(GenerationTime.INSERT) @Column(insertable = false)
+	@Generated(event = EventType.INSERT)
+	@Column(insertable = false)
 	public String latitude;
 
-	@Generated(GenerationTime.NEVER)
 	public Double power;
 }

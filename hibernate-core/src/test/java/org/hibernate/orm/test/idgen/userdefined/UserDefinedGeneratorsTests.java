@@ -25,9 +25,10 @@ import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.BeanContainer.LifecycleOptions;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
+import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
@@ -39,7 +40,7 @@ import org.mockito.Mockito;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.BDDMockito.given;
@@ -49,7 +50,7 @@ import static org.mockito.Mockito.times;
 /**
  * @author Yanming Zhou
  */
-@TestForIssue(jiraKey = "HHH-14688")
+@JiraKey("HHH-14688")
 @BaseUnitTest
 public class UserDefinedGeneratorsTests {
 
@@ -58,10 +59,16 @@ public class UserDefinedGeneratorsTests {
 		
 		final BeanContainer beanContainer = Mockito.mock( BeanContainer.class );
 		given(beanContainer.getBean( any(), any(), any() ) ).willAnswer( invocation -> {
+			Class<?> beanType = (Class<?>) invocation.getArguments()[0];
 			LifecycleOptions options = (LifecycleOptions) invocation.getArguments()[1];
-			assertThat( options.canUseCachedReferences(), is( false ) );
-			assertThat( options.useJpaCompliantCreation(), is( true ) );
-			return (ContainedBean<?>) TestIdentifierGenerator::new;
+			if (beanType == TestIdentifierGenerator.class) {
+				assertThat( options.canUseCachedReferences(), is( false ) );
+				assertThat( options.useJpaCompliantCreation(), is( true ) );
+				return (ContainedBean<?>) TestIdentifierGenerator::new;
+			}
+			else {
+				return (ContainedBean<?>) () -> ( ( BeanInstanceProducer ) invocation.getArguments()[2] ).produceBeanInstance( beanType );
+			}
 		} );
 		
 		final StandardServiceRegistryBuilder ssrb = ServiceRegistryUtil.serviceRegistryBuilder();

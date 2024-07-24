@@ -107,8 +107,6 @@ import org.hibernate.event.spi.ReplicateEvent;
 import org.hibernate.event.spi.ReplicateEventListener;
 import org.hibernate.event.spi.ResolveNaturalIdEvent;
 import org.hibernate.event.spi.ResolveNaturalIdEventListener;
-import org.hibernate.event.spi.SaveOrUpdateEvent;
-import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -636,72 +634,6 @@ public class SessionImpl
 	public void checkOpenOrWaitingForAutoClose() {
 		super.checkOpenOrWaitingForAutoClose();
 	}
-
-	// saveOrUpdate() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override @Deprecated
-	public void saveOrUpdate(Object object) throws HibernateException {
-		saveOrUpdate( null, object );
-	}
-
-	@Override @Deprecated
-	public void saveOrUpdate(String entityName, Object obj) throws HibernateException {
-		fireSaveOrUpdate( new SaveOrUpdateEvent( entityName, obj, this ) );
-	}
-
-	private void fireSaveOrUpdate(final SaveOrUpdateEvent event) {
-		checkOpen();
-		checkTransactionSynchStatus();
-		checkNoUnresolvedActionsBeforeOperation();
-		fastSessionServices.eventListenerGroup_SAVE_UPDATE
-				.fireEventOnEachListener( event, SaveOrUpdateEventListener::onSaveOrUpdate );
-		checkNoUnresolvedActionsAfterOperation();
-	}
-
-	// save() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override @Deprecated
-	public Object save(Object obj) throws HibernateException {
-		return save( null, obj );
-	}
-
-	@Override @Deprecated
-	public Object save(String entityName, Object object) throws HibernateException {
-		return fireSave( new SaveOrUpdateEvent( entityName, object, this ) );
-	}
-
-	private Object fireSave(final SaveOrUpdateEvent event) {
-		checkOpen();
-		checkTransactionSynchStatus();
-		checkNoUnresolvedActionsBeforeOperation();
-		fastSessionServices.eventListenerGroup_SAVE
-				.fireEventOnEachListener( event, SaveOrUpdateEventListener::onSaveOrUpdate );
-		checkNoUnresolvedActionsAfterOperation();
-		return event.getResultId();
-	}
-
-
-	// update() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override @Deprecated
-	public void update(Object obj) throws HibernateException {
-		update( null, obj );
-	}
-
-	@Override @Deprecated
-	public void update(String entityName, Object object) throws HibernateException {
-		fireUpdate( new SaveOrUpdateEvent( entityName, object, this ) );
-	}
-
-	private void fireUpdate(SaveOrUpdateEvent event) {
-		checkOpen();
-		checkTransactionSynchStatus();
-		checkNoUnresolvedActionsBeforeOperation();
-		fastSessionServices.eventListenerGroup_UPDATE
-				.fireEventOnEachListener( event, SaveOrUpdateEventListener::onSaveOrUpdate );
-		checkNoUnresolvedActionsAfterOperation();
-	}
-
 
 	// lock() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

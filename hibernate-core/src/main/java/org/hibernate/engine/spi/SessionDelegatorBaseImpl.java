@@ -36,7 +36,6 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.EventManager;
 import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.EventSource;
@@ -856,36 +855,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void replicate(String entityName, Object object, ReplicationMode replicationMode) {
 		delegate.replicate( entityName, object, replicationMode );
-	}
-
-	@Override
-	public Object save(Object object) {
-		return delegate.save( object );
-	}
-
-	@Override
-	public Object save(String entityName, Object object) {
-		return delegate.save( entityName, object );
-	}
-
-	@Override
-	public void saveOrUpdate(Object object) {
-		delegate.saveOrUpdate( object );
-	}
-
-	@Override
-	public void saveOrUpdate(String entityName, Object object) {
-		delegate.saveOrUpdate( entityName, object );
-	}
-
-	@Override
-	public void update(Object object) {
-		delegate.update( object );
-	}
-
-	@Override
-	public void update(String entityName, Object object) {
-		delegate.update( entityName, object );
 	}
 
 	@Override

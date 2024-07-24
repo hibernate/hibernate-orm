@@ -201,48 +201,6 @@ public class CascadingActions {
 	};
 
 	/**
-	 * @see org.hibernate.Session#saveOrUpdate(Object)
-	 */
-	public static final CascadingAction<PersistContext> SAVE_UPDATE = new BaseCascadingAction<>() {
-		@Override
-		public void cascade(
-				EventSource session,
-				Object child,
-				String entityName,
-				PersistContext nothing,
-				boolean isCascadeDeleteEnabled)
-				throws HibernateException {
-			LOG.tracev( "Cascading to save or update: {0}", entityName );
-			session.saveOrUpdate( entityName, child );
-		}
-
-		@Override
-		public Iterator<?> getCascadableChildrenIterator(
-				EventSource session,
-				CollectionType collectionType,
-				Object collection) {
-			// saves / updates don't cascade to uninitialized collections
-			return getLoadedElementsIterator( session, collectionType, collection );
-		}
-
-		@Override
-		public boolean deleteOrphans() {
-			// orphans should be deleted during save/update
-			return true;
-		}
-
-		@Override
-		public boolean performOnLazyProperty() {
-			return false;
-		}
-
-		@Override
-		public String toString() {
-			return "ACTION_SAVE_UPDATE";
-		}
-	};
-
-	/**
 	 * @see org.hibernate.Session#merge(Object)
 	 */
 	public static final CascadingAction<MergeContext> MERGE = new BaseCascadingAction<>() {

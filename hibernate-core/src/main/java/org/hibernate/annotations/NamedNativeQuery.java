@@ -133,6 +133,14 @@ public @interface NamedNativeQuery {
 	CacheRetrieveMode cacheRetrieveMode() default CacheRetrieveMode.USE;
 
 	/**
+	 * The cache interaction mode for this query.
+	 *
+	 * @see org.hibernate.query.SelectionQuery#setCacheMode(CacheMode)
+	 * @see org.hibernate.jpa.HibernateHints#HINT_CACHE_MODE
+	 */
+	CacheMode cacheMode() default CacheMode.NORMAL;
+
+	/**
 	 * Whether the results should be loaded in read-only mode.
 	 * Default is {@code false}.
 	 *

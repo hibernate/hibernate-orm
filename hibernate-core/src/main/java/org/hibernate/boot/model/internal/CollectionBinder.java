@@ -173,7 +173,6 @@ import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
 import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
-import static org.hibernate.boot.model.source.internal.hbm.ModelBinder.useEntityWhereClauseForCollections;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
 import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
@@ -1893,17 +1892,12 @@ public abstract class CollectionBinder {
 
 	private String getWhereOnClassClause() {
 		final TypeDetails elementType = property.getElementType();
-		if ( elementType != null && useEntityWhereClauseForCollections( buildingContext ) ) {
-			final SQLRestriction restrictionOnClass = getOverridableAnnotation(
-					property.getAssociatedType().determineRawClass(),
-					SQLRestriction.class,
-					buildingContext
-			);
-			return restrictionOnClass != null ? restrictionOnClass.value() : null;
-		}
-		else {
-			return null;
-		}
+		final SQLRestriction restrictionOnClass = getOverridableAnnotation(
+				property.getAssociatedType().determineRawClass(),
+				SQLRestriction.class,
+				buildingContext
+		);
+		return restrictionOnClass != null ? restrictionOnClass.value() : null;
 	}
 
 	private void addFilterJoinTable(boolean hasAssociationTable, FilterJoinTable filter) {

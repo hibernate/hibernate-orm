@@ -40,6 +40,15 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 	private final UuidValueGenerator generator;
 	private final ValueTransformer valueTransformer;
 
+	/**
+	 * This form is used when there is no {@code @UuidGenerator} but we know we want this generator
+	 */
+	@Internal
+	public UuidGenerator(Class<?> memberType) {
+		generator = StandardRandomStrategy.INSTANCE;
+		valueTransformer = determineProperTransformer( memberType );
+	}
+
 	private UuidGenerator(
 			org.hibernate.annotations.UuidGenerator config,
 			Member idMember) {
@@ -65,19 +74,7 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 		}
 
 		final Class<?> propertyType = getPropertyType( idMember );
-
-		if ( UUID.class.isAssignableFrom( propertyType ) ) {
-			valueTransformer = UUIDJavaType.PassThroughTransformer.INSTANCE;
-		}
-		else if ( String.class.isAssignableFrom( propertyType ) ) {
-			valueTransformer = UUIDJavaType.ToStringTransformer.INSTANCE;
-		}
-		else if ( byte[].class.isAssignableFrom( propertyType ) ) {
-			valueTransformer = UUIDJavaType.ToBytesTransformer.INSTANCE;
-		}
-		else {
-			throw new HibernateException( "Unanticipated return type [" + propertyType.getName() + "] for UUID conversion" );
-		}
+		this.valueTransformer = determineProperTransformer( propertyType );
 	}
 
 	private static UuidValueGenerator instantiateCustomGenerator(Class<? extends UuidValueGenerator> algorithmClass) {
@@ -87,6 +84,22 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 		catch (Exception e) {
 			throw new HibernateException( "Unable to instantiate " + algorithmClass.getName(), e );
 		}
+	}
+
+	private ValueTransformer determineProperTransformer(Class<?> propertyType) {
+		if ( UUID.class.isAssignableFrom( propertyType ) ) {
+			return UUIDJavaType.PassThroughTransformer.INSTANCE;
+		}
+
+		if ( String.class.isAssignableFrom( propertyType ) ) {
+			return UUIDJavaType.ToStringTransformer.INSTANCE;
+		}
+
+		if ( byte[].class.isAssignableFrom( propertyType ) ) {
+			return UUIDJavaType.ToBytesTransformer.INSTANCE;
+		}
+
+		throw new HibernateException( "Unanticipated return type [" + propertyType.getName() + "] for UUID conversion" );
 	}
 
 	public UuidGenerator(

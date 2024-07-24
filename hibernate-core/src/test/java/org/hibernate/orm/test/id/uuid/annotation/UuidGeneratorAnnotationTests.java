@@ -8,24 +8,19 @@ package org.hibernate.orm.test.id.uuid.annotation;
 
 import java.util.UUID;
 
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.generator.Generator;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
 import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.id.uuid.UuidGenerator;
 import org.hibernate.mapping.BasicValue;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.RootClass;
-import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.util.uuid.IdGeneratorCreationContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 

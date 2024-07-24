@@ -454,7 +454,7 @@ public interface MappingSettings {
 	String DEFAULT_LIST_SEMANTICS = "hibernate.mapping.default_list_semantics";
 
 	/**
-	 * The {@link org.hibernate.annotations.Where @Where} annotation specifies a
+	 * The {@link org.hibernate.annotations.SQLRestriction @SQLRestriction} annotation specifies a
 	 * restriction on the table rows which are visible as entity class instances or
 	 * collection elements.
 	 * <p>

@@ -2,15 +2,16 @@ package org.hibernate.orm.test.extralazy;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
+import org.hibernate.annotations.SQLRestriction;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
-import org.hibernate.annotations.Where;
 
 @Entity
 @Table(name = "championship")
@@ -21,7 +22,7 @@ public class Championship {
 
 	@OneToMany(cascade = CascadeType.ALL)
 	@LazyCollection(LazyCollectionOption.EXTRA)
-	@Where(clause = " gpa >= 4 ")
+	@SQLRestriction(" gpa >= 4 ")
 	private List<Student> students = new ArrayList<>();
 
 	public Championship() {}

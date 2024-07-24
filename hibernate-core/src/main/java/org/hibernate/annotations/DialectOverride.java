@@ -264,33 +264,6 @@ public interface DialectOverride {
 	}
 
 	/**
-	 * Specializes a {@link org.hibernate.annotations.Where}
-	 * in a certain dialect.
-	 *
-	 * @deprecated Use {@link SQLRestriction}
-	 */
-	@Target({METHOD, FIELD, TYPE})
-	@Retention(RUNTIME)
-	@Repeatable(Wheres.class)
-	@OverridesAnnotation(org.hibernate.annotations.Where.class)
-	@Deprecated(since = "6.3")
-	@interface Where {
-		/**
-		 * The {@link Dialect} in which this override applies.
-		 */
-		Class<? extends Dialect> dialect();
-		Version before() default @Version(major = MAX_VALUE);
-		Version sameOrAfter() default @Version(major = MIN_VALUE);
-
-		org.hibernate.annotations.Where override();
-	}
-	@Target({METHOD, FIELD})
-	@Retention(RUNTIME)
-	@interface Wheres {
-		Where[] value();
-	}
-
-	/**
 	 * Specializes a {@link org.hibernate.annotations.SQLRestriction}
 	 * in a certain dialect.
 	 */

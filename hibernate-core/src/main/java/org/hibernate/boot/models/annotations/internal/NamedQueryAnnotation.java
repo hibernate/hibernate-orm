@@ -11,7 +11,7 @@ import java.lang.annotation.Annotation;
 import org.hibernate.CacheMode;
 import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.NamedQuery;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedQueryImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedHqlQueryImpl;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.SourceModelBuildingContext;
@@ -209,7 +209,7 @@ public class NamedQueryAnnotation implements NamedQuery {
 	}
 
 
-	public void apply(JaxbNamedQueryImpl jaxbNamedQuery, XmlDocumentContext xmlDocumentContext) {
+	public void apply(JaxbNamedHqlQueryImpl jaxbNamedQuery, XmlDocumentContext xmlDocumentContext) {
 		name( jaxbNamedQuery.getName() );
 		query( jaxbNamedQuery.getQuery() );
 

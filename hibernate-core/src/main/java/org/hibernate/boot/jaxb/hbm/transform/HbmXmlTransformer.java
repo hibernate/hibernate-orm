@@ -142,7 +142,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOneImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeQueryImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedQueryImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedHqlQueryImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNaturalIdImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToManyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToOneImpl;
@@ -927,8 +927,8 @@ public class HbmXmlTransformer {
 		}
 	}
 
-	private static JaxbNamedQueryImpl transformNamedQuery(JaxbHbmNamedQueryType hbmQuery, String name) {
-		final JaxbNamedQueryImpl query = new JaxbNamedQueryImpl();
+	private static JaxbNamedHqlQueryImpl transformNamedQuery(JaxbHbmNamedQueryType hbmQuery, String name) {
+		final JaxbNamedHqlQueryImpl query = new JaxbNamedHqlQueryImpl();
 		query.setName( name );
 		query.setCacheable( hbmQuery.isCacheable() );
 		query.setCacheMode( hbmQuery.getCacheMode() );

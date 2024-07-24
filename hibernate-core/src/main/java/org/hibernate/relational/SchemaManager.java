@@ -68,6 +68,6 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 
 	@Override
 	default void drop(boolean dropSchemas) {
-		drop( dropSchemas );
+		dropMappedObjects( dropSchemas );
 	}
 }

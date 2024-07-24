@@ -493,7 +493,7 @@ public class QuerySqmImpl<R>
 		};
 		final SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) getSqmStatement();
 		return buildConcreteQueryPlan( sqmStatement.createCountQuery(), Long.class, null, getQueryOptions() )
-				.executeQuery( context, new SingleResultConsumer<>() );
+				.executeQuery( context, SingleResultConsumer.instance() );
 	}
 
 	protected List<R> doList() {

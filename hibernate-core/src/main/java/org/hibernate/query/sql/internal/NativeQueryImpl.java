@@ -473,8 +473,8 @@ public class NativeQueryImpl<R>
 				getTimeout(),
 				getFetchSize(),
 				getComment(),
-				getFirstResult(),
-				getMaxResults(),
+				getQueryOptions().getLimit().getFirstRow(),
+				getQueryOptions().getLimit().getMaxRows(),
 				getHints()
 		);
 	}
@@ -636,7 +636,7 @@ public class NativeQueryImpl<R>
 				return QueryOptions.NONE;
 			}
 		};
-		return createCountQueryPlan().executeQuery( context, new SingleResultConsumer<>() );
+		return createCountQueryPlan().executeQuery( context, SingleResultConsumer.instance() );
 	}
 
 	@Override

@@ -56,14 +56,14 @@ public interface AttributeMapping
 	 * Convenient access to getting the value for this attribute from the declarer
 	 */
 	default Object getValue(Object container) {
-		return getPropertyAccess().getGetter().get( container );
+		return getDeclaringType().getValue( container, getStateArrayPosition() );
 	}
 
 	/**
 	 * Convenient access to setting the value for this attribute on the declarer
 	 */
 	default void setValue(Object container, Object value) {
-		getPropertyAccess().getSetter().set( container, value );
+		getDeclaringType().setValue( container, getStateArrayPosition(), value );
 	}
 
 	/**

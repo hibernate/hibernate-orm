@@ -193,14 +193,14 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 					if ( attribute.isPluralAttributeMapping() ) {
 						addCollectionKey(
 								attribute.asPluralAttributeMapping(),
-								attribute.getPropertyAccess().getGetter().get( object ),
+								descriptor.getValue( object, i ),
 								persistenceContext
 						);
 					}
 					else if ( attribute.isEmbeddedAttributeMapping() ) {
 						visitEmbeddedAttributeMapping(
 								attribute.asEmbeddedAttributeMapping(),
-								attribute.getPropertyAccess().getGetter().get( object ),
+								descriptor.getValue( object, i ),
 								persistenceContext
 						);
 					}

@@ -15,6 +15,7 @@ import org.hibernate.query.NativeQuery;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -61,6 +62,9 @@ public class JdbcValuesMappingProducerStandard implements JdbcValuesMappingProdu
 		if ( resolvedSelections == null ) {
 			return resolvedMapping;
 		}
-		return new StandardJdbcValuesMapping( resolvedSelections, resolvedMapping.getDomainResults() );
+		return new StandardJdbcValuesMapping(
+				resolvedSelections,
+				resolvedMapping.getDomainResults()
+		);
 	}
 }

@@ -48,6 +48,8 @@ import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
+import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
@@ -318,18 +320,19 @@ public class MatchingIdSelectionHelper {
 		);
 		lockOptions.setLockMode( lockMode );
 
-		final RowTransformer<Object> rowTransformer;
+		final RowTransformer<?> rowTransformer;
 		if ( sqmQuerySpec.getSelectClause().getSelections().size() == 1 ) {
-			rowTransformer = row -> row[0];
+			rowTransformer = RowTransformerSingularReturnImpl.instance();
 		}
 		else {
-			rowTransformer = row -> row;
+			rowTransformer = RowTransformerArrayImpl.INSTANCE;
 		}
+		//noinspection unchecked
 		return jdbcServices.getJdbcSelectExecutor().list(
 				idSelectJdbcOperation,
 				jdbcParameterBindings,
 				SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( executionContext ),
-				rowTransformer,
+				(RowTransformer<Object>) rowTransformer,
 				ListResultsConsumer.UniqueSemantic.FILTER
 		);
 	}

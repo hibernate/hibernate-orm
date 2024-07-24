@@ -84,4 +84,11 @@ public interface JdbcValues {
 	void finishUp(SharedSessionContractImplementor session);
 
 	void setFetchSize(int fetchSize);
+
+	/**
+	 * The estimate for the amount of results that can be expected for pre-sizing collections.
+	 * May return zero or negative values if the count can not be reasonably estimated.
+	 * @since 6.6
+	 */
+	int getResultCountEstimate();
 }

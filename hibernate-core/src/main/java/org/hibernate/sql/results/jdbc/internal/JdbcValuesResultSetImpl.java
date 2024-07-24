@@ -19,6 +19,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.DataException;
 import org.hibernate.exception.LockTimeoutException;
+import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.exec.ExecutionException;
@@ -42,6 +43,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	private final JdbcValuesMapping valuesMapping;
 	private final ExecutionContext executionContext;
 	private final boolean usesFollowOnLocking;
+	private final int resultCountEstimate;
 
 	private final SqlSelection[] sqlSelections;
 	private final BitSet initializedIndexes;
@@ -51,6 +53,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	// Contains the size of the row to cache, or if the value is negative,
 	// represents the inverted index of the single value to cache
 	private final int rowToCacheSize;
+	private int resultCount;
 
 	public JdbcValuesResultSetImpl(
 			ResultSetAccess resultSetAccess,
@@ -72,6 +75,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 		this.valuesMapping = valuesMapping;
 		this.executionContext = executionContext;
 		this.usesFollowOnLocking = usesFollowOnLocking;
+		this.resultCountEstimate = determineResultCountEstimate( resultSetAccess, queryOptions, executionContext );
 
 		final int rowSize = valuesMapping.getRowSize();
 		this.sqlSelections = new SqlSelection[rowSize];
@@ -118,6 +122,22 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 				this.rowToCacheSize = cacheIndex;
 			}
 		}
+	}
+
+	private int determineResultCountEstimate(
+			ResultSetAccess resultSetAccess,
+			QueryOptions queryOptions,
+			ExecutionContext executionContext) {
+		final Limit limit = queryOptions.getLimit();
+		if ( limit != null && limit.getMaxRows() != null ) {
+			return limit.getMaxRows();
+		}
+
+		final int resultCountEstimate = resultSetAccess.getResultCountEstimate();
+		if ( resultCountEstimate > 0 ) {
+			return resultCountEstimate;
+		}
+		return -1;
 	}
 
 	private static QueryCachePutManager resolveQueryCachePutManager(
@@ -330,7 +350,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	@Override
 	public final void finishUp(SharedSessionContractImplementor session) {
 		if ( queryCachePutManager != null ) {
-			queryCachePutManager.finishUp( session );
+			queryCachePutManager.finishUp( resultCount, session );
 		}
 		resultSetAccess.release();
 	}
@@ -348,6 +368,9 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	@Override
 	public void finishRowProcessing(RowProcessingState rowProcessingState, boolean wasAdded) {
 		if ( queryCachePutManager != null ) {
+			if ( wasAdded ) {
+				resultCount++;
+			}
 			final Object objectToCache;
 			if ( valueIndexesToCacheIndexes == null ) {
 				objectToCache = Arrays.copyOf( currentRowJdbcValues, currentRowJdbcValues.length );
@@ -404,5 +427,10 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 		catch ( SQLException e ) {
 			throw makeExecutionException( "Error calling ResultSet.setFetchSize()", e );
 		}
+	}
+
+	@Override
+	public int getResultCountEstimate() {
+		return resultCountEstimate;
 	}
 }

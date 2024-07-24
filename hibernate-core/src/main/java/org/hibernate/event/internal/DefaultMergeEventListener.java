@@ -353,8 +353,7 @@ public class DefaultMergeEventListener
 						.getMappingMetamodel()
 						.getCollectionDescriptor( collectionType.getRole() );
 				final CollectionEntry collectionEntry = getSession().getPersistenceContextInternal()
-						.getCollectionEntries()
-						.get( coll );
+						.getCollectionEntry( coll );
 				if ( !coll.equalsSnapshot( persister ) ) {
 					collectionEntry.resetStoredSnapshot( coll, coll.getSnapshot( persister ) );
 				}

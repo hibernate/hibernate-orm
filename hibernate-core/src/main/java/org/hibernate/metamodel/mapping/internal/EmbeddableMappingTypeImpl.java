@@ -49,6 +49,7 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
@@ -862,6 +863,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		return concreteEmbeddableByDiscriminator == null ? this : concreteEmbeddableByDiscriminator.get( discriminatorValue );
 	}
 
+	@Override
 	public ConcreteEmbeddableType findSubtypeBySubclass(String subclassName) {
 		return concreteEmbeddableBySubclass == null ? this : concreteEmbeddableBySubclass.get( subclassName );
 	}
@@ -870,16 +872,6 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	public Collection<ConcreteEmbeddableType> getConcreteEmbeddableTypes() {
 		//noinspection unchecked
 		return (Collection<ConcreteEmbeddableType>) (Collection<?>) concreteEmbeddableBySubclass.values();
-	}
-
-	@Override
-	public Object getValue(Object instance, int position) {
-		final AttributeMapping attributeMapping = getAttributeMapping( position );
-		final ConcreteEmbeddableType concreteEmbeddableType = findSubtypeBySubclass( instance.getClass().getName() );
-		if ( concreteEmbeddableType.declaresAttribute( attributeMapping ) ) {
-			return attributeMapping.getValue( instance );
-		}
-		return null;
 	}
 
 	@Override
@@ -893,16 +885,9 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			final ConcreteEmbeddableType concreteEmbeddableType = findSubtypeBySubclass( compositeInstance.getClass().getName() );
 			int i = 0;
 			for ( ; i < numberOfAttributes; i++ ) {
-				final AttributeMapping attributeMapping = getAttributeMapping( i );
-				if ( concreteEmbeddableType.declaresAttribute( attributeMapping ) ) {
-					final Getter getter = attributeMapping.getAttributeMetadata()
-							.getPropertyAccess()
-							.getGetter();
-					results[i] = getter.get( compositeInstance );
-				}
-				else {
-					results[i] = null;
-				}
+				results[i] = concreteEmbeddableType.declaresAttribute( i )
+						? getValue( compositeInstance, i )
+						: null;
 			}
 			results[i] = compositeInstance.getClass().getName();
 			return results;
@@ -920,7 +905,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			for ( int i = 0; i < getNumberOfAttributeMappings(); i++ ) {
 				final AttributeMapping attributeMapping = getAttributeMapping( i );
 				if ( concreteEmbeddableType.declaresAttribute( attributeMapping ) ) {
-					attributeMapping.getPropertyAccess().getSetter().set( component, values[i] );
+					setValue( component, i, values[i] );
 				}
 				else if ( values[i] != null ) {
 					throw new IllegalArgumentException( String.format(
@@ -982,7 +967,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				if ( !attributeMapping.isPluralAttributeMapping() ) {
 					final Object attributeValue = concreteEmbeddableType == null || !concreteEmbeddableType.declaresAttribute( attributeMapping )
 							? null
-							: attributeMapping.getPropertyAccess().getGetter().get( domainValue );
+							: getValue( domainValue, i );
 					span += attributeMapping.breakDownJdbcValues(
 							attributeValue,
 							offset + span,
@@ -996,6 +981,47 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			if ( isPolymorphic() ) {
 				final Object d = concreteEmbeddableType == null ? null : concreteEmbeddableType.getDiscriminatorValue();
 				span += discriminatorMapping.breakDownJdbcValues( d, offset + span, x, y, valueConsumer, session );
+			}
+		}
+		return span;
+	}
+
+	@Override
+	public <X, Y> int forEachJdbcValue(
+			Object value,
+			int offset,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			SharedSessionContractImplementor session) {
+		int span = 0;
+		if ( value == null ) {
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				if ( attributeMapping instanceof PluralAttributeMapping ) {
+					continue;
+				}
+				span += attributeMapping.forEachJdbcValue( null, span + offset, x, y, valuesConsumer, session );
+			}
+			if ( isPolymorphic() ) {
+				span += discriminatorMapping.forEachJdbcValue( null, offset + span, x, y, valuesConsumer, session );
+			}
+		}
+		else {
+			final ConcreteEmbeddableType concreteEmbeddableType = findSubtypeBySubclass( value.getClass().getName() );
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				if ( attributeMapping instanceof PluralAttributeMapping ) {
+					continue;
+				}
+				final Object attributeValue = concreteEmbeddableType == null || !concreteEmbeddableType.declaresAttribute( attributeMapping )
+						? null
+						: getValue( value, i );
+				span += attributeMapping.forEachJdbcValue( attributeValue, span + offset, x, y, valuesConsumer, session );
+			}
+			if ( isPolymorphic() ) {
+				final Object d = concreteEmbeddableType == null ? null : concreteEmbeddableType.getDiscriminatorValue();
+				span += discriminatorMapping.forEachJdbcValue( d, offset + span, x, y, valuesConsumer, session );
 			}
 		}
 		return span;

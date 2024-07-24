@@ -93,7 +93,9 @@ public class EntityConcreteTypeLoader {
 				jdbcParamBindings,
 				new BaseExecutionContext( session ),
 				RowTransformerStandardImpl.instance(),
-				ListResultsConsumer.UniqueSemantic.NONE
+				null,
+				ListResultsConsumer.UniqueSemantic.NONE,
+				1
 		);
 
 		if ( results.isEmpty() ) {

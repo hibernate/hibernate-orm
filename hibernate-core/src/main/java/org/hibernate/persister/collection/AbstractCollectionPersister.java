@@ -1167,7 +1167,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	/**
-	 * Applies all defined {@link org.hibernate.annotations.Where}
+	 * Applies all defined {@link org.hibernate.annotations.SQLRestriction}
 	 */
 	private static void applyWhereFragments(Consumer<Predicate> predicateConsumer, String alias, String template) {
 		if ( template == null ) {

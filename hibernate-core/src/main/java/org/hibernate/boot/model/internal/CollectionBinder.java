@@ -72,8 +72,6 @@ import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.annotations.Synchronize;
-import org.hibernate.annotations.Where;
-import org.hibernate.annotations.WhereJoinTable;
 import org.hibernate.boot.BootLogging;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
@@ -168,10 +166,10 @@ import static org.hibernate.boot.model.internal.BinderHelper.createSyntheticProp
 import static org.hibernate.boot.model.internal.BinderHelper.extractFromPackage;
 import static org.hibernate.boot.model.internal.BinderHelper.getCascadeStrategy;
 import static org.hibernate.boot.model.internal.BinderHelper.getFetchMode;
-import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
 import static org.hibernate.boot.model.internal.BinderHelper.isPrimitive;
+import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
 import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
@@ -1875,11 +1873,7 @@ public abstract class CollectionBinder {
 
 	private String getWhereJoinTableClause() {
 		final SQLJoinTableRestriction joinTableRestriction = property.getDirectAnnotationUsage( SQLJoinTableRestriction.class );
-		if ( joinTableRestriction != null ) {
-			return joinTableRestriction.value();
-		}
-		final WhereJoinTable whereJoinTable = property.getDirectAnnotationUsage( WhereJoinTable.class );
-		return whereJoinTable == null ? null : whereJoinTable.clause();
+		return joinTableRestriction != null ? joinTableRestriction.value() : null;
 	}
 
 	private String getWhereClause() {
@@ -1894,16 +1888,7 @@ public abstract class CollectionBinder {
 
 	private String getWhereOnCollectionClause() {
 		final SQLRestriction restrictionOnCollection = getOverridableAnnotation( property, SQLRestriction.class, getBuildingContext() );
-		if ( restrictionOnCollection != null ) {
-			return restrictionOnCollection.value();
-		}
-
-		final Where whereOnCollection = getOverridableAnnotation( property, Where.class, buildingContext );
-		if ( whereOnCollection != null ) {
-			return whereOnCollection.clause();
-		}
-
-		return null;
+		return restrictionOnCollection != null ? restrictionOnCollection.value() : null;
 	}
 
 	private String getWhereOnClassClause() {
@@ -1914,14 +1899,7 @@ public abstract class CollectionBinder {
 					SQLRestriction.class,
 					buildingContext
 			);
-			if ( restrictionOnClass != null ) {
-				return restrictionOnClass.value();
-			}
-			final Where whereOnClass = getOverridableAnnotation( property, Where.class, buildingContext );
-			if ( whereOnClass != null ) {
-				return whereOnClass.clause();
-			}
-			return null;
+			return restrictionOnClass != null ? restrictionOnClass.value() : null;
 		}
 		else {
 			return null;

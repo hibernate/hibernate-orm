@@ -54,7 +54,6 @@ import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.TypeBinderType;
 import org.hibernate.annotations.View;
-import org.hibernate.annotations.Where;
 import org.hibernate.binder.TypeBinder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -1625,10 +1624,6 @@ public class EntityBinder {
 	}
 
 	public void bindWhere() {
-		final Where where = getOverridableAnnotation( annotatedClass, Where.class, context );
-		if ( where != null ) {
-			this.where = where.clause();
-		}
 		final SQLRestriction restriction = getOverridableAnnotation( annotatedClass, SQLRestriction.class, context );
 		if ( restriction != null ) {
 			this.where = restriction.value();

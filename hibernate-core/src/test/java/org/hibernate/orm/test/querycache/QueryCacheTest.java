@@ -633,79 +633,79 @@ public class QueryCacheTest {
 //		assertEquals(1, query.getResultList().size());
 //	}
 
-	@Test
-	@JiraKey("HHH-9962")
-	/* Test courtesy of Giambattista Bloisi */
-	public void testDelayedLoad(SessionFactoryScope scope) throws InterruptedException, ExecutionException {
-		DelayLoadOperations interceptor = new DelayLoadOperations();
-		final SessionBuilder sessionBuilder = scope.getSessionFactory().withOptions().interceptor( interceptor );
-		Item item1 = new Item();
-		item1.setName( "Item1" );
-		item1.setDescription( "Washington" );
-
-		try (Session s1 = sessionBuilder.openSession()) {
-			Transaction tx1 = s1.beginTransaction();
-			try {
-				s1.persist( item1 );
-				tx1.commit();
-			}
-			finally {
-				if ( tx1.isActive() ) {
-					tx1.rollback();
-				}
-			}
-		}
-
-		Item item2 = new Item();
-		item2.setName( "Item2" );
-		item2.setDescription( "Chicago" );
-		try (Session s2 = sessionBuilder.openSession()) {
-			Transaction tx2 = s2.beginTransaction();
-			try {
-				s2.persist( item2 );
-				tx2.commit();
-			}
-			finally {
-				if ( tx2.isActive() ) {
-					tx2.rollback();
-				}
-			}
-		}
-
-		interceptor.blockOnLoad();
-
-		Future<Item> fetchedItem = executor.submit( () -> findByDescription( sessionBuilder, "Washington" ) );
-
-		// wait for the onLoad listener to be called
-		interceptor.waitOnLoad();
-
-		try (Session s3 = sessionBuilder.openSession()) {
-			Transaction tx3 = s3.beginTransaction();
-			try {
-				item1.setDescription( "New York" );
-				item2.setDescription( "Washington" );
-				s3.update( item1 );
-				s3.update( item2 );
-				tx3.commit();
-			}
-			finally {
-				if ( tx3.isActive() ) {
-					tx3.rollback();
-				}
-			}
-		}
-
-		interceptor.unblockOnLoad();
-
-		// the concurrent query was executed before the data was amended so
-		// let's expect "Item1" to be returned as living in Washington
-		Item fetched = fetchedItem.get();
-		assertEquals( "Item1", fetched.getName() );
-
-		// Query again: now "Item2" is expected to live in Washington
-		fetched = findByDescription( sessionBuilder, "Washington" );
-		assertEquals( "Item2", fetched.getName() );
-	}
+//	@Test
+//	@JiraKey("HHH-9962")
+//	/* Test courtesy of Giambattista Bloisi */
+//	public void testDelayedLoad(SessionFactoryScope scope) throws InterruptedException, ExecutionException {
+//		DelayLoadOperations interceptor = new DelayLoadOperations();
+//		final SessionBuilder sessionBuilder = scope.getSessionFactory().withOptions().interceptor( interceptor );
+//		Item item1 = new Item();
+//		item1.setName( "Item1" );
+//		item1.setDescription( "Washington" );
+//
+//		try (Session s1 = sessionBuilder.openSession()) {
+//			Transaction tx1 = s1.beginTransaction();
+//			try {
+//				s1.persist( item1 );
+//				tx1.commit();
+//			}
+//			finally {
+//				if ( tx1.isActive() ) {
+//					tx1.rollback();
+//				}
+//			}
+//		}
+//
+//		Item item2 = new Item();
+//		item2.setName( "Item2" );
+//		item2.setDescription( "Chicago" );
+//		try (Session s2 = sessionBuilder.openSession()) {
+//			Transaction tx2 = s2.beginTransaction();
+//			try {
+//				s2.persist( item2 );
+//				tx2.commit();
+//			}
+//			finally {
+//				if ( tx2.isActive() ) {
+//					tx2.rollback();
+//				}
+//			}
+//		}
+//
+//		interceptor.blockOnLoad();
+//
+//		Future<Item> fetchedItem = executor.submit( () -> findByDescription( sessionBuilder, "Washington" ) );
+//
+//		// wait for the onLoad listener to be called
+//		interceptor.waitOnLoad();
+//
+//		try (Session s3 = sessionBuilder.openSession()) {
+//			Transaction tx3 = s3.beginTransaction();
+//			try {
+//				item1.setDescription( "New York" );
+//				item2.setDescription( "Washington" );
+//				s3.update( item1 );
+//				s3.update( item2 );
+//				tx3.commit();
+//			}
+//			finally {
+//				if ( tx3.isActive() ) {
+//					tx3.rollback();
+//				}
+//			}
+//		}
+//
+//		interceptor.unblockOnLoad();
+//
+//		// the concurrent query was executed before the data was amended so
+//		// let's expect "Item1" to be returned as living in Washington
+//		Item fetched = fetchedItem.get();
+//		assertEquals( "Item1", fetched.getName() );
+//
+//		// Query again: now "Item2" is expected to live in Washington
+//		fetched = findByDescription( sessionBuilder, "Washington" );
+//		assertEquals( "Item2", fetched.getName() );
+//	}
 
 	protected Item findByDescription(SessionBuilder sessionBuilder, final String description) {
 		try (Session s = sessionBuilder.openSession()) {

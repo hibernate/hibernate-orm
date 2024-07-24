@@ -43,7 +43,7 @@ public class DefaultAuditStrategy implements AuditStrategy {
 			Object id,
 			Object data,
 			Object revision) {
-		session.save( configuration.getAuditEntityName( entityName ), data );
+		session.persist( configuration.getAuditEntityName( entityName ), data );
 		sessionCacheCleaner.scheduleAuditDataRemoval( session, data );
 	}
 
@@ -55,7 +55,7 @@ public class DefaultAuditStrategy implements AuditStrategy {
 			Configuration configuration,
 			PersistentCollectionChangeData persistentCollectionChangeData,
 			Object revision) {
-		session.save( persistentCollectionChangeData.getEntityName(), persistentCollectionChangeData.getData() );
+		session.persist( persistentCollectionChangeData.getEntityName(), persistentCollectionChangeData.getData() );
 		sessionCacheCleaner.scheduleAuditDataRemoval( session, persistentCollectionChangeData.getData() );
 	}
 

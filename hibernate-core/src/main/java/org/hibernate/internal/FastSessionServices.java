@@ -63,7 +63,6 @@ import org.hibernate.event.spi.PreUpsertEventListener;
 import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.event.spi.ReplicateEventListener;
 import org.hibernate.event.spi.ResolveNaturalIdEventListener;
-import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.jpa.LegacySpecHints;
 import org.hibernate.jpa.SpecHints;
@@ -154,9 +153,6 @@ public final class FastSessionServices {
 	public final EventListenerGroup<RefreshEventListener> eventListenerGroup_REFRESH;
 	public final EventListenerGroup<ReplicateEventListener> eventListenerGroup_REPLICATE;
 	public final EventListenerGroup<ResolveNaturalIdEventListener> eventListenerGroup_RESOLVE_NATURAL_ID;
-	public final EventListenerGroup<SaveOrUpdateEventListener> eventListenerGroup_SAVE;
-	public final EventListenerGroup<SaveOrUpdateEventListener> eventListenerGroup_SAVE_UPDATE;
-	public final EventListenerGroup<SaveOrUpdateEventListener> eventListenerGroup_UPDATE;
 
 	//Intentionally Package private:
 	final boolean disallowOutOfTransactionUpdateOperations;
@@ -236,9 +232,6 @@ public final class FastSessionServices {
 		this.eventListenerGroup_REFRESH = listeners( eventListenerRegistry, EventType.REFRESH );
 		this.eventListenerGroup_REPLICATE = listeners( eventListenerRegistry, EventType.REPLICATE );
 		this.eventListenerGroup_RESOLVE_NATURAL_ID = listeners( eventListenerRegistry, EventType.RESOLVE_NATURAL_ID );
-		this.eventListenerGroup_SAVE = listeners( eventListenerRegistry, EventType.SAVE );
-		this.eventListenerGroup_SAVE_UPDATE = listeners( eventListenerRegistry, EventType.SAVE_UPDATE );
-		this.eventListenerGroup_UPDATE = listeners( eventListenerRegistry, EventType.UPDATE );
 
 		//Other highly useful constants:
 		this.dialect = jdbcServices.getJdbcEnvironment().getDialect();

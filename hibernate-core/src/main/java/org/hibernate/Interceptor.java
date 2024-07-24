@@ -264,7 +264,6 @@ public interface Interceptor {
 	 *
 	 * @see Session#persist(Object)
 	 * @see Session#merge(Object)
-	 * @see Session#save(Object)
 	 *
 	 * @deprecated Use {@link #onPersist(Object, Object, Object[], String[], Type[])}
 	 */

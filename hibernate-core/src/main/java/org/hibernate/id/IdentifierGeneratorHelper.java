@@ -159,7 +159,8 @@ public final class IdentifierGeneratorHelper {
 		}
 		catch (TransientObjectException toe) {
 			if ( sessionImplementor.isSessionImplementor() ) {
-				return sessionImplementor.asSessionImplementor().save( associatedEntityName, associatedEntity );
+				sessionImplementor.asSessionImplementor().persist( associatedEntityName, associatedEntity );
+				return sessionImplementor.getContextEntityIdentifier( associatedEntity );
 			}
 			else if ( sessionImplementor.isStatelessSession() ) {
 				return sessionImplementor.asStatelessSession().insert( associatedEntityName, associatedEntity );

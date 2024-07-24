@@ -11,7 +11,8 @@ import java.util.List;
 /**
  * @author Steve Ebersole
  */
-public interface JaxbNamedQueryBase {
+public interface JaxbQueryHintContainer {
 	String getName();
+	String getDescription();
 	List<? extends JaxbQueryHint> getHints();
 }

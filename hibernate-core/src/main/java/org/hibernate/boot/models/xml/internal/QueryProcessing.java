@@ -20,7 +20,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityResultImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbFieldResultImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeQueryImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedQueryImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedHqlQueryImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedStoredProcedureQueryImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbQueryHint;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbQueryHintImpl;
@@ -80,7 +80,7 @@ public class QueryProcessing {
 		List<NamedQueryJpaAnnotation> namedJpqlQueryList = null;
 
 		for ( int i = 0; i < jaxbEntity.getNamedQueries().size(); i++ ) {
-			final JaxbNamedQueryImpl jaxbNamedQuery = jaxbEntity.getNamedQueries().get( i );
+			final JaxbNamedHqlQueryImpl jaxbNamedQuery = jaxbEntity.getNamedQueries().get( i );
 
 			if ( CollectionHelper.isNotEmpty( jaxbNamedQuery.getHints() ) ) {
 				// treat this as a Jakarta Persistence named-query

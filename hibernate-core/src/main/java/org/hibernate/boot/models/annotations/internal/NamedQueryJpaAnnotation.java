@@ -8,7 +8,7 @@ package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
 
-import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedQueryImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedHqlQueryImpl;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.internal.QueryProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
@@ -117,7 +117,7 @@ public class NamedQueryJpaAnnotation implements NamedQuery {
 	}
 
 
-	public void apply(JaxbNamedQueryImpl jaxbNamedQuery, XmlDocumentContext xmlDocumentContext) {
+	public void apply(JaxbNamedHqlQueryImpl jaxbNamedQuery, XmlDocumentContext xmlDocumentContext) {
 		name( jaxbNamedQuery.getName() );
 		query( jaxbNamedQuery.getQuery() );
 		lockMode( coalesce( jaxbNamedQuery.getLockMode(), jakarta.persistence.LockModeType.NONE ) );

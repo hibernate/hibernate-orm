@@ -9,6 +9,7 @@ import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
@@ -25,17 +26,11 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@Jpa(
-		annotatedClasses = {
-				EagerManyToOneTest.Child.class,
-				EagerManyToOneTest.Parent.class
-		},
-		properties = @Setting( name = AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS, value = "false")
-
-)
-@TestForIssue(jiraKey = "HHH-15902")
+@SuppressWarnings("JUnitMalformedDeclaration")
+@Jpa( annotatedClasses = { EagerManyToOneTest.Child.class, EagerManyToOneTest.Parent.class } )
+@JiraKey("HHH-15902")
 public class EagerManyToOneTest {
 
 	@BeforeEach
@@ -62,12 +57,12 @@ public class EagerManyToOneTest {
 
 	@Test
 	public void testFindParent(EntityManagerFactoryScope scope) {
-
 		scope.inTransaction(
 				entityManager -> {
 					Parent parent = entityManager.find( Parent.class, 1 );
 					assertThat( parent ).isNotNull();
-					assertThat( parent.children.size() ).isEqualTo( 1 );
+					// the Child filter should apply
+					assertThat( parent.children ).isEmpty();
 				}
 		);
 		scope.inTransaction(

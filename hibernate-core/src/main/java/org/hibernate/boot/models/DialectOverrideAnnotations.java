@@ -45,8 +45,6 @@ import org.hibernate.boot.models.annotations.internal.OverriddenSQLSelectAnnotat
 import org.hibernate.boot.models.annotations.internal.OverriddenSQLSelectsAnnotation;
 import org.hibernate.boot.models.annotations.internal.OverriddenSQLUpdateAnnotation;
 import org.hibernate.boot.models.annotations.internal.OverriddenSQLUpdatesAnnotation;
-import org.hibernate.boot.models.annotations.internal.OverriddenWhereAnnotation;
-import org.hibernate.boot.models.annotations.internal.OverriddenWheresAnnotation;
 import org.hibernate.boot.models.annotations.internal.OverrideVersionAnnotation;
 import org.hibernate.boot.models.internal.OrmAnnotationHelper;
 import org.hibernate.models.internal.OrmAnnotationDescriptor;
@@ -145,15 +143,6 @@ public interface DialectOverrideAnnotations {
 			DialectOverride.JoinFormula.class,
 			OverriddenJoinFormulaAnnotation.class,
 			DIALECT_OVERRIDE_JOIN_FORMULAS
-	);
-	OrmAnnotationDescriptor<DialectOverride.Wheres, OverriddenWheresAnnotation> DIALECT_OVERRIDE_WHERES = new OrmAnnotationDescriptor<>(
-			DialectOverride.Wheres.class,
-			OverriddenWheresAnnotation.class
-	);
-	OrmAnnotationDescriptor<DialectOverride.Where, OverriddenWhereAnnotation> DIALECT_OVERRIDE_WHERE = new OrmAnnotationDescriptor<>(
-			DialectOverride.Where.class,
-			OverriddenWhereAnnotation.class,
-			DIALECT_OVERRIDE_WHERES
 	);
 	OrmAnnotationDescriptor<DialectOverride.SQLInserts, OverriddenSQLInsertsAnnotation> DIALECT_OVERRIDE_SQL_INSERTS = new OrmAnnotationDescriptor<>(
 			DialectOverride.SQLInserts.class,

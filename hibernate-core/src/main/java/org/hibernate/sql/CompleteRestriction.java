@@ -9,7 +9,7 @@ package org.hibernate.sql;
 import org.hibernate.Internal;
 
 /**
- * For a complete predicate.  E.g. {@link org.hibernate.annotations.Where}
+ * For a complete predicate.  E.g. {@link org.hibernate.annotations.SQLRestriction}
  *
  * @author Steve Ebersole
  */

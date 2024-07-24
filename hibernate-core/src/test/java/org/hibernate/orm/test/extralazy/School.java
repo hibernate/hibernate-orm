@@ -4,15 +4,16 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
+import org.hibernate.annotations.SQLRestriction;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.MapKey;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
-import org.hibernate.annotations.Where;
 
 @Entity
 @Table(name = "school")
@@ -27,12 +28,12 @@ public class School {
 
 	@OneToMany(mappedBy = "school")
 	@LazyCollection(LazyCollectionOption.EXTRA)
-	@Where(clause = " gpa >= 4 ")
+	@SQLRestriction(" gpa >= 4 ")
 	private Set<Student> topStudents = new HashSet<Student>();
 
 	@OneToMany(mappedBy = "school")
 	@LazyCollection(LazyCollectionOption.EXTRA)
-	@Where(clause = " gpa >= 4 ")
+	@SQLRestriction(" gpa >= 4 ")
 	@MapKey
 	private Map<String, Student> studentsMap = new HashMap<>();
 	

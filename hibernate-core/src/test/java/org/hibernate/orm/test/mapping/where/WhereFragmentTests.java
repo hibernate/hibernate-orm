@@ -9,7 +9,6 @@ package org.hibernate.orm.test.mapping.where;
 import java.util.Map;
 
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.Where;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -34,8 +33,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Tests for {@link Where} handling.
- *
  * @implNote Requires H2 simply because we need hard-coded schema export.  The schema is simple and would
  * probably work on a larger number of databases; but there should really be nothing database specific in
  * these tests.

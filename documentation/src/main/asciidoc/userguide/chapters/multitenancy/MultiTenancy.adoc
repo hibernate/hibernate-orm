@@ -118,6 +118,7 @@ The `MultiTenantConnectionProvider` to use can be specified in a number of ways:
 
 * Use the `hibernate.multi_tenant_connection_provider` setting.
 It could name a `MultiTenantConnectionProvider` instance, a `MultiTenantConnectionProvider` implementation class reference or a `MultiTenantConnectionProvider` implementation class name.
+* Provided by the configured `BeanContainer`.
 * Passed directly to the `org.hibernate.boot.registry.StandardServiceRegistryBuilder`.
 * If none of the above options match, but the settings do specify a `hibernate.connection.datasource` value,
 Hibernate will assume it should use the specific `DataSourceBasedMultiTenantConnectionProviderImpl` implementation which works on a number of pretty reasonable assumptions when running inside of an app server and using one `javax.sql.DataSource` per tenant.
@@ -161,7 +162,7 @@ include::{example-dir-multitenancy}/AbstractMultiTenancyTest.java[tags=multitena
 
 `org.hibernate.context.spi.CurrentTenantIdentifierResolver` is a contract for Hibernate to be able to resolve what the application considers the current tenant identifier.
 The implementation to use can be either passed directly to `Configuration` via its `setCurrentTenantIdentifierResolver` method,
-or be specified via the `hibernate.tenant_identifier_resolver` setting.
+or be specified via the `hibernate.tenant_identifier_resolver` setting, or be provided by the configured `BeanContainer`.
 
 There are two situations where `CurrentTenantIdentifierResolver` is used:
 

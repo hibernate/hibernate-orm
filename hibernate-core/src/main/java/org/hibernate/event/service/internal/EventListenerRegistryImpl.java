@@ -32,9 +32,6 @@ import org.hibernate.event.internal.DefaultPreLoadEventListener;
 import org.hibernate.event.internal.DefaultRefreshEventListener;
 import org.hibernate.event.internal.DefaultReplicateEventListener;
 import org.hibernate.event.internal.DefaultResolveNaturalIdEventListener;
-import org.hibernate.event.internal.DefaultSaveEventListener;
-import org.hibernate.event.internal.DefaultSaveOrUpdateEventListener;
-import org.hibernate.event.internal.DefaultUpdateEventListener;
 import org.hibernate.event.internal.PostDeleteEventListenerStandardImpl;
 import org.hibernate.event.internal.PostInsertEventListenerStandardImpl;
 import org.hibernate.event.internal.PostUpdateEventListenerStandardImpl;
@@ -81,9 +78,6 @@ import static org.hibernate.event.spi.EventType.PRE_UPSERT;
 import static org.hibernate.event.spi.EventType.REFRESH;
 import static org.hibernate.event.spi.EventType.REPLICATE;
 import static org.hibernate.event.spi.EventType.RESOLVE_NATURAL_ID;
-import static org.hibernate.event.spi.EventType.SAVE;
-import static org.hibernate.event.spi.EventType.SAVE_UPDATE;
-import static org.hibernate.event.spi.EventType.UPDATE;
 
 /**
  * Standard implementation of EventListenerRegistry
@@ -317,20 +311,11 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 			// post-upsert listeners
 			prepareListeners( POST_UPSERT, new PostUpsertEventListenerStandardImpl() );
 
-			// update listeners
-			prepareListeners( UPDATE, new DefaultUpdateEventListener() );
-
 			// refresh listeners
 			prepareListeners( REFRESH, new DefaultRefreshEventListener() );
 
 			// replicate listeners
 			prepareListeners( REPLICATE, new DefaultReplicateEventListener() );
-
-			// save listeners
-			prepareListeners( SAVE, new DefaultSaveEventListener() );
-
-			// save-update listeners
-			prepareListeners( SAVE_UPDATE, new DefaultSaveOrUpdateEventListener() );
 		}
 
 		public <T> void prepareListeners(EventType<T> eventType) {

@@ -63,22 +63,6 @@ public final class CascadeStyles {
 	};
 
 	/**
-	 * save / update
-	 */
-	public static final CascadeStyle UPDATE = new BaseCascadeStyle() {
-		@Override
-		public boolean doCascade(CascadingAction action) {
-			return action == CascadingActions.SAVE_UPDATE
-				|| action == CascadingActions.CHECK_ON_FLUSH;
-		}
-
-		@Override
-		public String toString() {
-			return "STYLE_SAVE_UPDATE";
-		}
-	};
-
-	/**
 	 * lock
 	 */
 	public static final CascadeStyle LOCK = new BaseCascadeStyle() {
@@ -197,7 +181,6 @@ public final class CascadeStyles {
 		@Override
 		public boolean doCascade(CascadingAction action) {
 			return action == CascadingActions.REMOVE
-				|| action == CascadingActions.SAVE_UPDATE
 				|| action == CascadingActions.PERSIST_ON_FLUSH
 				|| action == CascadingActions.CHECK_ON_FLUSH;
 		}
@@ -241,7 +224,6 @@ public final class CascadeStyles {
 
 		base.put( "all", ALL );
 		base.put( "all-delete-orphan", ALL_DELETE_ORPHAN );
-		base.put( "save-update", UPDATE );
 		base.put( "persist", PERSIST );
 		base.put( "merge", MERGE );
 		base.put( "lock", LOCK );

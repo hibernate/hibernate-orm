@@ -31,9 +31,6 @@ public final class EventType<T> {
 
 	public static final EventType<InitializeCollectionEventListener> INIT_COLLECTION = create( "load-collection", InitializeCollectionEventListener.class );
 
-	public static final EventType<SaveOrUpdateEventListener> SAVE_UPDATE = create( "save-update", SaveOrUpdateEventListener.class );
-	public static final EventType<SaveOrUpdateEventListener> UPDATE = create( "update", SaveOrUpdateEventListener.class );
-	public static final EventType<SaveOrUpdateEventListener> SAVE = create( "save", SaveOrUpdateEventListener.class );
 	public static final EventType<PersistEventListener> PERSIST = create( "create", PersistEventListener.class );
 	public static final EventType<PersistEventListener> PERSIST_ONFLUSH = create( "create-onflush", PersistEventListener.class );
 

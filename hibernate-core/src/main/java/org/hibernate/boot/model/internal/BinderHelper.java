@@ -1019,10 +1019,6 @@ public class BinderHelper {
 				case DELETE_ORPHAN:
 					cascade.append( "," ).append( "delete-orphan" );
 					break;
-				case SAVE_UPDATE:
-					warnAboutDeprecatedCascadeType( CascadeType.SAVE_UPDATE );
-					cascade.append( "," ).append( "save-update" );
-					break;
 				case REPLICATE:
 					warnAboutDeprecatedCascadeType( CascadeType.REPLICATE );
 					cascade.append( "," ).append( "replicate" );

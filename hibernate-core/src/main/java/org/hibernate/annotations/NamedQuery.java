@@ -14,7 +14,7 @@ import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityManager;
 
-import org.hibernate.Remove;
+import org.hibernate.CacheMode;
 
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
@@ -125,6 +125,14 @@ public @interface NamedQuery {
 	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_CACHE_RETRIEVE_MODE
 	 */
 	CacheRetrieveMode cacheRetrieveMode() default CacheRetrieveMode.USE;
+
+	/**
+	 * The cache interaction mode for this query.
+	 *
+	 * @see org.hibernate.query.SelectionQuery#setCacheMode(CacheMode)
+	 * @see org.hibernate.jpa.HibernateHints#HINT_CACHE_MODE
+	 */
+	CacheMode cacheMode() default CacheMode.NORMAL;
 
 	/**
 	 * Whether the results should be loaded in read-only mode.

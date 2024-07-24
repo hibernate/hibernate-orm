@@ -645,14 +645,6 @@ public interface HibernateAnnotations {
 			View.class,
 			ViewAnnotation.class
 	);
-	OrmAnnotationDescriptor<Where,WhereAnnotation> WHERE = new OrmAnnotationDescriptor<>(
-			Where.class,
-			WhereAnnotation.class
-	);
-	OrmAnnotationDescriptor<WhereJoinTable,WhereJoinTableAnnotation> WHERE_JOIN_TABLE = new OrmAnnotationDescriptor<>(
-			WhereJoinTable.class,
-			WhereJoinTableAnnotation.class
-	);
 
 	static void forEachAnnotation(Consumer<AnnotationDescriptor<? extends Annotation>> consumer) {
 		OrmAnnotationHelper.forEachOrmAnnotation( HibernateAnnotations.class, consumer );

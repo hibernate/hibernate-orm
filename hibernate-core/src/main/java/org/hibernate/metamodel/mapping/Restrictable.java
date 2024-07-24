@@ -16,7 +16,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
- * Things that can have {@link org.hibernate.annotations.Where},
+ * Things that can have {@link org.hibernate.annotations.SQLRestriction},
  * and/or {@link org.hibernate.annotations.Filter} applied to them.
  * This is effectively {@linkplain EntityMappingType entities} and
  * {@linkplain PluralAttributeMapping plural attributes}.

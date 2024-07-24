@@ -91,7 +91,7 @@ public class SimpleSelect implements RestrictionRenderingContext {
 	}
 
 	/**
-	 * Appends a complete {@linkplain org.hibernate.annotations.Where where} condition.
+	 * Appends a complete {@linkplain org.hibernate.annotations.SQLRestriction where} condition.
 	 * The {@code condition} is added as-is.
 	 */
 	public SimpleSelect addWhereToken(String condition) {

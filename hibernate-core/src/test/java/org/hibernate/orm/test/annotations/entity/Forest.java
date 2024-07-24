@@ -21,8 +21,8 @@ import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.annotations.ParamDef;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SelectBeforeUpdate;
-import org.hibernate.annotations.Where;
 
 import jakarta.persistence.Convert;
 import jakarta.persistence.ElementCollection;
@@ -43,7 +43,7 @@ import jakarta.persistence.Table;
 @SelectBeforeUpdate
 @DynamicInsert @DynamicUpdate
 @OptimisticLocking(type = OptimisticLockType.ALL)
-@Where(clause = "1=1")
+@SQLRestriction("1=1")
 @FilterDef(name = "minLength", parameters = {@ParamDef(name = "minLength", type = Integer.class)})
 @Filter(name = "betweenLength")
 @Filter(name = "minLength", condition = ":minLength <= length")

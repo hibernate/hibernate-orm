@@ -7,7 +7,6 @@
 package org.hibernate.cfg;
 
 import org.hibernate.Incubating;
-import org.hibernate.Remove;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.annotations.Nationalized;
@@ -452,28 +451,6 @@ public interface MappingSettings {
 	 * @see org.hibernate.annotations.Bag
 	 */
 	String DEFAULT_LIST_SEMANTICS = "hibernate.mapping.default_list_semantics";
-
-	/**
-	 * The {@link org.hibernate.annotations.SQLRestriction @SQLRestriction} annotation specifies a
-	 * restriction on the table rows which are visible as entity class instances or
-	 * collection elements.
-	 * <p>
-	 * This setting controls whether the restriction applied to an entity should be
-	 * applied to association fetches (for one-to-one, many-to-one, one-to-many, and
-	 * many-to-many associations) which target the entity.
-	 *
-	 * @apiNote The setting is very misnamed - it applies across all entity associations,
-	 *          not only to collections.
-	 *
-	 * @implSpec Enabled ({@code true}) by default, meaning the restriction is applied.
-	 *           When this setting is explicitly disabled ({@code false}), the restriction
-	 *           is not applied.
-	 *
-	 * @deprecated Originally added as a backwards compatibility flag
-	 */
-	@Remove
-	@Deprecated( forRemoval = true, since = "6.2" )
-	String USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS = "hibernate.use_entity_where_clause_for_collections";
 
 	/**
 	 * Whether XML should be validated against their schema as Hibernate reads them.

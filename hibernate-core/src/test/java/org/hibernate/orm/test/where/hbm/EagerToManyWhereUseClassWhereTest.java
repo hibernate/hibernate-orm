@@ -15,6 +15,7 @@ import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -24,8 +25,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Tests association collections with AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS = true
- *
  * @author Gail Badner
  */
 public class EagerToManyWhereUseClassWhereTest extends BaseNonConfigCoreFunctionalTestCase {
@@ -40,13 +39,8 @@ public class EagerToManyWhereUseClassWhereTest extends BaseNonConfigCoreFunction
 		return new String[] { "where/hbm/EagerToManyWhere.hbm.xml" };
 	}
 
-	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		settings.put( AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS, "true" );
-	}
-
 	@Test
-	@TestForIssue( jiraKey = "HHH-13011" )
+	@JiraKey( "HHH-13011" )
 	public void testAssociatedWhereClause() {
 
 		Product product = new Product();

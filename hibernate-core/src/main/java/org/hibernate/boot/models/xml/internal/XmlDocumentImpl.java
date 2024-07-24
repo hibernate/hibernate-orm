@@ -25,7 +25,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbJavaTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJdbcTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclassImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeQueryImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedQueryImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedHqlQueryImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedStoredProcedureQueryImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUserTypeRegistrationImpl;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
@@ -52,7 +52,7 @@ public class XmlDocumentImpl implements XmlDocument {
 	private final List<JaxbCompositeUserTypeRegistrationImpl> compositeUserTypeRegistrations;
 	private final List<JaxbCollectionUserTypeRegistrationImpl> collectionUserTypeRegistrations;
 	private final List<JaxbEmbeddableInstantiatorRegistrationImpl> embeddableInstantiatorRegistrations;
-	private final Map<String, JaxbNamedQueryImpl> jpaNamedQueries;
+	private final Map<String, JaxbNamedHqlQueryImpl> jpaNamedQueries;
 	private final Map<String, JaxbNamedNativeQueryImpl> jpaNamedNativeQueries;
 	private final Map<String, JaxbHbmNamedQueryType> hibernateNamedQueries;
 	private final Map<String, JaxbHbmNamedNativeQueryType> hibernateNamedNativeQueries;
@@ -71,7 +71,7 @@ public class XmlDocumentImpl implements XmlDocument {
 			List<JaxbCompositeUserTypeRegistrationImpl> compositeUserTypeRegistrations,
 			List<JaxbCollectionUserTypeRegistrationImpl> collectionUserTypeRegistrations,
 			List<JaxbEmbeddableInstantiatorRegistrationImpl> embeddableInstantiatorRegistrations,
-			Map<String, JaxbNamedQueryImpl> jpaNamedQueries,
+			Map<String, JaxbNamedHqlQueryImpl> jpaNamedQueries,
 			Map<String, JaxbNamedNativeQueryImpl> jpaNamedNativeQueries,
 			Map<String, JaxbNamedStoredProcedureQueryImpl> namedStoredProcedureQueries,
 			Map<String, JaxbHbmNamedQueryType> hibernateNamedQueries,
@@ -156,7 +156,7 @@ public class XmlDocumentImpl implements XmlDocument {
 	}
 
 	@Override
-	public Map<String, JaxbNamedQueryImpl> getJpaNamedQueries() {
+	public Map<String, JaxbNamedHqlQueryImpl> getJpaNamedQueries() {
 		return jpaNamedQueries;
 	}
 
@@ -277,12 +277,12 @@ public class XmlDocumentImpl implements XmlDocument {
 		);
 	}
 
-	private static Map<String, JaxbNamedQueryImpl> toNamedQueryMap(List<JaxbNamedQueryImpl> namedQueries) {
+	private static Map<String, JaxbNamedHqlQueryImpl> toNamedQueryMap(List<JaxbNamedHqlQueryImpl> namedQueries) {
 		if ( isEmpty( namedQueries ) ) {
 			return Collections.emptyMap();
 		}
 
-		final Map<String, JaxbNamedQueryImpl> map = new HashMap<>();
+		final Map<String, JaxbNamedHqlQueryImpl> map = new HashMap<>();
 		namedQueries.forEach( (query) -> map.put( query.getName(), query ) );
 		return map;
 	}

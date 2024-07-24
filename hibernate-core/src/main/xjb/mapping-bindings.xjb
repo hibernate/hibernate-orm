@@ -598,14 +598,15 @@
         </bindings>
 
         <bindings node="//xsd:complexType[@name='named-query']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbNamedQueryBase</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbNamedQuery</inheritance:implements>
             <bindings node=".//xsd:element[@name='hint']">
                 <property name="hints"/>
             </bindings>
+            <class name="JaxbNamedHqlQueryImpl"/>
         </bindings>
 
         <bindings node="//xsd:complexType[@name='named-native-query']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbNamedQueryBase</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbNamedQuery</inheritance:implements>
             <bindings node=".//xsd:element[@name='synchronize']">
                 <property name="synchronizations"/>
             </bindings>
@@ -615,7 +616,7 @@
         </bindings>
 
         <bindings node="//xsd:complexType[@name='named-stored-procedure-query']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbNamedQueryBase</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbQueryHintContainer</inheritance:implements>
             <bindings node=".//xsd:element[@name='hint']">
                 <property name="hints"/>
             </bindings>

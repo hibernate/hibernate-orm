@@ -32,8 +32,8 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbGenericIdGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJavaTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJdbcTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeQueryImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedQueryBase;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedQueryImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbQueryHintContainer;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedHqlQueryImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedStoredProcedureQueryImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbQueryHint;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSequenceGeneratorImpl;
@@ -965,7 +965,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		} );
 	}
 
-	private void collectNamedQueries(List<JaxbNamedQueryImpl> jaxbNamedQueries, XmlDocumentContext xmlDocumentContext) {
+	private void collectNamedQueries(List<JaxbNamedHqlQueryImpl> jaxbNamedQueries, XmlDocumentContext xmlDocumentContext) {
 		if ( isEmpty( jaxbNamedQueries ) ) {
 			return;
 		}
@@ -974,7 +974,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			namedQueryRegistrations = new HashMap<>();
 		}
 
-		for ( JaxbNamedQueryImpl jaxbNamedQuery : jaxbNamedQueries ) {
+		for ( JaxbNamedHqlQueryImpl jaxbNamedQuery : jaxbNamedQueries ) {
 			final NamedQueryJpaAnnotation queryAnnotation = JpaAnnotations.NAMED_QUERY.createUsage( xmlDocumentContext.getModelBuildingContext() );
 			namedQueryRegistrations.put(
 					jaxbNamedQuery.getName(),
@@ -995,7 +995,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		}
 	}
 
-	private QueryHint[] collectQueryHints(JaxbNamedQueryImpl jaxbNamedQuery, XmlDocumentContext xmlDocumentContext) {
+	private QueryHint[] collectQueryHints(JaxbNamedHqlQueryImpl jaxbNamedQuery, XmlDocumentContext xmlDocumentContext) {
 		final List<QueryHint> hints = extractQueryHints( jaxbNamedQuery );
 
 		if ( jaxbNamedQuery.isCacheable() == Boolean.TRUE ) {
@@ -1183,7 +1183,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		}
 	}
 
-	private List<QueryHint> extractQueryHints(JaxbNamedQueryBase jaxbQuery) {
+	private List<QueryHint> extractQueryHints(JaxbQueryHintContainer jaxbQuery) {
 		final List<QueryHint> hints = new ArrayList<>();
 		for ( JaxbQueryHint jaxbHint : jaxbQuery.getHints() ) {
 			final QueryHintJpaAnnotation hint = JpaAnnotations.QUERY_HINT.createUsage( sourceModelContext );

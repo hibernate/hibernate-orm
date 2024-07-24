@@ -96,7 +96,7 @@ public interface JaxbEntity extends JaxbEntityOrMappedSuperclass {
 
 	@Nullable JaxbGenericIdGeneratorImpl getGenericGenerator();
 
-	List<JaxbNamedQueryImpl> getNamedQueries();
+	List<JaxbNamedHqlQueryImpl> getNamedQueries();
 	List<JaxbNamedNativeQueryImpl> getNamedNativeQueries();
 	List<JaxbNamedStoredProcedureQueryImpl> getNamedStoredProcedureQueries();
 	List<JaxbSqlResultSetMappingImpl> getSqlResultSetMappings();

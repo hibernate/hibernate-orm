@@ -22,7 +22,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbJavaTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJdbcTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclassImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeQueryImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedQueryImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedHqlQueryImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedStoredProcedureQueryImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUserTypeRegistrationImpl;
 
@@ -54,7 +54,7 @@ public interface XmlDocument {
 
 	List<JaxbEmbeddableInstantiatorRegistrationImpl> getEmbeddableInstantiatorRegistrations();
 
-	Map<String, JaxbNamedQueryImpl> getJpaNamedQueries();
+	Map<String, JaxbNamedHqlQueryImpl> getJpaNamedQueries();
 
 	Map<String, JaxbNamedNativeQueryImpl> getJpaNamedNativeQueries();
 

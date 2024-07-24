@@ -19,14 +19,22 @@ import java.util.Set;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
 
 import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.SchemaManager;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -514,6 +522,22 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
+	@SkipForDialect(
+			value = SybaseDialect.class,
+			comment = "Sybase does not support LOB comparisons, and data cleanup plus OptimisticLockType.ALL on Forest triggers LOB comparison"
+	)
+	@SkipForDialect(
+			value = PostgreSQLDialect.class,
+			comment = "PGSQL does not support LOB comparisons, and data cleanup plus OptimisticLockType.ALL on Forest triggers LOB comparison"
+	)
+	@SkipForDialect(
+			value = DerbyDialect.class,
+			comment = "Derby does not support LOB comparisons, and data cleanup plus OptimisticLockType.ALL on Forest triggers LOB comparison"
+	)
+	@SkipForDialect(
+			value = OracleDialect.class,
+			comment = "Oracle does not support LOB comparisons, and data cleanup plus OptimisticLockType.ALL on Forest triggers LOB comparison"
+	)
 	public void testSerialized() {
 		Forest forest = new Forest();
 		forest.setName( "Shire" );

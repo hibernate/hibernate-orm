@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
-package org.hibernate.orm.test.id.uuid.annotation;
+package org.hibernate.testing.util.uuid;
 
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -19,14 +19,27 @@ import org.hibernate.service.ServiceRegistry;
  * @author Steve Ebersole
  */
 public class IdGeneratorCreationContext implements CustomIdGeneratorCreationContext {
+	private final ServiceRegistry serviceRegistry;
 	private final MetadataImplementor domainModel;
 	private final RootClass entityMapping;
 
-	public IdGeneratorCreationContext(MetadataImplementor domainModel, RootClass entityMapping) {
+	public IdGeneratorCreationContext(
+			ServiceRegistry serviceRegistry,
+			MetadataImplementor domainModel,
+			RootClass entityMapping) {
+		this.serviceRegistry = serviceRegistry;
 		this.domainModel = domainModel;
 		this.entityMapping = entityMapping;
 
 		assert entityMapping.getIdentifierProperty() != null;
+	}
+
+	public IdGeneratorCreationContext(MetadataImplementor domainModel, RootClass entityMapping) {
+		this(
+				domainModel.getMetadataBuildingOptions().getServiceRegistry(),
+				domainModel,
+				entityMapping
+		);
 	}
 
 	@Override

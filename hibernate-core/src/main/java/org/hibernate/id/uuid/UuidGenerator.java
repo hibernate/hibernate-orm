@@ -30,11 +30,8 @@ import static org.hibernate.internal.util.ReflectHelper.getPropertyType;
  * @see org.hibernate.annotations.UuidGenerator
  */
 public class UuidGenerator implements BeforeExecutionGenerator {
-	interface ValueGenerator {
-		UUID generateUuid(SharedSessionContractImplementor session);
-	}
 
-	private final ValueGenerator generator;
+	private final UuidValueGenerator generator;
 	private final ValueTransformer valueTransformer;
 
 	private UuidGenerator(

@@ -240,42 +240,6 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	@Deprecated
-	public Object save(Object object) {
-		return this.lazySession.get().save( object );
-	}
-
-	@Override
-	@Deprecated
-	public Object save(String entityName, Object object) {
-		return this.lazySession.get().save( entityName, object );
-	}
-
-	@Override
-	@Deprecated
-	public void saveOrUpdate(Object object) {
-		this.lazySession.get().saveOrUpdate( object );
-	}
-
-	@Override
-	@Deprecated
-	public void saveOrUpdate(String entityName, Object object) {
-		this.lazySession.get().saveOrUpdate( entityName, object );
-	}
-
-	@Override
-	@Deprecated
-	public void update(Object object) {
-		this.lazySession.get().update( object );
-	}
-
-	@Override
-	@Deprecated
-	public void update(String entityName, Object object) {
-		this.lazySession.get().update( entityName, object );
-	}
-
-	@Override
 	public <T> T merge(T object) {
 		return this.lazySession.get().merge( object );
 	}

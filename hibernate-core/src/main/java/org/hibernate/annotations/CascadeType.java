@@ -96,17 +96,6 @@ public enum CascadeType {
 	DELETE,
 
 	/**
-	 * A cascade type for the {@code saveOrUpdate()} operation.
-	 * 
-	 * @see org.hibernate.Session#saveOrUpdate(Object) 
-	 *
-	 * @deprecated since {@link org.hibernate.Session#saveOrUpdate(Object)}
-	 *             is deprecated
-	 */
-	@Deprecated
-	SAVE_UPDATE,
-
-	/**
 	 * A cascade type for the {@code replicate()} operation.
 	 *
 	 * @see org.hibernate.Session#replicate(Object, ReplicationMode) 

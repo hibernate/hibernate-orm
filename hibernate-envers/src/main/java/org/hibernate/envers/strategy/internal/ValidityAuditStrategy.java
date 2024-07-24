@@ -163,7 +163,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		final String auditedEntityName = configuration.getAuditEntityName( entityName );
 
 		// Save the audit data
-		session.save( auditedEntityName, data );
+		session.persist( auditedEntityName, data );
 
 		// Update the end date of the previous row.
 		//
@@ -271,7 +271,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		}
 
 		// Save the audit data
-		session.save( persistentCollectionChangeData.getEntityName(), persistentCollectionChangeData.getData() );
+		session.persist( persistentCollectionChangeData.getEntityName(), persistentCollectionChangeData.getData() );
 		sessionCacheCleaner.scheduleAuditDataRemoval( session, persistentCollectionChangeData.getData() );
 	}
 
@@ -375,7 +375,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			}
 
 			// Saving the previous version
-			session.save( auditedEntityName, previousData );
+			session.persist( auditedEntityName, previousData );
 			sessionCacheCleaner.scheduleAuditDataRemoval( session, previousData );
 		}
 		else {

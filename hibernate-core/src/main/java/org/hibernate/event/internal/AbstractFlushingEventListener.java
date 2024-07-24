@@ -198,13 +198,11 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 	}
 
 	protected PersistContext getContext(EventSource session) {
-		return jpaBootstrap || isJpaCascadeComplianceEnabled( session ) ? PersistContext.create() : null;
+		return PersistContext.create();
 	}
 
 	protected CascadingAction<PersistContext> getCascadingAction(EventSource session) {
-		return jpaBootstrap || isJpaCascadeComplianceEnabled( session )
-				? CascadingActions.PERSIST_ON_FLUSH
-				: CascadingActions.SAVE_UPDATE;
+		return CascadingActions.PERSIST_ON_FLUSH;
 	}
 
 	private static boolean isJpaCascadeComplianceEnabled(EventSource session) {

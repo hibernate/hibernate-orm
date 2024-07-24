@@ -68,7 +68,6 @@ final class StaticClassLists {
 				org.hibernate.event.spi.LoadEventListener[].class,
 				org.hibernate.event.spi.ResolveNaturalIdEventListener[].class,
 				org.hibernate.event.spi.InitializeCollectionEventListener[].class,
-				org.hibernate.event.spi.SaveOrUpdateEventListener[].class,
 				org.hibernate.event.spi.PersistEventListener[].class,
 				org.hibernate.event.spi.MergeEventListener[].class,
 				org.hibernate.event.spi.DeleteEventListener[].class,

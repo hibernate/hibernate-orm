@@ -11,6 +11,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.UUID;
 
+import org.hibernate.id.uuid.UuidValueGenerator;
+
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -58,4 +60,6 @@ public @interface UuidGenerator {
 	 * Specifies which {@linkplain Style style} of UUID generation should be used.
 	 */
 	Style style() default Style.AUTO;
+
+	Class<? extends UuidValueGenerator> valueGenerator() default UuidValueGenerator.class;
 }

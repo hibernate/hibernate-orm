@@ -129,13 +129,14 @@ public class EntityProxySerializationTest {
 			// Load the target of the proxy without the proxy being made aware of it
 			s.detach( parent );
 			s.find( SimpleEntity.class, 1L );
-			s.update( parent );
+			SimpleEntity merged = s.merge( parent );
 
 			// assert we still have an uninitialized proxy
 			assertFalse( Hibernate.isInitialized( parent ) );
+			assertTrue( Hibernate.isInitialized( merged ) );
 
 			// serialize/deserialize the proxy
-			final SimpleEntity deserializedParent = (SimpleEntity) SerializationHelper.clone( parent );
+			final SimpleEntity deserializedParent = (SimpleEntity) SerializationHelper.clone( merged );
 
 			// assert the deserialized object is no longer a proxy, but the target of the proxy
 			assertFalse( deserializedParent instanceof HibernateProxy );

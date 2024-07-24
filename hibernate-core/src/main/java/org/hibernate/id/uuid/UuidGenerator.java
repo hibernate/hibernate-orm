@@ -40,8 +40,19 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 		if ( config.style() == TIME ) {
 			generator = new CustomVersionOneStrategy();
 		}
-		else {
+		else if ( config.valueGenerator() == UuidValueGenerator.class ) {
 			generator = StandardRandomStrategy.INSTANCE;
+		}
+		else {
+			try {
+				generator = config.valueGenerator().getConstructor(  ).newInstance(  );
+			}
+			catch (final ReflectiveOperationException e) {
+				throw new HibernateException(
+						"Could not instantiate UUID value generator of type '" + config.valueGenerator().getName() + "'",
+						e
+				);
+			}
 		}
 
 		final Class<?> propertyType = getPropertyType( idMember );

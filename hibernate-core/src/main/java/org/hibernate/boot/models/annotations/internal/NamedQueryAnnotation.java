@@ -8,6 +8,7 @@ package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
 
+import org.hibernate.CacheMode;
 import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.NamedQuery;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedQueryImpl;
@@ -65,6 +66,10 @@ public class NamedQueryAnnotation implements NamedQuery {
 		this.comment = annotation.comment();
 		this.cacheStoreMode = annotation.cacheStoreMode();
 		this.cacheRetrieveMode = annotation.cacheRetrieveMode();
+		if ( annotation.cacheMode() != CacheMode.NORMAL ) {
+			this.cacheStoreMode = annotation.cacheMode().getJpaStoreMode();
+			this.cacheRetrieveMode = annotation.cacheMode().getJpaRetrieveMode();
+		}
 		this.readOnly = annotation.readOnly();
 	}
 
@@ -187,6 +192,11 @@ public class NamedQueryAnnotation implements NamedQuery {
 
 	public void cacheRetrieveMode(CacheRetrieveMode value) {
 		this.cacheRetrieveMode = value;
+	}
+
+	@Override
+	public CacheMode cacheMode() {
+		return CacheMode.fromJpaModes( cacheRetrieveMode, cacheStoreMode );
 	}
 
 	@Override

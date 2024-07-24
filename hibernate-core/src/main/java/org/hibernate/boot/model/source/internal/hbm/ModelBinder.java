@@ -18,7 +18,6 @@ import java.util.Properties;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
-import org.hibernate.Remove;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.boot.MappingException;
@@ -99,10 +98,8 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
 import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.generator.internal.GeneratedGeneration;
@@ -111,7 +108,6 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Array;
 import org.hibernate.mapping.AttributeContainer;
@@ -163,7 +159,6 @@ import org.hibernate.usertype.UserType;
 import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdGenerator;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.boot.model.source.internal.hbm.Helper.reflectedPropertyClass;
-import static org.hibernate.cfg.AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -193,28 +188,6 @@ public class ModelBinder {
 		this.database = context.getMetadataCollector().getDatabase();
 		this.implicitNamingStrategy = context.getBuildingOptions().getImplicitNamingStrategy();
 		this.relationalObjectBinder = new RelationalObjectBinder( context );
-	}
-
-	/**
-	 * @deprecated Interprets the setting {@value AvailableSettings#USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS},
-	 * which itself is deprecated
-	 */
-	@SuppressWarnings("removal")
-	@Remove
-	@Deprecated( since = "6.2" )
-	public static boolean useEntityWhereClauseForCollections(MetadataBuildingContext buildingContext) {
-		final Object explicitSetting = buildingContext
-				.getBuildingOptions()
-				.getServiceRegistry()
-				.requireService( ConfigurationService.class )
-				.getSettings()
-				.get( USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS );
-		if ( explicitSetting != null ) {
-			DEPRECATION_LOGGER.deprecatedSettingNoReplacement( USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS );
-			return ConfigurationHelper.toBoolean( explicitSetting, true );
-		}
-
-		return true;
 	}
 
 	public void bindEntityHierarchy(EntityHierarchySourceImpl hierarchySource) {
@@ -3333,9 +3306,7 @@ public class ModelBinder {
 						getPluralAttributeSource().getNature()
 				);
 			}
-			if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceBasic ) {
-				final PluralAttributeElementSourceBasic elementSource =
-						(PluralAttributeElementSourceBasic) getPluralAttributeSource().getElementSource();
+			if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceBasic elementSource ) {
 				final BasicValue elementBinding = new BasicValue(
 						getMappingDocument(),
 						getCollectionBinding().getCollectionTable()
@@ -3361,9 +3332,7 @@ public class ModelBinder {
 				// This "where" clause comes from the collection mapping; e.g., <set name="..." ... where="..." .../>
 				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
 			}
-			else if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceEmbedded ) {
-				final PluralAttributeElementSourceEmbedded elementSource =
-						(PluralAttributeElementSourceEmbedded) getPluralAttributeSource().getElementSource();
+			else if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceEmbedded elementSource ) {
 				final Component elementBinding = new Component(
 						getMappingDocument(),
 						getCollectionBinding()
@@ -3385,9 +3354,7 @@ public class ModelBinder {
 				// This "where" clause comes from the collection mapping; e.g., <set name="..." ... where="..." .../>
 				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
 			}
-			else if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceOneToMany ) {
-				final PluralAttributeElementSourceOneToMany elementSource =
-						(PluralAttributeElementSourceOneToMany) getPluralAttributeSource().getElementSource();
+			else if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceOneToMany elementSource ) {
 				final OneToMany elementBinding = new OneToMany(
 						getMappingDocument(),
 						getCollectionBinding().getOwner()
@@ -3396,32 +3363,18 @@ public class ModelBinder {
 
 				final PersistentClass referencedEntityBinding = getReferencedEntityBinding( elementSource.getReferencedEntityName() );
 
-				if ( useEntityWhereClauseForCollections( metadataBuildingContext ) ) {
-					// For a one-to-many association, there are 2 possible sources of "where" clauses that apply
-					// to the associated entity table:
-					// 1) from the associated entity mapping; i.e., <class name="..." ... where="..." .../>
-					// 2) from the collection mapping; e.g., <set name="..." ... where="..." .../>
-					// Collection#setWhere is used to set the "where" clause that applies to the collection table
-					// (which is the associated entity table for a one-to-many association).
-					collectionBinding.setWhere(
-							getNonEmptyOrConjunctionIfBothNonEmpty(
-									referencedEntityBinding.getWhere(),
-									getPluralAttributeSource().getWhere()
-							)
-					);
-				}
-				else {
-					// ignore entity's where clause
-					collectionBinding.setWhere( getPluralAttributeSource().getWhere() );
-				}
+				collectionBinding.setWhere(
+						getNonEmptyOrConjunctionIfBothNonEmpty(
+								referencedEntityBinding.getWhere(),
+								getPluralAttributeSource().getWhere()
+						)
+				);
 
 				elementBinding.setReferencedEntityName( referencedEntityBinding.getEntityName() );
 				elementBinding.setAssociatedClass( referencedEntityBinding );
 				elementBinding.setIgnoreNotFound( elementSource.isIgnoreNotFound() );
 			}
-			else if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceManyToMany ) {
-				final PluralAttributeElementSourceManyToMany elementSource =
-						(PluralAttributeElementSourceManyToMany) getPluralAttributeSource().getElementSource();
+			else if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceManyToMany elementSource ) {
 				final ManyToOne elementBinding = new ManyToOne(
 						getMappingDocument(),
 						getCollectionBinding().getCollectionTable()
@@ -3466,24 +3419,12 @@ public class ModelBinder {
 				// This "where" clause comes from the collection mapping; e.g., <set name="..." ... where="..." .../>
 				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
 
-				if ( useEntityWhereClauseForCollections( metadataBuildingContext ) ) {
-					// For a many-to-many association, there are 2 possible sources of "where" clauses that apply
-					// to the associated entity table (not the join table):
-					// 1) from the associated entity mapping; i.e., <class name="..." ... where="..." .../>
-					// 2) from the many-to-many mapping; i.e <many-to-many ... where="...".../>
-					// Collection#setManytoManyWhere is used to set the "where" clause that applies to
-					// to the many-to-many associated entity table (not the join table).
-					getCollectionBinding().setManyToManyWhere(
-							getNonEmptyOrConjunctionIfBothNonEmpty(
-									referencedEntityBinding.getWhere(),
-									elementSource.getWhere()
-							)
-					);
-				}
-				else {
-					// ignore entity's where clause
-					getCollectionBinding().setManyToManyWhere( elementSource.getWhere() );
-				}
+				getCollectionBinding().setManyToManyWhere(
+						getNonEmptyOrConjunctionIfBothNonEmpty(
+								referencedEntityBinding.getWhere(),
+								elementSource.getWhere()
+						)
+				);
 
 				getCollectionBinding().setManyToManyOrdering( elementSource.getOrder() );
 

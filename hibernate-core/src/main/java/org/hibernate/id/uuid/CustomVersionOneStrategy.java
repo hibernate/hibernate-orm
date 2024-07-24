@@ -23,7 +23,7 @@ import org.hibernate.internal.util.BytesHelper;
  *
  * @author Steve Ebersole
  */
-public class CustomVersionOneStrategy implements UUIDGenerationStrategy, UuidGenerator.ValueGenerator {
+public class CustomVersionOneStrategy implements UUIDGenerationStrategy, UuidValueGenerator {
 	@Override
 	public int getGeneratedVersion() {
 		return 1;

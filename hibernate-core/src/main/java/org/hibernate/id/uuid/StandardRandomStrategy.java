@@ -16,7 +16,7 @@ import org.hibernate.id.UUIDGenerationStrategy;
  *
  * @author Steve Ebersole
  */
-public class StandardRandomStrategy implements UUIDGenerationStrategy, UuidGenerator.ValueGenerator {
+public class StandardRandomStrategy implements UUIDGenerationStrategy, UuidValueGenerator {
 	public static final StandardRandomStrategy INSTANCE = new StandardRandomStrategy();
 
 	/**

@@ -63,6 +63,10 @@ import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
+import org.hibernate.resource.beans.container.spi.BeanContainer;
+import org.hibernate.resource.beans.internal.Helper;
+import org.hibernate.resource.beans.spi.BeanInstanceProducer;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -283,6 +287,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private final int queryStatisticsMaxSize;
 
 
+	@SuppressWarnings( "unchecked" )
 	public SessionFactoryOptionsBuilder(StandardServiceRegistry serviceRegistry, BootstrapContext context) {
 		this.serviceRegistry = serviceRegistry;
 		this.jpaBootstrap = context.isJpaBootstrap();
@@ -372,6 +377,38 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				CurrentTenantIdentifierResolver.class,
 				configurationSettings.get( MULTI_TENANT_IDENTIFIER_RESOLVER )
 		);
+		if ( this.currentTenantIdentifierResolver == null ) {
+			final BeanContainer beanContainer = Helper.allowExtensionsInCdi( serviceRegistry ) ? serviceRegistry.requireService( ManagedBeanRegistry.class ).getBeanContainer() : null;
+			if (beanContainer != null) {
+				this.currentTenantIdentifierResolver = beanContainer.getBean(
+						CurrentTenantIdentifierResolver.class,
+						new BeanContainer.LifecycleOptions() {
+							@Override
+							public boolean canUseCachedReferences() {
+								return true;
+							}
+
+							@Override
+							public boolean useJpaCompliantCreation() {
+								return false;
+							}
+						},
+						new BeanInstanceProducer() {
+
+							@Override
+							public <B> B produceBeanInstance(Class<B> beanType) {
+								return null;
+							}
+
+							@Override
+							public <B> B produceBeanInstance(String name, Class<B> beanType) {
+								return null;
+							}
+
+						}
+				).getBeanInstance();
+			}
+		}
 
 		this.delayBatchFetchLoaderCreations = configurationService.getSetting( DELAY_ENTITY_LOADER_CREATIONS, BOOLEAN, true );
 		this.defaultBatchFetchSize = getInt( DEFAULT_BATCH_FETCH_SIZE, configurationSettings, -1 );

@@ -55,7 +55,7 @@ public class UuidGeneratorAnnotationTests {
 			session.persist( gavin );
 			session.flush();
 			assertThat( gavin.id ).isNotNull();
-			assertThat( gavin.id.version() ).isEqualTo( 7 );
+			assertThat( gavin.id.version() ).isEqualTo( 6 );
 		} );
 	}
 }

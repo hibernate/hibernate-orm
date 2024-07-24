@@ -7,16 +7,16 @@ import org.hibernate.id.UUIDGenerationStrategy;
 import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.id.uuid.UuidValueGenerator;
 
-public class UuidV7ValueGenerator implements UUIDGenerationStrategy, UuidValueGenerator {
-	public static final UuidV7ValueGenerator INSTANCE = new UuidV7ValueGenerator();
+public class UuidV6ValueGenerator implements UUIDGenerationStrategy, UuidValueGenerator {
+	public static final UuidV6ValueGenerator INSTANCE = new UuidV6ValueGenerator();
 
 	/**
-	 * A variant 7
+	 * A variant 6
 	 */
 	@Override
 	public int getGeneratedVersion() {
-		// UUID v7
-		return 7;
+		// UUID v6
+		return 6;
 	}
 
 	/**
@@ -29,6 +29,6 @@ public class UuidV7ValueGenerator implements UUIDGenerationStrategy, UuidValueGe
 
 	@Override
 	public UUID generateUuid(SharedSessionContractImplementor session) {
-		return UUIDv7.nextIdentifier();
+		return UUIDv6.nextIdentifier();
 	}
 }

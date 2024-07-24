@@ -21,7 +21,7 @@ public class TheOtherEntity {
 	@Id @GeneratedValue
 	public Long pk;
 
-	@UuidGenerator(valueGenerator = UuidV7ValueGenerator.class)
+	@UuidGenerator(valueGenerator = UuidV6ValueGenerator.class)
 	public UUID id;
 
 	@Basic

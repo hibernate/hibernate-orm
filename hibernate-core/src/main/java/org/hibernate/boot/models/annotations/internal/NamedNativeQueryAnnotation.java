@@ -10,6 +10,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.CacheMode;
 import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.NamedNativeQuery;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeQueryImpl;
@@ -76,6 +77,10 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 		this.comment = annotation.comment();
 		this.cacheStoreMode = annotation.cacheStoreMode();
 		this.cacheRetrieveMode = annotation.cacheRetrieveMode();
+		if ( annotation.cacheMode() != CacheMode.NORMAL ) {
+			this.cacheStoreMode = annotation.cacheMode().getJpaStoreMode();
+			this.cacheRetrieveMode = annotation.cacheMode().getJpaRetrieveMode();
+		}
 		this.readOnly = annotation.readOnly();
 		this.querySpaces = annotation.querySpaces();
 		this.callable = annotation.callable();
@@ -212,6 +217,11 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 
 	public void cacheRetrieveMode(CacheRetrieveMode value) {
 		this.cacheRetrieveMode = value;
+	}
+
+	@Override
+	public CacheMode cacheMode() {
+		return CacheMode.fromJpaModes( cacheRetrieveMode, cacheStoreMode );
 	}
 
 	@Override

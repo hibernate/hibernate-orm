@@ -27,7 +27,7 @@
 	<class name="User" table="users">
 		<id name="name"/>
 		<property name="password" column="pw"/>
-		<map name="session" cascade="persist,save-update,delete,delete-orphan">
+		<map name="session" cascade="persist,merge,delete,delete-orphan">
 			<key column="userName" not-null="true"/>
 			<map-key formula="lower(name)" type="string"/>
 			<one-to-many class="SessionAttribute"/>

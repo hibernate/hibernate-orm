@@ -29,8 +29,8 @@ public class Mother {
 	private Integer id;
 
 	@OneToMany(mappedBy = "mother")
-	@Cascade({ CascadeType.SAVE_UPDATE })
+	@Cascade({ CascadeType.PERSIST, CascadeType.MERGE })
 	public Set<Son> getSons() { return sons; }
 	public void setSons(Set<Son> sons) {  this.sons = sons; }
-	private Set<Son> sons = new HashSet<Son>();
+	private Set<Son> sons = new HashSet<>();
 }

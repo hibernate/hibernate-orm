@@ -15,7 +15,7 @@
 			<generator class="increment"/>
 		</id>
 		<many-to-one name="w" 
-			cascade="save-update"
+			cascade="merge,persist"
 			class="org.hibernate.orm.test.legacy.W"
 			insert="true" 
 			update="false" 

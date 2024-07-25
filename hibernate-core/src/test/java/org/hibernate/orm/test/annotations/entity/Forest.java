@@ -22,7 +22,6 @@ import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.SQLRestriction;
-import org.hibernate.annotations.SelectBeforeUpdate;
 
 import jakarta.persistence.Convert;
 import jakarta.persistence.ElementCollection;
@@ -40,7 +39,6 @@ import jakarta.persistence.Table;
  */
 @Entity
 @BatchSize(size = 5)
-@SelectBeforeUpdate
 @DynamicInsert @DynamicUpdate
 @OptimisticLocking(type = OptimisticLockType.ALL)
 @SQLRestriction("1=1")

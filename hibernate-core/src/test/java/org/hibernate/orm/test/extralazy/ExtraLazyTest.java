@@ -11,10 +11,10 @@ import java.util.Map;
 
 import org.hibernate.Hibernate;
 
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -48,14 +48,14 @@ public class ExtraLazyTest {
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "delete from Group" ).executeUpdate();
-					session.createQuery( "delete from Document" ).executeUpdate();
-					session.createQuery( "delete from User" ).executeUpdate();
-					session.createQuery( "delete from Child" ).executeUpdate();
-					session.createQuery( "delete from Parent" ).executeUpdate();
-					session.createQuery( "delete from Student" ).executeUpdate();
-					session.createQuery( "delete from School" ).executeUpdate();
-					session.createQuery( "delete from Championship" ).executeUpdate();
+					session.createMutationQuery( "delete from Group" ).executeUpdate();
+					session.createMutationQuery( "delete from Document" ).executeUpdate();
+					session.createMutationQuery( "delete from User" ).executeUpdate();
+					session.createMutationQuery( "delete from Child" ).executeUpdate();
+					session.createMutationQuery( "delete from Parent" ).executeUpdate();
+					session.createMutationQuery( "delete from Student" ).executeUpdate();
+					session.createMutationQuery( "delete from School" ).executeUpdate();
+					session.createMutationQuery( "delete from Championship" ).executeUpdate();
 				}
 		);
 	}
@@ -207,7 +207,7 @@ public class ExtraLazyTest {
 					assertThat( g.getUsers().size(), is( 1 ) );
 					Map smap = ( (User) g.getUsers().get( "gavin" ) ).getSession();
 					assertThat( smap.size(), is( 1 ) );
-					User gavin = (User) g.getUsers().put( "gavin", user2 );
+					User gavin = (User) g.getUsers().put( "gavin", session.merge( user2 ) );
 					session.remove( gavin );
 					assertThat(
 							session.createQuery( "select count(*) from SessionAttribute" ).uniqueResult(),
@@ -296,14 +296,14 @@ public class ExtraLazyTest {
 					gavin = (User) results.get( 0 );
 					assertThat( gavin.getName(), is( "gavin" ) );
 					assertThat( gavin.getSession().size(), is( 2 ) );
-					session.createQuery( "delete SessionAttribute" ).executeUpdate();
-					session.createQuery( "delete User" ).executeUpdate();
+					session.createMutationQuery( "delete SessionAttribute" ).executeUpdate();
+					session.createMutationQuery( "delete User" ).executeUpdate();
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4294")
+	@JiraKey("HHH-4294")
 	public void testMap(SessionFactoryScope scope) {
 		Parent parent = new Parent();
 		Child child = new Child();
@@ -329,7 +329,7 @@ public class ExtraLazyTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10874")
+	@JiraKey("HHH-10874")
 	public void testWhereClauseOnBidirectionalCollection(SessionFactoryScope scope) {
 		School school = new School( 1 );
 		Student gavin = new Student( "gavin", 4 );

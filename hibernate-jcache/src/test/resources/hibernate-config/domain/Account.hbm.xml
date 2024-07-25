@@ -16,7 +16,7 @@
             <generator class="native"/>
         </id>
 
-        <many-to-one name="person" class="org.hibernate.orm.test.jcache.domain.Person" cascade="save-update,lock"
+        <many-to-one name="person" class="org.hibernate.orm.test.jcache.domain.Person" cascade="merge,persist,lock"
                      column="person_id"
                      unique="true"
                      not-null="true"/>

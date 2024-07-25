@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * |  <-   ->                |
  * -- (1 : N) -- (delivery) --
  * <p>
- * Arrows indicate the direction of cascade-merge, cascade-save, cascade-refresh and cascade-save-or-update
+ * Arrows indicate the direction of cascade-merge, cascade-persist, cascade-refresh
  * <p>
  * It reproduces the following issues:
  * https://hibernate.atlassian.net/browse/HHH-9512

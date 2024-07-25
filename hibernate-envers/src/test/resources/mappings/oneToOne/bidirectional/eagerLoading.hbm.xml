@@ -15,7 +15,7 @@
             <generator class="native" />
         </id>
         <property name="data" />
-        <many-to-one name="reference" cascade="save-update"
+        <many-to-one name="reference" cascade="merge,persist"
                      class="BidirectionalEagerHbmRefEdPK" column="BIDIRECTIONAL_REFERENCED_ID" />
     </class>
 

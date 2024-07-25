@@ -53,7 +53,7 @@ public class IdGeneratorCreationContext implements GeneratorCreationContext {
 
 	@Override
 	public ServiceRegistry getServiceRegistry() {
-		return domainModel.getMetadataBuildingOptions().getServiceRegistry();
+		return serviceRegistry;
 	}
 
 	@Override

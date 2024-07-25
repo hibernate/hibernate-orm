@@ -59,14 +59,6 @@ public interface EntityTypeMetadata extends IdentifiableTypeMetadata, EntityNami
 	int getBatchSize();
 
 	/**
-	 * Whether to perform a select prior to performing a {@linkplain org.hibernate.Session#update}
-	 *
-	 * @deprecated Because {@linkplain org.hibernate.Session#update} itself is deprecated
-	 */
-	@Deprecated
-	boolean isSelectBeforeUpdate();
-
-	/**
 	 * Whether to perform dynamic inserts.
 	 *
 	 * @see org.hibernate.annotations.DynamicInsert

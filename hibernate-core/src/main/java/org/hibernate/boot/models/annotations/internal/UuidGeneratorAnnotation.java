@@ -10,6 +10,7 @@ import java.lang.annotation.Annotation;
 
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.boot.models.HibernateAnnotations;
+import org.hibernate.id.uuid.UuidValueGenerator;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -20,12 +21,14 @@ import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJand
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
 public class UuidGeneratorAnnotation implements UuidGenerator {
 	private org.hibernate.annotations.UuidGenerator.Style style;
+	private Class<? extends UuidValueGenerator> algorithm;
 
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
 	public UuidGeneratorAnnotation(SourceModelBuildingContext modelContext) {
 		this.style = org.hibernate.annotations.UuidGenerator.Style.AUTO;
+		this.algorithm = UuidValueGenerator.class;
 	}
 
 	/**
@@ -33,6 +36,7 @@ public class UuidGeneratorAnnotation implements UuidGenerator {
 	 */
 	public UuidGeneratorAnnotation(UuidGenerator annotation, SourceModelBuildingContext modelContext) {
 		this.style = annotation.style();
+		this.algorithm = annotation.algorithm();
 	}
 
 	/**
@@ -52,9 +56,13 @@ public class UuidGeneratorAnnotation implements UuidGenerator {
 		return style;
 	}
 
+	@Override
+	public Class<? extends UuidValueGenerator> algorithm() {
+		return algorithm;
+	}
+
 	public void style(org.hibernate.annotations.UuidGenerator.Style value) {
 		this.style = value;
 	}
-
 
 }

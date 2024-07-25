@@ -21,7 +21,6 @@ import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
-import org.hibernate.annotations.SelectBeforeUpdate;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.boot.model.CustomSql;
 import org.hibernate.boot.model.naming.EntityNaming;
@@ -63,7 +62,6 @@ public class EntityTypeMetadataImpl
 	private final String proxy;
 	private final int batchSize;
 	private final String discriminatorMatchValue;
-	private final boolean isSelectBeforeUpdate;
 	private final boolean isDynamicInsert;
 	private final boolean isDynamicUpdate;
 	private final Map<String,CustomSql> customInsertMap;
@@ -102,7 +100,6 @@ public class EntityTypeMetadataImpl
 		this.cacheable = determineCacheability( classDetails, modelContext );
 		this.synchronizedTableNames = determineSynchronizedTableNames();
 		this.batchSize = determineBatchSize();
-		this.isSelectBeforeUpdate = decodeSelectBeforeUpdate();
 		this.isDynamicInsert = decodeDynamicInsert();
 		this.isDynamicUpdate = decodeDynamicUpdate();
 		this.customInsertMap = extractCustomSql( classDetails, SQLInsert.class );
@@ -172,7 +169,6 @@ public class EntityTypeMetadataImpl
 		this.cacheable = determineCacheability( classDetails, modelContext );
 		this.synchronizedTableNames = determineSynchronizedTableNames();
 		this.batchSize = determineBatchSize();
-		this.isSelectBeforeUpdate = decodeSelectBeforeUpdate();
 		this.isDynamicInsert = decodeDynamicInsert();
 		this.isDynamicUpdate = decodeDynamicUpdate();
 		this.customInsertMap = extractCustomSql( classDetails, SQLInsert.class );
@@ -252,11 +248,6 @@ public class EntityTypeMetadataImpl
 	@Override
 	public int getBatchSize() {
 		return batchSize;
-	}
-
-	@Override
-	public boolean isSelectBeforeUpdate() {
-		return isSelectBeforeUpdate;
 	}
 
 	@Override
@@ -410,15 +401,6 @@ public class EntityTypeMetadataImpl
 			return batchSizeAnnotation.size();
 		}
 		return -1;
-	}
-
-	private boolean decodeSelectBeforeUpdate() {
-		//noinspection deprecation
-		final SelectBeforeUpdate selectBeforeUpdateAnnotation = getClassDetails().getDirectAnnotationUsage( SelectBeforeUpdate.class );
-		if ( selectBeforeUpdateAnnotation == null ) {
-			return false;
-		}
-		return selectBeforeUpdateAnnotation.value();
 	}
 
 	private boolean decodeDynamicInsert() {

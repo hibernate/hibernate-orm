@@ -21,10 +21,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * only some of the attributes of the entity. However, there is a cost
  * associated with generating the SQL at runtime.
  * <p>
- * When detached entities are reattached using
- * {@link org.hibernate.Session#update(Object)}, the entity must also be
- * annotated {@link SelectBeforeUpdate} for this annotation to have any
- * effect.
  *
  * @author Steve Ebersole
  *

@@ -9,6 +9,8 @@ package org.hibernate.orm.test.map;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.LockMode;
+
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -30,8 +32,8 @@ public class MapIndexFormulaTest {
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "delete from Group" ).executeUpdate();
-					session.createQuery( "delete from User" ).executeUpdate();
+					session.createMutationQuery( "delete from Group" ).executeUpdate();
+					session.createMutationQuery( "delete from User" ).executeUpdate();
 				}
 		);
 	}
@@ -88,6 +90,7 @@ public class MapIndexFormulaTest {
 					assertEquals( 1, g.getUsers().size() );
 					Map smap = ( (User) g.getUsers().get( "gavin" ) ).getSession();
 					assertEquals( 1, smap.size() );
+					session.lock( turin , LockMode.NONE);
 					User gavin = (User) g.getUsers().put( "gavin", turin );
 					session.remove( gavin );
 					assertEquals(
@@ -141,8 +144,8 @@ public class MapIndexFormulaTest {
 					gavin = (User) results.get( 0 );
 					assertEquals( "gavin", gavin.getName() );
 					assertEquals( 2, gavin.getSession().size() );
-					session.createQuery( "delete SessionAttribute" ).executeUpdate();
-					session.createQuery( "delete User" ).executeUpdate();
+					session.createMutationQuery( "delete SessionAttribute" ).executeUpdate();
+					session.createMutationQuery( "delete User" ).executeUpdate();
 				}
 		);
 	}

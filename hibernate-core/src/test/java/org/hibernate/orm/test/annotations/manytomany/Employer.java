@@ -44,7 +44,7 @@ public class Employer implements Serializable {
 			joinColumns = {@JoinColumn(name = "EMPLOYER_ID")},
 			inverseJoinColumns = {@JoinColumn(name = "CONTRACTOR_ID")}
 	)
-	@Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
+	@Cascade({org.hibernate.annotations.CascadeType.PERSIST, org.hibernate.annotations.CascadeType.MERGE})
 	@OrderBy("name desc")	
 	public List getContractors() {
 		return contractors;
@@ -63,7 +63,7 @@ public class Employer implements Serializable {
 			joinColumns = {@JoinColumn(name = "EMPER_ID")},
 			inverseJoinColumns = {@JoinColumn(name = "EMPEE_ID")}
 	)
-	@Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
+	@Cascade({org.hibernate.annotations.CascadeType.PERSIST, org.hibernate.annotations.CascadeType.MERGE})
 	@OrderBy("name asc")
 	public Collection getEmployees() {
 		return employees;

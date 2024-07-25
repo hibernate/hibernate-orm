@@ -19,10 +19,11 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
 import org.hibernate.Hibernate;
+import org.hibernate.LockOptions;
 import org.hibernate.collection.spi.AbstractPersistentCollection;
 
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -85,7 +86,7 @@ public class BagDelayedOperationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5855")
+	@JiraKey( "HHH-5855")
 	public void testSimpleAddDetached(SessionFactoryScope scope) {
 		// Create 2 detached Child objects.
 		Child c1 = new Child( "Darwin" );
@@ -104,6 +105,7 @@ public class BagDelayedOperationTest {
 					Parent p = session.get( Parent.class, parentId );
 					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 					// add detached Child c
+					session.lock( c1, LockOptions.NONE );
 					p.addChild( c1 );
 					// collection should still be uninitialized
 					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
@@ -140,7 +142,7 @@ public class BagDelayedOperationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5855")
+	@JiraKey("HHH-5855")
 	public void testSimpleAddTransient(SessionFactoryScope scope) {
 		// Add a transient Child and commit.
 		scope.inTransaction(
@@ -185,7 +187,7 @@ public class BagDelayedOperationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5855")
+	@JiraKey("HHH-5855")
 	public void testSimpleAddManaged(SessionFactoryScope scope) {
 		// Add 2 Child entities
 		Child c1 = new Child( "Darwin" );
@@ -240,7 +242,7 @@ public class BagDelayedOperationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11209")
+	@JiraKey("HHH-11209")
 	public void testMergeInitializedBagAndRemerge(SessionFactoryScope scope) {
 		Parent parent = scope.fromTransaction(
 				session -> {
@@ -255,7 +257,7 @@ public class BagDelayedOperationTest {
 
 		Parent modifiedParent = scope.fromTransaction(
 				session -> {
-					Parent p = (Parent) session.merge( parent );
+					Parent p = session.merge( parent );
 					assertTrue( Hibernate.isInitialized( p.getChildren() ) );
 					Child c = new Child( "Zeke" );
 					c.setParent( p );
@@ -269,7 +271,7 @@ public class BagDelayedOperationTest {
 		// Merge detached Parent with initialized children
 		Parent mergedParent = scope.fromTransaction(
 				session -> {
-					Parent p = (Parent) session.merge( modifiedParent );
+					Parent p = session.merge( modifiedParent );
 					// after merging, p#children will be initialized
 					assertTrue( Hibernate.isInitialized( p.getChildren() ) );
 					assertFalse( ( (AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
@@ -280,7 +282,7 @@ public class BagDelayedOperationTest {
 		// Merge detached Parent
 		scope.inTransaction(
 				session -> {
-					Parent p = (Parent) session.merge( mergedParent );
+					Parent p = session.merge( mergedParent );
 					assertTrue( Hibernate.isInitialized( p.getChildren() ) );
 					assertFalse( ( (AbstractPersistentCollection) p.getChildren() ).hasQueuedOperations() );
 

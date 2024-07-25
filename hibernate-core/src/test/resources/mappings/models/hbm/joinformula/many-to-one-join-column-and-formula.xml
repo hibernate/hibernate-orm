@@ -27,7 +27,7 @@
 
         <many-to-one name="mailingAddress"
                      class="Address"
-                     cascade="persist,save-update,delete"
+                     cascade="persist,merge,delete"
                      fetch="join">
             <column name="mailing_address_fk"/>
             <formula>'MAILING'</formula>
@@ -35,7 +35,7 @@
 
         <many-to-one name="shippingAddress"
                      class="Address"
-                     cascade="persist,save-update,delete"
+                     cascade="persist,merge,delete"
                      fetch="join">
             <column name="shipping_address_fk"/>
             <formula>'SHIPPING'</formula>

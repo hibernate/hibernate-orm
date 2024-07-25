@@ -3,6 +3,7 @@ package org.hibernate.orm.test.annotations.selectbeforeupdate;
 import java.util.List;
 
 import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.SelectBeforeUpdate;
 import org.hibernate.orm.test.legacy.Child;
 
@@ -21,7 +22,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.hibernate.annotations.CascadeType.SAVE_UPDATE;
 
 @DomainModel(
 		annotatedClasses = {
@@ -51,7 +51,7 @@ public class SelectBeforeUpdateWithCascadeTest {
 		scope.inTransaction(
 				session -> {
 					ParentEntity parent1 = new ParentEntity();
-					parent1.setChildEntity( childEntity );
+					parent1.setChildEntity( session.merge( childEntity )  );
 
 					session.persist( parent1 );
 				}
@@ -60,7 +60,7 @@ public class SelectBeforeUpdateWithCascadeTest {
 		scope.inTransaction(
 				session -> {
 					ParentEntity parent2 = new ParentEntity();
-					parent2.setChildEntity( childEntity );
+					parent2.setChildEntity( session.merge( childEntity ) );
 
 					session.persist( parent2 );
 				}
@@ -181,11 +181,9 @@ public class SelectBeforeUpdateWithCascadeTest {
 		private Long id;
 
 		@ManyToOne
-		@Cascade(SAVE_UPDATE)
+		@Cascade({ CascadeType.MERGE, CascadeType.PERSIST})
 		@JoinColumn(name = "child_entity_id")
 		private ChildEntity childEntity;
-
-
 
 		public void setId(Long id) {
 			this.id = id;

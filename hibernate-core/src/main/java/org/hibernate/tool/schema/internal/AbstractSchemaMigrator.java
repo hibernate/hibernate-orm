@@ -59,6 +59,8 @@ import static org.hibernate.engine.config.spi.StandardConverters.STRING;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.tool.schema.UniqueConstraintSchemaUpdateStrategy.DROP_RECREATE_QUIETLY;
 import static org.hibernate.tool.schema.UniqueConstraintSchemaUpdateStrategy.SKIP;
+import static org.hibernate.tool.schema.internal.SchemaCreatorImpl.createUserDefinedTypes;
+import static org.hibernate.tool.schema.internal.SchemaDropperImpl.dropUserDefinedTypes;
 
 /**
  * Base implementation of {@link SchemaMigrator}.
@@ -202,6 +204,9 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			}
 		}
 
+		// Drop all UDTs
+		dropUserDefinedTypes( metadata, options, schemaFilter, dialect, formatter, sqlGenerationContext, targets );
+
 		// Create before-table AuxiliaryDatabaseObjects
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
 			if ( auxiliaryDatabaseObject.beforeTablesOnCreation()
@@ -215,6 +220,9 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 				);
 			}
 		}
+
+		// Recreate all UDTs
+		createUserDefinedTypes( metadata, options, schemaFilter, dialect, formatter, sqlGenerationContext, targets );
 
 		boolean tryToCreateCatalogs = false;
 		boolean tryToCreateSchemas = false;

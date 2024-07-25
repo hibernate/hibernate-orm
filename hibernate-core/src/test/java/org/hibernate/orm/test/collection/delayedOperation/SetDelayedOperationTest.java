@@ -22,8 +22,8 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -88,7 +88,7 @@ public class SetDelayedOperationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5855")
+	@JiraKey("HHH-5855")
 	public void testSimpleAddDetached(SessionFactoryScope scope) {
 		// Create 2 detached Child objects.
 		Child c1 = new Child( "Darwin" );
@@ -107,7 +107,7 @@ public class SetDelayedOperationTest {
 					Parent p = session.get( Parent.class, parentId );
 					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 					// add detached Child c
-					p.addChild( c1 );
+					p.addChild( session.merge( c1 ) );
 					// collection should still be uninitialized
 					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 				}
@@ -143,7 +143,7 @@ public class SetDelayedOperationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5855")
+	@JiraKey("HHH-5855")
 	public void testSimpleAddTransient(SessionFactoryScope scope) {
 		// Add a transient Child and commit.
 		scope.inTransaction(
@@ -190,7 +190,7 @@ public class SetDelayedOperationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5855")
+	@JiraKey("HHH-5855")
 	public void testSimpleAddManaged(SessionFactoryScope scope) {
 		// Add 2 Child entities
 		Child c1 = new Child( "Darwin" );
@@ -245,7 +245,7 @@ public class SetDelayedOperationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5855")
+	@JiraKey("HHH-5855")
 	public void testSimpleRemoveDetached(SessionFactoryScope scope) {
 		// Get the 2 Child entities and detach.
 		Child c1 = scope.fromTransaction(
@@ -302,7 +302,7 @@ public class SetDelayedOperationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5855")
+	@JiraKey("HHH-5855")
 	public void testSimpleRemoveManaged(SessionFactoryScope scope) {
 		// Remove a managed entity element and commit
 		scope.inTransaction(

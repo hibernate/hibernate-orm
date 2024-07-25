@@ -80,7 +80,7 @@ public class Employee implements Serializable {
 			cascade = {CascadeType.PERSIST, CascadeType.MERGE},
 			mappedBy = "employees"
 	)
-	@Cascade({org.hibernate.annotations.CascadeType.SAVE_UPDATE,
+	@Cascade({org.hibernate.annotations.CascadeType.MERGE,
 			org.hibernate.annotations.CascadeType.PERSIST})
 	public Collection<Employer> getEmployers() {
 		return employers;

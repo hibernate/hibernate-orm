@@ -44,7 +44,7 @@ public class Dependent {
 
 	@Id
 	@ManyToOne( cascade = CascadeType.PERSIST )
-	@Cascade( org.hibernate.annotations.CascadeType.SAVE_UPDATE )
+	@Cascade( {org.hibernate.annotations.CascadeType.PERSIST, org.hibernate.annotations.CascadeType.MERGE} )
 	@JoinColumn(nullable=false)
 	public Employee getEmp() {
 		return emp;

@@ -29,7 +29,7 @@ import org.hibernate.testing.orm.junit.Setting;
  * |  <-   ->                |
  * -- (1 : N) -- (delivery) --
  * <p>
- * Arrows indicate the direction of cascade-merge, cascade-save, and cascade-save-or-update
+ * Arrows indicate the direction of cascade-merge, cascade-persist
  * <p>
  * It reproduced the following issues:
  * http://opensource.atlassian.com/projects/hibernate/browse/HHH-3046

@@ -14,7 +14,7 @@ import java.util.Set;
 public class Group {
 	private Long id;
 	private String name;
-	private Set memberships = new HashSet();
+	private Set<Membership> memberships = new HashSet<>();
 
 	public Group() {
 	}
@@ -39,11 +39,11 @@ public class Group {
 		this.name = name;
 	}
 
-	public Set getMemberships() {
+	public Set<Membership> getMemberships() {
 		return memberships;
 	}
 
-	public void setMemberships(Set memberships) {
+	public void setMemberships(Set<Membership> memberships) {
 		this.memberships = memberships;
 	}
 

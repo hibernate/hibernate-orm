@@ -29,7 +29,7 @@
 
 		<property name="number" type="int" column="int" not-null="true" />
 
-		<bag name="owners" cascade="save-update">
+		<bag name="owners" cascade="persist, merge">
 			<key column="ID_GARAGE" not-null="true" update="false" />
 			<one-to-many entity-name="Personaje"/>
 		</bag>

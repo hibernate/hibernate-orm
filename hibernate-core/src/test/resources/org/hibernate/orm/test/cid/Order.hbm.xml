@@ -59,7 +59,7 @@
     		fetch="join" 
     		lazy="false"
     		inverse="true"
-    		cascade="save-update">
+    		cascade="persist, merge">
     		<key>
     			<column name="customerId"/>
     			<column name="orderNumber"/>

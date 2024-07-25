@@ -388,7 +388,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 		}
 	}
 
-	private static void dropUserDefinedTypes(
+	static void dropUserDefinedTypes(
 			Metadata metadata,
 			ExecutionOptions options,
 			SchemaFilter schemaFilter,

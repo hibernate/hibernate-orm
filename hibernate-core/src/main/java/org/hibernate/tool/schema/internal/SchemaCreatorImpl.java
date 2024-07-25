@@ -497,7 +497,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		}
 	}
 
-	private static void createUserDefinedTypes(
+	static void createUserDefinedTypes(
 			Metadata metadata,
 			ExecutionOptions options,
 			SchemaFilter schemaFilter,

@@ -26,7 +26,7 @@
 			<generator class="increment"/>
 		</id>
 		<property name="x"/>
-		<one-to-one name="theX" cascade="save-update"/>
+		<one-to-one name="theX" cascade="merge,persist"/>
 	</class>
 	<class name="org.hibernate.orm.test.legacy.X$XX" table="xxx">
 		<id name="id">

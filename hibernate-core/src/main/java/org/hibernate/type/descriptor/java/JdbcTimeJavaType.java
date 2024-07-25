@@ -8,6 +8,7 @@ package org.hibernate.type.descriptor.java;
 
 import java.sql.Time;
 import java.sql.Types;
+import java.text.SimpleDateFormat;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -42,7 +43,13 @@ import jakarta.persistence.TemporalType;
 public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 	public static final JdbcTimeJavaType INSTANCE = new JdbcTimeJavaType();
 
-	public static final String TIME_FORMAT = "HH:mm:ss.SSS";
+	private static final String LOCAL_DATE_FORMAT = "MM/dd/yyyy";
+	private static final String LOCAL_TIME_FORMAT = "HH:mm:ss.SSS";
+	private static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat(LOCAL_DATE_FORMAT + " " + LOCAL_TIME_FORMAT);
+	private static final  DateTimeFormatter DATE_TIME_FORMATTER = new DateTimeFormatterBuilder()
+		.appendPattern("MM/dd/yyyy HH:mm:ss")
+		.appendFraction(ChronoField.MILLI_OF_SECOND, 3, 3, true)
+		.toFormatter();
 
 	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ISO_LOCAL_TIME;
 
@@ -132,17 +139,9 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 			final Time time = value instanceof java.sql.Time
 					? ( (java.sql.Time) value )
 					: new java.sql.Time( value.getTime() % 86_400_000 );
-			final LocalTime localTime = time.toLocalTime();
-			long millis = time.getTime() % 1000;
-			if ( millis == 0 ) {
-				return localTime;
-			}
-			if ( millis < 0 ) {
-				// The milliseconds for a Time could be negative,
-				// which usually means the time is in a different time zone
-				millis += 1_000L;
-			}
-			return localTime.with( ChronoField.NANO_OF_SECOND, millis * 1_000_000L );
+
+			var date = DATE_FORMATTER.format(time);
+			return LocalTime.parse(date, DATE_TIME_FORMATTER);
 		}
 
 		if ( Time.class.isAssignableFrom( type ) ) {

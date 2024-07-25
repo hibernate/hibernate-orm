@@ -48,7 +48,6 @@ import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.annotations.SecondaryRows;
-import org.hibernate.annotations.SelectBeforeUpdate;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
@@ -1275,9 +1274,6 @@ public class EntityBinder {
 		if ( persistentClass.useDynamicUpdate() && annotatedClass.hasAnnotationUsage( SQLUpdate.class, getSourceModelContext() ) ) {
 			throw new AnnotationException( "Entity '" + name + "' is annotated both '@DynamicUpdate' and '@SQLUpdate'" );
 		}
-
-		final SelectBeforeUpdate selectBeforeUpdateAnn = annotatedClass.getAnnotationUsage( SelectBeforeUpdate.class, getSourceModelContext() );
-		persistentClass.setSelectBeforeUpdate( selectBeforeUpdateAnn != null && selectBeforeUpdateAnn.value() );
 	}
 
 	private void bindOptimisticLocking() {

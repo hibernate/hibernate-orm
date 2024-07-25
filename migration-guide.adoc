@@ -144,6 +144,60 @@ String isDefault();
 * Removed `MetadataContributor`, deprecated in favor of `AdditionalMappingContributor`
 * Removed `@Persister`.
 * Removed `hibernate.mapping.precedence` and friends
+* Removed `org.hibernate.Session#save(Object object)` and `org.hibernate.Session#save(String entityName, Object object)` in favor of `org.hibernate.Session#persist(Object object)` and `org.hibernate.Session#persist(String entityName, Object object)`
+* Removed `org.hibernate.Session#saveOrUpdate(Object object)` and `org.hibernate.Session#saveOrUpdate(String entityName, Object object)` in favor `persist` if the entity is transient or `merge` if the entity is detached.
+* Removed `org.hibernate.Session#update(Object object` and `org.hibernate.Session#update(String entityName, Object object)` in favor of `org.hibernate.Session.merge(T object)` and `org.hibernate.Session.merge(String entityName, T object)`
+* Removed `org.hibernate.annotations.CascadeType.SAVE_UPDATE` in favor of `org.hibernate.annotations.CascadeType.PERSIST` + `org.hibernate.annotations.CascadeType.MERGE`
+* Removed `@SelectBeforeUpdate`
+
+[WARNING]
+===
+The removal of `CascadeType.SAVE_UPDATE` slightly changes the persist and flush behaviour (not affecting application using `Entitymanager`) that now conforms with the Jakarta JPA specifications.
+
+Persisting a transient entity with an associated detached entity where the association is annotated with cascade=all or cascade=persist throws an exception if the detached entity has not been re-associated with the the session using lock or merge.
+
+The same happens when flushing a managed entity having an associated detached entity.
+
+```
+@Entit
+class Parent {
+        ...
+
+        @OneToMany(cascade = CascadeType.ALL, mappedBy = "parent", orphanRemoval = true)
+        @LazyCollection(value = LazyCollectionOption.EXTRA)
+        private Set<Child> children = new HashSet<>();
+}
+
+@Entity
+class Child {
+
+        ...
+
+        @Id
+        @GeneratedValue(strategy = GenerationType.AUTO)
+        private Long id;
+
+        @ManyToOne
+        private Parent parent;
+}
+
+
+```
+
+```
+// Being Child c1 detached.
+
+scope.inTransaction(
+        session -> {
+                Parent parent = session.get( Parent.class, parentId );
+                // add detached Child c
+                parent.addChild( c1 );
+        }
+);
+```
+will throw an `jakarta.persistence.EntityExistsException`
+
+in order to fix the issue we can call `session.lock(c1,LockMode.NONE)` before adding `c1` to the `parent` or instead using `p.addChild( session.merge(c1) )`;
 
 
 [[ddl-implicit-datatype-timestamp]]

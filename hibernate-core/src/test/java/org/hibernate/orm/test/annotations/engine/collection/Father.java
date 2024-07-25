@@ -33,8 +33,8 @@ public class Father {
 	@OneToMany
 	@OrderColumn(name = "son_arriv")
 	@JoinColumn(name = "father_id", nullable = false)
-	@Cascade({ CascadeType.SAVE_UPDATE })
+	@Cascade({ CascadeType.PERSIST, CascadeType.MERGE })
 	public List<Son> getOrderedSons() { return orderedSons; }
 	public void setOrderedSons(List<Son> orderedSons) {  this.orderedSons = orderedSons; }
-	private List<Son> orderedSons = new ArrayList<Son>( );
+	private List<Son> orderedSons = new ArrayList<>( );
 }

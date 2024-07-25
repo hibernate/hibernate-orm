@@ -14,7 +14,7 @@
 			<key-property column="NR_RZBK" name="num" />
 			<key-property column="TXT_OID" name="name" />
 		</composite-id>
-		<set cascade="persist, merge, save-update" inverse="true" lazy="false"
+		<set cascade="persist,merge" inverse="true" lazy="false"
 			name="buyers">
 			<key>
 				<column name="NR_RZBK" />
@@ -32,7 +32,7 @@
 		<union-subclass name="CarBuyer">
 			<property column="PID" name="pid" update="false" />
 			<property column="TXT_OID_TESTB" name="sellerName" />
-			<many-to-one cascade="persist, merge, save-update" class="Seller"
+			<many-to-one cascade="persist,merge" class="Seller"
 				insert="false" name="seller" update="false">
 				<column name="NR_RZBK" />
 				<column name="TXT_OID_TESTB" />

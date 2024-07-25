@@ -513,10 +513,6 @@ public interface HibernateAnnotations {
 			SecondaryRowAnnotation.class,
 			SECONDARY_ROWS
 	);
-	OrmAnnotationDescriptor<SelectBeforeUpdate,SelectBeforeUpdateAnnotation> SELECT_BEFORE_UPDATE = new OrmAnnotationDescriptor<>(
-			SelectBeforeUpdate.class,
-			SelectBeforeUpdateAnnotation.class
-	);
 	OrmAnnotationDescriptor<SoftDelete,SoftDeleteAnnotation> SOFT_DELETE = new OrmAnnotationDescriptor<>(
 			SoftDelete.class,
 			SoftDeleteAnnotation.class

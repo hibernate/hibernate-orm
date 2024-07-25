@@ -9,7 +9,6 @@ package org.hibernate.orm.test.write;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
-import org.hibernate.annotations.SelectBeforeUpdate;
 import org.hibernate.internal.util.StringHelper;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -319,7 +318,6 @@ public class DynamicUpdateTests {
 	@Entity( name = "AttachableJob" )
 	@Table( name = "AttachableJob" )
 	@DynamicUpdate
-	@SelectBeforeUpdate
 	public static class AttachableJob {
 		@Id
 		private Integer id;

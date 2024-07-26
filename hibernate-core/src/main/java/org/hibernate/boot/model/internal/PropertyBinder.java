@@ -325,7 +325,7 @@ public class PropertyBinder {
 		return property;
 	}
 
-	private void callAttributeBindersInSecondPass(Property property) {
+	void callAttributeBindersInSecondPass(Property property) {
 		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
 		if ( metadataCollector.isInSecondPass() ) {
 			callAttributeBinders( property, metadataCollector.getEntityBindingMap() );
@@ -426,7 +426,6 @@ public class PropertyBinder {
 		handleOptional( property );
 		inferOptimisticLocking( property );
 		LOG.tracev( "Cascading {0} with {1}", name, cascade );
-		callAttributeBindersInSecondPass( property );
 		return property;
 	}
 

@@ -80,7 +80,7 @@ public class OneToManyMappedByCascadeDeleteTest {
 		@Id
 		private Integer id;
 		@OneToMany(targetEntity = Child.class, mappedBy = "parent", fetch = FetchType.LAZY)
-		@Cascade(CascadeType.DELETE)
+		@Cascade(CascadeType.REMOVE)
 		private List<Child> children = new ArrayList<>();
 
 		public Integer getId() {

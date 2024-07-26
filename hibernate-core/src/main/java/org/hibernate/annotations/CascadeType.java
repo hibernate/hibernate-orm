@@ -83,19 +83,6 @@ public enum CascadeType {
 	LOCK,
 
 	/**
-	 * A cascade type for the {@code delete()} operation.
-	 * <p>
-	 * This is actually a synonym for {@link #REMOVE}.
-	 * 
-	 * @see org.hibernate.Session#delete(Object) 
-	 *
-	 * @deprecated since {@link org.hibernate.Session#delete(Object)}
-	 *             is deprecated
-	 */
-	@Deprecated
-	DELETE,
-
-	/**
 	 * A cascade type for the {@code replicate()} operation.
 	 *
 	 * @see org.hibernate.Session#replicate(Object, ReplicationMode) 

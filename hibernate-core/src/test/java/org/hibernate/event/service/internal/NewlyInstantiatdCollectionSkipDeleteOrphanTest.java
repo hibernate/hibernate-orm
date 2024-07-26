@@ -25,6 +25,7 @@ import jakarta.persistence.Version;
 import org.hibernate.FlushMode;
 import org.hibernate.Transaction;
 import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.DynamicUpdate;
 
 import org.hibernate.testing.TestForIssue;
@@ -329,7 +330,7 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest {
 				jakarta.persistence.CascadeType.REMOVE
 		}, orphanRemoval = true)
 		@Cascade({
-				org.hibernate.annotations.CascadeType.DELETE,
+				CascadeType.REMOVE,
 				org.hibernate.annotations.CascadeType.LOCK,
 				org.hibernate.annotations.CascadeType.REPLICATE
 		})
@@ -440,7 +441,7 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest {
 				jakarta.persistence.CascadeType.REMOVE
 		}, orphanRemoval = true)
 		@Cascade({
-				org.hibernate.annotations.CascadeType.DELETE,
+				CascadeType.REMOVE,
 				org.hibernate.annotations.CascadeType.LOCK,
 				org.hibernate.annotations.CascadeType.REPLICATE
 		})

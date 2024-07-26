@@ -11,7 +11,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.MergeContext;
 import org.hibernate.event.spi.PersistContext;
 import org.hibernate.event.spi.RefreshContext;
@@ -127,12 +126,6 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	 */
 	@Deprecated
 	void refresh(String entityName, Object object, RefreshContext refreshedAlready) throws HibernateException;
-
-	/**
-	 * @deprecated  OperationalContext should cover this overload I believe
-	 */
-	@Deprecated
-	void delete(String entityName, Object child, boolean isCascadeDeleteEnabled, DeleteContext transientEntities);
 
 	/**
 	 * @deprecated  OperationalContext should cover this overload I believe

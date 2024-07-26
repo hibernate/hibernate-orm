@@ -25,6 +25,8 @@ import org.hibernate.type.descriptor.java.UUIDJavaType.ValueTransformer;
 
 import static org.hibernate.annotations.UuidGenerator.Style.AUTO;
 import static org.hibernate.annotations.UuidGenerator.Style.TIME;
+import static org.hibernate.annotations.UuidGenerator.Style.VERSION_6;
+import static org.hibernate.annotations.UuidGenerator.Style.VERSION_7;
 import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
 import static org.hibernate.internal.util.ReflectHelper.getPropertyType;
 
@@ -49,32 +51,49 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 		valueTransformer = determineProperTransformer( memberType );
 	}
 
-	private UuidGenerator(
+	/**
+	 * This form is used when there is no {@code @UuidGenerator} but we know we want this generator
+	 */
+	@Internal
+	public UuidGenerator(
 			org.hibernate.annotations.UuidGenerator config,
 			Member idMember) {
-		if ( config.algorithm() != UuidValueGenerator.class ) {
-			if ( config.style() != AUTO ) {
-				throw new MappingException(
-						String.format(
-								Locale.ROOT,
-								"Style [%s] should not be specified with custom UUID value generator : %s.%s",
-								config.style().name(),
+		generator = determineValueGenerator( config, idMember );
+
+		final Class<?> memberType = getPropertyType( idMember );
+		valueTransformer = determineProperTransformer( memberType );
+	}
+
+	private static UuidValueGenerator determineValueGenerator(
+			org.hibernate.annotations.UuidGenerator config,
+			Member idMember) {
+		if ( config != null ) {
+			if ( config.algorithm() != UuidValueGenerator.class ) {
+				if ( config.style() != AUTO ) {
+					throw new MappingException(
+							String.format(
+									Locale.ROOT,
+									"Style [%s] should not be specified with custom UUID value generator : %s.%s",
+									config.style().name(),
 								idMember.getDeclaringClass().getName(),
 								idMember.getName()
-						)
-				);
+							)
+					);
+				}
+				return instantiateCustomGenerator( config.algorithm() );
 			}
-			generator = instantiateCustomGenerator( config.algorithm() );
-		}
-		else if ( config.style() == TIME ) {
-			generator = new CustomVersionOneStrategy();
-		}
-		else {
-			generator = StandardRandomStrategy.INSTANCE;
+			if ( config.style() == TIME ) {
+				return new CustomVersionOneStrategy();
+			}
+			else if ( config.style() == VERSION_6 ) {
+				return UuidVersion6Strategy.INSTANCE;
+			}
+			else if ( config.style() == VERSION_7 ) {
+				return UuidVersion7Strategy.INSTANCE;
+			}
 		}
 
-		final Class<?> propertyType = getPropertyType( idMember );
-		this.valueTransformer = determineProperTransformer( propertyType );
+		return StandardRandomStrategy.INSTANCE;
 	}
 
 	private static UuidValueGenerator instantiateCustomGenerator(Class<? extends UuidValueGenerator> algorithmClass) {

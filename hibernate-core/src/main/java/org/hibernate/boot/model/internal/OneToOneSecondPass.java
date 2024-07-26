@@ -127,6 +127,7 @@ public class OneToOneSecondPass implements SecondPass {
 		else {
 			bindUnowned( persistentClasses, value, result );
 		}
+		binder.callAttributeBindersInSecondPass( result );
 		value.sortProperties();
 	}
 

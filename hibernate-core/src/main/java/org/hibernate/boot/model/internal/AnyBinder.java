@@ -128,5 +128,6 @@ public class AnyBinder {
 		prop.setOptional( optional && value.isNullable() );
 		//composite FK columns are in the same table, so it's OK
 		propertyHolder.addProperty( prop, columns, inferredData.getDeclaringClass() );
+		binder.callAttributeBindersInSecondPass( prop );
 	}
 }

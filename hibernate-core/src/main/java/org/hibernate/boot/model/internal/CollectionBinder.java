@@ -1321,6 +1321,7 @@ public abstract class CollectionBinder {
 			throw new AssertionFailure( "DeclaringClass is not set in CollectionBinder while binding" );
 		}
 		propertyHolder.addProperty( prop, declaringClass );
+		binder.callAttributeBindersInSecondPass( prop );
 	}
 
 	@SuppressWarnings("deprecation")

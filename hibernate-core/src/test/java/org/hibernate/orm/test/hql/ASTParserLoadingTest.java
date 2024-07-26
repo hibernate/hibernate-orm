@@ -65,7 +65,7 @@ import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import org.hibernate.orm.test.cid.Customer;
@@ -252,7 +252,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8432" )
+	@JiraKey( value = "HHH-8432" )
 	public void testExpandListParameter() {
 		final Object[] namesArray = new Object[] {
 				"ZOO 1", "ZOO 2", "ZOO 3", "ZOO 4", "ZOO 5", "ZOO 6", "ZOO 7",
@@ -284,7 +284,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8699")
+	@JiraKey(value = "HHH-8699")
 	public void testBooleanPredicate() {
 		final Constructor created = fromTransaction(
 				(session) -> {
@@ -389,7 +389,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9642")
+	@JiraKey( value = "HHH-9642")
 	public void testLazyAssociationInComponent() {
 		inTransaction(
 				(session) -> {
@@ -686,7 +686,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-2045" )
+	@JiraKey( value = "HHH-2045" )
 	@RequiresDialect( H2Dialect.class )
 	public void testEmptyInList() {
 		Session session = openSession();
@@ -713,7 +713,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8901" )
+	@JiraKey( value = "HHH-8901" )
 	public void testEmptyInListForDialectsNotSupportsEmptyInList() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -741,7 +741,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-2851")
+	@JiraKey( value = "HHH-2851")
 	public void testMultipleRefsToSameParam() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -868,7 +868,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-4150" )
+	@JiraKey( value = "HHH-4150" )
 	public void testSelectClauseCaseWithSum() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -900,7 +900,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-4150" )
+	@JiraKey( value = "HHH-4150" )
 	public void testSelectClauseCaseWithCountDistinct() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1108,7 +1108,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-2257" )
+	@JiraKey( value = "HHH-2257" )
 	public void testImplicitJoinsInDifferentClauses() {
 		// both the classic and ast translators output the same syntactically valid sql
 		// for all of these cases; the issue is that shallow (iterate) and
@@ -1207,7 +1207,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-2257" )
+	@JiraKey( value = "HHH-2257" )
 	public void testImplicitSelectEntityAssociationInShallowQuery() {
 		// both the classic and ast translators output the same syntactically valid sql.
 		// the issue is that shallow and non-shallow queries return different
@@ -1251,7 +1251,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
     @Test
-    @TestForIssue( jiraKey = "HHH-6714" )
+    @JiraKey( value = "HHH-6714" )
     public void testUnaryMinus(){
         Session s = openSession();
         s.beginTransaction();
@@ -1298,7 +1298,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9305")
+	@JiraKey( value = "HHH-9305")
 	public void testExplicitToOneInnerJoin() {
 		final Employee employee1 = new Employee();
 		employee1.setFirstName( "Jane" );
@@ -1451,7 +1451,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-939" )
+	@JiraKey( value = "HHH-939" )
 	public void testSpecialClassPropertyReference() {
 		// this is a long standing bug in Hibernate when applied to joined-subclasses;
 		//  see HHH-939 for details and history
@@ -1463,7 +1463,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-2376" )
+	@JiraKey( value = "HHH-2376" )
 	public void testSpecialClassPropertyReferenceFQN() {
 		new SyntaxChecker( "from Zoo zoo where zoo.class = org.hibernate.orm.test.hql.PettingZoo" ).checkAll();
 		new SyntaxChecker( "select a.description from Animal a where a.class = org.hibernate.orm.test.hql.Mammal" ).checkAll();
@@ -1472,7 +1472,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-1631" )
+	@JiraKey( value = "HHH-1631" )
 	public void testSubclassOrSuperclassPropertyReferenceInJoinedSubclass() {
 		// this is a long standing bug in Hibernate; see HHH-1631 for details and history
 		//
@@ -1602,7 +1602,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-1774" )
+	@JiraKey( value = "HHH-1774" )
 	@RequiresDialectFeature( DialectChecks.SupportsSubqueryInSelect.class )
 	public void testComponentParameterBinding() {
 		Session s = openSession();
@@ -1720,7 +1720,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-1248" )
+	@JiraKey( value = "HHH-1248" )
 	public void testCollectionJoinsInSubselect() {
 		// HHH-1248 : initially FromElementFactory treated any explicit join
 		// as an implied join so that theta-style joins would always be used.
@@ -1832,7 +1832,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1830")
+	@JiraKey(value = "HHH-1830")
 	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't see that the subquery is functionally dependent")
 	public void testAggregatedJoinAlias() {
 		Session s = openSession();
@@ -1848,7 +1848,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-1464" )
+	@JiraKey( value = "HHH-1464" )
 	public void testQueryMetadataRetrievalWithFetching() {
 		// HHH-1464 : there was a problem due to the fact they we polled
 		// the shallow version of the query plan to get the metadata.
@@ -1868,7 +1868,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-429" )
+	@JiraKey( value = "HHH-429" )
 	@SuppressWarnings( {"unchecked"})
 	public void testSuperclassPropertyReferenceAfterCollectionIndexedAccess() {
 		// note: simply performing syntax checking in the db
@@ -2187,7 +2187,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9305")
+	@JiraKey( value = "HHH-9305")
 	@SuppressWarnings( {"unchecked"})
 	public void testSelectClauseImplicitJoinOrderByJoinedProperty() {
 		Session s = openSession();
@@ -3306,7 +3306,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9305")
+	@JiraKey( value = "HHH-9305")
 	public void testDynamicInstantiationWithToOneQueries() throws Exception {
 		final Employee employee1 = new Employee();
 		employee1.setFirstName( "Jane" );
@@ -3732,7 +3732,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11942" )
+	@JiraKey( value = "HHH-11942" )
 	public void testOrderByExtraParenthesis() throws Exception {
 		try {
 			doInHibernate( this::sessionFactory, session -> {

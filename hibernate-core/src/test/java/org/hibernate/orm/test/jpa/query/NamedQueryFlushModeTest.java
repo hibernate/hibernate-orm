@@ -18,7 +18,7 @@ import org.hibernate.annotations.NamedQuery;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 /**
  * @author Yoann Rodiere
  */
-@TestForIssue(jiraKey = "HHH-12795")
+@JiraKey(value = "HHH-12795")
 @Jpa(annotatedClasses = {
 		NamedQueryFlushModeTest.TestEntity.class
 })

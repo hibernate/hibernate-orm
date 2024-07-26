@@ -7,8 +7,9 @@
 package org.hibernate.processor.test.hashcode;
 
 import org.hibernate.processor.test.util.CompilationTest;
-import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.WithClasses;
+
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertAbsenceOfFieldInMetamodelFor;
@@ -21,7 +22,7 @@ import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldIn
 public class HashCodeTest extends CompilationTest {
 
 	@Test
-	@TestForIssue(jiraKey = "METAGEN-76")
+	@JiraKey(value = "METAGEN-76")
 	@WithClasses(HashEntity.class)
 	public void testHashCodeDoesNotCreateSingularAttribute() {
 		assertMetamodelClassGeneratedFor( HashEntity.class );

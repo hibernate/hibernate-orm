@@ -19,7 +19,7 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,7 +29,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-12062")
+@JiraKey(value = "HHH-12062")
 public class AttributeAccessorTest {
 	private ServiceRegistry serviceRegistry;
 

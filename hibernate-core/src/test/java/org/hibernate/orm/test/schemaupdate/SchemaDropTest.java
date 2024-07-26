@@ -38,13 +38,13 @@ import org.junit.Test;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10605")
+@JiraKey(value = "HHH-10605")
 @RequiresDialect(value = HSQLDialect.class)
 public class SchemaDropTest extends BaseUnitTestCase implements ExecutionOptions, ExceptionHandler {
 	protected ServiceRegistry serviceRegistry;

@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -34,7 +34,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @ServiceRegistry(
 		settings = @Setting(name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "2")
 )
-@TestForIssue(jiraKey = "HHH-16394")
+@JiraKey(value = "HHH-16394")
 public class BatchUpdateAndVersionTest {
 
 	@Test

@@ -2,7 +2,7 @@ package org.hibernate.orm.test.mapping.embeddable;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -24,7 +24,7 @@ import jakarta.persistence.OneToOne;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-16209")
+@JiraKey(value = "HHH-16209")
 public class EmbeddableWithIdenticallyNamedAssociationTest {
 
 	@BeforeAll

@@ -8,9 +8,10 @@ package org.hibernate.processor.test.xmlmapped;
 
 import org.hibernate.processor.HibernateProcessor;
 import org.hibernate.processor.test.util.CompilationTest;
-import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.WithClasses;
 import org.hibernate.processor.test.util.WithProcessorOption;
+
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
@@ -46,7 +47,7 @@ public class XmlMappingTest extends CompilationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "METAGEN-17")
+	@JiraKey(value = "METAGEN-17")
 	public void testTargetEntityOnOneToOne() {
 		assertMetamodelClassGeneratedFor( Boy.class );
 		assertPresenceOfFieldInMetamodelFor( Boy.class, "favoriteSuperhero", "favoriteSuperhero field should exist" );
@@ -56,7 +57,7 @@ public class XmlMappingTest extends CompilationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "METAGEN-17")
+	@JiraKey(value = "METAGEN-17")
 	public void testTargetEntityOnOneToMany() {
 		assertMetamodelClassGeneratedFor( Boy.class );
 		assertPresenceOfFieldInMetamodelFor( Boy.class, "knowsHeroes", "knowsHeroes field should exist" );
@@ -66,7 +67,7 @@ public class XmlMappingTest extends CompilationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "METAGEN-17")
+	@JiraKey(value = "METAGEN-17")
 	public void testTargetEntityOnManyToMany() {
 		assertMetamodelClassGeneratedFor( Boy.class );
 		assertPresenceOfFieldInMetamodelFor( Boy.class, "savedBy", "savedBy field should exist" );

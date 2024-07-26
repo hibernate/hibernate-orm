@@ -4,7 +4,7 @@ import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -24,7 +24,7 @@ import jakarta.persistence.ManyToOne;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-16189")
+@JiraKey(value = "HHH-16189")
 public class OrderByAndAggregateFunctionTest {
 
 	@Test

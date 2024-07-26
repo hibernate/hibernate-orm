@@ -1,6 +1,6 @@
 package org.hibernate.orm.test.annotations.enumerated;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -21,7 +21,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 		}
 )
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-16479")
+@JiraKey( value = "HHH-16479")
 public class EnumeratedAndGenericsTest {
 
 	@Test

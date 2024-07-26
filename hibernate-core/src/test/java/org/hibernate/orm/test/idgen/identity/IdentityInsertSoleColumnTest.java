@@ -18,7 +18,7 @@ import org.junit.Test;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertNotNull;
@@ -34,7 +34,7 @@ import static org.junit.Assert.assertNotNull;
  *
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-13104")
+@JiraKey(value = "HHH-13104")
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 @SkipForDialect(value=HANADialect.class, comment="SAP HANA requires at least value in insert value-list clause.")
 public class IdentityInsertSoleColumnTest extends BaseEntityManagerFunctionalTestCase {

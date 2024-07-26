@@ -13,7 +13,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -32,7 +32,7 @@ public class SubselectInJoinedTableTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10998")
+	@JiraKey( value = "HHH-10998")
 	public void testSubselectInJoinedTable() {
 		OrderEntry orderEntry1 = new OrderEntry();
 		orderEntry1.setOrderEntryId( 1L );

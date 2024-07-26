@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -24,7 +24,7 @@ import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.SingularAttribute;
 
-@TestForIssue(jiraKey = "HHH-15073")
+@JiraKey(value = "HHH-15073")
 public class CriteriaPrimitiveIdTest extends BaseCoreFunctionalTestCase {
 
 	@Override

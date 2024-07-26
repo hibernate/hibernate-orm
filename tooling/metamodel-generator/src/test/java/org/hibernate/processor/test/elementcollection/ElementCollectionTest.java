@@ -7,10 +7,10 @@
 package org.hibernate.processor.test.elementcollection;
 
 import org.hibernate.processor.test.util.CompilationTest;
-import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.WithClasses;
 import org.hibernate.processor.test.util.WithMappingFiles;
 
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertListAttributeTypeInMetaModelFor;
@@ -24,7 +24,7 @@ import static org.hibernate.processor.test.util.TestUtil.assertNoSourceFileGener
 public class ElementCollectionTest extends CompilationTest {
 
 	@Test
-	@TestForIssue(jiraKey = "METAGEN-8")
+	@JiraKey(value = "METAGEN-8")
 	@WithClasses({ House.class, Room.class })
 	public void testElementCollectionOnMap() {
 		assertMetamodelClassGeneratedFor( House.class );
@@ -34,7 +34,7 @@ public class ElementCollectionTest extends CompilationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "METAGEN-19")
+	@JiraKey(value = "METAGEN-19")
 	@WithClasses({ Hotel.class, Room.class, Cleaner.class })
 	public void testMapKeyClass() {
 		assertMetamodelClassGeneratedFor( Hotel.class );
@@ -48,7 +48,7 @@ public class ElementCollectionTest extends CompilationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "METAGEN-22")
+	@JiraKey(value = "METAGEN-22")
 	@WithClasses({ Hostel.class, Room.class, Cleaner.class })
 	@WithMappingFiles("hostel.xml")
 	public void testMapKeyClassXmlConfigured() {
@@ -63,7 +63,7 @@ public class ElementCollectionTest extends CompilationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11004")
+	@JiraKey(value = "HHH-11004")
 	@WithClasses({ OfficeBuilding.class })
 	public void testArrayValueElementCollection() {
 		assertMetamodelClassGeneratedFor( OfficeBuilding.class );
@@ -73,7 +73,7 @@ public class ElementCollectionTest extends CompilationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11871")
+	@JiraKey(value = "HHH-11871")
 	@WithClasses({ Homework.class})
 	public void testListAttributeWithGenericTypeForJavaBeanGetter() {
 		assertMetamodelClassGeneratedFor( Homework.class );

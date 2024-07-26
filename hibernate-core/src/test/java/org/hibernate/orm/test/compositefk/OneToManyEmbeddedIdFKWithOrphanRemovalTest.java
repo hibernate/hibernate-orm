@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15098")
+@JiraKey(value = "HHH-15098")
 public class OneToManyEmbeddedIdFKWithOrphanRemovalTest {
 
 	@Test

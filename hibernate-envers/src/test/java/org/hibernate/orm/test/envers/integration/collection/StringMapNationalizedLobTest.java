@@ -27,7 +27,7 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.tools.TestTools;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
 
@@ -36,7 +36,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-9834")
+@JiraKey(value = "HHH-9834")
 @SkipForDialect(OracleDialect.class)
 @SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-11477", comment = "@Lob field in HQL predicate fails with error about text = bigint")
 @SkipForDialect(value = HANADialect.class, comment = "HANA doesn't support comparing LOBs with the = operator")

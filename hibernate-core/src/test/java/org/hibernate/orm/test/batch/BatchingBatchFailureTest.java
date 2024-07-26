@@ -15,7 +15,7 @@ import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SessionImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -31,7 +31,7 @@ import static org.junit.Assert.fail;
  * @author Shawn Clowater
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-7689" )
+@JiraKey( value = "HHH-7689" )
 public class BatchingBatchFailureTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

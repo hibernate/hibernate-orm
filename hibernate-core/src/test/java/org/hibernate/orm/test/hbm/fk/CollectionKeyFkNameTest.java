@@ -13,7 +13,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
@@ -43,7 +43,7 @@ public class CollectionKeyFkNameTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10207" )
+	@JiraKey( value = "HHH-10207" )
 	public void testExplicitFkNameOnCollectionKey() {
 		verifyFkNameUsed(
 				"org/hibernate/orm/test/hbm/fk/person_set.hbm.xml",
@@ -72,7 +72,7 @@ public class CollectionKeyFkNameTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10207" )
+	@JiraKey( value = "HHH-10207" )
 	public void testExplicitFkNameOnManyToOne() {
 		verifyFkNameUsed(
 				"org/hibernate/orm/test/hbm/fk/person_set.hbm.xml",

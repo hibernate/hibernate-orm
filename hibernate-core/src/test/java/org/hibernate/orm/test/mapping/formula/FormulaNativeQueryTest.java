@@ -19,7 +19,7 @@ import org.hibernate.annotations.Formula;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -39,7 +39,7 @@ import static org.junit.Assert.assertTrue;
  */
 @DomainModel( annotatedClasses = FormulaNativeQueryTest.Foo.class )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-7525")
+@JiraKey(value = "HHH-7525")
 public class FormulaNativeQueryTest {
 
 	@BeforeEach

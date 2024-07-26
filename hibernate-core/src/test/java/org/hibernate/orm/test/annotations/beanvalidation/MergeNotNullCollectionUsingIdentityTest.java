@@ -28,7 +28,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hibernate.cfg.ValidationSettings.JAKARTA_VALIDATION_MODE;
@@ -40,7 +40,7 @@ import static org.hibernate.cfg.ValidationSettings.JAKARTA_VALIDATION_MODE;
 		DialectChecks.SupportsIdentityColumns.class,
 		DialectChecks.SupportsNoColumnInsert.class
 }, jiraKey = "HHH-9979")
-@TestForIssue( jiraKey = "HHH-9979")
+@JiraKey( value = "HHH-9979")
 public class MergeNotNullCollectionUsingIdentityTest extends BaseCoreFunctionalTestCase {
 
 	@Override

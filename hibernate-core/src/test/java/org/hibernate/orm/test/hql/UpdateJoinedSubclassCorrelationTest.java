@@ -1,7 +1,7 @@
 package org.hibernate.orm.test.hql;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -14,7 +14,7 @@ import java.util.List;
 import static jakarta.persistence.InheritanceType.JOINED;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
-@TestForIssue(jiraKey = "HHH-13169")
+@JiraKey(value = "HHH-13169")
 public class UpdateJoinedSubclassCorrelationTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

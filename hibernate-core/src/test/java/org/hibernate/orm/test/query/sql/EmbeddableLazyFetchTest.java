@@ -10,7 +10,7 @@ import java.util.Collections;
 
 import org.hibernate.graph.spi.RootGraphImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -28,7 +28,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 		annotatedClasses = EmbeddableLazyFetchTest.Person.class
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15778")
+@JiraKey(value = "HHH-15778")
 public class EmbeddableLazyFetchTest {
 
 	@BeforeEach

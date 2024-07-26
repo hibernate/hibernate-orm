@@ -19,7 +19,7 @@ import jakarta.persistence.OneToMany;
 
 import org.hibernate.dialect.H2Dialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -33,7 +33,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author bjoern.moritz
  */
-@TestForIssue(jiraKey = "HHH-9331")
+@JiraKey(value = "HHH-9331")
 @RequiresDialect(H2Dialect.class)
 @DomainModel(
 		annotatedClasses = {

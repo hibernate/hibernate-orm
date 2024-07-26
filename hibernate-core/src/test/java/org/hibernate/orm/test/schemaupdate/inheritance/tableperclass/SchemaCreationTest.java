@@ -27,7 +27,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import static org.hamcrest.core.Is.is;
@@ -56,7 +56,7 @@ public class SchemaCreationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10553")
+	@JiraKey(value = "HHH-10553")
 	public void testUniqueConstraintIsCorrectlyGenerated() throws Exception {
 
 		final MetadataSources metadataSources = new MetadataSources( ssr );

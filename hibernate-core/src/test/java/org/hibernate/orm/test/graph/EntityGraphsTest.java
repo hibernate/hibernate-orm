@@ -13,7 +13,7 @@ import org.hibernate.graph.EntityGraphs;
 import org.hibernate.graph.spi.RootGraphImplementor;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -196,7 +196,7 @@ public class EntityGraphsTest extends AbstractEntityGraphTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-14264" )
+	@JiraKey( value = "HHH-14264" )
 	public void testRootGraphAppliesToChildEntityClass() {
 		RootGraphImplementor<GraphParsingTestEntity> rootGraphImplementor = parseGraph( GraphParsingTestEntity.class, "name, description" );
 		EntityDomainType<?> entity = entityManagerFactory().getJpaMetamodel().entity( (Class<?>) GraphParsingTestSubentity.class );

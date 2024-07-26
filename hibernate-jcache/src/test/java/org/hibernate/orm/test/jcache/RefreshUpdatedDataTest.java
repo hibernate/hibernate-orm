@@ -28,7 +28,7 @@ import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Zhenlei Huang
  */
-@TestForIssue(jiraKey = "HHH-10649")
+@JiraKey(value = "HHH-10649")
 @BaseUnitTest
 public class RefreshUpdatedDataTest {
 	private ServiceRegistry serviceRegistry;

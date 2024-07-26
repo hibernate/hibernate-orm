@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.mapping.naturalid.composite;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
  */
 @DomainModel( annotatedClasses = PostalCarrier.class )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-11255")
+@JiraKey(value = "HHH-11255")
 public class EmbeddedNaturalIdTest {
 
 	@BeforeEach

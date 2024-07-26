@@ -16,7 +16,7 @@ import jakarta.persistence.Persistence;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
@@ -27,7 +27,7 @@ import static org.junit.Assert.assertNull;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-13227")
+@JiraKey(value = "HHH-13227")
 public class CfgFilePropertyTest extends BaseUnitTestCase {
 
 	@Test

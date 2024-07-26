@@ -16,7 +16,7 @@ import jakarta.persistence.ManyToOne;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -25,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-12251" )
+@JiraKey( value = "HHH-12251" )
 public class IdClassManyToOneCascadeTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

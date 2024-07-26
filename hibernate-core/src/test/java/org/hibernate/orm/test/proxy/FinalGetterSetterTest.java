@@ -14,7 +14,7 @@ import jakarta.persistence.Version;
 import org.hibernate.Hibernate;
 import org.hibernate.ObjectNotFoundException;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Gail Badner
  */
-@TestForIssue(jiraKey = "HHH-13891")
+@JiraKey(value = "HHH-13891")
 @DomainModel(
 		annotatedClasses = {
 				FinalGetterSetterTest.EntityWithFinalClass.class,

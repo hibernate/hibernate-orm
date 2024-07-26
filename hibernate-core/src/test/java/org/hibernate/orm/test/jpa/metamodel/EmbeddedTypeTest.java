@@ -8,7 +8,7 @@ package org.hibernate.orm.test.jpa.metamodel;
 
 import java.sql.Date;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class EmbeddedTypeTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6896")
+	@JiraKey(value = "HHH-6896")
 	public void ensureComponentsReturnedAsManagedType(EntityManagerFactoryScope scope) {
 		ManagedType<ShelfLife> managedType = scope.getEntityManagerFactory()
 				.getMetamodel()
@@ -40,7 +40,7 @@ public class EmbeddedTypeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4702")
+	@JiraKey(value = "HHH-4702")
 	public void testSingularAttributeAccessByName(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -54,7 +54,7 @@ public class EmbeddedTypeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5821")
+	@JiraKey(value = "HHH-5821")
 	public void testVersionAttributeMetadata(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {

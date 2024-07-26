@@ -41,7 +41,7 @@ import org.hibernate.metamodel.CollectionClassification;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
@@ -504,7 +504,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-4394" )
+	@JiraKey( value = "HHH-4394" )
 	public void testOrderByOnSuperclassProperty() {
 		OrganisationUser user = new OrganisationUser();
 		user.setFirstName( "Emmanuel" );
@@ -527,7 +527,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-4605" )
+	@JiraKey( value = "HHH-4605" )
 	public void testJoinColumnConfiguredInXml() {
 		PersistentClass pc = metadata().getEntityBinding( Model.class.getName() );
 		Table table = pc.getRootTable();

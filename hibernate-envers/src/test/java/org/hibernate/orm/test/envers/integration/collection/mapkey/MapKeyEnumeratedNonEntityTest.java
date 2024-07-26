@@ -24,7 +24,7 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.tools.TestTools;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hibernate.orm.test.envers.tools.TestTools.checkCollection;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -33,7 +33,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-13655")
+@JiraKey(value = "HHH-13655")
 public class MapKeyEnumeratedNonEntityTest extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

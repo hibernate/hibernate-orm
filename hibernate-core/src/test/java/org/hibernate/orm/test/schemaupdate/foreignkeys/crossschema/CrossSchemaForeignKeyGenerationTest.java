@@ -47,7 +47,7 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
@@ -83,7 +83,7 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10420")
+	@JiraKey(value = "HHH-10420")
 	public void testSchemaExportForeignKeysAreGeneratedAfterAllTheTablesAreCreated() throws Exception {
 		final MetadataSources metadataSources = new MetadataSources( ssr );
 		metadataSources.addAnnotatedClass( SchemaOneEntity.class );
@@ -107,7 +107,7 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10802")
+	@JiraKey(value = "HHH-10802")
 	public void testSchemaUpdateDoesNotFailResolvingCrossSchemaForeignKey() throws Exception {
 		final MetadataSources metadataSources = new MetadataSources( ssr );
 		metadataSources.addAnnotatedClass( SchemaOneEntity.class );
@@ -134,7 +134,7 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10420")
+	@JiraKey(value = "HHH-10420")
 	public void testSchemaMigrationForeignKeysAreGeneratedAfterAllTheTablesAreCreated() throws Exception {
 		final MetadataSources metadataSources = new MetadataSources( ssr );
 		metadataSources.addAnnotatedClass( SchemaOneEntity.class );
@@ -204,7 +204,7 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10420")
+	@JiraKey(value = "HHH-10420")
 	public void testImprovedSchemaMigrationForeignKeysAreGeneratedAfterAllTheTablesAreCreated() throws Exception {
 		final MetadataSources metadataSources = new MetadataSources( ssr );
 		metadataSources.addAnnotatedClass( SchemaOneEntity.class );

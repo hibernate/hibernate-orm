@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.refresh;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-11217")
+@JiraKey(value = "HHH-11217")
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/refresh/Customer.hbm.xml"
 )

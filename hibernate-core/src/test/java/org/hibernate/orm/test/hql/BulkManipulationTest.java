@@ -31,7 +31,7 @@ import org.hibernate.query.Query;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.generator.Generator;
 import org.junit.Test;
@@ -277,7 +277,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15161")
+	@JiraKey( value = "HHH-15161")
 	public void testInsertWithNullParamValue() {
 		TestData data = new TestData();
 		data.prepare();
@@ -302,7 +302,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15161")
+	@JiraKey( value = "HHH-15161")
 	public void testInsertWithNullParamValueSetOperation() {
 		TestData data = new TestData();
 		data.prepare();
@@ -1411,7 +1411,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8476")
+	@JiraKey(value = "HHH-8476")
 	public void testManyToManyBulkDelete() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1448,7 +1448,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1917")
+	@JiraKey(value = "HHH-1917")
 	public void testManyToManyBulkDeleteMultiTable() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

@@ -9,7 +9,7 @@ package org.hibernate.orm.test.jpa.version;
 import org.junit.Test;
 
 import org.hibernate.Session;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -17,7 +17,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-7138" )
+@JiraKey( value = "HHH-7138" )
 public class JpaSpecVersionValueUpdatingTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

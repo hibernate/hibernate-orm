@@ -18,7 +18,7 @@ import org.hibernate.orm.test.envers.entities.StrIntTestEntity;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.transaction.TransactionUtil;
 
 /**
@@ -26,7 +26,7 @@ import org.hibernate.testing.transaction.TransactionUtil;
  *
  * @author Chris Cranford
  */
-@TestForIssue( jiraKey = "HHH-14981" )
+@JiraKey( value = "HHH-14981" )
 public class NullPrecedenceTest extends BaseEnversJPAFunctionalTestCase {
 
     Integer id1;

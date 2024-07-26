@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.mapping.converted.converter.literal;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -20,7 +20,7 @@ import jakarta.persistence.Id;
  */
 @DomainModel(annotatedClasses = ConvertibleNullLiteralTest.Foo.class)
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-15246" )
+@JiraKey( value = "HHH-15246" )
 class ConvertibleNullLiteralTest {
 
 	@Test

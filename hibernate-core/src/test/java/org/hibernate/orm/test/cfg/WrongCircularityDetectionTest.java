@@ -18,7 +18,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
@@ -32,7 +32,7 @@ import static org.junit.Assert.assertTrue;
  * 
  * @author Didier Villevalois
  */
-@TestForIssue(jiraKey = "HHH-7134")
+@JiraKey(value = "HHH-7134")
 public class WrongCircularityDetectionTest extends BaseUnitTestCase {
 
 	@Test

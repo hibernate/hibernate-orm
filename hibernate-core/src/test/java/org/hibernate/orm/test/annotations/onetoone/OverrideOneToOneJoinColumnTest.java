@@ -11,7 +11,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Aresnii Skvortsov
  */
-@TestForIssue(jiraKey = "HHH-4384")
+@JiraKey(value = "HHH-4384")
 @BaseUnitTest
 public class OverrideOneToOneJoinColumnTest {
 

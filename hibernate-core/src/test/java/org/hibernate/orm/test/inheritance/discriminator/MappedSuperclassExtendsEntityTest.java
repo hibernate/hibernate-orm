@@ -34,7 +34,7 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.MappedSuperclass;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -58,7 +58,7 @@ import org.junit.jupiter.api.Test;
 public class MappedSuperclassExtendsEntityTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12332")
+	@JiraKey(value = "HHH-12332")
 	public void testQueryingSingle(SessionFactoryScope scope) {
 		// Make sure that the produced query for th
 		scope.inTransaction(
@@ -70,7 +70,7 @@ public class MappedSuperclassExtendsEntityTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12332")
+	@JiraKey(value = "HHH-12332")
 	public void testHql(SessionFactoryScope scope) {
 		// Make sure that the produced query for th
 		scope.inTransaction(

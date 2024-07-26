@@ -2,7 +2,7 @@ package org.hibernate.orm.test.annotations.generics;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 		}
 )
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-15687")
+@JiraKey( value = "HHH-15687")
 public class MultipleBoundsTest {
 
 	@BeforeEach

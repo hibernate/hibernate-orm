@@ -21,8 +21,9 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKeyGroup;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,7 +35,11 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Steve Ebersole
  */
-@TestForIssue(jiraKey = {"HHH-2884", "HHH-10674",  "HHH-14541"})
+@JiraKeyGroup({
+		@JiraKey(value = "HHH-2884"),
+		@JiraKey(value = "HHH-10674"),
+		@JiraKey(value = "HHH-14541")
+})
 public class CallbackTest extends BaseCoreFunctionalTestCase {
 	private TestingObserver observer = new TestingObserver();
 	private TestingListener listener = new TestingListener();

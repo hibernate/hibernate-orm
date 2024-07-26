@@ -8,7 +8,7 @@ package org.hibernate.orm.test.propertyref.cachedcollections;
 
 import org.hibernate.Hibernate;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @author Steve Ebersole
  */
-@TestForIssue(jiraKey = "HHH-5853")
+@JiraKey(value = "HHH-5853")
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/propertyref/cachedcollections/Mappings.hbm.xml"
 )

@@ -12,7 +12,7 @@ import java.util.Set;
 
 import org.hibernate.annotations.BatchSize;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.After;
 import org.junit.jupiter.api.Test;
 
@@ -37,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-9864")
+@JiraKey(value = "HHH-9864")
 public class InsertOrderingWithJoinedTableMultiLevelInheritance extends BaseInsertOrderingTest {
 
 	@Override

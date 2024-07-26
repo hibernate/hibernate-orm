@@ -16,7 +16,7 @@ import org.hibernate.orm.test.envers.Priority;
 
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 public abstract class AbstractCollectionChangeTest extends BaseEnversFunctionalTestCase {
 	protected Integer personId;
@@ -118,13 +118,13 @@ public abstract class AbstractCollectionChangeTest extends BaseEnversFunctionalT
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10201")
+	@JiraKey(value = "HHH-10201")
 	public void testParentRevisionCount() {
 		assert getAuditReader().getRevisions( Parent.class, parentId ).equals( getExpectedParentRevisions() );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10201")
+	@JiraKey(value = "HHH-10201")
 	public void testHouseRevisionCount() {
 		assert getAuditReader().getRevisions( House.class, houseId ).equals( getExpectedHouseRevisions() );
 	}

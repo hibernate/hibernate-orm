@@ -20,7 +20,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -33,7 +33,7 @@ import jakarta.persistence.Version;
 /**
  * @author Zhenlei Huang
  */
-@TestForIssue(jiraKey = "HHH-10649")
+@JiraKey(value = "HHH-10649")
 @RequiresDialect(value = H2Dialect.class)
 public class RefreshUpdatedDataTest extends BaseCoreFunctionalTestCase {
 

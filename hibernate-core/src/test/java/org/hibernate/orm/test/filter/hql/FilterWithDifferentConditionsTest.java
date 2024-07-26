@@ -14,7 +14,7 @@ import java.util.Map;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterJoinTable;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -37,7 +37,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 		}
 )
 @SessionFactory(exportSchema = true)
-@TestForIssue(jiraKey = "HHH-13485")
+@JiraKey(value = "HHH-13485")
 public class FilterWithDifferentConditionsTest {
 
 	@BeforeEach

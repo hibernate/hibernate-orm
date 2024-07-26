@@ -13,7 +13,7 @@ import java.util.ConcurrentModificationException;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
@@ -24,7 +24,7 @@ import org.junit.Test;
 public class HibernateAnnotationMappingTest extends BaseUnitTestCase {
 	
 	@Test
-	@TestForIssue( jiraKey = "HHH-7446" )
+	@JiraKey( value = "HHH-7446" )
 	public void testUniqueConstraintAnnotationOnNaturalIds() throws Exception {
 		Configuration configuration = new Configuration();
 		ServiceRegistryUtil.applySettings( configuration.getStandardServiceRegistryBuilder() );

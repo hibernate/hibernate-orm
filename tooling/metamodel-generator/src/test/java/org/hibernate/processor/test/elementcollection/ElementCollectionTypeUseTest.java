@@ -7,9 +7,10 @@
 package org.hibernate.processor.test.elementcollection;
 
 import org.hibernate.processor.test.util.CompilationTest;
-import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
+
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.*;
@@ -19,7 +20,7 @@ import static org.hibernate.processor.test.util.TestUtil.*;
  */
 public class ElementCollectionTypeUseTest extends CompilationTest {
 	@Test
-	@TestForIssue(jiraKey = "HHH-12612")
+	@JiraKey(value = "HHH-12612")
 	@WithClasses(OfficeBuildingValidated.class)
 	public void testAnnotatedCollectionElements() {
 		System.out.println( TestUtil.getMetaModelSourceAsString( OfficeBuildingValidated.class ) );

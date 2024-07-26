@@ -28,7 +28,7 @@ import org.hibernate.Transaction;
 import org.junit.Test;
 
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -66,7 +66,7 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8637" )
+	@JiraKey( value = "HHH-8637" )
 	public void testFilteringDiscriminatorSubclasses() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -107,7 +107,7 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8637" )
+	@JiraKey( value = "HHH-8637" )
 	public void testFilteringJoinedSubclasses() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -151,7 +151,7 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9862" )
+	@JiraKey( value = "HHH-9862" )
 	public void testRestrictionsOnJoinedSubclasses() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -193,7 +193,7 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9411")
+	@JiraKey(value = "HHH-9411")
 	public void testTreatWithRestrictionOnAbstractClass() {
 		inTransaction(
 				s -> {
@@ -212,7 +212,7 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-16657")
+	@JiraKey(value = "HHH-16657")
 	public void testTypeFilterInSubquery() {
 		inTransaction(
 				s -> {
@@ -247,7 +247,7 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-16658")
+	@JiraKey(value = "HHH-16658")
 	public void testPropagateEntityNameUsesFromDisjunction() {
 		inSession(
 				s -> {
@@ -260,7 +260,7 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-16658")
+	@JiraKey(value = "HHH-16658")
 	public void testPropagateEntityNameUsesFromDisjunction2() {
 		inSession(
 				s -> {
@@ -273,7 +273,7 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-16657")
+	@JiraKey(value = "HHH-16657")
 	public void testTreatInSelect() {
 		inTransaction(
 				s -> {
@@ -303,7 +303,7 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-16571") // Sort of related to that issue
+	@JiraKey(value = "HHH-16571") // Sort of related to that issue
 	public void testJoinSubclassOneToMany() {
 		// Originally, the FK for "others" used the primary key of the root table JoinedEntity
 		// Since we didn't register an entity use, we wrongly pruned that table before.

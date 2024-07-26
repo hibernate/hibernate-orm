@@ -8,7 +8,7 @@ package org.hibernate.orm.test.jpa.ql;
 
 import java.util.Set;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -25,7 +25,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.OneToMany;
 
-@TestForIssue(jiraKey = "HHH-16691")
+@JiraKey(value = "HHH-16691")
 @DomainModel(
 		annotatedClasses = {
 				JoinTableOptimizationTest.Document.class, JoinTableOptimizationTest.Person.class

@@ -15,7 +15,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
 import org.junit.Test;
@@ -28,7 +28,7 @@ import static org.junit.Assert.assertThat;
 public class CustomAfterCompletionTest extends BaseCoreFunctionalTestCase {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13666")
+	@JiraKey(value = "HHH-13666")
 	public void success() {
 		inSession( session -> {
 			AtomicBoolean called = new AtomicBoolean( false );
@@ -54,7 +54,7 @@ public class CustomAfterCompletionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13666")
+	@JiraKey(value = "HHH-13666")
 	public void failure() {
 		try {
 			inSession( session -> {

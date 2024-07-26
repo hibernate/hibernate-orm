@@ -14,7 +14,7 @@ import org.hibernate.annotations.Immutable;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,7 +24,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-13665")
+@JiraKey(value = "HHH-13665")
 public class DirectReferenceCacheEntriesTest extends BaseCoreFunctionalTestCase {
 
 	@Override

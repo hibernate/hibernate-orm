@@ -28,7 +28,7 @@ import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
@@ -73,7 +73,7 @@ public class SchemaDatabaseFileGenerationFailureTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12192")
+	@JiraKey(value = "HHH-12192")
 	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true,
 			reason = "on postgres we send 'set client_min_messages = WARNING'")
 	public void testErrorMessageContainsTheFailingDDLCommand() {

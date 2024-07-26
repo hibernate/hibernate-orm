@@ -8,7 +8,7 @@ package org.hibernate.orm.test.jpa.emops;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @author Gail Badner
  */
-@TestForIssue(jiraKey = "HHH-9106")
+@JiraKey(value = "HHH-9106")
 @Jpa(
 		annotatedClasses = {
 				Category.class,

@@ -8,7 +8,7 @@ package org.hibernate.testing.logger;
 
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionImpl;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.jboss.logging.Logger;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -19,7 +19,7 @@ import org.junit.Test;
  *
  * @author Sanne Grinovero (C) 2015 Red Hat Inc.
  */
-@TestForIssue(jiraKey = "HHH-9658")
+@JiraKey(value = "HHH-9658")
 public class LoggingRuleTest {
 
 	//Taking this specific logger as a representative example of a Logger

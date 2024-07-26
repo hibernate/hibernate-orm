@@ -23,7 +23,7 @@ import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -52,7 +52,7 @@ public class TableCommentTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10451")
+	@JiraKey(value = "HHH-10451")
 	public void testCommentOnTableStatementIsGenerated() throws IOException {
 		createSchema( new Class[] {TableWithComment.class} );
 

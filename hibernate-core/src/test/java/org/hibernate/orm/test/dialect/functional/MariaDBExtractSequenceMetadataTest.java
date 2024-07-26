@@ -12,7 +12,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -49,7 +49,7 @@ public class MariaDBExtractSequenceMetadataTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13373")
+	@JiraKey(value = "HHH-13373")
 	public void testHibernateLaunchedSuccessfully() {
 		JdbcEnvironment jdbcEnvironment = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() )
 				.getService( JdbcEnvironment.class );

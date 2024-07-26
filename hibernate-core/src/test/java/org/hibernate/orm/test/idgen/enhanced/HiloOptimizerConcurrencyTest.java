@@ -27,7 +27,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -42,7 +42,7 @@ import static org.junit.Assert.fail;
  *
  * @author Richard Barnes 4 May 2016
  */
-@TestForIssue(jiraKey = "HHH-3628")
+@JiraKey(value = "HHH-3628")
 public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	private boolean createSchema = true;

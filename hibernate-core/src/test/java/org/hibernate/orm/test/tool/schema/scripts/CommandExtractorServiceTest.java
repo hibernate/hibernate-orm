@@ -14,12 +14,12 @@ import org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor;
 import org.hibernate.tool.schema.spi.SqlScriptCommandExtractor;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 /**
  * @author Lukasz Antoniak
  */
-@TestForIssue( jiraKey = "HHH-2403" )
+@JiraKey( value = "HHH-2403" )
 @RequiresDialect(value = H2Dialect.class,
 		jiraKey = "HHH-6286",
 		comment = "Only running the tests against H2, because the sql statements in the import file are not generic. " +

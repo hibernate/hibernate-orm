@@ -14,7 +14,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import org.hibernate.dialect.SybaseASEDialect;
@@ -259,7 +259,7 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10413" )
+	@JiraKey( value = "HHH-10413" )
 	public void testComparableTimestamps() {
         final BasicType<?> versionType = sessionFactory()
 				.getMappingMetamodel()

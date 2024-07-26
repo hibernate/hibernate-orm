@@ -35,7 +35,7 @@ import java.util.List;
 
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.orm.test.jpa.model.AbstractJPATest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -91,7 +91,7 @@ public class ConvertBetweenTest extends AbstractJPATest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9356")
+	@JiraKey(value = "HHH-9356")
 	public void testBetweenLiteral() {
 		inTransaction(
 				session -> {

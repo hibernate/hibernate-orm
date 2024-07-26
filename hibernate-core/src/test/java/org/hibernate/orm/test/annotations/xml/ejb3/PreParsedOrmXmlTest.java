@@ -16,13 +16,16 @@ import org.hibernate.cfg.Configuration;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKeyGroup;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
-@TestForIssue(jiraKey = {"HHH-14530", "HHH-14529"})
+@JiraKeyGroup({
+		@JiraKey(value = "HHH-14530"),
+		@JiraKey(value = "HHH-14529")
+})
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 public class PreParsedOrmXmlTest extends BaseCoreFunctionalTestCase {
 

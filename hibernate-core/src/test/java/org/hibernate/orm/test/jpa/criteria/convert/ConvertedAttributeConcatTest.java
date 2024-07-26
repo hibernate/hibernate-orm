@@ -13,7 +13,7 @@ import java.util.Set;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * @author Marco Belladelli
  */
-@TestForIssue(jiraKey = "HHH-15823")
+@JiraKey(value = "HHH-15823")
 @DomainModel(annotatedClasses = ConvertedAttributeConcatTest.Post.class)
 public class ConvertedAttributeConcatTest {
 	@Test

@@ -15,7 +15,7 @@ import org.hibernate.LobHelper;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Brett Meyer
  */
-@TestForIssue(jiraKey = "HHH-7698")
+@JiraKey(value = "HHH-7698")
 @RequiresDialect(value = H2Dialect.class, comment = "HHH-7724")
 @DomainModel(
 		annotatedClasses = LobEntity.class

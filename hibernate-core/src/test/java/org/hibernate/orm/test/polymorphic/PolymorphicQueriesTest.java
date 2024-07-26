@@ -2,7 +2,7 @@ package org.hibernate.orm.test.polymorphic;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		}
 )
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-15718")
+@JiraKey( value = "HHH-15718")
 public class PolymorphicQueriesTest {
 
 	@BeforeEach

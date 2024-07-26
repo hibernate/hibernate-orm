@@ -15,7 +15,7 @@ import org.hibernate.LockMode;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -28,7 +28,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Steve Ebersole
  */
-@TestForIssue(jiraKey = "HHH-1168")
+@JiraKey(value = "HHH-1168")
 public class PagingAndLockingTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

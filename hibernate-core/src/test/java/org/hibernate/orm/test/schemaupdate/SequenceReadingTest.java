@@ -24,7 +24,7 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNo
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
@@ -36,7 +36,7 @@ import org.junit.Test;
  *
  * @see
  */
-@TestForIssue( jiraKey = "HHH-9745" )
+@JiraKey( value = "HHH-9745" )
 @RequiresDialect( H2Dialect.class )
 public class SequenceReadingTest extends BaseCoreFunctionalTestCase {
 

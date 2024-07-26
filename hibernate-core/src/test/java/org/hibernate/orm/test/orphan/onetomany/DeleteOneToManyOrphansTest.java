@@ -8,7 +8,7 @@ package org.hibernate.orm.test.orphan.onetomany;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -57,7 +57,7 @@ public class DeleteOneToManyOrphansTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9330")
+	@JiraKey(value = "HHH-9330")
 	public void testOrphanedWhileManaged(SessionFactoryScope scope) {
 
 		Product p = scope.fromTransaction(
@@ -86,7 +86,7 @@ public class DeleteOneToManyOrphansTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9330")
+	@JiraKey(value = "HHH-9330")
 	public void testOrphanedWhileManagedMergeOwner(SessionFactoryScope scope) {
 
 		Product p = scope.fromTransaction(
@@ -117,7 +117,7 @@ public class DeleteOneToManyOrphansTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9330")
+	@JiraKey(value = "HHH-9330")
 	public void testReplacedWhileManaged(SessionFactoryScope scope) {
 
 		Feature f = scope.fromTransaction(

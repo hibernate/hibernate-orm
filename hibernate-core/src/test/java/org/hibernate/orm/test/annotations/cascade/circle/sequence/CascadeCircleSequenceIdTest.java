@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.annotations.cascade.circle.sequence;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 public class CascadeCircleSequenceIdTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5472")
+	@JiraKey(value = "HHH-5472")
 	public void testCascade(SessionFactoryScope scope) {
 		A a = new A();
 		B b = new B();

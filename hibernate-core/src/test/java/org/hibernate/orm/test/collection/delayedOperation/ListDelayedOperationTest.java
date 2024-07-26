@@ -321,7 +321,7 @@ public class ListDelayedOperationTest {
 
 /* STILL WORKING ON THIS ONE...
 	@Test
-	@TestForIssue( jiraKey = "HHH-5855")
+	@JiraKey( value = "HHH-5855")
 	public void testSimpleRemoveManaged() {
 		// Remove a managed entity element and commit
 		Session s = openSession();

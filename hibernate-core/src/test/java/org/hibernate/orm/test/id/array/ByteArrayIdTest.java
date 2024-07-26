@@ -19,7 +19,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.Query;
 import org.hibernate.type.descriptor.java.ByteArrayJavaType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -74,7 +74,7 @@ public class ByteArrayIdTest {
 	 * Removes two records from database.
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-8999")
+	@JiraKey(value = "HHH-8999")
 	public void testMultipleDeletions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -97,7 +97,7 @@ public class ByteArrayIdTest {
 	 * Updates two records from database.
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-8999")
+	@JiraKey(value = "HHH-8999")
 	public void testMultipleUpdates(SessionFactoryScope scope) {
 		final String lastResultName = scope.fromTransaction(
 				session -> {

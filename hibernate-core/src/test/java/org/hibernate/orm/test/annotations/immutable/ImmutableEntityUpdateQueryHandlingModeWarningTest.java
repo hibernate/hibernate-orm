@@ -9,7 +9,7 @@ package org.hibernate.orm.test.annotations.immutable;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
@@ -25,7 +25,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-12387" )
+@JiraKey( value = "HHH-12387" )
 public class ImmutableEntityUpdateQueryHandlingModeWarningTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Rule

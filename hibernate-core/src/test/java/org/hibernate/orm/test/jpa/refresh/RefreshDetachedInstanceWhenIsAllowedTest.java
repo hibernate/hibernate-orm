@@ -9,7 +9,7 @@ package org.hibernate.orm.test.jpa.refresh;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-11188")
+@JiraKey(value = "HHH-11188")
 @Jpa(
 		annotatedClasses = {
 				TestEntity.class

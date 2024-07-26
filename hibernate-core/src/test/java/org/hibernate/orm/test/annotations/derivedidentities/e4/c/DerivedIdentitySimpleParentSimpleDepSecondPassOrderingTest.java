@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.boot.spi.MetadataImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -32,7 +32,7 @@ import static org.hibernate.orm.test.util.SchemaUtil.getColumnNames;
  * <p>
  * org.hibernate.MappingException: Foreign key (FK2m2b1kaetxfvcsaih4raaocn8:ref_mto_derived [])) must have same number of columns as the referenced primary key (mto_derived [idsource_id])
  */
-@TestForIssue(jiraKey = "HHH-14467")
+@JiraKey(value = "HHH-14467")
 @DomainModel(
 		annotatedClasses = {
 				// These two must be mentioned first in order to trigger the bug.

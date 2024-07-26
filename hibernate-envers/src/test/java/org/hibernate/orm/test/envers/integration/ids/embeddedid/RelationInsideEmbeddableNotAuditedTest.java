@@ -25,7 +25,7 @@ import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
@@ -39,7 +39,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-12498")
+@JiraKey(value = "HHH-12498")
 public class RelationInsideEmbeddableNotAuditedTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer authorId;
 	private BookId bookId1;

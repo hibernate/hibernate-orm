@@ -3,7 +3,7 @@ package org.hibernate.orm.test.inheritance;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.PostgreSQLDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -30,7 +30,7 @@ import jakarta.persistence.InheritanceType;
 @ServiceRegistry(
 		settings = @Setting( name = AvailableSettings.DEFAULT_SCHEMA,value = "public")
 )
-@TestForIssue(jiraKey = "HHH-15115")
+@JiraKey(value = "HHH-15115")
 public class JoinedInheritanceWithDefaultSchemaDeletionTest {
 
 	@BeforeEach

@@ -17,7 +17,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -27,7 +27,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Gail Badner
  */
-@TestForIssue( jiraKey = "HHH-11881")
+@JiraKey( value = "HHH-11881")
 public class SetElementNullBasicTest extends BaseCoreFunctionalTestCase {
 
 	@Override

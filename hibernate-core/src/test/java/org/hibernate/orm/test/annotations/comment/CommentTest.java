@@ -24,7 +24,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
@@ -39,7 +39,7 @@ public class CommentTest {
 	private static final String TABLE_COMMENT = "I am table";
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4369")
+	@JiraKey(value = "HHH-4369")
 	public void testComments() {
 		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		Metadata metadata = new MetadataSources(ssr).addAnnotatedClass(TestEntity.class).buildMetadata();

@@ -20,7 +20,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Matthew Morrissette
  */
-@TestForIssue(jiraKey = "HHH-10429")
+@JiraKey(value = "HHH-10429")
 @DomainModel( annotatedClasses = IdentityGeneratorExtendsTest.EntityBean.class )
 public class IdentityGeneratorExtendsTest {
 

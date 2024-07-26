@@ -19,7 +19,7 @@ import org.hibernate.annotations.Immutable;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.query.Query;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -31,7 +31,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-12387" )
+@JiraKey( value = "HHH-12387" )
 public class ImmutableEntityUpdateQueryHandlingModeExceptionTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
@@ -80,7 +80,7 @@ public class ImmutableEntityUpdateQueryHandlingModeExceptionTest extends BaseNon
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12927" )
+	@JiraKey( value = "HHH-12927" )
 	public void testUpdateMutableWithImmutableSubSelect() {
 		doInHibernate(this::sessionFactory, session -> {
 			String selector = "foo";
@@ -108,7 +108,7 @@ public class ImmutableEntityUpdateQueryHandlingModeExceptionTest extends BaseNon
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12927" )
+	@JiraKey( value = "HHH-12927" )
 	public void testUpdateImmutableWithMutableSubSelect() {
 		doInHibernate(this::sessionFactory, session -> {
 			String selector = "foo";

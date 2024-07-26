@@ -17,7 +17,7 @@ import jakarta.persistence.criteria.Root;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -36,7 +36,7 @@ public class EnumIsMemberTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9605")
+	@JiraKey(value = "HHH-9605")
 	public void testQueryEnumCollection() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

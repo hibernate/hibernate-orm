@@ -18,7 +18,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.OracleDialect;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +30,7 @@ import static org.junit.Assert.assertEquals;
  * @author Vlad Mihalcea
  */
 @RequiresDialect(OracleDialect.class)
-@TestForIssue( jiraKey = "HHH-10256" )
+@JiraKey( value = "HHH-10256" )
 public class OracleSQLCallableStatementProxyTest extends
 		BaseCoreFunctionalTestCase {
 

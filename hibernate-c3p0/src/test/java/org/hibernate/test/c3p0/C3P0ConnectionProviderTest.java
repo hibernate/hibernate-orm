@@ -18,7 +18,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.ConnectionProviderJdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -91,7 +91,7 @@ public class C3P0ConnectionProviderTest extends BaseCoreFunctionalTestCase {
 		assertTrue( "PooledDataSource BMean not found, please verify version of c3p0", mbeanfound );
 	}
 
-	@Test @TestForIssue(jiraKey="HHH-9498")
+	@Test @JiraKey(value="HHH-9498")
 	public void testIsolationPropertyCouldBeEmpty() {
 		C3P0ConnectionProvider provider = new C3P0ConnectionProvider();
 		try {

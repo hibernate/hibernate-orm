@@ -15,7 +15,7 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.MappedSuperclass;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -55,7 +55,7 @@ public class IdPropertyInSubclassIdInMappedSuperclassTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13114")
+	@JiraKey(value = "HHH-13114")
 	public void testHql(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			assertEquals(

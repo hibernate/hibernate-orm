@@ -16,7 +16,7 @@ import org.hibernate.orm.test.envers.integration.onetomany.embeddedid.Constant;
 import org.hibernate.orm.test.envers.integration.onetomany.embeddedid.Person;
 import org.hibernate.orm.test.envers.integration.onetomany.embeddedid.PersonTuple;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.Assert;
 import org.junit.Test;
@@ -24,7 +24,7 @@ import org.junit.Test;
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-7157")
+@JiraKey(value = "HHH-7157")
 @SkipForDialect( dialectClass = AltibaseDialect.class, reason = "'CONSTANT' is not escaped even though autoQuoteKeywords is enabled")
 public class MapsIdTest extends BaseEnversJPAFunctionalTestCase {
 	private PersonTuple tuple1Ver1 = null;

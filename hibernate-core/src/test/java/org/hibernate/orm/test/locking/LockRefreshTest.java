@@ -13,7 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Version;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.CustomParameterized;
 import org.junit.Test;
@@ -28,7 +28,7 @@ import static org.junit.Assert.assertNull;
  * @author Gail Badner
  */
 
-@TestForIssue(jiraKey = "HHH-13492")
+@JiraKey(value = "HHH-13492")
 @RunWith(CustomParameterized.class)
 public class LockRefreshTest extends BaseNonConfigCoreFunctionalTestCase {
 	private final LockModeType lockModeType;

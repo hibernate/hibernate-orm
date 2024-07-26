@@ -3,7 +3,7 @@ package org.hibernate.orm.test.inheritance;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +33,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 		},
 		sharedCacheMode = SharedCacheMode.ALL
 )
-@TestForIssue(jiraKey = "HHH-15699")
+@JiraKey(value = "HHH-15699")
 public class SingleTableInheritanceAndShareCacheModeAllTest {
 
 	@BeforeEach

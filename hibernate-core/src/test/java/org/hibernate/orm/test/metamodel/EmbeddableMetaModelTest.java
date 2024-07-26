@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.metamodel;
 
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class EmbeddableMetaModelTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11111")
+	@JiraKey(value = "HHH-11111")
 	public void testEmbeddableCanBeResolvedWhenUsedAsInterface(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			assertNotNull( entityManager.getMetamodel().embeddable( LocalizedValue.class ) );
@@ -38,7 +38,7 @@ public class EmbeddableMetaModelTest {
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12124")
+	@JiraKey(value = "HHH-12124")
 	public void testEmbeddableEquality(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			assertTrue( entityManager.getMetamodel().getEmbeddables().contains( Company_.address.getType() ) );

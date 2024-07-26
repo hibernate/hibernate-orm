@@ -8,7 +8,7 @@ package org.hibernate.orm.test.query.criteria;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 				SelectCaseTest.Person.class
 		}
 )
-@TestForIssue(jiraKey = "HHH-15482")
+@JiraKey(value = "HHH-15482")
 public class SelectCaseTest {
 
 	@BeforeEach

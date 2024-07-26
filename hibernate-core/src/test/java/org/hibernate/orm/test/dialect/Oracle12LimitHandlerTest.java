@@ -10,14 +10,14 @@ import org.hibernate.dialect.pagination.AbstractLimitHandler;
 
 import org.hibernate.dialect.pagination.Oracle12LimitHandler;
 import org.hibernate.query.spi.Limit;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.dialect.pagination.AbstractLimitHandler.hasFirstRow;
 import static org.hibernate.dialect.pagination.AbstractLimitHandler.hasMaxRows;
 
-@TestForIssue( jiraKey = "HHH-14649")
+@JiraKey( value = "HHH-14649")
 public class Oracle12LimitHandlerTest extends AbstractLimitHandlerTest {
 
 	@Override

@@ -12,7 +12,7 @@ import org.hibernate.query.spi.Limit;
 
 import static org.junit.Assert.assertEquals;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
@@ -24,7 +24,7 @@ import org.junit.Test;
 public class DerbyDialectTestCase extends BaseUnitTestCase {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-3972" )
+	@JiraKey( value = "HHH-3972" )
 	public void testInsertLimitClause() {
 		final int limit = 50;
 		final String input = "select * from tablename t where t.cat = 5";
@@ -35,7 +35,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-3972" )
+	@JiraKey( value = "HHH-3972" )
 	public void testInsertLimitWithOffsetClause() {
 		final int limit = 50;
 		final int offset = 200;
@@ -47,7 +47,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-3972" )
+	@JiraKey( value = "HHH-3972" )
 	public void testInsertLimitWithForUpdateClause() {
 		final int limit = 50;
 		final int offset = 200;
@@ -59,7 +59,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-3972" )
+	@JiraKey( value = "HHH-3972" )
 	public void testInsertLimitWithWithClause() {
 		final int limit = 50;
 		final int offset = 200;
@@ -71,7 +71,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-3972" )
+	@JiraKey( value = "HHH-3972" )
 	public void testInsertLimitWithForUpdateAndWithClauses() {
 		final int limit = 50;
 		final int offset = 200;

@@ -18,7 +18,7 @@ import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -29,7 +29,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-11514")
+@JiraKey(value = "HHH-11514")
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 @FailureExpected( jiraKey = "HHH-11514" )
 public class ReplicateTest extends BaseEntityManagerFunctionalTestCase {

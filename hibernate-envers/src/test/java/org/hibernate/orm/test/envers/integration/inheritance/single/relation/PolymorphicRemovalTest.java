@@ -24,7 +24,7 @@ import jakarta.persistence.OneToMany;
 import org.hibernate.envers.Audited;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
 
@@ -41,7 +41,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-7249")
+@JiraKey(value = "HHH-7249")
 public class PolymorphicRemovalTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer typeId;
 	private Integer employeeId;

@@ -7,15 +7,15 @@
 package org.hibernate.processor.test.circulartypevariable;
 
 import org.hibernate.processor.test.util.CompilationTest;
-import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
 
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import jakarta.persistence.metamodel.SetAttribute;
 
-@TestForIssue(jiraKey = "HHH-17253")
+@JiraKey(value = "HHH-17253")
 public class CircularTypeVariableTest extends CompilationTest {
 
     @Test

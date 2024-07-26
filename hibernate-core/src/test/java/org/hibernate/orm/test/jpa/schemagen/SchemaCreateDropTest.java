@@ -9,7 +9,7 @@ package org.hibernate.orm.test.jpa.schemagen;
 import jakarta.persistence.TypedQuery;
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -23,7 +23,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10104")
+@JiraKey(value = "HHH-10104")
 @Jpa(annotatedClasses = {
 		Document.class
 })

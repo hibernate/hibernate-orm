@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.orphan.onetoone;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class OneToOneOrphanTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9568")
+	@JiraKey(value = "HHH-9568")
 	public void testFlushTransientOneToOneNoCascade(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {

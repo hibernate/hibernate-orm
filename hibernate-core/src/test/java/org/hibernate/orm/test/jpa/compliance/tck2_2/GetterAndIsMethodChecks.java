@@ -12,7 +12,7 @@ import jakarta.persistence.OneToOne;
 
 import org.hibernate.boot.MetadataSources;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
@@ -20,7 +20,7 @@ import org.junit.Test;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "12096")
+@JiraKey( value = "12096")
 public class GetterAndIsMethodChecks extends BaseUnitTestCase {
 
 	@Test

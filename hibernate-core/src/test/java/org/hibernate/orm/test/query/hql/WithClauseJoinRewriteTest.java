@@ -8,7 +8,7 @@ package org.hibernate.orm.test.query.hql;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -44,7 +44,7 @@ public class WithClauseJoinRewriteTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    @TestForIssue(jiraKey = "HHH-11230")
+    @JiraKey(value = "HHH-11230")
     public void testInheritanceReAliasing() {
         Session s = openSession();
         Transaction tx = s.beginTransaction();

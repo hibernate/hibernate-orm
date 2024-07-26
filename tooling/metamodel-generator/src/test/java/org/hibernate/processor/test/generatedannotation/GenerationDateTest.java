@@ -8,9 +8,10 @@ package org.hibernate.processor.test.generatedannotation;
 
 import org.hibernate.processor.HibernateProcessor;
 import org.hibernate.processor.test.util.CompilationTest;
-import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.WithClasses;
 import org.hibernate.processor.test.util.WithProcessorOption;
+
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
@@ -23,7 +24,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class GenerationDateTest extends CompilationTest {
 	@Test
-	@TestForIssue(jiraKey = "METAGEN-73")
+	@JiraKey(value = "METAGEN-73")
 	@WithClasses(TestEntity.class)
 	@WithProcessorOption(key = HibernateProcessor.ADD_GENERATION_DATE, value = "true")
 	public void testGeneratedAnnotationGenerated() {

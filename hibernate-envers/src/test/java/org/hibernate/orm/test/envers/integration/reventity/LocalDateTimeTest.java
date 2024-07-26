@@ -15,7 +15,7 @@ import java.util.Date;
 import jakarta.persistence.EntityManager;
 
 import org.hibernate.envers.test.entities.reventity.CustomLocalDateTimeRevEntity;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
@@ -31,7 +31,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Chris Cranford
  */
-@TestForIssue( jiraKey = "HHH-10496" )
+@JiraKey( value = "HHH-10496" )
 public class LocalDateTimeTest extends BaseEnversJPAFunctionalTestCase {
     private Instant timestampStart;
     private Instant timestampEnd;

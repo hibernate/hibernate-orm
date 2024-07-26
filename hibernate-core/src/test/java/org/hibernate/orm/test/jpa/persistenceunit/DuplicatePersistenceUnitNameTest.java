@@ -21,7 +21,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
@@ -38,7 +38,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-11845")
+@JiraKey(value = "HHH-11845")
 public class DuplicatePersistenceUnitNameTest extends BaseUnitTestCase {
 	private Triggerable triggerable;
 

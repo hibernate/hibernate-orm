@@ -21,7 +21,7 @@ import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.StrIntTestEntity;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 import junit.framework.Assert;
 
@@ -96,7 +96,7 @@ public class StoreDeletedData extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7800")
+	@JiraKey(value = "HHH-7800")
 	public void testMaximizeInDisjunction() {
 		List<Integer> queryIds = Arrays.asList( id2, id3 );
 

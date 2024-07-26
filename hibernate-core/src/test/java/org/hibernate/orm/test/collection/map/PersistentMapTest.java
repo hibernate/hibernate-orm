@@ -25,7 +25,7 @@ import jakarta.persistence.Table;
 import org.hibernate.collection.spi.PersistentMap;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -193,7 +193,7 @@ public class PersistentMapTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5732")
+	@JiraKey(value = "HHH-5732")
 	public void testClearMap(SessionFactoryScope scope) {
 		scope.inSession(
 				session -> {
@@ -250,7 +250,7 @@ select
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5393")
+	@JiraKey(value = "HHH-5393")
 	public void testMapKeyColumnInEmbeddableElement(SessionFactoryScope scope) {
 		MultilingualString m = new MultilingualString();
 		scope.inTransaction(
@@ -283,7 +283,7 @@ select
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HQLPARSER-15")
+	@JiraKey(value = "HQLPARSER-15")
 	public void testJoinFetchElementCollectionWithParentSelect(SessionFactoryScope scope) {
 		MultilingualStringParent parent = new MultilingualStringParent();
 		scope.inTransaction(
@@ -327,7 +327,7 @@ select
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11038")
+	@JiraKey(value = "HHH-11038")
 	public void testMapKeyColumnNonInsertableNonUpdatableBidirOneToMany(SessionFactoryScope scope) {
 		User user = new User();
 		scope.inTransaction(
@@ -360,7 +360,7 @@ select
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11038")
+	@JiraKey(value = "HHH-11038")
 	public void testMapKeyColumnNonInsertableNonUpdatableUnidirOneToMany(SessionFactoryScope scope) {
 
 		Integer userId = scope.fromTransaction(

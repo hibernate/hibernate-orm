@@ -14,7 +14,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
@@ -24,7 +24,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  */
 public class StatementCacheTest extends BaseCoreFunctionalTestCase {
 	@Test
-	@TestForIssue( jiraKey = "HHH-7193" )
+	@JiraKey( value = "HHH-7193" )
 	public void testStatementCaching() {
 		inSession(
 				session -> {

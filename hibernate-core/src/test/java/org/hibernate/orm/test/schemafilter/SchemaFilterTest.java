@@ -27,7 +27,7 @@ import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Assert;
 import org.junit.Test;
@@ -35,7 +35,7 @@ import org.junit.Test;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 
-@TestForIssue(jiraKey = "HHH-9876")
+@JiraKey(value = "HHH-9876")
 @SuppressWarnings({"rawtypes", "unchecked"})
 @RequiresDialectFeature( value = {DialectChecks.SupportSchemaCreation.class})
 public class SchemaFilterTest extends BaseUnitTestCase {

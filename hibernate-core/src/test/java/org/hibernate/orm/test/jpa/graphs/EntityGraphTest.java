@@ -39,7 +39,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
@@ -62,7 +62,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8857")
+	@JiraKey(value = "HHH-8857")
 	public void loadMultipleAssociations() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -182,7 +182,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 	 * automatically include the specified attributes of superclass subgraphs."
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-8640")
+	@JiraKey(value = "HHH-8640")
 	public void inheritanceTest() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -229,7 +229,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
     @Test
-    @TestForIssue(jiraKey = "HHH-9080")
+    @JiraKey(value = "HHH-9080")
     public void attributeNodeInheritanceTest() {
         EntityManager em = getOrCreateEntityManager();
         em.getTransaction().begin();
@@ -267,7 +267,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
     }
 
     @Test
-    @TestForIssue(jiraKey = "HHH-9735")
+    @JiraKey(value = "HHH-9735")
     public void loadIsMemeberQueriedCollection() {
 
         EntityManager em = getOrCreateEntityManager();
@@ -311,7 +311,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
     }
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15859")
+	@JiraKey(value = "HHH-15859")
 	public void mapAttributeTest() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -342,7 +342,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15964")
+	@JiraKey(value = "HHH-15964")
 	public void paginationOverCollectionFetch() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -388,7 +388,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15964")
+	@JiraKey(value = "HHH-15964")
 	public void paginationOverEagerCollectionWithEmptyEG() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -433,7 +433,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15972")
+	@JiraKey(value = "HHH-15972")
 	public void joinedInheritanceWithAttributeConflictTest() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

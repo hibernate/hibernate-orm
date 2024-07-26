@@ -16,7 +16,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jdbc.Work;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -25,7 +25,7 @@ import org.junit.Test;
 /**
  * @author Lukasz Antoniak
  */
-@TestForIssue( jiraKey = "HHH-7780" )
+@JiraKey( value = "HHH-7780" )
 @RequiresDialect( value = H2Dialect.class )
 public class UnspecifiedEnumTypeTest extends BaseCoreFunctionalTestCase {
 	@Override

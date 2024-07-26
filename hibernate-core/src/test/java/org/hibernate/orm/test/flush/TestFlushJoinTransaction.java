@@ -14,7 +14,7 @@ import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -24,7 +24,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Michiel Hendriks
  */
-@TestForIssue(jiraKey = "HHH-13936")
+@JiraKey(value = "HHH-13936")
 public class TestFlushJoinTransaction extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override

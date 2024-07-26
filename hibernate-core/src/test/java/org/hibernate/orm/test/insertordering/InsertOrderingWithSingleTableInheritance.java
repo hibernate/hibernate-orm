@@ -11,7 +11,7 @@ import java.util.Set;
 
 import org.hibernate.annotations.BatchSize;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -36,7 +36,7 @@ import jakarta.persistence.Table;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue(jiraKey = "HHH-9864")
+@JiraKey(value = "HHH-9864")
 public class InsertOrderingWithSingleTableInheritance extends BaseInsertOrderingTest {
 
 	@Override

@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.orphan;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue(jiraKey = "HHH-565")
+@JiraKey(value = "HHH-565")
 @DomainModel(
 		xmlMappings = {
 				"org/hibernate/orm/test/orphan/User.hbm.xml",

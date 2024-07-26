@@ -14,7 +14,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CustomType;
 import org.hibernate.usertype.UserType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import jakarta.persistence.Entity;
@@ -30,7 +30,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import java.time.Duration;
 
-@TestForIssue(jiraKey = "HHH-17243")
+@JiraKey(value = "HHH-17243")
 public class DurationTest extends BaseEnversJPAFunctionalTestCase{
 
 	@Entity(name = "Duration")

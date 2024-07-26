@@ -12,14 +12,14 @@ import jakarta.persistence.EntityManager;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 import junit.framework.Assert;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-4751")
+@JiraKey(value = "HHH-4751")
 public class IdClassWithRelationTest extends BaseEnversJPAFunctionalTestCase {
 	private RelationalClassId entityId = null;
 	private String typeId = null;

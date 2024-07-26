@@ -14,7 +14,7 @@ import jakarta.persistence.OneToOne;
 import org.hibernate.internal.CoreMessageLogger;
 
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorStandard;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -30,7 +30,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-13228")
+@JiraKey(value = "HHH-13228")
 @Jpa(
 		annotatedClasses = {
 				OneToOneMapsIdChangeParentTest.Parent.class,

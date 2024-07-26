@@ -13,14 +13,14 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-4439")
+@JiraKey(value = "HHH-4439")
 public class AuditClassOverrideTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer classAuditedEntityId = null;
 	private Integer classNotAuditedEntityId = null;

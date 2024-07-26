@@ -16,7 +16,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 
 import org.hibernate.orm.test.hql.SimpleEntityWithAssociation;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -30,7 +30,7 @@ public class NativeCriteriaSyncTest extends BaseCoreFunctionalTestCase {
 	 * query.
 	 */
 	@Test
-	@TestForIssue( jiraKey = "HHH-3813" )
+	@JiraKey( value = "HHH-3813" )
 	public void test() {
 
 

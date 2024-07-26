@@ -22,7 +22,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -52,7 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SessionFactory
 public class EmbeddedOverrideTests {
 	@Test
-	@TestForIssue(jiraKey = "HHH-8630")
+	@JiraKey(value = "HHH-8630")
 	public void testModel(DomainModelScope scope) {
 		assertTrue( SchemaUtil.isColumnPresent( "DOMESTIC_CUSTOMER", "DC_address_street", scope.getDomainModel() ) );
 		assertTrue( SchemaUtil.isColumnPresent( "FOREIGN_CUSTOMER", "FC_address_street", scope.getDomainModel() ) );

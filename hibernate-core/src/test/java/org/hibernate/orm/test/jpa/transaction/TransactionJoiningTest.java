@@ -22,7 +22,7 @@ import org.hibernate.internal.SessionImpl;
 import org.hibernate.orm.test.jpa.txn.JtaTransactionJoiningTest;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.ExtraAssertions;
@@ -129,7 +129,7 @@ public class TransactionJoiningTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10807")
+	@JiraKey(value = "HHH-10807")
 	public void testIsJoinedAfterMarkedForRollbackImplicit(EntityManagerFactoryScope scope) throws Exception {
 		EntityManager entityManager = null;
 		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
@@ -166,7 +166,7 @@ public class TransactionJoiningTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10807")
+	@JiraKey(value = "HHH-10807")
 	public void testIsJoinedAfterMarkedForRollbackExplicit(EntityManagerFactoryScope scope) throws Exception {
 		EntityManager entityManager = null;
 		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
@@ -273,7 +273,7 @@ public class TransactionJoiningTest {
 	 * See HHH-7910
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-7910")
+	@JiraKey(value = "HHH-7910")
 	public void testMultiThreadTransactionTimeout(EntityManagerFactoryScope scope) throws Exception {
 		EntityManager em = null;
 		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();

@@ -15,7 +15,7 @@ import org.hibernate.envers.query.AuditQuery;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.tools.TestTools;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
@@ -25,7 +25,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-8070")
+@JiraKey(value = "HHH-8070")
 public class AuditRelatedIdInTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer company1Id;
 	private Integer company2Id;

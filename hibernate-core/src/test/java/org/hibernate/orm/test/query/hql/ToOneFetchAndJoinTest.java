@@ -32,7 +32,7 @@ package org.hibernate.orm.test.query.hql;
 
 import org.hibernate.Hibernate;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -60,7 +60,7 @@ import static org.junit.Assert.assertTrue;
 public class ToOneFetchAndJoinTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9637")
+	@JiraKey( value = "HHH-9637")
 	public void testFetchJoinsWithImplicitJoinInRestriction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -79,7 +79,7 @@ public class ToOneFetchAndJoinTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9637")
+	@JiraKey( value = "HHH-9637")
 	public void testExplicitJoinBeforeFetchJoins(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -99,7 +99,7 @@ public class ToOneFetchAndJoinTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9637")
+	@JiraKey( value = "HHH-9637")
 	public void testExplicitJoinBetweenFetchJoins(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -119,7 +119,7 @@ public class ToOneFetchAndJoinTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9637")
+	@JiraKey( value = "HHH-9637")
 	public void testExplicitJoinAfterFetchJoins(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {

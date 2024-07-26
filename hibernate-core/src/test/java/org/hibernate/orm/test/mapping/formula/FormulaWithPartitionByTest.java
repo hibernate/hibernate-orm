@@ -14,7 +14,7 @@ import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Formula;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -61,7 +61,7 @@ public class FormulaWithPartitionByTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10754" )
+	@JiraKey( value = "HHH-10754" )
 	void testFormulaAnnotationWithPartitionBy(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final List<DisplayItem> displayItems = session.createQuery( "select di from DisplayItem di order by di.id", DisplayItem.class).getResultList();

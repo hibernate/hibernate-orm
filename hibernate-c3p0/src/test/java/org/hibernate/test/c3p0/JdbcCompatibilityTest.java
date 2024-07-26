@@ -10,7 +10,7 @@ import java.sql.Statement;
 
 import org.hibernate.dialect.SQLServerDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class JdbcCompatibilityTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11308")
+	@JiraKey(value = "HHH-11308")
 	public void testJdbc41(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.doWork( connection -> {
@@ -45,7 +45,7 @@ public class JdbcCompatibilityTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11308")
+	@JiraKey(value = "HHH-11308")
 	public void testJdbc42(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			for ( int i = 0; i < 5; i++ ) {

@@ -9,7 +9,7 @@ package org.hibernate.orm.test.multitenancy.schema;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -18,7 +18,7 @@ import static org.junit.Assert.assertSame;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-10964")
+@JiraKey(value = "HHH-10964")
 public class TenantResolverConfigurationTest extends BaseCoreFunctionalTestCase {
 
 	private TestCurrentTenantIdentifierResolver currentTenantResolver = new TestCurrentTenantIdentifierResolver();

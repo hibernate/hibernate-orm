@@ -18,7 +18,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.SerializationHelper;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -52,7 +52,7 @@ public class MultipleSessionFactoriesProxyTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-17172")
+	@JiraKey(value = "HHH-17172")
 	public void testProxySerializationWithMultipleSessionFactories() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

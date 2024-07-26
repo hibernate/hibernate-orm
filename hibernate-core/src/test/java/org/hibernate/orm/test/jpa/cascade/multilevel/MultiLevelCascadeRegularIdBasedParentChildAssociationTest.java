@@ -16,7 +16,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -74,7 +74,7 @@ public class MultiLevelCascadeRegularIdBasedParentChildAssociationTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12291" )
+	@JiraKey( value = "HHH-12291" )
 	public void testHibernateDeleteEntityWithoutInitializingCollections(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {

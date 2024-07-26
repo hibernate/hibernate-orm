@@ -20,7 +20,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.UniqueKey;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -47,7 +47,7 @@ public class ConstraintTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 	
 	@Test
-	@TestForIssue( jiraKey = "HHH-7797" )
+	@JiraKey( value = "HHH-7797" )
 	public void testUniqueConstraints() {
 		Column column = (Column) metadata().getEntityBinding( DataPoint.class.getName() )
 				.getProperty( "foo1" ).getSelectables().get( 0 );
@@ -66,7 +66,7 @@ public class ConstraintTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 	
 	@Test
-	@TestForIssue( jiraKey = "HHH-1904" )
+	@JiraKey( value = "HHH-1904" )
 	public void testConstraintNameLength() {
 		int foundCount = 0;
 		for ( Namespace namespace : metadata().getDatabase().getNamespaces() ) {

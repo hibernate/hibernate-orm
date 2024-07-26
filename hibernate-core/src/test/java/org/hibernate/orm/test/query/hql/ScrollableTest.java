@@ -19,7 +19,7 @@ import org.hibernate.query.Query;
 
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -71,7 +71,7 @@ public class ScrollableTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10860")
+	@JiraKey(value = "HHH-10860")
 	public void testScrollableResults() {
 		final List<Long> params = new ArrayList<>();
 		params.add( 1L );
@@ -97,7 +97,7 @@ public class ScrollableTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10860")
+	@JiraKey(value = "HHH-10860")
 	public void testScrollableResults2() {
 		final List<Long> params = new ArrayList<>();
 		params.add( 1L );

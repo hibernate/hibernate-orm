@@ -17,7 +17,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -50,7 +50,7 @@ import static org.junit.Assert.assertTrue;
 @DomainModel( annotatedClasses = Building.class )
 @SessionFactory
 @SuppressWarnings("unchecked")
-@TestForIssue( jiraKey = "HHH-7085" )
+@JiraKey( value = "HHH-7085" )
 public class ImmutableEntityNaturalIdTest {
 	@BeforeEach
 	public void createTestData(SessionFactoryScope scope) {
@@ -206,7 +206,7 @@ public class ImmutableEntityNaturalIdTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7371" )
+	@JiraKey( value = "HHH-7371" )
 	public void testImmutableNaturalIdLifecycle2(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(s) -> {

@@ -14,7 +14,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Selectable;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anyOf;
@@ -28,7 +28,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "" )
+@JiraKey( value = "" )
 public class LegacyJpaNamingWithHbmBindingTests extends BaseHbmBindingTests {
 	@Override
 	protected ImplicitNamingStrategy getImplicitNamingStrategyToUse() {

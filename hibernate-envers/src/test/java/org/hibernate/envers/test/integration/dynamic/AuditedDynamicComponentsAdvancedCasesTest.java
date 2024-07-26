@@ -26,7 +26,7 @@ import org.hibernate.orm.test.envers.integration.components.dynamic.ManyToManyEn
 import org.hibernate.orm.test.envers.integration.components.dynamic.ManyToOneEntity;
 import org.hibernate.orm.test.envers.integration.components.dynamic.OneToOneEntity;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 import junit.framework.Assert;
 
@@ -36,7 +36,7 @@ import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
  * @author Lukasz Zuchowski (author at zuchos dot com)
  *         More advanced tests for dynamic component.
  */
-@TestForIssue(jiraKey = "HHH-8049")
+@JiraKey(value = "HHH-8049")
 public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctionalTestCase {
 
 	public static final String PROP_BOOLEAN = "propBoolean";

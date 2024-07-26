@@ -14,7 +14,7 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Table;
 import jakarta.persistence.metamodel.EntityType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class MixedIdAndIdClassHandling {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8533" )
+	@JiraKey( value = "HHH-8533" )
 	public void testAccess(EntityManagerFactoryScope scope) {
 		EntityType<FullTimeEmployee> entityType = scope.getEntityManagerFactory().getMetamodel().entity( FullTimeEmployee.class );
 		try {

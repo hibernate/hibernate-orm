@@ -18,7 +18,7 @@ import org.hibernate.query.Query;
 
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -27,7 +27,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10893")
+@JiraKey(value = "HHH-10893")
 public class ParameterCollectionTest extends BaseCoreFunctionalTestCase {
 
 	@Override

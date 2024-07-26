@@ -26,12 +26,13 @@ import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.jdbc.ConnectionProviderDelegate;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.junit4.CustomParameterized;
+import org.hibernate.testing.orm.junit.JiraKeyGroup;
 import org.hibernate.testing.transaction.TransactionUtil2;
 import org.junit.Rule;
 import org.junit.Test;
@@ -111,7 +112,10 @@ public class BeforeCompletionReleaseTest extends BaseEntityManagerFunctionalTest
     }
 
     @Test
-    @TestForIssue(jiraKey = {"HHH-13976", "HHH-14326"})
+    @JiraKeyGroup({
+            @JiraKey(value = "HHH-13976"),
+            @JiraKey(value = "HHH-14326")
+    })
     public void testResourcesReleasedThenConnectionClosedThenCommit() throws SQLException, XAException {
         try (SessionImplementor s = (SessionImplementor) openSession()) {
             XAResource transactionSpy = mock( XAResource.class );
@@ -144,7 +148,7 @@ public class BeforeCompletionReleaseTest extends BaseEntityManagerFunctionalTest
     }
 
     @Test
-    @TestForIssue(jiraKey = {"HHH-14557"})
+    @JiraKey(value = "HHH-14557")
     public void testResourcesReleasedThenConnectionClosedOnEachRollback() throws SQLException {
         try (SessionImplementor s = (SessionImplementor) openSession()) {
             Connection[] connections = new Connection[1];

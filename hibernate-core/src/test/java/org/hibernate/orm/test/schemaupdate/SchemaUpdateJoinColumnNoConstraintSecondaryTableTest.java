@@ -25,7 +25,7 @@ import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
@@ -37,7 +37,7 @@ import static org.junit.Assert.assertFalse;
  * @author Vlad Mihalcea
  */
 @RequiresDialect(H2Dialect.class)
-@TestForIssue(jiraKey = "HHH-8805")
+@JiraKey(value = "HHH-8805")
 public class SchemaUpdateJoinColumnNoConstraintSecondaryTableTest extends BaseUnitTestCase {
 
 	private static final String EXPECTED_SCRIPT =

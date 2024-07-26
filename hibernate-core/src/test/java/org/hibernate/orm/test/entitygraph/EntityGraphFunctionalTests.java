@@ -26,7 +26,7 @@ import org.hibernate.graph.GraphParser;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -52,7 +52,7 @@ import static org.hibernate.testing.hamcrest.InitializationCheckMatcher.isNotIni
 public class EntityGraphFunctionalTests {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13175")
+	@JiraKey( value = "HHH-13175")
 	void testSubsequentSelectFromFind(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

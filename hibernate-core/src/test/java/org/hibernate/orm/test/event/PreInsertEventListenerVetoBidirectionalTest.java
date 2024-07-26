@@ -21,7 +21,7 @@ import org.hibernate.event.spi.PreInsertEventListener;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -33,7 +33,7 @@ import static org.junit.Assert.fail;
  * @author Chris Cranford
  */
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-@TestForIssue(jiraKey = "HHH-11721")
+@JiraKey(value = "HHH-11721")
 public class PreInsertEventListenerVetoBidirectionalTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

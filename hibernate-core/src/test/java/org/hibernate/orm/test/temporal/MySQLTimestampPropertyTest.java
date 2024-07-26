@@ -16,7 +16,7 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.query.Query;
 import org.hibernate.type.StandardBasicTypes;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author Gail Badner
  */
 @RequiresDialect(value = MySQLDialect.class)
-@TestForIssue(jiraKey = "HHH-8401")
+@JiraKey(value = "HHH-8401")
 @DomainModel(
 		annotatedClasses = MySQLTimestampPropertyTest.Entity.class
 )

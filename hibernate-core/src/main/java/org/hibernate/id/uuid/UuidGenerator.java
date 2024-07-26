@@ -23,6 +23,8 @@ import org.hibernate.type.descriptor.java.UUIDJavaType.ValueTransformer;
 
 import static org.hibernate.annotations.UuidGenerator.Style.AUTO;
 import static org.hibernate.annotations.UuidGenerator.Style.TIME;
+import static org.hibernate.annotations.UuidGenerator.Style.VERSION_6;
+import static org.hibernate.annotations.UuidGenerator.Style.VERSION_7;
 import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
 import static org.hibernate.internal.util.ReflectHelper.getPropertyType;
 
@@ -78,8 +80,14 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 				}
 				return instantiateCustomGenerator( config.algorithm() );
 			}
-			else if ( config.style() == TIME ) {
+			if ( config.style() == TIME ) {
 				return new CustomVersionOneStrategy();
+			}
+			else if ( config.style() == VERSION_6 ) {
+				return UuidVersion6Strategy.INSTANCE;
+			}
+			else if ( config.style() == VERSION_7 ) {
+				return UuidVersion7Strategy.INSTANCE;
 			}
 		}
 

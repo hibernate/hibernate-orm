@@ -149,6 +149,9 @@ String isDefault();
 * Removed `org.hibernate.Session#update(Object object` and `org.hibernate.Session#update(String entityName, Object object)` in favor of `org.hibernate.Session.merge(T object)` and `org.hibernate.Session.merge(String entityName, T object)`
 * Removed `org.hibernate.annotations.CascadeType.SAVE_UPDATE` in favor of `org.hibernate.annotations.CascadeType.PERSIST` + `org.hibernate.annotations.CascadeType.MERGE`
 * Removed `@SelectBeforeUpdate`
+* Removed `org.hibernate.Session#delete(Object object)` and `org.hibernate.Session#delete(String entityName, Object object)` in favor of `org.hibernate.Session#remove(Object object)`
+* Removed `org.hibernate.annotations.CascadeType.DELETE` in favor of `org.hibernate.annotations.CascadeType#REMOVE`
+
 
 [WARNING]
 ===

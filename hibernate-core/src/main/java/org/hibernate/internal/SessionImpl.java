@@ -839,18 +839,6 @@ public class SessionImpl
 
 	// delete() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	@Override @Deprecated
-	public void delete(Object object) throws HibernateException {
-		checkOpen();
-		fireDelete( new DeleteEvent( object, this ) );
-	}
-
-	@Override @Deprecated
-	public void delete(String entityName, Object object) throws HibernateException {
-		checkOpen();
-		fireDelete( new DeleteEvent( entityName, object, this ) );
-	}
-
 	@Override
 	public void delete(String entityName, Object object, boolean isCascadeDeleteEnabled, DeleteContext transientEntities)
 			throws HibernateException {
@@ -2383,9 +2371,8 @@ public class SessionImpl
 	@Override
 	public void remove(Object entity) {
 		checkOpen();
-
 		try {
-			delete( entity );
+			fireDelete( new DeleteEvent( entity, this ) );
 		}
 		catch (MappingException e) {
 			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );

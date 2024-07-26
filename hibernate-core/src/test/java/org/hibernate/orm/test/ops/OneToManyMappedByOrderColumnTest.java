@@ -77,7 +77,7 @@ public class OneToManyMappedByOrderColumnTest {
 		private Integer id;
 		@OrderColumn(name = "list_idx")
 		@OneToMany(targetEntity = Child.class, mappedBy = "parent", fetch = FetchType.EAGER)
-		@Cascade(CascadeType.DELETE)
+		@Cascade(CascadeType.REMOVE)
 		private List<Child> children = new ArrayList<>();
 
 		public Integer getId() {

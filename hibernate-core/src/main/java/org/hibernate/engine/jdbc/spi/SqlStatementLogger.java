@@ -6,19 +6,16 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
+import java.util.concurrent.TimeUnit;
+
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.build.AllowSysOut;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.service.Service;
-
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.jboss.logging.Logger;
-
-import java.sql.Statement;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 /**
  * Centralize logging for SQL statements.
@@ -136,28 +133,6 @@ public class SqlStatementLogger implements Service {
 		if ( logToStdout ) {
 			String prefix = highlight ? "\u001b[35m[Hibernate]\u001b[0m " : "Hibernate: ";
 			System.out.println( prefix + statement );
-		}
-	}
-
-	/**
-	 * Log a slow SQL query
-	 *
-	 * @param statement SQL statement.
-	 * @param startTimeNanos Start time in nanoseconds.
-	 */
-	public void logSlowQuery(final Statement statement, final long startTimeNanos, final JdbcSessionContext context) {
-		if ( logSlowQuery < 1 ) {
-			return;
-		}
-		if ( startTimeNanos <= 0 ) {
-			throw new IllegalArgumentException( "startTimeNanos [" + startTimeNanos + "] should be greater than 0" );
-		}
-
-		final long queryExecutionMillis = elapsedFrom( startTimeNanos );
-
-		if ( queryExecutionMillis > logSlowQuery ) {
-			final String sql = statement.toString();
-			logSlowQueryInternal( context, queryExecutionMillis, sql );
 		}
 	}
 

@@ -64,7 +64,7 @@ dependencyResolutionManagement {
 
             // Gradle does bytecode transformation on tests.
             // You can't use bytecode higher than what Gradle supports, even with toolchains.
-            version "maxSupportedBytecode", "21"
+            version "maxSupportedBytecode", "22"
         }
         libs {
             def antlrVersion = version "antlr", "4.13.0"

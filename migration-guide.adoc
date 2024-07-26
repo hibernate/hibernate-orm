@@ -153,56 +153,6 @@ String isDefault();
 * Removed `org.hibernate.annotations.CascadeType.DELETE` in favor of `org.hibernate.annotations.CascadeType#REMOVE`
 
 
-[WARNING]
-===
-The removal of `CascadeType.SAVE_UPDATE` slightly changes the persist and flush behaviour (not affecting application using `Entitymanager`) that now conforms with the Jakarta JPA specifications.
-
-Persisting a transient entity with an associated detached entity where the association is annotated with cascade=all or cascade=persist throws an exception if the detached entity has not been re-associated with the the session using lock or merge.
-
-The same happens when flushing a managed entity having an associated detached entity.
-
-```
-@Entit
-class Parent {
-        ...
-
-        @OneToMany(cascade = CascadeType.ALL, mappedBy = "parent", orphanRemoval = true)
-        @LazyCollection(value = LazyCollectionOption.EXTRA)
-        private Set<Child> children = new HashSet<>();
-}
-
-@Entity
-class Child {
-
-        ...
-
-        @Id
-        @GeneratedValue(strategy = GenerationType.AUTO)
-        private Long id;
-
-        @ManyToOne
-        private Parent parent;
-}
-
-
-```
-
-```
-// Being Child c1 detached.
-
-scope.inTransaction(
-        session -> {
-                Parent parent = session.get( Parent.class, parentId );
-                // add detached Child c
-                parent.addChild( c1 );
-        }
-);
-```
-will throw an `jakarta.persistence.EntityExistsException`
-
-in order to fix the issue we can call `session.lock(c1,LockMode.NONE)` before adding `c1` to the `parent` or instead using `p.addChild( session.merge(c1) )`;
-
-
 [[ddl-implicit-datatype-timestamp]]
 == Default precision for timestamp on some databases
 
@@ -244,6 +194,61 @@ one file at a time.  This is now done across the entire set of `hbm.xml` files a
 While most users will never see this change, it might impact integrations which tie-in to
 XML processing.
 
+[[flush-persist]]
+== Session flush and persist
+
+The removal of `CascadeType.SAVE_UPDATE` slightly changes the persist and flush behaviour (not affecting application using `Entitymanager`) that now conforms with the Jakarta JPA specifications.
+
+Persisting a transient entity or flushing a manged entity with an associated detached entity having the association annotated with `cascade = CascadeType.ALL` or `cascade = CascadeType.PERSIST` throws now an `jakarta.persistence.EntityExistsException` if the detached entity has not been re-associated with the the Session.
+
+To re-associate the detached entity with the Session the `Session#merge` method can be used.
+
+Consider the following model
+
+```
+@Entity
+class Parent {
+
+        ...
+
+        @OneToMany(cascade = CascadeType.ALL, mappedBy = "parent", orphanRemoval = true)
+        @LazyCollection(value = LazyCollectionOption.EXTRA)
+        private Set<Child> children = new HashSet<>();
+
+        public void addChild(Child child) {
+			children.add( child );
+			child.setParent( this );
+		}
+}
+
+@Entity
+class Child {
+
+        ...
+
+        @Id
+        @GeneratedValue(strategy = GenerationType.AUTO)
+        private Long id;
+
+        @ManyToOne
+        private Parent parent;
+}
+
+```
+
+Assuming we have c1 as a detached Child, the following code will now result in jakarta.persistence.EntityExistsException being thrown at flush time:
+
+```
+Parent parent = session.get( Parent.class, parentId );
+parent.addChild( c1 );
+```
+Instead, c1 must first be re-associated with the Session using merge:
+
+```
+Parent parent = session.get( Parent.class, parentId );
+Child merged = session.merge( c1 );
+parent.addChild( merged );
+```
 
 [[todo]]
 == Todos (dev)

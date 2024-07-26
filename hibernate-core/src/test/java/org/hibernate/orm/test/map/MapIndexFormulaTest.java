@@ -9,11 +9,12 @@ package org.hibernate.orm.test.map;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.LockMode;
+import org.hibernate.dialect.MariaDBDialect;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -58,6 +59,7 @@ public class MapIndexFormulaTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = MariaDBDialect.class, reason = "HHH-18433")
 	public void testIndexFormulaMap(SessionFactoryScope scope) {
 		User turin = new User( "turin", "tiger" );
 		scope.inTransaction(
@@ -90,8 +92,7 @@ public class MapIndexFormulaTest {
 					assertEquals( 1, g.getUsers().size() );
 					Map smap = ( (User) g.getUsers().get( "gavin" ) ).getSession();
 					assertEquals( 1, smap.size() );
-					session.lock( turin , LockMode.NONE);
-					User gavin = (User) g.getUsers().put( "gavin", turin );
+					User gavin = (User) g.getUsers().put( "gavin", session.merge( turin ) );
 					session.remove( gavin );
 					assertEquals(
 							0l,

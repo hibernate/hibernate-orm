@@ -90,10 +90,7 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
 
 	public void undo(Session session) {
 		if ( isPerformed() ) {
-			session.delete(
-					enversService.getConfig().getAuditEntityName( getEntityName() ),
-					performedData
-			);
+			session.remove(	performedData );
 			session.flush();
 		}
 	}

@@ -681,35 +681,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void persist(String entityName, Object object);
 
 	/**
-	 * Remove a persistent instance from the datastore. The argument may be
-	 * an instance associated with the receiving {@code Session} or a transient
-	 * instance with an identifier associated with existing persistent state.
-	 * This operation cascades to associated instances if the association is
-	 * mapped with {@link jakarta.persistence.CascadeType#REMOVE}.
-	 *
-	 * @param object the instance to be removed
-	 *
-	 * @deprecated use {@link #remove(Object)}
-	 */
-	@Deprecated(since = "6.0")
-	void delete(Object object);
-
-	/**
-	 * Remove a persistent instance from the datastore. The second argument may
-	 * be an instance associated with the receiving {@code Session} or a transient
-	 * instance with an identifier associated with existing persistent state.
-	 * This operation cascades to associated instances if the association is
-	 * mapped with {@link jakarta.persistence.CascadeType#REMOVE}.
-	 *
-	 * @param entityName the entity name for the instance to be removed.
-	 * @param object the instance to be removed
-	 *
-	 * @deprecated use {@link #remove(Object)}
-	 */
-	@Deprecated(since = "6.0")
-	void delete(String entityName, Object object);
-
-	/**
 	 * Obtain the specified lock level on the given managed instance associated
 	 * with this session. This operation may be used to:
 	 * <ul>

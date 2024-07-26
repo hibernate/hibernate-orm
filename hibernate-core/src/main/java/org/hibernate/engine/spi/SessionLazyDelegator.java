@@ -260,18 +260,6 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	@Deprecated
-	public void delete(Object object) {
-		this.lazySession.get().delete( object );
-	}
-
-	@Override
-	@Deprecated
-	public void delete(String entityName, Object object) {
-		this.lazySession.get().delete( entityName, object );
-	}
-
-	@Override
 	public void lock(Object object, LockMode lockMode) {
 		this.lazySession.get().lock( object, lockMode );
 	}

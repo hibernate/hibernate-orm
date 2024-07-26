@@ -1009,11 +1009,7 @@ public class BinderHelper {
 				case DETACH:
 					cascade.append( "," ).append( "evict" );
 					break;
-				case DELETE:
 				case REMOVE:
-					if ( CascadeType.DELETE == cascadeType ) {
-						warnAboutDeprecatedCascadeType( CascadeType.DELETE, CascadeType.REMOVE );
-					}
 					cascade.append( "," ).append( "delete" );
 					break;
 				case DELETE_ORPHAN:

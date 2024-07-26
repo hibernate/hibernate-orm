@@ -923,16 +923,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void delete(Object object) {
-		delegate.delete( object );
-	}
-
-	@Override
-	public void delete(String entityName, Object object) {
-		delegate.delete( entityName, object );
-	}
-
-	@Override
 	public void lock(Object object, LockMode lockMode) {
 		delegate.lock( object, lockMode );
 	}
@@ -1210,11 +1200,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void refresh(String entityName, Object object, RefreshContext refreshedAlready) throws HibernateException {
 		delegate.refresh( entityName, object, refreshedAlready );
-	}
-
-	@Override
-	public void delete(String entityName, Object child, boolean isCascadeDeleteEnabled, DeleteContext transientEntities) {
-		delegate.delete( entityName, child, isCascadeDeleteEnabled, transientEntities );
 	}
 
 	@Override

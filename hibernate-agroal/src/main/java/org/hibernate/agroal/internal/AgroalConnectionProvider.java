@@ -9,6 +9,7 @@ package org.hibernate.agroal.internal;
 
 import io.agroal.api.AgroalDataSource;
 import io.agroal.api.configuration.AgroalConnectionFactoryConfiguration;
+import io.agroal.api.configuration.AgroalConnectionPoolConfiguration;
 import io.agroal.api.configuration.supplier.AgroalConnectionFactoryConfigurationSupplier;
 import io.agroal.api.configuration.supplier.AgroalPropertiesReader;
 import io.agroal.api.security.NamePrincipal;
@@ -17,11 +18,13 @@ import org.hibernate.HibernateException;
 import org.hibernate.cfg.AgroalSettings;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
+import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
+import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
-import org.jboss.logging.Logger;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -29,6 +32,8 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
+
+import static org.hibernate.cfg.AgroalSettings.AGROAL_CONFIG_PREFIX;
 
 /**
  * ConnectionProvider based on Agroal connection pool
@@ -54,18 +59,25 @@ import java.util.function.Function;
  */
 public class AgroalConnectionProvider implements ConnectionProvider, Configurable, Stoppable {
 
-	public static final String CONFIG_PREFIX = AgroalSettings.AGROAL_CONFIG_PREFIX + ".";
+	public static final String CONFIG_PREFIX = AGROAL_CONFIG_PREFIX + ".";
 	private static final long serialVersionUID = 1L;
-	private static final Logger LOGGER = Logger.getLogger( AgroalConnectionProvider.class );
 	private AgroalDataSource agroalDataSource = null;
+	private DatabaseConnectionInfo dbInfo;
 
 	// --- Configurable
 
-	private static void resolveIsolationSetting(Map<String, Object> properties, AgroalConnectionFactoryConfigurationSupplier cf) {
+	private static String extractIsolationAsString(Map<String, Object> properties) {
 		Integer isolation = ConnectionProviderInitiator.extractIsolation( properties );
 		if ( isolation != null ) {
 			// Agroal resolves transaction isolation from the 'nice' name
-			String isolationString = ConnectionProviderInitiator.toIsolationNiceName( isolation );
+			return ConnectionProviderInitiator.toIsolationNiceName( isolation );
+		}
+		return null;
+	}
+
+	private static void resolveIsolationSetting(Map<String, Object> properties, AgroalConnectionFactoryConfigurationSupplier cf) {
+		String isolationString = extractIsolationAsString( properties );
+		if ( isolationString != null ) {
 			cf.jdbcTransactionIsolation( AgroalConnectionFactoryConfiguration.TransactionIsolation.valueOf( isolationString ) );
 		}
 	}
@@ -79,7 +91,7 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 
 	@Override
 	public void configure(Map<String, Object> props) throws HibernateException {
-		LOGGER.debug( "Configuring Agroal" );
+		ConnectionInfoLogger.INSTANCE.configureConnectionPool( "Agroal" );
 		try {
 			AgroalPropertiesReader agroalProperties = new AgroalPropertiesReader( CONFIG_PREFIX )
 					.readProperties( (Map) props ); //TODO: this is a garbage cast
@@ -94,11 +106,23 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 			} ) );
 
 			agroalDataSource = AgroalDataSource.from( agroalProperties );
+
+			// For logging purposes
+			AgroalConnectionPoolConfiguration acpc = agroalDataSource.getConfiguration().connectionPoolConfiguration();
+			AgroalConnectionFactoryConfiguration acfc = acpc.connectionFactoryConfiguration();
+			dbInfo = new DatabaseConnectionInfoImpl()
+					.setDBUrl( acfc.jdbcUrl() )
+					.setDBDriverName( acfc.connectionProviderClass().toString() )
+					.setDBAutoCommitMode( Boolean.toString(acfc.autoCommit()) )
+					.setDBIsolationLevel( acfc.jdbcTransactionIsolation() != null ?
+							ConnectionProviderInitiator.toIsolationNiceName( acfc.jdbcTransactionIsolation().level() ) : null )
+					.setDBMinPoolSize( String.valueOf(acpc.minSize()) )
+					.setDBMaxPoolSize( String.valueOf(acpc.maxSize()) );
 		}
 		catch ( Exception e ) {
+			ConnectionInfoLogger.INSTANCE.unableToInstantiateConnectionPool( e );
 			throw new HibernateException( e );
 		}
-		LOGGER.debug( "Agroal Configured" );
 	}
 
 	// --- ConnectionProvider
@@ -119,6 +143,11 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 		// That logic is similar with what Hibernate does (however with better performance since it's integrated in the pool)
 		// and therefore that integration is not leveraged right now.
 		return false;
+	}
+
+	@Override
+	public DatabaseConnectionInfo getDatabaseConnectionInfo() {
+		return dbInfo;
 	}
 
 	@Override
@@ -146,6 +175,8 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 	@Override
 	public void stop() {
 		if ( agroalDataSource != null ) {
+			ConnectionInfoLogger.INSTANCE.cleaningUpConnectionPool( agroalDataSource.getConfiguration().connectionPoolConfiguration().
+																			connectionFactoryConfiguration().jdbcUrl() );
 			agroalDataSource.close();
 		}
 	}

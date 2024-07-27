@@ -21,6 +21,7 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
+import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.ast.spi.CollectionLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -153,7 +154,7 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 								persistenceContext,
 								getLoadable().getCollectionDescriptor(),
 								c,
-								c.getKey(),
+								NullnessUtil.castNonNull( c.getKey() ),
 								true
 						);
 					}

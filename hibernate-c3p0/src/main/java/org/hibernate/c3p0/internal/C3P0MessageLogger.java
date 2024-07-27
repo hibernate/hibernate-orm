@@ -6,19 +6,15 @@
  */
 package org.hibernate.c3p0.internal;
 
-import java.sql.SQLException;
-
-import org.hibernate.internal.log.ConnectionPoolingLogger;
+import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.Logger;
-import org.jboss.logging.annotations.Cause;
 import org.jboss.logging.annotations.LogMessage;
 import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
-import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.WARN;
 
 /**
@@ -33,10 +29,9 @@ import static org.jboss.logging.Logger.Level.WARN;
 		name = C3P0MessageLogger.NAME,
 		description = "Logging related to the C3P0 connection pool"
 )
-public interface C3P0MessageLogger extends ConnectionPoolingLogger {
-	String NAME = ConnectionPoolingLogger.LOGGER_NAME + ".c3p0";
+public interface C3P0MessageLogger extends ConnectionInfoLogger {
+	String NAME = ConnectionInfoLogger.LOGGER_NAME + ".c3p0";
 
-	Logger C3P0_LOGGER = Logger.getLogger( NAME );
 	C3P0MessageLogger C3P0_MSG_LOGGER = Logger.getMessageLogger( C3P0MessageLogger.class, NAME );
 
 	/**
@@ -49,41 +44,4 @@ public interface C3P0MessageLogger extends ConnectionPoolingLogger {
 	@Message(value = "Both hibernate-style property '%1$s' and c3p0-style property '%2$s' have been set in Hibernate "
 			+ "properties.  Hibernate-style property '%1$s' will be used and c3p0-style property '%2$s' will be ignored!", id = 10001)
 	void bothHibernateAndC3p0StylesSet(String hibernateStyle,String c3p0Style);
-
-	/**
-	 * Log a message (INFO) about which Driver class is being used.
-	 *
-	 * @param jdbcDriverClass The JDBC Driver class
-	 * @param jdbcUrl The JDBC URL
-	 */
-	@LogMessage(level = INFO)
-	@Message(value = "C3P0 using driver: %s at URL: %s", id = 10002)
-	void c3p0UsingDriver(String jdbcDriverClass, String jdbcUrl);
-
-	/**
-	 * Build a message about not being able to find the JDBC driver class
-	 *
-	 * @param jdbcDriverClass The JDBC driver class we could not find
-	 *
-	 * @return The message
-	 */
-	@Message(value = "JDBC Driver class not found: %s", id = 10003)
-	String jdbcDriverNotFound(String jdbcDriverClass);
-
-	/**
-	 * Log a message (WARN) about not being able to stop the underlying c3p0 pool.
-	 *
-	 * @param e The exception when we tried to stop pool
-	 */
-	@LogMessage(level = WARN)
-	@Message(value = "Could not destroy C3P0 connection pool", id = 10004)
-	void unableToDestroyC3p0ConnectionPool(@Cause SQLException e);
-
-	/**
-	 * Build a message about not being able to start the underlying c3p0 pool.
-	 *
-	 * @return The message
-	 */
-	@Message(value = "Could not instantiate C3P0 connection pool", id = 10005)
-	String unableToInstantiateC3p0ConnectionPool();
 }

@@ -101,10 +101,10 @@ public interface PersistenceContext {
 	 */
 	void clear();
 
-//	/**
-//	 * @return false if we know for certain that all the entities are read-only
-//	 */
-//	boolean hasNonReadOnlyEntities();
+	/**
+	 * @return false if we know for certain that all the entities are read-only
+	 */
+	boolean hasNonReadOnlyEntities();
 
 	/**
 	 * Set the status of an entry

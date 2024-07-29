@@ -22,8 +22,6 @@ public class DefaultDialectSelectorTest {
 	public void verifyAllDialectNamingResolve() {
 		testDialectNamingResolution( DB2Dialect.class );
 
-		testDialectNamingResolution( DerbyDialect.class );
-
 		testDialectNamingResolution( H2Dialect.class );
 		testDialectNamingResolution( HANADialect.class );
 		testDialectNamingResolution( HSQLDialect.class );

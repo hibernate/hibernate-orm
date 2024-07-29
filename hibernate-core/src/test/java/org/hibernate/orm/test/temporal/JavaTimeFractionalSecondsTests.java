@@ -19,7 +19,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.MariaDBDialect;

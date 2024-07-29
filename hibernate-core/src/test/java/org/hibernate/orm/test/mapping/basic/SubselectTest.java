@@ -16,7 +16,7 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.community.dialect.FirebirdDialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;

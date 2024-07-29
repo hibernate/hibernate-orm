@@ -13,7 +13,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.HANADialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;

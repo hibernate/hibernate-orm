@@ -17,7 +17,7 @@ import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.orm.test.jpa.metamodel.AbstractMetamodelSpecificTest;

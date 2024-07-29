@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.jpa.compliance;
+package org.hibernate.community.dialect;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -16,7 +16,6 @@ import java.util.Date;
 import java.util.function.Consumer;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -46,11 +45,11 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @Jpa(
-		annotatedClasses = StoredProcedureTest.Person.class,
+		annotatedClasses = DerbyStoredProcedureTest.Person.class,
 		properties = @Setting(name = AvailableSettings.JPA_LOAD_BY_ID_COMPLIANCE, value = "true")
 )
 @RequiresDialect(value = DerbyDialect.class)
-public class StoredProcedureTest {
+public class DerbyStoredProcedureTest {
 
 	@BeforeEach
 	public void setUp(EntityManagerFactoryScope scope) {
@@ -186,7 +185,7 @@ public class StoredProcedureTest {
 		try {
 			statement.execute(
 					"CREATE PROCEDURE SelectByDate(in IN_PARAM DATE, out OUT_PARAMAM INTEGER) " +
-							"language java external name 'org.hibernate.orm.test.jpa.compliance.StoredProcedureTest.selectByDate' " +
+							"language java external name 'org.hibernate.community.dialect.DerbyStoredProcedureTest.selectByDate' " +
 							"parameter style java"
 			);
 		}

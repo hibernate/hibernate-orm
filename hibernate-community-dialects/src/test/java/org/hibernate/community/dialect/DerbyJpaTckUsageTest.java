@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.test.jpa.procedure;
+package org.hibernate.community.dialect;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -14,14 +14,14 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 
-import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.procedure.User;
 
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,11 +41,11 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 @RequiresDialect(DerbyDialect.class)
-public class JpaTckUsageTest extends BaseEntityManagerFunctionalTestCase {
+public class DerbyJpaTckUsageTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{User.class};
+		return new Class[]{ User.class};
 	}
 
 	@Test
@@ -93,7 +93,7 @@ public class JpaTckUsageTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-8416", message = "JPA TCK challenge" )
+	@FailureExpected( jiraKey = "HHH-8416", reason = "JPA TCK challenge" )
 	public void testHasMoreResultsHandlingTckChallenge() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -202,7 +202,7 @@ public class JpaTckUsageTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-8395", message = "Out of the frying pan into the fire: https://issues.apache.org/jira/browse/DERBY-211" )
+	@FailureExpected( jiraKey = "HHH-8395", reason = "Out of the frying pan into the fire: https://issues.apache.org/jira/browse/DERBY-211" )
 	public void testExecuteUpdate() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -321,7 +321,7 @@ public class JpaTckUsageTest extends BaseEntityManagerFunctionalTestCase {
 				"CREATE PROCEDURE findOneUser() " +
 						"language java " +
 						"dynamic result sets 1 " +
-						"external name 'org.hibernate.orm.test.jpa.procedure.JpaTckUsageTest.findOneUser' " +
+						"external name 'org.hibernate.community.dialect.DerbyJpaTckUsageTest.findOneUser' " +
 						"parameter style java"
 		);
 	}
@@ -330,7 +330,7 @@ public class JpaTckUsageTest extends BaseEntityManagerFunctionalTestCase {
 		statement.execute(
 				"CREATE PROCEDURE deleteAllUsers() " +
 						"language java " +
-						"external name 'org.hibernate.orm.test.jpa.procedure.JpaTckUsageTest.deleteAllUsers' " +
+						"external name 'org.hibernate.community.dialect.DerbyJpaTckUsageTest.deleteAllUsers' " +
 						"parameter style java"
 		);
 	}

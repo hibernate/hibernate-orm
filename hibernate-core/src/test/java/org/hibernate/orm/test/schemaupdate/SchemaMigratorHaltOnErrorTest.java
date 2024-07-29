@@ -18,7 +18,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.tool.schema.spi.SchemaManagementException;

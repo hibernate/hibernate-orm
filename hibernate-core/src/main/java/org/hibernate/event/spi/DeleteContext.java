@@ -8,10 +8,14 @@ package org.hibernate.event.spi;
 
 import java.util.IdentityHashMap;
 
+import org.hibernate.event.internal.DefaultDeleteEventListener;
+
 /**
- * A {@link DeleteEvent} represents a {@linkplain org.hibernate.Session#delete(Object) delete operation}
+ * A {@link DeleteEvent} represents a {@linkplain org.hibernate.Session#remove delete operation}
  * applied to a single entity. A {@code DeleteContext} is propagated across all cascaded delete operations,
  * and keeps track of all the entities we've already visited.
+ *
+ * @see DefaultDeleteEventListener#onDelete(DeleteEvent, DeleteContext)
  *
  * @author Gavin King
  */

@@ -40,6 +40,7 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 			"org.hibernate.community.dialect.DerbyTenFiveDialect",
 			"org.hibernate.community.dialect.DerbyTenSevenDialect",
 			"org.hibernate.community.dialect.DerbyTenSixDialect",
+			"org.hibernate.community.dialect.DerbyDialect",
 			"org.hibernate.community.dialect.MariaDB10Dialect",
 			"org.hibernate.community.dialect.MariaDB53Dialect",
 			"org.hibernate.community.dialect.MariaDB102Dialect",

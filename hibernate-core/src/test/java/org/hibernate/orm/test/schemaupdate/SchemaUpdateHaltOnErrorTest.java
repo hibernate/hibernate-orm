@@ -27,7 +27,7 @@ import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.CustomRunner;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.spi.SchemaManagementException;

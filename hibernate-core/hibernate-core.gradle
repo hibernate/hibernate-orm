@@ -264,7 +264,7 @@ tasks.withType( Test.class ).each { test ->
     test.beforeTest { descriptor ->
         //println "Starting test: " + descriptor
     }
-    if ( project.db == "h2" || project.db == "hsqldb" || project.db == "derby" ) {
+    if ( project.db == "h2" || project.db == "hsqldb" ) {
         // Parallel test runs when running with in-memory databases
         test.maxParallelForks = Runtime.runtime.availableProcessors().intdiv( 2 ) ?: 1
     }

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.test.jpa.procedure;
+package org.hibernate.community.dialect;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -18,7 +18,6 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 
-import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -48,9 +47,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @RequiresDialect(DerbyDialect.class)
 @Jpa(
-		annotatedClasses = { DateTimeParameterTest.Message.class }
+		annotatedClasses = { DerbyDateTimeParameterTest.Message.class }
 )
-public class DateTimeParameterTest {
+public class DerbyDateTimeParameterTest {
 
 	private static GregorianCalendar nowCal = new GregorianCalendar();
 	private static Date now = new Date( nowCal.getTime().getTime() );
@@ -119,7 +118,7 @@ public class DateTimeParameterTest {
 						"CREATE PROCEDURE findMessagesByDate(IN chkDt DATE) " +
 								"language java " +
 								"dynamic result sets 1 " +
-								"external name 'org.hibernate.orm.test.jpa.procedure.DateTimeParameterTest.findMessagesByDate' " +
+								"external name 'org.hibernate.community.dialect.DerbyDateTimeParameterTest.findMessagesByDate' " +
 								"parameter style java"
 				);
 
@@ -127,7 +126,7 @@ public class DateTimeParameterTest {
 						"CREATE PROCEDURE findMessagesByTime(IN chkTime TIME) " +
 								"language java " +
 								"dynamic result sets 1 " +
-								"external name 'org.hibernate.orm.test.jpa.procedure.DateTimeParameterTest.findMessagesByTime' " +
+								"external name 'org.hibernate.community.dialect.DerbyDateTimeParameterTest.findMessagesByTime' " +
 								"parameter style java"
 				);
 
@@ -135,7 +134,7 @@ public class DateTimeParameterTest {
 						"CREATE PROCEDURE findMessagesByTimestampRange(IN startDt TIMESTAMP, IN endDt TIMESTAMP) " +
 								"language java " +
 								"dynamic result sets 1 " +
-								"external name 'org.hibernate.orm.test.jpa.procedure.DateTimeParameterTest.findMessagesByTimestampRange' " +
+								"external name 'org.hibernate.community.dialect.DerbyDateTimeParameterTest.findMessagesByTimestampRange' " +
 								"parameter style java"
 				);
 
@@ -143,7 +142,7 @@ public class DateTimeParameterTest {
 						"CREATE PROCEDURE retrieveTimestamp(IN ts1 TIMESTAMP, OUT ts2 TIMESTAMP) " +
 								"language java " +
 								"dynamic result sets 0 " +
-								"external name 'org.hibernate.orm.test.jpa.procedure.DateTimeParameterTest.retrieveTimestamp' " +
+								"external name 'org.hibernate.community.dialect.DerbyDateTimeParameterTest.retrieveTimestamp' " +
 								"parameter style java"
 				);
 

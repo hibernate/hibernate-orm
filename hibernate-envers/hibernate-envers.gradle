@@ -53,7 +53,7 @@ configurations {
 }
 
 tasks.withType( Test.class ).each { test ->
-    if ( project.db == "h2" || project.db == "hsqldb" || project.db == "derby" ) {
+    if ( project.db == "h2" || project.db == "hsqldb" ) {
         // Parallel test runs when running with in-memory databases
         test.maxParallelForks = Runtime.runtime.availableProcessors().intdiv( 2 ) ?: 1
     }

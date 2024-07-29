@@ -11,7 +11,6 @@ import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DB2iDialect;
 import org.hibernate.dialect.DB2zDialect;
-import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HANADialect;
@@ -50,11 +49,6 @@ public class DefaultDialectSelector implements DialectSelector {
 			case "DB2390V8":
 			case "DB2z":
 				return DB2zDialect.class;
-			case "DerbyTenFive":
-			case "DerbyTenSix":
-			case "DerbyTenSeven":
-			case "Derby":
-				return DerbyDialect.class;
 			case "H2":
 				return H2Dialect.class;
 			case "HANARowStore":

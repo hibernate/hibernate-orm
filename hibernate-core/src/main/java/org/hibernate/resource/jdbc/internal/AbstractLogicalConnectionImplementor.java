@@ -18,6 +18,8 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.jboss.logging.Logger;
 
 /**
+ * Base support for LogicalConnection implementations
+ *
  * @author Steve Ebersole
  */
 public abstract class AbstractLogicalConnectionImplementor implements LogicalConnectionImplementor, PhysicalJdbcTransaction {

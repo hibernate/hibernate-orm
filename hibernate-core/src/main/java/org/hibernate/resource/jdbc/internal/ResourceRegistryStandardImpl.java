@@ -20,7 +20,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.resource.jdbc.ResourceRegistry;
-import org.hibernate.resource.jdbc.spi.JdbcObserver;
+import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 
 /**
  * Helps to track statements and resultsets which need being closed.
@@ -49,7 +49,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	//but in this case the overhead of HashSet is not negligible.
 	private static final HashMap<ResultSet,Object> EMPTY = new HashMap<>( 1, 0.2f );
 
-	private final JdbcObserver jdbcObserver;
+	private final JdbcEventHandler jdbcEventHandler;
 
 	private final HashMap<Statement, HashMap<ResultSet,Object>> xref = new HashMap<>();
 	private HashMap<ResultSet,Object> unassociatedResultSets;
@@ -64,8 +64,8 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		this( null );
 	}
 
-	public ResourceRegistryStandardImpl(JdbcObserver jdbcObserver) {
-		this.jdbcObserver = jdbcObserver;
+	public ResourceRegistryStandardImpl(JdbcEventHandler jdbcEventHandler) {
+		this.jdbcEventHandler = jdbcEventHandler;
 	}
 
 	@Override
@@ -244,7 +244,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		}
 		else {
 			if ( unassociatedResultSets == null ) {
-				this.unassociatedResultSets = new HashMap<ResultSet,Object>();
+				this.unassociatedResultSets = new HashMap<>();
 			}
 			unassociatedResultSets.put( resultSet, PRESENT );
 		}
@@ -327,8 +327,8 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	public void releaseResources() {
 		log.trace( "Releasing JDBC resources" );
 
-		if ( jdbcObserver != null ) {
-			jdbcObserver.jdbcReleaseRegistryResourcesStart();
+		if ( jdbcEventHandler != null ) {
+			jdbcEventHandler.jdbcReleaseRegistryResourcesStart();
 		}
 
 		xref.forEach( ResourceRegistryStandardImpl::releaseXref );
@@ -371,6 +371,10 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 				}
 			} );
 			nclobs = null;
+		}
+
+		if ( jdbcEventHandler != null ) {
+			jdbcEventHandler.jdbcReleaseRegistryResourcesEnd();
 		}
 	}
 

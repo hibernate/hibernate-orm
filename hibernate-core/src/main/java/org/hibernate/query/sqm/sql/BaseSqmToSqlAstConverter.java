@@ -8406,7 +8406,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 									joinProducer,
 									joinProducer.determineSqlJoinType( lhs, null, true )
 							);
-							if ( compatibleTableGroup == null ) {
+							final SqmQueryPart<?> queryPart = getCurrentSqmQueryPart();
+							if ( compatibleTableGroup == null
+									// If the compatible table group is used in the where clause it cannot be reused for fetching
+									|| ( queryPart != null && queryPart.getFirstQuerySpec().whereClauseContains( compatibleTableGroup.getNavigablePath(), this ) ) ) {
 								final TableGroupJoin tableGroupJoin = joinProducer.createTableGroupJoin(
 										fetchablePath,
 										lhs,

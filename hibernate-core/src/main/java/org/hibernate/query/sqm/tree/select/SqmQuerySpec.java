@@ -630,14 +630,25 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Internal
+	public boolean whereClauseContains(NavigablePath navigablePath, SqmToSqlAstConverter sqlAstConverter) {
+		if ( whereClause == null ) {
+			return false;
+		}
+		return isSameOrParent(
+				navigablePath,
+				sqlAstConverter.resolveMetadata( this, SqmUtil::getWhereClauseNavigablePaths )
+		);
+	}
+
+	@Internal
 	public boolean groupByClauseContains(NavigablePath navigablePath, SqmToSqlAstConverter sqlAstConverter) {
 		if ( groupByClauseExpressions.isEmpty() ) {
 			return false;
 		}
-		return navigablePathsContain( sqlAstConverter.resolveMetadata(
-				this,
-				SqmUtil::getGroupByNavigablePaths
-		), navigablePath );
+		return isSameOrChildren(
+				navigablePath,
+				sqlAstConverter.resolveMetadata( this, SqmUtil::getGroupByNavigablePaths )
+		);
 	}
 
 	@Internal
@@ -646,15 +657,24 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		if ( orderByClause == null || orderByClause.getSortSpecifications().isEmpty() ) {
 			return false;
 		}
-		return navigablePathsContain( sqlAstConverter.resolveMetadata(
-				this,
-				SqmUtil::getOrderByNavigablePaths
-		), navigablePath );
+		return isSameOrChildren(
+				navigablePath,
+				sqlAstConverter.resolveMetadata( this, SqmUtil::getOrderByNavigablePaths )
+		);
 	}
 
-	private boolean navigablePathsContain(List<NavigablePath> navigablePaths, NavigablePath navigablePath) {
+	private boolean isSameOrChildren(NavigablePath navigablePath, List<NavigablePath> navigablePaths) {
 		for ( NavigablePath path : navigablePaths ) {
 			if ( path.isParentOrEqual( navigablePath ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean isSameOrParent(NavigablePath navigablePath, List<NavigablePath> navigablePaths) {
+		for ( NavigablePath path : navigablePaths ) {
+			if ( navigablePath.isParentOrEqual( path ) ) {
 				return true;
 			}
 		}

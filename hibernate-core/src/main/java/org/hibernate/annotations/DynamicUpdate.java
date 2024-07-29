@@ -23,8 +23,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  *
  * @author Steve Ebersole
- *
- * @see SelectBeforeUpdate
  */
 @Target( TYPE )
 @Retention( RUNTIME )

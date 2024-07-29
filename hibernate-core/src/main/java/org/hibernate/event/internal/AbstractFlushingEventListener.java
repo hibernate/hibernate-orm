@@ -53,11 +53,8 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, AbstractFlushingEventListener.class.getName() );
 
-	private boolean jpaBootstrap;
-
 	@Override
 	public void wasJpaBootstrap(boolean wasJpaBootstrap) {
-		this.jpaBootstrap = wasJpaBootstrap;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -205,10 +202,6 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		return CascadingActions.PERSIST_ON_FLUSH;
 	}
 
-	private static boolean isJpaCascadeComplianceEnabled(EventSource session) {
-		return session.getSessionFactory().getSessionFactoryOptions().getJpaCompliance().isJpaCascadeComplianceEnabled();
-	}
-
 	/**
 	 * Initialize the flags of the CollectionEntry, including the
 	 * dirty check.
@@ -284,14 +277,13 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 			EventSource source,
 			Object key,
 			EntityEntry entry) {
-		final FlushEntityEvent entityEvent = possiblyValidExistingInstance;
-		if ( entityEvent == null || !entityEvent.isAllowedToReuse() ) {
+		if ( possiblyValidExistingInstance == null || !possiblyValidExistingInstance.isAllowedToReuse() ) {
 			//need to create a new instance
 			return new FlushEntityEvent( source, key, entry );
 		}
 		else {
-			entityEvent.resetAndReuseEventInstance( key, entry );
-			return entityEvent;
+			possiblyValidExistingInstance.resetAndReuseEventInstance( key, entry );
+			return possiblyValidExistingInstance;
 		}
 	}
 

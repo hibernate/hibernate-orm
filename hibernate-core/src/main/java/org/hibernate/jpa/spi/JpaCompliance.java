@@ -81,14 +81,9 @@ public interface JpaCompliance {
 	boolean isJpaClosedComplianceEnabled();
 
 	/**
-	 * JPA specifies that a {@link jakarta.persistence.CascadeType#PERSIST}
-	 * operation should occur at flush time. The legacy behavior of Hibernate
-	 * was a {@link org.hibernate.annotations.CascadeType#SAVE_UPDATE}.
-	 *
-	 * @return {@code true} indicates to behave in the spec-defined way
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#JPA_CASCADE_COMPLIANCE
+	 * @deprecated No longer has any effect.
 	 */
+	@Deprecated(since = "7.0")
 	boolean isJpaCascadeComplianceEnabled();
 
 	/**

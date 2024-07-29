@@ -309,7 +309,6 @@ public interface Interceptor {
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 *
 	 * @see Session#remove(Object)
-	 * @see Session#delete(Object)
 	 *
 	 * @deprecated Use {@link #onRemove(Object, Object, Object[], String[], Type[])}
 	 */

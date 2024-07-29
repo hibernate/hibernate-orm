@@ -25,7 +25,6 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	 *
 	 * @return The connection
 	 */
-	// todo : expose Connection as here? Or accept(Work) where Work is given access to Connection?
 	Connection getPhysicalConnection();
 
 	PhysicalConnectionHandlingMode getConnectionHandlingMode();

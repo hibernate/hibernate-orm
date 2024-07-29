@@ -24,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DomainModel(annotatedClasses =
 		{CascadePersistSFTest.Parent.class,
 		CascadePersistSFTest.Child.class})
-@ServiceRegistry(settings = @Setting(name=JpaComplianceSettings.JPA_CASCADE_COMPLIANCE,value="true"))
 public class CascadePersistSFTest {
 	@Test void test(SessionFactoryScope scope) {
 		Parent p = new Parent();

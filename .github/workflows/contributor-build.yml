@@ -42,7 +42,6 @@ jobs:
         include:
           - rdbms: h2
           - rdbms: hsqldb
-          - rdbms: derby
           - rdbms: mysql
           - rdbms: mariadb
           - rdbms: postgresql

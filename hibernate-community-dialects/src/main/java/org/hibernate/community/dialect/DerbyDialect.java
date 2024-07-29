@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -13,19 +13,25 @@ import java.util.Locale;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.NationalizationSupport;
+import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.function.CastingConcatFunction;
 import org.hibernate.dialect.function.ChrLiteralEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
-import org.hibernate.dialect.function.DerbyLpadEmulation;
-import org.hibernate.dialect.function.DerbyRpadEmulation;
+import org.hibernate.community.dialect.function.DerbyLpadEmulation;
+import org.hibernate.community.dialect.function.DerbyRpadEmulation;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.pagination.DerbyLimitHandler;
+import org.hibernate.community.dialect.pagination.DerbyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.sequence.DerbySequenceSupport;
+import org.hibernate.community.dialect.sequence.DerbySequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
@@ -61,7 +67,7 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDerbyDatabaseImpl;
+import org.hibernate.community.dialect.sequence.SequenceInformationExtractorDerbyDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;

@@ -2,7 +2,7 @@ package org.hibernate.orm.test.hql;
 
 import java.time.LocalDate;
 
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;

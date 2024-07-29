@@ -99,6 +99,8 @@ public class AnnotatedColumn {
 
 	private String options;
 
+	private String comment;
+
 	public AnnotatedColumns getParent() {
 		return parent;
 	}
@@ -267,9 +269,9 @@ public class AnnotatedColumn {
 			}
 			mappingColumn.setOptions( options );
 
-//			if ( isNotEmpty( comment ) ) {
-//				mappingColumn.setComment( comment );
-//			}
+			if ( isNotEmpty( comment ) ) {
+				mappingColumn.setComment( comment );
+			}
 			if ( generatedAs != null ) {
 				mappingColumn.setGeneratedAs( generatedAs );
 			}
@@ -318,6 +320,7 @@ public class AnnotatedColumn {
 			}
 			mappingColumn.setDefaultValue( defaultValue );
 			mappingColumn.setOptions( options );
+			mappingColumn.setComment( comment );
 
 			if ( writeExpression != null ) {
 				final int numberOfJdbcParams = StringHelper.count( writeExpression, '?' );
@@ -814,6 +817,7 @@ public class AnnotatedColumn {
 		annotatedColumn.applyGeneratedAs( inferredData, numberOfColumns );
 		annotatedColumn.applyColumnCheckConstraint( column );
 		annotatedColumn.applyColumnOptions( column );
+		annotatedColumn.applyColumnComment(column);
 		annotatedColumn.applyCheckConstraint( inferredData, numberOfColumns );
 		annotatedColumn.extractDataFromPropertyData( propertyHolder, inferredData, sourceModelContext );
 		annotatedColumn.bind();
@@ -1034,6 +1038,12 @@ public class AnnotatedColumn {
 
 	private void applyColumnOptions(jakarta.persistence.Column column) {
 		options = column.options();
+	}
+
+	private void applyColumnComment(jakarta.persistence.Column column) {
+		if ( !column.comment().isEmpty() ) {
+			comment = column.comment();
+		}
 	}
 
 	void setOptions(String options){

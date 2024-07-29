@@ -24,6 +24,8 @@ public class TimeZoneColumnAnnotation implements TimeZoneColumn {
 	private boolean updatable;
 	private String columnDefinition;
 	private String table;
+	private String options;
+	private String comment;
 
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
@@ -34,6 +36,8 @@ public class TimeZoneColumnAnnotation implements TimeZoneColumn {
 		this.updatable = true;
 		this.columnDefinition = "";
 		this.table = "";
+		this.options = "";
+		this.comment = "";
 	}
 
 	/**
@@ -45,6 +49,8 @@ public class TimeZoneColumnAnnotation implements TimeZoneColumn {
 		this.updatable = annotation.updatable();
 		this.columnDefinition = annotation.columnDefinition();
 		this.table = annotation.table();
+		this.options = annotation.options();
+		this.comment = annotation.comment();
 	}
 
 	/**
@@ -71,6 +77,8 @@ public class TimeZoneColumnAnnotation implements TimeZoneColumn {
 				modelContext
 		);
 		this.table = extractJandexValue( annotation, HibernateAnnotations.TIME_ZONE_COLUMN, "table", modelContext );
+		this.options = extractJandexValue( annotation, HibernateAnnotations.TIME_ZONE_COLUMN, "options", modelContext );
+		this.comment = extractJandexValue( annotation, HibernateAnnotations.TIME_ZONE_COLUMN, "comment", modelContext );
 	}
 
 	@Override
@@ -127,5 +135,21 @@ public class TimeZoneColumnAnnotation implements TimeZoneColumn {
 		this.table = value;
 	}
 
+	@Override
+	public String options() {
+		return options;
+	}
 
+	public void options(String value) {
+		this.options = value;
+	}
+
+	@Override
+	public String comment() {
+		return comment;
+	}
+
+	public void comment(String value) {
+		this.comment = value;
+	}
 }

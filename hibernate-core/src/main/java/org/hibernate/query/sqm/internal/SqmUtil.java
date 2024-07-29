@@ -63,6 +63,7 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
@@ -88,6 +89,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.query.sqm.tree.jpa.ParameterCollector.collectParameters;
 
 /**
@@ -215,6 +217,15 @@ public class SqmUtil {
 		return false;
 	}
 
+	public static List<NavigablePath> getWhereClauseNavigablePaths(SqmQuerySpec<?> querySpec) {
+		final SqmWhereClause where = querySpec.getWhereClause();
+		if ( where == null || where.getPredicate() == null ) {
+			return Collections.emptyList();
+		}
+
+		return collectNavigablePaths( List.of( where.getPredicate() ) );
+	}
+
 	public static List<NavigablePath> getGroupByNavigablePaths(SqmQuerySpec<?> querySpec) {
 		final List<SqmExpression<?>> expressions = querySpec.getGroupByClauseExpressions();
 		if ( expressions.isEmpty() ) {
@@ -238,7 +249,7 @@ public class SqmUtil {
 	}
 
 	private static List<NavigablePath> collectNavigablePaths(final List<SqmExpression<?>> expressions) {
-		final List<NavigablePath> navigablePaths = new ArrayList<>( expressions.size() );
+		final List<NavigablePath> navigablePaths = arrayList( expressions.size() );
 		final SqmPathVisitor pathVisitor = new SqmPathVisitor( path -> navigablePaths.add( path.getNavigablePath() ) );
 		for ( final SqmExpression<?> expression : expressions ) {
 			if ( expression instanceof SqmAliasedNodeRef ) {

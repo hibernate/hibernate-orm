@@ -286,12 +286,6 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	@Deprecated
-	public void refresh(String entityName, Object object) {
-		this.lazySession.get().refresh( entityName, object );
-	}
-
-	@Override
 	public void refresh(Object object, LockMode lockMode) {
 		this.lazySession.get().refresh( object, lockMode );
 	}
@@ -299,12 +293,6 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	public void refresh(Object object, LockOptions lockOptions) {
 		this.lazySession.get().refresh( object, lockOptions );
-	}
-
-	@Override
-	@Deprecated
-	public void refresh(String entityName, Object object, LockOptions lockOptions) {
-		this.lazySession.get().refresh( entityName, object, lockOptions );
 	}
 
 	@Override

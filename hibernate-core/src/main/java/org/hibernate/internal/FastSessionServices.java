@@ -182,7 +182,6 @@ public final class FastSessionServices {
 	//Private fields:
 	private final CacheStoreMode defaultCacheStoreMode;
 	private final CacheRetrieveMode defaultCacheRetrieveMode;
-	private final ConnectionObserverStatsBridge defaultJdbcObservers;
 	private final FormatMapper jsonFormatMapper;
 	private final FormatMapper xmlFormatMapper;
 	private final MutationExecutorService mutationExecutorService;
@@ -265,7 +264,6 @@ public final class FastSessionServices {
 		this.defaultCacheRetrieveMode = determineCacheRetrieveMode( defaultSessionProperties );
 		this.initialSessionCacheMode = CacheModeHelper.interpretCacheMode( defaultCacheStoreMode, defaultCacheRetrieveMode );
 		this.discardOnClose = sessionFactoryOptions.isReleaseResourcesOnCloseEnabled();
-		this.defaultJdbcObservers = new ConnectionObserverStatsBridge( sessionFactory );
 		this.defaultSessionEventListeners = sessionFactoryOptions.getBaselineSessionEventsListenerBuilder();
 		this.defaultLockOptions = initializeDefaultLockOptions( defaultSessionProperties );
 		this.initialSessionFlushMode = initializeDefaultFlushMode( defaultSessionProperties );
@@ -374,10 +372,6 @@ public final class FastSessionServices {
 			return ( CacheStoreMode ) settings.get( JAKARTA_SHARED_CACHE_STORE_MODE );
 		}
 		return cacheStoreMode;
-	}
-
-	public ConnectionObserverStatsBridge getDefaultJdbcObserver() {
-		return defaultJdbcObservers;
 	}
 
 	public JdbcValuesMappingProducerProvider getJdbcValuesMappingProducerProvider() {

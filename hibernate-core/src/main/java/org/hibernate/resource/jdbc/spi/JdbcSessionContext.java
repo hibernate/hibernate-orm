@@ -57,11 +57,7 @@ public interface JdbcSessionContext {
 
 	StatisticsImplementor getStatistics();
 
-	/**
-	 * @deprecated since {@link JdbcObserver} is deprecated
-	 */
-	@Deprecated(forRemoval = true)
-	JdbcObserver getObserver();
+	JdbcEventHandler getEventHandler();
 
 	/**
 	* Retrieve the session factory for this environment.

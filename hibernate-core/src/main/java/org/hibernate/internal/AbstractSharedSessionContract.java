@@ -99,6 +99,7 @@ import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.resource.jdbc.internal.EmptyStatementInspector;
+import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -279,10 +280,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				fastSessionServices.jdbcServices,
 				fastSessionServices.batchBuilder,
 				// TODO: this object is deprecated and should be removed
-				new JdbcObserverImpl(
-						fastSessionServices.getDefaultJdbcObserver(),
+				new JdbcEventHandler(
+						factory.getStatistics(),
 						sessionEventsManager,
-						() -> jdbcCoordinator.abortBatch() // since jdbcCoordinator not yet initialized here
+						// since jdbcCoordinator not yet initialized here
+						() -> jdbcCoordinator
 				)
 		);
 	}

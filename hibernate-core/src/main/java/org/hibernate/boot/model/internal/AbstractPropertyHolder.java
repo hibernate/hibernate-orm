@@ -504,6 +504,8 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		created.nullable( column.nullable() );
 
 		if ( timeZoneColumn != null ) {
+			created.options( timeZoneColumn.options() );
+			created.comment( timeZoneColumn.comment() );
 			created.table( timeZoneColumn.table() );
 			created.insertable( timeZoneColumn.insertable() );
 			created.updatable( timeZoneColumn.updatable() );
@@ -514,6 +516,8 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			created.insertable( column.insertable() );
 			created.updatable( column.updatable() );
 			created.columnDefinition( column.columnDefinition() );
+			created.options( column.options() );
+			created.comment( column.comment() );
 		}
 
 		return created;

@@ -99,7 +99,6 @@ public class EntityManagerFactoryExtension
 		pui.getProperties().put( AvailableSettings.JPA_COMPLIANCE, emfAnn.jpaComplianceEnabled() );
 		pui.getProperties().put( AvailableSettings.JPA_QUERY_COMPLIANCE, emfAnn.queryComplianceEnabled() );
 		pui.getProperties().put( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, emfAnn.transactionComplianceEnabled() );
-		pui.getProperties().put( AvailableSettings.JPA_LIST_COMPLIANCE, emfAnn.listMappingComplianceEnabled() );
 		pui.getProperties().put( AvailableSettings.JPA_CLOSED_COMPLIANCE, emfAnn.closedComplianceEnabled() );
 		pui.getProperties().put( AvailableSettings.JPA_PROXY_COMPLIANCE, emfAnn.proxyComplianceEnabled() );
 		pui.getProperties().put( AvailableSettings.JPA_CACHING_COMPLIANCE, emfAnn.cacheComplianceEnabled() );

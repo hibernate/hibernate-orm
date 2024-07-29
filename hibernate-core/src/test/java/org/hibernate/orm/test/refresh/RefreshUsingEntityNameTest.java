@@ -46,7 +46,7 @@ public class RefreshUsingEntityNameTest {
 	public void testRefreshUsingEntityName(SessionFactoryScope scope) {
 		scope.inSession(
 				session ->
-						session.refresh( "CustomName", customer )
+						session.refresh( customer )
 		);
 	}
 }

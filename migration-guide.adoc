@@ -151,6 +151,8 @@ String isDefault();
 * Removed `@SelectBeforeUpdate`
 * Removed `org.hibernate.Session#delete(Object object)` and `org.hibernate.Session#delete(String entityName, Object object)` in favor of `org.hibernate.Session#remove(Object object)`
 * Removed `org.hibernate.annotations.CascadeType.DELETE` in favor of `org.hibernate.annotations.CascadeType#REMOVE`
+* Removed `org.hibernate.Session#refresh(String entityName, Object object)` in favor of `org.hibernate.Session#refresh(Object object)`
+* Removed `org.hibernate.Session#refresh(String entityName, Object object, LockOptions lockOptions)` in favor of `org.hibernate.Session#refresh(Object object, LockOptions lockOptions)`
 
 
 [WARNING]

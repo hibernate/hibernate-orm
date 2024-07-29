@@ -973,11 +973,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void refresh(String entityName, Object object) {
-		delegate.refresh( entityName, object );
-	}
-
-	@Override
 	public void refresh(Object object, LockMode lockMode) {
 		delegate.refresh( object, lockMode );
 	}
@@ -985,11 +980,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void refresh(Object object, LockOptions lockOptions) {
 		delegate.refresh( object, lockOptions );
-	}
-
-	@Override
-	public void refresh(String entityName, Object object, LockOptions lockOptions) {
-		delegate.refresh( entityName, object, lockOptions );
 	}
 
 	@Override
@@ -1195,11 +1185,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void persistOnFlush(String entityName, Object object, PersistContext copiedAlready) {
 		delegate.persistOnFlush( entityName, object, copiedAlready );
-	}
-
-	@Override
-	public void refresh(String entityName, Object object, RefreshContext refreshedAlready) throws HibernateException {
-		delegate.refresh( entityName, object, refreshedAlready );
 	}
 
 	@Override

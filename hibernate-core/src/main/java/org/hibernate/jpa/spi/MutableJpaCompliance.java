@@ -10,6 +10,10 @@ package org.hibernate.jpa.spi;
  * @author Steve Ebersole
  */
 public interface MutableJpaCompliance extends JpaCompliance {
+	/**
+	 * @deprecated Always enabled.  See {@linkplain JpaCompliance#isJpaCascadeComplianceEnabled()}
+	 */
+	@Deprecated
 	void setCascadeCompliance(boolean cascadeCompliance);
 
 	void setListCompliance(boolean listCompliance);

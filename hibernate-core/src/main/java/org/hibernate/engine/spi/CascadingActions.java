@@ -80,11 +80,11 @@ public class CascadingActions {
 	};
 
 	/**
-	 * @see org.hibernate.Session#delete(Object)
+	 * Used in legacy {@code Session#delete} method, which has been removed
 	 *
 	 * @deprecated Use {@link #REMOVE}
 	 */
-	@Deprecated(since = "6.6")
+	@Deprecated(since = "6.6", forRemoval = true)
 	public static final CascadingAction<DeleteContext> DELETE = REMOVE;
 
 	/**

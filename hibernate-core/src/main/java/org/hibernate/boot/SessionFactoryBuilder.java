@@ -720,10 +720,11 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder enableJpaListCompliance(boolean enabled);
 
 	/**
-	 * @see JpaCompliance#isJpaCascadeComplianceEnabled()
+	 * @deprecated No longer has any effect.
 	 *
-	 * @see org.hibernate.cfg.AvailableSettings#JPA_CASCADE_COMPLIANCE
+	 * @see JpaCompliance#isJpaCascadeComplianceEnabled()
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	SessionFactoryBuilder enableJpaCascadeCompliance(boolean enabled);
 
 	/**

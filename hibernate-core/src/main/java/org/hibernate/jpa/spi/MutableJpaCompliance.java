@@ -16,8 +16,6 @@ public interface MutableJpaCompliance extends JpaCompliance {
 	@Deprecated
 	void setCascadeCompliance(boolean cascadeCompliance);
 
-	void setListCompliance(boolean listCompliance);
-
 	void setOrderByMappingCompliance(boolean orderByCompliance);
 
 	void setProxyCompliance(boolean proxyCompliance);

@@ -125,12 +125,6 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	 * @deprecated  OperationalContext should cover this overload I believe
 	 */
 	@Deprecated
-	void refresh(String entityName, Object object, RefreshContext refreshedAlready) throws HibernateException;
-
-	/**
-	 * @deprecated  OperationalContext should cover this overload I believe
-	 */
-	@Deprecated
 	void removeOrphanBeforeUpdates(String entityName, Object child);
 
 	@Override

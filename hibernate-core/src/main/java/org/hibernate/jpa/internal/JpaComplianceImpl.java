@@ -12,7 +12,6 @@ import org.hibernate.jpa.spi.JpaCompliance;
  * @author Andrea Boriero
  */
 public class JpaComplianceImpl implements JpaCompliance {
-	private final boolean listCompliance;
 	private final boolean orderByMappingCompliance;
 	private final boolean proxyCompliance;
 	private final boolean globalGeneratorNameScopeCompliance;
@@ -24,7 +23,6 @@ public class JpaComplianceImpl implements JpaCompliance {
 	private final boolean cascadeCompliance;
 
 	public JpaComplianceImpl(
-			boolean listCompliance,
 			boolean orderByMappingCompliance,
 			boolean proxyCompliance,
 			boolean globalGeneratorNameScopeCompliance,
@@ -36,7 +34,6 @@ public class JpaComplianceImpl implements JpaCompliance {
 			boolean cascadeCompliance) {
 		this.queryCompliance = queryCompliance;
 		this.transactionCompliance = transactionCompliance;
-		this.listCompliance = listCompliance;
 		this.closedCompliance = closedCompliance;
 		this.proxyCompliance = proxyCompliance;
 		this.cachingCompliance = cachingCompliance;
@@ -59,11 +56,6 @@ public class JpaComplianceImpl implements JpaCompliance {
 	@Override
 	public boolean isJpaCascadeComplianceEnabled() {
 		return cascadeCompliance;
-	}
-
-	@Override
-	public boolean isJpaListComplianceEnabled() {
-		return listCompliance;
 	}
 
 	@Override
@@ -98,7 +90,6 @@ public class JpaComplianceImpl implements JpaCompliance {
 
 	public static class JpaComplianceBuilder {
 		private boolean queryCompliance;
-		private boolean listCompliance;
 		private boolean orderByMappingCompliance;
 		private boolean proxyCompliance;
 		private boolean globalGeneratorNameScopeCompliance;
@@ -113,11 +104,6 @@ public class JpaComplianceImpl implements JpaCompliance {
 
 		public JpaComplianceBuilder setCascadeCompliance(boolean cascadeCompliance) {
 			this.cascadeCompliance = cascadeCompliance;
-			return this;
-		}
-
-		public JpaComplianceBuilder setListCompliance(boolean listCompliance) {
-			this.listCompliance = listCompliance;
 			return this;
 		}
 
@@ -163,7 +149,6 @@ public class JpaComplianceImpl implements JpaCompliance {
 
 		JpaCompliance createJpaCompliance() {
 			return new JpaComplianceImpl(
-					listCompliance,
 					orderByMappingCompliance,
 					proxyCompliance,
 					globalGeneratorNameScopeCompliance,

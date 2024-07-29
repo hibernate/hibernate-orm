@@ -84,12 +84,6 @@ public @interface Jpa {
 	boolean closedComplianceEnabled() default false;
 
 	/**
-	 * @see JpaCompliance#isJpaListComplianceEnabled()
-	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_LIST_SEMANTICS
-	 */
-	boolean listMappingComplianceEnabled() default false;
-
-	/**
 	 * @see JpaCompliance#isJpaOrderByMappingComplianceEnabled()
 	 */
 	boolean orderByMappingComplianceEnabled() default false;

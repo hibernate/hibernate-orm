@@ -21,8 +21,7 @@ import jakarta.persistence.PersistenceException;
 import javax.sql.DataSource;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jpa.HibernatePersistenceProvider;
@@ -48,7 +47,7 @@ public class DataSourceInjectionTest {
 					// otherwise the FakeDataSourceException will be eaten trying to resolve the Dialect
 					final Map<String, Object> intgOverrides = Collections.singletonMap(
 							AvailableSettings.DIALECT,
-							DerbyDialect.class
+							HSQLDialect.class
 					);
 
 					final HibernatePersistenceProvider provider = new HibernatePersistenceProvider();

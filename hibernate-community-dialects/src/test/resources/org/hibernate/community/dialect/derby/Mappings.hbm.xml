@@ -230,13 +230,13 @@
 	
 	<database-object>
 		<create>
-            CREATE PROCEDURE selectAllEmployments ()
-            PARAMETER STYLE JAVA
-            LANGUAGE JAVA
-            READS SQL DATA
-            DYNAMIC RESULT SETS 2
-            EXTERNAL NAME 'org.hibernate.orm.test.sql.hand.custom.derby.DerbyStoreProcedures.selectAllEmployments'
-        </create>
+			CREATE PROCEDURE selectAllEmployments ()
+			PARAMETER STYLE JAVA
+			LANGUAGE JAVA
+			READS SQL DATA
+			DYNAMIC RESULT SETS 2
+			EXTERNAL NAME 'org.hibernate.community.dialect.DerbyStoreProcedures.selectAllEmployments'
+		</create>
 		<drop>
 		DROP PROCEDURE selectAllEmployments
 		</drop>
@@ -245,13 +245,13 @@
 	
 	<database-object>
 		<create>
-            CREATE PROCEDURE paramHandling (j SMALLINT, i SMALLINT)
-            PARAMETER STYLE JAVA
-            LANGUAGE JAVA
-            READS SQL DATA
-            DYNAMIC RESULT SETS 2
-            EXTERNAL NAME 'org.hibernate.orm.test.sql.hand.custom.derby.DerbyStoreProcedures.paramHandling'
-        </create>
+			CREATE PROCEDURE paramHandling (j SMALLINT, i SMALLINT)
+			PARAMETER STYLE JAVA
+			LANGUAGE JAVA
+			READS SQL DATA
+			DYNAMIC RESULT SETS 2
+			EXTERNAL NAME 'org.hibernate.community.dialect.DerbyStoreProcedures.paramHandling'
+		</create>
 		<drop>
 		DROP PROCEDURE paramHandling
 		</drop>
@@ -259,13 +259,13 @@
 	
     <database-object>
 	 <create>
-         CREATE PROCEDURE simpleScalar (j SMALLINT)
-         PARAMETER STYLE JAVA
-         LANGUAGE JAVA
-         READS SQL DATA
-         DYNAMIC RESULT SETS 2
-         EXTERNAL NAME 'org.hibernate.orm.test.sql.hand.custom.derby.DerbyStoreProcedures.simpleScalar'
-     </create>
+		 CREATE PROCEDURE simpleScalar (j SMALLINT)
+		 PARAMETER STYLE JAVA
+		 LANGUAGE JAVA
+		 READS SQL DATA
+		 DYNAMIC RESULT SETS 2
+		 EXTERNAL NAME 'org.hibernate.community.dialect.DerbyStoreProcedures.simpleScalar'
+	 </create>
 	 <drop>
 		DROP PROCEDURE simpleScalar
 	 </drop>

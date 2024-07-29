@@ -24,7 +24,7 @@ import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -46,7 +46,6 @@ import org.jboss.logging.Logger;
 
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.LockTimeoutException;
-import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.PessimisticLockException;
 import jakarta.persistence.Query;

@@ -9,9 +9,6 @@ package org.hibernate.orm.test.query.hql;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.dialect.Dialect;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;

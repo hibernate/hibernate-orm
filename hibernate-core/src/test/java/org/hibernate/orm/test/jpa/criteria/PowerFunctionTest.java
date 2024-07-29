@@ -3,11 +3,10 @@ package org.hibernate.orm.test.jpa.criteria;
 import java.util.List;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;

@@ -211,6 +211,23 @@ public enum CommunityDatabase {
 		public boolean productNameMatches(String databaseName) {
 			return databaseName.toLowerCase().startsWith( "timesten" );
 		}
+	},
+
+	DERBY {
+		@Override
+		public Dialect createDialect(DialectResolutionInfo info) {
+			return new DerbyDialect( info );
+		}
+		@Override
+		public boolean productNameMatches(String databaseName) {
+			return "Apache Derby".equals( databaseName );
+		}
+		@Override
+		public String getDriverClassName(String jdbcUrl) {
+			return jdbcUrl.startsWith( "jdbc:derby://" )
+					? "org.apache.derby.jdbc.ClientDriver"
+					: "org.apache.derby.jdbc.EmbeddedDriver";
+		}
 	};
 
 	/**

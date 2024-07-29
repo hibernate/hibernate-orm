@@ -13,7 +13,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -71,20 +70,6 @@ public class TransactionTimeoutTest {
 			entityManager.createNativeQuery( "create function sleep(secs bigint) returns bigint no sql language java parameter style java deterministic external name 'CLASSPATH:" + TransactionTimeoutTest.class.getName() + ".sleep'" )
 					.executeUpdate();
 			entityManager.createNativeQuery( "select sleep(10000) from (values (0)) d" ).getResultList();
-		});
-	}
-
-	@Test
-	@RequiresDialect(DerbyDialect.class)
-	public void testDerby(EntityManagerFactoryScope scope) throws Throwable {
-		test( scope, entityManager -> {
-			entityManager.createNativeQuery( "create procedure sleep(in secs bigint, out slept bigint) no sql language java parameter style java deterministic external name '" + TransactionTimeoutTest.class.getName() + ".sleep'" )
-					.executeUpdate();
-			entityManager.createStoredProcedureQuery( "sleep" )
-					.registerStoredProcedureParameter( 1, Long.class, ParameterMode.IN )
-					.registerStoredProcedureParameter( 2, Long.class, ParameterMode.OUT )
-					.setParameter( 1, 10_000L )
-					.execute();
 		});
 	}
 

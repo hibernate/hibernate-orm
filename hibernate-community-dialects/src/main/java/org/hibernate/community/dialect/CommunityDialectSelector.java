@@ -50,6 +50,11 @@ public class CommunityDialectSelector implements DialectSelector {
 				return TeradataDialect.class;
 			case "TimesTen":
 				return TimesTenDialect.class;
+			case "DerbyTenFive":
+			case "DerbyTenSix":
+			case "DerbyTenSeven":
+			case "Derby":
+				return DerbyDialect.class;
 		}
 		return null;
 	}

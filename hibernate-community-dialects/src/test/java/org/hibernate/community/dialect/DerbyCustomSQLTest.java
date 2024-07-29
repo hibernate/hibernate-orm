@@ -4,12 +4,12 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.test.sql.hand.custom.derby;
+package org.hibernate.community.dialect;
 
-import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.orm.test.sql.hand.custom.CustomStoredProcTestSupport;
 
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+
 
 /**
  * @author Andrea Boriero
@@ -17,6 +17,6 @@ import org.hibernate.testing.RequiresDialect;
 @RequiresDialect(DerbyDialect.class)
 public class DerbyCustomSQLTest extends CustomStoredProcTestSupport {
 	public String[] getMappings() {
-		return new String[] {"sql/hand/custom/derby/Mappings.hbm.xml"};
+		return new String[] {"derby/Mappings.hbm.xml"};
 	}
 }

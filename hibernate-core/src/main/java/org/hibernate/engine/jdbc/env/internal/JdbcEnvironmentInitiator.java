@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
@@ -41,7 +40,7 @@ import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.resource.jdbc.spi.JdbcObserver;
+import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -610,6 +609,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 	 * This is a temporary JdbcSessionOwner for the purpose of passing a connection to the Dialect for initialization.
 	 */
 	private static class TemporaryJdbcSessionOwner implements JdbcSessionOwner, JdbcSessionContext {
+		private static final JdbcEventHandler EMPTY_JDBC_EVENT_HANDLER = new JdbcEventHandler();
 
 		private final JdbcConnectionAccess jdbcConnectionAccess;
 		private final JdbcServices jdbcServices;
@@ -620,7 +620,6 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		private final PhysicalConnectionHandlingMode connectionHandlingMode;
 		private final JpaCompliance jpaCompliance;
 		private final SqlExceptionHelper sqlExceptionHelper;
-		private static final EmptyJdbcObserver EMPTY_JDBC_OBSERVER = EmptyJdbcObserver.INSTANCE;
 		TransactionCoordinator transactionCoordinator;
 		private final EmptyEventManager eventManager;
 
@@ -750,9 +749,9 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			return null;
 		}
 
-		@Override @Deprecated
-		public JdbcObserver getObserver() {
-			return EMPTY_JDBC_OBSERVER;
+		@Override
+		public JdbcEventHandler getEventHandler() {
+			return EMPTY_JDBC_EVENT_HANDLER;
 		}
 
 		@Override
@@ -783,61 +782,6 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		@Override
 		public SqlExceptionHelper getSqlExceptionHelper() {
 			return sqlExceptionHelper;
-		}
-
-		private static class EmptyJdbcObserver implements JdbcObserver{
-
-			public static final EmptyJdbcObserver INSTANCE = new EmptyJdbcObserver();
-
-			@Override
-			public void jdbcConnectionAcquisitionStart() {
-
-			}
-
-			@Override
-			public void jdbcConnectionAcquisitionEnd(Connection connection) {
-
-			}
-
-			@Override
-			public void jdbcConnectionReleaseStart() {
-
-			}
-
-			@Override
-			public void jdbcConnectionReleaseEnd() {
-
-			}
-
-			@Override
-			public void jdbcPrepareStatementStart() {
-
-			}
-
-			@Override
-			public void jdbcPrepareStatementEnd() {
-
-			}
-
-			@Override
-			public void jdbcExecuteStatementStart() {
-
-			}
-
-			@Override
-			public void jdbcExecuteStatementEnd() {
-
-			}
-
-			@Override
-			public void jdbcExecuteBatchStart() {
-
-			}
-
-			@Override
-			public void jdbcExecuteBatchEnd() {
-
-			}
 		}
 	}
 }

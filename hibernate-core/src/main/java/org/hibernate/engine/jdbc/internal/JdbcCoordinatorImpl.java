@@ -82,9 +82,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			JdbcServices jdbcServices) {
 		this.isUserSuppliedConnection = userSuppliedConnection != null;
 
-		final ResourceRegistry resourceRegistry = new ResourceRegistryStandardImpl(
-				owner.getJdbcSessionContext().getObserver()
-		);
+		final ResourceRegistry resourceRegistry = new ResourceRegistryStandardImpl( owner.getJdbcSessionContext().getEventHandler() );
 		if ( isUserSuppliedConnection ) {
 			this.logicalConnection = new LogicalConnectionProvidedImpl( userSuppliedConnection, resourceRegistry );
 		}

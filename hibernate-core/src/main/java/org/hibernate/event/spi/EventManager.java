@@ -15,18 +15,15 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.JavaServiceLoadable;
 
-@JavaServiceLoadable
-@Incubating
 /**
  * Defines the contract for monitoring low-level events
- * involving interactions between the {@link Session} and the database
- * or second-level cache.
+ * involving interactions between the {@linkplain org.hibernate.Session}
+ * and the database or second-level cache.
  *
- * <p>
- * <em>This an incubating API, subject to change.</em>
- *
- *
+ * @apiNote This an incubating API, subject to change.
  */
+@JavaServiceLoadable
+@Incubating
 public interface EventManager {
 	HibernateMonitoringEvent beginSessionOpenEvent();
 

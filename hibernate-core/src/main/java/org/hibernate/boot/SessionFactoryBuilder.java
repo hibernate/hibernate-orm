@@ -710,16 +710,6 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder enableJpaTransactionCompliance(boolean enabled);
 
 	/**
-	 * @see JpaCompliance#isJpaListComplianceEnabled()
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#JPA_LIST_COMPLIANCE
-	 *
-	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#DEFAULT_LIST_SEMANTICS} instead
-	 */
-	@Deprecated( since = "6.0" )
-	SessionFactoryBuilder enableJpaListCompliance(boolean enabled);
-
-	/**
 	 * @deprecated No longer has any effect.
 	 *
 	 * @see JpaCompliance#isJpaCascadeComplianceEnabled()

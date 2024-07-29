@@ -375,12 +375,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public T enableJpaListCompliance(boolean enabled) {
-		delegate.enableJpaListCompliance( enabled );
-		return getThis();
-	}
-
-	@Override
 	public T enableJpaClosedCompliance(boolean enabled) {
 		delegate.enableJpaClosedCompliance( enabled );
 		return getThis();

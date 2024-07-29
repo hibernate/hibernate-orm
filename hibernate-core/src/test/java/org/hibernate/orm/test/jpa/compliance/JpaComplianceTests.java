@@ -48,7 +48,6 @@ public class JpaComplianceTests {
 		assertThat( compliance.isJpaQueryComplianceEnabled() ).isEqualTo( expected );
 		assertThat( compliance.isJpaTransactionComplianceEnabled() ).isEqualTo( expected );
 		assertThat( compliance.isJpaClosedComplianceEnabled() ).isEqualTo( expected );
-		assertThat( compliance.isJpaListComplianceEnabled() ).isEqualTo( expected );
 		assertThat( compliance.isJpaOrderByMappingComplianceEnabled() ).isEqualTo( expected );
 		assertThat( compliance.isJpaProxyComplianceEnabled() ).isEqualTo( expected );
 		assertThat( compliance.isJpaCacheComplianceEnabled() ).isEqualTo( expected );
@@ -78,7 +77,6 @@ public class JpaComplianceTests {
 		assertThat( compliance.isJpaQueryComplianceEnabled() ).isEqualTo( !expected );
 		assertThat( compliance.isJpaTransactionComplianceEnabled() ).isEqualTo( expected );
 		assertThat( compliance.isJpaClosedComplianceEnabled() ).isEqualTo( expected );
-		assertThat( compliance.isJpaListComplianceEnabled() ).isEqualTo( expected );
 		assertThat( compliance.isJpaOrderByMappingComplianceEnabled() ).isEqualTo( expected );
 		assertThat( compliance.isJpaProxyComplianceEnabled() ).isEqualTo( expected );
 		assertThat( compliance.isJpaCacheComplianceEnabled() ).isEqualTo( expected );

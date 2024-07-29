@@ -30,11 +30,6 @@ public class JpaComplianceStub implements JpaCompliance {
 	}
 
 	@Override
-	public boolean isJpaListComplianceEnabled() {
-		return false;
-	}
-
-	@Override
 	public boolean isJpaClosedComplianceEnabled() {
 		return false;
 	}

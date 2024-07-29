@@ -24,7 +24,7 @@ import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.event.spi.EventManager;
 import org.hibernate.event.spi.HibernateMonitoringEvent;
-import org.hibernate.resource.jdbc.spi.JdbcObserver;
+import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
@@ -257,9 +257,8 @@ public class BatchImpl implements Batch {
 			);
 		}
 
-		//noinspection deprecation
 		final JdbcSessionOwner jdbcSessionOwner = jdbcCoordinator.getJdbcSessionOwner();
-		final JdbcObserver observer = jdbcSessionOwner.getJdbcSessionContext().getObserver();
+		final JdbcEventHandler eventHandler = jdbcSessionOwner.getJdbcSessionContext().getEventHandler();
 		try {
 			getStatementGroup().forEachStatement( (tableName, statementDetails) -> {
 				final String sql = statementDetails.getSqlString();
@@ -275,12 +274,12 @@ public class BatchImpl implements Batch {
 						final EventManager eventManager = jdbcSessionOwner.getEventManager();
 						final HibernateMonitoringEvent jdbcBatchExecutionEvent = eventManager.beginJdbcBatchExecutionEvent();
 						try {
-							observer.jdbcExecuteBatchStart();
+							eventHandler.jdbcExecuteBatchStart();
 							rowCounts = statement.executeBatch();
 						}
 						finally {
 							eventManager.completeJdbcBatchExecutionEvent( jdbcBatchExecutionEvent, sql );
-							observer.jdbcExecuteBatchEnd();
+							eventHandler.jdbcExecuteBatchEnd();
 						}
 						checkRowCounts( rowCounts, statementDetails );
 					}

@@ -78,11 +78,11 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	}
 
 	private void jdbcExecuteStatementEnd() {
-		jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getObserver().jdbcExecuteStatementEnd();
+		jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getEventHandler().jdbcExecuteStatementEnd();
 	}
 
 	private void jdbcExecuteStatementStart() {
-		jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getObserver().jdbcExecuteStatementStart();
+		jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getEventHandler().jdbcExecuteStatementStart();
 	}
 
 	@Override

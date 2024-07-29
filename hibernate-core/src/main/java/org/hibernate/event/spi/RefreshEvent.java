@@ -49,6 +49,11 @@ public class RefreshEvent extends AbstractEvent {
 		}
 		this.lockOptions = lockOptions;
 	}
+
+	/**
+	 * @deprecated use {@link #RefreshEvent(Object, LockOptions, EventSource)} instead.
+	 */
+	@Deprecated(since = "7.0")
 	public RefreshEvent(String entityName, Object object, LockOptions lockOptions, EventSource source){
 		this(object,lockOptions,source);
 		this.entityName = entityName;

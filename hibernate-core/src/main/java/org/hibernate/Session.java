@@ -792,29 +792,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void refresh(Object object);
 
 	/**
-	 * Reread the state of the given managed instance associated with this session
-	 * from the underlying database. This may be useful:
-	 * <ul>
-	 * <li>when a database trigger alters the object state upon insert or update,
-	 * <li>after {@linkplain #createMutationQuery(String) executing} any HQL update
-	 *     or delete statement,
-	 * <li>after {@linkplain #createNativeMutationQuery(String) executing} a native
-	 *     SQL statement, or
-	 * <li>after inserting a {@link java.sql.Blob} or {@link java.sql.Clob}.
-	 * </ul>
-	 * <p>
-	 * This operation cascades to associated instances if the association is mapped
-	 * with {@link jakarta.persistence.CascadeType#REFRESH}.
-	 *
-	 * @param entityName the name of the entity
-	 * @param object a persistent instance associated with this session
-	 *
-	 * @deprecated use {@link #refresh(Object)}
-	 */
-	@Deprecated(since = "6.0")
-	void refresh(String entityName, Object object);
-
-	/**
 	 * Reread the state of the given managed instance from the underlying database,
 	 * obtaining the given {@link LockMode}.
 	 * <p>
@@ -835,19 +812,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param lockOptions contains the lock mode to use
 	 */
 	void refresh(Object object, LockOptions lockOptions);
-
-	/**
-	 * Reread the state of the given managed instance from the underlying database,
-	 * obtaining the given {@link LockMode}.
-	 *
-	 * @param entityName the name of the entity
-	 * @param object a persistent instance associated with this session
-	 * @param lockOptions contains the lock mode to use
-	 *
-	 * @deprecated use {@link #refresh(Object, LockOptions)}
-	 */
-	@Deprecated(since = "6.0")
-	void refresh(String entityName, Object object, LockOptions lockOptions);
 
 	/**
 	 * Mark a persistence instance associated with this session for removal from

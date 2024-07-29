@@ -1178,13 +1178,7 @@ public class SessionImpl
 	@Override
 	public void refresh(Object object) throws HibernateException {
 		checkOpen();
-		fireRefresh( new RefreshEvent( null, object, this ) );
-	}
-
-	@Override @Deprecated
-	public void refresh(String entityName, Object object) throws HibernateException {
-		checkOpen();
-		fireRefresh( new RefreshEvent( entityName, object, this ) );
+		fireRefresh( new RefreshEvent( object, this ) );
 	}
 
 	@Override
@@ -1196,13 +1190,7 @@ public class SessionImpl
 	@Override
 	public void refresh(Object object, LockOptions lockOptions) throws HibernateException {
 		checkOpen();
-		refresh( null, object, lockOptions );
-	}
-
-	@Override @Deprecated
-	public void refresh(String entityName, Object object, LockOptions lockOptions) throws HibernateException {
-		checkOpen();
-		fireRefresh( new RefreshEvent( entityName, object, lockOptions, this ) );
+		fireRefresh( new RefreshEvent( object, lockOptions, this ) );
 	}
 
 	@Override

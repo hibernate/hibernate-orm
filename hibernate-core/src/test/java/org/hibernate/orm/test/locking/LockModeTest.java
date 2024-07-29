@@ -210,8 +210,6 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 			checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
 			session.refresh( a );
 			checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
-			session.refresh( A.class.getName(), a );
-			checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
 			session.refresh( a, Collections.emptyMap() );
 			checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
 			session.refresh( a, null, Collections.emptyMap() );

@@ -9,7 +9,7 @@ package org.hibernate.testing;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DialectDelegateWrapper;
 import org.hibernate.dialect.HANADialect;

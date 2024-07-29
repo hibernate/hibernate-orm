@@ -4,28 +4,40 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.test.dialect;
+package org.hibernate.community.dialect;
 
-import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.query.spi.Limit;
 
 import static org.junit.Assert.assertEquals;
 
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 /**
  * Testing of patched support for Derby limit and offset queries; see HHH-3972
  *
  * @author Evan Leonard
  */
-public class DerbyDialectTestCase extends BaseUnitTestCase {
+@SessionFactory
+@DomainModel(annotatedClasses = DerbyDialectTestCase.Constrained.class)
+public class DerbyDialectTestCase {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-3972" )
-	public void testInsertLimitClause() {
+	@JiraKey( value = "HHH-3972" )
+	public void testInsertLimitClause(SessionFactoryScope scope) {
 		final int limit = 50;
 		final String input = "select * from tablename t where t.cat = 5";
 		final String expected = "select * from tablename t where t.cat = 5 fetch first ? rows only";
@@ -35,8 +47,8 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-3972" )
-	public void testInsertLimitWithOffsetClause() {
+	@JiraKey( value = "HHH-3972" )
+	public void testInsertLimitWithOffsetClause(SessionFactoryScope scope) {
 		final int limit = 50;
 		final int offset = 200;
 		final String input = "select * from tablename t where t.cat = 5";
@@ -47,8 +59,8 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-3972" )
-	public void testInsertLimitWithForUpdateClause() {
+	@JiraKey( value = "HHH-3972" )
+	public void testInsertLimitWithForUpdateClause(SessionFactoryScope scope) {
 		final int limit = 50;
 		final int offset = 200;
 		final String input = "select c11 as col1, c12 as col2, c13 as col13 from t1 for update of c11, c13";
@@ -59,8 +71,8 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-3972" )
-	public void testInsertLimitWithWithClause() {
+	@JiraKey( value = "HHH-3972" )
+	public void testInsertLimitWithWithClause(SessionFactoryScope scope) {
 		final int limit = 50;
 		final int offset = 200;
 		final String input = "select c11 as col1, c12 as col2, c13 as col13 from t1 where flight_id between 'AA1111' and 'AA1112' with rr";
@@ -71,8 +83,8 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-3972" )
-	public void testInsertLimitWithForUpdateAndWithClauses() {
+	@JiraKey( value = "HHH-3972" )
+	public void testInsertLimitWithForUpdateAndWithClauses(SessionFactoryScope scope) {
 		final int limit = 50;
 		final int offset = 200;
 		final String input = "select c11 as col1, c12 as col2, c13 as col13 from t1 where flight_id between 'AA1111' and 'AA1112' for update of c11,c13 with rr";
@@ -81,6 +93,13 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 		final String actual = new DerbyDialect().getLimitHandler().processSql( input, toRowSelection( offset, limit ) );
 		assertEquals( expected, actual );
 	}
+	@RequiresDialect( DerbyDialect.class )
+	@Test void testInsertConflictOnConstraintDoNothing(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.inTransaction( s -> s.persist(new Constrained()));
+		scope.inTransaction( s -> s.createMutationQuery("insert into Constrained(id, name, count) values (4,'Gavin',69) on conflict on constraint count_name_key do nothing").executeUpdate());
+		scope.inSession( s -> Assertions.assertEquals( 69, s.createSelectionQuery( "select count from Constrained", int.class).getSingleResult()));
+	}
 
 	private Limit toRowSelection(int firstRow, int maxRows) {
 		Limit selection = new Limit();
@@ -88,4 +107,15 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 		selection.setMaxRows( maxRows );
 		return selection;
 	}
+
+	@Entity(name = "Constrained")
+	@Table(uniqueConstraints = @UniqueConstraint(name = "count_name_key", columnNames = {"count","name"}))
+	static class Constrained {
+		@Id
+		@GeneratedValue
+		long id;
+		String name = "Gavin";
+		int count = 69;
+	}
+
 }

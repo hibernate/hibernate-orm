@@ -19,7 +19,7 @@ import java.util.Set;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -29,12 +29,9 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.Test;
-import org.junit.jupiter.api.AfterEach;
 
 import jakarta.persistence.OptimisticLockException;
-import jakarta.persistence.SchemaManager;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

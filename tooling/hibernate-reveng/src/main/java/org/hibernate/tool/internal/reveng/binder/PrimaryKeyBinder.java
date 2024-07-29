@@ -19,11 +19,13 @@ import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 import org.hibernate.tool.internal.reveng.binder.ForeignKeyUtils.ForeignKeyForColumns;
+import org.hibernate.tool.internal.reveng.util.EnhancedBasicValue;
+import org.hibernate.tool.internal.reveng.util.EnhancedComponent;
+import org.hibernate.tool.internal.reveng.util.EnhancedValue;
 import org.hibernate.tool.internal.reveng.util.RevengUtils;
 
 class PrimaryKeyBinder extends AbstractBinder {
@@ -56,7 +58,7 @@ class PrimaryKeyBinder extends AbstractBinder {
 		List<Column> keyColumns = getKeyColumns(table);
 		final TableIdentifier tableIdentifier = TableIdentifier.create(table);
 		PrimaryKeyInfo pki = createPrimaryKeyInfo(tableIdentifier, keyColumns);
-		SimpleValue id = createKeyValue(rc, keyColumns, pki.suggestedStrategy, table, revengMetadataCollector, processed);		
+		EnhancedValue id = createKeyValue(rc, keyColumns, pki.suggestedStrategy, table, revengMetadataCollector, processed);		
 		id.setIdentifierGeneratorProperties(pki.suggestedProperties);
 		Property property = propertyBinder.bind(
 				table, 
@@ -70,7 +72,7 @@ class PrimaryKeyBinder extends AbstractBinder {
 	}
 
 	void updatePrimaryKey(RootClass rc, PrimaryKeyInfo pki) {
-		SimpleValue idValue = (SimpleValue) rc.getIdentifierProperty().getValue();
+		EnhancedValue idValue = (EnhancedValue) rc.getIdentifierProperty().getValue();
 		Properties defaultStrategyProperties = new Properties();
 		Property constrainedOneToOne = getConstrainedOneToOne(rc);
 		if(constrainedOneToOne!=null) {
@@ -84,7 +86,7 @@ class PrimaryKeyBinder extends AbstractBinder {
 		}
 	}
 	
-	private SimpleValue createKeyValue(
+	private EnhancedValue createKeyValue(
 			PersistentClass rc, 
 			List<Column> keyColumns, 
 			String suggestedStrategyName,
@@ -174,7 +176,7 @@ class PrimaryKeyBinder extends AbstractBinder {
 		return result;
 	}
 	
-	private SimpleValue handleColumnKey(
+	private EnhancedBasicValue handleColumnKey(
 			Table table, 
 			String tableIdentifierStrategyName, 
 			Set<Column> processed, 
@@ -182,7 +184,7 @@ class PrimaryKeyBinder extends AbstractBinder {
 		Column pkc = (Column) keyColumns.get(0);
 		BinderUtils.checkColumnForMultipleBinding(pkc);
 		processed.add(pkc);
-		SimpleValue result = simpleValueBinder.bind(
+		EnhancedBasicValue result = simpleValueBinder.bind(
 				table, 
 				pkc, 
 				isGeneratedId(keyColumns, tableIdentifierStrategyName));
@@ -190,11 +192,11 @@ class PrimaryKeyBinder extends AbstractBinder {
 		return result;
 	}
 
-	private SimpleValue handleCompositeKey(
+	private EnhancedComponent handleCompositeKey(
 			PersistentClass rc, 
 			Set<Column> processedColumns, 
 			List<Column> keyColumns) {
-		Component result = new Component(getMetadataBuildingContext(), rc);
+		EnhancedComponent result = new EnhancedComponent(getMetadataBuildingContext(), rc);
         result.setMetaAttributes(Collections.EMPTY_MAP);
         result.setEmbedded(false);
         result.setComponentClassName(getCompositeIdName(rc));

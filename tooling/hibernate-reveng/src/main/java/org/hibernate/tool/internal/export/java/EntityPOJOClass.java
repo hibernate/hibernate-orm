@@ -33,6 +33,8 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
+import org.hibernate.tool.internal.reveng.util.EnhancedBasicValue;
+import org.hibernate.tool.internal.reveng.util.EnhancedValue;
 import org.hibernate.tool.internal.util.AnnotationBuilder;
 import org.hibernate.tool.internal.util.IteratorTransformer;
 import org.hibernate.tool.internal.util.SkipBackRefPropertyIterator;
@@ -220,10 +222,10 @@ public class EntityPOJOClass extends BasicPOJOClass {
 
 			wholeString.append( AnnotationBuilder.createAnnotation( importType("jakarta.persistence.EmbeddedId") ).getResult());
 		}
-		else if ( identifier instanceof SimpleValue ) {
-			SimpleValue simpleValue = (SimpleValue) identifier;
-			strategy = simpleValue.getIdentifierGeneratorStrategy();
-			properties = c2j.getFilteredIdentifierGeneratorProperties(simpleValue);
+		else if ( identifier instanceof EnhancedBasicValue ) {
+			EnhancedBasicValue enhancedBasicValue = (EnhancedBasicValue) identifier;
+			strategy = enhancedBasicValue.getIdentifierGeneratorStrategy();
+			properties = c2j.getFilteredIdentifierGeneratorProperties(enhancedBasicValue);
 			StringBuffer idResult = new StringBuffer();
 			AnnotationBuilder builder = AnnotationBuilder.createAnnotation( importType("jakarta.persistence.Id") );
 			idResult.append(builder.getResult());
@@ -865,9 +867,13 @@ public class EntityPOJOClass extends BasicPOJOClass {
 
 	protected boolean isAssignedIdentifier(PersistentClass pc, Property property) {
 		if(property.equals(pc.getIdentifierProperty())) {
-			if(property.getValue().isSimpleValue()) {
-				SimpleValue sv = (SimpleValue) property.getValue();
+			if(property.getValue() instanceof EnhancedValue) {
+				EnhancedValue sv = (EnhancedValue) property.getValue();
 				if("assigned".equals(sv.getIdentifierGeneratorStrategy())) {
+					return true;
+				}
+			} else if (property.getValue().isSimpleValue()) {
+				if("assigned".equals(((SimpleValue)property.getValue()).getIdentifierGeneratorStrategy())) {
 					return true;
 				}
 			}

@@ -26,6 +26,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.tool.internal.export.hbm.Cfg2HbmTool;
+import org.hibernate.tool.internal.reveng.util.EnhancedValue;
 import org.hibernate.tool.internal.util.NameConverter;
 import org.hibernate.tool.internal.util.StringUtil;
 import org.hibernate.type.Type;
@@ -262,7 +263,7 @@ public class Cfg2JavaTool {
 	 * @return
 	 */
 	public Properties getFilteredIdentifierGeneratorProperties(SimpleValue simpleValue) {
-		Properties p = simpleValue.getIdentifierGeneratorProperties();
+		Properties p = ((EnhancedValue)simpleValue).getIdentifierGeneratorProperties();
 		return Cfg2HbmTool.getFilteredIdentifierGeneratorProperties(p, new Properties());
 	}
 

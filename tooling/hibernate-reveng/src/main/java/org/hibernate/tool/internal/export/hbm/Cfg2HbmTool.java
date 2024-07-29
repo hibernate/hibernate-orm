@@ -43,6 +43,7 @@ import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.internal.export.common.EntityNameFromValueVisitor;
+import org.hibernate.tool.internal.reveng.util.EnhancedValue;
 import org.hibernate.tool.internal.util.SkipBackRefPropertyIterator;
 
 /**
@@ -180,11 +181,20 @@ public class Cfg2HbmTool {
 	}
 	
 	public Properties getIdentifierGeneratorProperties(Property property) {
+		Properties result = null;
 		SimpleValue simpleValue = (SimpleValue)property.getValue();
-		Properties result = new Properties();
-		Map<String, Object> idGenParams = simpleValue.getIdentifierGeneratorParameters();
-		if (idGenParams != null) {
-			result.putAll(idGenParams);
+		if (simpleValue instanceof EnhancedValue) {
+			Properties idGenParams = ((EnhancedValue)simpleValue).getIdentifierGeneratorProperties();
+			if (idGenParams != null) {
+				result = new Properties();
+				result.putAll(idGenParams);
+			}
+		} else {
+			Map<String, Object> properties = simpleValue.getIdentifierGeneratorParameters();
+			if (properties != null) {
+				result = new Properties();
+				result.putAll(properties);
+			}
 		}
 		return result;
 	}

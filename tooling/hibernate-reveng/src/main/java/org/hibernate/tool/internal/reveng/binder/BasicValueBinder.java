@@ -1,9 +1,8 @@
 package org.hibernate.tool.internal.reveng.binder;
 
-import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+import org.hibernate.tool.internal.reveng.util.EnhancedBasicValue;
 
 class BasicValueBinder extends AbstractBinder {
 	
@@ -15,11 +14,11 @@ class BasicValueBinder extends AbstractBinder {
 		super(binderContext);
 	}
 	
-	SimpleValue bind(
+	EnhancedBasicValue bind(
 			Table table,
 			Column column,
 			boolean generatedIdentifier) {
-		SimpleValue value = new BasicValue(getMetadataBuildingContext(), table);
+		EnhancedBasicValue value = new EnhancedBasicValue(getMetadataBuildingContext(), table);
 		value.addColumn(column);
 		value.setTypeName(TypeUtils.determinePreferredType(
 				getMetadataCollector(), 

@@ -404,19 +404,10 @@ public class EntityTypeMetadataImpl
 	}
 
 	private boolean decodeDynamicInsert() {
-		final DynamicInsert dynamicInsertAnnotation = getClassDetails().getDirectAnnotationUsage( DynamicInsert.class );
-		if ( dynamicInsertAnnotation == null ) {
-			return false;
-		}
-
-		return dynamicInsertAnnotation.value();
+		return getClassDetails().getDirectAnnotationUsage( DynamicInsert.class ) != null;
 	}
 
 	private boolean decodeDynamicUpdate() {
-		final DynamicUpdate dynamicUpdateAnnotation = getClassDetails().getDirectAnnotationUsage( DynamicUpdate.class );
-		if ( dynamicUpdateAnnotation == null ) {
-			return false;
-		}
-		return dynamicUpdateAnnotation.value();
+		return getClassDetails().getDirectAnnotationUsage( DynamicUpdate.class ) != null;
 	}
 }

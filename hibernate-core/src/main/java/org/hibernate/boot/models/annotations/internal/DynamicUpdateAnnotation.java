@@ -25,36 +25,22 @@ public class DynamicUpdateAnnotation implements DynamicUpdate {
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
 	public DynamicUpdateAnnotation(SourceModelBuildingContext modelContext) {
-		this.value = true;
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public DynamicUpdateAnnotation(DynamicUpdate annotation, SourceModelBuildingContext modelContext) {
-		this.value = annotation.value();
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
 	public DynamicUpdateAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue( annotation, HibernateAnnotations.DYNAMIC_UPDATE, "value", modelContext );
 	}
 
 	@Override
 	public Class<? extends Annotation> annotationType() {
 		return DynamicUpdate.class;
 	}
-
-	@Override
-	public boolean value() {
-		return value;
-	}
-
-	public void value(boolean value) {
-		this.value = value;
-	}
-
-
 }

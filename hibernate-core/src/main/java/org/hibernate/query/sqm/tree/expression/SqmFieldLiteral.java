@@ -175,7 +175,7 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressible<T>, 
 	}
 
 	@Override
-	public <X> Expression<X> cast(Class<X> type) {
+	public <X> SqmExpression<X> cast(Class<X> type) {
 		return null;
 	}
 

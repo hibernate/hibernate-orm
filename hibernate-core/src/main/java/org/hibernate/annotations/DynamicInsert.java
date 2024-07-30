@@ -26,9 +26,4 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target( TYPE )
 @Retention( RUNTIME )
 public @interface DynamicInsert {
-	/**
-	 * @deprecated When {@code false}, this annotation has no effect.
-	 */
-	@Deprecated(since = "6.0")
-	boolean value() default true;
 }

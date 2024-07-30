@@ -7,6 +7,9 @@
 package org.hibernate.orm.test.mapping.converted.converter;
 
 import java.time.Duration;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Set;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -14,6 +17,7 @@ import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -23,6 +27,11 @@ import jakarta.persistence.Converter;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.ParameterExpression;
+import jakarta.persistence.criteria.Root;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,12 +43,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17693" )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17766" )
 public class ConvertedAttributesTypecheckTest {
+	private static final Date TEST_DATE = new GregorianCalendar( 1996, Calendar.MAY, 20, 6, 30 ).getTime();
+
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> session.persist( new TestEntity(
 				Set.of( "one", "two" ),
 				"123",
-				"3"
+				"3",
+				TEST_DATE
 		) ) );
 	}
 
@@ -101,6 +113,23 @@ public class ConvertedAttributesTypecheckTest {
 		} );
 	}
 
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18400" )
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+			final CriteriaQuery<TestEntity> criteriaQuery = criteriaBuilder.createQuery( TestEntity.class );
+			final Root<TestEntity> root = criteriaQuery.from( TestEntity.class );
+			final ParameterExpression<Date> dateParameter = criteriaBuilder.parameter( Date.class );
+			final TestEntity entity = session
+					.createQuery( criteriaQuery.where( criteriaBuilder.equal(
+							root.get( "convertedDate" ),
+							dateParameter
+					) ) ).setParameter( dateParameter, TEST_DATE ).getSingleResult();
+			assertThat( entity ).isNotNull();
+		} );
+	}
+
 	@Entity( name = "TestEntity" )
 	public static class TestEntity {
 		@Id
@@ -116,13 +145,21 @@ public class ConvertedAttributesTypecheckTest {
 		@Convert( converter = DurationConverter.class )
 		public String convertedDuration;
 
+		@Convert( converter = DateConverter.class )
+		public Date convertedDate;
+
 		public TestEntity() {
 		}
 
-		public TestEntity(Set<String> convertedString, String convertedNumber, String convertedDuration) {
+		public TestEntity(
+				Set<String> convertedString,
+				String convertedNumber,
+				String convertedDuration,
+				Date convertedDate) {
 			this.convertedString = convertedString;
 			this.convertedNumber = convertedNumber;
 			this.convertedDuration = convertedDuration;
+			this.convertedDate = convertedDate;
 		}
 
 		public Set<String> getConvertedString() {
@@ -174,6 +211,19 @@ public class ConvertedAttributesTypecheckTest {
 		@Override
 		public String convertToEntityAttribute(final Duration dbData) {
 			return dbData == null ? null : String.valueOf( dbData.toDays() );
+		}
+	}
+
+	@Converter
+	static class DateConverter implements AttributeConverter<Date, Long> {
+		@Override
+		public Long convertToDatabaseColumn(Date date) {
+			return date.getTime();
+		}
+
+		@Override
+		public Date convertToEntityAttribute(Long dbDate) {
+			return new Date( dbDate );
 		}
 	}
 }

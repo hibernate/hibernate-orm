@@ -133,7 +133,7 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 	}
 
 	@Override
-	public <X> Expression<X> cast(Class<X> castTarget) {
+	public <X> SqmExpression<X> cast(Class<X> castTarget) {
 		return nodeBuilder().cast( this, castTarget );
 	}
 

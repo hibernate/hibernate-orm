@@ -1263,10 +1263,10 @@ public class EntityBinder {
 
 	private void bindRowManagement() {
 		final DynamicInsert dynamicInsertAnn = annotatedClass.getAnnotationUsage( DynamicInsert.class, getSourceModelContext() );
-		persistentClass.setDynamicInsert( dynamicInsertAnn != null && dynamicInsertAnn.value() );
+		persistentClass.setDynamicInsert( dynamicInsertAnn != null );
 
 		final DynamicUpdate dynamicUpdateAnn = annotatedClass.getAnnotationUsage( DynamicUpdate.class, getSourceModelContext() );
-		persistentClass.setDynamicUpdate( dynamicUpdateAnn != null && dynamicUpdateAnn.value() );
+		persistentClass.setDynamicUpdate( dynamicUpdateAnn != null );
 
 		if ( persistentClass.useDynamicInsert() && annotatedClass.hasAnnotationUsage( SQLInsert.class, getSourceModelContext() ) ) {
 			throw new AnnotationException( "Entity '" + name + "' is annotated both '@DynamicInsert' and '@SQLInsert'" );

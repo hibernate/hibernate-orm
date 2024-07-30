@@ -131,4 +131,9 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( type ) );
 	}
 
+	@Override
+	Predicate notEqualTo(Expression<?> value);
+
+	@Override
+	Predicate notEqualTo(Object value);
 }

@@ -60,5 +60,12 @@ public interface JpaExpression<T> extends JpaSelection<T>, Expression<T> {
 	@Override
 	Predicate equalTo(Object value);
 
+	@Override
 	<X> JpaExpression<X> cast(Class<X> type);
+
+	@Override
+	Predicate notEqualTo(Expression<?> value);
+
+	@Override
+	Predicate notEqualTo(Object value);
 }

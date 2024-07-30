@@ -731,7 +731,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	}
 
 	@Override
-	public <X> Expression<X> cast(Class<X> targetType) {
+	public <X> SqmExpression<X> cast(Class<X> targetType) {
 		return nodeBuilder().cast( this, targetType );
 	}
 

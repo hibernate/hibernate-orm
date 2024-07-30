@@ -236,7 +236,7 @@ public class FullyQualifiedReflectivePathTerminal
 	}
 
 	@Override
-	public Expression cast(Class type) {
+	public SqmExpression cast(Class type) {
 		return null;
 	}
 

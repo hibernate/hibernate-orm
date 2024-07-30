@@ -6,8 +6,11 @@
  */
 package org.hibernate.testing.env;
 
+import java.util.function.BiConsumer;
+
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 
@@ -22,13 +25,17 @@ public final class TestingDatabaseInfo {
 
 	public static final Dialect DIALECT = new H2Dialect();
 
+	public static void forEachSetting(BiConsumer<String,String> consumer) {
+		consumer.accept( JdbcSettings.JAKARTA_JDBC_DRIVER, DRIVER );
+		consumer.accept( JdbcSettings.JAKARTA_JDBC_URL, URL );
+		consumer.accept( JdbcSettings.JAKARTA_JDBC_USER, USER );
+		consumer.accept( JdbcSettings.JAKARTA_JDBC_PASSWORD, PASS );
+		consumer.accept( JdbcSettings.DIALECT, DIALECT.getClass().getName() );
+	}
 	public static Configuration buildBaseConfiguration() {
-		return new Configuration()
-				.setProperty( Environment.DRIVER, DRIVER )
-				.setProperty( Environment.URL, URL )
-				.setProperty( Environment.USER, USER )
-				.setProperty( Environment.PASS, PASS )
-				.setProperty( Environment.DIALECT, DIALECT.getClass().getName() );
+		final Configuration configuration = new Configuration();
+		forEachSetting( configuration::setProperty );
+		return configuration;
 	}
 
 	private TestingDatabaseInfo() {

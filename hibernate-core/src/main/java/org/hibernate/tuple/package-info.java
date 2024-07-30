@@ -9,7 +9,7 @@
  * Most contracts here have been replaced by the new runtime
  * {@linkplain org.hibernate.metamodel.mapping mapping model}.
  * <p>
- * Value-generation related contracts have been replaced by
+ * @deprecated Value-generation related contracts have been replaced by
  * {@link org.hibernate.generator}
  */
 @Remove @Deprecated

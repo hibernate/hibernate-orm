@@ -6,6 +6,7 @@
  */
 package org.hibernate.tuple.entity;
 
+import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
@@ -28,6 +29,7 @@ import static org.hibernate.generator.EventTypeSets.NONE;
 /**
  * Handles value generation for composite properties.
  */
+@Internal
 class CompositeGeneratorBuilder {
 	private final String entityName;
 	private final Property mappingProperty;

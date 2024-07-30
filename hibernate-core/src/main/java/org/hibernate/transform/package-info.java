@@ -9,9 +9,12 @@
  * Defines strategies for post-processing criteria query
  * results into a form convenient to the application.
  * <p>
- * @deprecated use {@link org.hibernate.query.TupleTransformer}
- * and/or {@link org.hibernate.query.ResultListTransformer}
+ * @apiNote This entire package is considered deprecated.  Use
+ * {@link org.hibernate.query.TupleTransformer} and/or
+ * {@link org.hibernate.query.ResultListTransformer}
  * which are defined in {@link org.hibernate.query}.
  */
-@Deprecated
+@Remove
 package org.hibernate.transform;
+
+import org.hibernate.Remove;

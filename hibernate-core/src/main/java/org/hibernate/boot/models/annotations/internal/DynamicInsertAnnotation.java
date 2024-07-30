@@ -20,42 +20,27 @@ import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkV
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
 public class DynamicInsertAnnotation implements DynamicInsert {
-	private boolean value;
 
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
 	public DynamicInsertAnnotation(SourceModelBuildingContext modelContext) {
-		this.value = true;
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public DynamicInsertAnnotation(DynamicInsert annotation, SourceModelBuildingContext modelContext) {
-		this.value = annotation.value();
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
 	public DynamicInsertAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue( annotation, HibernateAnnotations.DYNAMIC_INSERT, "value", modelContext );
 	}
 
 	@Override
 	public Class<? extends Annotation> annotationType() {
 		return DynamicInsert.class;
 	}
-
-	@Override
-	public boolean value() {
-		return value;
-	}
-
-	public void value(boolean value) {
-		this.value = value;
-	}
-
-
 }

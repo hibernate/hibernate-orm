@@ -29,6 +29,7 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.QueryParameterJavaObjectType;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import java.time.temporal.Temporal;
@@ -172,14 +173,7 @@ public class TypecheckUtil {
 		// enums, user-defined types, etc.
 
 		if ( lhsDomainType instanceof JdbcMapping && rhsDomainType instanceof JdbcMapping ) {
-			JdbcType lhsJdbcType = ((JdbcMapping) lhsDomainType).getJdbcType();
-			JdbcType rhsJdbcType = ((JdbcMapping) rhsDomainType).getJdbcType();
-			if ( lhsJdbcType.getJdbcTypeCode() == rhsJdbcType.getJdbcTypeCode()
-					// "families" of implicitly-convertible JDBC types
-					// (this list might need to be extended in future)
-					|| lhsJdbcType.isStringLike() && rhsJdbcType.isStringLike()
-					|| lhsJdbcType.isTemporal() && rhsJdbcType.isTemporal()
-					|| lhsJdbcType.isNumber() && rhsJdbcType.isNumber() ) {
+			if ( areJdbcMappingsComparable(  (JdbcMapping) lhsDomainType, (JdbcMapping) rhsDomainType, factory ) ) {
 				return true;
 			}
 		}
@@ -196,6 +190,46 @@ public class TypecheckUtil {
 		}
 
 		return false;
+	}
+
+	private static boolean areJdbcMappingsComparable(
+			JdbcMapping lhsJdbcMapping,
+			JdbcMapping rhsJdbcMapping,
+			SessionFactoryImplementor factory) {
+		if ( areJdbcTypesComparable( lhsJdbcMapping.getJdbcType(), rhsJdbcMapping.getJdbcType() ) ) {
+			return true;
+		}
+		// converters are implicitly applied to the other side when its domain type is compatible
+		else if ( lhsJdbcMapping.getValueConverter() != null || rhsJdbcMapping.getValueConverter() != null ) {
+			final JdbcMapping lhsDomainMapping = getDomainJdbcType( lhsJdbcMapping, factory );
+			final JdbcMapping rhsDomainMapping = getDomainJdbcType( rhsJdbcMapping, factory );
+			return lhsDomainMapping != null && rhsDomainMapping != null && areJdbcTypesComparable(
+					lhsDomainMapping.getJdbcType(),
+					rhsDomainMapping.getJdbcType()
+			);
+		}
+		return false;
+	}
+
+	private static boolean areJdbcTypesComparable(JdbcType lhsJdbcType, JdbcType rhsJdbcType) {
+		return lhsJdbcType.getJdbcTypeCode() == rhsJdbcType.getJdbcTypeCode()
+				// "families" of implicitly-convertible JDBC types
+				// (this list might need to be extended in future)
+				|| lhsJdbcType.isStringLike() && rhsJdbcType.isStringLike()
+				|| lhsJdbcType.isTemporal() && rhsJdbcType.isTemporal()
+				|| lhsJdbcType.isNumber() && rhsJdbcType.isNumber();
+	}
+
+	private static JdbcMapping getDomainJdbcType(JdbcMapping jdbcMapping, SessionFactoryImplementor factory) {
+		if ( jdbcMapping.getValueConverter() != null ) {
+			final BasicType<?> basicType = factory.getTypeConfiguration().getBasicTypeForJavaType(
+					jdbcMapping.getValueConverter().getDomainJavaType().getJavaType()
+			);
+			if ( basicType != null ) {
+				return basicType.getJdbcMapping();
+			}
+		}
+		return jdbcMapping;
 	}
 
 	private static EmbeddableDomainType<?> getEmbeddableType(SqmExpressible<?> expressible) {

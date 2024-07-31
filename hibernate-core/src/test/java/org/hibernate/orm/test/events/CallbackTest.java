@@ -11,6 +11,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -57,13 +58,13 @@ public class CallbackTest extends BaseCoreFunctionalTestCase {
 					@Override
 					public void integrate(
 							Metadata metadata,
-							SessionFactoryImplementor sessionFactory,
-							SessionFactoryServiceRegistry serviceRegistry) {
-						integrate( serviceRegistry );
+							BootstrapContext bootstrapContext,
+							SessionFactoryImplementor sessionFactory) {
+						integrate( sessionFactory );
 					}
 
-					private void integrate(SessionFactoryServiceRegistry serviceRegistry) {
-						serviceRegistry.getService( EventListenerRegistry.class ).setListeners(
+					private void integrate(SessionFactoryImplementor sessionFactory) {
+						sessionFactory.getServiceRegistry().getService( EventListenerRegistry.class ).setListeners(
 								EventType.DELETE,
 								listener
 						);

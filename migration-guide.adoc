@@ -246,6 +246,7 @@ XML processing.
 * Removed `org.hibernate.Session#delete` in favor of `org.hibernate.Session#remove`
 * Removed `org.hibernate.annotations.CascadeType.DELETE` in favor of `org.hibernate.annotations.CascadeType#REMOVE`
 * Removed the attribute value from `@DynamicInsert` and `@DynamicUpdate`
+* Removed `org.hibernate.integrator.spi.Integrator#integrate(Metadata,SessionFactoryImplementor,SessionFactoryServiceRegistry)` in favor of `org.hibernate.integrator.spi.Integrator#integrate(Metadata,BootstrapContext,SessionFactoryImplementor)`
 
 
 [[todo]]

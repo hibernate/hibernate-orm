@@ -453,50 +453,6 @@ when executing an HQL or JPQL which selects from the `AccountSummary` entity,
 Hibernate will trigger a Persistence Context flush if there are pending `Account`, `Client` or `AccountTransaction` entity state transitions.
 ====
 
-[[entity-proxy]]
-==== Define a custom entity proxy
-
-By default, when it needs to use a proxy instead of the actual POJO, Hibernate is going to use a Bytecode manipulation library like
-https://bytebuddy.net/[Byte Buddy].
-
-However, if the entity class is final, a proxy will not be created; you will get a POJO even when you only need a proxy reference.
-In this case, you could proxy an interface that this particular entity implements, as illustrated by the following example.
-
-NOTE: Supplying a custom proxy class has been allowed historically, but has never seen much use. Also, setting the `lazy` property to `false`, effectively disallowing proxy creation for an entity type, can easily lead to performance degradation due to the N + 1 query issue. As of 6.2 `@Proxy` has been formally deprecated.
-
-See the <<concrete-proxy,@ConcreteProxy>> paragraph if you wish to resolve the concrete type of proxies for the purpose of `instanceof` checks and typecasts.
-
-[[entity-proxy-interface-mapping]]
-.Final entity class implementing the `Identifiable` interface
-====
-[source,java]
-----
-include::{example-dir-proxy}/ProxyInterfaceTest.java[tag=entity-proxy-interface-mapping,indent=0]
-----
-====
-
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Proxy.html[`@Proxy`]
-annotation is used to specify a custom proxy implementation for the current annotated entity.
-
-When loading the `Book` entity proxy, Hibernate is going to proxy the `Identifiable` interface instead as illustrated by the following example:
-
-[[entity-proxy-persist-mapping]]
-.Proxying the final entity class implementing the `Identifiable` interface
-====
-[source,java]
-----
-include::{example-dir-proxy}/ProxyInterfaceTest.java[tag=entity-proxy-persist-mapping,indent=0]
-----
-
-[source,sql]
-----
-include::{extrasdir}/entity/entity-proxy-persist-mapping.sql[]
-----
-====
-
-As you can see in the associated SQL snippet, Hibernate issues no SQL SELECT query since the proxy can be
-constructed without needing to fetch the actual entity POJO.
-
 [[concrete-proxy]]
 ==== Create proxies that resolve their inheritance subtype
 

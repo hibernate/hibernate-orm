@@ -7,6 +7,10 @@
 package org.hibernate.orm.test.envers.integration.onetoone.bidirectional.primarykeyjoincolumn;
 
 import java.io.Serializable;
+
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Parameter;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -14,15 +18,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.Proxy;
-
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @Entity
-@Proxy(lazy = false)
 public class NotAuditedNoProxyPerson implements Serializable {
 	@Id
 	@Column(name = "PERSON_ID")

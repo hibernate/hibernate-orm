@@ -6,22 +6,20 @@
  */
 package org.hibernate.orm.test.cache;
 
-import jakarta.persistence.Cacheable;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-
 import org.hibernate.Session;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Immutable;
-import org.hibernate.annotations.Proxy;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.persister.entity.EntityPersister;
 
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -91,7 +89,6 @@ public class ReferenceCacheTest extends BaseCoreFunctionalTestCase {
 	@Immutable
 	@Cacheable
 	@Cache( usage = CacheConcurrencyStrategy.READ_ONLY )
-	@Proxy( lazy = false )
 	@SuppressWarnings("UnusedDeclaration")
 	public static class MyReferenceData {
 		@Id

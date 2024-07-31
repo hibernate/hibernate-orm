@@ -7,6 +7,10 @@
 package org.hibernate.orm.test.envers.integration.onetoone.bidirectional.primarykeyjoincolumn;
 
 import java.io.Serializable;
+
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Parameter;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -15,16 +19,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.Proxy;
-
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @Entity
-@Proxy(lazy = true)
-public class NotAuditedProxyPerson implements Serializable {
+public class NotAuditedPerson implements Serializable {
 	@Id
 	@Column(name = "PERSON_ID")
 	@GeneratedValue(generator = "NotAuditedProxyKeyGenerator")
@@ -38,14 +37,14 @@ public class NotAuditedProxyPerson implements Serializable {
 	@PrimaryKeyJoinColumn(name = "PERSON_ID", referencedColumnName = "ACCOUNT_ID")
 	private AccountNotAuditedOwners account;
 
-	public NotAuditedProxyPerson() {
+	public NotAuditedPerson() {
 	}
 
-	public NotAuditedProxyPerson(String name) {
+	public NotAuditedPerson(String name) {
 		this.name = name;
 	}
 
-	public NotAuditedProxyPerson(Long personId, String name) {
+	public NotAuditedPerson(Long personId, String name) {
 		this.personId = personId;
 		this.name = name;
 	}
@@ -55,11 +54,11 @@ public class NotAuditedProxyPerson implements Serializable {
 		if ( this == o ) {
 			return true;
 		}
-		if ( !(o instanceof NotAuditedProxyPerson) ) {
+		if ( !(o instanceof NotAuditedPerson ) ) {
 			return false;
 		}
 
-		NotAuditedProxyPerson person = (NotAuditedProxyPerson) o;
+		NotAuditedPerson person = (NotAuditedPerson) o;
 
 		if ( personId != null ? !personId.equals( person.personId ) : person.personId != null ) {
 			return false;

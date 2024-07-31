@@ -15,7 +15,6 @@
  */
 package org.hibernate.orm.test.interceptor;
 
-import org.hibernate.EmptyInterceptor;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -44,7 +43,7 @@ public class InterceptorTransactionEventTest extends BaseCoreFunctionalTestCase 
         assertTrue("beforeTransactionCompletionCalled not called", interceptor.isBeforeTransactionCompletionCalled());
     }
 
-    private static class LoggingInterceptor extends EmptyInterceptor {
+    private static class LoggingInterceptor implements Interceptor {
         private boolean afterTransactionBeginCalled;
         private boolean afterTransactionCompletionCalled;
         private boolean beforeTransactionCompletionCalled;

@@ -7,16 +7,16 @@
 
 //$Id: StatefulInterceptor.java 7701 2005-07-30 05:07:01Z oneovthafew $
 package org.hibernate.orm.test.interceptor;
-import java.io.Serializable;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.type.Type;
 
-public class StatefulInterceptor extends EmptyInterceptor {
+public class StatefulInterceptor implements Interceptor {
 	
 	private Session session;
 
@@ -31,7 +31,7 @@ public class StatefulInterceptor extends EmptyInterceptor {
 	}
 
 	@Override
-	public boolean onFlushDirty(Object entity, Serializable id, Object[] currentState, Object[] previousState, String[] propertyNames, Type[] types) {
+	public boolean onFlushDirty(Object entity, Object id, Object[] currentState, Object[] previousState, String[] propertyNames, Type[] types) {
 		if ( !(entity instanceof Log) ) {
 			list.add( new Log( "update", (String) id, entity.getClass().getName() ) );
 		}

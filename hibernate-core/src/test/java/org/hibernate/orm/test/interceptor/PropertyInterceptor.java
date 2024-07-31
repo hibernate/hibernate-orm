@@ -7,16 +7,16 @@
 
 //$Id: PropertyInterceptor.java 7700 2005-07-30 05:02:47Z oneovthafew $
 package org.hibernate.orm.test.interceptor;
-import java.io.Serializable;
+
 import java.util.Calendar;
 
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 import org.hibernate.type.Type;
 
-public class PropertyInterceptor extends EmptyInterceptor {
+public class PropertyInterceptor implements Interceptor {
 
 	@Override
-	public boolean onFlushDirty(Object entity, Serializable id, Object[] currentState, Object[] previousState, String[] propertyNames, Type[] types) {
+	public boolean onFlushDirty(Object entity, Object id, Object[] currentState, Object[] previousState, String[] propertyNames, Type[] types) {
 		currentState[1] = Calendar.getInstance();
 		return true;
 	}

@@ -150,11 +150,13 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@After
 	public void cleanUpTestData() {
-		EntityManager em = entityManagerFactory().createEntityManager();
-		em.getTransaction().begin();
-		em.createQuery( "delete Employee" ).executeUpdate();
-		em.getTransaction().commit();
-		em.close();
+		if (entityManagerFactory() != null) {
+			EntityManager em = entityManagerFactory().createEntityManager();
+			em.getTransaction().begin();
+			em.createQuery("delete Employee").executeUpdate();
+			em.getTransaction().commit();
+			em.close();
+		}
 	}
 
 	@Entity( name = "Employee" )

@@ -112,7 +112,9 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 
 	@After
 	public void destroy() {
-		sessionFactory.close();
+		if (sessionFactory != null) {
+			sessionFactory.close();
+		}
 		connectionProvider.stop();
 	}
 

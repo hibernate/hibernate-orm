@@ -47,12 +47,14 @@ public class ComponentJoinTest extends BaseEntityManagerFunctionalTestCase {
 	
 	@After
 	public void after() {
-		EntityManager entityManager = entityManagerFactory().createEntityManager();
-		entityManager.getTransaction().begin();
-		entityManager.createQuery( "delete Entity" ).executeUpdate();
-		entityManager.createQuery( "delete ManyToOneType" ).executeUpdate();
-		entityManager.getTransaction().commit();
-		entityManager.close();
+		if (entityManagerFactory() != null) {
+			EntityManager entityManager = entityManagerFactory().createEntityManager();
+			entityManager.getTransaction().begin();
+			entityManager.createQuery( "delete Entity" ).executeUpdate();
+			entityManager.createQuery( "delete ManyToOneType" ).executeUpdate();
+			entityManager.getTransaction().commit();
+			entityManager.close();
+		}
 	}
 
 	interface JoinBuilder {

@@ -57,7 +57,9 @@ public class TransactionCommitFailureTest extends BaseUnitTestCase {
 
 	@After
 	public void tearDown() {
-		emf.close();
+		if (emf != null) {
+			emf.close();
+		}
 	}
 
 	@Test

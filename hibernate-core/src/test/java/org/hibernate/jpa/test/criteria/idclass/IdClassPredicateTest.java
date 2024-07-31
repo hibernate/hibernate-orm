@@ -120,11 +120,13 @@ public class IdClassPredicateTest extends AbstractMetamodelSpecificTest {
 	@After
 	public void cleanupTestData() {
 		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		em.createQuery( "delete Widget" ).executeUpdate();
-		em.createQuery( "delete Tool" ).executeUpdate();
-		em.getTransaction().commit();
-		em.close();
+		if (em != null) {
+			em.getTransaction().begin();
+			em.createQuery("delete Widget").executeUpdate();
+			em.createQuery("delete Tool").executeUpdate();
+			em.getTransaction().commit();
+			em.close();
+		}
 	}
 
 	@Test

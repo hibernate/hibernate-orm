@@ -63,10 +63,12 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	@After
 	public void cleanupTestData() {
 		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		em.remove( em.find( Product.class, "product1" ) );
-		em.getTransaction().commit();
-		em.close();
+		if (em != null) {
+			em.getTransaction().begin();
+			em.remove( em.find( Product.class, "product1" ) );
+			em.getTransaction().commit();
+			em.close();
+		}
 	}
 
 	@Test

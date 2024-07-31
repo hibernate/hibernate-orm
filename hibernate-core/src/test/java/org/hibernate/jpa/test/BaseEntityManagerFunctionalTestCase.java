@@ -299,7 +299,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	}
 
 	protected EntityManager getOrCreateEntityManager() {
-		if ( em == null || !em.isOpen() ) {
+		if ( (em == null || !em.isOpen()) && entityManagerFactory != null ) {
 			em = entityManagerFactory.createEntityManager();
 		}
 		return em;

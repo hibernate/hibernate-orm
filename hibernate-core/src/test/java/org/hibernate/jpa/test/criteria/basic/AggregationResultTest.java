@@ -50,10 +50,12 @@ public class AggregationResultTest extends AbstractMetamodelSpecificTest {
 	@After
 	public void cleanUpTestData() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		em.createQuery( "delete Product" ).executeUpdate();
-		em.getTransaction().commit();
-		em.close();
+		if (em != null) {
+			em.getTransaction().begin();
+			em.createQuery( "delete Product" ).executeUpdate();
+			em.getTransaction().commit();
+			em.close();
+		}
 	}
 
 	/**

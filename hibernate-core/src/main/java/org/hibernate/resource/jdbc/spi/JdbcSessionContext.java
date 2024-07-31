@@ -8,9 +8,7 @@ package org.hibernate.resource.jdbc.spi;
 
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
@@ -58,23 +56,6 @@ public interface JdbcSessionContext {
 	StatisticsImplementor getStatistics();
 
 	JdbcEventHandler getEventHandler();
-
-	/**
-	* Retrieve the session factory for this environment.
-	 *
-	 * @deprecated exposing this here seems to kinda defeat the purpose of this SPI
-	*/
-	@Deprecated(since = "6.2")
-	SessionFactoryImplementor getSessionFactory();
-
-	/**
-	 * Retrieve the service registry.
-	 *
-	 * @deprecated this is no longer called, and unnecessary, since the needed
-	 *             services are now available via {@link #getJdbcServices()}
-	 */
-	@Deprecated(since = "6.2")
-	ServiceRegistry getServiceRegistry();
 
 	JdbcServices getJdbcServices();
 

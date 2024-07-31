@@ -7,6 +7,7 @@
 package org.hibernate.testing.schema;
 
 import java.io.OutputStreamWriter;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.sql.Connection;
 import java.util.HashMap;
@@ -78,6 +79,24 @@ public class SchemaCreateHelper {
 				copy,
 				DelayedDropRegistryNotAvailableImpl.INSTANCE
 		);
+	}
+
+	public static String toCreateDdl(Metadata metadata) {
+		final StringWriter writer = new StringWriter();
+
+		final ServiceRegistry serviceRegistry = ( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry();
+		final Map<String,Object> settings = serviceRegistry.requireService( ConfigurationService.class ).getSettings();
+		final Map<String,Object> copy = new HashMap<>( settings );
+		copy.put( SchemaToolingSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, Action.CREATE_ONLY );
+		copy.put( SchemaToolingSettings.JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, writer );
+		SchemaManagementToolCoordinator.process(
+				metadata,
+				serviceRegistry,
+				copy,
+				DelayedDropRegistryNotAvailableImpl.INSTANCE
+		);
+
+		return writer.toString();
 	}
 
 	@AllowSysOut

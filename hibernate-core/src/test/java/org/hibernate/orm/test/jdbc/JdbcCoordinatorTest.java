@@ -61,7 +61,6 @@ public class JdbcCoordinatorTest {
 				jdbcConnectionAccess );
 
 		ServiceRegistry serviceRegistry = Mockito.mock( ServiceRegistry.class );
-		when( sessionContext.getServiceRegistry() ).thenReturn( serviceRegistry );
 		when( sessionContext.getPhysicalConnectionHandlingMode() ).thenReturn(
 				PhysicalConnectionHandlingMode.IMMEDIATE_ACQUISITION_AND_HOLD );
 

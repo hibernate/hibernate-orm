@@ -36,7 +36,7 @@ pipeline {
         string(name: 'TCK_VERSION', defaultValue: '3.2.0', description: 'The version of the Jakarta JPA TCK i.e. `2.2.0` or `3.0.1`')
         string(name: 'TCK_SHA', defaultValue: '', description: 'The SHA256 of the Jakarta JPA TCK that is distributed under https://download.eclipse.org/jakartaee/persistence/3.1/jakarta-persistence-tck-${TCK_VERSION}.zip.sha256')
 		string(name: 'TCK_URL', defaultValue: 'https://www.eclipse.org/downloads/download.php?file=/ee4j/jakartaee-tck/jakartaee11/staged/eftl/jakarta-persistence-tck-3.2.0.zip&mirror_id=1', description: 'The URL from which to download the TCK ZIP file. Only needed for testing staged builds. Ensure the TCK_VERSION variable matches the ZIP file name suffix.')
-        choice(name: 'RDBMS', defaultValue: 'postgresql', choices: ['mysql','mssql','oracle','postgresql','db2','sybase'], description: 'The JDK base image version to use for the TCK image.')
+        choice(name: 'RDBMS', choices: ['postgresql','mysql','mssql','oracle','db2','sybase'], description: 'The JDK base image version to use for the TCK image.')
 	}
     stages {
         stage('Build') {

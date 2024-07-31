@@ -6,7 +6,6 @@
  */
 package org.hibernate.integrator.spi;
 
-import org.hibernate.Incubating;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -36,33 +35,14 @@ public interface Integrator {
 	/**
 	 * Perform integration.
 	 *
-	 * @param metadata The "compiled" representation of the mapping information
-	 * @param sessionFactory The session factory being created
-	 * @param serviceRegistry The session factory's service registry
-	 * @deprecated - use
-	 */
-	@Deprecated(since = "6.0")
-	default void integrate(
-			Metadata metadata,
-			SessionFactoryImplementor sessionFactory,
-			SessionFactoryServiceRegistry serviceRegistry) {
-		throw new UnsupportedOperationException( "Call to un-implemented deprecated legacy `Integrator#integrate` overload form" );
-	}
-
-	/**
-	 * Perform integration.
-	 *
 	 * @param metadata The fully initialized boot-time mapping model
 	 * @param bootstrapContext The context for bootstrapping of the SessionFactory
 	 * @param sessionFactory The SessionFactory being created
 	 */
-	@Incubating
 	default void integrate(
 			Metadata metadata,
 			BootstrapContext bootstrapContext,
 			SessionFactoryImplementor sessionFactory) {
-		// simply call the legacy one, keeping implementors bytecode compatible.
-		integrate( metadata, sessionFactory, (SessionFactoryServiceRegistry) sessionFactory.getServiceRegistry() );
 	}
 
 	/**

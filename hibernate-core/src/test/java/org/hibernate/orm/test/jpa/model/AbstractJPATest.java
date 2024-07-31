@@ -13,6 +13,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
@@ -23,7 +24,6 @@ import org.hibernate.event.internal.DefaultFlushEventListener;
 import org.hibernate.event.internal.DefaultPersistEventListener;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.AutoFlushEventListener;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.FlushEntityEventListener;
 import org.hibernate.event.spi.FlushEventListener;
@@ -31,7 +31,6 @@ import org.hibernate.event.spi.PersistContext;
 import org.hibernate.event.spi.PersistEventListener;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
@@ -55,7 +54,7 @@ public abstract class AbstractJPATest extends BaseSessionFactoryFunctionalTest {
 
 	@Override
 	protected void applySettings(StandardServiceRegistryBuilder builder) {
-		builder.applySetting( Environment.JPAQL_STRICT_COMPLIANCE, "true" );
+		builder.applySetting( Environment.JPA_QUERY_COMPLIANCE, "true" );
 		builder.applySetting( Environment.USE_SECOND_LEVEL_CACHE, "false" );
 	}
 
@@ -69,17 +68,17 @@ public abstract class AbstractJPATest extends BaseSessionFactoryFunctionalTest {
 	public void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
 		builder.applyIntegrator(
 				new Integrator() {
-
 					@Override
 					public void integrate(
 							Metadata metadata,
-							SessionFactoryImplementor sessionFactory,
-							SessionFactoryServiceRegistry serviceRegistry) {
-						integrate( serviceRegistry );
+							BootstrapContext bootstrapContext,
+							SessionFactoryImplementor sessionFactory) {
+						integrate( sessionFactory );
 					}
 
-					private void integrate(SessionFactoryServiceRegistry serviceRegistry) {
-						EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
+					private void integrate(SessionFactoryImplementor sessionFactory) {
+						EventListenerRegistry eventListenerRegistry = sessionFactory.getServiceRegistry().getService(
+								EventListenerRegistry.class );
 						eventListenerRegistry.setListeners( EventType.PERSIST, buildPersistEventListeners() );
 						eventListenerRegistry.setListeners(
 								EventType.PERSIST_ONFLUSH, buildPersisOnFlushEventListeners()
@@ -87,11 +86,6 @@ public abstract class AbstractJPATest extends BaseSessionFactoryFunctionalTest {
 						eventListenerRegistry.setListeners( EventType.AUTO_FLUSH, buildAutoFlushEventListeners() );
 						eventListenerRegistry.setListeners( EventType.FLUSH, buildFlushEventListeners() );
 						eventListenerRegistry.setListeners( EventType.FLUSH_ENTITY, buildFlushEntityEventListeners() );
-					}
-
-					@Override
-					public void disintegrate(
-							SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
 					}
 				}
 		);
@@ -141,31 +135,11 @@ public abstract class AbstractJPATest extends BaseSessionFactoryFunctionalTest {
 	public static class JPAAutoFlushEventListener extends DefaultAutoFlushEventListener {
 		// not sure why EM code has this ...
 		public static final AutoFlushEventListener INSTANCE = new JPAAutoFlushEventListener();
-
-		@Override
-		protected CascadingAction<PersistContext> getCascadingAction(EventSource session) {
-			return CascadingActions.PERSIST_ON_FLUSH;
-		}
-
-		@Override
-		protected PersistContext getContext(EventSource session) {
-			return PersistContext.create();
-		}
 	}
 
 	public static class JPAFlushEventListener extends DefaultFlushEventListener {
 		// not sure why EM code has this ...
 		public static final FlushEventListener INSTANCE = new JPAFlushEventListener();
-
-		@Override
-		protected CascadingAction<PersistContext> getCascadingAction(EventSource session) {
-			return CascadingActions.PERSIST_ON_FLUSH;
-		}
-
-		@Override
-		protected PersistContext getContext(EventSource session) {
-			return PersistContext.create();
-		}
 	}
 
 	public static class JPAFlushEntityEventListener extends DefaultFlushEntityEventListener {
@@ -176,8 +150,7 @@ public abstract class AbstractJPATest extends BaseSessionFactoryFunctionalTest {
 		final int isolation;
 		try (Session testSession = sessionFactory().openSession()) {
 			isolation = testSession.doReturningWork(
-					connection ->
-							connection.getTransactionIsolation()
+					Connection::getTransactionIsolation
 			);
 		}
 		if ( isolation < Connection.TRANSACTION_READ_COMMITTED ) {

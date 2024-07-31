@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.cdi.general.hibernatesearch;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
@@ -60,7 +61,10 @@ public class HibernateSearchSimulatedIntegrator implements Integrator, BeanConta
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void integrate(Metadata metadata, SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
+	public void integrate(
+			Metadata metadata,
+			BootstrapContext bootstrapContext,
+			SessionFactoryImplementor sessionFactory) {
 		ManagedBeanRegistry registry = sessionFactory.getServiceRegistry().getService( ManagedBeanRegistry.class );
 
 		BeanContainer beanContainer = registry.getBeanContainer();

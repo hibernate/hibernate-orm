@@ -6,53 +6,67 @@
  */
 package org.hibernate.orm.test.events;
 
-import org.hibernate.Session;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.ClearEvent;
 import org.hibernate.event.spi.ClearEventListener;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
  * @author Steve Ebersole
  */
-public class ClearEventListenerTest extends BaseCoreFunctionalTestCase {
+@DomainModel
+@SessionFactory
+@BootstrapServiceRegistry(integrators = ClearEventListenerTest.CustomLoadIntegrator.class)
+public class ClearEventListenerTest {
 	@Test
-	public void testExplicitClear() {
-		listener.callCount = 0;
+	public void testExplicitClear(SessionFactoryScope scope) {
+		LISTENER.callCount = 0;
 
-		Session s = openSession();
-		s.clear();
-		assertEquals( 1, listener.callCount );
-		s.close();
-		assertEquals( 1, listener.callCount );
+		scope.inSession(
+				session -> {
+					session.clear();
+					assertThat( LISTENER.callCount ).isEqualTo( 1 );
+				}
+		);
+		assertThat( LISTENER.callCount ).isEqualTo( 1 );
 	}
 
 	@Test
-	public void testAutoClear() {
-		listener.callCount = 0;
+	public void testAutoClear(SessionFactoryScope scope) {
+		LISTENER.callCount = 0;
 
-		Session s = openSession();
-		( (SessionImplementor) s ).setAutoClear( true );
-		s.beginTransaction();
-		assertEquals( 0, listener.callCount );
-		s.getTransaction().commit();
-		assertEquals( 1, listener.callCount );
-		s.close();
-		assertEquals( 1, listener.callCount );
+		scope.inSession(
+				session -> {
+					session.setAutoClear( true );
+					session.getTransaction().begin();
+					try {
+						assertThat( LISTENER.callCount ).isEqualTo( 0 );
+						session.getTransaction().commit();
+					}
+					catch (Exception e) {
+						session.getTransaction().rollback();
+						throw e;
+					}
+					assertThat( LISTENER.callCount ).isEqualTo( 1 );
+				}
+		);
+
+		assertThat( LISTENER.callCount ).isEqualTo( 1 );
 	}
 
-	private TheListener listener = new TheListener();
+	private static final TheListener LISTENER = new TheListener();
 
 	private static class TheListener implements ClearEventListener {
 		private int callCount;
@@ -63,31 +77,20 @@ public class ClearEventListenerTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Override
-	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
-		super.prepareBootstrapRegistryBuilder( builder );
-		builder.applyIntegrator(
-				new Integrator() {
-					@Override
-					public void integrate(
-							Metadata metadata,
-							SessionFactoryImplementor sessionFactory,
-							SessionFactoryServiceRegistry serviceRegistry) {
-						integrate( serviceRegistry );
-					}
+	public static class CustomLoadIntegrator implements Integrator {
+		@Override
+		public void integrate(
+				Metadata metadata,
+				BootstrapContext bootstrapContext,
+				SessionFactoryImplementor sessionFactory) {
+			integrate( sessionFactory );
+		}
 
-					private void integrate(SessionFactoryServiceRegistry serviceRegistry) {
-						serviceRegistry.getService( EventListenerRegistry.class ).setListeners(
-								EventType.CLEAR,
-								listener
-						);
-					}
-
-					@Override
-					public void disintegrate(
-							SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
-					}
-				}
-		);
+		private void integrate(SessionFactoryImplementor sessionFactory) {
+			sessionFactory.getServiceRegistry().getService( EventListenerRegistry.class ).setListeners(
+					EventType.CLEAR,
+					LISTENER
+			);
+		}
 	}
 }

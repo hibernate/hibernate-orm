@@ -267,7 +267,15 @@ XML processing.
 * Removed `org.hibernate.annotations.CascadeType.DELETE` in favor of `org.hibernate.annotations.CascadeType#REMOVE`
 * Removed the attribute value from `@DynamicInsert` and `@DynamicUpdate`
 * Removed `org.hibernate.integrator.spi.Integrator#integrate(Metadata,SessionFactoryImplementor,SessionFactoryServiceRegistry)` in favor of `org.hibernate.integrator.spi.Integrator#integrate(Metadata,BootstrapContext,SessionFactoryImplementor)`
-
+* Removed `org.hibernate.Interceptor#onLoad(Object, Serializable, Object[] , String[] , Type[] )` in favour of `org.hibernate.Interceptor#onLoad(Object, Object, Object[], String[], Type[] )`
+* Removed `org.hibernate.Interceptor#onFlushDirty(Object, Serializable, Object[] , Object[], String[] , Type[] )` in favour of `org.hibernate.Interceptor#onLoad(Object, Object, Object[], Object[], String[] , Type[] )`
+* Removed `org.hibernate.Interceptor#onSave(Object, Serializable, Object[], String[], Type[])` in favour of `org.hibernate.Interceptor#onSave(Object, Object, Object[], String[], Type[])`
+* Removed `org.hibernate.Interceptor#onDelete(Object, Serializable, Object[], String[], Type[])` in favour of `org.hibernate.Interceptor#onDelete(Object, Serializable, Object[], String[], Type[])`
+* Removed `org.hibernate.Interceptor#onCollectionRecreate(Object, Serializable)` in favour of `org.hibernate.Interceptor#onCollectionRecreate(Object, Object)`
+* Removed `org.hibernate.Interceptor#onCollectionRemove(Object, Serializable)` in favour of `org.hibernate.Interceptor#onCollectionRemove(Object, Object)`
+* Removed `org.hibernate.Interceptor#onCollectionUpdate(Object, Serializable)` in favour of `org.hibernate.Interceptor#onCollectionUpdate(Object, Object)`
+* Removed `org.hibernate.Interceptor#findDirty(Object, Serializable, Object[], Object[], String[], Type[])` in favour of `org.hibernate.Interceptor#findDirty(Object, Object, Object[], Object[], String[], Type[])`
+* Removed `org.hibernate.Interceptor#getEntity(String, Serializable)` in favour of `org.hibernate.Interceptor#getEntity(String, Serializable)`
 
 [[todo]]
 == Todos (dev)

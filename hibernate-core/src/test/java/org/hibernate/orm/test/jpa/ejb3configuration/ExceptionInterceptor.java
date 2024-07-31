@@ -8,16 +8,14 @@
 //$Id$
 package org.hibernate.orm.test.jpa.ejb3configuration;
 
-import java.io.Serializable;
-
 import org.hibernate.CallbackException;
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 import org.hibernate.type.Type;
 
 /**
  * @author Emmanuel Bernard
  */
-public class ExceptionInterceptor extends EmptyInterceptor {
+public class ExceptionInterceptor implements Interceptor {
 	public static final String EXCEPTION_MESSAGE = "Interceptor enabled";
 	protected boolean allowSave = false;
 
@@ -30,7 +28,7 @@ public class ExceptionInterceptor extends EmptyInterceptor {
 	}
 
 	@Override
-	public boolean onLoad(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types)
+	public boolean onLoad(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)
 			throws CallbackException {
 		throw new IllegalStateException( EXCEPTION_MESSAGE );
 	}

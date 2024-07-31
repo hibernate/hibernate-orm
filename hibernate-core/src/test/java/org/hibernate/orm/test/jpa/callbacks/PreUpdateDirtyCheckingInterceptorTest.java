@@ -6,8 +6,6 @@
  */
 package org.hibernate.orm.test.jpa.callbacks;
 
-import java.io.Serializable;
-import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
@@ -21,7 +19,7 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 import org.hibernate.SessionBuilder;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.type.Type;
@@ -67,14 +65,14 @@ public class PreUpdateDirtyCheckingInterceptorTest
 		} );
 	}
 
-	public static class OnFlushDirtyInterceptor extends EmptyInterceptor {
+	public static class OnFlushDirtyInterceptor implements Interceptor {
 
 		private static OnFlushDirtyInterceptor INSTANCE = new OnFlushDirtyInterceptor();
 
 		@Override
 		public int[] findDirty(
 				Object entity,
-				Serializable id,
+				Object id,
 				Object[] currentState,
 				Object[] previousState,
 				String[] propertyNames,

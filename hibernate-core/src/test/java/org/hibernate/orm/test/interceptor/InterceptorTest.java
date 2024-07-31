@@ -9,7 +9,6 @@ package org.hibernate.orm.test.interceptor;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -18,7 +17,6 @@ import java.util.Queue;
 import org.junit.Test;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.EmptyInterceptor;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -108,11 +106,11 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		s = openSession(
-				new EmptyInterceptor() {
+				new Interceptor() {
 					@Override
 					public boolean onFlushDirty(
 							Object entity,
-							Serializable id,
+							Object id,
 							Object[] currentState,
 							Object[] previousState,
 							String[] propertyNames,
@@ -180,7 +178,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		final String checkComment = "generated from interceptor";
 
 		Session s = openSession(
-				new EmptyInterceptor() {
+				new Interceptor() {
 					@Override
 					public boolean onSave(
 							Object entity,

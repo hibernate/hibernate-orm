@@ -13,7 +13,7 @@ import jakarta.persistence.Cacheable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -296,7 +296,7 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	private final class TransactionInterceptor extends EmptyInterceptor {
+	private final class TransactionInterceptor implements Interceptor {
 		@Override
 		public void beforeTransactionCompletion(Transaction tx) {
 			if ( interceptTransaction.get() ) {

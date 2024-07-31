@@ -6,8 +6,6 @@
  */
 package org.hibernate.orm.test.dirtiness;
 
-import java.io.Serializable;
-
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
@@ -203,7 +201,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		@Override
 		public boolean onFlushDirty(
 				Object entity,
-				Serializable id,
+				Object id,
 				Object[] currentState,
 				Object[] previousState,
 				String[] propertyNames,

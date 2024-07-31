@@ -77,7 +77,9 @@ public class LockNoneWarmingTest extends BaseCoreFunctionalTestCase {
 	@After
 	public void tearDown(){
 		releaseSessionFactory();
-		triggerable.reset();
+		if (triggerable != null) {
+			triggerable.reset();
+		}
 	}
 
 	@Test

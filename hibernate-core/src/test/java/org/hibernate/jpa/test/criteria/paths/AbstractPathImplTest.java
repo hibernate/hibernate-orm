@@ -58,12 +58,14 @@ public class AbstractPathImplTest extends AbstractMetamodelSpecificTest {
     @After
     public void cleanupTestData() {
         EntityManager em = getOrCreateEntityManager();
-        em.getTransaction().begin();
-        em.remove( em.find( Thing.class, "thing1" ) );
-        em.remove( em.find( Thing.class, "thing2" ) );
-        em.remove( em.find( ThingWithQuantity.class, "thingWithQuantity3" ) );
-        em.getTransaction().commit();
-        em.close();
+		if (em != null) {
+			em.getTransaction().begin();
+			em.remove(em.find(Thing.class, "thing1"));
+			em.remove(em.find(Thing.class, "thing2"));
+			em.remove(em.find(ThingWithQuantity.class, "thingWithQuantity3"));
+			em.getTransaction().commit();
+			em.close();
+		}
     }
 
 	@Test(expected = IllegalArgumentException.class)

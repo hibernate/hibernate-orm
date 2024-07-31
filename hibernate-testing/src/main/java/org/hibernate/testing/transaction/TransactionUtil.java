@@ -197,22 +197,24 @@ public class TransactionUtil {
 		EntityManager entityManager = null;
 		EntityTransaction txn = null;
 		try {
-			entityManager = properties == null ?
-				factorySupplier.get().createEntityManager():
-				factorySupplier.get().createEntityManager(properties);
-			function.beforeTransactionCompletion();
-			txn = entityManager.getTransaction();
-			txn.begin();
-			function.accept( entityManager );
-			if ( !txn.getRollbackOnly() ) {
-				txn.commit();
-			}
-			else {
-				try {
-					txn.rollback();
+			if (factorySupplier.get() != null) {
+				entityManager = properties == null ?
+						factorySupplier.get().createEntityManager():
+						factorySupplier.get().createEntityManager(properties);
+				function.beforeTransactionCompletion();
+				txn = entityManager.getTransaction();
+				txn.begin();
+				function.accept( entityManager );
+				if ( !txn.getRollbackOnly() ) {
+					txn.commit();
 				}
-				catch (Exception e) {
-					log.error( "Rollback failure", e );
+				else {
+					try {
+						txn.rollback();
+					}
+					catch (Exception e) {
+						log.error( "Rollback failure", e );
+					}
 				}
 			}
 		}

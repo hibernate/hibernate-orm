@@ -107,16 +107,18 @@ public class StoredProcedureResultSetMappingTest extends BaseEntityManagerFuncti
 
 	@Override
 	public void releaseResources() {
-		Session s = entityManagerFactory().unwrap( SessionFactory.class ).openSession();
-		s.doWork(
-				new Work() {
-					@Override
-					public void execute(Connection connection) throws SQLException {
-						connection.createStatement().execute( "DROP ALIAS allEmployeeNames IF EXISTS" );
+		if (entityManagerFactory() != null) {
+			Session s = entityManagerFactory().unwrap(SessionFactory.class).openSession();
+			s.doWork(
+					new Work() {
+						@Override
+						public void execute(Connection connection) throws SQLException {
+							connection.createStatement().execute("DROP ALIAS allEmployeeNames IF EXISTS");
+						}
 					}
-				}
-		);
-		s.close();
+			);
+			s.close();
+		}
 
 		super.releaseResources();
 	}

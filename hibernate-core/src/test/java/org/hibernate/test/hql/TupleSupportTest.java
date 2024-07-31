@@ -75,7 +75,9 @@ public class TupleSupportTest extends BaseUnitTestCase {
 
 	@After
 	public void releaseSessionFactory() {
-		sessionFactory.close();
+		if (sessionFactory != null) {
+			sessionFactory.close();
+		}
 	}
 
 	@Test

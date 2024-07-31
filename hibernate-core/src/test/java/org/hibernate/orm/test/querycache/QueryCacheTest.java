@@ -6,21 +6,17 @@
  */
 package org.hibernate.orm.test.querycache;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
-import org.hibernate.EmptyInterceptor;
 import org.hibernate.Hibernate;
+import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
-import org.hibernate.Transaction;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
@@ -724,16 +720,10 @@ public class QueryCacheTest {
 		}
 	}
 
-	public class DelayLoadOperations extends EmptyInterceptor {
+	public class DelayLoadOperations implements Interceptor {
 
 		private volatile CountDownLatch blockLatch;
 		private volatile CountDownLatch waitLatch;
-
-		@Override
-		public boolean onLoad(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) {
-			onLoad();
-			return true;
-		}
 
 		@Override
 		public boolean onLoad(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types){

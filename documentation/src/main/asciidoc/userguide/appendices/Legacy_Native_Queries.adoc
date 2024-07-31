@@ -25,7 +25,7 @@ In this case, you do _not_ need to call `addEntity()` anymore.
 
 .Execution of a named query
 ====
-[source, JAVA, indent=0]
+[source, java,, indent=0]
 ----
 List people = session
     .getNamedQuery( "persons" )
@@ -107,7 +107,7 @@ You can, alternatively, use the resultset mapping information in your hbm files 
 
 .Programmatically specifying the result mapping information
 ====
-[source, JAVA, indent=0]
+[source, java,, indent=0]
 ----
 List cats = session
     .createSQLQuery( "select {cat.*}, {kitten.*} from cats cat, cats kitten where kitten.mother = cat.id" )

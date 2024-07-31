@@ -27,7 +27,6 @@ public class Customers implements Serializable {
 	private int customerID;
 
 	@OneToMany(mappedBy="owner", cascade= CascadeType.ALL, targetEntity=ShoppingBaskets.class)
-	@org.hibernate.annotations.LazyCollection(org.hibernate.annotations.LazyCollectionOption.TRUE)
 	private java.util.Set shoppingBasketses = new java.util.HashSet();
 
 	public void setCustomerID(int value) {

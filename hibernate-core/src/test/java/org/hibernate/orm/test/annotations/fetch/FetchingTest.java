@@ -48,31 +48,6 @@ public class FetchingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testExtraLazy() {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		Person p = new Person( "Gavin", "King", "JBoss Inc" );
-		Stay stay = new Stay( p, new Date(), new Date(), "A380", "Blah", "Blah" );
-		p.getOrderedStay().add( stay );
-		s.persist( p );
-		tx.commit();
-		s.clear();
-		tx = s.beginTransaction();
-		p = (Person) s.createQuery( "from Person p where p.firstName = :name" )
-				.setParameter( "name", "Gavin" ).uniqueResult();
-		assertFalse( Hibernate.isInitialized( p.getOrderedStay() ) );
-		assertEquals( 1, p.getOrderedStay().size() );
-		assertFalse( Hibernate.isInitialized( p.getOrderedStay() ) );
-		assertEquals( "A380", p.getOrderedStay().get(0).getVessel() );
-		assertFalse( Hibernate.isInitialized( p.getOrderedStay() ) );
-		s.remove( p );
-		tx.commit();
-		s.close();
-	}
-
-	@Test
 	public void testHibernateFetchingLazy() {
 		try(Session s = openSession()) {
 			Transaction tx = s.beginTransaction();
@@ -95,7 +70,7 @@ public class FetchingTest extends BaseCoreFunctionalTestCase {
 						.setParameter( "name", "Gavin" ).uniqueResult();
 				assertFalse( Hibernate.isInitialized( p.getOldStays() ) );
 				assertEquals( 1, p.getOldStays().size() );
-				assertFalse( "lazy extra is failing", Hibernate.isInitialized( p.getOldStays() ) );
+				assertTrue( Hibernate.isInitialized( p.getOldStays() ) );
 				s.clear();
 				stay = (Stay) s.get( Stay.class, stay.getId() );
 				assertTrue( !Hibernate.isInitialized( stay.getOldPerson() ) );

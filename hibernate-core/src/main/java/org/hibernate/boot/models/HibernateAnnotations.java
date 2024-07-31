@@ -366,10 +366,6 @@ public interface HibernateAnnotations {
 			JoinFormula.class,
 			JoinFormulaAnnotation.class
 	);
-	OrmAnnotationDescriptor<LazyCollection, LazyCollectionAnnotation> LAZY_COLLECTION = new OrmAnnotationDescriptor<>(
-			LazyCollection.class,
-			LazyCollectionAnnotation.class
-	);
 	OrmAnnotationDescriptor<LazyGroup, LazyGroupAnnotation> LAZY_GROUP = new OrmAnnotationDescriptor<>(
 			LazyGroup.class,
 			LazyGroupAnnotation.class

@@ -13,8 +13,6 @@ import java.util.Set;
 
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.util.connections.ConnectionCheckingConnectionProvider;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -239,7 +237,6 @@ public class LazyLoadingConnectionCloseTest extends EntityManagerFactoryBasedFun
 		}
 
 		@OneToMany(targetEntity = ChildEntity.class, mappedBy = "parent")
-		@LazyCollection(LazyCollectionOption.EXTRA)
 		@Fetch(FetchMode.SELECT)
 		public Set<ChildEntity> getChildren() {
 			return children;

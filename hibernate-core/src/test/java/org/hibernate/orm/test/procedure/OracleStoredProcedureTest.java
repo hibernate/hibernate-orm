@@ -19,6 +19,7 @@ import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.QueryHints;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.procedure.ProcedureParameter;
@@ -31,6 +32,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -65,7 +67,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 				OracleStoredProcedureTest.IdHolder.class,
 				Vote.class,
 				OracleStoredProcedureTest.Address.class
-		}
+		},
+		properties = @Setting( name = AvailableSettings.QUERY_PASS_PROCEDURE_PARAMETER_NAMES, value = "true")
 )
 @RequiresDialect(value = OracleDialect.class)
 public class OracleStoredProcedureTest {

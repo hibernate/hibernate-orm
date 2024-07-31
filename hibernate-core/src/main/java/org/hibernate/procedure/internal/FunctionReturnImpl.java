@@ -52,7 +52,7 @@ public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 		final JdbcCallParameterExtractorImpl<T> parameterExtractor;
 
 		if ( getJdbcTypeCode() == Types.REF_CURSOR ) {
-			refCursorExtractor = new JdbcCallRefCursorExtractorImpl( null, 1 );
+			refCursorExtractor = new JdbcCallRefCursorExtractorImpl( 1 );
 			ormType = null;
 			parameterExtractor = null;
 		}

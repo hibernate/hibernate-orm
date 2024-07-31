@@ -242,4 +242,11 @@ public interface QuerySettings {
 	 */
 	@Deprecated(since="6.0")
 	String QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE = "hibernate.query.plan_parameter_metadata_max_size";
+
+	/**
+	 * For database supporting name parameters this setting allows to use named parameter is the procedure call.
+	 *
+	 * By default, this is set to false
+	 */
+	String QUERY_PASS_PROCEDURE_PARAMETER_NAMES = "hibernate.query.pass_procedure_paramater_names";
 }

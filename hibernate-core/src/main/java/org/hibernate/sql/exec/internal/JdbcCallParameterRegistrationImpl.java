@@ -101,16 +101,9 @@ public class JdbcCallParameterRegistrationImpl implements JdbcCallParameterRegis
 	private void registerRefCursorParameter(
 			CallableStatement callableStatement,
 			SharedSessionContractImplementor session) {
-		if ( name != null ) {
-			session.getFactory().getServiceRegistry()
-					.requireService( RefCursorSupport.class )
-					.registerRefCursorParameter( callableStatement, name );
-		}
-		else {
-			session.getFactory().getServiceRegistry()
-					.requireService( RefCursorSupport.class )
-					.registerRefCursorParameter( callableStatement, jdbcParameterPositionStart );
-		}
+		session.getFactory().getServiceRegistry()
+				.requireService( RefCursorSupport.class )
+				.registerRefCursorParameter( callableStatement, jdbcParameterPositionStart );
 
 	}
 
@@ -119,12 +112,7 @@ public class JdbcCallParameterRegistrationImpl implements JdbcCallParameterRegis
 			SharedSessionContractImplementor session) {
 		final JdbcType sqlTypeDescriptor = ormType.getJdbcType();
 		try {
-			if ( name != null ) {
-				sqlTypeDescriptor.registerOutParameter( callableStatement, name );
-			}
-			else {
-				sqlTypeDescriptor.registerOutParameter( callableStatement, jdbcParameterPositionStart );
-			}
+			sqlTypeDescriptor.registerOutParameter( callableStatement, jdbcParameterPositionStart );
 		}
 		catch (SQLException e) {
 			throw session.getJdbcServices().getSqlExceptionHelper().convert(

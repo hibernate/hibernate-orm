@@ -18,6 +18,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.type.StandardBasicTypes;
@@ -26,6 +27,7 @@ import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,7 +55,8 @@ import static org.junit.Assert.fail;
 				Person.class,
 				Phone.class,
 				PostgreSQLStoredProcedureTest.Address.class
-		}
+		},
+		properties = @Setting( name = AvailableSettings.QUERY_PASS_PROCEDURE_PARAMETER_NAMES, value = "true")
 )
 @RequiresDialect(value = PostgreSQLDialect.class)
 public class PostgreSQLStoredProcedureTest {

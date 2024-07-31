@@ -91,7 +91,9 @@ public class StandardCallableStatementSupport extends AbstractStandardCallableSt
 						i + offset,
 						procedureCall
 				);
-				if ( parameter.getName() != null ) {
+				if ( parameter.getName() != null
+						&& session.getJdbcServices().getExtractedMetaDataSupport().supportsNamedParameters()
+						&& session.getFactory().getSessionFactoryOptions().isPassProcedureParameterNames() ) {
 					appendNameParameter( buffer, parameter, registration );
 				}
 				else {

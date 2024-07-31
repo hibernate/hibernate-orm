@@ -6,28 +6,35 @@
  */
 package org.hibernate.orm.test.procedure;
 
+import java.sql.CallableStatement;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
+import java.util.regex.Pattern;
 
+import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.jpa.HibernateHints;
+import org.hibernate.dialect.SQLServerDialect;
 
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.Setting;
-import org.junit.Assert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureQuery;
+import jakarta.persistence.Table;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.transaction.TransactionUtil.doInAutoCommit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -36,23 +43,25 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(value = SybaseASEDialect.class)
+@RequiresDialect(value = SQLServerDialect.class, majorVersion = 11)
 @Jpa(
 		annotatedClasses = {
 				Person.class,
 				Phone.class,
+				SQLServerStoredProcedureForcePositionalTest.Address.class
 		},
-		properties = @Setting( name = AvailableSettings.QUERY_PASS_PROCEDURE_PARAMETER_NAMES, value = "true")
+		properties = @Setting( name = AvailableSettings.QUERY_PASS_PROCEDURE_PARAMETER_NAMES, value = "false")
 )
-public class SybaseStoredProcedureTest {
+public class SQLServerStoredProcedureForcePositionalTest {
+
+	private static final String CITY = "London";
+	private static final String STREET = "Lollard Street";
+	private static final String ZIP = "SE116UG";
 
 	@BeforeEach
 	public void init(EntityManagerFactoryScope scope) {
-		// Force creation of the tables because Sybase checks that dependent tables exist
-		scope.getEntityManagerFactory();
 		doInAutoCommit(
 				"DROP PROCEDURE sp_count_phones",
-				"DROP FUNCTION fn_count_phones",
 				"CREATE PROCEDURE sp_count_phones " +
 						"   @personId INT, " +
 						"   @phoneCount INT OUTPUT " +
@@ -61,18 +70,7 @@ public class SybaseStoredProcedureTest {
 						"   SELECT @phoneCount = COUNT(*)  " +
 						"   FROM Phone  " +
 						"   WHERE person_id = @personId " +
-						"END",
-				"CREATE FUNCTION fn_count_phones (@personId INT)  " +
-						"RETURNS INT  " +
-						"AS  " +
-						"BEGIN  " +
-						"    DECLARE @phoneCount int  " +
-						"    SELECT @phoneCount = COUNT(*) " +
-						"    FROM Phone   " +
-						"    WHERE person_id = @personId  " +
-						"    RETURN @phoneCount  " +
-						"END",
-				"sp_procxmode sp_count_phones, 'chained'"
+						"END"
 		);
 
 		scope.inTransaction( entityManager -> {
@@ -93,22 +91,25 @@ public class SybaseStoredProcedureTest {
 			phone2.setId( 2L );
 
 			person1.addPhone( phone2 );
+
+			Address address = new Address( 1l, STREET, CITY, ZIP );
+			entityManager.persist( address );
 		} );
 	}
 
 	@AfterEach
-	public void tearDown(EntityManagerFactoryScope scope){
+	public void tearDown(EntityManagerFactoryScope scope) {
 		scope.releaseEntityManagerFactory();
 	}
 
 	@Test
-	public void testStoredProcedureOutParameter(EntityManagerFactoryScope scope) {
+	public void testStoredProcedure(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_count_phones" );
-			query.registerStoredProcedureParameter( "personId", Long.class, ParameterMode.IN );
+			query.registerStoredProcedureParameter( "personId2", Long.class, ParameterMode.IN );
 			query.registerStoredProcedureParameter( "phoneCount", Long.class, ParameterMode.OUT );
 
-			query.setParameter( "personId", 1L );
+			query.setParameter( "personId2", 1L );
 
 			query.execute();
 			Long phoneCount = (Long) query.getOutputParameterValue( "phoneCount" );
@@ -116,34 +117,43 @@ public class SybaseStoredProcedureTest {
 		} );
 	}
 
-	@Test
-	public void testStoredProcedureOutParameterDifferentParametersRegistrationOrder(EntityManagerFactoryScope scope) {
-		scope.inTransaction( entityManager -> {
-			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_count_phones" );
-			query.registerStoredProcedureParameter( "phoneCount", Long.class, ParameterMode.OUT );
-			query.registerStoredProcedureParameter( "personId", Long.class, ParameterMode.IN );
+	@Entity(name = "Address")
+	@Table(name = "ADDRESS_TABLE")
+	public static class Address {
+		@Id
+		@Column(name = "ID")
+		private long id;
+		@Column(name = "STREET")
+		private String street;
+		@Column(name = "CITY")
+		private String city;
+		@Column(name = "ZIP")
+		private String zip;
 
-			query.setParameter( "personId", 1L );
+		public Address() {
+		}
 
-			query.execute();
-			Long phoneCount = (Long) query.getOutputParameterValue( "phoneCount" );
-			assertEquals( Long.valueOf( 2 ), phoneCount );
-		} );
-	}
+		public Address(long id, String street, String city, String zip) {
+			this.id = id;
+			this.street = street;
+			this.city = city;
+			this.zip = zip;
+		}
 
-	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.IsJtds.class, reverse = true, comment = "jTDS can't handle calling functions")
-	public void testFunctionReturnValue(EntityManagerFactoryScope scope) {
-		scope.inTransaction( entityManager -> {
-			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "hibernate_orm_test.fn_count_phones", Long.class );
-			query.registerStoredProcedureParameter( "personId", Long.class, ParameterMode.IN );
-			query.setHint( HibernateHints.HINT_CALLABLE_FUNCTION, "true" );
+		public long getId() {
+			return id;
+		}
 
-			query.setParameter( "personId", 1L );
+		public String getStreet() {
+			return street;
+		}
 
-			query.execute();
-			Long phoneCount = (Long) query.getSingleResult();
-			Assert.assertEquals( Long.valueOf( 2 ), phoneCount );
-		});
+		public String getCity() {
+			return city;
+		}
+
+		public String getZip() {
+			return zip;
+		}
 	}
 }

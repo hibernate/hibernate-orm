@@ -45,7 +45,7 @@ import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.StandardBasicTypes;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -920,7 +920,7 @@ public class NativeSQLQueriesTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-14487")
+	@JiraKey( value = "HHH-14487")
 	public void testAliasToBeanMap(SessionFactoryScope scope) {
 		Person gavin = new Person( "Gavin" );
 

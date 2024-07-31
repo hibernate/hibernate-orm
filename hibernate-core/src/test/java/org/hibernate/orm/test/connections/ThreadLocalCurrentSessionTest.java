@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -75,7 +75,7 @@ public class ThreadLocalCurrentSessionTest extends ConnectionManagementTestCase 
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11067")
+	@JiraKey(value = "HHH-11067")
 	public void testEqualityChecking() {
 		Session session1 = sessionFactory().getCurrentSession();
 		Session session2 = sessionFactory().getCurrentSession();

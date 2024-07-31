@@ -8,7 +8,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Nathan Xu
  * @author Tassilo Karge
  */
-@TestForIssue(jiraKey = "HHH-14413")
+@JiraKey(value = "HHH-14413")
 public class PreUpdateEventListenerVetoTest extends BaseSessionFactoryFunctionalTest {
 
 	private static final Long EXAMPLE_ID_VALUE = 1L;

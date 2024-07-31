@@ -13,7 +13,7 @@ import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -41,7 +41,7 @@ public class QueryingWithProxyObjectTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4760")
+	@JiraKey(value = "HHH-4760")
 	@SuppressWarnings("unchecked")
 	public void testQueryingWithProxyObject() {
 		StrTestEntity originalSte = new StrTestEntity( "data", id );

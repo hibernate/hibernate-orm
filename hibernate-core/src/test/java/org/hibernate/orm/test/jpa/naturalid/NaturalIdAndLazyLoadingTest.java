@@ -12,7 +12,7 @@ import java.util.List;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.NaturalId;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +42,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 				NaturalIdAndLazyLoadingTest.Currency.class
 		}
 )
-@TestForIssue(jiraKey = "HHH-15481")
+@JiraKey(value = "HHH-15481")
 public class NaturalIdAndLazyLoadingTest {
 
 	@BeforeEach

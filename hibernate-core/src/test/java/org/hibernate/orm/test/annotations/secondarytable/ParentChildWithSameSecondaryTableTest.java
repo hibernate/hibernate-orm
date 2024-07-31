@@ -2,7 +2,7 @@ package org.hibernate.orm.test.annotations.secondarytable;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -33,7 +33,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15117")
+@JiraKey(value = "HHH-15117")
 public class ParentChildWithSameSecondaryTableTest {
 
 	@AfterEach

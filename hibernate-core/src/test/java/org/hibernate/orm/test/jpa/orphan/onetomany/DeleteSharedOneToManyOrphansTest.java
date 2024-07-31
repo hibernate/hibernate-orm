@@ -19,7 +19,7 @@ import jakarta.persistence.OneToMany;
 
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.Environment;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -77,7 +77,7 @@ public class DeleteSharedOneToManyOrphansTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11144")
+	@JiraKey(value = "HHH-11144")
 	@FailureExpected( jiraKey = "HHH-11144" )
 	public void testInitializingSecondCollection(EntityManagerFactoryScope scope) {
 		scope.inTransaction(

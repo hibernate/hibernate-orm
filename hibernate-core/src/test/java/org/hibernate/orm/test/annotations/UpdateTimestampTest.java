@@ -23,7 +23,7 @@ import java.time.*;
 import java.util.Calendar;
 import java.util.Date;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
@@ -185,7 +185,7 @@ public class UpdateTimestampTest extends BaseEntityManagerFunctionalTestCase {
     }
 
     @Test
-    @TestForIssue( jiraKey = "HHH-16240")
+    @JiraKey( value = "HHH-16240")
     public void generatesCurrentTimestampInStatelessSession() {
         doInJPA(this::entityManagerFactory, entityManager -> {
             Session session = entityManager.unwrap( Session.class);

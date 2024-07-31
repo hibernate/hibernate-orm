@@ -16,7 +16,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.OracleDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -43,7 +43,7 @@ public class IdentityIdEntityTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15561")
+	@JiraKey(value = "HHH-15561")
 	@ServiceRegistry(
 			settings = { @Setting( name = AvailableSettings.USE_GET_GENERATED_KEYS, value = "false") }
 	)
@@ -66,7 +66,7 @@ public class IdentityIdEntityTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15561")
+	@JiraKey(value = "HHH-15561")
 	@ServiceRegistry(
 			settings = { @Setting( name = "use_jdbc_metadata_defaults", value = "false") }
 	)
@@ -89,7 +89,7 @@ public class IdentityIdEntityTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-16418")
+	@JiraKey(value = "HHH-16418")
 	@ServiceRegistry(
 			settings = { @Setting( name = AvailableSettings.USE_GET_GENERATED_KEYS, value = "false") }
 	)

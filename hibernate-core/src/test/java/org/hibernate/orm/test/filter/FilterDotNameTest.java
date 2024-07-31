@@ -19,7 +19,7 @@ import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ParamDef;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -47,7 +47,7 @@ import static org.junit.Assert.assertThat;
 				FilterDotNameTest.PurchaseItem.class
 		}
 )
-@TestForIssue(jiraKey = "HHH-11250")
+@JiraKey(value = "HHH-11250")
 public class FilterDotNameTest extends AbstractStatefulStatelessFilterTest {
 
 	@BeforeEach

@@ -38,7 +38,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.orm.test.jpa.pack.defaultpar.Version;
 import org.hibernate.orm.test.jpa.pack.explodedpar.Carpet;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 
 import org.junit.jupiter.api.Test;
@@ -276,7 +276,7 @@ public class JarVisitorTest extends PackagingTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6806")
+	@JiraKey(value = "HHH-6806")
 	public void testJarVisitorFactory() throws Exception {
 		final File explodedPar = buildExplodedPar();
 		final File defaultPar = buildDefaultPar();
@@ -314,7 +314,7 @@ public class JarVisitorTest extends PackagingTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "EJB-230" )
+	@JiraKey( value = "EJB-230" )
 	public void testDuplicateFilterExplodedJarExpected() throws Exception {
 //		File explodedPar = buildExplodedPar();
 //		addPackageToClasspath( explodedPar );
@@ -360,7 +360,7 @@ public class JarVisitorTest extends PackagingTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7835")
+	@JiraKey(value = "HHH-7835")
 	public void testGetBytesFromInputStream() throws Exception {
 		File file = buildLargeJar();
 
@@ -406,7 +406,7 @@ public class JarVisitorTest extends PackagingTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7835")
+	@JiraKey(value = "HHH-7835")
 	public void testGetBytesFromZeroInputStream() throws Exception {
 		// Ensure that JarVisitorFactory#getBytesFromInputStream
 		// can handle 0 length streams gracefully.

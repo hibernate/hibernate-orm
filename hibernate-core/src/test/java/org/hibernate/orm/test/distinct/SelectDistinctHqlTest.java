@@ -11,7 +11,7 @@ import java.util.List;
 
 import org.hibernate.boot.SessionFactoryBuilder;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -32,7 +32,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-10965")
+@JiraKey(value = "HHH-10965")
 public class SelectDistinctHqlTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	private static final String DISTINCT_NAMED_QUERY = "distinct";
@@ -96,7 +96,7 @@ public class SelectDistinctHqlTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13780")
+	@JiraKey(value = "HHH-13780")
 	public void testNamedQueryDistinctPassThroughTrueWhenNotSpecified() {
 		doInHibernate( this::sessionFactory, session -> {
 			sqlStatementInterceptor.getSqlQueries().clear();

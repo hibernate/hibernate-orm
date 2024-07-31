@@ -10,7 +10,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.UnknownEntityTypeException;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -49,7 +49,7 @@ public class EntityNonEntityTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9856" )
+	@JiraKey( value = "HHH-9856" )
 	public void testGetAndFindNonEntityThrowsIllegalArgumentException() {
 		try {
             sessionFactory().getMetamodel().locateEntityPersister(Cellular.class);

@@ -31,7 +31,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.hamcrest.CollectionMatchers;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -55,7 +55,7 @@ import static org.junit.Assert.fail;
  * It tries to get to the bottom of the failures in
  * {@link ForeignKeyConstraintTest#testGet}
  */
-@TestForIssue( jiraKey = "HHH-11180" )
+@JiraKey( value = "HHH-11180" )
 @DomainModel(
 		annotatedClasses = {
 				NonRootTablePolymorphicTests.Root.class,

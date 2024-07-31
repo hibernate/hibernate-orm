@@ -9,7 +9,7 @@ package org.hibernate.orm.test.internal.util;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Michael Spahn
  */
-@TestForIssue(jiraKey = "HHH-13974")
+@JiraKey(value = "HHH-13974")
 @DomainModel
 @SessionFactory
 public class SessionBuilderFlushModeTest {

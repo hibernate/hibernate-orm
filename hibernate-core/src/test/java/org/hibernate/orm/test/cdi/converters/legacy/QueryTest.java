@@ -49,7 +49,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,7 +64,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	public static final float SALARY = 267.89f;
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9356" )
+	@JiraKey( value = "HHH-9356" )
 	public void testCriteriaBetween() {
 		final EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

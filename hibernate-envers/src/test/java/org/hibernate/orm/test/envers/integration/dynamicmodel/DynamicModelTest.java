@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.envers.integration.dynamicmodel;
 
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import jakarta.persistence.EntityManager;
@@ -17,7 +17,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Felix Feisst (feisst dot felix at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-8769")
+@JiraKey(value = "HHH-8769")
 public class DynamicModelTest extends BaseEnversJPAFunctionalTestCase {
 
 	@Override

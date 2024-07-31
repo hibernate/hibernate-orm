@@ -15,13 +15,13 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10953")
+@JiraKey(value = "HHH-10953")
 public class UpdateEntitiesWithPackageNamesStartingWithKeywordsTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

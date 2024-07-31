@@ -31,7 +31,7 @@ import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -41,7 +41,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-12292")
+@JiraKey( value = "HHH-12292")
 @RequiresDialect(H2Dialect.class)
 @SkipForDialect(dialectClass = H2Dialect.class, majorVersion = 2, reason = "Array support was changed to now be typed")
 @Jpa(

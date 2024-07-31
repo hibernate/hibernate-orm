@@ -17,7 +17,7 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -28,7 +28,7 @@ import static jakarta.persistence.CascadeType.ALL;
 /**
  * @author Moritz Becker
  */
-@TestForIssue(jiraKey = "HHH-13201")
+@JiraKey(value = "HHH-13201")
 @Jpa(
 		annotatedClasses = {
 				FetchNonRootRelativeElementCollectionAndAssociationTest.ProductNaturalId.class,

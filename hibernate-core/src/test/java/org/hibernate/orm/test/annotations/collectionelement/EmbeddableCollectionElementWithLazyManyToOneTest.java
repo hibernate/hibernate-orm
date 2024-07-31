@@ -22,7 +22,7 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class EmbeddableCollectionElementWithLazyManyToOneTest {
 
 	@Test
-	@TestForIssue(jiraKey = "???")
+	@JiraKey(value = "???")
 	public void testLazyManyToOneInEmbeddable(SessionFactoryScope scope) {
 		Parent p = new Parent();
 		p.containedChild = new ContainedChild( new Child() );
@@ -69,7 +69,7 @@ public class EmbeddableCollectionElementWithLazyManyToOneTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "???")
+	@JiraKey(value = "???")
 	public void testLazyManyToOneInCollectionElementEmbeddable(SessionFactoryScope scope) {
 		Parent p = new Parent();
 		p.containedChildren.add( new ContainedChild( new Child() ) );
@@ -96,7 +96,7 @@ public class EmbeddableCollectionElementWithLazyManyToOneTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "???")
+	@JiraKey(value = "???")
 	public void testLazyBoth(SessionFactoryScope scope) {
 		Parent p = new Parent();
 		ContainedChild containedChild = new ContainedChild( new Child() );
@@ -126,7 +126,7 @@ public class EmbeddableCollectionElementWithLazyManyToOneTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13045")
+	@JiraKey(value = "HHH-13045")
 	public void testAccessIdOfManyToOneInEmbeddable(SessionFactoryScope scope) {
 		Parent p = new Parent();
 		p.containedChildren.add( new ContainedChild( new Child() ) );

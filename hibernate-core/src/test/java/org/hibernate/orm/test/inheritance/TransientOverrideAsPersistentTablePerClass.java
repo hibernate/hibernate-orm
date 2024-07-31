@@ -30,7 +30,7 @@ import jakarta.persistence.criteria.ParameterExpression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
-@TestForIssue(jiraKey = "HHH-14103")
+@JiraKey(value = "HHH-14103")
 @DomainModel(
 		annotatedClasses = {
 				TransientOverrideAsPersistentTablePerClass.Employee.class,

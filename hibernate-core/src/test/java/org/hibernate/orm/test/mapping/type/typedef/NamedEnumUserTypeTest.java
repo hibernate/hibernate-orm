@@ -16,7 +16,7 @@ import org.hibernate.orm.test.mapping.converted.enums.Person;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
 @SessionFactory
 public class NamedEnumUserTypeTest {
 	@Test
-	@TestForIssue(jiraKey = "HHH-14820")
+	@JiraKey(value = "HHH-14820")
 	public void testNamedEnumUserType(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			session.createQuery( "from Person p", Person.class ).list();

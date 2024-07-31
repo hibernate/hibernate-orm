@@ -1,7 +1,7 @@
 package org.hibernate.orm.test.query.hql.joinorder;
 
 import jakarta.persistence.*;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 
 @SessionFactory
 @DomainModel(annotatedClasses = {JoinOrderTest.Task.class, JoinOrderTest.Location.class, JoinOrderTest.TaskLocation.class, JoinOrderTest.Vineyard.class, JoinOrderTest.TaskEventLog.class})
-@TestForIssue(jiraKey="HHH-16522")
+@JiraKey(value="HHH-16522")
 public class JoinOrderTest {
 
 	@Test

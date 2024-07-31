@@ -22,7 +22,7 @@ import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.metamodel.CollectionClassification;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,7 +34,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-7928" )
+@JiraKey( value = "HHH-7928" )
 public class MergeCollectionEventTest extends BaseCoreFunctionalTestCase {
 
 	@Override

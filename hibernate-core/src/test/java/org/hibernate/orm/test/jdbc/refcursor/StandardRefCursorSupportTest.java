@@ -11,7 +11,7 @@ import java.sql.SQLException;
 
 import org.hibernate.engine.jdbc.cursor.internal.StandardRefCursorSupport;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import org.mockito.Mockito;
@@ -24,7 +24,7 @@ import static org.junit.Assert.assertThat;
  *
  * @author Daniel Heinrich
  */
-@TestForIssue(jiraKey = "HHH-10612")
+@JiraKey(value = "HHH-10612")
 public class StandardRefCursorSupportTest {
 
     interface TestDatabaseMetaData extends DatabaseMetaData {

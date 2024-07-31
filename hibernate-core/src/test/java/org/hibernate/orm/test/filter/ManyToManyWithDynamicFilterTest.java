@@ -22,7 +22,7 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -69,7 +69,7 @@ public class ManyToManyWithDynamicFilterTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11410")
+	@JiraKey(value = "HHH-11410")
 	void testManyToManyCollectionWithActiveFilterOnJoin(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.enableFilter( "activeUserFilter" );
@@ -82,7 +82,7 @@ public class ManyToManyWithDynamicFilterTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11410")
+	@JiraKey(value = "HHH-11410")
 	void testManyToManyCollectionWithNoFilterOnJoin(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final User user = session.get( User.class, 1 );

@@ -7,7 +7,7 @@ import org.hibernate.orm.test.annotations.fetchprofile.mappedby.Address;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -15,7 +15,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
 
-@TestForIssue( jiraKey = "HHH-14071" )
+@JiraKey( value = "HHH-14071" )
 public class MappedByFetchProfileUnitTest extends BaseUnitTestCase {
 
 	private ServiceRegistry serviceRegistry;

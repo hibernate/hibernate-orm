@@ -21,7 +21,7 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.graph.GraphSemantic;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -45,7 +45,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class EntityGraphWithFetchAnnotationTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10485")
+	@JiraKey(value = "HHH-10485")
 	void testWithoutEntityGraph(SessionFactoryScope scope) {
 		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -71,7 +71,7 @@ public class EntityGraphWithFetchAnnotationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10485")
+	@JiraKey(value = "HHH-10485")
 	void testWithEntityGraph(SessionFactoryScope scope) {
 		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();

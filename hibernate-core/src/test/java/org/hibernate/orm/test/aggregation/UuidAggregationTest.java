@@ -2,7 +2,7 @@ package org.hibernate.orm.test.aggregation;
 
 import java.util.UUID;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -36,7 +36,7 @@ public class UuidAggregationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15495")
+	@JiraKey(value = "HHH-15495")
 	public void testMaxUuid(SessionFactoryScope scope) {
 		scope.inTransaction(
 				s -> {

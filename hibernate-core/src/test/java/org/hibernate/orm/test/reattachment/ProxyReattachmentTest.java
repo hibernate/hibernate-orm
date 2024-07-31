@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.reattachment;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -86,7 +86,7 @@ public class ProxyReattachmentTest {
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8374")
+	@JiraKey(value = "HHH-8374")
 	public void testRemoveAndReattachProxyEntity(SessionFactoryScope scope) {
 		Parent p = new Parent( "foo" );
 		scope.inTransaction(

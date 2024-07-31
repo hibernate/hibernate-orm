@@ -9,14 +9,14 @@ package org.hibernate.orm.test.tool.schema.scripts;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-13089")
+@JiraKey(value = "HHH-13089")
 public class EmptyImportFilesTest extends BaseCoreFunctionalTestCase {
 
 	@Override

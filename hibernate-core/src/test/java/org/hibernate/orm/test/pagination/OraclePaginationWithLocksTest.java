@@ -14,7 +14,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 @RequiresDialect(value = OracleDialect.class, majorVersion = 12)
-@TestForIssue(jiraKey = "HHH-14624")
+@JiraKey(value = "HHH-14624")
 @DomainModel(
 		annotatedClasses = OraclePaginationWithLocksTest.Person.class
 )

@@ -42,7 +42,7 @@ import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchJoinedImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -84,7 +84,7 @@ import static org.hibernate.testing.hamcrest.CollectionMatchers.isEmpty;
 		}
 )
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-13756" )
+@JiraKey( value = "HHH-13756" )
 public class EntityGraphLoadPlanBuilderTest implements SessionFactoryScopeAware {
 
 	private SessionFactoryScope scope;

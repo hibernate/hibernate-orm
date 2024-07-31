@@ -21,7 +21,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.usertype.UserType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import jakarta.persistence.Entity;
@@ -45,7 +45,7 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 		options.put( AvailableSettings.JPA_LOAD_BY_ID_COMPLIANCE, "true" );
 	}
 
-	@TestForIssue(jiraKey = "HHH-11397")
+	@JiraKey(value = "HHH-11397")
 	@Test(expected = IllegalArgumentException.class)
 	public void setParameterWithWrongTypeShouldThrowIllegalArgumentException() {
 		final EntityManager entityManager = entityManagerFactory().createEntityManager();
@@ -69,7 +69,7 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11971")
+	@JiraKey(value = "HHH-11971")
 	public void setPrimitiveParameterShouldNotThrowExceptions() {
 		final EntityManager entityManager = entityManagerFactory().createEntityManager();
 		try {
@@ -88,7 +88,7 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 	}
 
 	@Test(expected = IllegalArgumentException.class)
-	@TestForIssue( jiraKey = "HHH-11971")
+	@JiraKey( value = "HHH-11971")
 	public void setWrongPrimitiveParameterShouldThrowIllegalArgumentException() {
 		final EntityManager entityManager = entityManagerFactory().createEntityManager();
 		try {

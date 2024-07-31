@@ -10,7 +10,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.model.internal.XMLContext;
 import org.hibernate.orm.test.internal.util.xml.XMLMappingHelper;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Emmanuel Bernard
  */
-@TestForIssue(jiraKey = "HHH-14529")
+@JiraKey(value = "HHH-14529")
 public class XMLContextTest {
 
 	private BootstrapContextImpl bootstrapContext;

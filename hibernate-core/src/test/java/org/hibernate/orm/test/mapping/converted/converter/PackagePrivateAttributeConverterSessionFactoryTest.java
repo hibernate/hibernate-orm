@@ -13,7 +13,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Tuple;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -24,7 +24,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-10778" )
+@JiraKey( value = "HHH-10778" )
 @DomainModel( annotatedClasses = PackagePrivateAttributeConverterSessionFactoryTest.Tester.class )
 @SessionFactory
 public class PackagePrivateAttributeConverterSessionFactoryTest {

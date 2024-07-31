@@ -26,7 +26,7 @@ import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.order.NullPrecedence;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -34,7 +34,7 @@ import static org.junit.Assert.*;
 /**
  * @author Felix Feisst (feisst dot felix at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-11896")
+@JiraKey(value = "HHH-11896")
 public class AssociationQueryWithOnClauseTest extends BaseEnversJPAFunctionalTestCase {
 
 	private EntityA a1;

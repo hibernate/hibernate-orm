@@ -23,7 +23,7 @@ import org.hibernate.dialect.HANADialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.junit.Test;
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -31,7 +31,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-10062")
+@JiraKey(value = "HHH-10062")
 public class CriteriaToScrollableResultsFetchTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

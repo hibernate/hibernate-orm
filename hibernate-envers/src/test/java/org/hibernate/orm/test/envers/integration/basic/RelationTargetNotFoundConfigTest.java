@@ -20,7 +20,7 @@ import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertNotNull;
@@ -32,7 +32,7 @@ import static org.junit.Assert.assertNull;
  *
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-8051")
+@JiraKey(value = "HHH-8051")
 public class RelationTargetNotFoundConfigTest extends BaseEnversJPAFunctionalTestCase {
     @Override
     protected Class<?>[] getAnnotatedClasses() {

@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DomainModel(annotatedClasses = ElementCollectionUpdateTest.Person.class)
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-16297")
+@JiraKey(value = "HHH-16297")
 public class ElementCollectionUpdateTest {
 
 	private Person thePerson;

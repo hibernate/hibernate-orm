@@ -19,7 +19,7 @@ import jakarta.persistence.PrimaryKeyJoinColumn;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.mapping.Table;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -40,7 +40,7 @@ public class ForeignKeyNoConstraintTest extends BaseNonConfigCoreFunctionalTestC
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12975")
+	@JiraKey(value = "HHH-12975")
 	public void testPrimaryKeyJoinColumnForeignKeyNoConstraint() {
 		for ( Namespace namespace : metadata().getDatabase().getNamespaces() ) {
 			for ( Table table : namespace.getTables() ) {
@@ -52,7 +52,7 @@ public class ForeignKeyNoConstraintTest extends BaseNonConfigCoreFunctionalTestC
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12975")
+	@JiraKey(value = "HHH-12975")
 	public void testMapsIdJoinColumnForeignKeyNoConstraint() {
 		for ( Namespace namespace : metadata().getDatabase().getNamespaces() ) {
 			for ( Table table : namespace.getTables() ) {

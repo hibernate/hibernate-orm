@@ -7,8 +7,9 @@
 package org.hibernate.processor.test.generatedannotation;
 
 import org.hibernate.processor.test.util.CompilationTest;
-import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.WithClasses;
+
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
@@ -21,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 public class GeneratedAnnotationTest extends CompilationTest {
 
 	@Test
-	@TestForIssue(jiraKey = "METAGEN-79")
+	@JiraKey(value = "METAGEN-79")
 	@WithClasses(TestEntity.class)
 	public void testGeneratedAnnotationNotGenerated() {
 		assertMetamodelClassGeneratedFor( TestEntity.class );

@@ -8,7 +8,7 @@ package org.hibernate.orm.test.formulajoin;
 
 import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 @BaseUnitTest
 public class AnnotatedFormWithBeanValidationNotNullTest {
 	@Test
-	@TestForIssue( jiraKey = "HHH-8167" )
+	@JiraKey( value = "HHH-8167" )
 	public void testAnnotatedFormWithBeanValidationNotNull() {
 		Configuration cfg = new Configuration();
 		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );

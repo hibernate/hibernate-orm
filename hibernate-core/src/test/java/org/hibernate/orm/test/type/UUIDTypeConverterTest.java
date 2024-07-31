@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -37,7 +37,7 @@ import static org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator.safeRandom
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15417")
+@JiraKey(value = "HHH-15417")
 public class UUIDTypeConverterTest {
 
 	@AfterEach

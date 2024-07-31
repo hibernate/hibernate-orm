@@ -43,7 +43,7 @@ import org.hibernate.orm.test.jpa.metamodel.Product;
 import org.hibernate.orm.test.jpa.metamodel.ShelfLife;
 import org.hibernate.orm.test.jpa.metamodel.Spouse;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Assert;
 import org.junit.Before;
@@ -130,7 +130,7 @@ public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11393")
+	@JiraKey(value = "HHH-11393")
 	public void testTrimAChar() {
 		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
 			final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
@@ -206,7 +206,7 @@ public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10960")
+	@JiraKey(value = "HHH-10960")
 	public void testDeprecation() {
 		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
 

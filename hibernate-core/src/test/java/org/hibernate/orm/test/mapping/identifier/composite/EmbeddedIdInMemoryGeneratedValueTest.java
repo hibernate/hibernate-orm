@@ -10,7 +10,7 @@ import java.sql.Timestamp;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -27,7 +27,7 @@ public class EmbeddedIdInMemoryGeneratedValueTest extends BaseEntityManagerFunct
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13096")
+	@JiraKey(value = "HHH-13096")
 	public void test() {
 		final EventId eventId = doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::identifiers-composite-generated-in-memory-example[]

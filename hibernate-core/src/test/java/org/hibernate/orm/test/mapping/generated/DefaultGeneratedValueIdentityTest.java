@@ -41,7 +41,7 @@ import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -72,7 +72,7 @@ public class DefaultGeneratedValueIdentityTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12671" )
+	@JiraKey( value = "HHH-12671" )
 	public void testGenerationWithIdentityInsert() {
 		final TheEntity theEntity = new TheEntity();
 

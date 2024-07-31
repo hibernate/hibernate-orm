@@ -39,7 +39,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -208,7 +208,7 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8699")
+	@JiraKey(value = "HHH-8699")
 	public void testMultiselectWithPredicates() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -280,7 +280,7 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10737")
+	@JiraKey(value = "HHH-10737")
 	@FailureExpected(jiraKey = "HHH-10737")
 	public void testMissingDialectFunction() {
 		doInJPA( this::entityManagerFactory, em -> {
@@ -315,7 +315,7 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12314")
+	@JiraKey(value = "HHH-12314")
 	public void testJoinUsingNegatedPredicate() {
 		// Write test data
 		doInJPA( this::entityManagerFactory, entityManager -> {

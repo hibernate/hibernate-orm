@@ -16,7 +16,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -49,7 +49,7 @@ import static org.junit.Assert.assertNull;
 public class MutableNaturalIdTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10360")
+	@JiraKey( value = "HHH-10360")
 	public void testNaturalIdNullability(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		final EntityMappingType entityMappingType = sessionFactory.getRuntimeMetamodels().getEntityMappingType( User.class );

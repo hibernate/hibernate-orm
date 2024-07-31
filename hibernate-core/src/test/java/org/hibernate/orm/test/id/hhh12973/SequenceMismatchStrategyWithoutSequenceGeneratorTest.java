@@ -26,7 +26,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-12973")
+@JiraKey(value = "HHH-12973")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSequences.class)
 public class SequenceMismatchStrategyWithoutSequenceGeneratorTest extends EntityManagerFactoryBasedFunctionalTest {
 

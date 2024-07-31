@@ -21,7 +21,7 @@ import jakarta.persistence.OneToMany;
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
@@ -37,7 +37,7 @@ import static org.hibernate.testing.jdbc.SQLStatementInspector.extractFromSessio
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-@TestForIssue(jiraKey = "HHH-13944")
+@JiraKey(value = "HHH-13944")
 //@ServiceRegistry(
 //		settings = @Setting( name = AvailableSettings.STATEMENT_INSPECTOR, value = "org.hibernate.testing.jdbc.SQLStatementInspector" )
 //)

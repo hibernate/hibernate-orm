@@ -20,7 +20,7 @@ import jakarta.persistence.Table;
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -54,7 +54,7 @@ public class EmbeddedCircularFetchTests {
 	//		- `org.hibernate.orm.test.fetch.circular.manytoone`
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9642")
+	@JiraKey(value = "HHH-9642")
 	public void testCircularFetchAcrossComponent(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

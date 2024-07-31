@@ -25,7 +25,7 @@ import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.query.sqm.TemporalUnit;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
@@ -129,7 +129,7 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-2366" )
+	@JiraKey( value = "HHH-2366" )
 	public void testComponentStateChangeAndDirtiness() {
 		inTransaction(
 				s -> {

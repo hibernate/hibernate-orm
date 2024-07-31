@@ -19,7 +19,7 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -39,7 +39,7 @@ public class UnidirectionalOneToManyNonPkJoinColumnTest extends BaseEntityManage
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12064" )
+	@JiraKey( value = "HHH-12064" )
 	public void test() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			// Save the entity on the One side

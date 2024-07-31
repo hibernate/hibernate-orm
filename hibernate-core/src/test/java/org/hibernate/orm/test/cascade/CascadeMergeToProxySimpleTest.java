@@ -20,7 +20,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertNotNull;
 
-@TestForIssue(jiraKey = "HHH-13590")
+@JiraKey(value = "HHH-13590")
 @DomainModel(
 		annotatedClasses = {
 				CascadeMergeToProxySimpleTest.AbstractEntity.class,

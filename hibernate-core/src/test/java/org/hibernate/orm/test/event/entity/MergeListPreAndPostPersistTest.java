@@ -23,7 +23,7 @@ import org.hibernate.event.spi.PreInsertEvent;
 import org.hibernate.event.spi.PreInsertEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -32,7 +32,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Gail Badner
  */
-@TestForIssue( jiraKey = "HHH-9979")
+@JiraKey( value = "HHH-9979")
 public class MergeListPreAndPostPersistTest extends BaseCoreFunctionalTestCase {
 
 	protected Class[] getAnnotatedClasses() {
@@ -43,7 +43,7 @@ public class MergeListPreAndPostPersistTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9979")
+	@JiraKey( value = "HHH-9979")
 	public void testAllPropertiesCopied() {
 		final Order order = new Order();
 		order.id = 1L;

@@ -1,7 +1,7 @@
 package org.hibernate.orm.test.jpa.criteria;
 
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
@@ -22,7 +22,7 @@ import jakarta.persistence.criteria.Root;
 				GroupByTest.Person.class
 		}
 )
-@TestForIssue( jiraKey = "HHH-15749")
+@JiraKey( value = "HHH-15749")
 public class GroupByTest {
 
 	@Test

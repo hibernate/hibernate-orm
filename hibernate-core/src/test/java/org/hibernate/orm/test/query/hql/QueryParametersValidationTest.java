@@ -11,7 +11,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue( jiraKey = "HHH-11397")
+@JiraKey( value = "HHH-11397")
 @DomainModel( annotatedClasses = QueryParametersValidationTest.TestEntity.class )
 @SessionFactory( exportSchema = false )
 public class QueryParametersValidationTest {

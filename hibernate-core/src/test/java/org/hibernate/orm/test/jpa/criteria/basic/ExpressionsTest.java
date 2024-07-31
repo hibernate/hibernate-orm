@@ -31,7 +31,7 @@ import org.hibernate.query.criteria.JpaDerivedRoot;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.sqm.TemporalUnit;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
@@ -103,7 +103,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15452")
+	@JiraKey( value = "HHH-15452")
 	public void testGetConjunctionExpressionsAndAddPredicate(){
 		inTransaction(
 				entityManager -> {
@@ -124,7 +124,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6876")
+	@JiraKey(value = "HHH-6876")
 	public void testEmptyInList() {
 		doInJPA(
 				this::entityManagerFactory,

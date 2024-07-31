@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
@@ -34,7 +34,7 @@ import jakarta.persistence.TypedQuery;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@TestForIssue(jiraKey = "HHH-15086")
+@JiraKey(value = "HHH-15086")
 @Jpa(
 		annotatedClasses = CachedQueryDirectReferenceTest.ImmutableEmployee.class,
 		generateStatistics = true,

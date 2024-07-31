@@ -22,7 +22,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -75,7 +75,7 @@ public class SingleTableRelationsTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11375")
+	@JiraKey(value = "HHH-11375")
 	public void testLazyInitialization(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -87,7 +87,7 @@ public class SingleTableRelationsTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11375")
+	@JiraKey(value = "HHH-11375")
 	public void testJoinFetch(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -15,13 +15,13 @@ import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.integration.modifiedflags.entities.Professor;
 import org.hibernate.orm.test.envers.integration.modifiedflags.entities.Student;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-7510")
+@JiraKey(value = "HHH-7510")
 public class HasChangedAuditedManyToManyRemovalTest extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

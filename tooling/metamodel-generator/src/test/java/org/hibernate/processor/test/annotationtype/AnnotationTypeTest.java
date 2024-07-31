@@ -7,16 +7,17 @@
 package org.hibernate.processor.test.annotationtype;
 
 import org.hibernate.processor.test.util.CompilationTest;
-import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
 import org.hibernate.processor.test.util.WithMappingFiles;
+
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 /**
  * @author Sergey Morgunov
  */
-@TestForIssue(jiraKey = "HHH-13145")
+@JiraKey(value = "HHH-13145")
 public class AnnotationTypeTest extends CompilationTest {
 
     @Test

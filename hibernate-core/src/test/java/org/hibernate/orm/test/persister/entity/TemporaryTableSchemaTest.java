@@ -15,7 +15,7 @@ import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableIn
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -47,7 +47,7 @@ public class TemporaryTableSchemaTest {
 	static final String CUSTOM_SCHEMA = "CUSTOM_SCHEMA";
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15517")
+	@JiraKey( value = "HHH-15517")
 	public void test(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		final SqmMultiTableInsertStrategy insertStrategy = sessionFactory

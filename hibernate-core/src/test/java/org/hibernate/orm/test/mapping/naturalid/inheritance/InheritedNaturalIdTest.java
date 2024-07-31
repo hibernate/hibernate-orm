@@ -14,7 +14,7 @@ import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -39,7 +39,7 @@ import static org.junit.Assert.assertThat;
 @SessionFactory
 public class InheritedNaturalIdTest {
 	@Test
-	@TestForIssue( jiraKey = "HHH-10360")
+	@JiraKey( value = "HHH-10360")
 	public void verifyMappingModel(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		final EntityMappingType userMapping = sessionFactory.getRuntimeMetamodels().getEntityMappingType( User.class );

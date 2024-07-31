@@ -1,7 +1,7 @@
 package org.hibernate.orm.test.annotations.sharedfk;
 
 import org.hibernate.PropertyValueException;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-@TestForIssue(jiraKey = "JPA-46")
+@JiraKey(value = "JPA-46")
 @SessionFactory
 @DomainModel(annotatedClasses = {AbstractChild.class, Parent.class, ConcreteChild1.class, ConcreteChild2.class})
 public class TestDiscriminatedOneToMany {

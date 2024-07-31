@@ -29,7 +29,7 @@ import org.hibernate.stat.CacheRegionStatistics;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
@@ -54,7 +54,7 @@ public class SharedDomainDataAndQueryResultsTest extends BaseNonConfigCoreFuncti
 	private static final String PREFIX = "test";
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13586")
+	@JiraKey( value = "HHH-13586")
 	public void testAllCachedStatistics() {
 
 		final Statistics statistics = sessionFactory().getStatistics();
@@ -274,7 +274,7 @@ public class SharedDomainDataAndQueryResultsTest extends BaseNonConfigCoreFuncti
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13586")
+	@JiraKey( value = "HHH-13586")
 	public void testCacheImplementorGetRegion() {
 		rebuildSessionFactory();
 
@@ -304,7 +304,7 @@ public class SharedDomainDataAndQueryResultsTest extends BaseNonConfigCoreFuncti
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13586")
+	@JiraKey( value = "HHH-13586")
 	public void testEvictCaches() {
 
 		final Statistics statistics = sessionFactory().getStatistics();

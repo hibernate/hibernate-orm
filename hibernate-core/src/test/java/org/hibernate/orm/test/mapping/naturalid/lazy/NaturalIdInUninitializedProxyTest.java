@@ -13,7 +13,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -29,7 +29,7 @@ import static org.junit.Assert.assertFalse;
 /**
  * @author Gail Badner
  */
-@TestForIssue( jiraKey = "HHH-13607" )
+@JiraKey( value = "HHH-13607" )
 @ServiceRegistry(
 		settings = {
 				@Setting( name = AvailableSettings.FORMAT_SQL, value = "false" ),

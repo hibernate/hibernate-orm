@@ -11,7 +11,7 @@ import jakarta.persistence.MapKeyJoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import static org.hamcrest.core.Is.is;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import org.junit.Before;
@@ -21,7 +21,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Burkhard Graves
  */
-@TestForIssue(jiraKey = "HHH-14475")
+@JiraKey(value = "HHH-14475")
 public class IndicesTest extends BaseNonConfigCoreFunctionalTestCase {
     
     @Override

@@ -40,7 +40,7 @@ import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
@@ -105,7 +105,7 @@ public class UniqueConstraintDropTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11236")
+	@JiraKey(value = "HHH-11236")
 	public void testUniqueConstraintIsDropped() throws Exception {
 
 		new IndividuallySchemaMigratorImpl( tool, DefaultSchemaFilter.INSTANCE )

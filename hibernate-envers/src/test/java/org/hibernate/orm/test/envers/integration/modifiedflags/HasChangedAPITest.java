@@ -19,7 +19,7 @@ import org.hibernate.orm.test.envers.integration.modifiedflags.entities.EnumEnti
 import org.hibernate.orm.test.envers.integration.modifiedflags.entities.EnumOption;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
@@ -76,7 +76,7 @@ public class HasChangedAPITest extends AbstractModifiedFlagsEntityTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13770")
+	@JiraKey(value = "HHH-13770")
 	public void testHasChangedHasNotChangedEnum() {
 		List list = getAuditReader().createQuery().forRevisionsOfEntity( EnumEntity.class, true, true )
 				.add( AuditEntity.property( "option" ).hasChanged() ).getResultList();

@@ -17,7 +17,7 @@ import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.orm.test.event.collection.Entity;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -31,7 +31,7 @@ import static org.junit.Assert.assertSame;
  * 
  * @author Erik-Berndt Scheper
  */
-@TestForIssue( jiraKey = "HHH-6361" )
+@JiraKey( value = "HHH-6361" )
 public class DetachedMultipleCollectionChangeTest extends BaseCoreFunctionalTestCase {
 
 	@Override

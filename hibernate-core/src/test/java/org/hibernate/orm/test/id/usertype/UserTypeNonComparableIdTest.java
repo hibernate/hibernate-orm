@@ -23,7 +23,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.UserType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -36,7 +36,7 @@ import org.junit.jupiter.api.Test;
 public class UserTypeNonComparableIdTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8999")
+	@JiraKey(value = "HHH-8999")
 	public void testUserTypeId(SessionFactoryScope scope) {
 		SomeEntity e1 = new SomeEntity();
 		SomeEntity e2 = new SomeEntity();

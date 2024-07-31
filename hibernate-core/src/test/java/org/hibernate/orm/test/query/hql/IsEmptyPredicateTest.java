@@ -13,7 +13,7 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -27,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Nathan Xu
  */
-@TestForIssue(jiraKey = "HHH-6686")
+@JiraKey(value = "HHH-6686")
 @ServiceRegistry
 @DomainModel( annotatedClasses = IsEmptyPredicateTest.Person.class )
 @SessionFactory

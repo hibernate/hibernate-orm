@@ -16,7 +16,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.Session;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -27,7 +27,7 @@ import org.junit.Test;
  *
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-10024" )
+@JiraKey( value = "HHH-10024" )
 public class SizeAttributeReferenceTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void controlGroup() {

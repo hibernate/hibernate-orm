@@ -42,7 +42,7 @@ import org.hibernate.orm.test.jpa.Wallet;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
@@ -82,7 +82,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7192")
+	@JiraKey(value = "HHH-7192")
 	public void testTypedManipulationQueryError() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -416,7 +416,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10161")
+	@JiraKey(value = "HHH-10161")
 	@SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
 	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
 	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
@@ -502,7 +502,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10161")
+	@JiraKey(value = "HHH-10161")
 	@SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
 	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
 	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
@@ -666,7 +666,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH_7407")
+	@JiraKey(value = "HHH_7407")
 	public void testMultipleParameterLists() throws Exception {
 		final Item item = new Item( "Mouse", "Micro$oft mouse" );
 		final Item item2 = new Item( "Computer", "Dell computer" );
@@ -714,7 +714,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH_8949")
+	@JiraKey(value = "HHH_8949")
 	public void testCacheStoreAndRetrieveModeParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -775,7 +775,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12290")
+	@JiraKey(value = "HHH-12290")
 	public void testParameterCollectionAndPositional() {
 		final Item item = new Item( "Mouse", "Microsoft mouse" );
 		final Item item2 = new Item( "Computer", "Dell computer" );
@@ -801,7 +801,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12290")
+	@JiraKey(value = "HHH-12290")
 	public void testParameterCollectionParenthesesAndPositional() {
 		final Item item = new Item( "Mouse", "Microsoft mouse" );
 		final Item item2 = new Item( "Computer", "Dell computer" );
@@ -827,7 +827,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12290")
+	@JiraKey(value = "HHH-12290")
 	public void testParameterCollectionSingletonParenthesesAndPositional() {
 		final Item item = new Item( "Mouse", "Microsoft mouse" );
 		final Item item2 = new Item( "Computer", "Dell computer" );
@@ -1286,7 +1286,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10803")
+	@JiraKey(value = "HHH-10803")
 	public void testNamedParameterWithUserError() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -1604,7 +1604,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10269")
+	@JiraKey(value = "HHH-10269")
 	public void testFailingNativeQuery() {
 		final EntityManager entityManager = getOrCreateEntityManager();
 		try {
@@ -1625,7 +1625,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10833")
+	@JiraKey(value = "HHH-10833")
 	public void testGetSingleResultWithNoResultException() {
 		final EntityManager entityManager  = getOrCreateEntityManager();
 		try {

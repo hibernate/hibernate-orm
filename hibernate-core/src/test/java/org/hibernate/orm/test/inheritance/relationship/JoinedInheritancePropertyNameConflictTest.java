@@ -15,7 +15,7 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Christian Beikov
  */
-@TestForIssue(jiraKey = "HHH-7406")
+@JiraKey(value = "HHH-7406")
 @DomainModel(
 		annotatedClasses = {
 				JoinedInheritancePropertyNameConflictTest.Country.class,

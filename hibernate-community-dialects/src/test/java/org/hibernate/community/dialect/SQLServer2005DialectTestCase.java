@@ -13,7 +13,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.query.spi.Limit;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -53,7 +53,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10736")
+	@JiraKey(value = "HHH-10736")
 	public void testGetLimitStringWithNewlineAfterSelect() {
 		final String query = "select" + System.lineSeparator() + "* FROM Employee E WHERE E.firstName = :firstName";
 		assertEquals(
@@ -64,7 +64,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10736")
+	@JiraKey(value = "HHH-10736")
 	public void testGetLimitStringWithNewlineAfterSelectWithMultipleSpaces() {
 		final String query = "select    " + System.lineSeparator() + "* FROM Employee E WHERE E.firstName = :firstName";
 		assertEquals(
@@ -75,7 +75,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8507")
+	@JiraKey(value = "HHH-8507")
 	public void testGetLimitStringWithNewlineAfterColumnList() {
 		final String query = "select E.fieldA,E.fieldB\r\nFROM Employee E WHERE E.firstName = :firstName";
 		assertEquals(
@@ -88,7 +88,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6950")
+	@JiraKey(value = "HHH-6950")
 	public void testGetLimitStringWithFromColumnName() {
 		final String fromColumnNameSQL = "select persistent0_.rid as rid1688_, " +
 				"persistent0_.deviationfromtarget as deviati16_1688_, " + // "from" character sequence as a part of the column name
@@ -105,7 +105,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8301")
+	@JiraKey(value = "HHH-8301")
 	public void testGetLimitStringAliasGeneration() {
 		final String notAliasedSQL = "select column1, column2, column3, column4 from table1";
 
@@ -118,7 +118,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10994")
+	@JiraKey(value = "HHH-10994")
 	public void testGetLimitStringAliasGenerationWithAliasesNoAs() {
 		final String aliasedSQLNoAs = "select column1 c1, column c2, column c3, column c4 from table1";
 		assertEquals(
@@ -130,7 +130,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11352")
+	@JiraKey(value = "HHH-11352")
 	public void testPagingWithColumnNameStartingWithFrom() {
 		final String sql = "select column1 c1, from_column c2 from table1";
 		assertEquals( "with query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" +
@@ -140,7 +140,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7019")
+	@JiraKey(value = "HHH-7019")
 	public void testGetLimitStringWithSubselect() {
 		final String subselectInSelectClauseSQL = "select persistent0_.id as col_0_0_, " +
 				"(select max(persistent1_.acceptancedate) " +
@@ -158,7 +158,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11084")
+	@JiraKey(value = "HHH-11084")
 	public void testGetLimitStringWithSelectDistinctSubselect() {
 		final String selectDistinctSubselectSQL = "select col0_.CONTENTID as CONTENT1_12_ " +
 				"where col0_.CONTENTTYPE='PAGE' and (col0_.CONTENTID in " +
@@ -173,7 +173,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11084")
+	@JiraKey(value = "HHH-11084")
 	public void testGetLimitStringWithSelectDistinctSubselectNotFirst() {
 		final String selectDistinctSubselectSQL = "select col0_.CONTENTID as CONTENT1_12_ FROM CONTEXT col0_ " +
 				"where col0_.CONTENTTYPE='PAGE' and (col0_.CONTENTID in " +
@@ -188,7 +188,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6728")
+	@JiraKey(value = "HHH-6728")
 	public void testGetLimitStringCaseSensitive() {
 		final String caseSensitiveSQL = "select persistent0_.id, persistent0_.uid AS tmp1, " +
 				"(select case when persistent0_.name = 'Smith' then 'Neo' else persistent0_.id end) " +
@@ -207,7 +207,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6310")
+	@JiraKey(value = "HHH-6310")
 	public void testGetLimitStringDistinctWithinAggregation() {
 		final String distinctInAggregateSQL = "select aggregate_function(distinct p.n) as f1 from table849752 p order by f1";
 
@@ -220,7 +220,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10994")
+	@JiraKey(value = "HHH-10994")
 	public void testGetLimitStringDistinctWithinAggregationWithoutAlias() {
 		final String distinctInAggregateSQL = "select aggregate_function(distinct p.n) from table849752 p order by f1";
 
@@ -233,7 +233,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10994")
+	@JiraKey(value = "HHH-10994")
 	public void testGetLimitStringDistinctWithinAggregationWithAliasNoAs() {
 		final String distinctInAggregateSQL = "select aggregate_function(distinct p.n) f1 from table849752 p order by f1";
 
@@ -246,7 +246,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7370")
+	@JiraKey(value = "HHH-7370")
 	public void testGetLimitStringWithMaxOnly() {
 		final String query = "select product2x0_.id as id0_, product2x0_.description as descript2_0_ " +
 				"from Product2 product2x0_ order by product2x0_.id";
@@ -268,7 +268,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7781")
+	@JiraKey(value = "HHH-7781")
 	public void testGetLimitStringWithCastOperator() {
 		final String query = "select cast(lc302_doku6_.redniBrojStavke as varchar(255)) as col_0_0_, lc302_doku6_.dokumentiID as col_1_0_ " +
 				"from LC302_Dokumenti lc302_doku6_ order by lc302_doku6_.dokumentiID DESC";
@@ -283,7 +283,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10994")
+	@JiraKey(value = "HHH-10994")
 	public void testGetLimitStringWithCastOperatorWithAliasNoAs() {
 		final String query = "select cast(lc302_doku6_.redniBrojStavke as varchar(255)) f1, lc302_doku6_.dokumentiID f2 " +
 				"from LC302_Dokumenti lc302_doku6_ order by lc302_doku6_.dokumentiID DESC";
@@ -298,7 +298,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10994")
+	@JiraKey(value = "HHH-10994")
 	public void testGetLimitStringWithCastOperatorWithoutAliases() {
 		final String query = "select cast(lc302_doku6_.redniBrojStavke as varchar(255)), lc302_doku6_.dokumentiID " +
 				"from LC302_Dokumenti lc302_doku6_ order by lc302_doku6_.dokumentiID DESC";
@@ -313,7 +313,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8007")
+	@JiraKey(value = "HHH-8007")
 	public void testGetLimitStringSelectingMultipleColumnsFromSeveralTables() {
 		final String query = "select t1.*, t2.* from tab1 t1, tab2 t2 where t1.ref = t2.ref order by t1.id desc";
 
@@ -326,7 +326,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8007")
+	@JiraKey(value = "HHH-8007")
 	public void testGetLimitStringSelectingAllColumns() {
 		final String query = "select * from tab1 t1, tab2 t2 where t1.ref = t2.ref order by t1.id desc";
 
@@ -339,7 +339,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11145")
+	@JiraKey(value = "HHH-11145")
 	public void testGetLimitStringWithFromInColumnName() {
 		final String query = "select [Created From Nonstock Item], field2 from table1";
 
@@ -351,7 +351,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11145")
+	@JiraKey(value = "HHH-11145")
 	public void testGetLimitStringWithQuotedColumnNamesAndAlias() {
 		final String query = "select [Created From Item] c1, field2 from table1";
 
@@ -363,7 +363,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11145")
+	@JiraKey(value = "HHH-11145")
 	public void testGetLimitStringWithQuotedColumnNamesAndAliasWithAs() {
 		final String query = "select [Created From Item] as c1, field2 from table1";
 
@@ -375,7 +375,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11324")
+	@JiraKey(value = "HHH-11324")
 	public void testGetLimitStringWithSelectClauseNestedQueryUsingParenthesis() {
 		final String query = "select t1.c1 as col_0_0, (select case when count(t2.c1)>0 then 'ADDED' else 'UNMODIFIED' end from table2 t2 WHERE (t2.c1 in (?))) as col_1_0 from table1 t1 WHERE 1=1 ORDER BY t1.c1 ASC";
 
@@ -388,7 +388,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11650")
+	@JiraKey(value = "HHH-11650")
 	public void testGetLimitWithStringValueContainingParenthesis() {
 		final String query = "select t1.c1 as col_0_0 FROM table1 t1 where t1.c1 = '(123' ORDER BY t1.c1 ASC";
 
@@ -400,7 +400,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11324")
+	@JiraKey(value = "HHH-11324")
 	public void testGetLimitStringWithSelectClauseNestedQueryUsingParenthesisOnlyTop() {
 		final String query = "select t1.c1 as col_0_0, (select case when count(t2.c1)>0 then 'ADDED' else 'UNMODIFIED' end from table2 t2 WHERE (t2.c1 in (?))) as col_1_0 from table1 t1 WHERE 1=1 ORDER BY t1.c1 ASC";
 
@@ -411,7 +411,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8916")
+	@JiraKey(value = "HHH-8916")
 	public void testGetLimitStringUsingCTEQueryNoOffset() {
 		Limit selection = toRowSelection( 0, 5 );
 
@@ -449,7 +449,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8916")
+	@JiraKey(value = "HHH-8916")
 	public void testGetLimitStringUsingCTEQueryWithOffset() {
 		Limit selection = toRowSelection( 1, 5 );
 
@@ -497,7 +497,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9635")
+	@JiraKey(value = "HHH-9635")
 	public void testAppendLockHintReadPastLocking() {
 		final String expectedLockHint = "tab1 with (updlock,rowlock,readpast)";
 
@@ -508,7 +508,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9635")
+	@JiraKey(value = "HHH-9635")
 	public void testAppendLockHintReadPastLockingNoTimeOut() {
 		final String expectedLockHint = "tab1 with (updlock,rowlock,readpast,nowait)";
 
@@ -520,7 +520,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9635")
+	@JiraKey(value = "HHH-9635")
 	public void testAppendLockHintPessimisticRead() {
 		final String expectedLockHint = "tab1 with (holdlock,rowlock)";
 
@@ -531,7 +531,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9635")
+	@JiraKey(value = "HHH-9635")
 	public void testAppendLockHintPessimisticReadNoTimeOut() {
 		final String expectedLockHint = "tab1 with (holdlock,rowlock,nowait)";
 
@@ -543,7 +543,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9635")
+	@JiraKey(value = "HHH-9635")
 	public void testAppendLockHintWrite() {
 		final String expectedLockHint = "tab1 with (updlock,holdlock,rowlock)";
 
@@ -554,7 +554,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9635")
+	@JiraKey(value = "HHH-9635")
 	public void testAppendLockHintWriteWithNoTimeOut() {
 		final String expectedLockHint = "tab1 with (updlock,holdlock,rowlock,nowait)";
 
@@ -567,7 +567,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9635")
+	@JiraKey(value = "HHH-9635")
 	public void testAppendLockHintUpgradeNoWait() {
 		final String expectedLockHint = "tab1 with (updlock,holdlock,rowlock,nowait)";
 
@@ -578,7 +578,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9635")
+	@JiraKey(value = "HHH-9635")
 	public void testAppendLockHintUpgradeNoWaitNoTimeout() {
 		final String expectedLockHint = "tab1 with (updlock,holdlock,rowlock,nowait)";
 
@@ -590,7 +590,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9635")
+	@JiraKey(value = "HHH-9635")
 	public void testAppendLockHintUpgrade() {
 		final String expectedLockHint = "tab1 with (updlock,holdlock,rowlock)";
 
@@ -601,7 +601,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9635")
+	@JiraKey(value = "HHH-9635")
 	public void testAppendLockHintUpgradeNoTimeout() {
 		final String expectedLockHint = "tab1 with (updlock,holdlock,rowlock,nowait)";
 
@@ -613,7 +613,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9635")
+	@JiraKey(value = "HHH-9635")
 	public void testAppendLockHintPessimisticWrite() {
 		final String expectedLockHint = "tab1 with (updlock,holdlock,rowlock)";
 
@@ -624,7 +624,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9635")
+	@JiraKey(value = "HHH-9635")
 	public void testAppendLockHintPessimisticWriteNoTimeOut() {
 		final String expectedLockHint = "tab1 with (updlock,holdlock,rowlock,nowait)";
 

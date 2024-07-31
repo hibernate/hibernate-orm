@@ -30,7 +30,7 @@ import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -79,7 +79,7 @@ public class CollectionLoaderTest extends BaseEntityManagerFunctionalTestCase {
 		});
 	}
 
-	@Test @TestForIssue(jiraKey = "HHH-10557")
+	@Test @JiraKey(value = "HHH-10557")
 	public void test_HHH10557() {
 
 		Person _person = doInJPA(this::entityManagerFactory, entityManager -> {

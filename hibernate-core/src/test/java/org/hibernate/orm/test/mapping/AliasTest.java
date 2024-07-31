@@ -11,7 +11,7 @@ import java.util.Iterator;
 import org.hibernate.HibernateException;
 import org.hibernate.mapping.Table;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -47,7 +47,7 @@ public class AliasTest {
 	 * mapping ordering.
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-2448")
+	@JiraKey(value = "HHH-2448")
 	public void testAliasOrdering(SessionFactoryScope scope) {
 		Iterator<Table> tables = scope.getMetadataImplementor().collectTableMappings().iterator();
 		Table table1 = null;
@@ -66,7 +66,7 @@ public class AliasTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8371")
+	@JiraKey(value = "HHH-8371")
 	public final void testUnderscoreInColumnName(SessionFactoryScope scope) {
 
 		scope.inTransaction(

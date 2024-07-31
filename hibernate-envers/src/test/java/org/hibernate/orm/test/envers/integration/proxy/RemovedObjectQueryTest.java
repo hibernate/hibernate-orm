@@ -38,14 +38,14 @@ import org.hibernate.orm.test.envers.integration.manytomany.ternary.TernaryMapEn
 import org.hibernate.orm.test.envers.tools.TestTools;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-5845")
+@JiraKey(value = "HHH-5845")
 public class RemovedObjectQueryTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer stringSetId = null;
 	private Integer ternaryMapId = null;

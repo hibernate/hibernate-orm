@@ -14,7 +14,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.descriptor.java.DataHelper;
 
@@ -33,7 +33,7 @@ public class LobLocatorTest extends BaseCoreFunctionalTestCase {
 	 * {@literal The stream value is not the specified length. The specified length was 4, the actual length is 0.}
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-8193")
+	@JiraKey(value = "HHH-8193")
 	@RequiresDialectFeature(DialectChecks.UsesInputStreamToInsertBlob.class)
 	public void testStreamResetBeforeParameterBinding() throws SQLException {
 		final Session session = openSession();

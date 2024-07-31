@@ -15,7 +15,7 @@ import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -34,7 +34,7 @@ import static org.junit.Assert.assertTrue;
 public class SybaseTimestampComparisonAnnotationsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10413" )
+	@JiraKey( value = "HHH-10413" )
 	public void testComparableTimestamps() {
         final BasicType<?> versionType = sessionFactory()
 				.getMappingMetamodel()

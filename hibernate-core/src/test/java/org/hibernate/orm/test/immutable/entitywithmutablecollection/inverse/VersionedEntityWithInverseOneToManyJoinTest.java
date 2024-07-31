@@ -8,7 +8,7 @@ package org.hibernate.orm.test.immutable.entitywithmutablecollection.inverse;
 
 import org.hibernate.orm.test.immutable.entitywithmutablecollection.AbstractEntityWithOneToManyTest;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -17,7 +17,7 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 /**
  * @author Gail Badner
  */
-@TestForIssue(jiraKey = "HHH-4992")
+@JiraKey(value = "HHH-4992")
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTemporaryTable.class)
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/immutable/entitywithmutablecollection/inverse/ContractVariationVersionedOneToManyJoin.hbm.xml"

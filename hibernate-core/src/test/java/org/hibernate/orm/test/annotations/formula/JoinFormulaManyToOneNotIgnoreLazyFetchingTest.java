@@ -17,7 +17,7 @@ import org.hibernate.boot.model.internal.ToOneBinder;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
 import org.junit.Rule;
@@ -39,7 +39,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-@TestForIssue(jiraKey = "HHH-12770")
+@JiraKey(value = "HHH-12770")
 public class JoinFormulaManyToOneNotIgnoreLazyFetchingTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Rule

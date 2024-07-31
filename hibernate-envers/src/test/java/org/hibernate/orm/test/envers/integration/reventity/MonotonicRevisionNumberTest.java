@@ -23,14 +23,14 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-7669")
+@JiraKey(value = "HHH-7669")
 @RequiresDialect(OracleDialect.class)
 public class MonotonicRevisionNumberTest extends BaseEnversFunctionalTestCase {
 	@Override

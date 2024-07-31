@@ -22,7 +22,7 @@ import org.hibernate.orm.test.envers.entities.StrTestEntity;
 import org.hibernate.orm.test.envers.entities.onetomany.SetRefEdEntity;
 import org.hibernate.orm.test.envers.entities.onetomany.SetRefIngEntity;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -36,7 +36,7 @@ public class EvictAuditDataAfterCommitTest extends BaseEnversFunctionalTestCase 
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6614")
+	@JiraKey(value = "HHH-6614")
 	public void testSessionCacheClear() {
 		Session session = openSession();
 		session.getTransaction().begin();
@@ -47,7 +47,7 @@ public class EvictAuditDataAfterCommitTest extends BaseEnversFunctionalTestCase 
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6614")
+	@JiraKey(value = "HHH-6614")
 	public void testSessionCacheCollectionClear() {
 		final String[] auditEntityNames = new String[] {
 				"org.hibernate.orm.test.envers.entities.onetomany.SetRefEdEntity_AUD",

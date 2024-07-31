@@ -15,14 +15,14 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 import junit.framework.Assert;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-7246")
+@JiraKey(value = "HHH-7246")
 @RequiresDialect(OracleDialect.class)
 public class EmptyStringTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer emptyId = null;

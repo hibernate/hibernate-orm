@@ -12,7 +12,7 @@ import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -22,7 +22,7 @@ import org.junit.Test;
  * 
  * @author Guillaume Smet
  */
-@TestForIssue(jiraKey = "HHH-7821")
+@JiraKey(value = "HHH-7821")
 public class TestClearBatchFetchQueueAfterFlush extends BaseCoreFunctionalTestCase {
 
 	public void configure(Configuration cfg) {

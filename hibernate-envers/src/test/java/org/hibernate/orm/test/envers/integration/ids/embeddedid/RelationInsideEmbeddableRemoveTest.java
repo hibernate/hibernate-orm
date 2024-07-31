@@ -12,7 +12,7 @@ import jakarta.persistence.EntityManager;
 
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -24,7 +24,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-11107")
+@JiraKey(value = "HHH-11107")
 public class RelationInsideEmbeddableRemoveTest extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

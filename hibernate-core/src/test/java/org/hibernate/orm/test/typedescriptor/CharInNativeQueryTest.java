@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.typedescriptor;
 
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -49,7 +49,7 @@ public class CharInNativeQueryTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-2304")
+	@JiraKey(value = "HHH-2304")
 	public void testNativeQuery(SessionFactoryScope scope) {
 
 

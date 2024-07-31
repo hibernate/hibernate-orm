@@ -13,7 +13,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * Test various unwrap scenarios for {@code EntityManagerFactory}.
  */
-@TestForIssue(jiraKey = "HHH-9665")
+@JiraKey(value = "HHH-9665")
 @Jpa
 public class EntityManagerFactoryUnwrapTest {
 

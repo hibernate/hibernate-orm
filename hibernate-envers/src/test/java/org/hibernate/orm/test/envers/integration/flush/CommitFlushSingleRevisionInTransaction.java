@@ -14,7 +14,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 /**
@@ -28,7 +28,7 @@ public class CommitFlushSingleRevisionInTransaction extends AbstractFlushTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11575")
+	@JiraKey(value = "HHH-11575")
 	public void testSingleRevisionInTransaction() {
 		EntityManager em = getEntityManager();
 

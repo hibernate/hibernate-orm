@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.hibernate.dialect.OracleDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -23,7 +23,7 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 
 @RequiresDialect(value = OracleDialect.class, majorVersion = 12)
-@TestForIssue(jiraKey = "HHH-14819")
+@JiraKey(value = "HHH-14819")
 @DomainModel(
 		annotatedClasses = {
 				Oracle12LimitTest.Person.class,

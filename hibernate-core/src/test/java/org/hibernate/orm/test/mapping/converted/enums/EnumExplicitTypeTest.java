@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.mapping.converted.enums;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -25,7 +25,7 @@ import static org.junit.Assert.assertEquals;
 public class EnumExplicitTypeTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10766")
+	@JiraKey(value = "HHH-10766")
 	public void hbmEnumWithExplicitTypeTest(SessionFactoryScope scope) {
 		final Long id = scope.fromTransaction(
 				(session) -> {

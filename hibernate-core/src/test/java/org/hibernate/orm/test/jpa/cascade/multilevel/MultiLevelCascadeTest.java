@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.cascade.multilevel;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -35,7 +35,7 @@ public class MultiLevelCascadeTest {
 		);
 	}
 
-	@TestForIssue(jiraKey = "HHH-5299")
+	@JiraKey(value = "HHH-5299")
 	@Test
 	public void test(EntityManagerFactoryScope scope) {
 		final Top top = new Top();

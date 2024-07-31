@@ -2,7 +2,7 @@ package org.hibernate.orm.test.mapping.converted.converter;
 
 import java.net.URI;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		annotatedClasses = { AttributeConvertAndDynamicInstantiationTest.TestEntity.class }
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15331")
+@JiraKey(value = "HHH-15331")
 public class AttributeConvertAndDynamicInstantiationTest {
 
 	@BeforeEach

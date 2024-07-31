@@ -24,7 +24,7 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Assert;
 import org.junit.Test;
@@ -68,7 +68,7 @@ public class ClassLoaderServiceImplTest {
      * TODO: Is there a way to test that the ServiceLoader was actually reset?
      */
     @Test
-    @TestForIssue(jiraKey = "HHH-8363")
+    @JiraKey(value = "HHH-8363")
     public void testStoppableClassLoaderService() {
     	final BootstrapServiceRegistryBuilder bootstrapBuilder = new BootstrapServiceRegistryBuilder();
     	bootstrapBuilder.applyClassLoader( new TestClassLoader() );

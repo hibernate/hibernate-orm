@@ -37,7 +37,7 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
@@ -64,7 +64,7 @@ public class PostgreSQLMultipleSchemaSequenceTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-5538" )
+	@JiraKey( value = "HHH-5538" )
 	public void test() {
 		StandardServiceRegistry ssr1 = ServiceRegistryUtil.serviceRegistry();
 

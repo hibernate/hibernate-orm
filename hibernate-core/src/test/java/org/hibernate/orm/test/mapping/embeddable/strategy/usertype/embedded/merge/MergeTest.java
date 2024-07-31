@@ -1,6 +1,6 @@
 package org.hibernate.orm.test.mapping.embeddable.strategy.usertype.embedded.merge;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -12,7 +12,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 		annotatedClasses = { Parent.class, Child.class }
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-16015")
+@JiraKey(value = "HHH-16015")
 public class MergeTest {
 
 	@Test

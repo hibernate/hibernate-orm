@@ -18,7 +18,7 @@ import org.hibernate.metamodel.mapping.ordering.OrderByFragmentImpl;
 import org.hibernate.metamodel.mapping.ordering.ast.OrderingSpecification;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -65,7 +65,7 @@ public class ElementCollectionSortingTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6875")
+	@JiraKey(value = "HHH-6875")
 	public void testSortingEmbeddableCollectionOfPrimitives(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

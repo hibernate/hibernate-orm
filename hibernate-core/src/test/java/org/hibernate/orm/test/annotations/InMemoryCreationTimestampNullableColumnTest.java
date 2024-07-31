@@ -16,7 +16,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -25,7 +25,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-11096")
+@JiraKey(value = "HHH-11096")
 public class InMemoryCreationTimestampNullableColumnTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

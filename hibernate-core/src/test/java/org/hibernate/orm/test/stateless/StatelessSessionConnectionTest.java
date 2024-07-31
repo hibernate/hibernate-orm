@@ -11,7 +11,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -45,7 +45,7 @@ public class StatelessSessionConnectionTest {
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11732")
+	@JiraKey(value = "HHH-11732")
 	public void test(EntityManagerFactoryScope scope) {
 		Triggerable triggerable = logInspection.watchForLogMessages( "HHH000352" );
 		triggerable.reset();

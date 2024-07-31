@@ -7,7 +7,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -23,7 +23,7 @@ import jakarta.persistence.StoredProcedureQuery;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @RequiresDialect(H2Dialect.class)
-@TestForIssue( jiraKey = "HHH-15403")
+@JiraKey( value = "HHH-15403")
 public class StoreProcedureStatementsClosedTest extends BaseSessionFactoryFunctionalTest {
 
 	private final PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider(

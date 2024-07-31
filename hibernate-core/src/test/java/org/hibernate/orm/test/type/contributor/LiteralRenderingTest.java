@@ -30,7 +30,7 @@ import java.util.UUID;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -43,7 +43,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 @ServiceRegistry
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15590")
+@JiraKey(value = "HHH-15590")
 public class LiteralRenderingTest {
 
 	public static List<Object> literalValues() throws Exception {

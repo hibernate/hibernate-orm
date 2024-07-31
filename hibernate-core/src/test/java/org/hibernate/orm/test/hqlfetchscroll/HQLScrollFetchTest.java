@@ -16,7 +16,7 @@ import java.util.Set;
 import org.hibernate.Hibernate;
 import org.hibernate.ScrollableResults;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -90,7 +90,7 @@ public class HQLScrollFetchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1283")
+	@JiraKey(value = "HHH-1283")
 	public void testIncompleteScrollSecondResult(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -120,7 +120,7 @@ public class HQLScrollFetchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1283")
+	@JiraKey(value = "HHH-1283")
 	public void testIncompleteScrollSecondResultInTransaction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -137,7 +137,7 @@ public class HQLScrollFetchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1283")
+	@JiraKey(value = "HHH-1283")
 	public void testIncompleteScroll(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -179,7 +179,7 @@ public class HQLScrollFetchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1283")
+	@JiraKey(value = "HHH-1283")
 	public void testIncompleteScrollLast(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -225,7 +225,7 @@ public class HQLScrollFetchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1283")
+	@JiraKey(value = "HHH-1283")
 	public void testScrollOrderParentAsc(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -241,7 +241,7 @@ public class HQLScrollFetchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1283")
+	@JiraKey(value = "HHH-1283")
 	public void testScrollOrderParentDesc(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -257,7 +257,7 @@ public class HQLScrollFetchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1283")
+	@JiraKey(value = "HHH-1283")
 	public void testScrollOrderParentAscChildrenAsc(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -274,7 +274,7 @@ public class HQLScrollFetchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1283")
+	@JiraKey(value = "HHH-1283")
 	public void testScrollOrderParentAscChildrenDesc(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

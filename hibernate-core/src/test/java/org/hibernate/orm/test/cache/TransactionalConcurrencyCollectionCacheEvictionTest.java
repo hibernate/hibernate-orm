@@ -28,7 +28,7 @@ import org.hibernate.cache.internal.CollectionCacheInvalidator;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -43,7 +43,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Christian Beikov
  */
-@TestForIssue(jiraKey = "HHH-4910")
+@JiraKey(value = "HHH-4910")
 public class TransactionalConcurrencyCollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

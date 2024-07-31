@@ -12,7 +12,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.ServiceRegistry;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
@@ -21,7 +21,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-7129" )
+@JiraKey( value = "HHH-7129" )
 public class SpreadNaturalIdTest {
 	@Test
 	@SuppressWarnings("EmptyCatchBlock")

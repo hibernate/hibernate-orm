@@ -14,7 +14,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.spatial.HibernateSpatialConfigurationSettings;
 import org.hibernate.spatial.testing.SpatialSessionFactoryAware;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -40,7 +40,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 
-@TestForIssue(jiraKey = "HHH-15669")
+@JiraKey(value = "HHH-15669")
 @DomainModel(annotatedClasses = { Foo.class })
 @RequiresDialect(value = OracleDialect.class)
 @SessionFactory

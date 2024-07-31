@@ -14,7 +14,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Root;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Set;
 
-@TestForIssue(jiraKey = "HHH-16979")
+@JiraKey(value = "HHH-16979")
 @Jpa(annotatedClasses = {
         JoinedInheritanceImplicitJoinTest.MasterEntity.class,
         JoinedInheritanceImplicitJoinTest.ChildEntity.class,

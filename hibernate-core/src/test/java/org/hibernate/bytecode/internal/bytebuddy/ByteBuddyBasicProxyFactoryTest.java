@@ -15,10 +15,10 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import org.hibernate.bytecode.internal.bytebuddy.BasicProxyFactoryImpl;
 import org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
-@TestForIssue(jiraKey = "HHH-12786")
+@JiraKey(value = "HHH-12786")
 public class ByteBuddyBasicProxyFactoryTest {
 
 	private static final BasicProxyFactoryImpl BASIC_PROXY_FACTORY = new BasicProxyFactoryImpl( Entity.class, null, new ByteBuddyState() );

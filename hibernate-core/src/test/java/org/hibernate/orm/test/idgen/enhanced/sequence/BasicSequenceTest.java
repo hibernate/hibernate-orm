@@ -10,7 +10,7 @@ import org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -64,7 +64,7 @@ public class BasicSequenceTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6790")
+	@JiraKey(value = "HHH-6790")
 	public void testSequencePerEntity(SessionFactoryScope scope) {
 		final String overriddenEntityName = "SpecialEntity";
 

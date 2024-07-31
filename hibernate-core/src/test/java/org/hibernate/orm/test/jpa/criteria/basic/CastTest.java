@@ -19,7 +19,7 @@ import org.hibernate.orm.test.jpa.metamodel.Product_;
 import org.hibernate.orm.test.jpa.criteria.AbstractCriteriaTest;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -39,7 +39,7 @@ public class CastTest extends AbstractCriteriaTest {
 
 	@Test
 	@SkipForDialect(value = DerbyDialect.class, comment = "Derby does not support cast from INTEGER to VARCHAR")
-	@TestForIssue(jiraKey = "HHH-5755")
+	@JiraKey(value = "HHH-5755")
 	public void testCastToString(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {

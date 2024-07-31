@@ -31,7 +31,7 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ExpectedException;
 import org.hibernate.testing.orm.junit.ExpectedExceptionExtension;
 import org.junit.jupiter.api.Assertions;
@@ -182,7 +182,7 @@ public class ParameterTests extends BaseSqmUnitTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15341")
+	@JiraKey( value = "HHH-15341")
 	public void testTransientParamValue() {
 		inTransaction(
 				session -> {

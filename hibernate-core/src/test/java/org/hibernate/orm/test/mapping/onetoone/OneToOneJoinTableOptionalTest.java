@@ -17,7 +17,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-11596")
+@JiraKey(value = "HHH-11596")
 @DomainModel(
 		annotatedClasses = {
 				OneToOneJoinTableOptionalTest.Show.class,

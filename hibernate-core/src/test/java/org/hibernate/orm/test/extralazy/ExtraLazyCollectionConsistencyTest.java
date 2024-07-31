@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.extralazy;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -51,7 +51,7 @@ public class ExtraLazyCollectionConsistencyTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9933")
+	@JiraKey(value = "HHH-9933")
 	public void testSetSize(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			User _user = session.get( User.class, user.getName() );
@@ -61,7 +61,7 @@ public class ExtraLazyCollectionConsistencyTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9933")
+	@JiraKey(value = "HHH-9933")
 	public void testSetIterator(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			User _user = session.get( User.class, user.getName() );
@@ -71,7 +71,7 @@ public class ExtraLazyCollectionConsistencyTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9933")
+	@JiraKey(value = "HHH-9933")
 	public void testSetIsEmpty(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			User _user = session.get( User.class, user.getName() );
@@ -81,7 +81,7 @@ public class ExtraLazyCollectionConsistencyTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9933")
+	@JiraKey(value = "HHH-9933")
 	public void testSetContains(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			User _user = session.get( User.class, user.getName() );
@@ -91,7 +91,7 @@ public class ExtraLazyCollectionConsistencyTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9933")
+	@JiraKey(value = "HHH-9933")
 	public void testSetAdd(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			User _user = session.get( User.class, user.getName() );
@@ -105,7 +105,7 @@ public class ExtraLazyCollectionConsistencyTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9933")
+	@JiraKey(value = "HHH-9933")
 	public void testSetRemove(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			User _user = session.get( User.class, user.getName() );
@@ -116,7 +116,7 @@ public class ExtraLazyCollectionConsistencyTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9933")
+	@JiraKey(value = "HHH-9933")
 	public void testSetToArray(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			User _user = session.get( User.class, user.getName() );
@@ -127,7 +127,7 @@ public class ExtraLazyCollectionConsistencyTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9933")
+	@JiraKey(value = "HHH-9933")
 	public void testSetToArrayTyped(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			User _user = session.get( User.class, user.getName() );

@@ -17,7 +17,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * @author localEvg
  */
-@TestForIssue(jiraKey = "HHH-12436")
+@JiraKey(value = "HHH-12436")
 @Jpa(
 		annotatedClasses = {
 				OneToOneMergeTest.Prima.class,

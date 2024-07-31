@@ -27,7 +27,7 @@ import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.metamodel.CollectionClassification;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -175,7 +175,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12875")
+	@JiraKey( value = "HHH-12875")
 	public void testInitializeFromUniqueAssociationTable() {
 		doInHibernate(
 				this::sessionFactory, session -> {
@@ -202,7 +202,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12875")
+	@JiraKey( value = "HHH-12875")
 	public void testInitializeFromNonUniqueAssociationTable() {
 		doInHibernate(
 				this::sessionFactory, session -> {

@@ -19,7 +19,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Gail Badner
  */
-@TestForIssue(jiraKey = "HHH-12436")
+@JiraKey(value = "HHH-12436")
 @DomainModel(
 		annotatedClasses = {
 				RequiredLazyNotFoundTest.PersonManyToOneSelectException.class,

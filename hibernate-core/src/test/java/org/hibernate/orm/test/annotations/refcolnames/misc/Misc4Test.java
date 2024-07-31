@@ -11,7 +11,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -23,7 +23,7 @@ import java.util.Objects;
 
 @DomainModel(annotatedClasses = {Misc4Test.A.class, Misc4Test.B.class})
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-13054")
+@JiraKey(value = "HHH-13054")
 public class Misc4Test {
 
     @Test

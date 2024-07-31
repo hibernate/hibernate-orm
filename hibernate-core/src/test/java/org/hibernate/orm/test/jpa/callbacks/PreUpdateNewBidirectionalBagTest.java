@@ -20,7 +20,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PreUpdate;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@TestForIssue(jiraKey = "HHH-13466")
+@JiraKey(value = "HHH-13466")
 @Jpa(annotatedClasses = {
 		PreUpdateNewBidirectionalBagTest.Person.class,
 		PreUpdateNewBidirectionalBagTest.Tag.class

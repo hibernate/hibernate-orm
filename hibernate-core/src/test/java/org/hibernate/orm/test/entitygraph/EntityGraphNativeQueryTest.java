@@ -11,7 +11,7 @@ import java.util.Set;
 
 import org.hibernate.graph.GraphSemantic;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		}
 )
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-12476" )
+@JiraKey( value = "HHH-12476" )
 public class EntityGraphNativeQueryTest {
 
 	@BeforeEach

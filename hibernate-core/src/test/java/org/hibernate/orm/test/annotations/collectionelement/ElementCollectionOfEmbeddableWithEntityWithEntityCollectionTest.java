@@ -16,7 +16,7 @@ import org.hibernate.orm.test.annotations.collectionelement.ElementCollectionOfE
 import org.hibernate.orm.test.annotations.collectionelement.ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest.Plan;
 import org.hibernate.orm.test.annotations.collectionelement.ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest.SubPlan;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -48,7 +48,7 @@ import static org.hibernate.annotations.FetchMode.SUBSELECT;
 		}
 )
 @SessionFactory( useCollectingStatementInspector = true )
-@TestForIssue(jiraKey = "HHH-15713")
+@JiraKey(value = "HHH-15713")
 public class ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest {
 
 	@BeforeEach

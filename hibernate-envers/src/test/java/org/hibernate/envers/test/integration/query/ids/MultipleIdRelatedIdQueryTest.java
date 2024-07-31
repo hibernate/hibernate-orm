@@ -21,7 +21,7 @@ import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.transaction.TransactionUtil;
 
 import static org.junit.Assert.assertEquals;
@@ -30,7 +30,7 @@ import static org.junit.Assert.assertNull;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-11748")
+@JiraKey(value = "HHH-11748")
 public class MultipleIdRelatedIdQueryTest extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

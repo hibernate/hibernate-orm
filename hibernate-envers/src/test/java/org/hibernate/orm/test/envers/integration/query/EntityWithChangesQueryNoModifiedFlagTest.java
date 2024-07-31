@@ -9,7 +9,7 @@ package org.hibernate.orm.test.envers.integration.query;
 import org.hibernate.envers.exception.AuditException;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.fail;
@@ -17,7 +17,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Chris Cranford
  */
-@TestForIssue( jiraKey = "HHH-8058" )
+@JiraKey( value = "HHH-8058" )
 public class EntityWithChangesQueryNoModifiedFlagTest extends AbstractEntityWithChangesQueryTest {
 	@Test
 	public void testEntityRevisionsWithChangesQueryNoDeletions() {

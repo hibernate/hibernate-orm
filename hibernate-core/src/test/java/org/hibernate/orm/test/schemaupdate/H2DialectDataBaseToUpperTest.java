@@ -12,14 +12,14 @@ import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Test;
 
 @RequiresDialect(H2Dialect.class)
-@TestForIssue(jiraKey = "HHH-13597")
+@JiraKey(value = "HHH-13597")
 public class H2DialectDataBaseToUpperTest extends BaseUnitTestCase {
 
 	private StandardServiceRegistry ssr;

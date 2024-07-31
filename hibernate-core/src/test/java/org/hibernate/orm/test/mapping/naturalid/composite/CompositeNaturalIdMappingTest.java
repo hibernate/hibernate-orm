@@ -12,14 +12,14 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 /**
  * @author Steve Ebersole
  */
-@TestForIssue(jiraKey = "HHH-11255")
+@JiraKey(value = "HHH-11255")
 public class CompositeNaturalIdMappingTest {
 
 	@Test

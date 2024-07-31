@@ -7,9 +7,9 @@
 package org.hibernate.processor.test.inheritance.deep;
 
 import org.hibernate.processor.test.util.CompilationTest;
-import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.WithClasses;
 
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
@@ -24,7 +24,7 @@ import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldIn
  */
 public class DeepInheritanceTest extends CompilationTest {
 	@Test
-	@TestForIssue(jiraKey = "METAGEN-69")
+	@JiraKey(value = "METAGEN-69")
 	@WithClasses({ JetPlane.class, PersistenceBase.class, Plane.class })
 	public void testDeepInheritance() throws Exception {
 		assertMetamodelClassGeneratedFor( Plane.class );

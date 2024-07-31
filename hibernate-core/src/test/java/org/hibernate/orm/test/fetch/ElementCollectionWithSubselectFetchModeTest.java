@@ -14,7 +14,7 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.query.spi.QueryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		}
 )
 @SessionFactory(useCollectingStatementInspector = true)
-@TestForIssue(jiraKey = "HHH-15640")
+@JiraKey(value = "HHH-15640")
 public class ElementCollectionWithSubselectFetchModeTest {
 
 	@BeforeEach

@@ -56,7 +56,7 @@ import org.hibernate.type.descriptor.jdbc.RealJdbcType;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.CustomRunner;
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
 import org.hibernate.testing.orm.junit.DialectContext;
@@ -85,7 +85,7 @@ import static org.hamcrest.CoreMatchers.instanceOf;
  * We use one entity type per JDBC type, just in case some types are not supported in some dialects,
  * so that we can more easily disable testing of a particular type in a particular dialect.
  */
-@TestForIssue(jiraKey = "HHH-7318")
+@JiraKey(value = "HHH-7318")
 @RunWith(CustomRunner.class)
 public class NativeQueryResultTypeAutoDiscoveryTest {
 

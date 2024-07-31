@@ -17,7 +17,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.query.Query;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.junit.jupiter.api.Test;
@@ -466,7 +466,7 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11740")
+	@JiraKey(value = "HHH-11740")
 	public void testBulkOperationsWithDifferentConnections() throws Exception {
 		inTransaction(
 				s -> {

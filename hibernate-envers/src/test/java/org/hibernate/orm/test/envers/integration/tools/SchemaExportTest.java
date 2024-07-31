@@ -13,14 +13,14 @@ import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-7106")
+@JiraKey(value = "HHH-7106")
 public class SchemaExportTest extends BaseEnversFunctionalTestCase {
 	private Integer id = null;
 

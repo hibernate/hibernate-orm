@@ -28,7 +28,7 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterAll;
@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-12973")
+@JiraKey(value = "HHH-12973")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSequences.class)
 public class SequenceInformationTest extends
 		EntityManagerFactoryBasedFunctionalTest {

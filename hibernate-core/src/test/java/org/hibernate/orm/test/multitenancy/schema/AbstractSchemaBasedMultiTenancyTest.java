@@ -27,7 +27,7 @@ import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -150,7 +150,7 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-16310")
+	@JiraKey(value = "HHH-16310")
 	public void testJdbcMetadataAccessible() {
 		assertThat( ( (ExtractedDatabaseMetaDataImpl) sessionFactory.getJdbcServices().getJdbcEnvironment()
 				.getExtractedDatabaseMetaData() ).isJdbcMetadataAccessible() )

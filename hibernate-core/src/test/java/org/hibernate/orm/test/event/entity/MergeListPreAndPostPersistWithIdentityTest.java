@@ -30,7 +30,7 @@ import org.hibernate.testing.DialectCheck;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -38,7 +38,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Gail Badner
  */
-@TestForIssue( jiraKey = "HHH-9979")
+@JiraKey( value = "HHH-9979")
 @RequiresDialectFeature( value = DialectChecks.SupportsIdentityColumns.class, jiraKey = "HHH-9918")
 public class MergeListPreAndPostPersistWithIdentityTest extends BaseCoreFunctionalTestCase {
 
@@ -50,7 +50,7 @@ public class MergeListPreAndPostPersistWithIdentityTest extends BaseCoreFunction
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9979")
+	@JiraKey( value = "HHH-9979")
 	@FailureExpected( jiraKey = "HHH-9979")
 	public void testAllPropertiesCopied() {
 		final Order order = new Order();

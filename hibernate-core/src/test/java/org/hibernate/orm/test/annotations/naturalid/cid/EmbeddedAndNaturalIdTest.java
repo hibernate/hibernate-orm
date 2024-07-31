@@ -10,7 +10,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Test;
@@ -21,7 +21,7 @@ import static org.junit.Assert.assertNotNull;
  * @author Donnchadh O Donnabhain
  */
 public class EmbeddedAndNaturalIdTest extends BaseCoreFunctionalTestCase {
-	@TestForIssue(jiraKey = "HHH-9333")
+	@JiraKey(value = "HHH-9333")
 	@Test
 	public void testSave() {
 		A account = new A( new AId( 1 ), "testCode" );
@@ -31,7 +31,7 @@ public class EmbeddedAndNaturalIdTest extends BaseCoreFunctionalTestCase {
 		);
 	}
 
-	@TestForIssue(jiraKey = "HHH-9333")
+	@JiraKey(value = "HHH-9333")
 	@Test
 	public void testNaturalIdCriteria() {
 		inTransaction(
@@ -56,7 +56,7 @@ public class EmbeddedAndNaturalIdTest extends BaseCoreFunctionalTestCase {
 		);
 	}
 
-	@TestForIssue(jiraKey = "HHH-9333")
+	@JiraKey(value = "HHH-9333")
 	@Test
 	public void testByNaturalId() {
 		inTransaction(

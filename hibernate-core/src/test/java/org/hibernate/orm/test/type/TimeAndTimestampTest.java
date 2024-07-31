@@ -18,7 +18,7 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -28,7 +28,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-10465")
+@JiraKey(value = "HHH-10465")
 @SkipForDialect(MariaDBDialect.class)
 @SkipForDialect(MySQLDialect.class)
 @SkipForDialect(value = OracleDialect.class, comment = "Oracle date does not support milliseconds  ")

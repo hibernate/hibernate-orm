@@ -8,7 +8,7 @@ package org.hibernate.orm.test.property;
 
 
 import org.hibernate.Hibernate;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -28,7 +28,7 @@ import static org.junit.Assert.assertTrue;
 @SessionFactory
 public class DirectPropertyAccessorTest {
 	@Test
-	@TestForIssue( jiraKey="HHH-3718" )
+	@JiraKey( value="HHH-3718" )
 	public void testDirectIdPropertyAccess(SessionFactoryScope scope) throws Exception {
 		scope.inTransaction( s -> {
 			Item i = new Item();

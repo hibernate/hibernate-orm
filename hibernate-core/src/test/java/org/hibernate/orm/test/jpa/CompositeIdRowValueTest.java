@@ -3,7 +3,7 @@ package org.hibernate.orm.test.jpa;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
-@TestForIssue( jiraKey = "HHH-9029")
+@JiraKey( value = "HHH-9029")
 @Jpa(annotatedClasses = {
         EntityWithCompositeId.class,
         CompositeId.class

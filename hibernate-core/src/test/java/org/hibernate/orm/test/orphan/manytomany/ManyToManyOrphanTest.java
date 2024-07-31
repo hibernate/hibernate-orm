@@ -10,7 +10,7 @@ import java.util.List;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -36,7 +36,7 @@ public class ManyToManyOrphanTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8749")
+	@JiraKey(value = "HHH-8749")
 	public void testManyToManyWithCascadeDeleteOrphan(SessionFactoryScope scope) {
 		scope.inTransaction(
 				s -> {

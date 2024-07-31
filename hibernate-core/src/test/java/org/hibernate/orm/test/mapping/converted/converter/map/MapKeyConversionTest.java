@@ -18,7 +18,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.Session;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -27,7 +27,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-8529" )
+@JiraKey( value = "HHH-8529" )
 public class MapKeyConversionTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	protected Class[] getAnnotatedClasses() {

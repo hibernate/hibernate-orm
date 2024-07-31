@@ -21,12 +21,12 @@ import jakarta.persistence.Version;
 
 import org.hibernate.boot.MetadataSources;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-8860")
+@JiraKey(value = "HHH-8860")
 public class EmbeddableWithOneToMany_HHH_8860_Test
 		extends AbstractEmbeddableWithManyToManyTest {
 

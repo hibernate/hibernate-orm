@@ -27,7 +27,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -40,7 +40,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-6562")
+@JiraKey(value = "HHH-6562")
 @Jpa(annotatedClasses = {
 		EntitySuperclassComponentWithCollectionTest.Employee.class,
 		EntitySuperclassComponentWithCollectionTest.Manager.class,

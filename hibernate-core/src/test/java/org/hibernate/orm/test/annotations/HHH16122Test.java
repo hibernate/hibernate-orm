@@ -6,10 +6,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
-@TestForIssue( jiraKey = "HHH-16122" )
+@JiraKey( value = "HHH-16122" )
 public class HHH16122Test extends BaseEntityManagerFunctionalTestCase {
     @Override
     protected Class<?>[] getAnnotatedClasses() {

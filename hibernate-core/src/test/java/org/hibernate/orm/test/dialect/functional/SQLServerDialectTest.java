@@ -30,7 +30,7 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -54,7 +54,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8916")
+	@JiraKey(value = "HHH-8916")
 	public void testPaginationWithCTEQueryNoOffset() {
 		// This used to throw SQLServerException: Incorrect syntax near 'SEL'
 		doInHibernate( this::sessionFactory, session -> {
@@ -75,7 +75,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8916")
+	@JiraKey(value = "HHH-8916")
 	public void testPaginationWithCTEQueryNoOffsetNewLine() {
 		// This used to throw SQLServerException: Incorrect syntax near 'SEL'
 		doInHibernate( this::sessionFactory, session -> {
@@ -101,7 +101,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8916")
+	@JiraKey(value = "HHH-8916")
 	public void testPaginationWithCTEQueryWithOffsetAndOrderBy() {
 		// This used to throw a StringIndexOutOfBoundsException
 		doInHibernate( this::sessionFactory, session -> {
@@ -128,7 +128,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8916")
+	@JiraKey(value = "HHH-8916")
 	public void testPaginationWithCTEQueryWithOffset() {
 		// This used to throw a StringIndexOutOfBoundsException
 		doInHibernate( this::sessionFactory, session -> {
@@ -154,7 +154,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7369")
+	@JiraKey(value = "HHH-7369")
 	public void testPaginationWithScalarQuery() throws Exception {
 		doInHibernate( this::sessionFactory, session -> {
 			for ( int i = 0; i < 10; i++ ) {
@@ -176,7 +176,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7368")
+	@JiraKey(value = "HHH-7368")
 	public void testPaginationWithTrailingSemicolon() throws Exception {
 		doInHibernate( this::sessionFactory, session -> {
 			session.createNativeQuery( "select id from Product2 where description like 'Kit%' order by id;" )
@@ -221,7 +221,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7370")
+	@JiraKey(value = "HHH-7370")
 	public void testPaginationWithMaxOnly() {
 		doInHibernate( this::sessionFactory, session -> {
 			for ( int i = 30; i < 40; i++ ) {
@@ -239,7 +239,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6627")
+	@JiraKey(value = "HHH-6627")
 	public void testPaginationWithAggregation() {
 		doInHibernate( this::sessionFactory, session -> {
 			// populating test data
@@ -287,7 +287,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7752")
+	@JiraKey(value = "HHH-7752")
 	public void testPaginationWithFormulaSubquery() {
 		doInHibernate( this::sessionFactory, session -> {
 			// populating test data
@@ -316,7 +316,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7781")
+	@JiraKey(value = "HHH-7781")
 	public void testPaginationWithCastOperator() {
 		doInHibernate( this::sessionFactory, session -> {
 			for ( int i = 40; i < 50; i++ ) {
@@ -334,7 +334,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-3961")
+	@JiraKey(value = "HHH-3961")
 	public void testLockNowaitSqlServer() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -389,7 +389,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10879")
+	@JiraKey(value = "HHH-10879")
 	public void testKeyReservedKeyword() {
 		doInHibernate( this::sessionFactory, session -> {
 			final KeyHolder keyHolder = new KeyHolder();

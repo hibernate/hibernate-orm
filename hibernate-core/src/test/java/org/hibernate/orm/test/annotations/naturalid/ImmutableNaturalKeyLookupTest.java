@@ -23,7 +23,7 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.query.Query;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
@@ -31,7 +31,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  */
 public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 
-	@TestForIssue(jiraKey = "HHH-4838")
+	@JiraKey(value = "HHH-4838")
 	@Test
 	public void testSimpleImmutableNaturalKeyLookup() {
 		Session s = openSession();
@@ -72,7 +72,7 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	@TestForIssue(jiraKey = "HHH-4838")
+	@JiraKey(value = "HHH-4838")
 	@Test
 	public void testNaturalKeyLookupWithConstraint() {
 		Session s = openSession();
@@ -124,7 +124,7 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	@TestForIssue(jiraKey = "HHH-4838")
+	@JiraKey(value = "HHH-4838")
 	@Test
 	public void testCriteriaWithFetchModeJoinCollection() {
 		Session s = openSession();
@@ -180,7 +180,7 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	@TestForIssue(jiraKey = "HHH-4838")
+	@JiraKey(value = "HHH-4838")
 	@Test
 	public void testCriteriaWithFetchModeJoinOnetoOne() {
 		Session s = openSession();
@@ -228,7 +228,7 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	@TestForIssue(jiraKey = "HHH-4838")
+	@JiraKey(value = "HHH-4838")
 	@Test
 	public void testCriteriaWithAliasOneToOneJoin() {
 		Session s = openSession();
@@ -276,7 +276,7 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	@TestForIssue(jiraKey = "HHH-4838")
+	@JiraKey(value = "HHH-4838")
 	@Test
 	public void testSubCriteriaOneToOneJoin() {
 		Session s = openSession();

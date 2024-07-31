@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.criteria;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -26,7 +26,7 @@ import jakarta.persistence.criteria.Root;
  * @author Will Dazy
  */
 @Jpa(annotatedClasses = CoalesceTest.HHH15291Entity.class)
-@TestForIssue( jiraKey = "HHH-15291")
+@JiraKey( value = "HHH-15291")
 public class CoalesceTest {
 
 	@Test

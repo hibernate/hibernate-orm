@@ -7,7 +7,7 @@ import java.util.LinkedList;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -39,7 +39,7 @@ import static jakarta.persistence.CascadeType.REMOVE;
 				@Setting(name = AvailableSettings.ORDER_UPDATES, value = "true")
 		}
 )
-@TestForIssue(jiraKey = "HHH-16368")
+@JiraKey(value = "HHH-16368")
 public class OrderUpdatesTest {
 
 	@Test

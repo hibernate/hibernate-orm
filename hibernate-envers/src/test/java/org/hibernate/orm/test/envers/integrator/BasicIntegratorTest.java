@@ -11,7 +11,7 @@ import jakarta.persistence.Id;
 
 import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
@@ -24,7 +24,7 @@ public class BasicIntegratorTest {
 	 * to be on the classpath but we have no audited entities
 	 */
 	@Test
-	@TestForIssue( jiraKey = "HHH-9675" )
+	@JiraKey( value = "HHH-9675" )
 	public void testNoAudited() {
 		new Configuration().buildSessionFactory( ServiceRegistryUtil.serviceRegistry()).close();
 		new Configuration().addAnnotatedClass( SimpleNonAuditedEntity.class ).buildSessionFactory(ServiceRegistryUtil.serviceRegistry()).close();

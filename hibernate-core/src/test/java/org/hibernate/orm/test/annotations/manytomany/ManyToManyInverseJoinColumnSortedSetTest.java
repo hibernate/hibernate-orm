@@ -15,7 +15,7 @@ import java.util.TreeSet;
 
 import org.hibernate.annotations.SortNatural;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -25,7 +25,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 
-@TestForIssue(jiraKey = "HHH-16031")
+@JiraKey(value = "HHH-16031")
 public class ManyToManyInverseJoinColumnSortedSetTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testDefault() {

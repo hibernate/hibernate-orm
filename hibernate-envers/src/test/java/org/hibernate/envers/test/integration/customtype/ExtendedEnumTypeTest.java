@@ -20,7 +20,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CustomType;
 import org.hibernate.usertype.UserType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import jakarta.persistence.Entity;
@@ -44,7 +44,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-12304")
+@JiraKey(value = "HHH-12304")
 public class ExtendedEnumTypeTest extends BaseEnversJPAFunctionalTestCase {
 
 	// An extended type to trigger the need for Envers to supply type information in the HBM mappings.

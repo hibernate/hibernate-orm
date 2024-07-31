@@ -20,13 +20,13 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.Test;
 
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-11216")
+@JiraKey(value = "HHH-11216")
 public class ElementCollectionTest extends BaseInsertOrderingTest {
 
 	@Override

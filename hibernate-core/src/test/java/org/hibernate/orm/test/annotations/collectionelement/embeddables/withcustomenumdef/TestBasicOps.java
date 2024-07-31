@@ -10,7 +10,7 @@ import java.util.Iterator;
 
 import org.hibernate.Transaction;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -49,7 +49,7 @@ public class TestBasicOps {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7072")
+	@JiraKey(value = "HHH-7072")
 	public void testEmbeddableWithNullables(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -21,7 +21,7 @@ import jakarta.persistence.Table;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-12355")
+@JiraKey(value = "HHH-12355")
 @Jpa(
 		annotatedClasses = {
 				InsertOrderingWithCompositeTypeAssociation.Book.class,

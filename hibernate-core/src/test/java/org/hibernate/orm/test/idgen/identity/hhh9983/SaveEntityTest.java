@@ -14,7 +14,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.dialect.OracleDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-9983")
+@JiraKey(value = "HHH-9983")
 @RequiresDialect( OracleDialect.class )
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsIdentityColumns.class )
 @DomainModel( annotatedClasses = SaveEntityTest.Company.class )

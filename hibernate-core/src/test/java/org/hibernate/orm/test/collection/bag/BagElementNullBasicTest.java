@@ -21,7 +21,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -99,7 +99,7 @@ public class BagElementNullBasicTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13651")
+	@JiraKey(value = "HHH-13651")
 	public void addNullValueToNullableCollections(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

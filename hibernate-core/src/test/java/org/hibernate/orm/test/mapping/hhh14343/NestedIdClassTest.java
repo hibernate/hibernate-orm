@@ -13,7 +13,7 @@ import org.hibernate.query.sqm.mutation.internal.inline.InlineMutationStrategy;
 import org.hibernate.orm.test.mapping.hhh14343.entity.NestedPlayerStat;
 import org.hibernate.orm.test.mapping.hhh14343.entity.NestedScore;
 import org.hibernate.orm.test.mapping.hhh14343.entity.NestedStat;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -21,7 +21,7 @@ import java.util.Map;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
-@TestForIssue(jiraKey = "HHH-14343")
+@JiraKey(value = "HHH-14343")
 public class NestedIdClassTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

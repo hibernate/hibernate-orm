@@ -14,7 +14,7 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class MappedSuperclassAttributeOverrideTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12609")
+	@JiraKey(value = "HHH-12609")
 	public void test(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			TaxonEntity taxon1 = new TaxonEntity();

@@ -8,7 +8,7 @@ package org.hibernate.orm.test.id;
 
 import org.hibernate.dialect.SQLServerDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -31,7 +31,7 @@ public class SequenceGeneratorTest {
 	 * This seems a little trivial, but we need to guarantee that all Dialects start their sequences on a non-0 value.
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-8814")
+	@JiraKey(value = "HHH-8814")
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSequences.class)
 	@SkipForDialect(
 			dialectClass = SQLServerDialect.class,

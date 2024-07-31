@@ -14,7 +14,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Before;
@@ -23,7 +23,7 @@ import org.junit.Test;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-13076")
+@JiraKey(value = "HHH-13076")
 public class JpaComplianceAlreadyStartedTransactionTest extends BaseNonConfigCoreFunctionalTestCase {
 	private TransactionManager tm;
 

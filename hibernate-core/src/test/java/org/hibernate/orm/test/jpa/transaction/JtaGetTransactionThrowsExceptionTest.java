@@ -10,7 +10,7 @@ import jakarta.persistence.EntityManager;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class JtaGetTransactionThrowsExceptionTest {
 
 	@Test()
-	@TestForIssue(jiraKey = "HHH-12487")
+	@JiraKey(value = "HHH-12487")
 	public void onCloseEntityManagerTest(EntityManagerFactoryScope scope) {
 		EntityManager em = createEntityManager( scope );
 		em.close();
@@ -50,7 +50,7 @@ public class JtaGetTransactionThrowsExceptionTest {
 	}
 
 	@Test()
-	@TestForIssue(jiraKey = "HHH-12487")
+	@JiraKey(value = "HHH-12487")
 	public void onOpenEntityManagerTest(EntityManagerFactoryScope scope) {
 		EntityManager em = createEntityManager( scope );
 		try {

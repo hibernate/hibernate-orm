@@ -17,7 +17,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -36,7 +36,7 @@ import static org.hamcrest.core.Is.is;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-14835")
+@JiraKey(value = "HHH-14835")
 @BaseUnitTest
 @RequiresDialect(value = SQLServerDialect.class, majorVersion = 12)
 public class SchemaExportSqlServerWithSequenceDefaultSchemaCatalog {

@@ -10,12 +10,12 @@ import java.util.Map;
 
 import org.hibernate.envers.configuration.EnversSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 /**
  * @author Chris Cranford
  */
-@TestForIssue( jiraKey = "HHH-13817" )
+@JiraKey( value = "HHH-13817" )
 public class AssociationRevisionsOfEntitiesQueryStoreAtDeletionTest extends AssociationRevisionsOfEntitiesQueryTest {
     @Override
     protected void addSettings(Map<String,Object> settings) {

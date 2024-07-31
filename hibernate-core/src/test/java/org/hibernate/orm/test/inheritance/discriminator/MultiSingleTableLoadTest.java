@@ -20,7 +20,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -75,7 +75,7 @@ public class MultiSingleTableLoadTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5954")
+	@JiraKey(value = "HHH-5954")
 	public void testEagerLoadMultipleHoldersWithDifferentSubtypes(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Holder task1 = session.find( Holder.class, 1L );

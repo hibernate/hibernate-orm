@@ -17,7 +17,7 @@ import jakarta.persistence.ManyToOne;
 
 import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -32,7 +32,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
         SubQueryImplicitJoinReferenceTest.TheEntity.class,
         SubQueryImplicitJoinReferenceTest.RevisionInfoEntity.class })
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-14482")
+@JiraKey(value = "HHH-14482")
 public class SubQueryImplicitJoinReferenceTest {
 
     @Test

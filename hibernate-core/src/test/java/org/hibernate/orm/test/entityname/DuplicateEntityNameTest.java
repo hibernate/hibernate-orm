@@ -12,7 +12,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.DuplicateMappingException;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -22,7 +22,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-13060" )
+@JiraKey( value = "HHH-13060" )
 public class DuplicateEntityNameTest extends BaseCoreFunctionalTestCase {
 
 	protected Class<?>[] getAnnotatedClasses() {

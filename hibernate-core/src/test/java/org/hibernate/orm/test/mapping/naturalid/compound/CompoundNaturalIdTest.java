@@ -13,7 +13,7 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Sylvain Dusart
  */
-@TestForIssue(jiraKey = "HHH-16218")
+@JiraKey(value = "HHH-16218")
 @DomainModel(
 		annotatedClasses = {
 				CompoundNaturalIdTest.EntityWithSimpleNaturalId.class,

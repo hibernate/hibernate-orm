@@ -23,7 +23,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
@@ -63,7 +63,7 @@ public class SchemaScriptFileGenerationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "10601")
+	@JiraKey(value = "10601")
 	public void testGenerateSchemaDoesNotProduceTheSameStatementTwice() throws Exception {
 
 		entityManagerFactoryBuilder.generateSchema();

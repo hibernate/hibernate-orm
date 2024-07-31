@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.hibernate.annotations.SQLRestriction;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterEach;
@@ -30,7 +30,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 				EagerManyToOne2Test.Parent.class
 		}
 )
-@TestForIssue(jiraKey = "HHH-15902")
+@JiraKey(value = "HHH-15902")
 public class EagerManyToOne2Test {
 
 	@AfterEach

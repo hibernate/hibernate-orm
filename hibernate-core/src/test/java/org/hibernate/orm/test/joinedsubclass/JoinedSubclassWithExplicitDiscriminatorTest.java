@@ -19,7 +19,7 @@ import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue(jiraKey = "HHH-6911")
+@JiraKey(value = "HHH-6911")
 @DomainModel(
 		annotatedClasses = {
 				JoinedSubclassWithExplicitDiscriminatorTest.Animal.class,

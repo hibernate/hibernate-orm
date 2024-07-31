@@ -8,9 +8,10 @@ package org.hibernate.processor.test.supresswarnings;
 
 import org.hibernate.processor.HibernateProcessor;
 import org.hibernate.processor.test.util.CompilationTest;
-import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.WithClasses;
 import org.hibernate.processor.test.util.WithProcessorOption;
+
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
@@ -22,7 +23,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class SuppressWarningsAnnotationGeneratedTest extends CompilationTest {
 	@Test
-	@TestForIssue(jiraKey = "METAGEN-50")
+	@JiraKey(value = "METAGEN-50")
 	@WithClasses(TestEntity.class)
 	@WithProcessorOption(key = HibernateProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION, value = "true")
 	public void testSuppressedWarningsAnnotationGenerated() {

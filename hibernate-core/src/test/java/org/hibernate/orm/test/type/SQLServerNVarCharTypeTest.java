@@ -21,7 +21,7 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10529")
+@JiraKey(value = "HHH-10529")
 @RequiresDialect(value = SQLServerDialect.class)
 public class SQLServerNVarCharTypeTest {
 	private StandardServiceRegistry ssr;

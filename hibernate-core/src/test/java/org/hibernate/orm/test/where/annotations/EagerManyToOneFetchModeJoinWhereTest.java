@@ -26,7 +26,7 @@ import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.SQLRestriction;
 
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -47,7 +47,7 @@ public class EagerManyToOneFetchModeJoinWhereTest extends BaseNonConfigCoreFunct
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12104" )
+	@JiraKey( value = "HHH-12104" )
 	@FailureExpected( jiraKey = "HHH-12104")
 	public void testAssociatedWhereClause() {
 		Product product = new Product();

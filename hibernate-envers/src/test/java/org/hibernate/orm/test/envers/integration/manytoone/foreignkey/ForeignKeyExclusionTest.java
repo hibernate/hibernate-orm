@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
@@ -21,7 +21,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  *
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-12965")
+@JiraKey(value = "HHH-12965")
 public class ForeignKeyExclusionTest extends BaseEnversJPAFunctionalTestCase {
 
 	private RootLayer rootLayer;

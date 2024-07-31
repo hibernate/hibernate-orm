@@ -31,7 +31,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
@@ -42,7 +42,7 @@ import static org.junit.Assert.assertEquals;
 public class ExportIdentifierTest extends BaseUnitTestCase {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12935" )
+	@JiraKey( value = "HHH-12935" )
 	public void testUniqueExportableIdentifier() {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		final MetadataBuilderImpl.MetadataBuildingOptionsImpl options = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( ssr );

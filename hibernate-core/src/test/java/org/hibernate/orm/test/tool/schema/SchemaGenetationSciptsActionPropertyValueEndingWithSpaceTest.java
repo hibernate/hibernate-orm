@@ -16,7 +16,7 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
@@ -26,7 +26,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-13621")
+@JiraKey(value = "HHH-13621")
 public class SchemaGenetationSciptsActionPropertyValueEndingWithSpaceTest extends BaseCoreFunctionalTestCase {
 
 	private File dropOutput;

@@ -9,7 +9,7 @@ package org.hibernate.orm.test.collection.original;
 import org.hibernate.Hibernate;
 import org.hibernate.engine.spi.SessionImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -246,7 +246,7 @@ public class CollectionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-3636")
+	@JiraKey(value = "HHH-3636")
 	public void testCollectionInheritance(SessionFactoryScope scope) {
 		Zoo zoo = new Zoo();
 		scope.inTransaction(

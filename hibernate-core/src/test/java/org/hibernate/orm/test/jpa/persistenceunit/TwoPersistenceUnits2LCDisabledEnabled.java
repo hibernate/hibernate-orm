@@ -21,7 +21,7 @@ import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
@@ -34,7 +34,7 @@ import static org.junit.Assert.assertNull;
 public class TwoPersistenceUnits2LCDisabledEnabled {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11516" )
+	@JiraKey( value = "HHH-11516" )
 	public void testDisabledEnabled() {
 		final Map<Object, Object> config = Environment.getProperties();
 		config.put( AvailableSettings.LOADED_CLASSES, Collections.singletonList( AnEntity.class ) );

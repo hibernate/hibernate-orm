@@ -17,7 +17,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.orm.test.jpa.model.AbstractJPATest;
 import org.hibernate.orm.test.jpa.model.Item;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -56,7 +56,7 @@ public class LockExceptionTests extends AbstractJPATest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8786" )
+	@JiraKey( value = "HHH-8786" )
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 	public void testLockTimeoutFind() {
 		final Item item = new Item( "find" );

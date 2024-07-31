@@ -16,7 +16,7 @@ import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -24,7 +24,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue( jiraKey = "HHH-8243" )
+@JiraKey( value = "HHH-8243" )
 public class CommitFlush extends AbstractFlushTest {
 	private Integer id = null;
 

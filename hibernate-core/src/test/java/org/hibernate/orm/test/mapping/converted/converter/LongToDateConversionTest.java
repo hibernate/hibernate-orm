@@ -12,7 +12,7 @@ import java.util.stream.Stream;
 
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -34,7 +34,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10959")
+@JiraKey(value = "HHH-10959")
 @DomainModel( annotatedClasses = LongToDateConversionTest.TestEntity.class )
 @SessionFactory
 public class LongToDateConversionTest {

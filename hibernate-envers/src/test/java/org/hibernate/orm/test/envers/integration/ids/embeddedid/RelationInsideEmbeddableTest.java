@@ -12,14 +12,14 @@ import jakarta.persistence.EntityManager;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-7690")
+@JiraKey(value = "HHH-7690")
 public class RelationInsideEmbeddableTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer orderId = null;
 	private ItemId itemId = null;

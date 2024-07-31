@@ -32,7 +32,7 @@ import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
@@ -45,7 +45,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-12271")
+@JiraKey(value = "HHH-12271")
 @RequiresDialectFeature(DialectChecks.SupportDropConstraints.class)
 public class ForeignKeyDropTest extends BaseUnitTestCase {
 	private File output;
@@ -72,7 +72,7 @@ public class ForeignKeyDropTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11236")
+	@JiraKey(value = "HHH-11236")
 	public void testForeignKeyDropIsCorrectlyGenerated() throws Exception {
 
 		schemaExport

@@ -35,7 +35,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -68,7 +68,7 @@ public class HSQLStoreProcedureTest extends BaseEntityManagerFunctionalTestCase 
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10515")
+	@JiraKey(value = "HHH-10515")
 	public void testNamedStoredProcedureExecution() {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		try {
@@ -82,7 +82,7 @@ public class HSQLStoreProcedureTest extends BaseEntityManagerFunctionalTestCase 
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10915")
+	@JiraKey(value = "HHH-10915")
 	public void testGetNamedParameters() {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		try {
@@ -114,7 +114,7 @@ public class HSQLStoreProcedureTest extends BaseEntityManagerFunctionalTestCase 
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10915")
+	@JiraKey(value = "HHH-10915")
 	public void testGetPositionalParameters() {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		try {
@@ -142,7 +142,7 @@ public class HSQLStoreProcedureTest extends BaseEntityManagerFunctionalTestCase 
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10915")
+	@JiraKey(value = "HHH-10915")
 	public void testGetPositionalParameters2() {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		try {

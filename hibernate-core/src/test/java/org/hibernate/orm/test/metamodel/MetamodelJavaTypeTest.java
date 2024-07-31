@@ -8,7 +8,7 @@ package org.hibernate.orm.test.metamodel;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
@@ -21,7 +21,7 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 				Person.class
 		}
 )
-@TestForIssue(jiraKey = "HHH-15285")
+@JiraKey(value = "HHH-15285")
 public class MetamodelJavaTypeTest {
 
 	@Test

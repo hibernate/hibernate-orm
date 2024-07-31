@@ -5,7 +5,7 @@ import java.io.Serializable;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
@@ -29,7 +29,7 @@ import jakarta.persistence.OneToOne;
 		},
 		integrationSettings = @Setting(name = AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, value = "true")
 )
-@TestForIssue(jiraKey = "HHH-15153")
+@JiraKey(value = "HHH-15153")
 class OneToOneWithEmbeddedIdTest {
 
 	@Test

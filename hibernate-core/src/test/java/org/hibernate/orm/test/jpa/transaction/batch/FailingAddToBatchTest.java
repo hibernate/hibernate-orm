@@ -8,7 +8,7 @@ package org.hibernate.orm.test.jpa.transaction.batch;
 
 import org.hibernate.cfg.BatchSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.NotImplementedYet;
@@ -23,7 +23,7 @@ import jakarta.persistence.PersistenceException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@TestForIssue(jiraKey = "HHH-15082")
+@JiraKey(value = "HHH-15082")
 @Jpa(
 		annotatedClasses = {
 				FailingAddToBatchTest.MyEntity.class

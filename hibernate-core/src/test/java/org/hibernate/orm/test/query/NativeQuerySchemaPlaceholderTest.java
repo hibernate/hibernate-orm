@@ -4,8 +4,9 @@ import java.util.List;
 
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKeyGroup;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -23,7 +24,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 		annotatedClasses = { NativeQuerySchemaPlaceholderTest.TestEntity.class }
 )
 @SessionFactory
-@TestForIssue(jiraKey = {"HHH-15269", "HHH-18215"})
+@JiraKeyGroup({
+		@JiraKey(value = "HHH-15269"),
+		@JiraKey(value = "HHH-18215")
+})
 public class NativeQuerySchemaPlaceholderTest {
 
 	@BeforeEach

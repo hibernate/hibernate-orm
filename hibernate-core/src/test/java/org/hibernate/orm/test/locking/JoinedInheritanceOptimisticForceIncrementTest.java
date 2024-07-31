@@ -15,7 +15,7 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Version;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -55,7 +55,7 @@ public class JoinedInheritanceOptimisticForceIncrementTest extends BaseNonConfig
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11979")
+	@JiraKey(value = "HHH-11979")
 	public void testForceIncrement() {
 		doInHibernate(
 				this::sessionFactory,

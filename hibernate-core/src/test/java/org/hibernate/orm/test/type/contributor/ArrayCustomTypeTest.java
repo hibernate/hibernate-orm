@@ -12,7 +12,7 @@ import org.hibernate.annotations.Type;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import jakarta.persistence.Basic;
@@ -26,7 +26,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-11409" )
+@JiraKey( value = "HHH-11409" )
 public class ArrayCustomTypeTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

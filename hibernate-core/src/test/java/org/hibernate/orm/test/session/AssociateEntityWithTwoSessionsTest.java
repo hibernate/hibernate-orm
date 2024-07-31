@@ -17,7 +17,7 @@ import org.hibernate.Session;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.proxy.AbstractLazyInitializer;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -45,7 +45,7 @@ public class AssociateEntityWithTwoSessionsTest {
 			Logger.getMessageLogger( CoreMessageLogger.class, AbstractLazyInitializer.class.getName() ) );
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12216" )
+	@JiraKey( value = "HHH-12216" )
 	public void test(EntityManagerFactoryScope scope) {
 
 		final Location location = new Location();

@@ -41,7 +41,7 @@ import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Logger;
 import org.hibernate.testing.orm.junit.LoggingInspections;
@@ -83,7 +83,7 @@ public class MultipleSessionCollectionWarningTest {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractPersistentCollection.class );
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9518")
+	@JiraKey(value = "HHH-9518")
 	public void testUnsetSessionCannotOverwriteNonConnectedSession(
 			SessionFactoryScope scope,
 			LoggingInspectionsScope loggingScope) {
@@ -142,7 +142,7 @@ public class MultipleSessionCollectionWarningTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9518")
+	@JiraKey(value = "HHH-9518")
 	public void testUnsetSessionCannotOverwriteConnectedSession(
 			SessionFactoryScope scope,
 			LoggingInspectionsScope loggingScope) {
@@ -195,7 +195,7 @@ public class MultipleSessionCollectionWarningTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9518")
+	@JiraKey(value = "HHH-9518")
 	public void testUnsetSessionCannotOverwriteConnectedSessionFlushed(
 			SessionFactoryScope scope,
 			LoggingInspectionsScope loggingScope) {

@@ -20,7 +20,7 @@ import org.hibernate.Session;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.query.Query;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -76,7 +76,7 @@ public class HANABooleanTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12132")
+	@JiraKey(value = "HHH-12132")
 	public void testBooleanType() throws Exception {
 		rebuildSessionFactory( configuration -> {
 			configuration.setProperty( "hibernate.dialect.hana.use_legacy_boolean_type", Boolean.FALSE.toString() );
@@ -106,7 +106,7 @@ public class HANABooleanTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12132")
+	@JiraKey(value = "HHH-12132")
 	public void testBooleanTypeDefaultBehavior() throws Exception {
 		rebuildSessionFactory();
 
@@ -134,7 +134,7 @@ public class HANABooleanTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test(expected = PersistenceException.class)
-	@TestForIssue(jiraKey = "HHH-12132")
+	@JiraKey(value = "HHH-12132")
 	public void testLegacyBooleanType() throws Exception {
 		rebuildSessionFactory( configuration -> {
 			configuration.setProperty( "hibernate.dialect.hana.use_legacy_boolean_type", Boolean.FALSE.toString() );
@@ -160,7 +160,7 @@ public class HANABooleanTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12132")
+	@JiraKey(value = "HHH-12132")
 	public void testLegacyBooleanTypeLegacyBehavior() throws Exception {
 		rebuildSessionFactory( configuration -> {
 			configuration.setProperty( "hibernate.dialect.hana.use_legacy_boolean_type", Boolean.TRUE.toString() );
@@ -190,7 +190,7 @@ public class HANABooleanTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test(expected = PersistenceException.class)
-	@TestForIssue(jiraKey = "HHH-12132")
+	@JiraKey(value = "HHH-12132")
 	public void testBooleanTypeLegacyBehavior() throws Exception {
 		rebuildSessionFactory( configuration -> {
 			configuration.setProperty( "hibernate.dialect.hana.use_legacy_boolean_type", Boolean.TRUE.toString() );

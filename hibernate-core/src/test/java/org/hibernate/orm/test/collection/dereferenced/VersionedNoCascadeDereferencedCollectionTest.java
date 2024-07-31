@@ -30,7 +30,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -55,7 +55,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class VersionedNoCascadeDereferencedCollectionTest extends AbstractDereferencedCollectionTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9777")
+	@JiraKey(value = "HHH-9777")
 	public void testMergeNullCollection(SessionFactoryScope scope) {
 		VersionedNoCascadeOne versionedNoCascadeOne = new VersionedNoCascadeOne();
 		scope.inTransaction(
@@ -135,7 +135,7 @@ public class VersionedNoCascadeDereferencedCollectionTest extends AbstractDerefe
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9777")
+	@JiraKey(value = "HHH-9777")
 	public void testGetAndNullifyCollection(SessionFactoryScope scope) {
 		VersionedNoCascadeOne versionedNoCascadeOne = new VersionedNoCascadeOne();
 		scope.inTransaction(
@@ -220,7 +220,7 @@ public class VersionedNoCascadeDereferencedCollectionTest extends AbstractDerefe
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9777")
+	@JiraKey(value = "HHH-9777")
 	public void testGetAndReplaceCollection(SessionFactoryScope scope) {
 		VersionedNoCascadeOne versionedNoCascadeOne = new VersionedNoCascadeOne();
 

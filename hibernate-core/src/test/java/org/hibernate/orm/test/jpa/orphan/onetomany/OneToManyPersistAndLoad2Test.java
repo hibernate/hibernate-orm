@@ -7,7 +7,7 @@ import java.util.Set;
 import org.hibernate.Hibernate;
 import org.hibernate.engine.spi.SessionImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -25,7 +25,7 @@ import jakarta.persistence.OneToMany;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@TestForIssue(jiraKey = "HHH-16334")
+@JiraKey(value = "HHH-16334")
 @DomainModel(
 		annotatedClasses = {
 				OneToManyPersistAndLoad2Test.Parent.class,

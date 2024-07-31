@@ -31,7 +31,7 @@ import org.junit.Test;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 
@@ -40,7 +40,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey="HHH-13191")
+@JiraKey(value="HHH-13191")
 @RequiresDialectFeature({ DialectChecks.SupportsNoColumnInsert.class, DialectChecks.SupportsIdentityColumns.class })
 public class IdentifierProxyJtaSessionClosedBeforeCommitTest extends BaseEnversJPAFunctionalTestCase {
 	@Override

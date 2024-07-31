@@ -21,7 +21,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Davide D'Alto
  */
-@TestForIssue(jiraKey = "HHH-12332")
+@JiraKey(value = "HHH-12332")
 @ServiceRegistry(
 		settingProviders = @SettingProvider(
 				settingName = DEFAULT_LIST_SEMANTICS,

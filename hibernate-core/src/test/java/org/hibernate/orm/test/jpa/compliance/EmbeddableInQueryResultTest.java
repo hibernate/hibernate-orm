@@ -2,7 +2,7 @@ package org.hibernate.orm.test.jpa.compliance;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNotSame;
 				EmbeddableInQueryResultTest.Person.class,
 		}
 )
-@TestForIssue( jiraKey = "HHH-15223")
+@JiraKey( value = "HHH-15223")
 public class EmbeddableInQueryResultTest {
 
 	@BeforeEach

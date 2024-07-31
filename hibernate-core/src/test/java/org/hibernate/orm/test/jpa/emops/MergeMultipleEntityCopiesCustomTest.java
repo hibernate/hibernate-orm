@@ -12,7 +12,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.event.spi.EntityCopyObserver;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @author Gail Badner
  */
-@TestForIssue( jiraKey = "HHH-9106")
+@JiraKey( value = "HHH-9106")
 @Jpa(
 		annotatedClasses = {
 				Category.class,

@@ -27,7 +27,7 @@ import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.jdbc.DataSourceStub;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -312,7 +312,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13640" )
+	@JiraKey( value = "HHH-13640" )
 	public void testIntegrationOverridesOfPersistenceXmlDataSource() {
 
 		// mimics a DataSource defined in the persistence.xml
@@ -359,7 +359,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13640" )
+	@JiraKey( value = "HHH-13640" )
 	public void testIntegrationOverridesOfPersistenceXmlDataSourceWithDriverManagerInfo() {
 
 		// mimics a DataSource defined in the persistence.xml
@@ -398,7 +398,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13640" )
+	@JiraKey( value = "HHH-13640" )
 	public void testIntegrationOverridesOfPersistenceXmlDataSourceWithDriverManagerInfoUsingJakarta() {
 
 		// mimics a DataSource defined in the persistence.xml

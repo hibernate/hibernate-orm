@@ -15,7 +15,7 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -213,7 +213,7 @@ public class CompositeUserTypeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5946")
+	@JiraKey(value = "HHH-5946")
 	public void testNotEqualOperator(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -259,7 +259,7 @@ public class CompositeUserTypeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5946")
+	@JiraKey(value = "HHH-5946")
 	public void testLessThanOperator(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -272,7 +272,7 @@ public class CompositeUserTypeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5946")
+	@JiraKey(value = "HHH-5946")
 	public void testLessOrEqualOperator(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -284,7 +284,7 @@ public class CompositeUserTypeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5946")
+	@JiraKey(value = "HHH-5946")
 	public void testGreaterThanOperator(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -296,7 +296,7 @@ public class CompositeUserTypeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5946")
+	@JiraKey(value = "HHH-5946")
 	public void testGreaterOrEqualOperator(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

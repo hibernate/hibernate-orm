@@ -14,7 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -48,7 +48,7 @@ public class CompositeIdAssociationsWithEmbeddedCompositeIdTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13114")
+	@JiraKey(value = "HHH-13114")
 	public void testQueries(SessionFactoryScope scope) {
 		Parent parent1 = new Parent( "Jane", 0 );
 		Parent parent2 = new Parent( "Jim", 1 );

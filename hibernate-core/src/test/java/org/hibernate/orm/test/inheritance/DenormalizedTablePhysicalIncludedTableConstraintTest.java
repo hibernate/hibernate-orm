@@ -13,7 +13,7 @@ import jakarta.persistence.UniqueConstraint;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
  * @author Vlad Paln
  * @author Nathan Xu
  */
-@TestForIssue(jiraKey = "HHH-14234")
+@JiraKey(value = "HHH-14234")
 @RequiresDialect(
 		value = H2Dialect.class,
 		comment = "This test relies on 'hibernate.hbm2ddl.halt_on_error', only tested on h2; " +

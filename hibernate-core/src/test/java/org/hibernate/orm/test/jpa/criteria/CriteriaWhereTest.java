@@ -2,7 +2,7 @@ package org.hibernate.orm.test.jpa.criteria;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,7 +19,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @Jpa(
 		annotatedClasses = CriteriaWhereTest.TestEntity.class
 )
-@TestForIssue(jiraKey = "HHH-15716")
+@JiraKey(value = "HHH-15716")
 public class CriteriaWhereTest {
 
 

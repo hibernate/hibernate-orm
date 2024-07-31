@@ -24,7 +24,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -45,7 +45,7 @@ public class FormulaWithColumnTypesTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9951")
+	@JiraKey(value = "HHH-9951")
 	public void testFormulaAnnotationWithTypeNames() {
 
 		inTransaction( session -> {

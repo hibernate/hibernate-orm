@@ -12,7 +12,7 @@ import jakarta.persistence.PrimaryKeyJoinColumn;
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
@@ -21,7 +21,7 @@ import static junit.framework.TestCase.fail;
 /**
  * @author Dominique Toupin
  */
-@TestForIssue(jiraKey = "HHH-10456")
+@JiraKey(value = "HHH-10456")
 public class AnnotationBinderTest {
 
 	@Test

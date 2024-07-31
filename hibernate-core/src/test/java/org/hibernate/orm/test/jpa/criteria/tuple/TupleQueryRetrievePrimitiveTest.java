@@ -4,7 +4,7 @@ import org.hibernate.orm.test.jpa.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.orm.test.jpa.metamodel.ThingWithQuantity;
 import org.hibernate.orm.test.jpa.metamodel.ThingWithQuantity_;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.AfterEach;
@@ -18,7 +18,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 
-@TestForIssue( jiraKey = "HHH-15454" )
+@JiraKey( value = "HHH-15454" )
 public class TupleQueryRetrievePrimitiveTest extends AbstractMetamodelSpecificTest {
 
     public static final int QUANTITY_OF_THING = 3;

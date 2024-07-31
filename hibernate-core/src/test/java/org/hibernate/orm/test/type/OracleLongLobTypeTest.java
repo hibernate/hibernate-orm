@@ -25,7 +25,7 @@ import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
@@ -41,7 +41,7 @@ import static org.junit.Assert.assertSame;
 public class OracleLongLobTypeTest extends BaseUnitTestCase {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10345" )
+	@JiraKey( value = "HHH-10345" )
 	public void testOracle12() {
 		check( OracleDialect.class, Primitives.class, StandardBasicTypes.BINARY, StandardBasicTypes.CHAR_ARRAY );
 		check( OracleDialect.class, LobPrimitives.class, StandardBasicTypes.MATERIALIZED_BLOB, StandardBasicTypes.MATERIALIZED_CLOB_CHAR_ARRAY );
@@ -49,7 +49,7 @@ public class OracleLongLobTypeTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10345" )
+	@JiraKey( value = "HHH-10345" )
 	public void testOracle12PreferLongRaw() {
 		check( OracleDialect.class, Primitives.class, StandardBasicTypes.BINARY, StandardBasicTypes.CHAR_ARRAY, true );
 		check( OracleDialect.class, LobPrimitives.class, StandardBasicTypes.MATERIALIZED_BLOB, StandardBasicTypes.MATERIALIZED_CLOB_CHAR_ARRAY, true );

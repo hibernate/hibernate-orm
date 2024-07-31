@@ -22,7 +22,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,7 +58,7 @@ public class BackquoteTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "ANN-718")
+	@JiraKey(value = "ANN-718")
 	public void testBackquotes() {
 		try {
 			Configuration config = new Configuration();
@@ -88,7 +88,7 @@ public class BackquoteTest {
 	 * The same issue exists with getLogicalColumnName()
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-4647")
+	@JiraKey(value = "HHH-4647")
 	public void testInvalidReferenceToQuotedTableName() {
 		try (BootstrapServiceRegistry serviceRegistry = new BootstrapServiceRegistryBuilder().build()) {
 			Configuration config = new Configuration( serviceRegistry );

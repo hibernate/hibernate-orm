@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.boot.spi.MetadataImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -52,7 +52,7 @@ import static org.hibernate.orm.test.util.SchemaUtil.getColumnNames;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-14918")
+@JiraKey(value = "HHH-14918")
 public class IdClassForNestedIdWithAssociationTest {
 
 	@Test

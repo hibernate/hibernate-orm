@@ -19,7 +19,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.internal.util.ReflectHelper;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -53,7 +53,7 @@ public class GetAndIsVariantGetterTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10172" )
+	@JiraKey( value = "HHH-10172" )
 	public void testHbmXml() {
 		try {
 			new MetadataSources( ssr )
@@ -67,7 +67,7 @@ public class GetAndIsVariantGetterTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10172" )
+	@JiraKey( value = "HHH-10172" )
 	public void testAnnotations() {
 		try {
 			new MetadataSources( ssr )
@@ -81,7 +81,7 @@ public class GetAndIsVariantGetterTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10242" )
+	@JiraKey( value = "HHH-10242" )
 	public void testAnnotationsCorrected() {
 		Metadata metadata = new MetadataSources( ssr )
 				.addAnnotatedClass( TheEntity2.class )
@@ -91,7 +91,7 @@ public class GetAndIsVariantGetterTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10309" )
+	@JiraKey( value = "HHH-10309" )
 	public void testAnnotationsFieldAccess() {
 		// this one should be ok because the AccessType is FIELD
 		Metadata metadata = new MetadataSources( ssr )
@@ -102,7 +102,7 @@ public class GetAndIsVariantGetterTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12046" )
+	@JiraKey( value = "HHH-12046" )
 	public void testInstanceStaticConflict() {
 		Metadata metadata = new MetadataSources( ssr )
 				.addAnnotatedClass( InstanceStaticEntity.class )

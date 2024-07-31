@@ -17,7 +17,7 @@ import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  */
 @DomainModel(annotatedClasses = SubQueryInFromEmbeddedIdTests.Contact.class)
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-")
+@JiraKey( value = "HHH-")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class)
 public class SubQueryInFromEmbeddedIdTests {

@@ -27,14 +27,14 @@ import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.mapping.Table;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-11463")
+@JiraKey(value = "HHH-11463")
 public class EmbeddedIdManyToOneForeignKeyTest extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

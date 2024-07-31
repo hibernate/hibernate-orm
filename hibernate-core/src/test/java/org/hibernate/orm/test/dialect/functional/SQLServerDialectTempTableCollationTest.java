@@ -22,7 +22,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.SQLServerDialect;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.transaction.TransactionUtil;
@@ -35,7 +35,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
  * @author Nathan Xu
  */
 @RequiresDialect( SQLServerDialect.class )
-@TestForIssue( jiraKey = "HHH-3326" )
+@JiraKey( value = "HHH-3326" )
 public class SQLServerDialectTempTableCollationTest extends BaseCoreFunctionalTestCase {
 
 	private String originalDBCollation;

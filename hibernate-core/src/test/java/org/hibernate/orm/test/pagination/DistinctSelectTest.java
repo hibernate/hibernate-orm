@@ -16,7 +16,7 @@ import org.hibernate.Transaction;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertFalse;
@@ -27,7 +27,7 @@ import static org.junit.Assert.assertFalse;
  * 
  * @author Valotasios Yoryos
  */
-@TestForIssue( jiraKey = "HHH-5715" )
+@JiraKey( value = "HHH-5715" )
 public class DistinctSelectTest extends BaseCoreFunctionalTestCase {
 	private static final int NUM_OF_USERS = 30;
 

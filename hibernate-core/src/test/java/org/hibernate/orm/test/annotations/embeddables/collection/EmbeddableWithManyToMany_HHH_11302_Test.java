@@ -28,12 +28,12 @@ import jakarta.persistence.Version;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.internal.util.StringHelper;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-11302")
+@JiraKey(value = "HHH-11302")
 public class EmbeddableWithManyToMany_HHH_11302_Test
 		extends AbstractEmbeddableWithManyToManyTest {
 

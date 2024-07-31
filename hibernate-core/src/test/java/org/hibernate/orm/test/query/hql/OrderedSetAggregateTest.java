@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -138,7 +138,7 @@ public class OrderedSetAggregateTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15360")
+	@JiraKey( value = "HHH-15360")
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStringAggregation.class)
 	public void testListaggWithNullsClause(SessionFactoryScope scope) {
 		scope.inTransaction(

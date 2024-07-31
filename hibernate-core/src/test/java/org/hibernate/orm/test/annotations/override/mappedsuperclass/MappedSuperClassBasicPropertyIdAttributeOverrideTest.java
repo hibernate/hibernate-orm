@@ -8,14 +8,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.junit.jupiter.api.Test;
 
 /**
  * @author Stanislav Gubanov
  */
-@TestForIssue(jiraKey = "HHH-11771")
+@JiraKey(value = "HHH-11771")
 @DomainModel(
 		annotatedClasses = {
 				MappedSuperClassBasicPropertyIdAttributeOverrideTest.BaseMappedSuperClass.class,

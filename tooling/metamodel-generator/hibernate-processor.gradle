@@ -62,6 +62,8 @@ dependencies {
     api libs.byteBuddy
 	api libs.logging
 
+	testImplementation project(':hibernate-testing')
+
 	quarkusOrmPanacheImplementation "io.quarkus:quarkus-hibernate-orm-panache:3.6.2"
 	quarkusHrPanacheImplementation "io.quarkus:quarkus-hibernate-reactive-panache:3.6.2"
     jakartaDataImplementation "jakarta.data:jakarta.data-api:1.0.0"

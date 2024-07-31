@@ -20,7 +20,7 @@ import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.proxy.AbstractLazyInitializer;
 import org.hibernate.proxy.HibernateProxy;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -172,7 +172,7 @@ public class EntityProxySerializationTest {
 	 * temporary session.
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-12720")
+	@JiraKey(value = "HHH-12720")
 	public void testProxyInitializationWithoutTXAfterDeserialization(SessionFactoryScope scope) {
 		final SimpleEntity deserializedParent = scope.fromTransaction( s -> {
 			final ChildEntity child = s.find( ChildEntity.class, 1L );

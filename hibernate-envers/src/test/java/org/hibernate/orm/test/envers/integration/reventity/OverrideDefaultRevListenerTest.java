@@ -8,12 +8,12 @@ package org.hibernate.orm.test.envers.integration.reventity;
 
 import org.hibernate.internal.util.collections.ArrayHelper;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-6696")
+@JiraKey(value = "HHH-6696")
 public class OverrideDefaultRevListenerTest extends GloballyConfiguredRevListenerTest {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

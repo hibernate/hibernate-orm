@@ -23,7 +23,7 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -146,7 +146,7 @@ public class SchemaExportTest extends BaseUnitTestCase {
     }
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10678")
+	@JiraKey(value = "HHH-10678")
 	@RequiresDialectFeature( value = DialectChecks.SupportSchemaCreation.class)
 	public void testHibernateMappingSchemaPropertyIsNotIgnored() throws Exception {
 		File output = File.createTempFile( "update_script", ".sql" );

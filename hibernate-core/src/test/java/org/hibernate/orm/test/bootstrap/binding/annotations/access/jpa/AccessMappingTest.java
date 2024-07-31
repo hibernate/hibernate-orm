@@ -19,7 +19,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -269,7 +269,7 @@ public class AccessMappingTest {
 		}
 	}
 
-	@TestForIssue(jiraKey = "HHH-5004")
+	@JiraKey(value = "HHH-5004")
 	@Test
 	public void testAccessOnClassAndId() {
 		Configuration cfg = new Configuration();

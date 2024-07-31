@@ -3,7 +3,7 @@ package org.hibernate.orm.test.where.annotations;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
@@ -20,7 +20,7 @@ import jakarta.persistence.Table;
 				@Setting(name = AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, value = "true"),
 		}
 )
-@TestForIssue(jiraKey = "HHH-15358")
+@JiraKey(value = "HHH-15358")
 public class NullWhereClauseTest {
 
 	@Test

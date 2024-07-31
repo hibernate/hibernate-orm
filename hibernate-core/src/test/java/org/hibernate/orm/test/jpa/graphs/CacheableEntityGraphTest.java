@@ -28,7 +28,7 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 public class CacheableEntityGraphTest extends BaseEntityManagerFunctionalTestCase {
@@ -39,7 +39,7 @@ public class CacheableEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15964")
+	@JiraKey(value = "HHH-15964")
 	public void test() {
 		EntityManager em = getOrCreateEntityManager();
 

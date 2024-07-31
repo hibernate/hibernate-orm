@@ -14,7 +14,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.junit.Test;
 
@@ -52,7 +52,7 @@ public class SchemaBasedDataSourceMultiTenancyTest  extends AbstractSchemaBasedM
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11651")
+	@JiraKey( value = "HHH-11651")
 	public void testUnwrappingConnectionProvider() {
 		final MultiTenantConnectionProvider<String> multiTenantConnectionProvider = serviceRegistry.getService(
 				MultiTenantConnectionProvider.class );
@@ -61,7 +61,7 @@ public class SchemaBasedDataSourceMultiTenancyTest  extends AbstractSchemaBasedM
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11651")
+	@JiraKey(value = "HHH-11651")
 	public void testUnwrappingAbstractMultiTenantConnectionProvider() {
 		final MultiTenantConnectionProvider<String> multiTenantConnectionProvider = serviceRegistry.getService(
 				MultiTenantConnectionProvider.class );
@@ -71,7 +71,7 @@ public class SchemaBasedDataSourceMultiTenancyTest  extends AbstractSchemaBasedM
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11651")
+	@JiraKey(value = "HHH-11651")
 	public void testUnwrappingMultiTenantConnectionProvider() {
 		final MultiTenantConnectionProvider<String> multiTenantConnectionProvider = serviceRegistry.getService(
 				MultiTenantConnectionProvider.class );

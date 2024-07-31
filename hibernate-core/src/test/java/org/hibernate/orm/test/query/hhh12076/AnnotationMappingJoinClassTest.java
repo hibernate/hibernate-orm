@@ -17,7 +17,7 @@ import java.util.Set;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -46,7 +46,7 @@ import jakarta.persistence.Version;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 
-@TestForIssue(jiraKey = "HHH-12076")
+@JiraKey(value = "HHH-12076")
 @DomainModel(
 		annotatedClasses = {
 				AnnotationMappingJoinClassTest.Claim.class,

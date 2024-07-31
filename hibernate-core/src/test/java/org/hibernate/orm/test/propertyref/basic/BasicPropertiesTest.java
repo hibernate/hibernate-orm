@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.propertyref.basic;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -28,7 +28,7 @@ public class BasicPropertiesTest {
 	 * Really simple regression test for HHH-8689.
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-8689")
+	@JiraKey(value = "HHH-8689")
 	public void testProperties(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

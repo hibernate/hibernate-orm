@@ -24,7 +24,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class Tests {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9961")
+	@JiraKey(value = "HHH-9961")
 	public void testJpaJoinColumnPhysicalNaming() {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySettings( Environment.getProperties() )

@@ -12,7 +12,7 @@ import java.util.List;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.SpecHints;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 		annotatedClasses = LoadFetchGraphWithEagerSelfReferencingEagerToOneTest.Sample.class,
 		properties = @Setting(name = AvailableSettings.MAX_FETCH_DEPTH, value = "")
 )
-@TestForIssue(jiraKey = "HHH-15391")
+@JiraKey(value = "HHH-15391")
 public class LoadFetchGraphWithEagerSelfReferencingEagerToOneTest {
 
 	@BeforeEach

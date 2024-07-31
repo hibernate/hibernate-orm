@@ -10,7 +10,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Christian Beikov
  * @author Nathan Xu
  */
-@TestForIssue( jiraKey = "HHH-14201" )
+@JiraKey( value = "HHH-14201" )
 @DomainModel( annotatedClasses = { JoinOrderTest.EntityA.class, JoinOrderTest.EntityB.class, JoinOrderTest.EntityC.class } )
 @SessionFactory( useCollectingStatementInspector = true )
 public class JoinOrderTest {

@@ -11,7 +11,7 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class ManyToOneJoinReuseTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15648")
+	@JiraKey(value = "HHH-15648")
 	public void fetchAndImplicitPath(SessionFactoryScope scope) {
 		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction(
@@ -64,7 +64,7 @@ public class ManyToOneJoinReuseTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15645")
+	@JiraKey(value = "HHH-15645")
 	public void joinAndImplicitPath(SessionFactoryScope scope) {
 		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction(

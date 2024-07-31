@@ -7,7 +7,7 @@ import java.util.Objects;
 import org.hibernate.Hibernate;
 import org.hibernate.jpa.SpecHints;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		}
 )
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-15674")
+@JiraKey( value = "HHH-15674")
 public class LoadEntityWithIdClassEntityGraphTest {
 
 	private static final Long ORDER_ID = 1l;

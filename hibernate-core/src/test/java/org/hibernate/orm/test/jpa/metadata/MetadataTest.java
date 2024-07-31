@@ -27,7 +27,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -288,7 +288,7 @@ public class MetadataTest {
     }
 
     @Test
-    @TestForIssue(jiraKey = "HHH-14346")
+    @JiraKey(value = "HHH-14346")
     public void testEmptyPluralAttributeSet(EntityManagerFactoryScope scope) {
         final EntityType<Feline> entityType = scope.getEntityManagerFactory().getMetamodel().entity(Feline.class);
         final Set<PluralAttribute<? super Feline, ?, ?>> attributes = entityType.getPluralAttributes();

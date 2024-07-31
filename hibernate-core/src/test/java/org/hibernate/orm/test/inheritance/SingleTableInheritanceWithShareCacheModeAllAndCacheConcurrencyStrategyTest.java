@@ -6,7 +6,7 @@ import java.util.List;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeAll;
@@ -39,7 +39,7 @@ import static org.hibernate.orm.test.inheritance.SingleTableInheritanceWithShare
 		},
 		sharedCacheMode = SharedCacheMode.ALL
 )
-@TestForIssue(jiraKey = "HHH-15840")
+@JiraKey(value = "HHH-15840")
 public class SingleTableInheritanceWithShareCacheModeAllAndCacheConcurrencyStrategyTest {
 
 	@BeforeAll

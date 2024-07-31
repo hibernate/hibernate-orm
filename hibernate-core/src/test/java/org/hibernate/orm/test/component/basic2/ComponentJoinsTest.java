@@ -8,7 +8,7 @@ package org.hibernate.orm.test.component.basic2;
 
 import org.hibernate.Session;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -45,7 +45,7 @@ public class ComponentJoinsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7849")
+	@JiraKey(value = "HHH-7849")
 	public void testComponentJoinsHHH7849() {
 		// Just checking proper query construction and syntax checking via database query parser...
 		Session session = openSession();

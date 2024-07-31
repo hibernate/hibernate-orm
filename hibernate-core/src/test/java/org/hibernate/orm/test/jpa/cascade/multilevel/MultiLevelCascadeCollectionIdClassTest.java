@@ -26,7 +26,7 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -94,7 +94,7 @@ public class MultiLevelCascadeCollectionIdClassTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12294" )
+	@JiraKey( value = "HHH-12294" )
 	public void testHibernateDeleteEntityInitializeCollections(EntityManagerFactoryScope scope) {
 		if ( !initialized ) {
 			initialize(scope);

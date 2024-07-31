@@ -1,10 +1,10 @@
 package org.hibernate.processor.test.typeliteral;
 
 import org.hibernate.processor.test.util.CompilationTest;
-import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
 
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import jakarta.persistence.EntityManager;
@@ -20,7 +20,7 @@ public class TypeLiteralTest extends CompilationTest {
 			value = {},
 			sources = "org.hibernate.processor.test.typeliteral.Simple"
 	)
-	@TestForIssue(jiraKey = "HHH-18358")
+	@JiraKey(value = "HHH-18358")
 	public void namedQueryWithTypeLiteral() {
 		final String entityClass = "org.hibernate.processor.test.typeliteral.Simple";
 

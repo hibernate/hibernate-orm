@@ -21,7 +21,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.junit4.CustomParameterized;
@@ -36,7 +36,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-@TestForIssue( jiraKey = "HHH-13326")
+@JiraKey( value = "HHH-13326")
 @RunWith(CustomParameterized.class)
 public class InterceptorTransactionTest extends BaseJpaOrNativeBootstrapFunctionalTestCase {
 

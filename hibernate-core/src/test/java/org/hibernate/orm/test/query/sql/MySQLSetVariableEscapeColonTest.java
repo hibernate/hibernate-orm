@@ -10,7 +10,7 @@ import java.sql.Statement;
 
 import org.hibernate.dialect.MySQLDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Vlad Mihalcea
  */
 @RequiresDialect(MySQLDialect.class)
-@TestForIssue( jiraKey = "HHH-1237")
+@JiraKey( value = "HHH-1237")
 @SessionFactory
 @DomainModel
 public class MySQLSetVariableEscapeColonTest {

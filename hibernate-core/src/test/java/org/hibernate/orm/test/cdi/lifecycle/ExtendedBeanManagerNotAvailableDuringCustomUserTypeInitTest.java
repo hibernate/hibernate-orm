@@ -18,7 +18,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.hibernate.usertype.DynamicParameterizedType;
@@ -32,7 +32,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
 
-@TestForIssue(jiraKey = "HHH-16096")
+@JiraKey(value = "HHH-16096")
 public class ExtendedBeanManagerNotAvailableDuringCustomUserTypeInitTest {
 
 	@Test

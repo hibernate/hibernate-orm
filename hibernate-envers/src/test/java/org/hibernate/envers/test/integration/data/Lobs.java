@@ -16,7 +16,7 @@ import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -90,13 +90,13 @@ public class Lobs extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10734")
+	@JiraKey(value = "HHH-10734")
 	public void testRevisionsCountsForAuditedArraysWithNoChanges() {
 		assertEquals( Arrays.asList( 3 ), getAuditReader().getRevisions( LobTestEntity.class, id2 ) );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10734")
+	@JiraKey(value = "HHH-10734")
 	public void testHistoryOfId2() {
 		LobTestEntity ver1 = new LobTestEntity( id2, "abc", new byte[]{ 0, 1, 2 }, new char[]{ 'x', 'y', 'z' } );
 		assertEquals( getAuditReader().find( LobTestEntity.class, id2, 3 ), ver1 );

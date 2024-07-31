@@ -9,7 +9,7 @@ package org.hibernate.orm.test.lazyload;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.cfg.Environment;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class LazyLoadingNotFoundTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11179")
+	@JiraKey(value = "HHH-11179")
 	public void testNonExistentLazyInitOutsideTransaction(SessionFactoryScope scope) {
 		Child loadedChild = scope.fromTransaction(
 				session -> session.load( Child.class, -1L )

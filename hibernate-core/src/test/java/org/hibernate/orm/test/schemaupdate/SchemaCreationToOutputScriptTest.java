@@ -27,7 +27,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -40,7 +40,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringContains.containsString;
 
-@TestForIssue(jiraKey = "HHH-11817")
+@JiraKey(value = "HHH-11817")
 @RequiresDialect(H2Dialect.class)
 @BaseUnitTest
 public class SchemaCreationToOutputScriptTest {

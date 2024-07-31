@@ -19,7 +19,7 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
 
@@ -77,7 +77,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8756" )
+	@JiraKey( value = "HHH-8756" )
 	public void testNoneLockModeForNonSelectQueryAllowed() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -291,7 +291,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9419")
+	@JiraKey(value = "HHH-9419")
 	public void testNoVersionCheckAfterRemove() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -383,7 +383,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11376")
+	@JiraKey(value = "HHH-11376")
 	@RequiresDialect( SQLServerDialect.class )
 	public void testCriteriaWithPessimisticLock() {
 		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {

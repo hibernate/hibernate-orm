@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -37,7 +37,7 @@ import jakarta.persistence.Id;
 		CollectionEmbeddableElementConversionTest.MyBigDecimalConverter.class
 })
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15211")
+@JiraKey(value = "HHH-15211")
 class CollectionEmbeddableElementConversionTest {
 
 	@BeforeEach

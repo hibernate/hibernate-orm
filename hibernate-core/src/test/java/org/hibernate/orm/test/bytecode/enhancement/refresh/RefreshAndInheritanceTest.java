@@ -3,7 +3,7 @@ package org.hibernate.orm.test.bytecode.enhancement.refresh;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeAll;
@@ -36,7 +36,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 				RefreshAndInheritanceTest.Person.class,
 		}
 )
-@TestForIssue( jiraKey = "HHH-16447")
+@JiraKey( value = "HHH-16447")
 public class RefreshAndInheritanceTest {
 
 	@BeforeAll

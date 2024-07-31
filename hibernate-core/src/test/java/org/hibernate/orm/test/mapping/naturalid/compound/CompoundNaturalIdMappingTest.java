@@ -18,7 +18,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +28,7 @@ import static org.hamcrest.Matchers.is;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue(jiraKey = "HHH-11255")
+@JiraKey(value = "HHH-11255")
 public class CompoundNaturalIdMappingTest {
 
 	@Test

@@ -9,7 +9,7 @@ package org.hibernate.orm.test.query.resultmapping;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -35,7 +35,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 		annotatedClasses = NamedNativeQueryWithCountColumnTest.Sample.class,
 		properties = @Setting(name = AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, value = "true")
 )
-@TestForIssue(jiraKey = "HHH-15070")
+@JiraKey(value = "HHH-15070")
 class NamedNativeQueryWithCountColumnTest {
 
 	@BeforeEach

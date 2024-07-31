@@ -3,7 +3,7 @@ package org.hibernate.orm.test.jpa.compliance;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.transaction.JtaPlatformSettingProvider;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
@@ -27,7 +27,7 @@ import jakarta.persistence.Id;
 				)
 		}
 )
-@TestForIssue( jiraKey = "HHH-15225")
+@JiraKey( value = "HHH-15225")
 public class JtaIllegalArgumentExceptionTest {
 
 	@Test

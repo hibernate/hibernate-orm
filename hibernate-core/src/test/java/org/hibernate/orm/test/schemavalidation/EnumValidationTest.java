@@ -34,7 +34,7 @@ import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.SourceDescriptor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
@@ -51,7 +51,7 @@ import jakarta.persistence.Id;
 /**
  * Test that an existing tinyint column works even if we switch to smallint type code for enums.
  */
-@TestForIssue(jiraKey = "HHH-15288")
+@JiraKey(value = "HHH-15288")
 @RunWith(Parameterized.class)
 public class EnumValidationTest implements ExecutionOptions {
 	@Parameterized.Parameters

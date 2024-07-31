@@ -21,7 +21,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
@@ -34,7 +34,7 @@ import static org.junit.Assert.assertNotEquals;
 public class CacheKeyImplementationHashCodeTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12746")
+	@JiraKey( value = "HHH-12746")
 	public void test() {
 		try (ServiceRegistryImplementor serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
 			MetadataSources ms = new MetadataSources( serviceRegistry );

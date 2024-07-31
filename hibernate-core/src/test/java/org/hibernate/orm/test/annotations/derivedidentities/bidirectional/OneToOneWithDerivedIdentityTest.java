@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -48,7 +48,7 @@ public class OneToOneWithDerivedIdentityTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11903")
+	@JiraKey(value = "HHH-11903")
 	public void testInsertFooAndBarWithDerivedId(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -78,7 +78,7 @@ public class OneToOneWithDerivedIdentityTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14389")
+	@JiraKey(value = "HHH-14389")
 	public void testQueryById(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -108,7 +108,7 @@ public class OneToOneWithDerivedIdentityTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14389")
+	@JiraKey(value = "HHH-14389")
 	public void testFindById(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -135,7 +135,7 @@ public class OneToOneWithDerivedIdentityTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14389")
+	@JiraKey(value = "HHH-14389")
 	public void testFindByPrimaryKey(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -163,7 +163,7 @@ public class OneToOneWithDerivedIdentityTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10476")
+	@JiraKey(value = "HHH-10476")
 	public void testInsertFooAndBarWithDerivedIdPC(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -194,7 +194,7 @@ public class OneToOneWithDerivedIdentityTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6813")
+	@JiraKey(value = "HHH-6813")
 	public void testSelectWithDerivedId(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -222,7 +222,7 @@ public class OneToOneWithDerivedIdentityTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6813")
+	@JiraKey(value = "HHH-6813")
 	// Regression test utilizing multiple types of queries.
 	public void testCase(SessionFactoryScope scope) {
 		scope.inTransaction(

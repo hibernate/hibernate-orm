@@ -10,7 +10,7 @@ import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -37,7 +37,7 @@ public class StatisticsWithNoCachingTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12508")
+	@JiraKey(value = "HHH-12508")
 	public void testUncachedRegion(SessionFactoryScope scope) {
 		scope.getSessionFactory().getStatistics().getCacheRegionStatistics( "hibernate.test.unknown" );
 	}

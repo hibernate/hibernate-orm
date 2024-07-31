@@ -13,7 +13,7 @@ import jakarta.persistence.OneToMany;
 
 import org.hamcrest.collection.IsIterableContainingInOrder;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -44,7 +44,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 	}
 )
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-13877" )
+@JiraKey( value = "HHH-13877" )
 public class SortNaturalByDefaultTests {
 	
 	@Test

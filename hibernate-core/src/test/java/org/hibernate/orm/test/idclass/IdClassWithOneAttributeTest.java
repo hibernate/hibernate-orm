@@ -2,7 +2,7 @@ package org.hibernate.orm.test.idclass;
 
 import java.io.Serializable;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 		annotatedClasses = IdClassWithOneAttributeTest.SystemUser.class
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15286")
+@JiraKey(value = "HHH-15286")
 public class IdClassWithOneAttributeTest {
 
 	@BeforeEach

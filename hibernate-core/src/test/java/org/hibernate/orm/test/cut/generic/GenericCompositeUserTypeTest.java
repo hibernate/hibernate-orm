@@ -3,12 +3,12 @@ package org.hibernate.orm.test.cut.generic;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 
-@TestForIssue(jiraKey = "HHH-17019")
+@JiraKey(value = "HHH-17019")
 public class GenericCompositeUserTypeTest extends BaseCoreFunctionalTestCase {
 
     @Override

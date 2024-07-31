@@ -40,7 +40,7 @@ import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.CustomRunner;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
@@ -51,7 +51,7 @@ import org.junit.runner.RunWith;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-9849")
+@JiraKey(value = "HHH-9849")
 @RunWith(CustomRunner.class)
 @RequiresDialect(MySQLDialect.class)
 public class MixedFieldPropertyAnnotationTest {

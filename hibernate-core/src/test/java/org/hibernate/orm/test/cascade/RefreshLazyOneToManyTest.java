@@ -26,11 +26,11 @@ import jakarta.persistence.Table;
 import org.hibernate.Hibernate;
 
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-@TestForIssue(jiraKey = "HHH-12867")
+@JiraKey(value = "HHH-12867")
 public class RefreshLazyOneToManyTest extends BaseCoreFunctionalTestCase {
 
 	@Override

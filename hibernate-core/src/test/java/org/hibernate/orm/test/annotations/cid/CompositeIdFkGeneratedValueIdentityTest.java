@@ -15,7 +15,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.ManyToOne;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
@@ -24,7 +24,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
-@TestForIssue(jiraKey = "HHH-10956")
+@JiraKey(value = "HHH-10956")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 @DomainModel(
 		annotatedClasses = {

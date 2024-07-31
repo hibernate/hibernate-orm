@@ -8,7 +8,7 @@ package org.hibernate.orm.test.nationalized;
 
 import org.hibernate.annotations.Nationalized;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10364")
+@JiraKey(value = "HHH-10364")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNationalizedData.class)
 @DomainModel(
 		annotatedClasses = NationalizedLobFieldTest.MyEntity.class

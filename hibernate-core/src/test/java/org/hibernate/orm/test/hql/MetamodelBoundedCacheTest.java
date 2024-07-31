@@ -14,7 +14,7 @@ import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.internal.JpaMetamodelImpl;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -27,7 +27,7 @@ import static org.junit.Assert.assertEquals;
 public class MetamodelBoundedCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14948")
+	@JiraKey(value = "HHH-14948")
 	public void testMemoryConsumptionOfFailedImportsCache() throws NoSuchFieldException, IllegalAccessException {
 		MappingMetamodel mappingMetamodel = sessionFactory().getMappingMetamodel();
 

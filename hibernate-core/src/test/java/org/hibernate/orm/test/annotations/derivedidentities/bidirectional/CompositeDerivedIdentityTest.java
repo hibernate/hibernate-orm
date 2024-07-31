@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.annotations.derivedidentities.bidirectional;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -72,7 +72,7 @@ public class CompositeDerivedIdentityTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10476")
+	@JiraKey(value = "HHH-10476")
 	public void testBidirectonalKeyManyToOneId(SessionFactoryScope scope) {
 		Product product = new Product();
 		product.setName( "Product 1" );

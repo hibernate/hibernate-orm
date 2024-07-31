@@ -36,7 +36,7 @@ import org.hibernate.tool.schema.spi.SqlScriptException;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -52,7 +52,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-13673")
+@JiraKey(value = "HHH-13673")
 @RequiresDialect(value = H2Dialect.class,
 		jiraKey = "HHH-6286",
 		comment = "Only running the tests against H2, because the sql statements in the import file are not generic. " +

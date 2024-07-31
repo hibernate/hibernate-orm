@@ -21,7 +21,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyFactory;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -37,7 +37,7 @@ import org.jboss.logging.Logger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@TestForIssue(jiraKey = "HHH-13020")
+@JiraKey(value = "HHH-13020")
 @Jpa(annotatedClasses = {
 		PrivateConstructorTest.Parent.class,
 		PrivateConstructorTest.Child.class

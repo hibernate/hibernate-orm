@@ -27,7 +27,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.metamodel.CollectionClassification;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -681,7 +681,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-4685" )
+	@JiraKey( value = "HHH-4685" )
 	public void testManyToManyEmbeddableBiDirectionalDotNotationInMappedBy() {
 		// Section 11.1.25
 		// The ManyToMany annotation may be used within an embeddable class contained within an entity class to specify a
@@ -720,7 +720,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-4685" )
+	@JiraKey( value = "HHH-4685" )
 	public void testOneToManyEmbeddableBiDirectionalDotNotationInMappedBy() {
 		// Section 11.1.26
 		// The ManyToOne annotation may be used within an embeddable class to specify a relationship from the embeddable

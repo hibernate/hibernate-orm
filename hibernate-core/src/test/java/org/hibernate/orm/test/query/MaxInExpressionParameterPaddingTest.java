@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -39,7 +39,7 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-12469")
+@JiraKey(value = "HHH-12469")
 @RequiresDialect(H2Dialect.class)
 @Jpa(
 		annotatedClasses = { MaxInExpressionParameterPaddingTest.Person.class },
@@ -116,7 +116,7 @@ public class MaxInExpressionParameterPaddingTest {
 				arguments( 15, 15 ) );
 	}
 
-	@TestForIssue(jiraKey = "HHH-16826")
+	@JiraKey(value = "HHH-16826")
 	@ParameterizedTest
 	@MethodSource
 	public void testInClauseParameterPaddingUpToLimit(int parameters, int expectedBindVariables, EntityManagerFactoryScope scope) {
@@ -147,7 +147,7 @@ public class MaxInExpressionParameterPaddingTest {
 				arguments( 8 * MAX_COUNT + 1, 16 ) );
 	}
 
-	@TestForIssue(jiraKey = "HHH-16826")
+	@JiraKey(value = "HHH-16826")
 	@ParameterizedTest
 	@MethodSource
 	public void testInClauseParameterPaddingAfterLimit(int parameters, int expectedInClauses, EntityManagerFactoryScope scope) {

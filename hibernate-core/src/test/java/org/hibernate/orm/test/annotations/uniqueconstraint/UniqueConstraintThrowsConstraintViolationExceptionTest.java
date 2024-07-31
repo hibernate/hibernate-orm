@@ -17,7 +17,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.exception.ConstraintViolationException;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -28,7 +28,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-11236")
+@JiraKey(value = "HHH-11236")
 public class UniqueConstraintThrowsConstraintViolationExceptionTest extends BaseCoreFunctionalTestCase {
 
 	@Override

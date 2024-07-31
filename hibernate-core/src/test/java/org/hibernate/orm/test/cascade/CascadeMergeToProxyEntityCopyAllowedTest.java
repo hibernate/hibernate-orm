@@ -29,7 +29,7 @@ import jakarta.persistence.Version;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -42,7 +42,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@TestForIssue(jiraKey = "HHH-13590")
+@JiraKey(value = "HHH-13590")
 @DomainModel(
 		annotatedClasses = {
 				CascadeMergeToProxyEntityCopyAllowedTest.AbstractEntity.class,

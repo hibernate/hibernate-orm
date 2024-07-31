@@ -15,7 +15,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.IntTestEntity;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.junit.Test;
@@ -29,7 +29,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-11232")
+@JiraKey(value = "HHH-11232")
 public class JtaSessionClosedBeforeCommitTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer entityId;
 

@@ -11,7 +11,7 @@ import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
@@ -25,7 +25,7 @@ import static org.junit.Assert.assertEquals;
  * 
  * @author Svein Baardsen
  */
-@TestForIssue(jiraKey = "HHH-8854")
+@JiraKey(value = "HHH-8854")
 public class AttributeConverterOnSuperclassTest extends BaseUnitTestCase {
 
 	public static class StringIntegerAttributeConverter implements AttributeConverter<String, Integer> {

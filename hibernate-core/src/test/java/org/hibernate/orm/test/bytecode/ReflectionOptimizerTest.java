@@ -13,7 +13,7 @@ import static org.junit.Assert.assertNotNull;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -62,7 +62,7 @@ public class ReflectionOptimizerTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12584")
+	@JiraKey(value = "HHH-12584")
 	public void testAbstractClass() {
 		ReflectionOptimizer reflectionOptimizer = provider.getReflectionOptimizer( AbstractClass.class, new String[]{ "getProperty" },
 			new String[]{ "setProperty" }, new Class[]{ String.class } );
@@ -70,7 +70,7 @@ public class ReflectionOptimizerTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12584")
+	@JiraKey(value = "HHH-12584")
 	public void testInterface() {
 		ReflectionOptimizer reflectionOptimizer = provider.getReflectionOptimizer( Interface.class, new String[]{ "getProperty" },
 			new String[]{ "setProperty" }, new Class[]{ String.class } );

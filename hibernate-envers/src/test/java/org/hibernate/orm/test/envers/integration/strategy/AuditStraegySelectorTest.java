@@ -22,7 +22,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.junit.Test;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
 /**
@@ -31,7 +31,7 @@ import org.hibernate.testing.util.ServiceRegistryUtil;
  *
  * @author Chris Cranford
  */
-@TestForIssue( jiraKey = "HHH-12077" )
+@JiraKey( value = "HHH-12077" )
 public class AuditStraegySelectorTest {
     
 	@Test

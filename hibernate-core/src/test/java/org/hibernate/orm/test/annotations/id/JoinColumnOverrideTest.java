@@ -15,7 +15,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
@@ -40,7 +40,7 @@ public class JoinColumnOverrideTest {
 			"id numeric(128,0) not null, primary key (id))";
 
 	@Test
-	@TestForIssue(jiraKey = "ANN-748")
+	@JiraKey(value = "ANN-748")
 	public void testBlownPrecision() {
 		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, "SQLServer" )

@@ -7,8 +7,9 @@
 package org.hibernate.processor.test.arraytype;
 
 import org.hibernate.processor.test.util.CompilationTest;
-import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.WithClasses;
+
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
@@ -19,14 +20,14 @@ import static org.hibernate.processor.test.util.TestUtil.assertAttributeTypeInMe
 public class ArrayTest extends CompilationTest {
 
 	@Test
-	@TestForIssue(jiraKey = "METAGEN-2")
+	@JiraKey(value = "METAGEN-2")
 	@WithClasses(Image.class)
 	public void testPrimitiveArray() {
 		assertAttributeTypeInMetaModelFor( Image.class, "data", byte[].class, "Wrong type for field." );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "METAGEN-2")
+	@JiraKey(value = "METAGEN-2")
 	@WithClasses(TemperatureSamples.class)
 	public void testIntegerArray() {
 		assertAttributeTypeInMetaModelFor(

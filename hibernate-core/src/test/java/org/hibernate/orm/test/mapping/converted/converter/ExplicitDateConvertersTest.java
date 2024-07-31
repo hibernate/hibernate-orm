@@ -19,7 +19,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -29,7 +29,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-8807" )
+@JiraKey( value = "HHH-8807" )
 public class ExplicitDateConvertersTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	// NOTE : initially unable to reproduce the reported problem

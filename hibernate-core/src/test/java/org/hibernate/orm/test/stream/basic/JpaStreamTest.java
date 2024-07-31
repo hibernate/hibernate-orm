@@ -22,8 +22,9 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.resource.jdbc.ResourceRegistry;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKeyGroup;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -49,7 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class JpaStreamTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11907")
+	@JiraKey(value = "HHH-11907")
 	public void testQueryStream(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			MyEntity e = new MyEntity();
@@ -91,7 +92,10 @@ public class JpaStreamTest {
 
 	@Test
 	@RequiresDialect(H2Dialect.class)
-	@TestForIssue(jiraKey = { "HHH-13872", "HHH-14449" })
+	@JiraKeyGroup({
+			@JiraKey(value = "HHH-13872"),
+			@JiraKey(value = "HHH-14449")
+	})
 	public void testStreamCloseOnTerminalOperation(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.createQuery( "delete from MyEntity" ).executeUpdate();

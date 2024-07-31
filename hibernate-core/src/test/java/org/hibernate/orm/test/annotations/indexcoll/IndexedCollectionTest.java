@@ -22,7 +22,7 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -672,7 +672,7 @@ public class IndexedCollectionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8879")
+	@JiraKey(value = "HHH-8879")
 	public void testMapKeyEmbeddableWithEntityKey(SessionFactoryScope scope) {
 		Session s = scope.getSessionFactory().openSession();
 		Transaction tx;
@@ -716,7 +716,7 @@ public class IndexedCollectionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8994")
+	@JiraKey(value = "HHH-8994")
 	public void testEmbeddableWithEntityKey(SessionFactoryScope scope) {
 		Session s = scope.getSessionFactory().openSession();
 		Transaction tx;

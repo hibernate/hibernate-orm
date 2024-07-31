@@ -21,7 +21,7 @@ import jakarta.persistence.TableGenerator;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -49,7 +49,7 @@ import org.junit.jupiter.api.Test;
 public class InsertOrderingWithCascadeOnPersist {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11768")
+	@JiraKey(value = "HHH-11768")
 	public void testInsertOrderingAvoidingForeignKeyConstraintViolation(SessionFactoryScope scope) {
 		Long bidId = scope.fromTransaction( session -> {
 			// create MarketBid and Group

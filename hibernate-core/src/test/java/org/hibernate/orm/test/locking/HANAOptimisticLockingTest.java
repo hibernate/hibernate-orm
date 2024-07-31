@@ -14,7 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Version;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-11656")
+@JiraKey(value = "HHH-11656")
 @RequiresDialect(HANADialect.class)
 public class HANAOptimisticLockingTest {
 

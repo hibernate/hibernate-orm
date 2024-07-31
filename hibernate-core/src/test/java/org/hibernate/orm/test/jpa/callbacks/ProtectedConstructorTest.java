@@ -15,7 +15,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@TestForIssue( jiraKey = "HHH-13020" )
+@JiraKey( value = "HHH-13020" )
 @Jpa(annotatedClasses = {
 		ProtectedConstructorTest.Parent.class,
 		ProtectedConstructorTest.Child.class

@@ -18,7 +18,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.Test;
 
 /*
@@ -34,7 +34,7 @@ public class BatchSortingTest extends BaseInsertOrderingTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13410")
+	@JiraKey(value = "HHH-13410")
 	public void batchInsertTest() {
 
 		sessionFactoryScope().inTransaction( session -> {

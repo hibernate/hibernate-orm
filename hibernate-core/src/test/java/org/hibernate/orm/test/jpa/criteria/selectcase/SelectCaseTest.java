@@ -38,10 +38,10 @@ import jakarta.persistence.criteria.Root;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
-@TestForIssue( jiraKey = "HHH-9731" )
+@JiraKey( value = "HHH-9731" )
 public class SelectCaseTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

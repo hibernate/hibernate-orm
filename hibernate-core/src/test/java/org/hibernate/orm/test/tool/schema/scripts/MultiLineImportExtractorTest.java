@@ -14,7 +14,7 @@ import java.util.List;
 
 import org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.junit.Test;
 
@@ -74,7 +74,7 @@ public class MultiLineImportExtractorTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-16279")
+	@JiraKey(value = "HHH-16279")
 	public void testExtractionFromCommentsOnlyScript() throws IOException {
 		final ClassLoader classLoader = ClassLoader.getSystemClassLoader();
 

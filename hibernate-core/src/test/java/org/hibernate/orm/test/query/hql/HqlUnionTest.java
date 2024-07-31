@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.hibernate.dialect.SybaseASEDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -24,7 +24,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15766")
+@JiraKey(value = "HHH-15766")
 @SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase ASE does not support order by in subqueries")
 public class HqlUnionTest {
 

@@ -20,7 +20,7 @@ import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.StrIntTestEntity;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -148,7 +148,7 @@ public class MaximalizePropertyQuery extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7800")
+	@JiraKey(value = "HHH-7800")
 	public void testMaximizeInDisjunction() {
 		List<Integer> idsToQuery = Arrays.asList( id1, id3 );
 
@@ -174,7 +174,7 @@ public class MaximalizePropertyQuery extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7827")
+	@JiraKey(value = "HHH-7827")
 	public void testAllLatestRevisionsOfEntityType() {
 		List result = getAuditReader().createQuery()
 				.forRevisionsOfEntity( StrIntTestEntity.class, false, true )

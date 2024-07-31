@@ -26,7 +26,7 @@ import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
 import org.hibernate.orm.test.jpa.SettingsGenerator;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.junit.jupiter.api.AfterEach;
@@ -89,7 +89,7 @@ public class TransactionCommitFailureTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12285")
+	@JiraKey(value = "HHH-12285")
 	public void assertConnectionIsReleasedIfRollbackFails() {
 		EntityManager em = emf.createEntityManager();
 		try {

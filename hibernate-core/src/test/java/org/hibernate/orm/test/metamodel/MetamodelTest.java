@@ -15,7 +15,7 @@ import jakarta.persistence.ManyToMany;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
@@ -34,7 +34,7 @@ import static org.junit.Assert.assertEquals;
 public class MetamodelTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12906")
+	@JiraKey(value = "HHH-12906")
 	public void testGetAllCollectionRoles(EntityManagerFactoryScope scope) {
 		String[] collectionRoles = ( (SessionFactoryImplementor) scope.getEntityManagerFactory() ).getMetamodel()
 				.getAllCollectionRoles();

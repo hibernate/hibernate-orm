@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -63,7 +63,7 @@ public class EntityAsParamValueTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15256")
+	@JiraKey(value = "HHH-15256")
 	public void testQueryWithLeftJoinEntityAsParamValue(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -94,7 +94,7 @@ public class EntityAsParamValueTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15223")
+	@JiraKey(value = "HHH-15223")
 	public void testQueryWithEntityAsParamValue(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

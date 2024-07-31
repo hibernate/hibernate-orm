@@ -8,7 +8,7 @@ package org.hibernate.orm.test.query.hhh12225;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -18,7 +18,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 
-@TestForIssue(jiraKey = "HHH-12225")
+@JiraKey(value = "HHH-12225")
 @DomainModel(
 		xmlMappings = {
 				"org/hibernate/orm/test/query/hhh12225/Contract.hbm.xml",

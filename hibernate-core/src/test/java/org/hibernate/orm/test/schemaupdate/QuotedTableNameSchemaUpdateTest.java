@@ -26,7 +26,7 @@ import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.Skip;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
@@ -61,7 +61,7 @@ public class QuotedTableNameSchemaUpdateTest extends BaseUnitTestCase {
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10820")
+	@JiraKey(value = "HHH-10820")
 	@Skip(condition = Skip.OperatingSystem.Windows.class, message = "On Windows, MySQL is case insensitive!")
 	public void testSchemaUpdateWithQuotedTableName() throws Exception {
 		final MetadataSources metadataSources = new MetadataSources( ssr );

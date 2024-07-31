@@ -7,8 +7,9 @@
 package org.hibernate.processor.test.usertype;
 
 import org.hibernate.processor.test.util.CompilationTest;
-import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.WithClasses;
+
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
@@ -17,7 +18,7 @@ import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldIn
 /**
  * @author Hardy Ferentschik
  */
-@TestForIssue(jiraKey = "METAGEN-28")
+@JiraKey(value = "METAGEN-28")
 public class UserTypeTest extends CompilationTest {
 	@Test
 	@WithClasses({ ContactDetails.class, PhoneNumber.class })

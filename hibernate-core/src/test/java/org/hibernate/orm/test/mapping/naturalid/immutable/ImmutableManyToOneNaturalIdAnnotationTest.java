@@ -14,7 +14,7 @@ import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -32,7 +32,7 @@ import static org.junit.Assert.assertTrue;
 public class ImmutableManyToOneNaturalIdAnnotationTest {
 
     @Test
-    @TestForIssue( jiraKey = "HHH-10360")
+    @JiraKey( value = "HHH-10360")
     public void testNaturalIdNullability(SessionFactoryScope scope) {
 		// nullability is not specified for either properties making up
 		// the natural ID, so they should be nullable by annotation-specific default

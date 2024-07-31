@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterEach;
@@ -33,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		EnumForeignKeyParameterMappingTest.EntityWithEnumPrimaryKey.class,
 		EnumForeignKeyParameterMappingTest.EntityWithEnumForeignKey.class
 })
-@TestForIssue(jiraKey = "HHH-15842")
+@JiraKey(value = "HHH-15842")
 public class EnumForeignKeyParameterMappingTest {
 
 	List<EntityWithEnumPrimaryKey> entitiesWithEnumPk = new ArrayList<>();

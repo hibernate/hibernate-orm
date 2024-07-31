@@ -14,10 +14,10 @@ import java.util.Arrays;
 
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
-@TestForIssue(jiraKey = "HHH-13361")
+@JiraKey(value = "HHH-13361")
 public class NestedEmbeddedIdentifiersTest extends BaseEnversJPAFunctionalTestCase {
 
 	private OwnerOfRelationCodeId id;

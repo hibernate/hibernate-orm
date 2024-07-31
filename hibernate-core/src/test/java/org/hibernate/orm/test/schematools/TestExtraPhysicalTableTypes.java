@@ -35,7 +35,7 @@ import org.junit.After;
 import org.junit.Assume;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
@@ -46,7 +46,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10298")
+@JiraKey(value = "HHH-10298")
 public class TestExtraPhysicalTableTypes {
 
 	private StandardServiceRegistry ssr;

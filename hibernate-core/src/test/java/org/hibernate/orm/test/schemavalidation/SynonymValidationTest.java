@@ -15,7 +15,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialects;
@@ -108,7 +108,7 @@ public class SynonymValidationTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12406")
+	@JiraKey(value = "HHH-12406")
 	public void testSynonymUsingDefaultStrategySchemaValidator() {
 		// Hibernate should use JdbcMetadaAccessStrategy.INDIVIDUALLY when
 		// AvailableSettings.ENABLE_SYNONYMS is true.
@@ -128,7 +128,7 @@ public class SynonymValidationTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12406")
+	@JiraKey(value = "HHH-12406")
 	public void testSynonymUsingGroupedSchemaValidator() {
 		// Hibernate should use JdbcMetadaAccessStrategy.INDIVIDUALLY when
 		// AvailableSettings.ENABLE_SYNONYMS is true,

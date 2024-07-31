@@ -24,7 +24,7 @@ import org.hibernate.Transaction;
 import org.hibernate.dialect.SybaseDialect;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -33,7 +33,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-9306")
+@JiraKey(value = "HHH-9306")
 public class InheritanceManyToManyForeignKeyTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override

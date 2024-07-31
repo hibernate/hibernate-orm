@@ -12,7 +12,7 @@ import java.util.List;
 
 import org.hibernate.annotations.CompositeType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -28,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		annotatedClasses = ImmutableCompositeUserTypeTest.Wallet.class
 )
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-15554")
+@JiraKey( value = "HHH-15554")
 public class ImmutableCompositeUserTypeTest {
 
 	@Test

@@ -19,7 +19,7 @@ import jakarta.persistence.Table;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -29,7 +29,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
  * @author Vlad Mihalcea
  */
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-@TestForIssue( jiraKey = "HHH-9662" )
+@JiraKey( value = "HHH-9662" )
 public class CompositeIdIdentityTest extends BaseCoreFunctionalTestCase {
 
 	@Test

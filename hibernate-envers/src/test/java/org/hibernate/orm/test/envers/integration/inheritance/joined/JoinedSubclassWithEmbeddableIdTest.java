@@ -8,7 +8,7 @@ package org.hibernate.orm.test.envers.integration.inheritance.joined;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.configuration.EnversSettings;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		}
 )
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-15686")
+@JiraKey( value = "HHH-15686")
 public class JoinedSubclassWithEmbeddableIdTest {
 
 	@Test

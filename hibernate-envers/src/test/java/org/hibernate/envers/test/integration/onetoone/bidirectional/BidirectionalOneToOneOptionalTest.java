@@ -13,7 +13,7 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.integration.onetoone.bidirectional.BiRefedOptionalEntity;
 import org.hibernate.orm.test.envers.integration.onetoone.bidirectional.BiRefingOptionalEntity;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -23,7 +23,7 @@ import static org.junit.Assert.assertNull;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-8305")
+@JiraKey(value = "HHH-8305")
 public class BidirectionalOneToOneOptionalTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer refingWithNoRefedId;
 	private Integer refingId;

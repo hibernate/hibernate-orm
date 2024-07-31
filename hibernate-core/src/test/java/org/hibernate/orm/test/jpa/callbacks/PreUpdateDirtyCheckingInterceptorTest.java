@@ -26,7 +26,7 @@ import org.hibernate.SessionBuilder;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.type.Type;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -35,7 +35,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernateSes
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-@TestForIssue(jiraKey = "HHH-12718")
+@JiraKey(value = "HHH-12718")
 public class PreUpdateDirtyCheckingInterceptorTest
 		extends BaseNonConfigCoreFunctionalTestCase {
 

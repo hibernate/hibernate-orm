@@ -18,7 +18,7 @@ import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -32,7 +32,7 @@ import static org.junit.Assert.fail;
  *
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-8051")
+@JiraKey(value = "HHH-8051")
 public class RelationTargetNotFoundLegacyTest extends BaseEnversJPAFunctionalTestCase {
     @Override
     protected Class<?>[] getAnnotatedClasses() {

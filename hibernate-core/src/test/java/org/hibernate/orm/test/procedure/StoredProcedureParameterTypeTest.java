@@ -36,7 +36,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.TrueFalseConverter;
 import org.hibernate.type.YesNoConverter;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -58,7 +58,7 @@ public class StoredProcedureParameterTypeTest {
 	private static final byte[] TEST_BYTE_ARRAY = TEST_STRING.getBytes();
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testNumericBooleanTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery( "test" )
@@ -69,7 +69,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testNumericBooleanTypeConverterInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery( "test" )
@@ -80,7 +80,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testYesNoTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery( "test" )
@@ -91,7 +91,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testYesNoTypeConverterInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery( "test" )
@@ -102,7 +102,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testTrueFalseTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -112,7 +112,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testTrueFalseTypeConverterInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -122,7 +122,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testStringTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -132,7 +132,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testMaterializedClobTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -142,7 +142,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testTextTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -152,7 +152,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testCharacterTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -162,7 +162,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testBooleanTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -172,7 +172,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testByteTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -182,7 +182,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testShortTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -192,7 +192,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testIntegerTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -202,7 +202,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testLongTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -221,7 +221,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testDoubleTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -231,7 +231,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testBigIntegerTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -241,7 +241,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testBigDecimalTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -251,7 +251,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testTimestampTypeDateInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -261,7 +261,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testTimestampTypeTimestampInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -271,7 +271,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testTimeTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -281,7 +281,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testDateTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -291,7 +291,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testCalendarTypeCalendarInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -301,7 +301,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testCurrencyTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -311,7 +311,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testLocaleTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -321,7 +321,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testTimeZoneTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -331,7 +331,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testUrlTypeInParameter(SessionFactoryScope scope) throws MalformedURLException {
 		final URL url = new URL( "http://example.com");
 		scope.inTransaction(
@@ -342,7 +342,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testClassTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -352,7 +352,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testBlobTypeInParameter(SessionFactoryScope scope) throws SQLException {
 		final Blob blob = new SerialBlob( TEST_BYTE_ARRAY);
 		scope.inTransaction(
@@ -363,7 +363,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testClobTypeInParameter(SessionFactoryScope scope) throws SQLException {
 		final Clob clob = new SerialClob( TEST_CHAR_ARRAY);
 		scope.inTransaction(
@@ -374,7 +374,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testBinaryTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -384,7 +384,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testCharArrayTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -394,7 +394,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
+	@JiraKey( value = "HHH-12661" )
 	public void testUUIDBinaryTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
@@ -404,7 +404,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12905")
+	@JiraKey(value = "HHH-12905")
 	public void testStringTypeInParameterIsNull(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -416,7 +416,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12905")
+	@JiraKey(value = "HHH-12905")
 	public void testStringTypeInParameterIsNullWithoutEnablePassingNulls(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -429,7 +429,7 @@ public class StoredProcedureParameterTypeTest {
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15618")
+	@JiraKey(value = "HHH-15618")
 	public void testTypedParameterValueInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -445,7 +445,7 @@ public class StoredProcedureParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15618")
+	@JiraKey(value = "HHH-15618")
 	public void testTypedParameterValueInParameterWithNotSpecifiedType(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

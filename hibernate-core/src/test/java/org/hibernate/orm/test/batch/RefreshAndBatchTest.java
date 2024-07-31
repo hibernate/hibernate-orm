@@ -2,7 +2,7 @@ package org.hibernate.orm.test.batch;
 
 import org.hibernate.annotations.BatchSize;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeAll;
@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Jpa(
 		annotatedClasses = RefreshAndBatchTest.TestEntity.class
 )
-@TestForIssue(jiraKey = "HHH-15851")
+@JiraKey(value = "HHH-15851")
 public class RefreshAndBatchTest {
 	private static final Long ENTITY1_ID = 1l;
 	private static final Long ENTITY2_ID = 2l;

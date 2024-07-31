@@ -27,7 +27,7 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -37,7 +37,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gail Badner
  */
-@TestForIssue( jiraKey = "HHH-6960" )
+@JiraKey( value = "HHH-6960" )
 public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCase {
 
 	@Test

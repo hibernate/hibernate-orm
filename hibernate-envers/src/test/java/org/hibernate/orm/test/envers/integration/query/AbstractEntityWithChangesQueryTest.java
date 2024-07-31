@@ -25,7 +25,7 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.tools.TestTools;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
@@ -33,7 +33,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Chris Cranford
  */
-@TestForIssue( jiraKey = "HHH-8058" )
+@JiraKey( value = "HHH-8058" )
 public abstract class AbstractEntityWithChangesQueryTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer simpleId;
 

@@ -8,11 +8,11 @@ package org.hibernate.processor.test.xmlembeddable;
 
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.IgnoreCompilationErrors;
-import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.WithClasses;
 import org.hibernate.processor.test.util.WithMappingFiles;
 import org.hibernate.processor.test.xmlembeddable.foo.BusinessId;
 
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class EmbeddableConfiguredInXmlTest extends CompilationTest {
 	@Test
-	@TestForIssue(jiraKey = "METAGEN-66")
+	@JiraKey(value = "METAGEN-66")
 	@WithClasses(value = { Foo.class, BusinessEntity.class }, preCompile = BusinessId.class)
 	@WithMappingFiles("orm.xml")
 	@IgnoreCompilationErrors

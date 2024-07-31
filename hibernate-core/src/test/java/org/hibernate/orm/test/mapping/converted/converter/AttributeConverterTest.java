@@ -40,7 +40,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ExceptionUtil;
@@ -198,7 +198,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8462")
+	@JiraKey(value = "HHH-8462")
 	public void testBasicOrmXmlConverterApplication() {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
@@ -232,7 +232,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14881")
+	@JiraKey(value = "HHH-14881")
 	public void testBasicOrmXmlConverterWithOrmXmlPackage() {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
@@ -340,7 +340,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-14206" )
+	@JiraKey( value = "HHH-14206" )
 	public void testPrimitiveTypeConverterAutoApplied() {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
@@ -404,7 +404,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14021")
+	@JiraKey(value = "HHH-14021")
 	public void testBasicByteUsage() {
 		Configuration cfg = new Configuration();
 		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
@@ -446,7 +446,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8866")
+	@JiraKey(value = "HHH-8866")
 	public void testEnumConverter() {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )

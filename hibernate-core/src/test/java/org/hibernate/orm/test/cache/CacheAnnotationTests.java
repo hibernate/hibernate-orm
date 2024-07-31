@@ -16,7 +16,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -42,7 +42,7 @@ public class CacheAnnotationTests extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12587")
+	@JiraKey(value = "HHH-12587")
 	public void testCacheWriteConcurrencyStrategyNone() {
 		doInHibernate( this::sessionFactory, session -> {
 			NoCacheConcurrencyStrategyEntity entity = new NoCacheConcurrencyStrategyEntity();
@@ -53,7 +53,7 @@ public class CacheAnnotationTests extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12868")
+	@JiraKey(value = "HHH-12868")
 	public void testCacheReadConcurrencyStrategyNone() {
 		doInHibernate( this::sessionFactory, session -> {
 			NoCacheConcurrencyStrategyEntity entity = new NoCacheConcurrencyStrategyEntity();

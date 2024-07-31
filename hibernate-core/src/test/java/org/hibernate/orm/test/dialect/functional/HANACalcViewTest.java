@@ -23,7 +23,7 @@ import org.hibernate.Session;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.query.Query;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -109,7 +109,7 @@ public class HANACalcViewTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12541")
+	@JiraKey(value = "HHH-12541")
 	public void testCalcViewEntity() throws Exception {
 		Session s = openSession();
 		CVEntity cvEntity = s.find( CVEntity.class, "X" );
@@ -120,7 +120,7 @@ public class HANACalcViewTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12541")
+	@JiraKey(value = "HHH-12541")
 	public void testCalcViewEntityQuery() throws Exception {
 		Session s = openSession();
 		Query<CVEntity> query = s.createQuery( "select e from CVEntity e", CVEntity.class );
@@ -134,7 +134,7 @@ public class HANACalcViewTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12541")
+	@JiraKey(value = "HHH-12541")
 	public void testCalcViewEntityCriteriaQuery() throws Exception {
 		Session s = openSession();
 		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
@@ -152,7 +152,7 @@ public class HANACalcViewTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12541")
+	@JiraKey(value = "HHH-12541")
 	public void testCalcViewDTO() throws Exception {
 		Session s = openSession();
 		Query<CVEntityDTO> query = s.createQuery(

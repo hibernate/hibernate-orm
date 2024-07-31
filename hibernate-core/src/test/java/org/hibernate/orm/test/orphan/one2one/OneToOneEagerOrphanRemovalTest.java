@@ -11,7 +11,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-9663")
+@JiraKey(value = "HHH-9663")
 @DomainModel(
 		annotatedClasses = {
 				OneToOneEagerOrphanRemovalTest.Car.class,

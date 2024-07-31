@@ -17,7 +17,7 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.HibernateHints;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-12430")
+@JiraKey(value = "HHH-12430")
 @Jpa(
 		annotatedClasses = {
 				QueryCacheJoinFetchTest.Person.class,

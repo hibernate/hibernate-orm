@@ -13,7 +13,7 @@ import org.hibernate.LazyInitializationException;
 import org.hibernate.Session;
 import org.hibernate.stat.SessionStatistics;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -67,7 +67,7 @@ public class PersistOnLazyCollectionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11916")
+	@JiraKey(value = "HHH-11916")
 	public void testPersistOnAlreadyPersistentEntityWithUninitializedLazyCollection(SessionFactoryScope scope) {
 
 		final Invoice _invoice = scope.fromTransaction( session -> createInvoiceWithTwoInvoiceLines( session ) );
@@ -97,7 +97,7 @@ public class PersistOnLazyCollectionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11916")
+	@JiraKey(value = "HHH-11916")
 	public void testPersistOnNewEntityRelatedToAlreadyPersistentEntityWithUninitializedLazyCollection(
 			SessionFactoryScope scope) {
 		final Invoice _invoice = scope.fromTransaction( session -> createInvoiceWithTwoInvoiceLines( session ) );

@@ -17,7 +17,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -67,7 +67,7 @@ public class CountExpressionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9182")
+	@JiraKey(value = "HHH-9182")
 	public void testCountDistinctExpression() {
 		doInHibernate( this::sessionFactory, session -> {
 			List results = session.createQuery(
@@ -88,7 +88,7 @@ public class CountExpressionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11042")
+	@JiraKey(value = "HHH-11042")
 	public void testCountDistinctTuple() {
 		doInHibernate( this::sessionFactory, session -> {
 			List results = session.createQuery(
@@ -109,7 +109,7 @@ public class CountExpressionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11042")
+	@JiraKey(value = "HHH-11042")
 	public void testCountDistinctTupleSanity() {
 		doInHibernate( this::sessionFactory, session -> {
 			// A simple concatenation of tuple arguments would produce a distinct count of 1 in this case

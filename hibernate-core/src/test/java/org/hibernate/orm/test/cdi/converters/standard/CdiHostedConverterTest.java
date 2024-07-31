@@ -21,7 +21,7 @@ import org.hibernate.orm.test.cdi.converters.OrmXmlConverterBean;
 import org.hibernate.orm.test.cdi.converters.TheOrmXmlEntity;
 import org.hibernate.tool.schema.Action;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
@@ -107,7 +107,7 @@ public class CdiHostedConverterTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14881\n")
+	@JiraKey(value = "HHH-14881\n")
 	public void testOrmXml() {
 		MonitorBean.reset();
 

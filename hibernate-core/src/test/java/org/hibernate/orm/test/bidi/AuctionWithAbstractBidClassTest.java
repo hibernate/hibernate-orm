@@ -10,8 +10,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Date;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKeyGroup;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -26,7 +27,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		xmlMappings = "org/hibernate/orm/test/bidi/Auction3.hbm.xml"
 )
 @SessionFactory
-@TestForIssue( jiraKey = {"HHH-987", "HHH-992"} )
+@JiraKeyGroup({
+		@JiraKey(value = "HHH-987"),
+		@JiraKey(value = "HHH-992")
+})
 public class AuctionWithAbstractBidClassTest {
 
 	@Test

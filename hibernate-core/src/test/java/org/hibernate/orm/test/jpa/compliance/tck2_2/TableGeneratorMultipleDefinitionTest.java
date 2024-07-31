@@ -17,7 +17,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
@@ -25,7 +25,7 @@ import org.junit.Test;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-12157")
+@JiraKey(value = "HHH-12157")
 public class TableGeneratorMultipleDefinitionTest extends BaseUnitTestCase {
 
 	@Test(expected = IllegalArgumentException.class)

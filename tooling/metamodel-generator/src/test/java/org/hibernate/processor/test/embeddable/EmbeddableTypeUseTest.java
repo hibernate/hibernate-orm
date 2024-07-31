@@ -7,9 +7,10 @@
 package org.hibernate.processor.test.embeddable;
 
 import org.hibernate.processor.test.util.CompilationTest;
-import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
+
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
@@ -18,7 +19,7 @@ import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGen
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-12612")
+@JiraKey(value = "HHH-12612")
 public class EmbeddableTypeUseTest extends CompilationTest {
 	@Test
 	@WithClasses({SimpleEntity.class})

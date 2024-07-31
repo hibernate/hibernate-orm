@@ -25,7 +25,7 @@ import org.hibernate.Hibernate;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.FailureExpected;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 
 import org.junit.jupiter.api.AfterEach;
@@ -58,7 +58,7 @@ public class EntityGraphUsingFetchGraphForLazyTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10179")
+	@JiraKey(value = "HHH-10179")
 	@FailureExpected(jiraKey = "HHH-10179")
 	public void testFetchLazyWithGraphsSubsequently(EntityManagerFactoryScope scope) {
 		Address address = new Address();

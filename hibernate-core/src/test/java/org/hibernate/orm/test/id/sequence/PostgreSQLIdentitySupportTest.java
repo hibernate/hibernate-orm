@@ -13,7 +13,7 @@ import jakarta.persistence.Id;
 
 import org.hibernate.dialect.PostgreSQLDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * @author Vlad Mhalcea
  */
-@TestForIssue(jiraKey = "HHH-13202")
+@JiraKey(value = "HHH-13202")
 @RequiresDialect(value = PostgreSQLDialect.class)
 @Jpa(
 		annotatedClasses = PostgreSQLIdentitySupportTest.Role.class

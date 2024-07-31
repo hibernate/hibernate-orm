@@ -6,8 +6,9 @@
  */
 package org.hibernate.processor.test;
 
-import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.util.StringUtil;
+
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -32,7 +33,7 @@ public class StringUtilTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "METAGEN-76")
+	@JiraKey(value = "METAGEN-76")
 	public void testHashCodeNotAProperty() {
 		assertFalse( StringUtil.isProperty( "hashCode", "Integer" ) );
 	}

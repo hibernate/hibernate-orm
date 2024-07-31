@@ -15,14 +15,14 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.hibernate.orm.test.envers.integration.basic.ScalePrecisionEntity;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-7003")
+@JiraKey(value = "HHH-7003")
 public class ColumnScalePrecisionTest extends BaseEnversJPAFunctionalTestCase {
 	private Table auditTable = null;
 	private Table originalTable = null;

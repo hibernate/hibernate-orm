@@ -9,7 +9,7 @@ package org.hibernate.orm.test.id;
 
 import org.hibernate.Transaction;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks.SupportsIdentityColumns;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -18,7 +18,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
-@TestForIssue(jiraKey = "HHH-8611")
+@JiraKey(value = "HHH-8611")
 @RequiresDialectFeature(feature = SupportsIdentityColumns.class)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNoColumnInsert.class)
 @DomainModel(

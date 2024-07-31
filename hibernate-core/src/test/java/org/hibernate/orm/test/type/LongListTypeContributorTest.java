@@ -20,7 +20,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaType;
 import org.hibernate.type.descriptor.jdbc.LongVarcharJdbcType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.junit.jupiter.api.Test;
 
@@ -57,7 +57,7 @@ public class LongListTypeContributorTest extends EntityManagerFactoryBasedFuncti
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11409")
+	@JiraKey(value = "HHH-11409")
 	public void testParameterRegisterredCollection() {
 
 		LongList longList = new LongList( 5L, 11L, 6123L, -61235L, 24L );

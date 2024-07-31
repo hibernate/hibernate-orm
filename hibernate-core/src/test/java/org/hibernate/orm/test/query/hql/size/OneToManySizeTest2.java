@@ -11,7 +11,7 @@ import java.util.Locale;
 
 import org.hibernate.Hibernate;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -26,7 +26,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-@TestForIssue(jiraKey = "HHH-13944")
+@JiraKey(value = "HHH-13944")
 @DomainModel(
 		annotatedClasses = { Skill.class, Teacher.class, Student.class }
 )

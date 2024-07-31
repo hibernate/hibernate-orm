@@ -12,7 +12,7 @@ import java.util.List;
 
 import org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.junit.Test;
 
@@ -23,7 +23,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-14249")
+@JiraKey(value = "HHH-14249")
 public class MultiLineImportWithTabsAndSpacesTest {
 	public static final String IMPORT_FILE = "org/hibernate/orm/test/tool/schema/scripts/multi-line-statements-starting-with-tabs-and-spaces.sql";
 

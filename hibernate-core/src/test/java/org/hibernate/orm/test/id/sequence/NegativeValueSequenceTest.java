@@ -26,7 +26,7 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -50,7 +50,7 @@ public class NegativeValueSequenceTest {
 	);
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-5933")
+	@JiraKey( value = "HHH-5933")
 	public void testNegativeOneAllocationSizeNoopOptimizer() {
 		ServiceRegistryImplementor serviceRegistry = null;
 		SessionFactoryImplementor sessionFactory = null;
@@ -98,7 +98,7 @@ public class NegativeValueSequenceTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-5933")
+	@JiraKey( value = "HHH-5933")
 	public void testNegativeTwoAllocationSizeNoopOptimizer() {
 		ServiceRegistryImplementor serviceRegistry = null;
 		SessionFactoryImplementor sessionFactory = null;
@@ -147,7 +147,7 @@ public class NegativeValueSequenceTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11709" )
+	@JiraKey( value = "HHH-11709" )
 	public void testPositiveOneAllocationSizeNoopOptimizer() {
 		ServiceRegistryImplementor serviceRegistry = null;
 		SessionFactoryImplementor sessionFactory = null;
@@ -195,7 +195,7 @@ public class NegativeValueSequenceTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11709" )
+	@JiraKey( value = "HHH-11709" )
 	public void testPositiveTwoAllocationSizeNoopOptimizer() {
 		ServiceRegistryImplementor serviceRegistry = null;
 		SessionFactoryImplementor sessionFactory = null;
@@ -246,7 +246,7 @@ public class NegativeValueSequenceTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11709" )
+	@JiraKey( value = "HHH-11709" )
 	public void testPositiveTwoAllocationSizePooledOptimizer() {
 		ServiceRegistryImplementor serviceRegistry = null;
 		SessionFactoryImplementor sessionFactory = null;
@@ -296,7 +296,7 @@ public class NegativeValueSequenceTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11712" )
+	@JiraKey( value = "HHH-11712" )
 	public void testNegativeTwoAllocationSizePositiveStartNoopOptimizer() {
 		ServiceRegistryImplementor serviceRegistry = null;
 		SessionFactoryImplementor sessionFactory = null;

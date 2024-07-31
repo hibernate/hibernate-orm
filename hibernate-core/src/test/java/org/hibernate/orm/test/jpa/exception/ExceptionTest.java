@@ -10,7 +10,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.exception.ConstraintViolationException;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
@@ -154,7 +154,7 @@ public class ExceptionTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-4676" )
+	@JiraKey( value = "HHH-4676" )
 	public void testInterceptor(EntityManagerFactoryScope scope) {
 		EntityManager em = scope.getEntityManagerFactory().createEntityManager();
 		em.getTransaction().begin();

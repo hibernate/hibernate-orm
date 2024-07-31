@@ -20,7 +20,7 @@ import org.hibernate.envers.AuditOverrides;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.junit.Test;
@@ -134,7 +134,7 @@ public class EmbeddableTest extends BaseEnversJPAFunctionalTestCase {
     }
 
     @Test
-    @TestForIssue( jiraKey = "HHH-9228" )
+    @JiraKey( value = "HHH-9228" )
     public void testAuditOverrideOnAuditedEmbeddable() {
         final PersistentClass clazz = getPersistentClass( AuditedEmbeddableOverrideEntity.class, auditedId, 1 );
         assertTrue( clazz.hasProperty( "name" ) );
@@ -145,7 +145,7 @@ public class EmbeddableTest extends BaseEnversJPAFunctionalTestCase {
     }
 
     @Test
-    @TestForIssue( jiraKey = "HHH-9229" )
+    @JiraKey( value = "HHH-9229" )
     public void testEmptyEmbeddableWithFullAudit() {
         final PersistentClass clazz = getPersistentClass( FullOverrideEmbeddableEntity.class, fullOverrideId, 1 );
         assertTrue( clazz.hasProperty( "embeddable_intValue" ) );
@@ -153,7 +153,7 @@ public class EmbeddableTest extends BaseEnversJPAFunctionalTestCase {
     }
 
     @Test
-    @TestForIssue( jiraKey = "HHH-9229" )
+    @JiraKey( value = "HHH-9229" )
     public void testEmptyEmbeddableWithNoAudited() {
         final PersistentClass clazz = getPersistentClass( NotAuditedEmbeddableEntity.class, notAuditedId, 1 );
         // not mapped because @NotAudited should override any other behavior.
@@ -162,7 +162,7 @@ public class EmbeddableTest extends BaseEnversJPAFunctionalTestCase {
     }
 
     @Test
-    @TestForIssue( jiraKey = "HHH-9229" )
+    @JiraKey( value = "HHH-9229" )
     public void testEmptyEmbeddableWithAuditOverride() {
         final PersistentClass clazz = getPersistentClass( OverrideEmbeddableEntity.class, overridedId, 1 );
         assertFalse( clazz.hasProperty( "embeddable_strValue" ) );
@@ -170,7 +170,7 @@ public class EmbeddableTest extends BaseEnversJPAFunctionalTestCase {
     }
 
     @Test
-    @TestForIssue( jiraKey = "HHH-9229" )
+    @JiraKey( value = "HHH-9229" )
     public void testEmptyEmbeddableNoAuditOverrides() {
         final PersistentClass clazz = getPersistentClass( SimpleEmbeddableEntity.class, simpleId, 1 );
         assertFalse( clazz.hasProperty( "embeddable_strValue" ) );
@@ -178,7 +178,7 @@ public class EmbeddableTest extends BaseEnversJPAFunctionalTestCase {
     }
 
     @Test
-    @TestForIssue( jiraKey = "HHH-9229" )
+    @JiraKey( value = "HHH-9229" )
     public void testEmptyEmbeddableWithAuditOverrideForMappedSuperclass() {
         final PersistentClass clazz = getPersistentClass(
                 SimpleEmbeddableWithOverrideEntity.class,
@@ -190,7 +190,7 @@ public class EmbeddableTest extends BaseEnversJPAFunctionalTestCase {
     }
 
     @Test
-    @TestForIssue( jiraKey = "HHH-9229" )
+    @JiraKey( value = "HHH-9229" )
     public void testEmptyEmbeddableWithPropertyAuditOverride() {
         final PersistentClass clazz = getPersistentClass(
                 SimpleEmbeddableWithPropertyOverrideEntity.class,

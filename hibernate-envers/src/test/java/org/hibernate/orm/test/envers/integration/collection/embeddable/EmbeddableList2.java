@@ -15,7 +15,7 @@ import org.hibernate.orm.test.envers.entities.StrTestNoProxyEntity;
 import org.hibernate.orm.test.envers.entities.collection.EmbeddableListEntity2;
 import org.hibernate.orm.test.envers.entities.components.relations.ManyToOneEagerComponent;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -28,7 +28,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author thiagolrc
  */
-@TestForIssue(jiraKey = "HHH-6613")
+@JiraKey(value = "HHH-6613")
 public class EmbeddableList2 extends BaseEnversJPAFunctionalTestCase {
 	private Integer ele_id1 = null;
 

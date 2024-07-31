@@ -17,7 +17,7 @@ import org.hibernate.annotations.JavaType;
 import org.hibernate.query.Query;
 import org.hibernate.type.descriptor.java.CharacterArrayJavaType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -69,7 +69,7 @@ public class CharacterArrayIdTest {
 	 * Removes two records from database.
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-8999")
+	@JiraKey(value = "HHH-8999")
 	public void testMultipleDeletions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -92,7 +92,7 @@ public class CharacterArrayIdTest {
 	 * Updates two records from database.
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-8999")
+	@JiraKey(value = "HHH-8999")
 	public void testMultipleUpdates(SessionFactoryScope scope) {
 		final String lastResultName = scope.fromTransaction(
 				session -> {

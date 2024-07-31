@@ -15,7 +15,7 @@ import java.util.function.Consumer;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.orm.test.filter.AbstractStatefulStatelessFilterTest;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -60,7 +60,7 @@ public class FilterInheritanceTest extends AbstractStatefulStatelessFilterTest {
 
 	@ParameterizedTest
 	@MethodSource("transactionKind")
-	@TestForIssue(jiraKey = "HHH-8895")
+	@JiraKey(value = "HHH-8895")
 	public void testSelectFromHuman(
 			BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		inTransaction.accept( scope, session -> {

@@ -10,10 +10,10 @@ import static org.hibernate.processor.test.util.TestUtil.assertAbsenceOfNonDefau
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 
 import org.hibernate.processor.test.util.CompilationTest;
-import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
 
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 /**
@@ -23,7 +23,7 @@ import org.junit.Test;
  * <p>
  * The method may be static or not.
  */
-@TestForIssue(jiraKey = "HHH-17683")
+@JiraKey(value = "HHH-17683")
 public class SuperClassWithGetEntityManagerTest extends CompilationTest {
 	@Test
 	@WithClasses({ EntityWithInstanceGetEntityManager.class, EntityExtendingEntityWithInstanceGetEntityManager.class })

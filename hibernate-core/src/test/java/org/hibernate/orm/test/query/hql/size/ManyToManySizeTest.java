@@ -19,7 +19,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.Imported;
 import org.hibernate.dialect.DerbyDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
-@TestForIssue( jiraKey = "HHH-13619" )
+@JiraKey( value = "HHH-13619" )
 @DomainModel( annotatedClasses = { ManyToManySizeTest.Company.class, ManyToManySizeTest.Customer.class, ManyToManySizeTest.CompanyDto.class } )
 @SessionFactory
 public class ManyToManySizeTest {

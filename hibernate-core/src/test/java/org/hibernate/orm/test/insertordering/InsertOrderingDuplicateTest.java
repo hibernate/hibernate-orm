@@ -18,13 +18,13 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-11634")
+@JiraKey(value = "HHH-11634")
 public class InsertOrderingDuplicateTest extends BaseInsertOrderingTest {
 
 	@Override

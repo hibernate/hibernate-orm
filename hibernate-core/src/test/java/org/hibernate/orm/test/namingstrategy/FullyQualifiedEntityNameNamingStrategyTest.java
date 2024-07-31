@@ -21,7 +21,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PersistentClass;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterAll;
@@ -56,7 +56,7 @@ public class FullyQualifiedEntityNameNamingStrategyTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4312")
+	@JiraKey(value = "HHH-4312")
 	public void testEntityTable() throws Exception {
 		final PersistentClass classMapping = metadata.getEntityBinding( Workflow.class.getName() );
 		final String expectedTableName = transformEntityName( Workflow.class.getName() );
@@ -64,7 +64,7 @@ public class FullyQualifiedEntityNameNamingStrategyTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9327")
+	@JiraKey(value = "HHH-9327")
 	public void testElementCollectionTable() {
 		final Collection collectionMapping = metadata.getCollectionBinding(
 				Workflow.class.getName() + ".localized"
@@ -74,7 +74,7 @@ public class FullyQualifiedEntityNameNamingStrategyTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9327")
+	@JiraKey(value = "HHH-9327")
 	public void testManyToManyCollectionTable() {
 		final Collection collectionMapping = metadata.getCollectionBinding(
 				Category.class.getName() + "." + "items"
@@ -84,7 +84,7 @@ public class FullyQualifiedEntityNameNamingStrategyTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9327")
+	@JiraKey( value = "HHH-9327")
 	public void testManyToManyForeignKeys() {
 		final Collection ownerCollectionMapping = metadata.getCollectionBinding(
 				Category.class.getName() + "." + "items"

@@ -13,7 +13,7 @@ import java.util.List;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import jakarta.persistence.EntityManager;
@@ -66,7 +66,7 @@ public class BasicCriteriaUsageTest extends BaseEntityManagerFunctionalTestCase 
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8283")
+	@JiraKey(value = "HHH-8283")
 	public void testDateCompositeCustomType() {
 		final Date date = Date.from( Instant.now() );
 		final Payment payment = new Payment();
@@ -92,7 +92,7 @@ public class BasicCriteriaUsageTest extends BaseEntityManagerFunctionalTestCase 
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8373")
+	@JiraKey(value = "HHH-8373")
 	public void testFunctionCriteria() {
 		Wall wall = new Wall();
 		wall.setColor( "yellow" );
@@ -114,7 +114,7 @@ public class BasicCriteriaUsageTest extends BaseEntityManagerFunctionalTestCase 
 	}
     
 	@Test
-	@TestForIssue( jiraKey = "HHH-8914" )
+	@JiraKey( value = "HHH-8914" )
 	public void testDoubleNegation() {
 		Wall wall1 = new Wall();
 		wall1.setColor( "yellow" );

@@ -22,7 +22,7 @@ import jakarta.persistence.Table;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.FetchMode;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue(jiraKey = "HHH-565")
+@JiraKey(value = "HHH-565")
 @DomainModel(
 		annotatedClasses = {
 				ReferencedColumnNameTest.User.class,

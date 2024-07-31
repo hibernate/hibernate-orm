@@ -10,7 +10,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-9302")
+@JiraKey(value = "HHH-9302")
 @DomainModel(
 		annotatedClasses = {
 				RootEntity.class, SubEntity.class, SubSubEntity.class, SubSubSubEntity.class

@@ -12,7 +12,7 @@ import org.hibernate.Transaction;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -86,7 +86,7 @@ public class HANASearchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13021")
+	@JiraKey(value = "HHH-13021")
 	public void testTextType(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -118,7 +118,7 @@ public class HANASearchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13021")
+	@JiraKey(value = "HHH-13021")
 	public void testTextTypeFalse(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -150,7 +150,7 @@ public class HANASearchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13021")
+	@JiraKey(value = "HHH-13021")
 	public void testCharType(SessionFactoryScope scope) throws Exception {
 		scope.inSession(
 				session -> {
@@ -187,7 +187,7 @@ public class HANASearchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13021")
+	@JiraKey(value = "HHH-13021")
 	public void testCharTypeComplexQuery(SessionFactoryScope scope) {
 		scope.inSession(
 				session -> {
@@ -224,7 +224,7 @@ public class HANASearchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13021")
+	@JiraKey(value = "HHH-13021")
 	public void testFuzzy(SessionFactoryScope scope) {
 		scope.inSession(
 				session -> {

@@ -13,7 +13,7 @@ import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.fail;
@@ -28,7 +28,7 @@ public class NotAuditedQueryTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11558")
+	@JiraKey(value = "HHH-11558")
 	public void testRevisionsOfEntityNotAuditedMultipleResults() {
 		try {
 			getAuditReader().createQuery()
@@ -42,7 +42,7 @@ public class NotAuditedQueryTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11558")
+	@JiraKey(value = "HHH-11558")
 	public void testRevisionsOfEntityNotAuditedSingleResult() {
 		try {
 			getAuditReader().createQuery()
@@ -57,7 +57,7 @@ public class NotAuditedQueryTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11558")
+	@JiraKey(value = "HHH-11558")
 	public void testForEntitiesAtRevisionNotAuditedMultipleResults() {
 		try {
 			getAuditReader().createQuery()
@@ -71,7 +71,7 @@ public class NotAuditedQueryTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11558")
+	@JiraKey(value = "HHH-11558")
 	public void testForEntitiesAtRevisionNotAuditedSingleResult() {
 		try {
 			getAuditReader().createQuery()
@@ -86,7 +86,7 @@ public class NotAuditedQueryTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11558")
+	@JiraKey(value = "HHH-11558")
 	public void testForEntitiesModifiedAtRevisionNotAuditedMultipleResults() {
 		try {
 			getAuditReader().createQuery()
@@ -100,7 +100,7 @@ public class NotAuditedQueryTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11558")
+	@JiraKey(value = "HHH-11558")
 	public void testForEntitiesModifiedAtRevisionNotAuditedSingleResult() {
 		try {
 			getAuditReader().createQuery()

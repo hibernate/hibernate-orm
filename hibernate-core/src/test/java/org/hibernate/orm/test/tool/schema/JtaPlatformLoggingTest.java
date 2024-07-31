@@ -15,7 +15,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.internal.CoreMessageLogger;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.logger.LoggerInspectionRule;
@@ -30,7 +30,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-12763" )
+@JiraKey( value = "HHH-12763" )
 public class JtaPlatformLoggingTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Rule

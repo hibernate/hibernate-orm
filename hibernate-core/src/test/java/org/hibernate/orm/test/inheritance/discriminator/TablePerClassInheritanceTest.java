@@ -20,7 +20,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Davide D'Alto
  */
-@TestForIssue(jiraKey = "HHH-12332")
+@JiraKey(value = "HHH-12332")
 @DomainModel(
 		annotatedClasses = {
 				TablePerClassInheritanceTest.Person.class,

@@ -16,7 +16,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
@@ -42,7 +42,7 @@ public class InheritedAttributeOverridingTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9485" )
+	@JiraKey( value = "HHH-9485" )
 	public void testInheritedAttributeOverridingMappedsuperclass() {
 		Metadata metadata = new MetadataSources( standardServiceRegistry )
 				.addAnnotatedClass( A.class )
@@ -54,7 +54,7 @@ public class InheritedAttributeOverridingTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9485" )
+	@JiraKey( value = "HHH-9485" )
 	public void testInheritedAttributeOverridingEntity() {
 		Metadata metadata = new MetadataSources( standardServiceRegistry )
 				.addAnnotatedClass( C.class )

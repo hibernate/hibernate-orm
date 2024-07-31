@@ -21,13 +21,13 @@ import org.hibernate.type.StandardBasicTypes;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.envers.RequiresAuditStrategy;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-7780")
+@JiraKey(value = "HHH-7780")
 @RequiresAuditStrategy(DefaultAuditStrategy.class)
 public class UnspecifiedEnumTypeTest extends BaseEnversFunctionalTestCase {
 	private Long id = null;

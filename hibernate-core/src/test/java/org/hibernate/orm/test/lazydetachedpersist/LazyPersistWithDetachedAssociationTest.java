@@ -15,7 +15,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.cfg.Environment;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -60,7 +60,7 @@ public class LazyPersistWithDetachedAssociationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-3846")
+	@JiraKey(value = "HHH-3846")
 	public void testDetachedAssociationOnPersisting(SessionFactoryScope scope) {
 		Address loadedAddress = scope.fromTransaction(
 				session -> {

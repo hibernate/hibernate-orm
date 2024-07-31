@@ -14,7 +14,7 @@ import jakarta.persistence.Table;
 import org.hibernate.StatelessSession;
 import org.hibernate.query.NativeQuery;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -40,7 +40,7 @@ public class StatelessSessionNativeQueryInsertTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12141")
+	@JiraKey(value = "HHH-12141")
 	public void testInsertInStatelessSession(SessionFactoryScope scope) {
 		scope.inSession(
 				session ->

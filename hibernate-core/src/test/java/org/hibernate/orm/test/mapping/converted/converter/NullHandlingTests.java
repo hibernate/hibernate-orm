@@ -19,7 +19,7 @@ import jakarta.persistence.Table;
 import org.hibernate.Session;
 import org.hibernate.jdbc.Work;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -35,7 +35,7 @@ public class NullHandlingTests extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8697" )
+	@JiraKey( value = "HHH-8697" )
 	public void testNullReplacementOnBinding() {
 		TheEntity theEntity = new TheEntity( 1 );
 
@@ -84,7 +84,7 @@ public class NullHandlingTests extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9320" )
+	@JiraKey( value = "HHH-9320" )
 	public void testNullReplacementOnExtraction() {
 		Session session = openSession();
 		session.beginTransaction();

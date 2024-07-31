@@ -11,7 +11,7 @@ import org.hibernate.envers.strategy.ValidityAuditStrategy;
 import org.hibernate.orm.test.envers.Priority;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.envers.RequiresAuditStrategy;
 
 import jakarta.persistence.DiscriminatorColumn;
@@ -26,7 +26,7 @@ import jakarta.persistence.InheritanceType;
 /**
  * @author Chris Cranford
  */
-@TestForIssue( jiraKey = "HHH-9092" )
+@JiraKey( value = "HHH-9092" )
 @RequiresAuditStrategy( ValidityAuditStrategy.class )
 public class RevisionEndTimestampJoinedInheritanceTest extends AbstractRevisionEndTimestampTest {
 

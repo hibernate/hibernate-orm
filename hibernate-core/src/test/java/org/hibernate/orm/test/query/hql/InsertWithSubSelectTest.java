@@ -10,7 +10,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author bjoern.moritz
  */
-@TestForIssue(jiraKey = "HHH-5274")
+@JiraKey(value = "HHH-5274")
 @DomainModel(
 		annotatedClasses = {
 				InsertWithSubSelectTest.A.class,

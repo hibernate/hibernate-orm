@@ -19,7 +19,7 @@ import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import org.junit.After;
@@ -75,7 +75,7 @@ public class DB297SubStringFunctionsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11957")
+	@JiraKey( value = "HHH-11957")
 	public void testSubstringWithStringUnits() {
 
 		mostRecentStatementInspector.clear();
@@ -95,7 +95,7 @@ public class DB297SubStringFunctionsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11957")
+	@JiraKey( value = "HHH-11957")
 	public void testSubstringWithoutStringUnits() {
 
 		mostRecentStatementInspector.clear();
@@ -113,7 +113,7 @@ public class DB297SubStringFunctionsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11957")
+	@JiraKey( value = "HHH-11957")
 	public void testSubstrWithStringUnits() {
 
 		try {
@@ -134,7 +134,7 @@ public class DB297SubStringFunctionsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11957")
+	@JiraKey( value = "HHH-11957")
 	public void testSubstrWithoutStringUnits() {
 
 		mostRecentStatementInspector.clear();

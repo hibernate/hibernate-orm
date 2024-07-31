@@ -4,7 +4,7 @@ import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.Test;
 
 import org.mockito.stubbing.Answer;
@@ -16,7 +16,7 @@ import static org.mockito.Mockito.when;
 /**
  * @author Kyuhee Cho
  */
-@TestForIssue(jiraKey = "HHH-15300")
+@JiraKey(value = "HHH-15300")
 class SqlStatementLoggerTest {
 
 	@Test

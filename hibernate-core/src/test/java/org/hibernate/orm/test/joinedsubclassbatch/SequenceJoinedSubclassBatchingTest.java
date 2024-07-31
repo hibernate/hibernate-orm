@@ -13,7 +13,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.cfg.Environment;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-12968\n")
+@JiraKey(value = "HHH-12968\n")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSequences.class)
 @DomainModel(
 		annotatedClasses = {

@@ -27,7 +27,7 @@ import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.internal.exec.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
@@ -59,7 +59,7 @@ public class TableGeneratorQuotingTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7927")
+	@JiraKey(value = "HHH-7927")
 	public void testTableGeneratorQuoting() {
 		final Metadata metadata = new MetadataSources( serviceRegistry ).addAnnotatedClass( TestEntity.class )
 				.buildMetadata();

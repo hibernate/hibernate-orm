@@ -17,7 +17,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
@@ -29,7 +29,7 @@ import org.junit.Test;
 public class UniqueConstraintValidationTest extends BaseUnitTestCase {
 
 	@Test(expected = AnnotationException.class)
-	@TestForIssue(jiraKey = "HHH-4084")
+	@JiraKey(value = "HHH-4084")
 	public void testUniqueConstraintWithEmptyColumnName() {
 		buildSessionFactory(EmptyColumnNameEntity.class);
 	}

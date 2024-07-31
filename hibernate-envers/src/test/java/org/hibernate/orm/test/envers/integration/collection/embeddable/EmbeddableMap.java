@@ -17,14 +17,14 @@ import org.hibernate.orm.test.envers.entities.components.Component3;
 import org.hibernate.orm.test.envers.entities.components.Component4;
 import org.hibernate.orm.test.envers.tools.TestTools;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Kristoffer Lundberg (kristoffer at cambio dot se)
  */
-@TestForIssue(jiraKey = "HHH-6613")
+@JiraKey(value = "HHH-6613")
 public class EmbeddableMap extends BaseEnversJPAFunctionalTestCase {
 	private Integer eme1_id = null;
 	private Integer eme2_id = null;

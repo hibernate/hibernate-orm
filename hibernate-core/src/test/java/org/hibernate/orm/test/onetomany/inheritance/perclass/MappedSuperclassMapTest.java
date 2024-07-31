@@ -9,7 +9,7 @@ package org.hibernate.orm.test.onetomany.inheritance.perclass;
 import java.util.List;
 import java.util.Map.Entry;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@TestForIssue(jiraKey = "HHH-11005")
+@JiraKey(value = "HHH-11005")
 @DomainModel(
 		annotatedClasses = {
 				Book.class,

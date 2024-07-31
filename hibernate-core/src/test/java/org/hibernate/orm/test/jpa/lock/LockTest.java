@@ -37,7 +37,7 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.Test;
@@ -98,8 +98,8 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 	
 	@Test(timeout = 5 * 1000) //5 seconds
-	@TestForIssue( jiraKey = "HHH-7252" )
-	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class, 
+	@JiraKey( value = "HHH-7252" )
+	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class,
 		                    comment = "Test verifies proper exception throwing when a lock timeout is specified.",
                               jiraKey = "HHH-7252" )
 	@SkipForDialect(value = CockroachDialect.class, comment = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
@@ -148,7 +148,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test(timeout = 5 * 1000) //5 seconds
-	@TestForIssue( jiraKey = "HHH-13364" )
+	@JiraKey( value = "HHH-13364" )
 	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class,
 			comment = "Test verifies proper exception throwing when a lock timeout is specified for Query#getSingleResult.",
 			jiraKey = "HHH-13364" )
@@ -195,7 +195,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test(timeout = 5 * 1000) //5 seconds
-	@TestForIssue( jiraKey = "HHH-13364" )
+	@JiraKey( value = "HHH-13364" )
 	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class,
 			comment = "Test verifies proper exception throwing when a lock timeout is specified for Query#getResultList.",
 			jiraKey = "HHH-13364" )
@@ -245,7 +245,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test(timeout = 5 * 1000) //5 seconds
-	@TestForIssue( jiraKey = "HHH-13364" )
+	@JiraKey( value = "HHH-13364" )
 	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class,
 			comment = "Test verifies proper exception throwing when a lock timeout is specified for NamedQuery#getResultList.",
 			jiraKey = "HHH-13364" )
@@ -1182,7 +1182,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test(timeout = 70 * 1000) //70 seconds
-	@TestForIssue( jiraKey = "HHH-13135" )
+	@JiraKey( value = "HHH-13135" )
 	@SkipForDialect(value = MySQLDialect.class, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
 	@SkipForDialect(value = MariaDBDialect.class, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
 	@SkipForDialect(value = HSQLDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
@@ -1221,7 +1221,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test(timeout = 70 * 1000) //70 seconds
-	@TestForIssue( jiraKey = "HHH-13135" )
+	@JiraKey( value = "HHH-13135" )
 	@SkipForDialect(value = MySQLDialect.class, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
 	@SkipForDialect(value = MariaDBDialect.class, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
 	@SkipForDialect(value = HSQLDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")

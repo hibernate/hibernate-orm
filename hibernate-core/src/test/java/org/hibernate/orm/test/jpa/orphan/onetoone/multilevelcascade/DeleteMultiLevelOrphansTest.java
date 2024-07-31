@@ -13,7 +13,7 @@ import jakarta.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -70,7 +70,7 @@ public class DeleteMultiLevelOrphansTest extends BaseEntityManagerFunctionalTest
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9091")
+	@JiraKey( value = "HHH-9091")
 	public void testDirectAssociationOrphanedWhileManaged() {
 		createData();
 
@@ -114,7 +114,7 @@ public class DeleteMultiLevelOrphansTest extends BaseEntityManagerFunctionalTest
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9091")
+	@JiraKey( value = "HHH-9091")
 	public void testReplacedDirectAssociationWhileManaged() {
 		createData();
 
@@ -203,7 +203,7 @@ public class DeleteMultiLevelOrphansTest extends BaseEntityManagerFunctionalTest
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9091")
+	@JiraKey( value = "HHH-9091")
 	public void testDirectAndNestedAssociationsOrphanedWhileManaged() {
 		createData();
 

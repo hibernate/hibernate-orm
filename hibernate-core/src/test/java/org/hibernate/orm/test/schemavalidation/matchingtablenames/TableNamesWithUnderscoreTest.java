@@ -16,13 +16,13 @@ import org.hibernate.tool.hbm2ddl.SchemaValidator;
 
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10718")
+@JiraKey(value = "HHH-10718")
 public class TableNamesWithUnderscoreTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

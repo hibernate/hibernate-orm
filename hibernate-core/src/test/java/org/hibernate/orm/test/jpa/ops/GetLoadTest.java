@@ -11,7 +11,7 @@ import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -160,7 +160,7 @@ public class GetLoadTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9856" )
+	@JiraKey( value = "HHH-9856" )
 	public void testNonEntity(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {
@@ -180,7 +180,7 @@ public class GetLoadTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11838")
+	@JiraKey( value = "HHH-11838")
 	public void testLoadGetId(EntityManagerFactoryScope scope) {
 		Workload workload = scope.fromTransaction(
 				entityManager -> {
@@ -208,7 +208,7 @@ public class GetLoadTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12034")
+	@JiraKey( value = "HHH-12034")
 	public void testLoadIdNotFound_FieldBasedAccess(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {
@@ -231,7 +231,7 @@ public class GetLoadTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12034")
+	@JiraKey( value = "HHH-12034")
 	public void testReferenceIdNotFound_FieldBasedAccess(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {
@@ -253,7 +253,7 @@ public class GetLoadTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12034")
+	@JiraKey( value = "HHH-12034")
 	public void testLoadIdNotFound_PropertyBasedAccess(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {
@@ -276,7 +276,7 @@ public class GetLoadTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12034")
+	@JiraKey( value = "HHH-12034")
 	public void testReferenceIdNotFound_PropertyBasedAccess(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {

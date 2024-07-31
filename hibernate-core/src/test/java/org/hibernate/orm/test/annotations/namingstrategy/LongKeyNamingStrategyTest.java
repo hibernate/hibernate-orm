@@ -24,7 +24,7 @@ import org.hibernate.mapping.UniqueKey;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -37,7 +37,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-11089" )
+@JiraKey( value = "HHH-11089" )
 public class LongKeyNamingStrategyTest extends BaseUnitTestCase {
 
 	private ServiceRegistry serviceRegistry;

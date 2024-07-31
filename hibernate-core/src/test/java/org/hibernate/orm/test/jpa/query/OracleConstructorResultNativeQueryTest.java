@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 
 import org.hibernate.dialect.OracleDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 				OracleConstructorResultNativeQueryTest.Person.class
 		}
 )
-@TestForIssue(jiraKey = "HHH-10323")
+@JiraKey(value = "HHH-10323")
 @RequiresDialect(value = OracleDialect.class)
 public class OracleConstructorResultNativeQueryTest {
 

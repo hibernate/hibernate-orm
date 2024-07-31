@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.orphan.onetoone;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-9663")
+@JiraKey(value = "HHH-9663")
 @Jpa(
 		annotatedClasses = {
 				OneToOneLazyOrphanRemovalTest.Car.class,

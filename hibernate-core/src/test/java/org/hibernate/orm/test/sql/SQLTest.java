@@ -34,7 +34,7 @@ import org.hibernate.testing.orm.domain.userguide.PhoneType;
 import org.hibernate.testing.orm.domain.userguide.WireTransferPayment;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -195,7 +195,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15914" )
+	@JiraKey( value = "HHH-15914" )
 	public void test_sql_hibernate_custom_column_selection_scalar_query_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap(Session.class);
@@ -412,7 +412,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10504")
+	@JiraKey(value = "HHH-10504")
 	public void test_sql_hibernate_entity_associations_query_one_to_many_join_example_1() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap(Session.class);
@@ -498,7 +498,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15914" )
+	@JiraKey( value = "HHH-15914" )
 	public void test_sql_hibernate_multi_entity_query_alias_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap(Session.class);

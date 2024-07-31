@@ -27,7 +27,7 @@ import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
@@ -37,7 +37,7 @@ import org.junit.Test;
 /**
  * @author Yoann Rodiere
  */
-@TestForIssue(jiraKey = "HHH-10191")
+@JiraKey(value = "HHH-10191")
 @RequiresDialect(PostgreSQLDialect.class)
 public class SchemaUpdateWithFunctionIndexTest extends BaseNonConfigCoreFunctionalTestCase {
 	protected ServiceRegistry serviceRegistry;

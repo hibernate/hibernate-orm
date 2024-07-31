@@ -13,7 +13,7 @@ import java.util.Set;
 
 import org.hibernate.Hibernate;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -45,7 +45,7 @@ public class ManyToOneEagerDerivedIdFetchModeJoinTest {
 	private Foo foo;
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14466")
+	@JiraKey(value = "HHH-14466")
 	public void testQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Bar newBar = (Bar) session.createQuery( "SELECT b FROM Bar b WHERE b.foo.id = :id" )
@@ -63,7 +63,7 @@ public class ManyToOneEagerDerivedIdFetchModeJoinTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14466")
+	@JiraKey(value = "HHH-14466")
 	public void testQueryById(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Bar newBar = (Bar) session.createQuery( "SELECT b FROM Bar b WHERE b.foo = :foo" )
@@ -81,7 +81,7 @@ public class ManyToOneEagerDerivedIdFetchModeJoinTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14466")
+	@JiraKey(value = "HHH-14466")
 	public void testFindByPrimaryKey(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Bar newBar = session.find( Bar.class, foo.getId() );
@@ -97,7 +97,7 @@ public class ManyToOneEagerDerivedIdFetchModeJoinTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14466")
+	@JiraKey(value = "HHH-14466")
 	public void testFindByInversePrimaryKey(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Foo newFoo = session.find( Foo.class, foo.getId() );

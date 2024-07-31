@@ -27,7 +27,7 @@ import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
 import org.hibernate.type.StandardBasicTypes;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -349,7 +349,7 @@ public class MySQLStoredProcedureTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12905")
+	@JiraKey(value = "HHH-12905")
 	public void testStoredProcedureNullParameter(EntityManagerFactoryScope scope) {
 
 		scope.inTransaction( entityManager -> {
@@ -378,7 +378,7 @@ public class MySQLStoredProcedureTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12905")
+	@JiraKey(value = "HHH-12905")
 	public void testStoredProcedureNullParameterHibernateWithoutEnablePassingNulls(EntityManagerFactoryScope scope) {
 
 		scope.inTransaction( entityManager -> {

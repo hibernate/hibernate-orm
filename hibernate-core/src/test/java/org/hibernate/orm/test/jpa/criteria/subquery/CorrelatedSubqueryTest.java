@@ -23,7 +23,7 @@ import org.hibernate.orm.test.jpa.metamodel.LineItem;
 import org.hibernate.orm.test.jpa.metamodel.LineItem_;
 import org.hibernate.orm.test.jpa.metamodel.Order;
 import org.hibernate.orm.test.jpa.metamodel.Order_;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 
@@ -125,7 +125,7 @@ public class CorrelatedSubqueryTest extends AbstractMetamodelSpecificTest {
 	}
 	
 	@Test
-	@TestForIssue(jiraKey = "HHH-8556")
+	@JiraKey(value = "HHH-8556")
 	public void testCorrelatedJoinsFromSubquery() {
 		CriteriaBuilder builder = entityManagerFactory().getCriteriaBuilder();
 		CriteriaQuery<Customer> cquery = builder.createQuery(Customer.class);

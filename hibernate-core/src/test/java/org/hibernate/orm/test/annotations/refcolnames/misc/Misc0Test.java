@@ -6,7 +6,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinFormula;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -16,7 +16,7 @@ import java.io.Serializable;
 
 @DomainModel(annotatedClasses = {Misc0Test.EntityA.class, Misc0Test.EntityB.class})
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15355")
+@JiraKey(value = "HHH-15355")
 public class Misc0Test {
     @Test
     public void test(SessionFactoryScope scope) {

@@ -23,7 +23,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import org.hibernate.resource.jdbc.internal.EmptyStatementInspector;
@@ -98,7 +98,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	 * causes EntityPersister.findDirty() to return no dirty properties.
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-1921")
+	@JiraKey(value = "HHH-1921")
 	public void testPropertyIntercept2() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -302,7 +302,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6594")
+	@JiraKey(value = "HHH-6594")
 	public void testPrepareStatementIntercept() {
 		final Queue<String> expectedSQLs = new LinkedList<>();
 		// Transaction 1

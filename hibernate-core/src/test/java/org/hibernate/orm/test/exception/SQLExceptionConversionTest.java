@@ -20,7 +20,7 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.SQLGrammarException;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -109,7 +109,7 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7357")
+	@JiraKey(value = "HHH-7357")
 	public void testNotNullConstraint() {
 		final Session session = openSession();
 		session.beginTransaction();

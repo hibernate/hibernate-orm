@@ -27,7 +27,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
@@ -64,7 +64,7 @@ public class UniqueConstraintGenerationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11101")
+	@JiraKey(value = "HHH-11101")
 	public void testUniqueConstraintIsGenerated() throws Exception {
 		new SchemaExport()
 				.setOutputFile( output.getAbsolutePath() )

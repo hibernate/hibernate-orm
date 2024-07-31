@@ -23,7 +23,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import jakarta.persistence.EntityExistsException;
@@ -299,7 +299,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "EJB-9" )
+	@JiraKey( value = "EJB-9" )
 	public void testGet() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -489,7 +489,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11958" )
+	@JiraKey( value = "HHH-11958" )
 	public void testReadonlyHibernateQueryHint() {
 
 		EntityManager em = getOrCreateEntityManager();

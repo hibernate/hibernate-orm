@@ -10,7 +10,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.internal.util.SerializationHelper;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -281,7 +281,7 @@ public class OrphanTest {
 
 	@Test
 	@SuppressWarnings("unchecked")
-	@TestForIssue(jiraKey = "HHH-9171")
+	@JiraKey(value = "HHH-9171")
 	public void testOrphanDeleteOnAddElementMergeRemoveElementMerge(SessionFactoryScope scope) {
 		Product prod = new Product();
 		scope.inTransaction(

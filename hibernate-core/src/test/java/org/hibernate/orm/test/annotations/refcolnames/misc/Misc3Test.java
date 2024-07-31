@@ -12,7 +12,7 @@ import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 
 @DomainModel(annotatedClasses = {Misc3Test.A.class, Misc3Test.B.class})
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-14687")
+@JiraKey(value = "HHH-14687")
 public class Misc3Test {
 
     @Test

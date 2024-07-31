@@ -10,7 +10,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-12973")
+@JiraKey(value = "HHH-12973")
 @RequiresDialect(value = OracleDialect.class)
 public class OracleSequenceInfoTest extends
 		SequenceInformationTest {

@@ -13,7 +13,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.proxy.HibernateProxy;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,7 +34,7 @@ import static org.junit.Assert.assertTrue;
  * @author Marco Belladelli
  * @author Tomas Cerskus
  */
-@TestForIssue(jiraKey = "HHH-16136")
+@JiraKey(value = "HHH-16136")
 public class OneToManyLazyAndEagerProxyTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

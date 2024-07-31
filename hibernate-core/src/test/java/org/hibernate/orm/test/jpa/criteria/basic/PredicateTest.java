@@ -22,7 +22,7 @@ import org.hibernate.orm.test.jpa.metamodel.CreditCard_;
 import org.hibernate.orm.test.jpa.metamodel.Customer_;
 import org.hibernate.orm.test.jpa.metamodel.Order;
 import org.hibernate.orm.test.jpa.metamodel.Order_;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 
@@ -261,7 +261,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-5803" )
+	@JiraKey( value = "HHH-5803" )
 	@SkipForDialect( dialectClass = CockroachDialect.class, reason = "https://github.com/cockroachdb/cockroach/issues/41943")
 	public void testQuotientConversion() {
 		EntityManager em = getOrCreateEntityManager();
@@ -312,7 +312,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8901" )
+	@JiraKey( value = "HHH-8901" )
 	public void testEmptyInPredicate() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -328,7 +328,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-17804" )
+	@JiraKey( value = "HHH-17804" )
 	public void testEmptyInPredicate2() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -344,7 +344,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-17804" )
+	@JiraKey( value = "HHH-17804" )
 	public void testEmptyInPredicate3() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

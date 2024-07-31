@@ -2,7 +2,7 @@ package org.hibernate.orm.test.batch;
 
 import org.hibernate.annotations.BatchSize;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeAll;
@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 				BatchPostLoadTest.MyEntity2.class
 		}
 )
-@TestForIssue(jiraKey = "HHH-16106")
+@JiraKey(value = "HHH-16106")
 public class BatchPostLoadTest {
 
 	private static final Long MY_ENTITY_1_ID = 1l;

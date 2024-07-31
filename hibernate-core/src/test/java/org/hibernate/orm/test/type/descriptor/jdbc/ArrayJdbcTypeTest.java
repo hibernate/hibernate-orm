@@ -1,6 +1,6 @@
 package org.hibernate.orm.test.type.descriptor.jdbc;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BigIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
@@ -14,7 +14,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 public class ArrayJdbcTypeTest {
     @Test
-    @TestForIssue(jiraKey = "HHH-17662")
+    @JiraKey(value = "HHH-17662")
     public void testEquality() {
         Map<JdbcType, String> typeMap = new HashMap<>();
         JdbcType bigInt = new BigIntJdbcType();

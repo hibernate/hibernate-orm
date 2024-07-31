@@ -15,7 +15,7 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -26,7 +26,7 @@ import static org.junit.Assert.assertTrue;
  * @author Vlad Mihalcea
  */
 @RequiresDialect( SQLServerDialect.class )
-@TestForIssue( jiraKey = "HHH-12943" )
+@JiraKey( value = "HHH-12943" )
 public class UUID2GeneratorStringUniqueIdentifierIdTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

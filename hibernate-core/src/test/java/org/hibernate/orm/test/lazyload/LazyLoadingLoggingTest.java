@@ -16,7 +16,7 @@ import jakarta.persistence.OneToOne;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.internal.AbstractSharedSessionContract;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -67,7 +67,7 @@ public class LazyLoadingLoggingTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12484")
+	@JiraKey(value = "HHH-12484")
 	public void testNoSession(SessionFactoryScope scope) {
 		Address address = scope.fromTransaction(
 				session ->
@@ -89,7 +89,7 @@ public class LazyLoadingLoggingTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12484")
+	@JiraKey(value = "HHH-12484")
 	public void testDisconnect(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

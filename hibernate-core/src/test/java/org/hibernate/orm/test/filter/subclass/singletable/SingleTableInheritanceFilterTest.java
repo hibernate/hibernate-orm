@@ -20,7 +20,7 @@ import org.hibernate.annotations.FilterDef;
 import org.hibernate.orm.test.filter.AbstractStatefulStatelessFilterTest;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.Query;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
@@ -36,7 +36,7 @@ import java.util.function.Consumer;
 /**
  * @author Jan Schatteman
  */
-@TestForIssue( jiraKey = "HHH-16435")
+@JiraKey( value = "HHH-16435")
 @DomainModel(
 		annotatedClasses = {
 				SingleTableInheritanceFilterTest.AbstractSuperClass.class,

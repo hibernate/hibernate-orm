@@ -7,8 +7,9 @@
 package org.hibernate.processor.test.sortedcollection;
 
 import org.hibernate.processor.test.util.CompilationTest;
-import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.WithClasses;
+
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
@@ -20,7 +21,7 @@ import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldIn
 public class SortedCollectionTest extends CompilationTest {
 
 	@Test
-	@TestForIssue(jiraKey = "METAGEN-62")
+	@JiraKey(value = "METAGEN-62")
 	@WithClasses({ Printer.class, PrintJob.class })
 	public void testGenerics() {
 		assertMetamodelClassGeneratedFor( Printer.class );

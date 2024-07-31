@@ -22,7 +22,7 @@ import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -30,7 +30,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
-@TestForIssue(jiraKey = "HHH-12770")
+@JiraKey(value = "HHH-12770")
 public class JoinFormulaManyToOneLazyFetchingTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

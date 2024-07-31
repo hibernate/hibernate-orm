@@ -42,7 +42,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.engine.spi.CollectionEntry;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -70,7 +70,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class MultipleSessionCollectionTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9518")
+	@JiraKey(value = "HHH-9518")
 	public void testCopyPersistentCollectionReferenceBeforeFlush(SessionFactoryScope scope) {
 		Parent parent = new Parent();
 		Child c = new Child();
@@ -157,7 +157,7 @@ public class MultipleSessionCollectionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9518")
+	@JiraKey(value = "HHH-9518")
 	public void testCopyUninitializedCollectionReferenceAfterGet(SessionFactoryScope scope) {
 		Parent parent = new Parent();
 		Child c = new Child();
@@ -196,7 +196,7 @@ public class MultipleSessionCollectionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9518")
+	@JiraKey(value = "HHH-9518")
 	public void testCopyInitializedCollectionReferenceAfterGet(SessionFactoryScope scope) {
 		Parent parent = new Parent();
 		Child c = new Child();
@@ -240,7 +240,7 @@ public class MultipleSessionCollectionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9518")
+	@JiraKey(value = "HHH-9518")
 	public void testCopyInitializedCollectionReferenceToNewEntityCollectionRoleAfterGet(SessionFactoryScope scope) {
 		Parent parent = new Parent();
 		Child c = new Child();
@@ -290,7 +290,7 @@ public class MultipleSessionCollectionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9518")
+	@JiraKey(value = "HHH-9518")
 	public void testDeleteCommitCopyToNewOwnerInNewSession(SessionFactoryScope scope) {
 		Parent p1 = new Parent();
 		p1.nickNames.add( "nick" );
@@ -335,7 +335,7 @@ public class MultipleSessionCollectionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9518")
+	@JiraKey(value = "HHH-9518")
 	public void testDeleteCommitCopyToNewOwnerNewCollectionRoleInNewSession(SessionFactoryScope scope) {
 		Parent p1 = new Parent();
 		p1.nickNames.add( "nick" );
@@ -381,7 +381,7 @@ public class MultipleSessionCollectionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9518")
+	@JiraKey(value = "HHH-9518")
 	public void testDeleteCopyToNewOwnerInNewSessionBeforeFlush(SessionFactoryScope scope) {
 		Parent p1 = new Parent();
 		p1.nickNames.add( "nick" );
@@ -416,7 +416,7 @@ public class MultipleSessionCollectionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9518")
+	@JiraKey(value = "HHH-9518")
 	public void testDeleteCopyToNewOwnerNewCollectionRoleInNewSessionBeforeFlush(SessionFactoryScope scope) {
 		Parent p1 = new Parent();
 		p1.nickNames.add( "nick" );

@@ -19,7 +19,7 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.query.spi.QueryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * @implNote Skipped for Dialects which do not support at lease
  */
-@TestForIssue(jiraKey = "HHH-15895")
+@JiraKey(value = "HHH-15895")
 @DomainModel(annotatedClasses = InPredicateTest.Event.class)
 @SessionFactory(exportSchema = false)
 public class InPredicateTest {

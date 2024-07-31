@@ -24,7 +24,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
@@ -57,7 +57,7 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9591")
+	@JiraKey(value = "HHH-9591")
 	public void oneToOneTest() throws Exception {
 		createSchema( new Class[] {User.class, UserSetting.class, Group.class} );
 
@@ -83,7 +83,7 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10396")
+	@JiraKey(value = "HHH-10396")
 	public void oneToManyTest() throws Exception {
 		createSchema( new Class[] {User.class, UserSetting.class, Group.class} );
 
@@ -101,7 +101,7 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10385")
+	@JiraKey(value = "HHH-10385")
 	public void oneToManyWithJoinTableTest() throws Exception {
 		createSchema( new Class[] {Person.class, Phone.class} );
 
@@ -127,7 +127,7 @@ public class ForeignKeyGenerationTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10386")
+	@JiraKey(value = "HHH-10386")
 	public void manyToManyTest() throws Exception {
 		createSchema( new Class[] {Project.class, Employee.class} );
 

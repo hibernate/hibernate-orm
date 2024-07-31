@@ -12,7 +12,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -22,7 +22,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  * @author Christian Beikov
  * @author Nathan Xu
  */
-@TestForIssue( jiraKey = "HHH-14116" )
+@JiraKey( value = "HHH-14116" )
 public class HHH14116Test extends BaseCoreFunctionalTestCase {
 
 	@Override

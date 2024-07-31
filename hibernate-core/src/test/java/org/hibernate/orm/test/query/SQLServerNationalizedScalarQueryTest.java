@@ -13,7 +13,7 @@ import jakarta.persistence.Convert;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.dialect.SQLServerDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -37,14 +37,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SessionFactory
 public class SQLServerNationalizedScalarQueryTest {
 
-	@TestForIssue(jiraKey = "HHH-16857")
+	@JiraKey(value = "HHH-16857")
 	@Test
 	public void testLiteral(SessionFactoryScope scope) {
 		scope.inTransaction(session -> session.createSelectionQuery("from User where name = 'Gavin'").getResultList());
 		scope.inTransaction(session -> session.createSelectionQuery("from User where role = 'ADMIN'").getResultList());
 	}
 
-	@TestForIssue(jiraKey = "HHH-10183")
+	@JiraKey(value = "HHH-10183")
 	@Test
 	public void testScalarResult(SessionFactoryScope scope) {
 

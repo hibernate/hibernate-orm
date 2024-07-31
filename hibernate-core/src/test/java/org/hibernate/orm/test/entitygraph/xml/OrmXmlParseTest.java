@@ -9,7 +9,7 @@ package org.hibernate.orm.test.entitygraph.xml;
 
 import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 public class OrmXmlParseTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9247")
+	@JiraKey(value = "HHH-9247")
 	void parseNamedAttributeNode() {
 		final Configuration cfg = new Configuration();
 		cfg.addURL( getClass().getResource( "orm.xml" ) );

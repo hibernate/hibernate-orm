@@ -2,14 +2,14 @@ package org.hibernate.orm.test.orphan.elementcollection;
 
 import java.util.Collections;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-@TestForIssue(jiraKey = "HHH-14597")
+@JiraKey(value = "HHH-14597")
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/orphan/elementcollection/student.hbm.xml"
 )

@@ -17,7 +17,7 @@ import jakarta.persistence.Id;
 import org.hibernate.annotations.Formula;
 import org.hibernate.dialect.H2Dialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -53,7 +53,7 @@ public class FormulaWithAliasTest {
 		} );
 	}
 	@Test
-	@TestForIssue(jiraKey = "HHH-12280")
+	@JiraKey(value = "HHH-12280")
 	void testFormulaWithAlias(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final List<Customer> customers = session.createQuery( "select c from Customer c ", Customer.class ).getResultList();

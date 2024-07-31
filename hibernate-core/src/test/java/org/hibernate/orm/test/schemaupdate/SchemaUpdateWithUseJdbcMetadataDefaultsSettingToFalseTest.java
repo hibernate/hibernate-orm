@@ -26,7 +26,7 @@ import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -38,7 +38,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-13788")
+@JiraKey(value = "HHH-13788")
 public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseTest {
 
 	private File updateOutputFile;

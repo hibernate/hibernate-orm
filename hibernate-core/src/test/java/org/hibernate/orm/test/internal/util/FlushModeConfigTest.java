@@ -14,7 +14,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
 import org.hibernate.jpa.HibernateHints;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Nathan Xu
  */
-@TestForIssue( jiraKey = "HHH-13677" )
+@JiraKey( value = "HHH-13677" )
 @BaseUnitTest
 public class FlushModeConfigTest {
 	@ParameterizedTest

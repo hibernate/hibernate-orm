@@ -9,7 +9,7 @@ package org.hibernate.orm.test.sql.exec;
 import org.hibernate.orm.test.mapping.SecondaryTableTests;
 import org.hibernate.orm.test.mapping.inheritance.joined.JoinedInheritanceTest;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -50,7 +50,7 @@ public class HqlUpdateExecutionTests {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15361")
+	@JiraKey( value = "HHH-15361")
 	public void testSimpleUpdateAssignability(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createQuery( "update EntityOfBasics set theDate = current_date" )
@@ -59,7 +59,7 @@ public class HqlUpdateExecutionTests {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15939" )
+	@JiraKey( value = "HHH-15939" )
 	public void testNumericUpdate(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.createMutationQuery( "update EntityOfBasics set theShort = 69" )

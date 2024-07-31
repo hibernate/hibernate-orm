@@ -19,7 +19,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Test;
@@ -32,7 +32,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10877")
+@JiraKey(value = "HHH-10877")
 public class NonTransactionalDataAccessTest extends BaseCoreFunctionalTestCase {
 
 	private String allowUpdateOperationOutsideTransaction = "true";

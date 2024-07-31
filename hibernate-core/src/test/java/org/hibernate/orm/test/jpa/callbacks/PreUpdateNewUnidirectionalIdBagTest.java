@@ -17,7 +17,7 @@ import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.CollectionIdJdbcTypeCode;
 import org.hibernate.annotations.GenericGenerator;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterEach;
@@ -35,7 +35,7 @@ import jakarta.persistence.PreUpdate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@TestForIssue(jiraKey = "HHH-13466")
+@JiraKey(value = "HHH-13466")
 @Jpa(annotatedClasses = {
 		PreUpdateNewUnidirectionalIdBagTest.Person.class,
 		PreUpdateNewUnidirectionalIdBagTest.Tag.class

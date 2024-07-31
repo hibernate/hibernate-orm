@@ -11,7 +11,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -48,7 +48,7 @@ public class PropertyNamedIdInIdClassTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13084")
+	@JiraKey(value = "HHH-13084")
 	public void testHql(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			assertEquals( 2, session.createQuery( "from Person p where p.id = 0", Person.class ).list().size() );

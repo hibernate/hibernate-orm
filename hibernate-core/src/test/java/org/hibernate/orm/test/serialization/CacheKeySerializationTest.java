@@ -20,7 +20,7 @@ import org.hibernate.orm.test.serialization.entity.PK;
 import org.hibernate.orm.test.serialization.entity.WithEmbeddedId;
 import org.hibernate.orm.test.serialization.entity.WithSimpleId;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -53,25 +53,25 @@ public class CacheKeySerializationTest {
    }
 
    @Test
-   @TestForIssue(jiraKey = "HHH-11202")
+   @JiraKey(value = "HHH-11202")
    public void testSimpleCacheKeySimpleId() throws Exception {
       testId( SimpleCacheKeysFactory.INSTANCE, WithSimpleId.class.getName(), 1L );
    }
 
    @Test
-   @TestForIssue(jiraKey = "HHH-11202")
+   @JiraKey(value = "HHH-11202")
    public void testSimpleCacheKeyEmbeddedId() throws Exception {
       testId( SimpleCacheKeysFactory.INSTANCE, WithEmbeddedId.class.getName(), new PK( 1L ) );
    }
 
    @Test
-   @TestForIssue(jiraKey = "HHH-11202")
+   @JiraKey(value = "HHH-11202")
    public void testDefaultCacheKeySimpleId() throws Exception {
       testId( DefaultCacheKeysFactory.INSTANCE, WithSimpleId.class.getName(), 1L  );
    }
 
    @Test
-   @TestForIssue(jiraKey = "HHH-11202")
+   @JiraKey(value = "HHH-11202")
    public void testDefaultCacheKeyEmbeddedId() throws Exception {
       testId( DefaultCacheKeysFactory.INSTANCE, WithEmbeddedId.class.getName(), new PK( 1L ) );
    }

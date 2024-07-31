@@ -13,7 +13,7 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.onetoone.BidirectionalEagerHbmRefEdPK;
 import org.hibernate.orm.test.envers.entities.onetoone.BidirectionalEagerHbmRefIngPK;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
@@ -21,7 +21,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Erik-Berndt Scheper, Amar Singh
  */
-@TestForIssue(jiraKey = "HHH-3854")
+@JiraKey(value = "HHH-3854")
 public class BidirectionalEagerHbmTest extends BaseEnversJPAFunctionalTestCase {
 	private Long refIngId1 = null;
 

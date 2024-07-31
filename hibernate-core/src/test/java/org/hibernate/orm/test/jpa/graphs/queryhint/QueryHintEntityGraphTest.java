@@ -25,7 +25,7 @@ import org.hibernate.orm.test.jpa.graphs.Manager;
 import org.hibernate.orm.test.jpa.graphs.Market;
 import org.hibernate.orm.test.jpa.graphs.Student;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.transaction.TransactionUtil2;
 import org.junit.Before;
 import org.junit.Test;
@@ -117,7 +117,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "https://hibernate.atlassian.net/browse/HHH-14855")
+	@JiraKey(value = "https://hibernate.atlassian.net/browse/HHH-14855")
 	public void testEntityGraphStringQueryHint() {
 		TransactionUtil2.inTransaction( entityManagerFactory(), (session) -> {
 			final String hql = "from Company c";
@@ -143,7 +143,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8776")
+	@JiraKey(value = "HHH-8776")
 	public void testFetchGraph() {
 		EntityManager entityManager = getOrCreateEntityManager();
 		entityManager.getTransaction().begin();
@@ -209,7 +209,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8776")
+	@JiraKey(value = "HHH-8776")
 	public void testFetchGraphTakingPrecedenceOverFetchProfile() {
 		EntityManager entityManager = getOrCreateEntityManager();
 		entityManager.getTransaction().begin();
@@ -275,7 +275,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 	}
 	
 	@Test
-	@TestForIssue( jiraKey = "HHH-9457")
+	@JiraKey( value = "HHH-9457")
 	public void testLoadGraphOrderByWithImplicitJoin() {
 		EntityManager entityManager = getOrCreateEntityManager();
 		entityManager.getTransaction().begin();
@@ -339,7 +339,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9448")
+	@JiraKey( value = "HHH-9448")
 	public void testLoadGraphWithRestriction() {
 		EntityManager entityManager = getOrCreateEntityManager();
 		entityManager.getTransaction().begin();
@@ -432,7 +432,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9448")
+	@JiraKey( value = "HHH-9448")
 	public void testEntityGraphWithExplicitFetchAndRestriction() {
 		EntityManager entityManager = getOrCreateEntityManager();
 		entityManager.getTransaction().begin();
@@ -460,7 +460,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9374")
+	@JiraKey(value = "HHH-9374")
 	public void testEntityGraphWithCollectionSubquery(){
 		EntityManager entityManager = getOrCreateEntityManager();
 		entityManager.getTransaction().begin();
@@ -476,7 +476,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11569")
+	@JiraKey(value = "HHH-11569")
 	public void testCollectionSizeLoadedWithGraph() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 

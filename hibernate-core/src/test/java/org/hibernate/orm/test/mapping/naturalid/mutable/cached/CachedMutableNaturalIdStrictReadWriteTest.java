@@ -10,7 +10,7 @@ import org.hibernate.Transaction;
 import org.hibernate.stat.NaturalIdStatistics;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -37,7 +37,7 @@ import static org.junit.Assert.assertNull;
 public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNaturalIdTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9203" )
+	@JiraKey( value = "HHH-9203" )
 	public void testToMapConversion(SessionFactoryScope scope) {
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
@@ -51,7 +51,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 	}
 	
 	@Test
-	@TestForIssue( jiraKey = "HHH-7278" )
+	@JiraKey( value = "HHH-7278" )
 	public void testInsertedNaturalIdCachedAfterTransactionSuccess(SessionFactoryScope scope) {
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
@@ -70,7 +70,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 	}
 	
 	@Test
-	@TestForIssue( jiraKey = "HHH-7278" )
+	@JiraKey( value = "HHH-7278" )
 	public void testInsertedNaturalIdNotCachedAfterTransactionFailure(SessionFactoryScope scope) {
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
@@ -97,7 +97,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 	}
 	
 	@Test
-	@TestForIssue( jiraKey = "HHH-7278" )
+	@JiraKey( value = "HHH-7278" )
 	public void testChangedNaturalIdCachedAfterTransactionSuccess(SessionFactoryScope scope) {
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
@@ -128,7 +128,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 	}
 	
 	@Test
-	@TestForIssue( jiraKey = "HHH-7278" )
+	@JiraKey( value = "HHH-7278" )
 	public void testChangedNaturalIdNotCachedAfterTransactionFailure(SessionFactoryScope scope) {
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
@@ -164,7 +164,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 	}
 	
 	@Test
-	@TestForIssue( jiraKey = "HHH-7309" )
+	@JiraKey( value = "HHH-7309" )
 	public void testInsertUpdateEntity_NaturalIdCachedAfterTransactionSuccess(SessionFactoryScope scope) {
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
@@ -192,7 +192,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9200" )
+	@JiraKey( value = "HHH-9200" )
 	public void testNaturalIdCacheStatisticsReset(SessionFactoryScope scope) {
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();

@@ -19,7 +19,7 @@ import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.Before;
@@ -70,7 +70,7 @@ public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerF
 	}
 
 	@Test(timeout = 1000 * 30) //30 seconds
-	@TestForIssue(jiraKey = "HHH-11617")
+	@JiraKey(value = "HHH-11617")
 	public void testStatementIsClosed() {
 
 		TransactionUtil.doInJPA( this::entityManagerFactory, em1 -> {

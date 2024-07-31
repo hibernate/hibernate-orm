@@ -40,7 +40,7 @@ import org.hibernate.annotations.FetchMode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -74,7 +74,7 @@ import static org.junit.Assert.assertTrue;
 public class SubselectFetchCollectionFromBatchTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10679")
+	@JiraKey( value = "HHH-10679")
 	public void testSubselectFetchFromEntityBatch(SessionFactoryScope scope) {
 		final EmployeeGroup[] createdGroups = scope.fromTransaction( (s) -> {
 			EmployeeGroup group1 = new EmployeeGroup();
@@ -189,7 +189,7 @@ public class SubselectFetchCollectionFromBatchTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10679")
+	@JiraKey( value = "HHH-10679")
 	public void testMultiSubselectFetchSamePersisterQueryList(SessionFactoryScope scope) {
 		final Long[] createdIds = scope.fromTransaction( (s) -> {
 			EmployeeGroup group1 = new EmployeeGroup();

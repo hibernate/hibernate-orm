@@ -19,7 +19,7 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
@@ -298,7 +298,7 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6723")
+	@JiraKey(value = "HHH-6723")
 	public void testPkOneToOneSelectStatementDoesNotGenerateExtraJoin() {
 		// This test uses an interceptor to verify that correct number of joins are generated.
 		TransactionUtil.doInHibernate( this::sessionFactory, s -> {
@@ -361,7 +361,7 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5757")
+	@JiraKey(value = "HHH-5757")
 	public void testHqlQuery() {
 		//test a default one to one and a mappedBy in the other side
 		final Passport passport = TransactionUtil.doInHibernate( this::sessionFactory, session -> {

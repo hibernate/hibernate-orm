@@ -13,7 +13,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Gail Badner
  */
-@TestForIssue(jiraKey = "HHH-9573")
+@JiraKey(value = "HHH-9573")
 @Jpa(
 		annotatedClasses = Employee.class,
 		generateStatistics = true,

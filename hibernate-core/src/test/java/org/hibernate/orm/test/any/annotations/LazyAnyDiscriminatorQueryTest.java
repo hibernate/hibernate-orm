@@ -15,7 +15,7 @@ import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyDiscriminatorValues;
 import org.hibernate.annotations.AnyKeyJavaClass;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterEach;
@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				LazyAnyDiscriminatorQueryTest.StringProperty.class
 		}
 )
-@TestForIssue(jiraKey = "HHH-15423")
+@JiraKey(value = "HHH-15423")
 public class LazyAnyDiscriminatorQueryTest {
 	private static final Long PROPERTY_HOLDER_ID = 2l;
 	private static final Long STRING_PROPERTY_ID = 1l;

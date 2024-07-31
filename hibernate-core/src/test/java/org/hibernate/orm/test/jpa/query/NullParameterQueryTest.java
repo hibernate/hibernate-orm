@@ -12,7 +12,7 @@ import jakarta.persistence.Id;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNotNull;
  * @author Vlad Mihalcea
  * @see <a href="https://hibernate.atlassian.net/browse/JPA-31">JPA-31</a>
  */
-@TestForIssue(jiraKey = "JPA-31")
+@JiraKey(value = "JPA-31")
 public class NullParameterQueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

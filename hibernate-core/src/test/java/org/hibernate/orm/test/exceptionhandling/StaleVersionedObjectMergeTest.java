@@ -13,7 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.Version;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * @author Jan Schatteman
  */
-@TestForIssue( jiraKey = "HHH-1661")
+@JiraKey( value = "HHH-1661")
 @RequiresDialect( H2Dialect.class )
 public class StaleVersionedObjectMergeTest {
 

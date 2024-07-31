@@ -30,7 +30,7 @@ import org.hibernate.query.Query;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.transform.ResultTransformer;
 import org.junit.After;
@@ -247,7 +247,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14567")
+	@JiraKey(value = "HHH-14567")
 	public void testHqlFiltersAppliedAfterQueryCreation() {
 		inTransaction( session -> {
 			Query<Salesperson> query = session.createQuery(
@@ -611,7 +611,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5932")
+	@JiraKey(value = "HHH-5932")
 	public void testHqlQueryWithColons() {
 		inSession(
 				session -> {

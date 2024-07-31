@@ -20,7 +20,7 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.cfg.Environment;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
  * @author Harikant Verma
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-13068")
+@JiraKey(value = "HHH-13068")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJdbcDriverProxying.class)
 @Jpa(
 		annotatedClasses = {

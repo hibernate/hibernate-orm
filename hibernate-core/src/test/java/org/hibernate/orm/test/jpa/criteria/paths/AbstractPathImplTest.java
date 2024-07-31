@@ -18,7 +18,7 @@ import org.hibernate.orm.test.jpa.metamodel.Order;
 import org.hibernate.orm.test.jpa.metamodel.Thing;
 import org.hibernate.orm.test.jpa.metamodel.ThingWithQuantity;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ExpectedException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -124,7 +124,7 @@ public class AbstractPathImplTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15433")
+	@JiraKey( value = "HHH-15433")
 	public void testTypeExpressionWithoutInheritance() {
 		EntityManager em = getOrCreateEntityManager();
 		try {

@@ -8,7 +8,7 @@ package org.hibernate.orm.test.bootstrap.binding.annotations.embedded;
 
 import org.hibernate.Session;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -18,7 +18,7 @@ import org.junit.Test;
 public class NestedEmbeddableAttributeOverrideTest extends BaseCoreFunctionalTestCase {
 	
 	@Test
-	@TestForIssue(jiraKey="HHH-8021")
+	@JiraKey(value="HHH-8021")
 	public void testAttributeOverride() {
 		EmbeddableB embedB = new EmbeddableB();
 		embedB.setEmbedAttrB( "B" );

@@ -16,7 +16,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -44,7 +44,7 @@ public class PersistentBagContainsTest {
 	 * managed and detached entities.
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-5409")
+	@JiraKey(value = "HHH-5409")
 	public void testContains(SessionFactoryScope scope) {
 		Order _order = scope.fromTransaction( session -> {
 			Order order = new Order();

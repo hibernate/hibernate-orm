@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @ServiceRegistry(
 		settings = @Setting(name = AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, value = "2")
 )
-@TestForIssue(jiraKey = "HHH-15346")
+@JiraKey(value = "HHH-15346")
 public class EagerManyToOneBatchTest {
 
 	@BeforeEach

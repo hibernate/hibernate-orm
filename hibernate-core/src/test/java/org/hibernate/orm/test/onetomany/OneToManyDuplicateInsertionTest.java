@@ -16,7 +16,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterEach;
@@ -47,7 +47,7 @@ public class OneToManyDuplicateInsertionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6776")
+	@JiraKey(value = "HHH-6776")
 	public void testDuplicateInsertion(EntityManagerFactoryScope scope) {
 		// persist parent entity in a transaction
 
@@ -79,7 +79,7 @@ public class OneToManyDuplicateInsertionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7404")
+	@JiraKey(value = "HHH-7404")
 	public void testDuplicateInsertionWithCascadeAndMerge(EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {
 			ParentCascade p = new ParentCascade();

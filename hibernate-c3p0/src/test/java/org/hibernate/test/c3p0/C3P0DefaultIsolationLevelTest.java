@@ -11,7 +11,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -25,7 +25,7 @@ import static org.mockito.Mockito.verify;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-12749")
+@JiraKey(value = "HHH-12749")
 @RequiresDialect(H2Dialect.class)
 public class C3P0DefaultIsolationLevelTest extends
 		BaseNonConfigCoreFunctionalTestCase {

@@ -8,7 +8,7 @@ package org.hibernate.orm.test.jpa.metamodel.attributeInSuper;
 
 import jakarta.persistence.metamodel.EmbeddableType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -29,7 +29,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class FunkyExtendedEmbeddedIdTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8712")
+	@JiraKey(value = "HHH-8712")
 	public void ensureAttributeForEmbeddableIsGeneratedInMappedSuperClass(EntityManagerFactoryScope scope) {
 		EmbeddableType<WorkOrderComponentId> woci = scope.getEntityManagerFactory().getMetamodel()
 				.embeddable( WorkOrderComponentId.class );

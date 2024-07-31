@@ -16,7 +16,7 @@ import jakarta.persistence.TypedQuery;
 import org.hibernate.dialect.PostgreSQLDialect;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,7 +28,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Johannes Buehler
  */
-@TestForIssue( jiraKey = "HHH-10463")
+@JiraKey( value = "HHH-10463")
 public class CoalesceTest extends BaseCoreFunctionalTestCase {
 
     private Person person;

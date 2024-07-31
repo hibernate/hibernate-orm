@@ -15,7 +15,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.id.IdentifierGenerationException;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -32,7 +32,7 @@ import static org.junit.Assert.fail;
 public class OptionalOneToOnePKJCTest extends BaseCoreFunctionalTestCase {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-4982")
+	@JiraKey( value = "HHH-4982")
 	public void testNullBidirForeignIdGenerator() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -54,7 +54,7 @@ public class OptionalOneToOnePKJCTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-4982")
+	@JiraKey( value = "HHH-4982")
 	public void testNotFoundBidirForeignIdGenerator() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -79,7 +79,7 @@ public class OptionalOneToOnePKJCTest extends BaseCoreFunctionalTestCase {
 
 	// @PrimaryKeyJoinColumn @OneToOne(optional=true) non-foreign generator
 	@Test
-	@TestForIssue( jiraKey = "HHH-4982")
+	@JiraKey( value = "HHH-4982")
 	public void testNotFoundBidirDefaultIdGenerator() {
 		Session s = openSession();
 		s.getTransaction().begin();

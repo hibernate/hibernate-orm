@@ -11,7 +11,7 @@ import java.util.List;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -40,7 +40,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15608")
+@JiraKey(value = "HHH-15608")
 public class NativeQueryWithDuplicateColumnTest {
 
 	@BeforeEach

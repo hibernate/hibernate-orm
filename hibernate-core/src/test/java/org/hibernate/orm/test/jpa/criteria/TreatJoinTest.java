@@ -24,7 +24,7 @@ import jakarta.persistence.criteria.Root;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -61,7 +61,7 @@ public class TreatJoinTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8488")
+	@JiraKey(value = "HHH-8488")
 	public void testTreatJoin() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -77,7 +77,7 @@ public class TreatJoinTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8488")
+	@JiraKey(value = "HHH-8488")
 	public void testTreatJoin2() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -96,7 +96,7 @@ public class TreatJoinTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8488")
+	@JiraKey(value = "HHH-8488")
 	public void testJoinMethodOnATreatedJoin() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -118,7 +118,7 @@ public class TreatJoinTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11081")
+	@JiraKey( value = "HHH-11081")
 	public void testTreatedJoinInWhereClause() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -135,7 +135,7 @@ public class TreatJoinTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10561")
+	@JiraKey(value = "HHH-10561")
 	public void testJoinOnTreatedRoot() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -154,7 +154,7 @@ public class TreatJoinTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10561")
+	@JiraKey(value = "HHH-10561")
 	public void testJoinOnTreatedRootWithJoin() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -171,7 +171,7 @@ public class TreatJoinTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10767")
+	@JiraKey(value = "HHH-10767")
 	public void testJoinOnTreatedJoin() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();

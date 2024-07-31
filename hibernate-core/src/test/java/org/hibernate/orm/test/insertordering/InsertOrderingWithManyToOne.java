@@ -14,13 +14,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-9864")
+@JiraKey(value = "HHH-9864")
 public class InsertOrderingWithManyToOne extends BaseInsertOrderingTest {
 
 	@Override

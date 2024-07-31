@@ -13,7 +13,7 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.metamodel.CollectionClassification;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -23,7 +23,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-7928" )
+@JiraKey( value = "HHH-7928" )
 public class BadMergeHandlingTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration configuration) {
@@ -38,7 +38,7 @@ public class BadMergeHandlingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7928" )
+	@JiraKey( value = "HHH-7928" )
 	public void testMergeAndHold() {
 		Session s = openSession();
 		s.beginTransaction();

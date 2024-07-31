@@ -22,7 +22,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
@@ -35,7 +35,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-9865")
+@JiraKey(value = "HHH-9865")
 public class ImplicitCompositeKeyJoinTest {
 	private static final Logger LOGGER = Logger.getLogger( ImplicitCompositeKeyJoinTest.class );
 

@@ -15,7 +15,7 @@ import jakarta.persistence.ManyToOne;
 
 import org.hibernate.cfg.Environment;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-12407")
+@JiraKey(value = "HHH-12407")
 @SessionFactory
 @DomainModel(
 		annotatedClasses = {

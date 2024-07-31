@@ -12,7 +12,7 @@ import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,7 +27,7 @@ import static org.junit.Assert.assertThat;
  */
 public abstract class AbstractCompositeIdAndNaturalIdTest {
 	@Test
-	@TestForIssue( jiraKey = "HHH-10360")
+	@JiraKey( value = "HHH-10360")
 	public void testNaturalIdNullability(SessionFactoryScope scope) {
 		final EntityMappingType accountMapping = scope.getSessionFactory().getRuntimeMetamodels().getEntityMappingType( Account.class );
 		final SingularAttributeMapping shortCodeMapping = ((SimpleNaturalIdMapping) accountMapping.getNaturalIdMapping()).getAttribute();

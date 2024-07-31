@@ -18,7 +18,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.type.SqlTypes;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -41,7 +41,7 @@ import jakarta.persistence.TypedQuery;
 		annotatedClasses = VarbinaryArrayTest.EntityWithArrays.class
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-16085")
+@JiraKey(value = "HHH-16085")
 @SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
 public class VarbinaryArrayTest {
 

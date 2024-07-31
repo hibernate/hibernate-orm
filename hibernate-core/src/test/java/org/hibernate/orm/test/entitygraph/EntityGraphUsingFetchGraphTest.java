@@ -28,7 +28,7 @@ import jakarta.persistence.metamodel.Attribute;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -54,7 +54,7 @@ import static org.hibernate.testing.hamcrest.InitializationCheckMatcher.isInitia
 public class EntityGraphUsingFetchGraphTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9392")
+	@JiraKey( value = "HHH-9392")
 	void fetchSubGraphFromSubgraph(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -102,7 +102,7 @@ public class EntityGraphUsingFetchGraphTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9392")
+	@JiraKey( value = "HHH-9392")
 	void fetchAttributeNodeByStringFromSubgraph(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -152,7 +152,7 @@ public class EntityGraphUsingFetchGraphTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13233")
+	@JiraKey( value = "HHH-13233")
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	void fetchAttributeNodeByAttributeFromSubgraph(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -213,7 +213,7 @@ public class EntityGraphUsingFetchGraphTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9392")
+	@JiraKey( value = "HHH-9392")
 	void fetchUsingHql(SessionFactoryScope scope) {
 		// This test is here only for comparison with results from fetchAttributeNodeFromSubgraph.
 		// At the time this was written, the generated SQL from the HQL is the same as that generated with the

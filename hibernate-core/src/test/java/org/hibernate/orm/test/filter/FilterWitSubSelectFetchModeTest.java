@@ -19,7 +19,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -56,7 +56,7 @@ import static org.junit.Assert.assertThat;
 				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" )
 		}
 )
-@TestForIssue(jiraKey = "HHH-7119")
+@JiraKey(value = "HHH-7119")
 public class FilterWitSubSelectFetchModeTest {
 
 	@BeforeEach

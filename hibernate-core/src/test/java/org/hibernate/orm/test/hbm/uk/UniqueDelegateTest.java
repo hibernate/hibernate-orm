@@ -22,7 +22,7 @@ import org.hibernate.mapping.UniqueKey;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
@@ -60,7 +60,7 @@ public class UniqueDelegateTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10203" )
+	@JiraKey( value = "HHH-10203" )
 	public void testUniqueDelegateConsulted() {
 		final Metadata metadata = new MetadataSources( ssr )
 				.addResource( "org/hibernate/orm/test/hbm/uk/person_unique.hbm.xml" )

@@ -8,14 +8,14 @@ package org.hibernate.orm.test.idgen.foreign;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-12738")
+@JiraKey(value = "HHH-12738")
 @Jpa(
 		annotatedClasses = {
 				ForeignGeneratorResourceLocalTest.Contract.class,

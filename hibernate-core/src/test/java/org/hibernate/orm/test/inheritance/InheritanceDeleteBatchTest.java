@@ -10,7 +10,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.query.sqm.mutation.internal.inline.InlineMutationStrategy;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -32,7 +32,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-13214")
+@JiraKey(value = "HHH-13214")
 @DomainModel(
 		annotatedClasses = {
 				InheritanceDeleteBatchTest.TestEntity.class,

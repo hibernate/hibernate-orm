@@ -15,7 +15,7 @@ import org.hibernate.orm.test.annotations.query.Employeegroup;
 import org.hibernate.orm.test.hql.Panel;
 import org.hibernate.orm.test.hql.TrtPanel;
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -37,7 +37,7 @@ public class DeleteWithSubqueryTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8318" )
+	@JiraKey( value = "HHH-8318" )
 	@SkipForDialect( value = MySQLDialect.class, comment = "Cannot use Attrvalue in the delete and from clauses simultaneously." )
 	public void testDeleteMemberOf() {
 		final String qry = "delete Attrvalue aval where aval.id in ( "
@@ -52,7 +52,7 @@ public class DeleteWithSubqueryTest extends BaseCoreFunctionalTestCase {
 	}
 	
 	@Test
-	@TestForIssue( jiraKey = "HHH-8447" )
+	@JiraKey( value = "HHH-8447" )
 	public void testDeleteMultipleWhereIns() {
 		Session s = openSession();
 		s.getTransaction().begin();

@@ -21,7 +21,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.mapping.ForeignKey;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.junit.Test;
@@ -40,7 +40,7 @@ import static org.junit.Assert.assertEquals;
  * @author Jan Schatteman
  */
 @RequiresDialect( value = H2Dialect.class )
-@TestForIssue( jiraKey = "HHH-15704")
+@JiraKey( value = "HHH-15704")
 public class StandardForeignKeyExporterTest {
 
 	@Test

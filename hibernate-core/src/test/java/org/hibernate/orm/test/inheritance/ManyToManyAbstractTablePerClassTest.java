@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -33,7 +33,7 @@ import jakarta.persistence.Table;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@TestForIssue(jiraKey = "HHH-16358")
+@JiraKey(value = "HHH-16358")
 @DomainModel(
 		annotatedClasses = {
 				ManyToManyAbstractTablePerClassTest.TablePerClassBase.class,

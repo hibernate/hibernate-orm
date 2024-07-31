@@ -9,7 +9,7 @@ package org.hibernate.orm.test.bootstrap.binding.naming;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.NamingHelper;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
@@ -18,7 +18,7 @@ import static org.junit.Assert.assertEquals;
 public class NamingHelperTest extends BaseUnitTestCase {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12357")
+	@JiraKey(value = "HHH-12357")
 	public void generateHashedFkName() {
 		Identifier booksDe = new Identifier( "Bücher", false );
 		Identifier authorsDe = new Identifier( "Autoren", false );
@@ -34,7 +34,7 @@ public class NamingHelperTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12357")
+	@JiraKey(value = "HHH-12357")
 	public void generateHashedFkNameUSingUtf8() {
 		Identifier booksDe = new Identifier( "Bücher", false );
 		Identifier authorsDe = new Identifier( "Autoren", false );

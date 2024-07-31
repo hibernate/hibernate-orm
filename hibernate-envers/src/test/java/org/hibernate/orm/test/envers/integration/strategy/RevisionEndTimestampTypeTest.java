@@ -22,7 +22,7 @@ import org.hibernate.orm.test.envers.entities.StrTestEntity;
 import org.hibernate.type.BasicType;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.envers.RequiresAuditStrategy;
 
 /**
@@ -31,7 +31,7 @@ import org.hibernate.testing.envers.RequiresAuditStrategy;
  *
  * @author Chris Cranford
  */
-@TestForIssue( jiraKey = "HHH-6210" )
+@JiraKey( value = "HHH-6210" )
 @RequiresAuditStrategy( value = ValidityAuditStrategy.class, jiraKey = "HHH-6210" )
 public class RevisionEndTimestampTypeTest extends BaseEnversJPAFunctionalTestCase {
 

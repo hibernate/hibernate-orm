@@ -27,7 +27,7 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.IntTestEntity;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 
@@ -49,7 +49,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-12448")
+@JiraKey(value = "HHH-12448")
 public class JtaTransactionAfterCallbackTest extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

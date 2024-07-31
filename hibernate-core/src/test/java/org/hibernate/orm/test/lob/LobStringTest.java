@@ -15,7 +15,7 @@ import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialects;
@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-11477")
+@JiraKey(value = "HHH-11477")
 // Note that Cockroach doesn't support LOB functions. See https://github.com/cockroachdb/cockroach/issues/26725
 @RequiresDialect(PostgreSQLDialect.class)
 @DomainModel(
@@ -80,7 +80,7 @@ public class LobStringTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11477")
+	@JiraKey(value = "HHH-11477")
 	public void testHqlQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Query query = session.createQuery( "from TestEntity" );
@@ -104,7 +104,7 @@ public class LobStringTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11477")
+	@JiraKey(value = "HHH-11477")
 	@RequiresDialect(PostgreSQLDialect.class)
 	public void testUsingStringLobAnnotatedPropertyInNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
@@ -133,7 +133,7 @@ public class LobStringTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11477")
+	@JiraKey(value = "HHH-11477")
 	@RequiresDialect(PostgreSQLDialect.class)
 	public void testSelectStringLobAnnotatedInNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
@@ -151,7 +151,7 @@ public class LobStringTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11477")
+	@JiraKey(value = "HHH-11477")
 	@RequiresDialect(PostgreSQLDialect.class)
 	public void testUsingLobPropertyInNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
@@ -169,7 +169,7 @@ public class LobStringTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11477")
+	@JiraKey(value = "HHH-11477")
 	@RequiresDialect(PostgreSQLDialect.class)
 	public void testSelectClobPropertyInNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {

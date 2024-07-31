@@ -13,7 +13,7 @@ import org.hibernate.query.results.ResultSetMappingImpl;
 import org.hibernate.query.results.complete.CompleteResultBuilderEntityValued;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Assert;
@@ -23,7 +23,7 @@ import org.junit.Test;
 /**
  * @author Koen Aers
  */
-@TestForIssue( jiraKey = "HHH-10405" )
+@JiraKey( value = "HHH-10405" )
 @RequiresDialect( H2Dialect.class )
 public class QueryReturnTest extends BaseUnitTestCase {
 	

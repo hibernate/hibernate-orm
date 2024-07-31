@@ -24,7 +24,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
@@ -34,7 +34,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "10180")
+@JiraKey(value = "10180")
 public class SchemaUpdateGeneratingOnlyScriptFileTest {
 
 	@Test

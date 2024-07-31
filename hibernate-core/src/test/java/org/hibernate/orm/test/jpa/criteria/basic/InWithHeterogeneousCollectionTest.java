@@ -23,7 +23,7 @@ import jakarta.persistence.criteria.Root;
 
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
 import org.junit.Before;
@@ -33,7 +33,7 @@ import org.junit.Test;
  * @author Jeremy Carnus
  * @author Guillaume Smet
  */
-@TestForIssue(jiraKey = "HHH-12989")
+@JiraKey(value = "HHH-12989")
 public class InWithHeterogeneousCollectionTest extends BaseCoreFunctionalTestCase {
 
 	@Test

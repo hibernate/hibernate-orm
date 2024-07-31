@@ -1,10 +1,10 @@
 package org.hibernate.processor.test.constant;
 
 import org.hibernate.processor.test.util.CompilationTest;
-import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
 
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import jakarta.persistence.EntityManager;
@@ -13,7 +13,7 @@ import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGen
 import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
 import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfMethodInMetamodelFor;
 
-@TestForIssue(jiraKey = "HHH-18106")
+@JiraKey(value = "HHH-18106")
 public class ConstantInNamedQueryTest extends CompilationTest {
 
 	@Test

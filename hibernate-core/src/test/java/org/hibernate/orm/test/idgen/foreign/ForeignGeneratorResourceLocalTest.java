@@ -28,7 +28,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
@@ -38,7 +38,7 @@ import org.jboss.logging.Logger;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-12738")
+@JiraKey(value = "HHH-12738")
 @Jpa(
 		annotatedClasses = {
 				ForeignGeneratorResourceLocalTest.Contract.class,

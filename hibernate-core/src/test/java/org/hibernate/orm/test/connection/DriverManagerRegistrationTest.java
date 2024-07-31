@@ -15,7 +15,7 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  *
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-7272" )
+@JiraKey( value = "HHH-7272" )
 public class DriverManagerRegistrationTest {
 
 	@Test

@@ -14,7 +14,7 @@ import java.util.Map;
 
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ExpectedException;
@@ -40,7 +40,7 @@ import static org.junit.Assert.assertThat;
 @SessionFactory
 public class LegacyParameterTests {
 	@Test
-	@TestForIssue( jiraKey = "HHH-9154" )
+	@JiraKey( value = "HHH-9154" )
 	public void testClassAsParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(s) -> {
@@ -54,7 +54,7 @@ public class LegacyParameterTests {
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7705")
+	@JiraKey(value = "HHH-7705")
 	public void testSetPropertiesMapWithNullValues(SessionFactoryScope scope) {
 
 		scope.inTransaction(
@@ -95,7 +95,7 @@ public class LegacyParameterTests {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10796")
+	@JiraKey(value = "HHH-10796")
 	public void testSetPropertiesMapNotContainingAllTheParameters(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(s) -> {
@@ -115,7 +115,7 @@ public class LegacyParameterTests {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9154" )
+	@JiraKey( value = "HHH-9154" )
 	public void testObjectAsParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(s) -> {
@@ -128,7 +128,7 @@ public class LegacyParameterTests {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13310")
+	@JiraKey(value = "HHH-13310")
 	public void testGetParameterListValue(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -142,7 +142,7 @@ public class LegacyParameterTests {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13310")
+	@JiraKey(value = "HHH-13310")
 	public void testGetParameterListValueAfterParameterExpansion(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -158,7 +158,7 @@ public class LegacyParameterTests {
 
 	@Test
 	@ExpectedException( IllegalStateException.class )
-	@TestForIssue(jiraKey = "HHH-13310")
+	@JiraKey(value = "HHH-13310")
 	public void testGetNotBoundParameterListValue(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -169,7 +169,7 @@ public class LegacyParameterTests {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13310")
+	@JiraKey(value = "HHH-13310")
 	public void testGetPositionalParameterListValue(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -185,7 +185,7 @@ public class LegacyParameterTests {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13310")
+	@JiraKey(value = "HHH-13310")
 	public void testGetPositionalParameterValue(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -201,7 +201,7 @@ public class LegacyParameterTests {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13310")
+	@JiraKey(value = "HHH-13310")
 	public void testGetParameterByPositionListValueAfterParameterExpansion(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -217,7 +217,7 @@ public class LegacyParameterTests {
 
 	@Test
 	@ExpectedException( IllegalStateException.class )
-	@TestForIssue(jiraKey = "HHH-13310")
+	@JiraKey(value = "HHH-13310")
 	public void testGetPositionalNotBoundParameterListValue(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {

@@ -13,7 +13,7 @@ import org.hibernate.engine.internal.NaturalIdResolutionsImpl;
 import org.hibernate.stat.NaturalIdStatistics;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -32,7 +32,7 @@ import static org.hibernate.testing.cache.CachingRegionFactory.DEFAULT_ACCESSTYP
 /**
  * @author Sylvain Dusart
  */
-@TestForIssue(jiraKey = "HHH-16218")
+@JiraKey(value = "HHH-16218")
 @DomainModel(
 		annotatedClasses = {
 				CompoundNaturalIdCacheTest.EntityWithSimpleNaturalId.class,

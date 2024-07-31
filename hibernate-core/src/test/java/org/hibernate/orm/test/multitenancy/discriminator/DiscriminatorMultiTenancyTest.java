@@ -30,7 +30,7 @@ import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -47,7 +47,7 @@ import org.junit.Test;
 /**
  * @author Mårten Svantesson
  */
-@TestForIssue(jiraKey = "HHH-11980")
+@JiraKey(value = "HHH-11980")
 @RequiresDialectFeature( value = ConnectionProviderBuilder.class )
 public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 

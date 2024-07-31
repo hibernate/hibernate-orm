@@ -22,7 +22,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
@@ -46,7 +46,7 @@ public class ServiceRegistryTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10427")
+	@JiraKey(value = "HHH-10427")
 	public void testOnlyOneInstanceOfTheServiceShouldBeCreated() throws InterruptedException, ExecutionException {
 
 		Future<SlowInitializationService>[] serviceIdentities = execute();
@@ -65,7 +65,7 @@ public class ServiceRegistryTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11395")
+	@JiraKey(value = "HHH-11395")
 	public void testGetService() {
 		assertThat(
 				registry.getService( SlowInitializationService.class ),
@@ -74,13 +74,13 @@ public class ServiceRegistryTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11395")
+	@JiraKey(value = "HHH-11395")
 	public void testGetServiceReturnsNullWhenTheServiceInitiatorInitiateServiceReturnsNull() {
 		assertNull( registry.getService( FakeService.class ) );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11395")
+	@JiraKey(value = "HHH-11395")
 	public void testRequireService() {
 		assertThat(
 				registry.requireService( SlowInitializationService.class ),
@@ -89,7 +89,7 @@ public class ServiceRegistryTest {
 	}
 
 	@Test(expected = NullServiceException.class)
-	@TestForIssue(jiraKey = "HHH-11395")
+	@JiraKey(value = "HHH-11395")
 	public void testRequireServiceThrowsAnExceptionWhenTheServiceInitiatorInitiateServiceReturnsNull() {
 		assertNull( registry.requireService( FakeService.class ) );
 	}

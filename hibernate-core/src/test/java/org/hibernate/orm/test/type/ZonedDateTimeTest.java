@@ -32,7 +32,7 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.type.StandardBasicTypes;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 import org.junit.runners.Parameterized;
 
@@ -42,7 +42,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10372")
+@JiraKey(value = "HHH-10372")
 public class ZonedDateTimeTest extends AbstractJavaTimeTypeTest<ZonedDateTime, ZonedDateTimeTest.EntityWithZonedDateTime> {
 
 	@Override

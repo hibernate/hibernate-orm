@@ -11,7 +11,7 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.orm.test.jpa.model.MapContent;
 import org.hibernate.orm.test.jpa.model.MapOwner;
 import org.hibernate.orm.test.jpa.model.Relationship;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -19,7 +19,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
-@TestForIssue(jiraKey = "HHH-14279")
+@JiraKey(value = "HHH-14279")
 @DomainModel(
 		annotatedClasses = {
 				MapOwner.class, MapContent.class, Relationship.class
@@ -122,7 +122,7 @@ public class MapIssueTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15357")
+	@JiraKey( value = "HHH-15357")
 	public void testSelectMapKeyFk(SessionFactoryScope scope) {
 		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();

@@ -7,8 +7,9 @@
 package org.hibernate.processor.test.embeddable.generics;
 
 import org.hibernate.processor.test.util.CompilationTest;
-import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.WithClasses;
+
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static java.lang.System.out;
@@ -17,7 +18,7 @@ import static org.hibernate.processor.test.util.TestUtil.*;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH_12030")
+@JiraKey(value = "HHH_12030")
 public class EmbeddableGenericsTest extends CompilationTest {
 	@Test
 	@WithClasses({ ChildEmbeddable.class, ParentEmbeddable.class })

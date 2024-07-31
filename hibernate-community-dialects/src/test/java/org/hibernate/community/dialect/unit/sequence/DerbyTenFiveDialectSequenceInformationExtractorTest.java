@@ -13,12 +13,12 @@ import org.hibernate.orm.test.dialect.unit.sequence.AbstractSequenceInformationE
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-11470")
+@JiraKey(value = "HHH-11470")
 public class DerbyTenFiveDialectSequenceInformationExtractorTest extends AbstractSequenceInformationExtractorTest {
 
 	@Override

@@ -17,7 +17,7 @@ import org.hibernate.Transaction;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.query.Query;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -47,7 +47,7 @@ public class HANAFunctionsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12546")
+	@JiraKey(value = "HHH-12546")
 	public void testLocateFunction() {
 		try ( Session s = openSession() ) {
 			Transaction tx = s.beginTransaction();

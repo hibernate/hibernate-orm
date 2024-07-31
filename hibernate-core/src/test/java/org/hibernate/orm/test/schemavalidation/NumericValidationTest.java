@@ -36,7 +36,7 @@ import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.SourceDescriptor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
@@ -47,7 +47,7 @@ import org.junit.runners.Parameterized;
 /**
  * @author Jonathan Bregler
  */
-@TestForIssue(jiraKey = "HHH-12203")
+@JiraKey(value = "HHH-12203")
 @RunWith(Parameterized.class)
 public class NumericValidationTest implements ExecutionOptions {
 	@Parameterized.Parameters

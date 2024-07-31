@@ -9,7 +9,7 @@ package org.hibernate.orm.test.where.hbm;
 import java.util.HashSet;
 import java.util.Set;
 import org.hibernate.Hibernate;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -168,7 +168,7 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12875" )
+	@JiraKey( value = "HHH-12875" )
 	public void testInitializeFromUniqueAssociationTable() {
 		doInHibernate(
 				this::sessionFactory, session -> {
@@ -197,7 +197,7 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12875" )
+	@JiraKey( value = "HHH-12875" )
 	public void testInitializeFromNonUniqueAssociationTable() {
 		doInHibernate(
 				this::sessionFactory, session -> {

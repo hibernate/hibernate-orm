@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.id.idClass;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -36,7 +36,7 @@ import static org.hibernate.cfg.AvailableSettings.IMPLICIT_NAMING_STRATEGY;
 public class IdClassNamingStrategyTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14241")
+	@JiraKey(value = "HHH-14241")
 	public void test(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			MyEntity entity = new MyEntity();

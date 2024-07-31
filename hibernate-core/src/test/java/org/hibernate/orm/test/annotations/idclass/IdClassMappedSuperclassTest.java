@@ -12,7 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.MappedSuperclass;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-9114")
+@JiraKey(value = "HHH-9114")
 @DomainModel(annotatedClasses = IdClassMappedSuperclassTest.Simple.class)
 @SessionFactory
 public class IdClassMappedSuperclassTest {

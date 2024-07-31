@@ -12,7 +12,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.HibernateException;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -71,7 +71,7 @@ public class NonUniqueIdTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12802")
+	@JiraKey(value = "HHH-12802")
 	public void testLoadEntityWithNonUniqueId(SessionFactoryScope scope) {
 		try {
 			scope.inTransaction(

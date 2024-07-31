@@ -17,7 +17,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -35,7 +35,7 @@ import org.junit.jupiter.api.Test;
 )
 public class XmlAndAnnotationAttributeOverrideTest {
 	@Test
-	@TestForIssue(jiraKey = "HHH-14827")
+	@JiraKey(value = "HHH-14827")
 	public void testDerivedClassAttributeOverriding(EntityManagerFactoryScope scope) {
 		assertThat( SchemaUtil.getColumnNames( scope.getEntityManagerFactory(), DerivedEntityType.class ) )
 				.contains( "custom_name" )

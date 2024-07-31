@@ -33,7 +33,7 @@ import java.util.Date;
 
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.query.Query;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -85,7 +85,7 @@ public class SybaseASEFunctionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7070")
+	@JiraKey(value = "HHH-7070")
 	public void testDateaddFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -96,7 +96,7 @@ public class SybaseASEFunctionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7070")
+	@JiraKey(value = "HHH-7070")
 	public void testDatepartFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -107,7 +107,7 @@ public class SybaseASEFunctionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7070")
+	@JiraKey(value = "HHH-7070")
 	public void testDatediffFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -118,7 +118,7 @@ public class SybaseASEFunctionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7070")
+	@JiraKey(value = "HHH-7070")
 	public void testAtn2Function(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

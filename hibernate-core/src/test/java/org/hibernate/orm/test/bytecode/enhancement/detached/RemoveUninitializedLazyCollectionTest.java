@@ -11,7 +11,7 @@ import java.util.List;
 
 import org.hibernate.Hibernate;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -33,7 +33,7 @@ import jakarta.persistence.OneToMany;
 /**
  * @author Christian Beikov
  */
-@TestForIssue(jiraKey = "HHH-14387")
+@JiraKey(value = "HHH-14387")
 @DomainModel(
 		annotatedClasses = {
 				RemoveUninitializedLazyCollectionTest.Parent.class,

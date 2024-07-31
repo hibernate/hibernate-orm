@@ -27,7 +27,7 @@ import org.hibernate.query.Query;
 import org.hibernate.stat.Statistics;
 import org.hibernate.type.StandardBasicTypes;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -136,7 +136,7 @@ public class QueryAndSQLTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10161")
+	@JiraKey(value = "HHH-10161")
 	public void testQueryWithNullParameter(SessionFactoryScope scope) {
 		Chaos c0 = new Chaos();
 		c0.setId( 0L );
@@ -180,7 +180,7 @@ public class QueryAndSQLTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10161")
+	@JiraKey(value = "HHH-10161")
 	public void testQueryWithNullParameterTyped(SessionFactoryScope scope) {
 		Chaos c0 = new Chaos();
 		c0.setId( 0L );
@@ -224,7 +224,7 @@ public class QueryAndSQLTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10161")
+	@JiraKey(value = "HHH-10161")
 	public void testNativeQueryWithNullParameter(SessionFactoryScope scope) {
 		Chaos c0 = new Chaos();
 		c0.setId( 0L );
@@ -269,7 +269,7 @@ public class QueryAndSQLTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10161")
+	@JiraKey(value = "HHH-10161")
 	public void testNativeQueryWithNullParameterTyped(SessionFactoryScope scope) {
 		Chaos c0 = new Chaos();
 		c0.setId( 0L );

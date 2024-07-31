@@ -33,7 +33,7 @@ import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.SourceDescriptor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
@@ -48,7 +48,7 @@ import jakarta.persistence.Table;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue(jiraKey = "HHH-9693")
+@JiraKey(value = "HHH-9693")
 @RunWith(Parameterized.class)
 public class LongVarcharValidationTest implements ExecutionOptions {
 	@Parameterized.Parameters

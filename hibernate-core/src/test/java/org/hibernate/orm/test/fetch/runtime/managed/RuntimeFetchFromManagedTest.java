@@ -22,7 +22,7 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -34,7 +34,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-13152" )
+@JiraKey( value = "HHH-13152" )
 public class RuntimeFetchFromManagedTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test

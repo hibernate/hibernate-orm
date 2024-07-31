@@ -35,7 +35,7 @@ import jakarta.persistence.OneToMany;
 
 import org.hibernate.Hibernate;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -104,7 +104,7 @@ public class JoinedInheritanceEagerTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12375")
+	@JiraKey(value = "HHH-12375")
 	public void joinFindEntity(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			EntityA entityA = session.get( EntityA.class, 4L );
@@ -114,7 +114,7 @@ public class JoinedInheritanceEagerTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12375")
+	@JiraKey(value = "HHH-12375")
 	public void joinFindParenEntity(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			BaseEntity baseEntity = session.get( BaseEntity.class, 4L );
@@ -134,7 +134,7 @@ public class JoinedInheritanceEagerTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12375")
+	@JiraKey(value = "HHH-12375")
 	public void selectBaseType(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			List result = session.createQuery( "from BaseEntity" ).list();

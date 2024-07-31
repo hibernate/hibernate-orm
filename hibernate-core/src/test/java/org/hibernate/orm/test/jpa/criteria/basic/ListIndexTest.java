@@ -18,7 +18,7 @@ import org.hibernate.orm.test.jpa.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.orm.test.jpa.metamodel.Address;
 import org.hibernate.orm.test.jpa.metamodel.Address_;
 import org.hibernate.orm.test.jpa.metamodel.Phone;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -44,7 +44,7 @@ public class ListIndexTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8404")
+	@JiraKey(value = "HHH-8404")
 	public void testListIndex() {
 		EntityManager em = getOrCreateEntityManager();
 		

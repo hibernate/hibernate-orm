@@ -24,7 +24,7 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
@@ -34,7 +34,7 @@ import org.junit.Test;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-11061")
+@JiraKey(value = "HHH-11061")
 public class SchemaUpdateWithKeywordAutoQuotingEnabledTest extends BaseUnitTestCase {
 	private StandardServiceRegistry ssr;
 	private MetadataImplementor metadata;

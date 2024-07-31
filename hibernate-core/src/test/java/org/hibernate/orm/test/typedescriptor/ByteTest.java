@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.typedescriptor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -48,7 +48,7 @@ public class ByteTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6533")
+	@JiraKey(value = "HHH-6533")
 	public void testByteDataPersistenceAndRetrieval(SessionFactoryScope scope) {
 
 		scope.inTransaction(

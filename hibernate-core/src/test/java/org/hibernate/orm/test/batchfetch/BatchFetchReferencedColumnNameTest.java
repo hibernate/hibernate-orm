@@ -11,7 +11,7 @@ import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -57,7 +57,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class BatchFetchReferencedColumnNameTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13059")
+	@JiraKey(value = "HHH-13059")
 	public void test(SessionFactoryScope scope) throws Exception {
 		scope.inTransaction( session -> {
 			Parent p = new Parent();

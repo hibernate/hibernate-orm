@@ -26,7 +26,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.NClobJdbcType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -38,7 +38,7 @@ public class MaterializedNClobBindTest {
 	);
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11296" )
+	@JiraKey( value = "HHH-11296" )
 	public void testPreparedStatementStreamBinding() throws SQLException {
 		final WrapperOptions wrapperOptions = new MockWrapperOptions( true );
 		binder.bind(
@@ -50,7 +50,7 @@ public class MaterializedNClobBindTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11296" )
+	@JiraKey( value = "HHH-11296" )
 	public void testCallableStatementStreamBinding() throws SQLException {
 		final WrapperOptions wrapperOptions = new MockWrapperOptions( true );
 		binder.bind(
@@ -62,7 +62,7 @@ public class MaterializedNClobBindTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11818")
+	@JiraKey( value = "HHH-11818")
 	public void testPreparedStatementNClobBinding() throws SQLException {
 		final WrapperOptions wrapperOptions = new MockWrapperOptions( false );
 		binder.bind(
@@ -74,7 +74,7 @@ public class MaterializedNClobBindTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11818")
+	@JiraKey( value = "HHH-11818")
 	public void testCallableStatementNClobBinding() throws SQLException {
 		final WrapperOptions wrapperOptions = new MockWrapperOptions( false );
 		binder.bind(

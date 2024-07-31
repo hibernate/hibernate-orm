@@ -14,7 +14,7 @@ import org.hibernate.Session;
 import org.hibernate.resource.transaction.spi.TransactionObserver;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -43,7 +43,7 @@ public class TransactionRollbackTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11407")
+	@JiraKey( value = "HHH-11407")
 	public void checkRollBackTransactionIsExecutedOnceWhenACommitFails(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {

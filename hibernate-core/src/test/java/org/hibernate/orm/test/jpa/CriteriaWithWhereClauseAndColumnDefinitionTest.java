@@ -7,7 +7,7 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -35,7 +35,7 @@ import jakarta.persistence.criteria.Subquery;
 				CriteriaWithWhereClauseAndColumnDefinitionTest.Task.class
 		}
 )
-@TestForIssue(jiraKey = "HHH-15805")
+@JiraKey(value = "HHH-15805")
 @RequiresDialects({
 		@RequiresDialect(MariaDBDialect.class),
 		@RequiresDialect(MySQLDialect.class),

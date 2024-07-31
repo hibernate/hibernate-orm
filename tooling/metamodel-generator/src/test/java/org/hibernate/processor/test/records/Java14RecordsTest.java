@@ -2,7 +2,6 @@ package org.hibernate.processor.test.records;
 
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.processor.test.util.CompilationTest;
-import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.WithClasses;
 import org.junit.Test;
 
@@ -10,6 +9,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
+
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static java.lang.reflect.Modifier.isStatic;
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
@@ -22,7 +23,7 @@ import static org.junit.Assert.fail;
 public class Java14RecordsTest extends CompilationTest {
 
     @Test
-    @TestForIssue(jiraKey = "HHH-16261")
+    @JiraKey(value = "HHH-16261")
     @WithClasses({Address.class, Author.class})
     public void testEmbeddableRecordProperty() {
         assertMetamodelClassGeneratedFor(Address.class);

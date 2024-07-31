@@ -12,7 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -50,7 +50,7 @@ public class JoinedSubclassWithEmbeddableTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10920")
+	@JiraKey(value = "HHH-10920")
 	public void testEmbeddedFieldIsNotNull(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final ConcreteEntity entity = session.get( ConcreteEntity.class, 1L );

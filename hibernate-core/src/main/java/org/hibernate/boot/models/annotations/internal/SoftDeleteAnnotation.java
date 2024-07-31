@@ -20,6 +20,8 @@ import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJand
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
 public class SoftDeleteAnnotation implements SoftDelete {
 	private String columnName;
+	private String options;
+	private String comment;
 	private org.hibernate.annotations.SoftDeleteType strategy;
 	private java.lang.Class<? extends jakarta.persistence.AttributeConverter<java.lang.Boolean, ?>> converter;
 
@@ -38,6 +40,8 @@ public class SoftDeleteAnnotation implements SoftDelete {
 	public SoftDeleteAnnotation(SoftDelete annotation, SourceModelBuildingContext modelContext) {
 		this.columnName = annotation.columnName();
 		this.strategy = annotation.strategy();
+		this.options = annotation.options();
+		this.comment = annotation.comment();
 		this.converter = annotation.converter();
 	}
 
@@ -52,6 +56,8 @@ public class SoftDeleteAnnotation implements SoftDelete {
 				modelContext
 		);
 		this.strategy = extractJandexValue( annotation, HibernateAnnotations.SOFT_DELETE, "strategy", modelContext );
+		this.options = extractJandexValue( annotation, HibernateAnnotations.SOFT_DELETE, "options", modelContext );
+		this.comment = extractJandexValue( annotation, HibernateAnnotations.SOFT_DELETE, "comment", modelContext );
 		this.converter = extractJandexValue( annotation, HibernateAnnotations.SOFT_DELETE, "converter", modelContext );
 	}
 
@@ -69,6 +75,23 @@ public class SoftDeleteAnnotation implements SoftDelete {
 		this.columnName = value;
 	}
 
+	@Override
+	public String options() {
+		return options;
+	}
+
+	public void options(String options) {
+		this.options = options;
+	}
+
+	@Override
+	public String comment() {
+		return comment;
+	}
+
+	public void comment(String comment) {
+		this.comment = comment;
+	}
 
 	@Override
 	public org.hibernate.annotations.SoftDeleteType strategy() {

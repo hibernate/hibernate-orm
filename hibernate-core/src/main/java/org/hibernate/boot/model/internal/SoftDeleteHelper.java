@@ -13,6 +13,7 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.SoftDeletable;
@@ -93,7 +94,13 @@ public class SoftDeleteHelper {
 		softDeleteColumn.setLength( 1 );
 		softDeleteColumn.setNullable( false );
 		softDeleteColumn.setUnique( false );
-		softDeleteColumn.setComment( "Soft-delete indicator" );
+		softDeleteColumn.setOptions( softDeleteConfig.options() );
+		if ( StringHelper.isEmpty( softDeleteConfig.comment() ) ) {
+			softDeleteColumn.setComment( "Soft-delete indicator" );
+		}
+		else {
+			softDeleteColumn.setComment( softDeleteConfig.comment() );
+		}
 
 		softDeleteColumn.setValue( softDeleteIndicatorValue );
 		softDeleteIndicatorValue.addColumn( softDeleteColumn );

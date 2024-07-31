@@ -7,19 +7,15 @@
 
 //$Id$
 package org.hibernate.orm.test.annotations.entity;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
-import org.hibernate.annotations.Proxy;
-
 /**
- * Non lazy entity
- *
  * @author Emmanuel Bernard
  */
 @Entity
-@Proxy(lazy = false)
 public class Tree {
 	private Integer id;
 	private String name;

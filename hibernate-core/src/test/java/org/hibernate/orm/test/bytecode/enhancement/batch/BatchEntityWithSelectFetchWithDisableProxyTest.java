@@ -6,7 +6,6 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.Proxy;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
@@ -183,7 +182,6 @@ public class BatchEntityWithSelectFetchWithDisableProxyTest {
 	@Entity(name = "Product")
 	@BatchSize(size = 512)
 	@Cacheable
-	@Proxy(lazy = false)
 	public static class Product {
 		@Id
 		Long id;

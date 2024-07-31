@@ -30,13 +30,9 @@ public class AccountNotAuditedOwners implements Serializable {
 
 	private String type;
 
-	@OneToOne(mappedBy = "account", optional = false)
-	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
-	private NotAuditedNoProxyPerson owner;
-
 	@OneToOne(mappedBy = "account", optional = false, fetch = FetchType.LAZY)
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
-	private NotAuditedProxyPerson coOwner;
+	private NotAuditedPerson owner;
 
 	public AccountNotAuditedOwners() {
 	}
@@ -91,20 +87,12 @@ public class AccountNotAuditedOwners implements Serializable {
 		this.accountId = accountId;
 	}
 
-	public NotAuditedNoProxyPerson getOwner() {
+	public NotAuditedPerson getOwner() {
 		return owner;
 	}
 
-	public void setOwner(NotAuditedNoProxyPerson owner) {
+	public void setOwner(NotAuditedPerson owner) {
 		this.owner = owner;
-	}
-
-	public NotAuditedProxyPerson getCoOwner() {
-		return coOwner;
-	}
-
-	public void setCoOwner(NotAuditedProxyPerson coOwner) {
-		this.coOwner = coOwner;
 	}
 
 	public String getType() {

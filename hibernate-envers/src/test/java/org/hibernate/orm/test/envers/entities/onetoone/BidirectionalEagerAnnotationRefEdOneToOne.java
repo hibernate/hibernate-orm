@@ -6,6 +6,9 @@
  */
 package org.hibernate.orm.test.envers.entities.onetoone;
 
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -13,16 +16,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.Proxy;
-import org.hibernate.envers.Audited;
-import org.hibernate.envers.NotAudited;
-
 /**
  * Test class for issue HHH-3854. Restricting creation of proxy objects is essential.
  */
 @Entity
 @Audited
-@Proxy(lazy = false)
 // Class name is too long of an identifier for Oracle.
 @Table(name = "EdOneToOne")
 public final class BidirectionalEagerAnnotationRefEdOneToOne {

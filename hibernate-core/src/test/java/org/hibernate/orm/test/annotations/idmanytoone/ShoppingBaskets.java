@@ -37,7 +37,6 @@ public class ShoppingBaskets implements Serializable {
 	private java.util.Date basketDatetime;
 
 	@OneToMany(mappedBy="shoppingBaskets", cascade=CascadeType.ALL, targetEntity=BasketItems.class)
-	@org.hibernate.annotations.LazyCollection(org.hibernate.annotations.LazyCollectionOption.TRUE)
 	private java.util.Set items = new java.util.HashSet();
 	
 	public void setBasketDatetime(java.util.Date value) {

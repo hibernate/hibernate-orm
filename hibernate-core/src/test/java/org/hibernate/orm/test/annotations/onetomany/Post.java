@@ -16,17 +16,13 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
-
 @Entity(name = "Post")
 @DiscriminatorValue(value = "WCT")
 public class Post extends Comment{
 
-	protected List<Comment> comments = new ArrayList<Comment>();
+	protected List<Comment> comments = new ArrayList<>();
 
 	@OneToMany(mappedBy = "post", cascade = CascadeType.ALL , orphanRemoval = false, fetch = FetchType.LAZY)
-	@LazyCollection(LazyCollectionOption.EXTRA)
 	@OrderColumn(name = "idx")
 	public List<Comment> getComments() {
 		return comments;

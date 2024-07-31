@@ -7,11 +7,16 @@
 
 //$Id$
 package org.hibernate.orm.test.annotations.fetch;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -20,11 +25,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 
 
 /**
@@ -101,7 +101,6 @@ public class Person implements Serializable {
 	}
 
 	@OneToMany(cascade=CascadeType.ALL, mappedBy = "oldPerson")
-	@LazyCollection(LazyCollectionOption.EXTRA)
 	@Fetch(FetchMode.SUBSELECT)
 	public Collection<Stay> getOldStays() {
 		return oldStays;
@@ -122,7 +121,6 @@ public class Person implements Serializable {
 	}
 
 	@OneToMany(cascade=CascadeType.ALL)
-	@LazyCollection(LazyCollectionOption.EXTRA)
 	@Fetch(FetchMode.SUBSELECT)
 	@OrderColumn(name="orderedStayIndex")
 	public List<Stay> getOrderedStay() {

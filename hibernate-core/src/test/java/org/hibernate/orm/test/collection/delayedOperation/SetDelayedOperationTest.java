@@ -9,18 +9,8 @@ package org.hibernate.orm.test.collection.delayedOperation;
 
 import java.util.HashSet;
 import java.util.Set;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -30,8 +20,18 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 /**
@@ -108,8 +108,8 @@ public class SetDelayedOperationTest {
 					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 					// add detached Child c
 					p.addChild( session.merge( c1 ) );
-					// collection should still be uninitialized
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					// collection should now be uninitialized
+					assertTrue( Hibernate.isInitialized( p.getChildren() ) );
 				}
 		);
 
@@ -128,7 +128,8 @@ public class SetDelayedOperationTest {
 					Parent p = session.get( Parent.class, parentId );
 					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 					p.addChild( c2 );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					// collection should now be uninitialized
+					assertTrue( Hibernate.isInitialized( p.getChildren() ) );
 					session.merge( p );
 				}
 		);
@@ -152,8 +153,8 @@ public class SetDelayedOperationTest {
 					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 					// add transient Child
 					p.addChild( new Child( "Darwin" ) );
-					// collection should still be uninitialized
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					// collection should now be uninitialized
+					assertTrue( Hibernate.isInitialized( p.getChildren() ) );
 				}
 		);
 
@@ -173,8 +174,8 @@ public class SetDelayedOperationTest {
 					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 					// add transient Child
 					p.addChild( new Child( "Comet" ) );
-					// collection should still be uninitialized
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					// collection should now be uninitialized
+					assertTrue( Hibernate.isInitialized( p.getChildren() ) );
 					session.merge( p );
 				}
 		);
@@ -209,8 +210,8 @@ public class SetDelayedOperationTest {
 					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 					// get the first Child so it is managed; add to collection
 					p.addChild( session.get( Child.class, c1.getId() ) );
-					// collection should still be uninitialized
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					// collection should now be uninitialized
+					assertTrue( Hibernate.isInitialized( p.getChildren() ) );
 				}
 		);
 		scope.inTransaction(
@@ -229,8 +230,8 @@ public class SetDelayedOperationTest {
 					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 					// get the second Child so it is managed; add to collection
 					p.addChild( session.get( Child.class, c2.getId() ) );
-					// collection should still be uninitialized
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					// collection should now be uninitialized
+					assertTrue( Hibernate.isInitialized( p.getChildren() ) );
 					session.merge( p );
 				}
 		);
@@ -263,7 +264,8 @@ public class SetDelayedOperationTest {
 					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 					// remove a detached element and commit
 					p.removeChild( c1 );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					// collection should now be uninitialized
+					assertTrue( Hibernate.isInitialized( p.getChildren() ) );
 					session.merge( p );
 				}
 		);
@@ -285,7 +287,8 @@ public class SetDelayedOperationTest {
 					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 					// remove a detached element and commit
 					p.removeChild( c2 );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					// collection should now be uninitialized
+					assertTrue( Hibernate.isInitialized( p.getChildren() ) );
 					p = (Parent) session.merge( p );
 					Hibernate.initialize( p );
 				}
@@ -311,7 +314,8 @@ public class SetDelayedOperationTest {
 					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 					// get c1 so it is managed, then remove and commit
 					p.removeChild( session.get( Child.class, childId1 ) );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					// collection should now be uninitialized
+					assertTrue( Hibernate.isInitialized( p.getChildren() ) );
 				}
 		);
 
@@ -329,7 +333,8 @@ public class SetDelayedOperationTest {
 					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 					// get c1 so it is managed, then remove, merge and commit
 					p.removeChild( session.get( Child.class, childId2 ) );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+					// collection should now be uninitialized
+					assertTrue( Hibernate.isInitialized( p.getChildren() ) );
 					session.merge( p );
 				}
 		);
@@ -351,7 +356,6 @@ public class SetDelayedOperationTest {
 		private Long id;
 
 		@OneToMany(cascade = CascadeType.ALL, mappedBy = "parent", orphanRemoval = true)
-		@LazyCollection(value = LazyCollectionOption.EXTRA)
 		private Set<Child> children = new HashSet<>();
 
 		public Parent() {

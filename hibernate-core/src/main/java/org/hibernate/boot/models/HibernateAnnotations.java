@@ -488,10 +488,6 @@ public interface HibernateAnnotations {
 			PartitionKey.class,
 			PartitionKeyAnnotation.class
 	);
-	OrmAnnotationDescriptor<Proxy,ProxyAnnotation> PROXY = new OrmAnnotationDescriptor<>(
-			Proxy.class,
-			ProxyAnnotation.class
-	);
 	OrmAnnotationDescriptor<PropertyRef,PropertyRefAnnotation> PROPERTY_REF = new OrmAnnotationDescriptor<>(
 			PropertyRef.class,
 			PropertyRefAnnotation.class

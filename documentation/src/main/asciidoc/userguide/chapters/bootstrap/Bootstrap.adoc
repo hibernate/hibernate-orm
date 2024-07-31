@@ -68,7 +68,7 @@ We can inject the `EntityManagerFactory` -
 [[bootstrap-jpa-compliant-PersistenceUnit-configurable-example]]
 .Injecting a specific `EntityManagerFactory`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-boot}/BootstrapTest.java[tags=bootstrap-jpa-compliant-PersistenceUnit-configurable-example]
 ----
@@ -79,7 +79,7 @@ Because there is only one `<persistence-unit/>` defined, we can also omit the na
 [[bootstrap-jpa-compliant-PersistenceUnit-example]]
 .Injecting the default `EntityManagerFactory`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-boot}/BootstrapTest.java[tags=bootstrap-jpa-compliant-PersistenceUnit-example]
 ----
@@ -104,7 +104,7 @@ and either -
 [[example-bootstrap-jpa-compliant-EntityManagerFactory]]
 .Application bootstrapped `EntityManagerFactory`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-boot}/BootstrapTest.java[tags=bootstrap-jpa-compliant-EntityManagerFactory-example]
 ----
@@ -118,7 +118,7 @@ Jakarta Persistence 3.2 also introduced a new way for applications to build the 
 [[example-bootstrap-standard-PersistenceConfiguration]]
 .Using PersistenceConfiguration
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-boot-jpa}/PersistenceConfigurationTests.java[tags=example-bootstrap-standard-PersistenceConfiguration]
 ----
@@ -130,7 +130,7 @@ which exposes additional conveniences.
 [[example-bootstrap-standard-HibernatePersistenceConfiguration]]
 .Using HibernatePersistenceConfiguration
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-boot-jpa}/PersistenceConfigurationTests.java[tags=example-bootstrap-standard-HibernatePersistenceConfiguration]
 ----
@@ -254,7 +254,7 @@ If you wish to alter how the `BootstrapServiceRegistry` is built, that is contro
 [[example-bootstrap-native-BootstrapServiceRegistry]]
 .Controlling `BootstrapServiceRegistry` building
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-BootstrapServiceRegistry]
 ----
@@ -266,7 +266,7 @@ You will almost always need to configure this registry, which is done through `o
 [[example-bootstrap-native-StandardServiceRegistryBuilder]]
 .Building a `BootstrapServiceRegistryBuilder`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-StandardServiceRegistryBuilder]
 ----
@@ -289,7 +289,7 @@ This mapping information might be in the form of XML, annotations or both.
 [[example-bootstrap-native-MetadataSources]]
 .Building a `MetadataSources`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-MetadataSources]
 ----
@@ -300,7 +300,7 @@ Also, all methods on `MetadataSources` offer fluent-style call chaining -
 [[bootstrap-native-metadata-source-example]]
 .Configuring a `MetadataSources` with method chaining
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-MetadataSources-chained]
 ----
@@ -315,7 +315,7 @@ If you have specified everything as settings, or you are ok with the default beh
 [[example-bootstrap-native-Metadata-no-builder]]
 .Using `MetadataSources#buildMetadata`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-Metadata-no-builder]
 ----
@@ -327,7 +327,7 @@ Optionally, we can obtain a `MetadataBuilder` from `MetadataSources` which can b
 [[example-bootstrap-native-MetadataBuilder]]
 .Using `MetadataBuilder`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-Metadata-using-builder]
 ----
@@ -355,7 +355,7 @@ link:{doc-javadoc-url}/org/hibernate/boot/Metadata.html#buildSessionFactory--[`M
 [[example-bootstrap-native-SessionFactory-no-builder]]
 .Using `SessionFactoryBuilder`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-SessionFactory-no-builder]
 ----
@@ -366,7 +366,7 @@ Or a `SessionFactoryBuilder`, obtained from `Metadata`, may be used to configure
 [[example-bootstrap-native-SessionFactoryBuilder]]
 .Using `SessionFactoryBuilder`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-SessionFactory-using-builder]
 ----
@@ -380,7 +380,7 @@ A common use case for `Integrator`, for example, is to hook in custom event list
 [[example-bootstrap-event-listener-registration]]
 .Configuring an event listener
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-boot}/BootstrapTest.java[tags=bootstrap-event-listener-registration-example]
 ----

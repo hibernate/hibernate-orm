@@ -46,7 +46,7 @@ Since version 5.2, Hibernate allows overriding the global JDBC batch size given 
 [[batch-session-jdbc-batch-size-example]]
 .Hibernate specific JDBC batch size configuration on a per `Session` basis
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-doc-batch}/BatchTests.java[tags=batch-session-jdbc-batch-size-example]
 ----
@@ -60,7 +60,7 @@ The following example shows an anti-pattern for batch inserts.
 [[batch-session-batch-example]]
 .Naive way to insert 100 000 entities with Hibernate
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-doc-batch}/BatchTests.java[tags=batch-session-batch-example]
 ----
@@ -88,7 +88,7 @@ When you make new objects persistent, employ methods `flush()` and `clear()` to 
 [[batch-session-batch-insert-example]]
 .Flushing and clearing the `Session`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-doc-batch}/BatchTests.java[tags=batch-session-batch-insert-example]
 ----
@@ -103,7 +103,7 @@ In addition, use method `scroll()` to take advantage of server-side cursors for 
 [[batch-session-scroll-example]]
 .Using `scroll()`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-doc-batch}/BatchTests.java[tags=batch-session-scroll-example]
 ----
@@ -149,7 +149,7 @@ IMPORTANT: Due to the lack of a first-level cache, stateless sessions are vulner
 [[batch-stateless-session-example]]
 .Using a  `StatelessSession`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-doc-batch}/BatchTests.java[tags=batch-stateless-session-example]
 ----
@@ -205,7 +205,7 @@ You can use sub-queries in the `WHERE` clause, and the sub-queries themselves ca
 [[batch-bulk-jpql-update-example]]
 .Executing a JPQL `UPDATE`, using the `Query.executeUpdate()`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-jpql-update-example]
 ----
@@ -214,7 +214,7 @@ include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-jpql-update-exa
 [[batch-bulk-hql-update-example]]
 .Executing an HQL `UPDATE`, using the `Query.executeUpdate()`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-hql-update-example]
 ----
@@ -226,7 +226,7 @@ You can use a versioned update to force Hibernate to reset the version or timest
 [[batch-bulk-hql-update-version-example]]
 .Updating the version of timestamp
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-hql-update-version-example]
 ----
@@ -242,7 +242,7 @@ This feature is only available in HQL since it's not standardized by Jakarta Per
 [[batch-bulk-jpql-delete-example]]
 .A JPQL `DELETE` statement
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-jpql-delete-example]
 ----
@@ -251,7 +251,7 @@ include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-jpql-delete-exa
 [[batch-bulk-hql-delete-example]]
 .An HQL `DELETE` statement
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-hql-delete-example]
 ----
@@ -309,7 +309,7 @@ in which case the seed value defined by the `org.hibernate.type.descriptor.java.
 [[batch-bulk-hql-insert-example]]
 .HQL INSERT statement
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-hql-insert-example]
 ----
@@ -344,7 +344,7 @@ The `Person` entity is the base class of this entity inheritance model, and is m
 [[batch-bulk-hql-temp-table-base-class-example]]
 .Bulk mutation base class entity
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-bulkid}/AbstractMutationStrategyCompositeIdTest.java[tags=batch-bulk-hql-temp-table-base-class-example]
 ----
@@ -355,7 +355,7 @@ Both the `Doctor` and `Engineer` entity classes extend the `Person` base class:
 [[batch-bulk-hql-temp-table-sub-classes-example]]
 .Bulk mutation subclass entities
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-bulkid}/AbstractMutationStrategyIdTest.java[tags=batch-bulk-hql-temp-table-sub-classes-example]
 ----
@@ -369,7 +369,7 @@ Now, when you try to execute a bulk entity delete query:
 [[batch-bulk-hql-temp-table-delete-query-example]]
 .Bulk mutation delete query example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-bulkid}/AbstractMutationStrategyCompositeIdTest.java[tags=batch-bulk-hql-temp-table-delete-query-example]
 ----

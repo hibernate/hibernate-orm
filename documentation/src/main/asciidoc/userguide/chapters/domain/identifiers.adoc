@@ -697,7 +697,7 @@ for identifier generators.
 [[identifiers-generators-pooled-lo-optimizer-mapping-example]]
 .Pooled-lo optimizer mapping using `@GenericGenerator` mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-identifier}/PooledOptimizerTest.java[tag=identifiers-generators-pooled-lo-optimizer-mapping-example]
 ----
@@ -708,7 +708,7 @@ Now, when saving 5 `Person` entities and flushing the Persistence Context after 
 [[identifiers-generators-pooled-lo-optimizer-persist-example]]
 .Pooled-lo optimizer mapping using `@GenericGenerator` mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-identifier}/PooledOptimizerTest.java[tag=identifiers-generators-pooled-lo-optimizer-persist-example]
 ----
@@ -775,7 +775,7 @@ then Hibernate can use the `ROWID` pseudo-column for CRUD operations.
 [[identifiers-rowid-mapping]]
 .`@RowId` entity mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-identifier}/RowIdTest.java[tag=identifiers-rowid-mapping]
 ----
@@ -786,7 +786,7 @@ Now, when fetching an entity and modifying it, Hibernate uses the `ROWID` pseudo
 [[identifiers-rowid-example]]
 .`@RowId` example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-identifier}/RowIdTest.java[tag=identifiers-rowid-example]
 ----

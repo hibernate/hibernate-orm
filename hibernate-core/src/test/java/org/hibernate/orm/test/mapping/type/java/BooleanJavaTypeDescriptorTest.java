@@ -64,6 +64,15 @@ public class BooleanJavaTypeDescriptorTest {
     }
 
     @Test
+    public void testCheckConditionShouldReturnCorrectStatementWhen1And0AndNullIntegerGiven() {
+        // given
+        // when
+        String checkCondition = underTest.getCheckCondition("is_active", IntegerJdbcType.INSTANCE, new TriStateBooleanConverter(), new AnyDialect());
+        // then
+        assertEquals("is_active in (0,1,-1)", checkCondition);
+    }
+
+    @Test
     public void testWrapShouldReturnTrueWhenYStringGiven() {
         // given
         // when
@@ -154,6 +163,40 @@ public class BooleanJavaTypeDescriptorTest {
         @Override
         public Boolean convertToEntityAttribute(Integer dbData) {
             return dbData != null && dbData == 1;
+        }
+
+        @Override
+        public @Nullable Boolean toDomainValue(@Nullable Integer relationalForm) {
+            return convertToEntityAttribute(relationalForm);
+        }
+
+        @Override
+        public @Nullable Integer toRelationalValue(@Nullable Boolean domainForm) {
+            return convertToDatabaseColumn(domainForm);
+        }
+
+        @Override
+        public JavaType<Boolean> getDomainJavaType() {
+            return BooleanJavaType.INSTANCE;
+        }
+
+        @Override
+        public JavaType<Integer> getRelationalJavaType() {
+            return IntegerJavaType.INSTANCE;
+        }
+    }
+
+    private static class TriStateBooleanConverter implements AttributeConverter<Boolean, Integer>, BasicValueConverter<Boolean, Integer> {
+        @Override
+        public Integer convertToDatabaseColumn(Boolean attribute) {
+            if (attribute == null) return -1;
+            return  attribute ? 1 : 0;
+        }
+
+        @Override
+        public Boolean convertToEntityAttribute(Integer dbData) {
+            if (dbData == null || dbData == -1) return null;
+            return dbData == 1;
         }
 
         @Override

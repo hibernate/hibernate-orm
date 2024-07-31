@@ -152,6 +152,7 @@ String isDefault();
 * Removed `org.hibernate.Session#delete(Object object)` and `org.hibernate.Session#delete(String entityName, Object object)` in favor of `org.hibernate.Session#remove(Object object)`
 * Removed `org.hibernate.annotations.CascadeType.DELETE` in favor of `org.hibernate.annotations.CascadeType#REMOVE`
 * Removed the attribute value from `@DynamicInsert` and `@DynamicUpdate`
+* Removed `org.hibernate.integrator.spi.Integrator#integrate(Metadata,SessionFactoryImplementor,SessionFactoryServiceRegistry)` in favor of `org.hibernate.integrator.spi.Integrator#integrate(Metadata,BootstrapContext,SessionFactoryImplementor)`
 
 [WARNING]
 ===

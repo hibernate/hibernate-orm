@@ -12,6 +12,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.internal.DefaultLoadEventListener;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -19,13 +20,11 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -49,21 +48,16 @@ public class EagerKeyManyToOneTest {
 		@Override
 		public void integrate(
 				Metadata metadata,
-				SessionFactoryImplementor sessionFactory,
-				SessionFactoryServiceRegistry serviceRegistry) {
-			integrate( serviceRegistry );
+				BootstrapContext bootstrapContext,
+				SessionFactoryImplementor sessionFactory) {
+			integrate( sessionFactory );
 		}
 
-		private void integrate(SessionFactoryServiceRegistry serviceRegistry) {
-			serviceRegistry.getService( EventListenerRegistry.class ).prependListeners(
+		private void integrate(SessionFactoryImplementor sessionFactory) {
+			sessionFactory.getServiceRegistry().getService( EventListenerRegistry.class ).prependListeners(
 					EventType.LOAD,
 					new CustomLoadListener()
 			);
-		}
-
-		@Override
-		public void disintegrate(
-				SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
 		}
 	}
 

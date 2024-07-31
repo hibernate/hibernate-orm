@@ -38,6 +38,7 @@ import org.hibernate.tool.internal.reveng.util.EnhancedValue;
 import org.hibernate.tool.internal.util.AnnotationBuilder;
 import org.hibernate.tool.internal.util.IteratorTransformer;
 import org.hibernate.tool.internal.util.SkipBackRefPropertyIterator;
+import org.hibernate.tool.internal.util.ValueUtil;
 import org.hibernate.type.ForeignKeyDirection;
 
 public class EntityPOJOClass extends BasicPOJOClass {
@@ -873,7 +874,8 @@ public class EntityPOJOClass extends BasicPOJOClass {
 					return true;
 				}
 			} else if (property.getValue().isSimpleValue()) {
-				if("assigned".equals(((SimpleValue)property.getValue()).getIdentifierGeneratorStrategy())) {
+				ValueUtil v = new ValueUtil((SimpleValue)property.getValue());
+				if("assigned".equals(v.getIdentifierGeneratorStrategy())) {
 					return true;
 				}
 			}

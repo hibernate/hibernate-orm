@@ -10,18 +10,16 @@ import java.util.TreeMap;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.generator.Generator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.IdentifierCollection;
@@ -232,10 +230,10 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 	 * @return iterator over all the IdentifierGenerator's found in the entitymodel and return a list of unique IdentifierGenerators
 	 * @throws MappingException
 	 */
-	private Iterator<IdentifierGenerator> iterateGenerators() throws MappingException {
+	private Iterator<Generator> iterateGenerators() throws MappingException {
 
-		TreeMap<Object, IdentifierGenerator> generators = 
-				new TreeMap<Object, IdentifierGenerator>();
+		TreeMap<Object, Generator> generators = 
+				new TreeMap<Object, Generator>();
 
 		Iterator<PersistentClass> persistentClassIterator = getMetadata().getEntityBindings().iterator();
 		while ( persistentClassIterator.hasNext() ) {
@@ -243,9 +241,8 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 
 			if ( !pc.isInherited() ) {
 
-				IdentifierGenerator ig = pc.getIdentifier()
-						.createIdentifierGenerator(
-								getIdentifierGeneratorFactory(),
+				Generator ig = pc.getIdentifier()
+						.createGenerator(
 								dialect,
 								(RootClass) pc
 							);
@@ -263,9 +260,8 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 
 			if ( collection.isIdentified() ) {
 
-				IdentifierGenerator ig = ( (IdentifierCollection) collection ).getIdentifier()
-						.createIdentifierGenerator(
-								getIdentifierGeneratorFactory(),
+				Generator ig = ( (IdentifierCollection) collection ).getIdentifier()
+						.createGenerator(
 								dialect,
 								null
 							);
@@ -304,10 +300,6 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 		};
 	}
 	
-	private IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
-		return ((MetadataImpl)getMetadata()).getBootstrapContext().getIdentifierGeneratorFactory();
-	}
-
 	private String getGeneratorKey(PersistentIdentifierGenerator ig) {
 		String result = null;
 		if  (ig instanceof SequenceStyleGenerator) {

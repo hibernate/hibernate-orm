@@ -45,6 +45,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.internal.export.common.EntityNameFromValueVisitor;
 import org.hibernate.tool.internal.reveng.util.EnhancedValue;
 import org.hibernate.tool.internal.util.SkipBackRefPropertyIterator;
+import org.hibernate.tool.internal.util.ValueUtil;
 
 /**
  * @author David Channon and Max
@@ -190,7 +191,7 @@ public class Cfg2HbmTool {
 				result.putAll(idGenParams);
 			}
 		} else {
-			Map<String, Object> properties = simpleValue.getIdentifierGeneratorParameters();
+			Map<String, Object> properties = new ValueUtil(simpleValue).getIdentifierGeneratorParameters();
 			if (properties != null) {
 				result = new Properties();
 				result.putAll(properties);

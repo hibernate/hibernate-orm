@@ -76,7 +76,7 @@ interpretation as to which classification it fits in to, using the following che
 [[collection-list-ex]]
 .Basic List Mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-collection}/classification/list/EntityWithList.java[tags=collections-list-ex]
 ----
@@ -104,7 +104,7 @@ The default column name that stores the index is derived from the attribute name
 [[collection-list-ordercolumn-ex]]
 .@OrderColumn
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-collection}/classification/list/EntityWithOrderColumnList.java[tags=collections-list-ordercolumn-ex]
 ----
@@ -121,7 +121,7 @@ cases using its `@ListIndexBase` annotation.
 [[collection-list-indexbase-ex]]
 .@ListIndexBase
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-collection}/classification/list/EntityWithIndexBasedList.java[tags=collections-list-indexbase-ex]
 ----
@@ -141,7 +141,7 @@ mapping sets according to the requirements of the `java.util.Set`.
 [[collection-set-ex]]
 .Basic Set Mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-collection}/classification/set/EntityWithSet.java[tags=collections-set-ex]
 ----
@@ -168,7 +168,7 @@ this implies that the element type is `Comparable`.  E.g.
 [[collection-sortedset-natural-ex]]
 .@SortNatural
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-collection}/classification/Name.java[tags=collections-name-ex]
 
@@ -185,7 +185,7 @@ the `Names` as sorted by a `NameComparator`:
 [[collection-sortedset-comparator-ex]]
 .@SortComparator
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-collection}/classification/NameComparator.java[tags=collections-name-comparator-ex]
 
@@ -209,7 +209,7 @@ A `java.util.Map` is a collection of key/value pairs.
 [[collection-map-ex]]
 .Simple MAP mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-collection}/classification/map/EntityWithMap.java[tags=collections-map-ex]
 ----
@@ -223,7 +223,7 @@ Maps may be sorted naturally -
 [[collection-sortedmap-natural-ex]]
 .Naturally sorted MAP mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-collection}/classification/map/EntityWithNaturallySortedMap.java[tags=example]
 ----
@@ -234,7 +234,7 @@ or via a Comparator -
 [[collection-sortedmap-ex]]
 .Comparator sorted MAP mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-collection}/classification/map/EntityWithSortedMap.java[tags=example]
 ----
@@ -259,7 +259,7 @@ are handled is largely undefined.
 [[collection-bag-ex]]
 .Simple BAG mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-collection}/classification/bag/EntityWithBagAsCollection.java[tags=collections-bag-ex]
 ----
@@ -271,7 +271,7 @@ lists as bags.  First an explicit annotation
 [[collection-bag-list-ex]]
 .@Bag
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-collection}/classification/bag/EntityWithBagAsList.java[tags=collections-bag-list-ex]
 ----
@@ -409,7 +409,7 @@ cross between the ordered-ness of a `List` and the uniqueness of a `Set`.  First
 [[collection-type-ann-ex]]
 .@CollectionType
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-collection}/semantics/TheEntityWithUniqueList.java[tags=ex-collections-custom-type-model]
 ----
@@ -420,7 +420,7 @@ The mapping says to use the `UniqueListType` class for the mapping of the plural
 [[collection-type-usertype-ex]]
 .UniqueListType
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-collection}/semantics/UniqueListType.java[tags=collections-custom-type-ex]
 ----
@@ -431,7 +431,7 @@ Most custom `UserCollectionType` implementations will want their own `Persistent
 [[collection-type-usertype-wrapper-ex]]
 .UniqueListWrapper
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-collection}/semantics/UniqueListWrapper.java[tags=collections-custom-semantics-ex]
 ----
@@ -451,7 +451,7 @@ plural attributes of a given classification, Hibernate also provides the
 [[collection-type-usertype-registration-ex]]
 .UniqueListType Registration
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-collection}/semantics/TheEntityWithUniqueListRegistration.java[tags=ex-collections-custom-type-model]
 ----

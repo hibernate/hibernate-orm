@@ -76,7 +76,7 @@ As an example, consider the following domain model -
 [[ex-tooling-modelgen-model]]
 .`Order` and `Item` entities
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-model}/tooling/Customer.java[tags=tooling-modelgen-model]
 include::{example-dir-model}/tooling/Order.java[tags=tooling-modelgen-model]
@@ -89,7 +89,7 @@ Given this model, the generator will produce classes named `Customer_`, `Order_`
 [[tooling-modelgen-metamodel]]
 .`Order_`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-metamodelgen-generated}/tooling/Order_.java[]
 ----
@@ -101,7 +101,7 @@ Criteria queries for type-safe path references.  For example:
 [[tooling-modelgen-usage]]
 .Static Metamodel usage
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{toolingTestsDir}/modelgen/ModelGenTests.java[tags=tooling-modelgen-usage]
 ----

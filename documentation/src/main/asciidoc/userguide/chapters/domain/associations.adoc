@@ -615,7 +615,7 @@ For this example, consider the following `Property` class hierarchy:
 [[associations-any-property-example]]
 .`Property` class hierarchy
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-association}/any/Property.java[tags=associations-any-property-example]
 
@@ -630,7 +630,7 @@ A `PropertyHolder` entity defines an attribute of type `Property`:
 [[associations-any-example]]
 .`@Any` mapping usage
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-association}/any/PropertyHolder.java[tags=associations-any-example]
 ----
@@ -657,7 +657,7 @@ Hibernate will generate the following SQL queries:
 [[associations-any-persist-example]]
 .`@Any` mapping persist example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-association}/any/AnyTest.java[tags=associations-any-persist-example]
 ----
@@ -674,7 +674,7 @@ Hibernate will fetch the associated `StringProperty` entity like this:
 [[associations-any-query-example]]
 .`@Any` mapping query example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-association}/any/AnyTest.java[tags=associations-any-query-example]
 ----
@@ -700,7 +700,7 @@ into a single annotation that we can apply in each usage.
 [[associations-any-composed-example]]
 .`@Any` mapping usage
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-association}/any/PropertyHolder2.java[tags=associations-any-def-example]
 ----
@@ -731,7 +731,7 @@ The `repository_properties` link table holds the associations between `PropertyR
 [[associations-many-to-any-example]]
 .`@ManyToAny` mapping usage
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-association}/any/PropertyRepository.java[tags=associations-many-to-any-example]
 ----
@@ -751,7 +751,7 @@ Hibernate will generate the following SQL queries:
 [[associations-many-to-any-persist-example]]
 .`@ManyToAny` mapping persist example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-association}/any/ManyToAnyTest.java[tags=associations-many-to-any-persist-example]
 ----
@@ -768,7 +768,7 @@ Hibernate will fetch the associated `IntegerProperty` and `StringProperty` entit
 [[associations-many-to-any-query-example]]
 .`@ManyToAny` mapping query example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-association}/any/ManyToAnyTest.java[tags=associations-many-to-any-query-example]
 ----
@@ -789,7 +789,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 [[associations-JoinFormula-example]]
 .`@JoinFormula` mapping usage
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-association}/JoinFormulaTest.java[tags=associations-JoinFormula-example]
 ----
@@ -807,7 +807,7 @@ Considering we have the following entities:
 [[associations-JoinFormula-persistence-example]]
 .`@JoinFormula` mapping usage
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-association}/JoinFormulaTest.java[tags=associations-JoinFormula-persistence-example]
 ----
@@ -818,7 +818,7 @@ When fetching the `User` entities, the `country` property is mapped by the `@Joi
 [[associations-JoinFormula-fetching-example]]
 .`@JoinFormula` mapping usage
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-association}/JoinFormulaTest.java[tags=associations-JoinFormula-fetching-example]
 ----
@@ -839,7 +839,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 [[associations-JoinColumnOrFormula-example]]
 .`@JoinColumnOrFormula` mapping usage
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-association}/JoinColumnOrFormulaTest.java[tags=associations-JoinColumnOrFormula-example]
 ----
@@ -857,7 +857,7 @@ Considering we have the following entities:
 [[associations-JoinColumnOrFormula-persistence-example]]
 .`@JoinColumnOrFormula` persist example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-association}/JoinColumnOrFormulaTest.java[tags=associations-JoinColumnOrFormula-persistence-example]
 ----
@@ -868,7 +868,7 @@ When fetching the `User` entities, the `country` property is mapped by the `@Joi
 [[associations-JoinColumnOrFormula-fetching-example]]
 .`@JoinColumnOrFormula` fetching example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-association}/JoinColumnOrFormulaTest.java[tags=associations-JoinColumnOrFormula-fetching-example]
 ----

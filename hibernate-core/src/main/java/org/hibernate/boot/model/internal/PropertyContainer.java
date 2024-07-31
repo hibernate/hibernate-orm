@@ -139,8 +139,8 @@ public class PropertyContainer {
 			List<MethodDetails> getters) {
 		final Map<String, MemberDetails> attributeMemberMap;
 		// If the record class has only record components which match up with fields and no additional getters,
-		// we can retain the property order, to match up with the record component order
-		if ( !recordComponents.isEmpty() && recordComponents.size() == fields.size() && getters.isEmpty() ) {
+		// we must retain the property order, to match up with the record component order
+		if ( !recordComponents.isEmpty() && recordComponents.size() == fields.size() ) {
 			attributeMemberMap = new LinkedHashMap<>();
 		}
 		//otherwise we sort them in alphabetical order, since this is at least deterministic

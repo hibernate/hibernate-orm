@@ -23,6 +23,7 @@ public class OracleCallableStatementSupport extends StandardCallableStatementSup
 		super( supportsRefCursors );
 	}
 
+	@Override
 	protected void appendNameParameter(
 			StringBuilder buffer,
 			ProcedureParameterImplementor parameter,

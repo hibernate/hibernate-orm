@@ -16,6 +16,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.procedure.ProcedureParameter;
@@ -29,6 +30,7 @@ import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -58,13 +60,16 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Marco Belladelli
  */
-@Jpa( annotatedClasses = {
-		Person.class,
-		Phone.class,
-		Vote.class,
-		DB2StoredProcedureTest.IdHolder.class,
-		DB2StoredProcedureTest.Address.class,
-} )
+@Jpa(
+		annotatedClasses = {
+				Person.class,
+				Phone.class,
+				Vote.class,
+				DB2StoredProcedureTest.IdHolder.class,
+				DB2StoredProcedureTest.Address.class,
+		},
+		properties = @Setting(name = AvailableSettings.QUERY_PASS_PROCEDURE_PARAMETER_NAMES, value = "true")
+)
 @RequiresDialect( value = DB2Dialect.class )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-18332" )
 public class DB2StoredProcedureTest {

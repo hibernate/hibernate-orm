@@ -8,6 +8,7 @@ package org.hibernate.procedure.internal;
 
 import java.util.List;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
@@ -84,7 +85,10 @@ public class DB2CallableStatementSupport extends AbstractStandardCallableStateme
 						i + offset,
 						procedureCall
 				);
-				if ( parameter.getName() != null ) {
+				final SharedSessionContractImplementor session = procedureCall.getSession();
+				if ( parameter.getName() != null
+						&& session.getJdbcServices().getExtractedMetaDataSupport().supportsNamedParameters()
+						&& session.getFactory().getSessionFactoryOptions().isPassProcedureParameterNames() ) {
 					buffer.append( parameter.getName() ).append( " => ?" );
 				}
 				else {

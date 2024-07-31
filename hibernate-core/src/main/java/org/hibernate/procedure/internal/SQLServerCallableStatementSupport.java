@@ -18,6 +18,7 @@ public class SQLServerCallableStatementSupport extends StandardCallableStatement
 		super( false );
 	}
 
+	@Override
 	protected void appendNameParameter(StringBuilder buffer, ProcedureParameterImplementor parameter, JdbcCallParameterRegistration registration) {
 		buffer.append( '@' ).append( parameter.getName() ).append( " = ?" );
 	}

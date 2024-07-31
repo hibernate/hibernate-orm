@@ -858,11 +858,6 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) throws SQLException {
-		return false;
-	}
-
-	@Override
 	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
 		statement.registerOutParameter( col++, Types.REF_CURSOR );
 		return col;

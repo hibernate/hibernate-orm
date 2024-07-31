@@ -21,13 +21,10 @@ import org.hibernate.sql.exec.spi.JdbcCallRefCursorExtractor;
  * @author Steve Ebersole
  */
 public class JdbcCallRefCursorExtractorImpl implements JdbcCallRefCursorExtractor {
-	private final String jdbcParameterName;
 	private final int jdbcParameterPosition;
 
 	public JdbcCallRefCursorExtractorImpl(
-			String jdbcParameterName,
 			int jdbcParameterPosition) {
-		this.jdbcParameterName = jdbcParameterName;
 		this.jdbcParameterPosition = jdbcParameterPosition;
 	}
 
@@ -39,19 +36,9 @@ public class JdbcCallRefCursorExtractorImpl implements JdbcCallRefCursorExtracto
 				.getJdbcEnvironment()
 				.getExtractedDatabaseMetaData()
 				.supportsNamedParameters();
-		final boolean useNamed = supportsNamedParameters && jdbcParameterName != null;
-
-		if ( useNamed ) {
-			return session.getFactory()
-					.getServiceRegistry()
-					.requireService( RefCursorSupport.class )
-					.getResultSet( callableStatement, jdbcParameterName );
-		}
-		else {
-			return session.getFactory()
-					.getServiceRegistry()
-					.requireService( RefCursorSupport.class )
-					.getResultSet( callableStatement, jdbcParameterPosition );
-		}
+		return session.getFactory()
+				.getServiceRegistry()
+				.requireService( RefCursorSupport.class )
+				.getResultSet( callableStatement, jdbcParameterPosition );
 	}
 }

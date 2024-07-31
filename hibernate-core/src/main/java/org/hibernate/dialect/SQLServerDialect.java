@@ -1123,11 +1123,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) {
-		return false;
-	}
-
-	@Override
 	public String generatedAs(String generatedAs) {
 		return " as (" + generatedAs + ") persisted";
 	}

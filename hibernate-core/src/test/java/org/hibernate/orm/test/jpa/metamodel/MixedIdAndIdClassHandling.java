@@ -6,6 +6,8 @@
  */
 package org.hibernate.orm.test.jpa.metamodel;
 
+import java.util.Objects;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -14,8 +16,8 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Table;
 import jakarta.persistence.metamodel.EntityType;
 
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 
 import org.junit.jupiter.api.Test;
@@ -29,14 +31,16 @@ import static org.junit.jupiter.api.Assertions.fail;
  * Ugh
  *
  * @author Steve Ebersole
+ * @author Yanming Zhou
  */
 @Jpa(annotatedClasses = {
-		MixedIdAndIdClassHandling.FullTimeEmployee.class
+		MixedIdAndIdClassHandling.FullTimeEmployee.class,
+		MixedIdAndIdClassHandling.Person.class
 })
 public class MixedIdAndIdClassHandling {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8533" )
+	@JiraKey( "HHH-8533" )
 	public void testAccess(EntityManagerFactoryScope scope) {
 		EntityType<FullTimeEmployee> entityType = scope.getEntityManagerFactory().getMetamodel().entity( FullTimeEmployee.class );
 		try {
@@ -50,8 +54,16 @@ public class MixedIdAndIdClassHandling {
 		assertEquals( 1, entityType.getSupertype().getIdClassAttributes().size() );
 
 		assertFalse( entityType.hasSingleIdAttribute() );
+	}
 
-		assertEquals( String.class, entityType.getIdType().getJavaType() );
+	@Test
+	@JiraKey( "HHH-6951" )
+	public void testGetIdType(EntityManagerFactoryScope scope) {
+		EntityType<FullTimeEmployee> fullTimeEmployeeEntityType = scope.getEntityManagerFactory().getMetamodel().entity( FullTimeEmployee.class );
+		assertEquals( String.class, fullTimeEmployeeEntityType.getIdType().getJavaType() ); // return single @Id instead of @IdClass
+
+		EntityType<Person> personEntityType = scope.getEntityManagerFactory().getMetamodel().entity( Person.class );
+		assertEquals( PersonId.class, personEntityType.getIdType().getJavaType() ); // return @IdClass instead of null
 	}
 
 	@MappedSuperclass
@@ -90,27 +102,78 @@ public class MixedIdAndIdClassHandling {
 			this.id = id;
 		}
 
-
 		@Override
-		public boolean equals(Object obj) {
-			if (obj == null) {
+		public boolean equals(Object o) {
+			if ( this == o ) {
+				return true;
+			}
+			if ( !( o instanceof EmployeeId ) ) {
 				return false;
 			}
-			if (getClass() != obj.getClass()) {
-				return false;
-			}
-			final EmployeeId other = (EmployeeId) obj;
-			if ((this.id == null) ? (other.id != null) : !this.id.equals(other.id)) {
-				return false;
-			}
-			return true;
+			EmployeeId that = ( EmployeeId ) o;
+			return Objects.equals( id, that.id );
 		}
 
 		@Override
 		public int hashCode() {
-			int hash = 5;
-			hash = 29 * hash + (this.id != null ? this.id.hashCode() : 0);
-			return hash;
+			return Objects.hashCode( id );
+		}
+	}
+
+	@IdClass( PersonId.class )
+	@Entity( name = "Person" )
+	@Table( name="PERSON" )
+	public static class Person {
+		@Id
+		private String type;
+		@Id
+		private String no;
+		private String name;
+	}
+
+	public static class PersonId implements java.io.Serializable {
+		String type;
+		String no;
+
+		public PersonId() {
+		}
+
+		public PersonId(String type, String no) {
+			this.type = type;
+			this.no = no;
+		}
+
+		public String getType() {
+			return type;
+		}
+
+		public void setType(String type) {
+			this.type = type;
+		}
+
+		public String getNo() {
+			return no;
+		}
+
+		public void setNo(String no) {
+			this.no = no;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if ( this == o ) {
+				return true;
+			}
+			if ( !( o instanceof PersonId ) ) {
+				return false;
+			}
+			PersonId that = ( PersonId ) o;
+			return Objects.equals( type, that.type ) && Objects.equals( no, that.no );
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash( type, no );
 		}
 	}
 }

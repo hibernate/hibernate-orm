@@ -226,7 +226,7 @@ Here is an example using JTS:
 [[spatial-types-mapping-example]]
 .Type mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-spatial}/SpatialTest.java[tags=spatial-types-mapping-example, indent=0]
 ----
@@ -237,7 +237,7 @@ We can now treat spatial geometries like any other type.
 [[spatial-types-point-creation-example]]
 .Creating a Point
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-spatial}/SpatialTest.java[tags=spatial-types-point-creation-example]
 ----

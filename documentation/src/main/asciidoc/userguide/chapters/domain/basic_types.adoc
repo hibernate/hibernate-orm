@@ -60,7 +60,7 @@ examples are ultimately the same.
 [[basic-annotation-explicit-example]]
 .`@Basic` explicit
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/ExplicitBasicTypeTest.java[tags=basic-annotation-explicit-example]
 ----
@@ -69,7 +69,7 @@ include::{example-dir-basic-mapping}/basic/ExplicitBasicTypeTest.java[tags=basic
 [[basic-annotation-implicit-example]]
 .`@Basic` implied
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/ImplicitBasicTypeTest.java[tags=basic-annotation-implicit-example]
 ----
@@ -105,7 +105,7 @@ If that implicit naming rule does not meet your requirements, you can explicitly
 [[basic-annotation-explicit-column-example]]
 .Explicit column naming
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/ExplicitColumnNamingTest.java[tags=basic-annotation-explicit-column-example]
 ----
@@ -135,7 +135,7 @@ The `@Column` annotation defines other mapping information as well. See its Java
 [[mapping-column-formula-example]]
 .`@Formula` mapping usage
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/FormulaTest.java[tags=mapping-column-formula-example]
 ----
@@ -146,7 +146,7 @@ When loading the `Account` entity, Hibernate is going to calculate the `interest
 [[mapping-column-formula-persistence-example]]
 .Persisting an entity with a `@Formula` mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/FormulaTest.java[tags=mapping-column-formula-persistence-example]
 ----
@@ -254,7 +254,7 @@ Assuming the following enumeration:
 
 .`PhoneType` enumeration
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-model}/PhoneType.java[tags=hql-examples-domain-model-example]
 ----
@@ -269,7 +269,7 @@ In the ORDINAL example, the `phone_type` column is defined as a (nullable) INTEG
 [[basic-enums-Enumerated-ordinal-example]]
 .`@Enumerated(ORDINAL)` example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/PhoneTypeEnumeratedOrdinalTest.java[tags=basic-enums-Enumerated-ordinal-example]
 ----
@@ -280,7 +280,7 @@ When persisting this entity, Hibernate generates the following SQL statement:
 [[basic-enums-Enumerated-ordinal-persistence-example]]
 .Persisting an entity with an `@Enumerated(ORDINAL)` mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/PhoneTypeEnumeratedOrdinalTest.java[tags=basic-enums-Enumerated-ordinal-persistence-example]
 ----
@@ -300,7 +300,7 @@ In the STRING example, the `phone_type` column is defined as a (nullable) VARCHA
 [[basic-enums-Enumerated-string-example]]
 .`@Enumerated(STRING)` example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/PhoneTypeEnumeratedStringTest.java[tags=basic-enums-Enumerated-string-example]
 ----
@@ -325,7 +325,7 @@ Let's consider the following `Gender` enum which stores its values using the `'M
 [[basic-enums-converter-example]]
 .Enum with a custom constructor
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/Gender.java[tags=basic-enums-converter-example]
 ----
@@ -336,7 +336,7 @@ You can map enums in a Jakarta Persistence compliant way using a Jakarta Persist
 [[basic-enums-attribute-converter-example]]
 .Enum mapping with `AttributeConverter` example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/EnumerationConverterTest.java[tags=basic-enums-attribute-converter-example]
 ----
@@ -368,7 +368,7 @@ Let's again revisit the Gender enum example, this time using a custom Type to st
 [[basic-enums-custom-type-example]]
 .Enum mapping with custom Type example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/EnumerationCustomTypeTest.java[tags=basic-enums-custom-type-example, indent=0]
 
@@ -399,7 +399,7 @@ dedicated `BOOLEAN` type. On databases which don't, Hibernate uses whatever else
 [[basic-boolean-example-implicit]]
 .Implicit boolean mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/BooleanMappingTests.java[tags=basic-boolean-example-implicit]
 ----
@@ -416,7 +416,7 @@ provides 3 built-in converters for the common boolean mapping cases:
 [[basic-boolean-example-converted]]
 .Using `AttributeConverter`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/BooleanMappingTests.java[tags=basic-boolean-example-explicit-yes-no]
 
@@ -442,7 +442,7 @@ By default, Hibernate maps values of `Byte` / `byte` to the `TINYINT` JDBC type.
 [[basic-byte-example]]
 .Mapping Byte
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/ByteMappingTests.java[tags=basic-byte-example-implicit]
 ----
@@ -464,7 +464,7 @@ By default, Hibernate maps values of `Short` / `short` to the `SMALLINT` JDBC ty
 [[basic-short-example]]
 .Mapping Short
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/ShortMappingTests.java[tags=basic-short-example-implicit]
 ----
@@ -483,7 +483,7 @@ By default, Hibernate maps values of `Integer` / `int` to the `INTEGER` JDBC typ
 [[basic-integer-example]]
 .Mapping Integer
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/IntegerMappingTests.java[tags=basic-integer-example-implicit]
 ----
@@ -501,7 +501,7 @@ By default, Hibernate maps values of `Long` / `long` to the `BIGINT` JDBC type.
 [[basic-long-example]]
 .Mapping Long
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/LongMappingTests.java[tags=basic-long-example-implicit]
 ----
@@ -520,7 +520,7 @@ By default, Hibernate maps values of `BigInteger` to the `NUMERIC` JDBC type.
 [[basic-bitinteger-example]]
 .Mapping BigInteger
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/BigIntegerMappingTests.java[tags=basic-biginteger-example-implicit]
 ----
@@ -540,7 +540,7 @@ By default, Hibernate maps values of `Double` to the `DOUBLE`, `FLOAT`, `REAL` o
 [[basic-double-example]]
 .Mapping Double
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/DoubleMappingTests.java[tags=basic-double-example-implicit]
 ----
@@ -565,7 +565,7 @@ By default, Hibernate maps values of `Float` to the `FLOAT`, `REAL` or
 [[basic-float-example]]
 .Mapping Float
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/FloatMappingTests.java[tags=basic-float-example-implicit]
 ----
@@ -589,7 +589,7 @@ By default, Hibernate maps values of `BigDecimal` to the `NUMERIC` JDBC type.
 [[basic-bigdecimal-example]]
 .Mapping BigDecimal
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/BigDecimalMappingTests.java[tags=basic-bigdecimal-example-implicit]
 ----
@@ -607,7 +607,7 @@ By default, Hibernate maps `Character` to the `CHAR` JDBC type.
 [[basic-character-example]]
 .Mapping Character
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/CharacterMappingTests.java[tags=basic-character-example-implicit]
 ----
@@ -625,7 +625,7 @@ By default, Hibernate maps `String` to the `VARCHAR` JDBC type.
 [[basic-string-example]]
 .Mapping String
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/StringMappingTests.java[tags=basic-string-example]
 ----
@@ -636,7 +636,7 @@ or using the `@Size` annotation from Hibernate Validator.
 For very large strings, you can use one of the constant values defined by the class
 `org.hibernate.Length`, for example:
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 @Column(length=Length.LONG)
 private String text;
@@ -646,7 +646,7 @@ Alternatively, you may explicitly specify the JDBC type `LONGVARCHAR`, which is 
 as a `VARCHAR` mapping with default `length=Length.LONG` when no `length` is explicitly
 specified:
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 @JdbcTypeCode(Types.LONGVARCHAR)
 private String text;
@@ -672,7 +672,7 @@ nationalized data.
 [[basic-nstring-example]]
 .Mapping String as nationalized
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/StringNationalizedMappingTests.java[tags=basic-nstring-example]
 ----
@@ -697,7 +697,7 @@ it is necessary to annotate the persistent attribute with `@JavaType( CharacterA
 [[basic-string-example-implicit]]
 .Mapping Character
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/CharacterArrayMappingTests.java[tags=basic-chararray-example]
 ----
@@ -711,7 +711,7 @@ nationalized data.
 [[basic-nchararray-example]]
 .Mapping character arrays as nationalized
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/CharacterArrayNationalizedMappingTests.java[tags=basic-nchararray-example]
 ----
@@ -750,7 +750,7 @@ Let's first map this using the `@Lob` Jakarta Persistence annotation and the `ja
 [[basic-clob-example]]
 .`CLOB` mapped to `java.sql.Clob`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/ClobTest.java[tags=basic-clob-example]
 ----
@@ -761,7 +761,7 @@ To persist such an entity, you have to create a `Clob` using the `ClobProxy` Hib
 [[basic-clob-persist-example]]
 .Persisting a `java.sql.Clob` entity
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/ClobTest.java[tags=basic-clob-persist-example]
 ----
@@ -772,7 +772,7 @@ To retrieve the `Clob` content, you need to transform the underlying `java.io.Re
 [[basic-clob-find-example]]
 .Returning a `java.sql.Clob` entity
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/ClobTest.java[tags=basic-clob-find-example]
 ----
@@ -783,7 +783,7 @@ We could also map the CLOB in a materialized form. This way, we can either use a
 [[basic-clob-string-example]]
 .`CLOB` mapped to `String`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/ClobStringTest.java[tags=basic-clob-string-example]
 ----
@@ -794,7 +794,7 @@ We might even want the materialized data as a char array.
 [[basic-clob-char-array-example]]
 .CLOB - materialized `char[]` mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/ClobCharArrayTest.java[tags=basic-clob-char-array-example]
 ----
@@ -805,7 +805,7 @@ Just like with `CLOB`, Hibernate can also deal with `NCLOB` SQL data types:
 [[basic-nclob-sql-example]]
 .`NCLOB` - SQL
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{extrasdir}/basic/basic-nclob-sql-example.sql[]
 ----
@@ -816,7 +816,7 @@ Hibernate can map the `NCLOB` to a `java.sql.NClob`
 [[basic-nclob-example]]
 .`NCLOB` mapped to `java.sql.NClob`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/NClobTest.java[tags=basic-nclob-example]
 ----
@@ -827,7 +827,7 @@ To persist such an entity, you have to create an `NClob` using the `NClobProxy` 
 [[basic-nclob-persist-example]]
 .Persisting a `java.sql.NClob` entity
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/NClobTest.java[tags=basic-nclob-persist-example]
 ----
@@ -838,7 +838,7 @@ To retrieve the `NClob` content, you need to transform the underlying `java.io.R
 [[basic-nclob-find-example]]
 .Returning a `java.sql.NClob` entity
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/NClobTest.java[tags=basic-nclob-find-example]
 ----
@@ -849,7 +849,7 @@ We could also map the `NCLOB` in a materialized form. This way, we can either us
 [[basic-nclob-string-example]]
 .`NCLOB` mapped to `String`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/NClobStringTest.java[tags=basic-nclob-string-example]
 ----
@@ -860,7 +860,7 @@ We might even want the materialized data as a char array.
 [[basic-nclob-char-array-example]]
 .NCLOB - materialized `char[]` mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/NClobCharArrayTest.java[tags=basic-nclob-char-array-example]
 ----
@@ -884,7 +884,7 @@ it is necessary to annotate the persistent attribute with `@JavaType( ByteArrayJ
 [[basic-bytearray-example]]
 .Mapping arrays of bytes
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/ByteArrayMappingTests.java[tags=basic-bytearray-example]
 ----
@@ -942,7 +942,7 @@ Let's first map this using the JDBC `java.sql.Blob` type.
 [[basic-blob-example]]
 .`BLOB` mapped to `java.sql.Blob`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/BlobTest.java[tags=basic-blob-example]
 ----
@@ -953,7 +953,7 @@ To persist such an entity, you have to create a `Blob` using the `BlobProxy` Hib
 [[basic-blob-persist-example]]
 .Persisting a `java.sql.Blob` entity
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/BlobTest.java[tags=basic-blob-persist-example]
 ----
@@ -964,7 +964,7 @@ To retrieve the `Blob` content, you need to transform the underlying `java.io.In
 [[basic-blob-find-example]]
 .Returning a `java.sql.Blob` entity
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/BlobTest.java[tags=basic-blob-find-example]
 ----
@@ -975,7 +975,7 @@ We could also map the BLOB in a materialized form (e.g. `byte[]`).
 [[basic-blob-byte-array-example]]
 .`BLOB` mapped to `byte[]`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/BlobByteArrayTest.java[tags=basic-blob-byte-array-example]
 ----
@@ -995,7 +995,7 @@ TIP: It's possible to map `Duration` to the `INTERVAL_SECOND` SQL type using `@J
 [[basic-duration-example]]
 .Mapping Duration
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/DurationMappingTests.java[tags=basic-duration-example]
 ----
@@ -1013,7 +1013,7 @@ include::{example-dir-basic-mapping}/basic/DurationMappingTests.java[tags=basic-
 [[basic-instant-example]]
 .Mapping Instant
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/InstantMappingTests.java[tags=basic-instant-example]
 ----
@@ -1034,7 +1034,7 @@ See <<basic-temporal>> for basics of temporal mapping
 [[basic-localDate-example]]
 .Mapping LocalDate
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/LocalDateMappingTests.java[tags=basic-localDate-example]
 ----
@@ -1055,7 +1055,7 @@ See <<basic-temporal>> for basics of temporal mapping
 [[basic-localDateTime-example]]
 .Mapping LocalDateTime
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/LocalDateTimeMappingTests.java[tags=basic-localDateTime-example]
 ----
@@ -1076,7 +1076,7 @@ See <<basic-temporal>> for basics of temporal mapping
 [[basic-localTime-example]]
 .Mapping LocalTime
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/LocalTimeMappingTests.java[tags=basic-localTime-example]
 ----
@@ -1099,7 +1099,7 @@ depending on the database.
 [[basic-OffsetDateTime-example]]
 .Mapping OffsetDateTime
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/OffsetDateTimeMappingTests.java[tags=basic-OffsetDateTime-example]
 ----
@@ -1125,7 +1125,7 @@ depending on the database.
 [[basic-OffsetTime-example]]
 .Mapping OffsetTime
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/OffsetTimeMappingTests.java[tags=basic-offsetTime-example]
 ----
@@ -1147,7 +1147,7 @@ See <<basic-datetime-time-zone>> for basics of time-zone handling
 [[basic-TimeZone-example]]
 .Mapping OffsetTime
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/TimeZoneMappingTests.java[tags=basic-timeZone-example]
 ----
@@ -1169,7 +1169,7 @@ depending on the database.
 [[basic-ZonedDateTime-example]]
 .Mapping ZonedDateTime
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/ZonedDateTimeMappingTests.java[tags=basic-ZonedDateTime-example]
 ----
@@ -1193,7 +1193,7 @@ See <<basic-datetime-time-zone>> for basics of time-zone handling
 [[basic-ZoneOffset-example]]
 .Mapping ZoneOffset
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/ZoneOffsetMappingTests.java[tags=basic-ZoneOffset-example]
 ----
@@ -1263,7 +1263,7 @@ Hibernate maps `Class` references to `VARCHAR` JDBC type
 [[basic-Class-example]]
 .Mapping Class
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/ClassMappingTests.java[tags=basic-Class-example]
 ----
@@ -1278,7 +1278,7 @@ Hibernate maps `Currency` references to `VARCHAR` JDBC type
 [[basic-Currency-example]]
 .Mapping Currency
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/CurrencyMappingTests.java[tags=basic-Currency-example]
 ----
@@ -1293,7 +1293,7 @@ Hibernate maps `Locale` references to `VARCHAR` JDBC type
 [[basic-Locale-example]]
 .Mapping Locale
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/LocaleMappingTests.java[tags=basic-Locale-example]
 ----
@@ -1344,7 +1344,7 @@ By default, Hibernate will map `InetAddress` to the `INET` SQL type and fallback
 [[basic-inet-address-example]]
 .Mapping InetAddress
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/InetAddressMappingTests.java[tags=basic-inet-address-example]
 ----
@@ -1361,7 +1361,7 @@ as can be read in the <<appendices/Configurations.adoc#misc-options,Configuratio
 [[basic-json-example]]
 .Mapping JSON
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/JsonMappingTests.java[tags=basic-json-example]
 ----
@@ -1378,7 +1378,7 @@ as can be read in the <<appendices/Configurations.adoc#misc-options,Configuratio
 [[basic-xml-example]]
 .Mapping XML
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/XmlMappingTests.java[tags=basic-xml-example]
 ----
@@ -1396,7 +1396,7 @@ depending on the database support as determined via the new method `org.hibernat
 [[basic-array-example]]
 .Mapping basic arrays
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/BasicArrayMappingTests.java[tags=basic-array-example]
 ----
@@ -1414,7 +1414,7 @@ depending on the database support as determined via the new method `org.hibernat
 [[basic-collection-example]]
 .Mapping basic collections
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/BasicCollectionMappingTests.java[tags=basic-collection-example]
 ----
@@ -1656,7 +1656,7 @@ Considering we have the following database table:
 [[basic-nationalized-sql-example]]
 .`NVARCHAR` - SQL
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{extrasdir}/basic/basic-nationalized-sql-example.sql[]
 ----
@@ -1667,7 +1667,7 @@ To map a specific attribute to a nationalized variant data type, Hibernate defin
 [[basic-nationalized-example]]
 .`NVARCHAR` mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/NationalizedTest.java[tags=basic-nationalized-example]
 ----
@@ -1778,7 +1778,7 @@ use `@Temporal`.
 [[basic-temporal-java-util-example]]
 .Mapping java.util.Date
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/DatePrecisionTests.java[tags=basic-temporal-example]
 ----
@@ -1879,7 +1879,7 @@ Due to this, storing the offset is only safe for past timestamps, and we advise 
 
 .`@TimeZoneColumn` usage
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/TimeZoneStorageMappingTests.java[tags=time-zone-column-examples-mapping-example]
 ----
@@ -1899,7 +1899,7 @@ In the following example, the `java.time.Period` is going to be mapped to a `VAR
 [[basic-jpa-convert-period-string-converter-example]]
 .`java.time.Period` custom `AttributeConverter`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/converter/PeriodStringConverter.java[tags=basic-jpa-convert-period-string-converter-example]
 ----
@@ -1910,7 +1910,7 @@ To make use of this custom converter, the `@Convert` annotation must decorate th
 [[basic-jpa-convert-period-string-converter-mapping-example]]
 .Entity using the custom `java.time.Period` `AttributeConverter` mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/converter/PeriodStringTest.java[tags=basic-jpa-convert-period-string-converter-mapping-example]
 ----
@@ -1972,7 +1972,7 @@ Let's consider we have an application-specific `Money` type:
 [[basic-hbm-attribute-converter-mapping-money-example]]
 .Application-specific `Money` type
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/converter/hbm/Money.java[tags=basic-hbm-attribute-converter-mapping-money-example]
 ----
@@ -1983,7 +1983,7 @@ Now, we want to use the `Money` type when mapping the `Account` entity:
 [[basic-hbm-attribute-converter-mapping-account-example]]
 .`Account` entity using the `Money` type
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/converter/hbm/Account.java[tags=basic-hbm-attribute-converter-mapping-account-example]
 ----
@@ -1996,7 +1996,7 @@ to transform the `Money` type as a `Long`. For this purpose, we are going to use
 [[basic-hbm-attribute-converter-mapping-moneyconverter-example]]
 .`MoneyConverter` implementing the Jakarta Persistence `AttributeConverter` interface
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/converter/hbm/MoneyConverter.java[tags=basic-hbm-attribute-converter-mapping-moneyconverter-example]
 ----
@@ -2008,7 +2008,7 @@ attribute of the `property` element.
 [[basic-hbm-attribute-converter-mapping-xml-config-example]]
 .HBM mapping for `AttributeConverter`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-resources}/mapping/converter/hbm/MoneyConverterHbmTest.hbm.xml[]
 ----
@@ -2042,14 +2042,14 @@ then you can only change the entity attribute value by reassigning it to a new v
 
 Considering we have the same `Period` entity attribute as illustrated in the <<basic-jpa-convert>> section:
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/converter/PeriodStringTest.java[tags=basic-jpa-convert-period-string-converter-mapping-example]
 ----
 
 The only way to change the `span` attribute is to reassign it to a different value:
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/converter/PeriodStringTest.java[tags=basic-jpa-convert-period-string-converter-immutability-plan-example]
 ----
@@ -2058,14 +2058,14 @@ include::{example-dir-basic-mapping}/converter/PeriodStringTest.java[tags=basic-
 
 On the other hand, consider the following example where the `Money` type is a mutable.
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/converter/MoneyConverterTest.java[tags=basic-jpa-convert-money-converter-mapping-example]
 ----
 
 A mutable `Object` allows you to modify its internal structure, and Hibernate's dirty checking mechanism is going to propagate the change to the database:
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/converter/MoneyConverterTest.java[tags=basic-jpa-convert-money-converter-mutability-plan-example]
 ----
@@ -2088,7 +2088,7 @@ Assuming you have the following entity:
 [[basic-attribute-converter-query-parameter-entity-example]]
 .`Photo` entity with `AttributeConverter`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-converter}/ConverterTest.java[tags=basic-attribute-converter-query-parameter-entity-example]
 ----
@@ -2099,7 +2099,7 @@ And the `Caption` class looks as follows:
 [[basic-attribute-converter-query-parameter-object-example]]
 .`Caption` Java object
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-converter}/ConverterTest.java[tags=basic-attribute-converter-query-parameter-object-example]
 ----
@@ -2110,7 +2110,7 @@ And we have an `AttributeConverter` to handle the `Caption` Java object:
 [[basic-attribute-converter-query-parameter-converter-example]]
 .`Caption` Java object AttributeConverter
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-converter}/ConverterTest.java[tags=basic-attribute-converter-query-parameter-converter-example]
 ----
@@ -2121,7 +2121,7 @@ Traditionally, you could only use the DB data `Caption` representation, which in
 [[basic-attribute-converter-query-parameter-converter-dbdata-example]]
 .Filtering by the `Caption` property using the DB data representation
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-converter}/ConverterTest.java[tags=basic-attribute-converter-query-parameter-converter-dbdata-example]
 ----
@@ -2132,7 +2132,7 @@ In order to use the Java object `Caption` representation, you have to get the as
 [[basic-attribute-converter-query-parameter-converter-object-example]]
 .Filtering by the `Caption` property using the Java Object representation
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-converter}/ConverterTest.java[tags=basic-attribute-converter-query-parameter-converter-object-example]
 ----
@@ -2197,7 +2197,7 @@ We've covered many ways to specify basic value mappings so far.  This section wi
 [[basic-bitset-example-implicit]]
 .Implicit BitSet mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/bitset/BitSetImplicitTests.java[tags=basic-bitset-example-implicit]
 ----
@@ -2221,7 +2221,7 @@ This works well in most cases and is portable across Jakarta Persistence provide
 [[basic-bitset-example-converter]]
 .BitSet AttributeConverter
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/bitset/BitSetConverterTests.java[tags=basic-bitset-example-convert]
 
@@ -2253,7 +2253,7 @@ for `BitSet` that maps values to `VARCHAR` for storage by default.
 [[basic-bitset-example-java-type]]
 .BitSet JavaTypeDescriptor
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/bitset/BitSetJavaType.java[tags=basic-bitset-example-java-type]
 ----
@@ -2265,7 +2265,7 @@ We can either apply that type locally using `@JavaType`
 [[basic-bitset-example-java-type-local]]
 .@JavaType
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/bitset/BitSetJavaTypeTests.java[tags=basic-bitset-example-java-type-local,indent=0]
 ----
@@ -2277,7 +2277,7 @@ to be used as the default whenever we encounter the `BitSet` type
 [[basic-bitset-example-java-type-global]]
 .@JavaTypeRegistration
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/bitset/BitSetJavaTypeRegistrationTests.java[tags=basic-bitset-example-java-type-global,indent=0]
 ----
@@ -2303,7 +2303,7 @@ serialization.
 [[basic-bitset-example-jdbc-type-code]]
 .@JdbcTypeCode
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/bitset/BitSetJdbcTypeCodeTests.java[tags=basic-bitset-example-jdbc-type-code,indent=0]
 ----
@@ -2316,7 +2316,7 @@ In this example, `@JdbcTypeCode` has been used to indicate that the `JdbcType` r
 [[basic-bitset-example-jdbc-type-local]]
 .@JdbcType
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/bitset/BitSetJdbcTypeTests.java[tags=basic-bitset-example-jdbc-type-local,indent=0]
 ----
@@ -2331,7 +2331,7 @@ We could instead replace how Hibernate deals with all `VARBINARY` handling with 
 [[basic-bitset-example-jdbc-type-global]]
 .@JdbcType
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/bitset/BitSetJdbcTypeRegistrationTests.java[tags=basic-bitset-example-jdbc-type-global,indent=0]
 ----
@@ -2355,7 +2355,7 @@ This is usually double quotes, but SQL Server uses brackets and MySQL uses backt
 [[basic-quoting-example]]
 .Hibernate quoting
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/QuotingTest.java[tags=basic-quoting-example]
 ----
@@ -2364,7 +2364,7 @@ include::{example-dir-basic-mapping}/basic/QuotingTest.java[tags=basic-quoting-e
 [[basic-jpa-quoting-example]]
 .Jakarta Persistence quoting
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/JpaQuotingTest.java[tags=basic-jpa-quoting-example]
 ----
@@ -2377,7 +2377,7 @@ When saving the following `Product entity`, Hibernate generates the following SQ
 [[basic-quoting-persistence-example]]
 .Persisting a quoted column name
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/QuotingTest.java[tags=basic-quoting-persistence-example, indent=0]
 ----
@@ -2408,7 +2408,7 @@ This way, we don't need to manually quote any identifier:
 [[basic-auto-quoting-example]]
 .Jakarta Persistence quoting
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/AutoQuotingTest.java[tags=basic-auto-quoting-example]
 ----
@@ -2494,7 +2494,7 @@ It uses the database's `current_timestamp` function as the generated value
 [[mapping-generated-provided-CurrentTimestamp-ex1]]
 .`@UpdateTimestamp` mapping example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-generated}/CurrentTimestampAnnotationTests.java[tags=mapping-generated-CurrentTimestamp-ex1]
 ----
@@ -2513,7 +2513,7 @@ Supports most temporal types (`java.time.Instant`, `java.util.Date`, `java.util.
 [[mapping-generated-CreationTimestamp-example]]
 .`@CreationTimestamp` mapping example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/generated/CreationTimestampTest.java[tags=mapping-generated-provided-creation-ex1]
 ----
@@ -2534,7 +2534,7 @@ Supports most temporal types (`java.time.Instant`, `java.util.Date`, `java.util.
 [[mapping-generated-provided-update-ex1]]
 .`@UpdateTimestamp` mapping example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/generated/UpdateTimestampTest.java[tags=mapping-generated-provided-update-ex1]
 ----
@@ -2553,7 +2553,7 @@ This is the legacy mapping for in-DB generated values.
 [[mapping-generated-provided-Generated]]
 .`@Generated` mapping example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/generated/GeneratedTest.java[tags=mapping-generated-provided-generated]
 ----
@@ -2572,7 +2572,7 @@ Let's look at an example of generating UUID values.  First the attribute mapping
 [[mapping-generated-custom-ex1]]
 .Custom generation mapping example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-generated}/temporals/GeneratedUuidTests.java[tags=mapping-generated-custom-ex1]
 ----
@@ -2584,7 +2584,7 @@ annotations provided by the application.
 [[mapping-generated-custom-ex2]]
 .Custom generation mapping example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-generated}/temporals/GeneratedUuidTests.java[tags=mapping-generated-custom-ex2]
 ----
@@ -2596,7 +2596,7 @@ Hibernate how to generate values for the attribute - here it will use the specif
 [[mapping-generated-custom-ex3]]
 .Custom generation mapping example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-generated}/temporals/GeneratedUuidTests.java[tags=mapping-generated-custom-ex3]
 ----
@@ -2618,7 +2618,7 @@ For example, if your database provides a set of data encryption functions, you c
 [[mapping-column-read-and-write-example]]
 .`@ColumnTransformer` example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/../fetching/FetchingTest.java[tags=mapping-column-read-and-write-example]
 ----
@@ -2629,7 +2629,7 @@ If a property uses more than one column, you must use the `forColumn` attribute 
 [[mapping-column-read-and-write-composite-type-example]]
 .`@ColumnTransformer` `forColumn` attribute usage
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/ColumnTransformerTest.java[tags=mapping-column-read-and-write-composite-type-example]
 ----
@@ -2646,7 +2646,7 @@ The `write` expression, if specified, must contain exactly one '?' placeholder f
 [[mapping-column-read-and-write-composite-type-persistence-example]]
 .Persisting an entity with a `@ColumnTransformer` and a composite type
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-basic-mapping}/basic/ColumnTransformerTest.java[tags=mapping-column-read-and-write-composite-type-persistence-example]
 ----

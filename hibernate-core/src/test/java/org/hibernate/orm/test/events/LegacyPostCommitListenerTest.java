@@ -11,6 +11,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
@@ -22,7 +23,7 @@ import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -36,9 +37,9 @@ import org.junit.Test;
  * @author ShawnClowater
  */
 public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
-	private PostInsertEventListener postCommitInsertEventListener = new LegacyPostCommitInsertEventListener();
-	private PostDeleteEventListener postCommitDeleteEventListener = new LegacyPostCommitDeleteEventListener();
-	private PostUpdateEventListener postCommitUpdateEventListener = new LegacyPostCommitUpdateEventListener();
+	private final PostInsertEventListener postCommitInsertEventListener = new LegacyPostCommitInsertEventListener();
+	private final PostDeleteEventListener postCommitDeleteEventListener = new LegacyPostCommitDeleteEventListener();
+	private final PostUpdateEventListener postCommitUpdateEventListener = new LegacyPostCommitUpdateEventListener();
 
 	@Override
 	protected void prepareTest() throws Exception {
@@ -55,12 +56,13 @@ public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
 					@Override
 					public void integrate(
 							Metadata metadata,
-							SessionFactoryImplementor sessionFactory,
-							SessionFactoryServiceRegistry serviceRegistry) {
-						integrate( serviceRegistry );
+							BootstrapContext bootstrapContext,
+							SessionFactoryImplementor sessionFactory) {
+						integrate( sessionFactory );
 					}
 
-					private void integrate(SessionFactoryServiceRegistry serviceRegistry) {
+					private void integrate(SessionFactoryImplementor sessionFactory) {
+						final ServiceRegistryImplementor serviceRegistry = sessionFactory.getServiceRegistry();
 						serviceRegistry.getService( EventListenerRegistry.class ).getEventListenerGroup(
 								EventType.POST_COMMIT_DELETE
 						).appendListener( postCommitDeleteEventListener );
@@ -70,11 +72,6 @@ public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
 						serviceRegistry.getService( EventListenerRegistry.class ).getEventListenerGroup(
 								EventType.POST_COMMIT_INSERT
 						).appendListener( postCommitInsertEventListener );
-					}
-
-					@Override
-					public void disintegrate(
-							SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
 					}
 				}
 		);
@@ -218,7 +215,7 @@ public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		Assert.assertEquals( 1, ( (LegacyPostCommitDeleteEventListener) postCommitDeleteEventListener ).fired );
 	}
 
-	private class LegacyPostCommitDeleteEventListener implements PostDeleteEventListener {
+	private static class LegacyPostCommitDeleteEventListener implements PostDeleteEventListener {
 		int fired;
 
 		@Override
@@ -232,7 +229,7 @@ public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	private class LegacyPostCommitUpdateEventListener implements PostUpdateEventListener {
+	private static class LegacyPostCommitUpdateEventListener implements PostUpdateEventListener {
 		int fired;
 
 		@Override
@@ -246,7 +243,7 @@ public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	private class LegacyPostCommitInsertEventListener implements PostInsertEventListener {
+	private static class LegacyPostCommitInsertEventListener implements PostInsertEventListener {
 		int fired;
 
 		@Override

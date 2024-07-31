@@ -555,7 +555,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 		@Override
 		public R toRelationalValue(Boolean domainValue) {
-			return underlyingJpaConverter.toRelationalValue( !domainValue );
+			return underlyingJpaConverter.toRelationalValue( domainValue != null ? !domainValue : null );
 		}
 
 		@Override

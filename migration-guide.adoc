@@ -41,7 +41,7 @@ For many years Hibernate has used the Hibernate Commons Annotations (HCANN) libr
 related to understanding the structure of an application domain model, reading annotations and weaving in XML
 mapping documents.
 
-However, HCANN suffers from a number of limitations that continue to be problematic.  And given
+However, HCANN suffers from a number of limitations that continued to be problematic.  And given
 the use of HCANN across multiple projects, doing the needed refactoring was simply not possible.
 
 The https://github.com/hibernate/hibernate-models[Hibernate Models] project was developed to be a better alternative
@@ -50,16 +50,16 @@ annotations.  Check out its project page for complete details.
 
 7.0 uses Hibernate Models in place of HCANN.
 
-NOTE: Currently, the `hibernate-envers` module still uses HCANN.  That will change during continued 7.0 development.
+NOTE: Currently, the `hibernate-envers` module still uses HCANN.  That will change during continued 7.x development.
 
 
 
-[[annotation-validation]]
-== Annotation Validations
+[[model-validation]]
+== Domain Model Validations
 
 7.0 adds many more checks about illegal use of annotations.
 
-
+[[PersistentAttributeType]]
 === PersistentAttributeType
 
 As of 7.0, Hibernate applies much better validation of an attribute specifying multiple PersistentAttributeTypes.
@@ -100,9 +100,72 @@ class Book {
 	// previously ignored, this is an error now
     @Column(name="category")
     String getType() { ... }
-
-    ...
 }
+----
+
+[[java-beans]]
+=== JavaBean Conventions
+
+Previous versions allowed some questionable (at best) attribute naming patterns.  These are no longer supported.  E.g.
+
+[source,java]
+----
+@Basic
+String isDefault();
+----
+
+
+
+[[flush-persist]]
+== Session flush and persist
+
+Persisting a transient entity or flushing a manged entity with an associated detached entity having the association annotated with `cascade = CascadeType.ALL` or `cascade = CascadeType.PERSIST` throws now an `jakarta.persistence.EntityExistsException` if the detached entity has not been re-associated with the Session.
+
+To re-associate the detached entity with the Session the `Session#merge` method can be used.
+
+Consider the following model
+
+[source,java]
+----
+@Entity
+class Parent {
+	...
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "parent", orphanRemoval = true)
+	@LazyCollection(value = LazyCollectionOption.EXTRA)
+	private Set<Child> children = new HashSet<>();
+
+	public void addChild(Child child) {
+		children.add( child );
+		child.setParent( this );
+	}
+}
+
+@Entity
+class Child {
+	...
+
+	@ManyToOne
+	private Parent parent;
+}
+----
+
+Assuming we have `c1` as a detached `Child`, the following code will now result in `jakarta.persistence.EntityExistsException` being thrown at flush time:
+
+[source,java]
+----
+Parent parent = session.get( Parent.class, parentId );
+parent.addChild( c1 );
+----
+
+Instead, `c1` must first be re-associated with the Session using merge:
+
+
+[source,java]
+----
+Parent parent = session.get( Parent.class, parentId );
+Child merged = session.merge( c1 );
+parent.addChild( merged );
 ----
 
 
@@ -121,87 +184,6 @@ Existing code which relies on this behavior should be modified by addition of ex
 Hibernate previously added support for generating check constraints for enums mapped using `@Enumerated`
 as part of schema generation.  7.0 adds the same capability for enums mapped using an `AttributeConverter`,
 by asking the converter to convert all the enum constants on start up.
-
-
-[[java-beans]]
-== JavaBean Conventions
-
-Previous versions allowed some questionable (at best) attribute naming patterns.  These are no longer supported.  E.g.
-
-[source,java]
-----
-@Basic
-String isDefault();
-----
-
-
-
-[[cleanup]]
-== Some Cleanup
-
-* Removed `SqmQualifiedJoin`.  All joins are qualified.
-* Removed `AdditionalJaxbMappingProducer`, deprecated in favor of `AdditionalMappingContributor`
-* Removed `MetadataContributor`, deprecated in favor of `AdditionalMappingContributor`
-* Removed `@Persister`.
-* Removed `hibernate.mapping.precedence` and friends
-* Removed `org.hibernate.Session#save(Object object)` and `org.hibernate.Session#save(String entityName, Object object)` in favor of `org.hibernate.Session#persist(Object object)` and `org.hibernate.Session#persist(String entityName, Object object)`
-* Removed `org.hibernate.Session#saveOrUpdate(Object object)` and `org.hibernate.Session#saveOrUpdate(String entityName, Object object)` in favor `persist` if the entity is transient or `merge` if the entity is detached.
-* Removed `org.hibernate.Session#update(Object object` and `org.hibernate.Session#update(String entityName, Object object)` in favor of `org.hibernate.Session.merge(T object)` and `org.hibernate.Session.merge(String entityName, T object)`
-* Removed `org.hibernate.annotations.CascadeType.SAVE_UPDATE` in favor of `org.hibernate.annotations.CascadeType.PERSIST` + `org.hibernate.annotations.CascadeType.MERGE`
-* Removed `@SelectBeforeUpdate`
-* Removed `org.hibernate.Session#delete(Object object)` and `org.hibernate.Session#delete(String entityName, Object object)` in favor of `org.hibernate.Session#remove(Object object)`
-* Removed `org.hibernate.annotations.CascadeType.DELETE` in favor of `org.hibernate.annotations.CascadeType#REMOVE`
-* Removed the attribute value from `@DynamicInsert` and `@DynamicUpdate`
-* Removed `org.hibernate.integrator.spi.Integrator#integrate(Metadata,SessionFactoryImplementor,SessionFactoryServiceRegistry)` in favor of `org.hibernate.integrator.spi.Integrator#integrate(Metadata,BootstrapContext,SessionFactoryImplementor)`
-
-[WARNING]
-===
-The removal of `CascadeType.SAVE_UPDATE` slightly changes the persist and flush behaviour (not affecting application using `Entitymanager`) that now conforms with the Jakarta JPA specifications.
-
-Persisting a transient entity with an associated detached entity where the association is annotated with cascade=all or cascade=persist throws an exception if the detached entity has not been re-associated with the the session using lock or merge.
-
-The same happens when flushing a managed entity having an associated detached entity.
-
-```
-@Entit
-class Parent {
-        ...
-
-        @OneToMany(cascade = CascadeType.ALL, mappedBy = "parent", orphanRemoval = true)
-        @LazyCollection(value = LazyCollectionOption.EXTRA)
-        private Set<Child> children = new HashSet<>();
-}
-
-@Entity
-class Child {
-
-        ...
-
-        @Id
-        @GeneratedValue(strategy = GenerationType.AUTO)
-        private Long id;
-
-        @ManyToOne
-        private Parent parent;
-}
-
-
-```
-
-```
-// Being Child c1 detached.
-
-scope.inTransaction(
-        session -> {
-                Parent parent = session.get( Parent.class, parentId );
-                // add detached Child c
-                parent.addChild( c1 );
-        }
-);
-```
-will throw an `jakarta.persistence.EntityExistsException`
-
-in order to fix the issue we can call `session.lock(c1,LockMode.NONE)` before adding `c1` to the `parent` or instead using `p.addChild( session.merge(c1) )`;
 
 
 [[ddl-implicit-datatype-timestamp]]
@@ -244,6 +226,26 @@ Previous versions of Hibernate performed transformations of `hbm.xml` files (wit
 one file at a time.  This is now done across the entire set of `hbm.xml` files at once.
 While most users will never see this change, it might impact integrations which tie-in to
 XML processing.
+
+
+[[cleanup]]
+== Cleanup
+
+* Removed `SqmQualifiedJoin`.  All joins are qualified.
+* Removed `AdditionalJaxbMappingProducer`, deprecated in favor of `AdditionalMappingContributor`
+* Removed `MetadataContributor`, deprecated in favor of `AdditionalMappingContributor`
+* Removed `@Persister`.
+* Removed `hibernate.mapping.precedence` and friends
+* Removed `org.hibernate.Session#save` in favor of `org.hibernate.Session#persist`
+* Removed `org.hibernate.Session#saveOrUpdate` in favor `#persist` if the entity is transient or `#merge` if the entity is detached.
+* Removed `org.hibernate.Session#update` in favor of `org.hibernate.Session.merge`
+* Removed `org.hibernate.annotations.CascadeType.SAVE_UPDATE` in favor of `org.hibernate.annotations.CascadeType.PERSIST` + `org.hibernate.annotations.CascadeType.MERGE`
+* Removed `@SelectBeforeUpdate`
+* Removed `org.hibernate.Session#delete` in favor of `org.hibernate.Session#remove`
+* Removed `org.hibernate.annotations.CascadeType.DELETE` in favor of `org.hibernate.annotations.CascadeType#REMOVE`
+* Removed the attribute value from `@DynamicInsert` and `@DynamicUpdate`
+* Removed `org.hibernate.integrator.spi.Integrator#integrate(Metadata,SessionFactoryImplementor,SessionFactoryServiceRegistry)`
+
 
 
 [[todo]]

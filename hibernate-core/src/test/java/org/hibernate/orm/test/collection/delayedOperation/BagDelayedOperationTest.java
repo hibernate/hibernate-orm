@@ -105,8 +105,7 @@ public class BagDelayedOperationTest {
 					Parent p = session.get( Parent.class, parentId );
 					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 					// add detached Child c
-					session.lock( c1, LockOptions.NONE );
-					p.addChild( c1 );
+					p.addChild( session.merge( c1 ) );
 					// collection should still be uninitialized
 					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 				}

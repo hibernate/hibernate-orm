@@ -77,7 +77,7 @@ public class PluralAttributeMappingTests {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel();
 		final EntityMappingType containerEntityDescriptor = domainModel.getEntityDescriptor( EntityOfSets.class );
 
-		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 12 ) );
+		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 11 ) );
 
 		final AttributeMapping setOfBasics = containerEntityDescriptor.findAttributeMapping( "setOfBasics" );
 		assertThat( setOfBasics, notNullValue() );
@@ -99,9 +99,6 @@ public class PluralAttributeMappingTests {
 
 		final AttributeMapping setOfComponents = containerEntityDescriptor.findAttributeMapping( "setOfComponents" );
 		assertThat( setOfComponents, notNullValue() );
-
-		final AttributeMapping extraLazySetOfComponents = containerEntityDescriptor.findAttributeMapping( "extraLazySetOfComponents" );
-		assertThat( extraLazySetOfComponents, notNullValue() );
 
 		final AttributeMapping setOfOneToMany = containerEntityDescriptor.findAttributeMapping( "setOfOneToMany" );
 		assertThat( setOfOneToMany, notNullValue() );

@@ -176,7 +176,7 @@ However, for simple embeddable types, there is no such construct and so you need
 [[embeddable-Target-example]]
 .`@Target` mapping usage
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-emeddable}/TargetTest.java[tags=embeddable-Target-example]
 ----
@@ -191,7 +191,7 @@ Assuming we have persisted the following `City` entity:
 [[embeddable-Target-persist-example]]
 .`@Target` persist example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-emeddable}/TargetTest.java[tags=embeddable-Target-persist-example]
 ----
@@ -202,7 +202,7 @@ When fetching the `City` entity, the `coordinates` property is mapped by the `@T
 [[embeddable-Target-fetching-example]]
 .`@Target` fetching example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-emeddable}/TargetTest.java[tags=embeddable-Target-fetching-example]
 ----
@@ -223,7 +223,7 @@ The Hibernate-specific `@Parent` annotation allows you to reference the owner en
 [[embeddable-Parent-example]]
 .`@Parent` mapping usage
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-emeddable}/ParentTest.java[tags=embeddable-Parent-example]
 ----
@@ -234,7 +234,7 @@ Assuming we have persisted the following `City` entity:
 [[embeddable-Parent-persist-example]]
 .`@Parent` persist example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-emeddable}/ParentTest.java[tags=embeddable-Parent-persist-example]
 ----
@@ -245,7 +245,7 @@ When fetching the `City` entity, the `city` property of the embeddable type acts
 [[embeddable-Parent-fetching-example]]
 .`@Parent` fetching example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-emeddable}/ParentTest.java[tags=embeddable-Parent-fetching-example]
 ----
@@ -268,7 +268,7 @@ embeddable:
 [[embeddable-instantiator-embeddable-ex]]
 .`EmbeddableInstantiator` - Embeddable
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-embeddableinstantiator}/embedded/Name.java[tags=embeddable-instantiator-embeddable]
 ----
@@ -280,7 +280,7 @@ conventions, in terms of constructor, a custom strategy for instantiation is nee
 [[embeddable-instantiator-impl-ex]]
 .`EmbeddableInstantiator` - Implementation
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-embeddableinstantiator}/embedded/NameInstantiator.java[tags=embeddable-instantiator-impl]
 ----
@@ -292,7 +292,7 @@ annotation can be used on the embedded attribute:
 [[embeddable-instantiator-property-ex]]
 .`@EmbeddableInstantiator` on attribute
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-embeddableinstantiator}/embedded/Person.java[tags=embeddable-instantiator-property]
 ----
@@ -303,7 +303,7 @@ include::{example-dir-embeddableinstantiator}/embedded/Person.java[tags=embeddab
 [[embeddable-instantiator-class-ex]]
 .`@EmbeddableInstantiator` on class
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-embeddableinstantiator}/embeddable/Name.java[tags=embeddable-instantiator-class]
 
@@ -319,7 +319,7 @@ on the <<embeddable-instantiator-class-ex,embeddable>>.
 [[embeddable-instantiator-registration-ex]]
 .`@EmbeddableInstantiatorRegistration`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-embeddableinstantiator}/registered/Person.java[tags=embeddable-instantiator-registration]
 ----
@@ -344,7 +344,7 @@ For example, consider the following custom type:
 [[embeddable-usertype-domain-ex]]
 .`CompositeUserType` - Domain type
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-compositeusertype}/embedded/Name.java[tags=embeddable-usertype-domain]
 ----
@@ -356,7 +356,7 @@ conventions, a custom user type for instantiation and state access is needed.
 [[embeddable-usertype-impl-ex]]
 .`CompositeUserType` - Implementation
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-compositeusertype}/embedded/NameCompositeUserType.java[tags=embeddable-usertype-impl]
 ----
@@ -379,7 +379,7 @@ annotation can be used on the embedded and element collection attributes:
 [[embeddable-usertype-property-ex]]
 .`@CompositeType` on attribute
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-compositeusertype}/embedded/Person.java[tags=embeddable-usertype-property]
 ----
@@ -391,7 +391,7 @@ when the application developer wants to apply the composite user type for all do
 [[embeddable-usertype-registration-ex]]
 .`@CompositeTypeRegistration`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-compositeusertype}/registered/Person.java[tags=embeddable-usertype-registration]
 ----

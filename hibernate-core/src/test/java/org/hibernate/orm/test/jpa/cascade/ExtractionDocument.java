@@ -9,6 +9,10 @@
 package org.hibernate.orm.test.jpa.cascade;
 
 import java.io.Serializable;
+
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -17,17 +21,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.DynamicInsert;
-import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.annotations.Proxy;
-
 /**
  * @author Emmanuel Bernard
  */
 @Entity
 @Table(name = "portal_pk_docs_extraction")
 @DynamicUpdate @DynamicInsert
-@Proxy
 public class ExtractionDocument implements Serializable {
 	private Long id;
 	private byte[] body;

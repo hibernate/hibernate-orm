@@ -115,6 +115,26 @@ String isDefault();
 ----
 
 
+[[proxy-annotation]]
+== Replace @Proxy
+
+Applications will need to replace usages of the removed `@Proxy` annotation.
+
+`@Proxy#proxyClass` has no direct replacement, but was also never needed/useful.
+
+Here we focus on `@Proxy#laxy` attribute which, again, was hardly ever useful.
+By default (true), Hibernate would proxy an entity when possible and when asked for.
+"Asked for" includes calls to `Session#getReference` and lazy associations.
+All such cases though are already controllable by the application.
+
+* Instead of `Session#getReference`, use `Session#find`
+* Use eager associations, using
+** `FetchType.EAGER` (the default for to-one associations anyway), possibly combined with `@Fetch`
+** `EntityGraph`
+** `@FetchProfiles`
+
+The effect can also often be mitigated using Hibernate's bytecode-based laziness (possibly combined with `@ConcreteProxy`).
+
 
 [[flush-persist]]
 == Session flush and persist

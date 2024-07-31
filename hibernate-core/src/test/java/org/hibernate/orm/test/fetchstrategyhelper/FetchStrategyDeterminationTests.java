@@ -8,84 +8,55 @@ package org.hibernate.orm.test.fetchstrategyhelper;
 
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.Proxy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.mapping.internal.FetchOptionsHelper;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.type.AssociationType;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
+import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Gail Badner
  */
-public class NoProxyFetchStrategyHelperTest extends BaseCoreFunctionalTestCase {
+public class FetchStrategyDeterminationTests extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testManyToOneDefaultFetch() {
-		final AssociationType associationType = determineAssociationType( AnEntity.class, "otherEntityDefault" );
-		final org.hibernate.FetchMode fetchMode = determineFetchMode( AnEntity.class, "otherEntityDefault" );
-		assertSame( org.hibernate.FetchMode.JOIN, fetchMode );
-		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
-				fetchMode,
-				associationType,
-				sessionFactory()
-		);
-		assertSame( FetchStyle.JOIN, fetchStyle );
-		final FetchTiming fetchTiming = FetchOptionsHelper.determineFetchTiming(
-				fetchStyle,
-				associationType,
-				sessionFactory()
-		);
-		assertSame( FetchTiming.IMMEDIATE, fetchTiming );
+		final EntityPersister entityDescriptor = sessionFactory().getMappingMetamodel().getEntityDescriptor( AnEntity.class );
+		final AttributeMapping attributeMapping = entityDescriptor.findAttributeMapping( "otherEntityDefault" );
+		final FetchOptions mappedFetchOptions = attributeMapping.getMappedFetchOptions();
+		assertEquals( mappedFetchOptions.getTiming(), FetchTiming.IMMEDIATE );
+		assertEquals( mappedFetchOptions.getStyle(), FetchStyle.JOIN );
 	}
 
 	@Test
 	public void testManyToOneJoinFetch() {
-		final AssociationType associationType = determineAssociationType( AnEntity.class, "otherEntityJoin" );
-		final org.hibernate.FetchMode fetchMode = determineFetchMode( AnEntity.class, "otherEntityJoin" );
-		assertSame( org.hibernate.FetchMode.JOIN, fetchMode );
-		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
-				fetchMode,
-				associationType,
-				sessionFactory()
-		);
-		assertSame( FetchStyle.JOIN, fetchStyle );
-		final FetchTiming fetchTiming = FetchOptionsHelper.determineFetchTiming(
-				fetchStyle,
-				associationType,
-				sessionFactory()
-		);
-		assertSame( FetchTiming.IMMEDIATE, fetchTiming );
+		final EntityPersister entityDescriptor = sessionFactory().getMappingMetamodel().getEntityDescriptor( AnEntity.class );
+		final AttributeMapping attributeMapping = entityDescriptor.findAttributeMapping( "otherEntityJoin" );
+		final FetchOptions mappedFetchOptions = attributeMapping.getMappedFetchOptions();
+		assertEquals( mappedFetchOptions.getTiming(), FetchTiming.IMMEDIATE );
+		assertEquals( mappedFetchOptions.getStyle(), FetchStyle.JOIN );
 	}
 
 	@Test
 	public void testManyToOneSelectFetch() {
-		final AssociationType associationType = determineAssociationType( AnEntity.class, "otherEntitySelect" );
-		final org.hibernate.FetchMode fetchMode = determineFetchMode( AnEntity.class, "otherEntitySelect" );
-		assertSame( org.hibernate.FetchMode.SELECT, fetchMode );
-		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
-				fetchMode,
-				associationType,
-				sessionFactory()
-		);
-		assertSame( FetchStyle.SELECT, fetchStyle );
-		final FetchTiming fetchTiming = FetchOptionsHelper.determineFetchTiming(
-				fetchStyle,
-				associationType,
-				sessionFactory()
-		);
-		// Proxies are not allowed, so it should be FetchTiming.IMMEDIATE
-		assertSame( FetchTiming.IMMEDIATE, fetchTiming );
+		final EntityPersister entityDescriptor = sessionFactory().getMappingMetamodel().getEntityDescriptor( AnEntity.class );
+		final AttributeMapping attributeMapping = entityDescriptor.findAttributeMapping( "otherEntitySelect" );
+		final FetchOptions mappedFetchOptions = attributeMapping.getMappedFetchOptions();
+		assertEquals( mappedFetchOptions.getTiming(), FetchTiming.IMMEDIATE );
+		assertEquals( mappedFetchOptions.getStyle(), FetchStyle.SELECT );
 	}
 
 	private org.hibernate.FetchMode determineFetchMode(Class<?> entityClass, String path) {
@@ -108,7 +79,7 @@ public class NoProxyFetchStrategyHelperTest extends BaseCoreFunctionalTestCase {
 				OtherEntity.class
 		};
 	}
-	@jakarta.persistence.Entity
+	@Entity
 	@Table(name="entity")
 	public static class AnEntity {
 		@Id
@@ -129,9 +100,8 @@ public class NoProxyFetchStrategyHelperTest extends BaseCoreFunctionalTestCase {
 		// @Fetch(FetchMode.SUBSELECT) is not allowed for ToOne associations
 	}
 
-	@jakarta.persistence.Entity
+	@Entity
 	@Table(name="otherentity")
-	@Proxy(lazy = false)
 	public static class OtherEntity {
 		@Id
 		@GeneratedValue

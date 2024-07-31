@@ -7,20 +7,19 @@
 package org.hibernate.orm.test.envers.entities;
 
 import java.io.Serializable;
+
+import org.hibernate.envers.Audited;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.Proxy;
-import org.hibernate.envers.Audited;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @Entity
 @Table(name = "STR_TEST_NP")
-@Proxy(lazy = false)
 public class StrTestNoProxyEntity implements Serializable {
 	@Id
 	@GeneratedValue

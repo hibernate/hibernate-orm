@@ -11,7 +11,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
 @Entity
-@org.hibernate.annotations.Proxy( proxyClass = B.class )
 @Table( name = "ENTITYB" )
 public class BImpl extends AImpl implements B {
 	private static final long serialVersionUID = 1L;

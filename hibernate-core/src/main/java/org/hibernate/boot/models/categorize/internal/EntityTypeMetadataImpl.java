@@ -16,7 +16,6 @@ import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Immutable;
-import org.hibernate.annotations.Proxy;
 import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLInsert;
@@ -40,7 +39,6 @@ import jakarta.persistence.Cacheable;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 
-import static org.hibernate.boot.models.categorize.internal.CategorizationHelper.toClassDetails;
 import static org.hibernate.internal.util.StringHelper.EMPTY_STRINGS;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.unqualify;
@@ -106,29 +104,9 @@ public class EntityTypeMetadataImpl
 		this.customUpdateMap = extractCustomSql( classDetails, SQLUpdate.class );
 		this.customDeleteMap = extractCustomSql( classDetails, SQLDelete.class );
 
-		//noinspection deprecation
-		final Proxy proxyAnnotation = classDetails.getDirectAnnotationUsage( Proxy.class );
-		if ( proxyAnnotation != null ) {
-			this.isLazy = proxyAnnotation.lazy();
-
-			if ( this.isLazy ) {
-				final ClassDetails proxyClassDetails = toClassDetails( proxyAnnotation.proxyClass(), modelContext.getClassDetailsRegistry() );
-				if ( proxyClassDetails != null ) {
-					this.proxy = proxyClassDetails.getName();
-				}
-				else {
-					this.proxy = null;
-				}
-			}
-			else {
-				this.proxy = null;
-			}
-		}
-		else {
-			// defaults are that it is lazy and that the class itself is the proxy class
-			this.isLazy = true;
-			this.proxy = getEntityName();
-		}
+		// defaults are that it is lazy and that the class itself is the proxy class
+		this.isLazy = true;
+		this.proxy = getEntityName();
 
 		final DiscriminatorValue discriminatorValueAnn = classDetails.getDirectAnnotationUsage( DiscriminatorValue.class );
 		if ( discriminatorValueAnn != null ) {
@@ -175,29 +153,9 @@ public class EntityTypeMetadataImpl
 		this.customUpdateMap = extractCustomSql( classDetails, SQLUpdate.class );
 		this.customDeleteMap = extractCustomSql( classDetails, SQLDelete.class );
 
-		//noinspection deprecation
-		final Proxy proxyAnnotation = classDetails.getDirectAnnotationUsage( Proxy.class );
-		if ( proxyAnnotation != null ) {
-			this.isLazy = proxyAnnotation.lazy();
-
-			if ( this.isLazy ) {
-				final ClassDetails proxyClassDetails = toClassDetails( proxyAnnotation.proxyClass(), modelContext.getClassDetailsRegistry() );
-				if ( proxyClassDetails != null ) {
-					this.proxy = proxyClassDetails.getName();
-				}
-				else {
-					this.proxy = null;
-				}
-			}
-			else {
-				this.proxy = null;
-			}
-		}
-		else {
-			// defaults are that it is lazy and that the class itself is the proxy class
-			this.isLazy = true;
-			this.proxy = getEntityName();
-		}
+		// defaults are that it is lazy and that the class itself is the proxy class
+		this.isLazy = true;
+		this.proxy = getEntityName();
 
 		final DiscriminatorValue discriminatorValueAnn = classDetails.getDirectAnnotationUsage( DiscriminatorValue.class );
 		if ( discriminatorValueAnn != null ) {

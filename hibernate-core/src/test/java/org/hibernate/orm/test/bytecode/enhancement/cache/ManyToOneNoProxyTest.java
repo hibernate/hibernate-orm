@@ -5,7 +5,6 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.Proxy;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
@@ -110,7 +109,6 @@ public class ManyToOneNoProxyTest {
 
 	@Entity
 	@Table(name = "users")
-	@Proxy(lazy = false)
 	@BatchSize(size = 512)
 	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	@Cacheable
@@ -145,7 +143,6 @@ public class ManyToOneNoProxyTest {
 	}
 
 	@Entity
-	@Proxy(lazy = false)
 	@BatchSize(size = 512)
 	@DiscriminatorValue(value = "USER")
 	public static class User extends Actor {
@@ -167,7 +164,6 @@ public class ManyToOneNoProxyTest {
 	}
 
 	@Entity
-	@Proxy(lazy = false)
 	@DiscriminatorValue("USERS")
 	@BatchSize(size = 256)
 	public static class UserGroup extends ActorGroup<User> {
@@ -177,7 +173,6 @@ public class ManyToOneNoProxyTest {
 	}
 
 	@Entity
-	@Proxy(lazy = false)
 	@Table(name = "actor_group")
 	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	@DiscriminatorColumn(name = "TYPE")

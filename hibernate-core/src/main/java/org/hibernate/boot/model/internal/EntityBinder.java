@@ -37,7 +37,6 @@ import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
-import org.hibernate.annotations.Proxy;
 import org.hibernate.annotations.QueryCacheLayout;
 import org.hibernate.annotations.RowId;
 import org.hibernate.annotations.SQLDelete;
@@ -1585,27 +1584,9 @@ public class EntityBinder {
 	}
 
 	public void bindProxy() {
-		final Proxy proxy = annotatedClass.getAnnotationUsage( Proxy.class, getSourceModelContext() );
-		if ( proxy != null ) {
-			lazy = proxy.lazy();
-			proxyClass = lazy ? resolveProxyClass( proxy, annotatedClass, getSourceModelContext() ) : null;
-		}
-		else {
-			//needed to allow association lazy loading.
-			lazy = true;
-			proxyClass = annotatedClass;
-		}
-	}
-
-	private static ClassDetails resolveProxyClass(
-			Proxy proxy,
-			ClassDetails annotatedClass,
-			SourceModelBuildingContext sourceModelContext) {
-		final Class<?> explicitProxyClass = proxy.proxyClass();
-		if ( explicitProxyClass == void.class ) {
-			return annotatedClass;
-		}
-		return sourceModelContext.getClassDetailsRegistry().resolveClassDetails( explicitProxyClass.getName() );
+		//needed to allow association lazy loading.
+		lazy = true;
+		proxyClass = annotatedClass;
 	}
 
 	public void bindConcreteProxy() {

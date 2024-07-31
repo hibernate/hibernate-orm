@@ -228,27 +228,24 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testNonLazy() throws Exception {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		Forest f = new Forest();
-		Tree t = new Tree();
-		t.setName( "Basic one" );
-		s.persist( f );
-		s.persist( t );
-		tx.commit();
-		s.close();
+	public void testLoading() throws Exception {
+		final Forest created = fromTransaction( (session) -> {
+			Forest f = new Forest();
+			session.persist( f );
+			return f;
+		} );
 
-		s = openSession();
-		tx = s.beginTransaction();
-		f = (Forest) s.load( Forest.class, f.getId() );
-		t = (Tree) s.load( Tree.class, t.getId() );
-		assertFalse( "Default should be lazy", Hibernate.isInitialized( f ) );
-		assertTrue( "Tree is not lazy", Hibernate.isInitialized( t ) );
-		tx.commit();
-		s.close();
+		// getReference
+		inTransaction( (session) -> {
+			final Forest reference = session.getReference( Forest.class, created.getId() );
+			assertFalse( Hibernate.isInitialized( reference ) );
+		} );
+
+		// find
+		inTransaction( (session) -> {
+			final Forest reference = session.find( Forest.class, created.getId() );
+			assertTrue( Hibernate.isInitialized( reference ) );
+		} );
 	}
 
 	@Test

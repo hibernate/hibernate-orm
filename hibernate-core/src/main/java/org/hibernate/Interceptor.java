@@ -56,6 +56,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
+@SuppressWarnings("unused")
 public interface Interceptor {
 	/**
 	 * Called just before an object is initialized. The interceptor may change the {@code state}, which will

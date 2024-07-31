@@ -374,4 +374,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	default JavaType<Object> getDefaultTenantIdentifierJavaType() {
 		return ObjectJavaType.INSTANCE;
 	}
+
+	boolean isPassProcedureParameterNames();
 }

@@ -39,8 +39,6 @@ import org.hibernate.annotations.FilterJoinTable;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.HQLSelect;
 import org.hibernate.annotations.Immutable;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.annotations.ListIndexJavaType;
@@ -150,7 +148,6 @@ import jakarta.persistence.UniqueConstraint;
 import static jakarta.persistence.AccessType.PROPERTY;
 import static jakarta.persistence.ConstraintMode.NO_CONSTRAINT;
 import static jakarta.persistence.ConstraintMode.PROVIDER_DEFAULT;
-import static jakarta.persistence.FetchType.EAGER;
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.EMBEDDABLE;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.NONE;
@@ -1559,21 +1556,8 @@ public abstract class CollectionBinder {
 	@SuppressWarnings("deprecation")
 	private void handleLazy() {
 		final FetchType jpaFetchType = getJpaFetchType();
-		final LazyCollection lazyCollectionAnnotation = property.getDirectAnnotationUsage( LazyCollection.class );
-		if ( lazyCollectionAnnotation != null ) {
-			final LazyCollectionOption option = lazyCollectionAnnotation.value();
-			boolean eager = option == LazyCollectionOption.FALSE;
-			if ( !eager && jpaFetchType == EAGER ) {
-				throw new AnnotationException("Collection '" + safeCollectionRole()
-						+ "' is marked 'fetch=EAGER' and '@LazyCollection(" + option + ")'");
-			}
-			collection.setLazy( !eager );
-			collection.setExtraLazy( option == LazyCollectionOption.EXTRA );
-		}
-		else {
-			collection.setLazy( jpaFetchType == LAZY );
-			collection.setExtraLazy( false );
-		}
+		collection.setLazy( jpaFetchType == LAZY );
+		collection.setExtraLazy( false );
 	}
 
 	private FetchType getJpaFetchType() {

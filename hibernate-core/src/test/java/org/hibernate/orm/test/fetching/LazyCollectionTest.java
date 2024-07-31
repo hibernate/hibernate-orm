@@ -8,6 +8,12 @@ package org.hibernate.orm.test.fetching;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.hibernate.annotations.NaturalId;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+
+import org.junit.Test;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -15,13 +21,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
-
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
-import org.hibernate.annotations.NaturalId;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
@@ -78,7 +77,6 @@ public class LazyCollectionTest extends BaseEntityManagerFunctionalTestCase {
 
 		@OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
 		@OrderColumn(name = "order_id")
-		@LazyCollection(LazyCollectionOption.EXTRA)
 		private List<Employee> employees = new ArrayList<>();
 
 		//Getters and setters omitted for brevity

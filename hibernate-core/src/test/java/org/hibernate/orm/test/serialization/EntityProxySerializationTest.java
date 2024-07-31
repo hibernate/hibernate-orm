@@ -13,8 +13,6 @@ import java.util.Set;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.proxy.AbstractLazyInitializer;
@@ -217,7 +215,6 @@ public class EntityProxySerializationTest {
 		}
 
 		@OneToMany(targetEntity = ChildEntity.class, mappedBy = "parent")
-		@LazyCollection(LazyCollectionOption.EXTRA)
 		@Fetch(FetchMode.SELECT)
 		public Set<ChildEntity> getChildren() {
 			return children;

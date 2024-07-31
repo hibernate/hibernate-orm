@@ -9,7 +9,7 @@ package org.hibernate.envers.test.integration.tm;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 import org.hibernate.Transaction;
 
 import org.jboss.logging.Logger;
@@ -17,7 +17,7 @@ import org.jboss.logging.Logger;
 /**
  * @author Chris Cranford
  */
-public class TestInterceptor extends EmptyInterceptor {
+public class TestInterceptor implements Interceptor {
 
     private static final Logger LOGGER = Logger.getLogger( TestInterceptor.class );
     private static Map<TestInterceptor, Integer> interceptorInvocations = new HashMap<>();
@@ -28,7 +28,6 @@ public class TestInterceptor extends EmptyInterceptor {
 
     @Override
     public void beforeTransactionCompletion(Transaction tx) {
-        super.beforeTransactionCompletion(tx);
         interceptorInvocations.put( this, interceptorInvocations.get( this ) + 1 );
         LOGGER.info( "Interceptor beforeTransactionCompletion invoked" );
     }

@@ -11,10 +11,10 @@
 package org.hibernate.orm.test.interceptor;
 
 import org.hibernate.CallbackException;
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 import org.hibernate.metamodel.RepresentationMode;
 
-public class InstantiateInterceptor extends EmptyInterceptor {
+public class InstantiateInterceptor implements Interceptor {
 	private String injectedString;
 
 	public InstantiateInterceptor(String injectedString) {

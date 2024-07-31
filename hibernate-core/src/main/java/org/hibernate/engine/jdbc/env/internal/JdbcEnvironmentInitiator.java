@@ -32,7 +32,6 @@ import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.engine.jdbc.internal.JdbcServicesImpl;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.internal.EmptyEventManager;
 import org.hibernate.event.spi.EventManager;
 import org.hibernate.internal.CoreMessageLogger;
@@ -47,7 +46,6 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
@@ -613,7 +611,6 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 
 		private final JdbcConnectionAccess jdbcConnectionAccess;
 		private final JdbcServices jdbcServices;
-		private final ServiceRegistryImplementor serviceRegistry;
 		private final boolean jtaTrackByThread;
 		private final boolean preferUserTransaction;
 		private final boolean connectionProviderDisablesAutoCommit;
@@ -631,7 +628,6 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			this.jdbcConnectionAccess = jdbcConnectionAccess;
 			this.jdbcServices = jdbcServices;
 			this.sqlExceptionHelper = sqlExceptionHelper;
-			this.serviceRegistry = serviceRegistry;
 			final ConfigurationService configuration = serviceRegistry.requireService( ConfigurationService.class );
 			this.jtaTrackByThread = configuration.getSetting( JTA_TRACK_BY_THREAD, BOOLEAN, true );
 			this.preferUserTransaction = getBoolean( PREFER_USER_TRANSACTION, configuration.getSettings() );
@@ -752,16 +748,6 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		@Override
 		public JdbcEventHandler getEventHandler() {
 			return EMPTY_JDBC_EVENT_HANDLER;
-		}
-
-		@Override
-		public SessionFactoryImplementor getSessionFactory() {
-			return null;
-		}
-
-		@Override
-		public ServiceRegistry getServiceRegistry() {
-			return serviceRegistry;
 		}
 
 		@Override

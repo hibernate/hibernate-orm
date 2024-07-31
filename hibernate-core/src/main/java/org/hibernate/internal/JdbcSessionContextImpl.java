@@ -15,7 +15,6 @@ import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
@@ -97,16 +96,6 @@ public class JdbcSessionContextImpl implements JdbcSessionContext {
 	@Override
 	public JdbcEventHandler getEventHandler() {
 		return jdbcEventHandler;
-	}
-
-	@Override @Deprecated
-	public SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory;
-	}
-
-	@Override @Deprecated
-	public ServiceRegistry getServiceRegistry() {
-		return sessionFactory.getServiceRegistry();
 	}
 
 	private SessionFactoryOptions settings() {

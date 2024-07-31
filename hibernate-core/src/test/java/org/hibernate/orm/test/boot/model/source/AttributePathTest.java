@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.boot.model.source;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -15,6 +16,7 @@ import org.junit.Test;
 
 /**
  * @author Guillaume Smet
+ * @author Nathan Xu
  */
 public class AttributePathTest {
 
@@ -24,8 +26,15 @@ public class AttributePathTest {
 		AttributePath attributePath = AttributePath.parse( "items.collection&&element.name" );
 
 		assertFalse( attributePath.isCollectionElement() );
+		assertTrue( attributePath.isPartOfCollectionElement() );
+
 		assertTrue( attributePath.getParent().isCollectionElement() );
+		assertTrue( attributePath.getParent().isPartOfCollectionElement() );
+
 		assertFalse( attributePath.getParent().getParent().isCollectionElement() );
+		assertFalse( attributePath.getParent().getParent().isPartOfCollectionElement() );
+
+		assertEquals( "items.name", attributePath.stripCollectionElementMarker() );
 	}
 
 }

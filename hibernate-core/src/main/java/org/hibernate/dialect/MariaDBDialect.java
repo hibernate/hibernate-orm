@@ -44,13 +44,13 @@ import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 
 /**
- * A {@linkplain Dialect SQL dialect} for MariaDB 10.3 and above.
+ * A {@linkplain Dialect SQL dialect} for MariaDB 10.5 and above.
  *
  * @author Vlad Mihalcea
  * @author Gavin King
  */
 public class MariaDBDialect extends MySQLDialect {
-	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 4 );
+	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 5 );
 	private static final DatabaseVersion MYSQL57 = DatabaseVersion.make( 5, 7 );
 
 	public MariaDBDialect() {
@@ -192,7 +192,7 @@ public class MariaDBDialect extends MySQLDialect {
 
 	@Override
 	public boolean supportsIfExistsAfterAlterTable() {
-		return getVersion().isSameOrAfter( 10, 5 );
+		return true;
 	}
 
 	@Override
@@ -248,7 +248,7 @@ public class MariaDBDialect extends MySQLDialect {
 	 */
 	@Override
 	public boolean supportsInsertReturning() {
-		return getVersion().isSameOrAfter( 10, 5 );
+		return true;
 	}
 
 	@Override

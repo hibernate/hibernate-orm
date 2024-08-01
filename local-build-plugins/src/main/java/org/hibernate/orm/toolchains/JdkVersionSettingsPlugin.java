@@ -6,9 +6,11 @@
  */
 package org.hibernate.orm.toolchains;
 
+import org.gradle.StartParameter;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Plugin;
 import org.gradle.api.artifacts.VersionCatalog;
+import org.gradle.api.artifacts.VersionCatalogsExtension;
 import org.gradle.api.artifacts.VersionConstraint;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.plugins.ExtraPropertiesExtension;
@@ -31,14 +33,8 @@ public class JdkVersionSettingsPlugin implements Plugin<Settings> {
 		final JavaLanguageVersion explicitTestVersion = extractVersion( settings, TEST_JDK_VERSION );
 
 		final JavaLanguageVersion gradleJdkVersion = JavaLanguageVersion.of( JavaVersion.current().getMajorVersion() );
-		final JavaLanguageVersion baselineJdkVersion;
-		final JavaLanguageVersion maxSupportedJdkVersion;
-//		final VersionCatalogsExtension versionCatalogs = settings.getExtensions().getByType( VersionCatalogsExtension.class );
-//		final VersionCatalog jdkVersions = versionCatalogs.named( "jdks" );
-//		baselineJdkVersion = getJavaLanguageVersion( jdkVersions, "baseline" );
-//		maxSupportedJdkVersion = getJavaLanguageVersion( jdkVersions, "maxSupportedBytecode" );
-		baselineJdkVersion = JavaLanguageVersion.of( "11" );
-		maxSupportedJdkVersion = JavaLanguageVersion.of( "17" );
+		final JavaLanguageVersion baselineJdkVersion = getJavaLanguageVersion( settings, "orm.jdk.base" );
+		final JavaLanguageVersion maxSupportedJdkVersion = getJavaLanguageVersion( settings, "orm.jdk.max" );
 
 		final JdkVersionConfig jdkVersionConfig = createVersionConfig(
 				explicitMainVersion,
@@ -54,8 +50,18 @@ public class JdkVersionSettingsPlugin implements Plugin<Settings> {
 	}
 
 	@NotNull
-	private static JavaLanguageVersion getJavaLanguageVersion(VersionCatalog jdks, String entryName) {
-		final VersionConstraint versionConstraint = jdks.findVersion( entryName ).orElseThrow();
-		return JavaLanguageVersion.of( versionConstraint.getRequiredVersion() );
+	private JavaLanguageVersion getJavaLanguageVersion(Settings settings, String name) {
+		final StartParameter startParameter = settings.getStartParameter();
+		final String fromSysProp = startParameter.getSystemPropertiesArgs().get( name );
+		if ( fromSysProp != null && !fromSysProp.isEmpty() ) {
+			return JavaLanguageVersion.of( fromSysProp );
+		}
+
+		final String fromProjProp = startParameter.getProjectProperties().get( name );
+		if ( fromProjProp != null && !fromProjProp.isEmpty() ) {
+			return JavaLanguageVersion.of( fromProjProp );
+		}
+
+		return JavaLanguageVersion.of( JavaVersion.current().getMajorVersion() );
 	}
 }

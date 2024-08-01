@@ -59,13 +59,17 @@ dependencyResolutionManagement {
 
     versionCatalogs {
         jdks {
-            version "baseline", "17"
+            // see gradle.properties (or set with -D/-P)
+            var String baseJdk = jdkVersions.baseline
+            var String maxJdk = jdkVersions.max
+
+            version "baseline", baseJdk
             version "compatible", "17 or 21"
             version "jdbc", "4.2" // Bundled with JDK 11
 
             // Gradle does bytecode transformation on tests.
             // You can't use bytecode higher than what Gradle supports, even with toolchains.
-            version "maxSupportedBytecode", "22"
+            version "maxSupportedBytecode", maxJdk
         }
         libs {
             def antlrVersion = version "antlr", "4.13.0"

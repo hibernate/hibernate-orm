@@ -22,6 +22,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.ServiceRegistry;
@@ -85,10 +86,10 @@ public class IncrementGenerator implements IdentifierGenerator {
 	}
 
 	@Override
-	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
-		returnClass = type.getReturnedClass();
+	public void configure(GeneratorCreationContext creationContext, Properties parameters) throws MappingException {
+		returnClass = creationContext.getType().getReturnedClass();
 
-		final JdbcEnvironment jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
+		final JdbcEnvironment jdbcEnvironment = creationContext.getServiceRegistry().requireService( JdbcEnvironment.class );
 		final IdentifierHelper identifierHelper = jdbcEnvironment.getIdentifierHelper();
 
 		column = parameters.getProperty( COLUMN );

@@ -24,6 +24,7 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
@@ -193,11 +194,12 @@ public class SequenceStyleGenerator
 	// Configurable implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
+	public void configure(GeneratorCreationContext creationContext, Properties parameters) throws MappingException {
+		final ServiceRegistry serviceRegistry = creationContext.getServiceRegistry();
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
 		final Dialect dialect = jdbcEnvironment.getDialect();
 
-		identifierType = type;
+		this.identifierType = creationContext.getType();
 
 		final QualifiedName sequenceName = determineSequenceName( parameters, dialect, jdbcEnvironment, serviceRegistry );
 		final int initialValue = determineInitialValue( parameters );
@@ -214,7 +216,8 @@ public class SequenceStyleGenerator
 				physicalSequence,
 				optimizationStrategy,
 				serviceRegistry,
-				determineContributor( parameters )
+				determineContributor( parameters ),
+				creationContext
 		);
 
 		if ( physicalSequence
@@ -224,8 +227,8 @@ public class SequenceStyleGenerator
 			LOG.forcingTableUse();
 		}
 
-		databaseStructure = buildDatabaseStructure(
-				type,
+		this.databaseStructure = buildDatabaseStructure(
+				identifierType,
 				parameters,
 				jdbcEnvironment,
 				forceTableUse,
@@ -251,7 +254,8 @@ public class SequenceStyleGenerator
 			boolean physicalSequence,
 			OptimizerDescriptor optimizationStrategy,
 			ServiceRegistry serviceRegistry,
-			String contributor) {
+			String contributor,
+			GeneratorCreationContext creationContext) {
 		final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
 		final SequenceMismatchStrategy sequenceMismatchStrategy = configurationService.getSetting(
 				AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY,
@@ -262,7 +266,13 @@ public class SequenceStyleGenerator
 		if ( sequenceMismatchStrategy != SequenceMismatchStrategy.NONE
 				&& optimizationStrategy.isPooled()
 				&& physicalSequence ) {
-			final String databaseSequenceName = sequenceName.getObjectName().getText();
+			final Database database = creationContext.getDatabase();
+			final String databaseSequenceName = database != null ?
+					database.getPhysicalNamingStrategy().toPhysicalSequenceName(
+							sequenceName.getObjectName(),
+							jdbcEnvironment
+					).getText() :
+					sequenceName.getObjectName().getText();
 			final Number databaseIncrementValue =
 					isSchemaToBeRecreated( contributor, configurationService ) ? null
 							: getSequenceIncrementValue( jdbcEnvironment, databaseSequenceName );

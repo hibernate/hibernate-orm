@@ -1051,6 +1051,11 @@ public abstract class SimpleValue implements KeyValue {
 			return rootClass.getIdentifierProperty();
 		}
 
+		@Override
+		public Type getType() {
+			return SimpleValue.this.getType();
+		}
+
 		// we could add these if it helps integrate old infrastructure
 //		@Override
 //		public Properties getParameters() {

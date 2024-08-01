@@ -240,6 +240,10 @@ specify a name for JNDI binding.  The new behavior is as follows (assuming `hibe
 Hibernate can use the persistence-unit name for binding into JNDI as well, but `hibernate.session_factory_name_is_jndi`
 must be explicitly set to true.
 
+[[configurable-generators]]
+== Configurable generators
+
+The signature of the `Configurable#configure` method changed from accepting just a `ServiceRegistry` instance to the new `GeneratorCreationContext` interface, which exposes a lot more useful information when configuring the generator itself. The old signature has been deprecated for removal, so you should migrate any custom `Configurable` generator implementation to the new one.
 
 [[hbm-transform]]
 == hbm.xml Transformation

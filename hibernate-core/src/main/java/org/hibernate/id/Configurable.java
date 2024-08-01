@@ -11,6 +11,7 @@ import java.util.Properties;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
@@ -22,6 +23,13 @@ import org.hibernate.type.Type;
  */
 public interface Configurable {
 	/**
+	 * @deprecated Use {@link #configure(GeneratorCreationContext, Properties)} instead
+	 */
+	@Deprecated( since = "7.0", forRemoval = true )
+	default void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
+	}
+
+	/**
 	 * Configure this instance, given the value of parameters
 	 * specified by the user as XML {@code <param>} elements and
 	 * {@link org.hibernate.annotations.Parameter @Parameter}
@@ -32,13 +40,14 @@ public interface Configurable {
 	 * then this method is always called before
 	 * {@link org.hibernate.boot.model.relational.ExportableProducer#registerExportables(Database)},
 	 *
-	 * @param type The id property type descriptor
+	 * @param creationContext Access to the generator creation context
 	 * @param parameters param values, keyed by parameter name
-	 * @param serviceRegistry Access to service that may be needed.
 	 *
 	 * @throws MappingException when there's something wrong with the given parameters
 	 */
-	void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException;
+	default void configure(GeneratorCreationContext creationContext, Properties parameters) throws MappingException {
+		configure( creationContext.getType(), parameters, creationContext.getServiceRegistry() );
+	};
 
 	/**
 	 * Initializes this instance, pre-generating SQL if necessary.

@@ -17,6 +17,8 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.type.Type;
@@ -39,7 +41,7 @@ import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
  * {@code ExportableProducer}, in case the implementation needs to export
  * objects to the database as part of the process of schema export.
  * <p>
- * The {@link #configure(Type, Properties, ServiceRegistry)} method accepts
+ * The {@link #configure(GeneratorCreationContext, Properties)} method accepts
  * a properties object containing named values. These include:
  * <ul>
  * <li>several "standard" parameters with keys defined as static members of
@@ -104,7 +106,7 @@ public interface IdentifierGenerator extends BeforeExecutionGenerator, Exportabl
 	 * for example, a sequence or tables.
 	 * <p>
 	 * This method is called just once, after
-	 * {@link #configure(Type, Properties, ServiceRegistry)}.
+	 * {@link #configure(GeneratorCreationContext, Properties)}.
 	 *
 	 * @param database The database instance
 	 */

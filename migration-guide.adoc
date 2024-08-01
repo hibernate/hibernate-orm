@@ -244,40 +244,72 @@ must be explicitly set to true.
 [[hbm-transform]]
 == hbm.xml Transformation
 
-Previous versions of Hibernate performed transformations of `hbm.xml` files (with `hibernate.transform_hbm_xml.enabled=true`)
-one file at a time.  This is now done across the entire set of `hbm.xml` files at once.
-While most users will never see this change, it might impact integrations which tie-in to
-XML processing.
+Hibernate's legacy `hbm.xml` mapping schema has been deprecated for quite some time, replaced by a new `mapping.xml`
+schema.  In 7.0, this `mapping.xml` is stabilized and we now offer a transformation of `hbm.xml` files into `mapping.xml` files.
 
+This tool is available as both -
+
+* build-time transformation (currently only offered as a Gradle plugin)
+* run-time transformation, using `hibernate.transform_hbm_xml.enabled=true`
+
+Build-time transformation is preferred.
+
+[NOTE]
+====
+Initial versions of the transformation processed one file at a time.
+This is now done across the entire set of `hbm.xml` files at once.
+While most users will never see this change, it might impact integrations which tie-in to XML processing.
+====
 
 [[cleanup]]
 == Cleanup
 
-* Removed `SqmQualifiedJoin`.  All joins are qualified.
-* Removed `AdditionalJaxbMappingProducer`, deprecated in favor of `AdditionalMappingContributor`
-* Removed `MetadataContributor`, deprecated in favor of `AdditionalMappingContributor`
-* Removed `@Persister`.
-* Removed `hibernate.mapping.precedence` and friends
-* Removed `org.hibernate.Session#save` in favor of `org.hibernate.Session#persist`
-* Removed `org.hibernate.Session#saveOrUpdate` in favor `#persist` if the entity is transient or `#merge` if the entity is detached.
-* Removed `org.hibernate.Session#update` in favor of `org.hibernate.Session.merge`
-* Removed `org.hibernate.annotations.CascadeType.SAVE_UPDATE` in favor of `org.hibernate.annotations.CascadeType.PERSIST` + `org.hibernate.annotations.CascadeType.MERGE`
-* Removed `@SelectBeforeUpdate`
-* Removed `org.hibernate.Session#delete` in favor of `org.hibernate.Session#remove`
-* Removed `org.hibernate.annotations.CascadeType.DELETE` in favor of `org.hibernate.annotations.CascadeType#REMOVE`
-* Removed `org.hibernate.Session#refresh(String entityName, Object object)` in favor of `org.hibernate.Session#refresh(Object object)`
-* Removed `org.hibernate.Session#refresh(String entityName, Object object, LockOptions lockOptions)` in favor of `org.hibernate.Session#refresh(Object object, LockOptions lockOptions)`
-* Removed the attribute value from `@DynamicInsert` and `@DynamicUpdate`
-* Removed `org.hibernate.integrator.spi.Integrator#integrate(Metadata,SessionFactoryImplementor,SessionFactoryServiceRegistry)` in favor of `org.hibernate.integrator.spi.Integrator#integrate(Metadata,BootstrapContext,SessionFactoryImplementor)`
-* Removed `org.hibernate.Interceptor#onLoad(Object, Serializable, Object[] , String[] , Type[] )` in favour of `org.hibernate.Interceptor#onLoad(Object, Object, Object[], String[], Type[] )`
-* Removed `org.hibernate.Interceptor#onFlushDirty(Object, Serializable, Object[] , Object[], String[] , Type[] )` in favour of `org.hibernate.Interceptor#onLoad(Object, Object, Object[], Object[], String[] , Type[] )`
-* Removed `org.hibernate.Interceptor#onSave(Object, Serializable, Object[], String[], Type[])` in favour of `org.hibernate.Interceptor#onSave(Object, Object, Object[], String[], Type[])`
-* Removed `org.hibernate.Interceptor#onDelete(Object, Serializable, Object[], String[], Type[])` in favour of `org.hibernate.Interceptor#onDelete(Object, Serializable, Object[], String[], Type[])`
-* Removed `org.hibernate.Interceptor#onCollectionRecreate(Object, Serializable)` in favour of `org.hibernate.Interceptor#onCollectionRecreate(Object, Object)`
-* Removed `org.hibernate.Interceptor#onCollectionRemove(Object, Serializable)` in favour of `org.hibernate.Interceptor#onCollectionRemove(Object, Object)`
-* Removed `org.hibernate.Interceptor#onCollectionUpdate(Object, Serializable)` in favour of `org.hibernate.Interceptor#onCollectionUpdate(Object, Object)`
-* Removed `org.hibernate.Interceptor#findDirty(Object, Serializable, Object[], Object[], String[], Type[])` in favour of `org.hibernate.Interceptor#findDirty(Object, Object, Object[], Object[], String[], Type[])`
-* Removed `org.hibernate.Interceptor#getEntity(String, Serializable)` in favour of `org.hibernate.Interceptor#getEntity(String, Serializable)`
+* Annotations
+** Removed `@Persister`
+** Removed `@Proxy` - see <<proxy-annotation>>
+** Removed `@SelectBeforeUpdate`
+** Removed `@DynamicInsert#value` and `@DynamicUpdate#value`
+** Removed `@Loader`
+** Removed `@Table`
+** Removed `@Where` and `@WhereJoinTable`
+** Removed `@ForeignKey`
+** Removed `@Index`
+** Removed `@IndexColumn`
+** Removed `@GeneratorType` (and `GenerationTime`, etc)
+** Removed `@LazyToOne`
+** Removed `@LazyCollection`
+** Removed `@IndexColumn`
+** Replaced uses of `CacheModeType` with `CacheMode`
+
+* Classes/interfaces
+** Removed `SqmQualifiedJoin` (all joins are qualified)
+** Removed `AdditionalJaxbMappingProducer` -> `AdditionalMappingContributor`
+** Removed `MetadataContributor` -> `AdditionalMappingContributor`
+
+* Behavior
+** Removed `org.hibernate.Session#save` in favor of `org.hibernate.Session#persist`
+** Removed `org.hibernate.Session#saveOrUpdate` in favor `#persist` if the entity is transient or `#merge` if the entity is detached.
+** Removed `org.hibernate.Session#update` in favor of `org.hibernate.Session.merge`
+** Removed `org.hibernate.annotations.CascadeType.SAVE_UPDATE` in favor of `org.hibernate.annotations.CascadeType.PERSIST` + `org.hibernate.annotations.CascadeType.MERGE`
+** Removed `org.hibernate.Session#delete` in favor of `org.hibernate.Session#remove`
+** Removed `org.hibernate.annotations.CascadeType.DELETE` in favor of `org.hibernate.annotations.CascadeType#REMOVE`
+** Removed `org.hibernate.Session#refresh(String entityName, Object object)` in favor of `org.hibernate.Session#refresh(Object object)`
+** Removed `org.hibernate.Session#refresh(String entityName, Object object, LockOptions lockOptions)` in favor of `org.hibernate.Session#refresh(Object object, LockOptions lockOptions)`
+** Removed `org.hibernate.integrator.spi.Integrator#integrate(Metadata,SessionFactoryImplementor,SessionFactoryServiceRegistry)` in favor of `org.hibernate.integrator.spi.Integrator#integrate(Metadata,BootstrapContext,SessionFactoryImplementor)`
+** Removed `org.hibernate.Interceptor#onLoad(Object, Serializable, Object[] , String[] , Type[] )` in favour of `org.hibernate.Interceptor#onLoad(Object, Object, Object[], String[], Type[] )`
+** Removed `org.hibernate.Interceptor#onFlushDirty(Object, Serializable, Object[] , Object[], String[] , Type[] )` in favour of `org.hibernate.Interceptor#onLoad(Object, Object, Object[], Object[], String[] , Type[] )`
+** Removed `org.hibernate.Interceptor#onSave(Object, Serializable, Object[], String[], Type[])` in favour of `org.hibernate.Interceptor#onSave(Object, Object, Object[], String[], Type[])`
+** Removed `org.hibernate.Interceptor#onDelete(Object, Serializable, Object[], String[], Type[])` in favour of `org.hibernate.Interceptor#onDelete(Object, Serializable, Object[], String[], Type[])`
+** Removed `org.hibernate.Interceptor#onCollectionRecreate(Object, Serializable)` in favour of `org.hibernate.Interceptor#onCollectionRecreate(Object, Object)`
+** Removed `org.hibernate.Interceptor#onCollectionRemove(Object, Serializable)` in favour of `org.hibernate.Interceptor#onCollectionRemove(Object, Object)`
+** Removed `org.hibernate.Interceptor#onCollectionUpdate(Object, Serializable)` in favour of `org.hibernate.Interceptor#onCollectionUpdate(Object, Object)`
+** Removed `org.hibernate.Interceptor#findDirty(Object, Serializable, Object[], Object[], String[], Type[])` in favour of `org.hibernate.Interceptor#findDirty(Object, Object, Object[], Object[], String[], Type[])`
+** Removed `org.hibernate.Interceptor#getEntity(String, Serializable)` in favour of `org.hibernate.Interceptor#getEntity(String, Serializable)`
+
+* Settings
+** Removed `hibernate.mapping.precedence` and friends
+
+
 
 [[todo]]
 == Todos (dev)

@@ -10,7 +10,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 
-import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.orm.test.jpa.metamodel.Product;
@@ -82,7 +81,6 @@ public class CiteriaAsExpressionTest {
 
 	@Test
 	@JiraKey("HHH-5755")
-	@SkipForDialect(dialectClass = DerbyDialect.class )
 	@SkipForDialect(dialectClass = SybaseDialect.class )
 	@SkipForDialect(dialectClass = SybaseASEDialect.class )
 	public void testAsToString(EntityManagerFactoryScope scope) {

@@ -737,7 +737,7 @@ public class SqmUtil {
 
 	public static boolean isSelectionAssignableToResultType(SqmSelection<?> selection, Class<?> expectedResultType) {
 		if ( expectedResultType == null
-				|| selection != null && selection.getSelectableNode() instanceof SqmParameter ) {
+				|| selection != null && selection.getSelectableNode() instanceof SqmParameter && !expectedResultType.isArray()) {
 			return true;
 		}
 		else if ( selection == null

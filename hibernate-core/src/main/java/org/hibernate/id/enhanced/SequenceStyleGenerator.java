@@ -15,6 +15,7 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
@@ -216,7 +217,8 @@ public class SequenceStyleGenerator
 				physicalSequence,
 				optimizationStrategy,
 				serviceRegistry,
-				determineContributor( parameters )
+				determineContributor( parameters ),
+				(ObjectNameNormalizer) parameters.get( IDENTIFIER_NORMALIZER )
 		);
 
 		if ( physicalSequence
@@ -251,7 +253,8 @@ public class SequenceStyleGenerator
 			boolean physicalSequence,
 			OptimizerDescriptor optimizationStrategy,
 			ServiceRegistry serviceRegistry,
-			String contributor) {
+			String contributor,
+			ObjectNameNormalizer normalizer) {
 		final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
 		final SequenceMismatchStrategy sequenceMismatchStrategy = configurationService.getSetting(
 				AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY,
@@ -262,7 +265,10 @@ public class SequenceStyleGenerator
 		if ( sequenceMismatchStrategy != SequenceMismatchStrategy.NONE
 				&& optimizationStrategy.isPooled()
 				&& physicalSequence ) {
-			final String databaseSequenceName = sequenceName.getObjectName().getText();
+			final String databaseSequenceName = normalizer.database()
+					.getPhysicalNamingStrategy()
+					.toPhysicalSequenceName( sequenceName.getObjectName(), jdbcEnvironment )
+					.getText();
 			final Number databaseIncrementValue = isSchemaToBeRecreated( contributor, configurationService ) ? null : getSequenceIncrementValue( jdbcEnvironment, databaseSequenceName );
 			if ( databaseIncrementValue != null && databaseIncrementValue.intValue() != incrementSize) {
 				final int dbIncrementValue = databaseIncrementValue.intValue();

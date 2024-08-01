@@ -34,7 +34,7 @@ public abstract class ObjectNameNormalizer {
 		return database().toIdentifier( identifierText );
 	}
 
-	protected Database database() {
+	public Database database() {
 		if ( database == null ) {
 			database = getBuildingContext().getMetadataCollector().getDatabase();
 		}

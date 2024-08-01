@@ -135,8 +135,6 @@ All such cases though are already controllable by the application.
 
 The effect can also often be mitigated using Hibernate's bytecode-based laziness (possibly combined with `@ConcreteProxy`).
 
-* Removed `org.hibernate.Session#refresh(String entityName, Object object)` in favor of `org.hibernate.Session#refresh(Object object)`
-* Removed `org.hibernate.Session#refresh(String entityName, Object object, LockOptions lockOptions)` in favor of `org.hibernate.Session#refresh(Object object, LockOptions lockOptions)`
 
 [[flush-persist]]
 == Session flush and persist
@@ -267,6 +265,8 @@ XML processing.
 * Removed `@SelectBeforeUpdate`
 * Removed `org.hibernate.Session#delete` in favor of `org.hibernate.Session#remove`
 * Removed `org.hibernate.annotations.CascadeType.DELETE` in favor of `org.hibernate.annotations.CascadeType#REMOVE`
+* Removed `org.hibernate.Session#refresh(String entityName, Object object)` in favor of `org.hibernate.Session#refresh(Object object)`
+* Removed `org.hibernate.Session#refresh(String entityName, Object object, LockOptions lockOptions)` in favor of `org.hibernate.Session#refresh(Object object, LockOptions lockOptions)`
 * Removed the attribute value from `@DynamicInsert` and `@DynamicUpdate`
 * Removed `org.hibernate.integrator.spi.Integrator#integrate(Metadata,SessionFactoryImplementor,SessionFactoryServiceRegistry)` in favor of `org.hibernate.integrator.spi.Integrator#integrate(Metadata,BootstrapContext,SessionFactoryImplementor)`
 * Removed `org.hibernate.Interceptor#onLoad(Object, Serializable, Object[] , String[] , Type[] )` in favour of `org.hibernate.Interceptor#onLoad(Object, Object, Object[], String[], Type[] )`

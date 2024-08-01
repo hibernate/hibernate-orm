@@ -7,12 +7,13 @@
 package org.hibernate.orm.test.softdelete;
 
 import org.hibernate.annotations.SoftDelete;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.schema.SchemaCreateHelper;
 import org.junit.jupiter.api.Test;
 
@@ -29,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class SoftDeleteColumnConfigTests {
 	@Test
 	@DomainModel(annotatedClasses = Thing.class)
+	@RequiresDialect( value = H2Dialect.class, comment = "Not all dialects export column comments, and we only really need to check for on that does" )
 	void verifyModel(DomainModelScope modelScope) {
 		final RootClass entityBinding = (RootClass) modelScope.getEntityBinding( Thing.class );
 		final Column softDeleteColumn = entityBinding.getSoftDeleteColumn();

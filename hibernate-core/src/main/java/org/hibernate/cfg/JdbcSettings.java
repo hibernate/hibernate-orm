@@ -518,7 +518,7 @@ public interface JdbcSettings extends C3p0Settings, ProxoolSettings, AgroalSetti
 	/**
 	 * @see #USER
 	 *
-	 * @deprecated The JPA-standard setting {@link #JAKARTA_JDBC_USER} is now preferred.
+	 * @deprecated The JPA-standard setting {@link #JAKARTA_JDBC_PASSWORD} is now preferred.
 	 */
 	@Deprecated
 	String PASS = "hibernate.connection.password";

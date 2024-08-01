@@ -1,4 +1,4 @@
-= Hibernate 7.0.0.Alpha2
+= Hibernate 7.0.0.Beta1
 Steve Ebersole
 :toc:
 :toclevels: 2

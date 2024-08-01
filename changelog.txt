@@ -3,6 +3,74 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 7.0.0.Beta1 (August 01, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32319
+
+** Bug
+    * [HHH-18314] - dialect for Db2 claims to be NationalizationSupport.EXPLICIT but never generates DDL with NCHAR/NVARCHAR
+
+** Improvement
+    * [HHH-18453] - Fix Java code block highlighting in User Guide
+    * [HHH-18448] - Add cast and notEqualTo methods to JpaExpression and SqmExpression
+    * [HHH-18441] - Create extension to PersistenceConfiguration
+    * [HHH-18440] - Rewrite the Bootstrapping chapter in the User Guide
+    * [HHH-18412] - Upgrade JBoss Logging Tools (processor) to 3.0.1.Final
+    * [HHH-18393] - Upgrade JBoss Logging Tools (processor) to 3.0.0.Final
+    * [HHH-18316] - use utf8mb4 instead of utf8 a.k.a utf8mb3 on MySQL
+    * [HHH-18097] - Replace `java.io.Closeable` with `java.lang.AutoCloseable`
+    * [HHH-18009] - Consolidate JdbcObserver and ConnectionObserver into JdbcEventHandler
+    * [HHH-17720] - Add common JAXB contracts for named queries
+
+** New Feature
+    * [HHH-18304] - Transform hbm.xml key-many-to-one references
+    * [HHH-18281] - Transform <filter-def/> and <filter/>
+    * [HHH-18266] - HbmXmlTransformer hbm inverse
+    * [HHH-18265] - HbmXmlTransformer transform hbm <key column=""/> 
+    * [HHH-18264] - HbmXmlTransformer collection classification
+    * [HHH-18060] - HbmXmlTransformer work
+    * [HHH-17979] - Add @PropertyRef
+
+** Remove Feature
+    * [HHH-18452] - Remove deprecated org.hibernate.Interceptor methods
+    * [HHH-18449] - Remove deprecated Integrator#integrate form
+    * [HHH-18444] - Remove deprecate Session#refresh methods
+    * [HHH-18443] - Drop SessionFactoryBuilder#enableJpaListCompliance
+    * [HHH-18442] - Drop DynamicInsert#value and DynamicUpdate#value
+    * [HHH-18437] - Remove deprecations from JdbcSessionContext
+    * [HHH-18428] - Remove Session#delete
+    * [HHH-18199] - Remove @Where and @WhereJoinTable
+    * [HHH-18196] - Remove Session#save / Session#update / Session#saveOrUpdate
+    * [HHH-18195] - Remove @SelectBeforeUpdate
+    * [HHH-18194] - Remove @Proxy
+    * [HHH-18193] - Remove @Polymorphism
+    * [HHH-18191] - Remove @LazyToOne
+    * [HHH-18190] - Remove @LazyCollection
+    * [HHH-18189] - Remove @IndexColumn
+    * [HHH-18188] - Remove GenerationTime and its uses
+    * [HHH-18186] - Remove @GeneratorType
+    * [HHH-18184] - Remove CacheModeType and its uses
+    * [HHH-17697] - Remove deprecated annotations
+
+** Sub-task
+    * [HHH-18197] - Remove @Table
+    * [HHH-18192] - Remove @Loader
+    * [HHH-18187] - Remove @Index
+    * [HHH-18185] - Remove @ForeignKey
+    * [HHH-18075] - Transform property-ref
+    * [HHH-17888] - Remove support for MariaDB versions older than 10.5
+
+** Task
+    * [HHH-18397] - Transform "foreign" generators
+    * [HHH-18396] - Transform property-ref pointing to a to-one attribute
+    * [HHH-18394] - Fix transformation of nested subclass mappings
+    * [HHH-18037] - Move DerbyDialect to hibernate-community-dialects
+    * [HHH-18010] - Investigate ConnectionObserver and friends
+    * [HHH-17583] - Cleanup for 7.0
+    * [HHH-17448] - Add newly standard column annotation attributes to Hibernate column annotations
+
+
 Changes in 7.0.0.Alpha3 (June 14, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

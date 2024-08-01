@@ -320,8 +320,6 @@ public class PropertyBinder {
 			holder.addProperty( property, columns, declaringClass );
 		}
 
-		callAttributeBindersInSecondPass( property );
-
 		return property;
 	}
 

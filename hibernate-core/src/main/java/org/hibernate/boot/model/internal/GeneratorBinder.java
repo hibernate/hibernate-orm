@@ -560,7 +560,7 @@ public class GeneratorBinder {
 
 	/**
 	 * If the given {@link Generator} also implements {@link Configurable},
-	 * call its {@link Configurable#configure(Type, Properties, ServiceRegistry)
+	 * call its {@link Configurable#configure(GeneratorCreationContext, Properties)
 	 * configure()} method.
 	 */
 	private static void callConfigure(
@@ -568,15 +568,14 @@ public class GeneratorBinder {
 			Generator generator,
 			Map<String, Object> configuration,
 			SimpleValue identifierValue) {
-		if ( generator instanceof Configurable ) {
-			final Configurable configurable = (Configurable) generator;
+		if ( generator instanceof final Configurable configurable ) {
 			final Properties parameters = collectParameters(
 					identifierValue,
 					creationContext.getDatabase().getDialect(),
 					creationContext.getRootClass(),
 					configuration
 			);
-			configurable.configure( identifierValue.getType(), parameters, creationContext.getServiceRegistry() );
+			configurable.configure( creationContext, parameters );
 		}
 	}
 

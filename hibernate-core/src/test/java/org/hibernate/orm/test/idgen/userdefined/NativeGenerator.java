@@ -53,9 +53,9 @@ public class NativeGenerator
     }
 
     @Override
-    public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) {
+    public void configure(GeneratorCreationContext creationContext, Properties parameters) {
         if ( generator instanceof Configurable ) {
-            ((Configurable) generator).configure( type, parameters, serviceRegistry );
+            ((Configurable) generator).configure( creationContext, parameters );
         }
     }
 

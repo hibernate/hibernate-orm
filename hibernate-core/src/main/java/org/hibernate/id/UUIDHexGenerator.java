@@ -10,9 +10,9 @@ import java.util.Properties;
 
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
 import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
@@ -53,7 +53,7 @@ public class UUIDHexGenerator extends AbstractUUIDGenerator {
 
 
 	@Override
-	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
+	public void configure(GeneratorCreationContext creationContext, Properties parameters) throws MappingException {
 		sep = getString( SEPARATOR, parameters, "" );
 	}
 

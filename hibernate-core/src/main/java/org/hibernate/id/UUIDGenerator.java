@@ -14,10 +14,10 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.UUIDJavaType;
 
@@ -50,7 +50,7 @@ public class UUIDGenerator implements IdentifierGenerator {
 	private UUIDJavaType.ValueTransformer valueTransformer;
 
 	@Override
-	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
+	public void configure(GeneratorCreationContext creationContext, Properties parameters) throws MappingException {
 		// check first for an explicit strategy instance
 		strategy = (UUIDGenerationStrategy) parameters.get( UUID_GEN_STRATEGY );
 
@@ -60,7 +60,7 @@ public class UUIDGenerator implements IdentifierGenerator {
 			if ( strategyClassName != null ) {
 				try {
 					final Class<?> strategyClass =
-							serviceRegistry.requireService( ClassLoaderService.class )
+							creationContext.getServiceRegistry().requireService( ClassLoaderService.class )
 									.classForName( strategyClassName );
 					try {
 						strategy = (UUIDGenerationStrategy) strategyClass.newInstance();
@@ -80,6 +80,7 @@ public class UUIDGenerator implements IdentifierGenerator {
 			strategy = StandardRandomStrategy.INSTANCE;
 		}
 
+		final Type type = creationContext.getType();
 		if ( UUID.class.isAssignableFrom( type.getReturnedClass() ) ) {
 			valueTransformer = UUIDJavaType.PassThroughTransformer.INSTANCE;
 		}

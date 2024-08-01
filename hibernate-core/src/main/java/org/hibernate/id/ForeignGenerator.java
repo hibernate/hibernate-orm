@@ -10,6 +10,7 @@ import java.util.Properties;
 
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
@@ -68,7 +69,7 @@ public class ForeignGenerator implements IdentifierGenerator {
 
 
 	@Override
-	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
+	public void configure(GeneratorCreationContext creationContext, Properties parameters) throws MappingException {
 		propertyName = parameters.getProperty( PROPERTY );
 		entityName = parameters.getProperty( ENTITY_NAME );
 		if ( propertyName==null ) {

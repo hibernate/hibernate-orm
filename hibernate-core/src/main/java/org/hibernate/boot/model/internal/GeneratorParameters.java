@@ -15,6 +15,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
@@ -38,7 +39,7 @@ import java.util.Properties;
 
 /**
  * Responsible for setting up the parameters which are passed to
- * {@link Configurable#configure(Type, Properties, ServiceRegistry)}
+ * {@link Configurable#configure(GeneratorCreationContext, Properties)}
  * when a {@link Configurable} generator is instantiated.
  *
  * @since 7.0
@@ -51,7 +52,7 @@ public class GeneratorParameters {
 
 	/**
 	 * Collect the parameters which should be passed to
-	 * {@link Configurable#configure(Type, Properties, ServiceRegistry)}.
+	 * {@link Configurable#configure(GeneratorCreationContext, Properties)}.
 	 */
 	public static Properties collectParameters(
 			SimpleValue identifierValue,

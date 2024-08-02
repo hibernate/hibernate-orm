@@ -31,19 +31,15 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.query.BindableType;
-import org.hibernate.query.Page;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.internal.NamedCriteriaQueryMementoImpl;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.internal.DelegatingDomainQueryExecutionContext;
 import org.hibernate.query.internal.ParameterMetadataImpl;
-import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -56,6 +52,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.results.internal.TupleMetadata;
@@ -86,7 +83,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 
 	private final ParameterMetadataImplementor parameterMetadata;
 	private final DomainParameterXref domainParameterXref;
-	private final QueryParameterBindingsImpl parameterBindings;
+	private final QueryParameterBindings parameterBindings;
 
 	private final Class<R> expectedResultType;
 	private final Class<?> resultType;
@@ -100,76 +97,34 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		super( session );
 		this.hql = hql;
 
+		SqmUtil.verifyIsSelectStatement( hqlInterpretation.getSqmStatement(), hql );
 		this.sqm = (SqmSelectStatement<R>) hqlInterpretation.getSqmStatement();
 
 		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
 		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
-		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
+		this.parameterBindings = parameterMetadata.createBindings( session.getFactory() );
+
 
 		this.expectedResultType = expectedResultType;
-		visitQueryReturnType( sqm.getQueryPart(), expectedResultType, getSessionFactory() );
-		this.resultType = determineResultType( sqm );
+		this.resultType = determineResultType( sqm, expectedResultType );
 		this.tupleMetadata = buildTupleMetadata( sqm, expectedResultType );
 
+		hqlInterpretation.validateResultType( resultType );
 		setComment( hql );
-	}
-
-	private Class<?> determineResultType(SqmSelectStatement<?> sqm) {
-		final List<SqmSelection<?>> selections = sqm.getQuerySpec().getSelectClause().getSelections();
-		if ( selections.size() == 1 ) {
-			if ( Object[].class.equals( expectedResultType ) ) {
-				// for JPA compatibility
-				return Object[].class;
-			}
-			else {
-				final SqmSelection<?> selection = selections.get(0);
-				if ( isSelectionAssignableToResultType( selection, expectedResultType ) ) {
-					return selection.getNodeJavaType().getJavaTypeClass();
-				}
-				else {
-					// let's assume there's some
-					// way to instantiate it
-					return expectedResultType;
-				}
-			}
-		}
-		else if ( expectedResultType != null ) {
-			// assume we can repackage the tuple as
-			// the given type (worry about how later)
-			return expectedResultType;
-		}
-		else {
-			// for JPA compatibility
-			return Object[].class;
-		}
 	}
 
 	public SqmSelectionQueryImpl(
 			NamedHqlQueryMementoImpl memento,
 			Class<R> resultType,
 			SharedSessionContractImplementor session) {
-		super( session );
-		this.hql = memento.getHqlString();
-		this.expectedResultType = resultType;
-		this.resultType = resultType;
+		this(
+				memento.getHqlString(),
+				interpretation( memento, resultType, session ),
+				resultType,
+				session
+		);
 
-		final QueryEngine queryEngine = session.getFactory().getQueryEngine();
-		final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
-		final HqlInterpretation<R> hqlInterpretation =
-				interpretationCache.resolveHqlInterpretation( hql, resultType, queryEngine.getHqlTranslator() );
-
-		SqmUtil.verifyIsSelectStatement( hqlInterpretation.getSqmStatement(), hql );
-		this.sqm = (SqmSelectStatement<R>) hqlInterpretation.getSqmStatement();
-
-		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
-		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
-
-		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
-
-		setComment( hql );
 		applyOptions( memento );
-
-		this.tupleMetadata = buildTupleMetadata( sqm, resultType );
 	}
 
 	public SqmSelectionQueryImpl(
@@ -201,7 +156,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 				? new ParameterMetadataImpl( domainParameterXref.getQueryParameters() )
 				: ParameterMetadataImpl.EMPTY;
 
-		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
+		this.parameterBindings = parameterMetadata.createBindings( session.getFactory() );
 
 		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
 		for ( SqmParameter<?> sqmParameter : domainParameterXref.getParameterResolutions().getSqmParameters() ) {
@@ -211,12 +166,47 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		}
 
 		this.expectedResultType = expectedResultType;
-		this.resultType = determineResultType( sqm );
-		visitQueryReturnType( sqm.getQueryPart(), expectedResultType, getSessionFactory() );
+		this.resultType = determineResultType( sqm, expectedResultType );
+
+		final SqmQueryPart<R> queryPart = sqm.getQueryPart();
+		// For criteria queries, we have to validate the fetch structure here
+		queryPart.validateQueryStructureAndFetchOwners();
+		validateCriteriaQuery( queryPart );
+		sqm.validateResultType( resultType );
 
 		setComment( hql );
 
 		this.tupleMetadata = buildTupleMetadata( sqm, expectedResultType );
+	}
+
+	private static Class<?> determineResultType(SqmSelectStatement<?> sqm, Class<?> expectedResultType) {
+		final List<SqmSelection<?>> selections = sqm.getQuerySpec().getSelectClause().getSelections();
+		if ( selections.size() == 1 ) {
+			if ( Object[].class.equals( expectedResultType ) ) {
+				// for JPA compatibility
+				return Object[].class;
+			}
+			else {
+				final SqmSelection<?> selection = selections.get(0);
+				if ( isSelectionAssignableToResultType( selection, expectedResultType ) ) {
+					return selection.getNodeJavaType().getJavaTypeClass();
+				}
+				else {
+					// let's assume there's some
+					// way to instantiate it
+					return expectedResultType;
+				}
+			}
+		}
+		else if ( expectedResultType != null ) {
+			// assume we can repackage the tuple as
+			// the given type (worry about how later)
+			return expectedResultType;
+		}
+		else {
+			// for JPA compatibility
+			return Object[].class;
+		}
 	}
 
 	private <T> void bindCriteriaParameter(SqmJpaCriteriaParameterWrapper<T> sqmParameter) {

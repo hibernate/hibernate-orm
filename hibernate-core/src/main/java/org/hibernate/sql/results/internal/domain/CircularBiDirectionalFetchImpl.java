@@ -136,8 +136,11 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch {
 				}
 			}
 			final InitializerData data = initializer.getData( rowProcessingState );
-			initializer.resolveInstance( data );
-			final Object initializedInstance = initializer.getEntityInstance( data );
+			final Initializer.State state = data.getState();
+			if ( state == Initializer.State.KEY_RESOLVED ) {
+				initializer.resolveInstance( data );
+			}
+			final Object initializedInstance = initializer.getResolvedInstance( data );
 			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( initializedInstance );
 			if ( lazyInitializer != null ) {
 				final Class<?> concreteProxyClass = initializer.getConcreteDescriptor( data ).getConcreteProxyClass();

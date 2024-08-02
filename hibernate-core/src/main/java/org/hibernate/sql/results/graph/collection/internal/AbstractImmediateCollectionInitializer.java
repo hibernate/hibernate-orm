@@ -12,9 +12,9 @@ import java.util.function.BiConsumer;
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -49,7 +49,7 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 
 	public static class ImmediateCollectionInitializerData extends CollectionInitializerData {
 
-		protected boolean shallowCached;
+		protected final boolean shallowCached;
 
 		/**
 		 * The value of the collection side of the collection key (FK).  Identifies
@@ -59,8 +59,10 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 		protected Object collectionValueKey;
 		protected LoadingCollectionEntryImpl responsibility;
 
-		public ImmediateCollectionInitializerData(RowProcessingState rowProcessingState) {
+		public ImmediateCollectionInitializerData(AbstractImmediateCollectionInitializer<?> initializer, RowProcessingState rowProcessingState) {
 			super( rowProcessingState );
+			shallowCached = rowProcessingState.isQueryCacheHit()
+					&& initializer.getInitializingCollectionDescriptor().useShallowQueryCacheLayout();
 		}
 	}
 
@@ -88,10 +90,8 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 
 	@Override
 	protected ImmediateCollectionInitializerData createInitializerData(RowProcessingState rowProcessingState) {
-		return new ImmediateCollectionInitializerData( rowProcessingState );
+		return new ImmediateCollectionInitializerData( this, rowProcessingState );
 	}
-
-	protected abstract String getSimpleConcreteImplName();
 
 	@Override
 	protected void forEachSubInitializer(BiConsumer<Initializer<?>, RowProcessingState> consumer, InitializerData data) {
@@ -102,16 +102,6 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 				consumer.accept( initializer, data.getRowProcessingState() );
 			}
 		}
-	}
-
-	@Override
-	public void startLoading(RowProcessingState rowProcessingState) {
-		final ImmediateCollectionInitializerData data = createInitializerData( rowProcessingState );
-		rowProcessingState.setInitializerData( initializerId, data );
-		if ( rowProcessingState.isQueryCacheHit() && getInitializingCollectionDescriptor().useShallowQueryCacheLayout() ) {
-			data.shallowCached = true;
-		}
-		forEachSubInitializer( Initializer::startLoading, data );
 	}
 
 	@Override
@@ -132,6 +122,22 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 			else {
 				resolveCollectionContentKey( data );
 			}
+		}
+	}
+
+	@Override
+	public void resolveState(Data data) {
+		super.resolveState( data );
+		if ( collectionValueKeyResultAssembler != null ) {
+			collectionValueKeyResultAssembler.resolveState( data.getRowProcessingState() );
+		}
+		final DomainResultAssembler<?> indexAssembler = getIndexAssembler();
+		if ( indexAssembler != null ) {
+			indexAssembler.resolveState( data.getRowProcessingState() );
+		}
+		final DomainResultAssembler<?> elementAssembler = getElementAssembler();
+		if ( elementAssembler != null ) {
+			elementAssembler.resolveState( data.getRowProcessingState() );
 		}
 	}
 
@@ -212,8 +218,10 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 		final RowProcessingState rowProcessingState = data.getRowProcessingState();
 		final SharedSessionContractImplementor session = rowProcessingState.getSession();
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final CollectionKey collectionKey = data.collectionKey;
+		assert collectionKey != null;
 		final LoadingCollectionEntry existingLoadingEntry = persistenceContext.getLoadContexts()
-				.findLoadingCollectionEntry( data.collectionKey );
+				.findLoadingCollectionEntry( collectionKey );
 		final PersistentCollection<?> existing;
 		final PersistentCollection<?> existingUnowned;
 		if ( existingLoadingEntry != null ) {
@@ -229,26 +237,26 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 				data.setState( State.INITIALIZED );
 			}
 		}
-		else if ( ( existing = persistenceContext.getCollection( data.collectionKey ) ) != null ) {
+		else if ( ( existing = persistenceContext.getCollection( collectionKey ) ) != null ) {
 			data.setCollectionInstance( existing );
 
 			// we found the corresponding collection instance on the Session.  If
 			// it is already initialized we have nothing to do
 
-			if ( data.getCollectionInstance().wasInitialized() ) {
+			if ( existing.wasInitialized() ) {
 				data.setState( State.INITIALIZED );
 			}
 			else if ( !data.shallowCached ) {
 				takeResponsibility( data );
 			}
 		}
-		else if ( ( existingUnowned = persistenceContext.useUnownedCollection( data.collectionKey ) ) != null ) {
+		else if ( ( existingUnowned = persistenceContext.useUnownedCollection( collectionKey ) ) != null ) {
 			data.setCollectionInstance( existingUnowned );
 
 			// we found the corresponding collection instance as unowned on the Session.  If
 			// it is already initialized we have nothing to do
 
-			if ( data.getCollectionInstance().wasInitialized() ) {
+			if ( existingUnowned.wasInitialized() ) {
 				data.setState( State.INITIALIZED );
 			}
 			else if ( !data.shallowCached ) {
@@ -258,12 +266,12 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 		else {
 			final CollectionPersister collectionDescriptor = getCollectionAttributeMapping().getCollectionDescriptor();
 			final CollectionSemantics<?, ?> collectionSemantics = collectionDescriptor.getCollectionSemantics();
-
-			data.setCollectionInstance( collectionSemantics.instantiateWrapper(
-					data.collectionKey.getKey(),
+			final PersistentCollection<?> persistentCollection = collectionSemantics.instantiateWrapper(
+					collectionKey.getKey(),
 					getInitializingCollectionDescriptor(),
 					session
-			) );
+			);
+			data.setCollectionInstance( persistentCollection );
 
 			if ( owningEntityInitializer != null ) {
 				assert owningEntityInitializer.getTargetInstance( rowProcessingState ) != null;
@@ -272,8 +280,8 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 
 			persistenceContext.addUninitializedCollection(
 					collectionDescriptor,
-					data.getCollectionInstance(),
-					data.collectionKey.getKey()
+					persistentCollection,
+					collectionKey.getKey()
 			);
 
 			if ( !data.shallowCached ) {
@@ -293,11 +301,13 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 				.getPersistenceContextInternal();
 		// If this is a query cache hit with the shallow query cache layout,
 		// we have to lazy load the collection instead
-		data.getCollectionInstance().forceInitialization();
+		final PersistentCollection<?> collectionInstance = data.getCollectionInstance();
+		assert collectionInstance != null;
+		collectionInstance.forceInitialization();
 		if ( collectionAttributeMapping.getCollectionDescriptor()
 				.getCollectionSemantics()
 				.getCollectionClassification() == CollectionClassification.ARRAY ) {
-			persistenceContext.addCollectionHolder( data.getCollectionInstance() );
+			persistenceContext.addCollectionHolder( collectionInstance );
 		}
 		data.setState( State.INITIALIZED );
 		initializeSubInstancesFromParent( data );
@@ -318,10 +328,10 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 			return;
 		}
 		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		final PersistentCollection<?> persistentCollection;
 		// Check if the given instance is different from the previous row state to avoid creating CollectionKey
 		if ( data.getCollectionInstance() != instance ) {
 			final PersistenceContext persistenceContext = rowProcessingState.getSession().getPersistenceContextInternal();
-			final PersistentCollection<?> persistentCollection;
 			if ( collectionAttributeMapping.getCollectionDescriptor()
 					.getCollectionSemantics()
 					.getCollectionClassification() == CollectionClassification.ARRAY ) {
@@ -335,8 +345,11 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 			data.setCollectionInstance( persistentCollection );
 			data.responsibility = null;
 		}
+		else {
+			persistentCollection = (PersistentCollection<?>) instance;
+		}
 		data.collectionValueKey = null;
-		if ( data.getCollectionInstance().wasInitialized() ) {
+		if ( persistentCollection.wasInitialized() ) {
 			data.setState( State.INITIALIZED );
 			if ( data.shallowCached ) {
 				initializeShallowCached( data );
@@ -410,16 +423,6 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 		getElementAssembler().resolveState( rowProcessingState );
 	}
 
-	/**
-	 * Specialized toString handling for PersistentCollection.  All `PersistentCollection#toString`
-	 * implementations are crazy expensive as they trigger a load
-	 */
-	private String toLoggableString(PersistentCollection<?> collectionInstance) {
-		return collectionInstance == null
-				? LoggingHelper.NULL
-				: collectionInstance.getClass().getName() + "@" + System.identityHashCode( collectionInstance );
-	}
-
 	protected void takeResponsibility(Data data) {
 		data.responsibility = new LoadingCollectionEntryImpl(
 				getCollectionAttributeMapping().getCollectionDescriptor(),
@@ -473,10 +476,4 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 	public abstract @Nullable DomainResultAssembler<?> getIndexAssembler();
 
 	public abstract DomainResultAssembler<?> getElementAssembler();
-
-	@Override
-	public void endLoading(Data data) {
-		super.endLoading( data );
-		data.shallowCached = false;
-	}
 }

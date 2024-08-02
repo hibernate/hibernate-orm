@@ -34,7 +34,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Steve Ebersole
  */
 public class BagInitializer extends AbstractImmediateCollectionInitializer<AbstractImmediateCollectionInitializer.ImmediateCollectionInitializerData> {
-	private static final String CONCRETE_NAME = BagInitializer.class.getSimpleName();
 
 	private final DomainResultAssembler<?> elementAssembler;
 	private final DomainResultAssembler<?> collectionIdAssembler;
@@ -64,11 +63,6 @@ public class BagInitializer extends AbstractImmediateCollectionInitializer<Abstr
 		this.collectionIdAssembler = collectionIdFetch == null
 				? null
 				: collectionIdFetch.createAssembler( this, creationState );
-	}
-
-	@Override
-	protected String getSimpleConcreteImplName() {
-		return CONCRETE_NAME;
 	}
 
 	@Override

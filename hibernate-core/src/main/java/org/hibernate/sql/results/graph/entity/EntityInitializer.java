@@ -33,19 +33,14 @@ public interface EntityInitializer<Data extends InitializerData> extends Initial
 	}
 
 	/**
-	 * Get the entity instance for the currently processing "row".
+	 * Get the target entity instance for the currently processing "row".
 	 *
 	 * @apiNote Calling this method is only valid from the time
 	 * {@link #resolveKey(InitializerData)} has been called until {@link #finishUpRow(InitializerData)}
 	 * has been called for the currently processing row
 	 */
-	Object getEntityInstance(Data data);
-	default Object getEntityInstance(RowProcessingState rowProcessingState) {
-		return getEntityInstance( getData( rowProcessingState ) );
-	}
-
 	default Object getTargetInstance(Data data) {
-		return getEntityInstance( data );
+		return getResolvedInstance( data );
 	}
 	default Object getTargetInstance(RowProcessingState rowProcessingState) {
 		return getTargetInstance( getData( rowProcessingState ) );

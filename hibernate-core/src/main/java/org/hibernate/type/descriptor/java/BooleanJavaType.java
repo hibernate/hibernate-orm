@@ -48,6 +48,11 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 	}
 
 	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
 	public String toString(Boolean value) {
 		return value == null ? null : value.toString();
 	}

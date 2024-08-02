@@ -53,6 +53,11 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 	}
 
 	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
 	public String toString(Duration value) {
 		if ( value == null ) {
 			return null;

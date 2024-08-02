@@ -220,6 +220,15 @@ public interface Type extends Serializable {
 	int getHashCode(Object x, SessionFactoryImplementor factory) throws HibernateException;
 
 	/**
+	 * The type to use for {@code equals()} and {@code hashCode()} computation.
+	 * When {@code null}, use {@link Object#equals(Object)} and {@link Object#hashCode()}.
+	 * This is useful to avoid mega-morphic callsites.
+	 */
+	default @Nullable Type getTypeForEqualsHashCode() {
+		return this;
+	}
+
+	/**
 	 * Perform a {@link java.util.Comparator}-style comparison of the given values.
 	 *
 	 * @param x The first value

@@ -224,6 +224,16 @@ public interface JavaType<T> extends Serializable {
 	}
 
 	/**
+	 * Whether to use {@link Object#equals(Object)} and {@link Object#hashCode()}
+	 * or {@link #areEqual(Object, Object)} and {@link #extractHashCode(Object)}
+	 * for objects of this java type.
+	 * This is useful to avoid mega-morphic callsites.
+	 */
+	default boolean useObjectEqualsHashCode() {
+		return false;
+	}
+
+	/**
 	 * Extract a loggable representation of the given value.
 	 *
 	 * @param value The value for which to extract a loggable representation.

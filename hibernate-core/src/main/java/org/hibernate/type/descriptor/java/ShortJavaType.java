@@ -31,6 +31,11 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 	}
 
 	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
 	public String toString(Short value) {
 		return value == null ? null : value.toString();
 	}

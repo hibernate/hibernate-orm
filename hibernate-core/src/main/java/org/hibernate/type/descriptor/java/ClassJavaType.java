@@ -22,6 +22,11 @@ public class ClassJavaType extends AbstractClassJavaType<Class> {
 		super( Class.class );
 	}
 
+	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
 	public String toString(Class value) {
 		return value.getName();
 	}

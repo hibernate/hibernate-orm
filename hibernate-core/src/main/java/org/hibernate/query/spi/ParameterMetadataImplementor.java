@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import jakarta.persistence.Parameter;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
 
@@ -45,4 +46,6 @@ public interface ParameterMetadataImplementor extends ParameterMetadata {
 
 	@Override
 	<P> QueryParameterImplementor<P> resolve(Parameter<P> param);
+
+	QueryParameterBindings createBindings(SessionFactoryImplementor sessionFactory);
 }

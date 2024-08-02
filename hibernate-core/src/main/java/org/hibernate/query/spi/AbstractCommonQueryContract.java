@@ -769,14 +769,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	public Object getParameterValue(String name) {
 		getSession().checkOpen( false );
 
-		final QueryParameterImplementor<?> parameter = getParameterMetadata().getQueryParameter( name );
-		if ( parameter == null ) {
-			throw new IllegalArgumentException( "Could not resolve parameter by name - " + name );
-		}
-
-		final QueryParameterBinding<?> binding = getQueryParameterBindings().getBinding( parameter );
-		if ( binding == null || !binding.isBound() ) {
-			throw new IllegalStateException( "Parameter value not yet bound : " + parameter );
+		final QueryParameterBinding<Object> binding = getQueryParameterBindings().getBinding( name );
+		if ( !binding.isBound() ) {
+			throw new IllegalStateException( "The parameter [" + name + "] has not yet been bound" );
 		}
 
 		if ( binding.isMultiValued() ) {
@@ -790,13 +785,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	public Object getParameterValue(int position) {
 		getSession().checkOpen( false );
 
-		final QueryParameterImplementor<?> parameter = getParameterMetadata().getQueryParameter( position );
-		if ( parameter == null ) {
-			throw new IllegalArgumentException( "Could not resolve parameter by position - " + position );
-		}
-
-		final QueryParameterBinding<?> binding = getQueryParameterBindings().getBinding( parameter );
-		if ( binding == null || !binding.isBound() ) {
+		final QueryParameterBinding<Object> binding = getQueryParameterBindings().getBinding( position );
+		if ( !binding.isBound() ) {
 			throw new IllegalStateException( "The parameter [" + position + "] has not yet been bound" );
 		}
 
@@ -823,12 +813,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			}
 		}
 
-		final QueryParameterImplementor<?> param = getParameterMetadata().getQueryParameter( name );
-
-		if ( param == null ) {
-			throw new IllegalArgumentException( "Named parameter [" + name + "] is not registered with this procedure call" );
-		}
-
+		final QueryParameterBinding<Object> binding = getQueryParameterBindings().getBinding( name );
+		final QueryParameter<Object> param = binding.getQueryParameter();
 		if ( param.allowsMultiValuedBinding() ) {
 			final BindableType<?> hibernateType = param.getHibernateType();
 			if ( hibernateType == null || isInstance( hibernateType, value ) ) {
@@ -839,7 +825,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			}
 		}
 
-		locateBinding( name ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
+		binding.setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
 
 		return this;
 	}
@@ -902,6 +888,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	public CommonQueryContract setParameter(int position, Object value) {
+		getSession().checkOpen( false );
+
 		if ( value instanceof TypedParameterValue ) {
 			@SuppressWarnings("unchecked")
 			final TypedParameterValue<Object> typedValue = (TypedParameterValue<Object>) value;
@@ -914,23 +902,19 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			}
 		}
 
-		final QueryParameterImplementor<?> param = getParameterMetadata().getQueryParameter( position );
-
-		if ( param == null ) {
-			throw new IllegalArgumentException( "Positional parameter [" + position + "] is not registered with this procedure call" );
-		}
-
+		final QueryParameterBinding<Object> binding = getQueryParameterBindings().getBinding( position );
+		final QueryParameter<Object> param = binding.getQueryParameter();
 		if ( param.allowsMultiValuedBinding() ) {
 			final BindableType<?> hibernateType = param.getHibernateType();
 			if ( hibernateType == null || isInstance( hibernateType, value ) ) {
 				if ( value instanceof Collection && !isRegisteredAsBasicType( value.getClass() ) ) {
-					//noinspection rawtypes,unchecked
-					return setParameterList( param, (Collection) value );
+					//noinspection rawtypes
+					return setParameterList( position, (Collection) value );
 				}
 			}
 		}
 
-		locateBinding( position ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
+		binding.setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
 		return this;
 	}
 

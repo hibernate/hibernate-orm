@@ -31,6 +31,16 @@ public interface JdbcValuesMapping {
 
 	int getRowSize();
 
+	/**
+	 * Mapping from value index to cache index.
+	 */
+	int[] getValueIndexesToCacheIndexes();
+
+	/**
+	 * The size of the row for caching.
+	 */
+	int getRowToCacheSize();
+
 	List<DomainResult<?>> getDomainResults();
 
 	JdbcValuesMappingResolution resolveAssemblers(SessionFactoryImplementor sessionFactory);

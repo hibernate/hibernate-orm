@@ -8,10 +8,10 @@ package org.hibernate.engine.spi;
 
 import java.io.Serializable;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.function.Supplier;
 
 import org.hibernate.Filter;
@@ -52,7 +52,8 @@ public class LoadQueryInfluencers implements Serializable {
 	private @Nullable HashSet<String> enabledFetchProfileNames;
 
 	//Lazily initialized!
-	private @Nullable HashMap<String,Filter> enabledFilters;
+	//Note that ordering is important for cache keys
+	private @Nullable TreeMap<String,Filter> enabledFilters;
 
 	private boolean subselectFetchEnabled;
 
@@ -77,7 +78,7 @@ public class LoadQueryInfluencers implements Serializable {
 		for (FilterDefinition filterDefinition : sessionFactory.getAutoEnabledFilters()) {
 			FilterImpl filter = new FilterImpl( filterDefinition );
 			if ( enabledFilters == null ) {
-				enabledFilters = new HashMap<>();
+				enabledFilters = new TreeMap<>();
 			}
 			enabledFilters.put( filterDefinition.getFilterName(), filter );
 		}
@@ -157,7 +158,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public Map<String,Filter> getEnabledFilters() {
-		final HashMap<String, Filter> enabledFilters = this.enabledFilters;
+		final TreeMap<String, Filter> enabledFilters = this.enabledFilters;
 		if ( enabledFilters == null ) {
 			return Collections.emptyMap();
 		}
@@ -196,7 +197,7 @@ public class LoadQueryInfluencers implements Serializable {
 	public Filter enableFilter(String filterName) {
 		FilterImpl filter = new FilterImpl( sessionFactory.getFilterDefinition( filterName ) );
 		if ( enabledFilters == null ) {
-			this.enabledFilters = new HashMap<>();
+			this.enabledFilters = new TreeMap<>();
 		}
 		enabledFilters.put( filterName, filter );
 		return filter;

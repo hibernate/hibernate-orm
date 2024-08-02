@@ -31,7 +31,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
  */
 public class JdbcValuesMappingProducerStandard implements JdbcValuesMappingProducer {
 
-	private final JdbcValuesMapping resolvedMapping;
+	private final StandardJdbcValuesMapping resolvedMapping;
 
 	public JdbcValuesMappingProducerStandard(List<SqlSelection> sqlSelections, List<DomainResult<?>> domainResults) {
 		this.resolvedMapping = new StandardJdbcValuesMapping( sqlSelections, domainResults );
@@ -47,6 +47,9 @@ public class JdbcValuesMappingProducerStandard implements JdbcValuesMappingProdu
 			JdbcValuesMetadata jdbcResultsMetadata,
 			LoadQueryInfluencers loadQueryInfluencers,
 			SessionFactoryImplementor sessionFactory) {
+		if ( !resolvedMapping.needsResolve() ) {
+			return resolvedMapping;
+		}
 		final List<SqlSelection> sqlSelections = resolvedMapping.getSqlSelections();
 		List<SqlSelection> resolvedSelections = null;
 		for ( int i = 0; i < sqlSelections.size(); i++ ) {

@@ -7,6 +7,7 @@
 package org.hibernate.sql.exec.spi;
 
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -23,6 +24,7 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
+import org.hibernate.sql.exec.internal.StandardStatementCreator;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.ResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
@@ -41,6 +43,30 @@ public interface JdbcSelectExecutor {
 
 	/**
 	 * @since 6.4
+	 * @deprecated Use {@link #executeQuery(JdbcOperationQuerySelect, JdbcParameterBindings, ExecutionContext, RowTransformer, Class, StatementCreator, ResultsConsumer)} instead
+	 */
+	@Deprecated(forRemoval = true, since = "6.6")
+	default <T, R> T executeQuery(
+			JdbcOperationQuerySelect jdbcSelect,
+			JdbcParameterBindings jdbcParameterBindings,
+			ExecutionContext executionContext,
+			RowTransformer<R> rowTransformer,
+			Class<R> domainResultType,
+			Function<String, PreparedStatement> statementCreator,
+			ResultsConsumer<T, R> resultsConsumer) {
+		return executeQuery(
+				jdbcSelect,
+				jdbcParameterBindings,
+				executionContext,
+				rowTransformer,
+				domainResultType,
+				(executionContext1, sql) -> statementCreator.apply( sql ),
+				resultsConsumer
+		);
+	}
+
+	/**
+	 * @since 6.6
 	 */
 	<T, R> T executeQuery(
 			JdbcOperationQuerySelect jdbcSelect,
@@ -48,7 +74,7 @@ public interface JdbcSelectExecutor {
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
 			Class<R> domainResultType,
-			Function<String, PreparedStatement> statementCreator,
+			StatementCreator statementCreator,
 			ResultsConsumer<T, R> resultsConsumer);
 
 	/**
@@ -69,10 +95,7 @@ public interface JdbcSelectExecutor {
 				rowTransformer,
 				domainResultType,
 				resultCountEstimate,
-				sql -> executionContext.getSession()
-						.getJdbcCoordinator()
-						.getStatementPreparer()
-						.prepareQueryStatement( sql, false, null ),
+				StandardStatementCreator.getStatementCreator( null ),
 				resultsConsumer
 		);
 	}
@@ -87,7 +110,7 @@ public interface JdbcSelectExecutor {
 			RowTransformer<R> rowTransformer,
 			Class<R> domainResultType,
 			int resultCountEstimate,
-			Function<String, PreparedStatement> statementCreator,
+			StatementCreator statementCreator,
 			ResultsConsumer<T, R> resultsConsumer) {
 		return executeQuery(
 				jdbcSelect,
@@ -176,14 +199,18 @@ public interface JdbcSelectExecutor {
 				rowTransformer,
 				null,
 				resultCountEstimate,
-				sql -> executionContext.getSession()
-						.getJdbcCoordinator()
-						.getStatementPreparer()
-						.prepareQueryStatement( sql, false, scrollMode ),
+				StandardStatementCreator.getStatementCreator( scrollMode ),
 				ScrollableResultsConsumer.instance()
 		);
 	}
 
+	/**
+	 * @since 6.6
+	 */
+	@FunctionalInterface
+	interface StatementCreator {
+		PreparedStatement createStatement(ExecutionContext executionContext, String sql) throws SQLException;
+	}
 
 	/*
 		When `Query#scroll()` is call the query is not executed immediately, a new ExecutionContext with the values of the `persistenceContext.isDefaultReadOnly()` and of the `queryOptions.isReadOnly()`

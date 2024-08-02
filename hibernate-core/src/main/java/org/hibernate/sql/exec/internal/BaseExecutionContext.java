@@ -8,6 +8,7 @@ package org.hibernate.sql.exec.internal;
 
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.exec.spi.Callback;
@@ -53,7 +54,7 @@ public class BaseExecutionContext implements ExecutionContext {
 
 	@Override
 	public QueryParameterBindings getQueryParameterBindings() {
-		return QueryParameterBindings.NO_PARAM_BINDINGS;
+		return QueryParameterBindingsImpl.EMPTY;
 	}
 
 }

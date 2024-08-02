@@ -9,8 +9,9 @@ package org.hibernate.internal;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.function.Supplier;
 
 import org.hibernate.Filter;
@@ -18,6 +19,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Implementation of FilterImpl.  FilterImpl implements the user's
@@ -30,7 +33,9 @@ public class FilterImpl implements Filter, Serializable {
 
 	private transient FilterDefinition definition;
 	private final String filterName;
-	private final Map<String,Object> parameters = new HashMap<>();
+	//Lazily initialized!
+	//Note that ordering is important for cache keys
+	private @Nullable TreeMap<String,Object> parameters;
 	private final boolean autoEnabled;
 	private final boolean applyToLoadByKey;
 
@@ -85,7 +90,7 @@ public class FilterImpl implements Filter, Serializable {
 	}
 
 	public Map<String,?> getParameters() {
-		return parameters;
+		return parameters == null ? Collections.emptyMap() : Collections.unmodifiableMap( parameters );
 	}
 
 	/**
@@ -107,6 +112,9 @@ public class FilterImpl implements Filter, Serializable {
 		}
 		if ( argument != null && !type.getJavaTypeDescriptor().isInstance( argument ) ) {
 			throw new IllegalArgumentException( "Incorrect type for parameter [" + name + "]" );
+		}
+		if ( parameters == null ) {
+			parameters = new TreeMap<>();
 		}
 		parameters.put( name, argument );
 		return this;
@@ -135,6 +143,9 @@ public class FilterImpl implements Filter, Serializable {
 				throw new HibernateException( "Incorrect type for parameter [" + name + "]" );
 			}
 		}
+		if ( parameters == null ) {
+			parameters = new TreeMap<>();
+		}
 		parameters.put( name, values );
 		return this;
 	}
@@ -158,7 +169,7 @@ public class FilterImpl implements Filter, Serializable {
 	 * @return The value of the named parameter.
 	 */
 	public Object getParameter(String name) {
-		return parameters.get( name );
+		return parameters == null ? null : parameters.get( name );
 	}
 
 	public Supplier<?> getParameterResolver(String name) {
@@ -189,6 +200,6 @@ public class FilterImpl implements Filter, Serializable {
 	}
 
 	private boolean hasArgument(String parameterName) {
-		return parameters.containsKey(parameterName);
+		return parameters != null && parameters.containsKey(parameterName);
 	}
 }

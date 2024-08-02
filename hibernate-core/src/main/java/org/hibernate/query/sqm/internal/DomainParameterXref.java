@@ -9,11 +9,11 @@ package org.hibernate.query.sqm.internal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.hibernate.internal.util.collections.LinkedIdentityHashMap;
 import org.hibernate.query.internal.QueryParameterNamedImpl;
 import org.hibernate.query.internal.QueryParameterPositionalImpl;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -30,6 +30,13 @@ import org.hibernate.type.BasicCollectionType;
  * @author Steve Ebersole
  */
 public class DomainParameterXref {
+
+	public static final DomainParameterXref EMPTY = new DomainParameterXref(
+			new LinkedHashMap<>( 0 ),
+			new IdentityHashMap<>( 0 ),
+			SqmStatement.ParameterResolutions.empty()
+	);
+
 	/**
 	 * Create a DomainParameterXref for the parameters defined in the SQM statement
 	 */
@@ -44,13 +51,12 @@ public class DomainParameterXref {
 
 		final SqmStatement.ParameterResolutions parameterResolutions = sqmStatement.resolveParameters();
 		if ( parameterResolutions.getSqmParameters().isEmpty() ) {
-			return empty();
+			return EMPTY;
 		}
 
-		final Map<QueryParameterImplementor<?>, List<SqmParameter<?>>> sqmParamsByQueryParam = new LinkedIdentityHashMap<>();
-
 		final int sqmParamCount = parameterResolutions.getSqmParameters().size();
-		final Map<SqmParameter<?>, QueryParameterImplementor<?>> queryParamBySqmParam = new IdentityHashMap<>( sqmParamCount );
+		final LinkedHashMap<QueryParameterImplementor<?>, List<SqmParameter<?>>> sqmParamsByQueryParam = new LinkedHashMap<>( sqmParamCount );
+		final IdentityHashMap<SqmParameter<?>, QueryParameterImplementor<?>> queryParamBySqmParam = new IdentityHashMap<>( sqmParamCount );
 
 		for ( SqmParameter<?> sqmParameter : parameterResolutions.getSqmParameters() ) {
 			if ( sqmParameter instanceof JpaCriteriaParameter ) {
@@ -102,30 +108,20 @@ public class DomainParameterXref {
 		return new DomainParameterXref( sqmParamsByQueryParam, queryParamBySqmParam, parameterResolutions );
 	}
 
-	/**
-	 * Creates an "empty" (no param) xref
-	 */
-	public static DomainParameterXref empty() {
-		return new DomainParameterXref( Collections.emptyMap(), Collections.emptyMap(), SqmStatement.ParameterResolutions.empty() );
-	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Instance state
 
 	private final SqmStatement.ParameterResolutions parameterResolutions;
 
-	private final Map<QueryParameterImplementor<?>, List<SqmParameter<?>>> sqmParamsByQueryParam;
-	private final Map<SqmParameter<?>, QueryParameterImplementor<?>> queryParamBySqmParam;
+	private final LinkedHashMap<QueryParameterImplementor<?>, List<SqmParameter<?>>> sqmParamsByQueryParam;
+	private final IdentityHashMap<SqmParameter<?>, QueryParameterImplementor<?>> queryParamBySqmParam;
 
 	private Map<SqmParameter<?>,List<SqmParameter<?>>> expansions;
 
-	/**
-	 * @implSpec Constructor is defined as public for
-	 */
-	public DomainParameterXref(
-			Map<QueryParameterImplementor<?>, List<SqmParameter<?>>> sqmParamsByQueryParam,
-			Map<SqmParameter<?>, QueryParameterImplementor<?>> queryParamBySqmParam,
+	private DomainParameterXref(
+			LinkedHashMap<QueryParameterImplementor<?>, List<SqmParameter<?>>> sqmParamsByQueryParam,
+			IdentityHashMap<SqmParameter<?>, QueryParameterImplementor<?>> queryParamBySqmParam,
 			SqmStatement.ParameterResolutions parameterResolutions) {
 		this.sqmParamsByQueryParam = sqmParamsByQueryParam;
 		this.queryParamBySqmParam = queryParamBySqmParam;
@@ -133,9 +129,10 @@ public class DomainParameterXref {
 	}
 
 	public DomainParameterXref copy() {
+		//noinspection unchecked
 		return new DomainParameterXref(
 				sqmParamsByQueryParam,
-				new IdentityHashMap<>( queryParamBySqmParam ),
+				(IdentityHashMap<SqmParameter<?>, QueryParameterImplementor<?>>) queryParamBySqmParam.clone(),
 				parameterResolutions
 		);
 	}
@@ -193,7 +190,7 @@ public class DomainParameterXref {
 			QueryParameterImplementor<?> domainParam,
 			SqmParameter originalSqmParameter,
 			SqmParameter expansion) {
-		SqmTreeTransformationLogger.LOGGER.debugf( "Adding domain-param xref expansion : %s", originalSqmParameter );
+		assert !queryParamBySqmParam.isEmpty();
 		queryParamBySqmParam.put( expansion, domainParam );
 
 		if ( expansions == null ) {

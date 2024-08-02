@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.annotations.immutable;
 
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.query.sqm.internal.QuerySqmImpl;
+import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -30,7 +30,7 @@ public class ImmutableEntityUpdateQueryHandlingModeWarningTest extends BaseNonCo
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, QuerySqmImpl.class.getName() ) );
+			Logger.getMessageLogger( CoreMessageLogger.class, SqmUpdateStatement.class.getName() ) );
 
 	@Override
 	protected Class[] getAnnotatedClasses() {

@@ -149,6 +149,10 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 		return statement;
 	}
 
+	public void validateResultType(Class<?> resultType) {
+		SqmUtil.validateQueryReturnType( getQueryPart(), resultType );
+	}
+
 	@Override
 	public SqmQuerySource getQuerySource() {
 		return querySource;

@@ -20,4 +20,7 @@ public interface HqlInterpretation<R> {
 	ParameterMetadataImplementor getParameterMetadata();
 
 	DomainParameterXref getDomainParameterXref();
+
+	void validateResultType(Class<?> resultType);
+
 }

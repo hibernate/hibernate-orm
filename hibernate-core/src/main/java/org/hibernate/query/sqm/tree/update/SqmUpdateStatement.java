@@ -6,9 +6,17 @@
  */
 package org.hibernate.query.sqm.tree.update;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaCriteriaUpdate;
 import org.hibernate.query.criteria.JpaRoot;
@@ -20,7 +28,6 @@ import org.hibernate.query.sqm.tree.AbstractSqmRestrictedDmlStatement;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
-import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -32,6 +39,7 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.metamodel.SingularAttribute;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertAssignable;
 
@@ -41,6 +49,9 @@ import static org.hibernate.query.sqm.internal.TypecheckUtil.assertAssignable;
 public class SqmUpdateStatement<T>
 		extends AbstractSqmRestrictedDmlStatement<T>
 		implements SqmDeleteOrUpdateStatement<T>, JpaCriteriaUpdate<T> {
+
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SqmUpdateStatement.class );
+
 	private boolean versioned;
 	private SqmSetClause setClause;
 
@@ -108,6 +119,46 @@ public class SqmUpdateStatement<T>
 			statement.setClause = setClause.copy( context );
 		}
 		return statement;
+	}
+
+	@Override
+	public void validate(@Nullable String hql) {
+		verifyImmutableEntityUpdate( hql );
+		if ( getSetClause() == null || getSetClause().getAssignments().isEmpty() ) {
+			throw new IllegalArgumentException( "No assignments specified as part of UPDATE criteria" );
+		}
+		verifyUpdateTypesMatch();
+	}
+
+	private void verifyImmutableEntityUpdate(String hql) {
+		final SessionFactoryImplementor factory = nodeBuilder().getSessionFactory();
+		final EntityPersister persister =
+				factory.getMappingMetamodel().getEntityDescriptor( getTarget().getEntityName() );
+		if ( !persister.isMutable() ) {
+			final ImmutableEntityUpdateQueryHandlingMode mode =
+					factory.getSessionFactoryOptions().getImmutableEntityUpdateQueryHandlingMode();
+			final String querySpaces = Arrays.toString( persister.getQuerySpaces() );
+			switch ( mode ) {
+				case WARNING:
+					LOG.immutableEntityUpdateQuery( hql, querySpaces );
+					break;
+				case EXCEPTION:
+					throw new HibernateException( "The query attempts to update an immutable entity: " + querySpaces );
+				default:
+					throw new UnsupportedOperationException( "The " + mode + " is not supported" );
+			}
+		}
+	}
+
+	private void verifyUpdateTypesMatch() {
+		final SessionFactoryImplementor factory = nodeBuilder().getSessionFactory();
+		final List<SqmAssignment<?>> assignments = getSetClause().getAssignments();
+		for ( int i = 0; i < assignments.size(); i++ ) {
+			final SqmAssignment<?> assignment = assignments.get( i );
+			final SqmPath<?> targetPath = assignment.getTargetPath();
+			final SqmExpression<?> expression = assignment.getValue();
+			assertAssignable( null, targetPath, expression, factory );
+		}
 	}
 
 	public SqmSetClause getSetClause() {

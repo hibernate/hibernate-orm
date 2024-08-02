@@ -31,13 +31,13 @@ public class InterpretationException extends QueryException {
 
 	public InterpretationException(String query, String message) {
 		super(
-				"Error interpreting query [" + message + "] [" + query + "]",
+				"Error interpreting query [" + message + "]",
 				query
 		);
 	}
 	public InterpretationException(String query, Exception cause) {
 		super(
-				"Error interpreting query [" + cause.getMessage() + "] [" + query + "]",
+				"Error interpreting query [" + cause.getMessage() + "]",
 				query,
 				cause
 		);

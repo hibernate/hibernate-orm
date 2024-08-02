@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaConflictClause;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
@@ -22,6 +23,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
@@ -30,6 +32,8 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 import jakarta.persistence.criteria.Path;
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.query.sqm.internal.TypecheckUtil.assertAssignable;
 
 /**
  * Convenience base class for InsertSqmStatement implementations.
@@ -82,6 +86,45 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 				insertionTargetPaths.add( insertionTargetPath.copy( context ) );
 			}
 			return insertionTargetPaths;
+		}
+	}
+
+	protected void verifyInsertTypesMatch(
+			List<SqmPath<?>> insertionTargetPaths,
+			List<? extends SqmTypedNode<?>> expressions) {
+		final int size = insertionTargetPaths.size();
+		final int expressionsSize = expressions.size();
+		if ( size != expressionsSize ) {
+			throw new SemanticException(
+					String.format(
+							"Expected insert attribute count [%d] did not match Query selection count [%d]",
+							size,
+							expressionsSize
+					),
+					null,
+					null
+			);
+		}
+		final SessionFactoryImplementor factory = nodeBuilder().getSessionFactory();
+		for ( int i = 0; i < expressionsSize; i++ ) {
+			final SqmTypedNode<?> expression = expressions.get( i );
+			final SqmPath<?> targetPath = insertionTargetPaths.get(i);
+			assertAssignable( null, targetPath, expression, factory );
+//			if ( expression.getNodeJavaType() == null ) {
+//				continue;
+//			}
+//			if ( insertionTargetPaths.get( i ).getJavaTypeDescriptor() != expression.getNodeJavaType() ) {
+//				throw new SemanticException(
+//						String.format(
+//								"Expected insert attribute type [%s] did not match Query selection type [%s] at selection index [%d]",
+//								insertionTargetPaths.get( i ).getJavaTypeDescriptor().getTypeName(),
+//								expression.getNodeJavaType().getTypeName(),
+//								i
+//						),
+//						hqlString,
+//						null
+//				);
+//			}
 		}
 	}
 

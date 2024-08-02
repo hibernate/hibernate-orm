@@ -88,6 +88,10 @@ public interface QueryParameterBindings {
 	QueryKey.ParameterBindingsMemento NO_PARAMETER_BINDING_MEMENTO = new QueryKey.ParameterBindingsMemento(){
 	};
 
+	/**
+	 * @deprecated Use {@link org.hibernate.query.internal.QueryParameterBindingsImpl#EMPTY} instead
+	 */
+	@Deprecated(forRemoval = true, since = "6.6")
 	QueryParameterBindings NO_PARAM_BINDINGS = new QueryParameterBindings() {
 		@Override
 		public boolean isBound(QueryParameterImplementor parameter) {
@@ -123,7 +127,7 @@ public interface QueryParameterBindings {
 		}
 
 		@Override
-		public QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor persistenceContext) {
+		public QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor session) {
 			return NO_PARAMETER_BINDING_MEMENTO;
 		}
 	};

@@ -53,6 +53,7 @@ import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.internal.JpaMetamodelPopulationSetting;
 import org.hibernate.metamodel.internal.JpaStaticMetamodelPopulationSetting;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -83,7 +84,6 @@ import org.hibernate.metamodel.model.domain.internal.SetAttributeImpl;
 import org.hibernate.metamodel.model.domain.internal.SingularAttributeImpl;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -366,7 +366,7 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
-	public MetamodelImplementor getMetamodel() {
+	public MappingMetamodel getMetamodel() {
 		return metamodel;
 	}
 
@@ -703,12 +703,6 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public EntityPersister entityPersister(String entityName)
-				throws MappingException {
-			return createEntityPersister(entityName);
-		}
-
-		@Override
 		public EntityPersister locateEntityPersister(String entityName)
 				throws MappingException {
 			return createEntityPersister(entityName);
@@ -721,11 +715,6 @@ public abstract class MockSessionFactory
 
 		@Override
 		public CollectionPersister findCollectionDescriptor(String role) {
-			return createCollectionPersister(role);
-		}
-
-		@Override
-		public CollectionPersister collectionPersister(String role) {
 			return createCollectionPersister(role);
 		}
 

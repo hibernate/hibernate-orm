@@ -27,12 +27,13 @@ import org.hibernate.query.sqm.CastType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractClassJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Convenience base class for {@link BasicType} implementations.
@@ -50,7 +51,7 @@ public abstract class AbstractStandardBasicType<T>
 	private final ValueBinder<T> jdbcValueBinder;
 	private final ValueExtractor<T> jdbcValueExtractor;
 	private final JdbcLiteralFormatter<T> jdbcLiteralFormatter;
-	private final AbstractClassJavaType<T> javaTypeAsAbstractClassJavaType;
+	private final @Nullable Type typeForEqualsHashCode;
 	private final Class javaTypeClass;
 	private final MutabilityPlan<T> mutabilityPlan;
 	private final Comparator<T> javatypeComparator;
@@ -68,13 +69,7 @@ public abstract class AbstractStandardBasicType<T>
 		this.javaTypeClass = javaType.getJavaTypeClass();
 		this.mutabilityPlan = javaType.getMutabilityPlan();
 		this.javatypeComparator = javaType.getComparator();
-		//This is a dispatch optimisation to avoid megamorphic invocations on the most common type:
-		if ( javaType instanceof AbstractClassJavaType ) {
-			this.javaTypeAsAbstractClassJavaType = (AbstractClassJavaType) javaType;
-		}
-		else {
-			this.javaTypeAsAbstractClassJavaType = null;
-		}
+		this.typeForEqualsHashCode = javaType.useObjectEqualsHashCode() ? null : this;
 	}
 
 	@Override
@@ -98,13 +93,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	public T fromString(CharSequence string) {
-		final AbstractClassJavaType<T> type = this.javaTypeAsAbstractClassJavaType;
-		if ( type != null ) {
-			return type.fromString( string );
-		}
-		else {
-			return javaType.fromString( string );
-		}
+		return javaType.fromString( string );
 	}
 
 	protected MutabilityPlan<T> getMutabilityPlan() {
@@ -196,25 +185,19 @@ public abstract class AbstractStandardBasicType<T>
 		else if ( one == null || another == null ) {
 			return false;
 		}
+		else if ( typeForEqualsHashCode == null ) {
+			return one.equals( another );
+		}
 		else {
-			final AbstractClassJavaType<T> type = this.javaTypeAsAbstractClassJavaType;
-			if ( type != null ) {
-				//Optimize for the most common case: avoid the megamorphic call
-				return type.areEqual( (T) one, (T) another );
-			}
-			else {
-				return javaType.areEqual( (T) one, (T) another );
-			}
+			return javaType.areEqual( (T) one, (T) another );
 		}
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public int getHashCode(Object x) {
-		final AbstractClassJavaType<T> type = this.javaTypeAsAbstractClassJavaType;
-		if ( type != null ) {
-			//Optimize for the most common case: avoid the megamorphic call
-			return type.extractHashCode( (T) x );
+		if ( typeForEqualsHashCode == null ) {
+			return x.hashCode();
 		}
 		else {
 			return javaType.extractHashCode( (T) x );
@@ -224,6 +207,11 @@ public abstract class AbstractStandardBasicType<T>
 	@Override
 	public final int getHashCode(Object x, SessionFactoryImplementor factory) {
 		return getHashCode( x );
+	}
+
+	@Override
+	public @Nullable Type getTypeForEqualsHashCode() {
+		return typeForEqualsHashCode;
 	}
 
 	@Override

@@ -36,6 +36,11 @@ public class DoubleJavaType extends AbstractClassJavaType<Double> implements
 	}
 
 	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
 	public String toString(Double value) {
 		return value == null ? null : value.toString();
 	}

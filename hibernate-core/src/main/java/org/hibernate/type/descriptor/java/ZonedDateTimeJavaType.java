@@ -63,6 +63,11 @@ public class ZonedDateTimeJavaType extends AbstractTemporalJavaType<ZonedDateTim
 	}
 
 	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
 	public String toString(ZonedDateTime value) {
 		return ISO_ZONED_DATE_TIME.format( value );
 	}

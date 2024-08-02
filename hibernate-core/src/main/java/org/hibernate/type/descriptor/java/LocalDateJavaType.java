@@ -61,6 +61,11 @@ public class LocalDateJavaType extends AbstractTemporalJavaType<LocalDate> {
 	}
 
 	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
 	public String toString(LocalDate value) {
 		return DateTimeFormatter.ISO_LOCAL_DATE.format( value );
 	}

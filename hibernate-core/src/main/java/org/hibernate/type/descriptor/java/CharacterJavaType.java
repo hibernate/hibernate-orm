@@ -26,6 +26,11 @@ public class CharacterJavaType extends AbstractClassJavaType<Character> implemen
 	}
 
 	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
 	public String toString(Character value) {
 		return value.toString();
 	}

@@ -31,6 +31,11 @@ public class LocaleJavaType extends AbstractClassJavaType<Locale> {
 		super( Locale.class, ImmutableMutabilityPlan.instance(), LocaleComparator.INSTANCE );
 	}
 
+	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
 	public String toString(Locale value) {
 		return value.toString();
 	}

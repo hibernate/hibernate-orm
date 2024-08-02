@@ -26,13 +26,15 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import jakarta.persistence.metamodel.Metamodel;
+
 /**
  * Access to information about the runtime relational O/R mapping model.
  *
  * @author Steve Ebersole
  */
 @Incubating
-public interface MappingMetamodel {
+public interface MappingMetamodel extends Metamodel {
 	/**
 	 * The {@link TypeConfiguration} this metamodel is associated with
 	 */

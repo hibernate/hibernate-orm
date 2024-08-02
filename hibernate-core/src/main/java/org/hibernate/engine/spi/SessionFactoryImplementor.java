@@ -23,7 +23,6 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FastSessionServices;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.BindableType;
@@ -200,12 +199,6 @@ public interface SessionFactoryImplementor
 	 */
 	@Deprecated(since = "6.2")
 	IdentifierGenerator getIdentifierGenerator(String rootEntityName);
-
-	/**
-	 * @deprecated no longer for internal use, use {@link #getMappingMetamodel()} or {@link #getJpaMetamodel()}
-	 */
-	@Override @Deprecated
-	MetamodelImplementor getMetamodel();
 
 	/**
 	 * @deprecated Use {@link #getMappingMetamodel()}.{@link MappingMetamodelImplementor#resolveParameterBindType(Object)}

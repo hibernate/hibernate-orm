@@ -40,7 +40,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
-import org.hibernate.sql.results.internal.RowTransformerDatabaseSnapshotImpl;
+import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
@@ -176,7 +176,7 @@ class DatabaseSnapshotExecutor {
 				jdbcSelect,
 				jdbcParameterBindings,
 				new BaseExecutionContext( session ),
-				RowTransformerDatabaseSnapshotImpl.instance(),
+				RowTransformerArrayImpl.instance(),
 				null,
 				ListResultsConsumer.UniqueSemantic.FILTER,
 				1

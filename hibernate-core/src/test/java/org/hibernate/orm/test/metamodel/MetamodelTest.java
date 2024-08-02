@@ -36,7 +36,7 @@ public class MetamodelTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-12906")
 	public void testGetAllCollectionRoles(EntityManagerFactoryScope scope) {
-		String[] collectionRoles = ( (SessionFactoryImplementor) scope.getEntityManagerFactory() ).getMetamodel()
+		String[] collectionRoles = ( (SessionFactoryImplementor) scope.getEntityManagerFactory() ).getMappingMetamodel()
 				.getAllCollectionRoles();
 		Arrays.sort( collectionRoles );
 		assertArrayEquals( collectionRoles, new String[] {
@@ -58,7 +58,7 @@ public class MetamodelTest {
 
 	@Test
 	public void testEntityNames(EntityManagerFactoryScope scope) {
-		String[] entityNames = ( (SessionFactoryImplementor) scope.getEntityManagerFactory() ).getMetamodel()
+		String[] entityNames = ( (SessionFactoryImplementor) scope.getEntityManagerFactory() ).getMappingMetamodel()
 				.getAllEntityNames();
 		Arrays.sort( entityNames );
 		assertArrayEquals(

@@ -28,7 +28,6 @@ import org.hibernate.cache.jcache.ConfigSettings;
 import org.hibernate.cache.jcache.MissingCacheStrategy;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
-import org.hibernate.cache.spi.SecondLevelCacheLogger;
 import org.hibernate.cache.spi.support.DomainDataStorageAccess;
 import org.hibernate.cache.spi.support.RegionFactoryTemplate;
 import org.hibernate.cache.spi.support.RegionNameQualifier;
@@ -204,20 +203,26 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 		final CachingProvider cachingProvider = getCachingProvider( properties );
 		final CacheManager cacheManager;
 		final URI cacheManagerUri = getUri( settings, properties );
+		final ClassLoader classLoader = getClassLoader( cachingProvider, settings );
 		if ( cacheManagerUri != null ) {
-			cacheManager = cachingProvider.getCacheManager( cacheManagerUri, getClassLoader( cachingProvider ) );
+			cacheManager = cachingProvider.getCacheManager( cacheManagerUri, classLoader );
 		}
 		else {
-			cacheManager = cachingProvider.getCacheManager( cachingProvider.getDefaultURI(), getClassLoader( cachingProvider ) );
+			cacheManager = cachingProvider.getCacheManager( cachingProvider.getDefaultURI(), classLoader );
 		}
 		return cacheManager;
 	}
 
-	protected ClassLoader getClassLoader(CachingProvider cachingProvider) {
-		// todo (5.3) : shouldn't this use Hibernate's AggregatedClassLoader?
-		return cachingProvider.getDefaultClassLoader();
+	protected ClassLoader getClassLoader(CachingProvider cachingProvider, SessionFactoryOptions settings) {
+		final ClassLoaderService classLoaderService = settings.getServiceRegistry()
+				.getService( org.hibernate.boot.registry.classloading.spi.ClassLoaderService.class );
+		if ( classLoaderService == null ) {
+			return cachingProvider.getDefaultClassLoader();
+		}
+		else {
+			return classLoaderService.workWithClassLoader(classLoader -> classLoader);
+		}
 	}
-
 	protected URI getUri(SessionFactoryOptions settings, Map<String,Object> properties) {
 		String cacheManagerUri = getProp( properties, ConfigSettings.CONFIG_URI );
 		if ( cacheManagerUri == null ) {

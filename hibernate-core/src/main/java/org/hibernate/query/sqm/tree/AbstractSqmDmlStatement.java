@@ -25,6 +25,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
 import jakarta.persistence.criteria.AbstractQuery;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Steve Ebersole
@@ -71,6 +72,8 @@ public abstract class AbstractSqmDmlStatement<E>
 			}
 		}
 	}
+
+	public abstract void validate(@Nullable String hql);
 
 	@Override
 	public Collection<SqmCteStatement<?>> getCteStatements() {

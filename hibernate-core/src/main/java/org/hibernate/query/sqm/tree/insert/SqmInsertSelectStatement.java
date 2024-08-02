@@ -25,10 +25,12 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Path;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Steve Ebersole
@@ -88,6 +90,17 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 						selectQueryPart.copy( context )
 				)
 		);
+	}
+
+	@Override
+	public void validate(@Nullable String hql) {
+		final List<SqmPath<?>> insertionTargetPaths = getInsertionTargetPaths();
+		final List<SqmSelectableNode<?>> selections = getSelectQueryPart()
+				.getFirstQuerySpec()
+				.getSelectClause()
+				.getSelectionItems();
+		verifyInsertTypesMatch( insertionTargetPaths, selections );
+		getSelectQueryPart().validateQueryStructureAndFetchOwners();
 	}
 
 	@Override

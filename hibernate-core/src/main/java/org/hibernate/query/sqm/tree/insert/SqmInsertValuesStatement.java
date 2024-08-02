@@ -113,6 +113,14 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 		);
 	}
 
+	@Override
+	public void validate(@Nullable String hql) {
+		final List<SqmPath<?>> insertionTargetPaths = getInsertionTargetPaths();
+		for ( SqmValues sqmValues : getValuesList() ) {
+			verifyInsertTypesMatch( insertionTargetPaths, sqmValues.getExpressions() );
+		}
+	}
+
 	public List<SqmValues> getValuesList() {
 		return valuesList == null
 				? Collections.emptyList()

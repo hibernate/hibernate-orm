@@ -147,7 +147,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 		final DomainParameterXref domainParameterXref;
 
 		if ( sqmStatement.getSqmParameters().isEmpty() ) {
-			domainParameterXref = DomainParameterXref.empty();
+			domainParameterXref = DomainParameterXref.EMPTY;
 			parameterMetadata = ParameterMetadataImpl.EMPTY;
 		}
 		else {

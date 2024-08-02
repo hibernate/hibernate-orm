@@ -32,6 +32,11 @@ public class ByteJavaType extends AbstractClassJavaType<Byte>
 	}
 
 	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
 	public String toString(Byte value) {
 		return value == null ? null : value.toString();
 	}

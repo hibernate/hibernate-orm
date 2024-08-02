@@ -22,6 +22,11 @@ public class ObjectJavaType extends AbstractClassJavaType<Object> {
 	}
 
 	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
 	public <X> X unwrap(Object value, Class<X> type, WrapperOptions options) {
 		//noinspection unchecked
 		return (X) value;

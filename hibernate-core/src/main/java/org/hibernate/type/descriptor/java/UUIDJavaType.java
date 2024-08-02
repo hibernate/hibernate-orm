@@ -34,6 +34,11 @@ public class UUIDJavaType extends AbstractClassJavaType<UUID> {
 		return context.getJdbcType( context.getPreferredSqlTypeCodeForUuid() );
 	}
 
+	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
 	public String toString(UUID value) {
 		return ToStringTransformer.INSTANCE.transform( value );
 	}

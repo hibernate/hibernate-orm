@@ -32,6 +32,11 @@ public class IntegerJavaType extends AbstractClassJavaType<Integer>
 	}
 
 	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
 	public String toString(Integer value) {
 		return value == null ? null : value.toString();
 	}

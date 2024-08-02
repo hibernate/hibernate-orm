@@ -70,6 +70,11 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 	}
 
 	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
 	public String toString(Instant value) {
 		return DateTimeFormatter.ISO_INSTANT.format( value );
 	}

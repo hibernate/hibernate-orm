@@ -46,7 +46,7 @@ public class CustomTypeConverterTest {
 			TypeConfiguration bootTypeConfiguration) {
 		try ( final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) metadataBuilder.build().buildSessionFactory()) {
 			assertThat(
-					sessionFactory.getMetamodel().getTypeConfiguration(),
+					sessionFactory.getMappingMetamodel().getTypeConfiguration(),
 					sameInstance( bootTypeConfiguration )
 			);
 

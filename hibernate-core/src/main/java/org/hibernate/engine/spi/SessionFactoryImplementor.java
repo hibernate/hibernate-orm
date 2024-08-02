@@ -20,7 +20,6 @@ import org.hibernate.event.spi.EventEngine;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.FastSessionServices;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
@@ -180,12 +179,4 @@ public interface SessionFactoryImplementor
 	 */
 	String bestGuessEntityName(Object object);
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Deprecations
-
-	/**
-	 * @deprecated no longer for internal use, use {@link #getMappingMetamodel()} or {@link #getJpaMetamodel()}
-	 */
-	@Override @Deprecated
-	MetamodelImplementor getMetamodel();
 }

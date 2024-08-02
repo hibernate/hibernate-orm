@@ -66,7 +66,7 @@ public class CacheKeyEmbeddedIdEnanchedTest  {
 
 	private void testId(SessionFactoryScope scope, CacheKeysFactory cacheKeysFactory, String entityName, Object id) throws Exception {
 		SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final EntityPersister persister = sessionFactory.getMetamodel().entityPersister( entityName );
+		final EntityPersister persister = sessionFactory.getMappingMetamodel().findEntityDescriptor( entityName );
 		final Object key = cacheKeysFactory.createEntityKey(
 				id,
 				persister,

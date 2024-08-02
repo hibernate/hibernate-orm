@@ -31,8 +31,8 @@ import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.InitializerProducer;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
+import org.hibernate.sql.results.graph.embeddable.AggregateEmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResult;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -44,15 +44,15 @@ import org.hibernate.type.spi.TypeConfiguration;
  * uses {@link org.hibernate.sql.results.graph.DomainResultCreationState#visitNestedFetches(FetchParent)}
  * for creating the fetches for the attributes of the embeddable.
  */
-public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent implements EmbeddableResultGraphNode,
+public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent implements AggregateEmbeddableResultGraphNode,
 		DomainResult<T>,
 		EmbeddableResult<T>,
 		InitializerProducer<AggregateEmbeddableResultImpl<T>> {
 	private final String resultVariable;
 	private final boolean containsAnyNonScalars;
-	private final SqlSelection aggregateSelection;
 	private final EmbeddableMappingType fetchContainer;
 	private final BasicFetch<?> discriminatorFetch;
+	private final int[] aggregateValuesArrayPositions;
 
 	public AggregateEmbeddableResultImpl(
 			NavigablePath navigablePath,
@@ -99,7 +99,7 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent implem
 		final TypeConfiguration typeConfiguration = sqlAstCreationState.getCreationContext()
 				.getSessionFactory()
 				.getTypeConfiguration();
-		this.aggregateSelection = sqlExpressionResolver.resolveSqlSelection(
+		final SqlSelection aggregateSelection = sqlExpressionResolver.resolveSqlSelection(
 				expression,
 				// Using the Object[] type here, so that a different JDBC extractor is chosen
 				typeConfiguration.getJavaTypeRegistry().resolveDescriptor( Object[].class ),
@@ -107,8 +107,14 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent implem
 				typeConfiguration
 		);
 		this.discriminatorFetch = creationState.visitEmbeddableDiscriminatorFetch( this, true );
+		this.aggregateValuesArrayPositions = AggregateEmbeddableResultGraphNode.determineAggregateValuesArrayPositions( null, aggregateSelection );
 		resetFetches( creationState.visitNestedFetches( this ) );
 		this.containsAnyNonScalars = determineIfContainedAnyScalars( getFetches() );
+	}
+
+	@Override
+	public int[] getAggregateValuesArrayPositions() {
+		return aggregateValuesArrayPositions;
 	}
 
 	private static boolean determineIfContainedAnyScalars(ImmutableFetchList fetches) {
@@ -174,8 +180,7 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent implem
 				discriminatorFetch,
 				parent,
 				creationState,
-				true,
-				aggregateSelection
+				true
 		);
 	}
 }

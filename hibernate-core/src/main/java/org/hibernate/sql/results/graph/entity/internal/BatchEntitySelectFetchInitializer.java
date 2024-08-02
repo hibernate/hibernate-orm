@@ -13,6 +13,7 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -33,10 +34,12 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 	protected final Type referencedModelPartType;
 
 	public static class BatchEntitySelectFetchInitializerData extends AbstractBatchEntitySelectFetchInitializerData {
-		private Map<EntityKey, List<ParentInfo>> toBatchLoad;
+		private HashMap<EntityKey, List<ParentInfo>> toBatchLoad;
 
-		public BatchEntitySelectFetchInitializerData(RowProcessingState rowProcessingState) {
-			super( rowProcessingState );
+		public BatchEntitySelectFetchInitializerData(
+				BatchEntitySelectFetchInitializer initializer,
+				RowProcessingState rowProcessingState) {
+			super( initializer, rowProcessingState );
 		}
 	}
 
@@ -57,7 +60,7 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 
 	@Override
 	protected InitializerData createInitializerData(RowProcessingState rowProcessingState) {
-		return new BatchEntitySelectFetchInitializerData( rowProcessingState );
+		return new BatchEntitySelectFetchInitializerData( this, rowProcessingState );
 	}
 
 	@Override
@@ -67,10 +70,11 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 		final AttributeMapping parentAttribute;
 		if ( owningData.getState() != State.INITIALIZED
 				&& ( parentAttribute = parentAttributes[owningEntityInitializer.getConcreteDescriptor( owningData ).getSubclassId()] ) != null ) {
-			if ( data.toBatchLoad == null ) {
-				data.toBatchLoad = new HashMap<>();
+			HashMap<EntityKey, List<ParentInfo>> toBatchLoad = data.toBatchLoad;
+			if ( toBatchLoad == null ) {
+				toBatchLoad = data.toBatchLoad = new HashMap<>();
 			}
-			data.toBatchLoad.computeIfAbsent( data.entityKey, key -> new ArrayList<>() ).add(
+			toBatchLoad.computeIfAbsent( data.entityKey, key -> new ArrayList<>() ).add(
 					new ParentInfo(
 							owningEntityInitializer.getTargetInstance( owningData ),
 							parentAttribute.getStateArrayPosition()
@@ -92,26 +96,28 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 	@Override
 	public void endLoading(BatchEntitySelectFetchInitializerData data) {
 		super.endLoading( data );
-		if ( data.toBatchLoad != null ) {
-			data.toBatchLoad.forEach(
-					(entityKey, parentInfos) -> {
-						final SharedSessionContractImplementor session = data.getRowProcessingState().getSession();
-						final Object instance = loadInstance( entityKey, toOneMapping, affectedByFilter, session );
-						for ( ParentInfo parentInfo : parentInfos ) {
-							final Object parentInstance = parentInfo.parentInstance;
-							final EntityEntry entry = session.getPersistenceContext().getEntry( parentInstance );
-							referencedModelPartSetter.set( parentInstance, instance );
-							final Object[] loadedState = entry.getLoadedState();
-							if ( loadedState != null ) {
-								loadedState[parentInfo.propertyIndex] = referencedModelPartType.deepCopy(
-										instance,
-										session.getFactory()
-								);
-							}
-						}
+		final HashMap<EntityKey, List<ParentInfo>> toBatchLoad = data.toBatchLoad;
+		if ( toBatchLoad != null ) {
+			final SharedSessionContractImplementor session = data.getRowProcessingState().getSession();
+			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+			for ( Map.Entry<EntityKey, List<ParentInfo>> entry : toBatchLoad.entrySet() ) {
+				final EntityKey entityKey = entry.getKey();
+				final List<ParentInfo> parentInfos = entry.getValue();
+				final Object instance = loadInstance( entityKey, toOneMapping, affectedByFilter, session );
+				for ( ParentInfo parentInfo : parentInfos ) {
+					final Object parentInstance = parentInfo.parentInstance;
+					final EntityEntry entityEntry = persistenceContext.getEntry( parentInstance );
+					referencedModelPartSetter.set( parentInstance, instance );
+					final Object[] loadedState = entityEntry.getLoadedState();
+					if ( loadedState != null ) {
+						loadedState[parentInfo.propertyIndex] = referencedModelPartType.deepCopy(
+								instance,
+								session.getFactory()
+						);
 					}
-			);
-			data.toBatchLoad.clear();
+				}
+			}
+			data.toBatchLoad = null;
 		}
 	}
 

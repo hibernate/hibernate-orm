@@ -41,7 +41,6 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 public class DiscriminatedEntityInitializer
 		extends AbstractInitializer<DiscriminatedEntityInitializer.DiscriminatedEntityInitializerData>
 		implements EntityInitializer<DiscriminatedEntityInitializer.DiscriminatedEntityInitializerData> {
-	private static final String CONCRETE_NAME = DiscriminatedEntityInitializer.class.getSimpleName();
 
 	protected final InitializerParent<?> parent;
 	private final NavigablePath navigablePath;
@@ -52,6 +51,7 @@ public class DiscriminatedEntityInitializer
 	private final DiscriminatedAssociationModelPart fetchedPart;
 	private final boolean eager;
 	private final boolean resultInitializer;
+	private final boolean keyIsEager;
 
 	public static class DiscriminatedEntityInitializerData extends InitializerData {
 		protected EntityPersister concreteDescriptor;
@@ -80,6 +80,9 @@ public class DiscriminatedEntityInitializer
 		this.keyValueAssembler = keyFetch.createAssembler( this, creationState );
 		this.eager = eager;
 		this.resultInitializer = resultInitializer;
+		this.keyIsEager = keyValueAssembler != null
+				&& keyValueAssembler.getInitializer() != null
+				&& keyValueAssembler.getInitializer().isEager();
 	}
 
 	@Override
@@ -109,7 +112,8 @@ public class DiscriminatedEntityInitializer
 
 		// resolve the key and the discriminator, and then use those to load the indicated entity
 
-		final Object discriminatorValue = discriminatorValueAssembler.assemble( data.getRowProcessingState() );
+		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		final Object discriminatorValue = discriminatorValueAssembler.assemble( rowProcessingState );
 
 		if ( discriminatorValue == null ) {
 			data.setState( State.MISSING );
@@ -117,21 +121,27 @@ public class DiscriminatedEntityInitializer
 			data.entityIdentifier = null;
 			data.setInstance( null );
 			// null association
-			assert keyValueAssembler.assemble( data.getRowProcessingState() ) == null;
+			assert keyValueAssembler.assemble( rowProcessingState ) == null;
 		}
 		else {
 			data.setState( State.KEY_RESOLVED );
 			data.concreteDescriptor = fetchedPart.resolveDiscriminatorValue( discriminatorValue ).getEntityPersister();
-			data.entityIdentifier = keyValueAssembler.assemble( data.getRowProcessingState() );
+			data.entityIdentifier = keyValueAssembler.assemble( rowProcessingState );
 		}
+	}
+
+	@Override
+	public void resolveState(DiscriminatedEntityInitializerData data) {
+		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		discriminatorValueAssembler.resolveState( rowProcessingState );
+		keyValueAssembler.resolveState( rowProcessingState );
 	}
 
 	@Override
 	public void resolveFromPreviousRow(DiscriminatedEntityInitializerData data) {
 		if ( data.getState() == State.UNINITIALIZED ) {
-			if ( data.entityIdentifier == null ) {
+			if ( data.getInstance() == null ) {
 				data.setState( State.MISSING );
-				data.setInstance( null );
 			}
 			else {
 				final Initializer<?> initializer = keyValueAssembler.getInitializer();
@@ -157,9 +167,10 @@ public class DiscriminatedEntityInitializer
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
 		if ( holder != null ) {
-			data.setInstance( holder.getEntity() );
+			final Object instance = holder.getEntity();
+			data.setInstance( instance );
 			if ( holder.getEntityInitializer() == null ) {
-				if ( data.getInstance() != null && Hibernate.isInitialized( data.getInstance() ) ) {
+				if ( instance != null && Hibernate.isInitialized( instance ) ) {
 					return;
 				}
 			}
@@ -167,7 +178,7 @@ public class DiscriminatedEntityInitializer
 				// the entity is already being loaded elsewhere
 				return;
 			}
-			else if ( data.getInstance() == null ) {
+			else if ( instance == null ) {
 				// todo: maybe mark this as resolved instead?
 				assert holder.getProxy() == null : "How to handle this case?";
 				return;
@@ -193,28 +204,35 @@ public class DiscriminatedEntityInitializer
 		}
 		else {
 			final RowProcessingState rowProcessingState = data.getRowProcessingState();
-			final SharedSessionContractImplementor session = rowProcessingState.getSession();
-			final LazyInitializer lazyInitializer = extractLazyInitializer( data.getInstance() );
+			final LazyInitializer lazyInitializer = extractLazyInitializer( instance );
 			if ( lazyInitializer == null ) {
 				data.setState( State.INITIALIZED );
-				data.concreteDescriptor = session.getEntityPersister( null, instance );
-				data.entityIdentifier = data.concreteDescriptor.getIdentifier( instance, session );
+				if ( keyIsEager ) {
+					final SharedSessionContractImplementor session = rowProcessingState.getSession();
+					data.concreteDescriptor = session.getEntityPersister( null, instance );
+					data.entityIdentifier = data.concreteDescriptor.getIdentifier( instance, session );
+				}
 			}
 			else if ( lazyInitializer.isUninitialized() ) {
 				data.setState( eager ? State.RESOLVED : State.INITIALIZED );
-				// Read the discriminator from the result set if necessary
-				final Object discriminatorValue = discriminatorValueAssembler.assemble( rowProcessingState );
-				data.concreteDescriptor = fetchedPart.resolveDiscriminatorValue( discriminatorValue ).getEntityPersister();
-				data.entityIdentifier = lazyInitializer.getIdentifier();
+				if ( keyIsEager ) {
+					// Read the discriminator from the result set if necessary
+					final Object discriminatorValue = discriminatorValueAssembler.assemble( rowProcessingState );
+					data.concreteDescriptor = fetchedPart.resolveDiscriminatorValue( discriminatorValue ).getEntityPersister();
+					data.entityIdentifier = lazyInitializer.getIdentifier();
+				}
 			}
 			else {
 				data.setState( State.INITIALIZED );
-				data.concreteDescriptor = session.getEntityPersister( null, lazyInitializer.getImplementation() );
-				data.entityIdentifier = lazyInitializer.getIdentifier();
+				if ( keyIsEager ) {
+					data.concreteDescriptor = rowProcessingState.getSession().getEntityPersister( null, lazyInitializer.getImplementation() );
+					data.entityIdentifier = lazyInitializer.getIdentifier();
+				}
 			}
 			data.setInstance( instance );
-			final Initializer<?> initializer = keyValueAssembler.getInitializer();
-			if ( initializer != null ) {
+			if ( keyIsEager ) {
+				final Initializer<?> initializer = keyValueAssembler.getInitializer();
+				assert initializer != null;
 				initializer.resolveInstance( data.entityIdentifier, rowProcessingState );
 			}
 			else if ( rowProcessingState.needsResolveState() ) {
@@ -278,11 +296,6 @@ public class DiscriminatedEntityInitializer
 	}
 
 	@Override
-	public Object getEntityInstance(DiscriminatedEntityInitializerData data) {
-		return data.getInstance();
-	}
-
-	@Override
 	public EntityPersister getConcreteDescriptor(DiscriminatedEntityInitializerData data) {
 		return data.concreteDescriptor;
 	}
@@ -295,6 +308,16 @@ public class DiscriminatedEntityInitializer
 	@Override
 	public boolean isPartOfKey() {
 		return isPartOfKey;
+	}
+
+	@Override
+	public boolean isEager() {
+		return eager || keyIsEager;
+	}
+
+	@Override
+	public boolean hasEagerSubInitializers() {
+		return keyIsEager;
 	}
 
 	@Override

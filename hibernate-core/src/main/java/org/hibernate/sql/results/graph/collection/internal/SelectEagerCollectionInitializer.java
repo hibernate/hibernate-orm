@@ -20,7 +20,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * @author Andrea Boriero
  */
-public class SelectEagerCollectionInitializer extends AbstractCollectionInitializer<AbstractCollectionInitializer.CollectionInitializerData> {
+public class SelectEagerCollectionInitializer extends AbstractNonJoinCollectionInitializer<AbstractCollectionInitializer.CollectionInitializerData> {
 
 	public SelectEagerCollectionInitializer(
 			NavigablePath fetchedPath,
@@ -44,17 +44,24 @@ public class SelectEagerCollectionInitializer extends AbstractCollectionInitiali
 	@Override
 	public void initializeInstanceFromParent(Object parentInstance, CollectionInitializerData data) {
 		final Object instance = getInitializedPart().getValue( parentInstance );
-		if ( collectionAttributeMapping.getCollectionDescriptor()
-				.getCollectionSemantics()
-				.getCollectionClassification() == CollectionClassification.ARRAY ) {
-			data.setCollectionInstance( data.getRowProcessingState().getSession().getPersistenceContextInternal()
-					.getCollectionHolder( instance ) );
+		if ( instance == null ) {
+			setMissing( data );
 		}
 		else {
-			data.setCollectionInstance( (PersistentCollection<?>) instance );
+			final PersistentCollection<?> collection;
+			if ( collectionAttributeMapping.getCollectionDescriptor()
+					.getCollectionSemantics()
+					.getCollectionClassification() == CollectionClassification.ARRAY ) {
+				collection = data.getRowProcessingState().getSession().getPersistenceContextInternal()
+						.getCollectionHolder( instance );
+			}
+			else {
+				collection = (PersistentCollection<?>) instance;
+			}
+			data.setState( State.INITIALIZED );
+			data.setCollectionInstance( collection );
+			collection.forceInitialization();
 		}
-		data.setState( State.INITIALIZED );
-		data.getCollectionInstance().forceInitialization();
 	}
 
 	@Override

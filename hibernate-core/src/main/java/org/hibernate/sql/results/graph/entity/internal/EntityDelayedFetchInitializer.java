@@ -54,6 +54,7 @@ public class EntityDelayedFetchInitializer
 	private final boolean selectByUniqueKey;
 	private final DomainResultAssembler<?> identifierAssembler;
 	private final @Nullable BasicResultAssembler<?> discriminatorAssembler;
+	private final boolean keyIsEager;
 
 	public static class EntityDelayedFetchInitializerData extends InitializerData {
 		// per-row state
@@ -85,6 +86,9 @@ public class EntityDelayedFetchInitializer
 		this.discriminatorAssembler = discriminatorResult == null
 				? null
 				: (BasicResultAssembler<?>) discriminatorResult.createResultAssembler( this, creationState );
+		this.keyIsEager = identifierAssembler != null
+				&& identifierAssembler.getInitializer() != null
+				&& identifierAssembler.getInitializer().isEager();
 	}
 
 	@Override
@@ -105,16 +109,15 @@ public class EntityDelayedFetchInitializer
 	@Override
 	public void resolveFromPreviousRow(EntityDelayedFetchInitializerData data) {
 		if ( data.getState() == State.UNINITIALIZED ) {
-			if ( data.entityIdentifier == null ) {
+			if ( data.getInstance() == null ) {
 				data.setState( State.MISSING );
-				data.setInstance( null );
 			}
 			else {
 				final Initializer<?> initializer = identifierAssembler.getInitializer();
 				if ( initializer != null ) {
 					initializer.resolveFromPreviousRow( data.getRowProcessingState() );
 				}
-				data.setState( State.RESOLVED );
+				data.setState( State.INITIALIZED );
 			}
 		}
 	}
@@ -125,7 +128,8 @@ public class EntityDelayedFetchInitializer
 			return;
 		}
 
-		data.setState( State.RESOLVED );
+		// This initializer is done initializing, since this is only invoked for delayed or select initializers
+		data.setState( State.INITIALIZED );
 
 		final RowProcessingState rowProcessingState = data.getRowProcessingState();
 		data.entityIdentifier = identifierAssembler.assemble( rowProcessingState );
@@ -137,7 +141,7 @@ public class EntityDelayedFetchInitializer
 		else {
 			final SharedSessionContractImplementor session = rowProcessingState.getSession();
 
-			final EntityPersister entityPersister = referencedModelPart.getEntityMappingType().getEntityPersister();
+			final EntityPersister entityPersister = getEntityDescriptor();
 			final EntityPersister concreteDescriptor;
 			if ( discriminatorAssembler != null ) {
 				concreteDescriptor = determineConcreteEntityDescriptor(
@@ -177,55 +181,58 @@ public class EntityDelayedFetchInitializer
 						uniqueKeyPropertyType,
 						session.getFactory()
 				);
-				data.setInstance( persistenceContext.getEntity( euk ) );
-				if ( data.getInstance() == null ) {
+				Object instance = persistenceContext.getEntity( euk );
+				if ( instance == null ) {
 					// For unique-key mappings, we always use bytecode-laziness if possible,
 					// because we can't generate a proxy based on the unique key yet
 					if ( referencedModelPart.isLazy() ) {
-						data.setInstance( LazyPropertyInitializer.UNFETCHED_PROPERTY );
+						instance = LazyPropertyInitializer.UNFETCHED_PROPERTY;
 					}
 					else {
-						data.setInstance( concreteDescriptor.loadByUniqueKey(
+						instance = concreteDescriptor.loadByUniqueKey(
 								uniqueKeyPropertyName,
 								data.entityIdentifier,
 								session
-						) );
+						);
 
 						// If the entity was not in the Persistence Context, but was found now,
 						// add it to the Persistence Context
-						if ( data.getInstance() != null ) {
-							persistenceContext.addEntity( euk, data.getInstance() );
+						if ( instance != null ) {
+							persistenceContext.addEntity( euk, instance );
 						}
 					}
 				}
-				if ( data.getInstance() != null ) {
-					data.setInstance( persistenceContext.proxyFor( data.getInstance() ) );
+				if ( instance != null ) {
+					instance = persistenceContext.proxyFor( instance );
 				}
+				data.setInstance( instance );
 			}
 			else {
 				final EntityKey entityKey = new EntityKey( data.entityIdentifier, concreteDescriptor );
 				final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
+				final Object instance;
 				if ( holder != null && holder.getEntity() != null ) {
-					data.setInstance( persistenceContext.proxyFor( holder, concreteDescriptor ) );
+					instance = persistenceContext.proxyFor( holder, concreteDescriptor );
 				}
 				// For primary key based mappings we only use bytecode-laziness if the attribute is optional,
 				// because the non-optionality implies that it is safe to have a proxy
 				else if ( referencedModelPart.isOptional() && referencedModelPart.isLazy() ) {
-					data.setInstance( LazyPropertyInitializer.UNFETCHED_PROPERTY );
+					instance = LazyPropertyInitializer.UNFETCHED_PROPERTY;
 				}
 				else {
-					data.setInstance( session.internalLoad(
+					instance = session.internalLoad(
 							concreteDescriptor.getEntityName(),
 							data.entityIdentifier,
 							false,
 							false
-					) );
+					);
 
-					final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( data.getInstance() );
+					final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( instance );
 					if ( lazyInitializer != null ) {
 						lazyInitializer.setUnwrap( referencedModelPart.isUnwrapProxy() && concreteDescriptor.isInstrumented() );
 					}
 				}
+				data.setInstance( instance );
 			}
 		}
 	}
@@ -238,14 +245,14 @@ public class EntityDelayedFetchInitializer
 			data.setInstance( null );
 		}
 		else {
-			data.setState( State.RESOLVED );
-			final RowProcessingState rowProcessingState = data.getRowProcessingState();
-			final SharedSessionContractImplementor session = rowProcessingState.getSession();
-			final EntityPersister concreteDescriptor = referencedModelPart.getEntityMappingType().getEntityPersister();
-			data.entityIdentifier = concreteDescriptor.getIdentifier( instance, session );
+			// This initializer is done initializing, since this is only invoked for delayed or select initializers
+			data.setState( State.INITIALIZED );
 			data.setInstance( instance );
-			final Initializer<?> initializer = identifierAssembler.getInitializer();
-			if ( initializer != null ) {
+			final RowProcessingState rowProcessingState = data.getRowProcessingState();
+			if ( keyIsEager ) {
+				data.entityIdentifier = getEntityDescriptor().getIdentifier( instance, rowProcessingState.getSession() );
+				final Initializer<?> initializer = identifierAssembler.getInitializer();
+				assert initializer != null;
 				initializer.resolveInstance( data.entityIdentifier, rowProcessingState );
 			}
 			else if ( rowProcessingState.needsResolveState() ) {
@@ -269,11 +276,6 @@ public class EntityDelayedFetchInitializer
 	}
 
 	@Override
-	public Object getEntityInstance(EntityDelayedFetchInitializerData data) {
-		return data.getInstance();
-	}
-
-	@Override
 	public @Nullable InitializerParent<?> getParent() {
 		return parent;
 	}
@@ -284,6 +286,16 @@ public class EntityDelayedFetchInitializer
 	}
 
 	@Override
+	public boolean isEager() {
+		return keyIsEager;
+	}
+
+	@Override
+	public boolean hasEagerSubInitializers() {
+		return keyIsEager;
+	}
+
+	@Override
 	public boolean isResultInitializer() {
 		return false;
 	}
@@ -291,6 +303,15 @@ public class EntityDelayedFetchInitializer
 	@Override
 	public EntityPersister getConcreteDescriptor(EntityDelayedFetchInitializerData data) {
 		return getEntityDescriptor();
+	}
+
+	@Override
+	public void resolveState(EntityDelayedFetchInitializerData data) {
+		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		identifierAssembler.resolveState( rowProcessingState );
+		if ( discriminatorAssembler != null ) {
+			discriminatorAssembler.resolveState( rowProcessingState );
+		}
 	}
 
 	@Override

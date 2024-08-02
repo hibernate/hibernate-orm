@@ -35,7 +35,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Steve Ebersole
  */
 public class MapInitializer extends AbstractImmediateCollectionInitializer<AbstractImmediateCollectionInitializer.ImmediateCollectionInitializerData> {
-	private static final String CONCRETE_NAME = MapInitializer.class.getSimpleName();
 
 	private final DomainResultAssembler<?> mapKeyAssembler;
 	private final DomainResultAssembler<?> mapValueAssembler;
@@ -63,11 +62,6 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer<Abstr
 		);
 		this.mapKeyAssembler = mapKeyFetch.createAssembler( this, creationState );
 		this.mapValueAssembler = mapValueFetch.createAssembler( this, creationState );
-	}
-
-	@Override
-	protected String getSimpleConcreteImplName() {
-		return CONCRETE_NAME;
 	}
 
 	@Override

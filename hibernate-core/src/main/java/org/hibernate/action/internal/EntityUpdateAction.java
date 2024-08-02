@@ -266,6 +266,7 @@ public class EntityUpdateAction extends EntityAction {
 				nextVersion = getVersion( state, persister );
 			}
 			entry.postUpdate( instance, state, nextVersion );
+			entry.setMaybeLazySet( null );
 		}
 	}
 

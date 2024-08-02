@@ -16,7 +16,7 @@ import org.hibernate.sql.results.graph.InitializerParent;
 /**
  * @author Steve Ebersole
  */
-public class DelayedCollectionInitializer extends AbstractCollectionInitializer<AbstractCollectionInitializer.CollectionInitializerData> {
+public class DelayedCollectionInitializer extends AbstractNonJoinCollectionInitializer<AbstractCollectionInitializer.CollectionInitializerData> {
 
 	public DelayedCollectionInitializer(
 			NavigablePath fetchedPath,
@@ -35,6 +35,17 @@ public class DelayedCollectionInitializer extends AbstractCollectionInitializer<
 	@Override
 	public void resolveInstance(Object instance, CollectionInitializerData data) {
 		resolveInstance( instance, data, false );
+	}
+
+	@Override
+	public boolean isEager() {
+		// No need to call resolve on this initializer if parent is initialized
+		return false;
+	}
+
+	@Override
+	public boolean hasEagerSubInitializers() {
+		return false;
 	}
 
 	@Override

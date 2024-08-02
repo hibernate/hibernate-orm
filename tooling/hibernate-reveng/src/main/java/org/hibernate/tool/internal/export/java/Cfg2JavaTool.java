@@ -406,7 +406,7 @@ public class Cfg2JavaTool {
 		return typeName!=null && typeName.endsWith("[]");
 	}
 	
-	public Map<?, ?> getParameterTypes(NamedHqlQueryDefinition query) {
+	public Map<?, ?> getParameterTypes(NamedHqlQueryDefinition<?> query) {
 		Map<?, ?> result = null;
 		try {
 			Field field = NamedHqlQueryDefinitionImpl.class.getDeclaredField("parameterTypes");

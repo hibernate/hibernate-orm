@@ -197,7 +197,7 @@ class PrimaryKeyBinder extends AbstractBinder {
 			Set<Column> processedColumns, 
 			List<Column> keyColumns) {
 		EnhancedComponent result = new EnhancedComponent(getMetadataBuildingContext(), rc);
-        result.setMetaAttributes(Collections.EMPTY_MAP);
+        result.setMetaAttributes(Collections.emptyMap());
         result.setEmbedded(false);
         result.setComponentClassName(getCompositeIdName(rc));
         addKeyColumns(result, rc.getTable(), getKeyColumns(rc.getTable(), keyColumns), processedColumns);

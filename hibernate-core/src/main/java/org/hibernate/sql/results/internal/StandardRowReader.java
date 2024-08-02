@@ -39,7 +39,7 @@ public class StandardRowReader<T> implements RowReader<T> {
 	private final Initializer<InitializerData>[] sortedForResolveInstance;
 	private final InitializerData[] sortedForResolveInstanceData;
 	private final boolean hasCollectionInitializers;
-	private final RowTransformer<T> rowTransformer;
+	private final @Nullable RowTransformer<T> rowTransformer;
 	private final Class<T> domainResultJavaType;
 
 	private final ComponentType componentType;
@@ -78,7 +78,11 @@ public class StandardRowReader<T> implements RowReader<T> {
 		this.sortedForResolveInstance = (Initializer<InitializerData>[]) sortedForResolveInitializers;
 		this.sortedForResolveInstanceData = new InitializerData[sortedForResolveInstance.length];
 		this.hasCollectionInitializers = hasCollectionInitializers;
-		this.rowTransformer = rowTransformer;
+		this.rowTransformer = rowTransformer == RowTransformerArrayImpl.INSTANCE && resultAssemblers.length != 1
+				|| rowTransformer == RowTransformerStandardImpl.INSTANCE
+				|| rowTransformer == RowTransformerSingularReturnImpl.INSTANCE && resultAssemblers.length == 1
+				? null
+				: rowTransformer;
 		this.domainResultJavaType = domainResultJavaType;
 		if ( domainResultJavaType == null
 				|| domainResultJavaType == Object[].class
@@ -136,6 +140,32 @@ public class StandardRowReader<T> implements RowReader<T> {
 	public T readRow(RowProcessingState rowProcessingState) {
 		coordinateInitializers( rowProcessingState );
 
+		final T result;
+		if ( componentType != ComponentType.OBJECT ) {
+			result = readPrimitiveRow( rowProcessingState );
+		}
+		else {
+			if ( resultAssemblers.length == 1 && rowTransformer == null ) {
+				//noinspection unchecked
+				result = (T) resultAssemblers[0].assemble( rowProcessingState );
+			}
+			else {
+				final Object[] resultRow = (Object[]) Array.newInstance( resultElementClass, resultAssemblers.length );
+				for ( int i = 0; i < resultAssemblers.length; i++ ) {
+					resultRow[i] = resultAssemblers[i].assemble( rowProcessingState );
+				}
+				//noinspection unchecked
+				result = rowTransformer == null
+						? (T) resultRow
+						: rowTransformer.transformRow( resultRow );
+			}
+		}
+
+		finishUpRow();
+		return result;
+	}
+
+	private T readPrimitiveRow(RowProcessingState rowProcessingState) {
 		// The following is ugly, but unfortunately necessary to not hurt performance.
 		// This implementation was micro-benchmarked and discussed with Francesco Nigro,
 		// who hinted that using this style instead of the reflective Array.getLength(), Array.set()
@@ -143,108 +173,55 @@ public class StandardRowReader<T> implements RowReader<T> {
 		switch ( componentType ) {
 			case BOOLEAN:
 				final boolean[] resultBooleanRow = new boolean[resultAssemblers.length];
-
 				for ( int i = 0; i < resultAssemblers.length; i++ ) {
-					final DomainResultAssembler assembler = resultAssemblers[i];
-					resultBooleanRow[i] = (boolean) assembler.assemble( rowProcessingState );
+					resultBooleanRow[i] = (boolean) resultAssemblers[i].assemble( rowProcessingState );
 				}
-
-				afterRow( rowProcessingState );
-
 				return (T) resultBooleanRow;
 			case BYTE:
 				final byte[] resultByteRow = new byte[resultAssemblers.length];
-
 				for ( int i = 0; i < resultAssemblers.length; i++ ) {
-					final DomainResultAssembler assembler = resultAssemblers[i];
-					resultByteRow[i] = (byte) assembler.assemble( rowProcessingState );
+					resultByteRow[i] = (byte) resultAssemblers[i].assemble( rowProcessingState );
 				}
-
-				afterRow( rowProcessingState );
-
 				return (T) resultByteRow;
 			case CHAR:
 				final char[] resultCharRow = new char[resultAssemblers.length];
-
 				for ( int i = 0; i < resultAssemblers.length; i++ ) {
-					final DomainResultAssembler assembler = resultAssemblers[i];
-					resultCharRow[i] = (char) assembler.assemble( rowProcessingState );
+					resultCharRow[i] = (char) resultAssemblers[i].assemble( rowProcessingState );
 				}
-
-				afterRow( rowProcessingState );
-
 				return (T) resultCharRow;
 			case SHORT:
 				final short[] resultShortRow = new short[resultAssemblers.length];
-
 				for ( int i = 0; i < resultAssemblers.length; i++ ) {
-					final DomainResultAssembler assembler = resultAssemblers[i];
-					resultShortRow[i] = (short) assembler.assemble( rowProcessingState );
+					resultShortRow[i] = (short) resultAssemblers[i].assemble( rowProcessingState );
 				}
-
-				afterRow( rowProcessingState );
-
 				return (T) resultShortRow;
 			case INT:
 				final int[] resultIntRow = new int[resultAssemblers.length];
-
 				for ( int i = 0; i < resultAssemblers.length; i++ ) {
-					final DomainResultAssembler assembler = resultAssemblers[i];
-					resultIntRow[i] = (int) assembler.assemble( rowProcessingState );
+					resultIntRow[i] = (int) resultAssemblers[i].assemble( rowProcessingState );
 				}
-
-				afterRow( rowProcessingState );
-
 				return (T) resultIntRow;
 			case LONG:
 				final long[] resultLongRow = new long[resultAssemblers.length];
-
 				for ( int i = 0; i < resultAssemblers.length; i++ ) {
-					final DomainResultAssembler assembler = resultAssemblers[i];
-					resultLongRow[i] = (long) assembler.assemble( rowProcessingState );
+					resultLongRow[i] = (long) resultAssemblers[i].assemble( rowProcessingState );
 				}
-
-				afterRow( rowProcessingState );
-
 				return (T) resultLongRow;
 			case FLOAT:
 				final float[] resultFloatRow = new float[resultAssemblers.length];
-
 				for ( int i = 0; i < resultAssemblers.length; i++ ) {
-					final DomainResultAssembler assembler = resultAssemblers[i];
-					resultFloatRow[i] = (float) assembler.assemble( rowProcessingState );
+					resultFloatRow[i] = (float) resultAssemblers[i].assemble( rowProcessingState );
 				}
-
-				afterRow( rowProcessingState );
-
 				return (T) resultFloatRow;
 			case DOUBLE:
 				final double[] resultDoubleRow = new double[resultAssemblers.length];
-
 				for ( int i = 0; i < resultAssemblers.length; i++ ) {
-					final DomainResultAssembler assembler = resultAssemblers[i];
-					resultDoubleRow[i] = (double) assembler.assemble( rowProcessingState );
+					resultDoubleRow[i] = (double) resultAssemblers[i].assemble( rowProcessingState );
 				}
-
-				afterRow( rowProcessingState );
-
 				return (T) resultDoubleRow;
 			default:
-				final Object[] resultRow = (Object[]) Array.newInstance( resultElementClass, resultAssemblers.length );
-
-				for ( int i = 0; i < resultAssemblers.length; i++ ) {
-					final DomainResultAssembler assembler = resultAssemblers[i];
-					resultRow[i] = assembler.assemble( rowProcessingState );
-				}
-
-				afterRow( rowProcessingState );
-
-				return rowTransformer.transformRow( resultRow );
+				throw new AssertionError( "Object should be handled specially" );
 		}
-	}
-
-	private void afterRow(RowProcessingState rowProcessingState) {
-		finishUpRow();
 	}
 
 	private void finishUpRow() {

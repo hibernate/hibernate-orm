@@ -105,7 +105,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 	}
 
 	private static class Results<R> {
-		private final List<R> results;
+		private final ArrayList<R> results;
 		private final JavaType<R> resultJavaType;
 
 		public Results(JavaType<R> resultJavaType, int initialSize) {
@@ -188,37 +188,17 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 				results = new Results<>( domainResultJavaType, initialCollectionSize );
 			}
 
-			int readRows = 0;
+			final int readRows;
 			if ( uniqueSemantic == UniqueSemantic.FILTER
 					|| uniqueSemantic == UniqueSemantic.ASSERT && rowReader.hasCollectionInitializers()
 					|| uniqueSemantic == UniqueSemantic.ALLOW && isEntityResultType ) {
-				while ( rowProcessingState.next() ) {
-					final boolean added = results.addUnique( rowReader.readRow( rowProcessingState ) );
-					rowProcessingState.finishRowProcessing( added );
-					readRows++;
-				}
+				readRows = readUnique( rowProcessingState, rowReader, results );
 			}
 			else if ( uniqueSemantic == UniqueSemantic.ASSERT ) {
-				while ( rowProcessingState.next() ) {
-					if ( !results.addUnique( rowReader.readRow( rowProcessingState ) ) ) {
-						throw new HibernateException(
-								String.format(
-										Locale.ROOT,
-										"Duplicate row was found and `%s` was specified",
-										UniqueSemantic.ASSERT
-								)
-						);
-					}
-					rowProcessingState.finishRowProcessing( true );
-					readRows++;
-				}
+				readRows = readUniqueAssert( rowProcessingState, rowReader, results );
 			}
 			else {
-				while ( rowProcessingState.next() ) {
-					results.add( rowReader.readRow( rowProcessingState ) );
-					rowProcessingState.finishRowProcessing( true );
-					readRows++;
-				}
+				readRows = read( rowProcessingState, rowReader, results );
 			}
 
 			rowReader.finishUp( rowProcessingState );
@@ -258,6 +238,53 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			}
 		}
 		throw new IllegalStateException( "Should not reach this" );
+	}
+
+	private static <R> int read(
+			RowProcessingStateStandardImpl rowProcessingState,
+			RowReader<R> rowReader,
+			Results<R> results) {
+		int readRows = 0;
+		while ( rowProcessingState.next() ) {
+			results.add( rowReader.readRow( rowProcessingState ) );
+			rowProcessingState.finishRowProcessing( true );
+			readRows++;
+		}
+		return readRows;
+	}
+
+	private static <R> int readUniqueAssert(
+			RowProcessingStateStandardImpl rowProcessingState,
+			RowReader<R> rowReader,
+			Results<R> results) {
+		int readRows = 0;
+		while ( rowProcessingState.next() ) {
+			if ( !results.addUnique( rowReader.readRow( rowProcessingState ) ) ) {
+				throw new HibernateException(
+						String.format(
+								Locale.ROOT,
+								"Duplicate row was found and `%s` was specified",
+								UniqueSemantic.ASSERT
+						)
+				);
+			}
+			rowProcessingState.finishRowProcessing( true );
+			readRows++;
+		}
+		return readRows;
+	}
+
+	private static <R> int readUnique(
+			RowProcessingStateStandardImpl rowProcessingState,
+			RowReader<R> rowReader,
+			Results<R> results) {
+		int readRows = 0;
+		while ( rowProcessingState.next() ) {
+			final boolean added = results.addUnique( rowReader.readRow( rowProcessingState ) );
+			rowProcessingState.finishRowProcessing( added );
+			readRows++;
+		}
+		return readRows;
 	}
 
 	private JavaType<R> resolveDomainResultJavaType(

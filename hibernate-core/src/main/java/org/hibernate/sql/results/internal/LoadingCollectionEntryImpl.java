@@ -82,7 +82,7 @@ public class LoadingCollectionEntryImpl implements LoadingCollectionEntry {
 
 		final boolean hasNoQueuedAdds = collectionInstance.endRead();
 		final SharedSessionContractImplementor session = executionContext.getSession();
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final CollectionPersister collectionDescriptor = getCollectionDescriptor();
 
 		ResultsHelper.finalizeCollectionLoading(

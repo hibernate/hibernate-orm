@@ -53,7 +53,7 @@ public class CollectionAssembler implements DomainResultAssembler {
 
 	@Override
 	public void resolveState(RowProcessingState rowProcessingState) {
-		initializer.resolveInstance( rowProcessingState );
+		initializer.resolveState( rowProcessingState );
 	}
 
 	@Override

@@ -30,8 +30,8 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.InitializerProducer;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
+import org.hibernate.sql.results.graph.embeddable.AggregateEmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -45,14 +45,14 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
  * for creating the fetches for the attributes of the embeddable.
  */
 public class AggregateEmbeddableFetchImpl extends AbstractFetchParent
-		implements EmbeddableResultGraphNode, Fetch, InitializerProducer<AggregateEmbeddableFetchImpl> {
+		implements AggregateEmbeddableResultGraphNode, Fetch, InitializerProducer<AggregateEmbeddableFetchImpl> {
 	private final FetchParent fetchParent;
 	private final FetchTiming fetchTiming;
 	private final TableGroup tableGroup;
 	private final boolean hasTableGroup;
-	private final SqlSelection aggregateSelection;
 	private final EmbeddableMappingType fetchContainer;
 	private final BasicFetch<?> discriminatorFetch;
+	private final int[] aggregateValuesArrayPositions;
 
 	public AggregateEmbeddableFetchImpl(
 			NavigablePath navigablePath,
@@ -97,14 +97,20 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent
 		final TypeConfiguration typeConfiguration = sqlAstCreationState.getCreationContext()
 				.getSessionFactory()
 				.getTypeConfiguration();
-		this.aggregateSelection = sqlExpressionResolver.resolveSqlSelection(
+		final SqlSelection aggregateSelection = sqlExpressionResolver.resolveSqlSelection(
 				expression,
 				typeConfiguration.getJavaTypeRegistry().resolveDescriptor( Object[].class ),
 				fetchParent,
 				typeConfiguration
 		);
 		this.discriminatorFetch = creationState.visitEmbeddableDiscriminatorFetch( this, true );
+		this.aggregateValuesArrayPositions = AggregateEmbeddableResultGraphNode.determineAggregateValuesArrayPositions( fetchParent, aggregateSelection );
 		resetFetches( creationState.visitNestedFetches( this ) );
+	}
+
+	@Override
+	public int[] getAggregateValuesArrayPositions() {
+		return aggregateValuesArrayPositions;
 	}
 
 	@Override
@@ -181,8 +187,7 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent
 				discriminatorFetch,
 				parent,
 				creationState,
-				false,
-				aggregateSelection
+				false
 		);
 	}
 

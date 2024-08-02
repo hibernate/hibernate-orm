@@ -178,8 +178,16 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 		@Override
 		public Object assemble(RowProcessingState rowProcessingState) {
 			final InitializerData data = initializer.getData( rowProcessingState );
-			initializer.resolveInstance( data );
-			return initializer.getEntityInstance( data );
+			final Initializer.State state = data.getState();
+			if ( state == Initializer.State.KEY_RESOLVED ) {
+				initializer.resolveInstance( data );
+			}
+			return initializer.getResolvedInstance( data );
+		}
+
+		@Override
+		public void resolveState(RowProcessingState rowProcessingState) {
+			initializer.resolveState( rowProcessingState );
 		}
 
 		@Override

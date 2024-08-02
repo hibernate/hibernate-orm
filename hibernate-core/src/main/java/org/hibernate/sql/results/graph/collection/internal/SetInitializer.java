@@ -29,7 +29,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Steve Ebersole
  */
 public class SetInitializer extends AbstractImmediateCollectionInitializer<AbstractImmediateCollectionInitializer.ImmediateCollectionInitializerData> {
-	private static final String CONCRETE_NAME = SetInitializer.class.getSimpleName();
 
 	private final DomainResultAssembler<?> elementAssembler;
 
@@ -54,11 +53,6 @@ public class SetInitializer extends AbstractImmediateCollectionInitializer<Abstr
 				creationState
 		);
 		this.elementAssembler = elementFetch.createAssembler( this, creationState );
-	}
-
-	@Override
-	protected String getSimpleConcreteImplName() {
-		return CONCRETE_NAME;
 	}
 
 	@Override

@@ -42,7 +42,7 @@ public class BasicSelectionQueryTests {
 	@Test
 	public void typedEntitySelectTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final SelectionQuery<Contact> query = session.createSelectionQuery( "select c from Contact c", Contact.class );
+			final SelectionQuery<DummyEntity> query = session.createSelectionQuery( "select c from DummyEntity c", DummyEntity.class );
 			checkResults( query, session );
 		} );
 	}
@@ -51,7 +51,7 @@ public class BasicSelectionQueryTests {
 	public void rawEntitySelectTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			// its unbounded
-			final SelectionQuery<?> query = session.createSelectionQuery( "select c from Contact c" );
+			final SelectionQuery<?> query = session.createSelectionQuery( "select c from DummyEntity c" );
 			checkResults( query, session );
 		} );
 	}

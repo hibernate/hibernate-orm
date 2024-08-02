@@ -24,6 +24,8 @@ import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Standard implementation of {@link StatementPreparer}.
  *
@@ -129,33 +131,28 @@ class StatementPreparerImpl implements StatementPreparer {
 	@Override
 	public PreparedStatement prepareQueryStatement(
 			String sql,
-			final boolean isCallable,
-			final ScrollMode scrollMode) {
+			boolean isCallable,
+			@Nullable ScrollMode scrollMode) {
+		final int resultSetType;
 		if ( scrollMode != null && !scrollMode.equals( ScrollMode.FORWARD_ONLY ) ) {
 			if ( ! settings().isScrollableResultSetsEnabled() ) {
 				throw new AssertionFailure("scrollable result sets are not enabled");
 			}
-			final PreparedStatement ps = new QueryStatementPreparationTemplate( sql ) {
-				public PreparedStatement doPrepare() throws SQLException {
-						return isCallable
-								? connection().prepareCall( sql, scrollMode.toResultSetType(), ResultSet.CONCUR_READ_ONLY )
-								: connection().prepareStatement( sql, scrollMode.toResultSetType(), ResultSet.CONCUR_READ_ONLY );
-				}
-			}.prepareStatement();
-			jdbcCoordinator.registerLastQuery( ps );
-			return ps;
+			resultSetType = scrollMode.toResultSetType();
 		}
 		else {
-			final PreparedStatement ps = new QueryStatementPreparationTemplate( sql ) {
-				public PreparedStatement doPrepare() throws SQLException {
-						return isCallable
-								? connection().prepareCall( sql )
-								: connection().prepareStatement( sql );
-				}
-			}.prepareStatement();
-			jdbcCoordinator.registerLastQuery( ps );
-			return ps;
+			resultSetType = ResultSet.TYPE_FORWARD_ONLY;
 		}
+
+		final PreparedStatement ps = new QueryStatementPreparationTemplate( sql ) {
+			public PreparedStatement doPrepare() throws SQLException {
+					return isCallable
+							? connection().prepareCall( sql, resultSetType, ResultSet.CONCUR_READ_ONLY )
+							: connection().prepareStatement( sql, resultSetType, ResultSet.CONCUR_READ_ONLY );
+			}
+		}.prepareStatement();
+		jdbcCoordinator.registerLastQuery( ps );
+		return ps;
 	}
 
 	private abstract class StatementPreparationTemplate {

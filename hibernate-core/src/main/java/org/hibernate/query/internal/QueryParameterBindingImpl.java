@@ -86,6 +86,10 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		return isMultiValued;
 	}
 
+	@Override
+	public QueryParameter<T> getQueryParameter() {
+		return queryParameter;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// single-valued binding support

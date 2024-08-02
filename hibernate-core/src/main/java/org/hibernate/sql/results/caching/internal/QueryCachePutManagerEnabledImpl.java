@@ -13,6 +13,7 @@ import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.results.caching.QueryCachePutManager;
+import org.hibernate.sql.results.jdbc.internal.CachedJdbcValuesMetadata;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
@@ -34,7 +35,7 @@ public class QueryCachePutManagerEnabledImpl implements QueryCachePutManager {
 			StatisticsImplementor statistics,
 			QueryKey queryKey,
 			String queryIdentifier,
-			JdbcValuesMetadata metadataForCache) {
+			CachedJdbcValuesMetadata metadataForCache) {
 		this.queryCache = queryCache;
 		this.statistics = statistics;
 		this.queryKey = queryKey;

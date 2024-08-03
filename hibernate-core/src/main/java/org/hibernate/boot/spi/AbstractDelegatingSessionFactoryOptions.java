@@ -512,4 +512,9 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	public FormatMapper getXmlFormatMapper() {
 		return delegate.getXmlFormatMapper();
 	}
+
+	@Override
+	public boolean isPassProcedureParameterNames() {
+		return delegate.isPassProcedureParameterNames();
+	}
 }

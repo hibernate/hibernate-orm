@@ -202,11 +202,11 @@
 
     <database-object>
         <create>
-            CREATE OR REPLACE FUNCTION simpleScalar (j number)
+            CREATE OR REPLACE FUNCTION simpleScalar (p_number number)
             RETURN SYS_REFCURSOR AS st_cursor SYS_REFCURSOR;
             BEGIN
             OPEN st_cursor FOR
-            SELECT j as value, 'getAll' as name from dual;
+            SELECT p_number as value, 'getAll' as name from dual;
             RETURN st_cursor;
             END;
         </create>

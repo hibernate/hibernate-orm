@@ -301,4 +301,9 @@ public class SingularAttributeImpl<D,J>
 	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
 		return sqmPathSource.createSqmPath( lhs, intermediatePathSource );
 	}
+
+	@Override
+	public JavaType<?> getRelationalJavaType() {
+		return sqmPathSource.getRelationalJavaType();
+	}
 }

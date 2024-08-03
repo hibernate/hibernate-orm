@@ -16,6 +16,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.procedure.ProcedureParameter;
@@ -28,10 +29,16 @@ import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedStoredProcedureQueries;
@@ -39,8 +46,11 @@ import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureParameter;
 import jakarta.persistence.StoredProcedureQuery;
+import jakarta.persistence.Table;
+import org.hamcrest.MatcherAssert;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -50,15 +60,24 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Marco Belladelli
  */
-@Jpa( annotatedClasses = {
-		Person.class,
-		Phone.class,
-		Vote.class,
-		DB2StoredProcedureTest.IdHolder.class,
-} )
+@Jpa(
+		annotatedClasses = {
+				Person.class,
+				Phone.class,
+				Vote.class,
+				DB2StoredProcedureTest.IdHolder.class,
+				DB2StoredProcedureTest.Address.class,
+		},
+		properties = @Setting(name = AvailableSettings.QUERY_PASS_PROCEDURE_PARAMETER_NAMES, value = "true")
+)
 @RequiresDialect( value = DB2Dialect.class )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-18332" )
 public class DB2StoredProcedureTest {
+
+	private static final String CITY = "London";
+	private static final String STREET = "Lollard Street";
+	private static final String ZIP = "SE116U";
+
 	@Test
 	public void testStoredProcedureOutParameter(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
@@ -242,6 +261,88 @@ public class DB2StoredProcedureTest {
 		} );
 	}
 
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18302" )
+	public void testStoredProcedureInAndOutAndRefCursorParameters(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_get_address_by_street_city" );
+					query.registerStoredProcedureParameter( "street_in", String.class, ParameterMode.IN );
+					query.registerStoredProcedureParameter( "city_in", String.class, ParameterMode.IN );
+					query.registerStoredProcedureParameter( "rec_out", ResultSet.class, ParameterMode.REF_CURSOR );
+
+					query.setParameter( "street_in", STREET )
+							.setParameter( "city_in", CITY );
+					query.execute();
+					ResultSet rs = (ResultSet) query.getOutputParameterValue( "rec_out" );
+					try {
+						Assertions.assertTrue( rs.next() );
+						MatcherAssert.assertThat( rs.getString( "street" ), is( STREET ) );
+						MatcherAssert.assertThat( rs.getString( "city" ), is( CITY ) );
+						MatcherAssert.assertThat( rs.getString( "zip" ), is( ZIP ) );
+					}
+					catch (SQLException e) {
+						throw new RuntimeException( e );
+					}
+				}
+		);
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18302" )
+	public void testStoredProcedureInAndOutAndRefCursorParametersDifferentRegistrationOrder(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_get_address_by_street_city" );
+					query.registerStoredProcedureParameter( "city_in", String.class, ParameterMode.IN );
+					query.registerStoredProcedureParameter( "street_in", String.class, ParameterMode.IN );
+					query.registerStoredProcedureParameter( "rec_out", ResultSet.class, ParameterMode.REF_CURSOR );
+
+					query.setParameter( "street_in", STREET )
+							.setParameter( "city_in", CITY );
+					query.execute();
+					ResultSet rs = (ResultSet) query.getOutputParameterValue( "rec_out" );
+					try {
+						Assertions.assertTrue( rs.next() );
+						MatcherAssert.assertThat( rs.getString( "street" ), is( STREET ) );
+						MatcherAssert.assertThat( rs.getString( "city" ), is( CITY ) );
+						MatcherAssert.assertThat( rs.getString( "zip" ), is( ZIP ) );
+					}
+					catch (SQLException e) {
+						throw new RuntimeException( e );
+					}
+				}
+		);
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18302" )
+	public void testStoredProcedureInAndOutAndRefCursorParametersDifferentRegistrationOrder2(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_get_address_by_street_city" );
+					query.registerStoredProcedureParameter( "rec_out", ResultSet.class, ParameterMode.REF_CURSOR );
+					query.registerStoredProcedureParameter( "city_in", String.class, ParameterMode.IN );
+					query.registerStoredProcedureParameter( "street_in", String.class, ParameterMode.IN );
+
+					query.setParameter( "street_in", STREET )
+							.setParameter( "city_in", CITY );
+					query.execute();
+					ResultSet rs = (ResultSet) query.getOutputParameterValue( "rec_out" );
+					try {
+						Assertions.assertTrue( rs.next() );
+						MatcherAssert.assertThat( rs.getString( "street" ), is( STREET ) );
+						MatcherAssert.assertThat( rs.getString( "city" ), is( CITY ) );
+						MatcherAssert.assertThat( rs.getString( "zip" ), is( ZIP ) );
+					}
+					catch (SQLException e) {
+						throw new RuntimeException( e );
+					}
+				}
+		);
+	}
+
+
 	@BeforeAll
 	public void prepareSchema(EntityManagerFactoryScope scope) {
 		scope.inTransaction( (entityManager) -> entityManager.unwrap( Session.class ).doWork( (connection) -> {
@@ -355,9 +456,27 @@ public class DB2StoredProcedureTest {
 								"    OPEN votes; " +
 								"END"
 				);
+				statement.executeUpdate(
+						"CREATE OR REPLACE PROCEDURE sp_get_address_by_street_city ( " +
+								"   IN street_in VARCHAR(255), " +
+								"   IN city_in VARCHAR(255), " +
+								"   OUT rec_out CURSOR ) " +
+								"BEGIN " +
+								"    SET rec_out = CURSOR FOR " +
+								"    SELECT * " +
+								"    FROM ADDRESS_TABLE A " +
+								"    WHERE " +
+								" 	 A.STREET = street_in" +
+								" 	 AND A.CITY = city_in;" +
+								"    OPEN rec_out; " +
+								"END;"
+				);
 			}
 		} ) );
+	}
 
+	@BeforeEach
+	public void setUp(EntityManagerFactoryScope scope){
 		scope.inTransaction( (entityManager) -> {
 			final Person person1 = new Person( 1L, "John Doe" );
 			person1.setNickName( "JD" );
@@ -377,6 +496,8 @@ public class DB2StoredProcedureTest {
 			phone2.setValid( false );
 
 			person1.addPhone( phone2 );
+			Address address = new Address( 1l, STREET, CITY, ZIP );
+			entityManager.persist( address );
 		} );
 	}
 
@@ -394,15 +515,21 @@ public class DB2StoredProcedureTest {
 					statement.executeUpdate( "DROP PROCEDURE outAndRefCursor" );
 					statement.executeUpdate( "DROP PROCEDURE sp_phone_validity" );
 					statement.executeUpdate( "DROP PROCEDURE sp_votes" );
+					statement.executeUpdate( "DROP PROCEDURE sp_get_address_by_street_city" );
 				}
 				catch (final SQLException ignore) {
 				}
 			} );
+		} );
+	}
 
-			scope.inTransaction( em, (em2) -> {
-				final List<Person> people = em.createQuery( "from Person", Person.class ).getResultList();
-				people.forEach( em::remove );
-			} );
+	@AfterEach
+	public void cleanData(EntityManagerFactoryScope scope) {
+		scope.inTransaction( (em) -> {
+			final List<Person> people = em.createQuery( "from Person", Person.class ).getResultList();
+			people.forEach( em::remove );
+
+			em.createQuery( "delete Address" ).executeUpdate();
 		} );
 	}
 
@@ -428,5 +555,45 @@ public class DB2StoredProcedureTest {
 		@Id
 		Long id;
 		String name;
+	}
+
+	@Entity(name = "Address")
+	@Table(name = "ADDRESS_TABLE")
+	public static class Address {
+		@Id
+		@Column(name = "ID")
+		private long id;
+		@Column(name = "STREET")
+		private String street;
+		@Column(name = "CITY")
+		private String city;
+		@Column(name = "ZIP")
+		private String zip;
+
+		public Address() {
+		}
+
+		public Address(long id, String street, String city, String zip) {
+			this.id = id;
+			this.street = street;
+			this.city = city;
+			this.zip = zip;
+		}
+
+		public long getId() {
+			return id;
+		}
+
+		public String getStreet() {
+			return street;
+		}
+
+		public String getCity() {
+			return city;
+		}
+
+		public String getZip() {
+			return zip;
+		}
 	}
 }

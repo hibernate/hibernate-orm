@@ -20,7 +20,7 @@ pluginManagement {
 plugins {
     id 'org.hibernate.orm.build.env-settings'
     id 'org.hibernate.orm.build.jdks-settings'
-    id 'com.gradle.develocity' version '3.17.5'
+    id 'com.gradle.develocity' version '3.17.6'
     id 'com.gradle.common-custom-user-data-gradle-plugin' version '2.0.2'
 }
 
@@ -64,7 +64,7 @@ dependencyResolutionManagement {
 
             // Gradle does bytecode transformation on tests.
             // You can't use bytecode higher than what Gradle supports, even with toolchains.
-            version "maxSupportedBytecode", "21"
+            version "maxSupportedBytecode", "22"
         }
         libs {
             def antlrVersion = version "antlr", "4.13.0"

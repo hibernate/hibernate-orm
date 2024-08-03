@@ -208,6 +208,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean orderInsertsEnabled;
 	private boolean collectionsInDefaultFetchGroupEnabled = true;
 	private boolean UnownedAssociationTransientCheck;
+	private boolean passProcedureParameterNames;
 
 	// JPA callbacks
 	private final boolean callbacksEnabled;
@@ -626,6 +627,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				UNOWNED_ASSOCIATION_TRANSIENT_CHECK,
 				configurationSettings,
 				isJpaBootstrap()
+		);
+
+		this.passProcedureParameterNames = ConfigurationHelper.getBoolean(
+				AvailableSettings.QUERY_PASS_PROCEDURE_PARAMETER_NAMES,
+				configurationSettings,
+				false
 		);
 	}
 
@@ -1316,6 +1323,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public FormatMapper getXmlFormatMapper() {
 		return xmlFormatMapper;
+	}
+
+	@Override
+	public boolean isPassProcedureParameterNames() {
+		return passProcedureParameterNames;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

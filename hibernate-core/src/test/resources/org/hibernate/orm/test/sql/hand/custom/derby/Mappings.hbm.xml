@@ -186,7 +186,7 @@
 	<sql-query name="simpleScalar" callable="true">
 		<return-scalar column="name" type="string"/>
 		<return-scalar column="`value`" type="long"/>
-		{ call simpleScalar(:number) }
+		{ call simpleScalar(:p_number) }
 	</sql-query>
 
 	<sql-query name="paramhandling" callable="true">
@@ -259,7 +259,7 @@
 	
     <database-object>
 	 <create>
-         CREATE PROCEDURE simpleScalar (j SMALLINT)
+         CREATE PROCEDURE simpleScalar (p_number SMALLINT)
          PARAMETER STYLE JAVA
          LANGUAGE JAVA
          READS SQL DATA

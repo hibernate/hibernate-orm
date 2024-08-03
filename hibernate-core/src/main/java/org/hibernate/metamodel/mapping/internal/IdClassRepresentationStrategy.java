@@ -7,12 +7,14 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Locale;
+import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.internal.EmbeddableInstantiatorPojoStandard;
+import org.hibernate.metamodel.internal.EmbeddableInstantiatorRecordIndirecting;
 import org.hibernate.metamodel.internal.EmbeddableInstantiatorRecordStandard;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
@@ -29,11 +31,29 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 	private final JavaType<?> idClassType;
 	private final EmbeddableInstantiator instantiator;
 
-	public IdClassRepresentationStrategy(IdClassEmbeddable idClassEmbeddable) {
+	public IdClassRepresentationStrategy(
+			IdClassEmbeddable idClassEmbeddable,
+			boolean simplePropertyOrder,
+			Supplier<String[]> attributeNamesAccess) {
 		this.idClassType = idClassEmbeddable.getMappedJavaType();
-		this.instantiator = isRecord( idClassType.getJavaTypeClass() ) ?
-				new EmbeddableInstantiatorRecordStandard( idClassType.getJavaTypeClass() ) :
-				new EmbeddableInstantiatorPojoStandard( idClassType.getJavaTypeClass(), () -> idClassEmbeddable );
+		final Class<?> javaTypeClass = idClassType.getJavaTypeClass();
+		if ( isRecord( javaTypeClass ) ) {
+			if ( simplePropertyOrder ) {
+				this.instantiator = new EmbeddableInstantiatorRecordStandard( javaTypeClass );
+			}
+			else {
+				this.instantiator = EmbeddableInstantiatorRecordIndirecting.of(
+						javaTypeClass,
+						attributeNamesAccess.get()
+				);
+			}
+		}
+		else {
+			this.instantiator = new EmbeddableInstantiatorPojoStandard(
+					idClassType.getJavaTypeClass(),
+					() -> idClassEmbeddable
+			);
+		}
 	}
 
 	@Override

@@ -22,6 +22,7 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.MetaType;
 import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A mapping model object which represents something that's persisted "by value",
@@ -73,12 +74,20 @@ public interface Value extends Serializable {
 
 	Type getType() throws MappingException;
 
-	@Incubating
+	/**
+	 * @deprecated use {@link #getSelectableType(TypeConfiguration, int)}
+	 */
+	@Deprecated(since = "7.0")
 	default JdbcMapping getSelectableType(Mapping factory, int index) throws MappingException {
 		return getType( factory, getType(), index );
 	}
 
-	private JdbcMapping getType(Mapping factory, Type elementType, int index) {
+	@Incubating
+	default JdbcMapping getSelectableType(TypeConfiguration typeConfiguration, int index) throws MappingException {
+		return getType( typeConfiguration, getType(), index );
+	}
+
+	private JdbcMapping getType(TypeConfiguration typeConfiguration, Type elementType, int index) {
 		if ( elementType instanceof CompositeType ) {
 			final Type[] subtypes = ( (CompositeType) elementType ).getSubtypes();
 			for ( int i = 0; i < subtypes.length; i++ ) {
@@ -87,25 +96,58 @@ public interface Value extends Serializable {
 				if ( subtype instanceof EntityType ) {
 					final EntityType entityType = (EntityType) subtype;
 					final Type idType = getIdType( entityType );
-					columnSpan = idType.getColumnSpan( factory );
+					columnSpan = idType.getColumnSpan( typeConfiguration );
 				}
 				else {
-					columnSpan = subtype.getColumnSpan( factory );
+					columnSpan = subtype.getColumnSpan( typeConfiguration );
 				}
 				if ( columnSpan < index ) {
 					index -= columnSpan;
 				}
 				else if ( columnSpan != 0 ) {
-					return getType( factory, subtype, index );
+					return getType( typeConfiguration, subtype, index );
 				}
 			}
 			// Should never happen
 			throw new IllegalStateException( "Type index is past the types column span!" );
 		}
 		else if ( elementType instanceof EntityType ) {
-			final EntityType entityType = (EntityType) elementType;
-			final Type idType = getIdType( entityType );
-			return getType( factory, idType, index );
+			final Type idType = getIdType( (EntityType) elementType );
+			return getType( typeConfiguration, idType, index );
+		}
+		else if ( elementType instanceof MetaType ) {
+			return (JdbcMapping) ( (MetaType) elementType ).getBaseType();
+		}
+		return (JdbcMapping) elementType;
+	}
+
+	private JdbcMapping getType(Mapping mapping, Type elementType, int index) {
+		if ( elementType instanceof CompositeType ) {
+			final Type[] subtypes = ( (CompositeType) elementType ).getSubtypes();
+			for ( int i = 0; i < subtypes.length; i++ ) {
+				final Type subtype = subtypes[i];
+				final int columnSpan;
+				if ( subtype instanceof EntityType ) {
+					final EntityType entityType = (EntityType) subtype;
+					final Type idType = getIdType( entityType );
+					columnSpan = idType.getColumnSpan( mapping );
+				}
+				else {
+					columnSpan = subtype.getColumnSpan( mapping );
+				}
+				if ( columnSpan < index ) {
+					index -= columnSpan;
+				}
+				else if ( columnSpan != 0 ) {
+					return getType( mapping, subtype, index );
+				}
+			}
+			// Should never happen
+			throw new IllegalStateException( "Type index is past the types column span!" );
+		}
+		else if ( elementType instanceof EntityType ) {
+			final Type idType = getIdType( (EntityType) elementType );
+			return getType( mapping, idType, index );
 		}
 		else if ( elementType instanceof MetaType ) {
 			return (JdbcMapping) ( (MetaType) elementType ).getBaseType();
@@ -145,7 +187,13 @@ public interface Value extends Serializable {
 
 	boolean isSimpleValue();
 
+	/**
+	 * @deprecated use {@link #isValid(TypeConfiguration)} instead.
+	 */
+	@Deprecated
 	boolean isValid(Mapping mapping) throws MappingException;
+
+	boolean isValid(TypeConfiguration typeConfiguration) throws MappingException;
 
 	void setTypeUsingReflection(String className, String propertyName) throws MappingException;
 

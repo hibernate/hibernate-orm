@@ -630,10 +630,10 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 
 	public void validate(Metadata mapping) throws MappingException {
 		for ( Property prop : getProperties() ) {
-			if ( !prop.isValid( mapping ) ) {
+			if ( !prop.isValid( mapping.getTypeConfiguration() ) ) {
 				final Type type = prop.getType();
 				final int actualColumns = prop.getColumnSpan();
-				final int requiredColumns = type.getColumnSpan( mapping );
+				final int requiredColumns = type.getColumnSpan( mapping.getTypeConfiguration() );
 				throw new MappingException(
 						"Property '" + qualify( getEntityName(), prop.getName() )
 								+ "' maps to " + actualColumns + " columns but " + requiredColumns

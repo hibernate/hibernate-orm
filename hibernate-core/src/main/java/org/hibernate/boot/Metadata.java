@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -21,12 +22,13 @@ import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Represents the ORM model as determined by aggregating the provided mapping sources.
@@ -36,7 +38,7 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
  *
  * @since 5.0
  */
-public interface Metadata extends Mapping {
+public interface Metadata {
 	/**
 	 * Get the builder for {@link SessionFactory} instances based on this metamodel.
 	 *
@@ -203,4 +205,18 @@ public interface Metadata extends Mapping {
 	 * All of the known model contributors
 	 */
 	Set<String> getContributors();
+
+	TypeConfiguration getTypeConfiguration();
+
+	default Type getIdentifierType(String className) throws org.hibernate.MappingException {
+		return getTypeConfiguration().getIdentifierType( className );
+	}
+
+	default String getIdentifierPropertyName(String className) throws org.hibernate.MappingException {
+		return getTypeConfiguration().getIdentifierPropertyName( className );
+	}
+
+	default Type getReferencedPropertyType(String className, String propertyName) throws MappingException {
+		return getTypeConfiguration().getReferencedPropertyType( className, propertyName );
+	}
 }

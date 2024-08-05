@@ -43,6 +43,7 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.internal.util.ReflectHelper.isRecord;
 import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
@@ -139,12 +140,36 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	}
 
 	@Override
+	public int getColumnSpan(TypeConfiguration typeConfiguration) throws MappingException {
+		int span = 0;
+		for ( int i = 0; i < propertySpan; i++ ) {
+			span += propertyTypes[i].getColumnSpan( typeConfiguration );
+		}
+		span += discriminatorColumnSpan;
+		return span;
+	}
+
+	@Override
 	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
 		//Not called at runtime so doesn't matter if it's slow :)
 		final int[] sqlTypes = new int[getColumnSpan( mapping )];
 		int n = 0;
 		for ( int i = 0; i < propertySpan; i++ ) {
 			int[] subtypes = propertyTypes[i].getSqlTypeCodes( mapping );
+			for ( int subtype : subtypes ) {
+				sqlTypes[n++] = subtype;
+			}
+		}
+		return sqlTypes;
+	}
+
+	@Override
+	public int[] getSqlTypeCodes(TypeConfiguration typeConfiguration) throws MappingException {
+		//Not called at runtime so doesn't matter if it's slow :)
+		final int[] sqlTypes = new int[getColumnSpan( typeConfiguration )];
+		int n = 0;
+		for ( int i = 0; i < propertySpan; i++ ) {
+			int[] subtypes = propertyTypes[i].getSqlTypeCodes( typeConfiguration );
 			for ( int subtype : subtypes ) {
 				sqlTypes[n++] = subtype;
 			}
@@ -288,7 +313,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		// null value and empty component are considered equivalent
 		int loc = 0;
 		for ( int i = 0; i < propertySpan; i++ ) {
-			int len = propertyTypes[i].getColumnSpan( session.getFactory() );
+			int len = propertyTypes[i].getColumnSpan( session.getTypeConfiguration() );
 			if ( len <= 1 ) {
 				final boolean dirty = ( len == 0 || checkable[loc] ) &&
 						propertyTypes[i].isDirty( getPropertyValue( x, i ), getPropertyValue( y, i ), session );
@@ -326,7 +351,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		// null value and empty components are considered equivalent
 		int loc = 0;
 		for ( int i = 0; i < propertySpan; i++ ) {
-			final int len = propertyTypes[i].getColumnSpan( session.getFactory() );
+			final int len = propertyTypes[i].getColumnSpan( session.getTypeConfiguration());
 			final boolean[] subcheckable = new boolean[len];
 			System.arraycopy( checkable, loc, subcheckable, 0, len );
 			if ( propertyTypes[i].isModified( getPropertyValue( old, i ),
@@ -347,7 +372,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 
 		for ( int i = 0; i < propertySpan; i++ ) {
 			propertyTypes[i].nullSafeSet( st, subvalues[i], begin, session );
-			begin += propertyTypes[i].getColumnSpan( session.getFactory() );
+			begin += propertyTypes[i].getColumnSpan( session.getTypeConfiguration() );
 		}
 	}
 
@@ -363,7 +388,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		final Object[] subvalues = nullSafeGetValues( value );
 		int loc = 0;
 		for ( int i = 0; i < propertySpan; i++ ) {
-			int len = propertyTypes[i].getColumnSpan( session.getFactory() );
+			int len = propertyTypes[i].getColumnSpan( session.getTypeConfiguration() );
 			//noinspection StatementWithEmptyBody
 			if ( len == 0 ) {
 				//noop
@@ -695,6 +720,21 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	}
 
 	@Override
+	public boolean[] toColumnNullness(Object value, TypeConfiguration typeConfiguration) {
+		final boolean[] result = new boolean[getColumnSpan( typeConfiguration )];
+		if ( value != null ) {
+			final Object[] values = getPropertyValues( value ); //TODO!!!!!!!
+			int loc = 0;
+			for ( int i = 0; i < propertyTypes.length; i++ ) {
+				final boolean[] propertyNullness = propertyTypes[i].toColumnNullness( values[i], typeConfiguration );
+				System.arraycopy( propertyNullness, 0, result, loc, propertyNullness.length );
+				loc += propertyNullness.length;
+			}
+		}
+		return result;
+	}
+
+	@Override
 	public boolean isEmbedded() {
 		return false;
 	}
@@ -772,7 +812,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 					notNull = true;
 				}
 				values[i] = value;
-				currentIndex += propertyType.getColumnSpan( session.getFactory() );
+				currentIndex += propertyType.getColumnSpan( session.getTypeConfiguration() );
 			}
 
 			if ( polymorphic ) {

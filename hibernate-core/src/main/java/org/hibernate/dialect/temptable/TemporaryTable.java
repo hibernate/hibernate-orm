@@ -195,7 +195,7 @@ public class TemporaryTable implements Exportable, Contributable {
 										),
 										column.getColumnSize(
 												dialect,
-												runtimeModelCreationContext.getMetadata()
+												runtimeModelCreationContext.getTypeConfiguration()
 										),
 										column.isNullable(),
 										true
@@ -238,7 +238,7 @@ public class TemporaryTable implements Exportable, Contributable {
 																),
 																column.getColumnSize(
 																		dialect,
-																		runtimeModelCreationContext.getMetadata()
+																		runtimeModelCreationContext.getMetadata().getTypeConfiguration()
 																),
 																column.isNullable()
 														)
@@ -324,7 +324,7 @@ public class TemporaryTable implements Exportable, Contributable {
 							if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
 								sqlTypeName = column.getSqlType( runtimeModelCreationContext.getMetadata() ) + " ";
 							}
-							sqlTypeName = sqlTypeName + dialect.getIdentityColumnSupport().getIdentityColumnString( column.getSqlTypeCode( runtimeModelCreationContext.getMetadata() ) );
+							sqlTypeName = sqlTypeName + dialect.getIdentityColumnSupport().getIdentityColumnString( column.getSqlTypeCode( runtimeModelCreationContext.getMetadata().getTypeConfiguration() ) );
 							columns.add(
 									new TemporaryTableColumn(
 											temporaryTable,
@@ -333,7 +333,7 @@ public class TemporaryTable implements Exportable, Contributable {
 											sqlTypeName,
 											column.getColumnSize(
 													dialect,
-													runtimeModelCreationContext.getMetadata()
+													runtimeModelCreationContext.getMetadata().getTypeConfiguration()
 											),
 											// Always report as nullable as the identity column string usually includes the not null constraint
 											true,//column.isNullable()
@@ -365,7 +365,7 @@ public class TemporaryTable implements Exportable, Contributable {
 										),
 										column.getColumnSize(
 												dialect,
-												runtimeModelCreationContext.getMetadata()
+												runtimeModelCreationContext.getMetadata().getTypeConfiguration()
 										),
 										// We have to set the identity column after the root table insert
 										column.isNullable() || identityColumn || hasOptimizer,
@@ -387,7 +387,7 @@ public class TemporaryTable implements Exportable, Contributable {
 										),
 										discriminator.getColumnSize(
 												dialect,
-												runtimeModelCreationContext.getMetadata()
+												runtimeModelCreationContext.getMetadata().getTypeConfiguration()
 										),
 										// We have to set the identity column after the root table insert
 										discriminator.isNullable()
@@ -418,7 +418,7 @@ public class TemporaryTable implements Exportable, Contributable {
 																	),
 																	column.getColumnSize(
 																			dialect,
-																			runtimeModelCreationContext.getMetadata()
+																			runtimeModelCreationContext.getMetadata().getTypeConfiguration()
 																	),
 																	// Treat regular temporary table columns as nullable for simplicity
 																	true

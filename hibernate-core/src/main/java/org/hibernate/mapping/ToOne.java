@@ -15,6 +15,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.Objects;
 
@@ -53,10 +54,12 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 		this.referenceToPrimaryKey = original.referenceToPrimaryKey;
 	}
 
+	@Override
 	public FetchMode getFetchMode() {
 		return fetchMode;
 	}
 
+	@Override
 	public void setFetchMode(FetchMode fetchMode) {
 		this.fetchMode=fetchMode;
 	}
@@ -97,10 +100,12 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 		}
 	}
 
+	@Override
 	public boolean isTypeSpecified() {
 		return referencedEntityName!=null;
 	}
-	
+
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}
@@ -116,6 +121,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 			&& Objects.equals( referencedEntityName, other.referencedEntityName );
 	}
 
+	@Override
 	public boolean isValid(Mapping mapping) throws MappingException {
 		if (referencedEntityName==null) {
 			throw new MappingException("association must specify the referenced entity");
@@ -123,10 +129,20 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 		return super.isValid( mapping );
 	}
 
+	@Override
+	public boolean isValid(TypeConfiguration typeConfiguration) throws MappingException {
+		if ( referencedEntityName == null ) {
+			throw new MappingException( "association must specify the referenced entity" );
+		}
+		return super.isValid( typeConfiguration );
+	}
+
+	@Override
 	public boolean isLazy() {
 		return lazy;
 	}
-	
+
+	@Override
 	public void setLazy(boolean lazy) {
 		this.lazy = lazy;
 	}

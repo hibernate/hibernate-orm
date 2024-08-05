@@ -22,6 +22,7 @@ import org.hibernate.mapping.ValueVisitor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -149,6 +150,11 @@ public class ExportableColumn extends Column {
 
 		@Override
 		public boolean isValid(Mapping mapping) throws MappingException {
+			return false;
+		}
+
+		@Override
+		public boolean isValid(TypeConfiguration typeConfiguration) throws MappingException {
 			return false;
 		}
 

@@ -10,6 +10,7 @@ import java.util.Collection;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -35,6 +36,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.generator.Generator;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -50,7 +52,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public interface SessionFactoryImplementor
-		extends Mapping, SessionFactory, SqmCreationContext, SqlAstCreationContext,
+		extends SessionFactory, SqmCreationContext, SqlAstCreationContext,
 				QueryParameterBindingTypeResolver { //deprecated extension, use MappingMetamodel
 	/**
 	 * Get the UUID for this SessionFactory.
@@ -219,4 +221,15 @@ public interface SessionFactoryImplementor
 	@Override @Deprecated(since = "6.2", forRemoval = true)
 	<T> BindableType<T> resolveParameterBindType(Class<T> clazz);
 
+	default Type getIdentifierType(String className) throws MappingException{
+		return getMappingMetamodel().getEntityDescriptor( className ).getIdentifierType();
+	}
+
+	default String getIdentifierPropertyName(String className) throws MappingException{
+		return getMappingMetamodel().getEntityDescriptor( className ).getIdentifierPropertyName();
+	}
+
+	default Type getReferencedPropertyType(String className, String propertyName) throws MappingException{
+		return getMappingMetamodel().getEntityDescriptor( className ).getPropertyType( propertyName );
+	}
 }

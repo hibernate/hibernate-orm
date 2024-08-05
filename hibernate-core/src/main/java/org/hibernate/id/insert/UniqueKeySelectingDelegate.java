@@ -84,7 +84,7 @@ public class UniqueKeySelectingDelegate extends AbstractSelectingDelegate {
 		int index = 1;
 		for ( int i = 0; i < uniqueKeyPropertyNames.length; i++ ) {
 			uniqueKeyTypes[i].nullSafeSet( ps, persister.getPropertyValue( entity, uniqueKeyPropertyNames[i] ), index, session );
-			index += uniqueKeyTypes[i].getColumnSpan( session.getFactory() );
+			index += uniqueKeyTypes[i].getColumnSpan( session.getFactory().getTypeConfiguration() );
 		}
 	}
 }

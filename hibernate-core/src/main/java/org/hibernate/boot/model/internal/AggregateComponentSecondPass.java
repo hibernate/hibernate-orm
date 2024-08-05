@@ -239,7 +239,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 	}
 
 	private boolean isAggregateArray() {
-		switch ( component.getAggregateColumn().getSqlTypeCode( context.getMetadataCollector() ) ) {
+		switch ( component.getAggregateColumn().getSqlTypeCode( context.getMetadataCollector().getTypeConfiguration() ) ) {
 			case SqlTypes.STRUCT_ARRAY:
 			case SqlTypes.STRUCT_TABLE:
 			case SqlTypes.JSON_ARRAY:
@@ -386,7 +386,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 			AggregateColumn aggregateColumn) {
 		for ( Column aggregatedColumn : aggregateColumn.getComponent().getAggregatedColumns() ) {
 			// Make sure this state is initialized
-			aggregatedColumn.getSqlTypeCode( metadataCollector );
+			aggregatedColumn.getSqlTypeCode( metadataCollector.getTypeConfiguration() );
 			aggregatedColumn.getSqlType( metadataCollector );
 			if ( aggregatedColumn instanceof AggregateColumn ) {
 				ensureChildrenInitialized( metadataCollector, (AggregateColumn) aggregatedColumn );
@@ -402,7 +402,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 			// Trigger resolving of the value so that the column gets properly filled
 			aggregateColumn.getValue().getType();
 			// Make sure this state is initialized
-			aggregateColumn.getSqlTypeCode( metadataCollector );
+			aggregateColumn.getSqlTypeCode( metadataCollector.getTypeConfiguration() );
 			aggregateColumn.getSqlType( metadataCollector );
 			aggregateColumn = aggregateColumn.getComponent().getParentAggregateColumn();
 		} while ( aggregateColumn != null );

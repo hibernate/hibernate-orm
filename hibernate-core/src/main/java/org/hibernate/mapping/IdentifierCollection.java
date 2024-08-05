@@ -12,6 +12,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
@@ -43,6 +44,8 @@ public abstract class IdentifierCollection extends Collection {
 	public void setIdentifier(KeyValue identifier) {
 		this.identifier = identifier;
 	}
+
+	@Override
 	public final boolean isIdentified() {
 		return true;
 	}
@@ -58,6 +61,7 @@ public abstract class IdentifierCollection extends Collection {
 				&& isSame( identifier, other.identifier );
 	}
 
+	@Override
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
 			PrimaryKey pk = new PrimaryKey( getCollectionTable() );
@@ -67,6 +71,8 @@ public abstract class IdentifierCollection extends Collection {
 		// create an index on the key columns??
 	}
 
+
+	@Override
 	public void validate(Mapping mapping) throws MappingException {
 		super.validate( mapping );
 
@@ -78,6 +84,22 @@ public abstract class IdentifierCollection extends Collection {
 				getRole() +
 				" type: " +
 				getIdentifier().getType().getName()
+			);
+		}
+	}
+
+	@Override
+	public void validate(TypeConfiguration typeConfiguration) throws MappingException {
+		super.validate( typeConfiguration );
+
+		assert getElement() != null : "IdentifierCollection identifier not bound : " + getRole();
+
+		if ( !getIdentifier().isValid( typeConfiguration ) ) {
+			throw new MappingException(
+					"collection id mapping has wrong number of columns: " +
+							getRole() +
+							" type: " +
+							getIdentifier().getType().getName()
 			);
 		}
 	}

@@ -38,6 +38,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Christian Beikov
@@ -139,6 +140,11 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {
 		return value == null ? ArrayHelper.FALSE : ArrayHelper.TRUE;
 	}
+
+	@Override
+	public boolean[] toColumnNullness(Object value, TypeConfiguration typeConfiguration) {
+		return value == null ? ArrayHelper.FALSE : ArrayHelper.TRUE;
+	}
 	public final JavaType<J> getJavaTypeDescriptor() {
 		return converter.getDomainJavaType();
 	}
@@ -158,7 +164,17 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 	}
 
 	@Override
+	public final int getColumnSpan(TypeConfiguration typeConfiguration) throws MappingException {
+		return 1;
+	}
+
+	@Override
 	public final int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
+		return sqlTypes;
+	}
+
+	@Override
+	public final int[] getSqlTypeCodes(TypeConfiguration typeConfiguration) throws MappingException {
 		return sqlTypes;
 	}
 

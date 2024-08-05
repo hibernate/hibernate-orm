@@ -61,7 +61,7 @@ public class EntityBatchLoaderInPredicate<T>
 		super( entityDescriptor, loadQueryInfluencers );
 		this.loadQueryInfluencers = loadQueryInfluencers;
 		this.domainBatchSize = domainBatchSize;
-		int idColumnCount = entityDescriptor.getEntityPersister().getIdentifierType().getColumnSpan( sessionFactory );
+		int idColumnCount = entityDescriptor.getEntityPersister().getIdentifierType().getColumnSpan( sessionFactory.getTypeConfiguration() );
 		this.sqlBatchSize = sessionFactory.getJdbcServices()
 				.getDialect()
 				.getBatchLoadSizingStrategy()

@@ -427,7 +427,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			}
 			else if ( subtype instanceof CompositeType ) {
 				final CompositeType subCompositeType = (CompositeType) subtype;
-				final int columnSpan = subCompositeType.getColumnSpan( creationProcess.getCreationContext().getMetadata() );
+				final int columnSpan = subCompositeType.getColumnSpan( creationProcess.getCreationContext().getTypeConfiguration() );
 				final String subTableExpression;
 				final String[] subRootTableKeyColumnNames;
 				if ( rootTableKeyColumnNames == null ) {

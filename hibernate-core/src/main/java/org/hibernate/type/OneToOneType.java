@@ -84,12 +84,27 @@ public class OneToOneType extends EntityType {
 	}
 
 	@Override
+	public int getColumnSpan(TypeConfiguration typeConfiguration) throws MappingException {
+		return 0;
+	}
+
+	@Override
 	public int[] getSqlTypeCodes(Mapping session) throws MappingException {
 		return ArrayHelper.EMPTY_INT_ARRAY;
 	}
 
 	@Override
+	public int[] getSqlTypeCodes(TypeConfiguration typeConfiguration) throws MappingException {
+		return ArrayHelper.EMPTY_INT_ARRAY;
+	}
+
+	@Override
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {
+		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
+	}
+
+	@Override
+	public boolean[] toColumnNullness(Object value, TypeConfiguration typeConfiguration) {
 		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 	}
 

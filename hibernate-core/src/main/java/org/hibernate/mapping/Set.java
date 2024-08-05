@@ -16,6 +16,7 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.OrderedSetType;
 import org.hibernate.type.SetType;
 import org.hibernate.type.SortedSetType;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
@@ -49,8 +50,14 @@ public class Set extends Collection {
 		return new Set( this );
 	}
 
+	@Override
 	public void validate(Mapping mapping) throws MappingException {
 		super.validate( mapping );
+	}
+
+	@Override
+	public void validate(TypeConfiguration typeConfiguration) throws MappingException {
+		super.validate( typeConfiguration );
 		//for backward compatibility, disable this:
 		/*Iterator iter = getElement().getColumnIterator();
 		while ( iter.hasNext() ) {
@@ -62,10 +69,12 @@ public class Set extends Collection {
 		throw new MappingException("set element mappings must have at least one non-nullable column: " + getRole() );*/
 	}
 
+	@Override
 	public boolean isSet() {
 		return true;
 	}
 
+	@Override
 	public CollectionType getDefaultCollectionType() {
 		if ( isSorted() ) {
 			return new SortedSetType( getRole(), getReferencedPropertyName(), getComparator() );
@@ -78,6 +87,7 @@ public class Set extends Collection {
 		return new SetType( getRole(), getReferencedPropertyName() );
 	}
 
+	@Override
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
 			final Table collectionTable = getCollectionTable();
@@ -111,6 +121,7 @@ public class Set extends Collection {
 //		}
 	}
 
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}

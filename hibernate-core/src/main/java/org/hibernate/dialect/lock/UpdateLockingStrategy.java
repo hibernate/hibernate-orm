@@ -90,7 +90,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 
 				final Type lockableIdentifierType = lockable.getIdentifierType();
 				lockableIdentifierType.nullSafeSet( st, id, offset, session );
-				offset += lockableIdentifierType.getColumnSpan( factory );
+				offset += lockableIdentifierType.getColumnSpan( factory.getTypeConfiguration() );
 
 				if ( lockable.isVersioned() ) {
 					lockableVersionType.nullSafeSet( st, version, offset, session );

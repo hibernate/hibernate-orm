@@ -453,7 +453,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				subquery.append( "select " );
 				for ( Column col : columns ) {
 					if ( !table.containsColumn( col ) ) {
-						int sqlType = col.getSqlTypeCode( mapping );
+						int sqlType = col.getSqlTypeCode( mapping.getTypeConfiguration() );
 						subquery.append( dialect.getSelectClauseNullString( sqlType, getFactory().getTypeConfiguration() ) )
 								.append(" as ");
 					}

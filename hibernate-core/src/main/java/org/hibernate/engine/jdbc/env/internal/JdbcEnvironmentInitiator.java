@@ -19,6 +19,8 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
+import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
+import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -123,6 +125,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		}
 
 		final JdbcEnvironment jdbcEnvironment;
+		DatabaseConnectionInfo databaseConnectionInfo;
 		if ( allowJdbcMetadataAccess( configurationValues ) ) {
 			jdbcEnvironment = getJdbcEnvironmentUsingJdbcMetadata(
 					configurationValues,
@@ -132,6 +135,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 					explicitDatabaseMajorVersion,
 					explicitDatabaseMinorVersion,
 					explicitDatabaseVersion);
+			databaseConnectionInfo = buildDbInfo( registry );
 		}
 		else if ( explicitDialectConfiguration( explicitDatabaseName, configurationValues ) ) {
 			jdbcEnvironment = getJdbcEnvironmentWithExplicitConfiguration(
@@ -143,31 +147,42 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 					explicitDatabaseMinorVersion,
 					explicitDatabaseVersion
 			);
+			databaseConnectionInfo = buildDbInfo( configurationValues );
 		}
 		else {
 			jdbcEnvironment = getJdbcEnvironmentWithDefaults( configurationValues, registry, dialectFactory );
+			databaseConnectionInfo = buildDbInfo( configurationValues );
 		}
 
-		logDbInfo( registry, jdbcEnvironment );
+		// most likely, the version hasn't been set yet, at least not for the ConnectionProviders that we currently maintain
+		databaseConnectionInfo.setDBVersion( jdbcEnvironment.getDialect().getVersion() );
+
+		// Standardized DB info logging
+		ConnectionInfoLogger.INSTANCE.logConnectionInfoDetails( databaseConnectionInfo.getDBInfoAsString() );
 
 		return jdbcEnvironment;
 	}
 
-	private static void logDbInfo(ServiceRegistryImplementor registry, JdbcEnvironment jdbcEnvironment) {
-		// Standardized DB info logging
-		DatabaseConnectionInfo databaseConnectionInfo = null;
+	private DatabaseConnectionInfo buildDbInfo(ServiceRegistryImplementor registry) {
 		if ( !isMultiTenancyEnabled( registry ) ) {
 			final ConnectionProvider cp = registry.requireService( ConnectionProvider.class );
-			databaseConnectionInfo = cp.getDatabaseConnectionInfo();
+			return cp.getDatabaseConnectionInfo();
 		}
 		else {
 			final MultiTenantConnectionProvider<?> mcp = registry.getService( MultiTenantConnectionProvider.class );
-			databaseConnectionInfo = mcp.getDatabaseConnectionInfo();
+			assert mcp != null;
+			return mcp.getDatabaseConnectionInfo();
 		}
-		// most likely, the version hasn't been set yet, at least not for the ConnectionProviders that we currently maintain
-		databaseConnectionInfo.setDBVersion( jdbcEnvironment.getDialect().getVersion() );
+	}
 
-		ConnectionInfoLogger.INSTANCE.logConnectionInfoDetails( databaseConnectionInfo.getDBInfoAsString() );
+	private DatabaseConnectionInfo buildDbInfo(Map<String, Object> configurationValues) {
+		return new DatabaseConnectionInfoImpl()
+					.setDBUrl( (String) configurationValues.get(JdbcSettings.JAKARTA_JDBC_URL) )
+					.setDBDriverName( (String) configurationValues.get(JdbcSettings.JAKARTA_JDBC_DRIVER) )
+					.setDBAutoCommitMode( (String) configurationValues.get(JdbcSettings.AUTOCOMMIT) )
+					.setDBIsolationLevel( ConnectionProviderInitiator.toIsolationNiceName( ConnectionProviderInitiator.interpretIsolation(configurationValues.get(JdbcSettings.ISOLATION)) ) )
+					// No setting for min. pool size
+					.setDBMaxPoolSize( (String) configurationValues.get(JdbcSettings.POOL_SIZE) );
 	}
 
 	private static JdbcEnvironmentImpl getJdbcEnvironmentWithDefaults(

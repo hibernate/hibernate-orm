@@ -7,24 +7,64 @@
 package org.hibernate.engine.jdbc.connections.spi;
 
 import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
+ * Contract used for logging "database information" on bootstrap
+ *
+ * @apiNote Most of the getters here may return {@code null} which indicates the value is not known
+ *
  * @author Jan Schatteman
  */
 public interface DatabaseConnectionInfo {
-	DatabaseConnectionInfo setDBUrl(String dbUrl);
+	/**
+	 * The JDBC URL to be used for connections
+	 */
+	@Nullable
+	String getJdbcUrl();
 
-	DatabaseConnectionInfo setDBDriverName(String dbDriverName);
+	/**
+	 * The JDBC Driver to be used for connections
+	 */
+	@Nullable
+	String getJdbcDriver();
 
-	DatabaseConnectionInfo setDBVersion(DatabaseVersion dbVersion);
+	/**
+	 * The database version.
+	 *
+	 * @see Dialect#getVersion()
+	 */
+	@Nullable
+	DatabaseVersion getDialectVersion();
 
-	DatabaseConnectionInfo setDBAutoCommitMode(String dbAutoCommitMode);
+	/**
+	 * The transaction auto-commit mode in effect.
+	 */
+	@Nullable
+	String getAutoCommitMode();
 
-	DatabaseConnectionInfo setDBIsolationLevel(String dbIsolationLevel);
+	/**
+	 * The transaction isolation-level in effect.
+	 */
+	@Nullable
+	String getIsolationLevel();
 
-	DatabaseConnectionInfo setDBMinPoolSize(String minPoolSize);
+	/**
+	 * The minimum connection pool size.
+	 */
+	@Nullable
+	Integer getPoolMinSize();
 
-	DatabaseConnectionInfo setDBMaxPoolSize(String maxPoolSize);
+	/**
+	 * The maximum connection pool size.
+	 */
+	@Nullable
+	Integer getPoolMaxSize();
 
-	String getDBInfoAsString();
+	/**
+	 * Collects the information available here as a single String with the intent of using it in logging.
+	 */
+	String toInfoString();
 }

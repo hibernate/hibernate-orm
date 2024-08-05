@@ -230,8 +230,7 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	 */
 	public static boolean hasFirstRow(Limit limit) {
 		return limit != null
-				&& limit.getFirstRow() != null
-				&& limit.getFirstRow() > 0;
+				&& limit.getFirstRow() != null;
 	}
 
 	/**

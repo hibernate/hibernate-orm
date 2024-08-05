@@ -30,7 +30,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 		final String input = "select * from tablename t where t.cat = 5";
 		final String expected = "select * from tablename t where t.cat = 5 fetch first ? rows only";
 
-		final String actual = new DerbyDialect().getLimitHandler().processSql( input, toRowSelection( 0, limit ) );
+		final String actual = new DerbyDialect().getLimitHandler().processSql( input, toRowSelection( null, limit ) );
 		assertEquals( expected, actual );
 	}
 
@@ -82,7 +82,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 		assertEquals( expected, actual );
 	}
 
-	private Limit toRowSelection(int firstRow, int maxRows) {
+	private Limit toRowSelection(Integer firstRow, Integer maxRows) {
 		Limit selection = new Limit();
 		selection.setFirstRow( firstRow );
 		selection.setMaxRows( maxRows );

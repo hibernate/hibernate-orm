@@ -50,7 +50,7 @@ public abstract class AbstractLimitHandlerTest {
 	protected abstract LimitHandler getLimitHandler();
 
 	protected Limit getLimit() {
-		return new Limit(0, 10);
+		return new Limit(null, 10);
 	}
 
 	protected String getLimitClause() {
@@ -64,8 +64,12 @@ public abstract class AbstractLimitHandlerTest {
 			}
 			else if (hasFirstRow(limit)) {
 				return " offset " + (oflh.supportsVariableLimit() ? "?" : String.valueOf(limit.getFirstRow())) + " rows";
-			} else {
+			}
+			else if (hasMaxRows(limit)) {
 				return " fetch first " + (oflh.supportsVariableLimit() ? "?" : String.valueOf(limit.getMaxRows())) + " rows only";
+			}
+			else {
+				return "";
 			}
 		}
 		return " limit ?";

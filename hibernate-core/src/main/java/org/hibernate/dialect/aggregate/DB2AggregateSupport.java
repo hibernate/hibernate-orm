@@ -397,7 +397,8 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 			}
 			else if ( needsVarcharForBitDataCast( udtColumn.getSqlType() ) ) {
 				serializerSb.append( ",cast(" ).append( prefix ).append( udtColumn.getName() ).append( " as varchar(" )
-						.append( udtColumn.getColumnSize( null, null ).getLength() ).append( ") for bit data)" );
+						.append( udtColumn.getSize().getLength() )
+						.append( ") for bit data)" );
 			}
 			else {
 				serializerSb.append( ',' ).append( prefix ).append( udtColumn.getName() );
@@ -456,7 +457,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 				deserializerSb.append( prefix ).append( udtColumn.getName() ).append( ' ' );
 				if ( needsVarcharForBitDataCast( udtColumn.getSqlType() ) ) {
 					deserializerSb.append( "varchar(" )
-							.append( udtColumn.getColumnSize( null, null ).getLength() ).append( ") for bit data" );
+							.append( udtColumn.getSize().getLength() ).append( ") for bit data" );
 				}
 				else {
 					deserializerSb.append( udtColumn.getSqlType() );

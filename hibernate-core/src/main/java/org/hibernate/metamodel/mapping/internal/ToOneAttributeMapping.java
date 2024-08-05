@@ -787,7 +787,7 @@ public class ToOneAttributeMapping
 		}
 		else if ( type instanceof EntityType ) {
 			final EntityType entityType = (EntityType) type;
-			final Type identifierOrUniqueKeyType = entityType.getIdentifierOrUniqueKeyType( factory );
+			final Type identifierOrUniqueKeyType = entityType.getIdentifierOrUniqueKeyType( factory.getTypeConfiguration() );
 			final String propertyName;
 			if ( entityType.isReferenceToPrimaryKey() ) {
 				propertyName = entityType.getAssociatedEntityPersister( factory ).getIdentifierPropertyName();

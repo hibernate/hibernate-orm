@@ -79,7 +79,18 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 
 	@Override
 	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
-		return join( discriminatorType.getSqlTypeCodes( mapping ), identifierType.getSqlTypeCodes( mapping ) );
+		return join(
+				discriminatorType.getSqlTypeCodes( mapping ),
+				identifierType.getSqlTypeCodes( mapping )
+		);
+	}
+
+	@Override
+	public int[] getSqlTypeCodes(TypeConfiguration typeConfiguration) throws MappingException {
+		return join(
+				discriminatorType.getSqlTypeCodes( typeConfiguration ),
+				identifierType.getSqlTypeCodes( typeConfiguration )
+		);
 	}
 
 	@Override
@@ -219,13 +230,27 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	@Override
+	public boolean[] toColumnNullness(Object value, TypeConfiguration typeConfiguration) {
+		final boolean[] result = new boolean[ getColumnSpan( typeConfiguration ) ];
+		if ( value != null ) {
+			Arrays.fill( result, true );
+		}
+		return result;
+	}
+
+	@Override
 	public boolean isDirty(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session)
 			throws HibernateException {
 		return isDirty( old, current, session );
 	}
 
 	@Override
-	public int getColumnSpan(Mapping session) {
+	public int getColumnSpan(Mapping mapping) {
+		return 2;
+	}
+
+	@Override
+	public int getColumnSpan(TypeConfiguration typeConfiguration) {
 		return 2;
 	}
 

@@ -12,6 +12,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
@@ -44,6 +45,8 @@ public abstract class IndexedCollection extends Collection {
 	public void setIndex(Value index) {
 		this.index = index;
 	}
+
+	@Override
 	public final boolean isIndexed() {
 		return true;
 	}
@@ -59,6 +62,7 @@ public abstract class IndexedCollection extends Collection {
 				&& isSame( index, other.index );
 	}
 
+	@Override
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
 			PrimaryKey pk = new PrimaryKey( getCollectionTable() );
@@ -91,6 +95,7 @@ public abstract class IndexedCollection extends Collection {
 //		}
 	}
 
+	@Override
 	public void validate(Mapping mapping) throws MappingException {
 		super.validate( mapping );
 
@@ -98,10 +103,26 @@ public abstract class IndexedCollection extends Collection {
 
 		if ( !getIndex().isValid(mapping) ) {
 			throw new MappingException(
-				"collection index mapping has wrong number of columns: " +
-				getRole() +
-				" type: " +
-				getIndex().getType().getName()
+					"collection index mapping has wrong number of columns: " +
+							getRole() +
+							" type: " +
+							getIndex().getType().getName()
+			);
+		}
+	}
+
+	@Override
+	public void validate(TypeConfiguration typeConfiguration) throws MappingException {
+		super.validate( typeConfiguration );
+
+		assert getElement() != null : "IndexedCollection index not bound : " + getRole();
+
+		if ( !getIndex().isValid( typeConfiguration ) ) {
+			throw new MappingException(
+					"collection index mapping has wrong number of columns: " +
+							getRole() +
+							" type: " +
+							getIndex().getType().getName()
 			);
 		}
 	}

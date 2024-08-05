@@ -216,7 +216,7 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 				final BasicValue basicValue = (BasicValue) context.getProperty().getValue();
 				final Size size = basicValue.getColumns().get( 0 ).getColumnSize(
 						context.getDatabase().getDialect(),
-						basicValue.getMetadata()
+						basicValue.getMetadata().getTypeConfiguration()
 				);
 				final Clock baseClock = context.getServiceRegistry()
 						.requireService( ConfigurationService.class )

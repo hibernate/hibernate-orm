@@ -55,6 +55,7 @@ import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.UserComponentType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 
 import static java.util.Collections.unmodifiableList;
@@ -811,6 +812,35 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	@Override
 	public boolean isValid(Mapping mapping) throws MappingException {
 		if ( !super.isValid( mapping ) ) {
+			return false;
+		}
+		if ( instantiatorPropertyNames != null ) {
+			if ( instantiatorPropertyNames.length < properties.size() ) {
+				throw new MappingException( "component type [" + componentClassName + "] specifies " + instantiatorPropertyNames.length + " properties for the instantiator but has " + properties.size() + " properties" );
+			}
+			final HashSet<String> assignedPropertyNames = CollectionHelper.setOfSize( properties.size() );
+			for ( String instantiatorPropertyName : instantiatorPropertyNames ) {
+				if ( getProperty( instantiatorPropertyName ) == null ) {
+					throw new MappingException( "could not find property [" + instantiatorPropertyName + "] defined in the @Instantiator withing component [" + componentClassName + "]" );
+				}
+				assignedPropertyNames.add( instantiatorPropertyName );
+			}
+			if ( assignedPropertyNames.size() != properties.size() ) {
+				final ArrayList<String> missingProperties = new ArrayList<>();
+				for ( Property property : properties ) {
+					if ( !assignedPropertyNames.contains( property.getName() ) ) {
+						missingProperties.add( property.getName() );
+					}
+				}
+				throw new MappingException( "component type [" + componentClassName + "] has " + properties.size() + " properties but the instantiator only assigns " + assignedPropertyNames.size() + " properties. missing properties: " + missingProperties );
+			}
+		}
+		return true;
+	}
+
+	@Override
+	public boolean isValid(TypeConfiguration typeConfiguration) throws MappingException {
+		if ( !super.isValid( typeConfiguration ) ) {
 			return false;
 		}
 		if ( instantiatorPropertyNames != null ) {

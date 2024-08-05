@@ -42,7 +42,7 @@ public class SimpleEntityTypeResolutionsTests {
 
 		{
 			final BasicValue identifier = (BasicValue) simpleEntityBinding.getIdentifier();
-			assertThat( identifier.isValid( scope.getDomainModel() ), is( true ) );
+			assertThat( identifier.isValid( scope.getDomainModel().getTypeConfiguration() ), is( true ) );
 			final BasicValue.Resolution<?> resolution = identifier.resolve();
 			assertSame( IntegerJavaType.INSTANCE, resolution.getDomainJavaType() );
 			assertSame( IntegerJdbcType.INSTANCE, resolution.getJdbcType() );
@@ -53,7 +53,7 @@ public class SimpleEntityTypeResolutionsTests {
 		while ( itr.hasNext() ) {
 			final Property property = itr.next();
 			final BasicValue propertyValue = (BasicValue) property.getValue();
-			assertThat( propertyValue.isValid( scope.getDomainModel() ), is( true ) );
+			assertThat( propertyValue.isValid( scope.getDomainModel().getTypeConfiguration() ), is( true ) );
 
 			final BasicValue.Resolution<?> propertyResolution = propertyValue.resolve();
 

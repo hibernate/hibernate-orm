@@ -18,6 +18,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A mapping model object representing a {@linkplain jakarta.persistence.OneToMany many-to-one association}.
@@ -85,6 +86,7 @@ public class OneToMany implements Value {
 		this.associatedClass = associatedClass;
 	}
 
+	@Override
 	public void createForeignKey() {
 		// no foreign key element for a one-to-many
 	}
@@ -103,10 +105,12 @@ public class OneToMany implements Value {
 		return associatedClass.getKey().getColumns();
 	}
 
+	@Override
 	public int getColumnSpan() {
 		return associatedClass.getKey().getColumnSpan();
 	}
 
+	@Override
 	public FetchMode getFetchMode() {
 		return FetchMode.JOIN;
 	}
@@ -114,31 +118,46 @@ public class OneToMany implements Value {
 	/**
 	 * Table of the owner entity (the "one" side)
 	 */
+	@Override
 	public Table getTable() {
 		return referencingTable;
 	}
 
+	@Override
 	public Type getType() {
 		return getEntityType();
 	}
 
+	@Override
 	public boolean isNullable() {
 		return false;
 	}
 
+	@Override
 	public boolean isSimpleValue() {
 		return false;
 	}
 
+	@Override
 	public boolean isAlternateUniqueKey() {
 		return false;
 	}
 
+	@Override
 	public boolean hasFormula() {
 		return false;
 	}
 
+	@Override
 	public boolean isValid(Mapping mapping) throws MappingException {
+		if ( referencedEntityName == null ) {
+			throw new MappingException( "one to many association must specify the referenced entity" );
+		}
+		return true;
+	}
+
+	@Override
+	public boolean isValid(TypeConfiguration typeConfiguration) throws MappingException {
 		if ( referencedEntityName == null ) {
 			throw new MappingException( "one to many association must specify the referenced entity" );
 		}
@@ -156,9 +175,11 @@ public class OneToMany implements Value {
 		this.referencedEntityName = referencedEntityName == null ? null : referencedEntityName.intern();
 	}
 
+	@Override
 	public void setTypeUsingReflection(String className, String propertyName) {
 	}
 
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept( this );
 	}
@@ -174,6 +195,7 @@ public class OneToMany implements Value {
 			&& Objects.equals( associatedClass, other.associatedClass );
 	}
 
+	@Override
 	public boolean[] getColumnInsertability() {
 		//TODO: we could just return all false...
 		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;

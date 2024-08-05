@@ -267,7 +267,7 @@ public class RootClass extends PersistentClass implements TableOwner, SoftDeleta
 	@Override
 	public void validate(Metadata mapping) throws MappingException {
 		super.validate( mapping );
-		if ( !getIdentifier().isValid( mapping ) ) {
+		if ( !getIdentifier().isValid( mapping.getTypeConfiguration() ) ) {
 			throw new MappingException(
 					"identifier mapping has wrong number of columns: " +
 							getEntityName() +

@@ -142,7 +142,12 @@ public class CustomType<J>
 	}
 
 	@Override
-	public int[] getSqlTypeCodes(Mapping pi) {
+	public int[] getSqlTypeCodes(Mapping mapping) {
+		return new int[] { jdbcType.getDdlTypeCode() };
+	}
+
+	@Override
+	public int[] getSqlTypeCodes(TypeConfiguration typeConfiguration) {
 		return new int[] { jdbcType.getDdlTypeCode() };
 	}
 
@@ -152,7 +157,12 @@ public class CustomType<J>
 	}
 
 	@Override
-	public int getColumnSpan(Mapping session) {
+	public int getColumnSpan(Mapping mapping) {
+		return 1;
+	}
+
+	@Override
+	public int getColumnSpan(TypeConfiguration typeConfiguration) {
 		return 1;
 	}
 
@@ -321,6 +331,15 @@ public class CustomType<J>
 		boolean[] result = new boolean[ getColumnSpan(mapping) ];
 		if ( value != null ) {
 			Arrays.fill(result, true);
+		}
+		return result;
+	}
+
+	@Override
+	public boolean[] toColumnNullness(Object value, TypeConfiguration typeConfiguration) {
+		boolean[] result = new boolean[getColumnSpan( typeConfiguration )];
+		if ( value != null ) {
+			Arrays.fill( result, true );
 		}
 		return result;
 	}

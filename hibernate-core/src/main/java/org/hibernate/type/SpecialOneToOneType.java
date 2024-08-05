@@ -53,15 +53,28 @@ public class SpecialOneToOneType extends OneToOneType {
 	public SpecialOneToOneType(SpecialOneToOneType original, String superTypeEntityName) {
 		super( original, superTypeEntityName );
 	}
-	
+
+	@Override
 	public int getColumnSpan(Mapping mapping) throws MappingException {
 		return super.getIdentifierOrUniqueKeyType( mapping ).getColumnSpan( mapping );
 	}
-	
+
+	@Override
+	public int getColumnSpan(TypeConfiguration typeConfiguration) throws MappingException {
+		return super.getIdentifierOrUniqueKeyType( typeConfiguration ).getColumnSpan( typeConfiguration );
+	}
+
+	@Override
 	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
 		return super.getIdentifierOrUniqueKeyType( mapping ).getSqlTypeCodes( mapping );
 	}
 
+	@Override
+	public int[] getSqlTypeCodes(TypeConfiguration typeConfiguration) throws MappingException {
+		return super.getIdentifierOrUniqueKeyType( typeConfiguration ).getSqlTypeCodes( typeConfiguration );
+	}
+
+	@Override
 	public boolean useLHSPrimaryKey() {
 		return false;
 	}
@@ -103,7 +116,7 @@ public class SpecialOneToOneType extends OneToOneType {
 								getAssociatedEntityName()
 				);
 			}
-			return getIdentifierType( sessionFactory ).disassemble( id, sessionFactory );
+			return getIdentifierType( sessionFactory.getTypeConfiguration() ).disassemble( id, sessionFactory );
 		}
 	}
 

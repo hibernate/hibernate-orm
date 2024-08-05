@@ -21,6 +21,7 @@ import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.UserDefinedObjectType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.lang.Math.log;
 import static org.hibernate.type.SqlTypes.*;
@@ -80,14 +81,15 @@ public class ColumnOrderingStrategyStandard implements ColumnOrderingStrategy {
 		@Override
 		public int compare(Column o1, Column o2) {
 			final Dialect dialect = metadata.getDatabase().getDialect();
+			final TypeConfiguration typeConfiguration = metadata.getTypeConfiguration();
 			final int physicalSizeInBytes1 = physicalSizeInBytes(
-					o1.getSqlTypeCode( metadata ),
-					o1.getColumnSize( dialect, metadata ),
+					o1.getSqlTypeCode( typeConfiguration ),
+					o1.getColumnSize( dialect, typeConfiguration ),
 					metadata
 			);
 			final int physicalSizeInBytes2 = physicalSizeInBytes(
-					o2.getSqlTypeCode( metadata ),
-					o2.getColumnSize( dialect, metadata ),
+					o2.getSqlTypeCode( typeConfiguration ),
+					o2.getColumnSize( dialect, typeConfiguration ),
 					metadata
 			);
 			int cmp = Integer.compare( Integer.max( physicalSizeInBytes1, 4 ), Integer.max( physicalSizeInBytes2, 4 ) );

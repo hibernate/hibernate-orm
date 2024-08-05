@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -27,6 +28,8 @@ import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Represents the ORM model as determined by aggregating the provided mapping sources.
@@ -203,4 +206,12 @@ public interface Metadata extends Mapping {
 	 * All of the known model contributors
 	 */
 	Set<String> getContributors();
+
+	TypeConfiguration getTypeConfiguration();
+
+	Type getIdentifierType(String className) throws org.hibernate.MappingException;
+
+	String getIdentifierPropertyName(String className);
+
+	Type getReferencedPropertyType(String className, String propertyName);
 }

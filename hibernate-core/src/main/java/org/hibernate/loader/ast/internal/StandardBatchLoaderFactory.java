@@ -39,7 +39,7 @@ public class StandardBatchLoaderFactory implements BatchLoaderFactory {
 		final SessionFactoryImplementor factory = loadQueryInfluencers.getSessionFactory();
 		// NOTE : don't use the EntityIdentifierMapping here because it will not be known until later
 		final Type identifierType = entityDescriptor.getEntityPersister().getIdentifierType();
-		if ( identifierType.getColumnSpan( factory ) == 1
+		if ( identifierType.getColumnSpan( factory.getTypeConfiguration() ) == 1
 				&& supportsSqlArrayType( factory.getJdbcServices().getDialect() )
 				&& identifierType instanceof BasicType ) {
 			// we can use a single ARRAY parameter to send all the ids

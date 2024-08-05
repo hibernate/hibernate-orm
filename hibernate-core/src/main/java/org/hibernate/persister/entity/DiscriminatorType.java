@@ -33,6 +33,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @deprecated The functionality of DiscriminatorType, {@link DiscriminatorMetadata} and {@link MetaType} have been
@@ -152,6 +153,13 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T> {
 	}
 
 	@Override
+	public boolean[] toColumnNullness(Object value, TypeConfiguration typeConfiguration) {
+		return value == null
+				? ArrayHelper.FALSE
+				: ArrayHelper.TRUE;
+	}
+
+	@Override
 	public boolean isDirty(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session)
 			throws HibernateException {
 		return Objects.equals( old, current );
@@ -176,8 +184,18 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T> {
 	}
 
 	@Override
+	public int[] getSqlTypeCodes(TypeConfiguration typeConfiguration) throws MappingException {
+		return underlyingType.getSqlTypeCodes( typeConfiguration );
+	}
+
+	@Override
 	public int getColumnSpan(Mapping mapping) throws MappingException {
 		return underlyingType.getColumnSpan( mapping );
+	}
+
+	@Override
+	public int getColumnSpan(TypeConfiguration typeConfiguration) throws MappingException {
+		return underlyingType.getColumnSpan( typeConfiguration );
 	}
 
 	@Override

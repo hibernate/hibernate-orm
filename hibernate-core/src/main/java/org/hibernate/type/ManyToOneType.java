@@ -13,7 +13,11 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.internal.ForeignKeys;
-import org.hibernate.engine.spi.*;
+import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.Mapping;
+import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -104,8 +108,18 @@ public class ManyToOneType extends EntityType {
 	}
 
 	@Override
+	public int getColumnSpan(TypeConfiguration typeConfiguration) throws MappingException {
+		return requireIdentifierOrUniqueKeyType( typeConfiguration ).getColumnSpan( typeConfiguration );
+	}
+
+	@Override
 	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
 		return requireIdentifierOrUniqueKeyType( mapping ).getSqlTypeCodes( mapping );
+	}
+
+	@Override
+	public int[] getSqlTypeCodes(TypeConfiguration typeConfiguration) throws MappingException {
+		return requireIdentifierOrUniqueKeyType( typeConfiguration ).getSqlTypeCodes( typeConfiguration );
 	}
 
 	@Override
@@ -151,7 +165,7 @@ public class ManyToOneType extends EntityType {
 
 
 		// the ids are fully resolved, so compare them with isDirty(), not isModified()
-		return getIdentifierOrUniqueKeyType( session.getFactory() )
+		return getIdentifierOrUniqueKeyType( session.getTypeConfiguration() )
 				.isDirty( old, getIdentifier( current, session ), session );
 	}
 
@@ -197,7 +211,7 @@ public class ManyToOneType extends EntityType {
 								getAssociatedEntityName()
 				);
 			}
-			return getIdentifierType( sessionFactory ).disassemble( id, sessionFactory );
+			return getIdentifierType( sessionFactory.getTypeConfiguration() ).disassemble( id, sessionFactory );
 		}
 	}
 
@@ -233,6 +247,15 @@ public class ManyToOneType extends EntityType {
 	@Override
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {
 		boolean[] result = new boolean[ getColumnSpan( mapping ) ];
+		if ( value != null ) {
+			Arrays.fill( result, true );
+		}
+		return result;
+	}
+
+	@Override
+	public boolean[] toColumnNullness(Object value, TypeConfiguration typeConfiguration) {
+		boolean[] result = new boolean[ getColumnSpan( typeConfiguration ) ];
 		if ( value != null ) {
 			Arrays.fill( result, true );
 		}

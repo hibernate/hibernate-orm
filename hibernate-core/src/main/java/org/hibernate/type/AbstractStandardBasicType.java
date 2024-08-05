@@ -32,6 +32,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -106,6 +107,11 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
+	public boolean[] toColumnNullness(Object value, TypeConfiguration typeConfiguration) {
+		return value == null ? ArrayHelper.FALSE : ArrayHelper.TRUE;
+	}
+
+	@Override
 	public String[] getRegistrationKeys() {
 		return registerUnderJavaType()
 				? new String[] { getName(), javaType.getTypeName() }
@@ -137,7 +143,17 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
+	public final int getColumnSpan(TypeConfiguration typeConfiguration) throws MappingException {
+		return 1;
+	}
+
+	@Override
 	public final int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
+		return sqlTypes;
+	}
+
+	@Override
+	public final int[] getSqlTypeCodes(TypeConfiguration typeConfiguration) throws MappingException {
 		return sqlTypes;
 	}
 

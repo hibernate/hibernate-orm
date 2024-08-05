@@ -358,6 +358,7 @@ While most users will never see this change, it might impact integrations which 
 ** Removed `org.hibernate.Interceptor#findDirty(Object, Serializable, Object[], Object[], String[], Type[])` in favour of `org.hibernate.Interceptor#findDirty(Object, Object, Object[], Object[], String[], Type[])`
 ** Removed `org.hibernate.Interceptor#getEntity(String, Serializable)` in favour of `org.hibernate.Interceptor#getEntity(String, Serializable)`
 
+
 * Settings
 ** Removed `hibernate.mapping.precedence` and friends
 

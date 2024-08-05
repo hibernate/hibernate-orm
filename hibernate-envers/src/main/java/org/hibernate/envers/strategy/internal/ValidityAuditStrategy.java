@@ -697,7 +697,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 
 		public int bind(int index, PreparedStatement statement, SessionImplementor session) throws SQLException {
 			type.nullSafeSet( statement, value, index, session );
-			return type.getColumnSpan( session.getSessionFactory() );
+			return type.getColumnSpan( session.getSessionFactory().getTypeConfiguration() );
 		}
 	}
 

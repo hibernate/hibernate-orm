@@ -16,7 +16,6 @@ import org.hibernate.QueryException;
 import org.hibernate.Remove;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -33,6 +32,7 @@ import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.SpecialOneToOneType;
 import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Gavin King
@@ -243,7 +243,7 @@ class EntityPropertyMapping {
 		assert columns != null : "Incoming columns should not be null : " + path;
 		assert type != null : "Incoming type should not be null : " + path;
 
-		if ( columns.length != type.getColumnSpan( factory ) ) {
+		if ( columns.length != type.getColumnSpan( factory.getTypeConfiguration() ) ) {
 			throw new MappingException(
 					"broken column mapping for: " + path +
 							" of: " + getEntityName()
@@ -333,9 +333,9 @@ class EntityPropertyMapping {
 			final String[] formulaTemplates,
 			final Metadata factory) throws MappingException {
 
-		Type idtype = etype.getIdentifierOrUniqueKeyType( factory );
-		String idPropName = etype.getIdentifierOrUniqueKeyPropertyName( factory );
-		boolean hasNonIdentifierPropertyNamedId = hasNonIdentifierPropertyNamedId( etype, factory );
+		Type idtype = etype.getIdentifierOrUniqueKeyType( factory.getTypeConfiguration() );
+		String idPropName = etype.getIdentifierOrUniqueKeyPropertyName( factory.getTypeConfiguration() );
+		boolean hasNonIdentifierPropertyNamedId = hasNonIdentifierPropertyNamedId( etype, factory.getTypeConfiguration() );
 
 		if ( etype.isReferenceToPrimaryKey() ) {
 			if ( !hasNonIdentifierPropertyNamedId ) {
@@ -352,12 +352,12 @@ class EntityPropertyMapping {
 		}
 	}
 
-	private boolean hasNonIdentifierPropertyNamedId(final EntityType entityType, final Mapping factory) {
+	private boolean hasNonIdentifierPropertyNamedId(final EntityType entityType, final TypeConfiguration typeConfiguration) {
 		// TODO : would be great to have a Mapping#hasNonIdentifierPropertyNamedId method
 		// I don't believe that Mapping#getReferencedPropertyType accounts for the identifier property; so
 		// if it returns for a property named 'id', then we should have a non-id field named id
 		try {
-			return factory.getReferencedPropertyType(
+			return typeConfiguration.getReferencedPropertyType(
 					entityType.getAssociatedEntityName(),
 					EntityPersister.ENTITY_ID
 			) != null;
@@ -382,7 +382,7 @@ class EntityPropertyMapping {
 		for ( int i = 0; i < properties.length; i++ ) {
 			String subpath = extendPath( path, properties[i] );
 			try {
-				int length = types[i].getColumnSpan( factory );
+				int length = types[i].getColumnSpan( factory.getTypeConfiguration() );
 				String[] columnSlice = ArrayHelper.slice( columns, begin, length );
 				String[] columnReaderSlice = ArrayHelper.slice( columnReaders, begin, length );
 				String[] columnReaderTemplateSlice = ArrayHelper.slice( columnReaderTemplates, begin, length );

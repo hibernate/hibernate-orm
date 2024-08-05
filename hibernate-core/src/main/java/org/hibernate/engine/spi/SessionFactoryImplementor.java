@@ -10,6 +10,7 @@ import java.util.Collection;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -31,6 +32,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.generator.Generator;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -189,4 +191,16 @@ public interface SessionFactoryImplementor
 	 */
 	@Override @Deprecated
 	MetamodelImplementor getMetamodel();
+
+	default Type getIdentifierType(String className) throws MappingException{
+		return getMappingMetamodel().getEntityDescriptor( className ).getIdentifierType();
+	}
+
+	default String getIdentifierPropertyName(String className) throws MappingException{
+		return getMappingMetamodel().getEntityDescriptor( className ).getIdentifierPropertyName();
+	}
+
+	default Type getReferencedPropertyType(String className, String propertyName) throws MappingException{
+		return getMappingMetamodel().getEntityDescriptor( className ).getPropertyType( propertyName );
+	}
 }

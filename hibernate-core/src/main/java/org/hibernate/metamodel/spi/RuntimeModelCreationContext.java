@@ -34,7 +34,7 @@ public interface RuntimeModelCreationContext {
 	MappingMetamodelImplementor getDomainModel();
 
 	default TypeConfiguration getTypeConfiguration() {
-		return getBootstrapContext().getTypeConfiguration();
+		return getSessionFactory().getTypeConfiguration();
 	}
 
 	default JavaTypeRegistry getJavaTypeRegistry() {

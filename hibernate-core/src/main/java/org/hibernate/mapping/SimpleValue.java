@@ -398,19 +398,23 @@ public abstract class SimpleValue implements KeyValue {
 		}
 	}
 
+	@Override
 	public boolean isUpdateable() {
 		//needed to satisfy KeyValue
 		return true;
 	}
-	
+
+	@Override
 	public FetchMode getFetchMode() {
 		return FetchMode.SELECT;
 	}
 
+	@Override
 	public Table getTable() {
 		return table;
 	}
 
+	@Override
 	public String getNullValue() {
 		return nullValue;
 	}
@@ -451,6 +455,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.foreignKeyDefinition = foreignKeyDefinition;
 	}
 
+	@Override
 	public boolean isAlternateUniqueKey() {
 		return alternateUniqueKey;
 	}
@@ -459,6 +464,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.alternateUniqueKey = unique;
 	}
 
+	@Override
 	public boolean isNullable() {
 		for ( Selectable selectable : getSelectables() ) {
 			if ( selectable instanceof Formula ) {
@@ -476,12 +482,19 @@ public abstract class SimpleValue implements KeyValue {
 		return true;
 	}
 
+	@Override
 	public boolean isSimpleValue() {
 		return true;
 	}
 
+	@Override
 	public boolean isValid(Mapping mapping) throws MappingException {
 		return getColumnSpan() == getType().getColumnSpan( mapping );
+	}
+
+	@Override
+	public boolean isValid(TypeConfiguration typeConfiguration) throws MappingException {
+		return getColumnSpan() == getType().getColumnSpan( typeConfiguration );
 	}
 
 	protected void setAttributeConverterDescriptor(ConverterDescriptor descriptor) {
@@ -747,6 +760,7 @@ public abstract class SimpleValue implements KeyValue {
 		return getClass().getSimpleName() + '(' + columns + ')';
 	}
 
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}

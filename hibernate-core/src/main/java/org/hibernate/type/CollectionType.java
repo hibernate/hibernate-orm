@@ -45,6 +45,7 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
@@ -162,12 +163,21 @@ public abstract class CollectionType extends AbstractType implements Association
 	}
 
 	@Override
-	public int[] getSqlTypeCodes(Mapping session) throws MappingException {
+	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
 		return ArrayHelper.EMPTY_INT_ARRAY;
 	}
 
 	@Override
-	public int getColumnSpan(Mapping session) throws MappingException {
+	public int[] getSqlTypeCodes(TypeConfiguration typeConfiguration) throws MappingException {
+		return ArrayHelper.EMPTY_INT_ARRAY;
+	}
+
+	@Override
+	public int getColumnSpan(Mapping mapping) throws MappingException {
+		return 0;
+	}
+	@Override
+	public int getColumnSpan(TypeConfiguration typeConfiguration) throws MappingException {
 		return 0;
 	}
 
@@ -801,6 +811,11 @@ public abstract class CollectionType extends AbstractType implements Association
 
 	@Override
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {
+		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
+	}
+
+	@Override
+	public boolean[] toColumnNullness(Object value, TypeConfiguration typeConfiguration) {
 		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 	}
 }

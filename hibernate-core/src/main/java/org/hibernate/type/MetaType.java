@@ -21,6 +21,7 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.persister.entity.DiscriminatorMetadata;
 import org.hibernate.persister.entity.DiscriminatorType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Gavin King
@@ -61,13 +62,24 @@ public class MetaType extends AbstractType {
 		return entityNameToDiscriminatorValueMap;
 	}
 
+	@Override
 	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
 		return baseType.getSqlTypeCodes(mapping);
 	}
 
 	@Override
+	public int[] getSqlTypeCodes(TypeConfiguration typeConfiguration) throws MappingException {
+		return baseType.getSqlTypeCodes(typeConfiguration);
+	}
+
+	@Override
 	public int getColumnSpan(Mapping mapping) throws MappingException {
 		return baseType.getColumnSpan(mapping);
+	}
+
+	@Override
+	public int getColumnSpan(TypeConfiguration typeConfiguration) throws MappingException {
+		return baseType.getColumnSpan(typeConfiguration);
 	}
 
 	@Override
@@ -110,7 +122,15 @@ public class MetaType extends AbstractType {
 		return (String) value; //value is the entity name
 	}
 
+	/**
+	 * @deprecated use {@link #fromXMLString(String, TypeConfiguration)}
+	 */
+	@Deprecated(since = "7.0")
 	public Object fromXMLString(String xml, Mapping factory) throws HibernateException {
+		return xml; //xml is the entity name
+	}
+
+	public Object fromXMLString(String xml, TypeConfiguration typeConfiguration) throws HibernateException {
 		return xml; //xml is the entity name
 	}
 
@@ -141,6 +161,11 @@ public class MetaType extends AbstractType {
 
 	@Override
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean[] toColumnNullness(Object value, TypeConfiguration typeConfiguration) {
 		throw new UnsupportedOperationException();
 	}
 

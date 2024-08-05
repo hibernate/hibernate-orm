@@ -139,6 +139,7 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.MetaType;
 import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -396,13 +397,14 @@ public abstract class AbstractCollectionPersister
 			columnInsertability = elementBootDescriptor.getColumnInsertability();
 		}
 		int j = 0;
+		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
 		for ( Selectable selectable: elementBootDescriptor.getSelectables() ) {
 			elementColumnAliases[j] = selectable.getAlias( dialect, table );
 			if ( selectable.isFormula() ) {
 				Formula form = (Formula) selectable;
 				elementFormulaTemplates[j] = form.getTemplate(
 						dialect,
-						creationContext.getTypeConfiguration(),
+						typeConfiguration,
 						creationContext.getFunctionRegistry()
 				);
 				elementFormulas[j] = form.getFormula();
@@ -410,11 +412,14 @@ public abstract class AbstractCollectionPersister
 			else {
 				Column col = (Column) selectable;
 				elementColumnNames[j] = col.getQuotedName( dialect );
-				elementColumnWriters[j] = col.getWriteExpr( elementBootDescriptor.getSelectableType( factory, j ), dialect );
+				elementColumnWriters[j] = col.getWriteExpr(
+						elementBootDescriptor.getSelectableType( typeConfiguration, j ),
+						dialect
+				);
 				elementColumnReaders[j] = col.getReadExpr( dialect );
 				elementColumnReaderTemplates[j] = col.getTemplate(
 						dialect,
-						creationContext.getTypeConfiguration(),
+						typeConfiguration,
 						creationContext.getFunctionRegistry()
 				);
 				elementColumnIsGettable[j] = true;
@@ -456,7 +461,7 @@ public abstract class AbstractCollectionPersister
 					Formula indexForm = (Formula) s;
 					indexFormulaTemplates[i] = indexForm.getTemplate(
 							dialect,
-							creationContext.getTypeConfiguration(),
+							typeConfiguration,
 							creationContext.getFunctionRegistry()
 					);
 					indexFormulas[i] = indexForm.getFormula();
@@ -574,7 +579,7 @@ public abstract class AbstractCollectionPersister
 			manyToManyWhereTemplate = Template.renderWhereStringTemplate(
 					manyToManyWhereString,
 					creationContext.getDialect(),
-					creationContext.getTypeConfiguration()
+					typeConfiguration
 			);
 		}
 

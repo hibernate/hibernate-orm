@@ -21,6 +21,7 @@ import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -91,6 +92,7 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 		SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 		Dialect dialect = getDialect();
+
 		return TemporaryTable.createIdTable(
 				session.getEntityPersister( null, new TestEntity() ),
 				basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
@@ -145,6 +147,11 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 					@Override
 					public JdbcServices getJdbcServices() {
 						return jdbcServices;
+					}
+
+					@Override
+					public TypeConfiguration getTypeConfiguration() {
+						return session.getTypeConfiguration();
 					}
 
 					@Override

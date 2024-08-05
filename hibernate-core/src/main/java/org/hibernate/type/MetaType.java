@@ -13,7 +13,6 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -21,6 +20,7 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.persister.entity.DiscriminatorMetadata;
 import org.hibernate.persister.entity.DiscriminatorType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Gavin King
@@ -61,13 +61,13 @@ public class MetaType extends AbstractType {
 		return entityNameToDiscriminatorValueMap;
 	}
 
-	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
-		return baseType.getSqlTypeCodes(mapping);
+	public int[] getSqlTypeCodes(TypeConfiguration typeConfiguration) throws MappingException {
+		return baseType.getSqlTypeCodes(typeConfiguration);
 	}
 
 	@Override
-	public int getColumnSpan(Mapping mapping) throws MappingException {
-		return baseType.getColumnSpan(mapping);
+	public int getColumnSpan(TypeConfiguration typeConfiguration) throws MappingException {
+		return baseType.getColumnSpan(typeConfiguration);
 	}
 
 	@Override
@@ -110,7 +110,7 @@ public class MetaType extends AbstractType {
 		return (String) value; //value is the entity name
 	}
 
-	public Object fromXMLString(String xml, Mapping factory) throws HibernateException {
+	public Object fromXMLString(String xml, TypeConfiguration typeConfiguration) throws HibernateException {
 		return xml; //xml is the entity name
 	}
 
@@ -140,7 +140,7 @@ public class MetaType extends AbstractType {
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
+	public boolean[] toColumnNullness(Object value, TypeConfiguration typeConfiguration) {
 		throw new UnsupportedOperationException();
 	}
 

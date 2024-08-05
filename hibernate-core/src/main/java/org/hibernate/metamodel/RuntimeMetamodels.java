@@ -7,11 +7,13 @@
 package org.hibernate.metamodel;
 
 import org.hibernate.Incubating;
+import org.hibernate.MappingException;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.type.Type;
 
 /**
  * Entry point providing access to the runtime metamodels:
@@ -61,5 +63,17 @@ public interface RuntimeMetamodels {
 
 	default String getImportedName(String name) {
 		return getMappingMetamodel().getImportedName( name );
+	}
+
+	default Type getIdentifierType(String className) throws MappingException {
+		return getMappingMetamodel().getEntityDescriptor( className ).getIdentifierType();
+	}
+
+	default String getIdentifierPropertyName(String className) throws MappingException {
+		return getMappingMetamodel().getEntityDescriptor( className ).getIdentifierPropertyName();
+	}
+
+	default Type getReferencedPropertyType(String className, String propertyName) throws MappingException {
+		return getMappingMetamodel().getEntityDescriptor( className ).getPropertyType( propertyName );
 	}
 }

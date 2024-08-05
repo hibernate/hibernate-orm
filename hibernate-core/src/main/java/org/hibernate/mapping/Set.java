@@ -10,12 +10,12 @@ import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.OrderedSetType;
 import org.hibernate.type.SetType;
 import org.hibernate.type.SortedSetType;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
@@ -49,8 +49,8 @@ public class Set extends Collection {
 		return new Set( this );
 	}
 
-	public void validate(Mapping mapping) throws MappingException {
-		super.validate( mapping );
+	public void validate(TypeConfiguration typeConfiguration) throws MappingException {
+		super.validate( typeConfiguration );
 		//for backward compatibility, disable this:
 		/*Iterator iter = getElement().getColumnIterator();
 		while ( iter.hasNext() ) {

@@ -19,7 +19,6 @@ import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -33,6 +32,7 @@ import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 import org.hibernate.type.WrapperArrayHandling;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
@@ -260,7 +260,7 @@ public class Property implements Serializable, MetaAttributable {
 		this.metaAttributes = metas;
 	}
 
-	public boolean isValid(Mapping mapping) throws MappingException {
+	public boolean isValid(TypeConfiguration typeConfiguration) throws MappingException {
 		final Value value = getValue();
 		if ( value instanceof BasicValue && ( (BasicValue) value ).isDisallowedWrapperArray() ) {
 			throw new MappingException(
@@ -277,7 +277,7 @@ public class Property implements Serializable, MetaAttributable {
 							"and the Javadoc of the org.hibernate.cfg.AvailableSettings.WRAPPER_ARRAY_HANDLING field."
 			);
 		}
-		return value.isValid( mapping );
+		return value.isValid( typeConfiguration );
 	}
 
 	public String toString() {

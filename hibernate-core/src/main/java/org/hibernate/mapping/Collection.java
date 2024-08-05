@@ -24,7 +24,6 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.collection.internal.CustomCollectionTypeSemantics;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.Expectation;
@@ -33,6 +32,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CustomCollectionType;
 import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserCollectionType;
 
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_BOOLEAN_ARRAY;
@@ -371,11 +371,11 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		this.fetchMode = fetchMode;
 	}
 
-	public void validate(Mapping mapping) throws MappingException {
+	public void validate(TypeConfiguration typeConfiguration) throws MappingException {
 		assert getKey() != null : "Collection key not bound : " + getRole();
 		assert getElement() != null : "Collection element not bound : " + getRole();
 
-		if ( !getKey().isValid( mapping ) ) {
+		if ( !getKey().isValid( typeConfiguration ) ) {
 			throw new MappingException(
 					"collection foreign key mapping has wrong number of columns: "
 							+ getRole()
@@ -383,7 +383,7 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 							+ getKey().getType().getName()
 			);
 		}
-		if ( !getElement().isValid( mapping ) ) {
+		if ( !getElement().isValid( typeConfiguration ) ) {
 			throw new MappingException(
 					"collection element mapping has wrong number of columns: "
 							+ getRole()
@@ -506,7 +506,7 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		return false;
 	}
 
-	public boolean isValid(Mapping mapping) {
+	public boolean isValid(TypeConfiguration typeConfiguration) {
 		return true;
 	}
 

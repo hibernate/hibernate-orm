@@ -357,7 +357,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		final Size size;
 		if ( selectable instanceof Column column ) {
 			resolveColumn( column, getDialect() );
-			size = column.calculateColumnSize( getDialect(), getBuildingContext().getMetadataCollector() );
+			size = column.calculateColumnSize( getDialect(), getBuildingContext().getMetadataCollector().getTypeConfiguration() );
 		}
 		else {
 			size = Size.nil();
@@ -965,7 +965,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		return aggregateColumn == null
 				? jdbcTypeCode
 				: getDialect().getAggregateSupport()
-				.aggregateComponentSqlTypeCode( aggregateColumn.getSqlTypeCode( getMetadata() ), jdbcTypeCode );
+				.aggregateComponentSqlTypeCode( aggregateColumn.getSqlTypeCode( getMetadata().getTypeConfiguration() ), jdbcTypeCode );
 	}
 
 	@Override

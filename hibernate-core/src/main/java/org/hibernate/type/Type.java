@@ -14,9 +14,9 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -96,15 +96,15 @@ public interface Type extends Serializable {
 	/**
 	 * How many columns are used to persist this type?
 	 * <p>
-	 * Always the same as {@link #getSqlTypeCodes(Mapping) getSqlTypCodes(mapping).length}.
+	 * Always the same as {@link #getSqlTypeCodes(TypeConfiguration) getSqlTypCodes(TypeConfiguration).length}.
 	 *
-	 * @param mapping The mapping object :/
+	 * @param typeConfiguration The TypeConfiguration  {#{@link TypeConfiguration}}
 	 *
 	 * @return The number of columns
 	 *
 	 * @throws MappingException Generally indicates an issue accessing the passed mapping object.
 	 */
-	int getColumnSpan(Mapping mapping) throws MappingException;
+	int getColumnSpan(TypeConfiguration typeConfiguration) throws MappingException;
 
 	/**
 	 * Return the JDBC types codes as defined by {@link java.sql.Types} or {@link SqlTypes}
@@ -112,13 +112,13 @@ public interface Type extends Serializable {
 	 * <p>
 	 * The number of elements in this array must match the return from {@link #getColumnSpan}.
 	 *
-	 * @param mapping The mapping object :/
+	 * @param typeConfiguration The TypeConfiguration  {#{@link TypeConfiguration}}
 	 *
 	 * @return The JDBC type codes.
 	 *
 	 * @throws MappingException Generally indicates an issue accessing the passed mapping object.
 	 */
-	int[] getSqlTypeCodes(Mapping mapping) throws MappingException;
+	int[] getSqlTypeCodes(TypeConfiguration typeConfiguration) throws MappingException;
 
 	/**
 	 * The class handled by this type.
@@ -492,9 +492,9 @@ public interface Type extends Serializable {
 	 * mapped columns would be null.
 	 *
 	 * @param value an instance of the type
-	 * @param mapping The mapping abstraction
+	 * @param typeConfiguration The TypeConfiguration  {#{@link TypeConfiguration}}
 	 *
 	 * @return array indicating column nullness for a value instance
 	 */
-	boolean[] toColumnNullness(@Nullable Object value, Mapping mapping);
+	boolean[] toColumnNullness(@Nullable Object value, TypeConfiguration typeConfiguration);
 }

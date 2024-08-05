@@ -285,6 +285,7 @@ While most users will never see this change, it might impact integrations which 
 ** Removed `SqmQualifiedJoin` (all joins are qualified)
 ** Removed `AdditionalJaxbMappingProducer` -> `AdditionalMappingContributor`
 ** Removed `MetadataContributor` -> `AdditionalMappingContributor`
+** Removed `org.hibernate.engine.spi.Mapping` in favor of `org.hibernate.type.spi.TypeConfiguration`, `org.hibernate.boot.Metadata` or `org.hibernate.metamodel.RuntimeMetamodels`
 
 * Behavior
 ** Removed `org.hibernate.Session#save` in favor of `org.hibernate.Session#persist`
@@ -305,6 +306,7 @@ While most users will never see this change, it might impact integrations which 
 ** Removed `org.hibernate.Interceptor#onCollectionUpdate(Object, Serializable)` in favour of `org.hibernate.Interceptor#onCollectionUpdate(Object, Object)`
 ** Removed `org.hibernate.Interceptor#findDirty(Object, Serializable, Object[], Object[], String[], Type[])` in favour of `org.hibernate.Interceptor#findDirty(Object, Object, Object[], Object[], String[], Type[])`
 ** Removed `org.hibernate.Interceptor#getEntity(String, Serializable)` in favour of `org.hibernate.Interceptor#getEntity(String, Serializable)`
+
 
 * Settings
 ** Removed `hibernate.mapping.precedence` and friends

@@ -92,7 +92,7 @@ public class JavaTimeFractionalSecondsTests {
 		final Property theInstant = entityBinding.getProperty( propertyName );
 		final BasicValue value = (BasicValue) theInstant.getValue();
 		final Column column = (Column) value.getColumn();
-		final Size columnSize = column.getColumnSize( value.getDialect(), domainModel );
+		final Size columnSize = column.getColumnSize( value.getDialect(), domainModel.getTypeConfiguration() );
 		assertThat( columnSize.getPrecision() ).isEqualTo( expectedMinimumSize );
 	}
 

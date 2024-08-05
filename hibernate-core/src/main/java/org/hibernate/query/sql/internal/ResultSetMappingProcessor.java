@@ -378,7 +378,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			final Type[] propertyTypes = componentType.getSubtypes();
 			int aliasIndex = 0;
 			for ( int i = 0; i < propertyNames.length; i++ ) {
-				final int columnSpan = propertyTypes[i].getColumnSpan( loadable.getFactory() );
+				final int columnSpan = propertyTypes[i].getColumnSpan( loadable.getFactory().getTypeConfiguration() );
 				addFetchBuilder(
 						suffix,
 						loadable,

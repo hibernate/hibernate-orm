@@ -506,7 +506,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		}
 
 		for ( Collection collectionBinding : this.getCollectionBindings() ) {
-			collectionBinding.validate( this );
+			collectionBinding.validate( getTypeConfiguration() );
 		}
 	}
 

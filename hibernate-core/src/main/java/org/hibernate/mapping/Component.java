@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -29,7 +28,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
@@ -56,6 +54,7 @@ import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.UserComponentType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 
 import static java.util.Collections.unmodifiableList;
@@ -805,8 +804,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	@Override
-	public boolean isValid(Mapping mapping) throws MappingException {
-		if ( !super.isValid( mapping ) ) {
+	public boolean isValid(TypeConfiguration typeConfiguration) throws MappingException {
+		if ( !super.isValid( typeConfiguration ) ) {
 			return false;
 		}
 		if ( instantiatorPropertyNames != null ) {

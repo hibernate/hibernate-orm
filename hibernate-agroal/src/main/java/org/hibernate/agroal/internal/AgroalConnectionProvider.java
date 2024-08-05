@@ -7,16 +7,17 @@
 
 package org.hibernate.agroal.internal;
 
-import io.agroal.api.AgroalDataSource;
-import io.agroal.api.configuration.AgroalConnectionFactoryConfiguration;
-import io.agroal.api.configuration.AgroalConnectionPoolConfiguration;
-import io.agroal.api.configuration.supplier.AgroalConnectionFactoryConfigurationSupplier;
-import io.agroal.api.configuration.supplier.AgroalPropertiesReader;
-import io.agroal.api.security.NamePrincipal;
-import io.agroal.api.security.SimplePassword;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import javax.sql.DataSource;
+
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AgroalSettings;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -26,12 +27,13 @@ import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Map;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import io.agroal.api.AgroalDataSource;
+import io.agroal.api.configuration.AgroalConnectionFactoryConfiguration;
+import io.agroal.api.configuration.AgroalConnectionPoolConfiguration;
+import io.agroal.api.configuration.supplier.AgroalConnectionFactoryConfigurationSupplier;
+import io.agroal.api.configuration.supplier.AgroalPropertiesReader;
+import io.agroal.api.security.NamePrincipal;
+import io.agroal.api.security.SimplePassword;
 
 import static org.hibernate.cfg.AgroalSettings.AGROAL_CONFIG_PREFIX;
 
@@ -62,7 +64,6 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 	public static final String CONFIG_PREFIX = AGROAL_CONFIG_PREFIX + ".";
 	private static final long serialVersionUID = 1L;
 	private AgroalDataSource agroalDataSource = null;
-	private DatabaseConnectionInfo dbInfo;
 
 	// --- Configurable
 
@@ -106,18 +107,6 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 			} ) );
 
 			agroalDataSource = AgroalDataSource.from( agroalProperties );
-
-			// For logging purposes
-			AgroalConnectionPoolConfiguration acpc = agroalDataSource.getConfiguration().connectionPoolConfiguration();
-			AgroalConnectionFactoryConfiguration acfc = acpc.connectionFactoryConfiguration();
-			dbInfo = new DatabaseConnectionInfoImpl()
-					.setDBUrl( acfc.jdbcUrl() )
-					.setDBDriverName( acfc.connectionProviderClass().toString() )
-					.setDBAutoCommitMode( Boolean.toString(acfc.autoCommit()) )
-					.setDBIsolationLevel( acfc.jdbcTransactionIsolation() != null ?
-							ConnectionProviderInitiator.toIsolationNiceName( acfc.jdbcTransactionIsolation().level() ) : null )
-					.setDBMinPoolSize( String.valueOf(acpc.minSize()) )
-					.setDBMaxPoolSize( String.valueOf(acpc.maxSize()) );
 		}
 		catch ( Exception e ) {
 			ConnectionInfoLogger.INSTANCE.unableToInstantiateConnectionPool( e );
@@ -146,8 +135,21 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 	}
 
 	@Override
-	public DatabaseConnectionInfo getDatabaseConnectionInfo() {
-		return dbInfo;
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+		final AgroalConnectionPoolConfiguration acpc = agroalDataSource.getConfiguration().connectionPoolConfiguration();
+		final AgroalConnectionFactoryConfiguration acfc = acpc.connectionFactoryConfiguration();
+
+		return new DatabaseConnectionInfoImpl(
+				acfc.jdbcUrl(),
+				acfc.connectionProviderClass().toString(),
+				dialect.getVersion(),
+				Boolean.toString( acfc.autoCommit() ),
+				acfc.jdbcTransactionIsolation() != null
+						? ConnectionProviderInitiator.toIsolationNiceName( acfc.jdbcTransactionIsolation().level() )
+						: null,
+				acpc.minSize(),
+				acpc.minSize()
+		);
 	}
 
 	@Override

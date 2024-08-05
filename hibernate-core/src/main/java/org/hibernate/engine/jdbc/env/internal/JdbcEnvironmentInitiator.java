@@ -135,7 +135,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 					explicitDatabaseMajorVersion,
 					explicitDatabaseMinorVersion,
 					explicitDatabaseVersion);
-			databaseConnectionInfo = buildDbInfo( registry );
+			databaseConnectionInfo = buildDbInfo( registry, jdbcEnvironment.getDialect() );
 		}
 		else if ( explicitDialectConfiguration( explicitDatabaseName, configurationValues ) ) {
 			jdbcEnvironment = getJdbcEnvironmentWithExplicitConfiguration(
@@ -147,42 +147,32 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 					explicitDatabaseMinorVersion,
 					explicitDatabaseVersion
 			);
-			databaseConnectionInfo = buildDbInfo( configurationValues );
+			databaseConnectionInfo = buildDbInfo( configurationValues, jdbcEnvironment.getDialect() );
 		}
 		else {
 			jdbcEnvironment = getJdbcEnvironmentWithDefaults( configurationValues, registry, dialectFactory );
-			databaseConnectionInfo = buildDbInfo( configurationValues );
+			databaseConnectionInfo = buildDbInfo( configurationValues, jdbcEnvironment.getDialect() );
 		}
 
-		// most likely, the version hasn't been set yet, at least not for the ConnectionProviders that we currently maintain
-		databaseConnectionInfo.setDBVersion( jdbcEnvironment.getDialect().getVersion() );
-
 		// Standardized DB info logging
-		ConnectionInfoLogger.INSTANCE.logConnectionInfoDetails( databaseConnectionInfo.getDBInfoAsString() );
+		ConnectionInfoLogger.INSTANCE.logConnectionInfoDetails( databaseConnectionInfo.toInfoString() );
 
 		return jdbcEnvironment;
 	}
 
-	private DatabaseConnectionInfo buildDbInfo(ServiceRegistryImplementor registry) {
+	private DatabaseConnectionInfo buildDbInfo(ServiceRegistryImplementor registry, Dialect dialect) {
 		if ( !isMultiTenancyEnabled( registry ) ) {
 			final ConnectionProvider cp = registry.requireService( ConnectionProvider.class );
-			return cp.getDatabaseConnectionInfo();
+			return cp.getDatabaseConnectionInfo( dialect );
 		}
 		else {
-			final MultiTenantConnectionProvider<?> mcp = registry.getService( MultiTenantConnectionProvider.class );
-			assert mcp != null;
-			return mcp.getDatabaseConnectionInfo();
+			final MultiTenantConnectionProvider<?> mcp = registry.requireService( MultiTenantConnectionProvider.class );
+			return mcp.getDatabaseConnectionInfo( dialect );
 		}
 	}
 
-	private DatabaseConnectionInfo buildDbInfo(Map<String, Object> configurationValues) {
-		return new DatabaseConnectionInfoImpl()
-					.setDBUrl( (String) configurationValues.get(JdbcSettings.JAKARTA_JDBC_URL) )
-					.setDBDriverName( (String) configurationValues.get(JdbcSettings.JAKARTA_JDBC_DRIVER) )
-					.setDBAutoCommitMode( (String) configurationValues.get(JdbcSettings.AUTOCOMMIT) )
-					.setDBIsolationLevel( ConnectionProviderInitiator.toIsolationNiceName( ConnectionProviderInitiator.interpretIsolation(configurationValues.get(JdbcSettings.ISOLATION)) ) )
-					// No setting for min. pool size
-					.setDBMaxPoolSize( (String) configurationValues.get(JdbcSettings.POOL_SIZE) );
+	private DatabaseConnectionInfo buildDbInfo(Map<String, Object> configurationValues, Dialect dialect) {
+		return new DatabaseConnectionInfoImpl( configurationValues, dialect );
 	}
 
 	private static JdbcEnvironmentImpl getJdbcEnvironmentWithDefaults(

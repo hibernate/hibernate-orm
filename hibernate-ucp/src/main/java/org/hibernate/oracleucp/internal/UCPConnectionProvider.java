@@ -15,10 +15,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
-
 import javax.sql.DataSource;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -34,7 +35,6 @@ import oracle.ucp.admin.UniversalConnectionPoolManager;
 import oracle.ucp.admin.UniversalConnectionPoolManagerImpl;
 import oracle.ucp.jdbc.PoolDataSource;
 import oracle.ucp.jdbc.PoolDataSourceFactory;
-import org.hibernate.cfg.AvailableSettings;
 
 
 public class UCPConnectionProvider implements ConnectionProvider, Configurable, Stoppable {
@@ -46,8 +46,6 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 	private static final String CONFIG_PREFIX = UCP_CONFIG_PREFIX + ".";
 	private boolean autoCommit;
 	private Integer isolation;
-
-	private DatabaseConnectionInfo dbInfo;
 
 	@SuppressWarnings("rawtypes")
 	@Override
@@ -63,14 +61,6 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 			ucpDS = PoolDataSourceFactory.getPoolDataSource();
 			Properties ucpProps = getConfiguration(props);
 			configureDataSource(ucpDS, ucpProps);
-
-			dbInfo = new DatabaseConnectionInfoImpl()
-					.setDBUrl( ucpDS.getURL() )
-					.setDBDriverName( ucpDS.getConnectionFactoryClassName() )
-					.setDBAutoCommitMode( Boolean.toString( autoCommit ) )
-					.setDBIsolationLevel( isolation != null ? ConnectionProviderInitiator.toIsolationConnectionConstantName( isolation ) : null )
-					.setDBMinPoolSize( String.valueOf(ucpDS.getMinPoolSize()) )
-					.setDBMaxPoolSize( String.valueOf(ucpDS.getMaxPoolSize()) );
 		}
 		catch (Exception e) {
 			ConnectionInfoLogger.INSTANCE.unableToInstantiateConnectionPool( e );
@@ -193,8 +183,16 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 	}
 
 	@Override
-	public DatabaseConnectionInfo getDatabaseConnectionInfo() {
-		return dbInfo;
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+		return new DatabaseConnectionInfoImpl(
+				ucpDS.getURL(),
+				ucpDS.getConnectionFactoryClassName(),
+				dialect.getVersion(),
+				Boolean.toString( autoCommit ),
+				isolation != null ? ConnectionProviderInitiator.toIsolationConnectionConstantName( isolation ) : null,
+				ucpDS.getMinPoolSize(),
+				ucpDS.getMaxPoolSize()
+		);
 	}
 
 	@Override

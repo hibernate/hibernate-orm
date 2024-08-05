@@ -53,6 +53,7 @@ import javax.transaction.xa.Xid;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -180,8 +181,8 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 	}
 
 	@Override
-	public DatabaseConnectionInfo getDatabaseConnectionInfo() {
-		return delegate.getDatabaseConnectionInfo();
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+		return delegate.getDatabaseConnectionInfo( dialect );
 	}
 
 	protected Transaction findCurrentTransaction() {

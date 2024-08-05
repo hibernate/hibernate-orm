@@ -29,6 +29,8 @@ import org.hibernate.Internal;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Database;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -170,13 +172,15 @@ public class DriverManagerConnectionProviderImpl
 			factory = ConnectionCreatorFactoryImpl.INSTANCE;
 		}
 
-		dbInfo = new DatabaseConnectionInfoImpl()
-				.setDBUrl( url )
-				.setDBDriverName( success ? driverClassName : list.toString() )
-				.setDBAutoCommitMode( Boolean.toString( autoCommit ) )
-				.setDBIsolationLevel( isolation != null ? ConnectionProviderInitiator.toIsolationNiceName(isolation) : null )
-				.setDBMinPoolSize( String.valueOf(ConfigurationHelper.getInt(MIN_SIZE, configurationValues, 1)) )
-				.setDBMaxPoolSize( String.valueOf(ConfigurationHelper.getInt(AvailableSettings.POOL_SIZE, configurationValues, 20)) );
+		dbInfo = new DatabaseConnectionInfoImpl(
+				url,
+				success ? driverClassName : list.toString(),
+				SimpleDatabaseVersion.ZERO_VERSION,
+				Boolean.toString( autoCommit ),
+				isolation != null ? ConnectionProviderInitiator.toIsolationNiceName(isolation) : null,
+				ConfigurationHelper.getInt(MIN_SIZE, configurationValues, 1),
+				ConfigurationHelper.getInt(AvailableSettings.POOL_SIZE, configurationValues, 20)
+		);
 
 		return factory.create(
 
@@ -267,8 +271,16 @@ public class DriverManagerConnectionProviderImpl
 	}
 
 	@Override
-	public DatabaseConnectionInfo getDatabaseConnectionInfo() {
-		return dbInfo;
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+		return new DatabaseConnectionInfoImpl(
+				dbInfo.getJdbcUrl(),
+				dbInfo.getJdbcDriver(),
+				dialect.getVersion(),
+				dbInfo.getAutoCommitMode(),
+				dbInfo.getIsolationLevel(),
+				dbInfo.getPoolMinSize(),
+				dbInfo.getPoolMaxSize()
+		);
 	}
 
 	@Override

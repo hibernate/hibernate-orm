@@ -19,6 +19,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.cfg.ProxoolSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -51,6 +52,7 @@ public class ProxoolConnectionProvider
 
 	private static final String PROXOOL_JDBC_STEM = "proxool.";
 
+	private String proxoolPoolAlias;
 	private String proxoolAlias;
 
 	// TRUE if the pool is borrowed from the outside, FALSE if we used to create it
@@ -63,8 +65,6 @@ public class ProxoolConnectionProvider
 	private boolean autocommit;
 
 	private ClassLoaderService classLoaderService;
-
-	private DatabaseConnectionInfo dbInfo;
 
 	@Override
 	public Connection getConnection() throws SQLException {
@@ -122,7 +122,6 @@ public class ProxoolConnectionProvider
 		final String propFile = (String) props.get( ProxoolSettings.PROXOOL_PROPERTIES );
 		final String externalConfig = (String) props.get( ProxoolSettings.PROXOOL_EXISTING_POOL );
 
-		String proxoolPoolAlias;
 		// Default the Proxool alias setting
 		proxoolAlias = proxoolPoolAlias = (String) props.get( ProxoolSettings.PROXOOL_POOL_ALIAS );
 
@@ -193,21 +192,6 @@ public class ProxoolConnectionProvider
 		// Remember Isolation level
 		isolation = ConnectionProviderInitiator.extractIsolation( props );
 		autocommit = getBoolean( JdbcSettings.AUTOCOMMIT, props );
-
-		try {
-			ConnectionPoolDefinitionIF cpd = ProxoolFacade.getConnectionPoolDefinition( proxoolPoolAlias );
-			dbInfo = new DatabaseConnectionInfoImpl()
-					.setDBUrl( cpd.getUrl() )
-					.setDBDriverName( cpd.getDriver() )
-					.setDBIsolationLevel( ConnectionProviderInitiator.toIsolationNiceName(isolation) )
-					.setDBAutoCommitMode( Boolean.toString(autocommit) )
-					.setDBMinPoolSize( String.valueOf(cpd.getMinimumConnectionCount()) )
-					.setDBMaxPoolSize( String.valueOf(cpd.getMaximumConnectionCount()) );
-		}
-		catch (ProxoolException e) {
-			PROXOOL_MESSAGE_LOGGER.warn( "Error while obtaining the database pool information", e );
-		}
-
 	}
 
 	private Reader getConfigStreamReader(String resource) {
@@ -256,8 +240,23 @@ public class ProxoolConnectionProvider
 	}
 
 	@Override
-	public DatabaseConnectionInfo getDatabaseConnectionInfo() {
-		return dbInfo;
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+		try {
+			final ConnectionPoolDefinitionIF cpd = ProxoolFacade.getConnectionPoolDefinition( proxoolPoolAlias );
+			return new DatabaseConnectionInfoImpl(
+					cpd.getUrl(),
+					cpd.getDriver(),
+					dialect.getVersion(),
+					ConnectionProviderInitiator.toIsolationNiceName( isolation ),
+					Boolean.toString( autocommit ),
+					cpd.getMinimumConnectionCount(),
+					cpd.getMaximumConnectionCount()
+			);
+		}
+		catch (ProxoolException e) {
+			PROXOOL_MESSAGE_LOGGER.warn( "Error while obtaining the database pool information", e );
+			return new DatabaseConnectionInfoImpl( dialect );
+		}
 	}
 
 	/**

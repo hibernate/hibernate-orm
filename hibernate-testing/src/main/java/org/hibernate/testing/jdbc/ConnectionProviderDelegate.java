@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
@@ -105,8 +106,8 @@ public class ConnectionProviderDelegate implements
 	}
 
 	@Override
-	public DatabaseConnectionInfo getDatabaseConnectionInfo() {
-		return connectionProvider.getDatabaseConnectionInfo();
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+		return connectionProvider.getDatabaseConnectionInfo( dialect );
 	}
 
 	@Override

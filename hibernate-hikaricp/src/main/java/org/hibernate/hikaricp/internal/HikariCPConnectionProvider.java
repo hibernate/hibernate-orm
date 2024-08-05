@@ -13,6 +13,7 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import org.hibernate.HibernateException;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
@@ -44,8 +45,6 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	 */
 	private HikariDataSource hds = null;
 
-	private DatabaseConnectionInfo dbinfo;
-
 	// *************************************************************************
 	// Configurable
 	// *************************************************************************
@@ -57,14 +56,6 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 
 			hcfg = HikariConfigurationUtil.loadConfiguration( props );
 			hds = new HikariDataSource( hcfg );
-
-			dbinfo = new DatabaseConnectionInfoImpl()
-					.setDBUrl( hcfg.getJdbcUrl() )
-					.setDBDriverName( hcfg.getDriverClassName() )
-					.setDBAutoCommitMode( Boolean.toString( hcfg.isAutoCommit() ) )
-					.setDBIsolationLevel( hcfg.getTransactionIsolation() )
-					.setDBMinPoolSize( String.valueOf(hcfg.getMinimumIdle()) )
-					.setDBMaxPoolSize( String.valueOf(hcfg.getMaximumPoolSize()) );
 		}
 		catch (Exception e) {
 			ConnectionInfoLogger.INSTANCE.unableToInstantiateConnectionPool( e );
@@ -92,8 +83,16 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	}
 
 	@Override
-	public DatabaseConnectionInfo getDatabaseConnectionInfo() {
-		return dbinfo;
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+		return new DatabaseConnectionInfoImpl(
+				hcfg.getJdbcUrl(),
+				hcfg.getDriverClassName(),
+				dialect.getVersion(),
+				Boolean.toString( hcfg.isAutoCommit() ),
+				hcfg.getTransactionIsolation(),
+				hcfg.getMinimumIdle(),
+				hcfg.getMaximumPoolSize()
+		);
 	}
 
 	@Override

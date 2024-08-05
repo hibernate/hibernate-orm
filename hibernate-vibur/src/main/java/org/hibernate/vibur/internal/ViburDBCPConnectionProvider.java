@@ -7,6 +7,12 @@
 
 package org.hibernate.vibur.internal;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Map;
+import java.util.Properties;
+
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
@@ -17,12 +23,12 @@ import org.hibernate.service.spi.Stoppable;
 
 import org.vibur.dbcp.ViburDBCPDataSource;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Map;
-import java.util.Properties;
-
-import static org.hibernate.cfg.AvailableSettings.*;
+import static org.hibernate.cfg.AvailableSettings.AUTOCOMMIT;
+import static org.hibernate.cfg.AvailableSettings.DRIVER;
+import static org.hibernate.cfg.AvailableSettings.ISOLATION;
+import static org.hibernate.cfg.AvailableSettings.PASS;
+import static org.hibernate.cfg.AvailableSettings.URL;
+import static org.hibernate.cfg.AvailableSettings.USER;
 
 /**
  * <p>ViburDBCP connection provider for Hibernate integration.
@@ -55,22 +61,12 @@ public class ViburDBCPConnectionProvider implements ConnectionProvider, Configur
 
 	private ViburDBCPDataSource dataSource = null;
 
-	private DatabaseConnectionInfo dbInfo;
-
 	@Override
 	public void configure(Map<String, Object> configurationValues) {
 		ConnectionInfoLogger.INSTANCE.configureConnectionPool( "Vibur" );
 
 		dataSource = new ViburDBCPDataSource( transform( configurationValues ) );
 		dataSource.start();
-
-		dbInfo = new DatabaseConnectionInfoImpl()
-				.setDBUrl( dataSource.getJdbcUrl() )
-				.setDBDriverName( dataSource.getDriverClassName() )
-				.setDBAutoCommitMode( String.valueOf(dataSource.getDefaultAutoCommit()) )
-				.setDBIsolationLevel( dataSource.getDefaultTransactionIsolation() )
-				.setDBMinPoolSize( String.valueOf(dataSource.getPoolInitialSize()) )
-				.setDBMaxPoolSize( String.valueOf(dataSource.getPoolMaxSize()) );
 	}
 
 	@Override
@@ -98,8 +94,16 @@ public class ViburDBCPConnectionProvider implements ConnectionProvider, Configur
 	}
 
 	@Override
-	public DatabaseConnectionInfo getDatabaseConnectionInfo() {
-		return dbInfo;
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+		return new DatabaseConnectionInfoImpl(
+				dataSource.getJdbcUrl(),
+				dataSource.getDriverClassName(),
+				dialect.getVersion(),
+				String.valueOf( dataSource.getDefaultAutoCommit() ),
+				dataSource.getDefaultTransactionIsolation(),
+				dataSource.getPoolInitialSize(),
+				dataSource.getPoolMaxSize()
+		);
 	}
 
 	@Override

@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.Function;
 import javax.sql.DataSource;
 
 import com.mchange.v2.c3p0.DataSources;
@@ -20,6 +21,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.C3p0Settings;
 import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -62,11 +64,11 @@ public class C3P0ConnectionProvider
 	//                     hibernate sensibly lets default to minPoolSize, but we'll let users
 	//                     override it with the c3p0-style property if they want.
 	private static final String C3P0_STYLE_INITIAL_POOL_SIZE = "c3p0.initialPoolSize";
-	private DatabaseConnectionInfo dbInfo;
 	private DataSource ds;
 	private Integer isolation;
 	private boolean autocommit;
 
+	private Function<Dialect,DatabaseConnectionInfo> dbInfoProducer;
 	private ServiceRegistryImplementor serviceRegistry;
 
 	@Override
@@ -202,13 +204,17 @@ public class C3P0ConnectionProvider
 
 		isolation = ConnectionProviderInitiator.extractIsolation( props );
 
-		dbInfo = new DatabaseConnectionInfoImpl()
-				.setDBUrl( jdbcUrl )
-				.setDBDriverName( jdbcDriverClass )
-				.setDBAutoCommitMode( Boolean.toString( autocommit ) )
-				.setDBIsolationLevel( isolation != null ? ConnectionProviderInitiator.toIsolationNiceName( isolation ) : null )
-				.setDBMinPoolSize( String.valueOf(minPoolSize) )
-				.setDBMaxPoolSize( String.valueOf(maxPoolSize) );
+		final Integer poolMinSize = minPoolSize;
+		final Integer poolMaxSize = maxPoolSize;
+		dbInfoProducer = (dialect) -> new DatabaseConnectionInfoImpl(
+				jdbcUrl,
+				jdbcDriverClass,
+				dialect.getVersion(),
+				Boolean.toString( autocommit ),
+				isolation != null ? ConnectionProviderInitiator.toIsolationNiceName( isolation ) : null,
+				poolMinSize,
+				poolMaxSize
+		);
 	}
 
 	@Override
@@ -217,8 +223,8 @@ public class C3P0ConnectionProvider
 	}
 
 	@Override
-	public DatabaseConnectionInfo getDatabaseConnectionInfo() {
-		return dbInfo;
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+		return dbInfoProducer.apply( dialect );
 	}
 
 	private void setOverwriteProperty(

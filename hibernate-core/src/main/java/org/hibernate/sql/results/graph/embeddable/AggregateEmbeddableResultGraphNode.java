@@ -12,6 +12,10 @@ import org.hibernate.sql.results.graph.FetchParent;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Specialized EmbeddableResultGraphNode for cases where we have an actual embeddable class.
+ */
+@org.hibernate.Incubating
 public interface AggregateEmbeddableResultGraphNode extends EmbeddableResultGraphNode {
 	/**
 	 * Returns the positions within the values array of the respective nesting level

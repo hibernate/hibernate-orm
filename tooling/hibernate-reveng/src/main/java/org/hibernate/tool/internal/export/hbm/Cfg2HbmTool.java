@@ -107,8 +107,7 @@ public class Cfg2HbmTool {
 					if (!isDefaultCatalog(catalog, environmentProperties)) {
 						fProp.put(key, catalog);
 					}
-				} else if (! (key.startsWith("target_") 
-						|| key.equals(PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER))) {
+				} else if (! key.startsWith("target_")) {
 					fProp.put(key, properties.get(key));
 				}
 			}

@@ -28,7 +28,7 @@ public class DerbyLegacyDialectTestCase {
 		final String input = "select * from tablename t where t.cat = 5";
 		final String expected = "select * from tablename t where t.cat = 5 fetch first " + limit + " rows only";
 
-		final String actual = withLimit( input, toRowSelection( 0, limit ) );
+		final String actual = withLimit( input, toRowSelection( null, limit ) );
 		assertThat( actual ).isEqualTo( expected );
 	}
 
@@ -88,7 +88,7 @@ public class DerbyLegacyDialectTestCase {
 				.processSql( sql, -1, null, new LimitQueryOptions( limit ) );
 	}
 
-	private Limit toRowSelection(int firstRow, int maxRows) {
+	private Limit toRowSelection(Integer firstRow, Integer maxRows) {
 		Limit selection = new Limit();
 		selection.setFirstRow( firstRow );
 		selection.setMaxRows( maxRows );

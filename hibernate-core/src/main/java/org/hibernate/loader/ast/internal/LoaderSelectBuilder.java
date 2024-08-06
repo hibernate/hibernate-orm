@@ -30,7 +30,6 @@ import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -963,19 +962,6 @@ public class LoaderSelectBuilder {
 						creationState
 				);
 
-				if ( fetch.getTiming() == FetchTiming.IMMEDIATE && joined ) {
-					if ( isFetchablePluralAttributeMapping ) {
-						final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
-						final QuerySpec querySpec = creationState.getInflightQueryPart().getFirstQuerySpec();
-						applyOrdering(
-								querySpec,
-								fetchablePath,
-								pluralAttributeMapping,
-								creationState
-						);
-					}
-				}
-
 				fetches.add( fetch );
 			}
 			finally {
@@ -1008,19 +994,6 @@ public class LoaderSelectBuilder {
 		}
 
 		return true;
-	}
-
-	private void applyOrdering(
-			QuerySpec querySpec,
-			NavigablePath navigablePath,
-			PluralAttributeMapping pluralAttributeMapping,
-			LoaderSqlAstCreationState sqlAstCreationState) {
-		assert pluralAttributeMapping.getAttributeName().equals( navigablePath.getLocalName() );
-
-		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( navigablePath );
-		assert tableGroup != null;
-
-		applyOrdering( querySpec, tableGroup, pluralAttributeMapping, sqlAstCreationState );
 	}
 
 	private SelectStatement generateSelect(SubselectFetch subselect) {

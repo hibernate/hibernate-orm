@@ -24,6 +24,7 @@ import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.spi.NavigablePath;
@@ -41,8 +42,10 @@ import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.FromClause;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
@@ -92,6 +95,13 @@ public class LoaderSqlAstCreationState
 				() -> Clause.IRRELEVANT,
 				true
 		);
+	}
+
+	@Override
+	public void applyOrdering(TableGroup tableGroup, OrderByFragment orderByFragment) {
+		final QuerySpec querySpec = getInflightQueryPart().getFirstQuerySpec();
+		assert querySpec.isRoot() : "Illegal attempt to apply order-by fragment to a non-root query spec";
+		orderByFragment.apply( querySpec, tableGroup, this );
 	}
 
 	@Override

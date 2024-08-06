@@ -3,6 +3,15 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.30.Final (August 06, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32322
+
+** Bug
+    * [HHH-18410] - Performance regression due to megamorphic calls
+
+
 Changes in 6.2.28.Final (July 03, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

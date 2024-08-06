@@ -21,7 +21,6 @@ During the bootstrap process, you might want to customize Hibernate behavior so 
 
 This section discusses the process of bootstrapping a Hibernate `SessionFactory`.
 Specifically, it addresses the bootstrapping APIs.
-For a discussion of the legacy bootstrapping API, see <<appendices/Legacy_Bootstrap.adoc#appendix-legacy-bootstrap,Legacy Bootstrapping>>.
 
 [[bootstrap-native-registry]]
 ==== Building the ServiceRegistry

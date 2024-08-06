@@ -371,6 +371,8 @@ def releasePrepareTask = tasks.register( 'releasePrepare' ) {
     group 'Release'
     description 'Performs release preparations on local check-out, including updating changelog'
 
+    // we want to assemble the docs here so that we catch problems early (and even during "dry run" for CI releases)
+    dependsOn assembleDocumentationTask
     dependsOn gitPreparationForReleaseTask
 
     finalizedBy releasePreparePostGitTask

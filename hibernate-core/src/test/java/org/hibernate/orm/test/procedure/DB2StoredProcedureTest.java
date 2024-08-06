@@ -469,7 +469,7 @@ public class DB2StoredProcedureTest {
 								" 	 A.STREET = street_in" +
 								" 	 AND A.CITY = city_in;" +
 								"    OPEN rec_out; " +
-								"END;"
+								"END"
 				);
 			}
 		} ) );

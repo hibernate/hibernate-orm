@@ -3,6 +3,83 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+
+Changes in 6.6.0.CR2 (August 6, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32320
+
+** Bug
+    * [HHH-15725] - Criteria API Expression.as adds cast even when the cast type is equal to the expression type
+    * [HHH-17840] - Jackson JsonNode stored as JSON "null" value instead of database NULL
+    * [HHH-17914] - NPE getSqlString\(\) in debug mode
+    * [HHH-17949] - StatelessSession.upsert\(\) with @Version-ed entity on databases with no SQL merge
+    * [HHH-18012] - Subclass of super generic array AttributeConverter cannot be auto applied
+    * [HHH-18017] - Query cache on Polymorphic entities leads to InstantiationException \(Cannot instantiate abstract class\)
+    * [HHH-18062] - 'Could not instantiate entity ... due to argument type mismatch' with record @IdClass
+    * [HHH-18085] - Executing SELECT query twice in a transaction, leads to "Shared references of collection error"
+    * [HHH-18086] - Assertion Error when using JOIN FETCH on ToOneAttribute with multiple JOINs of parent entity
+    * [HHH-18108] - Duplicate class definition regression caused by ClassTransformer
+    * [HHH-18177] - org.hibernate.AssertionFailure: null identifier for collection of role thrown when merging entity with generated id
+    * [HHH-18229] - "UnsupportedOperationException: Re-work support for semi-resolve " with null value in column referenced by @JoinColumn
+    * [HHH-18272] - UnsupportedOperationException when order / group by clause contains aliased item
+    * [HHH-18278] - Metamodel generator is ignoring JPA/Hibernate annotations in package-info
+    * [HHH-18280] - Support named procedure parameters down to the JDBC level
+    * [HHH-18284] - Missing classes in org.hibernate.graalvm.internal.StaticClassLists
+    * [HHH-18285] - Non-polymorphic embeddable inheritance fails starting with Hibernate ORM 6.6
+    * [HHH-18288] - Subclasses of SINGLE\_TABLE Inheritance should not be allowed to define @Table
+    * [HHH-18291] - Regression in SemanticQueryBuilder 6.4.7.Final -> 6.4.8.Final. Also present in 6.5.2.Final.
+    * [HHH-18292] - Regression in SemanticQueryBuilder 6.4.9.Final -> 6.5.0.Final. Also present in 6.5.2.Final.
+    * [HHH-18302] - DB2CallableStatementSupport uses an invalid syntax for named parameters
+    * [HHH-18306] - Implicit instantiation for queries with single selection item broken
+    * [HHH-18312] - Informix nationalized JDBC types support
+    * [HHH-18313] - NullPointerException because JdbcIsolationDelegate.sqlExceptionHelper\(\) returns null
+    * [HHH-18330] - UnknownTableReferenceException in JPQL query when join fetching to-one in embedded id
+    * [HHH-18332] - DB2 stored procedures returning REF\_CURSORs are not working with the standard support
+    * [HHH-18334] - Teradata doesn't support variable limit
+    * [HHH-18338] - When an embeddable object is loaded before the entity it references, hibernate fails to start
+    * [HHH-18340] - method return type errors in AbstractDelegatingSessionFactoryBuilder
+    * [HHH-18343] - fix Altibase integration test failures since Hibernate 6.5.2
+    * [HHH-18347] - Casted parameter rendering broken for some DDL types when using @Column
+    * [HHH-18352] - Tuple comparison emulation performing bad
+    * [HHH-18357] - Null pointer exception in createCountQuery because Identifier descriptor is null in MappedSuperclass
+    * [HHH-18358] - Metemodel generator does not resolving entity type literals
+    * [HHH-18382] - Assertion error when using @DiscriminatorFormula for embeddable inheritance
+    * [HHH-18390] - JoinColumn leads to \`NullPointerException: Cannot invoke "Object.hashCode\(\)" because "value" is null\` on load
+    * [HHH-18406] - Oracle: schema update fails to create entity table if one of the fields is an array
+    * [HHH-18410] - Performance regression due to megamorphic calls
+
+** Improvement
+	* [HHH-12836] - JtaPlatformInitiator.initiateService is logging same debug message twice
+	* [HHH-18296] - When JDBC drivers generate SQLWarnings with a "success" SQLState, do not log that at WARN level
+	* [HHH-18301] - Db2 supports 'drop table if exists' since version 11.5
+	* [HHH-18318] - fix user guide's bootstrap method reference link text
+	* [HHH-18320] - Correct some syntax errors in Locking chapter in user guide
+	* [HHH-18324] - Upgrade to Jandex 3.2.0
+	* [HHH-18327] - Connection pool configuration settings constants
+	* [HHH-18335] - improve partial order sorting in AnnotationMetadataSourceProcessorImpl
+	* [HHH-18339] - \`supportsFilterClause\` is not overridden to True for H2SqlAstTranslator
+	* [HHH-18342] - fix contradictive javadoc of org.hibernate.engine.spi.SharedSessionContractImplementor
+	* [HHH-18375] - Reuse previous row state when result cardinality is duplicated
+	* [HHH-18379] - Allow passing row count estimate to pre-size collections
+	* [HHH-18393] - Upgrade JBoss Logging Tools \(processor\) to 3.0.0.Final
+	* [HHH-18395] - Fix intermittent failures of clock based tests
+	* [HHH-18401] - SelectionQuery needs better validation of query return type
+	* [HHH-18411] - Add ability to specify a custom UuidGenerator.ValueGenerator
+	* [HHH-18412] - Upgrade JBoss Logging Tools \(processor\) to 3.0.1.Final
+	* [HHH-18454] - Skip connection provider retrieval and DB info logging when booting offline
+
+** New Feature
+	* [HHH-18224] - standardized logging of database connection
+
+** Task
+	* [HHH-18271] - Continue investigating performance drops compared to Hibernate 5
+	* [HHH-18293] - Upgrade to latest geolatte-geom version 1.9.1
+	* [HHH-18381] - Changes for Hibernate Reactive 2.4
+	* [HHH-18431] - Allow Hibernate Reactive to skip lazy initializations
+
+
+
 Changes in 6.6.0.CR1 (June 14, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

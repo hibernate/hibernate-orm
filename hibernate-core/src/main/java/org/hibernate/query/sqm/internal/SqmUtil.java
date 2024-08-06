@@ -1121,7 +1121,10 @@ public class SqmUtil {
 		}
 
 		final JavaType<?> selectionExpressibleJavaType = selectionExpressible.getExpressibleJavaType();
-		assert selectionExpressibleJavaType != null;
+		if ( selectionExpressibleJavaType == null ) {
+			// nothing we can validate
+			return;
+		}
 
 		final Class<?> selectionExpressibleJavaTypeClass = selectionExpressibleJavaType.getJavaTypeClass();
 		if ( selectionExpressibleJavaTypeClass == Object.class ) {

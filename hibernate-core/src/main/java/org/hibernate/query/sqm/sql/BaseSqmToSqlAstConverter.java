@@ -8555,14 +8555,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public ImmutableFetchList visitFetches(FetchParent fetchParent) {
-		if ( fetchParent instanceof EagerCollectionFetch && currentQuerySpec().isRoot() ) {
-			final EagerCollectionFetch collectionFetch = (EagerCollectionFetch) fetchParent;
-			final PluralAttributeMapping pluralAttributeMapping = collectionFetch.getFetchedMapping();
-			final NavigablePath fetchablePath = collectionFetch.getNavigablePath();
-			final TableGroup tableGroup = getFromClauseIndex().getTableGroup( fetchablePath );
-			assert tableGroup.getModelPart() == pluralAttributeMapping;
-			applyOrdering( tableGroup, pluralAttributeMapping );
-		}
 		final FetchableContainer referencedMappingContainer = fetchParent.getReferencedMappingContainer();
 		final int keySize = referencedMappingContainer.getNumberOfKeyFetchables();
 		final int size = referencedMappingContainer.getNumberOfFetchables();
@@ -8649,11 +8641,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 	}
 
-	private void applyOrdering(TableGroup tableGroup, OrderByFragment orderByFragment) {
-		if ( orderByFragments == null ) {
-			orderByFragments = new ArrayList<>();
+	@Override
+	public void applyOrdering(TableGroup tableGroup, OrderByFragment orderByFragment) {
+		if ( currentQuerySpec().isRoot() ) {
+			if ( orderByFragments == null ) {
+				orderByFragments = new ArrayList<>();
+			}
+			orderByFragments.add( new AbstractMap.SimpleEntry<>( orderByFragment, tableGroup ) );
 		}
-		orderByFragments.add( new AbstractMap.SimpleEntry<>( orderByFragment, tableGroup ) );
 	}
 
 	@Override

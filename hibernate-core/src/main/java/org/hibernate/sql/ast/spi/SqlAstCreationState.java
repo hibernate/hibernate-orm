@@ -9,6 +9,7 @@ package org.hibernate.sql.ast.spi;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.persister.entity.EntityNameUse;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 
@@ -48,5 +49,9 @@ public interface SqlAstCreationState {
 	@Internal
 	default boolean supportsEntityNameUsage() {
 		return false;
+	}
+
+	@Internal
+	default void applyOrdering(TableGroup tableGroup, OrderByFragment orderByFragment) {
 	}
 }

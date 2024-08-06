@@ -738,6 +738,16 @@ public class PluralAttributeMappingImpl
 				creationState
 		);
 
+		if ( fetched ) {
+			if ( orderByFragment != null ) {
+				creationState.applyOrdering( tableGroup, orderByFragment );
+			}
+
+			if ( manyToManyOrderByFragment != null ) {
+				creationState.applyOrdering( tableGroup, manyToManyOrderByFragment );
+			}
+		}
+
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				navigablePath,
 				determineSqlJoinType( lhs, requestedJoinType, fetched ),

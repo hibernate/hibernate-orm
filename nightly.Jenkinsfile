@@ -118,7 +118,7 @@ stage('Build') {
 									break;
 								case "mariadb_10_5":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('mariadb:10.4.31').pull()
+										docker.image('mariadb:10.5.25').pull()
 									}
 									sh "./docker_db.sh mariadb_10_5"
 									state[buildEnv.tag]['containerName'] = "mariadb"

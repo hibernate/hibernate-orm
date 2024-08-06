@@ -176,12 +176,12 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 		if ( valueIndexesToCacheIndexes == null ) {
 			return ( (Object[]) row )[valueIndex];
 		}
-		else if ( row.getClass() != Object[].class ) {
-			assert valueIndexesToCacheIndexes[valueIndex] == 0;
-			return row;
+		else if ( row instanceof Object[] ) {
+			return ( (Object[]) row )[valueIndexesToCacheIndexes[valueIndex]];
 		}
 		else {
-			return ( (Object[]) row )[valueIndexesToCacheIndexes[valueIndex]];
+			assert valueIndexesToCacheIndexes[valueIndex] == 0;
+			return row;
 		}
 	}
 

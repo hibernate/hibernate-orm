@@ -31,67 +31,60 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Jpa(
-		annotatedClasses = { ReloadEntityTest.Book.class, ReloadEntityTest.Author.class, ReloadEntityTest.AuthorDetails.class }
+		annotatedClasses = { ReloadWithPreviousRowEntityTest.Book.class, ReloadWithPreviousRowEntityTest.Author.class, ReloadWithPreviousRowEntityTest.AuthorDetails.class }
 )
 @Jira("https://hibernate.atlassian.net/browse/HHH-18271")
-public class ReloadEntityTest {
+public class ReloadWithPreviousRowEntityTest {
 
 	@BeforeEach
 	public void prepareTestData(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
-			final Book book = new Book();
-			book.name = "HTTP Definitive guide";
+			final Book book1 = new Book();
+			book1.name = "Book 1";
+			final Book book2 = new Book();
+			book2.name = "Book 2";
+			final Book book3 = new Book();
+			book3.name = "Book 3";
 
-			final Author author = new Author();
-			author.name = "David Gourley";
+			final Author author1 = new Author();
+			author1.name = "Author 1";
+			final Author author2 = new Author();
+			author2.name = "Author 2";
 
-			final AuthorDetails details = new AuthorDetails();
-			details.name = "Author Details";
-			details.author = author;
-			author.details = details;
+			final AuthorDetails details1 = new AuthorDetails();
+			details1.name = "Author Details";
+			details1.author = author1;
+			author1.details = details1;
 
-			author.books.add( book );
-			book.author = author;
+			final AuthorDetails details2 = new AuthorDetails();
+			details2.name = "Author Details";
+			details2.author = author2;
+			author2.details = details2;
 
-			entityManager.persist( author );
-			entityManager.persist( book );
+			author1.books.add( book1 );
+			author1.books.add( book2 );
+			author1.books.add( book3 );
+			book1.author = author1;
+			book2.author = author1;
+			book3.author = author2;
+			details1.favoriteBook = book3;
+
+			entityManager.persist( author1 );
+			entityManager.persist( author2 );
+			entityManager.persist( book1 );
+			entityManager.persist( book2 );
+			entityManager.persist( book3 );
 		} );
 	}
 
 	@Test
-	public void testReload(EntityManagerFactoryScope scope) {
+	public void testReloadWithPreviousRow(EntityManagerFactoryScope scope) {
 		scope.inEntityManager( em -> {
-			final List<Author> authors1 = em.createQuery( "from Author", Author.class ).getResultList();
-			final List<Author> authors2 = em.createQuery( "from Author", Author.class ).getResultList();
-		} );
-	}
-
-	@Test
-	public void testFlushAndReload(EntityManagerFactoryScope scope) {
-		scope.inTransaction( em -> {
-			// Load an Author with EAGER details
-			final List<Author> authors1 = em.createQuery( "from Author", Author.class ).getResultList();
-			final Author author = authors1.get(0);
-
-			// Create a new details object and then detach it
-			final AuthorDetails details = new AuthorDetails();
-			details.name = "Author Details";
-			details.author = author;
-			author.details = null;
-			em.persist( details );
-			em.flush();
-			em.detach( details );
-
-			// Replace the details with a lazy proxy
-			author.details = em.getReference( AuthorDetails.class, details.detailsId );
-			em.flush();
-
-			Assertions.assertFalse( Hibernate.isInitialized( author.details ) );
-
-			final List<Author> authors2 = em.createQuery( "from Author join fetch details", Author.class ).getResultList();
-			final Author author2 = authors2.get(0);
-			Assertions.assertTrue( Hibernate.isInitialized( author2.details ) );
-			Assertions.assertEquals( details.name, author2.details.getName() );
+			// Load authors into persistence context
+			Author author = em.createQuery( "from Author a join fetch a.details where a.name = 'Author 1'", Author.class ).getSingleResult();
+			em.createQuery( "from Author a join fetch a.details d left join fetch d.favoriteBook join fetch a.books where a.name = 'Author 1'", Author.class ).getResultList();
+			Assertions.assertTrue( Hibernate.isInitialized( author.details.favoriteBook ) );
+			Assertions.assertTrue( Hibernate.isInitialized( author.books ) );
 		} );
 	}
 
@@ -108,7 +101,7 @@ public class ReloadEntityTest {
 		@OneToMany(fetch = FetchType.LAZY, mappedBy = "author")
 		public List<Book> books = new ArrayList<>();
 
-		@OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+		@OneToOne(optional = false, fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
 		public AuthorDetails details;
 
 	}
@@ -125,6 +118,9 @@ public class ReloadEntityTest {
 
 		@OneToOne(fetch = FetchType.LAZY, mappedBy = "details", optional = false)
 		public Author author;
+
+		@ManyToOne(fetch = FetchType.LAZY)
+		public Book favoriteBook;
 
 		public String getName() {
 			return name;

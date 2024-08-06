@@ -53,6 +53,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	protected final ToOneAttributeMapping toOneMapping;
 	protected final boolean affectedByFilter;
 	protected final boolean keyIsEager;
+	protected final boolean hasLazySubInitializer;
 
 	public static class EntitySelectFetchInitializerData extends InitializerData {
 		// per-row state
@@ -88,9 +89,15 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		this.keyAssembler = keyResult.createResultAssembler( this, creationState );
 		this.isEnhancedForLazyLoading = concreteDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 		this.affectedByFilter = affectedByFilter;
-		this.keyIsEager = keyAssembler != null
-				&& keyAssembler.getInitializer() != null
-				&& keyAssembler.getInitializer().isEager();
+		final Initializer<?> initializer = keyAssembler.getInitializer();
+		if ( initializer == null ) {
+			this.keyIsEager = false;
+			this.hasLazySubInitializer = false;
+		}
+		else {
+			this.keyIsEager = initializer.isEager();
+			this.hasLazySubInitializer = !initializer.isEager() || initializer.hasLazySubInitializers();
+		}
 	}
 
 	@Override
@@ -321,8 +328,8 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	}
 
 	@Override
-	public boolean hasEagerSubInitializers() {
-		return keyIsEager;
+	public boolean hasLazySubInitializers() {
+		return hasLazySubInitializer;
 	}
 
 	@Override

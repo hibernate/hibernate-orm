@@ -6,11 +6,12 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
-import java.util.BitSet;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.BiConsumer;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -53,7 +54,7 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 	private final NavigablePath navigablePath;
 	private final EmbeddableValuedModelPart embedded;
 	private final EmbeddableMappingType embeddableMappingType;
-	private final InitializerParent<InitializerData> parent;
+	private final @Nullable InitializerParent<InitializerData> parent;
 	private final boolean isResultInitializer;
 	private final boolean isPartOfKey;
 	private final boolean createEmptyCompositesEnabled;
@@ -62,7 +63,10 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 	protected final DomainResultAssembler<?>[][] assemblers;
 	protected final BasicResultAssembler<?> discriminatorAssembler;
 	protected final @Nullable Initializer<InitializerData>[][] subInitializers;
-	protected final BitSet subInitializersNeedingResolveIfParentInitialized;
+	protected final @Nullable Initializer<InitializerData>[][] subInitializersForResolveFromInitialized;
+//	protected final BitSet eagerSubInitializers;
+	protected final boolean lazyCapable;
+	protected final boolean hasLazySubInitializer;
 
 	public static class EmbeddableInitializerData extends InitializerData implements ValueAccess {
 		protected final InitializerData parentData;
@@ -123,18 +127,42 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 				(BasicResultAssembler<?>) discriminatorFetch.createAssembler( this, creationState ) :
 				null;
 		this.subInitializers = createInitializers( assemblers );
-		final BitSet subInitializersNeedingResolveIfParentInitialized = new BitSet(subInitializers.length * embeddableMappingType.getNumberOfFetchables());
+		final @Nullable Initializer<InitializerData>[][] eagerSubInitializers = new Initializer[subInitializers.length][];
+		Arrays.fill( eagerSubInitializers, Initializer.EMPTY_ARRAY );
+//		final BitSet eagerSubInitializers = new BitSet(subInitializers.length * embeddableMappingType.getNumberOfFetchables());
+		boolean lazyCapable = false;
+		boolean hasLazySubInitializers = false;
 		for ( int subclassId = 0; subclassId < subInitializers.length; subclassId++ ) {
 			final Initializer<InitializerData>[] subInitializer = subInitializers[subclassId];
 			for ( int i = 0; i < subInitializer.length; i++ ) {
 				final Initializer<InitializerData> initializer = subInitializer[i];
 				if ( initializer != null ) {
-					subInitializersNeedingResolveIfParentInitialized.set( subclassId * embeddableMappingType.getNumberOfFetchables() + i );
+					if ( initializer.isEager() ) {
+						if ( eagerSubInitializers[subclassId] == Initializer.EMPTY_ARRAY ) {
+							eagerSubInitializers[subclassId] = new Initializer[subInitializer.length];
+						}
+						eagerSubInitializers[subclassId][i] = initializer;
+						hasLazySubInitializers = hasLazySubInitializers || initializer.hasLazySubInitializers();
+					}
+					else {
+						hasLazySubInitializers = true;
+					}
+					lazyCapable = lazyCapable || initializer.isLazyCapable();
 				}
 			}
 		}
 
-		this.subInitializersNeedingResolveIfParentInitialized = subInitializersNeedingResolveIfParentInitialized;
+		this.subInitializersForResolveFromInitialized = isEnhancedForLazyLoading( embeddableMappingType )
+				? subInitializers
+				: eagerSubInitializers;
+		this.lazyCapable = lazyCapable;
+		this.hasLazySubInitializer = hasLazySubInitializers;
+	}
+
+	private static boolean isEnhancedForLazyLoading(EmbeddableMappingType embeddableMappingType) {
+		return ManagedTypeHelper.isPersistentAttributeInterceptableType(
+				embeddableMappingType.getRepresentationStrategy().getMappedJavaType().getJavaTypeClass()
+		);
 	}
 
 	protected DomainResultAssembler<?>[][] createAssemblers(
@@ -224,9 +252,13 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 	}
 
 	@Override
-	public boolean hasEagerSubInitializers() {
-		// Since embeddables are never lazy, we only need to check the components
-		return !subInitializersNeedingResolveIfParentInitialized.isEmpty();
+	public boolean isLazyCapable() {
+		return lazyCapable;
+	}
+
+	@Override
+	public boolean hasLazySubInitializers() {
+		return hasLazySubInitializer;
 	}
 
 	@Override
@@ -328,17 +360,10 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 	}
 
 	private void resolveInstanceSubInitializers(int subclassId, Object instance, RowProcessingState rowProcessingState) {
-		final int fetchables = embedded.getNumberOfFetchables();
-		final int startIndex = subclassId * fetchables;
-		final int fetchableIndexNeedingResolve = subInitializersNeedingResolveIfParentInitialized.nextSetBit( startIndex );
-		if ( fetchableIndexNeedingResolve < 0 || fetchableIndexNeedingResolve >= startIndex + fetchables ) {
-			return;
-		}
-		final Initializer<InitializerData>[] subInitializer = subInitializers[subclassId];
-		for ( int i = 0; i < subInitializer.length; i++ ) {
-			if ( subInitializersNeedingResolveIfParentInitialized.get( startIndex + i ) ) {
-				final Initializer<?> initializer = subInitializer[i];
-				assert initializer != null;
+		final Initializer<?>[] initializers = subInitializersForResolveFromInitialized[subclassId];
+		for ( int i = 0; i < initializers.length; i++ ) {
+			final Initializer<?> initializer = initializers[i];
+			if ( initializer != null ) {
 				final Object subInstance = embeddableMappingType.getValue( instance, i );
 				if ( subInstance == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 					// Go through the normal initializer process

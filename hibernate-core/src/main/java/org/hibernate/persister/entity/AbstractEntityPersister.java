@@ -3584,6 +3584,8 @@ public abstract class AbstractEntityPersister
 			final TableMappingBuilder tableMappingBuilder;
 
 			final TableMappingBuilder existing = tableBuilderMap.get( tableExpression );
+
+			final boolean inverseTable = isInverseTable( relativePosition );
 			if ( existing == null ) {
 				final Consumer<SelectableConsumer> selectableConsumerConsumer = tableKeyColumnVisitationSupplier.get();
 				final List<EntityTableMapping.KeyColumn> keyColumns = new ArrayList<>();
@@ -3614,7 +3616,7 @@ public abstract class AbstractEntityPersister
 						relativePosition,
 						new EntityTableMapping.KeyMapping( keyColumns, identifierMapping ),
 						!isIdentifierTable && isNullableTable( relativePosition ),
-						isInverseTable( relativePosition ),
+						inverseTable,
 						isIdentifierTable,
 						insertExpectations[ relativePosition ],
 						customInsertSql,
@@ -3636,7 +3638,9 @@ public abstract class AbstractEntityPersister
 				tableMappingBuilder = existing;
 			}
 
-			collectAttributesIndexesForTable( relativePosition, tableMappingBuilder.attributeIndexes::add );
+			if ( !inverseTable ) {
+				collectAttributesIndexesForTable( relativePosition, tableMappingBuilder.attributeIndexes::add );
+			}
 		} );
 
 		final EntityTableMapping[] list = new EntityTableMapping[tableBuilderMap.size()];

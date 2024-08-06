@@ -19,6 +19,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.interpretIsolation;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
 /**
  * Standard implementation of DatabaseConnectionInfo
@@ -44,11 +45,11 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 			String isolationLevel,
 			Integer poolMinSize,
 			Integer poolMaxSize) {
-		this.jdbcUrl = jdbcUrl;
-		this.jdbcDriver = jdbcDriver;
+		this.jdbcUrl = nullIfEmpty( jdbcUrl );
+		this.jdbcDriver = nullIfEmpty( jdbcDriver );
 		this.dialectVersion = dialectVersion;
-		this.autoCommitMode = autoCommitMode;
-		this.isolationLevel = isolationLevel;
+		this.autoCommitMode = nullIfEmpty( autoCommitMode );
+		this.isolationLevel = nullIfEmpty( isolationLevel );
 		this.poolMinSize = poolMinSize;
 		this.poolMaxSize = poolMaxSize;
 	}

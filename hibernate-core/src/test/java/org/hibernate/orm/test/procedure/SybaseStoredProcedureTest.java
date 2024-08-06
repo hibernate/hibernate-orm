@@ -30,8 +30,6 @@ import jakarta.persistence.StoredProcedureQuery;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInAutoCommit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Vlad Mihalcea
@@ -117,6 +115,7 @@ public class SybaseStoredProcedureTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.IsJtds.class, comment = "only JTDS supports named parameters and if named parameter are not supported then the parameter should be registered in the same order as defined in the stored procedure")
 	public void testStoredProcedureOutParameterDifferentParametersRegistrationOrder(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_count_phones" );

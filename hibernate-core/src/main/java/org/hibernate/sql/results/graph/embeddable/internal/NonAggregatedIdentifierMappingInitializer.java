@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
-import java.util.BitSet;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -58,7 +57,9 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 
 	private final DomainResultAssembler<?>[] assemblers;
 	private final @Nullable Initializer<InitializerData>[] initializers;
-	private final BitSet subInitializersNeedingResolveIfParentInitialized;
+	private final @Nullable Initializer<InitializerData>[] subInitializersForResolveFromInitialized;
+	private final boolean lazyCapable;
+	private final boolean hasLazySubInitializer;
 	private final boolean hasIdClass;
 
 	public static class NonAggregatedIdentifierMappingInitializerData extends InitializerData implements ValueAccess {
@@ -125,14 +126,23 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 		this.sessionFactory = creationState.getSqlAstCreationContext().getSessionFactory();
 		this.assemblers = createAssemblers( this, resultDescriptor, creationState, virtualIdEmbeddable, fetchConverter );
 		final Initializer<?>[] initializers = new Initializer[assemblers.length];
-		final BitSet subInitializersNeedingResolveIfParentInitialized = new BitSet(assemblers.length);
+		final Initializer<?>[] eagerSubInitializers = new Initializer[assemblers.length];
 		boolean empty = true;
+		boolean emptyEager = true;
+		boolean lazyCapable = false;
+		boolean hasLazySubInitializers = false;
 		for ( int i = 0; i < assemblers.length; i++ ) {
 			final Initializer<?> initializer = assemblers[i].getInitializer();
 			if ( initializer != null ) {
 				if ( initializer.isEager() ) {
-					subInitializersNeedingResolveIfParentInitialized.set( i );
+					eagerSubInitializers[i] = initializer;
+					hasLazySubInitializers = hasLazySubInitializers || initializer.hasLazySubInitializers();
+					emptyEager = false;
 				}
+				else {
+					hasLazySubInitializers = true;
+				}
+				lazyCapable = lazyCapable || initializer.isLazyCapable();
 				initializers[i] = initializer;
 				empty = false;
 			}
@@ -141,7 +151,12 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 		this.initializers = (Initializer<InitializerData>[]) (
 				empty ? Initializer.EMPTY_ARRAY : initializers
 		);
-		this.subInitializersNeedingResolveIfParentInitialized = subInitializersNeedingResolveIfParentInitialized;
+		// No need to think about bytecode enhancement here, since ids can't contain lazy basic attributes
+		this.subInitializersForResolveFromInitialized = (Initializer<InitializerData>[]) (
+				emptyEager ? Initializer.EMPTY_ARRAY : initializers
+		);
+		this.lazyCapable = lazyCapable;
+		this.hasLazySubInitializer = hasLazySubInitializers;
 	}
 
 	protected static DomainResultAssembler<?>[] createAssemblers(
@@ -260,13 +275,9 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 	}
 
 	private void resolveInstanceSubInitializers(Object instance, RowProcessingState rowProcessingState) {
-		if ( subInitializersNeedingResolveIfParentInitialized.nextSetBit( 0 ) < 0) {
-			return;
-		}
-		for ( int i = 0; i < initializers.length; i++ ) {
-			if ( subInitializersNeedingResolveIfParentInitialized.get( i ) ) {
-				final Initializer<InitializerData> initializer = initializers[i];
-				assert initializer != null;
+		for ( int i = 0; i < subInitializersForResolveFromInitialized.length; i++ ) {
+			final Initializer<InitializerData> initializer = subInitializersForResolveFromInitialized[i];
+			if ( initializer != null ) {
 				final Object subInstance = virtualIdEmbeddable.getValue( instance, i );
 				if ( subInstance == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 					// Go through the normal initializer process
@@ -370,9 +381,13 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 	}
 
 	@Override
-	public boolean hasEagerSubInitializers() {
-		// Since embeddables are never lazy, we only need to check the components
-		return !subInitializersNeedingResolveIfParentInitialized.isEmpty();
+	public boolean isLazyCapable() {
+		return lazyCapable;
+	}
+
+	@Override
+	public boolean hasLazySubInitializers() {
+		return hasLazySubInitializer;
 	}
 
 	/*

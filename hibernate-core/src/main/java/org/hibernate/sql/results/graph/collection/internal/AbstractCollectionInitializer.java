@@ -240,7 +240,7 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 	}
 
 	@Override
-	public boolean hasEagerSubInitializers() {
+	public boolean hasLazySubInitializers() {
 		return true;
 	}
 

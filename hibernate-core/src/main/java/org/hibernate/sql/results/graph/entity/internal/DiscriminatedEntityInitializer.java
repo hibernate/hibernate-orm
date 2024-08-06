@@ -52,6 +52,7 @@ public class DiscriminatedEntityInitializer
 	private final boolean eager;
 	private final boolean resultInitializer;
 	private final boolean keyIsEager;
+	private final boolean hasLazySubInitializer;
 
 	public static class DiscriminatedEntityInitializerData extends InitializerData {
 		protected EntityPersister concreteDescriptor;
@@ -80,9 +81,15 @@ public class DiscriminatedEntityInitializer
 		this.keyValueAssembler = keyFetch.createAssembler( this, creationState );
 		this.eager = eager;
 		this.resultInitializer = resultInitializer;
-		this.keyIsEager = keyValueAssembler != null
-				&& keyValueAssembler.getInitializer() != null
-				&& keyValueAssembler.getInitializer().isEager();
+		final Initializer<?> initializer = keyValueAssembler.getInitializer();
+		if ( initializer == null ) {
+			this.keyIsEager = false;
+			this.hasLazySubInitializer = false;
+		}
+		else {
+			this.keyIsEager = initializer.isEager();
+			this.hasLazySubInitializer = !initializer.isEager() || initializer.hasLazySubInitializers();
+		}
 	}
 
 	@Override
@@ -316,8 +323,8 @@ public class DiscriminatedEntityInitializer
 	}
 
 	@Override
-	public boolean hasEagerSubInitializers() {
-		return keyIsEager;
+	public boolean hasLazySubInitializers() {
+		return hasLazySubInitializer;
 	}
 
 	@Override

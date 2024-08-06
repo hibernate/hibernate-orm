@@ -132,9 +132,9 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 	private final Initializer<?>[][] subInitializers;
 	private final Initializer<?>[][] subInitializersForResolveFromInitialized;
 	private final MutabilityPlan<Object>[][] updatableAttributeMutabilityPlans;
-	private final ImmutableBitSet[] lazySubInitializers;
+	private final ImmutableBitSet[] lazySets;
 	private final ImmutableBitSet[] maybeLazySets;
-	private final boolean hasEagerSubInitializers;
+	private final boolean hasLazySubInitializers;
 
 	public static class EntityInitializerData extends InitializerData {
 
@@ -280,7 +280,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		final DomainResultAssembler<?>[][] assemblers = new DomainResultAssembler[subMappingTypes.size() + 1][];
 		final Initializer<?>[][] subInitializers = new Initializer<?>[subMappingTypes.size() + 1][];
 		final Initializer<?>[][] eagerSubInitializers = new Initializer<?>[subMappingTypes.size() + 1][];
-		final BitSet[] lazySubInitializers = new BitSet[subMappingTypes.size() + 1];
+		final BitSet[] lazySets = new BitSet[subMappingTypes.size() + 1];
 		final BitSet[] maybeLazySets = new BitSet[subMappingTypes.size() + 1];
 		final MutabilityPlan[][] updatableAttributeMutabilityPlans = new MutabilityPlan[subMappingTypes.size() + 1][];
 		assemblers[rootEntityDescriptor.getSubclassId()] = new DomainResultAssembler[rootEntityDescriptor.getNumberOfFetchables()];
@@ -291,7 +291,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			updatableAttributeMutabilityPlans[subMappingType.getSubclassId()] = new MutabilityPlan[subMappingType.getNumberOfAttributeMappings()];
 		}
 
-		boolean hasEagerSubInitializers = false;
+		boolean hasLazySubInitializers = false;
 		final int size = entityDescriptor.getNumberOfFetchables();
 		for ( int i = 0; i < size; i++ ) {
 			final AttributeMapping attributeMapping = entityDescriptor.getFetchable( i ).asAttributeMapping();
@@ -309,20 +309,22 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 				if ( subInitializers[subclassId] == null ) {
 					subInitializers[subclassId] = new Initializer<?>[size];
 					eagerSubInitializers[subclassId] = new Initializer<?>[size];
-					lazySubInitializers[subclassId] = new BitSet(size);
-					maybeLazySets[subclassId] = new BitSet(size);
+					lazySets[subclassId] = new BitSet( size );
+					maybeLazySets[subclassId] = new BitSet( size );
 				}
 				subInitializers[subclassId][stateArrayPosition] = subInitializer;
 				if ( subInitializer.isEager() ) {
-					hasEagerSubInitializers = true;
 					eagerSubInitializers[subclassId][stateArrayPosition] = subInitializer;
-					if ( subInitializer.hasEagerSubInitializers() ) {
+					if ( subInitializer.hasLazySubInitializers() ) {
 						maybeLazySets[subclassId].set( stateArrayPosition );
+						hasLazySubInitializers = true;
 					}
 				}
 				else {
-					lazySubInitializers[subclassId].set( stateArrayPosition );
+					// Lazy initializer
+					lazySets[subclassId].set( stateArrayPosition );
 					maybeLazySets[subclassId].set( stateArrayPosition );
+					hasLazySubInitializers = true;
 				}
 			}
 
@@ -338,19 +340,18 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 					if ( subInitializers[subMappingType.getSubclassId()] == null ) {
 						subInitializers[subMappingType.getSubclassId()] = new Initializer<?>[size];
 						eagerSubInitializers[subMappingType.getSubclassId()] = new Initializer<?>[size];
-						lazySubInitializers[subMappingType.getSubclassId()] = new BitSet(size);
+						lazySets[subMappingType.getSubclassId()] = new BitSet(size);
 						maybeLazySets[subMappingType.getSubclassId()] = new BitSet(size);
 					}
 					subInitializers[subMappingType.getSubclassId()][stateArrayPosition] = subInitializer;
 					if ( subInitializer.isEager() ) {
-						hasEagerSubInitializers = true;
 						eagerSubInitializers[subMappingType.getSubclassId()][stateArrayPosition] = subInitializer;
-						if ( subInitializer.hasEagerSubInitializers() ) {
+						if ( subInitializer.hasLazySubInitializers() ) {
 							maybeLazySets[subMappingType.getSubclassId()].set( stateArrayPosition );
 						}
 					}
 					else {
-						lazySubInitializers[subMappingType.getSubclassId()].set( stateArrayPosition );
+						lazySets[subMappingType.getSubclassId()].set( stateArrayPosition );
 						maybeLazySets[subMappingType.getSubclassId()].set( stateArrayPosition );
 					}
 				}
@@ -366,7 +367,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 				}
 			}
 			subInitializers[i] = Initializer.EMPTY_ARRAY;
-			lazySubInitializers[i] = emptyBitSet;
+			lazySets[i] = emptyBitSet;
 			maybeLazySets[i] = emptyBitSet;
 		}
 		OUTER: for ( int i = 0; i < eagerSubInitializers.length; i++ ) {
@@ -385,9 +386,11 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		this.subInitializersForResolveFromInitialized = rootEntityDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()
 				? subInitializers
 				: eagerSubInitializers;
-		this.lazySubInitializers = Arrays.stream(lazySubInitializers).map( ImmutableBitSet::valueOf ).toArray(ImmutableBitSet[]::new);
-		this.maybeLazySets = Arrays.stream(maybeLazySets).map( ImmutableBitSet::valueOf ).toArray(ImmutableBitSet[]::new);
-		this.hasEagerSubInitializers = hasEagerSubInitializers;
+		this.lazySets = Arrays.stream( lazySets ).map( ImmutableBitSet::valueOf ).toArray( ImmutableBitSet[]::new );
+		this.maybeLazySets = Arrays.stream( maybeLazySets )
+				.map( ImmutableBitSet::valueOf )
+				.toArray( ImmutableBitSet[]::new );
+		this.hasLazySubInitializers = hasLazySubInitializers;
 		this.updatableAttributeMutabilityPlans = updatableAttributeMutabilityPlans;
 		this.notFoundAction = notFoundAction;
 
@@ -559,7 +562,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 				// or the entity entry has a lazy set available
 				|| ( maybeLazySet = ( entityEntry = data.entityHolder.getEntityEntry() ).getMaybeLazySet() ) != null
 				// which is contained in the lazy sub-initializers
-				&& lazySubInitializers[subclassId].contains( maybeLazySet ) ) {
+				&& lazySets[subclassId].contains( maybeLazySet ) ) {
 			return;
 		}
 		final RowProcessingState rowProcessingState = data.getRowProcessingState();
@@ -1585,8 +1588,8 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 	}
 
 	@Override
-	public boolean hasEagerSubInitializers() {
-		return hasEagerSubInitializers;
+	public boolean hasLazySubInitializers() {
+		return hasLazySubInitializers;
 	}
 
 	public boolean isPreviousRowReuse() {

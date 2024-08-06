@@ -44,7 +44,7 @@ public class DelayedCollectionInitializer extends AbstractNonJoinCollectionIniti
 	}
 
 	@Override
-	public boolean hasEagerSubInitializers() {
+	public boolean hasLazySubInitializers() {
 		return false;
 	}
 

@@ -3,6 +3,26 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.4.10.Final (August 06, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32315
+
+** Bug
+    * [HHH-18410] - Performance regression due to megamorphic calls
+    * [HHH-18352] - Tuple comparison emulation performing bad
+    * [HHH-18338] - When an embeddable object is loaded before the entity it references, hibernate fails to start
+    * [HHH-18272] - UnsupportedOperationException when order / group by clause contains aliased item
+    * [HHH-17949] - StatelessSession.upsert() with @Version-ed entity on databases with no SQL merge
+    * [HHH-17934] - StatelessSession.upsert() with @Version-ed entity
+    * [HHH-17840] - Jackson JsonNode stored as JSON "null" value instead of database NULL
+    * [HHH-17735] - Community dialects for MySQL 5.7 give invalid SQL syntax for locks since 6.4.4
+
+** Improvement
+    * [HHH-18412] - Upgrade JBoss Logging Tools (processor) to 3.0.1.Final
+    * [HHH-18393] - Upgrade JBoss Logging Tools (processor) to 3.0.0.Final
+
+
 Changes in 6.4.9.Final (June 11, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -55,6 +55,7 @@ public class EntityDelayedFetchInitializer
 	private final DomainResultAssembler<?> identifierAssembler;
 	private final @Nullable BasicResultAssembler<?> discriminatorAssembler;
 	private final boolean keyIsEager;
+	private final boolean hasLazySubInitializer;
 
 	public static class EntityDelayedFetchInitializerData extends InitializerData {
 		// per-row state
@@ -86,9 +87,15 @@ public class EntityDelayedFetchInitializer
 		this.discriminatorAssembler = discriminatorResult == null
 				? null
 				: (BasicResultAssembler<?>) discriminatorResult.createResultAssembler( this, creationState );
-		this.keyIsEager = identifierAssembler != null
-				&& identifierAssembler.getInitializer() != null
-				&& identifierAssembler.getInitializer().isEager();
+		final Initializer<?> initializer;
+		if ( identifierAssembler == null || ( initializer = identifierAssembler.getInitializer() ) == null ) {
+			this.keyIsEager = false;
+			this.hasLazySubInitializer = false;
+		}
+		else {
+			this.keyIsEager = initializer.isEager();
+			this.hasLazySubInitializer = !initializer.isEager() || initializer.hasLazySubInitializers();
+		}
 	}
 
 	@Override
@@ -291,8 +298,8 @@ public class EntityDelayedFetchInitializer
 	}
 
 	@Override
-	public boolean hasEagerSubInitializers() {
-		return keyIsEager;
+	public boolean hasLazySubInitializers() {
+		return hasLazySubInitializer;
 	}
 
 	@Override

@@ -221,9 +221,18 @@ public interface Initializer<Data extends InitializerData> {
 	boolean isEager();
 
 	/**
-	 * Indicates whether this initializers has eager sub-initializers, that could initialize lazy state of existing objects.
+	 * Indicates whether this initializer or one of its sub-parts could be made lazy.
 	 */
-	boolean hasEagerSubInitializers();
+	default boolean isLazyCapable() {
+		// Usually, every model part for which an initializer exists is lazy capable
+		// except for embeddable initializers with no sub-initializers
+		return true;
+	}
+
+	/**
+	 * Indicates whether this initializer has sub-initializers which are lazy.
+	 */
+	boolean hasLazySubInitializers();
 
 	/**
 	 * Indicates if this is a result or fetch initializer.

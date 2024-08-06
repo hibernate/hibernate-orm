@@ -16,12 +16,24 @@ public class LongVarbinaryJdbcType extends VarbinaryJdbcType {
 
 	private final int jdbcTypeCode;
 
+	private final int defaultSqlTypeCode;
+
 	public LongVarbinaryJdbcType() {
 		this(Types.LONGVARBINARY);
 	}
 
 	public LongVarbinaryJdbcType(int jdbcTypeCode) {
+		this( jdbcTypeCode, jdbcTypeCode );
+	}
+
+	public LongVarbinaryJdbcType(final int jdbcTypeCode, final int defaultSqlTypeCode) {
 		this.jdbcTypeCode = jdbcTypeCode;
+		this.defaultSqlTypeCode = defaultSqlTypeCode;
+	}
+
+	@Override
+	public int getDefaultSqlTypeCode() {
+		return defaultSqlTypeCode;
 	}
 
 	@Override

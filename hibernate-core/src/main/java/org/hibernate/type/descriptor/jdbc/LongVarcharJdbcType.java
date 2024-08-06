@@ -21,12 +21,19 @@ public class LongVarcharJdbcType extends VarcharJdbcType {
 
 	private final int jdbcTypeCode;
 
+	private final int defaultSqlTypeCode;
+
 	public LongVarcharJdbcType() {
 		this(Types.LONGVARCHAR);
 	}
 
 	public LongVarcharJdbcType(int jdbcTypeCode) {
+		this( jdbcTypeCode, jdbcTypeCode );
+	}
+
+	public LongVarcharJdbcType(final int jdbcTypeCode, final int defaultSqlTypeCode) {
 		this.jdbcTypeCode = jdbcTypeCode;
+		this.defaultSqlTypeCode = defaultSqlTypeCode;
 	}
 
 	@Override
@@ -37,6 +44,11 @@ public class LongVarcharJdbcType extends VarcharJdbcType {
 	@Override
 	public int getJdbcTypeCode() {
 		return jdbcTypeCode;
+	}
+
+	@Override
+	public int getDefaultSqlTypeCode() {
+		return defaultSqlTypeCode;
 	}
 
 	@Override

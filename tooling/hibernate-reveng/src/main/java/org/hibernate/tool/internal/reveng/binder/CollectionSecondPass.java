@@ -8,6 +8,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.DependantValue;
+import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Value;
@@ -46,7 +47,8 @@ public class CollectionSecondPass extends org.hibernate.boot.model.internal.Coll
     		oldKeyForeignKeyName = keyDependantValue.getForeignKeyName();
     		keyDependantValue.setForeignKeyName("none");
     	}
-    	super.doSecondPass(persistentClasses);
+    	secondPass(persistentClasses);
+//    	super.doSecondPass(persistentClasses);
     	if(elementDependantValue!=null) {
     		elementDependantValue.setForeignKeyName(oldElementForeignKeyName);
     	}

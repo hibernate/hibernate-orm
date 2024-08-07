@@ -509,7 +509,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 			}
 			else if ( "save-update".equals( element ) ) {
 				if (cascadeType == null) cascadeType = importType( "org.hibernate.annotations.CascadeType");
-				cascade.append( cascadeType ).append(".SAVE_UPDATE").append(", ");
+				cascade.append( cascadeType ).append(".MERGE").append(", ");
 			}
 			else if ( "replicate".equals( element ) ) {
 				if (cascadeType == null) cascadeType = importType( "org.hibernate.annotations.CascadeType");

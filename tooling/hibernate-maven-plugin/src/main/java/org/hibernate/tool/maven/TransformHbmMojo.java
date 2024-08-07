@@ -13,6 +13,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
@@ -21,6 +22,11 @@ import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.service.ServiceRegistry;
 
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
@@ -36,13 +42,41 @@ public class TransformHbmMojo extends AbstractMojo {
 		MappingBinder mappingBinder = new MappingBinder(
 				MappingBinder.class.getClassLoader()::getResourceAsStream,
 				UnsupportedFeatureHandling.ERROR);
-		Marshaller marshaller = createMarshaller(mappingBinder);
 		List<File> hbmFiles = getHbmFiles(inputFolder);
 		List<Binding<JaxbHbmHibernateMapping>> hbmMappings = getHbmMappings(hbmFiles, mappingBinder);
-		List<Binding<JaxbEntityMappingsImpl>> transformed = 
-				HbmXmlTransformer.transform(hbmMappings, UnsupportedFeatureHandling.ERROR);
-		for (int i = 0; i < hbmFiles.size(); i++) {
-			marshall(marshaller, transformed.get(i).getRoot(), hbmFiles.get(i));
+		performTransformation(hbmMappings, mappingBinder, createServiceRegistry());
+	}
+	
+	private ServiceRegistry createServiceRegistry() {
+		StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
+		ssrb.clearSettings();
+		ssrb.applySetting(JdbcSettings.ALLOW_METADATA_ON_BOOT, false);
+		// Choose the H2 dialect by default, make this configurable
+		ssrb.applySetting(JdbcSettings.DIALECT, H2Dialect.class.getName());
+		return ssrb.build();
+	}
+	
+	private void performTransformation(
+			List<Binding<JaxbHbmHibernateMapping>> hbmBindings,
+			MappingBinder mappingBinder,
+			ServiceRegistry serviceRegistry) {
+		Marshaller marshaller = createMarshaller(mappingBinder);
+		MetadataSources metadataSources = new MetadataSources( serviceRegistry );
+		hbmBindings.forEach( metadataSources::addHbmXmlBinding );
+		List<Binding<JaxbEntityMappingsImpl>> transformedBindings = HbmXmlTransformer.transform(
+				hbmBindings,
+				(MetadataImplementor) metadataSources.buildMetadata(),
+				serviceRegistry,
+				UnsupportedFeatureHandling.ERROR
+		);
+		for (int i = 0; i < hbmBindings.size(); i++) {
+			Binding<JaxbHbmHibernateMapping> hbmBinding = hbmBindings.get( i );
+			Binding<JaxbEntityMappingsImpl> transformedBinding = transformedBindings.get( i );
+
+			HbmXmlOrigin origin = (HbmXmlOrigin)hbmBinding.getOrigin();
+			File hbmXmlFile = origin.getHbmXmlFile();
+
+			marshall(marshaller, transformedBinding.getRoot(), hbmXmlFile);
 		}
 	}
 	
@@ -51,7 +85,7 @@ public class TransformHbmMojo extends AbstractMojo {
 		hbmXmlFiles.forEach((hbmXmlFile) -> {
 			final String fullPath = hbmXmlFile.getAbsolutePath();
 			getLog().info("Adding file: '" + fullPath + "' to the list to be transformed.");
-			Origin origin = new Origin(SourceType.FILE, hbmXmlFile.getAbsolutePath());
+			Origin origin = new HbmXmlOrigin(hbmXmlFile);
 			Binding<JaxbHbmHibernateMapping> binding = bindMapping( mappingBinder, hbmXmlFile, origin );
 			result.add(binding);
 		});
@@ -105,6 +139,23 @@ public class TransformHbmMojo extends AbstractMojo {
 			}
 		}
 		return result;
+	}
+	
+	private class HbmXmlOrigin extends Origin {
+
+		private static final long serialVersionUID = 1L;
+
+		private final File hbmXmlFile;
+
+		public HbmXmlOrigin(File hbmXmlFile) {
+			super( SourceType.FILE, hbmXmlFile.getAbsolutePath() );
+			this.hbmXmlFile = hbmXmlFile;
+		}
+
+		public File getHbmXmlFile() {
+			return hbmXmlFile;
+		}
+
 	}
 	
 }

@@ -96,7 +96,7 @@ public class ${declarationName}Home {
     public void attachDirty(${declarationName} instance) {
         logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "attaching dirty ${declarationName} instance");
         try {
-            sessionFactory.getCurrentSession().saveOrUpdate(instance);
+            sessionFactory.getCurrentSession().merge(instance);
             logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "attach successful");
         }
         catch (RuntimeException re) {
@@ -117,14 +117,14 @@ public class ${declarationName}Home {
         }
     }
     
-    public void delete(${declarationName} persistentInstance) {
-        logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "deleting ${declarationName} instance");
+    public void remove(${declarationName} persistentInstance) {
+        logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "removing ${declarationName} instance");
         try {
-            sessionFactory.getCurrentSession().delete(persistentInstance);
-            logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "delete successful");
+            sessionFactory.getCurrentSession().remove(persistentInstance);
+            logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "remove successful");
         }
         catch (RuntimeException re) {
-            logger.log(${pojo.importType("java.util.logging.Level")}.SEVERE, "delete failed", re);
+            logger.log(${pojo.importType("java.util.logging.Level")}.SEVERE, "remove failed", re);
             throw re;
         }
     }

@@ -181,6 +181,23 @@ public class InformixFunctionTest {
 		);
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-18369")
+	public void testMatches(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
+					String country = (String) session.createQuery(
+									"select e.country " +
+											"from Event e " +
+											"where e.id = :id and matches(e.country, :country) = 'T'" )
+							.setParameter( "id", event.id )
+							.setParameter( "country", "R*" )
+							.getSingleResult();
+					assertEquals( "Romania", country );
+				}
+		);
+	}
+
 	private Calendar todayCalendar() {
 		Calendar calendar = Calendar.getInstance();
 		calendar.set(Calendar.HOUR_OF_DAY, 0);

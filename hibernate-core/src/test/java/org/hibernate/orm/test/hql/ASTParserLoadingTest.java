@@ -28,6 +28,7 @@ import org.hibernate.Transaction;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
@@ -925,12 +926,20 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		s.flush();
 
-		Number count = (Number) s.createQuery( "select count(distinct case when bodyWeight > 100 then description else null end) from Human" ).uniqueResult();
-		assertEquals( 1, count.intValue() );
-		count = (Number) s.createQuery( "select count(case when bodyWeight > 100 then description else null end) from Human" ).uniqueResult();
-		assertEquals( 2, count.intValue() );
-		count = (Number) s.createQuery( "select count(distinct case when bodyWeight > 100 then nickName else null end) from Human" ).uniqueResult();
-		assertEquals( 2, count.intValue() );
+		if ( !( getDialect() instanceof InformixDialect && getDialect().getVersion().isBefore( 11, 70 ) ) ) {
+			Number count = (Number) s.createQuery(
+							"select count(distinct case when bodyWeight > 100 then description else null end) from Human" )
+					.uniqueResult();
+			assertEquals( 1, count.intValue() );
+			count = (Number) s.createQuery(
+							"select count(case when bodyWeight > 100 then description else null end) from Human" )
+					.uniqueResult();
+			assertEquals( 2, count.intValue() );
+			count = (Number) s.createQuery(
+							"select count(distinct case when bodyWeight > 100 then nickName else null end) from Human" )
+					.uniqueResult();
+			assertEquals( 2, count.intValue() );
+		}
 
 		t.rollback();
 		s.close();
@@ -3665,15 +3674,17 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		hql = "select length(a.description) from Animal a";
 		session.createQuery(hql).list();
 
-		//note: postgres and db2 don't have a 3-arg form, it gets transformed to 2-args
-		hql = "from Animal a where locate('abc', a.description, 2) = 2";
-		session.createQuery(hql).list();
+		if ( !( getDialect() instanceof InformixDialect && getDialect().getVersion().isBefore( 12 ) ) ) {
+			//note: postgres and db2 don't have a 3-arg form, it gets transformed to 2-args
+			hql = "from Animal a where locate('abc', a.description, 2) = 2";
+			session.createQuery( hql ).list();
 
-		hql = "from Animal a where locate('abc', a.description) = 2";
-		session.createQuery(hql).list();
+			hql = "from Animal a where locate('abc', a.description) = 2";
+			session.createQuery( hql ).list();
 
-		hql = "select locate('cat', a.description, 2) from Animal a";
-		session.createQuery(hql).list();
+			hql = "select locate('cat', a.description, 2) from Animal a";
+			session.createQuery( hql ).list();
+		}
 
 		if ( !( getDialect() instanceof DB2Dialect ) ) {
 			hql = "from Animal a where trim(trailing '_' from a.description) = 'cat'";

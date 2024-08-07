@@ -979,7 +979,10 @@ public class PropertyBinder {
 		final org.hibernate.mapping.MappedSuperclass superclass =
 				getMappedSuperclassOrNull( declaringClass, inheritanceStatePerClass, context );
 		if ( superclass != null ) {
-			superclass.setDeclaredVersion( property );
+			// Don't overwrite an existing version property
+			if ( superclass.getDeclaredVersion() == null ) {
+				superclass.setDeclaredVersion( property );
+			}
 		}
 		else {
 			//we know the property is on the actual entity

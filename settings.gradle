@@ -277,6 +277,11 @@ dependencyResolutionManagement {
             library( "mavenPlugin", "org.apache.maven", "maven-plugin-api" ).versionRef( mavenVersion )
             library( "mavenPluginTools", "org.apache.maven.plugin-tools", "maven-plugin-annotations" ).versionRef( mavenPluginToolsVersion )
         }
+        buildscriptLibs {
+            def forbiddenapisversion = version "forbiddenapis", "3.7"
+
+            library( "forbiddenapis", "de.thetaphi", "forbiddenapis" ).versionRef( forbiddenapisversion )
+        }
     }
 }
 

@@ -12,7 +12,7 @@ buildscript {
 
 	dependencies {
 //		classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.7'
-		classpath 'de.thetaphi:forbiddenapis:3.2'
+		classpath buildscriptLibs.forbiddenapis
 		classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.1'
 	}
 }

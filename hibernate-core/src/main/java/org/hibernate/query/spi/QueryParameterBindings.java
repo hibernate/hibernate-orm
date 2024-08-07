@@ -12,6 +12,7 @@ import org.hibernate.Incubating;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.internal.QueryParameterBindingsImpl;
 
 /**
  * Manages all the parameter bindings for a particular query.
@@ -89,7 +90,7 @@ public interface QueryParameterBindings {
 	};
 
 	/**
-	 * @deprecated Use {@link org.hibernate.query.internal.QueryParameterBindingsImpl#EMPTY} instead
+	 * @deprecated Use {@link #empty()} instead.
 	 */
 	@Deprecated(forRemoval = true, since = "6.6")
 	QueryParameterBindings NO_PARAM_BINDINGS = new QueryParameterBindings() {
@@ -131,4 +132,8 @@ public interface QueryParameterBindings {
 			return NO_PARAMETER_BINDING_MEMENTO;
 		}
 	};
+
+	static QueryParameterBindings empty() {
+		return QueryParameterBindingsImpl.EMPTY;
+	}
 }

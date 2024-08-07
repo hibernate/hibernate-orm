@@ -177,6 +177,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		else {
 			setImplicit( false );
 			if ( !joinColumn.columnDefinition().isEmpty() ) {
+				setColumnDefinition( joinColumn.columnDefinition() );
 				setSqlType( getBuildingContext().getObjectNameNormalizer()
 						.applyGlobalQuoting( joinColumn.columnDefinition() ) );
 			}
@@ -426,6 +427,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			}
 
 			// these properties can only be applied on the referenced column - we can just take them over
+			mappingColumn.setColumnDefinition( column.getColumnDefinition() );
 			mappingColumn.setLength( column.getLength() );
 			mappingColumn.setPrecision( column.getPrecision() );
 			mappingColumn.setScale( column.getScale() );

@@ -107,6 +107,7 @@ public class IndexColumn extends AnnotatedColumn {
 					: orderColumn.name();
 			final IndexColumn column = new IndexColumn();
 			column.setLogicalColumnName( name );
+			column.setColumnDefinition( orderColumn.columnDefinition() );
 			column.setSqlType( sqlType );
 			column.setNullable( orderColumn.nullable() );
 //			column.setJoins( secondaryTables );

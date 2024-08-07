@@ -140,6 +140,7 @@ public class ForeignKey extends Constraint {
 			for ( int i = 0; i<columnSpan; i++ ) {
 				Column referencedColumn = primaryKey.getColumn(i);
 				Column referencingColumn = getColumn(i);
+				referencingColumn.setColumnDefinition( referencingColumn.getColumnDefinition() );
 				referencingColumn.setLength( referencedColumn.getLength() );
 				referencingColumn.setScale( referencedColumn.getScale() );
 				referencingColumn.setPrecision( referencedColumn.getPrecision() );

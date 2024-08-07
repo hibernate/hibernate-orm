@@ -602,9 +602,15 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 	}
 
 	private void notifySubInitializersToReusePreviousRowInstance(EntityInitializerData data) {
+		final EntityEntry entityEntry = data.entityHolder.getEntityEntry();
+		final ImmutableBitSet maybeLazySet = entityEntry == null ? null : entityEntry.getMaybeLazySet();
 		final RowProcessingState rowProcessingState = data.getRowProcessingState();
-		for ( Initializer<?> initializer : subInitializers[data.concreteDescriptor.getSubclassId()] ) {
-			if ( initializer != null ) {
+		final Initializer<?>[] subInitializer = subInitializers[data.concreteDescriptor.getSubclassId()];
+		for ( int i = 0; i < subInitializer.length; i++ ) {
+			final Initializer<?> initializer = subInitializer[i];
+			// It is vital to only resolveFromPreviousRow only for the initializers where the state is maybe lazy,
+			// as the initialization process for the previous row also only called those initializers
+			if ( initializer != null && ( maybeLazySet == null || maybeLazySet.get( i ) ) ) {
 				initializer.resolveFromPreviousRow( rowProcessingState );
 			}
 		}

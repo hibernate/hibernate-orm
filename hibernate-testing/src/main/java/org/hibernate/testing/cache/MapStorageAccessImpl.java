@@ -9,6 +9,7 @@ package org.hibernate.testing.cache;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.hibernate.Internal;
 import org.hibernate.cache.spi.support.DomainDataStorageAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -20,6 +21,14 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 public class MapStorageAccessImpl implements DomainDataStorageAccess {
 	private ConcurrentMap data;
 
+	@Internal
+	public Object getFromData(Object key) {
+		if ( data == null ) {
+			return null;
+		}
+		return data.get( key );
+	}
+
 	@Override
 	public boolean contains(Object key) {
 		return data != null && data.containsKey( key );
@@ -27,10 +36,7 @@ public class MapStorageAccessImpl implements DomainDataStorageAccess {
 
 	@Override
 	public Object getFromCache(Object key, SharedSessionContractImplementor session) {
-		if ( data == null ) {
-			return null;
-		}
-		return data.get( key );
+		return getFromData( key );
 	}
 
 	@Override

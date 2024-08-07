@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping.internal;
 import java.io.Serializable;
 import java.util.BitSet;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -871,7 +872,9 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	@Override
 	public Collection<ConcreteEmbeddableType> getConcreteEmbeddableTypes() {
 		//noinspection unchecked
-		return (Collection<ConcreteEmbeddableType>) (Collection<?>) concreteEmbeddableBySubclass.values();
+		return concreteEmbeddableBySubclass == null
+				? Collections.singleton( this )
+				: (Collection<ConcreteEmbeddableType>) (Collection<?>) concreteEmbeddableBySubclass.values();
 	}
 
 	@Override

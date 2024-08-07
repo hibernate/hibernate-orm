@@ -7081,8 +7081,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		try {
 			appendSql( "(select " );
-
-			render( jdbcParameter, SqlAstNodeRenderingMode.DEFAULT );
+			visitParameterAsParameter( jdbcParameter );
 			appendSql( getFromDualForSelectOnly() );
 			appendSql( ')' );
 		}

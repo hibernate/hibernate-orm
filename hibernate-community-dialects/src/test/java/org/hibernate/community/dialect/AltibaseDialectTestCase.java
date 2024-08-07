@@ -48,7 +48,7 @@ public class AltibaseDialectTestCase extends BaseUnitTestCase {
 	public void testSelectWithLimitOnly() {
 		assertEquals( "select c1, c2 from t1 order by c1, c2 desc limit ?",
 					  dialect.getLimitHandler().processSql("select c1, c2 from t1 order by c1, c2 desc",
-														   toRowSelection( 0, 15 ) ).toLowerCase( Locale.ROOT));
+														   toRowSelection( null, 15 ) ).toLowerCase( Locale.ROOT));
 	}
 
 	@Test
@@ -65,7 +65,7 @@ public class AltibaseDialectTestCase extends BaseUnitTestCase {
 														   null ).toLowerCase(Locale.ROOT));
 	}
 
-	private Limit toRowSelection(int firstRow, int maxRows) {
+	private Limit toRowSelection(Integer firstRow, Integer maxRows) {
 		Limit selection = new Limit();
 		selection.setFirstRow( firstRow );
 		selection.setMaxRows( maxRows );

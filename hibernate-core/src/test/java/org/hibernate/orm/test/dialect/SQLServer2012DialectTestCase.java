@@ -45,7 +45,7 @@ public class SQLServer2012DialectTestCase extends BaseUnitTestCase {
 		final String input = "select distinct f1 as f53245 from table846752 order by f234, f67 desc";
 		assertEquals(
 				input + " offset 0 rows fetch first ? rows only",
-				dialect.getLimitHandler().processSql( input, toRowSelection( 0, 10 ) ).toLowerCase( Locale.ROOT )
+				dialect.getLimitHandler().processSql( input, toRowSelection( null, 10 ) ).toLowerCase( Locale.ROOT )
 		);
 	}
 
@@ -65,7 +65,7 @@ public class SQLServer2012DialectTestCase extends BaseUnitTestCase {
 		final String input = "select f1 from table";
 		assertEquals(
 				"select f1 from table order by @@version offset 0 rows fetch first ? rows only",
-				dialect.getLimitHandler().processSql( input, toRowSelection( 0, 10 ) ).toLowerCase( Locale.ROOT )
+				dialect.getLimitHandler().processSql( input, toRowSelection( null, 10 ) ).toLowerCase( Locale.ROOT )
 		);
 	}
 
@@ -79,7 +79,7 @@ public class SQLServer2012DialectTestCase extends BaseUnitTestCase {
 		);
 	}
 
-	private Limit toRowSelection(int firstRow, int maxRows) {
+	private Limit toRowSelection(Integer firstRow, Integer maxRows) {
 		final Limit selection = new Limit();
 		selection.setFirstRow( firstRow );
 		selection.setMaxRows( maxRows );

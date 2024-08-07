@@ -19,6 +19,8 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
+import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
+import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -123,6 +125,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		}
 
 		final JdbcEnvironment jdbcEnvironment;
+		DatabaseConnectionInfo databaseConnectionInfo;
 		if ( allowJdbcMetadataAccess( configurationValues ) ) {
 			jdbcEnvironment = getJdbcEnvironmentUsingJdbcMetadata(
 					configurationValues,
@@ -132,6 +135,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 					explicitDatabaseMajorVersion,
 					explicitDatabaseMinorVersion,
 					explicitDatabaseVersion);
+			databaseConnectionInfo = buildDbInfo( registry, jdbcEnvironment.getDialect() );
 		}
 		else if ( explicitDialectConfiguration( explicitDatabaseName, configurationValues ) ) {
 			jdbcEnvironment = getJdbcEnvironmentWithExplicitConfiguration(
@@ -143,31 +147,32 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 					explicitDatabaseMinorVersion,
 					explicitDatabaseVersion
 			);
+			databaseConnectionInfo = buildDbInfo( configurationValues, jdbcEnvironment.getDialect() );
 		}
 		else {
 			jdbcEnvironment = getJdbcEnvironmentWithDefaults( configurationValues, registry, dialectFactory );
+			databaseConnectionInfo = buildDbInfo( configurationValues, jdbcEnvironment.getDialect() );
 		}
 
-		logDbInfo( registry, jdbcEnvironment );
+		// Standardized DB info logging
+		ConnectionInfoLogger.INSTANCE.logConnectionInfoDetails( databaseConnectionInfo.toInfoString() );
 
 		return jdbcEnvironment;
 	}
 
-	private static void logDbInfo(ServiceRegistryImplementor registry, JdbcEnvironment jdbcEnvironment) {
-		// Standardized DB info logging
-		DatabaseConnectionInfo databaseConnectionInfo = null;
+	private DatabaseConnectionInfo buildDbInfo(ServiceRegistryImplementor registry, Dialect dialect) {
 		if ( !isMultiTenancyEnabled( registry ) ) {
 			final ConnectionProvider cp = registry.requireService( ConnectionProvider.class );
-			databaseConnectionInfo = cp.getDatabaseConnectionInfo();
+			return cp.getDatabaseConnectionInfo( dialect );
 		}
 		else {
-			final MultiTenantConnectionProvider<?> mcp = registry.getService( MultiTenantConnectionProvider.class );
-			databaseConnectionInfo = mcp.getDatabaseConnectionInfo();
+			final MultiTenantConnectionProvider<?> mcp = registry.requireService( MultiTenantConnectionProvider.class );
+			return mcp.getDatabaseConnectionInfo( dialect );
 		}
-		// most likely, the version hasn't been set yet, at least not for the ConnectionProviders that we currently maintain
-		databaseConnectionInfo.setDBVersion( jdbcEnvironment.getDialect().getVersion() );
+	}
 
-		ConnectionInfoLogger.INSTANCE.logConnectionInfoDetails( databaseConnectionInfo.getDBInfoAsString() );
+	private DatabaseConnectionInfo buildDbInfo(Map<String, Object> configurationValues, Dialect dialect) {
+		return new DatabaseConnectionInfoImpl( configurationValues, dialect );
 	}
 
 	private static JdbcEnvironmentImpl getJdbcEnvironmentWithDefaults(

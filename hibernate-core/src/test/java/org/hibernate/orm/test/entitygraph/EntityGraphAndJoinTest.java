@@ -44,6 +44,7 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_FETCH_GRAPH;
 } )
 @SessionFactory( useCollectingStatementInspector = true )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17629" )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-18378" )
 public class EntityGraphAndJoinTest {
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
@@ -59,25 +60,35 @@ public class EntityGraphAndJoinTest {
 
 	@Test
 	public void testHqlJoin(SessionFactoryScope scope) {
-		executeQuery( scope, false, false );
+		executeQuery( scope, false, false, false );
 	}
 
 	@Test
 	public void testHqlLeftJoin(SessionFactoryScope scope) {
-		executeQuery( scope, false, true );
+		executeQuery( scope, false, true, false );
 	}
 	
 	@Test
 	public void testCriteriaJoin(SessionFactoryScope scope) {
-		executeQuery( scope, true, false );
+		executeQuery( scope, true, false, false );
 	}
 
 	@Test
 	public void testCriteriaLeftJoin(SessionFactoryScope scope) {
-		executeQuery( scope, true, true );
+		executeQuery( scope, true, true, false );
 	}
 
-	private void executeQuery(SessionFactoryScope scope, boolean criteria, boolean leftJoin) {
+	@Test
+	public void testHqlJoinWhere(SessionFactoryScope scope) {
+		executeQuery( scope, false, false, true );
+	}
+
+	@Test
+	public void testCriteriaLeftJoinWhere(SessionFactoryScope scope) {
+		executeQuery( scope, true, true, true );
+	}
+
+	private void executeQuery(SessionFactoryScope scope, boolean criteria, boolean leftJoin, boolean where) {
 		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
 		inspector.clear();
 
@@ -88,13 +99,16 @@ public class EntityGraphAndJoinTest {
 				final CriteriaQuery<Person> cq = cb.createQuery( Person.class );
 				final Root<Person> root = cq.from( Person.class );
 				final Join<Person, Address> join = root.join( "address", leftJoin ? JoinType.LEFT : JoinType.INNER );
-				cq.distinct( true ).where( cb.equal( join.get( "description" ), "test" ) ).orderBy( cb.asc( join.get( "id" ) ) );
+				if ( where ) {
+					cq.where( cb.equal( join.get( "description" ), "test" ) );
+				}
 				query = session.createQuery( cq.distinct( true ) );
 			}
 			else {
 				query = session.createQuery( String.format(
-						"select distinct p from Person p %s p.address a where a.description = 'test' order by a.id",
-						leftJoin ? "left join" : "join"
+						"select distinct p from Person p %s p.address a %s",
+						leftJoin ? "left join" : "join",
+						where ? "where a.description = 'test'" : ""
 				), Person.class );
 			}
 			final EntityGraph<?> entityGraph = session.getEntityGraph( "test-graph" );
@@ -102,7 +116,7 @@ public class EntityGraphAndJoinTest {
 			assertThat( resultList ).hasSize( 2 );
 			assertThat( resultList.stream().map( p -> p.getAddress().getId() ) ).containsExactly( 1L, 2L );
 			inspector.assertExecutedCount( 1 );
-			inspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
+			inspector.assertNumberOfOccurrenceInQuery( 0, "join", where ? 2 : 1 );
 		} );
 	}
 

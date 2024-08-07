@@ -270,6 +270,7 @@ public class PostgreSQLStoredProcedureTest {
 	}
 
 	@Test
+	@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 14, comment = "Stored procedure OUT parameters are only supported since version 14")
 	public void testStoredProcedureInAndOutAndRefCursorParameters(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -296,6 +297,7 @@ public class PostgreSQLStoredProcedureTest {
 	}
 
 	@Test
+	@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 14, comment = "Stored procedure OUT parameters are only supported since version 14")
 	public void testStoredProcedureInAndOutAndRefCursorParametersDifferentRegistrationOrder(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -322,6 +324,7 @@ public class PostgreSQLStoredProcedureTest {
 	}
 
 	@Test
+	@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 14, comment = "Stored procedure OUT parameters are only supported since version 14")
 	public void testStoredProcedureInAndOutAndRefCursorParametersDifferentRegistrationOrder2(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {

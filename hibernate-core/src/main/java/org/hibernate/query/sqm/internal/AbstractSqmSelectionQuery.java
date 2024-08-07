@@ -16,18 +16,38 @@ import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.SelectionQuery;
+import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.ValueHandlingMode;
+import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.hql.internal.QuerySplitter;
+import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.AbstractSelectionQuery;
+import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.MutableQueryOptions;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
+import org.hibernate.query.sqm.tree.select.SqmQueryPart;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
+import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
+import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.results.internal.TupleMetadata;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.BasicTypeRegistry;
 
 import java.util.List;
+import java.util.Map;
+
+import jakarta.persistence.TupleElement;
+import jakarta.persistence.criteria.CompoundSelection;
 
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.cfg.QuerySettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH;
@@ -35,6 +55,8 @@ import static org.hibernate.query.KeyedPage.KeyInterpretation.KEY_OF_FIRST_ON_NE
 import static org.hibernate.query.sqm.internal.KeyBasedPagination.paginate;
 import static org.hibernate.query.sqm.internal.KeyedResult.collectKeys;
 import static org.hibernate.query.sqm.internal.KeyedResult.collectResults;
+import static org.hibernate.query.sqm.internal.SqmUtil.isHqlTuple;
+import static org.hibernate.query.sqm.internal.SqmUtil.isSelectionAssignableToResultType;
 import static org.hibernate.query.sqm.internal.SqmUtil.sortSpecification;
 import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
 
@@ -256,5 +278,158 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 
 	private <T> SelectQueryPlan<T> buildConcreteQueryPlan(SqmSelectStatement<T> sqmStatement, QueryOptions options) {
 		return buildConcreteQueryPlan( sqmStatement, null, null, options );
+	}
+
+	protected void applyOptions(NamedSqmQueryMemento memento) {
+		applyOptions( (NamedQueryMemento) memento );
+
+		if ( memento.getFirstResult() != null ) {
+			setFirstResult( memento.getFirstResult() );
+		}
+
+		if ( memento.getMaxResults() != null ) {
+			setMaxResults( memento.getMaxResults() );
+		}
+
+		if ( memento.getParameterTypes() != null ) {
+			final BasicTypeRegistry basicTypeRegistry =
+					getSessionFactory().getTypeConfiguration().getBasicTypeRegistry();
+			for ( Map.Entry<String, String> entry : memento.getParameterTypes().entrySet() ) {
+				final BasicType<?> type =
+						basicTypeRegistry.getRegisteredType( entry.getValue() );
+				getParameterMetadata()
+						.getQueryParameter( entry.getKey() ).applyAnticipatedType( type );
+			}
+		}
+	}
+
+	protected TupleMetadata buildTupleMetadata(SqmStatement<?> statement, Class<R> resultType) {
+		if ( statement instanceof SqmSelectStatement<?> ) {
+			final SqmSelectStatement<?> select = (SqmSelectStatement<?>) statement;
+			final SqmSelectClause selectClause = select.getQueryPart().getFirstQuerySpec().getSelectClause();
+			final List<SqmSelection<?>> selections =
+					selectClause
+							.getSelections();
+			return isTupleMetadataRequired( resultType, selections.get(0) )
+					? getTupleMetadata( selections )
+					: null;
+		}
+		else {
+			return null;
+		}
+	}
+
+	private static <R> boolean isTupleMetadataRequired(Class<R> resultType, SqmSelection<?> selection) {
+		return isHqlTuple( selection )
+				|| !isInstantiableWithoutMetadata( resultType )
+				&& !isSelectionAssignableToResultType( selection, resultType );
+	}
+
+	private static boolean isInstantiableWithoutMetadata(Class<?> resultType) {
+		return resultType == null
+				|| resultType.isArray()
+				|| Object.class == resultType
+				|| List.class == resultType;
+	}
+
+	private TupleMetadata getTupleMetadata(List<SqmSelection<?>> selections) {
+		if ( getQueryOptions().getTupleTransformer() == null ) {
+			return new TupleMetadata( buildTupleElementArray( selections ), buildTupleAliasArray( selections ) );
+		}
+		else {
+			throw new IllegalArgumentException(
+					"Illegal combination of Tuple resultType and (non-JpaTupleBuilder) TupleTransformer: "
+							+ getQueryOptions().getTupleTransformer()
+			);
+		}
+	}
+
+	private static TupleElement<?>[] buildTupleElementArray(List<SqmSelection<?>> selections) {
+		if ( selections.size() == 1 ) {
+			final SqmSelectableNode<?> selectableNode = selections.get( 0).getSelectableNode();
+			if ( selectableNode instanceof CompoundSelection<?> ) {
+				final List<? extends JpaSelection<?>> selectionItems = selectableNode.getSelectionItems();
+				final TupleElement<?>[] elements = new TupleElement<?>[ selectionItems.size() ];
+				for ( int i = 0; i < selectionItems.size(); i++ ) {
+					elements[i] = selectionItems.get( i );
+				}
+				return elements;
+			}
+			else {
+				return new TupleElement<?>[] { selectableNode };
+			}
+		}
+		else {
+			final TupleElement<?>[] elements = new TupleElement<?>[ selections.size() ];
+			for ( int i = 0; i < selections.size(); i++ ) {
+				elements[i] = selections.get( i ).getSelectableNode();
+			}
+			return elements;
+		}
+	}
+
+	private static String[] buildTupleAliasArray(List<SqmSelection<?>> selections) {
+		if ( selections.size() == 1 ) {
+			final SqmSelectableNode<?> selectableNode = selections.get(0).getSelectableNode();
+			if ( selectableNode instanceof CompoundSelection<?> ) {
+				final List<? extends JpaSelection<?>> selectionItems = selectableNode.getSelectionItems();
+				final String[] elements  = new String[ selectionItems.size() ];
+				for ( int i = 0; i < selectionItems.size(); i++ ) {
+					elements[i] = selectionItems.get( i ).getAlias();
+				}
+				return elements;
+			}
+			else {
+				return new String[] { selectableNode.getAlias() };
+			}
+		}
+		else {
+			final String[] elements = new String[ selections.size() ];
+			for ( int i = 0; i < selections.size(); i++ ) {
+				elements[i] = selections.get( i ).getAlias();
+			}
+			return elements;
+		}
+	}
+
+	protected static void validateCriteriaQuery(SqmQueryPart<?> queryPart) {
+		if ( queryPart instanceof SqmQuerySpec<?> ) {
+			final SqmQuerySpec<?> sqmQuerySpec = (SqmQuerySpec<?>) queryPart;
+			final List<SqmSelection<?>> selections = sqmQuerySpec.getSelectClause().getSelections();
+			if ( selections.isEmpty() ) {
+				// make sure there is at least one root
+				final List<SqmRoot<?>> sqmRoots = sqmQuerySpec.getFromClause().getRoots();
+				if ( sqmRoots == null || sqmRoots.isEmpty() ) {
+					throw new IllegalArgumentException( "Criteria did not define any query roots" );
+				}
+				// if there is a single root, use that as the selection
+				if ( sqmRoots.size() == 1 ) {
+					sqmQuerySpec.getSelectClause().add( sqmRoots.get( 0 ), null );
+				}
+				else {
+					throw new IllegalArgumentException( "Criteria has multiple query roots" );
+				}
+			}
+		}
+		else {
+			final SqmQueryGroup<?> queryGroup = (SqmQueryGroup<?>) queryPart;
+			for ( SqmQueryPart<?> part : queryGroup.getQueryParts() ) {
+				validateCriteriaQuery( part );
+			}
+		}
+	}
+
+	protected static <T> HqlInterpretation<T> interpretation(
+			NamedHqlQueryMementoImpl memento,
+			Class<T> expectedResultType,
+			SharedSessionContractImplementor session) {
+		final QueryEngine queryEngine = session.getFactory().getQueryEngine();
+		final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
+		final HqlInterpretation<T> interpretation = interpretationCache.resolveHqlInterpretation(
+				memento.getHqlString(),
+				expectedResultType,
+				queryEngine.getHqlTranslator()
+		);
+		return interpretation;
 	}
 }

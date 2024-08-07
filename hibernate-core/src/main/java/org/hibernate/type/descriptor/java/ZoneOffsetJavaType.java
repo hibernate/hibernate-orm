@@ -34,6 +34,11 @@ public class ZoneOffsetJavaType extends AbstractClassJavaType<ZoneOffset> {
 		super( ZoneOffset.class, ImmutableMutabilityPlan.instance(), ZoneOffsetComparator.INSTANCE );
 	}
 
+	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
 	public String toString(ZoneOffset value) {
 		return value.getId();
 	}

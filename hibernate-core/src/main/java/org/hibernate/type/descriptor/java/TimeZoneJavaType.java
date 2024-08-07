@@ -31,6 +31,11 @@ public class TimeZoneJavaType extends AbstractClassJavaType<TimeZone> {
 		super( TimeZone.class, ImmutableMutabilityPlan.instance(), TimeZoneComparator.INSTANCE );
 	}
 
+	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
 	public String toString(TimeZone value) {
 		return value.getID();
 	}

@@ -64,7 +64,10 @@ public interface Initializer<Data extends InitializerData> {
 	ModelPart getInitializedPart();
 
 	default Object getResolvedInstance(Data data) {
-		return data.getState() == State.RESOLVED || data.getState() == State.INITIALIZED ? data.getInstance() : null;
+		assert data.getState() != State.UNINITIALIZED
+				&& data.getState() != State.KEY_RESOLVED
+				&& ( data.getState() != State.MISSING || data.getInstance() == null );
+		return data.getInstance();
 	}
 	default Object getResolvedInstance(RowProcessingState rowProcessingState) {
 		return getResolvedInstance( getData( rowProcessingState ) );
@@ -124,6 +127,12 @@ public interface Initializer<Data extends InitializerData> {
 
 	default void resolveInstance(RowProcessingState rowProcessingState) {
 		resolveInstance( getData( rowProcessingState ) );
+	}
+
+	void resolveState(Data data);
+
+	default void resolveState(RowProcessingState rowProcessingState) {
+		resolveState( getData( rowProcessingState ) );
 	}
 
 	/**
@@ -205,6 +214,25 @@ public interface Initializer<Data extends InitializerData> {
 				|| ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
 				|| ForeignKeyDescriptor.TARGET_PART_NAME.equals( navigablePath.getLocalName() );
 	}
+
+	/**
+	 * Indicates whether calling resolve is needed when the object for this initializer is initialized already.
+	 */
+	boolean isEager();
+
+	/**
+	 * Indicates whether this initializer or one of its sub-parts could be made lazy.
+	 */
+	default boolean isLazyCapable() {
+		// Usually, every model part for which an initializer exists is lazy capable
+		// except for embeddable initializers with no sub-initializers
+		return true;
+	}
+
+	/**
+	 * Indicates whether this initializer has sub-initializers which are lazy.
+	 */
+	boolean hasLazySubInitializers();
 
 	/**
 	 * Indicates if this is a result or fetch initializer.

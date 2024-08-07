@@ -13,16 +13,18 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import jakarta.persistence.Parameter;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
+import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 
 /**
@@ -66,6 +68,11 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 			parameters = new ArrayList<>();
 		}
 		parameters.add( parameter );
+	}
+
+	@Override
+	public QueryParameterBindings createBindings(SessionFactoryImplementor sessionFactory) {
+		return QueryParameterBindingsImpl.from( this, sessionFactory );
 	}
 
 	@Override

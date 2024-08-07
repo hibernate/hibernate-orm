@@ -32,6 +32,11 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 		super( String.class );
 	}
 
+	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
 	public String toString(String value) {
 		return value;
 	}

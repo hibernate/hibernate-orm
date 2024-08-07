@@ -149,9 +149,13 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 		sqlExpression.accept( interpreter );
 	}
 
+	public boolean needsResolve() {
+		return sqlExpression.getExpressionType() instanceof JavaObjectType;
+	}
+
 	@Override
 	public SqlSelection resolve(JdbcValuesMetadata jdbcResultsMetadata, SessionFactoryImplementor sessionFactory) {
-		if ( sqlExpression.getExpressionType() instanceof JavaObjectType ) {
+		if ( needsResolve() ) {
 			final BasicType<Object> resolvedType = jdbcResultsMetadata.resolveType(
 					jdbcPosition,
 					null,

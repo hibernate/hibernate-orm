@@ -555,6 +555,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				queryExpressionContext.accept( this );
 
 				insertStatement.onConflict( visitConflictClause( ctx.conflictClause() ) );
+				insertStatement.validate( query );
 				return insertStatement;
 			}
 			finally {
@@ -613,6 +614,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 				insertStatement.values( valuesList );
 				insertStatement.onConflict( visitConflictClause( ctx.conflictClause() ) );
+				insertStatement.validate( query );
 				return insertStatement;
 			}
 			finally {
@@ -684,6 +686,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				updateStatement.applyPredicate( visitWhereClause( whereClauseContext ) );
 			}
 
+			updateStatement.validate( query );
 			return updateStatement;
 		}
 		finally {

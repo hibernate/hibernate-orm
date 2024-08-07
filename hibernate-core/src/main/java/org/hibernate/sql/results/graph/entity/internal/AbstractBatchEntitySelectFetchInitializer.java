@@ -38,14 +38,19 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 
 	protected final EntityInitializer<InitializerData> owningEntityInitializer;
 
-	protected boolean batchDisabled;
-
 	public static abstract class AbstractBatchEntitySelectFetchInitializerData extends EntitySelectFetchInitializerData {
+		final boolean batchDisabled;
+
 		// per-row state
 		protected @Nullable EntityKey entityKey;
 
-		public AbstractBatchEntitySelectFetchInitializerData(RowProcessingState rowProcessingState) {
-			super( rowProcessingState );
+		public AbstractBatchEntitySelectFetchInitializerData(
+				AbstractBatchEntitySelectFetchInitializer<?> initializer,
+				RowProcessingState rowProcessingState) {
+			super( initializer, rowProcessingState );
+
+			batchDisabled = rowProcessingState.isScrollResult()
+					|| !rowProcessingState.getLoadQueryInfluencers().effectivelyBatchLoadable( initializer.toOneMapping.getEntityMappingType().getEntityPersister() );
 		}
 	}
 
@@ -64,15 +69,6 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 	}
 
 	protected abstract void registerResolutionListener(Data data);
-
-	@Override
-	public void startLoading(RowProcessingState rowProcessingState) {
-		batchDisabled = rowProcessingState.isScrollResult()
-				|| !rowProcessingState
-				.getLoadQueryInfluencers()
-				.effectivelyBatchLoadable( toOneMapping.getEntityMappingType().getEntityPersister() );
-		super.startLoading( rowProcessingState );
-	}
 
 	@Override
 	public void resolveKey(Data data) {
@@ -104,10 +100,10 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 		}
 
 		data.setState( State.RESOLVED );
-		final RowProcessingState initializerRowProcessingState = data.getRowProcessingState();
+		final RowProcessingState rowProcessingState = data.getRowProcessingState();
 		if ( data.entityIdentifier == null ) {
 			// entityIdentifier can be null if the identifier is based on an initializer
-			data.entityIdentifier = keyAssembler.assemble( initializerRowProcessingState );
+			data.entityIdentifier = keyAssembler.assemble( rowProcessingState );
 			if ( data.entityIdentifier == null ) {
 				data.entityKey = null;
 				data.setInstance( null );
@@ -115,7 +111,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 				return;
 			}
 		}
-		if ( batchDisabled ) {
+		if ( data.batchDisabled ) {
 			initialize( data );
 		}
 		else {
@@ -138,22 +134,20 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 			return;
 		}
 		final RowProcessingState rowProcessingState = data.getRowProcessingState();
-		final Initializer<?> initializer = keyAssembler.getInitializer();
 		// Only need to extract the identifier if the identifier has a many to one
-		final boolean hasKeyManyToOne = initializer != null;
 		final LazyInitializer lazyInitializer = extractLazyInitializer( instance );
 		data.entityKey = null;
 		if ( lazyInitializer == null ) {
 			// Entity is initialized
 			data.setState( State.INITIALIZED );
-			if ( hasKeyManyToOne ) {
+			if ( keyIsEager ) {
 				data.entityIdentifier = concreteDescriptor.getIdentifier( instance, rowProcessingState.getSession() );
 			}
 			data.setInstance( instance );
 		}
 		else if ( lazyInitializer.isUninitialized() ) {
 			data.setState( State.RESOLVED );
-			if ( hasKeyManyToOne ) {
+			if ( keyIsEager ) {
 				data.entityIdentifier = lazyInitializer.getIdentifier();
 			}
 			// Resolve and potentially create the entity instance
@@ -162,12 +156,14 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 		else {
 			// Entity is initialized
 			data.setState( State.INITIALIZED );
-			if ( hasKeyManyToOne ) {
+			if ( keyIsEager ) {
 				data.entityIdentifier = lazyInitializer.getIdentifier();
 			}
 			data.setInstance( lazyInitializer.getImplementation() );
 		}
-		if ( hasKeyManyToOne ) {
+		if ( keyIsEager ) {
+			final Initializer<?> initializer = keyAssembler.getInitializer();
+			assert initializer != null;
 			initializer.resolveInstance( data.entityIdentifier, rowProcessingState );
 		}
 		else if ( rowProcessingState.needsResolveState() ) {
@@ -182,14 +178,14 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 			return;
 		}
 		data.setState( State.INITIALIZED );
-		if ( batchDisabled ) {
+		if ( data.batchDisabled ) {
 			Hibernate.initialize( data.getInstance() );
 		}
 	}
 
 	protected Object getExistingInitializedInstance(Data data) {
 		final SharedSessionContractImplementor session = data.getRowProcessingState().getSession();
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final EntityHolder holder = persistenceContext.getEntityHolder( data.entityKey );
 		if ( holder != null && holder.getEntity() != null && holder.isEventuallyInitialized() ) {
 			return holder.getEntity();
@@ -202,7 +198,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 
 	protected void registerToBatchFetchQueue(Data data) {
 		assert data.entityKey != null;
-		data.getRowProcessingState().getSession().getPersistenceContext()
+		data.getRowProcessingState().getSession().getPersistenceContextInternal()
 				.getBatchFetchQueue().addBatchLoadableEntityKey( data.entityKey );
 	}
 
@@ -226,11 +222,6 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 			}
 			data.setState( State.INITIALIZED );
 		}
-	}
-
-	@Override
-	public Object getEntityInstance(Data data) {
-		return data.getState() == State.RESOLVED || data.getState() == State.INITIALIZED ? data.getInstance() : null;
 	}
 
 	protected static Object loadInstance(

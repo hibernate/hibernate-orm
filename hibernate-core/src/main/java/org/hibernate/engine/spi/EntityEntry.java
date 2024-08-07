@@ -9,9 +9,13 @@ package org.hibernate.engine.spi;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 
+import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.internal.util.ImmutableBitSet;
 import org.hibernate.persister.entity.EntityPersister;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Information about the current state of a managed entity instance with respect
@@ -129,6 +133,16 @@ public interface EntityEntry {
 	boolean isReadOnly();
 
 	void setReadOnly(boolean readOnly, Object entity);
+
+	/**
+	 * Has a bit set for every attribute position that is potentially lazy.
+	 * When {@code null}, no knowledge is available and every attribute must be assumed potentially lazy.
+	 */
+	@Internal
+	@Nullable ImmutableBitSet getMaybeLazySet();
+
+	@Internal
+	void setMaybeLazySet(@Nullable ImmutableBitSet maybeLazySet);
 
 	@Override
 	String toString();

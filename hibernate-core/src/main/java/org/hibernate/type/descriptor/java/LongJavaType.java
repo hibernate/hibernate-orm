@@ -32,6 +32,11 @@ public class LongJavaType extends AbstractClassJavaType<Long>
 	}
 
 	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
 	public String toString(Long value) {
 		return value == null ? null : value.toString();
 	}

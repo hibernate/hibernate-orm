@@ -32,7 +32,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Steve Ebersole
  */
 public class ListInitializer extends AbstractImmediateCollectionInitializer<AbstractImmediateCollectionInitializer.ImmediateCollectionInitializerData> {
-	private static final String CONCRETE_NAME = ListInitializer.class.getSimpleName();
 
 	private final DomainResultAssembler<Integer> listIndexAssembler;
 	private final DomainResultAssembler<?> elementAssembler;
@@ -64,11 +63,6 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer<Abst
 		this.listIndexAssembler = (DomainResultAssembler<Integer>) listIndexFetch.createAssembler( this, creationState );
 		this.elementAssembler = elementFetch.createAssembler( this, creationState );
 		this.listIndexBase = attributeMapping.getIndexMetadata().getListIndexBase();
-	}
-
-	@Override
-	protected String getSimpleConcreteImplName() {
-		return CONCRETE_NAME;
 	}
 
 	@Override

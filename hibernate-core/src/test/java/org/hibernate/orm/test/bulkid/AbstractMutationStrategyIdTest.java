@@ -1,16 +1,22 @@
 package org.hibernate.orm.test.bulkid;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.Root;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.orm.test.jpa.compliance.CriteriaMutationQueryTableTest;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.Jira;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -87,6 +93,22 @@ public abstract class AbstractMutationStrategyIdTest extends BaseCoreFunctionalT
 					.executeUpdate();
 
 			assertEquals(entityCount(), updateCount);
+		});
+	}
+
+	@Test
+	@Jira( value = "HHH-18373" )
+	public void testNullValueUpdateWithCriteria() {
+		doInHibernate( this::sessionFactory, session -> {
+			EntityManager entityManager = session.unwrap( EntityManager.class);
+
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			CriteriaUpdate<Person> update = cb.createCriteriaUpdate( Person.class ).set( "name", null );
+			Root<Person> person = update.from( Person.class );
+			update.where( cb.equal( person.get( "employed" ), true ) );
+			int updateCount = entityManager.createQuery( update ).executeUpdate();
+
+			assertEquals( entityCount(), updateCount );
 		});
 	}
 

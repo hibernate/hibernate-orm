@@ -6,16 +6,13 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.List;
-
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
-import org.hibernate.sql.results.internal.RowTransformerDatabaseSnapshotImpl;
+import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
 import org.hibernate.sql.results.spi.RowTransformer;
 
 /**
@@ -37,7 +34,7 @@ public class SingleIdArrayLoadPlan extends SingleIdLoadPlan<Object[]> {
 
 	@Override
 	protected RowTransformer<Object[]> getRowTransformer() {
-		return RowTransformerDatabaseSnapshotImpl.instance();
+		return RowTransformerArrayImpl.instance();
 	}
 
 }

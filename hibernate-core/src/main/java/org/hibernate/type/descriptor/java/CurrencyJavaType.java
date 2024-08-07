@@ -25,6 +25,11 @@ public class CurrencyJavaType extends AbstractClassJavaType<Currency> {
 	}
 
 	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
 	public String toString(Currency value) {
 		return value.getCurrencyCode();
 	}

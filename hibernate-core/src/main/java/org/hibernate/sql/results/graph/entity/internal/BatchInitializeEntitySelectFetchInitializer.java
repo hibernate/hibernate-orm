@@ -7,7 +7,6 @@
 package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.HashSet;
-import java.util.Set;
 
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -28,10 +27,12 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEntitySelectFetchInitializer<BatchInitializeEntitySelectFetchInitializer.BatchInitializeEntitySelectFetchInitializerData> {
 
 	public static class BatchInitializeEntitySelectFetchInitializerData extends AbstractBatchEntitySelectFetchInitializerData {
-		private final Set<EntityKey> toBatchLoad = new HashSet<>();
+		private HashSet<EntityKey> toBatchLoad;
 
-		public BatchInitializeEntitySelectFetchInitializerData(RowProcessingState rowProcessingState) {
-			super( rowProcessingState );
+		public BatchInitializeEntitySelectFetchInitializerData(
+				BatchInitializeEntitySelectFetchInitializer initializer,
+				RowProcessingState rowProcessingState) {
+			super( initializer, rowProcessingState );
 		}
 	}
 
@@ -48,7 +49,7 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 
 	@Override
 	protected InitializerData createInitializerData(RowProcessingState rowProcessingState) {
-		return new BatchInitializeEntitySelectFetchInitializerData( rowProcessingState );
+		return new BatchInitializeEntitySelectFetchInitializerData( this, rowProcessingState );
 	}
 
 	@Override
@@ -66,17 +67,24 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 				false,
 				false
 		) );
-		data.toBatchLoad.add( data.entityKey );
+		HashSet<EntityKey> toBatchLoad = data.toBatchLoad;
+		if ( toBatchLoad == null ) {
+			toBatchLoad = data.toBatchLoad = new HashSet<>();
+		}
+		toBatchLoad.add( data.entityKey );
 	}
 
 	@Override
 	public void endLoading(BatchInitializeEntitySelectFetchInitializerData data) {
 		super.endLoading( data );
-		final SharedSessionContractImplementor session = data.getRowProcessingState().getSession();
-		for ( EntityKey key : data.toBatchLoad ) {
-			loadInstance( key, toOneMapping, affectedByFilter, session );
+		final HashSet<EntityKey> toBatchLoad = data.toBatchLoad;
+		if ( toBatchLoad != null ) {
+			final SharedSessionContractImplementor session = data.getRowProcessingState().getSession();
+			for ( EntityKey key : toBatchLoad ) {
+				loadInstance( key, toOneMapping, affectedByFilter, session );
+			}
+			data.toBatchLoad = null;
 		}
-		data.toBatchLoad.clear();
 	}
 
 	@Override

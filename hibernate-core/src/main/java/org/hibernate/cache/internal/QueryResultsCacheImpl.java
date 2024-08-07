@@ -116,7 +116,8 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 			L2CACHE_LOGGER.debug( "Returning cached query results" );
 		}
 
-		return deepCopy( cacheItem.results );
+		// No need to copy results, since consumers will never mutate
+		return cacheItem.results;
 	}
 
 	@Override

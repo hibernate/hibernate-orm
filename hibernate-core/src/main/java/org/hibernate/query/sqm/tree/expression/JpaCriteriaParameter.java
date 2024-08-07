@@ -122,12 +122,13 @@ public class JpaCriteriaParameter<T>
 
 	@Override
 	public BindableType<T> getHibernateType() {
-		return this.getNodeType();
+		return getNodeType();
 	}
 
 	@Override
 	public Class<T> getParameterType() {
-		return this.getNodeType().getExpressibleJavaType().getJavaTypeClass();
+		final SqmExpressible<T> nodeType = getNodeType();
+		return nodeType == null ? null : nodeType.getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	@Override

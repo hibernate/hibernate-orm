@@ -62,6 +62,14 @@ public interface EntityInitializer<Data extends InitializerData> extends Initial
 		return getEntityIdentifier( getData( rowProcessingState ) );
 	}
 
+	/**
+	 * Resets the resolved entity registrations by i.e. removing {@link org.hibernate.engine.spi.EntityHolder}.
+	 *
+	 * @see org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer#resetResolvedEntityRegistrations(RowProcessingState)
+	 */
+	default void resetResolvedEntityRegistrations(RowProcessingState rowProcessingState) {
+	}
+
 	@Override
 	default boolean isEntityInitializer() {
 		return true;

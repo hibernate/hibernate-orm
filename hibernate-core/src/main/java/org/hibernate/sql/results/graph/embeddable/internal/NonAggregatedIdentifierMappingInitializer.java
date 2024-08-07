@@ -26,12 +26,14 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.internal.AbstractInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -58,6 +60,7 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 	private final DomainResultAssembler<?>[] assemblers;
 	private final @Nullable Initializer<InitializerData>[] initializers;
 	private final @Nullable Initializer<InitializerData>[] subInitializersForResolveFromInitialized;
+	private final @Nullable Initializer<InitializerData>[] collectionContainingSubInitializers;
 	private final boolean lazyCapable;
 	private final boolean hasLazySubInitializer;
 	private final boolean hasIdClass;
@@ -124,20 +127,41 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 		this.hasIdClass = embedded.hasContainingClass() && virtualIdEmbeddable != representationEmbeddable;
 
 		this.sessionFactory = creationState.getSqlAstCreationContext().getSessionFactory();
-		this.assemblers = createAssemblers( this, resultDescriptor, creationState, virtualIdEmbeddable, fetchConverter );
+
+		final int size = virtualIdEmbeddable.getNumberOfFetchables();
+		final DomainResultAssembler<?>[] assemblers = new DomainResultAssembler[size];
+		this.assemblers = assemblers;
 		final Initializer<?>[] initializers = new Initializer[assemblers.length];
 		final Initializer<?>[] eagerSubInitializers = new Initializer[assemblers.length];
+		final Initializer<?>[] collectionContainingSubInitializers = new Initializer[assemblers.length];
 		boolean empty = true;
 		boolean emptyEager = true;
+		boolean emptyCollectionInitializers = true;
 		boolean lazyCapable = false;
 		boolean hasLazySubInitializers = false;
-		for ( int i = 0; i < assemblers.length; i++ ) {
-			final Initializer<?> initializer = assemblers[i].getInitializer();
+		for ( int i = 0; i < size; i++ ) {
+			final Fetchable stateArrayContributor = virtualIdEmbeddable.getFetchable( i );
+			final Fetch fetch = fetchConverter.apply( resultDescriptor.findFetch( stateArrayContributor ) );
+
+			final DomainResultAssembler<?> stateAssembler = fetch == null
+					? new NullValueAssembler<>( stateArrayContributor.getJavaType() )
+					: fetch.createAssembler( this, creationState );
+
+			assemblers[i] = stateAssembler;
+
+			final Initializer<?> initializer = stateAssembler.getInitializer();
 			if ( initializer != null ) {
 				if ( initializer.isEager() ) {
 					eagerSubInitializers[i] = initializer;
 					hasLazySubInitializers = hasLazySubInitializers || initializer.hasLazySubInitializers();
 					emptyEager = false;
+					assert fetch != null;
+					final FetchParent fetchParent;
+					if ( ( fetchParent = fetch.asFetchParent() ) != null && fetchParent.containsCollectionFetches()
+							|| initializer.isCollectionInitializer() ) {
+						collectionContainingSubInitializers[i] = initializer;
+						emptyCollectionInitializers = false;
+					}
 				}
 				else {
 					hasLazySubInitializers = true;
@@ -152,32 +176,16 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 				empty ? Initializer.EMPTY_ARRAY : initializers
 		);
 		// No need to think about bytecode enhancement here, since ids can't contain lazy basic attributes
+		//noinspection unchecked
 		this.subInitializersForResolveFromInitialized = (Initializer<InitializerData>[]) (
 				emptyEager ? Initializer.EMPTY_ARRAY : initializers
 		);
+		//noinspection unchecked
+		this.collectionContainingSubInitializers = (Initializer<InitializerData>[]) (
+				emptyCollectionInitializers ? Initializer.EMPTY_ARRAY : collectionContainingSubInitializers
+		);
 		this.lazyCapable = lazyCapable;
 		this.hasLazySubInitializer = hasLazySubInitializers;
-	}
-
-	protected static DomainResultAssembler<?>[] createAssemblers(
-			InitializerParent<?> parent,
-			EmbeddableResultGraphNode resultDescriptor,
-			AssemblerCreationState creationState,
-			EmbeddableMappingType embeddableTypeDescriptor,
-			Function<Fetch, Fetch> fetchConverter) {
-		final int size = embeddableTypeDescriptor.getNumberOfFetchables();
-		final DomainResultAssembler<?>[] assemblers = new DomainResultAssembler[size];
-		for ( int i = 0; i < size; i++ ) {
-			final Fetchable stateArrayContributor = embeddableTypeDescriptor.getFetchable( i );
-			final Fetch fetch = fetchConverter.apply( resultDescriptor.findFetch( stateArrayContributor ) );
-
-			final DomainResultAssembler<?> stateAssembler = fetch == null
-					? new NullValueAssembler<>( stateArrayContributor.getJavaType() )
-					: fetch.createAssembler( parent, creationState );
-
-			assemblers[i] = stateAssembler;
-		}
-		return assemblers;
 	}
 
 	@Override
@@ -210,7 +218,6 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 		if ( data.getState() != State.UNINITIALIZED ) {
 			return;
 		}
-		// We need to possibly wrap the processing state if the embeddable is within an aggregate
 		data.setInstance( null );
 		data.setState( State.KEY_RESOLVED );
 		if ( initializers.length == 0 ) {
@@ -228,6 +235,42 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 						return;
 					}
 				}
+			}
+		}
+	}
+
+	@Override
+	public void resetResolvedEntityRegistrations(RowProcessingState rowProcessingState) {
+		final NonAggregatedIdentifierMappingInitializerData data = getData( rowProcessingState );
+		for ( Initializer<InitializerData> initializer : initializers ) {
+			if ( initializer != null ) {
+				final EntityInitializer<?> entityInitializer = initializer.asEntityInitializer();
+				final EmbeddableInitializer<?> embeddableInitializer;
+				if ( entityInitializer != null ) {
+					entityInitializer.resetResolvedEntityRegistrations( rowProcessingState );
+				}
+				else if ( ( embeddableInitializer = initializer.asEmbeddableInitializer() ) != null ) {
+					embeddableInitializer.resetResolvedEntityRegistrations( rowProcessingState );
+				}
+			}
+		}
+	}
+
+	@Override
+	public void resolveFromPreviousRow(NonAggregatedIdentifierMappingInitializerData data) {
+		if ( data.getState() == State.UNINITIALIZED ) {
+			if ( data.getInstance() == null ) {
+				data.setState( State.MISSING );
+			}
+			else {
+				final RowProcessingState rowProcessingState = data.getRowProcessingState();
+				// When a previous row initialized this entity already, we only need to process collections
+				for ( Initializer<InitializerData> initializer : collectionContainingSubInitializers ) {
+					if ( initializer != null ) {
+						initializer.resolveFromPreviousRow( rowProcessingState );
+					}
+				}
+				data.setState( State.INITIALIZED );
 			}
 		}
 	}
@@ -252,6 +295,9 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 		}
 		else {
 			data.setInstance( embeddableInstantiator.instantiate( data, sessionFactory ) );
+		}
+		if ( parent == null ) {
+			data.setState( State.INITIALIZED );
 		}
 	}
 

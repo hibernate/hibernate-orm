@@ -29,6 +29,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
@@ -411,6 +412,17 @@ public class MetadataTest {
         final Type<?> collectionElement = siblingsCollection.getElementType();
         assertNotNull(collectionElement);
         assertEquals(collectionElement, child);
+    }
+
+    @Test
+    @Jira("https://hibernate.atlassian.net/browse/HHH-17465")
+    public void testInheritedVersion(EntityManagerFactoryScope scope) {
+        EntityManagerFactory emf = scope.getEntityManagerFactory();
+        assertNotNull(emf.getMetamodel());
+        final EntityType<Cat> entityType = emf.getMetamodel().entity(Cat.class);
+        assertTrue(entityType.hasVersionAttribute());
+        assertTrue(entityType.getSingularAttribute("version").isVersion());
+
     }
 
     private void ensureProperMember(Set<?> attributes) {

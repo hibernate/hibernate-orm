@@ -465,6 +465,19 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 	}
 
 	@Override
+	public boolean hasLazySubInitializers() {
+		final DomainResultAssembler<?> indexAssembler = getIndexAssembler();
+		if ( indexAssembler != null ) {
+			final Initializer<?> initializer = indexAssembler.getInitializer();
+			if ( initializer != null && ( !initializer.isEager() || initializer.hasLazySubInitializers() ) ) {
+				return true;
+			}
+		}
+		final Initializer<?> initializer = getElementAssembler().getInitializer();
+		return initializer != null && ( !initializer.isEager() || initializer.hasLazySubInitializers() );
+	}
+
+	@Override
 	public void accept(Data data, List<Object> objects) {
 		readCollectionRow( data, objects );
 	}

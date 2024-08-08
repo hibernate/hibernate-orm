@@ -3,6 +3,25 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.0.Final (August 08, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32329
+
+** Bug
+    * [HHH-18463] - Add AzureDialect
+    * [HHH-18451] - CharBooleanConverter : Boolean null value conversion limited by the BooleanJavaType check condition
+    * [HHH-18403] - DB2iDialect should not support Update Returning
+    * [HHH-18399] - Unable to persist self-referencing entity with @OneToOne and @JoinTable
+    * [HHH-18391] - EntityGraphs are not considering Embedded attributes
+    * [HHH-18378] - Avoid reusing existing joins for entity-graph fetches if they're included in the where clause
+    * [HHH-18373] - When executing update with Criteria API by setting InheritanceType.JOINED, InlineMutationStrategy, NPE error occurs
+    * [HHH-18309] - Oracle LimitHandler does not seem to handle maxrows correctly for native queries
+    * [HHH-17997] - Querying an Entity with CacheConcurrencyStrategy.READONLY throws UnsupportedOperationException: Can't update readonly object
+    * [HHH-17847] - StoredProcedureQuery map result set incorrectly when having INOUT param
+    * [HHH-17465] - Incorrect metamodel for shared version attribute in @MappedSuperclass
+
+
 
 Changes in 6.6.0.CR2 (August 6, 2024)
 ------------------------------------------------------------------------------------------------------------------------

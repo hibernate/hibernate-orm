@@ -329,7 +329,8 @@ public class EntityMetamodel implements Serializable {
 				}
 				else {
 					generators[i] = generator;
-					if ( generatedWithNoParameter( generator ) ) {
+					if ( !( attribute instanceof EntityBasedCompositionAttribute )
+							&& generatedWithNoParameter( generator ) ) {
 						propertyInsertability[i] = false;
 						propertyUpdateability[i] = false;
 					}
@@ -520,10 +521,19 @@ public class EntityMetamodel implements Serializable {
 		}
 		if ( mappingProperty.getValue() instanceof Component ) {
 			final Dialect dialect = context.getDialect();
-			final CompositeGeneratorBuilder builder = new CompositeGeneratorBuilder( entityName, mappingProperty, dialect );
+			final CompositeGeneratorBuilder builder = new CompositeGeneratorBuilder(
+					entityName,
+					mappingProperty,
+					dialect
+			);
 			final Component component = (Component) mappingProperty.getValue();
 			for ( Property property : component.getProperties() ) {
-				builder.add( property.createGenerator( context ) );
+				if ( property.isComposite() ) {
+					builder.add( property.getName(), buildGenerator( entityName, property, context ) );
+				}
+				else {
+					builder.add( property.getName(), property.createGenerator( context ) );
+				}
 			}
 			return builder.build();
 		}

@@ -9,9 +9,12 @@ package org.hibernate.tuple.entity;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.CompositeBeforeExecutionGenerator;
+import org.hibernate.generator.CompositeGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.generator.internal.OnExecutionCompositeGenerator;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -20,7 +23,9 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static java.lang.System.arraycopy;
 import static org.hibernate.generator.EventTypeSets.NONE;
@@ -36,7 +41,8 @@ class CompositeGeneratorBuilder {
 	private boolean hadBeforeExecutionGeneration;
 	private boolean hadOnExecutionGeneration;
 
-	private final List<Generator> generators = new ArrayList<>();
+	private final Map<String,Generator> generators = new HashMap<>();
+	private final List<Generator> generatorsByStateArrayPosition = new ArrayList<>();
 
 	public CompositeGeneratorBuilder(String entityName, Property mappingProperty, Dialect dialect) {
 		this.entityName = entityName;
@@ -44,8 +50,9 @@ class CompositeGeneratorBuilder {
 		this.dialect = dialect;
 	}
 
-	public void add(Generator generator) {
-		generators.add( generator );
+	public void add(String attributeName, Generator generator) {
+		generators.put( attributeName, generator );
+		generatorsByStateArrayPosition.add( generator );
 
 		if ( generator != null && generator.generatesSometimes() ) {
 			if ( generator.generatedOnExecution() ) {
@@ -71,94 +78,90 @@ class CompositeGeneratorBuilder {
 			return createCompositeOnExecutionGenerator();
 		}
 		else {
-			return new Generator() {
+			return new CompositeGenerator() {
+				@Override
+				public boolean generatedOnExecution() {
+					return false;
+				}
+
 				@Override
 				public EnumSet<EventType> getEventTypes() {
 					return NONE;
 				}
+
 				@Override
-				public boolean generatedOnExecution() {
-					return false;
+				public Generator getGenerator(int attributeStateArrayPosition) {
+					return new Generator() {
+						@Override
+						public EnumSet<EventType> getEventTypes() {
+							return NONE;
+						}
+
+						@Override
+						public boolean generatedOnExecution() {
+							return false;
+						}
+					};
 				}
 			};
 		}
 	}
 
-	private OnExecutionGenerator createCompositeOnExecutionGenerator() {
+	private Generator createCompositeOnExecutionGenerator() {
 		final Component composite = (Component) mappingProperty.getValue();
-
 		// the base-line values for the aggregated OnExecutionGenerator we will build here.
 		final EnumSet<EventType> eventTypes = EnumSet.noneOf(EventType.class);
-		boolean referenceColumns = false;
-		final String[] columnValues = new String[composite.getColumnSpan()];
-
-		// start building the aggregate values
-		int columnIndex = 0;
 		final List<Property> properties = composite.getProperties();
+		boolean writePropertyValue = false;
+		boolean referenceColumnsInSql = false;
+		final String[] columnValues = new String[composite.getColumnSpan()];
+		int columnIndex = 0;
 		for ( int i = 0; i < properties.size(); i++ ) {
-			final Property property = properties.get(i);
-			final OnExecutionGenerator generator = (OnExecutionGenerator) generators.get(i);
-			if ( generator == null ) {
-				throw new CompositeValueGenerationException(
-						"Property of on-execution generated embeddable is not generated: "
-								+ mappingProperty.getName() + '.' + property.getName()
-				);
-			}
-			eventTypes.addAll( generator.getEventTypes() );
-			if ( generator.referenceColumnsInSql( dialect ) ) {
-				// override base-line value
-				referenceColumns = true;
-				final String[] referencedColumnValues = generator.getReferencedColumnValues( dialect );
-				if ( referencedColumnValues != null ) {
-					final int span = property.getColumnSpan();
-					if ( referencedColumnValues.length != span ) {
-						throw new CompositeValueGenerationException(
-								"Mismatch between number of collected generated column values and number of columns for composite attribute: "
-										+ mappingProperty.getName() + '.' + property.getName()
-						);
+			final Property property = properties.get( i );
+//			final OnExecutionGenerator generator = (OnExecutionGenerator) generators.get( property.getName() );
+			final OnExecutionGenerator generator = (OnExecutionGenerator) generatorsByStateArrayPosition.get( i );
+			if ( generator != null ) {
+				if ( generator.generatesSometimes() ) {
+					eventTypes.addAll( generator.getEventTypes() );
+					if ( generator.referenceColumnsInSql( dialect ) ) {
+						referenceColumnsInSql = true;
+						final String[] referencedColumnValues = generator.getReferencedColumnValues( dialect );
+						if ( referencedColumnValues != null ) {
+							final int span = property.getColumnSpan();
+							if ( referencedColumnValues.length != span ) {
+								throw new CompositeValueGenerationException(
+										"Mismatch between number of collected generated column values and number of columns for composite attribute: "
+												+ mappingProperty.getName() + '.' + property.getName()
+								);
+							}
+							arraycopy( referencedColumnValues, 0, columnValues, columnIndex, span );
+							columnIndex += span;
+						}
 					}
-					arraycopy( referencedColumnValues, 0, columnValues, columnIndex, span );
-					columnIndex += span;
+					if ( generator.writePropertyValue() ) {
+						writePropertyValue = true;
+					}
+				}
+				else {
+					generators.put( property.getName(), null );
+					generatorsByStateArrayPosition.set( i, null );
 				}
 			}
 		}
-		final boolean referenceColumnsInSql = referenceColumns;
-
-		// then use the aggregated values to build an OnExecutionGenerator
-		return new OnExecutionGenerator() {
-			@Override
-			public EnumSet<EventType> getEventTypes() {
-				return eventTypes;
-			}
-
-			@Override
-			public boolean referenceColumnsInSql(Dialect dialect) {
-				return referenceColumnsInSql;
-			}
-
-			@Override
-			public String[] getReferencedColumnValues(Dialect dialect) {
-				return columnValues;
-			}
-
-			@Override
-			public boolean writePropertyValue() {
-				return false;
-			}
-		};
+		return new OnExecutionCompositeGenerator( generatorsByStateArrayPosition, eventTypes, writePropertyValue, referenceColumnsInSql, columnValues );
 	}
 
-	private BeforeExecutionGenerator createCompositeBeforeExecutionGenerator() {
+	private CompositeBeforeExecutionGenerator createCompositeBeforeExecutionGenerator() {
 		final Component composite = (Component) mappingProperty.getValue();
 		final EnumSet<EventType> eventTypes = EnumSet.noneOf(EventType.class);
 		final List<Property> properties = composite.getProperties();
 		for ( int i = 0; i < properties.size(); i++ ) {
-			final Generator generator = generators.get(i);
+			final Generator generator = generators.get(properties.get( i ).getName());
 			if ( generator != null ) {
 				eventTypes.addAll( generator.getEventTypes() );
 			}
 		}
-		return new BeforeExecutionGenerator() {
+		return new CompositeBeforeExecutionGenerator() {
 			@Override
 			public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
 				final EntityPersister persister = session.getEntityPersister( entityName, owner );
@@ -170,7 +173,7 @@ class CompositeGeneratorBuilder {
 				if ( currentValue == null ) {
 					final Object[] generatedValues = new Object[size];
 					for ( int i = 0; i < size; i++ ) {
-						final Generator generator = generators.get(i);
+						final Generator generator = generators.get( properties.get( i ).getName() );
 						if ( generator != null ) {
 							generatedValues[i] = ((BeforeExecutionGenerator) generator)
 									.generate( session, owner, null, eventType );
@@ -181,7 +184,7 @@ class CompositeGeneratorBuilder {
 				}
 				else {
 					for ( int i = 0; i < size; i++ ) {
-						final Generator generator = generators.get(i);
+						final Generator generator = generators.get( properties.get( i ).getName() );
 						if ( generator != null ) {
 							final Object value = descriptor.getValue( currentValue, i );
 							final Object generatedValue = ((BeforeExecutionGenerator) generator)
@@ -196,6 +199,11 @@ class CompositeGeneratorBuilder {
 			@Override
 			public EnumSet<EventType> getEventTypes() {
 				return eventTypes;
+			}
+
+			@Override
+			public Generator getGenerator(int attributeStateArrayPosition) {
+				return generatorsByStateArrayPosition.get( attributeStateArrayPosition );
 			}
 		};
 	}

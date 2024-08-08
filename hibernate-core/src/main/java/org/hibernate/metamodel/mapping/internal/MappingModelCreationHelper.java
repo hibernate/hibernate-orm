@@ -1361,7 +1361,7 @@ public class MappingModelCreationHelper {
 
 		if ( bootMapKeyDescriptor instanceof Component ) {
 			final Component component = (Component) bootMapKeyDescriptor;
-			final CompositeType compositeType = (CompositeType) component.getType();
+			final CompositeType compositeType = component.getType();
 
 
 			final EmbeddableMappingTypeImpl mappingType = EmbeddableMappingTypeImpl.from(

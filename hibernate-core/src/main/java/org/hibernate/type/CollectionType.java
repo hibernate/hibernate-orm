@@ -638,7 +638,12 @@ public abstract class CollectionType extends AbstractType implements Association
 			final Object owner,
 			final Map<Object, Object> copyCache) throws HibernateException {
 		if ( original == null ) {
-			return null;
+			if ( target == null  ) {
+				return target;
+			}
+			final Collection collection = (Collection) target;
+			collection.clear();
+			return collection;
 		}
 		if ( !Hibernate.isInitialized( original ) ) {
 			if ( ( (PersistentCollection<?>) original ).hasQueuedOperations() ) {

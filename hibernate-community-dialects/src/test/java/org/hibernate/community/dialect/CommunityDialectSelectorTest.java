@@ -72,6 +72,7 @@ public class CommunityDialectSelectorTest {
 
 		testDialectNamingResolution( TeradataDialect.class );
 		testDialectNamingResolution( TimesTenDialect.class );
+		testDialectNamingResolution( SingleStoreDialect.class );
 	}
 
 	private void testDialectNamingResolution(final Class<?> dialectClass) {

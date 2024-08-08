@@ -41,8 +41,8 @@ import org.hibernate.event.spi.EventEngine;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FastSessionServices;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.BindableType;
@@ -381,8 +381,8 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override @Deprecated
-	public MetamodelImplementor getMetamodel() {
-		return delegate.getMetamodel();
+	public MappingMetamodel getMetamodel() {
+		return (MappingMetamodel) delegate.getMetamodel();
 	}
 
 	@Override

@@ -83,12 +83,12 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.SessionFactoryBasedWrapperOptions;
@@ -846,9 +846,9 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	}
 
 	@Override
-	public MetamodelImplementor getMetamodel() {
+	public MappingMetamodel getMetamodel() {
 		validateNotClosed();
-		return (MetamodelImplementor) runtimeMetamodels.getMappingMetamodel();
+		return runtimeMetamodels.getMappingMetamodel();
 	}
 
 	@Override
@@ -965,7 +965,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 							}
 						}
 				);
-				( (MappingMetamodelImpl) runtimeMetamodels.getMappingMetamodel() ).close();
+				runtimeMetamodels.getMappingMetamodel().close();
 			}
 
 			if ( queryEngine != null ) {

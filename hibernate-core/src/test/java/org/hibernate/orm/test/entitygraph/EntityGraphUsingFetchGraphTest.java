@@ -24,9 +24,9 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.EntityType;
 
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -180,25 +180,25 @@ public class EntityGraphUsingFetchGraphTest {
 				session -> {
 					final EntityManager em = session.unwrap( EntityManager.class );
 					final EntityGraph<CustomerOrder> entityGraph = em.createEntityGraph( CustomerOrder.class );
-					EntityDomainType<CustomerOrder> customerOrderEntityType =
+					EntityType<CustomerOrder> customerOrderEntityType =
 							scope.getSessionFactory().getMetamodel().entity( CustomerOrder.class );
 					entityGraph.addAttributeNodes(
-							(Attribute) customerOrderEntityType.getAttribute( "shippingAddress" ),
-							(Attribute) customerOrderEntityType.getAttribute( "orderDate" )
+							customerOrderEntityType.getAttribute( "shippingAddress" ),
+							customerOrderEntityType.getAttribute( "orderDate" )
 					);
-					entityGraph.addAttributeNodes( (Attribute) customerOrderEntityType.getAttribute( "shippingAddress" ) );
+					entityGraph.addAttributeNodes( customerOrderEntityType.getAttribute( "shippingAddress" ) );
 
 					final Subgraph<OrderPosition> orderProductsSubgraph =
 							entityGraph.addSubgraph( (Attribute) customerOrderEntityType.getAttribute( "orderPosition" ) );
-					EntityDomainType<OrderPosition> positionEntityType =
+					EntityType<OrderPosition> positionEntityType =
 							scope.getSessionFactory().getMetamodel().entity( OrderPosition.class );
-					orderProductsSubgraph.addAttributeNodes( (Attribute) positionEntityType.getAttribute( "amount" ) );
-					orderProductsSubgraph.addAttributeNodes( (Attribute) positionEntityType.getAttribute( "product" ) );
+					orderProductsSubgraph.addAttributeNodes( positionEntityType.getAttribute( "amount" ) );
+					orderProductsSubgraph.addAttributeNodes( positionEntityType.getAttribute( "product" ) );
 
 					final Subgraph<Product> productSubgraph =
 							orderProductsSubgraph.addSubgraph( (Attribute) positionEntityType.getAttribute( "product" ) );
-					EntityDomainType<Product> productEntityType = scope.getSessionFactory().getMetamodel().entity( Product.class );
-					productSubgraph.addAttributeNodes( (Attribute) productEntityType.getAttribute( "productName" ) );
+					EntityType<Product> productEntityType = scope.getSessionFactory().getMetamodel().entity( Product.class );
+					productSubgraph.addAttributeNodes( productEntityType.getAttribute( "productName" ) );
 
 					TypedQuery<CustomerOrder> query = em.createQuery(
 							"SELECT o FROM CustomerOrder o", CustomerOrder.class

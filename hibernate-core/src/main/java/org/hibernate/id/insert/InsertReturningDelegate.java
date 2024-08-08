@@ -95,7 +95,7 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 
 		final ResultSet resultSet = jdbcCoordinator.getResultSetReturn().execute( preparedStatement, sql );
 		try {
-			return getGeneratedValues( resultSet, persister, getTiming(), session );
+			return getGeneratedValues( preparedStatement, resultSet, persister, getTiming(), session );
 		}
 		catch (SQLException e) {
 			throw jdbcServices.getSqlExceptionHelper().convert(

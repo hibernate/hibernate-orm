@@ -69,6 +69,7 @@ public class GeneratedValuesHelper {
 	 * Reads the {@link EntityPersister#getGeneratedProperties(EventType) generated values}
 	 * for the specified {@link ResultSet}.
 	 *
+	 * @param statement The prepared statement the result set was generated from
 	 * @param resultSet The result set from which to extract the generated values
 	 * @param persister The entity type which we're reading the generated values for
 	 * @param wrapperOptions The session
@@ -79,6 +80,7 @@ public class GeneratedValuesHelper {
 	 * @throws HibernateException Indicates a problem reading back a generated value
 	 */
 	public static GeneratedValues getGeneratedValues(
+			PreparedStatement statement,
 			ResultSet resultSet,
 			EntityPersister persister,
 			EventType timing,
@@ -100,6 +102,7 @@ public class GeneratedValuesHelper {
 
 		final GeneratedValuesImpl generatedValues = new GeneratedValuesImpl( generatedProperties );
 		final Object[] results = readGeneratedValues(
+				statement,
 				resultSet,
 				persister,
 				mappingProducer,
@@ -125,6 +128,7 @@ public class GeneratedValuesHelper {
 	 * Utility method that reads the generated values from the specified {@link ResultSet}
 	 * using the {@link JdbcValuesMappingProducer} provided in input.
 	 *
+	 * @param statement the prepared statement that the result set was generated from
 	 * @param resultSet the result set containing the generated values
 	 * @param persister the current entity persister
 	 * @param mappingProducer the mapping producer to use when reading generated values
@@ -133,23 +137,18 @@ public class GeneratedValuesHelper {
 	 * @return an object array containing the generated values, order is consistent with the generated model parts list
 	 */
 	private static Object[] readGeneratedValues(
+			PreparedStatement statement,
 			ResultSet resultSet,
 			EntityPersister persister,
 			JdbcValuesMappingProducer mappingProducer,
 			SharedSessionContractImplementor session) {
 		final ExecutionContext executionContext = new BaseExecutionContext( session );
 
-		final DirectResultSetAccess directResultSetAccess;
-		try {
-			directResultSetAccess = new DirectResultSetAccess(
-					session,
-					(PreparedStatement) resultSet.getStatement(),
-					resultSet
-			);
-		}
-		catch (SQLException e) {
-			throw new HibernateException( "Could not retrieve statement from generated values result set", e );
-		}
+		final DirectResultSetAccess directResultSetAccess = new DirectResultSetAccess(
+				session,
+				statement,
+				resultSet
+		);
 
 		final JdbcValues jdbcValues = new JdbcValuesResultSetImpl(
 				directResultSetAccess,

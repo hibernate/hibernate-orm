@@ -118,7 +118,7 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 			try {
 				final ResultSet resultSet = preparedStatement.getGeneratedKeys();
 				try {
-					return getGeneratedValues( resultSet, persister, getTiming(), session );
+					return getGeneratedValues( preparedStatement, resultSet, persister, getTiming(), session );
 				}
 				catch (SQLException e) {
 					throw jdbcServices.getSqlExceptionHelper().convert(
@@ -170,7 +170,7 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 		try {
 			final ResultSet resultSet = preparedStatement.getGeneratedKeys();
 			try {
-				return getGeneratedValues( resultSet, persister, getTiming(), session );
+				return getGeneratedValues( preparedStatement, resultSet, persister, getTiming(), session );
 			}
 			catch (SQLException e) {
 				throw jdbcServices.getSqlExceptionHelper().convert(

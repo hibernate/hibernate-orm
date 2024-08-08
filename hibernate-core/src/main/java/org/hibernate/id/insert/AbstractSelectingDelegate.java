@@ -68,16 +68,16 @@ public abstract class AbstractSelectingDelegate extends AbstractGeneratedValuesM
 	@Deprecated( forRemoval = true, since = "6.5" )
 	protected Object extractGeneratedValues(ResultSet resultSet, SharedSessionContractImplementor session)
 			throws SQLException {
-		final GeneratedValues generatedValues = extractReturningValues( resultSet, session );
+		final GeneratedValues generatedValues = extractReturningValues((PreparedStatement) resultSet.getStatement(), resultSet, session );
 		return generatedValues.getGeneratedValue( persister.getIdentifierMapping() );
 	}
 
 	/**
 	 * Extract the generated key value from the given result set after execution of {@link #getSelectSQL()}.
 	 */
-	private GeneratedValues extractReturningValues(ResultSet resultSet, SharedSessionContractImplementor session)
+	private GeneratedValues extractReturningValues(PreparedStatement statement, ResultSet resultSet, SharedSessionContractImplementor session)
 			throws SQLException {
-		return getGeneratedValues( resultSet, persister, getTiming(), session );
+		return getGeneratedValues( statement, resultSet, persister, getTiming(), session );
 	}
 
 	@Override
@@ -118,7 +118,7 @@ public abstract class AbstractSelectingDelegate extends AbstractGeneratedValuesM
 
 			final ResultSet resultSet = session.getJdbcCoordinator().getResultSetReturn().extract( idSelect, idSelectSql );
 			try {
-				return extractReturningValues( resultSet, session );
+				return extractReturningValues( idSelect, resultSet, session );
 			}
 			catch (SQLException e) {
 				throw jdbcServices.getSqlExceptionHelper().convert(
@@ -174,7 +174,7 @@ public abstract class AbstractSelectingDelegate extends AbstractGeneratedValuesM
 				bindParameters( binder.getEntity(), idSelect, session );
 				ResultSet resultSet = jdbcCoordinator.getResultSetReturn().extract( idSelect, selectSQL );
 				try {
-					return extractReturningValues( resultSet, session );
+					return extractReturningValues( idSelect, resultSet, session );
 				}
 				finally {
 					jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( resultSet, idSelect );

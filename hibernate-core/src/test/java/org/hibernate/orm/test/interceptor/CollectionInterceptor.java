@@ -18,7 +18,7 @@ public class CollectionInterceptor implements Interceptor {
 		return false;
 	}
 
-	public boolean onSave(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
+	public boolean onPersist(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
 		( (User) entity ).getActions().add("created");
 		return false;
 	}

@@ -22,7 +22,7 @@ public class PropertyInterceptor implements Interceptor {
 	}
 
 	@Override
-	public boolean onSave(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
+	public boolean onPersist(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
 		state[2] = Calendar.getInstance();
 		return true;
 	}

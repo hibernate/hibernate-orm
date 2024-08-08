@@ -26,11 +26,6 @@ include::{example-dir-event}/InterceptorTest.java[tags=events-interceptors-examp
 ----
 ====
 
-[NOTE]
-====
-You can either implement `Interceptor` directly or extend the `org.hibernate.EmptyInterceptor` base class.
-====
-
 An Interceptor can be either `Session`-scoped or `SessionFactory`-scoped.
 
 A Session-scoped interceptor is specified when a session is opened.

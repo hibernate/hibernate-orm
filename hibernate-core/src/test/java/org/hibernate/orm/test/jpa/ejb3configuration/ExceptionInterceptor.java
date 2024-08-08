@@ -34,7 +34,7 @@ public class ExceptionInterceptor implements Interceptor {
 	}
 
 	@Override
-	public boolean onSave(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)
+	public boolean onPersist(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)
 			throws CallbackException {
 		if (allowSave) return false;
 		throw new IllegalStateException( EXCEPTION_MESSAGE );

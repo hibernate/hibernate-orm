@@ -320,7 +320,7 @@ public class EntityEntryContext {
 			reentrantSafeEntries = new EntityEntryCrossRefImpl[count];
 			int i = 0;
 			ManagedEntity managedEntity = head;
-			while ( managedEntity != null ) {
+			while ( managedEntity != null && i < count) {
 				reentrantSafeEntries[i++] = new EntityEntryCrossRefImpl(
 						managedEntity.$$_hibernate_getEntityInstance(),
 						managedEntity.$$_hibernate_getEntityEntry()

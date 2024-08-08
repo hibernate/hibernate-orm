@@ -16,7 +16,6 @@ import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.EntityUniqueKey;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -229,7 +228,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	public void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable, SharedSessionContractImplementor session)
 			throws SQLException {
 		if ( settable.length > 0 ) {
-			requireIdentifierOrUniqueKeyType( session.getFactory() )
+			requireIdentifierOrUniqueKeyType( session.getTypeConfiguration() )
 					.nullSafeSet( st, getIdentifier( value, session ), index, settable, session );
 		}
 	}
@@ -237,7 +236,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
 			throws SQLException {
-		requireIdentifierOrUniqueKeyType( session.getFactory() )
+		requireIdentifierOrUniqueKeyType( session.getTypeConfiguration() )
 				.nullSafeSet( st, getIdentifier( value, session ), index, session );
 	}
 
@@ -276,7 +275,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		final Object xId = extractIdentifier( x, factory );
 		final Object yId = extractIdentifier( y, factory );
 
-		return getIdentifierType( factory ).compare( xId, yId );
+		return getIdentifierType( factory.getTypeConfiguration() ).compare( xId, yId );
 	}
 
 	private Object extractIdentifier(Object entity, SessionFactoryImplementor factory) {
@@ -333,7 +332,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 									.getName()
 					);
 				}
-				id = getIdentifierOrUniqueKeyType( session.getFactory() )
+				id = getIdentifierOrUniqueKeyType( session.getTypeConfiguration() )
 						.replace( id, null, session, owner, copyCache );
 				return resolve( id, session, owner );
 			}
@@ -592,17 +591,17 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	/**
 	 * Convenience method to locate the identifier type of the associated entity.
 	 *
-	 * @param factory The mappings...
+	 * @param typeConfiguration The TypeConfiguration {@link TypeConfiguration}
 	 *
 	 * @return The identifier type
 	 */
-	Type getIdentifierType(final Mapping factory) {
+	Type getIdentifierType(final TypeConfiguration typeConfiguration) {
 		final Type type = associatedIdentifierType;
 		//The following branch implements a simple lazy-initialization, but rather than the canonical
 		//form it returns the local variable to avoid a second volatile read: associatedIdentifierType
 		//needs to be volatile as the initialization might happen by a different thread than the readers.
 		if ( type == null ) {
-			associatedIdentifierType = factory.getIdentifierType( getAssociatedEntityName() );
+			associatedIdentifierType = typeConfiguration.getIdentifierType( getAssociatedEntityName() );
 			return associatedIdentifierType;
 		}
 		else {
@@ -620,7 +619,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	Type getIdentifierType(final SharedSessionContractImplementor session) {
 		final Type type = associatedIdentifierType;
 		if ( type == null ) {
-			associatedIdentifierType = getIdentifierType( session.getFactory() );
+			associatedIdentifierType = getIdentifierType( session.getTypeConfiguration() );
 			return associatedIdentifierType;
 		}
 		else {
@@ -633,21 +632,21 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * associated entity's PK or (2) the unique key to which we refer (i.e.
 	 * the property-ref).
 	 *
-	 * @param factory The mappings...
+	 * @param typeConfiguration The TypeConfiguration {@link TypeConfiguration}
 	 *
 	 * @return The appropriate type.
 	 *
 	 * @throws MappingException Generally, if unable to resolve the associated entity name
 	 * or unique key property name.
 	 */
-	public final Type getIdentifierOrUniqueKeyType(Mapping factory) throws MappingException {
+	public final Type getIdentifierOrUniqueKeyType(TypeConfiguration typeConfiguration) throws MappingException {
 		if ( isReferenceToIdentifierProperty() ) {
-			return getIdentifierType( factory );
+			return getIdentifierType( typeConfiguration );
 		}
 		else {
-			final Type type = factory.getReferencedPropertyType( getAssociatedEntityName(), uniqueKeyPropertyName );
+			final Type type = typeConfiguration.getReferencedPropertyType( getAssociatedEntityName(), uniqueKeyPropertyName );
 			if ( type.isEntityType() ) {
-				return ( (EntityType) type ).getIdentifierOrUniqueKeyType( factory );
+				return ( (EntityType) type ).getIdentifierOrUniqueKeyType( typeConfiguration );
 			}
 			else {
 				return type;
@@ -659,16 +658,16 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * The name of the property on the associated entity to which our FK
 	 * refers
 	 *
-	 * @param factory The mappings...
+	 * @param typeConfiguration The TypeConfiguration {@link TypeConfiguration}
 	 *
 	 * @return The appropriate property name.
 	 *
 	 * @throws MappingException Generally, if unable to resolve the associated entity name
 	 */
-	public final String getIdentifierOrUniqueKeyPropertyName(Mapping factory)
+	public final String getIdentifierOrUniqueKeyPropertyName(TypeConfiguration typeConfiguration)
 			throws MappingException {
 		return isReferenceToIdentifierProperty()
-				? factory.getIdentifierPropertyName( getAssociatedEntityName() )
+				? typeConfiguration.getIdentifierPropertyName( getAssociatedEntityName() )
 				: uniqueKeyPropertyName;
 	}
 
@@ -747,7 +746,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				entityName,
 				uniqueKeyPropertyName,
 				key,
-				getIdentifierOrUniqueKeyType( factory ),
+				getIdentifierOrUniqueKeyType( factory.getTypeConfiguration() ),
 				session.getFactory()
 		);
 
@@ -766,11 +765,11 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		return result == null ? null : persistenceContext.proxyFor( result );
 	}
 
-	protected Type requireIdentifierOrUniqueKeyType(Mapping mapping) {
-		final Type fkTargetType = getIdentifierOrUniqueKeyType( mapping );
+	protected Type requireIdentifierOrUniqueKeyType(TypeConfiguration typeConfiguration) {
+		final Type fkTargetType = getIdentifierOrUniqueKeyType( typeConfiguration );
 		if ( fkTargetType == null ) {
 			throw new MappingException(
-					"Unable to determine FK target Type for many-to-one or one-to-one mapping: " +
+					"Unable to determine FK target Type for many-to-one or one-to-one typeConfiguration: " +
 							"referenced-entity-name=[" + getAssociatedEntityName() +
 							"], referenced-entity-attribute-name=[" + getLHSPropertyName() + "]"
 			);

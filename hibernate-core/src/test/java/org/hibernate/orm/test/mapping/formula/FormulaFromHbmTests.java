@@ -43,7 +43,7 @@ public class FormulaFromHbmTests {
 							.getJdbcTypeRegistry();
 					final Property stringFormula = rootClass.getProperty( "stringFormula" );
 					{
-						final int[] sqlTypes = stringFormula.getType().getSqlTypeCodes( scope.getDomainModel() );
+						final int[] sqlTypes = stringFormula.getType().getSqlTypeCodes( scope.getDomainModel().getTypeConfiguration() );
 						assertThat( sqlTypes.length, is( 1 ) );
 						assertThat( sqlTypes[ 0 ], is( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ).getJdbcTypeCode() ) );
 
@@ -53,7 +53,7 @@ public class FormulaFromHbmTests {
 
 					final Property integerFormula = rootClass.getProperty( "integerFormula" );
 					{
-						final int[] sqlTypes = integerFormula.getType().getSqlTypeCodes( scope.getDomainModel() );
+						final int[] sqlTypes = integerFormula.getType().getSqlTypeCodes( scope.getDomainModel().getTypeConfiguration() );
 						assertThat( sqlTypes.length, is( 1 ) );
 						assertThat( sqlTypes[ 0 ], is( jdbcTypeRegistry.getDescriptor( Types.INTEGER ).getJdbcTypeCode() ) );
 

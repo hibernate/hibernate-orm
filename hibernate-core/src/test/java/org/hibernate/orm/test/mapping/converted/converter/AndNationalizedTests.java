@@ -50,7 +50,7 @@ public class AndNationalizedTests extends BaseUnitTestCase {
 			final Dialect dialect = metadata.getDatabase().getDialect();
 			assertEquals(
 					dialect.getNationalizationSupport().getVarcharVariantCode(),
-					entityBinding.getProperty( "name" ).getType().getSqlTypeCodes( metadata )[0]
+					entityBinding.getProperty( "name" ).getType().getSqlTypeCodes( metadata.getTypeConfiguration() )[0]
 			);
 		}
 		finally {

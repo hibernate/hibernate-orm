@@ -53,7 +53,7 @@ public class FieldAccessedNestedEmbeddableMetadataTest {
 			assertEquals( (Long) 500L, selectable.getLength() );
 			Component amountMetadata = (Component) investmentMetadata.getProperty( "amount" ).getValue();
 			SimpleValue currencyMetadata = (SimpleValue) amountMetadata.getProperty( "currency" ).getValue();
-			int[] currencySqlTypes = currencyMetadata.getType().getSqlTypeCodes( metadata );
+			int[] currencySqlTypes = currencyMetadata.getType().getSqlTypeCodes( metadata.getTypeConfiguration() );
 			assertEquals( 1, currencySqlTypes.length );
 			assertJdbcTypeCode(
 					new int[] { jdbcTypeRegistry.getDescriptor( SqlTypes.VARCHAR ).getJdbcTypeCode(), SqlTypes.ENUM },

@@ -9,7 +9,6 @@ package org.hibernate.processor.validation;
 import jakarta.persistence.AccessType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.PropertyNotFoundException;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
@@ -21,6 +20,7 @@ import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -350,7 +350,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		}
 
 		@Override
-		public int getColumnSpan(Mapping mapping) {
+		public int getColumnSpan(TypeConfiguration typeConfiguration) {
 			return propertyNames.length;
 		}
 	}

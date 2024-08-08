@@ -12,9 +12,9 @@ import org.hibernate.boot.model.internal.AnnotatedJoinColumn;
 import org.hibernate.boot.model.internal.AnnotatedJoinColumns;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.Objects;
 
@@ -116,11 +116,11 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 			&& Objects.equals( referencedEntityName, other.referencedEntityName );
 	}
 
-	public boolean isValid(Mapping mapping) throws MappingException {
+	public boolean isValid(TypeConfiguration typeConfiguration) throws MappingException {
 		if (referencedEntityName==null) {
 			throw new MappingException("association must specify the referenced entity");
 		}
-		return super.isValid( mapping );
+		return super.isValid( typeConfiguration );
 	}
 
 	public boolean isLazy() {

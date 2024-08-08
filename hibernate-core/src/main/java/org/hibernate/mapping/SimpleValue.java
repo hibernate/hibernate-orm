@@ -34,7 +34,6 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.internal.CoreLogging;
@@ -480,8 +479,8 @@ public abstract class SimpleValue implements KeyValue {
 		return true;
 	}
 
-	public boolean isValid(Mapping mapping) throws MappingException {
-		return getColumnSpan() == getType().getColumnSpan( mapping );
+	public boolean isValid(TypeConfiguration typeConfiguration) throws MappingException {
+		return getColumnSpan() == getType().getColumnSpan( typeConfiguration );
 	}
 
 	protected void setAttributeConverterDescriptor(ConverterDescriptor descriptor) {

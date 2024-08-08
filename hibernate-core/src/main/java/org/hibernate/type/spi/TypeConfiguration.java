@@ -35,6 +35,7 @@ import java.util.function.Function;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
+import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.TimeZoneStorageStrategy;
@@ -486,6 +487,26 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 					: sessionFactory.getJdbcServices().getDialect();
 		}
 
+		public org.hibernate.type.Type getIdentifierType(String className) throws MappingException {
+			return sessionFactory == null
+					? metadataBuildingContext.getMetadataCollector().getIdentifierType( className )
+					: getSessionFactory().getIdentifierType( className );
+		}
+
+		public String getIdentifierPropertyName(String className) throws MappingException {
+			return sessionFactory == null
+					? metadataBuildingContext.getMetadataCollector().getIdentifierPropertyName( className )
+					: getSessionFactory().getIdentifierPropertyName( className );
+		}
+
+		org.hibernate.type.Type getReferencedPropertyType(String className, String propertyName)
+				throws MappingException {
+			return sessionFactory == null
+					? metadataBuildingContext.getMetadataCollector()
+					.getReferencedPropertyType( className, propertyName )
+					: getSessionFactory().getReferencedPropertyType( className, propertyName );
+		}
+
 		private Scope(TypeConfiguration typeConfiguration) {
 			this.typeConfiguration = typeConfiguration;
 		}
@@ -892,5 +913,18 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 				scope.getServiceRegistry().requireService( ManagedBeanRegistry.class )
 						.getBean( planClass );
 		return (MutabilityPlan<J>) planBean.getBeanInstance();
+	}
+
+	public org.hibernate.type.Type getIdentifierType(String className) throws MappingException {
+		return scope.getIdentifierType( className );
+	}
+
+	public String getIdentifierPropertyName(String className) throws MappingException {
+		return scope.getIdentifierPropertyName( className );
+	}
+
+	public org.hibernate.type.Type getReferencedPropertyType(String className, String propertyName)
+			throws MappingException {
+		return scope.getReferencedPropertyType( className, propertyName );
 	}
 }

@@ -33,7 +33,7 @@ import static org.hibernate.type.SqlTypes.isStringType;
 class ColumnDefinitions {
 
 	static boolean hasMatchingType(Column column, ColumnInformation columnInformation, Metadata metadata, Dialect dialect) {
-		final boolean typesMatch = dialect.equivalentTypes( column.getSqlTypeCode( metadata ), columnInformation.getTypeCode() )
+		final boolean typesMatch = dialect.equivalentTypes( column.getSqlTypeCode( metadata.getTypeConfiguration() ), columnInformation.getTypeCode() )
 				|| normalize( stripArgs( column.getSqlType( metadata ) ) ).equals( normalize( columnInformation.getTypeName() ) );
 		if ( typesMatch ) {
 			return true;
@@ -48,7 +48,7 @@ class ColumnDefinitions {
 					columnInformation.getDecimalDigits(),
 					metadata.getDatabase().getTypeConfiguration().getJdbcTypeRegistry()
 			);
-			return dialect.equivalentTypes( column.getSqlTypeCode( metadata ), jdbcType.getDefaultSqlTypeCode() );
+			return dialect.equivalentTypes( column.getSqlTypeCode( metadata.getTypeConfiguration() ), jdbcType.getDefaultSqlTypeCode() );
 		}
 	}
 
@@ -62,7 +62,7 @@ class ColumnDefinitions {
 			int sqlType = columnInformation.getTypeCode();
 			if ( isStringType( sqlType ) ) {
 				final int actualLength = columnInformation.getColumnSize();
-				final Size size = column.getColumnSize( dialect, metadata );
+				final Size size = column.getColumnSize( dialect, metadata.getTypeConfiguration() );
 				final Long requiredLength = size.getLength();
 				return requiredLength == null
 					|| requiredLength == actualLength;
@@ -71,7 +71,7 @@ class ColumnDefinitions {
 				// Postgres, H2, SQL Server, and MySQL agree on the following:
 				final int actualPrecision = columnInformation.getColumnSize();
 				final int actualScale = columnInformation.getDecimalDigits();
-				final Size size = column.getColumnSize( dialect, metadata );
+				final Size size = column.getColumnSize( dialect, metadata.getTypeConfiguration() );
 				final Integer requiredPrecision = size.getPrecision();
 				final Integer requiredScale = size.getScale();
 				return requiredPrecision == null
@@ -198,7 +198,7 @@ class ColumnDefinitions {
 				definition.append( ' ' ).append( column.getSqlType( metadata ) );
 			}
 			final String identityColumnString = dialect.getIdentityColumnSupport()
-					.getIdentityColumnString( column.getSqlTypeCode( metadata ) );
+					.getIdentityColumnString( column.getSqlTypeCode( metadata.getTypeConfiguration() ) );
 			definition.append( ' ' ).append( identityColumnString );
 		}
 		else {

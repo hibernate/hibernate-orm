@@ -1132,7 +1132,6 @@ public class MappingModelCreationHelper {
 					keyTableExpression,
 					collectionBootValueMapping.getKey(),
 					getPropertyOrder( bootValueMapping, creationProcess ),
-					creationProcess.getCreationContext().getMetadata(),
 					creationProcess.getCreationContext().getTypeConfiguration(),
 					insertable,
 					updateable,
@@ -1157,7 +1156,6 @@ public class MappingModelCreationHelper {
 					keyTableExpression,
 					bootValueMapping,
 					getPropertyOrder( bootValueMapping, creationProcess ),
-					creationProcess.getCreationContext().getMetadata(),
 					creationProcess.getCreationContext().getTypeConfiguration(),
 					insertable,
 					updateable,
@@ -1216,7 +1214,7 @@ public class MappingModelCreationHelper {
 		else {
 			final EntityType entityType = (EntityType) bootValueMapping.getType();
 			final Type identifierOrUniqueKeyType = entityType.getIdentifierOrUniqueKeyType(
-					creationProcess.getCreationContext().getMetadata()
+					creationProcess.getCreationContext().getTypeConfiguration()
 			);
 			if ( identifierOrUniqueKeyType instanceof ComponentType ) {
 				componentType = (ComponentType) identifierOrUniqueKeyType;
@@ -1241,7 +1239,7 @@ public class MappingModelCreationHelper {
 		// A value that came from the annotation model is already sorted appropriately
 		// so we use an "identity mapping"
 		else {
-			final int columnSpan = componentType.getColumnSpan( creationProcess.getCreationContext().getBootModel() );
+			final int columnSpan = componentType.getColumnSpan( creationProcess.getCreationContext().getTypeConfiguration() );
 			final int[] propertyReordering = new int[columnSpan];
 			for ( int i = 0; i < columnSpan; i++ ) {
 				propertyReordering[i] = i;

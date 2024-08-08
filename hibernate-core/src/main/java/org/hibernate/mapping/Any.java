@@ -14,9 +14,9 @@ import java.util.function.Consumer;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A mapping model object representing a {@linkplain org.hibernate.annotations.Any polymorphic association}
@@ -250,11 +250,11 @@ public class Any extends SimpleValue {
 		return simpleValue != null ? simpleValue.getTypeName() : null;
 	}
 
-	public boolean isValid(Mapping mapping) throws MappingException {
+	public boolean isValid(TypeConfiguration typeConfiguration) throws MappingException {
 		if ( discriminatorDescriptor != null ) {
-			return discriminatorDescriptor.isValid( mapping ) && keyDescriptor.isValid( mapping );
+			return discriminatorDescriptor.isValid( typeConfiguration ) && keyDescriptor.isValid( typeConfiguration );
 		}
-		return metaMapping.isValid( mapping ) && keyMapping.isValid( mapping );
+		return metaMapping.isValid( typeConfiguration ) && keyMapping.isValid( typeConfiguration );
 	}
 
 	private static String columnName(Column column, MetadataBuildingContext buildingContext) {
@@ -391,9 +391,9 @@ public class Any extends SimpleValue {
 		}
 
 		@Override
-		public boolean isValid(Mapping mapping) {
+		public boolean isValid(TypeConfiguration typeConfiguration) {
 			return columnName != null
-					&& getType().getColumnSpan( mapping ) == 1;
+					&& getType().getColumnSpan( typeConfiguration ) == 1;
 		}
 	}
 
@@ -465,9 +465,9 @@ public class Any extends SimpleValue {
 		}
 
 		@Override
-		public boolean isValid(Mapping mapping) throws MappingException {
+		public boolean isValid(TypeConfiguration typeConfiguration) throws MappingException {
 			// check
-			return super.isValid( mapping );
+			return super.isValid( typeConfiguration );
 		}
 	}
 }

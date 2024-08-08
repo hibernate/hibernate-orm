@@ -10,8 +10,8 @@ import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
@@ -91,12 +91,12 @@ public abstract class IndexedCollection extends Collection {
 //		}
 	}
 
-	public void validate(Mapping mapping) throws MappingException {
-		super.validate( mapping );
+	public void validate(TypeConfiguration typeConfiguration) throws MappingException {
+		super.validate( typeConfiguration );
 
 		assert getElement() != null : "IndexedCollection index not bound : " + getRole();
 
-		if ( !getIndex().isValid(mapping) ) {
+		if ( !getIndex().isValid(typeConfiguration) ) {
 			throw new MappingException(
 				"collection index mapping has wrong number of columns: " +
 				getRole() +

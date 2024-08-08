@@ -19,7 +19,6 @@ import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -33,6 +32,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Convenience base class for {@link BasicType} implementations.
@@ -112,7 +112,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
+	public boolean[] toColumnNullness(Object value, TypeConfiguration typeConfiguration) {
 		return value == null ? ArrayHelper.FALSE : ArrayHelper.TRUE;
 	}
 
@@ -143,12 +143,12 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	public final int getColumnSpan(Mapping mapping) throws MappingException {
+	public final int getColumnSpan(TypeConfiguration typeConfiguration) throws MappingException {
 		return 1;
 	}
 
 	@Override
-	public final int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
+	public final int[] getSqlTypeCodes(TypeConfiguration typeConfiguration) throws MappingException {
 		return sqlTypes;
 	}
 

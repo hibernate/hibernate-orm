@@ -24,7 +24,6 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -78,8 +77,11 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	@Override
-	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
-		return join( discriminatorType.getSqlTypeCodes( mapping ), identifierType.getSqlTypeCodes( mapping ) );
+	public int[] getSqlTypeCodes(TypeConfiguration typeConfiguration) throws MappingException {
+		return join(
+				discriminatorType.getSqlTypeCodes( typeConfiguration ),
+				identifierType.getSqlTypeCodes( typeConfiguration )
+		);
 	}
 
 	@Override
@@ -210,8 +212,8 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
-		final boolean[] result = new boolean[ getColumnSpan( mapping ) ];
+	public boolean[] toColumnNullness(Object value, TypeConfiguration typeConfiguration) {
+		final boolean[] result = new boolean[ getColumnSpan( typeConfiguration ) ];
 		if ( value != null ) {
 			Arrays.fill( result, true );
 		}
@@ -225,7 +227,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	@Override
-	public int getColumnSpan(Mapping session) {
+	public int getColumnSpan(TypeConfiguration typeConfiguration) {
 		return 2;
 	}
 

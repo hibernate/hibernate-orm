@@ -118,6 +118,8 @@ public class CommunityDialectSelector implements DialectSelector {
 				return Teradata14Dialect.class;
 			case "TimesTen":
 				return TimesTenDialect.class;
+			case "SingleStore":
+				return SingleStoreDialect.class;
 		}
 		return null;
 	}

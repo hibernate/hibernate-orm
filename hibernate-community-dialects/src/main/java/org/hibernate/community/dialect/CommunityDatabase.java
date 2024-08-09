@@ -211,6 +211,23 @@ public enum CommunityDatabase {
 		public boolean productNameMatches(String databaseName) {
 			return databaseName.toLowerCase().startsWith( "timesten" );
 		}
+	},
+
+	SINGLESTORE {
+		@Override
+		public Dialect createDialect(DialectResolutionInfo info) {
+			return new SingleStoreDialect( info );
+		}
+
+		@Override
+		public boolean productNameMatches(String databaseName) {
+			return databaseName.toLowerCase().startsWith( "singlestore" );
+		}
+
+		@Override
+		public String getDriverClassName(String jdbcUrl) {
+			return "com.singlestore.jdbc.Driver";
+		}
 	};
 
 	/**

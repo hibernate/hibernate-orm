@@ -174,7 +174,11 @@ pipeline {
 								// update changelog from JIRA
 								// tags the version
 								// changes the version to the provided development version
-								withEnv(["BRANCH=${env.GIT_BRANCH}"]) {
+								withEnv([
+										"BRANCH=${env.GIT_BRANCH}",
+										// Increase the amount of memory for this part since asciidoctor doc rendering consumes a lot of metaspace
+										"DEFAULT_JVM_OPTS=-Dlog4j2.disableJmx -Xmx4g -XX:MaxMetaspaceSize=768m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8"
+								]) {
 									sh ".release/scripts/prepare-release.sh ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION}"
 								}
 							}

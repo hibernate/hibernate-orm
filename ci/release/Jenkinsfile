@@ -177,7 +177,7 @@ pipeline {
 								withEnv([
 										"BRANCH=${env.GIT_BRANCH}",
 										// Increase the amount of memory for this part since asciidoctor doc rendering consumes a lot of metaspace
-										"JAVA_OPTS=-Dlog4j2.disableJmx -Xmx4g -XX:MaxMetaspaceSize=768m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8"
+										"GRADLE_OPTS=-Dlog4j2.disableJmx -Xmx4g -XX:MaxMetaspaceSize=768m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8"
 								]) {
 									sh ".release/scripts/prepare-release.sh ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION}"
 								}

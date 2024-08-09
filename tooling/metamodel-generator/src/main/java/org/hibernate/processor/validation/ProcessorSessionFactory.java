@@ -367,6 +367,12 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		}
 
 		@Override
+		boolean isSamePersister(MockEntityPersister entityPersister) {
+			EntityPersister persister = (EntityPersister) entityPersister;
+			return typeUtil.isSameType( persister.type.asType(), type.asType() );
+		}
+
+		@Override
 		boolean isSubclassPersister(MockEntityPersister entityPersister) {
 			EntityPersister persister = (EntityPersister) entityPersister;
 			return typeUtil.isSubtype( persister.type.asType(), type.asType() );
@@ -426,19 +432,9 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	@Override
-	String findEntityName(String typeName) {
-		for ( final Map.Entry<String, String> e : entityNameMappings.entrySet() ) {
-			if ( typeName.equals( e.getKey() ) || typeName.equals( e.getValue() ) ) {
-				return e.getKey();
-			}
-		}
-		return null;
-	}
-
-	@Override
 	String qualifyName(String entityName) {
 		TypeElement entityClass = findEntityClass(entityName);
-		return entityClass == null ? null : entityClass.getSimpleName().toString();
+		return entityClass == null ? null : entityClass.getQualifiedName().toString();
 	}
 
 	@Override

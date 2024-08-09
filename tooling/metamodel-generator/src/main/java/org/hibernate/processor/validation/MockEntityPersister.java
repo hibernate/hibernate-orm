@@ -67,6 +67,8 @@ public abstract class MockEntityPersister implements EntityPersister, Queryable,
 				.orElse(null);
 	}
 
+	abstract boolean isSamePersister(MockEntityPersister entityPersister);
+
 	abstract boolean isSubclassPersister(MockEntityPersister entityPersister);
 
 	@Override
@@ -143,7 +145,8 @@ public abstract class MockEntityPersister implements EntityPersister, Queryable,
 	@Override
 	public String getRootEntityName() {
 		for (MockEntityPersister persister : factory.getMockEntityPersisters()) {
-			if (this != persister && persister.isSubclassPersister(this)) {
+			if (this != persister && !persister.isSamePersister(this)
+					&& persister.isSubclassPersister(this)) {
 				return persister.getRootEntityName();
 			}
 		}

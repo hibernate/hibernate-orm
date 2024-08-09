@@ -23,7 +23,7 @@ public class Person implements Serializable {
 	private String name;
 
 	@Embedded
-	private Address address = new Address();
+	private Height height;
 
 	public long getId() {
 		return id;
@@ -41,11 +41,11 @@ public class Person implements Serializable {
 		this.name = name;
 	}
 
-	public Address getAddress() {
-		return address;
+	public Height getHeight() {
+		return height;
 	}
 
-	public void setAddress(Address address) {
-		this.address = address;
+	public void setHeight(Height height) {
+		this.height = height;
 	}
 }

@@ -211,7 +211,9 @@ public class MetadataContext {
 		identifiableTypesByName.put( mappedSuperclassType.getTypeName(), mappedSuperclassType );
 		mappedSuperclassByMappedSuperclassMapping.put( mappedSuperclass, mappedSuperclassType );
 		orderedMappings.add( mappedSuperclass );
-		mappedSuperClassTypeToPersistentClass.put( mappedSuperclassType, getEntityWorkedOn() );
+		if ( !stackOfPersistentClassesBeingProcessed.isEmpty() ) {
+			mappedSuperClassTypeToPersistentClass.put( mappedSuperclassType, getEntityWorkedOn() );
+		}
 
 		knownMappedSuperclasses.remove( mappedSuperclass );
 	}
@@ -804,14 +806,7 @@ public class MetadataContext {
 	}
 
 	public PersistentClass getPersistentClassHostingProperties(MappedSuperclassTypeImpl<?> mappedSuperclassType) {
-		final PersistentClass persistentClass = mappedSuperClassTypeToPersistentClass.get( mappedSuperclassType );
-		if ( persistentClass == null ) {
-			throw new AssertionFailure(
-					"Could not find PersistentClass for MappedSuperclassType: "
-							+ mappedSuperclassType.getJavaType()
-			);
-		}
-		return persistentClass;
+		return mappedSuperClassTypeToPersistentClass.get( mappedSuperclassType );
 	}
 
 	public Set<MappedSuperclass> getUnusedMappedSuperclasses() {

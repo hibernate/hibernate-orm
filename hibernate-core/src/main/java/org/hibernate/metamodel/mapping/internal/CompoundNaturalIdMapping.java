@@ -89,12 +89,12 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			final SingularAttributeMapping attributeMapping = attributes.get( i );
 			final AttributeMetadata metadata = attributeMapping.getAttributeMetadata();
-			if ( ! metadata.isUpdatable() ) {
-				return false;
+			if ( metadata.isUpdatable() ) {
+				return true;
 			}
 		}
 
-		return true;
+		return false;
 	}
 
 	@Override

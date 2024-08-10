@@ -21,6 +21,8 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
+
 /**
  * Defines the default flush event listeners used by hibernate for
  * flushing session state in response to generated auto-flush events.
@@ -29,7 +31,7 @@ import org.jboss.logging.Logger;
  */
 public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener implements AutoFlushEventListener {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, DefaultAutoFlushEventListener.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, DefaultAutoFlushEventListener.class.getName() );
 
 	/**
 	 * Handle the given auto-flush event.

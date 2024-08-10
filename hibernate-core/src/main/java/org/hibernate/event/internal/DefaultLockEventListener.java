@@ -24,6 +24,8 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
+
 /**
  * Defines the default lock event listeners used by hibernate to lock entities
  * in response to generated lock events.
@@ -33,6 +35,7 @@ import org.jboss.logging.Logger;
 public class DefaultLockEventListener extends AbstractLockUpgradeEventListener implements LockEventListener {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			DefaultLockEventListener.class.getName()
 	);

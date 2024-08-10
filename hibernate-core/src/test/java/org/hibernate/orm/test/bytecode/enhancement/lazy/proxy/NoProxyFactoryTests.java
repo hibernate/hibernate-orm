@@ -30,6 +30,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import java.lang.invoke.MethodHandles;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -42,7 +44,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class NoProxyFactoryTests extends BaseNonConfigCoreFunctionalTestCase {
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, EntityRepresentationStrategyPojoStandard.class.getName() )
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, EntityRepresentationStrategyPojoStandard.class.getName() )
 	);
 
 	/**

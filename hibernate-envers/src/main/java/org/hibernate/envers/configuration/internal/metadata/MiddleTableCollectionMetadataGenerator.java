@@ -27,6 +27,8 @@ import org.hibernate.mapping.PersistentClass;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
+
 /**
  * An implementation of {@link AbstractCollectionMetadataGenerator} that builds collection metadata
  * and association mappings where the association uses a middle table mapping.
@@ -36,6 +38,7 @@ import org.jboss.logging.Logger;
 public class MiddleTableCollectionMetadataGenerator extends AbstractCollectionMetadataGenerator {
 
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			EnversMessageLogger.class,
 			MiddleTableCollectionMetadataGenerator.class.getName()
 	);

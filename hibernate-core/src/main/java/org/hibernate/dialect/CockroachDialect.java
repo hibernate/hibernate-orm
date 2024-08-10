@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -122,7 +123,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  */
 public class CockroachDialect extends Dialect {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, CockroachDialect.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, CockroachDialect.class.getName() );
 	// KNOWN LIMITATIONS:
 	// * no support for java.sql.Clob
 

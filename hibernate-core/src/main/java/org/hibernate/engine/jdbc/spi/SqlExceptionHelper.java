@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
@@ -31,6 +32,7 @@ import org.jboss.logging.Logger.Level;
  */
 public class SqlExceptionHelper {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			SqlExceptionHelper.class.getName()
 	);

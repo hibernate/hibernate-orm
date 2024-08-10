@@ -6,6 +6,7 @@
  */
 package org.hibernate.community.dialect;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.Types;
 
 import org.hibernate.LockMode;
@@ -81,6 +82,7 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
  */
 public class RDMSOS2200Dialect extends Dialect {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			RDMSOS2200Dialect.class.getName()
 	);

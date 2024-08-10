@@ -26,6 +26,8 @@ import org.jboss.logging.Logger;
 
 import jakarta.persistence.PersistenceException;
 
+import java.lang.invoke.MethodHandles;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -48,7 +50,7 @@ public class UniqueConstraintBatchingTest {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, SqlExceptionHelper.class.getName() ) );
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, SqlExceptionHelper.class.getName() ) );
 
 	private Triggerable triggerable;
 

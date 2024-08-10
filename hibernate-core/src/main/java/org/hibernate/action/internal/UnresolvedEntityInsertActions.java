@@ -9,6 +9,7 @@ package org.hibernate.action.internal;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.invoke.MethodHandles;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -45,8 +46,9 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  */
 public class UnresolvedEntityInsertActions {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-				CoreMessageLogger.class,
-				UnresolvedEntityInsertActions.class.getName()
+			MethodHandles.lookup(),
+			CoreMessageLogger.class,
+			UnresolvedEntityInsertActions.class.getName()
 	);
 
 	private static final int INIT_SIZE = 5;

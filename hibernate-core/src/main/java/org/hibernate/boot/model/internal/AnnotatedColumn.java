@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model.internal;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +69,7 @@ import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
  */
 public class AnnotatedColumn {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, AnnotatedColumn.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, AnnotatedColumn.class.getName() );
 
 	private Column mappingColumn;
 	private boolean insertable = true;

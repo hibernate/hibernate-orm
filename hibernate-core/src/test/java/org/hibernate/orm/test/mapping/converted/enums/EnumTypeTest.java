@@ -26,6 +26,8 @@ import org.junit.Test;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
+
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -37,12 +39,14 @@ public class EnumTypeTest extends BaseCoreFunctionalTestCase {
 
 	@Rule
 	public LoggerInspectionRule binderLogInspection = new LoggerInspectionRule( Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			JdbcBindingLogging.NAME
 	) );
 
 	@Rule
 	public LoggerInspectionRule extractorLogInspection = new LoggerInspectionRule( Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			JdbcExtractingLogging.NAME
 	) );

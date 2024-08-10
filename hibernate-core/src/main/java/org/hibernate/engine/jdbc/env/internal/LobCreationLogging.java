@@ -17,6 +17,8 @@ import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
+import java.lang.invoke.MethodHandles;
+
 import static org.jboss.logging.Logger.Level.DEBUG;
 
 /**
@@ -32,7 +34,7 @@ public interface LobCreationLogging extends BasicLogger {
 	String NAME = JdbcLogging.NAME + ".lob";
 
 	Logger LOB_LOGGER = Logger.getLogger( NAME );
-	LobCreationLogging LOB_MESSAGE_LOGGER = Logger.getMessageLogger( LobCreationLogging.class, NAME );
+	LobCreationLogging LOB_MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), LobCreationLogging.class, NAME );
 
 	@LogMessage(level = DEBUG)
 	@Message(value = "Disabling contextual LOB creation as %s is true", id = 10010001)

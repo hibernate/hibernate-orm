@@ -13,6 +13,8 @@ import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
+import java.lang.invoke.MethodHandles;
+
 /**
  * @author Steve Ebersole
  */
@@ -25,5 +27,5 @@ import org.jboss.logging.annotations.ValidIdRange;
 public interface SqlExecLogger extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".sql.exec";
 
-	SqlExecLogger SQL_EXEC_LOGGER = Logger.getMessageLogger( SqlExecLogger.class, LOGGER_NAME );
+	SqlExecLogger SQL_EXEC_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), SqlExecLogger.class, LOGGER_NAME );
 }

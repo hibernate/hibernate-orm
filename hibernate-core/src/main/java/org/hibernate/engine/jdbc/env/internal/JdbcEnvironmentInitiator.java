@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine.jdbc.env.internal;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -77,6 +78,7 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
  */
 public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEnvironment> {
 	private static final CoreMessageLogger log = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			JdbcEnvironmentInitiator.class.getName()
 	);

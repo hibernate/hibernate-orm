@@ -22,6 +22,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.CollectionType;
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Iterator;
 
 import static java.util.Collections.emptyIterator;
@@ -33,6 +34,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
  */
 public class CascadingActions {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			CascadingAction.class.getName()
 	);

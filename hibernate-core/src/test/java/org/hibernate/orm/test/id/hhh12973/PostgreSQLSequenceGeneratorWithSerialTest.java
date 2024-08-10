@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.id.hhh12973;
 
 import java.io.StringReader;
+import java.lang.invoke.MethodHandles;
 import java.sql.Statement;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -53,6 +54,7 @@ public class PostgreSQLSequenceGeneratorWithSerialTest extends EntityManagerFact
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
 			Logger.getMessageLogger(
+					MethodHandles.lookup(),
 					CoreMessageLogger.class,
 					SequenceStyleGenerator.class.getName()
 			) );

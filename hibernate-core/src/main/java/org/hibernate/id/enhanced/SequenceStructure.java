@@ -6,6 +6,7 @@
  */
 package org.hibernate.id.enhanced;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -31,6 +32,7 @@ import org.jboss.logging.Logger;
  */
 public class SequenceStructure implements DatabaseStructure {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			SequenceStructure.class.getName()
 	);

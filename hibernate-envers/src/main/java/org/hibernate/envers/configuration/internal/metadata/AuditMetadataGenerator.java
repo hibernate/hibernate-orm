@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
+import java.lang.invoke.MethodHandles;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
@@ -51,6 +52,7 @@ import org.jboss.logging.Logger;
 public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			EnversMessageLogger.class,
 			AuditMetadataGenerator.class.getName()
 	);

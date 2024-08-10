@@ -9,6 +9,7 @@
 
 package org.hibernate.boot.model.internal;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -56,7 +57,7 @@ import jakarta.persistence.Transient;
  */
 public class PropertyContainer {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, PropertyContainer.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, PropertyContainer.class.getName() );
 
 	/**
 	 * The class for which this container is created.

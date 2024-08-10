@@ -14,13 +14,15 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
+
 /**
  * Encapsulates the validator, return type and argument type resolvers for the array_contains function.
  * Subclasses only have to implement the rendering.
  */
 public abstract class AbstractArrayContainsFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
-	protected static final DeprecationLogger LOG = Logger.getMessageLogger( DeprecationLogger.class, AbstractArrayContainsFunction.class.getName() );
+	protected static final DeprecationLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), DeprecationLogger.class, AbstractArrayContainsFunction.class.getName() );
 
 	protected final boolean nullable;
 

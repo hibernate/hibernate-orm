@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
+import java.lang.invoke.MethodHandles;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -186,7 +187,7 @@ import static org.hibernate.mapping.MappingHelper.createLocalUserCollectionTypeB
  * @author Emmanuel Bernard
  */
 public abstract class CollectionBinder {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionBinder.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, CollectionBinder.class.getName() );
 
 	private static final List<Class<?>> INFERRED_CLASS_PRIORITY = List.of(
 			List.class,

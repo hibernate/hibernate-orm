@@ -8,6 +8,8 @@ package org.hibernate.internal;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
+
 /**
  * Sad when you need helpers for generating loggers...
  *
@@ -25,7 +27,7 @@ public class HEMLogging {
 	}
 
 	public static EntityManagerMessageLogger messageLogger(String loggerName) {
-		return Logger.getMessageLogger( EntityManagerMessageLogger .class, loggerName );
+		return Logger.getMessageLogger( MethodHandles.lookup(), EntityManagerMessageLogger .class, loggerName );
 	}
 
 	public static Logger logger(Class<?> classNeedingLogging) {

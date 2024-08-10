@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
+import java.lang.invoke.MethodHandles;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
@@ -33,7 +34,7 @@ public final class LobStreamDataHelper {
 	/** The size of the buffer we will use to deserialize larger streams */
 	private static final int BUFFER_SIZE = 1024 * 4;
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, LobStreamDataHelper.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, LobStreamDataHelper.class.getName() );
 
 	public static boolean isNClob(final Class type) {
 		return java.sql.NClob.class.isAssignableFrom( type );

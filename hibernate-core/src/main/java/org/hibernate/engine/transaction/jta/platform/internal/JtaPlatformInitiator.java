@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine.transaction.jta.platform.internal;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Map;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
@@ -28,7 +29,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class JtaPlatformInitiator implements StandardServiceInitiator<JtaPlatform> {
 	public static final JtaPlatformInitiator INSTANCE = new JtaPlatformInitiator();
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JtaPlatformInitiator.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, JtaPlatformInitiator.class.getName() );
 
 	@Override
 	public Class<JtaPlatform> getServiceInitiated() {

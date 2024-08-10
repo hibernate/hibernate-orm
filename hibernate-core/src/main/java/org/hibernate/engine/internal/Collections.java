@@ -24,6 +24,8 @@ import org.hibernate.type.CollectionType;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
+
 /**
  * Implements book-keeping for the collection persistence by reachability algorithm
  *
@@ -31,6 +33,7 @@ import org.jboss.logging.Logger;
  */
 public final class Collections {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			Collections.class.getName()
 	);

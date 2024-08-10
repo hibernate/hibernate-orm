@@ -23,6 +23,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Query;
 import jakarta.persistence.Table;
 
+import java.lang.invoke.MethodHandles;
+
 @DomainModel(
 		annotatedClasses = {
 				DynamicMapInstantiationTest.Parent.class
@@ -37,7 +39,7 @@ public class DynamicMapInstantiationTest {
 	@RegisterExtension
 	public LoggerInspectionExtension logger = LoggerInspectionExtension
 			.builder().setLogger(
-					Logger.getMessageLogger( CoreMessageLogger.class, SqmDynamicInstantiation.class.getName() )
+					Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, SqmDynamicInstantiation.class.getName() )
 			).build();
 
 	@BeforeEach

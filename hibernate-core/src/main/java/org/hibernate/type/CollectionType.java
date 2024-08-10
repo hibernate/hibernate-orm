@@ -7,6 +7,7 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -59,7 +60,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  */
 public abstract class CollectionType extends AbstractType implements AssociationType {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionType.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, CollectionType.class.getName() );
 
 	@Internal
 	public static final Object UNFETCHED_COLLECTION = new MarkerObject( "UNFETCHED COLLECTION" );

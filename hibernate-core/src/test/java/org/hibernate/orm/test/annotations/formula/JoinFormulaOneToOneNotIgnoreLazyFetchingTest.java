@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.annotations.formula;
 
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import org.hibernate.annotations.JoinColumnOrFormula;
@@ -44,7 +45,7 @@ public class JoinFormulaOneToOneNotIgnoreLazyFetchingTest extends BaseEntityMana
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, ToOneBinder.class.getName() )
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, ToOneBinder.class.getName() )
 	);
 
 	private final Triggerable triggerable = logInspection.watchForLogMessages( "HHH000491" );

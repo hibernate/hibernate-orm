@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.jpa.persistenceunit;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,7 +45,7 @@ public class DuplicatePersistenceUnitNameTest extends BaseUnitTestCase {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, PersistenceXmlParser.class.getName() )
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, PersistenceXmlParser.class.getName() )
 	);
 
 	@Before

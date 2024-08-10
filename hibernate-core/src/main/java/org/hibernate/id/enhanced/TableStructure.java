@@ -6,6 +6,7 @@
  */
 package org.hibernate.id.enhanced;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -46,6 +47,7 @@ import static org.hibernate.id.IdentifierGeneratorHelper.getIntegralDataTypeHold
  */
 public class TableStructure implements DatabaseStructure {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			TableStructure.class.getName()
 	);

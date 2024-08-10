@@ -6,6 +6,7 @@
  */
 package org.hibernate.id.enhanced;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.util.Properties;
 
@@ -23,6 +24,7 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
  */
 public class OptimizerFactory {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			OptimizerFactory.class.getName()
 	);

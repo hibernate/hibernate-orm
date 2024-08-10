@@ -6,6 +6,7 @@
  */
 package org.hibernate.id.enhanced;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -133,6 +134,7 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
  */
 public class TableGenerator implements PersistentIdentifierGenerator {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			TableGenerator.class.getName()
 	);

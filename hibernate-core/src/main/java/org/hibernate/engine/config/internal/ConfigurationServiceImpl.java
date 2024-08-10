@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine.config.internal;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.Map;
 
@@ -29,6 +30,7 @@ import org.checkerframework.checker.nullness.qual.PolyNull;
  */
 public class ConfigurationServiceImpl implements ConfigurationService, ServiceRegistryAwareService {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			ConfigurationServiceImpl.class.getName()
 	);

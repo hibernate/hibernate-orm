@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model.internal;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -67,7 +68,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.setOf;
  * @author Emmanuel Bernard
  */
 public abstract class QueryBinder {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, QueryBinder.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, QueryBinder.class.getName() );
 
 	public static void bindQuery(
 			NamedQuery namedQuery,

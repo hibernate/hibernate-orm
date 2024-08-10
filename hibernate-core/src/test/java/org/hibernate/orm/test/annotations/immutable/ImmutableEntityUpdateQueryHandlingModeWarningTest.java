@@ -18,9 +18,10 @@ import org.junit.Test;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
+
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 /**
  * @author Vlad Mihalcea
@@ -30,7 +31,7 @@ public class ImmutableEntityUpdateQueryHandlingModeWarningTest extends BaseNonCo
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, SqmUpdateStatement.class.getName() ) );
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, SqmUpdateStatement.class.getName() ) );
 
 	@Override
 	protected Class[] getAnnotatedClasses() {

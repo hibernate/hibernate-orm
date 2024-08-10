@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model.internal;
 
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import org.hibernate.AnnotationException;
@@ -57,7 +58,7 @@ import static org.hibernate.internal.util.StringHelper.unquote;
  * @author Emmanuel Bernard
  */
 public class TableBinder {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, TableBinder.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, TableBinder.class.getName() );
 
 	private MetadataBuildingContext buildingContext;
 

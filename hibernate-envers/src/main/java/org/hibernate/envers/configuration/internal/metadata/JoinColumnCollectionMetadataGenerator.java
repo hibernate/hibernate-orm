@@ -31,6 +31,8 @@ import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
+
 /**
  * An implementation of {@link AbstractCollectionMetadataGenerator} that builds collection metadata
  * and association mappings where the association uses a join column mapping.
@@ -40,6 +42,7 @@ import org.jboss.logging.Logger;
 public class JoinColumnCollectionMetadataGenerator extends AbstractCollectionMetadataGenerator {
 
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			EnversMessageLogger.class,
 			JoinColumnCollectionMetadataGenerator.class.getName()
 	);

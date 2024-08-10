@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -23,6 +24,7 @@ import org.jboss.logging.Logger;
  */
 public class TypeInfo {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			TypeInfo.class.getName()
 	);

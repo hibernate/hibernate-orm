@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.cache;
 
+import java.lang.invoke.MethodHandles;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,7 +45,7 @@ public class NonRootEntityWithCacheAnnotationTest {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, EntityBinder.class.getName() )
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, EntityBinder.class.getName() )
 	);
 
 	@Test

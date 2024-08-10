@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine.jndi.internal;
 
+import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Hashtable;
@@ -35,6 +36,7 @@ import org.jboss.logging.Logger;
  */
 final class JndiServiceImpl implements JndiService {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			JndiServiceImpl.class.getName()
 	);

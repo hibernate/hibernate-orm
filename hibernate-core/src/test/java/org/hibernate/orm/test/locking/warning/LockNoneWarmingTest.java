@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.locking.warning;
 
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.HashSet;
 import java.util.Set;
 import jakarta.persistence.Column;
@@ -46,7 +47,7 @@ public class LockNoneWarmingTest extends BaseCoreFunctionalTestCase {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, LockNoneWarmingTest.class.getName() )
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, LockNoneWarmingTest.class.getName() )
 	);
 
 	@Override

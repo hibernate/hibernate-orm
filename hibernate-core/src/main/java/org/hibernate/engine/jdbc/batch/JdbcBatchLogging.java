@@ -15,6 +15,8 @@ import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
+import java.lang.invoke.MethodHandles;
+
 import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.INFO;
 
@@ -33,7 +35,7 @@ public interface JdbcBatchLogging extends BasicLogger {
 	String NAME = "org.hibernate.orm.jdbc.batch";
 
 	Logger BATCH_LOGGER = Logger.getLogger( NAME );
-	JdbcBatchLogging BATCH_MESSAGE_LOGGER = Logger.getMessageLogger( JdbcBatchLogging.class, NAME );
+	JdbcBatchLogging BATCH_MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), JdbcBatchLogging.class, NAME );
 
 	@LogMessage(level = ERROR)
 	@Message(id = 100501, value = "Exception executing batch [%s], SQL: %s")

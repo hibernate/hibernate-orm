@@ -15,6 +15,8 @@ import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
+import java.lang.invoke.MethodHandles;
+
 import static org.jboss.logging.Logger.Level.INFO;
 
 /**
@@ -33,6 +35,7 @@ public interface ConnectionAccessLogger extends BasicLogger {
 	 * Static access to the logging instance
 	 */
 	ConnectionAccessLogger INSTANCE = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			ConnectionAccessLogger.class,
 			LOGGER_NAME
 	);

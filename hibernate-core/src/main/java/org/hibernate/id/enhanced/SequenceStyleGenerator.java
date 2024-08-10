@@ -6,6 +6,7 @@
  */
 package org.hibernate.id.enhanced;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
@@ -112,6 +113,7 @@ public class SequenceStyleGenerator
 		implements PersistentIdentifierGenerator, BulkInsertionCapableIdentifierGenerator {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			SequenceStyleGenerator.class.getName()
 	);

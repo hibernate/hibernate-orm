@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
+import java.lang.invoke.MethodHandles;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -102,7 +103,7 @@ import static org.hibernate.internal.util.StringHelper.qualify;
  * @author Emmanuel Bernard
  */
 public class PropertyBinder {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, PropertyBinder.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, PropertyBinder.class.getName() );
 
 	private MetadataBuildingContext buildingContext;
 

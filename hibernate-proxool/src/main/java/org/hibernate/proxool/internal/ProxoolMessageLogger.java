@@ -15,6 +15,8 @@ import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
+import java.lang.invoke.MethodHandles;
+
 import static org.jboss.logging.Logger.Level.DEBUG;
 
 /**
@@ -31,7 +33,7 @@ import static org.jboss.logging.Logger.Level.DEBUG;
 )
 public interface ProxoolMessageLogger extends ConnectionInfoLogger {
 	String LOGGER_NAME = ConnectionInfoLogger.LOGGER_NAME + ".proxool";
-	ProxoolMessageLogger PROXOOL_MESSAGE_LOGGER = Logger.getMessageLogger( ProxoolMessageLogger.class, LOGGER_NAME );
+	ProxoolMessageLogger PROXOOL_MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), ProxoolMessageLogger.class, LOGGER_NAME );
 
 	/**
 	 * Logs the name of a named pool to be used for configuration information

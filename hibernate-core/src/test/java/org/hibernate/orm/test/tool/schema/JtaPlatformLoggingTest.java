@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.tool.schema;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Map;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -35,7 +36,7 @@ public class JtaPlatformLoggingTest extends BaseNonConfigCoreFunctionalTestCase 
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, JtaPlatformInitiator.class.getName() ) );
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, JtaPlatformInitiator.class.getName() ) );
 
 	private Triggerable triggerable = logInspection.watchForLogMessages( "HHH000490" );
 

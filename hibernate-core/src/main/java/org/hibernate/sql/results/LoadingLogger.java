@@ -13,6 +13,8 @@ import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
+import java.lang.invoke.MethodHandles;
+
 /**
  * @author Steve Ebersole
  */
@@ -26,7 +28,7 @@ public interface LoadingLogger extends BasicLogger {
 	String LOGGER_NAME = ResultsLogger.LOGGER_NAME + ".loading";
 
 	Logger LOGGER = Logger.getLogger( LOGGER_NAME );
-	LoadingLogger MESSAGE_LOGGER = Logger.getMessageLogger( LoadingLogger.class, LOGGER_NAME );
+	LoadingLogger MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), LoadingLogger.class, LOGGER_NAME );
 
 	static String subLoggerName(String subName) {
 		return LOGGER_NAME + "." + subName;

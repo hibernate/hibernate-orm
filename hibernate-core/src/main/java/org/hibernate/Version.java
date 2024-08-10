@@ -11,6 +11,8 @@ import org.hibernate.internal.build.AllowSysOut;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
+
 /**
  * Information about the version of Hibernate.
  *
@@ -41,7 +43,7 @@ public final class Version {
 	 * Logs the Hibernate version (using {@link #getVersionString()}) to the logging system.
 	 */
 	public static void logVersion() {
-		Logger.getMessageLogger( CoreMessageLogger.class, Version.class.getName() ).version( getVersionString() );
+		Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, Version.class.getName() ).version( getVersionString() );
 	}
 
 	/**

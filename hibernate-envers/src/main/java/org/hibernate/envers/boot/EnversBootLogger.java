@@ -15,6 +15,8 @@ import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
+import java.lang.invoke.MethodHandles;
+
 import static org.jboss.logging.Logger.Level.INFO;
 
 /**
@@ -31,6 +33,7 @@ public interface EnversBootLogger extends BasicLogger {
 	String LOGGER_NAME = "org.hibernate.envers.boot";
 
 	EnversBootLogger BOOT_LOGGER = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			EnversBootLogger.class,
 			LOGGER_NAME
 	);

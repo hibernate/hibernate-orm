@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.persister.entity;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Set;
 
 import org.hibernate.dialect.OracleDialect;
@@ -51,7 +52,7 @@ public class TemporaryTableStrategyTest {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, GlobalTemporaryTableStrategy.class.getName() )
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, GlobalTemporaryTableStrategy.class.getName() )
 	);
 
 	private final Triggerable triggerable = logInspection.watchForLogMessages( Set.of(

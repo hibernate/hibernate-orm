@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.id.hhh12973;
 
+import java.lang.invoke.MethodHandles;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -52,6 +53,7 @@ public class SequenceMismatchStrategyWithoutSequenceGeneratorTest extends Entity
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
 			Logger.getMessageLogger(
+					MethodHandles.lookup(),
 					CoreMessageLogger.class,
 					SequenceStyleGenerator.class.getName()
 			)

@@ -7,6 +7,7 @@
 
 package org.hibernate.spatial.dialect.hana;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Locale;
@@ -39,6 +40,7 @@ import static java.lang.String.format;
 public class TestHANASpatialFunctions extends SpatialFunctionalTestCase {
 
 	private static final HSMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			HSMessageLogger.class,
 			TestHANASpatialFunctions.class.getName()
 	);

@@ -13,6 +13,8 @@ import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
+import java.lang.invoke.MethodHandles;
+
 /**
  * Logger used during mapping-model creation
  *
@@ -28,5 +30,5 @@ public interface MappingModelCreationLogging extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".model.mapping.creation";
 
 	Logger MAPPING_MODEL_CREATION_LOGGER = Logger.getLogger( LOGGER_NAME );
-	MappingModelCreationLogging MAPPING_MODEL_CREATION_MESSAGE_LOGGER = Logger.getMessageLogger( MappingModelCreationLogging.class, LOGGER_NAME );
+	MappingModelCreationLogging MAPPING_MODEL_CREATION_MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), MappingModelCreationLogging.class, LOGGER_NAME );
 }

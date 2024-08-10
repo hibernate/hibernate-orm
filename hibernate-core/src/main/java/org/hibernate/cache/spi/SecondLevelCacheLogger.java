@@ -16,6 +16,8 @@ import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
+import java.lang.invoke.MethodHandles;
+
 import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.WARN;
 
@@ -31,7 +33,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 public interface SecondLevelCacheLogger extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".cache";
 
-	SecondLevelCacheLogger L2CACHE_LOGGER = Logger.getMessageLogger( SecondLevelCacheLogger.class, LOGGER_NAME );
+	SecondLevelCacheLogger L2CACHE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), SecondLevelCacheLogger.class, LOGGER_NAME );
 
 	int NAMESPACE = 90001000;
 

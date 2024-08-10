@@ -8,6 +8,7 @@ package org.hibernate.orm.test.tool.schema;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -67,7 +68,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, IndividuallySchemaValidatorImplTest.class.getName() ) );
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, IndividuallySchemaValidatorImplTest.class.getName() ) );
 
 	private StandardServiceRegistry ssr;
 

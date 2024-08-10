@@ -14,6 +14,8 @@ import org.hibernate.type.descriptor.java.VersionJavaType;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
+
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.generator.EventType.UPDATE;
 
@@ -24,6 +26,7 @@ import static org.hibernate.generator.EventType.UPDATE;
  */
 public final class Versioning {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			Versioning.class.getName()
 	);

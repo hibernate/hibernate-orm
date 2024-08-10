@@ -21,6 +21,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Member;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -53,6 +54,7 @@ import static org.hibernate.generator.EventTypeSets.INSERT_AND_UPDATE;
 public class SourceGeneration implements BeforeExecutionGenerator {
 
 	private static final CoreMessageLogger log = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			SourceGeneration.class.getName()
 	);

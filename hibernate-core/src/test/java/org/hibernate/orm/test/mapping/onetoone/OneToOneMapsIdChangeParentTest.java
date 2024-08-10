@@ -24,6 +24,8 @@ import org.junit.jupiter.api.Test;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -42,6 +44,7 @@ public class OneToOneMapsIdChangeParentTest {
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
 			Logger.getMessageLogger(
+					MethodHandles.lookup(),
 					CoreMessageLogger.class,
 					UpdateCoordinatorStandard.class.getName()
 			)

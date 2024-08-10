@@ -6,6 +6,7 @@
  */
 package org.hibernate.context.internal;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import jakarta.transaction.Synchronization;
@@ -46,6 +47,7 @@ import org.jboss.logging.Logger;
  */
 public class JTASessionContext extends AbstractCurrentSessionContext {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			JTASessionContext.class.getName()
 	);

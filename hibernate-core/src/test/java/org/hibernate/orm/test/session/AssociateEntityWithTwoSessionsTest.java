@@ -28,6 +28,8 @@ import org.junit.jupiter.api.Test;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -42,7 +44,7 @@ public class AssociateEntityWithTwoSessionsTest {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, AbstractLazyInitializer.class.getName() ) );
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, AbstractLazyInitializer.class.getName() ) );
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12216" )

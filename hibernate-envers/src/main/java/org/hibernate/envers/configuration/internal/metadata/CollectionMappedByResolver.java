@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -35,6 +36,7 @@ import org.jboss.logging.Logger;
 public class CollectionMappedByResolver {
 
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			EnversMessageLogger.class,
 			CollectionMappedByResolver.class.getName()
 	);

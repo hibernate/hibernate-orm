@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.util.stream.Stream;
 
@@ -60,7 +61,7 @@ public class MetadataAccessTests {
 	@RegisterExtension
 	public LoggerInspectionExtension logger = LoggerInspectionExtension
 			.builder().setLogger(
-					Logger.getMessageLogger( CoreMessageLogger.class, Dialect.class.getName() )
+					Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, Dialect.class.getName() )
 			).build();
 
 	@BeforeEach

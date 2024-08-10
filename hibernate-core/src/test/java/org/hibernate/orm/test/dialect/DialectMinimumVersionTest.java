@@ -21,6 +21,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
+
 /**
  * @author Jan Schatteman
  */
@@ -31,7 +33,7 @@ public class DialectMinimumVersionTest {
 	@RegisterExtension
 	public LoggerInspectionExtension logger = LoggerInspectionExtension
 			.builder().setLogger(
-					Logger.getMessageLogger( CoreMessageLogger.class, Dialect.class.getName()  )
+					Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, Dialect.class.getName()  )
 			).build();
 
 	@BeforeEach

@@ -6,6 +6,7 @@
  */
 package org.hibernate.event.internal;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
@@ -51,7 +52,7 @@ import static org.hibernate.engine.internal.Collections.skipRemoval;
  */
 public abstract class AbstractFlushingEventListener implements JpaBootstrapSensitive {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, AbstractFlushingEventListener.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, AbstractFlushingEventListener.class.getName() );
 
 	@Override
 	public void wasJpaBootstrap(boolean wasJpaBootstrap) {

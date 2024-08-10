@@ -15,6 +15,8 @@ import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
+import java.lang.invoke.MethodHandles;
+
 import static org.jboss.logging.Logger.Level.WARN;
 
 /**
@@ -32,7 +34,7 @@ public interface JdbcLogging extends BasicLogger {
 	String NAME = "org.hibernate.orm.jdbc";
 
 	Logger JDBC_LOGGER = Logger.getLogger( NAME );
-	JdbcLogging JDBC_MESSAGE_LOGGER = Logger.getMessageLogger( JdbcLogging.class, NAME );
+	JdbcLogging JDBC_MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), JdbcLogging.class, NAME );
 
 	@LogMessage(level = WARN)
 	@Message(

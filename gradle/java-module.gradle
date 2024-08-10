@@ -185,10 +185,13 @@ tasks.withType( JavaCompile ) {
 	options.fork = true
 	options.forkOptions.memoryMaximumSize = '768m'
 
-//	javaCompileTask.options.compilerArgs += [
+	options.compilerArgs += [
+			// disable adding @Generated annotation in the logger impls to make
+			// the logging annotation processor create the same sources each time.
+			"-Aorg.jboss.logging.tools.addGeneratedAnnotation=false"
 //			"-nowarn",
 //			"-encoding", "UTF-8"
-//	]
+	]
 }
 
 

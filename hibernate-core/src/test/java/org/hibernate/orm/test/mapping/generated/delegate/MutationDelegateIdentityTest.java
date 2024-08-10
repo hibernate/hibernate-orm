@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.mapping.generated.delegate;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Date;
 
 import org.hibernate.annotations.ColumnDefault;
@@ -253,7 +254,7 @@ public class MutationDelegateIdentityTest {
 
 	@RegisterExtension
 	public LoggerInspectionExtension logger = LoggerInspectionExtension.builder().setLogger(
-			Logger.getMessageLogger( CoreMessageLogger.class, SqlExceptionHelper.class.getName() )
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, SqlExceptionHelper.class.getName() )
 	).build();
 
 	@BeforeAll

@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.beanvalidation;
 
+import java.lang.invoke.MethodHandles;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -47,6 +48,7 @@ public class BeanValidationEventListener
 		implements PreInsertEventListener, PreUpdateEventListener, PreDeleteEventListener, PreUpsertEventListener {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			BeanValidationEventListener.class.getName()
 	);

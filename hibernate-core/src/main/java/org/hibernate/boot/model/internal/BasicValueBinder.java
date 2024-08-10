@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.internal;
 
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.ParameterizedType;
 import java.util.Collection;
 import java.util.Collections;
@@ -113,7 +114,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	//      forward this class should undergo major changes: see the comments in #setType
 	//		but as always the "design" of these classes make it unclear exactly how to change it properly.
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, BasicValueBinder.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, BasicValueBinder.class.getName() );
 
 	public enum Kind {
 		ATTRIBUTE( ValueMappingAccess.INSTANCE ),

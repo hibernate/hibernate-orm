@@ -6,6 +6,7 @@
  */
 package org.hibernate.jpa.internal.util;
 
+import java.lang.invoke.MethodHandles;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.List;
@@ -21,7 +22,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public final class LogHelper {
-	private static final EntityManagerMessageLogger log = Logger.getMessageLogger( EntityManagerMessageLogger.class, LogHelper.class.getName() );
+	private static final EntityManagerMessageLogger log = Logger.getMessageLogger( MethodHandles.lookup(), EntityManagerMessageLogger.class, LogHelper.class.getName() );
 
 	private LogHelper() {
 	}

@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.beanvalidation;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Set;
@@ -30,6 +31,7 @@ import org.jboss.logging.Logger;
  */
 public class BeanValidationIntegrator implements Integrator {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			BeanValidationIntegrator.class.getName()
 	);

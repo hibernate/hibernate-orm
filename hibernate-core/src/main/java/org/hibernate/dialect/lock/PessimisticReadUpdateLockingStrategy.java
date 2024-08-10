@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect.lock;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -38,6 +39,7 @@ import org.jboss.logging.Logger;
  */
 public class PessimisticReadUpdateLockingStrategy implements LockingStrategy {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			PessimisticReadUpdateLockingStrategy.class.getName()
 	);

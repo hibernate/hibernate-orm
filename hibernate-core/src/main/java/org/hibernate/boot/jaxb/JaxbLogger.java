@@ -14,6 +14,8 @@ import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
+import java.lang.invoke.MethodHandles;
+
 /**
  * @author Steve Ebersole
  */
@@ -25,5 +27,5 @@ import org.jboss.logging.annotations.ValidIdRange;
 )
 public interface JaxbLogger extends BasicLogger {
 	String LOGGER_NAME = BootLogging.NAME + ".jaxb";
-	JaxbLogger JAXB_LOGGER = Logger.getMessageLogger( JaxbLogger.class, LOGGER_NAME );
+	JaxbLogger JAXB_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), JaxbLogger.class, LOGGER_NAME );
 }

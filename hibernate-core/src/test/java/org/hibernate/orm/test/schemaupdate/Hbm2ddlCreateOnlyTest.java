@@ -2,6 +2,7 @@ package org.hibernate.orm.test.schemaupdate;
 
 import static org.junit.Assert.assertFalse;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -28,7 +29,7 @@ public class Hbm2ddlCreateOnlyTest {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule( Logger.getMessageLogger(
-			CoreMessageLogger.class, SessionFactoryOptionsBuilder.class.getName() ) );
+			MethodHandles.lookup(), CoreMessageLogger.class, SessionFactoryOptionsBuilder.class.getName() ) );
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Test

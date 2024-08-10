@@ -13,6 +13,8 @@ import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
+import java.lang.invoke.MethodHandles;
+
 /**
  * @asciidoc
  *
@@ -34,7 +36,7 @@ public interface ResultsLogger extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".results";
 
 	Logger RESULTS_LOGGER = Logger.getLogger( LOGGER_NAME );
-	ResultsLogger RESULTS_MESSAGE_LOGGER = Logger.getMessageLogger( ResultsLogger.class, LOGGER_NAME );
+	ResultsLogger RESULTS_MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), ResultsLogger.class, LOGGER_NAME );
 
 	// todo (6.0) : make sure sql result processing classes use this logger
 

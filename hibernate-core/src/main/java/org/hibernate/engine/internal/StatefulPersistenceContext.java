@@ -11,6 +11,7 @@ import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -92,6 +93,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttrib
  */
 public class StatefulPersistenceContext implements PersistenceContext {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			StatefulPersistenceContext.class.getName()
 	);

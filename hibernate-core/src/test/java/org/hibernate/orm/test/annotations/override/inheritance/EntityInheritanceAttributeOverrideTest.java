@@ -24,6 +24,8 @@ import org.jboss.logging.Logger;
 import org.junit.Rule;
 import org.junit.jupiter.api.Test;
 
+import java.lang.invoke.MethodHandles;
+
 import static org.junit.jupiter.api.Assertions.fail;
 
 
@@ -35,7 +37,7 @@ public class EntityInheritanceAttributeOverrideTest extends EntityManagerFactory
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, EntityBinder.class.getName() ) );
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, EntityBinder.class.getName() ) );
 
 	@Override
 	public Class<?>[] getAnnotatedClasses() {

@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -171,7 +172,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpt
  */
 public class EntityBinder {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, EntityBinder.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, EntityBinder.class.getName() );
 	private static final String NATURAL_ID_CACHE_SUFFIX = "##NaturalId";
 
 	private MetadataBuildingContext context;

@@ -22,6 +22,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
+
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 
@@ -35,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 public class StatelessSessionConnectionTest {
 
 	final CoreMessageLogger messageLogger = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			SequenceStyleGenerator.class.getName()
 	);

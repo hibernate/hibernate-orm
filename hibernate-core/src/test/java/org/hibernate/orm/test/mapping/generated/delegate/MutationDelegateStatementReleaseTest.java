@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.mapping.generated.delegate;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Date;
 import java.util.Set;
 
@@ -65,6 +66,7 @@ public class MutationDelegateStatementReleaseTest {
 		LogInspectionHelper.registerListener(
 				trigger,
 				Logger.getMessageLogger(
+						MethodHandles.lookup(),
 						CoreMessageLogger.class,
 						ResourceRegistryStandardImpl.class.getName()
 				)

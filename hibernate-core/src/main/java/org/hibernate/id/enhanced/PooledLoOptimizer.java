@@ -7,6 +7,7 @@
 package org.hibernate.id.enhanced;
 
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
@@ -27,6 +28,7 @@ import org.jboss.logging.Logger;
  */
 public class PooledLoOptimizer extends AbstractOptimizer {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			PooledLoOptimizer.class.getName()
 	);

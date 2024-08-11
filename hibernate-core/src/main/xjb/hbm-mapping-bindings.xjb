@@ -375,10 +375,6 @@
 			<jaxb:property name="columnAttribute"/>
 		</jaxb:bindings>
 
-		<jaxb:bindings node="//xsd:attributeGroup[@name='table-information-group']//xsd:attribute[@name='subselect']">
-			<jaxb:property name="subselectAttribute"/>
-		</jaxb:bindings>
-
 		<jaxb:bindings node="//xsd:complexType[@name='multi-tenancy-type']//xsd:attribute[@name='column']">
 			<jaxb:property name="columnAttribute"/>
 		</jaxb:bindings>

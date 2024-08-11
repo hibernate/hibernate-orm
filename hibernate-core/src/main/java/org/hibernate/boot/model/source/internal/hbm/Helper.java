@@ -185,8 +185,7 @@ public class Helper {
 			String rowId,
 			String comment,
 			String checkConstraint) {
-		if ( StringHelper.isEmpty( tableInformationContainer.getSubselectAttribute() )
-				&& StringHelper.isEmpty( tableInformationContainer.getSubselect() ) ) {
+		if ( StringHelper.isEmpty( tableInformationContainer.getSubselect() ) ) {
 			return new TableSourceImpl(
 					mappingDocument,
 					tableInformationContainer.getSchema(),
@@ -202,9 +201,7 @@ public class Helper {
 					mappingDocument,
 					tableInformationContainer.getSchema(),
 					tableInformationContainer.getCatalog(),
-					tableInformationContainer.getSubselectAttribute() != null
-							? tableInformationContainer.getSubselectAttribute()
-							: tableInformationContainer.getSubselect(),
+					tableInformationContainer.getSubselect(),
 					tableInformationContainer.getTable() == null
 							? inLineViewNameInferrer.inferInLineViewName()
 							: tableInformationContainer.getTable(),

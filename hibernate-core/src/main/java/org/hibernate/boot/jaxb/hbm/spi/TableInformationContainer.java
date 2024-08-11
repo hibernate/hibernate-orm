@@ -20,5 +20,4 @@ public interface TableInformationContainer {
 
 	String getSubselect();
 
-	String getSubselectAttribute();
 }

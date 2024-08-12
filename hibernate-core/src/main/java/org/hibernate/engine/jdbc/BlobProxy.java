@@ -12,23 +12,30 @@ import java.io.OutputStream;
 import java.sql.Blob;
 import java.sql.SQLException;
 
+import org.hibernate.Internal;
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
 import org.hibernate.type.descriptor.java.DataHelper;
 
 /**
  * Manages aspects of representing {@link Blob} objects.
  *
- * In previous versions this used to be implemented by using a java.lang.reflect.Proxy to deal with
- * incompatibilities across various JDBC versions, hence the class name, but using a real Proxy is no longer necessary.
+ * @apiNote This class is not intended to be called directly by the application program.
+ *          Instead, use {@link org.hibernate.Session#getLobHelper()}.
  *
- * The class name could be updated to reflect this but that would break APIs, so this operation is deferred.
+ * @see ClobProxy
+ * @see LobCreator
+ * @see org.hibernate.LobHelper
  *
  * @author Gavin King
  * @author Steve Ebersole
  * @author Gail Badner
  * @author Sanne Grinovero
  */
+@Internal
 public final class BlobProxy implements Blob, BlobImplementer {
+    // In previous versions this used to be implemented by using a java.lang.reflect.Proxy to deal with
+    // incompatibilities across various JDBC versions, hence the class name, but using a real Proxy is
+	// no longer necessary. The class name could be updated to reflect this but that would break APIs.
 
 	private final BinaryStream binaryStream;
 	private boolean needsReset;
@@ -53,7 +60,6 @@ public final class BlobProxy implements Blob, BlobImplementer {
 	private BlobProxy(InputStream stream, long length) {
 		this.binaryStream = new StreamBackedBinaryStream( stream, length );
 	}
-
 
 	private InputStream getStream() throws SQLException {
 		return getUnderlyingStream().getInputStream();

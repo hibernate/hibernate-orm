@@ -15,6 +15,7 @@ import java.lang.reflect.Proxy;
 import java.sql.Clob;
 import java.sql.SQLException;
 
+import org.hibernate.Internal;
 import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
 import org.hibernate.type.descriptor.java.DataHelper;
 
@@ -22,10 +23,19 @@ import org.hibernate.type.descriptor.java.DataHelper;
  * Manages aspects of proxying {@link Clob}s for non-contextual creation, including proxy creation and
  * handling proxy invocations.  We use proxies here solely to avoid JDBC version incompatibilities.
  *
+ * @apiNote This class is not intended to be called directly by the application program.
+ *          Instead, use {@link org.hibernate.Session#getLobHelper()}.
+ *
+ * @see NClobProxy
+ * @see BlobProxy
+ * @see LobCreator
+ * @see org.hibernate.LobHelper
+ *
  * @author Gavin King
  * @author Steve Ebersole
  * @author Gail Badner
  */
+@Internal
 public class ClobProxy implements InvocationHandler {
 	private static final Class<?>[] PROXY_INTERFACES = new Class[] { Clob.class, ClobImplementer.class };
 

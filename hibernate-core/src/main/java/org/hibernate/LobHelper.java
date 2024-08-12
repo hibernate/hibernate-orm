@@ -16,6 +16,8 @@ import java.sql.NClob;
  * A factory for instances of {@link Blob} and {@link Clob} used for writing LOB data.
  *
  * @author Steve Ebersole
+ *
+ * @see Session#getLobHelper()
  */
 public interface LobHelper {
 

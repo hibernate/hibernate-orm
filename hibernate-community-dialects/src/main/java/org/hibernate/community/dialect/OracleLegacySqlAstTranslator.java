@@ -672,16 +672,6 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 		return getDialect().getVersion().isSameOrAfter( 9 );
 	}
 
-	@Override
-	protected String getDual() {
-		return "dual";
-	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return " from " + getDual();
-	}
-
 	private boolean supportsOffsetFetchClause() {
 		return getDialect().supportsFetchClause( FetchClauseType.ROWS_ONLY );
 	}

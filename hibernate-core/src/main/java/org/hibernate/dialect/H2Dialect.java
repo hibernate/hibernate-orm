@@ -42,6 +42,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
+import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
@@ -440,6 +441,16 @@ public class H2Dialect extends Dialect {
 		return unit == SECOND
 				? "(" + super.extractPattern(unit) + "+extract(nanosecond from ?2)/1e9)"
 				: super.extractPattern(unit);
+	}
+
+	@Override
+	public String castPattern(CastType from, CastType to) {
+		if ( from == CastType.STRING && to == CastType.BOOLEAN ) {
+			return "cast(?1 as ?2)";
+		}
+		else {
+			return super.castPattern( from, to );
+		}
 	}
 
 	@Override @SuppressWarnings("deprecation")
@@ -1008,6 +1019,16 @@ public class H2Dialect extends Dialect {
 	@Override
 	public boolean supportsBindingNullSqlTypeForSetNull() {
 		return true;
+	}
+
+	@Override
+	public boolean supportsValuesList() {
+		return true;
+	}
+
+	@Override
+	public String getDual() {
+		return "dual";
 	}
 
 }

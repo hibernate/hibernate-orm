@@ -78,9 +78,4 @@ public class MimerSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
 		return false;
 	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return " from " + getDual();
-	}
 }

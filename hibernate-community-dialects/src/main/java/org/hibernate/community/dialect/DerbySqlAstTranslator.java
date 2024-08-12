@@ -299,16 +299,6 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
-	protected String getDual() {
-		return "(values 0)";
-	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return " from " + getDual() + " dual";
-	}
-
-	@Override
 	protected boolean needsRowsToSkip() {
 		return !supportsOffsetFetchClause();
 	}

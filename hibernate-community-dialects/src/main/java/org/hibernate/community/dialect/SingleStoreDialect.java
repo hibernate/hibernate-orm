@@ -1410,4 +1410,9 @@ public class SingleStoreDialect extends Dialect {
 	 * @settingDefault {@code false}
 	 */
 	public static final String SINGLE_STORE_FOR_UPDATE_LOCK_ENABLED = "hibernate.dialect.singlestore.for_update_lock_enabled";
+
+	@Override
+	public String getDual() {
+		return "dual";
+	}
 }

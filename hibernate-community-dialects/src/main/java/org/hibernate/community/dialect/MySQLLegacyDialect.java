@@ -1436,4 +1436,14 @@ public class MySQLLegacyDialect extends Dialect {
 		}
 		return sqlCheckConstraint;
 	}
+	@Override
+	public String getDual() {
+		return "dual";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return getVersion().isSameOrAfter( 8 ) ? "" : ( " from " + getDual() );
+	}
+
 }

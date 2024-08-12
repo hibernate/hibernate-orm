@@ -281,4 +281,9 @@ public class MariaDBDialect extends MySQLDialect {
 
 		return super.buildIdentifierHelper( builder, dbMetaData );
 	}
+
+	@Override
+	public String getDual() {
+		return "dual";
+	}
 }

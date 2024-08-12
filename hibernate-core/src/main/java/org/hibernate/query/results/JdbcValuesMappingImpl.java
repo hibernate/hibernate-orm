@@ -9,6 +9,7 @@ package org.hibernate.query.results;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -21,6 +22,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Steve Ebersole
  */
+@Internal
 public class JdbcValuesMappingImpl extends StandardJdbcValuesMapping {
 
 	private final int rowSize;

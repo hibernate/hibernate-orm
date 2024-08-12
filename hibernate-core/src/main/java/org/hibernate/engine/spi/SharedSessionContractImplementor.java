@@ -43,8 +43,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * including implementors of {@link org.hibernate.type.Type}, {@link EntityPersister},
  * and {@link org.hibernate.persister.collection.CollectionPersister}.
  * <p>
- * The {@code Session}, via this interface and {@link SharedSessionContractImplementor},
- * implements:
+ * The {@code Session}, via this interface, implements:
  * <ul>
  *     <li>
  *         {@link JdbcSessionOwner}, and so the session also acts as the orchestrator

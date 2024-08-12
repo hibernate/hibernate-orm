@@ -14,7 +14,9 @@ import javax.sql.DataSource;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.MultiTenancySettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jndi.spi.JndiService;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -119,4 +121,18 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 			dataSourceMap = null;
 		}
 	}
+
+	@Override
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+		return new DatabaseConnectionInfoImpl(
+				"Multi-tenant - " + tenantIdentifierForAny,
+				null,
+				dialect.getVersion(),
+				null,
+				null,
+				null,
+				null
+		);
+	}
+
 }

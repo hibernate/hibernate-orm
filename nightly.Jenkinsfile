@@ -32,7 +32,6 @@ stage('Configure') {
 		new BuildEnvironment( dbName: 'mariadb_10_4' ),
 		new BuildEnvironment( dbName: 'postgresql_12' ),
 		new BuildEnvironment( dbName: 'edb_12' ),
-		new BuildEnvironment( dbName: 'oracle_21' ), // Did not find an image for Oracle-XE 19c
 		new BuildEnvironment( dbName: 'db2_10_5', longRunning: true ),
 		new BuildEnvironment( dbName: 'mssql_2017' ), // Unfortunately there is no SQL Server 2008 image, so we have to test with 2017
 // 		new BuildEnvironment( dbName: 'sybase_16' ), // There only is a Sybase ASE 16 image, so no pint in testing that nightly
@@ -137,13 +136,6 @@ stage('Build') {
 									sh "./docker_db.sh edb_12"
 									state[buildEnv.tag]['containerName'] = "edb"
 									break;
-								case "oracle_21":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('gvenzl/oracle-xe:21.3.0').pull()
-									}
-									sh "./docker_db.sh oracle_21"
-									state[buildEnv.tag]['containerName'] = "oracle"
-									break;
 								case "db2_10_5":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
 										docker.image('ibmoms/db2express-c@sha256:a499afd9709a1f69fb41703e88def9869955234c3525547e2efc3418d1f4ca2b').pull()
@@ -173,7 +165,7 @@ stage('Build') {
 							}
 						}
 						stage('Test') {
-              String args = "${buildEnv.additionalOptions ?: ''} ${state[buildEnv.tag]['additionalOptions'] ?: ''}"
+							String args = "${buildEnv.additionalOptions ?: ''} ${state[buildEnv.tag]['additionalOptions'] ?: ''}"
 							withEnv(["RDBMS=${buildEnv.dbName}"]) {
 								tryFinally({
 									if (buildEnv.dbLockableResource == null) {

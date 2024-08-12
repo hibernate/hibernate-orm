@@ -9,6 +9,7 @@ package org.hibernate.procedure.internal;
 import java.util.List;
 
 import org.hibernate.QueryException;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
@@ -80,10 +81,15 @@ public class SybaseCallableStatementSupport extends AbstractStandardCallableStat
 						i + offset,
 						procedureCall
 				);
-				if ( registration.getName() != null ) {
-					throw new QueryException( "The JDBC driver does not support named parameters" );
+				final SharedSessionContractImplementor session = procedureCall.getSession();
+				if (  parameter.getName() != null
+						&& session.getJdbcServices().getExtractedMetaDataSupport().supportsNamedParameters()
+						&& session.getFactory().getSessionFactoryOptions().isPassProcedureParameterNames()  ) {
+					buffer.append("@").append( parameter.getName() ).append( " = ?" );
 				}
-				buffer.append( "?" );
+				else {
+					buffer.append( "?" );
+				}
 				sep = ',';
 				builder.addParameterRegistration( registration );
 			}

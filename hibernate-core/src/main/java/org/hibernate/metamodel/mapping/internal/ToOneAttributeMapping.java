@@ -1741,52 +1741,59 @@ public class ToOneAttributeMapping
 		else {
 			joinType = null;
 		}
-		return fromClauseAccess.resolveTableGroup(
-				fetchablePath,
-				np -> {
-					// Try to reuse an existing join if possible,
-					// and note that we prefer reusing an inner over a left join,
-					// because a left join might stay uninitialized if unused
-					TableGroup leftJoined = null;
-					for ( TableGroupJoin tableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
-						switch ( tableGroupJoin.getJoinType() ) {
-							case INNER:
-								// If this is an inner joins, it's fine if the paths match
-								// Since this inner join would filter the parent row anyway,
-								// it makes no sense to add another left join for this association
-								if ( tableGroupJoin.getNavigablePath().pathsMatch( np ) ) {
-									return tableGroupJoin.getJoinedGroup();
-								}
-								break;
-							case LEFT:
-								// For an existing left join on the other hand which is row preserving,
-								// it is important to check if the predicate has user defined bits in it
-								// and only if it doesn't, we can reuse the join
-								if ( tableGroupJoin.getNavigablePath().pathsMatch( np )
-										&& isSimpleJoinPredicate( tableGroupJoin.getPredicate() ) ) {
-									leftJoined = tableGroupJoin.getJoinedGroup();
-								}
-						}
-					}
-
-					if ( leftJoined != null ) {
-						return leftJoined;
-					}
-
-					final TableGroupJoin tableGroupJoin = createTableGroupJoin(
-							fetchablePath,
-							parentTableGroup,
-							resultVariable,
-							null,
-							joinType,
-							true,
-							false,
-							creationState.getSqlAstCreationState()
-					);
-					parentTableGroup.addTableGroupJoin( tableGroupJoin );
-					return tableGroupJoin.getJoinedGroup();
-				}
+		final TableGroup existingTableGroup = fromClauseAccess.findTableGroupForGetOrCreate(
+				fetchablePath
 		);
+		if ( existingTableGroup != null && existingTableGroup.getModelPart() == this ) {
+			return existingTableGroup;
+		}
+		else {
+			// Try to reuse an existing join if possible,
+			// and note that we prefer reusing an inner over a left join,
+			// because a left join might stay uninitialized if unused
+			TableGroup leftJoined = null;
+			for ( TableGroupJoin tableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
+				if ( tableGroupJoin.getJoinedGroup().getModelPart() == this ) {
+					switch ( tableGroupJoin.getJoinType() ) {
+						case INNER:
+							// If this is an inner joins, it's fine if the paths match
+							// Since this inner join would filter the parent row anyway,
+							// it makes no sense to add another left join for this association
+							if ( tableGroupJoin.getNavigablePath().pathsMatch( fetchablePath ) ) {
+								return tableGroupJoin.getJoinedGroup();
+							}
+							break;
+						case LEFT:
+							// For an existing left join on the other hand which is row preserving,
+							// it is important to check if the predicate has user defined bits in it
+							// and only if it doesn't, we can reuse the join
+							if ( tableGroupJoin.getNavigablePath().pathsMatch( fetchablePath )
+									&& isSimpleJoinPredicate( tableGroupJoin.getPredicate() ) ) {
+								leftJoined = tableGroupJoin.getJoinedGroup();
+							}
+					}
+				}
+			}
+
+			if ( leftJoined != null ) {
+				return leftJoined;
+			}
+
+			final TableGroupJoin tableGroupJoin = createTableGroupJoin(
+					fetchablePath,
+					parentTableGroup,
+					resultVariable,
+					null,
+					joinType,
+					true,
+					false,
+					creationState.getSqlAstCreationState()
+			);
+			parentTableGroup.addTableGroupJoin( tableGroupJoin );
+			final TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
+			fromClauseAccess.registerTableGroup( fetchablePath, joinedGroup );
+			return joinedGroup;
+		}
 	}
 
 	private TableGroup createTableGroupForDelayedFetch(
@@ -2428,16 +2435,13 @@ public class ToOneAttributeMapping
 		return foreignKeyDescriptor.breakDownJdbcValues( value, offset, x, y, valueConsumer, session );
 	}
 
-	private Object extractValue(Object domainValue, SharedSessionContractImplementor session) {
+	protected Object extractValue(Object domainValue, SharedSessionContractImplementor session) {
 		if ( domainValue == null ) {
 			return null;
 		}
 
 		if ( referencedPropertyName != null ) {
-			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( domainValue );
-			if ( lazyInitializer != null ) {
-				domainValue = lazyInitializer.getImplementation();
-			}
+			domainValue = lazyInitialize( domainValue );
 			assert getAssociatedEntityMappingType()
 					.getRepresentationStrategy()
 					.getInstantiator()
@@ -2448,7 +2452,19 @@ public class ToOneAttributeMapping
 		return foreignKeyDescriptor.getAssociationKeyFromSide( domainValue, sideNature.inverse(), session );
 	}
 
-	private static Object extractAttributePathValue(Object domainValue, EntityMappingType entityType, String attributePath) {
+	/**
+	 * For Hibernate Reactive, because it doesn't support lazy initialization, it will override this method and skip it
+	 * when possible.
+	 */
+	protected Object lazyInitialize(Object domainValue) {
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( domainValue );
+		if ( lazyInitializer != null ) {
+			return lazyInitializer.getImplementation();
+		}
+		return domainValue;
+	}
+
+	protected static Object extractAttributePathValue(Object domainValue, EntityMappingType entityType, String attributePath) {
 		if ( ! attributePath.contains( "." ) ) {
 			return entityType.findAttributeMapping( attributePath ).getValue( domainValue );
 		}

@@ -111,6 +111,13 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 	}
 
 	@Override
+	public void resolveState(RowProcessingState rowProcessingState) {
+		for ( BeanInjection beanInjection : beanInjections ) {
+			beanInjection.getValueAssembler().resolveState( rowProcessingState );
+		}
+	}
+
+	@Override
 	public <X> void forEachResultAssembler(BiConsumer<Initializer<?>, X> consumer, X arg) {
 		for ( BeanInjection beanInjection : beanInjections ) {
 			beanInjection.getValueAssembler().forEachResultAssembler( consumer, arg );

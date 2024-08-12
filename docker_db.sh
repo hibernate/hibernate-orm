@@ -92,99 +92,56 @@ mysql_8_2() {
 }
 
 mariadb() {
-  mariadb_11_3
+  mariadb_11_4
+}
+
+mariadb_wait_until_start()
+{
+    n=0
+    until [ "$n" -ge 5 ]
+    do
+        if $CONTAINER_CLI exec mariadb healthcheck.sh --connect --innodb_initialized; then
+          break;
+        fi
+        n=$((n+1))
+        echo "Waiting for MariaDB to start..."
+        sleep 3
+    done
+    if $CONTAINER_CLI exec mariadb healthcheck.sh --connect --innodb_initialized; then
+      echo "MariaDB successfully started"
+    else
+      echo "MariaDB failed to start and configure after 15 seconds"
+    fi
 }
 
 mariadb_10_4() {
     $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:10.4.31 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
-    OUTPUT=
-    n=0
-    until [ "$n" -ge 5 ]
-    do
-        # Need to access STDERR. Thanks for the snippet https://stackoverflow.com/a/56577569/412446
-        { OUTPUT="$( { $CONTAINER_CLI logs mariadb; } 2>&1 1>&3 3>&- )"; } 3>&1;
-        if [[ $OUTPUT == *"ready for connections"* ]]; then
-          break;
-        fi
-        n=$((n+1))
-        echo "Waiting for MariaDB to start..."
-        sleep 3
-    done
-    if [ "$n" -ge 5 ]; then
-      echo "MariaDB failed to start and configure after 15 seconds"
-    else
-      echo "MariaDB successfully started"
-    fi
+    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:10.4.33 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
+    mariadb_wait_until_start
 }
 
-mariadb_10_9() {
+mariadb_10_11() {
     $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:10.9.3 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
-    OUTPUT=
-    n=0
-    until [ "$n" -ge 5 ]
-    do
-        # Need to access STDERR. Thanks for the snippet https://stackoverflow.com/a/56577569/412446
-        { OUTPUT="$( { $CONTAINER_CLI logs mariadb; } 2>&1 1>&3 3>&- )"; } 3>&1;
-        if [[ $OUTPUT == *"ready for connections"* ]]; then
-          break;
-        fi
-        n=$((n+1))
-        echo "Waiting for MariaDB to start..."
-        sleep 3
-    done
-    if [ "$n" -ge 5 ]; then
-      echo "MariaDB failed to start and configure after 15 seconds"
-    else
-      echo "MariaDB successfully started"
-    fi
+    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:10.11.8 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
+    mariadb_wait_until_start
 }
 
 mariadb_11_1() {
     $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:11.1.2 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
-    OUTPUT=
-    n=0
-    until [ "$n" -ge 5 ]
-    do
-        # Need to access STDERR. Thanks for the snippet https://stackoverflow.com/a/56577569/412446
-        { OUTPUT="$( { $CONTAINER_CLI logs mariadb; } 2>&1 1>&3 3>&- )"; } 3>&1;
-        if [[ $OUTPUT == *"ready for connections"* ]]; then
-          break;
-        fi
-        n=$((n+1))
-        echo "Waiting for MariaDB to start..."
-        sleep 3
-    done
-    if [ "$n" -ge 5 ]; then
-      echo "MariaDB failed to start and configure after 15 seconds"
-    else
-      echo "MariaDB successfully started"
-    fi
+    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:11.1.2 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
+    mariadb_wait_until_start
 }
 
-mariadb_11_3() {
+mariadb_11_4() {
     $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:11.3.1-rc --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
-    OUTPUT=
-    n=0
-    until [ "$n" -ge 5 ]
-    do
-        # Need to access STDERR. Thanks for the snippet https://stackoverflow.com/a/56577569/412446
-        { OUTPUT="$( { $CONTAINER_CLI logs mariadb; } 2>&1 1>&3 3>&- )"; } 3>&1;
-        if [[ $OUTPUT == *"ready for connections"* ]]; then
-          break;
-        fi
-        n=$((n+1))
-        echo "Waiting for MariaDB to start..."
-        sleep 3
-    done
-    if [ "$n" -ge 5 ]; then
-      echo "MariaDB failed to start and configure after 15 seconds"
-    else
-      echo "MariaDB successfully started"
-    fi
+    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:11.4.2 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
+    mariadb_wait_until_start
+}
+
+mariadb_verylatest() {
+    $CONTAINER_CLI rm -f mariadb || true
+    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d quay.io/mariadb-foundation/mariadb-devel:verylatest --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
+    mariadb_wait_until_start
 }
 
 postgresql() {
@@ -952,7 +909,7 @@ informix() {
 
 informix_14_10() {
     $PRIVILEGED_CLI $CONTAINER_CLI rm -f informix || true
-    $PRIVILEGED_CLI $CONTAINER_CLI run --name informix --privileged -p 9088:9088 -e LICENSE=accept -d icr.io/informix/informix-developer-database:14.10.FC9W1DE
+    $PRIVILEGED_CLI $CONTAINER_CLI run --name informix --privileged -p 9088:9088 -e LICENSE=accept -e GL_USEGLU=1 -d icr.io/informix/informix-developer-database:14.10.FC9W1DE
     echo "Starting Informix. This can take a few minutes"
     # Give the container some time to start
     OUTPUT=
@@ -962,7 +919,7 @@ informix_14_10() {
         OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs informix 2>&1)
         if [[ $OUTPUT == *"Server Started"* ]]; then
           sleep 15
-          $PRIVILEGED_CLI $CONTAINER_CLI exec informix bash -l -c "echo \"execute function task('create dbspace from storagepool', 'datadbs', '100 MB', '4');execute function task('create sbspace from storagepool', 'sbspace', '20 M', '0');create database dev in datadbs with log nlscase sensitive;\" > post_init.sql;dbaccess sysadmin post_init.sql"
+          $PRIVILEGED_CLI $CONTAINER_CLI exec informix bash -l -c "export DB_LOCALE=en_US.utf8;export CLIENT_LOCALE=en_US.utf8;echo \"execute function task('create dbspace from storagepool', 'datadbs', '100 MB', '4');execute function task('create sbspace from storagepool', 'sbspace', '20 M', '0');create database dev in datadbs with log;\" > post_init.sql;dbaccess sysadmin post_init.sql"
           break;
         fi
         n=$((n+1))
@@ -978,7 +935,7 @@ informix_14_10() {
 
 informix_12_10() {
     $PRIVILEGED_CLI $CONTAINER_CLI rm -f informix || true
-    $PRIVILEGED_CLI $CONTAINER_CLI run --name informix --privileged -p 9088:9088 -e LICENSE=accept -d ibmcom/informix-developer-database:12.10.FC12W1DE
+    $PRIVILEGED_CLI $CONTAINER_CLI run --name informix --privileged -p 9088:9088 -e LICENSE=accept -e GL_USEGLU=1 -d ibmcom/informix-developer-database:12.10.FC12W1DE
     echo "Starting Informix. This can take a few minutes"
     # Give the container some time to start
     OUTPUT=
@@ -988,7 +945,7 @@ informix_12_10() {
         OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs informix 2>&1)
         if [[ $OUTPUT == *"login Information"* ]]; then
           sleep 15
-          $PRIVILEGED_CLI $CONTAINER_CLI exec informix bash -l -c "echo \"execute function task('create dbspace from storagepool', 'datadbs', '100 MB', '4');execute function task('create sbspace from storagepool', 'sbspace', '20 M', '0');create database dev in datadbs with log nlscase sensitive;\" > post_init.sql;dbaccess sysadmin post_init.sql"
+          $PRIVILEGED_CLI $CONTAINER_CLI exec informix bash -l -c "export DB_LOCALE=en_US.utf8;export CLIENT_LOCALE=en_US.utf8;echo \"execute function task('create dbspace from storagepool', 'datadbs', '100 MB', '4');execute function task('create sbspace from storagepool', 'sbspace', '20 M', '0');create database dev in datadbs with log;\" > post_init.sql;dbaccess sysadmin post_init.sql"
           break;
         fi
         n=$((n+1))
@@ -1019,9 +976,10 @@ if [ -z ${1} ]; then
     echo -e "\tedb_12"
     echo -e "\thana"
     echo -e "\tmariadb"
-    echo -e "\tmariadb_11_3"
+    echo -e "\tmariadb_verylatest"
+    echo -e "\tmariadb_11_4"
     echo -e "\tmariadb_11_1"
-    echo -e "\tmariadb_10_9"
+    echo -e "\tmariadb_10_11"
     echo -e "\tmariadb_10_4"
     echo -e "\tmssql"
     echo -e "\tmssql_2022"

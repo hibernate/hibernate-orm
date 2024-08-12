@@ -12,6 +12,7 @@ import java.util.Set;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -57,13 +58,13 @@ public interface QueryOptions {
 	 * Transformer applied to the query to transform the structure of each "row"
 	 * in the results
 	 */
-	TupleTransformer<?> getTupleTransformer();
+	@Nullable TupleTransformer<?> getTupleTransformer();
 
 	/**
 	 * Transformer applied to the query to transform the structure of the
 	 * overall results
 	 */
-	ResultListTransformer<?> getResultListTransformer();
+	@Nullable ResultListTransformer<?> getResultListTransformer();
 
 	/**
 	 * Should results from the query be cached?

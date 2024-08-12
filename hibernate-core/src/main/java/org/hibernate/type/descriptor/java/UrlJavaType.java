@@ -32,6 +32,11 @@ public class UrlJavaType extends AbstractClassJavaType<URL> {
 		return context.getJdbcType( SqlTypes.VARCHAR );
 	}
 
+	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
 	public String toString(URL value) {
 		return value.toExternalForm();
 	}

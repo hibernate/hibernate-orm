@@ -13,7 +13,9 @@ import javax.sql.DataSource;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.engine.jndi.spi.JndiService;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
@@ -38,6 +40,7 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	private String pass;
 	private boolean useCredentials;
 	private JndiService jndiService;
+	private String dataSourceJndiName;
 
 	private boolean available;
 
@@ -92,6 +95,7 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 									+ "] configuration property"
 					);
 				}
+				this.dataSourceJndiName = dataSourceJndiName;
 				if ( jndiService == null ) {
 					throw new HibernateException( "Unable to locate JndiService to lookup Datasource" );
 				}
@@ -130,5 +134,18 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	@Override
 	public boolean supportsAggressiveRelease() {
 		return true;
+	}
+
+	@Override
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+		return new DatabaseConnectionInfoImpl(
+				"Connecting through datasource" + dataSourceJndiName,
+				null,
+				dialect.getVersion(),
+				null,
+				null,
+				null,
+				null
+		);
 	}
 }

@@ -495,7 +495,7 @@ public class EntityBinder {
 			else {
 				final boolean ignoreIdAnnotations = isIgnoreIdAnnotations();
 				setIgnoreIdAnnotations( true );
-				bindIdClass(
+				final Component idClassComponent = bindIdClass(
 						inferredData,
 						baseInferredData,
 						propertyHolder,
@@ -514,6 +514,9 @@ public class EntityBinder {
 						propertyAccessor,
 						true
 				);
+				if ( idClassComponent.isSimpleRecord() ) {
+					mapper.setSimpleRecord( true );
+				}
 				setIgnoreIdAnnotations( ignoreIdAnnotations );
 				for ( Property property : mapper.getProperties() ) {
 					idPropertiesIfIdClass.add( property.getName() );
@@ -656,7 +659,7 @@ public class EntityBinder {
 		}
 	}
 
-	private void bindIdClass(
+	private Component bindIdClass(
 			PropertyData inferredData,
 			PropertyData baseInferredData,
 			PropertyHolder propertyHolder,
@@ -707,6 +710,8 @@ public class EntityBinder {
 		rootClass.setEmbeddedIdentifier( inferredData.getPropertyClass() == null );
 
 		propertyHolder.setInIdClass( null );
+
+		return id;
 	}
 
 	private static void handleIdGenerator(PropertyData inferredData, MetadataBuildingContext buildingContext, Component id) {
@@ -750,7 +755,8 @@ public class EntityBinder {
 		final String table;
 		final String catalog;
 		final UniqueConstraint[] uniqueConstraints;
-		if ( annotatedClass.isAnnotationPresent( jakarta.persistence.Table.class ) ) {
+		final boolean hasTableAnnotation = annotatedClass.isAnnotationPresent( jakarta.persistence.Table.class );
+		if ( hasTableAnnotation ) {
 			final jakarta.persistence.Table tableAnnotation = annotatedClass.getAnnotation( jakarta.persistence.Table.class );
 			table = tableAnnotation.name();
 			schema = tableAnnotation.schema();
@@ -769,15 +775,11 @@ public class EntityBinder {
 			createTable( inheritanceState, superEntity, schema, table, catalog, uniqueConstraints );
 		}
 		else {
-			// must be a SINGLE_TABLE mapping for a subclass
-			if ( !table.isEmpty() ) {
-				final Table superTable = persistentClass.getRootClass().getTable();
-				if ( !logicalTableName( table, schema, catalog )
-						.equals( superTable.getQualifiedTableName() ) ) {
-					throw new AnnotationException( "Entity '" + annotatedClass.getName()
-							+ "' is a subclass in a 'SINGLE_TABLE' hierarchy and may not be annotated '@Table'"
-							+ " (the root class declares the table mapping for the hierarchy)");
-				}
+			// if we get here we have SINGLE_TABLE inheritance
+			if ( hasTableAnnotation ) {
+				throw new AnnotationException( "Entity '" + annotatedClass.getName()
+						+ "' is a subclass in a 'SINGLE_TABLE' hierarchy and may not be annotated '@Table'"
+						+ " (the root class declares the table mapping for the hierarchy)");
 			}
 			// we at least need to properly set up the EntityTableXref
 			bindTableForDiscriminatedSubclass( superEntity.getEntityName() );

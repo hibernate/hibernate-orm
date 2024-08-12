@@ -31,6 +31,11 @@ public class YearJavaType extends AbstractClassJavaType<Year> {
 	}
 
 	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
 	public String toString(Year value) {
 		return value == null ? null : value.format( FORMATTER );
 	}

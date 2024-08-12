@@ -9,6 +9,8 @@ package org.hibernate.engine.jdbc.connections.spi;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.service.Service;
 import org.hibernate.service.spi.Wrapped;
 
@@ -89,4 +91,9 @@ public interface MultiTenantConnectionProvider<T> extends Service, Wrapped {
 	 * @return {@code true} if aggressive releasing is supported; {@code false} otherwise.
 	 */
 	boolean supportsAggressiveRelease();
+
+	default DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+		return new DatabaseConnectionInfoImpl( dialect );
+	}
+
 }

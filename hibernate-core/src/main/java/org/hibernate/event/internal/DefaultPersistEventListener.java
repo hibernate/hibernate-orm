@@ -50,6 +50,7 @@ public class DefaultPersistEventListener
 	 * @param event The create event to be handled.
 	 *
 	 */
+	@Override
 	public void onPersist(PersistEvent event) throws HibernateException {
 		onPersist( event, PersistContext.create() );
 	}
@@ -60,6 +61,7 @@ public class DefaultPersistEventListener
 	 * @param event The create event to be handled.
 	 *
 	 */
+	@Override
 	public void onPersist(PersistEvent event, PersistContext createCache) throws HibernateException {
 		final Object object = event.getObject();
 		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );

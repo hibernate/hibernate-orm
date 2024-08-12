@@ -11,6 +11,8 @@ import java.sql.Statement;
 
 import org.hibernate.ScrollMode;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Interface to the object that prepares JDBC {@link Statement}s and {@link PreparedStatement}s
  * on behalf of a {@link JdbcCoordinator}.
@@ -89,5 +91,5 @@ public interface StatementPreparer {
 	 *
 	 * @return the prepared statement
 	 */
-	PreparedStatement prepareQueryStatement(String sql, boolean isCallable, ScrollMode scrollMode);
+	PreparedStatement prepareQueryStatement(String sql, boolean isCallable, @Nullable ScrollMode scrollMode);
 }

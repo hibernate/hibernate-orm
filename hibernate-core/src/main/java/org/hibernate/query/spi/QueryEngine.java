@@ -49,5 +49,9 @@ public interface QueryEngine {
 	HqlTranslator getHqlTranslator();
 
 	SqmTranslatorFactory getSqmTranslatorFactory();
+
+	default <R> HqlInterpretation<R> interpretHql(String hql, Class<R> resultType) {
+		return getInterpretationCache().resolveHqlInterpretation( hql, resultType, getHqlTranslator() );
+	}
 }
 

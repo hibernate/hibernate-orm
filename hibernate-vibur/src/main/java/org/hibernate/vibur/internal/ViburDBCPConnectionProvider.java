@@ -7,19 +7,28 @@
 
 package org.hibernate.vibur.internal;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Map;
+import java.util.Properties;
+
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
+import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
 
 import org.vibur.dbcp.ViburDBCPDataSource;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Map;
-import java.util.Properties;
-
-import static org.hibernate.cfg.AvailableSettings.*;
+import static org.hibernate.cfg.AvailableSettings.AUTOCOMMIT;
+import static org.hibernate.cfg.AvailableSettings.DRIVER;
+import static org.hibernate.cfg.AvailableSettings.ISOLATION;
+import static org.hibernate.cfg.AvailableSettings.PASS;
+import static org.hibernate.cfg.AvailableSettings.URL;
+import static org.hibernate.cfg.AvailableSettings.USER;
 
 /**
  * <p>ViburDBCP connection provider for Hibernate integration.
@@ -46,12 +55,16 @@ import static org.hibernate.cfg.AvailableSettings.*;
  * @see ConnectionProvider
  */
 public class ViburDBCPConnectionProvider implements ConnectionProvider, Configurable, Stoppable {
-	private static final String VIBUR_PREFIX = "hibernate.vibur.";
+
+	private static final String VIBUR_CONFIG_PREFIX = "hibernate.vibur";
+	private static final String VIBUR_PREFIX = VIBUR_CONFIG_PREFIX + ".";
 
 	private ViburDBCPDataSource dataSource = null;
 
 	@Override
 	public void configure(Map<String, Object> configurationValues) {
+		ConnectionInfoLogger.INSTANCE.configureConnectionPool( "Vibur" );
+
 		dataSource = new ViburDBCPDataSource( transform( configurationValues ) );
 		dataSource.start();
 	}
@@ -69,6 +82,7 @@ public class ViburDBCPConnectionProvider implements ConnectionProvider, Configur
 	@Override
 	public void stop() {
 		if ( dataSource != null ) {
+			ConnectionInfoLogger.INSTANCE.cleaningUpConnectionPool( VIBUR_CONFIG_PREFIX );
 			dataSource.terminate();
 			dataSource = null;
 		}
@@ -77,6 +91,19 @@ public class ViburDBCPConnectionProvider implements ConnectionProvider, Configur
 	@Override
 	public boolean supportsAggressiveRelease() {
 		return false;
+	}
+
+	@Override
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+		return new DatabaseConnectionInfoImpl(
+				dataSource.getJdbcUrl(),
+				dataSource.getDriverClassName(),
+				dialect.getVersion(),
+				String.valueOf( dataSource.getDefaultAutoCommit() ),
+				dataSource.getDefaultTransactionIsolation(),
+				dataSource.getPoolInitialSize(),
+				dataSource.getPoolMaxSize()
+		);
 	}
 
 	@Override
@@ -103,6 +130,7 @@ public class ViburDBCPConnectionProvider implements ConnectionProvider, Configur
 		if ( driverClassName != null ) {
 			result.setProperty( "driverClassName", driverClassName );
 		}
+
 		String jdbcUrl = (String) configurationValues.get( URL );
 		if ( jdbcUrl != null ) {
 			result.setProperty( "jdbcUrl", jdbcUrl );
@@ -133,7 +161,6 @@ public class ViburDBCPConnectionProvider implements ConnectionProvider, Configur
 				result.setProperty( key, (String) entry.getValue() );
 			}
 		}
-
 		return result;
 	}
 

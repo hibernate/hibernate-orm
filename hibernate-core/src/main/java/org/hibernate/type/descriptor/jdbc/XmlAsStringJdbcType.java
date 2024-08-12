@@ -130,7 +130,12 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 							getJavaType(),
 							options
 					);
-					st.setNString( index, xml );
+					if ( options.getDialect().supportsNationalizedMethods() ) {
+						st.setNString( index, xml );
+					}
+					else {
+						st.setString( index, xml );
+					}
 				}
 
 				@Override
@@ -141,7 +146,12 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 							getJavaType(),
 							options
 					);
-					st.setNString( name, xml );
+					if ( options.getDialect().supportsNationalizedMethods() ) {
+						st.setNString( name, xml );
+					}
+					else {
+						st.setString( name, xml );
+					}
 				}
 			};
 		}
@@ -179,19 +189,34 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-					return getObject( rs.getNString( paramIndex ), options );
+					if ( options.getDialect().supportsNationalizedMethods() ) {
+						return getObject( rs.getNString( paramIndex ), options );
+					}
+					else {
+						return getObject( rs.getString( paramIndex ), options );
+					}
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
 						throws SQLException {
-					return getObject( statement.getNString( index ), options );
+					if ( options.getDialect().supportsNationalizedMethods() ) {
+						return getObject( statement.getNString( index ), options );
+					}
+					else {
+						return getObject( statement.getString( index ), options );
+					}
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 						throws SQLException {
-					return getObject( statement.getNString( name ), options );
+					if ( options.getDialect().supportsNationalizedMethods() ) {
+						return getObject( statement.getNString( name ), options );
+					}
+					else {
+						return getObject( statement.getString( name ), options );
+					}
 				}
 
 				private X getObject(String xml, WrapperOptions options) throws SQLException {

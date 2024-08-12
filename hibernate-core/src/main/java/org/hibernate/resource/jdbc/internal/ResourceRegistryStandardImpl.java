@@ -71,10 +71,10 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	@Override
 	public boolean hasRegisteredResources() {
 		return hasRegistered( xref )
-				|| hasRegistered( unassociatedResultSets )
-				|| hasRegistered( blobs )
-				|| hasRegistered( clobs )
-				|| hasRegistered( nclobs );
+			|| hasRegistered( unassociatedResultSets )
+			|| hasRegistered( blobs )
+			|| hasRegistered( clobs )
+			|| hasRegistered( nclobs );
 	}
 
 	@Override
@@ -182,7 +182,6 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public static void close(Statement statement) {
 		log.tracef( "Closing prepared statement [%s]", statement );
 

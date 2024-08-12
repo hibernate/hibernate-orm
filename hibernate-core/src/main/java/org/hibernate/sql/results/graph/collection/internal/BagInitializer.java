@@ -13,7 +13,6 @@ import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentBag;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.collection.spi.PersistentIdentifierBag;
-import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
@@ -35,7 +34,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Steve Ebersole
  */
 public class BagInitializer extends AbstractImmediateCollectionInitializer<AbstractImmediateCollectionInitializer.ImmediateCollectionInitializerData> {
-	private static final String CONCRETE_NAME = BagInitializer.class.getSimpleName();
 
 	private final DomainResultAssembler<?> elementAssembler;
 	private final DomainResultAssembler<?> collectionIdAssembler;
@@ -68,11 +66,6 @@ public class BagInitializer extends AbstractImmediateCollectionInitializer<Abstr
 	}
 
 	@Override
-	protected String getSimpleConcreteImplName() {
-		return CONCRETE_NAME;
-	}
-
-	@Override
 	protected void forEachSubInitializer(BiConsumer<Initializer<?>, RowProcessingState> consumer, InitializerData data) {
 		super.forEachSubInitializer( consumer, data );
 		final Initializer<?> initializer = elementAssembler.getInitializer();
@@ -82,10 +75,8 @@ public class BagInitializer extends AbstractImmediateCollectionInitializer<Abstr
 	}
 
 	@Override
-	protected void readCollectionRow(
-			CollectionKey collectionKey,
-			List<Object> loadingState,
-			RowProcessingState rowProcessingState) {
+	protected void readCollectionRow(ImmediateCollectionInitializerData data, List<Object> loadingState) {
+		final RowProcessingState rowProcessingState = data.getRowProcessingState();
 		if ( collectionIdAssembler != null ) {
 			final Object collectionId = collectionIdAssembler.assemble( rowProcessingState );
 			if ( collectionId == null ) {

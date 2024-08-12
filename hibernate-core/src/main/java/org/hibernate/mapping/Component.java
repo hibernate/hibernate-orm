@@ -86,6 +86,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private boolean isKey;
 	private Boolean isGeneric;
 	private String roleName;
+	private MappedSuperclass mappedSuperclass;
 	private Value discriminator;
 	private transient DiscriminatorType<?> discriminatorType;
 	private Map<Object, String> discriminatorValues;
@@ -108,6 +109,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private QualifiedName structName;
 	private String[] structColumnNames;
 	private transient Class<?> componentClass;
+	private transient Boolean simpleRecord;
 
 	private transient Generator builtIdentifierGenerator;
 
@@ -377,6 +379,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	public void setComponentClassName(String componentClass) {
 		this.componentClassName = componentClass;
 		this.componentClass = null;
+		this.simpleRecord = null;
 	}
 
 	public void setEmbedded(boolean embedded) {
@@ -597,6 +600,14 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	public void setRoleName(String roleName) {
 		this.roleName = roleName;
+	}
+
+	public MappedSuperclass getMappedSuperclass() {
+		return mappedSuperclass;
+	}
+
+	public void setMappedSuperclass(MappedSuperclass mappedSuperclass) {
+		this.mappedSuperclass = mappedSuperclass;
 	}
 
 	public Value getDiscriminator() {
@@ -899,26 +910,33 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		return this.originalPropertyOrder = originalPropertyOrder;
 	}
 
-	private boolean isSimpleRecord() {
-		// A simple record is given, when the properties match the order of the record component names
-		final Class<?> componentClass = resolveComponentClass();
-		if ( customInstantiator != null ) {
-			return false;
-		}
-		if ( componentClass == null || !ReflectHelper.isRecord( componentClass ) ) {
-			return false;
-		}
-		final String[] recordComponentNames = ReflectHelper.getRecordComponentNames( componentClass );
-		if ( recordComponentNames.length != properties.size() ) {
-			return false;
-		}
-		for ( int i = 0; i < recordComponentNames.length; i++ ) {
-			if ( !recordComponentNames[i].equals( properties.get( i ).getName() ) ) {
-				return false;
-			}
-		}
+	public void setSimpleRecord(boolean simpleRecord) {
+		this.simpleRecord = simpleRecord;
+	}
 
-		return true;
+	public boolean isSimpleRecord() {
+		Boolean simple = simpleRecord;
+		if ( simple == null ) {
+			// A simple record is given, when the properties match the order of the record component names
+			final Class<?> componentClass = resolveComponentClass();
+			if ( customInstantiator != null ) {
+				return simpleRecord = false;
+			}
+			if ( componentClass == null || !ReflectHelper.isRecord( componentClass ) ) {
+				return simpleRecord = false;
+			}
+			final String[] recordComponentNames = ReflectHelper.getRecordComponentNames( componentClass );
+			if ( recordComponentNames.length != properties.size() ) {
+				return simpleRecord = false;
+			}
+			for ( int i = 0; i < recordComponentNames.length; i++ ) {
+				if ( !recordComponentNames[i].equals( properties.get( i ).getName() ) ) {
+					return simpleRecord = false;
+				}
+			}
+			simple = simpleRecord = true;
+		}
+		return simple;
 	}
 
 	public Class<? extends EmbeddableInstantiator> getCustomInstantiator() {

@@ -9,8 +9,12 @@ package org.hibernate.orm.test.query;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.Hibernate;
+
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -29,6 +33,7 @@ import jakarta.persistence.Table;
 @Jpa(
 		annotatedClasses = { ReloadEntityTest.Book.class, ReloadEntityTest.Author.class, ReloadEntityTest.AuthorDetails.class }
 )
+@Jira("https://hibernate.atlassian.net/browse/HHH-18271")
 public class ReloadEntityTest {
 
 	@BeforeEach
@@ -61,6 +66,35 @@ public class ReloadEntityTest {
 		} );
 	}
 
+	@Test
+	public void testFlushAndReload(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			// Load an Author with EAGER details
+			final List<Author> authors1 = em.createQuery( "from Author", Author.class ).getResultList();
+			final Author author = authors1.get(0);
+
+			// Create a new details object and then detach it
+			final AuthorDetails details = new AuthorDetails();
+			details.name = "Author Details";
+			details.author = author;
+			author.details = null;
+			em.persist( details );
+			em.flush();
+			em.detach( details );
+
+			// Replace the details with a lazy proxy
+			author.details = em.getReference( AuthorDetails.class, details.detailsId );
+			em.flush();
+
+			Assertions.assertFalse( Hibernate.isInitialized( author.details ) );
+
+			final List<Author> authors2 = em.createQuery( "from Author join fetch details", Author.class ).getResultList();
+			final Author author2 = authors2.get(0);
+			Assertions.assertTrue( Hibernate.isInitialized( author2.details ) );
+			Assertions.assertEquals( details.name, author2.details.getName() );
+		} );
+	}
+
 	@Entity(name = "Author")
 	@Table(name = "Author")
 	public static class Author {
@@ -74,7 +108,7 @@ public class ReloadEntityTest {
 		@OneToMany(fetch = FetchType.LAZY, mappedBy = "author")
 		public List<Book> books = new ArrayList<>();
 
-		@OneToOne(fetch = FetchType.EAGER, optional = false, cascade = CascadeType.ALL, orphanRemoval = true)
+		@OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
 		public AuthorDetails details;
 
 	}
@@ -91,6 +125,10 @@ public class ReloadEntityTest {
 
 		@OneToOne(fetch = FetchType.LAZY, mappedBy = "details", optional = false)
 		public Author author;
+
+		public String getName() {
+			return name;
+		}
 	}
 
 	@Entity(name = "Book")

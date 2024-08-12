@@ -306,6 +306,7 @@ The most important piece of information here is the specified `jakarta.persisten
 `IDENTITY`:: Indicates that database IDENTITY columns will be used for primary key value generation. See <<identifiers-generators-identity>>.
 `SEQUENCE`:: Indicates that database sequence should be used for obtaining primary key values. See <<identifiers-generators-sequence>>.
 `TABLE`:: Indicates that a database table should be used for obtaining primary key values. See <<identifiers-generators-table>>.
+`UUID`:::Indicates that UUID generation should be used.  See <<identifiers-generators-uuid>>
 
 [[identifiers-generators-auto]]
 ==== Interpreting AUTO
@@ -314,7 +315,7 @@ How a persistence provider interprets the AUTO generation type is left up to the
 
 The default behavior is to look at the Java type of the identifier attribute, plus what the underlying database supports.
 
-If the identifier type is UUID, Hibernate is going to use a <<identifiers-generators-uuid, UUID identifier>>.
+If the identifier type is UUID, Hibernate is going to use a <<identifiers-generators-uuid, UUID generator>>.
 
 If the identifier type is numeric (e.g. `Long`, `Integer`), then Hibernate will use its `SequenceStyleGenerator` which
 resolves to a SEQUENCE generation if the underlying database supports sequences and a table-based generation otherwise.
@@ -500,37 +501,121 @@ include::{extrasdir}/id/identifiers-generators-table-configured-persist-example.
 [[identifiers-generators-uuid]]
 ==== Using UUID generation
 
-As mentioned above, Hibernate supports UUID identifier value generation.
-This is supported through its `org.hibernate.id.UUIDGenerator` id generator.
+Hibernate offers 2 flavors of support for UUID generation -
 
-NOTE:: `org.hibernate.id.UUIDGenerator` is an example of `@IdGeneratorType` discussed in <<identifiers-generators-IdGeneratorType>>
+1. using `org.hibernate.id.uuid.UuidGenerator`, which can be configured using the `org.hibernate.annotations.UuidGenerator` annotation.
+2. using `org.hibernate.id.UUIDGenerator`, which can be configured using the `@GenericGenerator` annotation.  Note that this approach is deprecated.
 
+For legacy reasons, `org.hibernate.id.UUIDGenerator` is used when the generator is implicit (or explicitly requested via `@GenericGenerator`).
 
-`UUIDGenerator` supports pluggable strategies for exactly how the UUID is generated.
-These strategies are defined by the `org.hibernate.id.UUIDGenerationStrategy` contract.
-The default strategy is a version 4 (random) strategy according to IETF RFC 4122.
-Hibernate does ship with an alternative strategy which is a RFC 4122 version 1 (time-based) strategy (using IP address rather than mac address).
+[NOTE]
+====
+Future versions of Hibernate will drop support for `org.hibernate.id.UUIDGenerator` and the following 3 examples
+will then use `org.hibernate.id.uuid.UuidGenerator`.
+====
 
-[[identifiers-generators-uuid-mapping-example]]
-.Implicitly using the random UUID strategy
+[[example-identifiers-generators-uuid-implicit]]
+.Implicit UUID generation
 ====
 [source,java]
 ----
-include::{example-dir-identifier}/UuidGeneratedValueTest.java[tag=identifiers-generators-uuid-mapping-example, indent=0]
+include::{example-dir-identifier}/uuid/implicit/Book.java[tag=example-identifiers-generators-uuid-implicit, indent=0]
 ----
 ====
 
-To specify an alternative generation strategy, we'd have to define some configuration via `@GenericGenerator`.
-Here we choose the RFC 4122 version 1 compliant strategy named `org.hibernate.id.uuid.CustomVersionOneStrategy`.
-
-[[identifiers-generators-custom-uuid-mapping-example]]
-.Implicitly using the random UUID strategy
+[[example-identifiers-generators-uuid-implicit2]]
+.Another example of implicit UUID generation
 ====
 [source,java]
 ----
-include::{example-dir-identifier}/UuidCustomGeneratedValueTest.java[tag=identifiers-generators-custom-uuid-mapping-example, indent=0]
+include::{example-dir-identifier}/uuid/implicit2/Book.java[tag=example-identifiers-generators-uuid-implicit, indent=0]
 ----
 ====
+
+[[example-identifiers-generators-uuid-implicit3]]
+.Implicit UUID generation with String
+====
+[source,java]
+----
+include::{example-dir-identifier}/uuid/implicit3/Book.java[tag=example-identifiers-generators-uuid-implicit, indent=0]
+----
+====
+
+The second approach, using `org.hibernate.id.uuid.UuidGenerator`, is much more flexible and usable
+because it builds on top of the <<identifiers-generators-IdGeneratorType,@IdGeneratorType>> support.
+
+To use (and optionally configure) this strategy, use the `org.hibernate.annotations.UuidGenerator` annotation.
+
+By default, Hibernate uses a random (IETF RFC 4122 version 4) generation.
+
+[[example-identifiers-generators-uuid-random]]
+.Random UUID generation
+====
+[source,java]
+----
+include::{example-dir-identifier}/uuid/random/Book.java[tag=example-identifiers-generators-uuid-implicit, indent=0]
+----
+====
+
+[[example-identifiers-generators-uuid-random2]]
+.Random UUID generation, with explicit style
+====
+[source,java]
+----
+include::{example-dir-identifier}/uuid/random2/Book.java[tag=example-identifiers-generators-uuid-implicit, indent=0]
+----
+====
+
+[[example-identifiers-generators-uuid-random3]]
+.Random UUID generation, with String
+====
+[source,java]
+----
+include::{example-dir-identifier}/uuid/random3/Book.java[tag=example-identifiers-generators-uuid-implicit, indent=0]
+----
+====
+
+Hibernate also comes with simplified support for a time-based (IETF RFC 4122 version 1, variant2) generation.
+
+[[example-identifiers-generators-uuid-time]]
+.Time-based UUID generation
+====
+[source,java]
+----
+include::{example-dir-identifier}/uuid/time/Book.java[tag=example-identifiers-generators-uuid-implicit, indent=0]
+----
+====
+
+[[example-identifiers-generators-uuid-time2]]
+.Time-based UUID generation using String
+====
+[source,java]
+----
+include::{example-dir-identifier}/uuid/time2/Book.java[tag=example-identifiers-generators-uuid-implicit, indent=0]
+----
+====
+
+For even more flexibility, Hibernate also offers the ability to plug in custom algorithms for creating the UUID value
+by specifying an implementation of `org.hibernate.id.uuid.UuidValueGenerator`.
+
+[[example-identifiers-generators-uuid-custom]]
+.Custom UUID generation
+====
+[source,java]
+----
+include::{example-dir-identifier}/uuid/custom/Book.java[tag=example-identifiers-generators-uuid-implicit, indent=0]
+----
+====
+
+[[example-identifiers-generators-uuid-custom2]]
+.Custom UUID generation using String
+====
+[source,java]
+----
+include::{example-dir-identifier}/uuid/custom2/Book.java[tag=example-identifiers-generators-uuid-implicit, indent=0]
+----
+====
+
 
 [[identifiers-generators-optimizer]]
 ==== Optimizers

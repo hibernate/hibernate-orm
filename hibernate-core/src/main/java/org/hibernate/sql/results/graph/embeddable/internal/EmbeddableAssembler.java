@@ -8,6 +8,7 @@ package org.hibernate.sql.results.graph.embeddable.internal;
 
 import java.util.function.BiConsumer;
 
+import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -32,8 +33,11 @@ public class EmbeddableAssembler implements DomainResultAssembler {
 	@Override
 	public Object assemble(RowProcessingState rowProcessingState) {
 		final InitializerData data = initializer.getData( rowProcessingState );
-		initializer.resolveInstance( data );
-		return initializer.getCompositeInstance( data );
+		final Initializer.State state = data.getState();
+		if ( state == Initializer.State.KEY_RESOLVED ) {
+			initializer.resolveInstance( data );
+		}
+		return initializer.getResolvedInstance( data );
 	}
 
 	@Override

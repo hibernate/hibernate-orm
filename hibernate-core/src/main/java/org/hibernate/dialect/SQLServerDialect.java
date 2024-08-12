@@ -7,6 +7,7 @@
 package org.hibernate.dialect;
 
 import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.ChronoField;
@@ -40,6 +41,7 @@ import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.engine.jdbc.dialect.spi.BasicSQLExceptionConverter;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -52,8 +54,11 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
+import org.hibernate.procedure.internal.SQLServerCallableStatementSupport;
+import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
@@ -87,6 +92,7 @@ import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.cfg.DialectSpecificSettings.SQL_SERVER_COMPATIBILITY_LEVEL;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
@@ -172,8 +178,36 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	public SQLServerDialect(DialectResolutionInfo info) {
-		super(info);
-		exporter = createSequenceExporter(info);
+		this( determineDatabaseVersion( info ) );
+		registerKeywords( info );
+	}
+
+	private static DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
+		final Integer compatibilityLevel = getCompatibilityLevel( info );
+		if ( compatibilityLevel != null ) {
+			final int majorVersion = compatibilityLevel / 10;
+			final int minorVersion = compatibilityLevel % 10;
+			return DatabaseVersion.make( majorVersion, minorVersion );
+		}
+		return info.makeCopyOrDefault( MINIMUM_VERSION );
+	}
+
+	private static Integer getCompatibilityLevel(DialectResolutionInfo info) {
+		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
+		if ( databaseMetaData != null ) {
+			try ( java.sql.Statement statement = databaseMetaData.getConnection().createStatement() ) {
+				final ResultSet rs = statement.executeQuery( "SELECT compatibility_level FROM sys.databases where name = db_name();" );
+				if ( rs.next() ) {
+					return rs.getInt( 1 );
+				}
+			}
+			catch (SQLException e) {
+				throw BasicSQLExceptionConverter.INSTANCE.convert( e );
+			}
+		}
+
+		// default to the dialect-specific configuration setting
+		return ConfigurationHelper.getInteger( SQL_SERVER_COMPATIBILITY_LEVEL, info.getConfigurationValues() );
 	}
 
 	private StandardSequenceExporter createSequenceExporter(DatabaseVersion version) {
@@ -1121,12 +1155,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) {
-		// Not sure if it's a JDBC driver issue, but it doesn't work
-		return false;
-	}
-
-	@Override
 	public String generatedAs(String generatedAs) {
 		return " as (" + generatedAs + ") persisted";
 	}
@@ -1168,4 +1196,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	public boolean supportsFromClauseInUpdate() {
 		return true;
 	}
+
+	@Override
+	public CallableStatementSupport getCallableStatementSupport() {
+		return SQLServerCallableStatementSupport.INSTANCE;
+	}
+
 }

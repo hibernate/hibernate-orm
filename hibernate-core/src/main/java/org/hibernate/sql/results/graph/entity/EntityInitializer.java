@@ -33,19 +33,14 @@ public interface EntityInitializer<Data extends InitializerData> extends Initial
 	}
 
 	/**
-	 * Get the entity instance for the currently processing "row".
+	 * Get the target entity instance for the currently processing "row".
 	 *
 	 * @apiNote Calling this method is only valid from the time
 	 * {@link #resolveKey(InitializerData)} has been called until {@link #finishUpRow(InitializerData)}
 	 * has been called for the currently processing row
 	 */
-	Object getEntityInstance(Data data);
-	default Object getEntityInstance(RowProcessingState rowProcessingState) {
-		return getEntityInstance( getData( rowProcessingState ) );
-	}
-
 	default Object getTargetInstance(Data data) {
-		return getEntityInstance( data );
+		return getResolvedInstance( data );
 	}
 	default Object getTargetInstance(RowProcessingState rowProcessingState) {
 		return getTargetInstance( getData( rowProcessingState ) );
@@ -65,6 +60,14 @@ public interface EntityInitializer<Data extends InitializerData> extends Initial
 	@Nullable Object getEntityIdentifier(Data data);
 	default @Nullable Object getEntityIdentifier(RowProcessingState rowProcessingState) {
 		return getEntityIdentifier( getData( rowProcessingState ) );
+	}
+
+	/**
+	 * Resets the resolved entity registrations by i.e. removing {@link org.hibernate.engine.spi.EntityHolder}.
+	 *
+	 * @see org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer#resetResolvedEntityRegistrations(RowProcessingState)
+	 */
+	default void resetResolvedEntityRegistrations(RowProcessingState rowProcessingState) {
 	}
 
 	@Override

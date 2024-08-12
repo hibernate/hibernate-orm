@@ -91,8 +91,10 @@ public class StandardCallableStatementSupport extends AbstractStandardCallableSt
 						i + offset,
 						procedureCall
 				);
-				if ( registration.getName() != null ) {
-					buffer.append( ':' ).append( registration.getName() );
+				if ( parameter.getName() != null
+						&& session.getJdbcServices().getExtractedMetaDataSupport().supportsNamedParameters()
+						&& session.getFactory().getSessionFactoryOptions().isPassProcedureParameterNames() ) {
+					appendNameParameter( buffer, parameter, registration );
 				}
 				else {
 					buffer.append( "?" );
@@ -106,6 +108,13 @@ public class StandardCallableStatementSupport extends AbstractStandardCallableSt
 
 		builder.setCallableName( buffer.toString() );
 		return builder.buildJdbcCall();
+	}
+
+	protected void appendNameParameter(
+			StringBuilder buffer,
+			ProcedureParameterImplementor parameter,
+			JdbcCallParameterRegistration registration) {
+		buffer.append( '?' );
 	}
 
 	private void verifyRefCursorSupport(Dialect dialect) {

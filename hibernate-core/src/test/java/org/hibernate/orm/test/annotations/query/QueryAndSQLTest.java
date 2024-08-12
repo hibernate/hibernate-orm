@@ -98,11 +98,11 @@ public class QueryAndSQLTest {
 				.currentDate();
 
 		String sql = String.format(
-				"select t.TABLE_NAME as {t.tableName}, %s as {t.daysOld} from ALL_TABLES t where t.TABLE_NAME = 'AUDIT_ACTIONS' ",
+				"select t.table_name as {t.tableName}, %s as {t.daysOld} from ALL_TABLES t where t.table_name = 'AUDIT_ACTIONS' ",
 				dateFunctionRendered
 		);
 		String sql2 = String.format(
-				"select TABLE_NAME as t_name, %s as t_time from ALL_TABLES where TABLE_NAME = 'AUDIT_ACTIONS' ",
+				"select table_name as t_name, %s as t_time from ALL_TABLES where table_name = 'AUDIT_ACTIONS' ",
 				dateFunctionRendered
 		);
 
@@ -128,8 +128,8 @@ public class QueryAndSQLTest {
 	public void testNativeQueryWithFormulaAttributeWithoutAlias(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-                    String sql = "select TABLE_NAME , " + scope.getSessionFactory().getJdbcServices().getDialect()
-							.currentDate() + " as daysOld from ALL_TABLES  where TABLE_NAME = 'AUDIT_ACTIONS' ";
+                    String sql = "select table_name , " + scope.getSessionFactory().getJdbcServices().getDialect()
+							.currentDate() + " as days_old from ALL_TABLES  where table_name = 'AUDIT_ACTIONS' ";
 					session.createNativeQuery( sql ).addEntity( "t", AllTables.class ).list();
 				}
 		);

@@ -82,6 +82,11 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 	}
 
 	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
 	public String toString(OffsetDateTime value) {
 		return ISO_OFFSET_DATE_TIME.format( value );
 	}

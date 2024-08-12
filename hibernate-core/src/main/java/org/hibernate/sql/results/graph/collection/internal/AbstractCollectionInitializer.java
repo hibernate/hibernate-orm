@@ -24,10 +24,10 @@ import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
-import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.internal.AbstractInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+import org.hibernate.type.Type;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -40,9 +40,10 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 		extends AbstractInitializer<Data> implements CollectionInitializer<Data> {
 	protected final NavigablePath collectionPath;
 	protected final PluralAttributeMapping collectionAttributeMapping;
+	protected final @Nullable Type keyTypeForEqualsHashCode;
 	protected final boolean isResultInitializer;
 	protected final @Nullable InitializerParent<?> parent;
-	protected final @Nullable EntityInitializer<?> owningEntityInitializer;
+	protected final @Nullable EntityInitializer<InitializerData> owningEntityInitializer;
 
 	/**
 	 * refers to the collection's container value - which collection-key?
@@ -77,9 +78,13 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 		super( creationState );
 		this.collectionPath = collectionPath;
 		this.collectionAttributeMapping = collectionAttributeMapping;
+		this.keyTypeForEqualsHashCode = collectionAttributeMapping.getCollectionDescriptor()
+				.getKeyType()
+				.getTypeForEqualsHashCode();
 		this.isResultInitializer = isResultInitializer;
 		this.parent = parent;
-		this.owningEntityInitializer = Initializer.findOwningEntityInitializer( parent );
+		//noinspection unchecked
+		this.owningEntityInitializer = (EntityInitializer<InitializerData>) Initializer.findOwningEntityInitializer( parent );
 		this.collectionKeyResultAssembler = collectionKeyResult == null
 				? null
 				: collectionKeyResult.createResultAssembler( this, creationState );
@@ -117,6 +122,32 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 		}
 	}
 
+	@Override
+	public void resolveState(Data data) {
+		if ( collectionKeyResultAssembler != null ) {
+			collectionKeyResultAssembler.resolveState( data.getRowProcessingState() );
+		}
+	}
+
+	@Override
+	public void resolveFromPreviousRow(Data data) {
+		if ( data.getState() == State.UNINITIALIZED ) {
+			if ( data.collectionKey == null ) {
+				setMissing( data );
+			}
+			else {
+				// A collection key can't contain collections, so no need to resolve the key
+//				if ( collectionKeyResultAssembler != null ) {
+//					final Initializer<?> initializer = collectionKeyResultAssembler.getInitializer();
+//					if ( initializer != null ) {
+//						initializer.resolveFromPreviousRow( data.getRowProcessingState() );
+//					}
+//				}
+				data.setState( State.RESOLVED );
+			}
+		}
+	}
+
 	protected void setMissing(Data data) {
 		data.setState( State.MISSING );
 		data.collectionKey = null;
@@ -147,10 +178,7 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 		}
 		final CollectionPersister persister = collectionAttributeMapping.getCollectionDescriptor();
 		// Try to reuse the previous collection key and collection if possible
-		if ( checkPreviousRow && oldKey != null && persister.getKeyType().isEqual(
-				oldKey.getKey(),
-				data.collectionKeyValue
-		) ) {
+		if ( checkPreviousRow && oldKey != null && areKeysEqual( oldKey.getKey(), data.collectionKeyValue ) ) {
 			data.collectionKey = oldKey;
 			data.setCollectionInstance( oldCollectionInstance );
 			data.setState( oldCollectionInstance == null ? State.MISSING : State.RESOLVED );
@@ -161,111 +189,8 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 		}
 	}
 
-	protected void resolveInstance(Data data, boolean isEager) {
-		if ( data.getState() != State.KEY_RESOLVED ) {
-			// already resolved
-			return;
-		}
-
-		resolveCollectionKey( data, false );
-		if ( data.getState() == State.KEY_RESOLVED ) {
-			assert parent != null;
-			final RowProcessingState rowProcessingState = data.getRowProcessingState();
-			// We can avoid processing further if the parent is already initialized,
-			// as the value produced by this initializer will never be used anyway.
-			if ( owningEntityInitializer != null
-					&& owningEntityInitializer.getData( rowProcessingState ).getState() == State.INITIALIZED ) {
-				// It doesn't matter if it's eager or lazy, the collection object can not be referred to,
-				// so it doesn't make sense to create or initialize it
-				data.setState( State.MISSING );
-				return;
-			}
-			data.setState( State.RESOLVED );
-
-			final SharedSessionContractImplementor session = rowProcessingState.getSession();
-			final PersistenceContext persistenceContext = session.getPersistenceContext();
-
-			final LoadingCollectionEntry loadingEntry = persistenceContext.getLoadContexts()
-					.findLoadingCollectionEntry( data.collectionKey );
-
-			if ( loadingEntry != null ) {
-				data.setCollectionInstance( loadingEntry.getCollectionInstance() );
-				if ( data.getCollectionInstance().getOwner() == null ) {
-					assert owningEntityInitializer.getTargetInstance( rowProcessingState ) != null;
-					data.getCollectionInstance().setOwner( owningEntityInitializer.getTargetInstance( rowProcessingState ) );
-				}
-				return;
-			}
-
-			final PersistentCollection<?> existing = persistenceContext.getCollection( data.collectionKey );
-
-			if ( existing != null ) {
-				data.setCollectionInstance( existing );
-				if ( data.getCollectionInstance().getOwner() == null ) {
-					assert owningEntityInitializer.getTargetInstance( rowProcessingState ) != null;
-					data.getCollectionInstance().setOwner( owningEntityInitializer.getTargetInstance( rowProcessingState ) );
-				}
-				return;
-			}
-
-			final CollectionPersister collectionDescriptor = collectionAttributeMapping.getCollectionDescriptor();
-			final CollectionSemantics<?, ?> collectionSemantics = collectionDescriptor.getCollectionSemantics();
-			final Object key = data.collectionKey.getKey();
-
-			data.setCollectionInstance( collectionSemantics.instantiateWrapper(
-					key,
-					collectionDescriptor,
-					session
-			) );
-
-			assert owningEntityInitializer.getTargetInstance( rowProcessingState ) != null;
-			data.getCollectionInstance().setOwner( owningEntityInitializer.getTargetInstance( rowProcessingState ) );
-
-			persistenceContext.addUninitializedCollection(
-					collectionDescriptor,
-					data.getCollectionInstance(),
-					key
-			);
-
-			if ( isEager ) {
-				persistenceContext.addNonLazyCollection( data.getCollectionInstance() );
-			}
-
-			if ( collectionSemantics.getCollectionClassification() == CollectionClassification.ARRAY ) {
-				session.getPersistenceContext().addCollectionHolder( data.getCollectionInstance() );
-			}
-		}
-	}
-
-	protected void resolveInstance(Object instance, Data data, boolean isEager) {
-		if ( instance == null ) {
-			setMissing( data );
-		}
-		else {
-			final RowProcessingState rowProcessingState = data.getRowProcessingState();
-			final PersistenceContext persistenceContext = rowProcessingState.getSession().getPersistenceContextInternal();
-			final PersistentCollection<?> persistentCollection;
-			if ( collectionAttributeMapping.getCollectionDescriptor()
-					.getCollectionSemantics()
-					.getCollectionClassification() == CollectionClassification.ARRAY ) {
-				persistentCollection = persistenceContext.getCollectionHolder( instance );
-			}
-			else {
-				persistentCollection = (PersistentCollection<?>) instance;
-			}
-			// resolving the collection key seems unnecessary
-//			collectionKeyValue = persistentCollection.getKey();
-//			resolveCollectionKey( rowProcessingState, false );
-			data.setCollectionInstance( persistentCollection );
-			data.setState( State.RESOLVED );
-			if ( isEager && !data.getCollectionInstance().wasInitialized() ) {
-				persistenceContext.addNonLazyCollection( data.getCollectionInstance() );
-			}
-			if ( collectionKeyResultAssembler != null && rowProcessingState.needsResolveState() ) {
-				// Resolve the state of the identifier if result caching is enabled and this is not a query cache hit
-				collectionKeyResultAssembler.resolveState( rowProcessingState );
-			}
-		}
+	private boolean areKeysEqual(Object key1, Object key2) {
+		return keyTypeForEqualsHashCode == null ? key1.equals( key2 ) : keyTypeForEqualsHashCode.isEqual( key1, key2 );
 	}
 
 	@Override
@@ -307,6 +232,16 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 	public boolean isPartOfKey() {
 		// A collection can never be part of a key
 		return false;
+	}
+
+	@Override
+	public boolean isEager() {
+		return true;
+	}
+
+	@Override
+	public boolean hasLazySubInitializers() {
+		return true;
 	}
 
 	@Override

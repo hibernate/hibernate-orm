@@ -50,20 +50,8 @@ public class JdbcCallParameterExtractorImpl<T> implements JdbcCallParameterExtra
 			CallableStatement callableStatement,
 			boolean shouldUseJdbcNamedParameters,
 			SharedSessionContractImplementor session) {
-
-		final boolean useNamed = shouldUseJdbcNamedParameters
-				&& parameterName != null;
-
-		// todo (6.0) : we should just ask BasicValuedExpressibleType for the JdbcValueExtractor...
-
-
 		try {
-			if ( useNamed ) {
-				return ormType.extract( callableStatement, parameterName, session );
-			}
-			else {
-				return ormType.extract( callableStatement, parameterPosition, session );
-			}
+			return ormType.extract( callableStatement, parameterPosition, session );
 		}
 		catch (SQLException e) {
 			throw session.getJdbcServices().getSqlExceptionHelper().convert(

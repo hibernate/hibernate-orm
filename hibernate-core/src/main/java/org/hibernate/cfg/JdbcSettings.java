@@ -21,7 +21,7 @@ import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
  *
  * @author Steve Ebersole
  */
-public interface JdbcSettings extends C3p0Settings, ProxoolSettings {
+public interface JdbcSettings extends C3p0Settings, ProxoolSettings, AgroalSettings, HikariCPSettings {
 
 	/**
 	 * Specifies a JTA {@link javax.sql.DataSource} to use for Connections.
@@ -518,7 +518,7 @@ public interface JdbcSettings extends C3p0Settings, ProxoolSettings {
 	/**
 	 * @see #USER
 	 *
-	 * @deprecated The JPA-standard setting {@link #JAKARTA_JDBC_USER} is now preferred.
+	 * @deprecated The JPA-standard setting {@link #JAKARTA_JDBC_PASSWORD} is now preferred.
 	 */
 	@Deprecated
 	String PASS = "hibernate.connection.password";

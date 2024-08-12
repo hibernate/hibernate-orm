@@ -160,7 +160,7 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 		sb.append( '[' );
 		do {
 			final E element = iterator.next();
-			sb.append( componentJavaType.toString( element ) );
+			sb.append( componentJavaType.extractLoggableRepresentation( element ) );
 			if ( !iterator.hasNext() ) {
 				return sb.append( ']' ).toString();
 			}

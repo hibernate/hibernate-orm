@@ -9,6 +9,8 @@
 package org.hibernate.orm.test.jpa;
 import java.io.Serializable;
 import java.util.Date;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
@@ -47,6 +49,7 @@ public class Wallet implements Serializable {
 		this.brand = brand;
 	}
 
+	@Column(name = "market_entrance")
 	public Date getMarketEntrance() {
 		return marketEntrance;
 	}

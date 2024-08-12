@@ -19,6 +19,7 @@ import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
@@ -72,7 +73,7 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 		final DomainParameterXref domainParameterXref;
 		final ParameterMetadataImplementor parameterMetadata;
 		if ( sqmStatement.getSqmParameters().isEmpty() ) {
-			domainParameterXref = DomainParameterXref.empty();
+			domainParameterXref = DomainParameterXref.EMPTY;
 			parameterMetadata = ParameterMetadataImpl.EMPTY;
 		}
 		else {
@@ -100,6 +101,12 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 			@Override
 			public DomainParameterXref getDomainParameterXref() {
 				return domainParameterXref;
+			}
+
+			@Override
+			public void validateResultType(Class<?> resultType) {
+				assert sqmStatement instanceof SqmSelectStatement<?>;
+				( (SqmSelectStatement<R>) sqmStatement ).validateResultType( resultType );
 			}
 		};
 	}

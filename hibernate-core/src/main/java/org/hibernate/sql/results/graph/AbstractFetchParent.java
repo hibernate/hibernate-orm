@@ -27,6 +27,16 @@ public abstract class AbstractFetchParent implements FetchParent {
 		this.navigablePath = navigablePath;
 	}
 
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	public AbstractFetchParent(AbstractFetchParent original) {
+		navigablePath = original.navigablePath;
+		fetches = original.fetches;
+		hasJoinFetches = original.hasJoinFetches;
+		containsCollectionFetches = original.containsCollectionFetches;
+	}
+
 	public void afterInitialize(FetchParent fetchParent, DomainResultCreationState creationState) {
 		assert fetches == ImmutableFetchList.EMPTY;
 		resetFetches( creationState.visitFetches( fetchParent ) );

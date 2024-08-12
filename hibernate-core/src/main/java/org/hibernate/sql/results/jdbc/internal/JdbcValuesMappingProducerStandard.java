@@ -15,6 +15,7 @@ import org.hibernate.query.NativeQuery;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -30,7 +31,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
  */
 public class JdbcValuesMappingProducerStandard implements JdbcValuesMappingProducer {
 
-	private final JdbcValuesMapping resolvedMapping;
+	private final StandardJdbcValuesMapping resolvedMapping;
 
 	public JdbcValuesMappingProducerStandard(List<SqlSelection> sqlSelections, List<DomainResult<?>> domainResults) {
 		this.resolvedMapping = new StandardJdbcValuesMapping( sqlSelections, domainResults );
@@ -46,6 +47,9 @@ public class JdbcValuesMappingProducerStandard implements JdbcValuesMappingProdu
 			JdbcValuesMetadata jdbcResultsMetadata,
 			LoadQueryInfluencers loadQueryInfluencers,
 			SessionFactoryImplementor sessionFactory) {
+		if ( !resolvedMapping.needsResolve() ) {
+			return resolvedMapping;
+		}
 		final List<SqlSelection> sqlSelections = resolvedMapping.getSqlSelections();
 		List<SqlSelection> resolvedSelections = null;
 		for ( int i = 0; i < sqlSelections.size(); i++ ) {
@@ -61,6 +65,9 @@ public class JdbcValuesMappingProducerStandard implements JdbcValuesMappingProdu
 		if ( resolvedSelections == null ) {
 			return resolvedMapping;
 		}
-		return new StandardJdbcValuesMapping( resolvedSelections, resolvedMapping.getDomainResults() );
+		return new StandardJdbcValuesMapping(
+				resolvedSelections,
+				resolvedMapping.getDomainResults()
+		);
 	}
 }

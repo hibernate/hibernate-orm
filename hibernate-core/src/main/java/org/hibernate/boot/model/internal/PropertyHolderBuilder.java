@@ -54,8 +54,9 @@ public final class PropertyHolderBuilder {
 			String path,
 			PropertyData inferredData,
 			PropertyHolder parent,
-			MetadataBuildingContext context) {
-		return new ComponentPropertyHolder( component, path, inferredData, parent, context );
+			MetadataBuildingContext context,
+			Map<XClass, InheritanceState> inheritanceStatePerClass) {
+		return new ComponentPropertyHolder( component, path, inferredData, parent, context, inheritanceStatePerClass );
 	}
 
 	/**

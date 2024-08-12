@@ -9,6 +9,7 @@ package org.hibernate.orm.test.connection;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -17,7 +18,10 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DriverConnectionCreator;
+import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.JdbcServicesImpl;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.exception.JDBCConnectionException;
@@ -75,7 +79,12 @@ public class ConnectionCreatorTest extends BaseUnitTestCase {
 		public <R extends Service> R getService(Class<R> serviceRole) {
 			if ( JdbcServices.class.equals( serviceRole ) ) {
 				// return a new, not fully initialized JdbcServicesImpl
-				return (R) new JdbcServicesImpl();
+				JdbcServicesImpl jdbcServices = new JdbcServicesImpl(this);
+				jdbcServices.configure( new HashMap<>() );
+				return (R) jdbcServices;
+			}
+			if( JdbcEnvironment.class.equals( serviceRole ) ){
+				return (R) new JdbcEnvironmentImpl( this, new H2Dialect() );
 			}
 			return super.getService( serviceRole );
 		}

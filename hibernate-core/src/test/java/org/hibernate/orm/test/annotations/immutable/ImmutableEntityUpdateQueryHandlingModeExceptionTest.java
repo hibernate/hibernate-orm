@@ -57,18 +57,14 @@ public class ImmutableEntityUpdateQueryHandlingModeExceptionTest extends BaseNon
 
 		try {
 			doInHibernate( this::sessionFactory, session -> {
-				session.createQuery(
-					"update Country " +
-					"set name = :name" )
-				.setParameter( "name", "N/A" )
-				.executeUpdate();
+				session.createQuery("update Country set name = :name" );
 			} );
 			fail("Should throw PersistenceException");
 		}
 		catch (PersistenceException e) {
 			assertTrue( e instanceof HibernateException );
 			assertEquals(
-					"The query [update Country set name = :name] attempts to update an immutable entity: [Country]",
+					"Error interpreting query [The query attempts to update an immutable entity: [Country]] [update Country set name = :name]",
 					e.getMessage()
 			);
 		}

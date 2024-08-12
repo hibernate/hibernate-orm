@@ -125,6 +125,14 @@ public class ConverterHelper {
 		if ( erasedCheckType.isPrimitive() ) {
 			erasedCheckType = PrimitiveWrapperHelper.getDescriptorByPrimitiveType( erasedCheckType ).getWrapperClass();
 		}
+		else if ( erasedCheckType.isArray() ) {
+			// converterDefinedType have type parameters if it extends super generic class
+			// but checkType doesn't have any type parameters
+			// comparing erased type is enough
+			// see https://hibernate.atlassian.net/browse/HHH-18012
+			return converterDefinedType.getErasedType() == erasedCheckType;
+		}
+
 		if ( !converterDefinedType.getErasedType().isAssignableFrom( erasedCheckType ) ) {
 			return false;
 		}

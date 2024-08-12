@@ -35,6 +35,11 @@ public class FloatJavaType extends AbstractClassJavaType<Float> implements Primi
 	}
 
 	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
 	public String toString(Float value) {
 		return value == null ? null : value.toString();
 	}

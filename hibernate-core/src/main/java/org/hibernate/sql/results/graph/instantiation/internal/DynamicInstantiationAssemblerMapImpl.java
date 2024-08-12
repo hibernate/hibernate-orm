@@ -76,6 +76,13 @@ public class DynamicInstantiationAssemblerMapImpl implements DomainResultAssembl
 	}
 
 	@Override
+	public void resolveState(RowProcessingState rowProcessingState) {
+		for ( ArgumentReader<?> argumentReader : argumentReaders ) {
+			argumentReader.resolveState( rowProcessingState );
+		}
+	}
+
+	@Override
 	public <X> void forEachResultAssembler(BiConsumer<Initializer<?>, X> consumer, X arg) {
 		for ( ArgumentReader<?> argumentReader : argumentReaders ) {
 			argumentReader.forEachResultAssembler( consumer, arg );

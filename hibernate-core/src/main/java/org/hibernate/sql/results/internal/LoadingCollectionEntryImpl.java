@@ -8,6 +8,7 @@ package org.hibernate.sql.results.internal;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.collection.spi.PersistentCollection;
@@ -68,6 +69,11 @@ public class LoadingCollectionEntryImpl implements LoadingCollectionEntry {
 		loadingEntryConsumer.accept( loadingState );
 	}
 
+	@Override
+	public <T> void load(T arg1, BiConsumer<T, List<Object>> loadingEntryConsumer) {
+		loadingEntryConsumer.accept( arg1, loadingState );
+	}
+
 	@Override public void finishLoading(ExecutionContext executionContext) {
 		collectionInstance.injectLoadedState(
 				getCollectionDescriptor().getAttributeMapping(),
@@ -76,7 +82,7 @@ public class LoadingCollectionEntryImpl implements LoadingCollectionEntry {
 
 		final boolean hasNoQueuedAdds = collectionInstance.endRead();
 		final SharedSessionContractImplementor session = executionContext.getSession();
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final CollectionPersister collectionDescriptor = getCollectionDescriptor();
 
 		ResultsHelper.finalizeCollectionLoading(

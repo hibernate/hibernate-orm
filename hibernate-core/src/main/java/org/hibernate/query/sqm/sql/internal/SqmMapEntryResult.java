@@ -102,5 +102,11 @@ public class SqmMapEntryResult<K, V, R extends Map.Entry<K, V>> implements Domai
 			keyAssembler.forEachResultAssembler( consumer, arg );
 			valueAssembler.forEachResultAssembler( consumer, arg );
 		}
+
+		@Override
+		public void resolveState(RowProcessingState rowProcessingState) {
+			keyAssembler.resolveState( rowProcessingState );
+			valueAssembler.resolveState( rowProcessingState );
+		}
 	}
 }

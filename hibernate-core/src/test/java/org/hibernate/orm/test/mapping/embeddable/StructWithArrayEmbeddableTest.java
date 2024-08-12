@@ -509,7 +509,7 @@ public class StructWithArrayEmbeddableTest implements AdditionalMappingContribut
 					}
 					ProcedureCall structFunction = entityManager.createStoredProcedureCall( "structProcedure" );
 					ProcedureParameter<EmbeddableWithArrayAggregate> resultParameter = structFunction.registerParameter(
-							"structType",
+							"result",
 							EmbeddableWithArrayAggregate.class,
 							parameterMode
 					);

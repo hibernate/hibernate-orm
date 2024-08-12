@@ -36,7 +36,6 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
@@ -44,8 +43,6 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  */
 public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitializer.EntitySelectFetchInitializerData>
 		extends AbstractInitializer<Data> implements EntityInitializer<Data> {
-	private static final String CONCRETE_NAME = EntitySelectFetchInitializer.class.getSimpleName();
-
 	protected final InitializerParent<?> parent;
 	private final NavigablePath navigablePath;
 	private final boolean isPartOfKey;
@@ -55,15 +52,24 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	protected final DomainResultAssembler<?> keyAssembler;
 	protected final ToOneAttributeMapping toOneMapping;
 	protected final boolean affectedByFilter;
+	protected final boolean keyIsEager;
+	protected final boolean hasLazySubInitializer;
 
 	public static class EntitySelectFetchInitializerData extends InitializerData {
 		// per-row state
 		protected @Nullable Object entityIdentifier;
 
-		public EntitySelectFetchInitializerData(RowProcessingState rowProcessingState) {
+		public EntitySelectFetchInitializerData(EntitySelectFetchInitializer<?> initializer, RowProcessingState rowProcessingState) {
 			super( rowProcessingState );
 		}
 
+		/*
+		 * Used by Hibernate Reactive
+		 */
+		public EntitySelectFetchInitializerData(EntitySelectFetchInitializerData original) {
+			super( original );
+			this.entityIdentifier = original.entityIdentifier;
+		}
 	}
 
 	public EntitySelectFetchInitializer(
@@ -83,11 +89,20 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		this.keyAssembler = keyResult.createResultAssembler( this, creationState );
 		this.isEnhancedForLazyLoading = concreteDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 		this.affectedByFilter = affectedByFilter;
+		final Initializer<?> initializer = keyAssembler.getInitializer();
+		if ( initializer == null ) {
+			this.keyIsEager = false;
+			this.hasLazySubInitializer = false;
+		}
+		else {
+			this.keyIsEager = initializer.isEager();
+			this.hasLazySubInitializer = !initializer.isEager() || initializer.hasLazySubInitializers();
+		}
 	}
 
 	@Override
 	protected InitializerData createInitializerData(RowProcessingState rowProcessingState) {
-		return new EntitySelectFetchInitializerData( rowProcessingState );
+		return new EntitySelectFetchInitializerData( this, rowProcessingState );
 	}
 
 	public ModelPart getInitializedPart(){
@@ -102,6 +117,22 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
+	}
+
+	@Override
+	public void resolveFromPreviousRow(Data data) {
+		if ( data.getState() == State.UNINITIALIZED ) {
+			if ( data.getInstance() == null ) {
+				data.setState( State.MISSING );
+			}
+			else {
+				final Initializer<?> initializer = keyAssembler.getInitializer();
+				if ( initializer != null ) {
+					initializer.resolveFromPreviousRow( data.getRowProcessingState() );
+				}
+				data.setState( State.INITIALIZED );
+			}
+		}
 	}
 
 	@Override
@@ -131,23 +162,29 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		}
 		else {
 			final RowProcessingState rowProcessingState = data.getRowProcessingState();
-			final SharedSessionContractImplementor session = rowProcessingState.getSession();
 			final LazyInitializer lazyInitializer = extractLazyInitializer( data.getInstance() );
 			if ( lazyInitializer == null ) {
 				data.setState( State.INITIALIZED );
-				data.entityIdentifier = concreteDescriptor.getIdentifier( instance, session );
+				if ( keyIsEager ) {
+					data.entityIdentifier = concreteDescriptor.getIdentifier( instance, rowProcessingState.getSession() );
+				}
 			}
 			else if ( lazyInitializer.isUninitialized() ) {
 				data.setState( State.RESOLVED );
-				data.entityIdentifier = lazyInitializer.getIdentifier();
+				if ( keyIsEager ) {
+					data.entityIdentifier = lazyInitializer.getIdentifier();
+				}
 			}
 			else {
 				data.setState( State.INITIALIZED );
-				data.entityIdentifier = lazyInitializer.getIdentifier();
+				if ( keyIsEager ) {
+					data.entityIdentifier = lazyInitializer.getIdentifier();
+				}
 			}
 			data.setInstance( instance );
-			final Initializer<?> initializer = keyAssembler.getInitializer();
-			if ( initializer != null ) {
+			if ( keyIsEager ) {
+				final Initializer<?> initializer = keyAssembler.getInitializer();
+				assert initializer != null;
 				initializer.resolveInstance( data.entityIdentifier, rowProcessingState );
 			}
 			else if ( rowProcessingState.needsResolveState() ) {
@@ -217,7 +254,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 					throw new FetchNotFoundException( entityName, data.entityIdentifier );
 				}
 			}
-			rowProcessingState.getSession().getPersistenceContextInternal().claimEntityHolderIfPossible(
+			persistenceContext.claimEntityHolderIfPossible(
 					new EntityKey( data.entityIdentifier, concreteDescriptor ),
 					instance,
 					rowProcessingState.getJdbcValuesSourceProcessingState(),
@@ -266,11 +303,6 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	}
 
 	@Override
-	public Object getEntityInstance(Data data) {
-		return data.getInstance();
-	}
-
-	@Override
 	public EntityPersister getConcreteDescriptor(Data data) {
 		return concreteDescriptor;
 	}
@@ -286,6 +318,21 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	}
 
 	@Override
+	public boolean isEager() {
+		return true;
+	}
+
+	@Override
+	public void resolveState(EntitySelectFetchInitializerData data) {
+		keyAssembler.resolveState( data.getRowProcessingState() );
+	}
+
+	@Override
+	public boolean hasLazySubInitializers() {
+		return hasLazySubInitializer;
+	}
+
+	@Override
 	public boolean isResultInitializer() {
 		return false;
 	}
@@ -295,4 +342,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		return "EntitySelectFetchInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
 	}
 
+	public DomainResultAssembler<?> getKeyAssembler() {
+		return keyAssembler;
+	}
 }

@@ -34,6 +34,7 @@ import org.hibernate.sql.exec.spi.JdbcLockStrategy;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 
 /**
  * @author Steve Ebersole
@@ -46,12 +47,13 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 	private final JdbcOperationQuerySelect jdbcSelect;
 	private final JdbcParameterBindings jdbcParameterBindings;
 	private final ExecutionContext executionContext;
-	private final Function<String, PreparedStatement> statementCreator;
+	private final JdbcSelectExecutor.StatementCreator statementCreator;
 	private final SqlStatementLogger sqlStatementLogger;
 	private final String finalSql;
 	private final Limit limit;
 	private final LimitHandler limitHandler;
 	private final boolean usesFollowOnLocking;
+	private final int resultCountEstimate;
 
 	private PreparedStatement preparedStatement;
 	private ResultSet resultSet;
@@ -60,13 +62,15 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 			JdbcOperationQuerySelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
-			Function<String, PreparedStatement> statementCreator) {
+			JdbcSelectExecutor.StatementCreator statementCreator,
+			int resultCountEstimate) {
 		super( executionContext.getSession() );
 		this.jdbcParameterBindings = jdbcParameterBindings;
 		this.executionContext = executionContext;
 		this.jdbcSelect = jdbcSelect;
 		this.statementCreator = statementCreator;
 		this.sqlStatementLogger = executionContext.getSession().getJdbcServices().getSqlStatementLogger();
+		this.resultCountEstimate = resultCountEstimate;
 
 		final QueryOptions queryOptions = executionContext.getQueryOptions();
 		if ( queryOptions == null ) {
@@ -228,7 +232,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 		try {
 			LOG.tracef( "Executing query to retrieve ResultSet : %s", finalSql );
 			// prepare the query
-			preparedStatement = statementCreator.apply( finalSql );
+			preparedStatement = statementCreator.createStatement( executionContext, finalSql );
 
 			bindParameters( preparedStatement );
 
@@ -333,5 +337,19 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 		}
 
 		logicalConnection.afterStatement();
+	}
+
+	@Override
+	public int getResultCountEstimate() {
+		if ( limit != null && limit.getMaxRows() != null ) {
+			return limit.getMaxRows();
+		}
+		if ( jdbcSelect.getLimitParameter() != null ) {
+			return (int) jdbcParameterBindings.getBinding( jdbcSelect.getLimitParameter() ).getBindValue();
+		}
+		if ( resultCountEstimate > 0 ) {
+			return resultCountEstimate;
+		}
+		return super.getResultCountEstimate();
 	}
 }

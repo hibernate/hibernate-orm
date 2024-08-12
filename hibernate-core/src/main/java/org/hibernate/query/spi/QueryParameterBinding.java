@@ -12,6 +12,7 @@ import jakarta.persistence.TemporalType;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.QueryParameter;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -33,6 +34,8 @@ public interface QueryParameterBinding<T> {
 	 * Is the binding multivalued?
 	 */
 	boolean isMultiValued();
+
+	QueryParameter<T> getQueryParameter();
 
 	/**
 	 * Get the Type currently associated with this binding.

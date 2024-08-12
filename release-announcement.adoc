@@ -15,17 +15,17 @@ Steve Ebersole
 [[jakarta-data]]
 == Jakarta Data
 
-Hibernate 6.6 includes a complete implementation of the Jakarta Data 1.0 Release. As https://in.relation.to/2024/04/18/jakarta-data-1/[discussed here], our implementation:
+Hibernate 6.6 includes a complete implementation of the https://jakarta.ee/specifications/data/1.0/[Jakarta Data 1.0] Release. As https://in.relation.to/2024/04/18/jakarta-data-1/[discussed here], our implementation:
 
 - is based on compile-time code generation via an annotation processor, enabling unprecedented compile-time type safety, and
 - is backed by Hibernate's `StatelessSession`, which has been enhanced especially to meet the needs of Jakarta Data.
 
-This implementation already passes the Jakarta Data TCK, and we have a request for certification pending.
+Hibernate 6.6 is https://github.com/jakartaee/data/issues/714[certified] as a compatible implementation.
 
 To make use of _Hibernate Data Repositories_, you'll need to depend on:
 
 - our annotation processor, `hibernate-jpamodelgen`, and
-- the Jakarta Data API, `jakarta.data-api.
+- the Jakarta Data API, `jakarta.data-api`.
 
 For example, in Gradle:
 
@@ -198,6 +198,8 @@ create table TestEntity (
     -- ...
 )
 ----
+
+You can choose to customize the discriminator column properties using the `@DiscriminatorColumn` annotation on the root embeddable type, and you can pick the discriminator values to use for each subtype with the `@DiscriminatorValue` annotation, just like with entities.
 
 For more detailed information please refer to the link:{user-guide-url}#embeddable-inheritance[Embeddable inheritance] user guide chapter.
 

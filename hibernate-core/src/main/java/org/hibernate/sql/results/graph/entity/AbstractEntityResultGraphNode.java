@@ -24,13 +24,15 @@ import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * AbstractFetchParent sub-class for entity-valued graph nodes
  *
  * @author Steve Ebersole
  */
 public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent implements EntityResultGraphNode {
-	private Fetch identifierFetch;
+	private @Nullable Fetch identifierFetch;
 	private BasicFetch<?> discriminatorFetch;
 	private DomainResult<Object> rowIdResult;
 	private final EntityValuedModelPart fetchContainer;
@@ -92,7 +94,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 		return getEntityValuedModelPart().getEntityMappingType().getMappedJavaType();
 	}
 
-	public Fetch getIdentifierFetch() {
+	public @Nullable Fetch getIdentifierFetch() {
 		return identifierFetch;
 	}
 
@@ -107,7 +109,9 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 	@Override
 	public void collectValueIndexesToCache(BitSet valueIndexes) {
 		final EntityPersister entityPersister = fetchContainer.getEntityMappingType().getEntityPersister();
-		identifierFetch.collectValueIndexesToCache( valueIndexes );
+		if ( identifierFetch != null ) {
+			identifierFetch.collectValueIndexesToCache( valueIndexes );
+		}
 		if ( !entityPersister.useShallowQueryCacheLayout() ) {
 			if ( discriminatorFetch != null ) {
 				discriminatorFetch.collectValueIndexesToCache( valueIndexes );

@@ -119,6 +119,17 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 		}
 	}
 
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected NonAggregatedIdentifierMappingImpl(NonAggregatedIdentifierMappingImpl original) {
+		super( original );
+		entityDescriptor = original.entityDescriptor;
+		virtualIdEmbeddable = original.virtualIdEmbeddable;
+		idClassEmbeddable = original.idClassEmbeddable;
+		identifierValueMapper = original.identifierValueMapper;
+	}
+
 	@Override
 	public EmbeddableMappingType getMappedType() {
 		return virtualIdEmbeddable;
@@ -235,7 +246,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 			final Object[] propertyValues = new Object[embeddableTypeDescriptor.getNumberOfAttributeMappings()];
 			for ( int i = 0; i < propertyValues.length; i++ ) {
 				final AttributeMapping attributeMapping = embeddableTypeDescriptor.getAttributeMapping( i );
-				final Object o = attributeMapping.getPropertyAccess().getGetter().get( entity );
+				final Object o = attributeMapping.getValue( entity );
 				if ( o == null ) {
 					final AttributeMapping idClassAttributeMapping = identifierValueMapper.getAttributeMapping( i );
 					if ( idClassAttributeMapping.getPropertyAccess().getGetter().getReturnTypeClass().isPrimitive() ) {
@@ -281,7 +292,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 		for ( int i = 0; i < propertyValues.length; i++ ) {
 			final AttributeMapping attribute = embeddableTypeDescriptor.getAttributeMapping( i );
 			final AttributeMapping mappedIdAttributeMapping = identifierValueMapper.getAttributeMapping( i );
-			Object o = mappedIdAttributeMapping.getPropertyAccess().getGetter().get( id );
+			Object o = mappedIdAttributeMapping.getValue( id );
 			if ( attribute instanceof ToOneAttributeMapping && !( mappedIdAttributeMapping instanceof ToOneAttributeMapping ) ) {
 				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attribute;
 				final EntityPersister entityPersister = toOneAttributeMapping.getEntityMappingType().getEntityPersister();

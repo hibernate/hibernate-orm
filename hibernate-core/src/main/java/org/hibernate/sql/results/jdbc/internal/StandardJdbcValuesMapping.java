@@ -6,11 +6,13 @@
  */
 package org.hibernate.sql.results.jdbc.internal;
 
+import java.util.BitSet;
 import java.util.List;
 import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.spi.NavigablePath;
@@ -28,6 +30,7 @@ import org.hibernate.sql.results.graph.collection.internal.AbstractImmediateColl
 import org.hibernate.sql.results.graph.instantiation.DynamicInstantiationResult;
 import org.hibernate.sql.results.internal.InitializersList;
 import org.hibernate.sql.results.internal.NavigablePathMapToInitializer;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingResolution;
 
@@ -35,8 +38,15 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingResolution;
  * @author Steve Ebersole
  */
 public class StandardJdbcValuesMapping implements JdbcValuesMapping {
+
 	private final List<SqlSelection> sqlSelections;
 	private final List<DomainResult<?>> domainResults;
+	private final boolean needsResolve;
+	private final int[] valueIndexesToCacheIndexes;
+	// Is only meaningful if valueIndexesToCacheIndexes is not null
+	// Contains the size of the row to cache, or if the value is negative,
+	// represents the inverted index of the single value to cache
+	private final int rowToCacheSize;
 	private JdbcValuesMappingResolutionImpl resolution;
 
 	public StandardJdbcValuesMapping(
@@ -44,6 +54,30 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 			List<DomainResult<?>> domainResults) {
 		this.sqlSelections = sqlSelections;
 		this.domainResults = domainResults;
+
+		final int rowSize = sqlSelections.size();
+		final BitSet valueIndexesToCache = new BitSet( rowSize );
+		for ( DomainResult<?> domainResult : domainResults ) {
+			domainResult.collectValueIndexesToCache( valueIndexesToCache );
+		}
+		final int[] valueIndexesToCacheIndexes = new int[rowSize];
+		int cacheIndex = 0;
+		boolean needsResolve = false;
+		for ( int i = 0; i < valueIndexesToCacheIndexes.length; i++ ) {
+			final SqlSelection sqlSelection = sqlSelections.get( i );
+			needsResolve = needsResolve
+					|| sqlSelection instanceof SqlSelectionImpl && ( (SqlSelectionImpl) sqlSelection ).needsResolve();
+			if ( valueIndexesToCache.get( i ) ) {
+				valueIndexesToCacheIndexes[i] = cacheIndex++;
+			}
+			else {
+				valueIndexesToCacheIndexes[i] = -1;
+			}
+		}
+
+		this.needsResolve = needsResolve;
+		this.valueIndexesToCacheIndexes = cacheIndex == 0 ? ArrayHelper.EMPTY_INT_ARRAY : valueIndexesToCacheIndexes;
+		this.rowToCacheSize = cacheIndex;
 	}
 
 	@Override
@@ -59,6 +93,20 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 	@Override
 	public int getRowSize() {
 		return sqlSelections.size();
+	}
+
+	@Override
+	public int[] getValueIndexesToCacheIndexes() {
+		return valueIndexesToCacheIndexes;
+	}
+
+	@Override
+	public int getRowToCacheSize() {
+		return rowToCacheSize;
+	}
+
+	public boolean needsResolve() {
+		return needsResolve;
 	}
 
 	@Override
@@ -109,6 +157,7 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 		private int initializerId;
 		boolean hasCollectionInitializers;
 		Boolean dynamicInstantiation;
+		Boolean containsMultipleCollectionFetches;
 
 		public AssemblerCreationStateImpl(
 				JdbcValuesMapping jdbcValuesMapping,
@@ -125,6 +174,20 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 						.anyMatch( domainResult -> domainResult instanceof DynamicInstantiationResult );
 			}
 			return dynamicInstantiation;
+		}
+
+		@Override
+		public boolean containsMultipleCollectionFetches() {
+			if ( containsMultipleCollectionFetches == null ) {
+				int collectionFetchesCount = 0;
+				for ( DomainResult<?> domainResult : jdbcValuesMapping.getDomainResults() ) {
+					if ( domainResult instanceof FetchParent ) {
+						collectionFetchesCount += ( (FetchParent) domainResult ).getCollectionFetchesCount();
+					}
+				}
+				containsMultipleCollectionFetches = collectionFetchesCount > 1;
+			}
+			return containsMultipleCollectionFetches;
 		}
 
 		@Override

@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Clob;
@@ -196,6 +197,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
 import jakarta.persistence.TemporalType;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.lang.Math.ceil;
 import static java.lang.Math.log;
@@ -3188,7 +3190,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public IdentifierHelper buildIdentifierHelper(
 			IdentifierHelperBuilder builder,
-			DatabaseMetaData dbMetaData) throws SQLException {
+			@Nullable DatabaseMetaData dbMetaData) throws SQLException {
 		builder.applyIdentifierCasing( dbMetaData );
 		builder.applyReservedWords( sqlKeywords );
 		builder.setNameQualifierSupport( getNameQualifierSupport() );
@@ -4355,7 +4357,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *                      an exception. Just rethrow and Hibernate will
 	 *                      handle it.
 	 */
-	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) throws SQLException {
+	public boolean supportsNamedParameters(@Nullable DatabaseMetaData databaseMetaData) throws SQLException {
 		return databaseMetaData != null && databaseMetaData.supportsNamedParameters();
 	}
 
@@ -4368,6 +4370,18 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public NationalizationSupport getNationalizationSupport() {
 		return NationalizationSupport.EXPLICIT;
+	}
+
+	/**
+	 * Checks whether the JDBC driver implements methods for handling nationalized character data types
+	 * {@link ResultSet#getNString(int)} / {@link java.sql.PreparedStatement#setNString(int, String)},
+	 * {@link ResultSet#getNClob(int)} /{@link java.sql.PreparedStatement#setNClob(int, NClob)},
+	 * {@link ResultSet#getNCharacterStream(int)} / {@link java.sql.PreparedStatement#setNCharacterStream(int, Reader, long)}
+	 *
+	 * @return {@code true} if the driver implements these methods
+	 */
+	public boolean supportsNationalizedMethods(){
+		return true;
 	}
 
 	/**

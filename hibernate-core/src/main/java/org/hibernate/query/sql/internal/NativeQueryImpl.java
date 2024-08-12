@@ -282,7 +282,7 @@ public class NativeQueryImpl<R>
 		this.sqlString = parameterInterpretation.getAdjustedSqlString();
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
 		this.parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
-		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
+		this.parameterBindings = parameterMetadata.createBindings( session.getFactory() );
 		this.querySpaces = new HashSet<>();
 
 		this.resultSetMapping = resultSetMappingCreator.get();
@@ -311,7 +311,7 @@ public class NativeQueryImpl<R>
 		this.sqlString = parameterInterpretation.getAdjustedSqlString();
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
 		this.parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
-		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
+		this.parameterBindings = parameterMetadata.createBindings( session.getFactory() );
 		this.querySpaces = new HashSet<>();
 
 		this.resultSetMapping = buildResultSetMapping( resultSetMappingMemento.getName(), false, session );
@@ -334,7 +334,7 @@ public class NativeQueryImpl<R>
 		this.sqlString = parameterInterpretation.getAdjustedSqlString();
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
 		this.parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
-		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
+		this.parameterBindings = parameterMetadata.createBindings( session.getFactory() );
 
 		this.resultSetMapping = ResultSetMapping.resolveResultSetMapping( sqlString, true, session.getFactory() );
 		this.resultMappingSuppliedToCtor = false;
@@ -473,8 +473,8 @@ public class NativeQueryImpl<R>
 				getTimeout(),
 				getFetchSize(),
 				getComment(),
-				getFirstResult(),
-				getMaxResults(),
+				getQueryOptions().getLimit().getFirstRow(),
+				getQueryOptions().getLimit().getMaxRows(),
 				getHints()
 		);
 	}
@@ -636,7 +636,7 @@ public class NativeQueryImpl<R>
 				return QueryOptions.NONE;
 			}
 		};
-		return createCountQueryPlan().executeQuery( context, new SingleResultConsumer<>() );
+		return createCountQueryPlan().executeQuery( context, SingleResultConsumer.instance() );
 	}
 
 	@Override
@@ -1606,7 +1606,12 @@ public class NativeQueryImpl<R>
 
 		@Override
 		public ParameterMetadataImplementor toParameterMetadata(SharedSessionContractImplementor session1) {
-			return new ParameterMetadataImpl( positionalParameters, namedParameters );
+			if ( CollectionHelper.isEmpty( positionalParameters ) && CollectionHelper.isEmpty( namedParameters ) ) {
+				return ParameterMetadataImpl.EMPTY;
+			}
+			else {
+				return new ParameterMetadataImpl( positionalParameters, namedParameters );
+			}
 		}
 
 		@Override

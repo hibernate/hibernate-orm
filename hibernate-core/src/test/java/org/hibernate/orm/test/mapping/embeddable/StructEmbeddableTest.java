@@ -546,7 +546,7 @@ public class StructEmbeddableTest implements AdditionalMappingContributor {
 					}
 					ProcedureCall structFunction = entityManager.createStoredProcedureCall( "structProcedure" );
 					ProcedureParameter<EmbeddableAggregate> resultParameter = structFunction.registerParameter(
-							"structType",
+							"result",
 							EmbeddableAggregate.class,
 							parameterMode
 					);

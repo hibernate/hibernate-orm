@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.graph.embeddable.internal;
 
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.graph.spi.GraphHelper;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -30,6 +31,8 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * @author Steve Ebersole
@@ -88,8 +91,8 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 	 * For Hibernate Reactive
 	 */
 	protected EmbeddableFetchImpl(EmbeddableFetchImpl original) {
-		super( original.getNavigablePath() );
-		this.fetchContainer = original.getFetchContainer();
+		super( original );
+		fetchContainer = original.getFetchContainer();
 		fetchParent = original.fetchParent;
 		fetchTiming = original.fetchTiming;
 		tableGroup = original.tableGroup;
@@ -135,7 +138,8 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 				final NavigablePath navigablePath = tableGroupJoin.getNavigablePath();
 				if ( tableGroupJoin.getJoinedGroup().isFetched()
 						&& fetchable.getFetchableName().equals( navigablePath.getLocalName() )
-						&& tableGroupJoin.getJoinedGroup().getModelPart() == fetchable ) {
+						&& tableGroupJoin.getJoinedGroup().getModelPart() == fetchable
+						&& castNonNull( navigablePath.getParent() ).equals( getNavigablePath() ) ) {
 					return navigablePath;
 				}
 			}
@@ -152,7 +156,9 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 	public DomainResultAssembler<?> createAssembler(
 			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
-		return new EmbeddableAssembler( creationState.resolveInitializer( this, parent, this ).asEmbeddableInitializer() );
+		Initializer<?> initializer = creationState.resolveInitializer( this, parent, this );
+		EmbeddableInitializer<?> embeddableInitializer = initializer.asEmbeddableInitializer();
+		return new EmbeddableAssembler( embeddableInitializer );
 	}
 
 	@Override
@@ -170,11 +176,16 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 
 	@Override
 	public boolean appliesTo(GraphImplementor<?> graphImplementor, JpaMetamodel metamodel) {
-		return getFetchParent().appliesTo( graphImplementor, metamodel );
+		// We use managedType here since this fetch could correspond to an entity type if the embeddable is an id-class
+		return GraphHelper.appliesTo( graphImplementor, metamodel.managedType( getResultJavaType().getTypeName() ) );
 	}
 
 	@Override
 	public FetchParent asFetchParent() {
 		return this;
+	}
+
+	protected BasicFetch<?> getDiscriminatorFetch() {
+		return discriminatorFetch;
 	}
 }

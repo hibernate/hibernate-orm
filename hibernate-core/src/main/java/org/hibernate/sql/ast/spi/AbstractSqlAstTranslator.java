@@ -7053,6 +7053,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				renderExpressionAsLiteral( jdbcParameter, jdbcParameterBindings );
 				break;
 			}
+			case WRAP_ALL_PARAMETERS:
+				renderWrappedParameter( jdbcParameter );
+				break;
 			case DEFAULT:
 			default: {
 				visitParameterAsParameter( jdbcParameter );
@@ -7073,6 +7076,20 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		renderParameterAsParameter( parameterBinders.size() + 1, jdbcParameter );
 	}
 
+	protected void renderWrappedParameter(JdbcParameter jdbcParameter) {
+		clauseStack.push( Clause.SELECT );
+
+		try {
+			appendSql( "(select " );
+			visitParameterAsParameter( jdbcParameter );
+			appendSql( getFromDualForSelectOnly() );
+			appendSql( ')' );
+		}
+		finally {
+			clauseStack.pop();
+		}
+	}
+
 	/**
 	 * Renders a parameter marker for the given position
 	 * @param jdbcParameter
@@ -7088,7 +7105,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public void render(SqlAstNode sqlAstNode, SqlAstNodeRenderingMode renderingMode) {
 		SqlAstNodeRenderingMode original = this.parameterRenderingMode;
-		if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS ) {
+		if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
 			this.parameterRenderingMode = renderingMode;
 		}
 		try {
@@ -7101,7 +7118,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected void withParameterRenderingMode(SqlAstNodeRenderingMode renderingMode, Runnable runnable) {
 		SqlAstNodeRenderingMode original = this.parameterRenderingMode;
-		if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS ) {
+		if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
 			this.parameterRenderingMode = renderingMode;
 		}
 		try {
@@ -7285,7 +7302,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		appendSql( "case" );
 		final SqlAstNodeRenderingMode original = this.parameterRenderingMode;
 		for ( CaseSearchedExpression.WhenFragment whenFragment : caseSearchedExpression.getWhenFragments() ) {
-			if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS ) {
+			if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
 				this.parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 			}
 			appendSql( " when " );
@@ -7313,7 +7330,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		for ( int i = 0; i < caseNumber; i++ ) {
 			final CaseSearchedExpression.WhenFragment whenFragment = whenFragments.get( i );
 			Predicate predicate = whenFragment.getPredicate();
-			if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS ) {
+			if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
 				this.parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 			}
 			if ( i != 0 ) {
@@ -7360,12 +7377,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			Consumer<Expression> resultRenderer) {
 		appendSql( "case " );
 		final SqlAstNodeRenderingMode original = this.parameterRenderingMode;
-		if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS ) {
+		if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
 			this.parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 		}
 		caseSimpleExpression.getFixture().accept( this );
 		for ( CaseSimpleExpression.WhenFragment whenFragment : caseSimpleExpression.getWhenFragments() ) {
-			if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS ) {
+			if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
 				this.parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 			}
 			appendSql( " when " );
@@ -8320,14 +8337,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			else if ( needsTupleComparisonEmulation( operator ) ) {
 				rhsTuple = SqlTupleContainer.getSqlTuple( rhsExpression );
 				assert rhsTuple != null;
-				// Some DBs like Oracle support tuples only for the IN subquery predicate
-				if ( ( operator == ComparisonOperator.EQUAL || operator == ComparisonOperator.NOT_EQUAL ) && supportsRowValueConstructorSyntaxInInSubQuery() ) {
+				// If the DB supports tuples in the IN list predicate, use that syntax as it's more concise
+				if ( ( operator == ComparisonOperator.EQUAL || operator == ComparisonOperator.NOT_EQUAL ) && supportsRowValueConstructorSyntaxInInList() ) {
 					comparisonPredicate.getLeftHandExpression().accept( this );
 					if ( operator == ComparisonOperator.NOT_EQUAL ) {
 						appendSql( " not" );
 					}
 					appendSql( " in (" );
-					renderExpressionsAsSubquery( rhsTuple.getExpressions() );
+					rhsTuple.accept( this );
 					appendSql( CLOSE_PARENTHESIS );
 				}
 				else {

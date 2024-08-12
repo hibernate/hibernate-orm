@@ -32,6 +32,11 @@ public class ZoneIdJavaType extends AbstractClassJavaType<ZoneId> {
 	}
 
 	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
 	public String toString(ZoneId value) {
 		return value == null ? null : value.getId();
 	}

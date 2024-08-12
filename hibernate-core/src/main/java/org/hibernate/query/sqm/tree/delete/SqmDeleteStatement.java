@@ -20,10 +20,10 @@ import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Steve Ebersole
@@ -101,6 +101,11 @@ public class SqmDeleteStatement<T>
 		);
 		statement.setWhereClause( copyWhereClause( context ) );
 		return statement;
+	}
+
+	@Override
+	public void validate(@Nullable String hql) {
+		// No-op
 	}
 
 	@Override

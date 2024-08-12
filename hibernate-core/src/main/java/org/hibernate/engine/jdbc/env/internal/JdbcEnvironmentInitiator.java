@@ -19,7 +19,10 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
+import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
+import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.dialect.spi.DialectFactory;
@@ -28,10 +31,12 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.engine.jdbc.internal.JdbcServicesImpl;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.internal.EmptyEventManager;
 import org.hibernate.event.spi.EventManager;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.JpaCompliance;
@@ -119,8 +124,10 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			}
 		}
 
+		final JdbcEnvironment jdbcEnvironment;
+		DatabaseConnectionInfo databaseConnectionInfo;
 		if ( allowJdbcMetadataAccess( configurationValues ) ) {
-			return getJdbcEnvironmentUsingJdbcMetadata(
+			jdbcEnvironment = getJdbcEnvironmentUsingJdbcMetadata(
 					configurationValues,
 					registry,
 					dialectFactory,
@@ -128,9 +135,10 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 					explicitDatabaseMajorVersion,
 					explicitDatabaseMinorVersion,
 					explicitDatabaseVersion);
+			databaseConnectionInfo = buildDbInfo( registry, jdbcEnvironment.getDialect() );
 		}
 		else if ( explicitDialectConfiguration( explicitDatabaseName, configurationValues ) ) {
-			return getJdbcEnvironmentWithExplicitConfiguration(
+			jdbcEnvironment = getJdbcEnvironmentWithExplicitConfiguration(
 					configurationValues,
 					registry,
 					dialectFactory,
@@ -139,10 +147,32 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 					explicitDatabaseMinorVersion,
 					explicitDatabaseVersion
 			);
+			databaseConnectionInfo = buildDbInfo( configurationValues, jdbcEnvironment.getDialect() );
 		}
 		else {
-			return getJdbcEnvironmentWithDefaults( configurationValues, registry, dialectFactory );
+			jdbcEnvironment = getJdbcEnvironmentWithDefaults( configurationValues, registry, dialectFactory );
+			databaseConnectionInfo = buildDbInfo( configurationValues, jdbcEnvironment.getDialect() );
 		}
+
+		// Standardized DB info logging
+		ConnectionInfoLogger.INSTANCE.logConnectionInfoDetails( databaseConnectionInfo.toInfoString() );
+
+		return jdbcEnvironment;
+	}
+
+	private DatabaseConnectionInfo buildDbInfo(ServiceRegistryImplementor registry, Dialect dialect) {
+		if ( !isMultiTenancyEnabled( registry ) ) {
+			final ConnectionProvider cp = registry.requireService( ConnectionProvider.class );
+			return cp.getDatabaseConnectionInfo( dialect );
+		}
+		else {
+			final MultiTenantConnectionProvider<?> mcp = registry.requireService( MultiTenantConnectionProvider.class );
+			return mcp.getDatabaseConnectionInfo( dialect );
+		}
+	}
+
+	private DatabaseConnectionInfo buildDbInfo(Map<String, Object> configurationValues, Dialect dialect) {
+		return new DatabaseConnectionInfoImpl( configurationValues, dialect );
 	}
 
 	private static JdbcEnvironmentImpl getJdbcEnvironmentWithDefaults(
@@ -278,6 +308,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		final TemporaryJdbcSessionOwner temporaryJdbcSessionOwner = new TemporaryJdbcSessionOwner(
 				jdbcConnectionAccess,
 				jdbcServices,
+				new SqlExceptionHelper( false ),
 				registry
 		);
 		temporaryJdbcSessionOwner.transactionCoordinator = registry.requireService( TransactionCoordinatorBuilder.class )
@@ -586,6 +617,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		private final boolean connectionProviderDisablesAutoCommit;
 		private final PhysicalConnectionHandlingMode connectionHandlingMode;
 		private final JpaCompliance jpaCompliance;
+		private final SqlExceptionHelper sqlExceptionHelper;
 		private static final EmptyJdbcObserver EMPTY_JDBC_OBSERVER = EmptyJdbcObserver.INSTANCE;
 		TransactionCoordinator transactionCoordinator;
 		private final EmptyEventManager eventManager;
@@ -593,9 +625,11 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		public TemporaryJdbcSessionOwner(
 				JdbcConnectionAccess jdbcConnectionAccess,
 				JdbcServices jdbcServices,
+				SqlExceptionHelper sqlExceptionHelper,
 				ServiceRegistryImplementor serviceRegistry) {
 			this.jdbcConnectionAccess = jdbcConnectionAccess;
 			this.jdbcServices = jdbcServices;
+			this.sqlExceptionHelper = sqlExceptionHelper;
 			this.serviceRegistry = serviceRegistry;
 			final ConfigurationService configuration = serviceRegistry.requireService( ConfigurationService.class );
 			this.jtaTrackByThread = configuration.getSetting( JTA_TRACK_BY_THREAD, BOOLEAN, true );
@@ -747,6 +781,11 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		@Override
 		public boolean isActive() {
 			return true;
+		}
+
+		@Override
+		public SqlExceptionHelper getSqlExceptionHelper() {
+			return sqlExceptionHelper;
 		}
 
 		private static class EmptyJdbcObserver implements JdbcObserver{

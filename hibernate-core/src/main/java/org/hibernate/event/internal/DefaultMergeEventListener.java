@@ -78,6 +78,7 @@ public class DefaultMergeEventListener
 	 * @param event The merge event to be handled.
 	 *
 	 */
+	@Override
 	public void onMerge(MergeEvent event) throws HibernateException {
 		final EventSource session = event.getSession();
 		final EntityCopyObserver entityCopyObserver = createEntityCopyObserver( session );
@@ -102,6 +103,7 @@ public class DefaultMergeEventListener
 	 * @param event The merge event to be handled.
 	 *
 	 */
+	@Override
 	public void onMerge(MergeEvent event, MergeContext copiedAlready) throws HibernateException {
 		final Object original = event.getOriginal();
 		// NOTE : `original` is the value being merged
@@ -351,8 +353,7 @@ public class DefaultMergeEventListener
 						.getMappingMetamodel()
 						.getCollectionDescriptor( collectionType.getRole() );
 				final CollectionEntry collectionEntry = getSession().getPersistenceContextInternal()
-						.getCollectionEntries()
-						.get( coll );
+						.getCollectionEntry( coll );
 				if ( !coll.equalsSnapshot( persister ) ) {
 					collectionEntry.resetStoredSnapshot( coll, coll.getSnapshot( persister ) );
 				}

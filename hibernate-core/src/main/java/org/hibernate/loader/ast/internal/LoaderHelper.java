@@ -243,7 +243,9 @@ public class LoaderHelper {
 						session
 				),
 				RowTransformerStandardImpl.instance(),
-				ListResultsConsumer.UniqueSemantic.FILTER
+				null,
+				ListResultsConsumer.UniqueSemantic.FILTER,
+				idsToInitialize.length
 		);
 	}
 }

@@ -6,12 +6,9 @@
  */
 package org.hibernate.sql.exec.internal;
 
-import java.io.Serializable;
-import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 import org.hibernate.CacheMode;
 import org.hibernate.cache.spi.QueryKey;
@@ -31,6 +28,7 @@ import org.hibernate.sql.results.internal.ResultsHelper;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.internal.RowTransformerTupleTransformerAdapter;
+import org.hibernate.sql.results.jdbc.internal.CachedJdbcValuesMetadata;
 import org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesCacheHit;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl;
@@ -68,7 +66,29 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
 			Class<R> domainResultType,
-			Function<String, PreparedStatement> statementCreator,
+			StatementCreator statementCreator,
+			ResultsConsumer<T, R> resultsConsumer) {
+		return executeQuery(
+				jdbcSelect,
+				jdbcParameterBindings,
+				executionContext,
+				rowTransformer,
+				domainResultType,
+				-1,
+				statementCreator,
+				resultsConsumer
+		);
+	}
+
+	@Override
+	public <T, R> T executeQuery(
+			JdbcOperationQuerySelect jdbcSelect,
+			JdbcParameterBindings jdbcParameterBindings,
+			ExecutionContext executionContext,
+			RowTransformer<R> rowTransformer,
+			Class<R> domainResultType,
+			int resultCountEstimate,
+			StatementCreator statementCreator,
 			ResultsConsumer<T, R> resultsConsumer) {
 		final PersistenceContext persistenceContext = executionContext.getSession().getPersistenceContext();
 		boolean defaultReadOnlyOrig = persistenceContext.isDefaultReadOnly();
@@ -85,6 +105,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 					executionContext,
 					rowTransformer,
 					domainResultType,
+					resultCountEstimate,
 					statementCreator,
 					resultsConsumer
 			);
@@ -102,14 +123,16 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
 			Class<R> domainResultType,
-			Function<String, PreparedStatement> statementCreator,
+			int resultCountEstimate,
+			StatementCreator statementCreator,
 			ResultsConsumer<T, R> resultsConsumer) {
 
 		final DeferredResultSetAccess deferredResultSetAccess = new DeferredResultSetAccess(
 				jdbcSelect,
 				jdbcParameterBindings,
 				executionContext,
-				statementCreator
+				statementCreator,
+				resultCountEstimate
 		);
 		final JdbcValues jdbcValues = resolveJdbcValuesSource(
 				executionContext.getQueryIdentifier( deferredResultSetAccess.getFinalSql() ),
@@ -197,8 +220,6 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				rowReader,
 				jdbcValues
 		);
-
-		rowReader.startLoading( rowProcessingState );
 
 		final T result = resultsConsumer.consume(
 				jdbcValues,
@@ -313,7 +334,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		}
 
 		if ( cachedResults == null ) {
-			final JdbcValuesMetadata metadataForCache;
+			final CachedJdbcValuesMetadata metadataForCache;
 			final JdbcValuesMapping jdbcValuesMapping;
 			if ( queryResultsCacheKey == null ) {
 				jdbcValuesMapping = mappingProducer.resolve( resultSetAccess, session.getLoadQueryInfluencers(), factory );
@@ -349,7 +370,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		}
 	}
 
-	public static class CapturingJdbcValuesMetadata implements JdbcValuesMetadata {
+	static class CapturingJdbcValuesMetadata implements JdbcValuesMetadata {
 		private final ResultSetAccess resultSetAccess;
 		private String[] columnNames;
 		private BasicType<?>[] types;
@@ -423,7 +444,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			return basicType;
 		}
 
-		public JdbcValuesMetadata resolveMetadataForCache() {
+		public CachedJdbcValuesMetadata resolveMetadataForCache() {
 			if ( columnNames == null ) {
 				return null;
 			}
@@ -431,58 +452,4 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		}
 	}
 
-	private static class CachedJdbcValuesMetadata implements JdbcValuesMetadata, Serializable {
-		private final String[] columnNames;
-		private final BasicType<?>[] types;
-
-		public CachedJdbcValuesMetadata(String[] columnNames, BasicType<?>[] types) {
-			this.columnNames = columnNames;
-			this.types = types;
-		}
-
-		@Override
-		public int getColumnCount() {
-			return columnNames.length;
-		}
-
-		@Override
-		public int resolveColumnPosition(String columnName) {
-			final int position = ArrayHelper.indexOf( columnNames, columnName ) + 1;
-			if ( position == 0 ) {
-				throw new IllegalStateException( "Unexpected resolving of unavailable column: " + columnName );
-			}
-			return position;
-		}
-
-		@Override
-		public String resolveColumnName(int position) {
-			final String name = columnNames[position - 1];
-			if ( name == null ) {
-				throw new IllegalStateException( "Unexpected resolving of unavailable column at position: " + position );
-			}
-			return name;
-		}
-
-		@Override
-		public <J> BasicType<J> resolveType(
-				int position,
-				JavaType<J> explicitJavaType,
-				TypeConfiguration typeConfiguration) {
-			final BasicType<?> type = types[position - 1];
-			if ( type == null ) {
-				throw new IllegalStateException( "Unexpected resolving of unavailable column at position: " + position );
-			}
-			if ( explicitJavaType == null || type.getJavaTypeDescriptor() == explicitJavaType ) {
-				//noinspection unchecked
-				return (BasicType<J>) type;
-			}
-			else {
-				return typeConfiguration.getBasicTypeRegistry().resolve(
-						explicitJavaType,
-						type.getJdbcType()
-				);
-			}
-		}
-
-	}
 }

@@ -20,7 +20,7 @@ pluginManagement {
 plugins {
     id 'org.hibernate.orm.build.env-settings'
     id 'org.hibernate.orm.build.jdks-settings'
-    id 'com.gradle.develocity' version '3.17.4'
+    id 'com.gradle.develocity' version '3.17.6'
     id 'com.gradle.common-custom-user-data-gradle-plugin' version '2.0.2'
 }
 
@@ -64,18 +64,18 @@ dependencyResolutionManagement {
 
             // Gradle does bytecode transformation on tests.
             // You can't use bytecode higher than what Gradle supports, even with toolchains.
-            version "maxSupportedBytecode", "21"
+            version "maxSupportedBytecode", "22"
         }
         libs {
             def antlrVersion = version "antlr", "4.13.0"
-            def byteBuddyVersion = version "byteBuddy", "1.14.15"
+            def byteBuddyVersion = version "byteBuddy", "1.14.18"
             def classmateVersion = version "classmate", "1.5.1"
-            def geolatteVersion = version "geolatte", "1.8.2"
+            def geolatteVersion = version "geolatte", "1.9.1"
             def hcannVersion = version "hcann", "7.0.1.Final"
-            def jandexVersion = version "jandex", "3.1.2"
+            def jandexVersion = version "jandex", "3.2.0"
             def jacksonVersion = version "jackson", "2.17.0"
             def jbossLoggingVersion = version "jbossLogging", "3.5.0.Final"
-            def jbossLoggingToolVersion = version "jbossLoggingTool", "2.2.1.Final"
+            def jbossLoggingToolVersion = version "jbossLoggingTool", "3.0.1.Final"
 
             def agroalVersion = version "agroal", "2.0"
             def c3poVersion = version"c3p0", "0.9.5.5"
@@ -234,7 +234,7 @@ dependencyResolutionManagement {
             def h2gisVersion = version "h2gis", overrideableVersion( "gradle.libs.versions.h2gis", "2.2.0" )
             def hsqldbVersion = version "hsqldb", overrideableVersion( "gradle.libs.versions.hsqldb", "2.7.2" )
             def informixVersion = version "informix", "4.50.10.1"
-            def mariadbVersion = version "mariadb", "3.3.1"
+            def mariadbVersion = version "mariadb", "3.4.0"
             def mssqlVersion = version "mssql", "12.4.2.jre11"
             def mysqlVersion = version "mysql", "8.2.0"
             def oracleVersion = version "oracle", "23.4.0.24.05"

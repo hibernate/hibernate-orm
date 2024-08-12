@@ -38,6 +38,9 @@ public class EmbeddableForeignKeyResultImpl<T>
 	private final FetchParent fetchParent;
 	private final EmbeddableMappingType fetchContainer;
 
+	/*
+	 * Used by Hibernate Reactive
+	 */
 	public EmbeddableForeignKeyResultImpl(
 			NavigablePath navigablePath,
 			EmbeddableValuedModelPart embeddableValuedModelPart,
@@ -49,6 +52,13 @@ public class EmbeddableForeignKeyResultImpl<T>
 		this.resultVariable = resultVariable;
 		this.fetchParent = fetchParent;
 		resetFetches( creationState.visitFetches( this ) );
+	}
+
+	protected EmbeddableForeignKeyResultImpl(EmbeddableForeignKeyResultImpl<T> original) {
+		super( original );
+		this.resultVariable = original.resultVariable;
+		this.fetchParent = original.fetchParent;
+		this.fetchContainer = original.fetchContainer;
 	}
 
 	@Override

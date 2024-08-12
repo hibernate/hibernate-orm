@@ -53,9 +53,11 @@ import javax.transaction.xa.Xid;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.internal.build.AllowSysOut;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
@@ -176,6 +178,11 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 	@Override
 	public boolean supportsAggressiveRelease() {
 		return true;
+	}
+
+	@Override
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+		return delegate.getDatabaseConnectionInfo( dialect );
 	}
 
 	protected Transaction findCurrentTransaction() {

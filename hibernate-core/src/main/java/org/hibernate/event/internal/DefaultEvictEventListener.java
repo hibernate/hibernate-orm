@@ -41,6 +41,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 	 * @param event The evict event to be handled.
 	 *
 	 */
+	@Override
 	public void onEvict(EvictEvent event) throws HibernateException {
 		final EventSource source = event.getSession();
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();

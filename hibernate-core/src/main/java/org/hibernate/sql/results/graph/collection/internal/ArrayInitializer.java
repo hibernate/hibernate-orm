@@ -13,7 +13,6 @@ import java.util.function.BiConsumer;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentArrayHolder;
-import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
@@ -32,8 +31,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Chris Cranford
  */
 public class ArrayInitializer extends AbstractImmediateCollectionInitializer<AbstractImmediateCollectionInitializer.ImmediateCollectionInitializerData> {
-	private static final String CONCRETE_NAME = ArrayInitializer.class.getSimpleName();
-
 	private final DomainResultAssembler<Integer> listIndexAssembler;
 	private final DomainResultAssembler<?> elementAssembler;
 
@@ -67,11 +64,6 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer<Abs
 	}
 
 	@Override
-	protected String getSimpleConcreteImplName() {
-		return CONCRETE_NAME;
-	}
-
-	@Override
 	protected void forEachSubInitializer(BiConsumer<Initializer<?>, RowProcessingState> consumer, InitializerData data) {
 		super.forEachSubInitializer( consumer, data );
 		final Initializer<?> initializer = elementAssembler.getInitializer();
@@ -86,10 +78,8 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer<Abs
 	}
 
 	@Override
-	protected void readCollectionRow(
-			CollectionKey collectionKey,
-			List<Object> loadingState,
-			RowProcessingState rowProcessingState) {
+	protected void readCollectionRow(ImmediateCollectionInitializerData data, List<Object> loadingState) {
+		final RowProcessingState rowProcessingState = data.getRowProcessingState();
 		final Integer indexValue = listIndexAssembler.assemble( rowProcessingState );
 		if ( indexValue == null ) {
 			throw new HibernateException( "Illegal null value for array index encountered while reading: "

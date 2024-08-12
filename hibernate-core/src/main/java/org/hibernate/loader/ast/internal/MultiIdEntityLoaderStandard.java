@@ -267,7 +267,9 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 				jdbcParameterBindings,
 				new ExecutionContextWithSubselectFetchHandler( session, subSelectFetchableKeysHandler ),
 				RowTransformerStandardImpl.instance(),
-				ListResultsConsumer.UniqueSemantic.FILTER
+				null,
+				ListResultsConsumer.UniqueSemantic.FILTER,
+				idsInBatch.size()
 		);
 	}
 

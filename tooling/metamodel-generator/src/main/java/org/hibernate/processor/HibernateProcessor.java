@@ -642,7 +642,7 @@ public class HibernateProcessor extends AbstractProcessor {
 			final TypeElement fieldType = (TypeElement) declaredType.asElement();
 			if ( fieldType.getKind() == ElementKind.ENUM ) {
 				for  (Element enumMember : fieldType.getEnclosedElements() ) {
-					if ( enumMember.getKind() == ElementKind.ENUM_CONSTANT) {
+					if ( enumMember.getKind() == ElementKind.ENUM_CONSTANT ) {
 						context.addEnumValue( fieldType.getQualifiedName().toString(),
 								enumMember.getSimpleName().toString() );
 					}

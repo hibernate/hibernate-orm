@@ -49,6 +49,7 @@ public class DefaultReplicateEventListener
 	 *
 	 * @throws TransientObjectException An invalid attempt to replicate a transient entity.
 	 */
+	@Override
 	public void onReplicate(ReplicateEvent event) {
 		final EventSource source = event.getSession();
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();

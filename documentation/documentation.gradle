@@ -3,10 +3,20 @@ import java.util.function.Function
 import org.asciidoctor.gradle.jvm.AsciidoctorTask
 import org.asciidoctor.gradle.jvm.pdf.AsciidoctorPdfTask
 
+buildscript {
+	configurations.all {
+		resolutionStrategy.dependencySubstitution {
+			substitute module( 'com.burgstaller:okhttp-digest:1.10' ) using module(
+					'io.github.rburgst:okhttp-digest:1.21'
+			) because 'okhttp-digest only version 1.21 is available on Maven Central. Old version was on jcenter, which asciidoctor-gradle-plugin depends on transitively through simplified-jruby-gradle-plugin via http-builder-ng-okhttp '
+		}
+	}
+}
+
 plugins {
-	id 'org.asciidoctor.jvm.convert' version '3.3.2'
-	id 'org.asciidoctor.jvm.pdf' version '3.3.2'
-	id "org.asciidoctor.jvm.gems" version "3.3.2"
+	id 'org.asciidoctor.jvm.convert' version '4.0.2'
+	id 'org.asciidoctor.jvm.pdf' version '4.0.2'
+	id "org.asciidoctor.jvm.gems" version "4.0.2"
 	id "org.hibernate.orm.build.settings-doc"
 }
 
@@ -693,7 +703,7 @@ def renderUserGuideHtmlTask = tasks.register( 'renderUserGuideHtml', Asciidoctor
 			   stylesheet: "css/hibernate.css",
 			   docinfo: 'private',
 			   jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/",
-			   'generated-report-dir': layout.buildDirectory.dir( 'orm/generated' )
+			   'generated-report-dir': layout.buildDirectory.dir( 'orm/generated' ).get()
 
 	resources {
 		from( 'src/main/asciidoc/userguide/' ) {

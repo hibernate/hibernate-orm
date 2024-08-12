@@ -45,7 +45,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@RequiresDialectFeature(
-			value = DialectChecks.SupportsUnboundedLobLocatorMaterializationCheck.class,
+			value = DialectChecks.SupportsExpectedLobUsagePattern.class,
 			comment = "database/driver does not support materializing a LOB locator outside the owning transaction"
 	)
 	public void testBoundedBlobLocatorAccess() throws Throwable {

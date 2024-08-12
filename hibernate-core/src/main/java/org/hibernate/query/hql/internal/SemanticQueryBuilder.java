@@ -264,6 +264,7 @@ import static org.hibernate.query.sqm.TemporalUnit.TIMEZONE_HOUR;
 import static org.hibernate.query.sqm.TemporalUnit.TIMEZONE_MINUTE;
 import static org.hibernate.query.sqm.TemporalUnit.WEEK_OF_MONTH;
 import static org.hibernate.query.sqm.TemporalUnit.WEEK_OF_YEAR;
+import static org.hibernate.query.sqm.internal.SqmUtil.resolveExpressibleJavaTypeClass;
 import static org.hibernate.type.descriptor.DateTimeUtils.DATE_TIME;
 import static org.hibernate.type.spi.TypeConfiguration.isJdbcTemporalType;
 
@@ -554,6 +555,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				queryExpressionContext.accept( this );
 
 				insertStatement.onConflict( visitConflictClause( ctx.conflictClause() ) );
+				insertStatement.validate( query );
 				return insertStatement;
 			}
 			finally {
@@ -612,6 +614,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 				insertStatement.values( valuesList );
 				insertStatement.onConflict( visitConflictClause( ctx.conflictClause() ) );
+				insertStatement.validate( query );
 				return insertStatement;
 			}
 			finally {
@@ -683,6 +686,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				updateStatement.applyPredicate( visitWhereClause( whereClauseContext ) );
 			}
 
+			updateStatement.validate( query );
 			return updateStatement;
 		}
 		finally {
@@ -2918,8 +2922,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmPredicate visitBooleanExpressionPredicate(HqlParser.BooleanExpressionPredicateContext ctx) {
 		final SqmExpression<?> expression = (SqmExpression<?>) ctx.expression().accept( this );
-		if ( expression.getJavaType() != Boolean.class ) {
-			throw new SemanticException( "Non-boolean expression used in predicate context: " + ctx.getText(), query );
+		if ( resolveExpressibleJavaTypeClass( expression ) != Boolean.class ) {
+			throw new SemanticException(
+					"Non-boolean expression used in predicate context: " + ctx.getText(),
+					query
+			);
 		}
 		@SuppressWarnings("unchecked")
 		final SqmExpression<Boolean> booleanExpression = (SqmExpression<Boolean>) expression;

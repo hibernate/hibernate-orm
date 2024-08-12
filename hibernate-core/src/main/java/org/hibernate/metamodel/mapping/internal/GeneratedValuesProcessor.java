@@ -30,6 +30,7 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.sql.results.spi.ListResultsConsumer.UniqueSemantic.FILTER;
@@ -171,8 +172,15 @@ public class GeneratedValuesProcessor {
 
 	private List<Object[]> executeSelect(Object id, SharedSessionContractImplementor session) {
 		final JdbcParameterBindings jdbcParamBindings = getJdbcParameterBindings( id, session );
-		return session.getFactory().getJdbcServices().getJdbcSelectExecutor()
-				.list( jdbcSelect, jdbcParamBindings, new NoCallbackExecutionContext(session), (row) -> row, FILTER );
+		return session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
+				jdbcSelect,
+				jdbcParamBindings,
+				new NoCallbackExecutionContext( session ),
+				RowTransformerArrayImpl.INSTANCE,
+				null,
+				FILTER,
+				1
+		);
 	}
 
 	private JdbcParameterBindings getJdbcParameterBindings(Object id, SharedSessionContractImplementor session) {

@@ -54,7 +54,7 @@ import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
-import org.hibernate.procedure.internal.StandardCallableStatementSupport;
+import org.hibernate.procedure.internal.OracleCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.spi.QueryOptions;
@@ -1314,7 +1314,7 @@ public class OracleDialect extends Dialect {
 	@Override
 	public CallableStatementSupport getCallableStatementSupport() {
 		// Oracle supports returning cursors
-		return StandardCallableStatementSupport.REF_CURSOR_INSTANCE;
+		return OracleCallableStatementSupport.REF_CURSOR_INSTANCE;
 	}
 
 	@Override
@@ -1580,12 +1580,6 @@ public class OracleDialect extends Dialect {
 	public int registerResultSetOutParameter(CallableStatement statement, String name) throws SQLException {
 		statement.registerOutParameter( name, OracleTypes.CURSOR );
 		return 1;
-	}
-
-	@Override
-	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) {
-		// Not sure if it's a JDBC driver issue, but it doesn't work
-		return false;
 	}
 
 	@Override

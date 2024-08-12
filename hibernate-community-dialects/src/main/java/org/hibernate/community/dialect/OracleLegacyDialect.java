@@ -398,20 +398,33 @@ public class OracleLegacyDialect extends Dialect {
 				}
 				break;
 			case INTEGER_BOOLEAN:
-				result = BooleanDecoder.toIntegerBoolean( from );
+				result = from == CastType.STRING
+						? buildStringToBooleanCastDecode( "1", "0" )
+						: BooleanDecoder.toIntegerBoolean( from );
 				if ( result != null ) {
 					return result;
 				}
 				break;
 			case YN_BOOLEAN:
-				result = BooleanDecoder.toYesNoBoolean( from );
+				result = from == CastType.STRING
+						? buildStringToBooleanCastDecode( "'Y'", "'N'" )
+						: BooleanDecoder.toYesNoBoolean( from );
 				if ( result != null ) {
 					return result;
 				}
 				break;
 			case BOOLEAN:
+				result = from == CastType.STRING
+						? buildStringToBooleanCastDecode( "true", "false" )
+						: BooleanDecoder.toBoolean( from );
+				if ( result != null ) {
+					return result;
+				}
+				break;
 			case TF_BOOLEAN:
-				result = BooleanDecoder.toTrueFalseBoolean( from );
+				result = from == CastType.STRING
+						? buildStringToBooleanCastDecode( "'T'", "'F'" )
+						: BooleanDecoder.toTrueFalseBoolean( from );
 				if ( result != null ) {
 					return result;
 				}
@@ -1562,6 +1575,16 @@ public class OracleLegacyDialect extends Dialect {
 	public boolean useInputStreamToInsertBlob() {
 		// see HHH-18206
 		return false;
+	}
+
+	@Override
+	public String getDual() {
+		return "dual";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from " + getDual();
 	}
 
 }

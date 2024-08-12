@@ -1986,4 +1986,14 @@ public abstract class AbstractHANADialect extends Dialect {
 	public String getForUpdateString(LockMode lockMode) {
 		return super.getForUpdateString(lockMode);
 	}
+
+	@Override
+	public String getDual() {
+		return "sys.dummy";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from " + getDual();
+	}
 }

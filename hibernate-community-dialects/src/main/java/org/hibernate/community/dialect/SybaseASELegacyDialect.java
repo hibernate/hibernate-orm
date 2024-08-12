@@ -696,4 +696,9 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 		}
 		return new TopLimitHandler(false);
 	}
+
+	@Override
+	public String getDual() {
+		return "(select 1 c1)";
+	}
 }

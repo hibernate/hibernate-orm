@@ -434,4 +434,14 @@ public class RDMSOS2200Dialect extends Dialect {
 	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
 		return AbstractTransactSQLDialect.replaceLtrimRtrim( specification, isWhitespace );
 	}
+
+	@Override
+	public String getDual() {
+		return "rdms.rdms_dummy";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from " + getDual() + " where key_col=1";
+	}
 }

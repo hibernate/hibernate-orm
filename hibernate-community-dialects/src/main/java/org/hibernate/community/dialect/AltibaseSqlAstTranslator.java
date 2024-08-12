@@ -222,16 +222,6 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected String getDual() {
-		return "dual";
-	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return " from " + getDual();
-	}
-
-	@Override
 	protected boolean needsRecursiveKeywordInWithClause() {
 		return false;
 	}

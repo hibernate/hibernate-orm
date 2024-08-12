@@ -253,16 +253,6 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	@Override
-	protected String getDual() {
-		return "sys.dummy";
-	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return " from " + getDual();
-	}
-
-	@Override
 	protected void renderInsertIntoNoColumns(TableInsertStandard tableInsert) {
 		throw new MappingException(
 				String.format(

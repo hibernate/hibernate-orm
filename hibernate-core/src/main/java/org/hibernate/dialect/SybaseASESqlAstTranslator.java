@@ -508,11 +508,6 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 		return false;
 	}
 
-	@Override
-	protected String getDual() {
-		return "(select 1 c1)";
-	}
-
 	private boolean supportsParameterOffsetFetchExpression() {
 		return false;
 	}

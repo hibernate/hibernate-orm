@@ -80,16 +80,4 @@ public class CUBRIDSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
 		return false;
 	}
-
-	@Override
-	protected String getDual() {
-		//TODO: is this really needed?
-		//TODO: would "from table({0})" be better?
-		return "db_root";
-	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return " from " + getDual();
-	}
 }

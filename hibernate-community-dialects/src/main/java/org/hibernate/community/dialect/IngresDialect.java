@@ -559,4 +559,15 @@ public class IngresDialect extends Dialect {
 	public boolean supportsFetchClause(FetchClauseType type) {
 		return getVersion().isSameOrAfter( 9, 3 );
 	}
+
+	@Override
+	public String getDual() {
+		return "(select 0)";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		//this is only necessary if the query has a where clause
+		return " from " + getDual() + " dual";
+	}
 }

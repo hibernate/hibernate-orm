@@ -303,16 +303,6 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	protected String getDual() {
-		return "(values 0)";
-	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return " from " + getDual() + " dual";
-	}
-
-	@Override
 	protected boolean needsRowsToSkip() {
 		return !supportsOffsetFetchClause();
 	}

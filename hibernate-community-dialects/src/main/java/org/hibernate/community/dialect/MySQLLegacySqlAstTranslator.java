@@ -390,16 +390,6 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	protected String getDual() {
-		return "dual";
-	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return getDialect().getVersion().isSameOrAfter( 8 ) ? "" : ( " from " + getDual() );
-	}
-
-	@Override
 	public MySQLLegacyDialect getDialect() {
 		return (MySQLLegacyDialect) DialectDelegateWrapper.extractRealDialect( super.getDialect() );
 	}

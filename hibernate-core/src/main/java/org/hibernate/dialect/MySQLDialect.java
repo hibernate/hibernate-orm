@@ -1572,4 +1572,9 @@ public class MySQLDialect extends Dialect {
 	public boolean supportsFromClauseInUpdate() {
 		return true;
 	}
+
+	@Override
+	public String getDual() {
+		return "dual";
+	}
 }

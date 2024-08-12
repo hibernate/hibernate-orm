@@ -331,5 +331,15 @@ public class MaxDBDialect extends Dialect {
 	public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
 		return false;
 	}
+
+	@Override
+	public String getDual() {
+		return "dual";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from " + getDual();
+	}
 }
 

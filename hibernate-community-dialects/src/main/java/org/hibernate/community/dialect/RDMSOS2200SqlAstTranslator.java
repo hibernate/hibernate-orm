@@ -124,14 +124,4 @@ public class RDMSOS2200SqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
 		return false;
 	}
-
-	@Override
-	protected String getDual() {
-		return "rdms.rdms_dummy";
-	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return " from " + getDual() + " where key_col=1";
-	}
 }

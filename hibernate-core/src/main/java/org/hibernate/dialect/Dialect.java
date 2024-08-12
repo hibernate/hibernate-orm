@@ -1441,7 +1441,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			case INTEGER_BOOLEAN:
 				switch ( from ) {
 					case STRING:
-						return "case ?1 when 'T' then 1 when 'Y' then 1 when 'F' then 0 when 'N' then 0 else null end";
+						return buildStringToBooleanCast( "1", "0" );
 					case INTEGER:
 					case LONG:
 						return "abs(sign(?1))";
@@ -1456,7 +1456,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			case YN_BOOLEAN:
 				switch ( from ) {
 					case STRING:
-						return "case ?1 when 'T' then 'Y' when 'Y' then 'Y' when 'F' then 'N' when 'N' then 'N' else null end";
+						return buildStringToBooleanCast( "'Y'", "'N'" );
 					case INTEGER_BOOLEAN:
 						return "case ?1 when 1 then 'Y' when 0 then 'N' else null end";
 					case INTEGER:
@@ -1471,7 +1471,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			case TF_BOOLEAN:
 				switch ( from ) {
 					case STRING:
-						return "case ?1 when 'T' then 'T' when 'Y' then 'T' when 'F' then 'F' when 'N' then 'F' else null end";
+						return buildStringToBooleanCast( "'T'", "'F'" );
 					case INTEGER_BOOLEAN:
 						return "case ?1 when 1 then 'T' when 0 then 'F' else null end";
 					case INTEGER:
@@ -1486,7 +1486,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			case BOOLEAN:
 				switch ( from ) {
 					case STRING:
-						return "case ?1 when 'T' then true when 'Y' then true when 'F' then false when 'N' then false else null end";
+						return buildStringToBooleanCast( "true", "false" );
 					case INTEGER_BOOLEAN:
 					case INTEGER:
 					case LONG:
@@ -1499,6 +1499,153 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				break;
 		}
 		return "cast(?1 as ?2)";
+	}
+
+	protected static final String[] TRUE_STRING_VALUES = new String[] { "t", "true", "y", "1" };
+	protected static final String[] FALSE_STRING_VALUES = new String[] { "f", "false", "n", "0" };
+
+	protected String buildStringToBooleanCast(String trueValue, String falseValue) {
+		final boolean supportsValuesList = supportsValuesList();
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "(select v.x from (" );
+		if ( supportsValuesList ) {
+			sb.append( "values (" );
+			sb.append( trueValue );
+			sb.append( "),(" );
+			sb.append( falseValue );
+			sb.append( ")) v(x)" );
+		}
+		else {
+			sb.append( "select " );
+			sb.append( trueValue );
+			sb.append( " x");
+			sb.append( getFromDualForSelectOnly() );
+			sb.append(" union all select " );
+			sb.append( falseValue );
+			sb.append( getFromDualForSelectOnly() );
+			sb.append( ") v" );
+		}
+		sb.append( " left join (" );
+		if ( supportsValuesList ) {
+			sb.append( "values" );
+			char separator = ' ';
+			for ( String trueStringValue : Dialect.TRUE_STRING_VALUES ) {
+				sb.append( separator );
+				sb.append( "('" );
+				sb.append( trueStringValue );
+				sb.append( "'," );
+				sb.append( trueValue );
+				sb.append( ')' );
+				separator = ',';
+			}
+			for ( String falseStringValue : Dialect.FALSE_STRING_VALUES ) {
+				sb.append( ",('" );
+				sb.append( falseStringValue );
+				sb.append( "'," );
+				sb.append( falseValue );
+				sb.append( ')' );
+			}
+			sb.append( ") t(k,v)" );
+		}
+		else {
+			sb.append( "select '" );
+			sb.append( Dialect.TRUE_STRING_VALUES[0] );
+			sb.append( "' k," );
+			sb.append( trueValue );
+			sb.append( " v" );
+			sb.append( getFromDualForSelectOnly() );
+			for ( int i = 1; i < Dialect.TRUE_STRING_VALUES.length; i++ ) {
+				sb.append( " union all select '" );
+				sb.append( Dialect.TRUE_STRING_VALUES[i] );
+				sb.append( "'," );
+				sb.append( trueValue );
+				sb.append( getFromDualForSelectOnly() );
+			}
+			for ( String falseStringValue : Dialect.FALSE_STRING_VALUES ) {
+				sb.append( " union all select '" );
+				sb.append( falseStringValue );
+				sb.append( "'," );
+				sb.append( falseValue );
+				sb.append( getFromDualForSelectOnly() );
+			}
+			sb.append( ") t" );
+		}
+		sb.append( " on " );
+		sb.append( getLowercaseFunction() );
+		sb.append( "(?1)=t.k where t.v is null or v.x=t.v)" );
+		return sb.toString();
+	}
+
+	protected String buildStringToBooleanCastDecode(String trueValue, String falseValue) {
+		final boolean supportsValuesList = supportsValuesList();
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "(select v.x from (" );
+		if ( supportsValuesList ) {
+			sb.append( "values (" );
+			sb.append( trueValue );
+			sb.append( "),(" );
+			sb.append( falseValue );
+			sb.append( ")) v(x)" );
+		}
+		else {
+			sb.append( "select " );
+			sb.append( trueValue );
+			sb.append( " x");
+			sb.append( getFromDualForSelectOnly() );
+			sb.append(" union all select " );
+			sb.append( falseValue );
+			sb.append( getFromDualForSelectOnly() );
+			sb.append( ") v" );
+		}
+		sb.append( ", (" );
+		if ( supportsValuesList ) {
+			sb.append( "values (" );
+			sb.append( buildStringToBooleanDecode( trueValue, falseValue ) );
+			sb.append( ")) t(v)" );
+		}
+		else {
+			sb.append( "select " );
+			sb.append( buildStringToBooleanDecode( trueValue, falseValue ) );
+			sb.append( " v");
+			sb.append( getFromDualForSelectOnly() );
+			sb.append(") t" );
+		}
+		sb.append( " where t.v is null or v.x=t.v)" );
+		return sb.toString();
+	}
+
+	protected String buildStringToBooleanDecode(String trueValue, String falseValue) {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "decode(" );
+		sb.append( getLowercaseFunction() );
+		sb.append( "(?1)" );
+		for ( String trueStringValue : TRUE_STRING_VALUES ) {
+			sb.append( ",'" );
+			sb.append( trueStringValue );
+			sb.append( "'," );
+			sb.append( trueValue );
+		}
+		for ( String falseStringValue : FALSE_STRING_VALUES ) {
+			sb.append( ",'" );
+			sb.append( falseStringValue );
+			sb.append( "'," );
+			sb.append( falseValue );
+		}
+		sb.append( ",null)" );
+		return sb.toString();
+	}
+
+	/**
+	 * Returns a table expression that has one row.
+	 *
+	 * @return the SQL equivalent to Oracle's {@code dual}.
+	 */
+	public String getDual() {
+		return "(values(0))";
+	}
+
+	public String getFromDualForSelectOnly() {
+		return "";
 	}
 
 	/**

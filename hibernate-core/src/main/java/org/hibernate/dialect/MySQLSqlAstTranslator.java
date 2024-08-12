@@ -444,11 +444,6 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
-	protected String getDual() {
-		return "dual";
-	}
-
-	@Override
 	public MySQLDialect getDialect() {
 		return (MySQLDialect) DialectDelegateWrapper.extractRealDialect( super.getDialect() );
 	}

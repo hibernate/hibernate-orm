@@ -239,14 +239,4 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
 		return false;
 	}
-
-	@Override
-	protected String getDual() {
-		return "sys.dummy";
-	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return " from " + getDual();
-	}
 }

@@ -139,17 +139,6 @@ public class IngresSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	@Override
-	protected String getDual() {
-		return "(select 0)";
-	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		//this is only necessary if the query has a where clause
-		return " from " + getDual() + " dual";
-	}
-
-	@Override
 	protected boolean needsRowsToSkip() {
 		return !supportsOffsetFetchClause();
 	}

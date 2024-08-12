@@ -370,11 +370,6 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
-	protected String getDual() {
-		return "dual";
-	}
-
-	@Override
 	public MariaDBDialect getDialect() {
 		return this.dialect;
 	}

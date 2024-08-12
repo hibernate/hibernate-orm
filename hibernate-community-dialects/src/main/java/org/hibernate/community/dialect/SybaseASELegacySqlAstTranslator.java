@@ -530,11 +530,6 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 		return false;
 	}
 
-	@Override
-	protected String getDual() {
-		return "(select 1 c1)";
-	}
-
 	private boolean supportsTopClause() {
 		return getDialect().getVersion().isSameOrAfter( 12, 5 );
 	}

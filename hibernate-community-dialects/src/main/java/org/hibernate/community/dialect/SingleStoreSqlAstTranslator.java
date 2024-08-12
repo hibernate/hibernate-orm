@@ -438,11 +438,6 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	protected String getDual() {
-		return "dual";
-	}
-
-	@Override
 	public SingleStoreDialect getDialect() {
 		return this.dialect;
 	}

@@ -92,14 +92,4 @@ public class MaxDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
 		return false;
 	}
-
-	@Override
-	protected String getDual() {
-		return "dual";
-	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return " from " + getDual();
-	}
 }

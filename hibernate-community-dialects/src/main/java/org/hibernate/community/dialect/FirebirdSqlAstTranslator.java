@@ -262,16 +262,6 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		return false;
 	}
 
-	@Override
-	protected String getDual() {
-		return "rdb$database";
-	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return " from " + getDual();
-	}
-
 	private boolean supportsOffsetFetchClause() {
 		return getDialect().getVersion().isSameOrAfter( 3 );
 	}

@@ -215,4 +215,14 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 		return TopLimitHandler.INSTANCE;
 	}
 
+	@Override
+	public String getDual() {
+		return "sys.dummy";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from " + getDual();
+	}
+
 }

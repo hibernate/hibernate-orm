@@ -7,6 +7,9 @@
 package org.hibernate.orm.test.query.hql;
 
 import org.hamcrest.Matchers;
+
+import org.hibernate.HibernateException;
+import org.hibernate.JDBCException;
 import org.hibernate.QueryException;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.CockroachDialect;
@@ -23,6 +26,8 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
+import org.hibernate.sql.exec.ExecutionException;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -31,6 +36,7 @@ import org.hibernate.testing.orm.domain.gambit.EntityOfMaps;
 import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -66,6 +72,7 @@ import static org.hamcrest.Matchers.isOneOf;
 import static org.hibernate.testing.orm.domain.gambit.EntityOfBasics.Gender.FEMALE;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -1028,6 +1035,44 @@ public class FunctionTests {
 					assertThat( session.createQuery("select cast('F' as TrueFalse)", Boolean.class).getSingleResult(), is(false) );
 				}
 		);
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-18447")
+	public void testCastStringToBoolean(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			assertThat( session.createQuery("select cast('1' as Boolean)", Boolean.class).getSingleResult(), is(true) );
+			assertThat( session.createQuery("select cast('0' as Boolean)", Boolean.class).getSingleResult(), is(false) );
+			assertThat( session.createQuery("select cast('y' as Boolean)", Boolean.class).getSingleResult(), is(true) );
+			assertThat( session.createQuery("select cast('n' as Boolean)", Boolean.class).getSingleResult(), is(false) );
+			assertThat( session.createQuery("select cast('Y' as Boolean)", Boolean.class).getSingleResult(), is(true) );
+			assertThat( session.createQuery("select cast('N' as Boolean)", Boolean.class).getSingleResult(), is(false) );
+			assertThat( session.createQuery("select cast('t' as Boolean)", Boolean.class).getSingleResult(), is(true) );
+			assertThat( session.createQuery("select cast('f' as Boolean)", Boolean.class).getSingleResult(), is(false) );
+			assertThat( session.createQuery("select cast('T' as Boolean)", Boolean.class).getSingleResult(), is(true) );
+			assertThat( session.createQuery("select cast('F' as Boolean)", Boolean.class).getSingleResult(), is(false) );
+			assertThat( session.createQuery("select cast('true' as Boolean)", Boolean.class).getSingleResult(), is(true) );
+			assertThat( session.createQuery("select cast('false' as Boolean)", Boolean.class).getSingleResult(), is(false) );
+			assertThat( session.createQuery("select cast('TRUE' as Boolean)", Boolean.class).getSingleResult(), is(true) );
+			assertThat( session.createQuery("select cast('FALSE' as Boolean)", Boolean.class).getSingleResult(), is(false) );
+		});
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-18447")
+	public void testCastInvalidStringToBoolean(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			try {
+				session.createQuery( "select cast('bla' as Boolean)", Boolean.class ).getSingleResult();
+				fail("Casting invalid boolean string should fail");
+			}
+			catch ( HibernateException e ) {
+				// Expected
+				if ( !( e instanceof JDBCException || e instanceof ExecutionException ) ) {
+					throw e;
+				}
+			}
+		} );
 	}
 
 	@Test

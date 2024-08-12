@@ -335,11 +335,6 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		return false;
 	}
 
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return " from " + getDual();
-	}
-
 	private boolean supportsOffsetFetchClause() {
 		return true;
 	}

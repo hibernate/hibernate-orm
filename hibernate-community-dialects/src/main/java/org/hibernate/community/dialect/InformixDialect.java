@@ -744,4 +744,14 @@ public class InformixDialect extends Dialect {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
 		jdbcTypeRegistry.addDescriptor( Types.NCLOB, ClobJdbcType.DEFAULT );
 	}
+
+	@Override
+	public String getDual() {
+		return "(select 0 from systables where tabid=1)";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from " + getDual() + " dual";
+	}
 }

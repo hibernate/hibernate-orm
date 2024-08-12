@@ -15,10 +15,14 @@ import java.sql.NClob;
 /**
  * Contract for creating various LOB references.
  *
+ * @apiNote This class is not intended to be called directly by the application program.
+ *          Instead, use {@link org.hibernate.Session#getLobHelper()}.
+ *
  * @author Steve Ebersole
  * @author Gail Badner
  *
  * @see org.hibernate.type.descriptor.WrapperOptions#getLobCreator()
+ * @see org.hibernate.engine.jdbc.spi.JdbcServices#getLobCreator(LobCreationContext)
  * @see org.hibernate.LobHelper
  */
 public interface LobCreator {

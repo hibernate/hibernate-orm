@@ -386,11 +386,6 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		return getClauseStack().getCurrent() != Clause.WITHIN_GROUP || getDialect().getVersion().isSameOrAfter( 2 );
 	}
 
-	@Override
-	protected String getDual() {
-		return "dual";
-	}
-
 	private boolean supportsOffsetFetchClause() {
 		return getDialect().getVersion().isSameOrAfter( 1, 4, 195 );
 	}

@@ -8579,11 +8579,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * @return the SQL equivalent to Oracle's {@code dual}.
 	 */
 	protected String getDual() {
-		return "(values(0))";
+		return dialect.getDual();
 	}
 
 	protected String getFromDualForSelectOnly() {
-		return "";
+		return dialect.getFromDualForSelectOnly();
 	}
 
 	protected enum LockStrategy {

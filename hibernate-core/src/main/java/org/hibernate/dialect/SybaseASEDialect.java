@@ -710,4 +710,9 @@ public class SybaseASEDialect extends SybaseDialect {
 	public LimitHandler getLimitHandler() {
 		return new TopLimitHandler(false);
 	}
+
+	@Override
+	public String getDual() {
+		return "(select 1 c1)";
+	}
 }

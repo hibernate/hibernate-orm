@@ -341,4 +341,9 @@ public class MimerSQLDialect extends Dialect {
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return MimerSQLIdentityColumnSupport.INSTANCE;
 	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from " + getDual();
+	}
 }

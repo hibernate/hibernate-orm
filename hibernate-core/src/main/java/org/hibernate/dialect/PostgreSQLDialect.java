@@ -56,6 +56,7 @@ import org.hibernate.procedure.internal.PostgreSQLCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
@@ -434,6 +435,16 @@ public class PostgreSQLDialect extends Dialect {
 			case DAY_OF_WEEK -> "(" + super.extractPattern( unit ) + "+1)";
 			default -> super.extractPattern(unit);
 		};
+	}
+
+	@Override
+	public String castPattern(CastType from, CastType to) {
+		if ( from == CastType.STRING && to == CastType.BOOLEAN ) {
+			return "cast(?1 as ?2)";
+		}
+		else {
+			return super.castPattern( from, to );
+		}
 	}
 
 	/**

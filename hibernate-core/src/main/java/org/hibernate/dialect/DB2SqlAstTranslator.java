@@ -586,16 +586,6 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	}
 
 	@Override
-	protected String getDual() {
-		return "sysibm.dual";
-	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return " from " + getDual();
-	}
-
-	@Override
 	protected void visitReturningColumns(List<ColumnReference> returningColumns) {
 		// For DB2 we use #renderReturningClause to render a wrapper around the DML statement
 	}

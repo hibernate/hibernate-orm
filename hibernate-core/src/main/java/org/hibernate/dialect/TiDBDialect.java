@@ -187,4 +187,9 @@ public class TiDBDialect extends MySQLDialect {
 				? "timestampadd(microsecond,?2*1e6,?3)"
 				: super.timestampaddPattern(unit, temporalType, intervalType);
 	}
+
+	@Override
+	public String getDual() {
+		return "dual";
+	}
 }

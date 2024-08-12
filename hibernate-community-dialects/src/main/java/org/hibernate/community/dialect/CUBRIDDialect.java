@@ -515,4 +515,16 @@ public class CUBRIDDialect extends Dialect {
 		sqlAppender.append( diffUnit.conversionFactor( toUnit, this ) );
 	}
 
+	@Override
+	public String getDual() {
+		//TODO: is this really needed?
+		//TODO: would "from table({0})" be better?
+		return "db_root";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from " + getDual();
+	}
+
 }

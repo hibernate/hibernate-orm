@@ -358,11 +358,6 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 		return true;
 	}
 
-	@Override
-	protected String getDual() {
-		return "dual";
-	}
-
 	private boolean supportsOffsetFetchClause() {
 		return true;
 	}

@@ -1516,4 +1516,9 @@ public class MySQLDialect extends Dialect {
 	public boolean supportsBindingNullSqlTypeForSetNull() {
 		return true;
 	}
+
+	@Override
+	public String getDual() {
+		return "dual";
+	}
 }

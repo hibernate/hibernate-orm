@@ -262,4 +262,14 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 
 		return super.buildIdentifierHelper( builder, dbMetaData );
 	}
+
+	@Override
+	public String getDual() {
+		return "dual";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return getVersion().isBefore( 10, 4 ) ? ( " from " + getDual() ) : "";
+	}
 }

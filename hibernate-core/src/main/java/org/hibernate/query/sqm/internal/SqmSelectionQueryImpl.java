@@ -63,6 +63,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.sql.results.spi.ResultsConsumer;
 import org.hibernate.sql.results.spi.SingleResultConsumer;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
@@ -276,15 +277,15 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 				return Object[].class;
 			}
 			else {
-				final SqmSelection<?> selection = selections.get(0);
+				final SqmSelection<?> selection = selections.get( 0 );
 				if ( isSelectionAssignableToResultType( selection, expectedResultType ) ) {
-					return selection.getNodeJavaType().getJavaTypeClass();
+					final JavaType<?> nodeJavaType = selection.getNodeJavaType();
+					if ( nodeJavaType != null ) {
+						return nodeJavaType.getJavaTypeClass();
+					}
 				}
-				else {
-					// let's assume there's some
-					// way to instantiate it
-					return expectedResultType;
-				}
+				// let's assume there's some way to instantiate it
+				return expectedResultType;
 			}
 		}
 		else if ( expectedResultType != null ) {

@@ -50,7 +50,7 @@ public abstract class AbstractRowReader implements RowReader {
 
 	// cache map for looking up EntityReferenceInitializer by EntityReference to help with resolving
 	// bidirectional EntityReference and fetches.
-	private Map<EntityReference,EntityReferenceInitializer> entityInitializerByEntityReference;
+	private volatile Map<EntityReference,EntityReferenceInitializer> entityInitializerByEntityReference;
 
 	public AbstractRowReader(ReaderCollector readerCollector) {
 		this.entityReferenceInitializers = readerCollector.getEntityReferenceInitializers().toArray( EMPTY_REFERENCE_INITIALIZERS );
@@ -149,13 +149,14 @@ public abstract class AbstractRowReader implements RowReader {
 
 	private EntityReferenceInitializer getInitializerByEntityReference(EntityReference targetEntityReference) {
 		if ( entityInitializerByEntityReference == null ) {
-			entityInitializerByEntityReference = new HashMap<>( entityReferenceInitializers.length );
+			Map<EntityReference,EntityReferenceInitializer> entityInitializerByEntityReference = new HashMap<>( entityReferenceInitializers.length );
 			for ( EntityReferenceInitializer entityReferenceInitializer : entityReferenceInitializers ) {
 				entityInitializerByEntityReference.put(
 						entityReferenceInitializer.getEntityReference(),
 						entityReferenceInitializer
 				);
 			}
+			this.entityInitializerByEntityReference = entityInitializerByEntityReference;
 		}
 		return entityInitializerByEntityReference.get(
 				targetEntityReference

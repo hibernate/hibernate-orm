@@ -46,6 +46,7 @@ import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Order;
@@ -853,9 +854,15 @@ public class SqmUtil {
 	}
 
 	public static boolean isSelectionAssignableToResultType(SqmSelection<?> selection, Class<?> expectedResultType) {
-		if ( expectedResultType == null
-				|| selection != null && selection.getSelectableNode() instanceof SqmParameter ) {
+		if ( expectedResultType == null ) {
 			return true;
+		}
+		else if ( selection != null && selection.getSelectableNode() instanceof SqmParameter<?> ) {
+			final SqmParameter<?> sqmParameter = (SqmParameter<?>) selection.getSelectableNode();
+			final Class<?> anticipatedClass = sqmParameter.getAnticipatedType() != null ?
+					sqmParameter.getAnticipatedType().getBindableJavaType() :
+					null;
+			return anticipatedClass != null && expectedResultType.isAssignableFrom( anticipatedClass );
 		}
 		else if ( selection == null
 				|| !isHqlTuple( selection ) && selection.getSelectableNode().isCompoundSelection() ) {

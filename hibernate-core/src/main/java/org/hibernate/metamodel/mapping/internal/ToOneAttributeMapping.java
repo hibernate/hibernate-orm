@@ -1332,14 +1332,7 @@ public class ToOneAttributeMapping
 			// We get here is this is a lazy collection initialization for which we know the owner is in the PC
 			// So we create a delayed fetch, as we are sure to find the entity in the PC
 			final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
-			final NavigablePath realParent;
-			if ( CollectionPart.Nature.fromNameExact( parentNavigablePath.getLocalName() ) != null ) {
-				realParent = parentNavigablePath.getParent();
-			}
-			else {
-				realParent = parentNavigablePath;
-			}
-			final TableGroup parentTableGroup = fromClauseAccess.getTableGroup( realParent );
+			final TableGroup parentTableGroup = fromClauseAccess.getTableGroup( parentNavigablePath );
 			final DomainResult<?> domainResult;
 			if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
 				domainResult = foreignKeyDescriptor.createKeyDomainResult(

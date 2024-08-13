@@ -19,6 +19,7 @@ public class System {
 	@Basic
 	public String name;
 	@YesNo
+	@Foo
 	public boolean active;
 
 	private System() {

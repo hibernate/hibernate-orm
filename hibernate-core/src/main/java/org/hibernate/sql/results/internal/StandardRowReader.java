@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.sql.results.LoadingLogger;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerData;
@@ -23,8 +22,6 @@ import org.hibernate.sql.results.spi.RowTransformer;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-
-import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
@@ -44,8 +41,6 @@ public class StandardRowReader<T> implements RowReader<T> {
 
 	private final ComponentType componentType;
 	private final Class<?> resultElementClass;
-
-	private static final Logger LOGGER = LoadingLogger.LOGGER;
 
 	public StandardRowReader(
 			JdbcValuesMappingResolution jdbcValuesMappingResolution,

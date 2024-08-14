@@ -153,8 +153,8 @@ public class GeneratedValuesProcessor {
 				assert results.size() == 1;
 				setEntityAttributes( entity, state, results.get( 0 ) );
 			}
-			else {
-				castNonNull( generatedValues );
+			else if ( generatedValues != null ) {
+				// can be null when an update action resulted in a no-op (e.g. only changes to unowned association)
 				final List<Object> results = generatedValues.getGeneratedValues( generatedValuesToSelect );
 				setEntityAttributes( entity, state, results.toArray( new Object[0] ) );
 			}

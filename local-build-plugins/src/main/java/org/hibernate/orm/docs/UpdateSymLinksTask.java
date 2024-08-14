@@ -107,11 +107,11 @@ public class UpdateSymLinksTask extends DefaultTask {
 
 		try (FileWriter commandFileWriter = new FileWriter( commandFile )) {
 			commandFileWriter.write( "cd " + serverBaseDir + "/stable\n" );
-			commandFileWriter.write( "rm orm\n" );
+			commandFileWriter.write( "-rm orm\n" );
 			commandFileWriter.write( String.format( Locale.ROOT, "ln -s ../orm/%s orm\n", releaseName ) );
 
 			commandFileWriter.write( "cd " + serverBaseDir + "/orm\n" );
-			commandFileWriter.write( "rm current\n" );
+			commandFileWriter.write( "-rm current\n" );
 			commandFileWriter.write( String.format( Locale.ROOT, "ln -s %s current\n", releaseName ) );
 
 			commandFileWriter.flush();

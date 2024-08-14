@@ -7,6 +7,7 @@
 package org.hibernate.orm;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Major/family version component pair
@@ -43,6 +44,23 @@ public class ReleaseFamilyIdentifier implements Comparable<ReleaseFamilyIdentifi
 
 	public String toExternalForm() {
 		return majorVersion + "." + familyVersion;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		ReleaseFamilyIdentifier that = (ReleaseFamilyIdentifier) o;
+		return majorVersion == that.majorVersion && familyVersion == that.familyVersion;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( majorVersion, familyVersion );
 	}
 
 	public boolean newerThan(ReleaseFamilyIdentifier other) {

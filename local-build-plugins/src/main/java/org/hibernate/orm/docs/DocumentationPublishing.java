@@ -25,12 +25,21 @@ import org.hibernate.orm.ReleaseFamilyIdentifier;
 public class DocumentationPublishing {
 	public static final String DSL_NAME = "documentationPublishing";
 
+	public static final String RSYNC_SERVER = "filemgmt-prod-sync.jboss.org";
+	public static final String SFTP_SERVER = "filemgmt-prod.jboss.org";
+
+	public static final String DOC_SERVER_BASE_DIR = "/docs_htdocs/hibernate";
+
+	public static final String DESCRIPTOR_FILE = "doc-pub/orm.json";
+
 	private final Project project;
 
 	private final DirectoryProperty stagingDirectory;
-	private final Property<String> docServerUrl;
 
-	private final Property<String> docDescriptorUploadUrl;
+	private final Property<String> rsyncDocServer;
+	private final Property<String> sftpDocServer;
+	private final Property<String> serverBaseDir;
+
 	private final RegularFileProperty updatedJsonFile;
 
 	private final ReleaseFamilyIdentifier releaseFamilyIdentifier;
@@ -43,18 +52,22 @@ public class DocumentationPublishing {
 				.directoryProperty()
 				.convention( project.getLayout().getBuildDirectory().dir( "documentation" ) );
 
-		docServerUrl = project.getObjects()
-				.property( String.class )
-				.convention( "filemgmt-prod-sync.jboss.org:/docs_htdocs/hibernate/orm" );
 
-		docDescriptorUploadUrl = project.getObjects()
+		rsyncDocServer = project.getObjects()
 				.property( String.class )
-				.convention( "filemgmt-prod-sync.jboss.org:/docs_htdocs/hibernate/_outdated-content/orm.json" );
+				.convention( RSYNC_SERVER );
 
+		sftpDocServer = project.getObjects()
+				.property( String.class )
+				.convention( SFTP_SERVER );
+
+		serverBaseDir = project.getObjects()
+				.property( String.class )
+				.convention( DOC_SERVER_BASE_DIR );
 
 		updatedJsonFile = project.getObjects()
 				.fileProperty()
-				.convention( project.getLayout().getBuildDirectory().file( "doc-pub/orm.json" ) );
+				.convention( project.getLayout().getBuildDirectory().file( DESCRIPTOR_FILE ) );
 
 		releaseFamilyIdentifier = ReleaseFamilyIdentifier.parse( project.getVersion().toString() );
 	}
@@ -63,24 +76,22 @@ public class DocumentationPublishing {
 		return releaseFamilyIdentifier;
 	}
 
-	public Property<String> getDocServerUrl() {
-		return docServerUrl;
+	public Property<String> getRsyncDocServer() {
+		return rsyncDocServer;
+	}
+
+	public Property<String> getSftpDocServer() {
+		return sftpDocServer;
+	}
+
+	public Property<String> getServerBaseDir() {
+		return serverBaseDir;
 	}
 
 	public DirectoryProperty getStagingDirectory() {
 		return stagingDirectory;
 	}
 
-	/**
-	 * Where to upload the {@link #getUpdatedJsonFile() documentation descriptor}
-	 */
-	public Property<String> getDocDescriptorUploadUrl() {
-		return docDescriptorUploadUrl;
-	}
-
-	/**
-	 * THe ORM documentation descriptor
-	 */
 	public Provider<RegularFile> getUpdatedJsonFile() {
 		return updatedJsonFile;
 	}

@@ -64,8 +64,9 @@ public abstract class PublishTask extends DefaultTask {
 		getProject().getLogger().lifecycle( "Uploading documentation `{}` -> `{}`", stagingDirPath, url );
 		final ExecResult result = getProject().exec( (exec) -> {
 			exec.executable( "rsync" );
-			exec.args("--port=2222", "-avz", "--links", "--delete", stagingDirPathContent, url );
+			exec.args("-avz", "--delete", stagingDirPathContent, url );
 		} );
 		getProject().getLogger().lifecycle( "Done uploading documentation - {}", result.getExitValue() == 0 ? "success" : "failure" );
+		setDidWork( true );
 	}
 }

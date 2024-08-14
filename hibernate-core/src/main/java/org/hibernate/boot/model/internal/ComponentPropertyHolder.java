@@ -32,8 +32,6 @@ import jakarta.persistence.JoinTable;
 
 import static org.hibernate.boot.model.internal.ClassPropertyHolder.addPropertyToMappedSuperclass;
 import static org.hibernate.boot.model.internal.ClassPropertyHolder.handleGenericComponentProperty;
-import static org.hibernate.boot.model.internal.HCANNHelper.hasAnnotation;
-import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.qualifyConditionally;
 import static org.hibernate.spi.NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
@@ -70,7 +68,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	private final Component component;
 	private final boolean isOrWithinEmbeddedId;
 	private final boolean isWithinElementCollection;
-	private final Map<XClass, InheritanceState> inheritanceStatePerClass;
+	private final Map<ClassDetails, InheritanceState> inheritanceStatePerClass;
 
 	private final String embeddedAttributeName;
 	private final Map<String,AttributeConversionInfo> attributeConversionInfoMap;
@@ -81,7 +79,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			PropertyData inferredData,
 			PropertyHolder parent,
 			MetadataBuildingContext context,
-			Map<XClass, InheritanceState> inheritanceStatePerClass) {
+			Map<ClassDetails, InheritanceState> inheritanceStatePerClass) {
 		super( path, parent, inferredData.getPropertyType().determineRawClass(), context );
 		final MemberDetails embeddedMemberDetails = inferredData.getAttributeMember();
 		setCurrentProperty( embeddedMemberDetails );
@@ -292,11 +290,11 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 
 	@Override
 	public void addProperty(Property prop, MemberDetails attributeMemberDetails, ClassDetails declaringClass) {
-		handleGenericComponentProperty( prop, getContext() );
+		handleGenericComponentProperty( prop, attributeMemberDetails, getContext() );
 		if ( declaringClass != null ) {
 			final InheritanceState inheritanceState = inheritanceStatePerClass.get( declaringClass );
 			if ( inheritanceState != null && inheritanceState.isEmbeddableSuperclass() ) {
-				addPropertyToMappedSuperclass( prop, declaringClass, getContext() );
+				addPropertyToMappedSuperclass( prop, attributeMemberDetails, declaringClass, getContext() );
 			}
 		}
 		component.addProperty( prop, declaringClass );

@@ -109,6 +109,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, SqmFunctionDescriptor> sqlFunctionMap;
 	private final Database database;
 
+	// note that this "internal" constructor is called by the Quarkus extension!
 	public MetadataImpl(
 			UUID uuid,
 			MetadataBuildingOptions metadataBuildingOptions,

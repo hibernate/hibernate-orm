@@ -271,9 +271,13 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		}
 	}
 
-	private void addPropertyToMappedSuperclass(Property prop, MemberDetails memberDetails, ClassDetails declaringClass) {
-		final MappedSuperclass superclass = getContext().getMetadataCollector().getMappedSuperclass( declaringClass.toJavaClass() );
-		prepareActualProperty( prop, memberDetails, true, getContext(), superclass::addDeclaredProperty );
+	public static void addPropertyToMappedSuperclass(
+			Property prop,
+			MemberDetails memberDetails,
+			ClassDetails declaringClass,
+			MetadataBuildingContext context) {
+		final MappedSuperclass superclass = context.getMetadataCollector().getMappedSuperclass( declaringClass.toJavaClass() );
+		prepareActualProperty( prop, memberDetails, true, context, superclass::addDeclaredProperty );
 	}
 
 	static void prepareActualProperty(

@@ -280,8 +280,8 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		return buildConcreteQueryPlan( sqmStatement, null, null, options );
 	}
 
-	protected void applyOptions(NamedSqmQueryMemento memento) {
-		applyOptions( (NamedQueryMemento) memento );
+	protected void applyOptions(NamedSqmQueryMemento<?> memento) {
+		applyOptions( (NamedQueryMemento<?>) memento );
 
 		if ( memento.getFirstResult() != null ) {
 			setFirstResult( memento.getFirstResult() );

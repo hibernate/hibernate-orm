@@ -55,7 +55,7 @@ public final class PropertyHolderBuilder {
 			PropertyData inferredData,
 			PropertyHolder parent,
 			MetadataBuildingContext context,
-			Map<XClass, InheritanceState> inheritanceStatePerClass) {
+			Map<ClassDetails, InheritanceState> inheritanceStatePerClass) {
 		return new ComponentPropertyHolder( component, path, inferredData, parent, context, inheritanceStatePerClass );
 	}
 

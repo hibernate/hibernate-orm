@@ -117,7 +117,9 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 		try {
 			// First we suspend any current JTA transaction
 			final Transaction surroundingTransaction = transactionManager.suspend();
-			LOG.debugf( "Surrounding JTA transaction suspended [%s]", surroundingTransaction );
+			if ( surroundingTransaction != null ) {
+				LOG.debugf( "Surrounding JTA transaction suspended [%s]", surroundingTransaction );
+			}
 
 			try {
 				return callable.call();
@@ -127,8 +129,10 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 			}
 			finally {
 				try {
-					transactionManager.resume( surroundingTransaction );
-					LOG.debugf( "Surrounding JTA transaction resumed [%s]", surroundingTransaction );
+					if ( surroundingTransaction != null ) {
+						transactionManager.resume( surroundingTransaction );
+						LOG.debugf( "Surrounding JTA transaction resumed [%s]", surroundingTransaction );
+					}
 				}
 				catch ( Throwable t2 ) {
 					// if the actually work had an error use that, otherwise error based on t

@@ -661,6 +661,11 @@ public class InformixDialect extends Dialect {
 		appender.appendSql( datetimeFormat( format ).result() );
 	}
 
+	@Override
+	public boolean supportsStandardCurrentTimestampFunction() {
+		return false;
+	}
+
 	public static Replacer datetimeFormat(String format) {
 		return new Replacer( format, "'", "" )
 				.replace("%", "%%")

@@ -8,7 +8,6 @@ package org.hibernate.orm.test.mapping.generated;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.lang.reflect.Member;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -31,19 +30,17 @@ import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.generator.AnnotationBasedGenerator;
 import org.hibernate.generator.EventType;
-import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -51,32 +48,24 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-@SkipForDialect(value = SybaseDialect.class, comment = "CURRENT_TIMESTAMP not supported as default value in Sybase")
-@SkipForDialect(value = MySQLDialect.class, comment = "See HHH-10196")
-@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-public class DefaultGeneratedValueIdentityTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { TheEntity.class };
-	}
-
-	@Override
-	protected boolean isCleanupTestDataUsingBulkDelete() {
-		return true;
-	}
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsIdentityColumns.class)
+@RequiresDialectFeature( feature = DialectFeatureChecks.CurrentTimestampHasMicrosecondPrecision.class )
+@RequiresDialectFeature( feature = DialectFeatureChecks.UsesStandardCurrentTimestampFunction.class )
+@DomainModel( annotatedClasses = DefaultGeneratedValueIdentityTest.TheEntity.class )
+@SessionFactory
+@SuppressWarnings("JUnitMalformedDeclaration")
+public class DefaultGeneratedValueIdentityTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12671" )
-	public void testGenerationWithIdentityInsert() {
+	@JiraKey( "HHH-12671" )
+	public void testGenerationWithIdentityInsert(SessionFactoryScope scope) {
 		final TheEntity theEntity = new TheEntity();
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( (session) -> {
 			assertNull( theEntity.createdDate );
 			assertNull( theEntity.alwaysDate );
 			assertNull( theEntity.vmCreatedDate );
@@ -121,7 +110,7 @@ public class DefaultGeneratedValueIdentityTest extends BaseCoreFunctionalTestCas
 		assertNotNull( theEntity.alwaysDate );
 		assertEquals( "Bob", theEntity.name );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( (session) -> {
 			TheEntity _theEntity = session.get( TheEntity.class, theEntity.id );
 			assertNotNull( _theEntity.createdDate );
 			assertNotNull( _theEntity.alwaysDate );
@@ -145,8 +134,13 @@ public class DefaultGeneratedValueIdentityTest extends BaseCoreFunctionalTestCas
 		} );
 	}
 
+	@AfterEach
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.inTransaction( (s) -> s.createQuery( "delete TheEntity" ).executeUpdate() );
+	}
+
 	@Entity( name = "TheEntity" )
-	private static class TheEntity {
+	public static class TheEntity {
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		private Integer id;

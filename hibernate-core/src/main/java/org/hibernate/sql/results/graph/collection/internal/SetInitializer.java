@@ -97,12 +97,7 @@ public class SetInitializer extends AbstractImmediateCollectionInitializer<Abstr
 	protected void resolveInstanceSubInitializers(ImmediateCollectionInitializerData data) {
 		final Initializer<?> initializer = elementAssembler.getInitializer();
 		if ( initializer != null ) {
-			final RowProcessingState rowProcessingState = data.getRowProcessingState();
-			final PersistentSet<?> set = getCollectionInstance( data );
-			assert set != null;
-			for ( Object element : set ) {
-				initializer.resolveInstance( element, rowProcessingState );
-			}
+			initializer.resolveKey( data.getRowProcessingState() );
 		}
 	}
 

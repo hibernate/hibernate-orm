@@ -25,15 +25,14 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.generator.EventType;
 
+
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -47,9 +46,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Steve Ebersole
  */
-@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "CURRENT_TIMESTAMP not supported as default value in Sybase")
-@SkipForDialect(dialectClass = MySQLDialect.class, reason = "See HHH-10196")
-@SkipForDialect(dialectClass = TiDBDialect.class, reason = "See HHH-10196")
+
+@RequiresDialectFeature( feature = DialectFeatureChecks.CurrentTimestampHasMicrosecondPrecision.class )
+@RequiresDialectFeature( feature = DialectFeatureChecks.UsesStandardCurrentTimestampFunction.class )
 @DomainModel( annotatedClasses = ComplexValueGenerationTests.AuditedEntity.class )
 @SessionFactory
 @SuppressWarnings("JUnitMalformedDeclaration")

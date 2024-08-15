@@ -12,15 +12,14 @@ import java.util.Date;
 
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Generated;
-import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.query.Query;
 import org.hibernate.type.StandardBasicTypes;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.GeneratedValue;
@@ -43,8 +42,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author Gail Badner
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "CURRENT_TIMESTAMP not supported as default value in MySQL")
-@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "CURRENT_TIMESTAMP not supported as default value in Sybase")
+@RequiresDialectFeature(feature = DialectFeatureChecks.CurrentTimestampHasMicrosecondPrecision.class, comment = "Without this, we might not see an update to the timestamp")
+@RequiresDialectFeature( feature = DialectFeatureChecks.UsesStandardCurrentTimestampFunction.class )
 @DomainModel(
 		annotatedClasses = TimestampPropertyTest.Entity.class
 )

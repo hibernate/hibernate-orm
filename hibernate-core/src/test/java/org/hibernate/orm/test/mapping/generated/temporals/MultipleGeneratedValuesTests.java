@@ -37,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DomainModel( annotatedClasses = MultipleGeneratedValuesTests.GeneratedInstantEntity.class )
 @SessionFactory
 @RequiresDialectFeature(feature = DialectFeatureChecks.CurrentTimestampHasMicrosecondPrecision.class, comment = "Without this, we might not see an update to the timestamp")
-@SkipForDialect( dialectClass = SybaseASEDialect.class, matchSubTypes = true, reason = "CURRENT_TIMESTAMP not supported in insert/update in Sybase ASE. Also see https://groups.google.com/g/comp.databases.sybase/c/j-RxPnF3img" )
+@RequiresDialectFeature( feature = DialectFeatureChecks.UsesStandardCurrentTimestampFunction.class )
 @SkipForDialect( dialectClass = SQLServerDialect.class, matchSubTypes = true, reason = "CURRENT_TIMESTAMP has millisecond precision" )
 public class MultipleGeneratedValuesTests {
 	@Test

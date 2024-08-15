@@ -13,13 +13,11 @@ import java.util.EnumSet;
 
 import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 import jakarta.persistence.Column;
@@ -32,7 +30,6 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 /**
  * @author Vlad Mihalcea
  */
-@SkipForDialect(value = SybaseDialect.class, comment = "Sybase doesn't seem to support current_timestamp")
 public class DatabaseValueGenerationTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

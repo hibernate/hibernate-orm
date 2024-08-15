@@ -50,8 +50,9 @@ public interface NaturalIdMapping extends VirtualModelPart {
 	List<SingularAttributeMapping> getNaturalIdAttributes();
 
 	/**
-	 * Whether the natural-id is immutable.  This is the same as saying that none of
-	 * the attributes are mutable
+	 * Whether the natural-id is mutable.  
+	 * 
+	 * @apiNote For compound natural-ids, this is true if any of the attributes are mutable.
 	 */
 	boolean isMutable();
 

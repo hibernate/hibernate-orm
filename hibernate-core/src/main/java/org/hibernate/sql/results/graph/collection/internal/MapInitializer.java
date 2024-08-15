@@ -121,17 +121,27 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer<Abstr
 	protected void resolveInstanceSubInitializers(ImmediateCollectionInitializerData data) {
 		final Initializer<?> keyInitializer = mapKeyAssembler.getInitializer();
 		final Initializer<?> valueInitializer = mapValueAssembler.getInitializer();
-		if ( keyInitializer != null || valueInitializer != null ) {
-			final RowProcessingState rowProcessingState = data.getRowProcessingState();
-			final PersistentMap<?, ?> map = getCollectionInstance( data );
-			assert map != null;
-			for ( Map.Entry<?, ?> entry : map.entrySet() ) {
-				if ( keyInitializer != null ) {
-					keyInitializer.resolveInstance( entry.getKey(), rowProcessingState );
-				}
-				if ( valueInitializer != null ) {
-					valueInitializer.resolveInstance( entry.getValue(), rowProcessingState );
-				}
+		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		if ( keyInitializer == null && valueInitializer != null ) {
+			// For now, we only support resolving the value initializer instance when keys have no initializer,
+			// though we could also support map keys with an initializer given that the initialized java type:
+			// * is an entity that uses only the primary key in equals/hashCode.
+			//   If the primary key type is an embeddable, the next condition must hold for that
+			// * or is an embeddable that has no initializers for fields being used in the equals/hashCode
+			//   which violate this same requirement (recursion)
+			final Object key = mapKeyAssembler.assemble( rowProcessingState );
+			if ( key != null ) {
+				final PersistentMap<?, ?> map = getCollectionInstance( data );
+				assert map != null;
+				valueInitializer.resolveInstance( map.get( key ), rowProcessingState );
+			}
+		}
+		else {
+			if ( keyInitializer != null ) {
+				keyInitializer.resolveKey( rowProcessingState );
+			}
+			if ( valueInitializer != null ) {
+				valueInitializer.resolveKey( rowProcessingState );
 			}
 		}
 	}

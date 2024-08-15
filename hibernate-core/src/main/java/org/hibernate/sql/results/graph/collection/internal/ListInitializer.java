@@ -123,10 +123,11 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer<Abst
 		final Initializer<?> initializer = elementAssembler.getInitializer();
 		if ( initializer != null ) {
 			final RowProcessingState rowProcessingState = data.getRowProcessingState();
-			final PersistentList<?> list = getCollectionInstance( data );
-			assert list != null;
-			for ( Object element : list ) {
-				initializer.resolveInstance( element, rowProcessingState );
+			final Integer index = listIndexAssembler.assemble( rowProcessingState );
+			if ( index != null ) {
+				final PersistentList<?> list = getCollectionInstance( data );
+				assert list != null;
+				initializer.resolveInstance( list.get( index ), rowProcessingState );
 			}
 		}
 	}

@@ -10,13 +10,11 @@ on:
   push:
     branches:
       - 'main'
-      - 'wip/7.0'
   # WARNING: Using pull_request_target to access secrets, but we check out the PR head commit.
   # See checkout action for details.
   pull_request_target:
     branches:
       - 'main'
-      - 'wip/7.0'
 
 
 permissions: {} # none

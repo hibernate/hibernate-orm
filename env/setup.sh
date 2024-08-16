@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SCRIPT_DIR=$(cd `dirname $0` && pwd)
-IMG_NAME=${NUODB_IMAGE:-"nuodb/nuodb-ce:latest"}
+IMG_NAME=${NUODB_IMAGE:-"nuodb/nuodb:5.1"}
 
 # Since we don't have sudo on the build servers, we need to use
 # docker container to run as original user, mount the directories

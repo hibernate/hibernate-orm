@@ -122,6 +122,7 @@ import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.LazyValue;
+import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -164,7 +165,6 @@ import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.AttributeMappingsMap;
-import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
@@ -265,7 +265,6 @@ import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
-import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -971,27 +970,25 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private boolean shouldUseShallowCacheLayout(CacheLayout entityQueryCacheLayout, SessionFactoryOptions options) {
-		final CacheLayout queryCacheLayout;
-		if ( entityQueryCacheLayout == null ) {
-			queryCacheLayout = options.getQueryCacheLayout();
-		}
-		else {
-			queryCacheLayout = entityQueryCacheLayout;
-		}
-		return queryCacheLayout == CacheLayout.SHALLOW || queryCacheLayout == CacheLayout.SHALLOW_WITH_DISCRIMINATOR
-				|| queryCacheLayout == CacheLayout.AUTO && ( canUseReferenceCacheEntries() || canReadFromCache() );
+	private static CacheLayout queryCacheLayout(CacheLayout entityQueryCacheLayout, SessionFactoryOptions options) {
+		return entityQueryCacheLayout == null ? options.getQueryCacheLayout() : entityQueryCacheLayout;
 	}
 
-	private boolean shouldStoreDiscriminatorInShallowQueryCacheLayout(CacheLayout entityQueryCacheLayout, SessionFactoryOptions options) {
-		final CacheLayout queryCacheLayout;
-		if ( entityQueryCacheLayout == null ) {
-			queryCacheLayout = options.getQueryCacheLayout();
+	private boolean shouldUseShallowCacheLayout(CacheLayout entityQueryCacheLayout, SessionFactoryOptions options) {
+		switch ( queryCacheLayout( entityQueryCacheLayout, options ) ) {
+			case FULL:
+				return false;
+			case AUTO:
+				return canUseReferenceCacheEntries()
+					|| canReadFromCache();
+			default:
+				return true;
 		}
-		else {
-			queryCacheLayout = entityQueryCacheLayout;
-		}
-		return queryCacheLayout == CacheLayout.SHALLOW_WITH_DISCRIMINATOR;
+	}
+
+	private static boolean shouldStoreDiscriminatorInShallowQueryCacheLayout(
+			CacheLayout entityQueryCacheLayout, SessionFactoryOptions options) {
+		return queryCacheLayout( entityQueryCacheLayout, options ) == CacheLayout.SHALLOW_WITH_DISCRIMINATOR;
 	}
 
 	@Override
@@ -1274,10 +1271,10 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Iterable<UniqueKeyEntry> uniqueKeyEntries() {
-		if ( this.uniqueKeyEntries == null ) {
-			this.uniqueKeyEntries = initUniqueKeyEntries( this );
+		if ( uniqueKeyEntries == null ) {
+			uniqueKeyEntries = initUniqueKeyEntries( this );
 		}
-		return this.uniqueKeyEntries;
+		return uniqueKeyEntries;
 	}
 
 	private static List<UniqueKeyEntry> initUniqueKeyEntries(final AbstractEntityPersister aep) {
@@ -1296,7 +1293,7 @@ public abstract class AbstractEntityPersister
 				}
 			}
 		}
-		return CollectionHelper.toSmallList( uniqueKeys );
+		return toSmallList( uniqueKeys );
 	}
 
 	protected Map<String, SingleIdArrayLoadPlan> getLazyLoadPlanByFetchGroup() {
@@ -1334,7 +1331,7 @@ public abstract class AbstractEntityPersister
 			return null;
 		}
 		else {
-			JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder();
+			final JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder();
 			final SelectStatement select = LoaderSelectBuilder.createSelect(
 					this,
 					partsToSelect,
@@ -1346,12 +1343,11 @@ public abstract class AbstractEntityPersister
 					jdbcParametersBuilder::add,
 					factory
 			);
-			JdbcParametersList jdbcParameters = jdbcParametersBuilder.build();
 			return new SingleIdArrayLoadPlan(
 					this,
 					getIdentifierMapping(),
 					select,
-					jdbcParameters,
+					jdbcParametersBuilder.build(),
 					LockOptions.NONE,
 					factory
 			);
@@ -3189,17 +3185,16 @@ public abstract class AbstractEntityPersister
 				return new NullnessPredicate( sqlExpression );
 			}
 			else if ( value == NOT_NULL_DISCRIMINATOR ) {
-				return new NegatedPredicate( new NullnessPredicate( sqlExpression ) );
+				return new NullnessPredicate( sqlExpression, true );
 			}
 			else {
-				final QueryLiteral<Object> literal = new QueryLiteral<>( value, discriminatorType );
-				return new ComparisonPredicate( sqlExpression, ComparisonOperator.EQUAL, literal );
+				return new ComparisonPredicate( sqlExpression, ComparisonOperator.EQUAL,
+						new QueryLiteral<>( value, discriminatorType ) );
 			}
 		}
 	}
 
 	private Predicate createInListPredicate(BasicType<?> discriminatorType, Expression sqlExpression) {
-		final List<Expression> values = new ArrayList<>( fullDiscriminatorValues.length );
 		boolean hasNull = false, hasNonNull = false;
 		for ( Object discriminatorValue : fullDiscriminatorValues ) {
 			if ( discriminatorValue == NULL_DISCRIMINATOR ) {
@@ -3208,43 +3203,48 @@ public abstract class AbstractEntityPersister
 			else if ( discriminatorValue == NOT_NULL_DISCRIMINATOR ) {
 				hasNonNull = true;
 			}
-			else {
+		}
+		if ( hasNull && hasNonNull ) {
+			// This means we need to select all rows,
+			// and so we don't need a predicate at all
+			// Just return an empty Junction
+			return new Junction( Junction.Nature.DISJUNCTION );
+		}
+		else if ( hasNonNull ) {
+			// we need every row with a non-null discriminator
+			return new NullnessPredicate( sqlExpression, true );
+		}
+		else if ( hasNull ) {
+			final Junction junction = new Junction( Junction.Nature.DISJUNCTION );
+			junction.add( new NullnessPredicate( sqlExpression ) );
+			junction.add( discriminatorValuesPredicate( discriminatorType, sqlExpression ) );
+			return junction;
+		}
+		else {
+			return discriminatorValuesPredicate( discriminatorType, sqlExpression );
+		}
+	}
+
+	private InListPredicate discriminatorValuesPredicate(BasicType<?> discriminatorType, Expression sqlExpression) {
+		final List<Expression> values = new ArrayList<>( fullDiscriminatorValues.length );
+		for ( Object discriminatorValue : fullDiscriminatorValues ) {
+			if ( !(discriminatorValue instanceof MarkerObject) ) {
 				values.add( new QueryLiteral<>( discriminatorValue, discriminatorType) );
 			}
 		}
-		final Predicate predicate = new InListPredicate( sqlExpression, values );
-		if ( hasNull || hasNonNull ) {
-			final Junction junction = new Junction( Junction.Nature.DISJUNCTION );
-
-			if ( hasNull && hasNonNull ) {
-				// This means we need to select everything, we don't need a predicate at all
-				// Return an empty Junction
-				return junction;
-			}
-
-			if ( hasNonNull ) {
-				return new NullnessPredicate( sqlExpression, true );
-			}
-			else if ( hasNull ) {
-				junction.add( new NullnessPredicate( sqlExpression ) );				
-			}
-
-			junction.add( predicate );
-			return junction;
-		}
-		return predicate;
+		return new InListPredicate( sqlExpression, values);
 	}
 
 	protected String getPrunedDiscriminatorPredicate(
 			Map<String, EntityNameUse> entityNameUses,
 			MappingMetamodelImplementor mappingMetamodel,
 			String alias) {
-		final InFragment frag = new InFragment();
+		final InFragment fragment = new InFragment();
 		if ( isDiscriminatorFormula() ) {
-			frag.setFormula( alias, getDiscriminatorFormulaTemplate() );
+			fragment.setFormula( alias, getDiscriminatorFormulaTemplate() );
 		}
 		else {
-			frag.setColumn( alias, getDiscriminatorColumnName() );
+			fragment.setColumn( alias, getDiscriminatorColumnName() );
 		}
 		boolean containsNotNull = false;
 		for ( Map.Entry<String, EntityNameUse> entry : entityNameUses.entrySet() ) {
@@ -3259,11 +3259,12 @@ public abstract class AbstractEntityPersister
 			// as the query will contain a filter for that already anyway
 			if ( !persister.isAbstract() && ( this == persister || !isTypeOrSuperType( persister ) ) ) {
 				containsNotNull = containsNotNull || InFragment.NOT_NULL.equals( persister.getDiscriminatorSQLValue() );
-				frag.addValue( persister.getDiscriminatorSQLValue() );
+				fragment.addValue( persister.getDiscriminatorSQLValue() );
 			}
 		}
-		final List<String> discriminatorSQLValues = Arrays.asList( ( (AbstractEntityPersister) getRootEntityDescriptor() ).fullDiscriminatorSQLValues );
-		if ( frag.getValues().size() == discriminatorSQLValues.size() ) {
+		final AbstractEntityPersister rootEntityDescriptor = (AbstractEntityPersister) getRootEntityDescriptor();
+		final List<String> discriminatorSQLValues = Arrays.asList( rootEntityDescriptor.fullDiscriminatorSQLValues );
+		if ( fragment.getValues().size() == discriminatorSQLValues.size() ) {
 			// Nothing to prune if we filter for all subtypes
 			return null;
 		}
@@ -3278,7 +3279,7 @@ public abstract class AbstractEntityPersister
 			}
 			final List<String> actualDiscriminatorSQLValues = new ArrayList<>( discriminatorSQLValues.size() );
 			for ( String value : discriminatorSQLValues ) {
-				if ( !frag.getValues().contains( value ) && !InFragment.NULL.equals( value ) ) {
+				if ( !fragment.getValues().contains( value ) && !InFragment.NULL.equals( value ) ) {
 					actualDiscriminatorSQLValues.add( value );
 				}
 			}
@@ -3289,11 +3290,11 @@ public abstract class AbstractEntityPersister
 				sb.append( ") and " );
 			}
 			sb.append( lhs ).append( " is not null" );
-			frag.getValues().remove( InFragment.NOT_NULL );
-			return frag.toFragmentString() + sb;
+			fragment.getValues().remove( InFragment.NOT_NULL );
+			return fragment.toFragmentString() + sb;
 		}
 		else {
-			return frag.toFragmentString();
+			return fragment.toFragmentString();
 		}
 	}
 

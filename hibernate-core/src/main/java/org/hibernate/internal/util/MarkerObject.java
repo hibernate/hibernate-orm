@@ -9,10 +9,13 @@ package org.hibernate.internal.util;
 import java.io.Serializable;
 
 /**
+ * @deprecated This is a legacy of very ancient versions of Hibernate.
+ *
  * @author Gavin King
  */
+@Deprecated
 public class MarkerObject implements Serializable {
-	private String name;
+	private final String name;
 
 	public MarkerObject(String name) {
 		this.name = name;

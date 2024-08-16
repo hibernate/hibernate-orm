@@ -9,12 +9,12 @@ name: Hibernate ORM build-Atlas
 on:
   push:
     branches:
-      - 'wip/7.0'
+      - 'main'
   # WARNING: Using pull_request_target to access secrets, but we check out the PR head commit.
   # See checkout action for details.
   pull_request_target:
     branches:
-      - 'wip/7.0'
+      - 'main'
 
 permissions: {} # none
 

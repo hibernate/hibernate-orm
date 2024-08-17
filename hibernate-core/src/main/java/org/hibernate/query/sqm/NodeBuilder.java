@@ -44,6 +44,7 @@ import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
+import org.hibernate.query.sqm.tree.expression.SqmJsonValueExpression;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -612,6 +613,21 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 
 	@Override
 	<E> SqmPredicate collectionIntersectsNullable(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
+
+	@Override
+	<T> SqmJsonValueExpression<T> jsonValue(
+			Expression<?> jsonDocument,
+			Expression<String> jsonPath,
+			Class<T> returningType);
+
+	@Override
+	SqmJsonValueExpression<String> jsonValue(Expression<?> jsonDocument, Expression<String> jsonPath);
+
+	@Override
+	<T> SqmJsonValueExpression<T> jsonValue(Expression<?> jsonDocument, String jsonPath, Class<T> returningType);
+
+	@Override
+	SqmJsonValueExpression<String> jsonValue(Expression<?> jsonDocument, String jsonPath);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides

@@ -339,6 +339,10 @@ public class H2Dialect extends Dialect {
 		functionFactory.arrayTrim_trim_array();
 		functionFactory.arrayFill_h2();
 		functionFactory.arrayToString_h2( getMaximumArraySize() );
+
+		if ( getVersion().isSameOrAfter( 2, 2, 220 ) ) {
+			functionFactory.jsonValue_h2();
+		}
 	}
 
 	/**

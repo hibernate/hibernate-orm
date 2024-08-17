@@ -398,6 +398,10 @@ public class H2LegacyDialect extends Dialect {
 				functionFactory.arrayTrim_trim_array();
 				functionFactory.arrayFill_h2();
 				functionFactory.arrayToString_h2( getMaximumArraySize() );
+
+				if ( getVersion().isSameOrAfter( 2, 2, 220 ) ) {
+					functionFactory.jsonValue_h2();
+				}
 			}
 			else {
 				// Use group_concat until 2.x as listagg was buggy

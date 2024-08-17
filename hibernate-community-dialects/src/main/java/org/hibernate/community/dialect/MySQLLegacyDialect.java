@@ -651,6 +651,10 @@ public class MySQLLegacyDialect extends Dialect {
 		functionRegistry.registerAlternateKey( "char", "chr" );
 
 		functionFactory.listagg_groupConcat();
+
+		if ( getMySQLVersion().isSameOrAfter( 5, 7 ) ) {
+			functionFactory.jsonValue_mysql();
+		}
 	}
 
 	@Override

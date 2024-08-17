@@ -658,6 +658,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		this.limitParameter = limitParameter;
 	}
 
+	@Override
+	public <X> X getLiteralValue(Expression expression) {
+		return interpretExpression( expression, jdbcParameterBindings );
+	}
+
 	@SuppressWarnings("unchecked")
 	protected <R> R interpretExpression(Expression expression, JdbcParameterBindings jdbcParameterBindings) {
 		if ( expression instanceof Literal ) {

@@ -1109,6 +1109,7 @@ function
 	| collectionFunctionMisuse
 	| jpaNonstandardFunction
 	| columnFunction
+	| jsonValueFunction
 	| genericFunction
 	;
 
@@ -1621,6 +1622,20 @@ rollup
 	;
 
 /**
+ * The 'json_value()' function
+ */
+jsonValueFunction
+	: JSON_VALUE LEFT_PAREN expression COMMA expression jsonValueReturningClause? jsonValueOnErrorOrEmptyClause? jsonValueOnErrorOrEmptyClause? RIGHT_PAREN
+	;
+
+jsonValueReturningClause
+	: RETURNING castTarget
+	;
+
+jsonValueOnErrorOrEmptyClause
+	: ( ERROR | NULL | ( DEFAULT expression ) ) ON (ERROR|EMPTY);
+
+/**
  * Support for "soft" keywords which may be used as identifiers
  *
  * The 'identifier' rule is used to provide "keyword as identifier" handling.
@@ -1714,6 +1729,7 @@ rollup
 	| INTO
 	| IS
 	| JOIN
+	| JSON_VALUE
 	| KEY
 	| KEYS
 	| LAST
@@ -1771,6 +1787,7 @@ rollup
 	| QUARTER
 	| RANGE
 	| RESPECT
+	| RETURNING
 //	| RIGHT
 	| ROLLUP
 	| ROW

@@ -89,6 +89,7 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 							.getBasicTypeRegistry()
 							.resolve( StandardBasicTypes.BOOLEAN )
 			);
+			commonFunctionFactory.jsonValue_mariadb();
 			if ( getVersion().isSameOrAfter( 10, 3, 3 ) ) {
 				commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
 				functionContributions.getFunctionRegistry().patternDescriptorBuilder( "median", "median(?1) over ()" )

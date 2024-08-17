@@ -386,6 +386,8 @@ public class OracleDialect extends Dialect {
 		functionFactory.arrayTrim_oracle();
 		functionFactory.arrayFill_oracle();
 		functionFactory.arrayToString_oracle();
+
+		functionFactory.jsonValue_literal_path();
 	}
 
 	@Override

@@ -418,6 +418,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		functionFactory.windowFunctions();
 		functionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+		if ( getVersion().isSameOrAfter( 13 ) ) {
+			functionFactory.jsonValue_sqlserver();
+		}
 		if ( getVersion().isSameOrAfter( 14 ) ) {
 			functionFactory.listagg_stringAggWithinGroup( "varchar(max)" );
 		}

@@ -3680,6 +3680,38 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Incubating
 	<E> JpaPredicate collectionIntersectsNullable(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// JSON functions
+
+	/**
+	 * @see #jsonValue(Expression, String, Class)
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaJsonValueExpression<String> jsonValue(Expression<?> jsonDocument, String jsonPath);
+
+	/**
+	 * Extracts a value by JSON path from a json document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	<T> JpaJsonValueExpression<T> jsonValue(Expression<?> jsonDocument, String jsonPath, Class<T> returningType);
+
+	/**
+	 * @see #jsonValue(Expression, Expression, Class)
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaJsonValueExpression<String> jsonValue(Expression<?> jsonDocument, Expression<String> jsonPath);
+
+	/**
+	 * Extracts a value by JSON path from a json document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	<T> JpaJsonValueExpression<T> jsonValue(Expression<?> jsonDocument, Expression<String> jsonPath, Class<T> returningType);
 
 	@Override
 	JpaPredicate and(List<Predicate> restrictions);

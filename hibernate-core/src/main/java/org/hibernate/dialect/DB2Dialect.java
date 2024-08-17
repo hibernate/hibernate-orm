@@ -414,6 +414,10 @@ public class DB2Dialect extends Dialect {
 
 		functionFactory.windowFunctions();
 		functionFactory.listagg( null );
+
+		if ( getDB2Version().isSameOrAfter( 11 ) ) {
+			functionFactory.jsonValue();
+		}
 	}
 
 	@Override

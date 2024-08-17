@@ -580,6 +580,13 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.arrayFill_postgresql();
 		functionFactory.arrayToString_postgresql();
 
+		if ( getVersion().isSameOrAfter( 17 ) ) {
+			functionFactory.jsonValue();
+		}
+		else {
+			functionFactory.jsonValue_postgresql();
+		}
+
 		functionFactory.makeDateTimeTimestamp();
 		// Note that PostgreSQL doesn't support the OVER clause for ordered set-aggregate functions
 		functionFactory.inverseDistributionOrderedSetAggregates();

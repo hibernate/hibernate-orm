@@ -6,6 +6,7 @@
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/hql
 :array-example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/array
+:json-example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/json
 :extrasdir: extras
 
 This chapter describes Hibernate Query Language (HQL) and Jakarta Persistence Query Language (JPQL).
@@ -1618,6 +1619,85 @@ which is a short version of `concat('[', array_to_string(array, ',', 'null'), ']
 include::{array-example-dir-hql}/ArrayToStringTest.java[tags=hql-array-to-string-hql-example]
 ----
 ====
+
+[[hql-functions-json]]
+==== Functions for dealing with JSON
+
+The following functions deal with SQL JSON types, which are not supported on every database.
+
+[[hql-json-functions]]
+|===
+| Function | Purpose
+
+| `json_value()` | Extracts a value from a JSON document by JSON path
+|===
+
+[[hql-json-value-function]]
+===== `json_value()`
+
+Extracts a value by https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html[JSON path] from a JSON document.
+
+[[hql-like-json-value-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/json_value_bnf.txt[]
+----
+
+The first argument is an expression to a JSON document. The second argument is a JSON path as String expression.
+
+NOTE: It is recommended to only us the dot notation for JSON paths, since most databases support only that.
+
+[[hql-json-value-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonValueTest.java[tags=hql-json-value-example]
+----
+====
+
+The `returning` clause allows to specify the <<hql-function-cast,cast target>> i.e. the type of value to extract.
+
+[[hql-json-value-returning-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonValueTest.java[tags=hql-json-value-returning-example]
+----
+====
+
+The `on empty` clause defines the behavior when the JSON path does not match the JSON document.
+By default, `null` is returned on empty.
+
+[[hql-json-value-on-error-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonValueTest.java[tags=hql-json-value-on-error-example]
+----
+====
+
+The `on error` clause defines the behavior when an error occurs while resolving the value for the JSON path.
+Conditions that classify as errors are database dependent, but usual errors which can be handled with this clause are:
+
+* First argument is not a valid JSON document
+* Second argument is not a valid JSON path
+* JSON path does not resolve to a scalar value
+
+The default behavior of `on error` is database specific, but usually, `null` is returned on an error.
+It is recommended to specify this clause when the exact error behavior is important.
+
+[[hql-json-value-on-empty-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonValueTest.java[tags=hql-json-value-on-empty-example]
+----
+====
+
+To actually receive an error `on empty`, it is necessary to also specify `error on error`.
+Depending on the database, an error might still be thrown even without that, but that is not portable.
+
+NOTE: The H2 emulation only supports absolute JSON paths using the dot notation.
 
 [[hql-user-defined-functions]]
 ==== Native and user-defined functions

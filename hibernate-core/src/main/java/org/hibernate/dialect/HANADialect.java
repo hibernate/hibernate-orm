@@ -488,6 +488,11 @@ public class HANADialect extends Dialect {
 				ANY, ANY, ANY,
 				typeConfiguration
 		);
+
+		if ( getVersion().isSameOrAfter(2, 0, 20) ) {
+			// Introduced in 2.0 SPS 02
+			functionFactory.jsonValue();
+		}
 	}
 
 	@Override

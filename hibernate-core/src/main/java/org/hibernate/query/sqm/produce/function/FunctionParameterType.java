@@ -87,6 +87,18 @@ public enum FunctionParameterType {
 	 */
 	SPATIAL,
 	/**
+	 * Indicates that the argument should be a JSON type
+	 * @see org.hibernate.type.SqlTypes#isJsonType(int)
+	 * @since 7.0
+	 */
+	JSON,
+	/**
+	 * Indicates that the argument should be a JSON or String type
+	 * @see org.hibernate.type.SqlTypes#isImplicitJsonType(int)
+	 * @since 7.0
+	 */
+	IMPLICIT_JSON,
+	/**
 	 * Indicates a parameter that accepts any type, except untyped expressions like {@code null} literals
 	 */
 	NO_UNTYPED

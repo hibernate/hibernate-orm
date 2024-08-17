@@ -989,4 +989,36 @@ public class SqlTypes {
 				return false;
 		}
 	}
+
+	/**
+	 * Does the typecode represent a JSON type.
+	 *
+	 * @param typeCode - a JDBC type code
+	 * @since 7.0
+	 */
+	public static boolean isJsonType(int typeCode) {
+		switch ( typeCode ) {
+			case JSON:
+			case JSON_ARRAY:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	/**
+	 * Does the typecode represent a JSON type or a type that can be implicitly cast to JSON.
+	 *
+	 * @param typeCode - a JDBC type code
+	 * @since 7.0
+	 */
+	public static boolean isImplicitJsonType(int typeCode) {
+		switch ( typeCode ) {
+			case JSON:
+			case JSON_ARRAY:
+				return true;
+			default:
+				return isCharacterOrClobType( typeCode );
+		}
+	}
 }

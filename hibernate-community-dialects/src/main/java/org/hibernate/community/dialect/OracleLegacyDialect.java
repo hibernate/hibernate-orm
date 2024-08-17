@@ -318,6 +318,10 @@ public class OracleLegacyDialect extends Dialect {
 		functionFactory.arrayTrim_oracle();
 		functionFactory.arrayFill_oracle();
 		functionFactory.arrayToString_oracle();
+
+		if ( getVersion().isSameOrAfter( 12 ) ) {
+			functionFactory.jsonValue_literal_path();
+		}
 	}
 
 	@Override

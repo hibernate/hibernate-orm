@@ -426,6 +426,16 @@ public interface JdbcType extends Serializable {
 	}
 
 	@Incubating
+	default boolean isJson() {
+		return isJsonType( getDefaultSqlTypeCode() );
+	}
+
+	@Incubating
+	default boolean isImplicitJson() {
+		return isImplicitJsonType( getDefaultSqlTypeCode() );
+	}
+
+	@Incubating
 	default boolean isBoolean() {
 		return getDefaultSqlTypeCode() == BOOLEAN;
 	}

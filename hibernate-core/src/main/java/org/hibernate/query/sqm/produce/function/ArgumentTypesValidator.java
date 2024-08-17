@@ -248,6 +248,10 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			case DATE -> jdbcType.hasDatePart();
 			case TIME -> jdbcType.hasTimePart();
 			case SPATIAL -> jdbcType.isSpatial();
+			case JSON:
+				return jdbcType.isJson();
+			case IMPLICIT_JSON:
+				return jdbcType.isImplicitJson();
 			default -> true; // TODO: should we throw here?
 		};
 	}

@@ -121,6 +121,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
+import org.hibernate.query.sqm.tree.expression.SqmJsonValueExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
@@ -5289,5 +5290,46 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				null,
 				queryEngine
 		);
+	}
+
+	@Override
+	public SqmJsonValueExpression<String> jsonValue(Expression<?> jsonDocument, String jsonPath) {
+		return jsonValue( jsonDocument, value( jsonPath ), null );
+	}
+
+	@Override
+	public <T> SqmJsonValueExpression<T> jsonValue(
+			Expression<?> jsonDocument,
+			String jsonPath,
+			Class<T> returningType) {
+		return jsonValue( jsonDocument, value( jsonPath ), returningType );
+	}
+
+	@Override
+	public SqmJsonValueExpression<String> jsonValue(Expression<?> jsonDocument, Expression<String> jsonPath) {
+		return jsonValue( jsonDocument, jsonPath, null );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> SqmJsonValueExpression<T> jsonValue(
+			Expression<?> jsonDocument,
+			Expression<String> jsonPath,
+			Class<T> returningType) {
+		if ( returningType == null ) {
+			return (SqmJsonValueExpression<T>) getFunctionDescriptor( "json_value" ).generateSqmExpression(
+					asList( (SqmTypedNode<?>) jsonDocument, (SqmTypedNode<?>) jsonPath ),
+					null,
+					queryEngine
+			);
+		}
+		else {
+			final BasicType<T> type = getTypeConfiguration().standardBasicTypeForJavaType( returningType );
+			return (SqmJsonValueExpression<T>) getFunctionDescriptor( "json_value" ).generateSqmExpression(
+					asList( (SqmTypedNode<?>) jsonDocument, (SqmTypedNode<?>) jsonPath, new SqmCastTarget<>( type, this ) ),
+					type,
+					queryEngine
+			);
+		}
 	}
 }

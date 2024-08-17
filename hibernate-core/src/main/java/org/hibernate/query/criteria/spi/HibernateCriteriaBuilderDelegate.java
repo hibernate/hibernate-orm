@@ -38,6 +38,7 @@ import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaFunction;
 import org.hibernate.query.criteria.JpaInPredicate;
 import org.hibernate.query.criteria.JpaJoin;
+import org.hibernate.query.criteria.JpaJsonValueExpression;
 import org.hibernate.query.criteria.JpaListJoin;
 import org.hibernate.query.criteria.JpaMapJoin;
 import org.hibernate.query.criteria.JpaOrder;
@@ -3342,5 +3343,35 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			Collection<E> collection1,
 			Expression<? extends Collection<? extends E>> collectionExpression2) {
 		return criteriaBuilder.collectionIntersectsNullable( collection1, collectionExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public JpaJsonValueExpression<String> jsonValue(Expression<?> jsonDocument, String jsonPath) {
+		return criteriaBuilder.jsonValue( jsonDocument, jsonPath );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaJsonValueExpression<T> jsonValue(
+			Expression<?> jsonDocument,
+			String jsonPath,
+			Class<T> returningType) {
+		return criteriaBuilder.jsonValue( jsonDocument, jsonPath, returningType );
+	}
+
+	@Override
+	@Incubating
+	public JpaJsonValueExpression<String> jsonValue(Expression<?> jsonDocument, Expression<String> jsonPath) {
+		return criteriaBuilder.jsonValue( jsonDocument, jsonPath );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaJsonValueExpression<T> jsonValue(
+			Expression<?> jsonDocument,
+			Expression<String> jsonPath,
+			Class<T> returningType) {
+		return criteriaBuilder.jsonValue( jsonDocument, jsonPath, returningType );
 	}
 }

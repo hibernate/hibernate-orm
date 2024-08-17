@@ -145,6 +145,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmJsonValueExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
@@ -2691,6 +2692,45 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				creationContext.getQueryEngine()
 		);
 		return new SqmBooleanExpressionPredicate( contains, negated, creationContext.getNodeBuilder() );
+	}
+
+	@Override
+	public SqmExpression<?> visitJsonValueFunction(HqlParser.JsonValueFunctionContext ctx) {
+		final SqmExpression<?> jsonDocument = (SqmExpression<?>) ctx.expression( 0 ).accept( this );
+		final SqmExpression<?> jsonPath = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
+		final HqlParser.JsonValueReturningClauseContext returningClause = ctx.jsonValueReturningClause();
+		final SqmCastTarget<?> castTarget = returningClause == null
+				? null
+				: (SqmCastTarget<?>) returningClause.castTarget().accept( this );
+
+		final SqmJsonValueExpression<?> jsonValue = (SqmJsonValueExpression<?>) getFunctionDescriptor( "json_value" ).generateSqmExpression(
+				castTarget == null
+						? asList( jsonDocument, jsonPath )
+						: asList( jsonDocument, jsonPath, castTarget ),
+				null,
+				creationContext.getQueryEngine()
+		);
+		for ( HqlParser.JsonValueOnErrorOrEmptyClauseContext subCtx : ctx.jsonValueOnErrorOrEmptyClause() ) {
+			final TerminalNode firstToken = (TerminalNode) subCtx.getChild( 0 );
+			final TerminalNode lastToken = (TerminalNode) subCtx.getChild( subCtx.getChildCount() - 1 );
+			if ( lastToken.getSymbol().getType() == HqlParser.ERROR ) {
+				switch ( firstToken.getSymbol().getType() ) {
+					case HqlParser.NULL -> jsonValue.nullOnError();
+					case HqlParser.ERROR -> jsonValue.errorOnError();
+					case HqlParser.DEFAULT ->
+							jsonValue.defaultOnError( (SqmExpression<?>) subCtx.expression().accept( this ) );
+				}
+			}
+			else {
+				switch ( firstToken.getSymbol().getType() ) {
+					case HqlParser.NULL -> jsonValue.nullOnEmpty();
+					case HqlParser.ERROR -> jsonValue.errorOnEmpty();
+					case HqlParser.DEFAULT ->
+							jsonValue.defaultOnEmpty( (SqmExpression<?>) subCtx.expression().accept( this ) );
+				}
+			}
+		}
+		return jsonValue;
 	}
 
 	@Override

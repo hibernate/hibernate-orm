@@ -430,6 +430,10 @@ public class DB2LegacyDialect extends Dialect {
 		functionFactory.windowFunctions();
 		if ( getDB2Version().isSameOrAfter( 9, 5 ) ) {
 			functionFactory.listagg( null );
+
+			if ( getDB2Version().isSameOrAfter( 11 ) ) {
+				functionFactory.jsonValue();
+			}
 		}
 	}
 

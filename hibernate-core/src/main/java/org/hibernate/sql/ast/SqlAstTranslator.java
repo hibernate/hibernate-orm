@@ -12,6 +12,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -22,6 +23,12 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker {
 
 	SessionFactoryImplementor getSessionFactory();
+
+	/**
+	 * Returns the literal value of the given expression, inlining a parameter value if necessary.
+	 * @since 7.0
+	 */
+	<X> X getLiteralValue(Expression expression);
 
 	/**
 	 * Renders the given SQL AST node with the given rendering mode.

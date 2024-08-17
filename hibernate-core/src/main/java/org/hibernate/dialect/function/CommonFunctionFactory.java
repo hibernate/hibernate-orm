@@ -78,6 +78,13 @@ import org.hibernate.dialect.function.array.OracleArrayConstructorFunction;
 import org.hibernate.dialect.function.array.OracleArrayContainsFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayPositionsFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayTrimEmulation;
+import org.hibernate.dialect.function.json.CockroachDBJsonValueFunction;
+import org.hibernate.dialect.function.json.H2JsonValueFunction;
+import org.hibernate.dialect.function.json.JsonValueFunction;
+import org.hibernate.dialect.function.json.MariaDBJsonValueFunction;
+import org.hibernate.dialect.function.json.MySQLJsonValueFunction;
+import org.hibernate.dialect.function.json.PostgreSQLJsonValueFunction;
+import org.hibernate.dialect.function.json.SQLServerJsonValueFunction;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
@@ -3321,5 +3328,61 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayToString_oracle() {
 		functionRegistry.register( "array_to_string", new OracleArrayToStringFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * json_value() function
+	 */
+	public void jsonValue() {
+		functionRegistry.register( "json_value", new JsonValueFunction( typeConfiguration, true ) );
+	}
+
+	/**
+	 * json_value() function that supports only literal json paths
+	 */
+	public void jsonValue_literal_path() {
+		functionRegistry.register( "json_value", new JsonValueFunction( typeConfiguration, false ) );
+	}
+
+	/**
+	 * PostgreSQL json_value() function
+	 */
+	public void jsonValue_postgresql() {
+		functionRegistry.register( "json_value", new PostgreSQLJsonValueFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * CockroachDB json_value() function
+	 */
+	public void jsonValue_cockroachdb() {
+		functionRegistry.register( "json_value", new CockroachDBJsonValueFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_value() function
+	 */
+	public void jsonValue_mysql() {
+		functionRegistry.register( "json_value", new MySQLJsonValueFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MariaDB json_value() function
+	 */
+	public void jsonValue_mariadb() {
+		functionRegistry.register( "json_value", new MariaDBJsonValueFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server json_value() function
+	 */
+	public void jsonValue_sqlserver() {
+		functionRegistry.register( "json_value", new SQLServerJsonValueFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * H2 json_value() function
+	 */
+	public void jsonValue_h2() {
+		functionRegistry.register( "json_value", new H2JsonValueFunction( typeConfiguration ) );
 	}
 }

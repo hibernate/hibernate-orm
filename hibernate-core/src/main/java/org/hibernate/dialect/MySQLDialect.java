@@ -634,6 +634,8 @@ public class MySQLDialect extends Dialect {
 		}
 
 		functionFactory.listagg_groupConcat();
+
+		functionFactory.jsonValue_mysql();
 	}
 
 	@Override

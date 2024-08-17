@@ -352,6 +352,8 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			case "truefalse": return basicTypeRegistry.getRegisteredType( StandardBasicTypes.TRUE_FALSE.getName() );
 			case "yesno": return basicTypeRegistry.getRegisteredType( StandardBasicTypes.YES_NO.getName() );
 			case "numericboolean": return basicTypeRegistry.getRegisteredType( StandardBasicTypes.NUMERIC_BOOLEAN.getName() );
+			case "json": return basicTypeRegistry.resolve( Object.class, SqlTypes.JSON );
+			case "xml": return basicTypeRegistry.resolve( Object.class, SqlTypes.SQLXML );
 			//really not sure about this one - it works well for casting from binary
 			//to UUID, but people will want to use it to cast from varchar, and that
 			//won't work at all without some special casing in the Dialects

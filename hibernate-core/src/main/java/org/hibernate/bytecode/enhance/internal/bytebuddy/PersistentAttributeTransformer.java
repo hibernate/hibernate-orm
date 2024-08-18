@@ -148,7 +148,10 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		}
 		TypeDefinition managedCtSuperclass = managedCtClass.getSuperClass();
 
-		if ( enhancementContext.isEntityClass( managedCtSuperclass.asErasure() ) ) {
+		// If managedCtSuperclass is null, managedCtClass can be either interface or module-info.
+		// Interfaces are already filtered-out, and module-info does not have any fields to enhance
+		// so we can safely return empty list.
+		if ( managedCtSuperclass == null || enhancementContext.isEntityClass( managedCtSuperclass.asErasure() ) ) {
 			return Collections.emptyList();
 		}
 		else if ( !enhancementContext.isMappedSuperclassClass( managedCtSuperclass.asErasure() ) ) {

@@ -256,31 +256,35 @@ public class SqmJsonValueExpression<T> extends SelfRenderingSqmFunction<T> imple
 			sb.append( " returning " );
 			getArguments().get( 2 ).appendHqlString( sb );
 		}
-		switch ( errorBehavior ) {
-			case NULL:
-				sb.append( " null on error" );
-				break;
-			case ERROR:
-				sb.append( " error on error" );
-				break;
-			case DEFAULT:
-				sb.append( " default " );
-				errorDefaultExpression.appendHqlString( sb );
-				sb.append( " on error" );
-				break;
+		if ( errorBehavior != null ) {
+			switch ( errorBehavior ) {
+				case NULL:
+					sb.append( " null on error" );
+					break;
+				case ERROR:
+					sb.append( " error on error" );
+					break;
+				case DEFAULT:
+					sb.append( " default " );
+					errorDefaultExpression.appendHqlString( sb );
+					sb.append( " on error" );
+					break;
+			}
 		}
-		switch ( emptyBehavior ) {
-			case NULL:
-				sb.append( " null on empty" );
-				break;
-			case ERROR:
-				sb.append( " error on empty" );
-				break;
-			case DEFAULT:
-				sb.append( " default " );
-				emptyDefaultExpression.appendHqlString( sb );
-				sb.append( " on empty" );
-				break;
+		if ( emptyBehavior != null ) {
+			switch ( emptyBehavior ) {
+				case NULL:
+					sb.append( " null on empty" );
+					break;
+				case ERROR:
+					sb.append( " error on empty" );
+					break;
+				case DEFAULT:
+					sb.append( " default " );
+					emptyDefaultExpression.appendHqlString( sb );
+					sb.append( " on empty" );
+					break;
+			}
 		}
 		sb.append( ')' );
 	}

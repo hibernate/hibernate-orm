@@ -52,6 +52,14 @@ public final class PgJdbcHelper {
 		return createJdbcType( serviceRegistry, "org.hibernate.dialect.PostgreSQLJsonPGObjectJsonbType" );
 	}
 
+	public static JdbcType getJsonArrayJdbcType(ServiceRegistry serviceRegistry) {
+		return createJdbcType( serviceRegistry, "org.hibernate.dialect.PostgreSQLJsonArrayPGObjectJsonType" );
+	}
+
+	public static JdbcType getJsonbArrayJdbcType(ServiceRegistry serviceRegistry) {
+		return createJdbcType( serviceRegistry, "org.hibernate.dialect.PostgreSQLJsonArrayPGObjectJsonbType" );
+	}
+
 	public static JdbcType createJdbcType(ServiceRegistry serviceRegistry, String className) {
 		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		try {

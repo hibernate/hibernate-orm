@@ -96,6 +96,7 @@ import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INTERVAL_SECOND;
 import static org.hibernate.type.SqlTypes.JSON;
+import static org.hibernate.type.SqlTypes.JSON_ARRAY;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
@@ -263,6 +264,7 @@ public class H2LegacyDialect extends Dialect {
 			}
 			if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
 				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON_ARRAY, "json", this ) );
 			}
 		}
 		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
@@ -293,6 +295,7 @@ public class H2LegacyDialect extends Dialect {
 		}
 		if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( H2JsonJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( H2JsonArrayJdbcType.INSTANCE );
 		}
 		jdbcTypeRegistry.addDescriptor( EnumJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( OrdinalEnumJdbcType.INSTANCE );
@@ -403,6 +406,9 @@ public class H2LegacyDialect extends Dialect {
 				}
 			}
 			else {
+				functionFactory.jsonObject();
+				functionFactory.jsonArray();
+
 				// Use group_concat until 2.x as listagg was buggy
 				functionFactory.listagg_groupConcat();
 			}

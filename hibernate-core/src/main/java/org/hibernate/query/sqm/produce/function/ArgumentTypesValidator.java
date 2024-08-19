@@ -193,7 +193,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	/**
 	 * We can't validate some expressions involving parameters / unknown functions.
 	 */
-	private static boolean isUnknownExpressionType(JdbcMappingContainer expressionType) {
+	public static boolean isUnknownExpressionType(JdbcMappingContainer expressionType) {
 		return expressionType instanceof JavaObjectType
 			|| expressionType instanceof BasicType
 				&& isUnknown( ((BasicType<?>) expressionType).getJavaTypeDescriptor() );
@@ -217,7 +217,8 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 		return paramNumber;
 	}
 
-	private static void checkArgumentType(
+	@Internal
+	public static void checkArgumentType(
 			int paramNumber, String functionName, FunctionParameterType type, JdbcType jdbcType, Type javaType) {
 		if ( !isCompatible( type, jdbcType )
 				// as a special case, we consider a binary column

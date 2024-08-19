@@ -127,6 +127,7 @@ import static org.hibernate.query.sqm.TemporalUnit.YEAR;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BIT;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.DATE;
 import static org.hibernate.type.SqlTypes.DECIMAL;
@@ -135,6 +136,7 @@ import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INTEGER;
 import static org.hibernate.type.SqlTypes.JSON;
+import static org.hibernate.type.SqlTypes.JSON_ARRAY;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.REAL;
@@ -283,6 +285,16 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
+	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
+		if ( getVersion().isSameOrAfter( 23 ) ) {
+			appender.appendSql( bool );
+		}
+		else {
+			super.appendBooleanValueString( appender, bool );
+		}
+	}
+
+	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
@@ -392,6 +404,8 @@ public class OracleDialect extends Dialect {
 		functionFactory.arrayToString_oracle();
 
 		functionFactory.jsonValue_literal_path();
+		functionFactory.jsonObject_oracle();
+		functionFactory.jsonArray_oracle();
 	}
 
 	@Override
@@ -725,9 +739,8 @@ public class OracleDialect extends Dialect {
 				if ( getVersion().isSameOrAfter( 23 ) ) {
 					return super.columnType( sqlTypeCode );
 				}
-				else {
-					return "number(1,0)";
-				}
+			case BIT:
+				return "number(1,0)";
 			case TINYINT:
 				return "number(3,0)";
 			case SMALLINT:
@@ -781,9 +794,11 @@ public class OracleDialect extends Dialect {
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "MDSYS.SDO_GEOMETRY", this ) );
 		if ( getVersion().isSameOrAfter( 21 ) ) {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON_ARRAY, "json", this ) );
 		}
 		else {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "blob", this ) );
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON_ARRAY, "blob", this ) );
 		}
 
 		ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this, false ) );

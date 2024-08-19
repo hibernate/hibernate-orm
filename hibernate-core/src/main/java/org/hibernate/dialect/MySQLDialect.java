@@ -289,6 +289,11 @@ public class MySQLDialect extends Dialect {
 		// MySQL has no real concept of LOBs, so we can just use longtext/longblob with the materialized JDBC APIs
 		return false;
 	}
+	@Override
+	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
+		// Use the true/false constants since these evaluate to true/false literals in JSON functions
+		appender.appendSql( bool );
+	}
 
 	@Override
 	protected String castType(int sqlTypeCode) {
@@ -636,6 +641,8 @@ public class MySQLDialect extends Dialect {
 		functionFactory.listagg_groupConcat();
 
 		functionFactory.jsonValue_mysql();
+		functionFactory.jsonObject_mysql();
+		functionFactory.jsonArray_mysql();
 	}
 
 	@Override
@@ -645,6 +652,7 @@ public class MySQLDialect extends Dialect {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
 
 		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, MySQLCastingJsonJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON_ARRAY, MySQLCastingJsonArrayJdbcType.INSTANCE );
 
 		// MySQL requires a custom binder for binding untyped nulls with the NULL type
 		typeContributions.contributeJdbcType( NullJdbcType.INSTANCE );

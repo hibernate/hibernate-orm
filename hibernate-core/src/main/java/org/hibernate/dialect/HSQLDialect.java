@@ -207,6 +207,11 @@ public class HSQLDialect extends Dialect {
 		functionFactory.arrayFill_hsql();
 		functionFactory.arrayToString_hsql();
 
+		if ( getVersion().isSameOrAfter( 2, 7 ) ) {
+			functionFactory.jsonObject_hsqldb();
+			functionFactory.jsonArray_hsqldb();
+		}
+
 		//trim() requires parameters to be cast when used as trim character
 		functionContributions.getFunctionRegistry().register( "trim", new TrimFunction(
 				this,

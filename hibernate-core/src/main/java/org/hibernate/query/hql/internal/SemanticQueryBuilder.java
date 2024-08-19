@@ -24,6 +24,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -145,6 +146,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmJsonNullBehavior;
 import org.hibernate.query.sqm.tree.expression.SqmJsonValueExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
@@ -2731,6 +2733,61 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			}
 		}
 		return jsonValue;
+	}
+
+	@Override
+	public SqmExpression<?> visitJsonArrayFunction(HqlParser.JsonArrayFunctionContext ctx) {
+		final HqlParser.JsonNullClauseContext subCtx = ctx.jsonNullClause();
+		final List<HqlParser.ExpressionOrPredicateContext> argumentContexts = ctx.expressionOrPredicate();
+		int count = argumentContexts.size();
+		final List<SqmTypedNode<?>> arguments = new ArrayList<>( count + (subCtx == null ? 0 : 1 ) );
+		for ( int i = 0; i < count; i++ ) {
+			arguments.add( (SqmTypedNode<?>) argumentContexts.get(i).accept( this ) );
+		}
+		if ( subCtx != null ) {
+			final TerminalNode firstToken = (TerminalNode) subCtx.getChild( 0 );
+			arguments.add(
+					firstToken.getSymbol().getType() == HqlParser.ABSENT
+							? SqmJsonNullBehavior.ABSENT
+							: SqmJsonNullBehavior.NULL
+			);
+		}
+		return getFunctionDescriptor( "json_array" ).generateSqmExpression(
+				arguments,
+				null,
+				creationContext.getQueryEngine()
+		);
+	}
+
+	@Override
+	public SqmExpression<?> visitJsonObjectFunction(HqlParser.JsonObjectFunctionContext ctx) {
+		final HqlParser.JsonObjectFunctionEntriesContext entries = ctx.jsonObjectFunctionEntries();
+		final List<SqmTypedNode<?>> arguments;
+		if ( entries == null ) {
+			arguments = Collections.emptyList();
+		}
+		else {
+			final HqlParser.JsonNullClauseContext subCtx = ctx.jsonNullClause();
+			final List<HqlParser.ExpressionOrPredicateContext> argumentContexts = entries.expressionOrPredicate();
+			int count = argumentContexts.size();
+			arguments = new ArrayList<>( count + ( subCtx == null ? 0 : 1 ) );
+			for ( int i = 0; i < count; i++ ) {
+				arguments.add( (SqmTypedNode<?>) argumentContexts.get( i ).accept( this ) );
+			}
+			if ( subCtx != null ) {
+				final TerminalNode firstToken = (TerminalNode) subCtx.getChild( 0 );
+				arguments.add(
+						firstToken.getSymbol().getType() == HqlParser.ABSENT
+								? SqmJsonNullBehavior.ABSENT
+								: SqmJsonNullBehavior.NULL
+				);
+			}
+		}
+		return getFunctionDescriptor( "json_object" ).generateSqmExpression(
+				arguments,
+				null,
+				creationContext.getQueryEngine()
+		);
 	}
 
 	@Override

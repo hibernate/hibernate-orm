@@ -35,7 +35,7 @@ public class H2JsonJdbcType extends JsonJdbcType {
 
 	@Override
 	public String toString() {
-		return "FormatJsonJdbcType";
+		return "H2JsonJdbcType";
 	}
 
 	@Override

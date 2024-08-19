@@ -1629,21 +1629,89 @@ The following functions deal with SQL JSON types, which are not supported on eve
 |===
 | Function | Purpose
 
+| `json_object()` | Constructs a JSON object from pairs of key and value arguments
+| `json_array()` | Constructs a JSON array from arguments
 | `json_value()` | Extracts a value from a JSON document by JSON path
 |===
+
+
+[[hql-json-object-function]]
+===== `json_object()`
+
+Constructs a JSON object from pairs of key and value arguments.
+
+[[hql-json-object-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/json_object_bnf.txt[]
+----
+
+Argument count must be even and expressions alternate between keys and values i.e. `key1, value1, key2, value2, ...`.
+Alternatively, it is also possible to use a `:` (colon) to separate keys from values or the `value` keyword.
+
+[[hql-json-object-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonObjectTest.java[tags=hql-json-object-example]
+----
+====
+
+Although database dependent, usually `null` values are present in the resulting JSON object.
+To remove `null` value entries, use the `absent on null` clause.
+
+[[hql-json-object-on-null-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonObjectTest.java[tags=hql-json-object-on-null-example]
+----
+====
+
+[[hql-json-array-function]]
+===== `json_array()`
+
+Constructs a JSON array from arguments.
+
+[[hql-json-array-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/json_array_bnf.txt[]
+----
+
+[[hql-json-array-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonArrayTest.java[tags=hql-json-array-example]
+----
+====
+
+Although database dependent, usually `null` values are `absent` in the resulting JSON array.
+To retain `null` elements, use the `null on null` clause.
+
+[[hql-json-array-on-null-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonArrayTest.java[tags=hql-json-array-on-null-example]
+----
+====
 
 [[hql-json-value-function]]
 ===== `json_value()`
 
-Extracts a value by https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html[JSON path] from a JSON document.
+Extracts a scalar value by https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html[JSON path] from a JSON document.
 
-[[hql-like-json-value-bnf]]
+[[hql-json-value-bnf]]
 [source, antlrv4, indent=0]
 ----
 include::{extrasdir}/json_value_bnf.txt[]
 ----
 
 The first argument is an expression to a JSON document. The second argument is a JSON path as String expression.
+
+WARNING: Some databases might also return non-scalar values. Beware that this behavior is not portable.
 
 NOTE: It is recommended to only us the dot notation for JSON paths, since most databases support only that.
 

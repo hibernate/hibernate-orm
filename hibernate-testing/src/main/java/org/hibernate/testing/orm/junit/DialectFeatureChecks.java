@@ -734,6 +734,18 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsJsonArray implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "json_array" );
+		}
+	}
+
+	public static class SupportsJsonObject implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "json_object" );
+		}
+	}
+
 	public static class SupportsJsonValueErrorBehavior implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesFunction( dialect, "json_value" )

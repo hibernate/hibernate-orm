@@ -14,22 +14,35 @@ import org.hibernate.QueryException;
 public class JsonPathHelper {
 
 	public static List<JsonPathElement> parseJsonPathElements(String jsonPath) {
-		if ( jsonPath.charAt( 0 ) != '$' || jsonPath.charAt( 1 ) != '.' ) {
-			throw new QueryException( "Json path expression expression emulation only supports absolute paths i.e. must start with a '$.' but got: " + jsonPath );
+		if ( jsonPath.charAt( 0 ) != '$' ) {
+			throw new QueryException( "Json path expression expression emulation only supports absolute paths i.e. must start with a '$' but got: " + jsonPath );
 		}
 		final var jsonPathElements = new ArrayList<JsonPathElement>();
-		int startIndex = 2;
+		int startIndex;
 		int dotIndex;
 
-		try {
-			while ( ( dotIndex = jsonPath.indexOf( '.', startIndex ) ) != -1 ) {
-				parseAttribute( jsonPath, startIndex, dotIndex, jsonPathElements );
-				startIndex = dotIndex + 1;
+		if ( jsonPath.length() > 1 ) {
+			if ( jsonPath.charAt( 1 ) == '.' ) {
+				startIndex = 2;
 			}
-			parseAttribute( jsonPath, startIndex, jsonPath.length(), jsonPathElements );
-		}
-		catch (Exception ex) {
-			throw new QueryException( "Can't emulate non-simple json path expression: " + jsonPath, ex );
+			else {
+				final int bracketEndIndex = jsonPath.indexOf( ']' );
+				parseBracket( jsonPath, 1, bracketEndIndex, jsonPathElements );
+				startIndex = bracketEndIndex + 2;
+			}
+
+			try {
+				while ( ( dotIndex = jsonPath.indexOf( '.', startIndex ) ) != -1 ) {
+					parseAttribute( jsonPath, startIndex, dotIndex, jsonPathElements );
+					startIndex = dotIndex + 1;
+				}
+				if ( startIndex < jsonPath.length() ) {
+					parseAttribute( jsonPath, startIndex, jsonPath.length(), jsonPathElements );
+				}
+			}
+			catch (Exception ex) {
+				throw new QueryException( "Can't emulate non-simple json path expression: " + jsonPath, ex );
+			}
 		}
 		return jsonPathElements;
 	}

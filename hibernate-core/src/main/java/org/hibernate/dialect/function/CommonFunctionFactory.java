@@ -77,11 +77,28 @@ import org.hibernate.dialect.function.array.OracleArrayContainsFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayPositionsFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayTrimEmulation;
 import org.hibernate.dialect.function.json.CockroachDBJsonValueFunction;
+import org.hibernate.dialect.function.json.DB2JsonArrayFunction;
+import org.hibernate.dialect.function.json.DB2JsonObjectFunction;
 import org.hibernate.dialect.function.json.H2JsonValueFunction;
+import org.hibernate.dialect.function.json.HANAJsonArrayFunction;
+import org.hibernate.dialect.function.json.HANAJsonObjectFunction;
+import org.hibernate.dialect.function.json.HSQLJsonArrayFunction;
+import org.hibernate.dialect.function.json.HSQLJsonObjectFunction;
+import org.hibernate.dialect.function.json.JsonArrayFunction;
+import org.hibernate.dialect.function.json.JsonObjectFunction;
 import org.hibernate.dialect.function.json.JsonValueFunction;
+import org.hibernate.dialect.function.json.MariaDBJsonArrayFunction;
 import org.hibernate.dialect.function.json.MariaDBJsonValueFunction;
+import org.hibernate.dialect.function.json.MySQLJsonArrayFunction;
+import org.hibernate.dialect.function.json.MySQLJsonObjectFunction;
 import org.hibernate.dialect.function.json.MySQLJsonValueFunction;
+import org.hibernate.dialect.function.json.OracleJsonArrayFunction;
+import org.hibernate.dialect.function.json.OracleJsonObjectFunction;
+import org.hibernate.dialect.function.json.PostgreSQLJsonArrayFunction;
+import org.hibernate.dialect.function.json.PostgreSQLJsonObjectFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonValueFunction;
+import org.hibernate.dialect.function.json.SQLServerJsonArrayFunction;
+import org.hibernate.dialect.function.json.SQLServerJsonObjectFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonValueFunction;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
@@ -3382,5 +3399,124 @@ public class CommonFunctionFactory {
 	 */
 	public void jsonValue_h2() {
 		functionRegistry.register( "json_value", new H2JsonValueFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * json_object() function
+	 */
+	public void jsonObject() {
+		functionRegistry.register( "json_object", new JsonObjectFunction( typeConfiguration, true ) );
+	}
+
+	/**
+	 * DB2 json_object() function
+	 */
+	public void jsonObject_db2() {
+		functionRegistry.register( "json_object", new DB2JsonObjectFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Oracle json_object() function
+	 */
+	public void jsonObject_oracle() {
+		functionRegistry.register( "json_object", new OracleJsonObjectFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server json_object() function
+	 */
+	public void jsonObject_sqlserver() {
+		functionRegistry.register( "json_object", new SQLServerJsonObjectFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SAP HANA json_object() function
+	 */
+	public void jsonObject_hana() {
+		functionRegistry.register( "json_object", new HANAJsonObjectFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * HSQLDB json_object() function
+	 */
+	public void jsonObject_hsqldb() {
+		functionRegistry.register( "json_object", new HSQLJsonObjectFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_object() function
+	 */
+	public void jsonObject_mysql() {
+		functionRegistry.register( "json_object", new MySQLJsonObjectFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_object() function
+	 */
+	public void jsonObject_postgresql() {
+		functionRegistry.register( "json_object", new PostgreSQLJsonObjectFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * json_array() function
+	 */
+	public void jsonArray() {
+		functionRegistry.register( "json_array", new JsonArrayFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * DB2 json_array() function
+	 */
+	public void jsonArray_db2() {
+		functionRegistry.register( "json_array", new DB2JsonArrayFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Oracle json_array() function
+	 */
+	public void jsonArray_oracle() {
+		functionRegistry.register( "json_array", new OracleJsonArrayFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server json_array() function
+	 */
+	public void jsonArray_sqlserver() {
+		functionRegistry.register( "json_array", new SQLServerJsonArrayFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SAP HANA json_array() function
+	 */
+	public void jsonArray_hana() {
+		functionRegistry.register( "json_array", new HANAJsonArrayFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * HSQLDB json_array() function
+	 */
+	public void jsonArray_hsqldb() {
+		functionRegistry.register( "json_array", new HSQLJsonArrayFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_array() function
+	 */
+	public void jsonArray_mysql() {
+		functionRegistry.register( "json_array", new MySQLJsonArrayFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MariaDB json_array() function
+	 */
+	public void jsonArray_mariadb() {
+		functionRegistry.register( "json_array", new MariaDBJsonArrayFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_array() function
+	 */
+	public void jsonArray_postgresql() {
+		functionRegistry.register( "json_array", new PostgreSQLJsonArrayFunction( typeConfiguration ) );
 	}
 }

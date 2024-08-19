@@ -145,6 +145,7 @@ VERSIONED		: [vV] [eE] [rR] [sS] [iI] [oO] [nN] [eE] [dD];
 NATURALID		: [nN] [aA] [tT] [uU] [rR] [aA] [lL] [iI] [dD];
 FK				: [fF] [kK];
 
+ABSENT				: [aA] [bB] [sS] [eE] [nN] [tT];
 ALL					: [aA] [lL] [lL];
 AND					: [aA] [nN] [dD];
 ANY					: [aA] [nN] [yY];
@@ -221,6 +222,8 @@ INTERSECTS			: [iI] [nN] [tT] [eE] [rR] [sS] [eE] [cC] [tT] [sS];
 INTO 				: [iI] [nN] [tT] [oO];
 IS					: [iI] [sS];
 JOIN				: [jJ] [oO] [iI] [nN];
+JSON_ARRAY			: [jJ] [sS] [oO] [nN] '_' [aA] [rR] [rR] [aA] [yY];
+JSON_OBJECT			: [jJ] [sS] [oO] [nN] '_' [oO] [bB] [jJ] [eE] [cC] [tT];
 JSON_VALUE			: [jJ] [sS] [oO] [nN] '_' [vV] [aA] [lL] [uU] [eE];
 KEY					: [kK] [eE] [yY];
 KEYS				: [kK] [eE] [yY] [sS];

@@ -120,6 +120,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
+import org.hibernate.query.sqm.tree.expression.SqmJsonNullBehavior;
 import org.hibernate.query.sqm.tree.expression.SqmJsonValueExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
@@ -5330,5 +5331,58 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 					queryEngine
 			);
 		}
+	}
+
+	@Override
+	public SqmExpression<String> jsonArrayWithNulls(Expression<?>... values) {
+		final var arguments = new ArrayList<SqmTypedNode<?>>( values.length + 1 );
+		for ( Expression<?> expression : values ) {
+			arguments.add( (SqmTypedNode<?>) expression );
+		}
+		arguments.add( SqmJsonNullBehavior.NULL );
+		return getFunctionDescriptor( "json_array" ).generateSqmExpression(
+				arguments,
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmExpression<String> jsonArray(Expression<?>... values) {
+		//noinspection unchecked
+		return getFunctionDescriptor( "json_array" ).generateSqmExpression(
+				(List<? extends SqmTypedNode<?>>) (List<?>) asList( values ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmExpression<String> jsonObjectWithNulls(Map<?, ? extends Expression<?>> keyValues) {
+		final var arguments = keyValuesAsAlternatingList( keyValues );
+		arguments.add( SqmJsonNullBehavior.NULL );
+		return getFunctionDescriptor( "json_object" ).generateSqmExpression(
+				arguments,
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmExpression<String> jsonObject(Map<?, ? extends Expression<?>> keyValues) {
+		return getFunctionDescriptor( "json_object" ).generateSqmExpression(
+				keyValuesAsAlternatingList( keyValues ),
+				null,
+				queryEngine
+		);
+	}
+
+	private ArrayList<SqmTypedNode<?>> keyValuesAsAlternatingList(Map<?, ? extends Expression<?>> keyValues) {
+		final var list = new ArrayList<SqmTypedNode<?>>( keyValues.size() );
+		for ( Map.Entry<?, ? extends Expression<?>> entry : keyValues.entrySet() ) {
+			list.add( value( entry.getKey() ) );
+			list.add( (SqmTypedNode<?>) entry.getValue() );
+		}
+		return list;
 	}
 }

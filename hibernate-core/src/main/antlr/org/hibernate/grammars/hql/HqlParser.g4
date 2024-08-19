@@ -1109,7 +1109,7 @@ function
 	| collectionFunctionMisuse
 	| jpaNonstandardFunction
 	| columnFunction
-	| jsonValueFunction
+	| jsonFunction
 	| genericFunction
 	;
 
@@ -1621,6 +1621,12 @@ rollup
 	: ROLLUP LEFT_PAREN expressionOrPredicate (COMMA expressionOrPredicate)* RIGHT_PAREN
 	;
 
+jsonFunction
+	: jsonValueFunction
+	| jsonArrayFunction
+	| jsonObjectFunction
+	;
+
 /**
  * The 'json_value()' function
  */
@@ -1634,6 +1640,29 @@ jsonValueReturningClause
 
 jsonValueOnErrorOrEmptyClause
 	: ( ERROR | NULL | ( DEFAULT expression ) ) ON (ERROR|EMPTY);
+
+/**
+ * The 'json_array()' function
+ */
+jsonArrayFunction
+	: JSON_ARRAY LEFT_PAREN (expressionOrPredicate (COMMA expressionOrPredicate)* jsonNullClause?)? RIGHT_PAREN
+	;
+
+/**
+ * The 'json_object()' function
+ */
+jsonObjectFunction
+	: JSON_OBJECT LEFT_PAREN (jsonObjectFunctionEntries jsonNullClause?)? RIGHT_PAREN
+	;
+
+jsonObjectFunctionEntries
+	: expressionOrPredicate COMMA expressionOrPredicate (COMMA expressionOrPredicate COMMA expressionOrPredicate)*
+	| (KEY? expressionOrPredicate VALUE expressionOrPredicate | expressionOrPredicate COLON expressionOrPredicate) (COMMA (KEY? expressionOrPredicate VALUE expressionOrPredicate | expressionOrPredicate COLON expressionOrPredicate))*
+	;
+
+jsonNullClause
+	: (ABSENT|NULL) ON NULL
+	;
 
 /**
  * Support for "soft" keywords which may be used as identifiers
@@ -1651,7 +1680,8 @@ jsonValueOnErrorOrEmptyClause
  nakedIdentifier
 	: IDENTIFIER
 	| QUOTED_IDENTIFIER
-	| (ALL
+	| (ABSENT
+	| ALL
 	| AND
 	| ANY
 	| AS
@@ -1729,6 +1759,8 @@ jsonValueOnErrorOrEmptyClause
 	| INTO
 	| IS
 	| JOIN
+	| JSON_ARRAY
+	| JSON_OBJECT
 	| JSON_VALUE
 	| KEY
 	| KEYS

@@ -108,6 +108,7 @@ import static org.hibernate.type.SqlTypes.GEOGRAPHY;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INET;
 import static org.hibernate.type.SqlTypes.JSON;
+import static org.hibernate.type.SqlTypes.JSON_ARRAY;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
@@ -257,9 +258,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			// Prefer jsonb if possible
 			if ( getVersion().isSameOrAfter( 9, 4 ) ) {
 				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
+				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON_ARRAY, "jsonb", this ) );
 			}
 			else {
 				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON_ARRAY, "json", this ) );
 			}
 		}
 		ddlTypeRegistry.addDescriptor( new NamedNativeEnumDdlTypeImpl( this ) );
@@ -631,9 +634,19 @@ public class PostgreSQLLegacyDialect extends Dialect {
 
 		if ( getVersion().isSameOrAfter( 17 ) ) {
 			functionFactory.jsonValue();
+			functionFactory.jsonObject();
+			functionFactory.jsonArray();
 		}
 		else {
 			functionFactory.jsonValue_postgresql();
+			if ( getVersion().isSameOrAfter( 16 ) ) {
+				functionFactory.jsonObject();
+				functionFactory.jsonArray();
+			}
+			else {
+				functionFactory.jsonObject_postgresql();
+				functionFactory.jsonArray_postgresql();
+			}
 		}
 
 		if ( getVersion().isSameOrAfter( 9, 4 ) ) {
@@ -1417,17 +1430,21 @@ public class PostgreSQLLegacyDialect extends Dialect {
 					if ( getVersion().isSameOrAfter( 9, 4 ) ) {
 						if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
 							jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonbJdbcType( serviceRegistry ) );
+							jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonbArrayJdbcType( serviceRegistry ) );
 						}
 						else {
 							jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
+							jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonArrayJdbcType.JSONB_INSTANCE );
 						}
 					}
 					else {
 						if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
 							jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonJdbcType( serviceRegistry ) );
+							jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonArrayJdbcType( serviceRegistry ) );
 						}
 						else {
 							jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSON_INSTANCE );
+							jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonArrayJdbcType.JSON_INSTANCE );
 						}
 					}
 				}
@@ -1443,9 +1460,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 				if ( getVersion().isSameOrAfter( 9, 2 ) ) {
 					if ( getVersion().isSameOrAfter( 9, 4 ) ) {
 						jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
+						jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonArrayJdbcType.JSONB_INSTANCE );
 					}
 					else {
 						jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSON_INSTANCE );
+						jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonArrayJdbcType.JSON_INSTANCE );
 					}
 				}
 			}

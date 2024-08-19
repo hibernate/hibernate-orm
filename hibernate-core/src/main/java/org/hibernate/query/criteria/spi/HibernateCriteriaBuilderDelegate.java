@@ -3374,4 +3374,28 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			Class<T> returningType) {
 		return criteriaBuilder.jsonValue( jsonDocument, jsonPath, returningType );
 	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonObject(Map<?, ? extends Expression<?>> keyValues) {
+		return criteriaBuilder.jsonObject( keyValues );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonObjectWithNulls(Map<?, ? extends Expression<?>> keyValues) {
+		return criteriaBuilder.jsonObjectWithNulls( keyValues );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonArray(Expression<?>... values) {
+		return criteriaBuilder.jsonArray( values );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonArrayWithNulls(Expression<?>... values) {
+		return criteriaBuilder.jsonArrayWithNulls( values );
+	}
 }

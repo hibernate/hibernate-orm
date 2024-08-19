@@ -3713,6 +3713,38 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Incubating
 	<T> JpaJsonValueExpression<T> jsonValue(Expression<?> jsonDocument, Expression<String> jsonPath, Class<T> returningType);
 
+	/**
+	 * Create a JSON object from the given map of key values.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonObject(Map<?, ? extends Expression<?>> keyValues);
+
+	/**
+	 * Create a JSON object from the given map of key values, retaining {@code null} values in the JSON.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonObjectWithNulls(Map<?, ? extends Expression<?>> keyValues);
+
+	/**
+	 * Create a JSON array from the array of values.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonArray(Expression<?>... values);
+
+	/**
+	 * Create a JSON object from the given array of values, retaining {@code null} values in the JSON array.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonArrayWithNulls(Expression<?>... values);
+
 	@Override
 	JpaPredicate and(List<Predicate> restrictions);
 

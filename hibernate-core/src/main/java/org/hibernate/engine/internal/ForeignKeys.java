@@ -17,7 +17,8 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.AnyType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
@@ -91,7 +92,7 @@ public final class ForeignKeys {
 			if ( value == null ) {
 				returnedValue = null;
 			}
-			else if ( type.isEntityType() ) {
+			else if ( type instanceof EntityType ) {
 				final EntityType entityType = (EntityType) type;
 				if ( entityType.isOneToOne() ) {
 					returnedValue = value;
@@ -113,11 +114,11 @@ public final class ForeignKeys {
 					}
 				}
 			}
-			else if ( type.isAnyType() ) {
+			else if ( type instanceof AnyType ) {
 				returnedValue = isNullifiable( null, value ) ? null : value;
 			}
-			else if ( type.isComponentType() ) {
-				final CompositeType actype = (CompositeType) type;
+			else if ( type instanceof ComponentType ) {
+				final ComponentType actype = (ComponentType) type;
 				final Object[] subvalues = actype.getPropertyValues( value, session );
 				final Type[] subtypes = actype.getSubtypes();
 				final String[] subPropertyNames = actype.getPropertyNames();
@@ -159,7 +160,7 @@ public final class ForeignKeys {
 				final Type type) {
 			if ( isDelete &&
 					value == LazyPropertyInitializer.UNFETCHED_PROPERTY &&
-					type.isEntityType() &&
+					type instanceof EntityType &&
 					!session.getPersistenceContextInternal().isNullifiableEntityKeysEmpty() ) {
 				// IMPLEMENTATION NOTE: If cascade-remove was mapped for the attribute,
 				// then value should have been initialized previously, when the remove operation was
@@ -406,7 +407,7 @@ public final class ForeignKeys {
 			return;
 		}
 
-		if ( type.isEntityType() ) {
+		if ( type instanceof EntityType ) {
 			final EntityType entityType = (EntityType) type;
 			if ( !isNullable
 					&& !entityType.isOneToOne()
@@ -414,13 +415,13 @@ public final class ForeignKeys {
 				nonNullableTransientEntities.add( propertyName, value );
 			}
 		}
-		else if ( type.isAnyType() ) {
+		else if ( type instanceof AnyType ) {
 			if ( !isNullable && nullifier.isNullifiable( null, value ) ) {
 				nonNullableTransientEntities.add( propertyName, value );
 			}
 		}
-		else if ( type.isComponentType() ) {
-			final CompositeType actype = (CompositeType) type;
+		else if ( type instanceof ComponentType ) {
+			final ComponentType actype = (ComponentType) type;
 			final boolean[] subValueNullability = actype.getPropertyNullability();
 			if ( subValueNullability != null ) {
 				final String[] subPropertyNames = actype.getPropertyNames();

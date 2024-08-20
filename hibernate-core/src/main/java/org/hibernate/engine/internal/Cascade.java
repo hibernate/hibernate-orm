@@ -28,12 +28,14 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
@@ -125,7 +127,7 @@ public final class Cascade {
 							// parent was not in the PersistenceContext
 							continue;
 						}
-						if ( type.isCollectionType() ) {
+						if ( type instanceof CollectionType ) {
 							// CollectionType#getCollection gets the PersistentCollection
 							// that corresponds to the uninitialized collection from the
 							// PersistenceContext. If not present, an uninitialized
@@ -140,13 +142,13 @@ public final class Cascade {
 									null
 							);
 						}
-						else if ( type.isComponentType() ) {
+						else if ( type instanceof AnyType || type instanceof ComponentType ) {
 							// Hibernate does not support lazy embeddables, so this shouldn't happen.
 							throw new UnsupportedOperationException(
 									"Lazy components are not supported."
 							);
 						}
-						else if ( action.performOnLazyProperty() && type.isEntityType() ) {
+						else if ( action.performOnLazyProperty() && type instanceof EntityType ) {
 							// Only need to initialize a lazy entity attribute when action.performOnLazyProperty()
 							// returns true.
 							LazyAttributeLoadingInterceptor interceptor = persister.getBytecodeEnhancementMetadata()
@@ -226,7 +228,7 @@ public final class Cascade {
 			final boolean isCascadeDeleteEnabled) throws HibernateException {
 
 		if ( child != null ) {
-			if ( type.isAssociationType() ) {
+			if ( type instanceof EntityType || type instanceof CollectionType || type instanceof AnyType ) {
 				final AssociationType associationType = (AssociationType) type;
 				if ( cascadeAssociationNow( cascadePoint, associationType ) ) {
 					cascadeAssociation(
@@ -243,7 +245,7 @@ public final class Cascade {
 						);
 				}
 			}
-			else if ( type.isComponentType() ) {
+			else if ( type instanceof ComponentType ) {
 				if ( componentPath == null && propertyName != null ) {
 					componentPath = new ArrayList<>();
 				}
@@ -358,9 +360,8 @@ public final class Cascade {
 								LOG.tracev( "Deleting orphaned entity instance: {0}", description );
 							}
 
-							if ( type.isAssociationType() && ( (AssociationType) type ).getForeignKeyDirection().equals(
-									ForeignKeyDirection.TO_PARENT
-							) ) {
+							if ( type instanceof CollectionType
+									|| type instanceof OneToOneType && ( (OneToOneType) type ).getForeignKeyDirection() == ForeignKeyDirection.TO_PARENT ) {
 								// If FK direction is to-parent, we must remove the orphan *before* the queued update(s)
 								// occur.  Otherwise, replacing the association on a managed entity, without manually
 								// nulling and flushing, causes FK constraint violations.
@@ -442,10 +443,10 @@ public final class Cascade {
 			final CascadeStyle style,
 			final T anything,
 			final boolean isCascadeDeleteEnabled) {
-		if ( type.isEntityType() || type.isAnyType() ) {
+		if ( type instanceof EntityType || type instanceof AnyType ) {
 			cascadeToOne( action, eventSource, parent, child, type, style, anything, isCascadeDeleteEnabled );
 		}
-		else if ( type.isCollectionType() ) {
+		else if ( type instanceof CollectionType ) {
 			cascadeCollection(
 					action,
 					cascadePoint,
@@ -485,7 +486,7 @@ public final class Cascade {
 		}
 
 		//cascade to current collection elements
-		if ( elemType.isEntityType() || elemType.isAnyType() || elemType.isComponentType() ) {
+		if ( elemType instanceof EntityType || elemType instanceof AnyType || elemType instanceof ComponentType ) {
 			cascadeCollectionElements(
 				action,
 				elementsCascadePoint,
@@ -514,7 +515,7 @@ public final class Cascade {
 			final CascadeStyle style,
 			final T anything,
 			final boolean isCascadeDeleteEnabled) {
-		final String entityName = type.isEntityType()
+		final String entityName = type instanceof EntityType
 				? ( (EntityType) type ).getAssociatedEntityName()
 				: null;
 		if ( style.reallyDoCascade( action ) ) {
@@ -578,7 +579,7 @@ public final class Cascade {
 
 		final boolean deleteOrphans = style.hasOrphanDelete()
 				&& action.deleteOrphans()
-				&& elemType.isEntityType()
+				&& elemType instanceof EntityType
 				&& child instanceof PersistentCollection
 				// a newly instantiated collection can't have orphans
 				&& ! ( (PersistentCollection<?>) child ).isNewlyInstantiated();

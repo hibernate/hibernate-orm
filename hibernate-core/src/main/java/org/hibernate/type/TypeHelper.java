@@ -192,7 +192,7 @@ public class TypeHelper {
 			}
 			else {
 				final Type type = types[i];
-				if ( type.isComponentType() ) {
+				if ( type instanceof AnyType || type instanceof ComponentType ) {
 					final CompositeType compositeType = (CompositeType) type;
 					// need to extract the component values and check for subtype replacements...
 					final Type[] subtypes = compositeType.getSubtypes();
@@ -226,11 +226,11 @@ public class TypeHelper {
 					}
 					copied[i] = target[i];
 				}
-				else if ( !type.isAssociationType() ) {
-					copied[i] = target[i];
+				else if ( type instanceof CollectionType || type instanceof EntityType ) {
+					copied[i] = types[i].replace( currentOriginal, target[i], session, owner, copyCache, foreignKeyDirection );
 				}
 				else {
-					copied[i] = types[i].replace( currentOriginal, target[i], session, owner, copyCache, foreignKeyDirection );
+					copied[i] = target[i];
 				}
 			}
 		}

@@ -51,6 +51,7 @@ import org.hibernate.sql.model.ast.builder.CollectionRowDeleteBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
+import org.hibernate.type.EntityType;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
@@ -701,7 +702,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 	@Override
 	public boolean isManyToMany() {
-		return elementType.isEntityType(); //instanceof AssociationType;
+		return elementType instanceof EntityType; //instanceof AssociationType;
 	}
 
 	@Override

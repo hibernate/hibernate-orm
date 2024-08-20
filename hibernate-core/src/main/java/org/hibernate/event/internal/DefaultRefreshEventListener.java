@@ -34,6 +34,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
@@ -243,7 +244,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		final SessionFactoryImplementor factory = source.getFactory();
 		final MappingMetamodelImplementor metamodel = factory.getRuntimeMetamodels().getMappingMetamodel();
 		for ( Type type : types ) {
-			if ( type.isCollectionType() ) {
+			if ( type instanceof CollectionType ) {
 				final String role = ((CollectionType) type).getRole();
 				CollectionPersister collectionPersister = metamodel.getCollectionDescriptor( role );
 				if ( collectionPersister.hasCache() ) {
@@ -259,8 +260,9 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 					actionQueue.registerProcess( (success, session) -> cache.unlockItem( session, ck, lock ) );
 				}
 			}
-			else if ( type.isComponentType() ) {
-				CompositeType compositeType = (CompositeType) type;
+			else if ( type instanceof ComponentType ) {
+				// Only components can contain collections
+				ComponentType compositeType = (ComponentType) type;
 				evictCachedCollections( compositeType.getSubtypes(), id, source );
 			}
 		}

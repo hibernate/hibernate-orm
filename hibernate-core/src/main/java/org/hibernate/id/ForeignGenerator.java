@@ -100,7 +100,7 @@ public class ForeignGenerator implements IdentifierGenerator, StandardGenerator 
 
 		final EntityType foreignValueSourceType;
 		final Type propertyType = entityDescriptor.getPropertyType( propertyName );
-		if ( propertyType.isEntityType() ) {
+		if ( propertyType instanceof EntityType ) {
 			// the normal case
 			foreignValueSourceType = (EntityType) propertyType;
 		}

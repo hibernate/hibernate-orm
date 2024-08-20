@@ -200,7 +200,7 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
 		//		Currently the tuple is { owner_id, entity_id, rev } and so having this special
 		//		treatment is critical to avoid HHH-13080.
 		//
-		if ( elementType.isEntityType() && !revisionTypeInId ) {
+		if ( elementType instanceof EntityType && !revisionTypeInId ) {
 
 			// This is a short-circuit to check for reference equality only.
 			// There is no need to delegate to the identifier if the objects are reference equal.

@@ -257,7 +257,7 @@ public final class TypeUtils {
 	}
 
 	public static boolean hasAnnotation(Element element, String qualifiedName) {
-		return getAnnotationMirror( element, qualifiedName ) != null;
+		return element != null && qualifiedName != null && getAnnotationMirror( element, qualifiedName ) != null;
 	}
 
 	public static boolean hasAnnotation(Element element, String... qualifiedNames) {
@@ -615,8 +615,7 @@ public final class TypeUtils {
 
 	public static @Nullable String findMappedSuperClass(Metamodel entity, Context context) {
 		final Element element = entity.getElement();
-		if ( element instanceof TypeElement ) {
-			final TypeElement typeElement = (TypeElement) element;
+		if ( element instanceof TypeElement typeElement ) {
 			TypeMirror superClass = typeElement.getSuperclass();
 			//superclass of Object is of NoType which returns some other kind
 			while ( superClass.getKind() == TypeKind.DECLARED ) {

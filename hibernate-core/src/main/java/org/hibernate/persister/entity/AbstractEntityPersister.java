@@ -3696,7 +3696,7 @@ public abstract class AbstractEntityPersister
 	public int[] findDirty(Object[] currentState, Object[] previousState, Object entity, SharedSessionContractImplementor session)
 			throws HibernateException {
 		int[] props = DirtyHelper.findDirty(
-				entityMetamodel.getProperties(),
+				entityMetamodel.getDirtyCheckablePropertyTypes(),
 				currentState,
 				previousState,
 				propertyColumnUpdateable,

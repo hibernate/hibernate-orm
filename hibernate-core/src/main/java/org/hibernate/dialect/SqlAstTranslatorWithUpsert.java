@@ -193,7 +193,7 @@ public class SqlAstTranslatorWithUpsert<T extends JdbcOperation> extends Abstrac
 		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
 		final List<ColumnValueBinding> optimisticLockBindings = optionalTableUpdate.getOptimisticLockBindings();
 
-		appendSql( " when matched then update set " );
+		appendSql( "when matched then update set " );
 		for ( int i = 0; i < valueBindings.size(); i++ ) {
 			final ColumnValueBinding binding = valueBindings.get( i );
 			if ( i > 0 ) {

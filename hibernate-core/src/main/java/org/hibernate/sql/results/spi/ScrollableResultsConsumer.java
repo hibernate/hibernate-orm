@@ -26,7 +26,11 @@ import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 public class ScrollableResultsConsumer<R> implements ResultsConsumer<ScrollableResultsImplementor<R>, R> {
 	/**
 	 * Singleton access to the standard scrollable-results consumer instance
+	 *
+	 * @deprecated in favor of {@link #instance()}
 	 */
+	@SuppressWarnings( "rawtypes" )
+	@Deprecated( forRemoval = true )
 	public static final ScrollableResultsConsumer INSTANCE = new ScrollableResultsConsumer();
 
 	@SuppressWarnings("unchecked")

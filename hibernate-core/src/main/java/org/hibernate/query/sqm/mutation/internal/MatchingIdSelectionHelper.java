@@ -316,7 +316,7 @@ public class MatchingIdSelectionHelper {
 			rowTransformer = RowTransformerSingularReturnImpl.instance();
 		}
 		else {
-			rowTransformer = RowTransformerArrayImpl.INSTANCE;
+			rowTransformer = RowTransformerArrayImpl.instance();
 		}
 		//noinspection unchecked
 		return jdbcServices.getJdbcSelectExecutor().list(

@@ -695,7 +695,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			};
 		}
 		else {
-			return ImmutableMutabilityPlan.INSTANCE;
+			return ImmutableMutabilityPlan.instance();
 		}
 	}
 

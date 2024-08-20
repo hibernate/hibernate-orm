@@ -21,6 +21,14 @@ import org.hibernate.SharedSessionContract;
  * @author Steve Ebersole
  */
 public class ImmutableMutabilityPlan<T> implements MutabilityPlan<T> {
+
+	/**
+	 * Singleton access
+	 *
+	 * @deprecated in favor of {@link #instance()}
+	 */
+	@SuppressWarnings( "rawtypes" )
+	@Deprecated( forRemoval = true )
 	public static final ImmutableMutabilityPlan INSTANCE = new ImmutableMutabilityPlan();
 
 	public static <X> ImmutableMutabilityPlan<X> instance() {

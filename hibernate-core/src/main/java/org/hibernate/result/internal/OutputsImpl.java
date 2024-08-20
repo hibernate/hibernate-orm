@@ -188,7 +188,7 @@ public class OutputsImpl implements Outputs {
 			//noinspection unchecked
 			final RowReader<Object> rowReader = (RowReader<Object>) ResultsHelper.createRowReader(
 					getSessionFactory(),
-					RowTransformerStandardImpl.INSTANCE,
+					RowTransformerStandardImpl.instance(),
 					null,
 					jdbcValues
 			);

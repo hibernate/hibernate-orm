@@ -45,6 +45,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchJoinedImpl;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
@@ -389,8 +390,8 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				propertyType = entityBinding.getIdentifierMapper().getType();
 			}
 			if ( entityBinding.getIdentifierProperty() == null ) {
-				final CompositeType compositeType;
-				if ( propertyType.isComponentType() && ( compositeType = (CompositeType) propertyType ).isEmbedded()
+				final ComponentType compositeType;
+				if ( propertyType instanceof ComponentType && ( compositeType = (ComponentType) propertyType ).isEmbedded()
 						&& compositeType.getPropertyNames().length == 1 ) {
 					ToOneAttributeMapping.addPrefixedPropertyPaths(
 							targetKeyPropertyNames,
@@ -443,8 +444,8 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 		}
 		else {
 			final Type propertyType = entityBinding.getRecursiveProperty( referencedPropertyName ).getType();
-			final CompositeType compositeType;
-			if ( propertyType.isComponentType() && ( compositeType = (CompositeType) propertyType ).isEmbedded()
+			final ComponentType compositeType;
+			if ( propertyType instanceof ComponentType && ( compositeType = (ComponentType) propertyType ).isEmbedded()
 					&& compositeType.getPropertyNames().length == 1 ) {
 				final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
 				ToOneAttributeMapping.addPrefixedPropertyPaths(

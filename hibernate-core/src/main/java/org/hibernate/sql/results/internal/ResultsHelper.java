@@ -49,6 +49,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingResolution;
 import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.results.spi.RowTransformer;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.type.EntityType;
 
 /**
  * @author Steve Ebersole
@@ -204,7 +205,7 @@ public class ResultsHelper {
 		);
 
 		boolean isPutFromLoad = true;
-		if ( collectionDescriptor.getElementType().isAssociationType() ) {
+		if ( collectionDescriptor.getElementType() instanceof EntityType ) {
 			final EntityPersister entityPersister = ( (QueryableCollection) collectionDescriptor ).getElementPersister();
 			for ( Object id : entry.getState() ) {
 				if ( persistenceContext.wasInsertedDuringTransaction( entityPersister, id ) ) {

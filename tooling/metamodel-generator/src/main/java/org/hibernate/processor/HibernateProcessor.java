@@ -24,6 +24,7 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.ModuleElement;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.QualifiedNameable;
 import javax.lang.model.element.TypeElement;
@@ -364,6 +365,11 @@ public class HibernateProcessor extends AbstractProcessor {
 		}
 
 		for ( Element element : roundEnvironment.getRootElements() ) {
+			if (isModule( element ) ) {
+				context.logMessage( Diagnostic.Kind.WARNING,
+									"Element '" + element + "' is module. Pass it." );
+				continue;
+			}
 			try {
 				if ( !included( element )
 						|| hasAnnotation( element, Constants.EXCLUDE )
@@ -378,8 +384,7 @@ public class HibernateProcessor extends AbstractProcessor {
 					context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated class '" + element + "'" );
 					handleRootElementAuxiliaryAnnotationMirrors( element );
 				}
-				else if ( element instanceof TypeElement ) {
-					final TypeElement typeElement = (TypeElement) element;
+				else if ( element instanceof TypeElement typeElement ) {
 					final AnnotationMirror repository = getAnnotationMirror( element, JD_REPOSITORY );
 					if ( repository != null ) {
 						final AnnotationValue provider = getAnnotationValue( repository, "provider" );
@@ -418,6 +423,10 @@ public class HibernateProcessor extends AbstractProcessor {
 				}
 			}
 		}
+	}
+
+	private boolean isModule(Element element) {
+		return element instanceof ModuleElement;
 	}
 
 	private void createMetaModelClasses() {

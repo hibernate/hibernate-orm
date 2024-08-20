@@ -26,6 +26,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ManyToOneType;
@@ -249,7 +250,7 @@ class EntityPropertyMapping {
 			);
 		}
 
-		if ( type.isAssociationType() ) {
+		if ( type instanceof AnyType || type instanceof CollectionType || type instanceof EntityType ) {
 			AssociationType actype = (AssociationType) type;
 			if ( actype.useLHSPrimaryKey() ) {
 				columns = getIdentifierColumnNames();
@@ -275,8 +276,20 @@ class EntityPropertyMapping {
 			addPropertyPath( path, type, columns, columnReaders, columnReaderTemplates, factory );
 		}
 
-		if ( type.isComponentType() ) {
-			CompositeType actype = (CompositeType) type;
+		if ( type instanceof AnyType ) {
+			AnyType actype = (AnyType) type;
+			initComponentPropertyPaths(
+					path,
+					actype,
+					columns,
+					columnReaders,
+					columnReaderTemplates,
+					formulaTemplates,
+					factory
+			);
+		}
+		else if ( type instanceof ComponentType ) {
+			ComponentType actype = (ComponentType) type;
 			initComponentPropertyPaths(
 					path,
 					actype,
@@ -298,7 +311,7 @@ class EntityPropertyMapping {
 				);
 			}
 		}
-		else if ( type.isEntityType() ) {
+		else if ( type instanceof EntityType ) {
 			initIdentifierPropertyPaths(
 					path,
 					(EntityType) type,

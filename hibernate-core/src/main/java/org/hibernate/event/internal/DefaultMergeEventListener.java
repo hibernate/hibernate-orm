@@ -41,7 +41,9 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.type.AnyType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
@@ -165,14 +167,14 @@ public class DefaultMergeEventListener
 			originalId = persister.getIdentifier( entity, source );
 			if ( originalId != null ) {
 				final EntityKey entityKey;
-				if ( persister.getIdentifierType().isComponentType() ) {
+				if ( persister.getIdentifierType() instanceof ComponentType ) {
 					/*
 					this is needed in case of composite id containing an association with a generated identifier, in such a case
 					generating the EntityKey will cause a NPE when trying to get the hashcode of the null id
 					 */
 					copiedId = copyCompositeTypeId(
 							originalId,
-							(CompositeType) persister.getIdentifierType(),
+							(ComponentType) persister.getIdentifierType(),
 							source,
 							copiedAlready
 					);
@@ -250,7 +252,7 @@ public class DefaultMergeEventListener
 		final Object[] copyValues = compositeType.getPropertyValues( idCopy );
 		for ( int i = 0; i < subtypes.length; i++ ) {
 			final Type subtype = subtypes[i];
-			if ( subtype.isEntityType() ) {
+			if ( subtype instanceof EntityType ) {
 				// the value of the copy in the MergeContext has the id assigned
 				final Object o = mergeContext.get( propertyValues[i] );
 				if ( o != null ) {
@@ -260,8 +262,11 @@ public class DefaultMergeEventListener
 					copyValues[i] = subtype.deepCopy( propertyValues[i], sessionFactory );
 				}
 			}
-			else if ( subtype.isComponentType() ) {
-				copyValues[i] = copyCompositeTypeId( propertyValues[i], (CompositeType) subtype, session, mergeContext );
+			else if ( subtype instanceof AnyType ) {
+				copyValues[i] = copyCompositeTypeId( propertyValues[i], (AnyType) subtype, session, mergeContext );
+			}
+			else if ( subtype instanceof ComponentType ) {
+				copyValues[i] = copyCompositeTypeId( propertyValues[i], (ComponentType) subtype, session, mergeContext );
 			}
 			else {
 				copyValues[i] = subtype.deepCopy( propertyValues[i], sessionFactory );

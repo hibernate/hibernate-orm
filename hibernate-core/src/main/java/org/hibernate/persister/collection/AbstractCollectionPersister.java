@@ -140,6 +140,7 @@ import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.MetaType;
@@ -386,7 +387,7 @@ public abstract class AbstractCollectionPersister
 
 		// ELEMENT
 
-		if ( elementType.isEntityType() ) {
+		if ( elementType instanceof EntityType ) {
 			String entityName = ( (EntityType) elementType ).getAssociatedEntityName();
 			elementPersister = creationContext.getDomainModel().getEntityDescriptor( entityName );
 			// NativeSQL: collect element column and auto-aliases
@@ -437,7 +438,7 @@ public abstract class AbstractCollectionPersister
 						creationContext.getFunctionRegistry()
 				);
 				elementColumnIsGettable[j] = true;
-				if ( elementType.isComponentType() ) {
+				if ( elementType instanceof ComponentType || elementType instanceof AnyType ) {
 					// Implements desired behavior specifically for @ElementCollection mappings.
 					elementColumnIsSettable[j] = columnInsertability[j];
 				}
@@ -555,7 +556,7 @@ public abstract class AbstractCollectionPersister
 			elementClass = null; // elementType.returnedClass();
 		}
 
-		if ( elementType.isComponentType() ) {
+		if ( elementType instanceof ComponentType || elementType instanceof AnyType ) {
 			elementPropertyMapping = new CompositeElementPropertyMapping(
 					elementColumnNames,
 					elementColumnReaders,
@@ -565,7 +566,7 @@ public abstract class AbstractCollectionPersister
 					creationContext.getMetadata()
 			);
 		}
-		else if ( !elementType.isEntityType() ) {
+		else if ( !( elementType instanceof EntityType ) ) {
 			elementPropertyMapping = new ElementPropertyMapping( elementColumnNames, elementType );
 		}
 		else {
@@ -1534,7 +1535,7 @@ public abstract class AbstractCollectionPersister
 		collectionPropertyColumnAliases.put( aliasName, columnAliases );
 
 		//TODO: this code is almost certainly obsolete and can be removed
-		if ( type.isComponentType() ) {
+		if ( type instanceof ComponentType || type instanceof AnyType ) {
 			CompositeType ct = (CompositeType) type;
 			String[] propertyNames = ct.getPropertyNames();
 			for ( int i = 0; i < propertyNames.length; i++ ) {

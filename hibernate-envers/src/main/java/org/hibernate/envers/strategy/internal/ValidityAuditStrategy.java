@@ -433,7 +433,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		final Type propertyType = session.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityName ).getPropertyType( propertyName );
-		if ( propertyType.isCollectionType() ) {
+		if ( propertyType instanceof CollectionType ) {
 			final CollectionType collectionType = (CollectionType) propertyType;
 			final Type collectionElementType = collectionType.getElementType( session.getSessionFactory() );
 			if ( collectionElementType instanceof ComponentType ) {

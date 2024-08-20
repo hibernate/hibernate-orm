@@ -316,7 +316,7 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 			);
 			collectionPersisterMap.put( model.getRole(), persister );
 			Type indexType = persister.getIndexType();
-			if ( indexType != null && indexType.isEntityType() && !indexType.isAnyType() ) {
+			if ( indexType instanceof org.hibernate.type.EntityType ) {
 				String entityName = ( (org.hibernate.type.EntityType) indexType ).getAssociatedEntityName();
 				Set<String> roles = collectionRolesByEntityParticipant.get( entityName );
 				//noinspection Java8MapApi
@@ -327,7 +327,7 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 				roles.add( persister.getRole() );
 			}
 			Type elementType = persister.getElementType();
-			if ( elementType.isEntityType() && !elementType.isAnyType() ) {
+			if ( elementType instanceof org.hibernate.type.EntityType ) {
 				String entityName = ( (org.hibernate.type.EntityType) elementType ).getAssociatedEntityName();
 				Set<String> roles = collectionRolesByEntityParticipant.get( entityName );
 				//noinspection Java8MapApi

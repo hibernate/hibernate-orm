@@ -108,6 +108,7 @@ import org.hibernate.sql.results.graph.entity.internal.EntityFetchSelectImpl;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.internal.domain.CircularBiDirectionalFetchImpl;
 import org.hibernate.sql.results.internal.domain.CircularFetchImpl;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
@@ -460,8 +461,8 @@ public class ToOneAttributeMapping
 				propertyType = entityBinding.getIdentifierMapper().getType();
 			}
 			if ( entityBinding.getIdentifierProperty() == null ) {
-				final CompositeType compositeType;
-				if ( propertyType.isComponentType() && ( compositeType = (CompositeType) propertyType ).isEmbedded()
+				final ComponentType compositeType;
+				if ( propertyType instanceof ComponentType && ( compositeType = (ComponentType) propertyType ).isEmbedded()
 						&& compositeType.getPropertyNames().length == 1 ) {
 					this.targetKeyPropertyName = compositeType.getPropertyNames()[0];
 					addPrefixedPropertyPaths(
@@ -520,8 +521,8 @@ public class ToOneAttributeMapping
 				this.targetKeyPropertyNames = targetKeyPropertyNames;
 			}
 			else {
-				final CompositeType compositeType;
-				if ( propertyType.isComponentType() && ( compositeType = (CompositeType) propertyType ).isEmbedded()
+				final ComponentType compositeType;
+				if ( propertyType instanceof ComponentType && ( compositeType = (ComponentType) propertyType ).isEmbedded()
 						&& compositeType.getPropertyNames().length == 1 ) {
 					final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
 					this.targetKeyPropertyName = compositeType.getPropertyNames()[0];
@@ -771,7 +772,7 @@ public class ToOneAttributeMapping
 		if ( prefix != null ) {
 			targetKeyPropertyNames.add( prefix );
 		}
-		if ( type.isComponentType() ) {
+		if ( type instanceof ComponentType ) {
 			final CompositeType componentType = (CompositeType) type;
 			final String[] propertyNames = componentType.getPropertyNames();
 			final Type[] componentTypeSubtypes = componentType.getSubtypes();
@@ -786,7 +787,7 @@ public class ToOneAttributeMapping
 				addPrefixedPropertyNames( targetKeyPropertyNames, newPrefix, componentTypeSubtypes[i], factory );
 			}
 		}
-		else if ( type.isEntityType() ) {
+		else if ( type instanceof EntityType ) {
 			final EntityType entityType = (EntityType) type;
 			final Type identifierOrUniqueKeyType = entityType.getIdentifierOrUniqueKeyType( factory );
 			final String propertyName;

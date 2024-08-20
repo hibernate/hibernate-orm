@@ -771,7 +771,7 @@ public class MappingModelCreationHelper {
 		final ManagedMappingType keyDeclaringType;
 		final String collectionTableName = ((AbstractCollectionPersister) collectionDescriptor).getTableName();
 
-		if ( collectionDescriptor.getElementType().isEntityType() ) {
+		if ( collectionDescriptor.getElementType() instanceof EntityType ) {
 			keyDeclaringType = ( (QueryableCollection) collectionDescriptor ).getElementPersister();
 		}
 		else {

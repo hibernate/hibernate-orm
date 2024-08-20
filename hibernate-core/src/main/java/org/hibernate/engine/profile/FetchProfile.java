@@ -14,6 +14,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.BagType;
+import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -98,7 +99,7 @@ public class FetchProfile {
 		final String role = association.getRole();
 		final Type associationType =
 				association.getOwner().getPropertyType( association.getAssociationPath() );
-		if ( associationType.isCollectionType() ) {
+		if ( associationType instanceof CollectionType ) {
 			LOG.tracev( "Handling request to add collection fetch [{0}]", role );
 
 			// couple of things for which to account in the case of collection

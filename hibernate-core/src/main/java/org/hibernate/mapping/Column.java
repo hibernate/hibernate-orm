@@ -350,7 +350,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	}
 
 	private static Type getUnderlyingType(Mapping mapping, Type type, int typeIndex) {
-		if ( type.isComponentType() ) {
+		if ( type instanceof ComponentType ) {
 			final ComponentType componentType = (ComponentType) type;
 			int cols = 0;
 			for ( Type subtype : componentType.getSubtypes() ) {
@@ -362,7 +362,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 			}
 			throw new IndexOutOfBoundsException();
 		}
-		else if ( type.isEntityType() ) {
+		else if ( type instanceof EntityType ) {
 			final EntityType entityType = (EntityType) type;
 			final Type idType = entityType.getIdentifierOrUniqueKeyType( mapping );
 			return getUnderlyingType( mapping, idType, typeIndex );

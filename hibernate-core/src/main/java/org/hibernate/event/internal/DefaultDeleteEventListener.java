@@ -47,6 +47,7 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
@@ -133,15 +134,15 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	private static void deleteOwnedCollections(Type type, Object key, EventSource session) {
 		MappingMetamodelImplementor mappingMetamodel = session.getFactory().getMappingMetamodel();
 		ActionQueue actionQueue = session.getActionQueue();
-		if ( type.isCollectionType() ) {
+		if ( type instanceof CollectionType ) {
 			String role = ( (CollectionType) type ).getRole();
 			CollectionPersister persister = mappingMetamodel.getCollectionDescriptor(role);
 			if ( !persister.isInverse() ) {
 				actionQueue.addAction( new CollectionRemoveAction( persister, key, session ) );
 			}
 		}
-		else if ( type.isComponentType() ) {
-			Type[] subtypes = ( (CompositeType) type ).getSubtypes();
+		else if ( type instanceof ComponentType ) {
+			Type[] subtypes = ( (ComponentType) type ).getSubtypes();
 			for ( Type subtype : subtypes ) {
 				deleteOwnedCollections( subtype, key, session );
 			}
@@ -453,7 +454,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		final String[] propertyNames = persister.getPropertyNames();
 		final BytecodeEnhancementMetadata enhancementMetadata = persister.getBytecodeEnhancementMetadata();
 		for ( int i = 0; i < types.length; i++) {
-			if ( types[i].isCollectionType() && !enhancementMetadata.isAttributeLoaded( parent, propertyNames[i] ) ) {
+			if ( types[i] instanceof CollectionType && !enhancementMetadata.isAttributeLoaded( parent, propertyNames[i] ) ) {
 				final CollectionType collectionType = (CollectionType) types[i];
 				final CollectionPersister collectionDescriptor = persister.getFactory().getMappingMetamodel()
 						.getCollectionDescriptor( collectionType.getRole() );

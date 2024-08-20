@@ -552,7 +552,7 @@ public class EntityMetamodel implements Serializable {
 	}
 
 	private static boolean indicatesCollection(Type type) {
-		if ( type.isCollectionType() ) {
+		if ( type instanceof CollectionType ) {
 			return true;
 		}
 		else if ( type.isComponentType() ) {
@@ -567,7 +567,7 @@ public class EntityMetamodel implements Serializable {
 	}
 
 	private static boolean indicatesOwnedCollection(Type type, MetadataImplementor metadata) {
-		if ( type.isCollectionType() ) {
+		if ( type instanceof CollectionType ) {
 			String role = ( (CollectionType) type ).getRole();
 			return !metadata.getCollectionBinding( role ).isInverse();
 		}

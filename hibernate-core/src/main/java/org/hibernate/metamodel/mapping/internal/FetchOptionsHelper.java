@@ -16,7 +16,10 @@ import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.results.graph.FetchOptions;
+import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.EntityType;
 
 /**
  * @author Steve Ebersole
@@ -40,7 +43,7 @@ public final class FetchOptionsHelper {
 			FetchMode mappingFetchMode,
 			AssociationType type,
 			SessionFactoryImplementor sessionFactory) {
-		if ( !type.isEntityType() && !type.isCollectionType() ) {
+		if ( !( type instanceof EntityType ) && !( type instanceof CollectionType ) ) {
 			return FetchStyle.SELECT;
 		}
 
@@ -48,7 +51,7 @@ public final class FetchOptionsHelper {
 			return FetchStyle.JOIN;
 		}
 
-		if ( type.isEntityType() ) {
+		if ( type instanceof EntityType ) {
 			EntityPersister persister = (EntityPersister) type.getAssociatedJoinable( sessionFactory );
 			if ( persister.isBatchLoadable() ) {
 				return FetchStyle.BATCH;
@@ -116,11 +119,11 @@ public final class FetchOptionsHelper {
 	}
 
 	private static boolean isSubsequentSelectDelayed(AssociationType type, SessionFactoryImplementor sessionFactory) {
-		if ( type.isAnyType() ) {
+		if ( type instanceof AnyType ) {
 			// we'd need more context here.  this is only kept as part of the property state on the owning entity
 			return false;
 		}
-		else if ( type.isEntityType() ) {
+		else if ( type instanceof EntityType ) {
 			final EntityPersister entityPersister = (EntityPersister) type.getAssociatedJoinable( sessionFactory );
 			return entityPersister.getEntityMetamodel().isLazy();
 		}

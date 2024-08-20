@@ -32,6 +32,9 @@ import org.hibernate.property.access.spi.Setter;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.type.AnyType;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 import org.hibernate.type.WrapperArrayHandling;
@@ -150,10 +153,13 @@ public class Property implements Serializable, MetaAttributable {
 
 	public CascadeStyle getCascadeStyle() throws MappingException {
 		final Type type = value.getType();
-		if ( type.isComponentType() ) {
-			return getCompositeCascadeStyle( (CompositeType) type, cascade );
+		if ( type instanceof AnyType ) {
+			return getCascadeStyle( cascade );
 		}
-		else if ( type.isCollectionType() ) {
+		if ( type instanceof ComponentType ) {
+			return getCompositeCascadeStyle( (ComponentType) type, cascade );
+		}
+		else if ( type instanceof CollectionType ) {
 			return getCollectionCascadeStyle( ( (Collection) value ).getElement().getType(), cascade );
 		}
 		else {
@@ -162,9 +168,15 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	private static CascadeStyle getCompositeCascadeStyle(CompositeType compositeType, String cascade) {
-		if ( compositeType.isAnyType() ) {
+		if ( compositeType instanceof AnyType ) {
 			return getCascadeStyle( cascade );
 		}
+		else {
+			return getCompositeCascadeStyle( (ComponentType) compositeType, cascade );
+		}
+	}
+
+	private static CascadeStyle getCompositeCascadeStyle(ComponentType compositeType, String cascade) {
 		int length = compositeType.getSubtypes().length;
 		for ( int i=0; i<length; i++ ) {
 			if ( compositeType.getCascadeStyle(i) != CascadeStyles.NONE ) {
@@ -175,8 +187,11 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	private static CascadeStyle getCollectionCascadeStyle(Type elementType, String cascade) {
-		if ( elementType.isComponentType() ) {
-			return getCompositeCascadeStyle( (CompositeType) elementType, cascade );
+		if ( elementType instanceof AnyType ) {
+			return getCascadeStyle( cascade );
+		}
+		else if ( elementType instanceof ComponentType ) {
+			return getCompositeCascadeStyle( (ComponentType) elementType, cascade );
 		}
 		else {
 			return getCascadeStyle( cascade );

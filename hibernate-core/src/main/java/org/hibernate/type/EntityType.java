@@ -491,7 +491,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			// we need to dig a little deeper, as that property might also be
 			// an entity type, in which case we need to resolve its identifier
 			final Type type = entityPersister.getPropertyType( uniqueKeyPropertyName );
-			if ( type.isEntityType() ) {
+			if ( type instanceof EntityType ) {
 				return ( (EntityType) type ).getIdentifier( propertyValue, session );
 			}
 
@@ -515,7 +515,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			// we need to dig a little deeper, as that property might also be
 			// an entity type, in which case we need to resolve its identifier
 			Type type = entityPersister.getPropertyType( uniqueKeyPropertyName );
-			if ( type.isEntityType() ) {
+			if ( type instanceof EntityType ) {
 				propertyValue = ( (EntityType) type ).getIdentifier( propertyValue, sessionFactory );
 			}
 
@@ -639,7 +639,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 		else {
 			Type type = factory.getReferencedPropertyType( getAssociatedEntityName(), uniqueKeyPropertyName );
-			if ( type.isEntityType() ) {
+			if ( type instanceof EntityType ) {
 				type = ( (EntityType) type ).getIdentifierOrUniqueKeyType( factory );
 			}
 			return type;

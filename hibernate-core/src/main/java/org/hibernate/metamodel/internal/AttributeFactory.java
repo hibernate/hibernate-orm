@@ -57,6 +57,9 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessMapImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.type.AnyType;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
@@ -409,7 +412,7 @@ public class AttributeFactory {
 		final org.hibernate.type.Type type = value.getType();
 		LOG.tracef( "    Determined type [name=%s, class=%s]", type.getName(), type.getClass().getName() );
 
-		if ( type.isAnyType() ) {
+		if ( type instanceof AnyType ) {
 			return new SingularAttributeMetadataImpl<>(
 					propertyMapping,
 					attributeContext.getOwnerType(),
@@ -418,18 +421,17 @@ public class AttributeFactory {
 					context
 			);
 		}
-		else if ( type.isAssociationType() ) {
-			// collection or entity
-			if ( type.isEntityType() ) {
-				// entity
-				return new SingularAttributeMetadataImpl<>(
-						propertyMapping,
-						attributeContext.getOwnerType(),
-						member,
-						determineSingularAssociationClassification( member ),
-						context
-				);
-			}
+		else if ( type instanceof EntityType ) {
+			// entity
+			return new SingularAttributeMetadataImpl<>(
+					propertyMapping,
+					attributeContext.getOwnerType(),
+					member,
+					determineSingularAssociationClassification( member ),
+					context
+			);
+		}
+		else if ( type instanceof CollectionType ) {
 			// collection
 			if ( value instanceof Collection ) {
 				final Collection collValue = (Collection) value;
@@ -441,15 +443,15 @@ public class AttributeFactory {
 				// collection type
 				final AttributeClassification elementClassification;
 				final AttributeClassification attributeClassification;
-				if ( elementType.isAnyType() ) {
+				if ( elementType instanceof AnyType ) {
 					attributeClassification = AttributeClassification.ELEMENT_COLLECTION;
 					elementClassification = AttributeClassification.ANY;
 				}
-				else if ( elementValue instanceof Component ) {
+				else if ( elementType instanceof ComponentType ) {
 					elementClassification = AttributeClassification.EMBEDDED;
 					attributeClassification = AttributeClassification.ELEMENT_COLLECTION;
 				}
-				else if ( elementType.isAssociationType() ) {
+				else if ( elementType instanceof EntityType ) {
 					elementClassification = isManyToMany ?
 							AttributeClassification.MANY_TO_MANY :
 							AttributeClassification.ONE_TO_MANY;
@@ -467,13 +469,13 @@ public class AttributeFactory {
 					final Value keyValue = ( (Map) value ).getIndex();
 					final org.hibernate.type.Type keyType = keyValue.getType();
 
-					if ( keyType.isAnyType() ) {
+					if ( keyType instanceof AnyType ) {
 						indexClassification = AttributeClassification.ANY;
 					}
-					else if ( keyValue instanceof Component ) {
+					else if ( keyType instanceof ComponentType ) {
 						indexClassification = AttributeClassification.EMBEDDED;
 					}
-					else if ( keyType.isAssociationType() ) {
+					else if ( keyType instanceof EntityType ) {
 						indexClassification = AttributeClassification.MANY_TO_ONE;
 					}
 					else {
@@ -516,7 +518,7 @@ public class AttributeFactory {
 //					);
 			}
 		}
-		else if ( propertyMapping.isComposite() ) {
+		else if ( type instanceof ComponentType ) {
 			// component
 			return new SingularAttributeMetadataImpl<>(
 					propertyMapping,
@@ -527,6 +529,7 @@ public class AttributeFactory {
 			);
 		}
 		else {
+			assert type instanceof BasicType<?>;
 			// basic type
 			return new SingularAttributeMetadataImpl<>(
 					propertyMapping,

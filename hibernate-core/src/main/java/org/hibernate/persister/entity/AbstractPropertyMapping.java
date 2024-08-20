@@ -27,6 +27,7 @@ import org.hibernate.sql.Template;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ManyToOneType;
@@ -282,7 +283,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			);
 		}
 
-		if ( type.isAssociationType() ) {
+		if ( type instanceof AnyType || type instanceof CollectionType || type instanceof EntityType ) {
 			AssociationType actype = (AssociationType) type;
 			if ( actype.useLHSPrimaryKey() ) {
 				columns = getIdentifierColumnNames();
@@ -308,8 +309,20 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			addPropertyPath( path, type, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
 		}
 
-		if ( type.isComponentType() ) {
-			CompositeType actype = (CompositeType) type;
+		if ( type instanceof AnyType ) {
+			AnyType actype = (AnyType) type;
+			initComponentPropertyPaths(
+					path,
+					actype,
+					columns,
+					columnReaders,
+					columnReaderTemplates,
+					formulaTemplates,
+					factory
+			);
+		}
+		else if ( type instanceof ComponentType ) {
+			ComponentType actype = (ComponentType) type;
 			initComponentPropertyPaths(
 					path,
 					actype,
@@ -331,7 +344,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 				);
 			}
 		}
-		else if ( type.isEntityType() ) {
+		else if ( type instanceof EntityType ) {
 			initIdentifierPropertyPaths(
 					path,
 					(EntityType) type,

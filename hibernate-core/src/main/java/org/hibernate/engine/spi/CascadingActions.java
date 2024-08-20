@@ -359,7 +359,7 @@ public class CascadingActions {
 				EntityPersister persister,
 				Type propertyType,
 				int propertyIndex) {
-			if ( propertyType.isEntityType() ) {
+			if ( propertyType instanceof EntityType ) {
 				Object child = persister.getValue( parent, propertyIndex );
 				if ( child != null
 						&& !isInManagedState( child, session )

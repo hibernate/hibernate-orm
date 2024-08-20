@@ -19,6 +19,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
@@ -67,7 +68,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 			collectionAttributeNames = new HashSet<>();
 			for ( int i = 0; i < propertyTypes.length; i++ ) {
 				Type propertyType = propertyTypes[i];
-				if ( propertyType.isCollectionType() ) {
+				if ( propertyType instanceof CollectionType ) {
 					collectionAttributeNames.add( entityPersister.getPropertyNames()[i] );
 				}
 			}

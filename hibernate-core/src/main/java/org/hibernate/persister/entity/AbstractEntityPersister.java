@@ -283,6 +283,7 @@ import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -902,7 +903,7 @@ public abstract class AbstractEntityPersister
 			// 2) have no associations.
 			// Eventually we want to be a little more lenient with associations.
 			for ( Type type : getSubclassPropertyTypeClosure() ) {
-				if ( type.isAssociationType() ) {
+				if ( type instanceof AnyType || type instanceof CollectionType || type instanceof EntityType ) {
 					return false;
 				}
 			}
@@ -1445,7 +1446,7 @@ public abstract class AbstractEntityPersister
 
 		if ( hasCollections() ) {
 			final Type type = getPropertyType( fieldName );
-			if ( type.isCollectionType() ) {
+			if ( type instanceof CollectionType ) {
 				// we have a condition where a collection attribute is being access via enhancement:
 				// 		we can circumvent all the rest and just return the PersistentCollection
 				final CollectionType collectionType = (CollectionType) type;
@@ -2245,7 +2246,7 @@ public abstract class AbstractEntityPersister
 //				// performance op to avoid the array search
 //				return 0;
 //			}
-//			else if ( type.isCollectionType() ) {
+//			else if ( type instanceof CollectionType ) {
 //				// properly handle property-ref-based associations
 //				rootPropertyName = assocType.getLHSPropertyName();
 //			}
@@ -6444,9 +6445,9 @@ public abstract class AbstractEntityPersister
 		}
 
 		// aliases for composite-id's
-		if ( getIdentifierType().isComponentType() ) {
+		if ( getIdentifierType() instanceof ComponentType ) {
 			// Fetch embedded identifiers property names from the "virtual" identifier component
-			final CompositeType componentId = (CompositeType) getIdentifierType();
+			final ComponentType componentId = (ComponentType) getIdentifierType();
 			final String[] idPropertyNames = componentId.getPropertyNames();
 			final String[] idAliases = getIdentifierAliases();
 			final String[] idColumnNames = getIdentifierColumnNames();

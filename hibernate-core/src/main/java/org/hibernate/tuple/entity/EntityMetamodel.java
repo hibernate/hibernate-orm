@@ -55,7 +55,10 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ManyToOneType;
+import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.util.Collections.singleton;
 import static org.hibernate.internal.CoreLogging.messageLogger;
@@ -95,6 +98,7 @@ public class EntityMetamodel implements Serializable {
 	// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private final String[] propertyNames;
 	private final Type[] propertyTypes;
+	private final @Nullable Type[] dirtyCheckablePropertyTypes;
 	private final boolean[] propertyLaziness;
 	private final boolean[] propertyUpdateability;
 	private final boolean[] nonlazyPropertyUpdateability;
@@ -217,6 +221,7 @@ public class EntityMetamodel implements Serializable {
 		// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		propertyNames = new String[propertySpan];
 		propertyTypes = new Type[propertySpan];
+		dirtyCheckablePropertyTypes = new Type[propertySpan];
 		propertyUpdateability = new boolean[propertySpan];
 		propertyInsertability = new boolean[propertySpan];
 		nonlazyPropertyUpdateability = new boolean[propertySpan];
@@ -306,6 +311,9 @@ public class EntityMetamodel implements Serializable {
 			propertyNames[i] = attribute.getName();
 			final Type propertyType = attribute.getType();
 			propertyTypes[i] = propertyType;
+			if ( attribute.isDirtyCheckable() && !( propertyType instanceof OneToOneType ) ) {
+				dirtyCheckablePropertyTypes[i] = propertyType;
+			}
 			propertyNullability[i] = attribute.isNullable();
 			propertyUpdateability[i] = attribute.isUpdateable();
 			propertyInsertability[i] = attribute.isInsertable();
@@ -792,6 +800,10 @@ public class EntityMetamodel implements Serializable {
 
 	public Type[] getPropertyTypes() {
 		return propertyTypes;
+	}
+
+	public @Nullable Type[] getDirtyCheckablePropertyTypes() {
+		return dirtyCheckablePropertyTypes;
 	}
 
 	public boolean[] getPropertyLaziness() {

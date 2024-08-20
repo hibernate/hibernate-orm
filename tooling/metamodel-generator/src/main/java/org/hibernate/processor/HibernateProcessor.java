@@ -367,7 +367,7 @@ public class HibernateProcessor extends AbstractProcessor {
 			try {
 				if ( !included( element )
 						|| hasAnnotation( element, Constants.EXCLUDE )
-						|| hasAnnotation( context.getElementUtils().getPackageOf(element), Constants.EXCLUDE ) ) {
+						|| hasPackageAnnotation( element, Constants.EXCLUDE ) ) {
 					// skip it completely
 				}
 				else if ( isEntityOrEmbeddable( element ) ) {
@@ -418,6 +418,11 @@ public class HibernateProcessor extends AbstractProcessor {
 				}
 			}
 		}
+	}
+
+	private boolean hasPackageAnnotation(Element element, String annotation) {
+		final PackageElement pack = context.getElementUtils().getPackageOf( element ); // null for module descriptor
+		return pack != null && hasAnnotation( pack, annotation );
 	}
 
 	private void createMetaModelClasses() {

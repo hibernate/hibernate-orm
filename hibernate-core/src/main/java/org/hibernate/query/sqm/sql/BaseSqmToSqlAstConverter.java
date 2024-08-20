@@ -3022,10 +3022,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 								parentType.getRootEntityDescriptor().getEntityName()
 						);
 					}
+					final EntityDiscriminatorMapping discriminator = parentType.getDiscriminatorMapping();
+					final String entityName;
+					if ( discriminator != null && discriminator.hasPhysicalColumn() && !parentType.getSubMappingTypes().isEmpty() ) {
+						// This is needed to preserve optimization for joined + discriminator inheritance
+						// see JoinedSubclassEntityPersister#getIdentifierMappingForJoin
+						entityName = parentType.getRootEntityDescriptor().getEntityName();
+					}
+					else {
+						entityName = parentType.getEntityName();
+					}
 					registerEntityNameUsage(
 							tableGroup,
 							EntityNameUse.EXPRESSION,
-							parentType.getEntityName()
+							entityName
 					);
 				}
 				else {

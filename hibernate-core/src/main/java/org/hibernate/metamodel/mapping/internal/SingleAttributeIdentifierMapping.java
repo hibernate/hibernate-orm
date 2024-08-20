@@ -85,6 +85,6 @@ public interface SingleAttributeIdentifierMapping extends EntityIdentifierMappin
 
 	@Override
 	default MutabilityPlan getMutabilityPlan() {
-		return ImmutableMutabilityPlan.INSTANCE;
+		return ImmutableMutabilityPlan.instance();
 	}
 }

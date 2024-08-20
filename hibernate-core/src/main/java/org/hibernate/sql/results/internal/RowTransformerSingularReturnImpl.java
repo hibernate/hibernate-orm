@@ -22,7 +22,7 @@ public class RowTransformerSingularReturnImpl<R> implements RowTransformer<R> {
 	 * Singleton access
 	 */
 	@SuppressWarnings("rawtypes")
-	public static final RowTransformerSingularReturnImpl INSTANCE = new RowTransformerSingularReturnImpl();
+	private static final RowTransformerSingularReturnImpl INSTANCE = new RowTransformerSingularReturnImpl();
 
 	@SuppressWarnings("unchecked")
 	public static <R> RowTransformer<R> instance() {

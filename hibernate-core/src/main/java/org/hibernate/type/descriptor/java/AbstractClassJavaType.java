@@ -46,13 +46,12 @@ public abstract class AbstractClassJavaType<T> implements BasicJavaType<T>, Seri
 	 * @param type The Java type.
 	 * @param mutabilityPlan The plan for handling mutability aspects of the java type.
 	 */
-	@SuppressWarnings("unchecked")
 	protected AbstractClassJavaType(Class<? extends T> type, MutabilityPlan<? extends T> mutabilityPlan) {
 		this(
 				type,
 				mutabilityPlan,
 				Comparable.class.isAssignableFrom( type )
-						? (Comparator<T>) ComparableComparator.INSTANCE
+						? ComparableComparator.instance()
 						: null
 		);
 	}

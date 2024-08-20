@@ -17,7 +17,7 @@ public class RowTransformerArrayImpl implements RowTransformer<Object[]> {
 	/**
 	 * Singleton access
 	 */
-	public static final RowTransformerArrayImpl INSTANCE = new RowTransformerArrayImpl();
+	private static final RowTransformerArrayImpl INSTANCE = new RowTransformerArrayImpl();
 
 	public static RowTransformerArrayImpl instance() {
 		return INSTANCE;

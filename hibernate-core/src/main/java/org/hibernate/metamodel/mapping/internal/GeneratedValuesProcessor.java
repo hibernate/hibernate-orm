@@ -176,7 +176,7 @@ public class GeneratedValuesProcessor {
 				jdbcSelect,
 				jdbcParamBindings,
 				new NoCallbackExecutionContext( session ),
-				RowTransformerArrayImpl.INSTANCE,
+				RowTransformerArrayImpl.instance(),
 				null,
 				FILTER,
 				1

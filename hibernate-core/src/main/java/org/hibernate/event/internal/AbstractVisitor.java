@@ -10,7 +10,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.AnyType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -87,15 +89,18 @@ public abstract class AbstractVisitor {
 	 */
 	final Object processValue(Object value, Type type) throws HibernateException {
 
-		if ( type.isCollectionType() ) {
+		if ( type instanceof CollectionType ) {
 			//even process null collections
 			return processCollection( value, (CollectionType) type );
 		}
-		else if ( type.isEntityType() ) {
+		else if ( type instanceof EntityType ) {
 			return processEntity( value, (EntityType) type );
 		}
-		else if ( type.isComponentType() ) {
-			return processComponent( value, (CompositeType) type );
+		else if ( type instanceof ComponentType ) {
+			return processComponent( value, (ComponentType) type );
+		}
+		else if ( type instanceof AnyType ) {
+			return processComponent( value, (AnyType) type );
 		}
 		else {
 			return null;

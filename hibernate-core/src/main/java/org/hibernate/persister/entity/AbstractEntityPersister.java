@@ -5810,8 +5810,7 @@ public abstract class AbstractEntityPersister
 
 	private ModelPart getIdentifierModelPart(String name, EntityMappingType treatTargetType) {
 		final EntityIdentifierMapping identifierMapping = getIdentifierMappingForJoin();
-		if ( identifierMapping instanceof NonAggregatedIdentifierMapping ) {
-			NonAggregatedIdentifierMapping mapping = (NonAggregatedIdentifierMapping) identifierMapping;
+		if ( identifierMapping instanceof final NonAggregatedIdentifierMapping mapping ) {
 			final ModelPart subPart = mapping.findSubPart( name, treatTargetType );
 			if ( subPart != null ) {
 				return subPart;

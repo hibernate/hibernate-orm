@@ -11,6 +11,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.EntityType;
 import org.hibernate.type.ListType;
 import org.hibernate.type.MapType;
 import org.hibernate.type.Type;
@@ -96,7 +97,7 @@ public abstract class MockCollectionPersister implements CollectionPersister, Jo
 
 	@Override
 	public EntityPersister getElementPersister() {
-		if (elementType.isEntityType()) {
+		if (elementType instanceof EntityType ) {
 			return factory.getMetamodel()
 					.entityPersister(elementType.getName());
 		}
@@ -112,7 +113,7 @@ public abstract class MockCollectionPersister implements CollectionPersister, Jo
 
 	@Override
 	public boolean isOneToMany() {
-		return elementType.isEntityType();
+		return elementType instanceof EntityType;
 	}
 
 	@Override

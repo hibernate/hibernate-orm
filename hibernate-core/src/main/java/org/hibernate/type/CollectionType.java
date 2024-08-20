@@ -468,7 +468,7 @@ public abstract class CollectionType extends AbstractType implements Association
 
 			CollectionPersister collectionPersister = factory.getRuntimeMetamodels().getMappingMetamodel().getCollectionDescriptor( role );
 
-			if ( !collectionPersister.getElementType().isEntityType() ) {
+			if ( !( collectionPersister.getElementType() instanceof EntityType ) ) {
 				throw new MappingException(
 						"collection was not an association: " +
 						collectionPersister.getRole()

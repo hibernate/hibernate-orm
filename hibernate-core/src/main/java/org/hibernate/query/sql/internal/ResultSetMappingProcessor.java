@@ -405,7 +405,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			String entitySuffix) {
 		final CollectionPersister collectionPersister = collectionReturn.getPluralAttribute().getCollectionDescriptor();
 		final String[] elementColumnAliases;
-		if ( collectionPersister.getElementType().isEntityType() ) {
+		if ( collectionPersister.getElementType() instanceof EntityType ) {
 			final EntityPersister elementPersister = collectionPersister.getElementPersister();
 			final String[] propertyNames = elementPersister.getPropertyNames();
 			final String[] identifierAliases = elementPersister.getIdentifierAliases( entitySuffix );
@@ -558,13 +558,13 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 		EntityPersister ownerPersister = alias2Persister.get( ownerAlias );
 		Type returnType = ownerPersister.getPropertyType( fetchReturn.getFetchableName() );
 
-		if ( returnType.isCollectionType() ) {
+		if ( returnType instanceof CollectionType ) {
 			String role = ownerPersister.getEntityName() + '.' + fetchReturn.getFetchableName();
 			Map<String, String[]> propertyResultsMap = Collections.emptyMap();//fetchReturn.getPropertyResultsMap()
 			addCollection( role, alias, propertyResultsMap );
 //			collectionOwnerAliases.add( ownerAlias );
 		}
-		else if ( returnType.isEntityType() ) {
+		else if ( returnType instanceof EntityType ) {
 			EntityType eType = ( EntityType ) returnType;
 			String returnEntityName = eType.getAssociatedEntityName();
 			EntityPersister persister = getSQLLoadable( returnEntityName );
@@ -624,7 +624,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 //		}
 //		for ( CollectionPersister persister : alias2CollectionPersister.values() ) {
 //			final Type elementType = persister.getElementType();
-//			if ( elementType.isEntityType() && ! elementType.isAnyType() ) {
+//			if ( elementType instanceof EntityType && ! elementType instanceof AnyType ) {
 //				final Joinable joinable = ( (EntityType) elementType ).getAssociatedJoinable( factory );
 //				Collections.addAll( spaces, (String[]) ( (EntityPersister) joinable ).getQuerySpaces() );
 //			}

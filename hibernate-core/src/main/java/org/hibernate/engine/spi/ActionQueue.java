@@ -52,7 +52,7 @@ import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
@@ -1167,7 +1167,10 @@ public class ActionQueue {
 			}
 
 			private void addDirectDependency(Type type, @Nullable Object value, IdentityHashMap<Object, InsertInfo> insertInfosByEntity) {
-				if ( type.isEntityType() && value != null ) {
+				if ( value == null ) {
+					return;
+				}
+				if ( type instanceof EntityType ) {
 					final EntityType entityType = (EntityType) type;
 					final InsertInfo insertInfo = insertInfosByEntity.get( value );
 					if ( insertInfo != null ) {
@@ -1188,7 +1191,7 @@ public class ActionQueue {
 						}
 					}
 				}
-				else if ( type.isCollectionType() && value != null ) {
+				else if ( type instanceof CollectionType ) {
 					CollectionType collectionType = (CollectionType) type;
 					final PluralAttributeMapping pluralAttributeMapping = insertAction.getSession()
 							.getFactory()
@@ -1212,9 +1215,9 @@ public class ActionQueue {
 						}
 					}
 				}
-				else if ( type.isComponentType() && value != null ) {
+				else if ( type instanceof ComponentType ) {
 					// Support recursive checks of composite type properties for associations and collections.
-					final CompositeType compositeType = (CompositeType) type;
+					ComponentType compositeType = (ComponentType) type;
 					final SharedSessionContractImplementor session = insertAction.getSession();
 					final Object[] componentValues = compositeType.getPropertyValues( value, session );
 					for ( int j = 0; j < componentValues.length; ++j ) {

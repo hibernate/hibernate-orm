@@ -173,7 +173,7 @@ public final class IdentifierGeneratorHelper {
 
 	private static EntityType entityType(String propertyName, EntityPersister entityDescriptor) {
 		final Type propertyType = entityDescriptor.getPropertyType( propertyName );
-		if ( propertyType.isEntityType() ) {
+		if ( propertyType instanceof EntityType ) {
 			// the normal case
 			return (EntityType) propertyType;
 		}

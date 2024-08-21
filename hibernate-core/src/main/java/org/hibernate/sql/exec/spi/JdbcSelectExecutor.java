@@ -42,30 +42,6 @@ import jakarta.persistence.CacheStoreMode;
 public interface JdbcSelectExecutor {
 
 	/**
-	 * @since 6.4
-	 * @deprecated Use {@link #executeQuery(JdbcOperationQuerySelect, JdbcParameterBindings, ExecutionContext, RowTransformer, Class, StatementCreator, ResultsConsumer)} instead
-	 */
-	@Deprecated(forRemoval = true, since = "6.6")
-	default <T, R> T executeQuery(
-			JdbcOperationQuerySelect jdbcSelect,
-			JdbcParameterBindings jdbcParameterBindings,
-			ExecutionContext executionContext,
-			RowTransformer<R> rowTransformer,
-			Class<R> domainResultType,
-			Function<String, PreparedStatement> statementCreator,
-			ResultsConsumer<T, R> resultsConsumer) {
-		return executeQuery(
-				jdbcSelect,
-				jdbcParameterBindings,
-				executionContext,
-				rowTransformer,
-				domainResultType,
-				(executionContext1, sql) -> statementCreator.apply( sql ),
-				resultsConsumer
-		);
-	}
-
-	/**
 	 * @since 6.6
 	 */
 	<T, R> T executeQuery(
@@ -213,8 +189,9 @@ public interface JdbcSelectExecutor {
 	}
 
 	/*
-		When `Query#scroll()` is call the query is not executed immediately, a new ExecutionContext with the values of the `persistenceContext.isDefaultReadOnly()` and of the `queryOptions.isReadOnly()`
-		set at the moment of the Query#scroll() call is created in order to use it when the query will be executed.
+		When `Query#scroll()` is call the query is not executed immediately, a new ExecutionContext with the values
+		of the `persistenceContext.isDefaultReadOnly()` and of the `queryOptions.isReadOnly()` set at the moment of
+		the Query#scroll() call is created in order to use it when the query will be executed.
 	 */
 	private ExecutionContext getScrollContext(ExecutionContext context) {
 		class ScrollableExecutionContext extends BaseExecutionContext implements QueryOptions {
@@ -388,45 +365,25 @@ public interface JdbcSelectExecutor {
 			}
 		}
 
-		final QueryOptions queryOptions = context.getQueryOptions();
-		final Boolean readOnly;
-		if ( queryOptions.isReadOnly() == null ) {
-			readOnly = context.getSession().getPersistenceContext().isDefaultReadOnly();
-		}
-		else {
-			readOnly = queryOptions.isReadOnly();
-		}
-		final Integer timeout = queryOptions.getTimeout();
-		final FlushMode flushMode = queryOptions.getFlushMode();
-		final AppliedGraph appliedGraph = queryOptions.getAppliedGraph();
-		final TupleTransformer<?> tupleTransformer = queryOptions.getTupleTransformer();
-		final ResultListTransformer<?> resultListTransformer = queryOptions.getResultListTransformer();
-		final Boolean resultCachingEnabled = queryOptions.isResultCachingEnabled();
-		final CacheRetrieveMode cacheRetrieveMode = queryOptions.getCacheRetrieveMode();
-		final CacheStoreMode cacheStoreMode = queryOptions.getCacheStoreMode();
-		final String resultCacheRegionName = queryOptions.getResultCacheRegionName();
-		final LockOptions lockOptions = queryOptions.getLockOptions();
-		final String comment = queryOptions.getComment();
-		final List<String> databaseHints = queryOptions.getDatabaseHints();
-		final Integer fetchSize = queryOptions.getFetchSize();
-		final Limit limit = queryOptions.getLimit();
-
+		final QueryOptions options = context.getQueryOptions();
 		return new ScrollableExecutionContext(
-				timeout,
-				flushMode,
-				readOnly,
-				appliedGraph,
-				tupleTransformer,
-				resultListTransformer,
-				resultCachingEnabled,
-				cacheRetrieveMode,
-				cacheStoreMode,
-				resultCacheRegionName,
-				lockOptions,
-				comment,
-				databaseHints,
-				fetchSize,
-				limit,
+				options.getTimeout(),
+				options.getFlushMode(),
+				options.isReadOnly() == null
+					? context.getSession().getPersistenceContext().isDefaultReadOnly()
+					: options.isReadOnly(),
+				options.getAppliedGraph(),
+				options.getTupleTransformer(),
+				options.getResultListTransformer(),
+				options.isResultCachingEnabled(),
+				options.getCacheRetrieveMode(),
+				options.getCacheStoreMode(),
+				options.getResultCacheRegionName(),
+				options.getLockOptions(),
+				options.getComment(),
+				options.getDatabaseHints(),
+				options.getFetchSize(),
+				options.getLimit(),
 				context
 		);
 	}

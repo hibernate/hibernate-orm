@@ -592,7 +592,8 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 
 	@Override
 	public SqmInPredicate<?> in(Collection<?> values) {
-		return nodeBuilder().in( this, values );
+		//noinspection unchecked
+		return nodeBuilder().in( this, (Collection<T>) values );
 	}
 
 	@Override

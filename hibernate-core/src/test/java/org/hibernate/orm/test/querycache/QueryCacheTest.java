@@ -26,6 +26,8 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.Type;
 
+import org.assertj.core.api.Assertions;
+
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -762,6 +764,47 @@ public class QueryCacheTest {
 			if ( blockLatch != null ) {
 				blockLatch.countDown();
 			}
+		}
+	}
+
+	@Test
+	@JiraKey("HHH-18439")
+	void testNullValuesInQueryCache(SessionFactoryScope scope) throws Exception {
+		scope.getSessionFactory().getCache().evictQueryRegions();
+		scope.getSessionFactory().getStatistics().clear();
+
+		scope.inTransaction( session -> {
+			var item1 = new Item();
+			item1.setName( "name" );
+			item1.setDescription( "description" );
+
+			var item2 = new Item();
+			item2.setName( "fooName" );
+			// description explicitly has a null value
+
+			session.persist( item1 );
+			session.persist( item2 );
+		} );
+
+		// First execution puts entity in query cache, second execution loads entity from query cache
+		// -> check that the mapping of null values works when loading from the query cache
+		for ( int i = 0; i < 2; i++ ) {
+			scope.inTransaction( session -> {
+				// test single result
+				var result1 = session.createQuery(
+								"select description from Item i where i.name='fooName'",
+								String.class
+						)
+						.setCacheable( true )
+						.list();
+				Assertions.assertThat( result1 ).hasSize( 1 ).containsOnlyNulls();
+
+				// test multiple results
+				var result2 = session.createQuery( "select description from Item", String.class )
+						.setCacheable( true )
+						.list();
+				Assertions.assertThat( result2 ).containsExactlyInAnyOrder( "description", null );
+			} );
 		}
 	}
 }

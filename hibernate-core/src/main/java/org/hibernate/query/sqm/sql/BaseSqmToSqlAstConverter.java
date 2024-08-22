@@ -289,6 +289,7 @@ import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.SqlTreeCreationLogger;
 import org.hibernate.sql.ast.internal.TableGroupJoinHelper;
@@ -297,6 +298,7 @@ import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
@@ -6439,7 +6441,22 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		functionImpliedResultTypeAccess = inferrableTypeAccessStack.getCurrent();
 		inferrableTypeAccessStack.push( () -> null );
 		try {
-			return sqmFunction.convertToSqlAst( this );
+			final Expression expression = sqmFunction.convertToSqlAst( this );
+			if ( sqmFunction.getFunctionDescriptor().isPredicate()
+					&& expression instanceof SelfRenderingExpression selfRenderingExpression) {
+				final BasicType<Boolean> booleanType = getBooleanType();
+				return new CaseSearchedExpression(
+						booleanType,
+						List.of(
+								new CaseSearchedExpression.WhenFragment(
+										new SelfRenderingPredicate( selfRenderingExpression ),
+										new QueryLiteral<>( true, booleanType )
+								)
+						),
+						new QueryLiteral<>( false, booleanType )
+				);
+			}
+			return expression;
 		}
 		finally {
 			inferrableTypeAccessStack.pop();
@@ -8220,14 +8237,27 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 	}
 
-	private JdbcMappingContainer getBooleanType() {
+	private BasicType<Boolean> getBooleanType() {
 		return getTypeConfiguration().getBasicTypeForJavaType( Boolean.class );
 	}
 
 	@Override
 	public Object visitBooleanExpressionPredicate(SqmBooleanExpressionPredicate predicate) {
 		inferrableTypeAccessStack.push( this::getBooleanType );
-		final Expression booleanExpression = (Expression) predicate.getBooleanExpression().accept( this );
+		final SqmExpression<Boolean> sqmExpression = predicate.getBooleanExpression();
+		final Expression booleanExpression = (Expression) sqmExpression.accept( this );
+		if ( booleanExpression instanceof CaseSearchedExpression caseExpr
+				&& sqmExpression instanceof SqmFunction<?> sqmFunction
+				&& sqmFunction.getFunctionDescriptor().isPredicate() ) {
+			// Functions that are rendered as predicates are always wrapped,
+			// so the following unwraps the predicate and returns it directly instead of wrapping once more
+			final Predicate sqlPredicate = caseExpr.getWhenFragments().get( 0 ).getPredicate();
+			if ( predicate.isNegated() ) {
+				return new NegatedPredicate( sqlPredicate );
+			}
+			return sqlPredicate;
+		}
+
 		inferrableTypeAccessStack.pop();
 		if ( booleanExpression instanceof SelfRenderingExpression ) {
 			final Predicate sqlPredicate = new SelfRenderingPredicate( (SelfRenderingExpression) booleanExpression );

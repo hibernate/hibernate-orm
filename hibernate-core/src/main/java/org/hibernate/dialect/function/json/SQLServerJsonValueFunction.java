@@ -10,7 +10,7 @@ import org.hibernate.QueryException;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
 import org.hibernate.sql.ast.tree.expression.JsonValueEmptyBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonValueErrorBehavior;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -21,7 +21,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class SQLServerJsonValueFunction extends JsonValueFunction {
 
 	public SQLServerJsonValueFunction(TypeConfiguration typeConfiguration) {
-		super( typeConfiguration, true );
+		super( typeConfiguration, true, false );
 	}
 
 	@Override
@@ -36,7 +36,7 @@ public class SQLServerJsonValueFunction extends JsonValueFunction {
 		}
 		sqlAppender.appendSql( "(select v from openjson(" );
 		arguments.jsonDocument().accept( walker );
-		sqlAppender.appendSql( ",'$') with (v " );
+		sqlAppender.appendSql( ") with (v " );
 		if ( arguments.returningType() != null ) {
 			arguments.returningType().accept( walker );
 		}
@@ -44,10 +44,32 @@ public class SQLServerJsonValueFunction extends JsonValueFunction {
 			sqlAppender.appendSql( "varchar(max)" );
 		}
 		sqlAppender.appendSql( ' ' );
+		final JsonPathPassingClause passingClause = arguments.passingClause();
 		if ( arguments.emptyBehavior() != null && arguments.emptyBehavior() != JsonValueEmptyBehavior.NULL ) {
-			walker.getSessionFactory().getJdbcServices().getDialect().appendLiteral(
+			// The strict modifier will cause an error to be thrown if a field doesn't exist
+			if ( passingClause != null ) {
+				JsonPathHelper.appendInlinedJsonPathIncludingPassingClause(
+						sqlAppender,
+						"strict ",
+						arguments.jsonPath(),
+						passingClause,
+						walker
+				);
+			}
+			else {
+				walker.getSessionFactory().getJdbcServices().getDialect().appendLiteral(
+						sqlAppender,
+						"strict " + walker.getLiteralValue( arguments.jsonPath() )
+				);
+			}
+		}
+		else if ( passingClause != null ) {
+			JsonPathHelper.appendInlinedJsonPathIncludingPassingClause(
 					sqlAppender,
-					"strict " + walker.getLiteralValue( arguments.jsonPath() )
+					"",
+					arguments.jsonPath(),
+					passingClause,
+					walker
 			);
 		}
 		else {

@@ -24,8 +24,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.Tuple;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -34,8 +32,8 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @DomainModel(annotatedClasses = EntityWithJson.class)
 @SessionFactory
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsJsonValue.class)
-public class JsonValueTest {
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsJsonExists.class)
+public class JsonExistsTest {
 
 	@BeforeEach
 	public void prepareData(SessionFactoryScope scope) {
@@ -63,10 +61,10 @@ public class JsonValueTest {
 	@Test
 	public void testSimple(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			//tag::hql-json-value-example[]
-			List<Tuple> results = em.createQuery( "select json_value(e.json, '$.theString') from EntityWithJson e", Tuple.class )
+			//tag::hql-json-exists-example[]
+			List<Boolean> results = em.createQuery( "select json_exists(e.json, '$.theString') from EntityWithJson e", Boolean.class )
 					.getResultList();
-			//end::hql-json-value-example[]
+			//end::hql-json-exists-example[]
 			assertEquals( 1, results.size() );
 		} );
 	}
@@ -74,21 +72,10 @@ public class JsonValueTest {
 	@Test
 	public void testPassing(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			//tag::hql-json-value-passing-example[]
-			List<Tuple> results = em.createQuery( "select json_value(e.json, '$.theArray[$idx]' passing 1 as idx) from EntityWithJson e", Tuple.class )
+			//tag::hql-json-exists-passing-example[]
+			List<Boolean> results = em.createQuery( "select json_exists(e.json, '$.theArray[$idx]' passing 1 as idx) from EntityWithJson e", Boolean.class )
 					.getResultList();
-			//end::hql-json-value-passing-example[]
-			assertEquals( 1, results.size() );
-		} );
-	}
-
-	@Test
-	public void testReturning(SessionFactoryScope scope) {
-		scope.inSession( em -> {
-			//tag::hql-json-value-returning-example[]
-			List<Tuple> results = em.createQuery( "select json_value(e.json, '$.theInt' returning Integer) from EntityWithJson e", Tuple.class )
-					.getResultList();
-			//end::hql-json-value-returning-example[]
+			//end::hql-json-exists-passing-example[]
 			assertEquals( 1, results.size() );
 		} );
 	}
@@ -98,30 +85,11 @@ public class JsonValueTest {
 	public void testOnError(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			try {
-				//tag::hql-json-value-on-error-example[]
-				em.createQuery( "select json_value('invalidJson', '$.theInt' error on error) from EntityWithJson e")
+				//tag::hql-json-exists-on-error-example[]
+				em.createQuery( "select json_exists('invalidJson', '$.theInt' error on error) from EntityWithJson e")
 						.getResultList();
-				//end::hql-json-value-on-error-example[]
+				//end::hql-json-exists-on-error-example[]
 				fail("error clause should fail because of invalid json document");
-			}
-			catch ( HibernateException e ) {
-				if ( !( e instanceof JDBCException ) && !( e instanceof ExecutionException ) ) {
-					throw e;
-				}
-			}
-		} );
-	}
-
-	@Test
-	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsJsonValueErrorBehavior.class)
-	public void testOnEmpty(SessionFactoryScope scope) {
-		scope.inSession( em -> {
-			try {
-				//tag::hql-json-value-on-empty-example[]
-				em.createQuery("select json_value(e.json, '$.nonExisting' error on empty error on error) from EntityWithJson e" )
-						.getResultList();
-				//end::hql-json-value-on-empty-example[]
-				fail("empty clause should fail because of json path doesn't produce results");
 			}
 			catch ( HibernateException e ) {
 				if ( !( e instanceof JDBCException ) && !( e instanceof ExecutionException ) ) {

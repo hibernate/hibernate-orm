@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.ast.spi;
 
+import org.hibernate.internal.util.QuotingHelper;
+
 /**
  * Access to appending SQL fragments to an in-flight buffer
  *
@@ -42,6 +44,18 @@ public interface SqlAppender extends Appendable {
 
 	default void appendSql(boolean value) {
 		appendSql( String.valueOf( value ) );
+	}
+
+	default void appendDoubleQuoteEscapedString(String value) {
+		final StringBuilder sb = new StringBuilder( value.length() + 2 );
+		QuotingHelper.appendDoubleQuoteEscapedString( sb, value );
+		appendSql( sb.toString() );
+	}
+
+	default void appendSingleQuoteEscapedString(String value) {
+		final StringBuilder sb = new StringBuilder( value.length() + 2 );
+		QuotingHelper.appendSingleQuoteEscapedString( sb, value );
+		appendSql( sb.toString() );
 	}
 
 	default Appendable append(CharSequence csq) {

@@ -4692,15 +4692,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @apiNote Needed because MySQL has nonstandard escape characters
 	 */
 	public void appendLiteral(SqlAppender appender, String literal) {
-		appender.appendSql( '\'' );
-		for ( int i = 0; i < literal.length(); i++ ) {
-			final char c = literal.charAt( i );
-			if ( c == '\'' ) {
-				appender.appendSql( '\'' );
-			}
-			appender.appendSql( c );
-		}
-		appender.appendSql( '\'' );
+		appender.appendSingleQuoteEscapedString( literal );
 	}
 
 	/**

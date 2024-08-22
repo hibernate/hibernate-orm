@@ -491,7 +491,8 @@ public class HANADialect extends Dialect {
 
 		if ( getVersion().isSameOrAfter(2, 0, 20) ) {
 			// Introduced in 2.0 SPS 02
-			functionFactory.jsonValue();
+			functionFactory.jsonValue_no_passing();
+			functionFactory.jsonExists_hana();
 			if ( getVersion().isSameOrAfter(2, 0, 40) ) {
 				// Introduced in 2.0 SPS 04
 				functionFactory.jsonObject_hana();

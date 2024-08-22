@@ -120,6 +120,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
+import org.hibernate.query.sqm.tree.expression.SqmJsonExistsExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJsonNullBehavior;
 import org.hibernate.query.sqm.tree.expression.SqmJsonValueExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
@@ -5331,6 +5332,20 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 					queryEngine
 			);
 		}
+	}
+
+	@Override
+	public SqmJsonExistsExpression jsonExists(Expression<?> jsonDocument, String jsonPath) {
+		return jsonExists( jsonDocument, value( jsonPath ) );
+	}
+
+	@Override
+	public SqmJsonExistsExpression jsonExists(Expression<?> jsonDocument, Expression<String> jsonPath) {
+		return (SqmJsonExistsExpression) getFunctionDescriptor( "json_exists" ).<Boolean>generateSqmExpression(
+				asList( (SqmTypedNode<?>) jsonDocument, (SqmTypedNode<?>) jsonPath ),
+				null,
+				queryEngine
+		);
 	}
 
 	@Override

@@ -347,6 +347,7 @@ public class H2Dialect extends Dialect {
 		functionFactory.jsonArray();
 		if ( getVersion().isSameOrAfter( 2, 2, 220 ) ) {
 			functionFactory.jsonValue_h2();
+			functionFactory.jsonExists_h2();
 		}
 	}
 

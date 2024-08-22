@@ -13,11 +13,11 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
 import org.hibernate.sql.ast.tree.expression.JsonValueEmptyBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonValueErrorBehavior;
-import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -26,7 +26,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class CockroachDBJsonValueFunction extends JsonValueFunction {
 
 	public CockroachDBJsonValueFunction(TypeConfiguration typeConfiguration) {
-		super( typeConfiguration, true );
+		super( typeConfiguration, true, false );
 	}
 
 	@Override
@@ -74,6 +74,19 @@ public class CockroachDBJsonValueFunction extends JsonValueFunction {
 			sqlAppender.appendSql( separator );
 			if ( jsonPathElement instanceof JsonPathHelper.JsonAttribute attribute ) {
 				dialect.appendLiteral( sqlAppender, attribute.attribute() );
+			}
+			else if ( jsonPathElement instanceof JsonPathHelper.JsonParameterIndexAccess ) {
+				final JsonPathPassingClause jsonPathPassingClause = arguments.passingClause();
+				assert jsonPathPassingClause != null;
+				final String parameterName = ( (JsonPathHelper.JsonParameterIndexAccess) jsonPathElement ).parameterName();
+				final Expression expression = jsonPathPassingClause.getPassingExpressions().get( parameterName );
+				if ( expression == null ) {
+					throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );
+				}
+
+				sqlAppender.appendSql( "cast(" );
+				expression.accept( walker );
+				sqlAppender.appendSql( " as text)" );
 			}
 			else {
 				sqlAppender.appendSql( '\'' );

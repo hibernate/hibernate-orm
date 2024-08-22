@@ -77,6 +77,7 @@ public class ArrayAggregateTest {
 						"StringArray"
 				).addAuxiliaryDatabaseObjects(
 						new ArrayJavaType<>( javaTypeRegistry.getDescriptor( String.class ) ),
+						null,
 						Size.nil(),
 						metadata.getDatabase(),
 						typeConfiguration.getCurrentBaseSqlTypeIndicators()

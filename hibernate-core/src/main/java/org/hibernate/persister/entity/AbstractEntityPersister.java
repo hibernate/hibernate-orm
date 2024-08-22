@@ -378,6 +378,7 @@ public abstract class AbstractEntityPersister
 	private final String[] lazyPropertyNames;
 	private final int[] lazyPropertyNumbers;
 	private final Type[] lazyPropertyTypes;
+	private final Set<String> nonLazyPropertyNames;
 
 	//information about all properties in class hierarchy
 	private final String[] subclassPropertyNameClosure;
@@ -469,6 +470,7 @@ public abstract class AbstractEntityPersister
 	private final boolean implementsLifecycle;
 
 	private List<UniqueKeyEntry> uniqueKeyEntries = null; //lazily initialized
+	private HashMap<String,SingleIdArrayLoadPlan> nonLazyPropertyLoadPlansByName;
 
 	public AbstractEntityPersister(
 			final PersistentClass persistentClass,
@@ -606,6 +608,7 @@ public abstract class AbstractEntityPersister
 		propertyColumnUpdateable = new boolean[hydrateSpan][];
 		propertyColumnInsertable = new boolean[hydrateSpan][];
 		sharedColumnNames = new HashSet<>();
+		nonLazyPropertyNames = new HashSet<>();
 
 		final HashSet<Property> thisClassProperties = new HashSet<>();
 		final ArrayList<String> lazyNames = new ArrayList<>();
@@ -662,6 +665,9 @@ public abstract class AbstractEntityPersister
 				lazyNames.add( prop.getName() );
 				lazyNumbers.add( i );
 				lazyTypes.add( prop.getValue().getType() );
+			}
+			else {
+				nonLazyPropertyNames.add( prop.getName() );
 			}
 
 			propertyColumnUpdateable[i] = prop.getValue().getColumnUpdateability();
@@ -1222,6 +1228,10 @@ public abstract class AbstractEntityPersister
 			partsToSelect.add( getAttributeMapping( getSubclassPropertyIndex( lazyAttributeDescriptor.getName() ) ) );
 		}
 
+		return createLazyLoanPlan( partsToSelect );
+	}
+
+	private SingleIdArrayLoadPlan createLazyLoanPlan(List<ModelPart> partsToSelect) {
 		if ( partsToSelect.isEmpty() ) {
 			// only one-to-one is lazily fetched
 			return null;
@@ -1542,75 +1552,117 @@ public abstract class AbstractEntityPersister
 			final EntityEntry entry,
 			final String fieldName,
 			final SharedSessionContractImplementor session) {
-
-		if ( !hasLazyProperties() ) {
-			throw new AssertionFailure( "no lazy properties" );
-		}
-
-		final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
-		assert interceptor != null : "Expecting bytecode interceptor to be non-null";
-
-		LOG.tracef( "Initializing lazy properties from datastore (triggered for `%s`)", fieldName );
-
-		final String fetchGroup = getEntityMetamodel().getBytecodeEnhancementMetadata()
-				.getLazyAttributesMetadata()
-				.getFetchGroupName( fieldName );
-		final List<LazyAttributeDescriptor> fetchGroupAttributeDescriptors = getEntityMetamodel().getBytecodeEnhancementMetadata()
-				.getLazyAttributesMetadata()
-				.getFetchGroupAttributeDescriptors( fetchGroup );
-
-		final Set<String> initializedLazyAttributeNames = interceptor.getInitializedLazyAttributeNames();
-
-		final SingleIdArrayLoadPlan lazySelect = getSQLLazySelectLoadPlan( fetchGroup );
-
-		try {
-			Object result = null;
-			final Object[] values = lazySelect.load( id, session );
-			int i = 0;
-			for ( LazyAttributeDescriptor fetchGroupAttributeDescriptor : fetchGroupAttributeDescriptors ) {
-				final boolean previousInitialized = initializedLazyAttributeNames.contains( fetchGroupAttributeDescriptor.getName() );
-
-				if ( previousInitialized ) {
-					// todo : one thing we should consider here is potentially un-marking an attribute as dirty based on the selected value
-					// 		we know the current value - getPropertyValue( entity, fetchGroupAttributeDescriptor.getAttributeIndex() );
-					// 		we know the selected value (see selectedValue below)
-					//		we can use the attribute Type to tell us if they are the same
-					//
-					//		assuming entity is a SelfDirtinessTracker we can also know if the attribute is
-					//			currently considered dirty, and if really not dirty we would do the un-marking
-					//
-					//		of course that would mean a new method on SelfDirtinessTracker to allow un-marking
-
-					// its already been initialized (e.g. by a write) so we don't want to overwrite
-					i++;
-					continue;
+		if ( nonLazyPropertyNames.contains( fieldName ) ) {
+			// An eager property can be lazy because of an applied EntityGraph
+			final List<ModelPart> partsToSelect = new ArrayList<>(1);
+			int propertyIndex = getPropertyIndex( fieldName );
+			partsToSelect.add( getAttributeMapping( propertyIndex ) );
+			SingleIdArrayLoadPlan lazyLoanPlan;
+			if ( nonLazyPropertyLoadPlansByName == null ) {
+				nonLazyPropertyLoadPlansByName = new HashMap<>();
+				lazyLoanPlan = createLazyLoanPlan( partsToSelect );
+				;
+				nonLazyPropertyLoadPlansByName.put( fieldName, lazyLoanPlan );
+			}
+			else {
+				lazyLoanPlan = nonLazyPropertyLoadPlansByName.get( fieldName );
+				if ( lazyLoanPlan == null ) {
+					lazyLoanPlan = createLazyLoanPlan( partsToSelect );
+					;
+					nonLazyPropertyLoadPlansByName.put( fieldName, lazyLoanPlan );
 				}
-
-				final Object selectedValue = values[i++];
-				final boolean set = initializeLazyProperty(
-						fieldName,
+			}
+			try {
+				final Object[] values = lazyLoanPlan.load( id, session );
+				final Object selectedValue = values[0];
+				initializeLazyProperty(
 						entity,
 						entry,
-						fetchGroupAttributeDescriptor.getLazyIndex(),
-						selectedValue
+						selectedValue,
+						propertyIndex,
+						getPropertyTypes()[propertyIndex]
 				);
-				if ( set ) {
-					result = selectedValue;
-					interceptor.attributeInitialized( fetchGroupAttributeDescriptor.getName() );
-				}
-
+				return selectedValue;
+			}
+			catch (JDBCException ex) {
+				throw session.getJdbcServices().getSqlExceptionHelper().convert(
+						ex.getSQLException(),
+						"could not initialize lazy properties: " + infoString( this, id, getFactory() ),
+						lazyLoanPlan.getJdbcSelect().getSqlString()
+				);
+			}
+		}
+		else {
+			if ( !hasLazyProperties() ) {
+				throw new AssertionFailure( "no lazy properties" );
 			}
 
-			LOG.trace( "Done initializing lazy properties" );
+			final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
+			assert interceptor != null : "Expecting bytecode interceptor to be non-null";
 
-			return result;
-		}
-		catch ( JDBCException ex ) {
-			throw session.getJdbcServices().getSqlExceptionHelper().convert(
-					ex.getSQLException(),
-					"could not initialize lazy properties: " + infoString( this, id, getFactory() ),
-					lazySelect.getJdbcSelect().getSqlString()
-			);
+			LOG.tracef( "Initializing lazy properties from datastore (triggered for `%s`)", fieldName );
+
+			final String fetchGroup = getEntityMetamodel().getBytecodeEnhancementMetadata()
+					.getLazyAttributesMetadata()
+					.getFetchGroupName( fieldName );
+			final List<LazyAttributeDescriptor> fetchGroupAttributeDescriptors = getEntityMetamodel().getBytecodeEnhancementMetadata()
+					.getLazyAttributesMetadata()
+					.getFetchGroupAttributeDescriptors( fetchGroup );
+
+			final Set<String> initializedLazyAttributeNames = interceptor.getInitializedLazyAttributeNames();
+
+			final SingleIdArrayLoadPlan lazySelect = getSQLLazySelectLoadPlan( fetchGroup );
+
+			try {
+				Object result = null;
+				final Object[] values = lazySelect.load( id, session );
+				int i = 0;
+				for ( LazyAttributeDescriptor fetchGroupAttributeDescriptor : fetchGroupAttributeDescriptors ) {
+					final boolean previousInitialized = initializedLazyAttributeNames.contains(
+							fetchGroupAttributeDescriptor.getName() );
+
+					if ( previousInitialized ) {
+						// todo : one thing we should consider here is potentially un-marking an attribute as dirty based on the selected value
+						// 		we know the current value - getPropertyValue( entity, fetchGroupAttributeDescriptor.getAttributeIndex() );
+						// 		we know the selected value (see selectedValue below)
+						//		we can use the attribute Type to tell us if they are the same
+						//
+						//		assuming entity is a SelfDirtinessTracker we can also know if the attribute is
+						//			currently considered dirty, and if really not dirty we would do the un-marking
+						//
+						//		of course that would mean a new method on SelfDirtinessTracker to allow un-marking
+
+						// its already been initialized (e.g. by a write) so we don't want to overwrite
+						i++;
+						continue;
+					}
+
+					final Object selectedValue = values[i++];
+					final boolean set = initializeLazyProperty(
+							fieldName,
+							entity,
+							entry,
+							fetchGroupAttributeDescriptor,
+							selectedValue
+					);
+					if ( set ) {
+						result = selectedValue;
+						interceptor.attributeInitialized( fetchGroupAttributeDescriptor.getName() );
+					}
+				}
+
+				LOG.trace( "Done initializing lazy properties" );
+
+				return result;
+
+			}
+			catch (JDBCException ex) {
+				throw session.getJdbcServices().getSqlExceptionHelper().convert(
+						ex.getSQLException(),
+						"could not initialize lazy properties: " + infoString( this, id, getFactory() ),
+						lazySelect.getJdbcSelect().getSqlString()
+				);
+			}
 		}
 	}
 
@@ -1667,6 +1719,43 @@ public abstract class AbstractEntityPersister
 			entry.getDeletedState()[lazyPropertyNumbers[index]] = lazyPropertyTypes[index].deepCopy( propValue, factory );
 		}
 		return fieldName.equals( lazyPropertyNames[index] );
+	}
+
+
+
+	protected boolean initializeLazyProperty(
+			final String fieldName,
+			final Object entity,
+			final EntityEntry entry,
+			LazyAttributeDescriptor fetchGroupAttributeDescriptor,
+			final Object propValue) {
+		final String name = fetchGroupAttributeDescriptor.getName();
+		initializeLazyProperty(
+				entity,
+				entry,
+				propValue,
+				getPropertyIndex( name ),
+				fetchGroupAttributeDescriptor.getType()
+		);
+		return fieldName.equals( name );
+	}
+
+	private void initializeLazyProperty(Object entity, EntityEntry entry, Object propValue, int index, Type type) {
+		setPropertyValue( entity, index, propValue );
+		if ( entry.getLoadedState() != null ) {
+			// object have been loaded with setReadOnly(true); HHH-2236
+			entry.getLoadedState()[index] = type.deepCopy(
+					propValue,
+					factory
+			);
+		}
+		// If the entity has deleted state, then update that as well
+		if ( entry.getDeletedState() != null ) {
+			entry.getDeletedState()[index] = type.deepCopy(
+					propValue,
+					factory
+			);
+		}
 	}
 
 	@Override

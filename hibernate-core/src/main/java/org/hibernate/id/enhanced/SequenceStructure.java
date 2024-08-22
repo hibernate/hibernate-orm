@@ -16,13 +16,14 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.internal.CoreMessageLogger;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.id.IdentifierGeneratorHelper.getIntegralDataTypeHolder;
 
 /**
  * Describes a sequence.
@@ -39,7 +40,7 @@ public class SequenceStructure implements DatabaseStructure {
 	private final QualifiedName logicalQualifiedSequenceName;
 	private final int initialValue;
 	private final int incrementSize;
-	private final Class numberType;
+	private final Class<?> numberType;
 	private final String options;
 
 	private String sql;
@@ -48,12 +49,11 @@ public class SequenceStructure implements DatabaseStructure {
 	protected QualifiedName physicalSequenceName;
 
 	public SequenceStructure(
-			JdbcEnvironment jdbcEnvironment,
 			String contributor,
 			QualifiedName qualifiedSequenceName,
 			int initialValue,
 			int incrementSize,
-			Class numberType) {
+			Class<?> numberType) {
 		this.contributor = contributor;
 		this.logicalQualifiedSequenceName = qualifiedSequenceName;
 
@@ -64,13 +64,12 @@ public class SequenceStructure implements DatabaseStructure {
 	}
 
 	public SequenceStructure(
-			JdbcEnvironment jdbcEnvironment,
 			String contributor,
 			QualifiedName qualifiedSequenceName,
 			int initialValue,
 			int incrementSize,
 			String options,
-			Class numberType) {
+			Class<?> numberType) {
 		this.contributor = contributor;
 		this.logicalQualifiedSequenceName = qualifiedSequenceName;
 
@@ -100,7 +99,7 @@ public class SequenceStructure implements DatabaseStructure {
 		return initialValue;
 	}
 
-	@Override
+	@Override @Deprecated
 	public String[] getAllSqlForTests() {
 		return new String[] { sql };
 	}
@@ -116,12 +115,13 @@ public class SequenceStructure implements DatabaseStructure {
 			public IntegralDataTypeHolder getNextValue() {
 				accessCounter++;
 				try {
-					final PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
+					final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+					final PreparedStatement st = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
 					try {
-						final ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st, sql );
+						final ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st, sql );
 						try {
 							rs.next();
-							final IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( numberType );
+							final IntegralDataTypeHolder value = getIntegralDataTypeHolder( numberType );
 							value.initialize( rs, 1 );
 							if ( LOG.isDebugEnabled() ) {
 								LOG.debugf( "Sequence value obtained: %s", value.makeValue() );
@@ -130,7 +130,7 @@ public class SequenceStructure implements DatabaseStructure {
 						}
 						finally {
 							try {
-								session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, st );
+								jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( rs, st );
 							}
 							catch( Throwable ignore ) {
 								// intentionally empty
@@ -138,8 +138,8 @@ public class SequenceStructure implements DatabaseStructure {
 						}
 					}
 					finally {
-						session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
-						session.getJdbcCoordinator().afterStatementExecution();
+						jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( st );
+						jdbcCoordinator.afterStatementExecution();
 					}
 
 				}
@@ -171,7 +171,8 @@ public class SequenceStructure implements DatabaseStructure {
 
 	@Override
 	public void initialize(SqlStringGenerationContext context) {
-		this.sql = context.getDialect().getSequenceSupport().getSequenceNextValString( context.format( physicalSequenceName ) );
+		this.sql = context.getDialect().getSequenceSupport()
+				.getSequenceNextValString( context.format( physicalSequenceName ) );
 	}
 
 	@Override
@@ -213,6 +214,6 @@ public class SequenceStructure implements DatabaseStructure {
 			);
 		}
 
-		this.physicalSequenceName = sequence.getName();
+		physicalSequenceName = sequence.getName();
 	}
 }

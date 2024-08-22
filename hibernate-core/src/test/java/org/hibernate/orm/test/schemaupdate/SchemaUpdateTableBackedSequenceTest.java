@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.schemaupdate;
 
-import java.sql.SQLException;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Map;
@@ -63,13 +62,12 @@ public class SchemaUpdateTableBackedSequenceTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void testCreateTableOnUpdate() throws SQLException {
+	public void testCreateTableOnUpdate() {
 		Metadata metadata = new MetadataSources( ssr ).buildMetadata();
 
 		Database database = metadata.getDatabase();
 
 		TableStructure tableStructure = new TableStructure(
-				database.getJdbcEnvironment(),
 				"orm",
 				new QualifiedTableName( null, null, Identifier.toIdentifier( "test_seq" ) ),
 				Identifier.toIdentifier( "nextval" ),
@@ -79,7 +77,7 @@ public class SchemaUpdateTableBackedSequenceTest extends BaseUnitTestCase {
 		);
 		tableStructure.registerExportables( database );
 
-		// lets make sure the InitCommand is there
+		// let's make sure the InitCommand is there
 		assertEquals( 1, database.getDefaultNamespace().getTables().size() );
 		Table table = database.getDefaultNamespace().getTables().iterator().next();
 		SqlStringGenerationContext context = SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment(), null, null );

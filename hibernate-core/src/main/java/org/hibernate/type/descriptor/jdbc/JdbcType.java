@@ -373,7 +373,7 @@ public interface JdbcType extends Serializable {
 	}
 
 	/**
-	 * @deprecated Use {@link #addAuxiliaryDatabaseObjects(JavaType, Size, Database, JdbcTypeIndicators)} instead
+	 * @deprecated Use {@link #addAuxiliaryDatabaseObjects(JavaType, BasicValueConverter, Size, Database, JdbcTypeIndicators)} instead
 	 */
 	@Incubating
 	@Deprecated(forRemoval = true)
@@ -392,6 +392,7 @@ public interface JdbcType extends Serializable {
 	@Incubating
 	default void addAuxiliaryDatabaseObjects(
 			JavaType<?> javaType,
+			BasicValueConverter<?, ?> valueConverter,
 			Size columnSize,
 			Database database,
 			JdbcTypeIndicators context) {

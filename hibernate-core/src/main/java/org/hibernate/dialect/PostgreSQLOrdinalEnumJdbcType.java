@@ -8,6 +8,7 @@ package org.hibernate.dialect;
 
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -42,10 +43,10 @@ public class PostgreSQLOrdinalEnumJdbcType extends PostgreSQLEnumJdbcType {
 	@Override
 	public void addAuxiliaryDatabaseObjects(
 			JavaType<?> javaType,
-			Size columnSize,
+			BasicValueConverter<?, ?> valueConverter, Size columnSize,
 			Database database,
 			JdbcTypeIndicators context) {
-		addAuxiliaryDatabaseObjects( javaType, database, false );
+		addAuxiliaryDatabaseObjects( javaType, valueConverter, database, false );
 	}
 
 	@Override
@@ -54,6 +55,6 @@ public class PostgreSQLOrdinalEnumJdbcType extends PostgreSQLEnumJdbcType {
 			Size columnSize,
 			Database database,
 			TypeConfiguration typeConfiguration) {
-		addAuxiliaryDatabaseObjects( javaType, database, false );
+		addAuxiliaryDatabaseObjects( javaType, null, database, false );
 	}
 }

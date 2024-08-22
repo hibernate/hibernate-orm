@@ -639,6 +639,7 @@ public class MySQLDialect extends Dialect {
 		functionFactory.listagg_groupConcat();
 
 		functionFactory.jsonValue_mysql();
+		functionFactory.jsonExists_mysql();
 		functionFactory.jsonObject_mysql();
 		functionFactory.jsonArray_mysql();
 	}

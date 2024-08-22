@@ -6,12 +6,16 @@
  */
 package org.hibernate.dialect.function.json;
 
+import java.util.Map;
+
 import org.hibernate.QueryException;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
 import org.hibernate.sql.ast.tree.expression.JsonValueEmptyBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonValueErrorBehavior;
 import org.hibernate.sql.ast.tree.expression.Literal;
@@ -23,7 +27,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class PostgreSQLJsonValueFunction extends JsonValueFunction {
 
 	public PostgreSQLJsonValueFunction(TypeConfiguration typeConfiguration) {
-		super( typeConfiguration, true );
+		super( typeConfiguration, true, true );
 	}
 
 	@Override
@@ -60,6 +64,19 @@ public class PostgreSQLJsonValueFunction extends JsonValueFunction {
 			sqlAppender.appendSql( "cast(" );
 			jsonPath.accept( walker );
 			sqlAppender.appendSql( " as jsonpath)" );
+		}
+		final JsonPathPassingClause passingClause = arguments.passingClause();
+		if ( passingClause != null ) {
+			sqlAppender.append( ",jsonb_build_object" );
+			char separator = '(';
+			for ( Map.Entry<String, Expression> entry : passingClause.getPassingExpressions().entrySet() ) {
+				sqlAppender.append( separator );
+				sqlAppender.appendSingleQuoteEscapedString( entry.getKey() );
+				sqlAppender.append( ',' );
+				entry.getValue().accept( walker );
+				separator = ',';
+			}
+			sqlAppender.append( ')' );
 		}
 		// Unquote the value
 		sqlAppender.appendSql( ")#>>'{}'" );

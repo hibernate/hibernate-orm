@@ -1622,16 +1622,21 @@ rollup
 	;
 
 jsonFunction
-	: jsonValueFunction
-	| jsonArrayFunction
+	: jsonArrayFunction
+	| jsonExistsFunction
 	| jsonObjectFunction
+	| jsonValueFunction
 	;
 
 /**
  * The 'json_value()' function
  */
 jsonValueFunction
-	: JSON_VALUE LEFT_PAREN expression COMMA expression jsonValueReturningClause? jsonValueOnErrorOrEmptyClause? jsonValueOnErrorOrEmptyClause? RIGHT_PAREN
+	: JSON_VALUE LEFT_PAREN expression COMMA expression jsonPassingClause? jsonValueReturningClause? jsonValueOnErrorOrEmptyClause? jsonValueOnErrorOrEmptyClause? RIGHT_PAREN
+	;
+
+jsonPassingClause
+	: PASSING expressionOrPredicate AS identifier (COMMA expressionOrPredicate AS identifier)*
 	;
 
 jsonValueReturningClause
@@ -1640,6 +1645,16 @@ jsonValueReturningClause
 
 jsonValueOnErrorOrEmptyClause
 	: ( ERROR | NULL | ( DEFAULT expression ) ) ON (ERROR|EMPTY);
+
+/**
+ * The 'json_exists()' function
+ */
+jsonExistsFunction
+	: JSON_EXISTS LEFT_PAREN expression COMMA expression jsonPassingClause? jsonExistsOnErrorClause? RIGHT_PAREN
+	;
+
+jsonExistsOnErrorClause
+	: ( ERROR | TRUE | FALSE ) ON ERROR;
 
 /**
  * The 'json_array()' function
@@ -1760,6 +1775,7 @@ jsonNullClause
 	| IS
 	| JOIN
 	| JSON_ARRAY
+	| JSON_EXISTS
 	| JSON_OBJECT
 	| JSON_VALUE
 	| KEY
@@ -1812,6 +1828,7 @@ jsonNullClause
 	| OVERLAY
 	| PAD
 	| PARTITION
+	| PASSING
 	| PERCENT
 	| PLACING
 	| POSITION

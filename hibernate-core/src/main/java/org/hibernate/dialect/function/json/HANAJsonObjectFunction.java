@@ -106,15 +106,7 @@ public class HANAJsonObjectFunction extends JsonObjectFunction {
 				value.accept( walker );
 				sqlAppender.appendSql( ' ' );
 				final String literalValue = walker.getLiteralValue( (Expression) key );
-				sqlAppender.appendSql( '"' );
-				for ( int j = 0; j < literalValue.length(); j++ ) {
-					final char c = literalValue.charAt( j );
-					if ( c == '"' ) {
-						sqlAppender.appendSql( '"' );
-					}
-					sqlAppender.appendSql( c );
-				}
-				sqlAppender.appendSql( '"' );
+				sqlAppender.appendDoubleQuoteEscapedString( literalValue );
 				separator = ',';
 			}
 			sqlAppender.appendSql( " from sys.dummy for json('arraywrap'='no'" );

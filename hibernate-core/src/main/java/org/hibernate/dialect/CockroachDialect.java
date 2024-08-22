@@ -469,6 +469,7 @@ public class CockroachDialect extends Dialect {
 		functionFactory.arrayToString_postgresql();
 
 		functionFactory.jsonValue_cockroachdb();
+		functionFactory.jsonExists_postgresql();
 		functionFactory.jsonObject_postgresql();
 		functionFactory.jsonArray_postgresql();
 

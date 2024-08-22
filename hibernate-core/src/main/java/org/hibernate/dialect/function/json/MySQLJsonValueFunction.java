@@ -9,6 +9,7 @@ package org.hibernate.dialect.function.json;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
 import org.hibernate.sql.ast.tree.expression.JsonValueEmptyBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonValueErrorBehavior;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -19,7 +20,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class MySQLJsonValueFunction extends JsonValueFunction {
 
 	public MySQLJsonValueFunction(TypeConfiguration typeConfiguration) {
-		super( typeConfiguration, true );
+		super( typeConfiguration, true, false );
 	}
 
 	@Override
@@ -42,7 +43,17 @@ public class MySQLJsonValueFunction extends JsonValueFunction {
 			sqlAppender.appendSql( "json_unquote(nullif(json_extract(" );
 			arguments.jsonDocument().accept( walker );
 			sqlAppender.appendSql( "," );
-			arguments.jsonPath().accept( walker );
+			final JsonPathPassingClause passingClause = arguments.passingClause();
+			if ( passingClause == null ) {
+				arguments.jsonPath().accept( walker );
+			}
+			else {
+				JsonPathHelper.appendJsonPathConcatPassingClause(
+						sqlAppender,
+						arguments.jsonPath(),
+						passingClause, walker
+				);
+			}
 			sqlAppender.appendSql( "),cast('null' as json)))" );
 			if ( arguments.returningType() != null ) {
 				sqlAppender.appendSql( " as " );

@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.query.hql;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -97,6 +96,20 @@ public class JsonFunctionTests {
 //					assertNull( tuple.get( 7 ) );
 					assertEquals( entity.json.get( "theInt" ).toString(), tuple.get( 8 ) );
 					assertEquals( ( (String[]) entity.json.get( "theArray" ) )[2], tuple.get( 9 ) );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonValue.class)
+	public void testJsonValueExpression(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Tuple tuple = session.createQuery(
+							"select json_value('{\"theArray\":[1,10]}', '$.theArray[$idx]' passing :idx as idx) ",
+							Tuple.class
+					).setParameter( "idx", 0 ).getSingleResult();
+					assertEquals( "1", tuple.get( 0 ) );
 				}
 		);
 	}
@@ -209,6 +222,29 @@ public class JsonFunctionTests {
 		);
 	}
 
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonExists.class)
+	public void testJsonExists(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Tuple tuple = session.createQuery(
+							"select " +
+									"json_exists(e.json, '$.theUnknown'), " +
+									"json_exists(e.json, '$.theInt'), " +
+									"json_exists(e.json, '$.theArray[0]'), " +
+									"json_exists(e.json, '$.theArray[$idx]' passing :idx as idx) " +
+									"from JsonHolder e " +
+									"where e.id = 1L",
+							Tuple.class
+					).setParameter( "idx", 3 ).getSingleResult();
+					assertEquals( false, tuple.get( 0 ) );
+					assertEquals( true, tuple.get( 1 ) );
+					assertEquals( true, tuple.get( 2 ) );
+					assertEquals( false, tuple.get( 3 ) );
+				}
+		);
+	}
+
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 
 	private static Map<String, Object> parseObject(String json) {
@@ -228,22 +264,6 @@ public class JsonFunctionTests {
 		catch (JsonProcessingException e) {
 			throw new RuntimeException( e );
 		}
-	}
-
-	private static double[] parseDoubleArray( String s ) {
-		final List<Double> list = new ArrayList<>();
-		int startIndex = 1;
-		int commaIndex;
-		while ( (commaIndex = s.indexOf(',', startIndex)) != -1 ) {
-			list.add( Double.parseDouble( s.substring( startIndex, commaIndex ) ) );
-			startIndex = commaIndex + 1;
-		}
-		list.add( Double.parseDouble( s.substring( startIndex, s.length() - 1 ) ) );
-		double[] array = new double[list.size()];
-		for ( int i = 0; i < list.size(); i++ ) {
-			array[i] = list.get( i );
-		}
-		return array;
 	}
 
 	@Entity(name = "JsonHolder")

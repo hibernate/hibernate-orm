@@ -584,11 +584,13 @@ public class PostgreSQLDialect extends Dialect {
 
 		if ( getVersion().isSameOrAfter( 17 ) ) {
 			functionFactory.jsonValue();
+			functionFactory.jsonExists();
 			functionFactory.jsonObject();
 			functionFactory.jsonArray();
 		}
 		else {
 			functionFactory.jsonValue_postgresql();
+			functionFactory.jsonExists_postgresql();
 			if ( getVersion().isSameOrAfter( 16 ) ) {
 				functionFactory.jsonObject();
 				functionFactory.jsonArray();

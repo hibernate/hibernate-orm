@@ -4,6 +4,8 @@
  */
 package org.hibernate.internal.util;
 
+import org.hibernate.sql.ast.spi.SqlAppender;
+
 public final class QuotingHelper {
 
 	private QuotingHelper() { /* static methods only - hide constructor */
@@ -150,4 +152,25 @@ public final class QuotingHelper {
 		}
 		return sb.toString();
 	}
+
+	public static void appendDoubleQuoteEscapedString(StringBuilder sb, String text) {
+		appendWithDoubleEscaping( sb, text, '"' );
+	}
+
+	public static void appendSingleQuoteEscapedString(StringBuilder sb, String text) {
+		appendWithDoubleEscaping( sb, text, '\'' );
+	}
+
+	private static void appendWithDoubleEscaping(StringBuilder sb, String text, char quoteChar) {
+		sb.append( quoteChar );
+		for ( int i = 0; i < text.length(); i++ ) {
+			final char c = text.charAt( i );
+			if ( c == quoteChar ) {
+				sb.append( quoteChar );
+			}
+			sb.append( c );
+		}
+		sb.append( quoteChar );
+	}
+
 }

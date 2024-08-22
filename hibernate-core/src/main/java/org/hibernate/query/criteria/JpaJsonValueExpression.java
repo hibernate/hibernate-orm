@@ -98,6 +98,13 @@ public interface JpaJsonValueExpression<T> extends JpaExpression<T> {
 	JpaJsonValueExpression<T> defaultOnEmpty(Expression<?> expression);
 
 	/**
+	 * Passes the given {@link Expression} as value for the parameter with the given name in the JSON path.
+	 *
+	 * @return {@code this} for method chaining
+	 */
+	JpaJsonValueExpression<T> passing(String parameterName, Expression<?> expression);
+
+	/**
 	 * The behavior of the json value expression when a JSON processing error occurs.
 	 */
 	enum ErrorBehavior {

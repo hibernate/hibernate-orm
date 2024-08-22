@@ -79,25 +79,31 @@ import org.hibernate.dialect.function.array.PostgreSQLArrayTrimEmulation;
 import org.hibernate.dialect.function.json.CockroachDBJsonValueFunction;
 import org.hibernate.dialect.function.json.DB2JsonArrayFunction;
 import org.hibernate.dialect.function.json.DB2JsonObjectFunction;
+import org.hibernate.dialect.function.json.H2JsonExistsFunction;
 import org.hibernate.dialect.function.json.H2JsonValueFunction;
 import org.hibernate.dialect.function.json.HANAJsonArrayFunction;
+import org.hibernate.dialect.function.json.HANAJsonExistsFunction;
 import org.hibernate.dialect.function.json.HANAJsonObjectFunction;
 import org.hibernate.dialect.function.json.HSQLJsonArrayFunction;
 import org.hibernate.dialect.function.json.HSQLJsonObjectFunction;
 import org.hibernate.dialect.function.json.JsonArrayFunction;
+import org.hibernate.dialect.function.json.JsonExistsFunction;
 import org.hibernate.dialect.function.json.JsonObjectFunction;
 import org.hibernate.dialect.function.json.JsonValueFunction;
 import org.hibernate.dialect.function.json.MariaDBJsonArrayFunction;
 import org.hibernate.dialect.function.json.MariaDBJsonValueFunction;
 import org.hibernate.dialect.function.json.MySQLJsonArrayFunction;
+import org.hibernate.dialect.function.json.MySQLJsonExistsFunction;
 import org.hibernate.dialect.function.json.MySQLJsonObjectFunction;
 import org.hibernate.dialect.function.json.MySQLJsonValueFunction;
 import org.hibernate.dialect.function.json.OracleJsonArrayFunction;
 import org.hibernate.dialect.function.json.OracleJsonObjectFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonArrayFunction;
+import org.hibernate.dialect.function.json.PostgreSQLJsonExistsFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonObjectFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonValueFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonArrayFunction;
+import org.hibernate.dialect.function.json.SQLServerJsonExistsFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonObjectFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonValueFunction;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -3349,14 +3355,21 @@ public class CommonFunctionFactory {
 	 * json_value() function
 	 */
 	public void jsonValue() {
-		functionRegistry.register( "json_value", new JsonValueFunction( typeConfiguration, true ) );
+		functionRegistry.register( "json_value", new JsonValueFunction( typeConfiguration, true, true ) );
 	}
 
 	/**
-	 * json_value() function that supports only literal json paths
+	 * json_value() function that doesn't support the passing clause
 	 */
-	public void jsonValue_literal_path() {
-		functionRegistry.register( "json_value", new JsonValueFunction( typeConfiguration, false ) );
+	public void jsonValue_no_passing() {
+		functionRegistry.register( "json_value", new JsonValueFunction( typeConfiguration, true, false ) );
+	}
+
+	/**
+	 * Oracle json_value() function
+	 */
+	public void jsonValue_oracle() {
+		functionRegistry.register( "json_value", new JsonValueFunction( typeConfiguration, false, false ) );
 	}
 
 	/**
@@ -3399,6 +3412,62 @@ public class CommonFunctionFactory {
 	 */
 	public void jsonValue_h2() {
 		functionRegistry.register( "json_value", new H2JsonValueFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * json_exists() function
+	 */
+	public void jsonExists() {
+		functionRegistry.register( "json_exists", new JsonExistsFunction( typeConfiguration, true, true ) );
+	}
+
+	/**
+	 * json_exists() function that doesn't support the passing clause
+	 */
+	public void jsonExists_no_passing() {
+		functionRegistry.register( "json_exists", new JsonExistsFunction( typeConfiguration, true, false ) );
+	}
+
+	/**
+	 * Oracle json_exists() function
+	 */
+	public void jsonExists_oracle() {
+		functionRegistry.register( "json_exists", new JsonExistsFunction( typeConfiguration, false, true ) );
+	}
+
+	/**
+	 * H2 json_exists() function
+	 */
+	public void jsonExists_h2() {
+		functionRegistry.register( "json_exists", new H2JsonExistsFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server json_exists() function
+	 */
+	public void jsonExists_sqlserver() {
+		functionRegistry.register( "json_exists", new SQLServerJsonExistsFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_exists() function
+	 */
+	public void jsonExists_postgresql() {
+		functionRegistry.register( "json_exists", new PostgreSQLJsonExistsFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_exists() function
+	 */
+	public void jsonExists_mysql() {
+		functionRegistry.register( "json_exists", new MySQLJsonExistsFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SAP HANA json_exists() function
+	 */
+	public void jsonExists_hana() {
+		functionRegistry.register( "json_exists", new HANAJsonExistsFunction( typeConfiguration ) );
 	}
 
 	/**

@@ -3691,7 +3691,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaJsonValueExpression<String> jsonValue(Expression<?> jsonDocument, String jsonPath);
 
 	/**
-	 * Extracts a value by JSON path from a json document.
+	 * Extracts a value by JSON path from a JSON document.
 	 *
 	 * @since 7.0
 	 */
@@ -3706,12 +3706,28 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaJsonValueExpression<String> jsonValue(Expression<?> jsonDocument, Expression<String> jsonPath);
 
 	/**
-	 * Extracts a value by JSON path from a json document.
+	 * Extracts a value by JSON path from a JSON document.
 	 *
 	 * @since 7.0
 	 */
 	@Incubating
 	<T> JpaJsonValueExpression<T> jsonValue(Expression<?> jsonDocument, Expression<String> jsonPath, Class<T> returningType);
+
+	/**
+	 * Checks if a JSON document contains a node for the given JSON path.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaJsonExistsExpression jsonExists(Expression<?> jsonDocument, String jsonPath);
+
+	/**
+	 * Checks if a JSON document contains a node for the given JSON path.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaJsonExistsExpression jsonExists(Expression<?> jsonDocument, Expression<String> jsonPath);
 
 	/**
 	 * Create a JSON object from the given map of key values.

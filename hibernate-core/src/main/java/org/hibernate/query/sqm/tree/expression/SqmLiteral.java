@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.query.internal.QueryLiteralHelper;
+import org.hibernate.internal.util.QuotingHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
@@ -82,7 +82,7 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 		else {
 			final String string = javaType.toString( value );
 			if ( javaType.getJavaTypeClass() == String.class ) {
-				QueryLiteralHelper.appendStringLiteral( sb, string );
+				QuotingHelper.appendSingleQuoteEscapedString( sb, string );
 			}
 			else {
 				sb.append( string );

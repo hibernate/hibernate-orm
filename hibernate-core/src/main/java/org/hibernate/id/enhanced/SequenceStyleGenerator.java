@@ -7,7 +7,6 @@
 package org.hibernate.id.enhanced;
 
 import java.util.Iterator;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 

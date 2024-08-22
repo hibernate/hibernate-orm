@@ -564,13 +564,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 				selectPS.setString( 1, segmentValue );
 				final ResultSet selectRS = executeQuery( selectPS, listener, selectQuery, session );
 				if ( !selectRS.next() ) {
-					long initializationValue;
-					if ( storeLastUsedValue ) {
-						initializationValue = initialValue - 1;
-					}
-					else {
-						initializationValue = initialValue;
-					}
+					final long initializationValue = storeLastUsedValue ? initialValue - 1 : initialValue;
 					value.initialize( initializationValue );
 
 					try ( PreparedStatement statement = prepareStatement( connection, insertQuery, logger, listener, session ) ) {
@@ -581,13 +575,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 					}
 				}
 				else {
-					int defaultValue;
-					if ( storeLastUsedValue ) {
-						defaultValue = 0;
-					}
-					else {
-						defaultValue = 1;
-					}
+					final int defaultValue = storeLastUsedValue ? 0 : 1;
 					value.initialize( selectRS, defaultValue );
 				}
 				selectRS.close();
@@ -619,12 +607,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		while ( rows == 0 );
 
 		accessCount++;
-		if ( storeLastUsedValue ) {
-			return value.increment();
-		}
-		else {
-			return value;
-		}
+		return storeLastUsedValue ? value.increment() : value;
 	}
 
 	private PreparedStatement prepareStatement(

@@ -323,13 +323,13 @@ public class TableStructure implements DatabaseStructure {
 
 	@Override
 	public void initialize(SqlStringGenerationContext context) {
-		Dialect dialect = context.getDialect();
-
-		String formattedPhysicalTableName = context.format( physicalTableName );
-
+		final Dialect dialect = context.getDialect();
+		final String formattedPhysicalTableName = context.format( physicalTableName );
+		final String lockedTable =
+				dialect.appendLockHint( new LockOptions( PESSIMISTIC_WRITE ), formattedPhysicalTableName )
+						+ dialect.getForUpdateString();
 		selectQuery = "select " + valueColumnNameText + " as id_val" +
-				" from " + dialect.appendLockHint( new LockOptions( PESSIMISTIC_WRITE ), formattedPhysicalTableName ) +
-				dialect.getForUpdateString();
+				" from " + lockedTable ;
 
 		updateQuery = "update " + formattedPhysicalTableName +
 				" set " + valueColumnNameText + "= ?" +

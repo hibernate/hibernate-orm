@@ -248,25 +248,20 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 	 * Convert a value of the enum type to its name value
 	 */
 	public String toName(T domainForm) {
-		if ( domainForm == null ) {
-			return null;
-		}
-		return domainForm.name();
+		return domainForm == null ? null : domainForm.name();
 	}
 
 	/**
 	 * Interpret a string value as the named value of the enum type
 	 */
 	public T fromName(String relationalForm) {
-		if ( relationalForm == null ) {
-			return null;
-		}
-		return Enum.valueOf( getJavaTypeClass(), relationalForm.trim() );
+		return relationalForm == null ? null : Enum.valueOf( getJavaTypeClass(), relationalForm.trim() );
 	}
 
 	@Override
 	public String getCheckCondition(String columnName, JdbcType jdbcType, BasicValueConverter<?, ?> converter, Dialect dialect) {
-		if ( converter != null ) {
+		if ( converter != null
+				&& jdbcType.getDefaultSqlTypeCode() != NAMED_ENUM ) {
 			return renderConvertedEnumCheckConstraint( columnName, jdbcType, converter, dialect );
 		}
 		else if ( jdbcType.isInteger() ) {

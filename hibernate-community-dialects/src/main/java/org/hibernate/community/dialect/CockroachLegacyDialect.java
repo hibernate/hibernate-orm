@@ -499,6 +499,7 @@ public class CockroachLegacyDialect extends Dialect {
 
 		functionFactory.jsonValue_cockroachdb();
 		functionFactory.jsonObject_postgresql();
+		functionFactory.jsonExists_postgresql();
 		functionFactory.jsonArray_postgresql();
 
 		// Postgres uses # instead of ^ for XOR

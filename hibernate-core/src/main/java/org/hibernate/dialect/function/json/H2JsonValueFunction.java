@@ -10,13 +10,18 @@ import java.util.List;
 
 import org.hibernate.QueryException;
 import org.hibernate.query.ReturnableType;
+import org.hibernate.query.sqm.sql.internal.BasicValuedPathInterpretation;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
 import org.hibernate.sql.ast.tree.expression.JsonValueEmptyBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonValueErrorBehavior;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * H2 json_value function.
@@ -24,7 +29,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class H2JsonValueFunction extends JsonValueFunction {
 
 	public H2JsonValueFunction(TypeConfiguration typeConfiguration) {
-		super( typeConfiguration, false );
+		super( typeConfiguration, false, true );
 	}
 
 	@Override
@@ -58,7 +63,16 @@ public class H2JsonValueFunction extends JsonValueFunction {
 		if ( defaultExpression != null ) {
 			sqlAppender.appendSql( "coalesce(" );
 		}
-		renderJsonPath( sqlAppender, arguments.jsonDocument(), walker, jsonPath );
+		sqlAppender.appendSql( "cast(" );
+		renderJsonPath(
+				sqlAppender,
+				arguments.jsonDocument(),
+				arguments.isJsonType(),
+				walker,
+				jsonPath,
+				arguments.passingClause()
+		);
+		sqlAppender.appendSql( " as varchar)" );
 		if ( defaultExpression != null ) {
 			sqlAppender.appendSql( ",cast(" );
 			defaultExpression.accept( walker );
@@ -73,27 +87,45 @@ public class H2JsonValueFunction extends JsonValueFunction {
 		}
 	}
 
-	private void renderJsonPath(
+	public static void renderJsonPath(
 			SqlAppender sqlAppender,
-			SqlAstNode jsonDocument,
+			Expression jsonDocument,
+			boolean isJson,
 			SqlAstTranslator<?> walker,
-			String jsonPath) {
-		sqlAppender.appendSql( "cast(" );
-
+			String jsonPath,
+			@Nullable JsonPathPassingClause passingClause) {
 		final List<JsonPathHelper.JsonPathElement> jsonPathElements = JsonPathHelper.parseJsonPathElements( jsonPath );
-		final boolean needsWrapping = jsonPathElements.get( 0 ) instanceof JsonPathHelper.JsonAttribute;
+		final boolean needsWrapping = jsonPathElements.get( 0 ) instanceof JsonPathHelper.JsonAttribute
+				&& jsonDocument.getColumnReference() != null
+				|| !isJson;
 		if ( needsWrapping ) {
 			sqlAppender.appendSql( '(' );
 		}
 		jsonDocument.accept( walker );
 		if ( needsWrapping ) {
+			if ( !isJson ) {
+				sqlAppender.append( " format json" );
+			}
 			sqlAppender.appendSql( ')' );
 		}
 		for ( int i = 0; i < jsonPathElements.size(); i++ ) {
 			final JsonPathHelper.JsonPathElement jsonPathElement = jsonPathElements.get( i );
 			if ( jsonPathElement instanceof JsonPathHelper.JsonAttribute attribute ) {
 				final String attributeName = attribute.attribute();
-				appendInDoubleQuotes( sqlAppender, attributeName );
+				sqlAppender.appendSql( "." );
+				sqlAppender.appendDoubleQuoteEscapedString( attributeName );
+			}
+			else if ( jsonPathElement instanceof JsonPathHelper.JsonParameterIndexAccess ) {
+				assert passingClause != null;
+				final String parameterName = ( (JsonPathHelper.JsonParameterIndexAccess) jsonPathElement ).parameterName();
+				final Expression expression = passingClause.getPassingExpressions().get( parameterName );
+				if ( expression == null ) {
+					throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );
+				}
+
+				sqlAppender.appendSql( '[' );
+				expression.accept( walker );
+				sqlAppender.appendSql( "+1]" );
 			}
 			else {
 				sqlAppender.appendSql( '[' );
@@ -101,18 +133,5 @@ public class H2JsonValueFunction extends JsonValueFunction {
 				sqlAppender.appendSql( ']' );
 			}
 		}
-		sqlAppender.appendSql( " as varchar)" );
-	}
-
-	private static void appendInDoubleQuotes(SqlAppender sqlAppender, String attributeName) {
-		sqlAppender.appendSql( ".\"" );
-		for ( int j = 0; j < attributeName.length(); j++ ) {
-			final char c = attributeName.charAt( j );
-			if ( c == '"' ) {
-				sqlAppender.appendSql( '"' );
-			}
-			sqlAppender.appendSql( c );
-		}
-		sqlAppender.appendSql( '"' );
 	}
 }

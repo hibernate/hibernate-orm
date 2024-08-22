@@ -403,7 +403,8 @@ public class OracleDialect extends Dialect {
 		functionFactory.arrayFill_oracle();
 		functionFactory.arrayToString_oracle();
 
-		functionFactory.jsonValue_literal_path();
+		functionFactory.jsonValue_oracle();
+		functionFactory.jsonExists_oracle();
 		functionFactory.jsonObject_oracle();
 		functionFactory.jsonArray_oracle();
 	}

@@ -40,6 +40,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.internal.util.MathHelper;
+import org.hibernate.internal.util.QuotingHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
@@ -121,6 +122,7 @@ import org.hibernate.sql.ast.tree.expression.Every;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.Format;
+import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.Literal;
@@ -551,6 +553,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	@Override
+	public void appendDoubleQuoteEscapedString(String value) {
+		QuotingHelper.appendDoubleQuoteEscapedString( sqlBuffer, value );
+	}
+
+	@Override
+	public void appendSingleQuoteEscapedString(String value) {
+		QuotingHelper.appendSingleQuoteEscapedString( sqlBuffer, value );
+	}
+
+	@Override
 	public Appendable append(CharSequence csq) {
 		sqlBuffer.append( csq );
 		return this;
@@ -681,6 +693,20 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				throw new IllegalArgumentException( "Can't interpret expression because no parameter bindings are available" );
 			}
 			return (R) getParameterBindValue( (JdbcParameter) ( (SqmParameterInterpretation) expression).getResolvedExpression() );
+		}
+		else if ( expression instanceof FunctionExpression functionExpression ) {
+			if ( "concat".equals( functionExpression.getFunctionName() ) ) {
+				final List<? extends SqlAstNode> arguments = functionExpression.getArguments();
+				final StringBuilder sb = new StringBuilder();
+				for ( SqlAstNode argument : arguments ) {
+					final Object argumentLiteral = interpretExpression( (Expression) argument, jdbcParameterBindings );
+					if ( argumentLiteral == null ) {
+						return null;
+					}
+					sb.append( argumentLiteral );
+				}
+				return (R) sb.toString();
+			}
 		}
 		throw new UnsupportedOperationException( "Can't interpret expression: " + expression );
 	}

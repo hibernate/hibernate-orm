@@ -222,4 +222,13 @@ public interface SqmFunctionDescriptor {
 	 * @return an instance of {@link ArgumentsValidator}
 	 */
 	ArgumentsValidator getArgumentsValidator();
+
+	/**
+	 * Whether the function renders as a predicate.
+	 *
+	 * @since 7.0
+	 */
+	default boolean isPredicate() {
+		return false;
+	}
 }

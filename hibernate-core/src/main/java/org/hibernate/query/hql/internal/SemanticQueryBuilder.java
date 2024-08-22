@@ -146,6 +146,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmJsonExistsExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJsonNullBehavior;
 import org.hibernate.query.sqm.tree.expression.SqmJsonValueExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
@@ -2732,7 +2733,51 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				}
 			}
 		}
+		final HqlParser.JsonPassingClauseContext passingClause = ctx.jsonPassingClause();
+		if ( passingClause != null ) {
+			final List<HqlParser.ExpressionOrPredicateContext> expressionContexts = passingClause.expressionOrPredicate();
+			final List<HqlParser.IdentifierContext> identifierContexts = passingClause.identifier();
+			for ( int i = 0; i < expressionContexts.size(); i++ ) {
+				jsonValue.passing(
+						visitIdentifier( identifierContexts.get( i ) ),
+						(SqmExpression<?>) expressionContexts.get( i ).accept( this )
+				);
+			}
+		}
 		return jsonValue;
+	}
+
+	@Override
+	public SqmExpression<?> visitJsonExistsFunction(HqlParser.JsonExistsFunctionContext ctx) {
+		final SqmExpression<?> jsonDocument = (SqmExpression<?>) ctx.expression( 0 ).accept( this );
+		final SqmExpression<?> jsonPath = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
+
+		final SqmJsonExistsExpression jsonExists = (SqmJsonExistsExpression) getFunctionDescriptor( "json_exists" ).<Boolean>generateSqmExpression(
+				asList( jsonDocument, jsonPath ),
+				null,
+				creationContext.getQueryEngine()
+		);
+		final HqlParser.JsonExistsOnErrorClauseContext subCtx = ctx.jsonExistsOnErrorClause();
+		if ( subCtx != null ) {
+			final TerminalNode firstToken = (TerminalNode) subCtx.getChild( 0 );
+			switch ( firstToken.getSymbol().getType() ) {
+				case HqlParser.ERROR -> jsonExists.errorOnError();
+				case HqlParser.TRUE -> jsonExists.trueOnError();
+				case HqlParser.FALSE -> jsonExists.falseOnError();
+			}
+		}
+		final HqlParser.JsonPassingClauseContext passingClause = ctx.jsonPassingClause();
+		if ( passingClause != null ) {
+			final List<HqlParser.ExpressionOrPredicateContext> expressionContexts = passingClause.expressionOrPredicate();
+			final List<HqlParser.IdentifierContext> identifierContexts = passingClause.identifier();
+			for ( int i = 0; i < expressionContexts.size(); i++ ) {
+				jsonExists.passing(
+						visitIdentifier( identifierContexts.get( i ) ),
+						(SqmExpression<?>) expressionContexts.get( i ).accept( this )
+				);
+			}
+		}
+		return jsonExists;
 	}
 
 	@Override

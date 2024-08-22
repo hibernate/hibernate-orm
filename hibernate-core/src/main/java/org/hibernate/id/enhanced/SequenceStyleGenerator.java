@@ -198,7 +198,7 @@ public class SequenceStyleGenerator
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
 		final Dialect dialect = jdbcEnvironment.getDialect();
 
-		this.identifierType = type;
+		identifierType = type;
 
 		final QualifiedName sequenceName = determineSequenceName( parameters, dialect, jdbcEnvironment, serviceRegistry );
 		final int initialValue = determineInitialValue( parameters );
@@ -225,7 +225,7 @@ public class SequenceStyleGenerator
 			LOG.forcingTableUse();
 		}
 
-		this.databaseStructure = buildDatabaseStructure(
+		databaseStructure = buildDatabaseStructure(
 				type,
 				parameters,
 				jdbcEnvironment,
@@ -234,15 +234,15 @@ public class SequenceStyleGenerator
 				initialValue,
 				incrementSize
 		);
-		this.optimizer = OptimizerFactory.buildOptimizer(
+		optimizer = OptimizerFactory.buildOptimizer(
 				optimizationStrategy,
 				identifierType.getReturnedClass(),
 				incrementSize,
 				getInt( INITIAL_PARAM, parameters, -1 )
 		);
-		this.databaseStructure.configure( optimizer );
+		databaseStructure.configure( optimizer );
 
-		this.options = parameters.getProperty( OPTIONS );
+		options = parameters.getProperty( OPTIONS );
 	}
 
 	private int adjustIncrementSize(
@@ -306,7 +306,7 @@ public class SequenceStyleGenerator
 
 	@Override
 	public void initialize(SqlStringGenerationContext context) {
-		this.databaseStructure.initialize( context );
+		databaseStructure.initialize( context );
 	}
 
 	/**
@@ -472,12 +472,9 @@ public class SequenceStyleGenerator
 			QualifiedName sequenceName,
 			int initialValue,
 			int incrementSize) {
-		if ( isPhysicalSequence( jdbcEnvironment, forceTableUse ) ) {
-			return buildSequenceStructure( type, params, jdbcEnvironment, sequenceName, initialValue, incrementSize );
-		}
-		else {
-			return buildTableStructure( type, params, jdbcEnvironment, sequenceName, initialValue, incrementSize );
-		}
+		return isPhysicalSequence( jdbcEnvironment, forceTableUse )
+				? buildSequenceStructure( type, params, jdbcEnvironment, sequenceName, initialValue, incrementSize )
+				: buildTableStructure( type, params, jdbcEnvironment, sequenceName, initialValue, incrementSize );
 	}
 
 	protected boolean isPhysicalSequence(JdbcEnvironment jdbcEnvironment, boolean forceTableUse) {

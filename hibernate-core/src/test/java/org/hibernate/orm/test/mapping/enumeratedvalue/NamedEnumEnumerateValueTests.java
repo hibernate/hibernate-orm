@@ -14,6 +14,7 @@ import jakarta.persistence.EnumeratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -43,8 +44,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@RequiresDialect(PostgreSQLDialect.class)
-public class PostgresqlNamedEnumEnumerateValueTests {
+@RequiresDialect(value = PostgreSQLDialect.class)
+@RequiresDialect(value = OracleDialect.class, majorVersion = 23)
+public class NamedEnumEnumerateValueTests {
 	@Test
 	@DomainModel(annotatedClasses = Person.class)
 	@SessionFactory

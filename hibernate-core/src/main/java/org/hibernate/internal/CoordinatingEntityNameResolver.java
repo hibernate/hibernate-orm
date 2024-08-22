@@ -30,15 +30,15 @@ public class CoordinatingEntityNameResolver implements EntityNameResolver {
 			return entityName;
 		}
 
-		final MappingMetamodelImplementor mappingMetamodel = sessionFactory.getRuntimeMetamodels().getMappingMetamodel();
-		for ( EntityNameResolver resolver : mappingMetamodel.getEntityNameResolvers() ) {
+		for ( EntityNameResolver resolver : sessionFactory.getSessionFactoryOptions().getEntityNameResolvers() ) {
 			entityName = resolver.resolveEntityName( entity );
 			if ( entityName != null ) {
 				return entityName;
 			}
 		}
 
-		for ( EntityNameResolver resolver : sessionFactory.getSessionFactoryOptions().getEntityNameResolvers() ) {
+		final MappingMetamodelImplementor mappingMetamodel = sessionFactory.getRuntimeMetamodels().getMappingMetamodel();
+		for ( EntityNameResolver resolver : mappingMetamodel.getEntityNameResolvers() ) {
 			entityName = resolver.resolveEntityName( entity );
 			if ( entityName != null ) {
 				return entityName;

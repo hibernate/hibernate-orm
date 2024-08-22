@@ -34,8 +34,9 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 	private final Object identifier;
 
 	//N.B. this Set needs to be treated as immutable
-	private final Set<String> lazyFields;
+	private Set<String> lazyFields;
 	private Set<String> initializedLazyFields;
+	private Set<String> mutableLazyFields;
 
 	public LazyAttributeLoadingInterceptor(
 			String entityName,
@@ -193,4 +194,11 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 		return initializedLazyFields == null ? Collections.emptySet() : initializedLazyFields;
 	}
 
+	public void addLazyFieldByGraph(String fieldName) {
+		if ( mutableLazyFields == null ) {
+			mutableLazyFields = new HashSet<>( lazyFields );
+			lazyFields = mutableLazyFields;
+		}
+		mutableLazyFields.add( fieldName );
+	}
 }

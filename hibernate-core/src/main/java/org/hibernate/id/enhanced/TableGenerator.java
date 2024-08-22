@@ -731,7 +731,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 
 	@Override
 	public void initialize(SqlStringGenerationContext context) {
-		String formattedPhysicalTableName = context.format( physicalTableName );
+		final String formattedPhysicalTableName = context.format( physicalTableName );
 		selectQuery = buildSelectQuery( formattedPhysicalTableName, context );
 		updateQuery = buildUpdateQuery( formattedPhysicalTableName, context );
 		insertQuery = buildInsertQuery( formattedPhysicalTableName, context );

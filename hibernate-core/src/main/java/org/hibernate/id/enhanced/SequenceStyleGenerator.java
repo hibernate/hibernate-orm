@@ -554,21 +554,22 @@ public class SequenceStyleGenerator
 	 * @return sequence increment value
 	 */
 	private Number getSequenceIncrementValue(JdbcEnvironment jdbcEnvironment, String sequenceName) {
-		return jdbcEnvironment.getExtractedDatabaseMetaData().getSequenceInformationList()
-				.stream()
-				.filter(
-					sequenceInformation -> {
-						final QualifiedSequenceName name = sequenceInformation.getSequenceName();
-						final Identifier catalog = name.getCatalogName();
-						final Identifier schema = name.getSchemaName();
-						return sequenceName.equalsIgnoreCase( name.getSequenceName().getText() )
-							&& ( catalog == null || catalog.equals( jdbcEnvironment.getCurrentCatalog() ) )
-							&& ( schema == null || schema.equals( jdbcEnvironment.getCurrentSchema() ) );
-					}
-				)
-				.map( SequenceInformation::getIncrementValue )
-				.filter( Objects::nonNull )
-				.findFirst()
-				.orElse( null );
+		for ( SequenceInformation information :
+				jdbcEnvironment.getExtractedDatabaseMetaData().getSequenceInformationList() ) {
+			final QualifiedSequenceName name = information.getSequenceName();
+			if ( sequenceName.equalsIgnoreCase( name.getSequenceName().getText() )
+					&& isDefaultSchema( jdbcEnvironment, name.getCatalogName(), name.getSchemaName() ) ) {
+				final Number incrementValue = information.getIncrementValue();
+				if ( incrementValue != null ) {
+					return incrementValue;
+				}
+			}
+		}
+		return null;
+	}
+
+	private static boolean isDefaultSchema(JdbcEnvironment jdbcEnvironment, Identifier catalog, Identifier schema) {
+		return ( catalog == null || catalog.equals( jdbcEnvironment.getCurrentCatalog() ) )
+			&& ( schema == null || schema.equals( jdbcEnvironment.getCurrentSchema() ) );
 	}
 }

@@ -17,7 +17,6 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedNameImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.enhanced.SequenceStructure;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
@@ -52,7 +51,6 @@ public class ExportIdentifierTest extends BaseUnitTestCase {
 			int namespaceSize = 0;
 			for ( Namespace namespace : database.getNamespaces() ) {
 				final SequenceStructure sequenceStructure = new SequenceStructure(
-						ssr.getService( JdbcEnvironment.class ),
 						"envers",
 						new QualifiedNameImpl(
 								namespace.getName(),

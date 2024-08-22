@@ -6,7 +6,6 @@
  */
 package org.hibernate.id.enhanced;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.Properties;
@@ -31,7 +30,6 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.SequenceMismatchStrategy;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
@@ -40,9 +38,9 @@ import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 
+import static java.util.Collections.singleton;
 import static org.hibernate.id.IdentifierGeneratorHelper.getNamingStrategy;
 import static org.hibernate.id.enhanced.OptimizerFactory.determineImplicitOptimizerName;
-import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
@@ -266,7 +264,9 @@ public class SequenceStyleGenerator
 				&& optimizationStrategy.isPooled()
 				&& physicalSequence ) {
 			final String databaseSequenceName = sequenceName.getObjectName().getText();
-			final Number databaseIncrementValue = isSchemaToBeRecreated( contributor, configurationService ) ? null : getSequenceIncrementValue( jdbcEnvironment, databaseSequenceName );
+			final Number databaseIncrementValue =
+					isSchemaToBeRecreated( contributor, configurationService ) ? null
+							: getSequenceIncrementValue( jdbcEnvironment, databaseSequenceName );
 			if ( databaseIncrementValue != null && databaseIncrementValue.intValue() != incrementSize) {
 				final int dbIncrementValue = databaseIncrementValue.intValue();
 				switch ( sequenceMismatchStrategy ) {
@@ -291,7 +291,8 @@ public class SequenceStyleGenerator
 	}
 
 	private boolean isSchemaToBeRecreated(String contributor, ConfigurationService configurationService) {
-		final Set<ActionGrouping> actions = ActionGrouping.interpret( Collections.singleton(contributor), configurationService.getSettings() );
+		final Set<ActionGrouping> actions =
+				ActionGrouping.interpret( singleton( contributor ), configurationService.getSettings() );
 		// We know this will only contain at most 1 action
 		final Iterator<ActionGrouping> it = actions.iterator();
 		final Action dbAction = it.hasNext() ? it.next().getDatabaseAction() : null;
@@ -492,7 +493,6 @@ public class SequenceStyleGenerator
 			int initialValue,
 			int incrementSize) {
 		return new SequenceStructure(
-				jdbcEnvironment,
 				determineContributor( params ),
 				sequenceName,
 				initialValue,
@@ -511,7 +511,6 @@ public class SequenceStyleGenerator
 			int incrementSize) {
 
 		return new TableStructure(
-				jdbcEnvironment,
 				determineContributor( params ),
 				sequenceName,
 				determineValueColumnName( params, jdbcEnvironment ),

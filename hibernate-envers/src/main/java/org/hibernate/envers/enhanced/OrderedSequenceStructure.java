@@ -42,7 +42,7 @@ public class OrderedSequenceStructure extends SequenceStructure {
 			int incrementSize,
 			boolean noCache,
 			Class<?> numberType) {
-		super( jdbcEnvironment, "envers", qualifiedSequenceName, initialValue, incrementSize, numberType );
+		super( "envers", qualifiedSequenceName, initialValue, incrementSize, numberType );
 		this.sequenceObject = new OrderedSequence();
 		final Dialect dialect = DialectDelegateWrapper.extractRealDialect( jdbcEnvironment.getDialect() );
 		if ( dialect instanceof OracleDialect ) {

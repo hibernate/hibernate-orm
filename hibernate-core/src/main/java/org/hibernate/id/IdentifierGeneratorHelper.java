@@ -14,17 +14,27 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Objects;
+import java.util.Properties;
 
 import org.hibernate.Internal;
 import org.hibernate.TransientObjectException;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
+import org.hibernate.id.enhanced.StandardNamingStrategy;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
+import static org.hibernate.cfg.MappingSettings.ID_DB_STRUCTURE_NAMING_STRATEGY;
 import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifierIfNotUnsaved;
+import static org.hibernate.internal.log.IncubationLogger.INCUBATION_LOGGER;
+import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
 import static org.hibernate.spi.NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
 
 /**
@@ -623,6 +633,31 @@ public final class IdentifierGeneratorHelper {
 		public int hashCode() {
 			return Objects.hashCode( value );
 		}
+	}
+
+	public static ImplicitDatabaseObjectNamingStrategy getNamingStrategy(Properties params, ServiceRegistry serviceRegistry) {
+		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
+
+		final String namingStrategySetting = coalesceSuppliedValues(
+				() -> {
+					final String localSetting = getString( ID_DB_STRUCTURE_NAMING_STRATEGY, params );
+					if ( localSetting != null ) {
+						INCUBATION_LOGGER.incubatingSetting( ID_DB_STRUCTURE_NAMING_STRATEGY );
+					}
+					return localSetting;
+				},
+				() -> {
+					final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
+					final String globalSetting = getString( ID_DB_STRUCTURE_NAMING_STRATEGY, configurationService.getSettings() );
+					if ( globalSetting != null ) {
+						INCUBATION_LOGGER.incubatingSetting( ID_DB_STRUCTURE_NAMING_STRATEGY );
+					}
+					return globalSetting;
+				},
+				StandardNamingStrategy.class::getName
+		);
+
+		return strategySelector.resolveStrategy( ImplicitDatabaseObjectNamingStrategy.class, namingStrategySetting );
 	}
 
 	/**

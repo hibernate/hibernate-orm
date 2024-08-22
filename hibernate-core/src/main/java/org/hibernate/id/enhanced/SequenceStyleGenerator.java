@@ -6,9 +6,7 @@
  */
 package org.hibernate.id.enhanced;
 
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 
@@ -20,7 +18,6 @@ import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -32,7 +29,6 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.SequenceMismatchStrategy;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
@@ -41,10 +37,10 @@ import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.cfg.AvailableSettings.ID_DB_STRUCTURE_NAMING_STRATEGY;
+import static java.util.Collections.singleton;
+import static org.hibernate.id.IdentifierGeneratorHelper.getNamingStrategy;
 import static org.hibernate.id.enhanced.OptimizerFactory.determineImplicitOptimizerName;
-import static org.hibernate.internal.log.IncubationLogger.INCUBATION_LOGGER;
-import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
@@ -201,7 +197,7 @@ public class SequenceStyleGenerator
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
 		final Dialect dialect = jdbcEnvironment.getDialect();
 
-		this.identifierType = type;
+		identifierType = type;
 
 		final QualifiedName sequenceName = determineSequenceName( parameters, dialect, jdbcEnvironment, serviceRegistry );
 		final int initialValue = determineInitialValue( parameters );
@@ -228,7 +224,7 @@ public class SequenceStyleGenerator
 			LOG.forcingTableUse();
 		}
 
-		this.databaseStructure = buildDatabaseStructure(
+		databaseStructure = buildDatabaseStructure(
 				type,
 				parameters,
 				jdbcEnvironment,
@@ -237,15 +233,15 @@ public class SequenceStyleGenerator
 				initialValue,
 				incrementSize
 		);
-		this.optimizer = OptimizerFactory.buildOptimizer(
+		optimizer = OptimizerFactory.buildOptimizer(
 				optimizationStrategy,
 				identifierType.getReturnedClass(),
 				incrementSize,
 				getInt( INITIAL_PARAM, parameters, -1 )
 		);
-		this.databaseStructure.configure( optimizer );
+		databaseStructure.configure( optimizer );
 
-		this.options = parameters.getProperty( OPTIONS );
+		options = parameters.getProperty( OPTIONS );
 	}
 
 	private int adjustIncrementSize(
@@ -267,7 +263,9 @@ public class SequenceStyleGenerator
 				&& optimizationStrategy.isPooled()
 				&& physicalSequence ) {
 			final String databaseSequenceName = sequenceName.getObjectName().getText();
-			final Number databaseIncrementValue = isSchemaToBeRecreated( contributor, configurationService ) ? null : getSequenceIncrementValue( jdbcEnvironment, databaseSequenceName );
+			final Number databaseIncrementValue =
+					isSchemaToBeRecreated( contributor, configurationService ) ? null
+							: getSequenceIncrementValue( jdbcEnvironment, databaseSequenceName );
 			if ( databaseIncrementValue != null && databaseIncrementValue.intValue() != incrementSize) {
 				final int dbIncrementValue = databaseIncrementValue.intValue();
 				switch ( sequenceMismatchStrategy ) {
@@ -292,7 +290,8 @@ public class SequenceStyleGenerator
 	}
 
 	private boolean isSchemaToBeRecreated(String contributor, ConfigurationService configurationService) {
-		final Set<ActionGrouping> actions = ActionGrouping.interpret( Collections.singleton(contributor), configurationService.getSettings() );
+		final Set<ActionGrouping> actions =
+				ActionGrouping.interpret( singleton( contributor ), configurationService.getSettings() );
 		// We know this will only contain at most 1 action
 		final Iterator<ActionGrouping> it = actions.iterator();
 		final Action dbAction = it.hasNext() ? it.next().getDatabaseAction() : null;
@@ -306,7 +305,7 @@ public class SequenceStyleGenerator
 
 	@Override
 	public void initialize(SqlStringGenerationContext context) {
-		this.databaseStructure.initialize( context );
+		databaseStructure.initialize( context );
 	}
 
 	/**
@@ -327,62 +326,32 @@ public class SequenceStyleGenerator
 			JdbcEnvironment jdbcEnv,
 			ServiceRegistry serviceRegistry) {
 		final IdentifierHelper identifierHelper = jdbcEnv.getIdentifierHelper();
-
 		final Identifier catalog = identifierHelper.toIdentifier( getString( CATALOG, params ) );
 		final Identifier schema =  identifierHelper.toIdentifier( getString( SCHEMA, params ) );
-
 		final String sequenceName = getString( SEQUENCE_PARAM, params, () -> getString( ALT_SEQUENCE_PARAM, params ) );
-		if ( StringHelper.isNotEmpty( sequenceName ) ) {
-			// we have an explicit name, use it
-			if ( sequenceName.contains( "." ) ) {
-				return QualifiedNameParser.INSTANCE.parse( sequenceName );
-			}
-			else {
-				return new QualifiedNameParser.NameParts(
-						catalog,
-						schema,
-						identifierHelper.toIdentifier( sequenceName )
-				);
-			}
-		}
-
-		// otherwise, determine an implicit name to use
-		return determineImplicitName( catalog, schema, params, serviceRegistry );
+		return sequenceName( params, serviceRegistry, sequenceName, catalog, schema, identifierHelper );
 	}
 
-	private QualifiedName determineImplicitName(
-			Identifier catalog,
-			Identifier schema,
+	private static QualifiedName sequenceName(
 			Properties params,
-			ServiceRegistry serviceRegistry) {
-		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
-
-		final String namingStrategySetting = coalesceSuppliedValues(
-				() -> {
-					final String localSetting = getString( ID_DB_STRUCTURE_NAMING_STRATEGY, params );
-					if ( localSetting != null ) {
-						INCUBATION_LOGGER.incubatingSetting( ID_DB_STRUCTURE_NAMING_STRATEGY );
-					}
-					return localSetting;
-				},
-				() -> {
-					final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
-					final String globalSetting = getString( ID_DB_STRUCTURE_NAMING_STRATEGY, configurationService.getSettings() );
-					if ( globalSetting != null ) {
-						INCUBATION_LOGGER.incubatingSetting( ID_DB_STRUCTURE_NAMING_STRATEGY );
-					}
-					return globalSetting;
-				},
-				StandardNamingStrategy.class::getName
-		);
-
-		final ImplicitDatabaseObjectNamingStrategy namingStrategy = strategySelector.resolveStrategy(
-				ImplicitDatabaseObjectNamingStrategy.class,
-				namingStrategySetting
-		);
-
-		return namingStrategy.determineSequenceName( catalog, schema, params, serviceRegistry );
+			ServiceRegistry serviceRegistry,
+			String explicitSequenceName,
+			Identifier catalog, Identifier schema,
+			IdentifierHelper identifierHelper) {
+		if ( isNotEmpty( explicitSequenceName ) ) {
+			// we have an explicit name, use it
+			return explicitSequenceName.contains(".")
+					? QualifiedNameParser.INSTANCE.parse( explicitSequenceName )
+					: new QualifiedNameParser.NameParts( catalog, schema,
+							identifierHelper.toIdentifier( explicitSequenceName ) );
+		}
+		else {
+			// otherwise, determine an implicit name to use
+			return getNamingStrategy( params, serviceRegistry )
+					.determineSequenceName( catalog, schema, params, serviceRegistry );
+		}
 	}
+
 
 	/**
 	 * Determine the name of the column used to store the generator value in
@@ -502,12 +471,9 @@ public class SequenceStyleGenerator
 			QualifiedName sequenceName,
 			int initialValue,
 			int incrementSize) {
-		if ( isPhysicalSequence( jdbcEnvironment, forceTableUse ) ) {
-			return buildSequenceStructure( type, params, jdbcEnvironment, sequenceName, initialValue, incrementSize );
-		}
-		else {
-			return buildTableStructure( type, params, jdbcEnvironment, sequenceName, initialValue, incrementSize );
-		}
+		return isPhysicalSequence( jdbcEnvironment, forceTableUse )
+				? buildSequenceStructure( type, params, jdbcEnvironment, sequenceName, initialValue, incrementSize )
+				: buildTableStructure( type, params, jdbcEnvironment, sequenceName, initialValue, incrementSize );
 	}
 
 	protected boolean isPhysicalSequence(JdbcEnvironment jdbcEnvironment, boolean forceTableUse) {
@@ -523,7 +489,6 @@ public class SequenceStyleGenerator
 			int initialValue,
 			int incrementSize) {
 		return new SequenceStructure(
-				jdbcEnvironment,
 				determineContributor( params ),
 				sequenceName,
 				initialValue,
@@ -540,14 +505,11 @@ public class SequenceStyleGenerator
 			QualifiedName sequenceName,
 			int initialValue,
 			int incrementSize) {
-		final Identifier valueColumnName = determineValueColumnName( params, jdbcEnvironment );
-		final String contributor = determineContributor( params );
 
 		return new TableStructure(
-				jdbcEnvironment,
-				contributor,
+				determineContributor( params ),
 				sequenceName,
-				valueColumnName,
+				determineValueColumnName( params, jdbcEnvironment ),
 				initialValue,
 				incrementSize,
 				params.getProperty( OPTIONS ),
@@ -591,21 +553,22 @@ public class SequenceStyleGenerator
 	 * @return sequence increment value
 	 */
 	private Number getSequenceIncrementValue(JdbcEnvironment jdbcEnvironment, String sequenceName) {
-		return jdbcEnvironment.getExtractedDatabaseMetaData().getSequenceInformationList()
-				.stream()
-				.filter(
-					sequenceInformation -> {
-						QualifiedSequenceName name = sequenceInformation.getSequenceName();
-						Identifier catalog = name.getCatalogName();
-						Identifier schema = name.getSchemaName();
-						return sequenceName.equalsIgnoreCase( name.getSequenceName().getText() )
-							&& ( catalog == null || catalog.equals( jdbcEnvironment.getCurrentCatalog() ) )
-							&& ( schema == null || schema.equals( jdbcEnvironment.getCurrentSchema() ) );
-					}
-				)
-				.map( SequenceInformation::getIncrementValue )
-				.filter( Objects::nonNull )
-				.findFirst()
-				.orElse( null );
+		for ( SequenceInformation information :
+				jdbcEnvironment.getExtractedDatabaseMetaData().getSequenceInformationList() ) {
+			final QualifiedSequenceName name = information.getSequenceName();
+			if ( sequenceName.equalsIgnoreCase( name.getSequenceName().getText() )
+					&& isDefaultSchema( jdbcEnvironment, name.getCatalogName(), name.getSchemaName() ) ) {
+				final Number incrementValue = information.getIncrementValue();
+				if ( incrementValue != null ) {
+					return incrementValue;
+				}
+			}
+		}
+		return null;
+	}
+
+	private static boolean isDefaultSchema(JdbcEnvironment jdbcEnvironment, Identifier catalog, Identifier schema) {
+		return ( catalog == null || catalog.equals( jdbcEnvironment.getCurrentCatalog() ) )
+			&& ( schema == null || schema.equals( jdbcEnvironment.getCurrentSchema() ) );
 	}
 }

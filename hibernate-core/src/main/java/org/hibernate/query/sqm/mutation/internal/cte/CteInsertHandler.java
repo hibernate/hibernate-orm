@@ -50,6 +50,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmStar;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmConflictClause;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
@@ -107,7 +108,6 @@ import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.generator.Generator;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  *
@@ -172,18 +172,16 @@ public class CteInsertHandler implements InsertHandler {
 		final SqmInsertStatement<?> sqmInsertStatement = getSqmStatement();
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 		final EntityPersister entityDescriptor = getEntityDescriptor().getEntityPersister();
-		final String explicitDmlTargetAlias;
-		if ( sqmInsertStatement.getTarget().getExplicitAlias() == null ) {
-			explicitDmlTargetAlias = "dml_target";
-		}
-		else {
-			explicitDmlTargetAlias = sqmInsertStatement.getTarget().getExplicitAlias();
-		}
+		final SqmRoot<?> target = sqmInsertStatement.getTarget();
+		final String explicitDmlTargetAlias =
+				target.getExplicitAlias() == null
+						? "dml_target"
+						: target.getExplicitAlias();
 
 		final MultiTableSqmMutationConverter sqmConverter = new MultiTableSqmMutationConverter(
 				entityDescriptor,
 				sqmInsertStatement,
-				sqmInsertStatement.getTarget(),
+				target,
 				explicitDmlTargetAlias,
 				domainParameterXref,
 				executionContext.getQueryOptions(),
@@ -383,8 +381,10 @@ public class CteInsertHandler implements InsertHandler {
 								rowNumberColumnReference
 						)
 				);
-				final String fragment = ( (BulkInsertionCapableIdentifierGenerator) entityDescriptor.getGenerator() )
-						.determineBulkInsertionIdentifierGenerationSelectFragment(
+				final BulkInsertionCapableIdentifierGenerator generator =
+						(BulkInsertionCapableIdentifierGenerator) entityDescriptor.getGenerator();
+				final String fragment =
+						generator.determineBulkInsertionIdentifierGenerationSelectFragment(
 								sessionFactory.getSqlStringGenerationContext()
 						);
 				rowsWithSequenceQuery.getSelectClause().addSqlSelection(

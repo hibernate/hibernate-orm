@@ -227,18 +227,18 @@ public class TableStructure implements DatabaseStructure {
 	private PreparedStatement prepareStatement(
 			Connection connection,
 			String sql,
-			SqlStatementLogger statementLogger,
+			SqlStatementLogger logger,
 			SessionEventListenerManager statsCollector,
 			SharedSessionContractImplementor session) throws SQLException {
-		statementLogger.logStatement( sql, FormatStyle.BASIC.getFormatter() );
+		logger.logStatement( sql, FormatStyle.BASIC.getFormatter() );
 		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent jdbcPreparedStatementCreation = eventManager.beginJdbcPreparedStatementCreationEvent();
+		final HibernateMonitoringEvent creationEvent = eventManager.beginJdbcPreparedStatementCreationEvent();
 		try {
 			statsCollector.jdbcPrepareStatementStart();
 			return connection.prepareStatement( sql );
 		}
 		finally {
-			eventManager.completeJdbcPreparedStatementCreationEvent( jdbcPreparedStatementCreation, sql );
+			eventManager.completeJdbcPreparedStatementCreationEvent( creationEvent, sql );
 			statsCollector.jdbcPrepareStatementEnd();
 		}
 	}
@@ -249,13 +249,13 @@ public class TableStructure implements DatabaseStructure {
 			String sql,
 			SharedSessionContractImplementor session) throws SQLException {
 		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+		final HibernateMonitoringEvent executionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			statsCollector.jdbcExecuteStatementStart();
 			return ps.executeUpdate();
 		}
 		finally {
-			eventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
+			eventManager.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
 			statsCollector.jdbcExecuteStatementEnd();
 		}
 
@@ -267,13 +267,13 @@ public class TableStructure implements DatabaseStructure {
 			String sql,
 			SharedSessionContractImplementor session) throws SQLException {
 		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+		final HibernateMonitoringEvent executionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			statsCollector.jdbcExecuteStatementStart();
 			return ps.executeQuery();
 		}
 		finally {
-			eventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
+			eventManager.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
 			statsCollector.jdbcExecuteStatementEnd();
 		}
 	}

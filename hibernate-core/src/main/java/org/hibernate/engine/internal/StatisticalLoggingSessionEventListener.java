@@ -250,10 +250,10 @@ public class StatisticalLoggingSessionEventListener extends BaseSessionEventList
 
 	@Override
 	public void prePartialFlushEnd() {
-		assert prePartialFlushStart > 0 : "Unexpected call to partialFlushEnd; expecting partialFlushStart";
+		assert prePartialFlushStart > 0 : "Unexpected call to prePartialFlushEnd; expecting prePartialFlushStart";
 
 		prePartialFlushCount++;
-		prePartialFlushTime += ( System.nanoTime() - partialFlushStart );
+		prePartialFlushTime += ( System.nanoTime() - prePartialFlushStart );
 		prePartialFlushStart = -1;
 	}
 

@@ -5207,6 +5207,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				Integer precision,
 				Integer scale,
 				Long length);
+
+		default Size resolveSize(
+				JdbcType jdbcType,
+				JavaType<?> javaType,
+				Size size) {
+			return resolveSize( jdbcType, javaType, size.getPrecision(), size.getScale(), size.getLength() );
+		}
 	}
 
 	public class SizeStrategyImpl implements SizeStrategy {

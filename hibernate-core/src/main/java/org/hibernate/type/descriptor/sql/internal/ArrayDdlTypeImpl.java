@@ -46,9 +46,7 @@ public class ArrayDdlTypeImpl extends DdlTypeImpl {
 							dialect.getSizeStrategy().resolveSize(
 									elementType.getJdbcMapping().getJdbcType(),
 									elementType.getJavaTypeDescriptor(),
-									columnSize.getPrecision(),
-									columnSize.getScale(),
-									columnSize.getLength()
+									columnSize
 							),
 							elementType,
 							ddlTypeRegistry
@@ -79,9 +77,7 @@ public class ArrayDdlTypeImpl extends DdlTypeImpl {
 				dialect.getSizeStrategy().resolveSize(
 						elementType.getJdbcMapping().getJdbcType(),
 						elementType.getJavaTypeDescriptor(),
-						columnSize.getPrecision(),
-						columnSize.getScale(),
-						columnSize.getLength()
+						columnSize
 				),
 				elementType
 		);

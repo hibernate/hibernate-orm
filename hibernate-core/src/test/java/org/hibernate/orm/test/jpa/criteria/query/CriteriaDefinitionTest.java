@@ -54,6 +54,11 @@ public class CriteriaDefinitionTest {
             orderBy(asc(message.get("id")));
         }};
 
+        var query5 = new CriteriaDefinition<>(query4, Long.class) {{
+            select(count());
+            orderBy();
+        }};
+
         scope.inSession(session -> {
             var idAndText = session.createSelectionQuery(query1).getSingleResult();
             assertNotNull(idAndText);
@@ -72,6 +77,9 @@ public class CriteriaDefinitionTest {
             assertNotNull(msg);
             assertEquals(1L,msg.id);
             assertEquals("hello",msg.text);
+
+            long count = session.createSelectionQuery(query5).getSingleResult();
+            assertEquals(1L,count);
         });
     }
 

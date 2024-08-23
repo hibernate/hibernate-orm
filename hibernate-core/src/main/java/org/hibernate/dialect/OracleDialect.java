@@ -1683,6 +1683,27 @@ public class OracleDialect extends Dialect {
 		return new String[] { domain.toString() };
 	}
 
+	/**
+	 * Used to generate the {@code CREATE} DDL command for
+	 * Data Use Case Domain based on {@code VARCHAR2} values.
+	 *
+	 * @return the DDL command to create that enum
+	 */
+	public static String[] getCreateVarcharEnumTypeCommand(String name, String[] values) {
+		final StringBuilder domain = new StringBuilder();
+		domain.append( "create domain " )
+				.append( name )
+				.append( " as enum (" );
+		String separator = "";
+		for ( String value : values ) {
+			domain.append( separator ).append( value ).append("='").append(value).append("'");
+			separator = ", ";
+		}
+		domain.append( ')' );
+		return new String[] { domain.toString() };
+
+	}
+
 	@Override
 	public String[] getDropEnumTypeCommand(String name) {
 		return new String[] { "drop domain if exists " + name + " force" };

@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.hibernate.Internal;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSelection;
@@ -26,8 +27,6 @@ import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.expression.SqmStar;
-import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -127,7 +126,8 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 		return createCopy( context, getResultType() );
 	}
 
-	private <X> SqmSelectStatement<X> createCopy(SqmCopyContext context, Class<X> resultType) {
+	@Internal
+	public <X> SqmSelectStatement<X> createCopy(SqmCopyContext context, Class<X> resultType) {
 		final Set<SqmParameter<?>> parameters;
 		if ( this.parameters == null ) {
 			parameters = null;

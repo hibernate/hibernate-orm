@@ -804,6 +804,13 @@ public class QueryCacheTest {
 						.setCacheable( true )
 						.list();
 				Assertions.assertThat( result2 ).containsExactlyInAnyOrder( "description", null );
+
+				// test select null directly
+				var result3 = session.createQuery( "select null", Object.class )
+						.setCacheable( true )
+						.list();
+				Assertions.assertThat( result3 ).hasSize( 1 ).containsOnlyNulls();
+
 			} );
 		}
 	}

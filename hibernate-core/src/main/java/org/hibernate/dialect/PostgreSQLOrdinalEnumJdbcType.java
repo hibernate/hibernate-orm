@@ -6,13 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.boot.model.relational.Database;
-import org.hibernate.engine.jdbc.Size;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
-import org.hibernate.type.spi.TypeConfiguration;
-
 import jakarta.persistence.EnumType;
 
 import static org.hibernate.type.SqlTypes.NAMED_ORDINAL_ENUM;
@@ -38,23 +31,5 @@ public class PostgreSQLOrdinalEnumJdbcType extends PostgreSQLEnumJdbcType {
 	@Override
 	public int getDefaultSqlTypeCode() {
 		return NAMED_ORDINAL_ENUM;
-	}
-
-	@Override
-	public void addAuxiliaryDatabaseObjects(
-			JavaType<?> javaType,
-			BasicValueConverter<?, ?> valueConverter, Size columnSize,
-			Database database,
-			JdbcTypeIndicators context) {
-		addAuxiliaryDatabaseObjects( javaType, valueConverter, database, false );
-	}
-
-	@Override
-	public void addAuxiliaryDatabaseObjects(
-			JavaType<?> javaType,
-			Size columnSize,
-			Database database,
-			TypeConfiguration typeConfiguration) {
-		addAuxiliaryDatabaseObjects( javaType, null, database, false );
 	}
 }

@@ -114,8 +114,7 @@ public class DdlTypeImpl implements DdlType {
 		}
 		else {
 			//use the given length/precision/scale
-			final Size size = dialect.getSizeStrategy()
-					.resolveSize( jdbcType, javaType, precision, scale, length );
+			final Size size = dialect.getSizeStrategy().resolveSize( jdbcType, javaType, precision, scale, length );
 			if ( size.getPrecision() != null && size.getScale() == null ) {
 				//needed for cast(x as BigInteger(p))
 				size.setScale( javaType.getDefaultSqlScale( dialect, jdbcType ) );

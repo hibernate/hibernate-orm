@@ -214,7 +214,30 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 
 	@Override
 	public AfterTransactionCompletionProcess getAfterTransactionCompletionProcess() {
-		return (success, session) -> {
+		return new BulkOperationCleanUpAfterTransactionCompletionProcess(
+				entityCleanups,
+				collectionCleanups,
+				naturalIdCleanups
+		);
+	}
+
+	public static final class BulkOperationCleanUpAfterTransactionCompletionProcess
+			implements AfterTransactionCompletionProcess {
+		private final Set<EntityCleanup> entityCleanups;
+		private final Set<CollectionCleanup> collectionCleanups;
+		private final Set<NaturalIdCleanup> naturalIdCleanups;
+
+		public BulkOperationCleanUpAfterTransactionCompletionProcess(
+				Set<EntityCleanup> entityCleanups,
+				Set<CollectionCleanup> collectionCleanups,
+				Set<NaturalIdCleanup> naturalIdCleanups) {
+			this.entityCleanups = entityCleanups;
+			this.collectionCleanups = collectionCleanups;
+			this.naturalIdCleanups = naturalIdCleanups;
+		}
+
+		@Override
+		public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
 			for ( var cleanup : entityCleanups ) {
 				cleanup.release();
 			}

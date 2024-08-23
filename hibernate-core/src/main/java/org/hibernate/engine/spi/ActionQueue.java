@@ -19,6 +19,7 @@ import java.util.Set;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.PropertyValueException;
 import org.hibernate.TransientPropertyValueException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
@@ -534,6 +535,14 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 		if ( !isTransactionCoordinatorShared ) {
 			// Execute completion actions only in transaction owner (aka parent session).
 			transactionCompletionCallbacks.afterTransactionCompletion( success );
+		}
+	}
+
+	@Internal
+	public void executePendingBulkOperationCleanUpActions() {
+		if ( !isTransactionCoordinatorShared && transactionCompletionCallbacks != null ) {
+			// Execute completion actions only in transaction owner (aka parent session).
+			transactionCompletionCallbacks.executePendingBulkOperationCleanUpActions();
 		}
 	}
 

@@ -107,8 +107,27 @@ public class MapBinder extends CollectionBinder {
 		};
 	}
 
-	private void makeOneToManyMapKeyColumnNullableIfNotInProperty(
-			final XProperty property) {
+	@Override
+	protected boolean mappingDefinedAttributeOverrideOnElement(XProperty property) {
+		if ( property.isAnnotationPresent( AttributeOverride.class ) ) {
+			return namedMapValue( property.getAnnotation( AttributeOverride.class ) );
+		}
+		if ( property.isAnnotationPresent( AttributeOverrides.class ) ) {
+			final AttributeOverrides annotations = property.getAnnotation( AttributeOverrides.class );
+			for ( AttributeOverride attributeOverride : annotations.value() ) {
+				if ( namedMapValue( attributeOverride ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private boolean namedMapValue(AttributeOverride annotation) {
+		return annotation.name().startsWith( "value." );
+	}
+
+	private void makeOneToManyMapKeyColumnNullableIfNotInProperty(XProperty property) {
 		final Map map = (Map) this.collection;
 		if ( map.isOneToMany() &&
 				property.isAnnotationPresent( MapKeyColumn.class ) ) {

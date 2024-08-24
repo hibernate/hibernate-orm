@@ -2340,13 +2340,17 @@ public abstract class CollectionBinder {
 		}
 		else {
 			//force in case of attribute override
-			final boolean attributeOverride = property.isAnnotationPresent( AttributeOverride.class )
-					|| property.isAnnotationPresent( AttributeOverrides.class );
+			final boolean attributeOverride = mappingDefinedAttributeOverrideOnElement(property);
 			// todo : force in the case of Convert annotation(s) with embedded paths (beyond key/value prefixes)?
 			return isEmbedded || attributeOverride
 					? EMBEDDABLE
 					: buildingContext.getMetadataCollector().getClassType( elementType );
 		}
+	}
+
+	protected boolean mappingDefinedAttributeOverrideOnElement(XProperty property) {
+		return property.isAnnotationPresent( AttributeOverride.class )
+				|| property.isAnnotationPresent( AttributeOverrides.class );
 	}
 
 	static AnnotatedColumns createElementColumnsIfNecessary(

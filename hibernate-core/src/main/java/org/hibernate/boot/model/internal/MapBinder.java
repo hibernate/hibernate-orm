@@ -109,6 +109,26 @@ public class MapBinder extends CollectionBinder {
 		};
 	}
 
+	@Override
+	protected boolean mappingDefinedAttributeOverrideOnElement(MemberDetails property) {
+		if ( property.hasDirectAnnotationUsage( AttributeOverride.class ) ) {
+			return namedMapValue( property.getDirectAnnotationUsage( AttributeOverride.class ) );
+		}
+		if ( property.hasDirectAnnotationUsage( AttributeOverrides.class ) ) {
+			final AttributeOverrides annotations = property.getDirectAnnotationUsage( AttributeOverrides.class );
+			for ( AttributeOverride attributeOverride : annotations.value() ) {
+				if ( namedMapValue( attributeOverride ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private boolean namedMapValue(AttributeOverride annotation) {
+		return annotation.name().startsWith( "value." );
+	}
+
 	private void makeOneToManyMapKeyColumnNullableIfNotInProperty(MemberDetails property) {
 		final Map map = (Map) this.collection;
 		if ( map.isOneToMany() && property.hasDirectAnnotationUsage( MapKeyColumn.class ) ) {

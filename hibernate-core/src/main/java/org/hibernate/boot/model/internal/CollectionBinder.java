@@ -2356,13 +2356,17 @@ public abstract class CollectionBinder {
 		}
 		else {
 			//force in case of attribute override
-			final boolean attributeOverride = property.hasDirectAnnotationUsage( AttributeOverride.class )
-					|| property.hasDirectAnnotationUsage( AttributeOverrides.class );
+			final boolean attributeOverride = mappingDefinedAttributeOverrideOnElement(property);
 			// todo : force in the case of Convert annotation(s) with embedded paths (beyond key/value prefixes)?
 			return isEmbedded || attributeOverride
 					? EMBEDDABLE
 					: buildingContext.getMetadataCollector().getClassType( elementClass );
 		}
+	}
+
+	protected boolean mappingDefinedAttributeOverrideOnElement(MemberDetails property) {
+		return property.hasDirectAnnotationUsage( AttributeOverride.class )
+				|| property.hasDirectAnnotationUsage( AttributeOverrides.class );
 	}
 
 	static AnnotatedColumns createElementColumnsIfNecessary(

@@ -27,6 +27,11 @@ public interface KeyValue extends Value {
 	
 	boolean isUpdateable();
 
-	Generator createGenerator(Dialect dialect, RootClass rootClass);
+	@Deprecated(since = "7.0")
+	default Generator createGenerator(Dialect dialect, RootClass rootClass) {
+		return createGenerator( dialect, rootClass, null );
+	}
+
+	Generator createGenerator(Dialect dialect, RootClass rootClass, Property property);
 
 }

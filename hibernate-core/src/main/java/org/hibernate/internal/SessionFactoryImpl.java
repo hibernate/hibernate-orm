@@ -457,7 +457,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		for ( PersistentClass model : bootMetamodel.getEntityBindings() ) {
 			if ( !model.isInherited() ) {
 				final KeyValue id = model.getIdentifier();
-				final Generator generator = id.createGenerator( dialect, (RootClass) model );
+				final Generator generator = id.createGenerator( dialect, (RootClass) model, model.getIdentifierProperty() );
 				if ( generator instanceof Configurable ) {
 					final Configurable identifierGenerator = (Configurable) generator;
 					identifierGenerator.initialize( sqlStringGenerationContext );

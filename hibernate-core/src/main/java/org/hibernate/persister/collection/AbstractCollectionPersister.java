@@ -598,7 +598,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	private BeforeExecutionGenerator createGenerator(RuntimeModelCreationContext context, IdentifierCollection collection) {
-		final Generator generator = collection.getIdentifier().createGenerator( context.getDialect(), null );
+		final Generator generator = collection.getIdentifier().createGenerator( context.getDialect(), null, null );
 		if ( generator.generatedOnExecution() ) {
 			throw new MappingException("must be an BeforeExecutionGenerator"); //TODO fix message
 		}

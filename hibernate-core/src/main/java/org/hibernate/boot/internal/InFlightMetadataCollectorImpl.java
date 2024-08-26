@@ -1358,24 +1358,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		}
 	}
 
-	private static AnnotatedClassType getAnnotatedClassType2(ClassDetails classDetails) {
-		if ( classDetails.hasDirectAnnotationUsage( Entity.class ) ) {
-			return AnnotatedClassType.ENTITY;
-		}
-		else if ( classDetails.hasDirectAnnotationUsage( Embeddable.class ) ) {
-			return AnnotatedClassType.EMBEDDABLE;
-		}
-		else if ( classDetails.hasDirectAnnotationUsage( jakarta.persistence.MappedSuperclass.class ) ) {
-			return AnnotatedClassType.MAPPED_SUPERCLASS;
-		}
-		else if ( classDetails.hasDirectAnnotationUsage( Imported.class ) ) {
-			return AnnotatedClassType.IMPORTED;
-		}
-		else {
-			return AnnotatedClassType.NONE;
-		}
-	}
-
 	@Override
 	public void addMappedSuperclass(Class<?> type, MappedSuperclass mappedSuperclass) {
 		if ( mappedSuperClasses == null ) {
@@ -2022,10 +2004,10 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 					}
 				}
 			}
-			stopProcess = failingSecondPasses.size() == 0 || failingSecondPasses.size() == endOfQueueFkSecondPasses.size();
+			stopProcess = failingSecondPasses.isEmpty() || failingSecondPasses.size() == endOfQueueFkSecondPasses.size();
 			endOfQueueFkSecondPasses = failingSecondPasses;
 		}
-		if ( endOfQueueFkSecondPasses.size() > 0 ) {
+		if ( !endOfQueueFkSecondPasses.isEmpty() ) {
 			throw originalException;
 		}
 	}
@@ -2212,7 +2194,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			handleIdentifierValueBinding(
 					entityBinding.getIdentifier(),
 					dialect,
-					(RootClass) entityBinding
+					(RootClass) entityBinding,
+					entityBinding.getIdentifierProperty()
 			);
 
 		}
@@ -2225,22 +2208,20 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			handleIdentifierValueBinding(
 					( (IdentifierCollection) collection ).getIdentifier(),
 					dialect,
+					null,
 					null
 			);
 		}
 	}
 
 	private void handleIdentifierValueBinding(
-			KeyValue identifierValueBinding,
-			Dialect dialect,
-			RootClass entityBinding) {
+			KeyValue identifierValueBinding, Dialect dialect, RootClass entityBinding, Property identifierProperty) {
 		// todo : store this result (back into the entity or into the KeyValue, maybe?)
 		// 		This process of instantiating the id-generator is called multiple times.
 		//		It was done this way in the old code too, so no "regression" here; but
 		//		it could be done better
 		try {
-			final Generator generator = identifierValueBinding.createGenerator( dialect, entityBinding );
-
+			final Generator generator = identifierValueBinding.createGenerator( dialect, entityBinding, identifierProperty );
 			if ( generator instanceof ExportableProducer ) {
 				( (ExportableProducer) generator ).registerExportables( getDatabase() );
 			}

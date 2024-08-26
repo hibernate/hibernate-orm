@@ -375,10 +375,10 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	@Override
-	public Generator createGenerator(Dialect dialect, RootClass rootClass) {
+	public Generator createGenerator(Dialect dialect, RootClass rootClass, Property property) {
 		if ( generator == null ) {
 			if ( customIdGeneratorCreator != null ) {
-				generator = customIdGeneratorCreator.createGenerator( new IdGeneratorCreationContext( rootClass ) );
+				generator = customIdGeneratorCreator.createGenerator( new IdGeneratorCreationContext( rootClass, property ) );
 			}
 		}
 		return generator;
@@ -1011,9 +1011,11 @@ public abstract class SimpleValue implements KeyValue {
 
 	private class IdGeneratorCreationContext implements GeneratorCreationContext {
 		private final RootClass rootClass;
+		private final Property property;
 
-		public IdGeneratorCreationContext(RootClass rootClass) {
+		public IdGeneratorCreationContext(RootClass rootClass, Property property) {
 			this.rootClass = rootClass;
+			this.property = property;
 		}
 
 		@Override
@@ -1048,7 +1050,7 @@ public abstract class SimpleValue implements KeyValue {
 
 		@Override
 		public Property getProperty() {
-			return rootClass.getIdentifierProperty();
+			return property;
 		}
 
 		// we could add these if it helps integrate old infrastructure

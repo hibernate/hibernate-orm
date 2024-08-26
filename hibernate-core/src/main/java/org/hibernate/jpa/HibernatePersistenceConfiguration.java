@@ -6,6 +6,8 @@
  */
 package org.hibernate.jpa;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
@@ -15,8 +17,10 @@ import org.hibernate.cfg.CacheSettings;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.cfg.JpaComplianceSettings;
 import org.hibernate.cfg.MappingSettings;
+import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.cfg.StatisticsSettings;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.tool.schema.Action;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -26,6 +30,8 @@ import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 
 /**
+ * Hibernate extension to the Jakarta Persistence PersistenceConfiguration contract.
+ *
  * @author Steve Ebersole
  */
 public class HibernatePersistenceConfiguration extends PersistenceConfiguration {
@@ -300,6 +306,61 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 */
 	public HibernatePersistenceConfiguration collectStatistics(boolean enabled) {
 		property( StatisticsSettings.GENERATE_STATISTICS, enabled );
+		return this;
+	}
+
+	/**
+	 * Add the specified classes as {@linkplain #managedClasses() managed classes}.
+	 *
+	 * @see #managedClass
+	 */
+	public HibernatePersistenceConfiguration managedClasses(Class<?>... managedClasses) {
+		Collections.addAll( managedClasses(), managedClasses );
+		return this;
+	}
+
+	/**
+	 * Add the specified classes as {@linkplain #managedClasses() managed classes}.
+	 *
+	 * @see #managedClass
+	 */
+	public HibernatePersistenceConfiguration managedClasses(Collection<Class<?>> managedClasses) {
+		managedClasses().addAll( managedClasses );
+		return this;
+	}
+
+	/**
+	 * Add the specified resource names as {@linkplain #mappingFiles() mapping files}.
+	 *
+	 * @see #mappingFiles
+	 */
+	public HibernatePersistenceConfiguration mappingFiles(String... names) {
+		Collections.addAll( mappingFiles(), names );
+		return this;
+	}
+
+	/**
+	 * Add the specified resource names as {@linkplain #mappingFiles() mapping files}.
+	 *
+	 * @see #mappingFiles
+	 */
+	public HibernatePersistenceConfiguration mappingFiles(Collection<String> names) {
+		mappingFiles().addAll( names );
+		return this;
+	}
+
+	/**
+	 * Specify the {@linkplain Action action} to take in terms of automatic
+	 * database schema tooling.
+	 *
+	 * @apiNote This only controls tooling as exported directly to the database.  To
+	 * output tooling commands to scripts, use {@linkplain #properties(Map) config properties}
+	 * instead with appropriate {@linkplain SchemaToolingSettings settings}.
+	 *
+	 * @see SchemaToolingSettings#HBM2DDL_AUTO
+	 */
+	public HibernatePersistenceConfiguration schemaToolingAction(Action action) {
+		property( SchemaToolingSettings.HBM2DDL_AUTO, action );
 		return this;
 	}
 

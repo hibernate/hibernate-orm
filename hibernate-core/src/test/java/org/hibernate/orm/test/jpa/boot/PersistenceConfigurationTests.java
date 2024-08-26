@@ -6,11 +6,18 @@
  */
 package org.hibernate.orm.test.jpa.boot;
 
+import java.util.List;
+
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
+import org.hibernate.tool.schema.Action;
 
 import org.hibernate.testing.env.TestingDatabaseInfo;
+import org.hibernate.testing.orm.domain.library.Book;
+import org.hibernate.testing.orm.domain.library.Person;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.transaction.TransactionUtil2;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.EntityManagerFactory;
@@ -108,6 +115,40 @@ public class PersistenceConfigurationTests {
 				assert emf.isOpen();
 			}
 			//end::example-bootstrap-standard-HibernatePersistenceConfiguration[]
+		}
+	}
+	
+	@Test
+	@RequiresDialect( H2Dialect.class )
+	public void testVarargs() {
+		final PersistenceConfiguration cfg = new HibernatePersistenceConfiguration( "emf" )
+				.jdbcUrl( "jdbc:h2:mem:db1" )
+				.jdbcUsername( "sa" )
+				.jdbcPassword( "" )
+				.schemaToolingAction( Action.CREATE_DROP )
+				.managedClasses( Book.class, Person.class );
+		try (EntityManagerFactory emf = cfg.createEntityManagerFactory()) {
+			assert emf.isOpen();
+			TransactionUtil2.inTransaction( emf.unwrap( SessionFactoryImplementor.class ), (em) -> {
+				em.createSelectionQuery( "from Book", Book.class ).list();
+			} );
+		}
+	}
+
+	@Test
+	@RequiresDialect( H2Dialect.class )
+	public void testVarargs2() {
+		final PersistenceConfiguration cfg = new HibernatePersistenceConfiguration( "emf" )
+				.jdbcUrl( "jdbc:h2:mem:db1" )
+				.jdbcUsername( "sa" )
+				.jdbcPassword( "" )
+				.schemaToolingAction( Action.CREATE_DROP )
+				.managedClasses( List.of( Book.class, Person.class ) );
+		try (EntityManagerFactory emf = cfg.createEntityManagerFactory()) {
+			assert emf.isOpen();
+			TransactionUtil2.inTransaction( emf.unwrap( SessionFactoryImplementor.class ), (em) -> {
+				em.createSelectionQuery( "from Book", Book.class ).list();
+			} );
 		}
 	}
 }

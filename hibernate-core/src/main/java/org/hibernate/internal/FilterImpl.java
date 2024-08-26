@@ -103,15 +103,16 @@ public class FilterImpl implements Filter, Serializable {
 	 * of the passed value did not match the configured type.
 	 */
 	public Filter setParameter(String name, Object value) throws IllegalArgumentException {
-		Object argument = definition.processArgument(value);
+		final Object argument = definition.processArgument( value );
 
 		// Make sure this is a defined parameter and check the incoming value type
-		JdbcMapping type = definition.getParameterJdbcMapping( name );
+		final JdbcMapping type = definition.getParameterJdbcMapping( name );
 		if ( type == null ) {
-			throw new IllegalArgumentException( "Undefined filter parameter [" + name + "]" );
+			throw new IllegalArgumentException( "Undefined filter parameter '" + name + "'" );
 		}
 		if ( argument != null && !type.getJavaTypeDescriptor().isInstance( argument ) ) {
-			throw new IllegalArgumentException( "Incorrect type for parameter [" + name + "]" );
+			throw new IllegalArgumentException( "Argument assigned to filter parameter '" + name
+					+ "' is not of type '" + type.getJavaTypeDescriptor().getTypeName() + "'" );
 		}
 		if ( parameters == null ) {
 			parameters = new TreeMap<>();
@@ -133,14 +134,15 @@ public class FilterImpl implements Filter, Serializable {
 		if ( values == null ) {
 			throw new IllegalArgumentException( "Collection must be not null" );
 		}
-		JdbcMapping type = definition.getParameterJdbcMapping( name );
+		final JdbcMapping type = definition.getParameterJdbcMapping( name );
 		if ( type == null ) {
-			throw new HibernateException( "Undefined filter parameter [" + name + "]" );
+			throw new HibernateException( "Undefined filter parameter '" + name + "'" );
 		}
 		if ( !values.isEmpty() ) {
 			final Object element = values.iterator().next();
 			if ( !type.getJavaTypeDescriptor().isInstance( element ) ) {
-				throw new HibernateException( "Incorrect type for parameter [" + name + "]" );
+				throw new IllegalArgumentException( "Argument assigned to filter parameter '" + name
+						+ "' is not of type '" + type.getJavaTypeDescriptor().getTypeName() + "'" );
 			}
 		}
 		if ( parameters == null ) {

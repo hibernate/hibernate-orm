@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -546,10 +545,6 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		this.isKey = isKey;
 	}
 
-	public boolean hasPojoRepresentation() {
-		return componentClassName!=null;
-	}
-
 	/**
 	 * Returns the {@link Property} at the specified position in this {@link Component}.
 	 *
@@ -661,37 +656,33 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	@Override
-	public Generator createGenerator(Dialect dialect, RootClass rootClass) throws MappingException {
+	public Generator createGenerator(Dialect dialect, RootClass rootClass, Property property) {
 		if ( builtIdentifierGenerator == null ) {
-			builtIdentifierGenerator = buildIdentifierGenerator( dialect, rootClass );
+			builtIdentifierGenerator =
+					getCustomIdGeneratorCreator().isAssigned()
+							? buildIdentifierGenerator( dialect, rootClass )
+							: super.createGenerator( dialect, rootClass, property );
 		}
 		return builtIdentifierGenerator;
 	}
 
-	private Generator buildIdentifierGenerator( Dialect dialect, RootClass rootClass) throws MappingException {
-		if ( !getCustomIdGeneratorCreator().isAssigned() ) {
-			return super.createGenerator( dialect, rootClass );
-		}
-
-		final Class<?> entityClass = rootClass.getMappedClass();
-		final Class<?> attributeDeclarer = getAttributeDeclarer( rootClass, entityClass );
-
-		final CompositeNestedGeneratedValueGenerator.GenerationContextLocator locator =
-				new StandardGenerationContextLocator( rootClass.getEntityName() );
+	private Generator buildIdentifierGenerator(Dialect dialect, RootClass rootClass) {
 		final CompositeNestedGeneratedValueGenerator generator =
-				new CompositeNestedGeneratedValueGenerator( locator, getType() );
-
+				new CompositeNestedGeneratedValueGenerator(
+						new StandardGenerationContextLocator( rootClass.getEntityName() ),
+						getType()
+				);
 		final List<Property> properties = getProperties();
 		for ( int i = 0; i < properties.size(); i++ ) {
 			final Property property = properties.get( i );
 			if ( property.getValue().isSimpleValue() ) {
 				final SimpleValue value = (SimpleValue) property.getValue();
 				if ( !value.getCustomIdGeneratorCreator().isAssigned() ) {
-					// skip any 'assigned' generators, they would have been handled by
-					// the StandardGenerationContextLocator
+					// skip any 'assigned' generators, they would have been
+					// handled by the StandardGenerationContextLocator
 					generator.addGeneratedValuePlan( new ValueGenerationPlan(
-							value.createGenerator( dialect, rootClass ),
-							getType().isMutable() ? injector( property, attributeDeclarer ) : null,
+							value.createGenerator( dialect, rootClass, property ),
+							getType().isMutable() ? injector( property, getAttributeDeclarer( rootClass ) ) : null,
 							i
 					) );
 				}
@@ -700,23 +691,27 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		return generator;
 	}
 
-	private Class<?> getAttributeDeclarer(RootClass rootClass, Class<?> entityClass) {
-		final Class<?> attributeDeclarer; // what class is the declarer of the composite pk attributes
-		// IMPL NOTE : See the javadoc discussion on CompositeNestedGeneratedValueGenerator wrt the
-		//		various scenarios for which we need to account here
+	/**
+	 * Return the class that declares the composite pk attributes,
+	 * which might be an {@code @IdClass}, an {@code @EmbeddedId},
+	 * of the entity class itself.
+	 */
+	private Class<?> getAttributeDeclarer(RootClass rootClass) {
+		// See the javadoc discussion on CompositeNestedGeneratedValueGenerator
+		// for the various scenarios we need to account for here
 		if ( rootClass.getIdentifierMapper() != null ) {
 			// we have the @IdClass / <composite-id mapped="true"/> case
-			attributeDeclarer = resolveComponentClass();
+			return resolveComponentClass();
 		}
 		else if ( rootClass.getIdentifierProperty() != null ) {
 			// we have the "@EmbeddedId" / <composite-id name="idName"/> case
-			attributeDeclarer = resolveComponentClass();
+			return resolveComponentClass();
 		}
 		else {
-			// we have the "straight up" embedded (again the Hibernate term) component identifier
-			attributeDeclarer = entityClass;
+			// we have the "straight up" embedded (again the Hibernate term)
+			// component identifier: the entity class itself is the id class
+			return rootClass.getMappedClass();
 		}
-		return attributeDeclarer;
 	}
 
 	private Setter injector(Property property, Class<?> attributeDeclarer) {

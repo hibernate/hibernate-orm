@@ -26,6 +26,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
@@ -59,6 +60,8 @@ import jakarta.persistence.metamodel.Attribute;
 import jakarta.persistence.metamodel.IdentifiableType;
 import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.persistence.metamodel.Type;
+
+import static org.hibernate.internal.util.StringHelper.root;
 
 /**
  * Defines a context for storing information during the building of the {@link MappingMetamodelImpl}.
@@ -415,7 +418,16 @@ public class MetadataContext {
 					final PersistentAttribute<Object, ?> attribute =
 							attributeFactory.buildAttribute( (ManagedDomainType<Object>) embeddable, property );
 					if ( attribute != null ) {
-						addAttribute( embeddable, attribute );
+						final Property superclassProperty = getMappedSuperclassProperty(
+								property.getName(),
+								component.getMappedSuperclass()
+						);
+						if ( superclassProperty != null && superclassProperty.isGeneric() ) {
+							( (AttributeContainer<Object>) embeddable ).getInFlightAccess().addConcreteGenericAttribute( attribute );
+						}
+						else {
+							addAttribute( embeddable, attribute );
+						}
 					}
 				}
 
@@ -641,6 +653,32 @@ public class MetadataContext {
 		return mappedSuperclass.getSuperMappedSuperclass() != null
 				? mappedSuperclass.getSuperMappedSuperclass()
 				: getMappedSuperclass( mappedSuperclass.getSuperPersistentClass() );
+	}
+
+	private Property getMappedSuperclassProperty(String propertyName, MappedSuperclass mappedSuperclass) {
+		if ( mappedSuperclass == null ) {
+			return null;
+		}
+
+		for ( Property property : mappedSuperclass.getDeclaredProperties() ) {
+			if ( property.getName().equals( propertyName ) ) {
+				return property;
+			}
+		}
+
+		final Property property = getMappedSuperclassProperty(
+				propertyName,
+				mappedSuperclass.getSuperMappedSuperclass()
+		);
+		if ( property != null ) {
+			return property;
+		}
+
+		if ( mappedSuperclass.getSuperPersistentClass() != null ) {
+			return mappedSuperclass.getSuperPersistentClass().getProperty( propertyName );
+		}
+
+		return null;
 	}
 
 	private <X> Set<SingularPersistentAttribute<? super X, ?>> buildIdClassAttributes(

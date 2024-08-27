@@ -28,7 +28,6 @@ import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
@@ -66,19 +65,15 @@ import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.getPropertyOverriddenByMapperOrMapsId;
 import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
-import static org.hibernate.boot.model.internal.BinderHelper.isGlobalGeneratorNameGlobal;
-import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
-import static org.hibernate.boot.model.internal.GeneratorBinder.generatorType;
-import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdGenerator;
 import static org.hibernate.boot.model.internal.HCANNHelper.findContainingAnnotations;
 import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
 import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
+import static org.hibernate.boot.model.internal.PropertyBinder.processId;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.unqualify;
-import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
 
 /**
  * A binder responsible for interpreting {@link Embeddable} classes and producing
@@ -452,17 +447,26 @@ public class EmbeddableBinder {
 					inheritanceStatePerClass
 			);
 
-			final XProperty property = propertyAnnotatedElement.getProperty();
-			if ( property.isAnnotationPresent( GeneratedValue.class ) ) {
-				if ( isIdClass || subholder.isOrWithinEmbeddedId() ) {
-					processGeneratedId( context, component, property );
+			final XProperty member = propertyAnnotatedElement.getProperty();
+			if ( isIdClass || subholder.isOrWithinEmbeddedId() ) {
+				final Property property = findProperty( component, member.getName() );
+				if ( property != null ) {
+					// Identifier properties are always simple values
+					final SimpleValue value = (SimpleValue) property.getValue();
+					processId(
+							subholder,
+							propertyAnnotatedElement,
+							value,
+							Map.of(),
+							context
+					);
 				}
-				else {
-					throw new AnnotationException(
-							"Property '" + property.getName() + "' of '"
-									+ getPath( propertyHolder, inferredData )
-									+ "' is annotated '@GeneratedValue' but is not part of an identifier" );
-				}
+			}
+			else if ( member.isAnnotationPresent( GeneratedValue.class ) ) {
+				throw new AnnotationException(
+						"Property '" + member.getName() + "' of '"
+								+ getPath( propertyHolder, inferredData )
+								+ "' is annotated '@GeneratedValue' but is not part of an identifier" );
 			}
 		}
 
@@ -471,6 +475,15 @@ public class EmbeddableBinder {
 		}
 
 		return component;
+	}
+
+	private static Property findProperty(Component component, String name) {
+		for ( Property property : component.getProperties() ) {
+			if ( property.getName().equals( name ) ) {
+				return property;
+			}
+		}
+		return null;
 	}
 
 	private static CompositeUserType<?> compositeUserType(
@@ -780,40 +793,6 @@ public class EmbeddableBinder {
 			|| property.isAnnotationPresent(GeneratedValue.class)
 			|| property.isAnnotationPresent(OneToOne.class)
 			|| property.isAnnotationPresent(ManyToMany.class);
-	}
-
-	private static void processGeneratedId(MetadataBuildingContext context, Component component, XProperty property) {
-		final GeneratedValue generatedValue = property.getAnnotation( GeneratedValue.class );
-		final String generatorType = generatedValue != null
-				? generatorType( generatedValue, property.getType(), context )
-				: DEFAULT_ID_GEN_STRATEGY;
-		final String generator = generatedValue != null ? generatedValue.generator() : "";
-
-		if ( isGlobalGeneratorNameGlobal( context ) ) {
-			buildGenerators( property, context );
-			context.getMetadataCollector().addSecondPass( new IdGeneratorResolverSecondPass(
-					(SimpleValue) component.getProperty( property.getName() ).getValue(),
-					property,
-					generatorType,
-					generator,
-					context
-			) );
-
-//			handleTypeDescriptorRegistrations( property, context );
-//			bindEmbeddableInstantiatorRegistrations( property, context );
-//			bindCompositeUserTypeRegistrations( property, context );
-//			handleConverterRegistrations( property, context );
-		}
-		else {
-			makeIdGenerator(
-					(SimpleValue) component.getProperty( property.getName() ).getValue(),
-					property,
-					generatorType,
-					generator,
-					context,
-					new HashMap<>( buildGenerators( property, context ) )
-			);
-		}
 	}
 
 	private static void processIdClassElements(

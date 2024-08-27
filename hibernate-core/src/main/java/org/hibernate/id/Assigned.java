@@ -43,4 +43,9 @@ public class Assigned implements IdentifierGenerator, StandardGenerator {
 			throw new MappingException("no entity name");
 		}
 	}
+
+	@Override
+	public boolean allowAssignedIdentifiers() {
+		return true;
+	}
 }

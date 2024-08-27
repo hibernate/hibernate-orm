@@ -59,6 +59,7 @@ import jakarta.persistence.Version;
 import static org.hibernate.boot.model.internal.BinderHelper.isCompositeId;
 import static org.hibernate.boot.model.internal.BinderHelper.isGlobalGeneratorNameGlobal;
 import static org.hibernate.id.factory.internal.IdentifierGeneratorUtil.collectParameters;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
 
 public class GeneratorBinder {
@@ -113,15 +114,9 @@ public class GeneratorBinder {
 					|| identifierGeneratorStrategy.equals( "seqhilo" );
 			if ( generatorType == null || !avoidOverriding ) {
 				id.setIdentifierGeneratorStrategy( identifierGeneratorStrategy );
-				if ( DEFAULT_ID_GEN_STRATEGY.equals( identifierGeneratorStrategy ) ) {
-					id.setNullValue( "undefined" );
-				}
 			}
 			//checkIfMatchingGenerator(definition, generatorType, generatorName);
 			parameters.putAll( definition.getParameters() );
-		}
-		if ( DEFAULT_ID_GEN_STRATEGY.equals( generatorType ) ) {
-			id.setNullValue( "undefined" );
 		}
 		id.setIdentifierGeneratorParameters( parameters );
 	}
@@ -564,9 +559,9 @@ public class GeneratorBinder {
 			XProperty idProperty) {
 		//manage composite related metadata
 		//guess if its a component and find id data access (property, field etc)
-		final GeneratedValue generatedValue = idProperty.getAnnotation( GeneratedValue.class );
+		final GeneratedValue generatedValue = castNonNull( idProperty.getAnnotation( GeneratedValue.class ) );
 		final String generatorType = generatorType( context, entityClass, isCompositeId( entityClass, idProperty ), generatedValue );
-		final String generatorName = generatedValue == null ? "" : generatedValue.generator();
+		final String generatorName = generatedValue.generator();
 		if ( isGlobalGeneratorNameGlobal( context ) ) {
 			buildGenerators( idProperty, context );
 			context.getMetadataCollector().addSecondPass( new IdGeneratorResolverSecondPass(

@@ -76,6 +76,7 @@ import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.jpa.internal.ExceptionMapperLegacyJpaImpl;
 import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
@@ -462,7 +463,8 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		bootMetamodel.getEntityBindings().stream()
 				.filter( model -> !model.isInherited() )
 				.forEach( model -> {
-					final Generator generator = model.getIdentifier().createGenerator(
+					final KeyValue id = model.getIdentifier();
+					final Generator generator = id.createGenerator(
 							bootstrapContext.getIdentifierGeneratorFactory(),
 							jdbcServices.getJdbcEnvironment().getDialect(),
 							(RootClass) model
@@ -471,8 +473,11 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 						final Configurable identifierGenerator = (Configurable) generator;
 						identifierGenerator.initialize( sqlStringGenerationContext );
 					}
-					if ( generator.allowAssignedIdentifiers() ) {
-						( (SimpleValue) model.getIdentifier() ).setNullValue( "undefined" );
+					if ( generator.allowAssignedIdentifiers() && id instanceof SimpleValue ) {
+						final SimpleValue simpleValue = (SimpleValue) id;
+						if ( simpleValue.getNullValue() == null ) {
+							simpleValue.setNullValue( "undefined" );
+						}
 					}
 					generators.put( model.getEntityName(), generator );
 				} );

@@ -719,7 +719,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 			if ( property.getValue().isSimpleValue() ) {
 				final SimpleValue value = (SimpleValue) property.getValue();
 
-				if ( !DEFAULT_ID_GEN_STRATEGY.equals( value.getIdentifierGeneratorStrategy() ) ) {
+				if ( !DEFAULT_ID_GEN_STRATEGY.equals( value.getIdentifierGeneratorStrategy() )
+						|| value.getCustomIdGeneratorCreator() != null ) {
 					// skip any 'assigned' generators, they would have been handled by
 					// the StandardGenerationContextLocator
 					generator.addGeneratedValuePlan( new ValueGenerationPlan(

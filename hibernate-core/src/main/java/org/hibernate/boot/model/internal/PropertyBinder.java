@@ -1135,11 +1135,11 @@ public class PropertyBinder {
 			);
 		}
 		else if ( propertyBinder.isId() ) {
-			//components and regular basic types create SimpleValue objects
 			if ( isIdentifierMapper ) {
 				throw new AnnotationException( "Property '"+ getPath( propertyHolder, inferredData )
 						+ "' belongs to an '@IdClass' and may not be annotated '@Id' or '@EmbeddedId'" );
 			}
+			//components and regular basic types create SimpleValue objects
 			createIdGeneratorsFromGeneratorAnnotations(
 					propertyHolder,
 					inferredData,

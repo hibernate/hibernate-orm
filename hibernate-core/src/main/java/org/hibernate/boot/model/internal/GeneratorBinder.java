@@ -65,6 +65,7 @@ import static org.hibernate.boot.model.internal.GeneratorParameters.interpretSeq
 import static org.hibernate.boot.model.internal.GeneratorParameters.interpretTableGenerator;
 import static org.hibernate.boot.model.internal.GeneratorStrategies.generatorClass;
 import static org.hibernate.boot.model.internal.GeneratorStrategies.generatorStrategy;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.resource.beans.internal.Helper.allowExtensionsInCdi;
 
@@ -600,7 +601,7 @@ public class GeneratorBinder {
 			MemberDetails idMember) {
 		//manage composite related metadata
 		//guess if its a component and find id data access (property, field etc)
-		final GeneratedValue generatedValue = idMember.getDirectAnnotationUsage( GeneratedValue.class );
+		final GeneratedValue generatedValue = castNonNull( idMember.getDirectAnnotationUsage( GeneratedValue.class ) );
 		final String generatorType =
 				generatorStrategy( generatedValue.strategy(), generatedValue.generator(), idMember.getType() );
 		final String generatorName = generatedValue.generator();

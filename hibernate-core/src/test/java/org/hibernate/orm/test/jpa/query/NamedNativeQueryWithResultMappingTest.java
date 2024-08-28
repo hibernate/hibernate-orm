@@ -9,20 +9,24 @@ import jakarta.persistence.Id;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.Table;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
 @SessionFactory
 @DomainModel(annotatedClasses = NamedNativeQueryWithResultMappingTest.Mapped.class)
+@FailureExpected( jiraKey = "HHH-18537", reason = "Call to #createNamedSelectionQuery for native-query, which never worked." )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-18537" )
 public class NamedNativeQueryWithResultMappingTest {
 	@Test void test(SessionFactoryScope scope) {
 		Mapped mapped = new Mapped();
 		mapped.name = "Gavin";
 		scope.inTransaction(s -> s.persist(mapped));
 		scope.inSession(s -> {
-			s.createNamedSelectionQuery("mapped-native-query").getSingleResult();
-			s.createNamedSelectionQuery("unmapped-native-query").getSingleResult();
+			s.createNamedSelectionQuery("mapped-native-query",Object[].class).getSingleResult();
+			s.createNamedSelectionQuery("unmapped-native-query",Object[].class).getSingleResult();
 		});
 	}
 	@NamedNativeQuery(

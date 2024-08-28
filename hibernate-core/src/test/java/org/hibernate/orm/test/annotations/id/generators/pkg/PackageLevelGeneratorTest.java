@@ -4,6 +4,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -14,6 +16,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DomainModel(annotatedClasses =
 		{PackageLevelGeneratorTest.EntityWithAnonSequenceGenerator.class,
 		PackageLevelGeneratorTest.EntityWithAnonTableGenerator.class})
+@FailureExpected( reason = "Support for unnamed generators is not implemented yet" )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-18498" )
 public class PackageLevelGeneratorTest {
 	@Test
 	void testAnonGenerator(SessionFactoryScope scope) {

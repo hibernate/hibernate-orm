@@ -15,7 +15,6 @@ import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaMapJoin;
 import org.hibernate.query.criteria.JpaPredicate;
-import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -183,18 +182,6 @@ public class SqmMapJoin<L, K, V>
 			return addTreat( new SqmTreatedMapJoin<>( this, treatTarget, alias ) );
 		}
 		return treat;
-	}
-
-	@Override
-	public SqmMapJoin<L, K, V> makeCopy(SqmCreationProcessingState creationProcessingState) {
-		return new SqmMapJoin<>(
-				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
-				getAttribute(),
-				getExplicitAlias(),
-				getSqmJoinType(),
-				isFetched(),
-				nodeBuilder()
-		);
 	}
 
 }

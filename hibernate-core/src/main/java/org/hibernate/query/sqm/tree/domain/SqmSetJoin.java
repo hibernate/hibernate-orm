@@ -17,7 +17,6 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSetJoin;
-import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -167,15 +166,4 @@ public class SqmSetJoin<O, E>
 	}
 
 
-	@Override
-	public SqmAttributeJoin<O, E> makeCopy(SqmCreationProcessingState creationProcessingState) {
-		return new SqmSetJoin<>(
-				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
-				getModel(),
-				getExplicitAlias(),
-				getSqmJoinType(),
-				isFetched(),
-				nodeBuilder()
-		);
-	}
 }

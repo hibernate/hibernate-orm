@@ -11,7 +11,6 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
-import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
@@ -159,15 +158,6 @@ public class SqmTreatedMapJoin<L, K, V, S extends V> extends SqmMapJoin<L, K, S>
 	@Override
 	public SqmTreatedMapJoin<L, K, V, S> on(Predicate... restrictions) {
 		return (SqmTreatedMapJoin<L, K, V, S>) super.on( restrictions );
-	}
-
-	@Override
-	public SqmMapJoin<L, K, S> makeCopy(SqmCreationProcessingState creationProcessingState) {
-		return new SqmTreatedMapJoin<>(
-				wrappedPath,
-				treatTarget,
-				getAlias()
-		);
 	}
 
 	@Override

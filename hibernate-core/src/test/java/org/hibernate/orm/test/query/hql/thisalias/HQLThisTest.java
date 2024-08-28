@@ -13,8 +13,6 @@ import org.junit.jupiter.api.Test;
 
 @SessionFactory
 @DomainModel(annotatedClasses = HQLThisTest.This.class)
-@FailureExpected( jiraKey = "HHH-18536", reason = "Support implicit \"this\" alias in HQL" )
-@Jira( "https://hibernate.atlassian.net/browse/HHH-18536" )
 public class HQLThisTest {
 	@Test
 	void test(SessionFactoryScope scope) {

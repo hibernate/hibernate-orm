@@ -20,7 +20,6 @@ import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Remove;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.graph.GraphSemantic;
@@ -295,14 +294,6 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	@Incubating
 	public SqmSelectionQueryImplementor<R> setOrder(Order<? super R> order) {
 		getDelegate().setOrder( order );
-		return this;
-	}
-
-	@Override
-	@Remove
-	@Deprecated(since = "6.2")
-	public SqmSelectionQueryImplementor<R> setAliasSpecificLockMode(String alias, LockMode lockMode) {
-		getDelegate().setAliasSpecificLockMode( alias, lockMode );
 		return this;
 	}
 

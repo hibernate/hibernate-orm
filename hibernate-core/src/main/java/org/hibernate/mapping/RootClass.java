@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.MappingException;
-import org.hibernate.Remove;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreLogging;
@@ -28,11 +27,6 @@ import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
  */
 public class RootClass extends PersistentClass implements TableOwner, SoftDeletable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( RootClass.class );
-
-	@Deprecated(since = "6.2") @Remove
-	public static final String DEFAULT_IDENTIFIER_COLUMN_NAME = "id";
-	@Deprecated(since = "6.2") @Remove
-	public static final String DEFAULT_DISCRIMINATOR_COLUMN_NAME = "class";
 
 	private Property identifierProperty;
 	private KeyValue identifier;

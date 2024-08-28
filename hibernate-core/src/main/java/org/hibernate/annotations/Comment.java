@@ -58,7 +58,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({METHOD, FIELD, TYPE})
 @Retention(RUNTIME)
 @Repeatable(Comments.class)
-@Deprecated
+@Deprecated(since="7")
 @Remove
 public @interface Comment {
 	/**

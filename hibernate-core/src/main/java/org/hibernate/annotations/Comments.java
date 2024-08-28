@@ -33,7 +33,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @AttributeBinderType(binder = CommentsBinder.class)
 @Target({METHOD, FIELD, TYPE})
 @Retention(RUNTIME)
-@Deprecated
+@Deprecated(since="7")
 @Remove
 public @interface Comments {
 	Comment[] value();

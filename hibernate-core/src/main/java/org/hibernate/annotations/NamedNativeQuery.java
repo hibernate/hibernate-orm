@@ -13,7 +13,6 @@ import java.lang.annotation.Target;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
-import org.hibernate.Remove;
 
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;

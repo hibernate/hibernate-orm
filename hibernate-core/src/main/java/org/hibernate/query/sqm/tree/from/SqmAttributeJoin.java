@@ -7,13 +7,11 @@
 package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.Internal;
-import org.hibernate.Remove;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaFetch;
 import org.hibernate.query.criteria.JpaJoin;
 import org.hibernate.query.criteria.JpaPredicate;
-import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -86,10 +84,4 @@ public interface SqmAttributeJoin<O,T> extends SqmJoin<O,T>, JpaFetch<O,T>, JpaJ
 	<S extends T> SqmTreatedAttributeJoin<O,T,S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch);
 	<S extends T> SqmTreatedAttributeJoin<O,T,S> treatAs(Class<S> treatTarget, String alias, boolean fetch);
 
-	/*
-		@deprecated not used anymore
-	 */
-	@Deprecated
-	@Remove
-	SqmAttributeJoin<O,T> makeCopy( SqmCreationProcessingState creationProcessingState );
 }

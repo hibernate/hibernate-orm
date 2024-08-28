@@ -11,10 +11,8 @@ import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
-import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
 import org.hibernate.spi.NavigablePath;
 
@@ -119,11 +117,6 @@ public class SqmTreatedBagJoin<L, R, R1 extends R> extends SqmBagJoin<L, R1> imp
 	@Override
 	public SqmPathSource<?> getResolvedModel() {
 		return treatTarget;
-	}
-
-	@Override
-	public SqmAttributeJoin<L, R1> makeCopy(SqmCreationProcessingState creationProcessingState) {
-		return new SqmTreatedBagJoin<>( wrappedPath, treatTarget, getAlias() );
 	}
 
 	@Override

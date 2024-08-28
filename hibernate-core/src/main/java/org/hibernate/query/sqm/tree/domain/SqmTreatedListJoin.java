@@ -11,12 +11,10 @@ import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
-import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
 import org.hibernate.spi.NavigablePath;
 
@@ -151,13 +149,6 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 		return (SqmTreatedListJoin<O, T, S>) super.on( restrictions );
 	}
 
-
-
-
-	@Override
-	public SqmAttributeJoin<O, S> makeCopy(SqmCreationProcessingState creationProcessingState) {
-		return new SqmTreatedListJoin<>( wrappedPath, treatTarget, getAlias() );
-	}
 
 	@Override
 	public void appendHqlString(StringBuilder sb) {

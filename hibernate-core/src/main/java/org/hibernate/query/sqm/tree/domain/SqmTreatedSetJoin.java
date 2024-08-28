@@ -11,10 +11,8 @@ import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
-import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
 import org.hibernate.spi.NavigablePath;
 
@@ -119,11 +117,6 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 	@Override
 	public SqmPathSource<?> getResolvedModel() {
 		return treatTarget;
-	}
-
-	@Override
-	public SqmAttributeJoin<O, S> makeCopy(SqmCreationProcessingState creationProcessingState) {
-		return new SqmTreatedSetJoin<>( wrappedPath, treatTarget, getAlias() );
 	}
 
 	@Override

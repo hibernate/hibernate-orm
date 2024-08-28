@@ -7,6 +7,9 @@
 package org.hibernate.community.dialect;
 
 import java.sql.Types;
+import java.time.temporal.TemporalAccessor;
+import java.util.Date;
+import java.util.TimeZone;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
@@ -74,6 +77,8 @@ import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import jakarta.persistence.TemporalType;
+
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -88,6 +93,14 @@ import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
+import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
+import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE;
+import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME;
+import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIMESTAMP;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
 
 /**
  * Dialect for Informix 7.31.UD3 with Informix
@@ -232,6 +245,11 @@ public class InformixDialect extends Dialect {
 	public int getDefaultTimestampPrecision() {
 		//the maximum
 		return 5;
+	}
+
+	@Override
+	public boolean doesRoundTemporalOnOverflow() {
+		return false;
 	}
 
 	@Override
@@ -716,6 +734,56 @@ public class InformixDialect extends Dialect {
 				.replace("SSS", "%F3")
 				.replace("SS", "%F2")
 				.replace("S", "%F1");
+	}
+
+	@Override
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			TemporalAccessor temporalAccessor,
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( JDBC_ESCAPE_START_DATE );
+				appendAsDate( appender, temporalAccessor );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			case TIME:
+				appender.appendSql( JDBC_ESCAPE_START_TIME );
+				appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( JDBC_ESCAPE_START_TIMESTAMP );
+				appendAsTimestampWithMicros( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	@Override
+	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( JDBC_ESCAPE_START_DATE );
+				appendAsDate( appender, date );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			case TIME:
+				appender.appendSql( JDBC_ESCAPE_START_TIME );
+				appendAsLocalTime( appender, date );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( JDBC_ESCAPE_START_TIMESTAMP );
+				appendAsTimestampWithMicros( appender, date, jdbcTimeZone );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
 	}
 
 	@Override

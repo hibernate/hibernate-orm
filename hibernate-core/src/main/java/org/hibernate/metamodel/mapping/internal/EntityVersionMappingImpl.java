@@ -54,7 +54,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	private final Integer scale;
 	private final Integer temporalPrecision;
 
-	private final BasicType versionBasicType;
+	private final BasicType<?> versionBasicType;
 
 	private final VersionValue unsavedValueStrategy;
 
@@ -90,15 +90,10 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 		unsavedValueStrategy = UnsavedValueFactory.getUnsavedVersionValue(
 				(KeyValue) bootEntityDescriptor.getVersion().getValue(),
 				(VersionJavaType<?>) versionBasicType.getJavaTypeDescriptor(),
-				length,
-				precision,
-				scale,
-				declaringType
-						.getRepresentationStrategy()
+				declaringType.getRepresentationStrategy()
 						.resolvePropertyAccess( bootEntityDescriptor.getVersion() )
 						.getGetter(),
-				templateInstanceAccess,
-				creationProcess.getCreationContext().getSessionFactory()
+				templateInstanceAccess
 		);
 	}
 

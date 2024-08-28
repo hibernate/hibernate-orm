@@ -6,22 +6,13 @@
  */
 package org.hibernate.boot.model.source.spi;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.hibernate.internal.util.StringHelper;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractAttributeKey {
-	// todo : replace this with "{element}"
-	private static final String COLLECTION_ELEMENT = "collection&&element";
-	private static final String DOT_COLLECTION_ELEMENT = '.' + COLLECTION_ELEMENT;
-	private static final Pattern DOT_COLLECTION_ELEMENT_PATTERN = Pattern.compile(
-			DOT_COLLECTION_ELEMENT,
-			Pattern.LITERAL
-	);
+	private static final String COLLECTION_ELEMENT = "{element}";
 
 	private final AbstractAttributeKey parent;
 	private final String property;
@@ -125,24 +116,10 @@ public abstract class AbstractAttributeKey {
 	 * Does this part represent a collection-element reference?
 	 *
 	 * @return {@code true} if the current property is a collection element
-	 * marker ({@link #COLLECTION_ELEMENT}
+	 *         marker {@value #COLLECTION_ELEMENT}
 	 */
 	public boolean isCollectionElement() {
 		return COLLECTION_ELEMENT.equals( property );
-	}
-
-	/**
-	 * Does any part represent a collection-element reference?
-	 *
-	 * @return {@code true} if this part or any parent part is a collection element
-	 * marker ({@link #COLLECTION_ELEMENT}.
-	 */
-	public boolean isPartOfCollectionElement() {
-		return fullPath.contains( DOT_COLLECTION_ELEMENT );
-	}
-
-	public String stripCollectionElementMarker() {
-		return DOT_COLLECTION_ELEMENT_PATTERN.matcher( fullPath ).replaceAll( Matcher.quoteReplacement( "" ) );
 	}
 
 	@Override

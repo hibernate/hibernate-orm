@@ -237,10 +237,10 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	public Column[] getOverriddenColumn(String propertyName) {
 		final Column[] result = getExactOverriddenColumn( propertyName );
 		if ( result == null ) {
-			if ( propertyName.contains( ".collection&&element." ) ) {
+			if ( propertyName.contains( ".{element}." ) ) {
 				//support for non map collections where no prefix is needed
 				//TODO cache the underlying regexp
-				return getExactOverriddenColumn( propertyName.replace( ".collection&&element.", "."  ) );
+				return getExactOverriddenColumn( propertyName.replace( ".{element}.", "."  ) );
 			}
 		}
 		return result;
@@ -294,10 +294,10 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	@Override
 	public JoinColumn[] getOverriddenJoinColumn(String propertyName) {
 		final JoinColumn[] result = getExactOverriddenJoinColumn( propertyName );
-		if ( result == null && propertyName.contains( ".collection&&element." ) ) {
+		if ( result == null && propertyName.contains( ".{element}." ) ) {
 			//support for non map collections where no prefix is needed
 			//TODO cache the underlying regexp
-			return getExactOverriddenJoinColumn( propertyName.replace( ".collection&&element.", "."  ) );
+			return getExactOverriddenJoinColumn( propertyName.replace( ".{element}.", "."  ) );
 		}
 		return result;
 	}
@@ -325,10 +325,10 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	@Override
 	public ForeignKey getOverriddenForeignKey(String propertyName) {
 		final ForeignKey result = getExactOverriddenForeignKey( propertyName );
-		if ( result == null && propertyName.contains( ".collection&&element." ) ) {
+		if ( result == null && propertyName.contains( ".{element}." ) ) {
 			//support for non map collections where no prefix is needed
 			//TODO cache the underlying regexp
-			return getExactOverriddenForeignKey( propertyName.replace( ".collection&&element.", "." ) );
+			return getExactOverriddenForeignKey( propertyName.replace( ".{element}.", "." ) );
 		}
 		return result;
 	}
@@ -371,10 +371,10 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	 */
 	public JoinTable getOverriddenJoinTable(String propertyName) {
 		final JoinTable result = getExactOverriddenJoinTable( propertyName );
-		if ( result == null && propertyName.contains( ".collection&&element." ) ) {
+		if ( result == null && propertyName.contains( ".{element}." ) ) {
 			//support for non map collections where no prefix is needed
 			//TODO cache the underlying regexp
-			return getExactOverriddenJoinTable( propertyName.replace( ".collection&&element.", "."  ) );
+			return getExactOverriddenJoinTable( propertyName.replace( ".{element}.", "."  ) );
 		}
 		return result;
 	}

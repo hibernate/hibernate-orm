@@ -2490,8 +2490,8 @@ public abstract class CollectionBinder {
 				return new PropertyPreloadedData( AccessType.PROPERTY, "element", elementClass );
 			}
 			else {
-				//"collection&&element" is not a valid property name => placeholder
-				return new PropertyPreloadedData( AccessType.PROPERTY, "collection&&element", elementClass );
+				//"{element}" is not a valid property name => placeholder
+				return new PropertyPreloadedData( AccessType.PROPERTY, "{element}", elementClass );
 			}
 		}
 	}

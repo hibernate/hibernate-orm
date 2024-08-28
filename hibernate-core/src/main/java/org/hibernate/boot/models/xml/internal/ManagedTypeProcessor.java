@@ -32,6 +32,7 @@ import org.hibernate.boot.models.annotations.internal.AttributeAccessorAnnotatio
 import org.hibernate.boot.models.annotations.internal.CacheAnnotation;
 import org.hibernate.boot.models.annotations.internal.CacheableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ExtendsXmlAnnotation;
+import org.hibernate.boot.models.internal.ModelsHelper;
 import org.hibernate.boot.models.xml.internal.attr.BasicAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.attr.BasicIdAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing;
@@ -100,7 +101,19 @@ public class ManagedTypeProcessor {
 
 			memberAdjuster = ManagedTypeProcessor::adjustDynamicTypeMember;
 			classAccessType = AccessType.FIELD;
-			classDetails = (MutableClassDetails) classDetailsRegistry.resolveClassDetails( jaxbEntity.getName() );
+			classDetails = (MutableClassDetails) ModelsHelper.resolveClassDetails(
+					jaxbEntity.getName(),
+					classDetailsRegistry,
+					() ->
+							new DynamicClassDetails(
+									jaxbEntity.getName(),
+									null,
+									false,
+									null,
+									null,
+									xmlDocumentContext.getModelBuildingContext()
+							)
+			);
 
 			prepareDynamicClass( classDetails, jaxbEntity, xmlDocumentContext );
 		}
@@ -934,8 +947,15 @@ public class ManagedTypeProcessor {
 				throw new ModelsException( "Embeddable did not define class nor name" );
 			}
 			// no class == dynamic...
-			classDetails = (MutableClassDetails) classDetailsRegistry
-					.resolveClassDetails( jaxbEmbeddable.getName() );
+			classDetails = (MutableClassDetails) ModelsHelper.resolveClassDetails(
+					jaxbEmbeddable.getName(),
+					classDetailsRegistry,
+					() ->
+							new DynamicClassDetails(
+									jaxbEmbeddable.getName(),
+									xmlDocumentContext.getModelBuildingContext()
+							)
+			);
 			classAccessType = AccessType.FIELD;
 			memberAdjuster = ManagedTypeProcessor::adjustDynamicTypeMember;
 

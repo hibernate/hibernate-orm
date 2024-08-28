@@ -11,13 +11,22 @@ import java.io.InputStream;
 import java.util.List;
 
 import org.hibernate.boot.ResourceStreamLocator;
+import org.hibernate.boot.models.HibernateAnnotations;
+import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.annotations.internal.EntityJpaAnnotation;
+import org.hibernate.boot.models.internal.ModelsHelper;
 import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.models.internal.dynamic.DynamicClassDetails;
+import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
+import org.hibernate.models.internal.jdk.JdkClassDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
+import org.hibernate.models.spi.MutableMemberDetails;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry.JavaService;
@@ -292,28 +301,53 @@ public class AdditionalMappingContributorTests {
 				InFlightMetadataCollector metadata,
 				ResourceStreamLocator resourceStreamLocator,
 				MetadataBuildingContext buildingContext) {
-			final ClassDetailsRegistry classDetailsRegistry = buildingContext.getMetadataCollector()
-					.getSourceModelBuildingContext()
+			SourceModelBuildingContext sourceModelBuildingContext = buildingContext.getMetadataCollector()
+					.getSourceModelBuildingContext();
+			final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext
 					.getClassDetailsRegistry();
 
-			contributeEntity4Details( contributions, classDetailsRegistry );
-			contributeEntity5Details( contributions, classDetailsRegistry );
+			contributeEntity4Details( contributions, sourceModelBuildingContext, classDetailsRegistry );
+			contributeEntity5Details( contributions, sourceModelBuildingContext, classDetailsRegistry );
 		}
 
 		private static void contributeEntity4Details(
 				AdditionalMappingContributions contributions,
+				SourceModelBuildingContext sourceModelBuildingContext,
 				ClassDetailsRegistry classDetailsRegistry) {
-			final ClassDetails entity4Details = classDetailsRegistry.resolveClassDetails(
-					Entity4.class.getName()
+			final ClassDetails entity4Details = ModelsHelper.resolveClassDetails(
+					Entity4.class.getName(),
+					classDetailsRegistry,
+					() ->
+							new JdkClassDetails( Entity4.class, sourceModelBuildingContext )
 			);
 			contributions.contributeManagedClass( entity4Details );
 		}
 
 		private static void contributeEntity5Details(
 				AdditionalMappingContributions contributions,
+				SourceModelBuildingContext modelBuildingContext,
 				ClassDetailsRegistry classDetailsRegistry) {
-			final ClassDetails entity5Details = classDetailsRegistry.resolveClassDetails(
-					Entity5.class.getName()
+			final ClassDetails entity5Details = ModelsHelper.resolveClassDetails(
+					Entity5.class.getName(),
+					classDetailsRegistry,
+					() -> {
+						final JdkClassDetails jdkClassDetails = new JdkClassDetails(
+								Entity5.class,
+								modelBuildingContext
+						);
+
+						final EntityJpaAnnotation entityUsage = (EntityJpaAnnotation) jdkClassDetails.applyAnnotationUsage(
+								JpaAnnotations.ENTITY,
+								modelBuildingContext
+						);
+						entityUsage.name( "___Entity5___" );
+
+						final MutableMemberDetails idField = (MutableMemberDetails) jdkClassDetails.findFieldByName(
+								"id" );
+						idField.applyAnnotationUsage( JpaAnnotations.ID, modelBuildingContext );
+
+						return jdkClassDetails;
+					}
 			);
 			contributions.contributeManagedClass( entity5Details );
 		}
@@ -326,17 +360,50 @@ public class AdditionalMappingContributorTests {
 				InFlightMetadataCollector metadata,
 				ResourceStreamLocator resourceStreamLocator,
 				MetadataBuildingContext buildingContext) {
-			final ClassDetailsRegistry classDetailsRegistry = buildingContext.getMetadataCollector()
-					.getSourceModelBuildingContext()
-					.getClassDetailsRegistry();
-			contributeEntity6Details( contributions, classDetailsRegistry );
+			final SourceModelBuildingContext sourceModelBuildingContext = buildingContext.getMetadataCollector()
+					.getSourceModelBuildingContext();
+			final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+			contributeEntity6Details( contributions, sourceModelBuildingContext, classDetailsRegistry );
 		}
 
 		private void contributeEntity6Details(
 				AdditionalMappingContributions contributions,
+				SourceModelBuildingContext modelBuildingContext,
 				ClassDetailsRegistry classDetailsRegistry) {
-			final ClassDetails entity6Details = classDetailsRegistry.resolveClassDetails(
-					"Entity6"
+			final ClassDetails entity6Details = ModelsHelper.resolveClassDetails(
+					"Entity6",
+					classDetailsRegistry,
+					() -> {
+						final DynamicClassDetails classDetails = new DynamicClassDetails(
+								"Entity6",
+								modelBuildingContext
+						);
+						final EntityJpaAnnotation entityUsage = (EntityJpaAnnotation) classDetails.applyAnnotationUsage(
+								JpaAnnotations.ENTITY,
+								modelBuildingContext
+						);
+						entityUsage.name( "Entity6" );
+
+						final DynamicFieldDetails idMember = classDetails.applyAttribute(
+								"id",
+								classDetailsRegistry.resolveClassDetails( Integer.class.getName() ),
+								false,
+								false,
+								modelBuildingContext
+						);
+						idMember.applyAnnotationUsage( JpaAnnotations.ID, modelBuildingContext );
+
+						final DynamicFieldDetails nameMember = classDetails.applyAttribute(
+								"name",
+								classDetailsRegistry.resolveClassDetails( String.class.getName() ),
+								false,
+								false,
+								modelBuildingContext
+						);
+						nameMember.applyAnnotationUsage( HibernateAnnotations.NATIONALIZED, modelBuildingContext );
+
+						return classDetails;
+					}
 			);
 			contributions.contributeManagedClass( entity6Details );
 		}

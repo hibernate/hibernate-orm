@@ -23,6 +23,8 @@ import org.hibernate.query.named.NamedResultSetMappingMemento;
 
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
@@ -121,6 +123,8 @@ public class EntityResultTests extends AbstractUsageTest {
 	}
 
 	@Test
+	@FailureExpected( jiraKey = "HHH-18535", reason = "Support for @EntityResult(lockMode) not implemented yet")
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18535" )
 	public void testImplicitAttributeMappingWithLockMode(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

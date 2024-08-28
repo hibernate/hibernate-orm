@@ -6,6 +6,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -16,6 +18,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DomainModel(annotatedClasses =
 		{FieldLevelGeneratorTest.EntityWithAnonSequenceGenerator.class,
 		FieldLevelGeneratorTest.EntityWithAnonTableGenerator.class})
+@FailureExpected( reason = "Support for unnamed generators is not implemented yet" )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-18498" )
 public class FieldLevelGeneratorTest {
 	@Test
 	void testAnonGenerator(SessionFactoryScope scope) {

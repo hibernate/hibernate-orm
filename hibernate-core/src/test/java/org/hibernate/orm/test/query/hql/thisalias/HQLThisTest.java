@@ -5,12 +5,16 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
 @SessionFactory
 @DomainModel(annotatedClasses = HQLThisTest.This.class)
+@FailureExpected( jiraKey = "HHH-18536", reason = "Support implicit \"this\" alias in HQL" )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-18536" )
 public class HQLThisTest {
 	@Test
 	void test(SessionFactoryScope scope) {
@@ -23,14 +27,18 @@ public class HQLThisTest {
 			s.createSelectionQuery("select id(this) from This").getSingleResult();
 		});
 	}
-	@Entity
+	@Entity(name="This")
 	static class This {
 		@Id @GeneratedValue
 		long id;
 		@Basic(optional = false)
 		String name;
 
-		This(String gavin) {}
-		This() {}
+		This(String name) {
+			this.name = name;
+		}
+
+		This() {
+		}
 	}
 }

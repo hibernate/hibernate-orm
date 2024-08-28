@@ -7,14 +7,10 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.ParamDef;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -42,10 +38,10 @@ public class ParamDefAnnotation implements ParamDef {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public ParamDefAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, HibernateAnnotations.PARAM_DEF, "name", modelContext );
-		this.type = extractJandexValue( annotation, HibernateAnnotations.PARAM_DEF, "type", modelContext );
-		this.resolver = extractJandexValue( annotation, HibernateAnnotations.PARAM_DEF, "resolver", modelContext );
+	public ParamDefAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.name = (String) attributeValues.get( "name" );
+		this.type = (Class<?>) attributeValues.get( "type" );
+		this.resolver = (Class<? extends java.util.function.Supplier>) attributeValues.get( "resolver" );
 	}
 
 	@Override

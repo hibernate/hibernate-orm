@@ -7,15 +7,11 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
-import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.SequenceGenerator;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -57,29 +53,16 @@ public class SequenceGeneratorJpaAnnotation implements SequenceGenerator {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public SequenceGeneratorJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, JpaAnnotations.SEQUENCE_GENERATOR, "name", modelContext );
-		this.sequenceName = extractJandexValue(
-				annotation,
-				JpaAnnotations.SEQUENCE_GENERATOR,
-				"sequenceName",
-				modelContext
-		);
-		this.catalog = extractJandexValue( annotation, JpaAnnotations.SEQUENCE_GENERATOR, "catalog", modelContext );
-		this.schema = extractJandexValue( annotation, JpaAnnotations.SEQUENCE_GENERATOR, "schema", modelContext );
-		this.initialValue = extractJandexValue(
-				annotation,
-				JpaAnnotations.SEQUENCE_GENERATOR,
-				"initialValue",
-				modelContext
-		);
-		this.allocationSize = extractJandexValue(
-				annotation,
-				JpaAnnotations.SEQUENCE_GENERATOR,
-				"allocationSize",
-				modelContext
-		);
-		this.options = extractJandexValue( annotation, JpaAnnotations.SEQUENCE_GENERATOR, "options", modelContext );
+	public SequenceGeneratorJpaAnnotation(
+			Map<String, Object> attributeValues,
+			SourceModelBuildingContext modelContext) {
+		this.name = (String) attributeValues.get( "name" );
+		this.sequenceName = (String) attributeValues.get( "sequenceName" );
+		this.catalog = (String) attributeValues.get( "catalog" );
+		this.schema = (String) attributeValues.get( "schema" );
+		this.initialValue = (int) attributeValues.get( "initialValue" );
+		this.allocationSize = (int) attributeValues.get( "allocationSize" );
+		this.options = (String) attributeValues.get( "options" );
 	}
 
 	@Override

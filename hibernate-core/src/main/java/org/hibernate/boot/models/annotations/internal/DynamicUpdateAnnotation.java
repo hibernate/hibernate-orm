@@ -7,14 +7,10 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -36,7 +32,7 @@ public class DynamicUpdateAnnotation implements DynamicUpdate {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public DynamicUpdateAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
+	public DynamicUpdateAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
 	}
 
 	@Override

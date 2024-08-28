@@ -7,15 +7,11 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.boot.internal.CollectionClassification;
 import org.hibernate.boot.internal.LimitedCollectionClassification;
-import org.hibernate.boot.models.XmlAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -41,9 +37,9 @@ public class CollectionClassificationXmlAnnotation implements CollectionClassifi
 	 * Used in creating annotation instances from Jandex variant
 	 */
 	public CollectionClassificationXmlAnnotation(
-			AnnotationInstance annotation,
+			Map<String, Object> attributeValues,
 			SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue( annotation, XmlAnnotations.COLLECTION_CLASSIFICATION, "value", modelContext );
+		this.value = (LimitedCollectionClassification) attributeValues.get( "value" );
 	}
 
 	@Override

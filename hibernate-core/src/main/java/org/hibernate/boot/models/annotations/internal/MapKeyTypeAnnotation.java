@@ -7,14 +7,12 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.MapKeyType;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -41,14 +39,9 @@ public class MapKeyTypeAnnotation implements MapKeyType {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public MapKeyTypeAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue( annotation, HibernateAnnotations.MAP_KEY_TYPE, "value", modelContext );
-		this.parameters = extractJandexValue(
-				annotation,
-				HibernateAnnotations.MAP_KEY_TYPE,
-				"parameters",
-				modelContext
-		);
+	public MapKeyTypeAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.value = (Class<? extends org.hibernate.usertype.UserType<?>>) attributeValues.get( "value" );
+		this.parameters = (org.hibernate.annotations.Parameter[]) attributeValues.get( "parameters" );
 	}
 
 	@Override

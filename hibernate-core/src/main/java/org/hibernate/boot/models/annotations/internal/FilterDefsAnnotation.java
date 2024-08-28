@@ -7,6 +7,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
@@ -14,9 +15,6 @@ import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -40,8 +38,8 @@ public class FilterDefsAnnotation implements FilterDefs, RepeatableContainer<Fil
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public FilterDefsAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue( annotation, HibernateAnnotations.FILTER_DEFS, "value", modelContext );
+	public FilterDefsAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.value = (FilterDef[]) attributeValues.get( "value" );
 	}
 
 	@Override

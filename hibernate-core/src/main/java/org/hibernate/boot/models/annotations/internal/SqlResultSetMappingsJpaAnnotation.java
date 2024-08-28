@@ -7,17 +7,15 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.SqlResultSetMappings;
 
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -42,8 +40,10 @@ public class SqlResultSetMappingsJpaAnnotation
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public SqlResultSetMappingsJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue( annotation, JpaAnnotations.SQL_RESULT_SET_MAPPINGS, "value", modelContext );
+	public SqlResultSetMappingsJpaAnnotation(
+			Map<String, Object> attributeValues,
+			SourceModelBuildingContext modelContext) {
+		this.value = (SqlResultSetMapping[]) attributeValues.get( "value" );
 	}
 
 	@Override

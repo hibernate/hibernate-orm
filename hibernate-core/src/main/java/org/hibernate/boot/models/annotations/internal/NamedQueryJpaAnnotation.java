@@ -7,6 +7,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedHqlQueryImpl;
 import org.hibernate.boot.models.JpaAnnotations;
@@ -14,11 +15,8 @@ import org.hibernate.boot.models.xml.internal.QueryProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.NamedQuery;
 
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
 
@@ -54,12 +52,12 @@ public class NamedQueryJpaAnnotation implements NamedQuery {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public NamedQueryJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, JpaAnnotations.NAMED_QUERY, "name", modelContext );
-		this.query = extractJandexValue( annotation, JpaAnnotations.NAMED_QUERY, "query", modelContext );
-		this.resultClass = extractJandexValue( annotation, JpaAnnotations.NAMED_QUERY, "resultClass", modelContext );
-		this.lockMode = extractJandexValue( annotation, JpaAnnotations.NAMED_QUERY, "lockMode", modelContext );
-		this.hints = extractJandexValue( annotation, JpaAnnotations.NAMED_QUERY, "hints", modelContext );
+	public NamedQueryJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.name = (String) attributeValues.get( "name" );
+		this.query = (String) attributeValues.get( "query" );
+		this.resultClass = (Class<?>) attributeValues.get( "resultClass" );
+		this.lockMode = (jakarta.persistence.LockModeType) attributeValues.get( "lockMode" );
+		this.hints = (jakarta.persistence.QueryHint[]) attributeValues.get( "hints" );
 	}
 
 	@Override

@@ -7,15 +7,11 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
-import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.Temporal;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -38,8 +34,8 @@ public class TemporalJpaAnnotation implements Temporal {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public TemporalJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue( annotation, JpaAnnotations.TEMPORAL, "value", modelContext );
+	public TemporalJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.value = (jakarta.persistence.TemporalType) attributeValues.get( "value" );
 	}
 
 	@Override

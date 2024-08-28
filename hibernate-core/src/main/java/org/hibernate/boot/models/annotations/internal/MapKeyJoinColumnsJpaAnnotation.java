@@ -7,17 +7,15 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.MapKeyJoinColumn;
 import jakarta.persistence.MapKeyJoinColumns;
 
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -49,14 +47,11 @@ public class MapKeyJoinColumnsJpaAnnotation implements MapKeyJoinColumns, Repeat
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public MapKeyJoinColumnsJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue( annotation, JpaAnnotations.MAP_KEY_JOIN_COLUMNS, "value", modelContext );
-		this.foreignKey = extractJandexValue(
-				annotation,
-				JpaAnnotations.MAP_KEY_JOIN_COLUMNS,
-				"foreignKey",
-				modelContext
-		);
+	public MapKeyJoinColumnsJpaAnnotation(
+			Map<String, Object> attributeValues,
+			SourceModelBuildingContext modelContext) {
+		this.value = (MapKeyJoinColumn[]) attributeValues.get( "value" );
+		this.foreignKey = (jakarta.persistence.ForeignKey) attributeValues.get( "foreignKey" );
 	}
 
 	@Override

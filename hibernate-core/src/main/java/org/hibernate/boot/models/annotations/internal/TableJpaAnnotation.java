@@ -7,6 +7,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTableImpl;
 import org.hibernate.boot.models.JpaAnnotations;
@@ -14,11 +15,8 @@ import org.hibernate.boot.models.annotations.spi.CommonTableDetails;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.Table;
 
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.applyCatalog;
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.applyOptionalString;
@@ -70,20 +68,15 @@ public class TableJpaAnnotation implements Table, CommonTableDetails {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public TableJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, JpaAnnotations.TABLE, "name", modelContext );
-		this.catalog = extractJandexValue( annotation, JpaAnnotations.TABLE, "catalog", modelContext );
-		this.schema = extractJandexValue( annotation, JpaAnnotations.TABLE, "schema", modelContext );
-		this.uniqueConstraints = extractJandexValue(
-				annotation,
-				JpaAnnotations.TABLE,
-				"uniqueConstraints",
-				modelContext
-		);
-		this.indexes = extractJandexValue( annotation, JpaAnnotations.TABLE, "indexes", modelContext );
-		this.check = extractJandexValue( annotation, JpaAnnotations.TABLE, "check", modelContext );
-		this.comment = extractJandexValue( annotation, JpaAnnotations.TABLE, "comment", modelContext );
-		this.options = extractJandexValue( annotation, JpaAnnotations.TABLE, "options", modelContext );
+	public TableJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.name = (String) attributeValues.get( "name" );
+		this.catalog = (String) attributeValues.get( "catalog" );
+		this.schema = (String) attributeValues.get( "schema" );
+		this.uniqueConstraints = (jakarta.persistence.UniqueConstraint[]) attributeValues.get( "uniqueConstraints" );
+		this.indexes = (jakarta.persistence.Index[]) attributeValues.get( "indexes" );
+		this.check = (jakarta.persistence.CheckConstraint[]) attributeValues.get( "check" );
+		this.comment = (String) attributeValues.get( "comment" );
+		this.options = (String) attributeValues.get( "options" );
 	}
 
 	@Override

@@ -7,14 +7,10 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.ConverterRegistration;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -43,25 +39,12 @@ public class ConverterRegistrationAnnotation implements ConverterRegistration {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public ConverterRegistrationAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.converter = extractJandexValue(
-				annotation,
-				HibernateAnnotations.CONVERTER_REGISTRATION,
-				"converter",
-				modelContext
-		);
-		this.domainType = extractJandexValue(
-				annotation,
-				HibernateAnnotations.CONVERTER_REGISTRATION,
-				"domainType",
-				modelContext
-		);
-		this.autoApply = extractJandexValue(
-				annotation,
-				HibernateAnnotations.CONVERTER_REGISTRATION,
-				"autoApply",
-				modelContext
-		);
+	public ConverterRegistrationAnnotation(
+			Map<String, Object> attributeValues,
+			SourceModelBuildingContext modelContext) {
+		this.converter = (Class<? extends jakarta.persistence.AttributeConverter<?, ?>>) attributeValues.get( "converter" );
+		this.domainType = (Class<?>) attributeValues.get( "domainType" );
+		this.autoApply = (boolean) attributeValues.get( "autoApply" );
 	}
 
 	@Override

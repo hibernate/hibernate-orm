@@ -7,15 +7,13 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -46,20 +44,11 @@ public class CollectionIdAnnotation implements CollectionId {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public CollectionIdAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.column = extractJandexValue( annotation, HibernateAnnotations.COLLECTION_ID, "column", modelContext );
-		this.generatorImplementation = extractJandexValue(
-				annotation,
-				HibernateAnnotations.COLLECTION_ID,
-				"generatorImplementation",
-				modelContext
-		);
-		this.generator = extractJandexValue(
-				annotation,
-				HibernateAnnotations.COLLECTION_ID,
-				"generator",
-				modelContext
-		);
+	public CollectionIdAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.column = (jakarta.persistence.Column) attributeValues.get( "column" );
+		this.generatorImplementation = (Class<? extends org.hibernate.id.IdentifierGenerator>) attributeValues
+				.get( "generatorImplementation" );
+		this.generator = (String) attributeValues.get( "generator" );
 	}
 
 	@Override

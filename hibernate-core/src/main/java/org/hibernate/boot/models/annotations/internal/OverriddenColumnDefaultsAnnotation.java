@@ -7,15 +7,13 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.DialectOverride;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import static org.hibernate.boot.models.DialectOverrideAnnotations.DIALECT_OVERRIDE_COLUMN_DEFAULTS;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 /**
@@ -45,8 +43,10 @@ public class OverriddenColumnDefaultsAnnotation
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public OverriddenColumnDefaultsAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue( annotation, DIALECT_OVERRIDE_COLUMN_DEFAULTS, "value", modelContext );
+	public OverriddenColumnDefaultsAnnotation(
+			Map<String, Object> attributeValues,
+			SourceModelBuildingContext modelContext) {
+		this.value = (DialectOverride.ColumnDefault[]) attributeValues.get( "value" );
 	}
 
 	@Override

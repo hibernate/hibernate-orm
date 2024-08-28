@@ -7,14 +7,12 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import static org.hibernate.boot.models.HibernateAnnotations.COLLECTION_TYPE_REGISTRATION;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -46,26 +44,11 @@ public class CollectionTypeRegistrationAnnotation implements CollectionTypeRegis
 	 * Used in creating annotation instances from Jandex variant
 	 */
 	public CollectionTypeRegistrationAnnotation(
-			AnnotationInstance annotation,
+			Map<String, Object> attributeValues,
 			SourceModelBuildingContext modelContext) {
-		this.classification = extractJandexValue(
-				annotation,
-				COLLECTION_TYPE_REGISTRATION,
-				"classification",
-				modelContext
-		);
-		this.type = extractJandexValue(
-				annotation,
-				COLLECTION_TYPE_REGISTRATION,
-				"type",
-				modelContext
-		);
-		this.parameters = extractJandexValue(
-				annotation,
-				COLLECTION_TYPE_REGISTRATION,
-				"parameters",
-				modelContext
-		);
+		this.classification = (org.hibernate.metamodel.CollectionClassification) attributeValues.get( "classification" );
+		this.type = (Class<? extends org.hibernate.usertype.UserCollectionType>) attributeValues.get( "type" );
+		this.parameters = (org.hibernate.annotations.Parameter[]) attributeValues.get( "parameters" );
 	}
 
 	@Override

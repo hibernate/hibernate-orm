@@ -7,6 +7,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.SQLSelect;
@@ -16,10 +17,7 @@ import org.hibernate.boot.models.annotations.spi.DialectOverrider;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import static org.hibernate.boot.models.DialectOverrideAnnotations.DIALECT_OVERRIDE_SQL_SELECT;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 /**
@@ -31,9 +29,15 @@ public class OverriddenSQLSelectAnnotation
 		implements DialectOverride.SQLSelect, DialectOverrider<SQLSelect> {
 	private SQLSelect override;
 
+	/**
+	 * Used in creating dynamic annotation instances (e.g. from XML)
+	 */
 	public OverriddenSQLSelectAnnotation(SourceModelBuildingContext modelContext) {
 	}
 
+	/**
+	 * Used in creating annotation instances from JDK variant
+	 */
 	public OverriddenSQLSelectAnnotation(
 			DialectOverride.SQLSelect annotation,
 			SourceModelBuildingContext modelContext) {
@@ -43,9 +47,12 @@ public class OverriddenSQLSelectAnnotation
 		override( extractJdkValue( annotation, DIALECT_OVERRIDE_SQL_SELECT, "override", modelContext ) );
 	}
 
-	public OverriddenSQLSelectAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		super( annotation, DIALECT_OVERRIDE_SQL_SELECT, modelContext );
-		override( extractJandexValue( annotation, DIALECT_OVERRIDE_SQL_SELECT, "override", modelContext ) );
+	/**
+	 * Used in creating annotation instances from Jandex variant
+	 */
+	public OverriddenSQLSelectAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		super( attributeValues, DIALECT_OVERRIDE_SQL_SELECT, modelContext );
+		override( (SQLSelect) attributeValues.get( "override" ) );
 	}
 
 	@Override

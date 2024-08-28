@@ -7,11 +7,10 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -32,7 +31,7 @@ public class NationalizedAnnotation implements Nationalized {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public NationalizedAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
+	public NationalizedAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
 	}
 
 	@Override

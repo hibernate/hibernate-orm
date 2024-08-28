@@ -7,6 +7,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
@@ -41,8 +42,8 @@ public class SequenceGeneratorsJpaAnnotation implements SequenceGenerators, Repe
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public SequenceGeneratorsJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue( annotation, JpaAnnotations.SEQUENCE_GENERATORS, "value", modelContext );
+	public SequenceGeneratorsJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.value = (SequenceGenerator[]) attributeValues.get( "value" );
 	}
 
 	@Override

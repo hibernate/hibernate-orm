@@ -7,6 +7,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
@@ -17,7 +18,6 @@ import org.jboss.jandex.AnnotationInstance;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinColumns;
 
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -44,9 +44,9 @@ public class JoinColumnsJpaAnnotation implements JoinColumns, RepeatableContaine
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public JoinColumnsJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue( annotation, JpaAnnotations.JOIN_COLUMNS, "value", modelContext );
-		this.foreignKey = extractJandexValue( annotation, JpaAnnotations.JOIN_COLUMNS, "foreignKey", modelContext );
+	public JoinColumnsJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.value = (JoinColumn[]) attributeValues.get( "value" );
+		this.foreignKey = (jakarta.persistence.ForeignKey) attributeValues.get( "foreignKey" );
 	}
 
 	@Override

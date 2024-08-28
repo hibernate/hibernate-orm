@@ -7,6 +7,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnImpl;
 import org.hibernate.boot.models.JpaAnnotations;
@@ -18,11 +19,8 @@ import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.Column;
 
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -95,26 +93,21 @@ public class ColumnJpaAnnotation implements Column,
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public ColumnJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, JpaAnnotations.COLUMN, "name", modelContext );
-		this.unique = extractJandexValue( annotation, JpaAnnotations.COLUMN, "unique", modelContext );
-		this.nullable = extractJandexValue( annotation, JpaAnnotations.COLUMN, "nullable", modelContext );
-		this.insertable = extractJandexValue( annotation, JpaAnnotations.COLUMN, "insertable", modelContext );
-		this.updatable = extractJandexValue( annotation, JpaAnnotations.COLUMN, "updatable", modelContext );
-		this.columnDefinition = extractJandexValue(
-				annotation,
-				JpaAnnotations.COLUMN,
-				"columnDefinition",
-				modelContext
-		);
-		this.options = extractJandexValue( annotation, JpaAnnotations.COLUMN, "options", modelContext );
-		this.table = extractJandexValue( annotation, JpaAnnotations.COLUMN, "table", modelContext );
-		this.length = extractJandexValue( annotation, JpaAnnotations.COLUMN, "length", modelContext );
-		this.precision = extractJandexValue( annotation, JpaAnnotations.COLUMN, "precision", modelContext );
-		this.scale = extractJandexValue( annotation, JpaAnnotations.COLUMN, "scale", modelContext );
-		this.secondPrecision = extractJandexValue( annotation, JpaAnnotations.COLUMN, "secondPrecision", modelContext );
-		this.check = extractJandexValue( annotation, JpaAnnotations.COLUMN, "check", modelContext );
-		this.comment = extractJandexValue( annotation, JpaAnnotations.COLUMN, "comment", modelContext );
+	public ColumnJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.name = (String) attributeValues.get( "name" );
+		this.unique = (boolean) attributeValues.get( "unique" );
+		this.nullable = (boolean) attributeValues.get( "nullable" );
+		this.insertable = (boolean) attributeValues.get( "insertable" );
+		this.updatable = (boolean) attributeValues.get( "updatable" );
+		this.columnDefinition = (String) attributeValues.get( "columnDefinition" );
+		this.options = (String) attributeValues.get( "options" );
+		this.table = (String) attributeValues.get( "table" );
+		this.length = (int) attributeValues.get( "length" );
+		this.precision = (int) attributeValues.get( "precision" );
+		this.scale = (int) attributeValues.get( "scale" );
+		this.secondPrecision = (int) attributeValues.get( "secondPrecision" );
+		this.check = (jakarta.persistence.CheckConstraint[]) attributeValues.get( "check" );
+		this.comment = (String) attributeValues.get( "comment" );
 	}
 
 	@Override

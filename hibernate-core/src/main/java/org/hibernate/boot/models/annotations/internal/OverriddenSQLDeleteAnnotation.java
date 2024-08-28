@@ -7,6 +7,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.SQLDelete;
@@ -16,10 +17,7 @@ import org.hibernate.boot.models.annotations.spi.DialectOverrider;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import static org.hibernate.boot.models.DialectOverrideAnnotations.DIALECT_OVERRIDE_SQL_DELETE;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 /**
@@ -31,21 +29,32 @@ public class OverriddenSQLDeleteAnnotation
 		implements DialectOverride.SQLDelete, DialectOverrider<SQLDelete> {
 	private SQLDelete override;
 
+	/**
+	 * Used in creating dynamic annotation instances (e.g. from XML)
+	 */
 	public OverriddenSQLDeleteAnnotation(SourceModelBuildingContext sourceModelContext) {
 	}
 
+	/**
+	 * Used in creating annotation instances from JDK variant
+	 */
 	public OverriddenSQLDeleteAnnotation(
-			DialectOverride.SQLDelete source,
+			DialectOverride.SQLDelete annotation,
 			SourceModelBuildingContext sourceModelContext) {
-		dialect( source.dialect() );
-		before( source.before() );
-		sameOrAfter( source.sameOrAfter() );
-		override( extractJdkValue( source, DIALECT_OVERRIDE_SQL_DELETE, "override", sourceModelContext ) );
+		dialect( annotation.dialect() );
+		before( annotation.before() );
+		sameOrAfter( annotation.sameOrAfter() );
+		override( extractJdkValue( annotation, DIALECT_OVERRIDE_SQL_DELETE, "override", sourceModelContext ) );
 	}
 
-	public OverriddenSQLDeleteAnnotation(AnnotationInstance source, SourceModelBuildingContext sourceModelContext) {
-		super( source, DIALECT_OVERRIDE_SQL_DELETE, sourceModelContext );
-		override( extractJandexValue( source, DIALECT_OVERRIDE_SQL_DELETE, "override", sourceModelContext ) );
+	/**
+	 * Used in creating annotation instances from Jandex variant
+	 */
+	public OverriddenSQLDeleteAnnotation(
+			Map<String, Object> attributeValues,
+			SourceModelBuildingContext sourceModelContext) {
+		super( attributeValues, DIALECT_OVERRIDE_SQL_DELETE, sourceModelContext );
+		override( (SQLDelete) attributeValues.get( "override" ) );
 	}
 
 	@Override

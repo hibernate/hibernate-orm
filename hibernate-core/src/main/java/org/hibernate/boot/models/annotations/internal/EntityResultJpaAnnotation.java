@@ -7,15 +7,11 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
-import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.EntityResult;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -47,16 +43,11 @@ public class EntityResultJpaAnnotation implements EntityResult {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public EntityResultJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.entityClass = extractJandexValue( annotation, JpaAnnotations.ENTITY_RESULT, "entityClass", modelContext );
-		this.lockMode = extractJandexValue( annotation, JpaAnnotations.ENTITY_RESULT, "lockMode", modelContext );
-		this.fields = extractJandexValue( annotation, JpaAnnotations.ENTITY_RESULT, "fields", modelContext );
-		this.discriminatorColumn = extractJandexValue(
-				annotation,
-				JpaAnnotations.ENTITY_RESULT,
-				"discriminatorColumn",
-				modelContext
-		);
+	public EntityResultJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.entityClass = (Class<?>) attributeValues.get( "entityClass" );
+		this.lockMode = (jakarta.persistence.LockModeType) attributeValues.get( "lockMode" );
+		this.fields = (jakarta.persistence.FieldResult[]) attributeValues.get( "fields" );
+		this.discriminatorColumn = (String) attributeValues.get( "discriminatorColumn" );
 	}
 
 	@Override

@@ -7,15 +7,13 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.Comments;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -40,8 +38,8 @@ public class CommentsAnnotation implements Comments, RepeatableContainer<org.hib
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public CommentsAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue( annotation, HibernateAnnotations.COMMENTS, "value", modelContext );
+	public CommentsAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.value = (org.hibernate.annotations.Comment[]) attributeValues.get( "value" );
 	}
 
 	@Override

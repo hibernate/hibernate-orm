@@ -7,15 +7,11 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.UuidGenerator;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.id.uuid.UuidValueGenerator;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -42,8 +38,9 @@ public class UuidGeneratorAnnotation implements UuidGenerator {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public UuidGeneratorAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.style = extractJandexValue( annotation, HibernateAnnotations.UUID_GENERATOR, "style", modelContext );
+	public UuidGeneratorAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.style = (Style) attributeValues.get( "style" );
+		this.algorithm = (Class<? extends UuidValueGenerator>) attributeValues.get( "algorithm" );
 	}
 
 	@Override

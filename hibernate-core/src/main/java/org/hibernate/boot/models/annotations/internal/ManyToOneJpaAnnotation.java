@@ -7,16 +7,12 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
-import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.AttributeMarker;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.ManyToOne;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -53,11 +49,11 @@ public class ManyToOneJpaAnnotation implements ManyToOne,
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public ManyToOneJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.targetEntity = extractJandexValue( annotation, JpaAnnotations.MANY_TO_ONE, "targetEntity", modelContext );
-		this.cascade = extractJandexValue( annotation, JpaAnnotations.MANY_TO_ONE, "cascade", modelContext );
-		this.fetch = extractJandexValue( annotation, JpaAnnotations.MANY_TO_ONE, "fetch", modelContext );
-		this.optional = extractJandexValue( annotation, JpaAnnotations.MANY_TO_ONE, "optional", modelContext );
+	public ManyToOneJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.targetEntity = (Class<?>) attributeValues.get( "targetEntity" );
+		this.cascade = (jakarta.persistence.CascadeType[]) attributeValues.get( "cascade" );
+		this.fetch = (jakarta.persistence.FetchType) attributeValues.get( "fetch" );
+		this.optional = (boolean) attributeValues.get( "optional" );
 	}
 
 	@Override

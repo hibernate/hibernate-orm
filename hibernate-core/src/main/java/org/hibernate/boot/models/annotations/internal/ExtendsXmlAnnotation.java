@@ -7,14 +7,10 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.boot.internal.Extends;
-import org.hibernate.boot.models.XmlAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -37,8 +33,8 @@ public class ExtendsXmlAnnotation implements Extends {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public ExtendsXmlAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.superType = extractJandexValue( annotation, XmlAnnotations.EXTENDS, "superType", modelContext );
+	public ExtendsXmlAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.superType = (String) attributeValues.get( "superType" );
 	}
 
 	@Override

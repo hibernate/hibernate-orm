@@ -6,13 +6,11 @@
  */
 package org.hibernate.boot.models.annotations.internal;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.Bag;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -32,7 +30,7 @@ public class BagAnnotation implements Bag {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public BagAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
+	public BagAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
 	}
 
 	@Override

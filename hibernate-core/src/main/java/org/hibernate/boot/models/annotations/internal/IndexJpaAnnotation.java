@@ -7,15 +7,11 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
-import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.Index;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -47,11 +43,11 @@ public class IndexJpaAnnotation implements Index {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public IndexJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, JpaAnnotations.INDEX, "name", modelContext );
-		this.columnList = extractJandexValue( annotation, JpaAnnotations.INDEX, "columnList", modelContext );
-		this.unique = extractJandexValue( annotation, JpaAnnotations.INDEX, "unique", modelContext );
-		this.options = extractJandexValue( annotation, JpaAnnotations.INDEX, "options", modelContext );
+	public IndexJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.name = (String) attributeValues.get( "name" );
+		this.columnList = (String) attributeValues.get( "columnList" );
+		this.unique = (boolean) attributeValues.get( "unique" );
+		this.options = (String) attributeValues.get( "options" );
 	}
 
 	@Override

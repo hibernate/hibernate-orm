@@ -7,10 +7,9 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
 
 import jakarta.persistence.Id;
 
@@ -32,7 +31,7 @@ public class IdJpaAnnotation implements Id {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public IdJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
+	public IdJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
 	}
 
 	@Override

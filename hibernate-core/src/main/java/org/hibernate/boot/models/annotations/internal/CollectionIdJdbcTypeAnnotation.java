@@ -7,15 +7,11 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.CollectionIdJdbcType;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -38,13 +34,8 @@ public class CollectionIdJdbcTypeAnnotation implements CollectionIdJdbcType {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public CollectionIdJdbcTypeAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue(
-				annotation,
-				HibernateAnnotations.COLLECTION_ID_JDBC_TYPE,
-				"value",
-				modelContext
-		);
+	public CollectionIdJdbcTypeAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.value = (Class<? extends JdbcType>) attributeValues.get( "value" );
 	}
 
 	@Override

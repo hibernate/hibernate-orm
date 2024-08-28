@@ -7,16 +7,15 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
 
 import jakarta.persistence.AssociationOverride;
 
 import static org.hibernate.boot.models.JpaAnnotations.ASSOCIATION_OVERRIDE;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -50,11 +49,13 @@ public class AssociationOverrideJpaAnnotation implements AssociationOverride {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public AssociationOverrideJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, ASSOCIATION_OVERRIDE, "name", modelContext );
-		this.joinColumns = extractJandexValue( annotation, ASSOCIATION_OVERRIDE, "joinColumns", modelContext );
-		this.foreignKey = extractJandexValue( annotation, ASSOCIATION_OVERRIDE, "foreignKey", modelContext );
-		this.joinTable = extractJandexValue( annotation, ASSOCIATION_OVERRIDE, "joinTable", modelContext );
+	public AssociationOverrideJpaAnnotation(
+			Map<String, Object> attributeValues,
+			SourceModelBuildingContext modelContext) {
+		this.name = (String) attributeValues.get( "name" );
+		this.joinColumns = (jakarta.persistence.JoinColumn[]) attributeValues.get( "joinColumns" );
+		this.foreignKey = (jakarta.persistence.ForeignKey) attributeValues.get( "foreignKey" );
+		this.joinTable = (jakarta.persistence.JoinTable) attributeValues.get( "joinTable" );
 	}
 
 	@Override

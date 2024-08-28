@@ -7,6 +7,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.GeneratedColumn;
@@ -16,10 +17,7 @@ import org.hibernate.boot.models.annotations.spi.DialectOverrider;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import static org.hibernate.boot.models.DialectOverrideAnnotations.DIALECT_OVERRIDE_GENERATED_COLUMN;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 /**
@@ -31,23 +29,32 @@ public class OverriddenGeneratedColumnAnnotation
 		implements DialectOverride.GeneratedColumn, DialectOverrider<GeneratedColumn> {
 	private GeneratedColumn override;
 
+	/**
+	 * Used in creating dynamic annotation instances (e.g. from XML)
+	 */
 	public OverriddenGeneratedColumnAnnotation(SourceModelBuildingContext sourceModelContext) {
 	}
 
+	/**
+	 * Used in creating annotation instances from JDK variant
+	 */
 	public OverriddenGeneratedColumnAnnotation(
-			DialectOverride.GeneratedColumn source,
+			DialectOverride.GeneratedColumn annotation,
 			SourceModelBuildingContext sourceModelContext) {
-		dialect( source.dialect() );
-		before( source.before() );
-		sameOrAfter( source.sameOrAfter() );
-		override( extractJdkValue( source, DIALECT_OVERRIDE_GENERATED_COLUMN, "override", sourceModelContext ) );
+		dialect( annotation.dialect() );
+		before( annotation.before() );
+		sameOrAfter( annotation.sameOrAfter() );
+		override( extractJdkValue( annotation, DIALECT_OVERRIDE_GENERATED_COLUMN, "override", sourceModelContext ) );
 	}
 
+	/**
+	 * Used in creating annotation instances from Jandex variant
+	 */
 	public OverriddenGeneratedColumnAnnotation(
-			AnnotationInstance source,
+			Map<String, Object> attributeValues,
 			SourceModelBuildingContext sourceModelContext) {
-		super( source, DIALECT_OVERRIDE_GENERATED_COLUMN, sourceModelContext );
-		override( extractJandexValue( source, DIALECT_OVERRIDE_GENERATED_COLUMN, "override", sourceModelContext ) );
+		super( attributeValues, DIALECT_OVERRIDE_GENERATED_COLUMN, sourceModelContext );
+		override( (GeneratedColumn) attributeValues.get( "override" ) );
 	}
 
 	@Override

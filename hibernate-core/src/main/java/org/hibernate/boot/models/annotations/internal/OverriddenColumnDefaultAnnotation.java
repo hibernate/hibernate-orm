@@ -7,20 +7,17 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DialectOverride;
-import org.hibernate.boot.models.DialectOverrideAnnotations;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.AbstractOverrider;
 import org.hibernate.boot.models.annotations.spi.DialectOverrider;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import static org.hibernate.boot.models.DialectOverrideAnnotations.DIALECT_OVERRIDE_COLUMN_DEFAULT;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 /**
@@ -32,9 +29,15 @@ public class OverriddenColumnDefaultAnnotation
 		implements DialectOverride.ColumnDefault, DialectOverrider<ColumnDefault> {
 	private ColumnDefault override;
 
+	/**
+	 * Used in creating dynamic annotation instances (e.g. from XML)
+	 */
 	public OverriddenColumnDefaultAnnotation(SourceModelBuildingContext modelContext) {
 	}
 
+	/**
+	 * Used in creating annotation instances from JDK variant
+	 */
 	public OverriddenColumnDefaultAnnotation(
 			DialectOverride.ColumnDefault annotation,
 			SourceModelBuildingContext modelContext) {
@@ -44,9 +47,14 @@ public class OverriddenColumnDefaultAnnotation
 		override( extractJdkValue( annotation, DIALECT_OVERRIDE_COLUMN_DEFAULT, "override", modelContext ) );
 	}
 
-	public OverriddenColumnDefaultAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		super( annotation, DIALECT_OVERRIDE_COLUMN_DEFAULT, modelContext );
-		override( extractJandexValue( annotation, DIALECT_OVERRIDE_COLUMN_DEFAULT, "override", modelContext ) );
+	/**
+	 * Used in creating annotation instances from Jandex variant
+	 */
+	public OverriddenColumnDefaultAnnotation(
+			Map<String, Object> attributeValues,
+			SourceModelBuildingContext modelContext) {
+		super( attributeValues, DIALECT_OVERRIDE_COLUMN_DEFAULT, modelContext );
+		override( (ColumnDefault) attributeValues.get( "override" ) );
 	}
 
 	@Override

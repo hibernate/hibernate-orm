@@ -31,8 +31,8 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
-import org.hibernate.models.internal.SourceModelBuildingContextImpl;
-import org.hibernate.models.internal.jandex.JandexIndexerHelper;
+import org.hibernate.models.internal.BasicModelBuildingContextImpl;
+import org.hibernate.models.jandex.internal.JandexIndexerHelper;
 import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
@@ -103,9 +103,8 @@ public class ManagedResourcesProcessor {
 		// At this point we know all managed class names across all sources.
 		// Resolve the Jandex Index and build the SourceModelBuildingContext.
 		final IndexView jandexIndex = resolveJandexIndex( allKnownClassNames, bootstrapContext.getJandexView(), classLoading );
-		final SourceModelBuildingContextImpl sourceModelBuildingContext = new SourceModelBuildingContextImpl(
+		final BasicModelBuildingContextImpl sourceModelBuildingContext = new BasicModelBuildingContextImpl(
 				classLoading,
-				jandexIndex,
 				ModelsHelper::preFillRegistries
 		);
 
@@ -174,16 +173,11 @@ public class ManagedResourcesProcessor {
 		// OUTPUTS:
 		//		- CategorizedDomainModel
 
-		final ClassDetailsRegistry classDetailsRegistryImmutable = classDetailsRegistry
-				.makeImmutableCopy();
-
-		final AnnotationDescriptorRegistry annotationDescriptorRegistryImmutable = descriptorRegistry
-				.makeImmutableCopy();
 
 		// Collect the entity hierarchies based on the set of `rootEntities`
 		final ModelCategorizationContextImpl mappingBuildingContext = new ModelCategorizationContextImpl(
-				classDetailsRegistryImmutable,
-				annotationDescriptorRegistryImmutable,
+				classDetailsRegistry,
+				descriptorRegistry,
 				globalRegistrations
 		);
 
@@ -212,8 +206,8 @@ public class ManagedResourcesProcessor {
 		return modelCategorizationCollector.createResult(
 				entityHierarchies,
 				xmlPreProcessingResult.getPersistenceUnitMetadata(),
-				classDetailsRegistryImmutable,
-				annotationDescriptorRegistryImmutable
+				classDetailsRegistry,
+				descriptorRegistry
 		);
 	}
 

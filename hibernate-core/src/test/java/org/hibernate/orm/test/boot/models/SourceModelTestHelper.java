@@ -52,17 +52,15 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.models.internal.AnnotationDescriptorRegistryStandard;
 import org.hibernate.models.internal.BaseLineJavaTypes;
-import org.hibernate.models.internal.SourceModelBuildingContextImpl;
-import org.hibernate.models.internal.jandex.JandexBuilders;
-import org.hibernate.models.internal.jandex.JandexIndexerHelper;
+import org.hibernate.models.internal.BasicModelBuildingContextImpl;
 import org.hibernate.models.internal.jdk.JdkBuilders;
+import org.hibernate.models.jandex.internal.JandexIndexerHelper;
+import org.hibernate.models.jandex.internal.JandexModelBuildingContextImpl;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.ClassLoading;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-import org.hibernate.service.ServiceRegistry;
 
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.Index;
@@ -87,49 +85,50 @@ public class SourceModelTestHelper {
 		return createBuildingContext( jandexIndex, modelClasses );
 	}
 
-	public static SourceModelBuildingContextImpl createBuildingContext(Index jandexIndex, Class<?>... modelClasses) {
+	public static SourceModelBuildingContext createBuildingContext(Index jandexIndex, Class<?>... modelClasses) {
 		return createBuildingContext( jandexIndex, SIMPLE_CLASS_LOADING, modelClasses );
 	}
 
-	public static SourceModelBuildingContextImpl createBuildingContext(
+	public static SourceModelBuildingContext createBuildingContext(
 			Index jandexIndex,
 			ClassLoading classLoadingAccess,
 			Class<?>... modelClasses) {
-		final SourceModelBuildingContextImpl buildingContext = new SourceModelBuildingContextImpl(
-				classLoadingAccess,
-				jandexIndex,
-				(contributions, buildingContext1) -> OrmAnnotationHelper.forEachOrmAnnotation( contributions::registerAnnotation )
-		);
-		final ClassDetailsRegistry classDetailsRegistry = buildingContext.getClassDetailsRegistry();
-		final AnnotationDescriptorRegistryStandard annotationDescriptorRegistry = (AnnotationDescriptorRegistryStandard) buildingContext.getAnnotationDescriptorRegistry();
+		final SourceModelBuildingContext ctx;
 
-		for ( ClassInfo knownClass : jandexIndex.getKnownClasses() ) {
-//			if ( knownClass.simpleName().endsWith( "package-info" ) ) {
-//				new PackageDetailsImpl( knownClass, buildingContext );
-//				continue;
-//			}
-
-			classDetailsRegistry.resolveClassDetails(
-					knownClass.name().toString(),
-					JandexBuilders.DEFAULT_BUILDER
+		if ( jandexIndex == null ) {
+			ctx = new BasicModelBuildingContextImpl(
+					classLoadingAccess,
+					(contributions, buildingContext1) -> OrmAnnotationHelper.forEachOrmAnnotation( contributions::registerAnnotation )
+			);
+		}
+		else {
+			ctx = new JandexModelBuildingContextImpl(
+					jandexIndex,
+					classLoadingAccess,
+					(contributions, buildingContext1) -> OrmAnnotationHelper.forEachOrmAnnotation( contributions::registerAnnotation )
 			);
 
-			if ( knownClass.isAnnotation() ) {
-				final Class<? extends Annotation> annotationClass = buildingContext
-						.getClassLoading()
-						.classForName( knownClass.name().toString() );
-				annotationDescriptorRegistry.resolveDescriptor( annotationClass, annotationType -> JdkBuilders.buildAnnotationDescriptor(
-						annotationType,
-						buildingContext
-				) );
+			for ( ClassInfo knownClass : jandexIndex.getKnownClasses() ) {
+				ctx.getClassDetailsRegistry().resolveClassDetails( knownClass.name().toString() );
+
+				if ( knownClass.isAnnotation() ) {
+					final Class<? extends Annotation> annotationClass = classLoadingAccess.classForName( knownClass.name().toString() );
+					ctx.getAnnotationDescriptorRegistry().resolveDescriptor(
+							annotationClass,
+							annotationType -> JdkBuilders.buildAnnotationDescriptor(
+									annotationType,
+									ctx
+							)
+					);
+				}
 			}
 		}
 
 		for ( int i = 0; i < modelClasses.length; i++ ) {
-			classDetailsRegistry.resolveClassDetails( modelClasses[i].getName() );
+			ctx.getClassDetailsRegistry().resolveClassDetails( modelClasses[i].getName() );
 		}
 
-		return buildingContext;
+		return ctx;
 	}
 
 	public static Index buildJandexIndex(Class<?>... modelClasses) {
@@ -275,11 +274,21 @@ public class SourceModelTestHelper {
 				? buildJandexIndex( classLoading, allKnownClassNames )
 				: null;
 
-		final SourceModelBuildingContextImpl sourceModelBuildingContext = new SourceModelBuildingContextImpl(
-				classLoading,
-				jandexIndex,
-				ModelsHelper::preFillRegistries
-		);
+		final SourceModelBuildingContext sourceModelBuildingContext;
+
+		if ( jandexIndex == null ) {
+			sourceModelBuildingContext = new BasicModelBuildingContextImpl(
+					classLoading,
+					ModelsHelper::preFillRegistries
+			);
+		}
+		else {
+			sourceModelBuildingContext = new JandexModelBuildingContextImpl(
+					jandexIndex,
+					classLoading,
+					ModelsHelper::preFillRegistries
+			);
+		}
 
 		final RootMappingDefaults rootMappingDefaults = new RootMappingDefaults(
 				metadataBuildingOptions.getMappingDefaults(),

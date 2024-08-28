@@ -20,7 +20,7 @@ import org.hibernate.boot.models.xml.spi.XmlProcessingResult;
 import org.hibernate.boot.models.xml.spi.XmlProcessor;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.models.internal.SourceModelBuildingContextImpl;
+import org.hibernate.models.internal.BasicModelBuildingContextImpl;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.MemberDetails;
@@ -91,9 +91,8 @@ public abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 				persistenceUnitMetadata
 		);
 
-		final SourceModelBuildingContext modelBuildingContext = new SourceModelBuildingContextImpl(
+		final SourceModelBuildingContext modelBuildingContext = new BasicModelBuildingContextImpl(
 				SIMPLE_CLASS_LOADING,
-				null,
 				(contributions, inFlightContext) -> {
 					OrmAnnotationHelper.forEachOrmAnnotation( contributions::registerAnnotation );
 				}

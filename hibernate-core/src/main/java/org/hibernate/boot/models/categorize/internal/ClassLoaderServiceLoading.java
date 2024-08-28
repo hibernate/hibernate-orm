@@ -7,6 +7,12 @@
 package org.hibernate.boot.models.categorize.internal;
 
 import java.net.URL;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ServiceLoader;
+import java.util.Set;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.models.spi.ClassLoading;
@@ -36,5 +42,10 @@ public class ClassLoaderServiceLoading implements ClassLoading {
 	@Override
 	public URL locateResource(String resourceName) {
 		return classLoaderService.locateResource( resourceName );
+	}
+
+	@Override
+	public <S> Collection<S> loadJavaServices(Class<S> serviceType) {
+		return classLoaderService.loadJavaServices( serviceType );
 	}
 }

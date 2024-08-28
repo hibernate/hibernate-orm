@@ -4,6 +4,10 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import java.sql.Time;
+import java.time.Instant;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.Comparator;
 
 import jakarta.persistence.TemporalType;
@@ -58,6 +62,13 @@ public abstract class AbstractTemporalJavaType<T>
 	private <X> TemporalJavaType<X> forMissingPrecision(TypeConfiguration typeConfiguration) {
 		//noinspection unchecked,rawtypes
 		return (TemporalJavaType) this;
+	}
+
+	public static Time millisToSqlTime(long millis) {
+		final LocalTime localTime = Instant.ofEpochMilli( millis ).atZone( ZoneId.systemDefault() ).toLocalTime();
+		final Time time = Time.valueOf( localTime );
+		time.setTime( time.getTime() + localTime.getNano() / 1_000_000 );
+		return time;
 	}
 
 	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {

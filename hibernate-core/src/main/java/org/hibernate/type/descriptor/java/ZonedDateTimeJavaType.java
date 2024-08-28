@@ -124,7 +124,7 @@ public class ZonedDateTimeJavaType extends AbstractTemporalJavaType<ZonedDateTim
 		}
 
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			return (X) new java.sql.Time( zonedDateTime.toInstant().toEpochMilli() );
+			return (X) millisToSqlTime( zonedDateTime.toInstant().toEpochMilli() );
 		}
 
 		if ( Date.class.isAssignableFrom( type ) ) {

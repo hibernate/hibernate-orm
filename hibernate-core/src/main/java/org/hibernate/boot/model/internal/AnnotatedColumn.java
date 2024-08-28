@@ -400,9 +400,9 @@ public class AnnotatedColumn {
 		);
 
 		// HHH-6005 magic
-		if ( implicitName.getText().contains( "_collection&&element_" ) ) {
+		if ( implicitName.getText().contains( "_{element}_" ) ) {
 			implicitName = Identifier.toIdentifier(
-					implicitName.getText().replace( "_collection&&element_", "_" ),
+					implicitName.getText().replace( "_{element}_", "_" ),
 					implicitName.isQuoted()
 			);
 		}

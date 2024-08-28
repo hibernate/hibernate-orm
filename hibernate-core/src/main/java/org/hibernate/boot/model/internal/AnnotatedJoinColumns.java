@@ -445,9 +445,9 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 					new OwnedImplicitJoinColumnNameSource(referencedEntity, logicalTableName, logicalReferencedColumn)
 			);
 			// HHH-11826 magic. See AnnotatedColumn and the HHH-6005 comments
-			if ( columnIdentifier.getText().contains( "_collection&&element_" ) ) {
+			if ( columnIdentifier.getText().contains( "_{element}_" ) ) {
 				columnIdentifier = Identifier.toIdentifier(
-						columnIdentifier.getText().replace( "_collection&&element_", "_" ),
+						columnIdentifier.getText().replace( "_{element}_", "_" ),
 						columnIdentifier.isQuoted()
 				);
 			}

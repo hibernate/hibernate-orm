@@ -24,7 +24,6 @@ import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueResultException;
-import org.hibernate.Remove;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -587,14 +586,6 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 */
 	@Incubating
 	SelectionQuery<R> setOrder(Order<? super R> order);
-
-	/**
-	 * Specify a {@link LockMode} to apply to a specific alias defined in the query
-	 *
-	 * @deprecated use {@link #setLockMode(String, LockMode)}
-	 */
-	@Deprecated(since = "6.2") @Remove
-	SelectionQuery<R> setAliasSpecificLockMode(String alias, LockMode lockMode);
 
 	/**
 	 * Specifies whether follow-on locking should be applied

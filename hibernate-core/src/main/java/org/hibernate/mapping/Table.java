@@ -17,11 +17,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
-import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.Remove;
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.relational.ContributableDatabaseObject;
@@ -32,9 +29,7 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.tool.schema.extract.spi.TableInformation;
 
-import org.hibernate.tool.schema.internal.StandardTableMigrator;
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.emptyList;
@@ -438,16 +433,6 @@ public class Table implements Serializable, ContributableDatabaseObject {
 				&& Identifier.areEqual( schema, table.schema )
 				&& Identifier.areEqual( catalog, table.catalog );
 		}
-	}
-
-	@Deprecated(since = "6.2") @Remove
-	public Iterator<String> sqlAlterStrings(
-			Dialect dialect,
-			Metadata metadata,
-			TableInformation tableInfo,
-			SqlStringGenerationContext sqlStringGenerationContext) throws HibernateException {
-		return StandardTableMigrator.sqlAlterStrings(this, dialect, metadata, tableInfo, sqlStringGenerationContext )
-				.iterator();
 	}
 
 	public boolean isPrimaryKey(Column column) {

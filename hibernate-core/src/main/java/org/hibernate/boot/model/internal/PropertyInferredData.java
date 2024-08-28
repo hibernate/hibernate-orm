@@ -8,6 +8,7 @@ package org.hibernate.boot.model.internal;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Target;
+import org.hibernate.boot.models.internal.ModelsHelper;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
@@ -87,8 +88,11 @@ public class PropertyInferredData implements PropertyData {
 		if ( targetAnnotation != null ) {
 			final String targetName = targetAnnotation.value();
 			final SourceModelBuildingContext sourceModelBuildingContext = sourceModelContext;
-			final ClassDetails classDetails = sourceModelBuildingContext.getClassDetailsRegistry()
-					.resolveClassDetails( targetName );
+			final ClassDetails classDetails = ModelsHelper.resolveClassDetails(
+					targetName,
+					sourceModelBuildingContext.getClassDetailsRegistry(),
+					() -> new DynamicClassDetails( targetName, sourceModelContext )
+			);
 			return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );
 		}
 
@@ -117,8 +121,11 @@ public class PropertyInferredData implements PropertyData {
 		final org.hibernate.boot.internal.Target annotationUsage = propertyMember.getDirectAnnotationUsage( org.hibernate.boot.internal.Target.class );
 		if ( annotationUsage != null ) {
 			final String targetName = annotationUsage.value();
-			final ClassDetails classDetails = sourceModelBuildingContext.getClassDetailsRegistry()
-					.resolveClassDetails( targetName );
+			final ClassDetails classDetails = ModelsHelper.resolveClassDetails(
+					targetName,
+					sourceModelBuildingContext.getClassDetailsRegistry(),
+					() -> new DynamicClassDetails( targetName, sourceModelBuildingContext )
+			);
 			return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );
 		}
 
@@ -169,4 +176,6 @@ public class PropertyInferredData implements PropertyData {
 	public ClassDetails getDeclaringClass() {
 		return declaringClass;
 	}
+
+
 }

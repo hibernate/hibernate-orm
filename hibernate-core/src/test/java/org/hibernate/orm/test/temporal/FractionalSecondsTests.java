@@ -16,6 +16,7 @@ import java.time.ZonedDateTime;
 import org.hibernate.annotations.FractionalSeconds;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
@@ -121,6 +122,7 @@ public class FractionalSecondsTests {
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA does not support specifying a precision on timestamps")
 	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Because... Sybase...", matchSubTypes = true)
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase does not support specifying a precision on timestamps")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix only supports precision from 1 to 5")
 	void testUsage0(SessionFactoryScope scope) {
 		final Instant start = Instant.now();
 
@@ -172,6 +174,7 @@ public class FractionalSecondsTests {
 	@SkipForDialect(dialectClass = PostgreSQLDialect.class, reason = "PostgreSQL only supports precision <= 6", matchSubTypes = true)
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "CockroachDB only supports precision <= 6")
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA does not support specifying a precision on timestamps")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix only supports precision from 1 to 5")
 	void testUsage9(SessionFactoryScope scope) {
 		final Instant start = Instant.now();
 

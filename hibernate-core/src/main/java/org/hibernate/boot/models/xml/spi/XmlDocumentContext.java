@@ -137,10 +137,8 @@ public interface XmlDocumentContext {
 			// <embedded/>, <embedded-id/>
 			final String target = jaxbEmbeddedMapping.getTarget();
 			if ( isNotEmpty( target ) ) {
-				return (MutableClassDetails) getModelBuildingContext().getClassDetailsRegistry().resolveClassDetails(
-						target,
-						(name) -> new DynamicClassDetails( target, getModelBuildingContext() )
-				);
+				return (MutableClassDetails) getModelBuildingContext().getClassDetailsRegistry()
+						.resolveClassDetails( target );
 			}
 			// fall through to exception
 		}
@@ -148,17 +146,8 @@ public interface XmlDocumentContext {
 		if ( jaxbPersistentAttribute instanceof JaxbAssociationAttribute jaxbAssociationAttribute ) {
 			final String target = jaxbAssociationAttribute.getTargetEntity();
 			if ( isNotEmpty( target ) ) {
-				return (MutableClassDetails) getModelBuildingContext().getClassDetailsRegistry().resolveClassDetails(
-						target,
-						(name) -> new DynamicClassDetails(
-								target,
-								null,
-								false,
-								null,
-								null,
-								getModelBuildingContext()
-						)
-				);
+				return (MutableClassDetails) getModelBuildingContext().getClassDetailsRegistry()
+						.resolveClassDetails( target );
 			}
 			// fall through to exception
 		}

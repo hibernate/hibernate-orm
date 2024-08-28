@@ -105,8 +105,8 @@ import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
-import org.hibernate.models.internal.SourceModelBuildingContextImpl;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ModelsConfiguration;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -228,11 +228,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	private static SourceModelBuildingContext createModelBuildingContext(BootstrapContext bootstrapContext) {
 		final ClassLoaderService classLoaderService = bootstrapContext.getServiceRegistry().getService( ClassLoaderService.class );
 		final ClassLoaderServiceLoading classLoading = new ClassLoaderServiceLoading( classLoaderService );
-		return new SourceModelBuildingContextImpl(
-				classLoading,
-				bootstrapContext.getJandexView(),
-				ModelsHelper::preFillRegistries
-		);
+
+		final ModelsConfiguration modelsConfiguration = new ModelsConfiguration();
+		modelsConfiguration.setClassLoading(classLoading);
+//		modelsConfiguration.setExplicitContextProvider(  );
+		modelsConfiguration.configValue( "hibernate.models.jandex.index", bootstrapContext.getJandexView() );
+		modelsConfiguration.setRegistryPrimer( ModelsHelper::preFillRegistries );
+		return modelsConfiguration.bootstrap();
 	}
 
 	@Override

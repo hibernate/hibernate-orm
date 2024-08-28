@@ -72,7 +72,8 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.mapping.Table;
-import org.hibernate.models.internal.jandex.JandexIndexerHelper;
+import org.hibernate.models.internal.MutableClassDetailsRegistry;
+import org.hibernate.models.jandex.internal.JandexIndexerHelper;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.ClassLoading;
@@ -458,7 +459,7 @@ public class MetadataBuildingProcess {
 		xmlProcessingResult.apply( xmlPreProcessingResult.getPersistenceUnitMetadata() );
 
 		return new DomainModelSource(
-				classDetailsRegistry.makeImmutableCopy(),
+				classDetailsRegistry,
 				jandexIndex,
 				allKnownClassNames,
 				modelCategorizationCollector.getGlobalRegistrations(),
@@ -516,40 +517,6 @@ public class MetadataBuildingProcess {
 
 		return CompositeIndex.create( suppliedJandexIndex, jandexIndexer.complete() );
 	}
-//
-//	public static void preFillRegistries(RegistryPrimer.Contributions contributions, SourceModelBuildingContext buildingContext) {
-//		OrmAnnotationHelper.forEachOrmAnnotation( contributions::registerAnnotation );
-//
-//		final IndexView jandexIndex = buildingContext.getJandexIndex();
-//		if ( jandexIndex == null ) {
-//			return;
-//		}
-//
-//		final ClassDetailsRegistry classDetailsRegistry = buildingContext.getClassDetailsRegistry();
-//		final AnnotationDescriptorRegistry annotationDescriptorRegistry = buildingContext.getAnnotationDescriptorRegistry();
-//
-//		for ( ClassInfo knownClass : jandexIndex.getKnownClasses() ) {
-//			final String className = knownClass.name().toString();
-//
-//			if ( knownClass.isAnnotation() ) {
-//				// it is always safe to load the annotation classes - we will never be enhancing them
-//				//noinspection rawtypes
-//				final Class annotationClass = buildingContext
-//						.getClassLoading()
-//						.classForName( className );
-//				//noinspection unchecked
-//				annotationDescriptorRegistry.resolveDescriptor(
-//						annotationClass,
-//						(t) -> JdkBuilders.buildAnnotationDescriptor( annotationClass, buildingContext )
-//				);
-//			}
-//
-//			classDetailsRegistry.resolveClassDetails(
-//					className,
-//					(name) -> new JandexClassDetails( knownClass, buildingContext )
-//			);
-//		}
-//	}
 
 	private static void processAdditionalMappingContributions(
 			InFlightMetadataCollectorImpl metadataCollector,
@@ -628,6 +595,7 @@ public class MetadataBuildingProcess {
 			additionalClassDetails.add( classDetails );
 			metadataCollector.getSourceModelBuildingContext()
 					.getClassDetailsRegistry()
+					.as( MutableClassDetailsRegistry.class )
 					.addClassDetails( classDetails.getName(), classDetails );
 		}
 

@@ -87,10 +87,8 @@ public class PropertyInferredData implements PropertyData {
 		if ( targetAnnotation != null ) {
 			final String targetName = targetAnnotation.value();
 			final SourceModelBuildingContext sourceModelBuildingContext = sourceModelContext;
-			final ClassDetails classDetails = sourceModelBuildingContext.getClassDetailsRegistry().resolveClassDetails(
-					targetName,
-					name -> new DynamicClassDetails( targetName, sourceModelBuildingContext )
-			);
+			final ClassDetails classDetails = sourceModelBuildingContext.getClassDetailsRegistry()
+					.resolveClassDetails( targetName );
 			return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );
 		}
 
@@ -119,10 +117,8 @@ public class PropertyInferredData implements PropertyData {
 		final org.hibernate.boot.internal.Target annotationUsage = propertyMember.getDirectAnnotationUsage( org.hibernate.boot.internal.Target.class );
 		if ( annotationUsage != null ) {
 			final String targetName = annotationUsage.value();
-			final ClassDetails classDetails = sourceModelBuildingContext.getClassDetailsRegistry().resolveClassDetails(
-					targetName,
-					name -> new DynamicClassDetails( targetName, sourceModelBuildingContext )
-			);
+			final ClassDetails classDetails = sourceModelBuildingContext.getClassDetailsRegistry()
+					.resolveClassDetails( targetName );
 			return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );
 		}
 

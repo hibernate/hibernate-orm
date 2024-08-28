@@ -44,9 +44,10 @@ import org.hibernate.models.ModelsException;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.internal.ModelsClassLogging;
 import org.hibernate.models.internal.ModifierUtils;
-import org.hibernate.models.internal.RenderingCollectorImpl;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
+import org.hibernate.models.rendering.internal.RenderingTargetCollectingImpl;
+import org.hibernate.models.rendering.internal.SimpleRenderer;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.FieldDetails;
@@ -99,17 +100,7 @@ public class ManagedTypeProcessor {
 
 			memberAdjuster = ManagedTypeProcessor::adjustDynamicTypeMember;
 			classAccessType = AccessType.FIELD;
-			classDetails = (MutableClassDetails) classDetailsRegistry.resolveClassDetails(
-					jaxbEntity.getName(),
-					(name) -> new DynamicClassDetails(
-							jaxbEntity.getName(),
-							null,
-							false,
-							null,
-							null,
-							xmlDocumentContext.getModelBuildingContext()
-					)
-			);
+			classDetails = (MutableClassDetails) classDetailsRegistry.resolveClassDetails( jaxbEntity.getName() );
 
 			prepareDynamicClass( classDetails, jaxbEntity, xmlDocumentContext );
 		}
@@ -625,9 +616,10 @@ public class ManagedTypeProcessor {
 			return;
 		}
 
-		final RenderingCollectorImpl renderingCollector = new RenderingCollectorImpl();
-		classDetails.render( renderingCollector, xmlDocumentContext.getModelBuildingContext() );
-		XML_PROCESS_LOGGER.debugf( "Class annotations from XML for %s:\n%s", classDetails.getName(), renderingCollector.toString() );
+		final RenderingTargetCollectingImpl collectingTarget = new RenderingTargetCollectingImpl();
+		final SimpleRenderer renderer = new SimpleRenderer( collectingTarget );
+		renderer.renderClass( classDetails, xmlDocumentContext.getModelBuildingContext()  );
+		XML_PROCESS_LOGGER.debugf( "Class annotations from XML for %s:\n%s", classDetails.getName(), renderer.toString() );
 	}
 
 	private static void applyAccessAnnotation(
@@ -943,7 +935,7 @@ public class ManagedTypeProcessor {
 			}
 			// no class == dynamic...
 			classDetails = (MutableClassDetails) classDetailsRegistry
-					.resolveClassDetails( jaxbEmbeddable.getName(), DynamicClassDetails::new );
+					.resolveClassDetails( jaxbEmbeddable.getName() );
 			classAccessType = AccessType.FIELD;
 			memberAdjuster = ManagedTypeProcessor::adjustDynamicTypeMember;
 

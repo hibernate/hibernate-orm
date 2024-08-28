@@ -7,17 +7,15 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.NamedStoredProcedureQueries;
 import jakarta.persistence.NamedStoredProcedureQuery;
 
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -50,14 +48,9 @@ public class NamedStoredProcedureQueriesJpaAnnotation
 	 * Used in creating annotation instances from Jandex variant
 	 */
 	public NamedStoredProcedureQueriesJpaAnnotation(
-			AnnotationInstance annotation,
+			Map<String, Object> attributeValues,
 			SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue(
-				annotation,
-				JpaAnnotations.NAMED_STORED_PROCEDURE_QUERIES,
-				"value",
-				modelContext
-		);
+		this.value = (NamedStoredProcedureQuery[]) attributeValues.get( "value" );
 	}
 
 	@Override

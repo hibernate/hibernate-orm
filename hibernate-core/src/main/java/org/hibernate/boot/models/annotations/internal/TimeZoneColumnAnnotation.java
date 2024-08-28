@@ -7,14 +7,10 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.TimeZoneColumn;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -56,29 +52,14 @@ public class TimeZoneColumnAnnotation implements TimeZoneColumn {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public TimeZoneColumnAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, HibernateAnnotations.TIME_ZONE_COLUMN, "name", modelContext );
-		this.insertable = extractJandexValue(
-				annotation,
-				HibernateAnnotations.TIME_ZONE_COLUMN,
-				"insertable",
-				modelContext
-		);
-		this.updatable = extractJandexValue(
-				annotation,
-				HibernateAnnotations.TIME_ZONE_COLUMN,
-				"updatable",
-				modelContext
-		);
-		this.columnDefinition = extractJandexValue(
-				annotation,
-				HibernateAnnotations.TIME_ZONE_COLUMN,
-				"columnDefinition",
-				modelContext
-		);
-		this.table = extractJandexValue( annotation, HibernateAnnotations.TIME_ZONE_COLUMN, "table", modelContext );
-		this.options = extractJandexValue( annotation, HibernateAnnotations.TIME_ZONE_COLUMN, "options", modelContext );
-		this.comment = extractJandexValue( annotation, HibernateAnnotations.TIME_ZONE_COLUMN, "comment", modelContext );
+	public TimeZoneColumnAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.name = (String) attributeValues.get( "name" );
+		this.insertable = (boolean) attributeValues.get( "insertable" );
+		this.updatable = (boolean) attributeValues.get( "updatable" );
+		this.columnDefinition = (String) attributeValues.get( "columnDefinition" );
+		this.table = (String) attributeValues.get( "table" );
+		this.options = (String) attributeValues.get( "options" );
+		this.comment = (String) attributeValues.get( "comment" );
 	}
 
 	@Override

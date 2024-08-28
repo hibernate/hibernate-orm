@@ -7,14 +7,10 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.DiscriminatorOptions;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -41,19 +37,9 @@ public class DiscriminatorOptionsAnnotation implements DiscriminatorOptions {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public DiscriminatorOptionsAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.force = extractJandexValue(
-				annotation,
-				HibernateAnnotations.DISCRIMINATOR_OPTIONS,
-				"force",
-				modelContext
-		);
-		this.insert = extractJandexValue(
-				annotation,
-				HibernateAnnotations.DISCRIMINATOR_OPTIONS,
-				"insert",
-				modelContext
-		);
+	public DiscriminatorOptionsAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.force = (boolean) attributeValues.get( "force");
+		this.insert = (boolean) attributeValues.get( "insert");
 	}
 
 	@Override

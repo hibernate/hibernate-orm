@@ -7,16 +7,11 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.SQLInsert;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.CustomSqlDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -51,12 +46,12 @@ public class SQLInsertAnnotation implements SQLInsert, CustomSqlDetails {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public SQLInsertAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.sql = extractJandexValue( annotation, HibernateAnnotations.SQL_INSERT, "sql", modelContext );
-		this.callable = extractJandexValue( annotation, HibernateAnnotations.SQL_INSERT, "callable", modelContext );
-		this.verify = extractJandexValue( annotation, HibernateAnnotations.SQL_INSERT, "verify", modelContext );
-		this.check = extractJandexValue( annotation, HibernateAnnotations.SQL_INSERT, "check", modelContext );
-		this.table = extractJandexValue( annotation, HibernateAnnotations.SQL_INSERT, "table", modelContext );
+	public SQLInsertAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.sql = (String) attributeValues.get( "sql" );
+		this.callable = (boolean) attributeValues.get( "callable" );
+		this.verify = (Class<? extends org.hibernate.jdbc.Expectation>) attributeValues.get( "verify" );
+		this.check = (org.hibernate.annotations.ResultCheckStyle) attributeValues.get( "check" );
+		this.table = (String) attributeValues.get( "table" );
 	}
 
 	@Override

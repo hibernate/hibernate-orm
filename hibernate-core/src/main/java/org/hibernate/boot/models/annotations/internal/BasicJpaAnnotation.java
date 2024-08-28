@@ -7,16 +7,12 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
-import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.AttributeMarker;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.Basic;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -45,9 +41,9 @@ public class BasicJpaAnnotation
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public BasicJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.fetch = extractJandexValue( annotation, JpaAnnotations.BASIC, "fetch", modelContext );
-		this.optional = extractJandexValue( annotation, JpaAnnotations.BASIC, "optional", modelContext );
+	public BasicJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.fetch = (jakarta.persistence.FetchType) attributeValues.get( "fetch" );
+		this.optional = (boolean) attributeValues.get( "optional" );
 	}
 
 	@Override

@@ -7,14 +7,10 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.JavaTypeRegistration;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -39,19 +35,12 @@ public class JavaTypeRegistrationAnnotation implements JavaTypeRegistration {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public JavaTypeRegistrationAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.javaType = extractJandexValue(
-				annotation,
-				HibernateAnnotations.JAVA_TYPE_REGISTRATION,
-				"javaType",
-				modelContext
-		);
-		this.descriptorClass = extractJandexValue(
-				annotation,
-				HibernateAnnotations.JAVA_TYPE_REGISTRATION,
-				"descriptorClass",
-				modelContext
-		);
+	public JavaTypeRegistrationAnnotation(
+			Map<String, Object> attributeValues,
+			SourceModelBuildingContext modelContext) {
+		this.javaType = (Class<?>) attributeValues.get( "javaType" );
+		this.descriptorClass = (Class<? extends org.hibernate.type.descriptor.java.BasicJavaType<?>>) attributeValues
+				.get( "descriptorClass" );
 	}
 
 	@Override

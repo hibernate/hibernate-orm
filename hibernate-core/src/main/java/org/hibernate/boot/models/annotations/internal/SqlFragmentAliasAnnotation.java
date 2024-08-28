@@ -7,14 +7,10 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.SqlFragmentAlias;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -43,10 +39,10 @@ public class SqlFragmentAliasAnnotation implements SqlFragmentAlias {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public SqlFragmentAliasAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.alias = extractJandexValue( annotation, HibernateAnnotations.SQL_FRAGMENT_ALIAS, "alias", modelContext );
-		this.table = extractJandexValue( annotation, HibernateAnnotations.SQL_FRAGMENT_ALIAS, "table", modelContext );
-		this.entity = extractJandexValue( annotation, HibernateAnnotations.SQL_FRAGMENT_ALIAS, "entity", modelContext );
+	public SqlFragmentAliasAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.alias = (String) attributeValues.get( "alias" );
+		this.table = (String) attributeValues.get( "table" );
+		this.entity = (Class<?>) attributeValues.get( "entity" );
 	}
 
 	@Override

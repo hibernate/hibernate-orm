@@ -7,6 +7,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.OrderBy;
@@ -16,10 +17,7 @@ import org.hibernate.boot.models.annotations.spi.DialectOverrider;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import static org.hibernate.boot.models.DialectOverrideAnnotations.DIALECT_OVERRIDE_ORDER_BY;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 /**
@@ -31,19 +29,32 @@ public class OverriddenOrderByAnnotation
 		implements DialectOverride.OrderBy, DialectOverrider<OrderBy> {
 	private OrderBy override;
 
+	/**
+	 * Used in creating dynamic annotation instances (e.g. from XML)
+	 */
 	public OverriddenOrderByAnnotation(SourceModelBuildingContext sourceModelContext) {
 	}
 
-	public OverriddenOrderByAnnotation(DialectOverride.OrderBy source, SourceModelBuildingContext sourceModelContext) {
-		dialect( source.dialect() );
-		before( source.before() );
-		sameOrAfter( source.sameOrAfter() );
-		override( extractJdkValue( source, DIALECT_OVERRIDE_ORDER_BY, "override", sourceModelContext ) );
+	/**
+	 * Used in creating annotation instances from JDK variant
+	 */
+	public OverriddenOrderByAnnotation(
+			DialectOverride.OrderBy annotation,
+			SourceModelBuildingContext sourceModelContext) {
+		dialect( annotation.dialect() );
+		before( annotation.before() );
+		sameOrAfter( annotation.sameOrAfter() );
+		override( extractJdkValue( annotation, DIALECT_OVERRIDE_ORDER_BY, "override", sourceModelContext ) );
 	}
 
-	public OverriddenOrderByAnnotation(AnnotationInstance source, SourceModelBuildingContext sourceModelContext) {
-		super( source, DIALECT_OVERRIDE_ORDER_BY, sourceModelContext );
-		override( extractJandexValue( source, DIALECT_OVERRIDE_ORDER_BY, "override", sourceModelContext ) );
+	/**
+	 * Used in creating annotation instances from Jandex variant
+	 */
+	public OverriddenOrderByAnnotation(
+			Map<String, Object> attributeValues,
+			SourceModelBuildingContext sourceModelContext) {
+		super( attributeValues, DIALECT_OVERRIDE_ORDER_BY, sourceModelContext );
+		override( (OrderBy) attributeValues.get( "override" ) );
 	}
 
 	@Override

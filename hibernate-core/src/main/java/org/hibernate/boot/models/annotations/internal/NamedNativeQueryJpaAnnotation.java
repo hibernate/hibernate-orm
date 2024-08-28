@@ -7,6 +7,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeQueryImpl;
 import org.hibernate.boot.models.JpaAnnotations;
@@ -16,11 +17,8 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.NamedNativeQuery;
 
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -64,25 +62,15 @@ public class NamedNativeQueryJpaAnnotation implements NamedNativeQuery {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public NamedNativeQueryJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, JpaAnnotations.NAMED_NATIVE_QUERY, "name", modelContext );
-		this.query = extractJandexValue( annotation, JpaAnnotations.NAMED_NATIVE_QUERY, "query", modelContext );
-		this.hints = extractJandexValue( annotation, JpaAnnotations.NAMED_NATIVE_QUERY, "hints", modelContext );
-		this.resultClass = extractJandexValue(
-				annotation,
-				JpaAnnotations.NAMED_NATIVE_QUERY,
-				"resultClass",
-				modelContext
-		);
-		this.resultSetMapping = extractJandexValue(
-				annotation,
-				JpaAnnotations.NAMED_NATIVE_QUERY,
-				"resultSetMapping",
-				modelContext
-		);
-		this.entities = extractJandexValue( annotation, JpaAnnotations.NAMED_NATIVE_QUERY, "entities", modelContext );
-		this.classes = extractJandexValue( annotation, JpaAnnotations.NAMED_NATIVE_QUERY, "classes", modelContext );
-		this.columns = extractJandexValue( annotation, JpaAnnotations.NAMED_NATIVE_QUERY, "columns", modelContext );
+	public NamedNativeQueryJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.name = (String) attributeValues.get( "name" );
+		this.query = (String) attributeValues.get( "query" );
+		this.hints = (jakarta.persistence.QueryHint[]) attributeValues.get( "hints" );
+		this.resultClass = (Class<?>) attributeValues.get( "resultClass" );
+		this.resultSetMapping = (String) attributeValues.get( "resultSetMapping" );
+		this.entities = (jakarta.persistence.EntityResult[]) attributeValues.get( "entities" );
+		this.classes = (jakarta.persistence.ConstructorResult[]) attributeValues.get( "classes" );
+		this.columns = (jakarta.persistence.ColumnResult[]) attributeValues.get( "columns" );
 	}
 
 	@Override

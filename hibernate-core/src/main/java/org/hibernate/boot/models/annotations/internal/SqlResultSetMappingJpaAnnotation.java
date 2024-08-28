@@ -7,15 +7,13 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.SqlResultSetMapping;
 
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -48,16 +46,13 @@ public class SqlResultSetMappingJpaAnnotation implements SqlResultSetMapping {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public SqlResultSetMappingJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, JpaAnnotations.SQL_RESULT_SET_MAPPING, "name", modelContext );
-		this.entities = extractJandexValue(
-				annotation,
-				JpaAnnotations.SQL_RESULT_SET_MAPPING,
-				"entities",
-				modelContext
-		);
-		this.classes = extractJandexValue( annotation, JpaAnnotations.SQL_RESULT_SET_MAPPING, "classes", modelContext );
-		this.columns = extractJandexValue( annotation, JpaAnnotations.SQL_RESULT_SET_MAPPING, "columns", modelContext );
+	public SqlResultSetMappingJpaAnnotation(
+			Map<String, Object> attributeValues,
+			SourceModelBuildingContext modelContext) {
+		this.name = (String) attributeValues.get( "name" );
+		this.entities = (jakarta.persistence.EntityResult[]) attributeValues.get( "entities" );
+		this.classes = (jakarta.persistence.ConstructorResult[]) attributeValues.get( "classes" );
+		this.columns = (jakarta.persistence.ColumnResult[]) attributeValues.get( "columns" );
 	}
 
 	@Override

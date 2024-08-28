@@ -7,14 +7,10 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.SoftDelete;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -48,17 +44,13 @@ public class SoftDeleteAnnotation implements SoftDelete {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public SoftDeleteAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.columnName = extractJandexValue(
-				annotation,
-				HibernateAnnotations.SOFT_DELETE,
-				"columnName",
-				modelContext
-		);
-		this.strategy = extractJandexValue( annotation, HibernateAnnotations.SOFT_DELETE, "strategy", modelContext );
-		this.options = extractJandexValue( annotation, HibernateAnnotations.SOFT_DELETE, "options", modelContext );
-		this.comment = extractJandexValue( annotation, HibernateAnnotations.SOFT_DELETE, "comment", modelContext );
-		this.converter = extractJandexValue( annotation, HibernateAnnotations.SOFT_DELETE, "converter", modelContext );
+	public SoftDeleteAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.columnName = (String) attributeValues.get( "columnName" );
+		this.strategy = (org.hibernate.annotations.SoftDeleteType) attributeValues.get( "strategy" );
+		this.options = (String) attributeValues.get( "options" );
+		this.comment = (String) attributeValues.get( "comment" );
+		this.converter = (Class<? extends jakarta.persistence.AttributeConverter<Boolean, ?>>) attributeValues.
+				get( "converter" );
 	}
 
 	@Override

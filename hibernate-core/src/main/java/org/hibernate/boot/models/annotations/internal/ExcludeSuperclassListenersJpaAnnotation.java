@@ -6,11 +6,10 @@
  */
 package org.hibernate.boot.models.annotations.internal;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
 import java.lang.annotation.Annotation;
+import java.util.Map;
+
+import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import jakarta.persistence.ExcludeSuperclassListeners;
 
@@ -36,7 +35,7 @@ public class ExcludeSuperclassListenersJpaAnnotation implements ExcludeSuperclas
 	 * Used in creating annotation instances from Jandex variant
 	 */
 	public ExcludeSuperclassListenersJpaAnnotation(
-			AnnotationInstance annotation,
+			Map<String, Object> attributeValues,
 			SourceModelBuildingContext modelContext) {
 	}
 

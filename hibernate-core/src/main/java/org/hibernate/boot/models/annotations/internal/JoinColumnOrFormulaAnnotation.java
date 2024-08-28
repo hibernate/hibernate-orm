@@ -7,16 +7,14 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import static org.hibernate.boot.models.HibernateAnnotations.JOIN_COLUMN_OR_FORMULA;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -44,9 +42,9 @@ public class JoinColumnOrFormulaAnnotation implements JoinColumnOrFormula {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public JoinColumnOrFormulaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.formula = extractJandexValue( annotation, JOIN_COLUMN_OR_FORMULA, "formula", modelContext );
-		this.column = extractJandexValue( annotation, JOIN_COLUMN_OR_FORMULA, "column", modelContext );
+	public JoinColumnOrFormulaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.formula = (org.hibernate.annotations.JoinFormula) attributeValues.get( "formula" );
+		this.column = (jakarta.persistence.JoinColumn) attributeValues.get( "column" );
 	}
 
 	@Override

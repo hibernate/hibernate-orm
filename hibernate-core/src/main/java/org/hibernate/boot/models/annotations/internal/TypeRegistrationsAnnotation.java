@@ -7,6 +7,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.TypeRegistration;
 import org.hibernate.annotations.TypeRegistrations;
@@ -14,9 +15,6 @@ import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -40,8 +38,8 @@ public class TypeRegistrationsAnnotation implements TypeRegistrations, Repeatabl
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public TypeRegistrationsAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue( annotation, HibernateAnnotations.TYPE_REGISTRATIONS, "value", modelContext );
+	public TypeRegistrationsAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.value = (TypeRegistration[]) attributeValues.get( "value" );
 	}
 
 	@Override

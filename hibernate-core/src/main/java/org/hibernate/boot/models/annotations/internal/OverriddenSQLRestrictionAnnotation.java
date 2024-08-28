@@ -7,6 +7,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.SQLRestriction;
@@ -16,11 +17,8 @@ import org.hibernate.boot.models.annotations.spi.DialectOverrider;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import static org.hibernate.boot.models.DialectOverrideAnnotations.DIALECT_OVERRIDE_SQL_ORDER;
 import static org.hibernate.boot.models.DialectOverrideAnnotations.DIALECT_OVERRIDE_SQL_RESTRICTION;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 /**
@@ -32,23 +30,32 @@ public class OverriddenSQLRestrictionAnnotation
 		implements DialectOverride.SQLRestriction, DialectOverrider<SQLRestriction> {
 	private SQLRestriction override;
 
+	/**
+	 * Used in creating dynamic annotation instances (e.g. from XML)
+	 */
 	public OverriddenSQLRestrictionAnnotation(SourceModelBuildingContext sourceModelContext) {
 	}
 
+	/**
+	 * Used in creating annotation instances from JDK variant
+	 */
 	public OverriddenSQLRestrictionAnnotation(
-			DialectOverride.SQLRestriction source,
+			DialectOverride.SQLRestriction annotation,
 			SourceModelBuildingContext sourceModelContext) {
-		dialect( source.dialect() );
-		before( source.before() );
-		sameOrAfter( source.sameOrAfter() );
-		override( extractJdkValue( source, DIALECT_OVERRIDE_SQL_RESTRICTION, "override", sourceModelContext ) );
+		dialect( annotation.dialect() );
+		before( annotation.before() );
+		sameOrAfter( annotation.sameOrAfter() );
+		override( extractJdkValue( annotation, DIALECT_OVERRIDE_SQL_RESTRICTION, "override", sourceModelContext ) );
 	}
 
+	/**
+	 * Used in creating annotation instances from Jandex variant
+	 */
 	public OverriddenSQLRestrictionAnnotation(
-			AnnotationInstance source,
+			Map<String, Object> attributeValues,
 			SourceModelBuildingContext sourceModelContext) {
-		super( source, DIALECT_OVERRIDE_SQL_ORDER, sourceModelContext );
-		override( extractJandexValue( source, DIALECT_OVERRIDE_SQL_RESTRICTION, "override", sourceModelContext ) );
+		super( attributeValues, DIALECT_OVERRIDE_SQL_ORDER, sourceModelContext );
+		override( (SQLRestriction) attributeValues.get( "override" ) );
 	}
 
 	@Override

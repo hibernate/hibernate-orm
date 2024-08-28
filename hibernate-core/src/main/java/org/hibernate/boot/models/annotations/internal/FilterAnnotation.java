@@ -7,6 +7,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.Filter;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbFilterImpl;
@@ -17,9 +18,6 @@ import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -52,16 +50,11 @@ public class FilterAnnotation implements Filter, FilterDetails {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public FilterAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, HibernateAnnotations.FILTER, "name", modelContext );
-		this.condition = extractJandexValue( annotation, HibernateAnnotations.FILTER, "condition", modelContext );
-		this.deduceAliasInjectionPoints = extractJandexValue(
-				annotation,
-				HibernateAnnotations.FILTER,
-				"deduceAliasInjectionPoints",
-				modelContext
-		);
-		this.aliases = extractJandexValue( annotation, HibernateAnnotations.FILTER, "aliases", modelContext );
+	public FilterAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.name = (String) attributeValues.get( "name" );
+		this.condition = (String) attributeValues.get( "condition" );
+		this.deduceAliasInjectionPoints = (boolean) attributeValues.get( "deduceAliasInjectionPoints" );
+		this.aliases = (org.hibernate.annotations.SqlFragmentAlias[]) attributeValues.get( "aliases" );
 	}
 
 

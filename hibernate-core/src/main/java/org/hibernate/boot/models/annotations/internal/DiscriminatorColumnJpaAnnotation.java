@@ -7,6 +7,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbDiscriminatorColumnImpl;
 import org.hibernate.boot.models.annotations.spi.ColumnDetails;
@@ -14,11 +15,7 @@ import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.DiscriminatorColumn;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -55,37 +52,14 @@ public class DiscriminatorColumnJpaAnnotation implements DiscriminatorColumn, Co
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public DiscriminatorColumnJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue(
-				annotation,
-				org.hibernate.boot.models.JpaAnnotations.DISCRIMINATOR_COLUMN,
-				"name",
-				modelContext
-		);
-		this.discriminatorType = extractJandexValue(
-				annotation,
-				org.hibernate.boot.models.JpaAnnotations.DISCRIMINATOR_COLUMN,
-				"discriminatorType",
-				modelContext
-		);
-		this.columnDefinition = extractJandexValue(
-				annotation,
-				org.hibernate.boot.models.JpaAnnotations.DISCRIMINATOR_COLUMN,
-				"columnDefinition",
-				modelContext
-		);
-		this.options = extractJandexValue(
-				annotation,
-				org.hibernate.boot.models.JpaAnnotations.DISCRIMINATOR_COLUMN,
-				"options",
-				modelContext
-		);
-		this.length = extractJandexValue(
-				annotation,
-				org.hibernate.boot.models.JpaAnnotations.DISCRIMINATOR_COLUMN,
-				"length",
-				modelContext
-		);
+	public DiscriminatorColumnJpaAnnotation(
+			Map<String, Object> attributeValues,
+			SourceModelBuildingContext modelContext) {
+		this.name = (String) attributeValues.get( "name" );
+		this.discriminatorType = (jakarta.persistence.DiscriminatorType) attributeValues.get( "discriminatorType" );
+		this.columnDefinition = (String) attributeValues.get( "columnDefinition" );
+		this.options = (String) attributeValues.get( "options" );
+		this.length = (int) attributeValues.get( "length" );
 	}
 
 	@Override

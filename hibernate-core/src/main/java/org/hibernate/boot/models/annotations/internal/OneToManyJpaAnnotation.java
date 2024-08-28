@@ -7,16 +7,12 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
-import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.AttributeMarker;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.OneToMany;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -52,17 +48,12 @@ public class OneToManyJpaAnnotation implements OneToMany, AttributeMarker.Fetcha
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public OneToManyJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.targetEntity = extractJandexValue( annotation, JpaAnnotations.ONE_TO_MANY, "targetEntity", modelContext );
-		this.cascade = extractJandexValue( annotation, JpaAnnotations.ONE_TO_MANY, "cascade", modelContext );
-		this.fetch = extractJandexValue( annotation, JpaAnnotations.ONE_TO_MANY, "fetch", modelContext );
-		this.mappedBy = extractJandexValue( annotation, JpaAnnotations.ONE_TO_MANY, "mappedBy", modelContext );
-		this.orphanRemoval = extractJandexValue(
-				annotation,
-				JpaAnnotations.ONE_TO_MANY,
-				"orphanRemoval",
-				modelContext
-		);
+	public OneToManyJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.targetEntity = (Class<?>) attributeValues.get( "targetEntity" );
+		this.cascade = (jakarta.persistence.CascadeType[]) attributeValues.get( "cascade" );
+		this.fetch = (jakarta.persistence.FetchType) attributeValues.get( "fetch" );
+		this.mappedBy = (String) attributeValues.get( "mappedBy" );
+		this.orphanRemoval = (boolean) attributeValues.get( "orphanRemoval" );
 	}
 
 	@Override

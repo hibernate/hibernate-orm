@@ -7,13 +7,10 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.AttributeBinderType;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -36,13 +33,8 @@ public class AttributeBinderTypeAnnotation implements AttributeBinderType {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public AttributeBinderTypeAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.binder = extractJandexValue(
-				annotation,
-				org.hibernate.boot.models.HibernateAnnotations.ATTRIBUTE_BINDER_TYPE,
-				"binder",
-				modelContext
-		);
+	public AttributeBinderTypeAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.binder = (Class<? extends org.hibernate.binder.AttributeBinder<?>>) attributeValues.get( "binder" );
 	}
 
 	@Override

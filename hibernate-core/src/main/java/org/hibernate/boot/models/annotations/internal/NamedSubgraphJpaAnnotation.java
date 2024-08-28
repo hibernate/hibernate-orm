@@ -7,15 +7,13 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
 
 import jakarta.persistence.NamedSubgraph;
 
 import static org.hibernate.boot.models.JpaAnnotations.NAMED_SUBGRAPH;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -44,15 +42,10 @@ public class NamedSubgraphJpaAnnotation implements NamedSubgraph {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public NamedSubgraphJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, NAMED_SUBGRAPH, "name", modelContext );
-		this.type = extractJandexValue( annotation, NAMED_SUBGRAPH, "type", modelContext );
-		this.attributeNodes = extractJandexValue(
-				annotation,
-				NAMED_SUBGRAPH,
-				"attributeNodes",
-				modelContext
-		);
+	public NamedSubgraphJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.name = (String) attributeValues.get( "name" );
+		this.type = (Class<?>) attributeValues.get( "type" );
+		this.attributeNodes = (jakarta.persistence.NamedAttributeNode[]) attributeValues.get( "attributeNodes" );
 	}
 
 	@Override

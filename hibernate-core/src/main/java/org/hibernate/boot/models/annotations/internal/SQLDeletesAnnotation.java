@@ -6,18 +6,15 @@
  */
 package org.hibernate.boot.models.annotations.internal;
 
+import java.lang.annotation.Annotation;
+import java.util.Map;
+
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLDeletes;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
-import java.lang.annotation.Annotation;
-
-import org.hibernate.annotations.SQLDeletes;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -41,8 +38,8 @@ public class SQLDeletesAnnotation implements SQLDeletes, RepeatableContainer<SQL
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public SQLDeletesAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue( annotation, HibernateAnnotations.SQL_DELETES, "value", modelContext );
+	public SQLDeletesAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.value = (SQLDelete[]) attributeValues.get( "value" );
 	}
 
 	@Override

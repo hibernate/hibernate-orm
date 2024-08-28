@@ -6,16 +6,15 @@
  */
 package org.hibernate.boot.models.annotations.internal;
 
+import java.lang.annotation.Annotation;
+import java.util.Map;
+
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
-import java.lang.annotation.Annotation;
-
 import jakarta.persistence.Converts;
 
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -35,7 +34,7 @@ public class ConvertsJpaAnnotation implements Converts, RepeatableContainer<jaka
 	public ConvertsJpaAnnotation(Converts annotation, SourceModelBuildingContext modelContext) {
 		this.value = extractJdkValue(
 				annotation,
-				org.hibernate.boot.models.JpaAnnotations.CONVERTS,
+				JpaAnnotations.CONVERTS,
 				"value",
 				modelContext
 		);
@@ -44,13 +43,8 @@ public class ConvertsJpaAnnotation implements Converts, RepeatableContainer<jaka
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public ConvertsJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue(
-				annotation,
-				org.hibernate.boot.models.JpaAnnotations.CONVERTS,
-				"value",
-				modelContext
-		);
+	public ConvertsJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.value = (jakarta.persistence.Convert[]) attributeValues.get( "value" );
 	}
 
 	@Override

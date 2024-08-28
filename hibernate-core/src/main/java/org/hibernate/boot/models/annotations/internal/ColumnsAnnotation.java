@@ -7,15 +7,13 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.Columns;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -41,8 +39,8 @@ public class ColumnsAnnotation implements Columns {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public ColumnsAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.columns = extractJandexValue( annotation, HibernateAnnotations.COLUMNS, "columns", modelContext );
+	public ColumnsAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.columns = (jakarta.persistence.Column[]) attributeValues.get( "columns" );
 	}
 
 	@Override

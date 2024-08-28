@@ -7,14 +7,10 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.Comment;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -40,9 +36,9 @@ public class CommentAnnotation implements Comment {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public CommentAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue( annotation, HibernateAnnotations.COMMENT, "value", modelContext );
-		this.on = extractJandexValue( annotation, HibernateAnnotations.COMMENT, "on", modelContext );
+	public CommentAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.value = (String) attributeValues.get( "value" );
+		this.on = (String) attributeValues.get( "on" );
 	}
 
 	@Override

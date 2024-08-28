@@ -7,10 +7,9 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
 
 import jakarta.persistence.PreRemove;
 
@@ -33,7 +32,7 @@ public class PreRemoveJpaAnnotation implements PreRemove {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public PreRemoveJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
+	public PreRemoveJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
 	}
 
 	@Override

@@ -7,14 +7,12 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -52,21 +50,11 @@ public class GenericGeneratorAnnotation implements GenericGenerator {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public GenericGeneratorAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, HibernateAnnotations.GENERIC_GENERATOR, "name", modelContext );
-		this.type = extractJandexValue( annotation, HibernateAnnotations.GENERIC_GENERATOR, "type", modelContext );
-		this.strategy = extractJandexValue(
-				annotation,
-				HibernateAnnotations.GENERIC_GENERATOR,
-				"strategy",
-				modelContext
-		);
-		this.parameters = extractJandexValue(
-				annotation,
-				HibernateAnnotations.GENERIC_GENERATOR,
-				"parameters",
-				modelContext
-		);
+	public GenericGeneratorAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.name = (String) attributeValues.get( "name" );
+		this.type = (Class<? extends org.hibernate.generator.Generator>) attributeValues.get( "type" );
+		this.strategy = (String) attributeValues.get( "strategy" );
+		this.parameters = (org.hibernate.annotations.Parameter[]) attributeValues.get( "parameters" );
 	}
 
 	@Override

@@ -7,6 +7,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedStoredProcedureQueryImpl;
 import org.hibernate.boot.models.JpaAnnotations;
@@ -14,11 +15,8 @@ import org.hibernate.boot.models.xml.internal.QueryProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.NamedStoredProcedureQuery;
 
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -64,39 +62,14 @@ public class NamedStoredProcedureQueryJpaAnnotation implements NamedStoredProced
 	 * Used in creating annotation instances from Jandex variant
 	 */
 	public NamedStoredProcedureQueryJpaAnnotation(
-			AnnotationInstance annotation,
+			Map<String, Object> attributeValues,
 			SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY, "name", modelContext );
-		this.procedureName = extractJandexValue(
-				annotation,
-				JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY,
-				"procedureName",
-				modelContext
-		);
-		this.parameters = extractJandexValue(
-				annotation,
-				JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY,
-				"parameters",
-				modelContext
-		);
-		this.resultClasses = extractJandexValue(
-				annotation,
-				JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY,
-				"resultClasses",
-				modelContext
-		);
-		this.resultSetMappings = extractJandexValue(
-				annotation,
-				JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY,
-				"resultSetMappings",
-				modelContext
-		);
-		this.hints = extractJandexValue(
-				annotation,
-				JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY,
-				"hints",
-				modelContext
-		);
+		this.name = (String) attributeValues.get( "name" );
+		this.procedureName = (String) attributeValues.get( "procedureName" );
+		this.parameters = (jakarta.persistence.StoredProcedureParameter[]) attributeValues.get( "parameters" );
+		this.resultClasses = (Class[]) attributeValues.get( "resultClasses" );
+		this.resultSetMappings = (String[]) attributeValues.get( "resultSetMappings" );
+		this.hints = (jakarta.persistence.QueryHint[]) attributeValues.get( "hints" );
 	}
 
 	@Override

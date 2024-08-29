@@ -95,7 +95,7 @@ public class MergeProxyTest {
 	public void testMergeDetachInitializedProxy(SessionFactoryScope scope) {
 		final Activity activityProxy = scope.fromTransaction(
 				session -> {
-					final Activity activity = session.load( Activity.class, 0 );
+					final Activity activity = session.getReference( Activity.class, 0 );
 					assertFalse( Hibernate.isInitialized( activity) );
 					Hibernate.initialize( activity );
 					return activity;
@@ -140,7 +140,7 @@ public class MergeProxyTest {
 	public void testMergeDetachInitializedByAccessProxy(SessionFactoryScope scope) {
 		final Activity activityProxy = scope.fromTransaction(
 				session -> {
-					final Activity activity = session.load( Activity.class, 0 );
+					final Activity activity = session.getReference( Activity.class, 0 );
 					assertFalse( Hibernate.isInitialized( activity) );
 					activity.getDescription();
 					return activity;

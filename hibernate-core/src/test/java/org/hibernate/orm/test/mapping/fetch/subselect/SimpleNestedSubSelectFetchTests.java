@@ -154,9 +154,9 @@ public class SimpleNestedSubSelectFetchTests {
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			session.remove( session.load( Customer.class, 1 ) );
-			session.remove( session.load( Customer.class, 2 ) );
-			session.remove( session.load( Customer.class, 3 ) );
+			session.remove( session.getReference( Customer.class, 1 ) );
+			session.remove( session.getReference( Customer.class, 2 ) );
+			session.remove( session.getReference( Customer.class, 3 ) );
 		} );
 	}
 

@@ -51,7 +51,7 @@ public class FinalGetterSetterTest {
 
 		try {
 			scope.inTransaction( session ->
-										 session.load( EntityWithFinalClass.class, 999 )
+										 session.getReference( EntityWithFinalClass.class, 999 )
 			);
 			fail( "Should have thrown ObjectNotFoundException" );
 		}
@@ -66,7 +66,7 @@ public class FinalGetterSetterTest {
 		} );
 
 		scope.inTransaction( session -> {
-			final EntityWithFinalClass entity = session.load( EntityWithFinalClass.class, 1 );
+			final EntityWithFinalClass entity = session.getReference( EntityWithFinalClass.class, 1 );
 			assertNotNull( entity );
 			assertTrue( Hibernate.isInitialized( entity ) );
 		} );
@@ -82,7 +82,7 @@ public class FinalGetterSetterTest {
 		try {
 			scope.inTransaction(
 					session ->
-							session.load( EntityWithFinalIdGetter.class, 999 )
+							session.getReference( EntityWithFinalIdGetter.class, 999 )
 			);
 			fail( "Should have thrown ObjectNotFoundException" );
 		}
@@ -99,7 +99,7 @@ public class FinalGetterSetterTest {
 
 		scope.inTransaction(
 				session -> {
-					final EntityWithFinalIdGetter entity = session.load( EntityWithFinalIdGetter.class, 1 );
+					final EntityWithFinalIdGetter entity = session.getReference( EntityWithFinalIdGetter.class, 1 );
 					assertNotNull( entity );
 					assertTrue( Hibernate.isInitialized( entity ) );
 				} );
@@ -115,7 +115,7 @@ public class FinalGetterSetterTest {
 		try {
 			scope.inTransaction(
 					session ->
-							session.load( EntityWithFinalIdSetter.class, 999 )
+							session.getReference( EntityWithFinalIdSetter.class, 999 )
 			);
 			fail( "Should have thrown ObjectNotFoundException" );
 		}
@@ -132,7 +132,7 @@ public class FinalGetterSetterTest {
 
 		scope.inTransaction(
 				session -> {
-					final EntityWithFinalIdSetter entity = session.load( EntityWithFinalIdSetter.class, 1 );
+					final EntityWithFinalIdSetter entity = session.getReference( EntityWithFinalIdSetter.class, 1 );
 					assertNotNull( entity );
 					assertTrue( Hibernate.isInitialized( entity ) );
 				} );
@@ -148,7 +148,7 @@ public class FinalGetterSetterTest {
 		try {
 			scope.inTransaction(
 					session ->
-							session.load( EntityWithFinalVersionGetter.class, 999 )
+							session.getReference( EntityWithFinalVersionGetter.class, 999 )
 			);
 			fail( "Should have thrown ObjectNotFoundException" );
 		}
@@ -165,7 +165,7 @@ public class FinalGetterSetterTest {
 
 		scope.inTransaction(
 				session -> {
-					final EntityWithFinalVersionGetter entity = session.load( EntityWithFinalVersionGetter.class, 1 );
+					final EntityWithFinalVersionGetter entity = session.getReference( EntityWithFinalVersionGetter.class, 1 );
 					assertNotNull( entity );
 					assertTrue( Hibernate.isInitialized( entity ) );
 				} );
@@ -181,7 +181,7 @@ public class FinalGetterSetterTest {
 		try {
 			scope.inTransaction(
 					session ->
-							session.load( EntityWithFinalVersionSetter.class, 999 )
+							session.getReference( EntityWithFinalVersionSetter.class, 999 )
 			);
 			fail( "Should have thrown ObjectNotFoundException" );
 		}
@@ -198,7 +198,7 @@ public class FinalGetterSetterTest {
 
 		scope.inTransaction(
 				session -> {
-					final EntityWithFinalVersionSetter entity = session.load( EntityWithFinalVersionSetter.class, 1 );
+					final EntityWithFinalVersionSetter entity = session.getReference( EntityWithFinalVersionSetter.class, 1 );
 					assertNotNull( entity );
 					assertTrue( Hibernate.isInitialized( entity ) );
 				} );
@@ -214,7 +214,7 @@ public class FinalGetterSetterTest {
 		try {
 			scope.inTransaction(
 					session ->
-							session.load( EntityWithFinalPropertyGetter.class, 999 )
+							session.getReference( EntityWithFinalPropertyGetter.class, 999 )
 			);
 			fail( "Should have thrown ObjectNotFoundException" );
 		}
@@ -231,7 +231,7 @@ public class FinalGetterSetterTest {
 
 		scope.inTransaction(
 				session -> {
-					final EntityWithFinalPropertyGetter entity = session.load( EntityWithFinalPropertyGetter.class, 1 );
+					final EntityWithFinalPropertyGetter entity = session.getReference( EntityWithFinalPropertyGetter.class, 1 );
 					assertNotNull( entity );
 					assertTrue( Hibernate.isInitialized( entity ) );
 				} );
@@ -247,7 +247,7 @@ public class FinalGetterSetterTest {
 		try {
 			scope.inTransaction(
 					session ->
-							session.load( EntityWithFinalPropertySetter.class, 999 )
+							session.getReference( EntityWithFinalPropertySetter.class, 999 )
 			);
 			fail( "Should have thrown ObjectNotFoundException" );
 		}
@@ -264,7 +264,7 @@ public class FinalGetterSetterTest {
 
 		scope.inTransaction(
 				session -> {
-					final EntityWithFinalPropertySetter entity = session.load( EntityWithFinalPropertySetter.class, 1 );
+					final EntityWithFinalPropertySetter entity = session.getReference( EntityWithFinalPropertySetter.class, 1 );
 					assertNotNull( entity );
 					assertTrue( Hibernate.isInitialized( entity ) );
 				} );

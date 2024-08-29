@@ -50,7 +50,7 @@ public class LoaderTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		Team t2 = s.load( Team.class, t.getId() );
+		Team t2 = s.getReference( Team.class, t.getId() );
 		Set<Player> players = t2.getPlayers();
 		Iterator<Player> iterator = players.iterator();
 		assertEquals( "me", iterator.next().getName() );
@@ -75,7 +75,7 @@ public class LoaderTest extends BaseCoreFunctionalTestCase {
 
 		try {
 			long notExistingId = 1l;
-			s.load( Team.class, notExistingId );
+			s.getReference( Team.class, notExistingId );
 			s.get( Team.class, notExistingId );
 			s.getTransaction().commit();
 		}

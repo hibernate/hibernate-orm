@@ -201,7 +201,7 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 		session.getTransaction().commit();
 
 		//sanity check. Loaded entity should be equal to one that we created.
-		AdvancedEntity advancedEntityActual = (AdvancedEntity) session.load( AdvancedEntity.class, 1L );
+		AdvancedEntity advancedEntityActual = (AdvancedEntity) session.getReference( AdvancedEntity.class, 1L );
 
 		Assert.assertEquals( advancedEntity, advancedEntityActual );
 	}

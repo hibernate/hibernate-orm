@@ -126,10 +126,10 @@ public class GetLoadTest {
 		scope.inTransaction(
 				entityManager -> {
 					Session s = ( Session ) entityManager.getDelegate();
-					Employer emp = s.load( Employer.class, empId );
+					Employer emp = s.getReference( Employer.class, empId );
 					emp.getId();
 					assertFalse( Hibernate.isInitialized( emp ) );
-					Node node = s.load( Node.class, nodeName );
+					Node node = s.getReference( Node.class, nodeName );
 					assertEquals( node.getName(), nodeName );
 					assertFalse( Hibernate.isInitialized( node ) );
 				}
@@ -138,10 +138,10 @@ public class GetLoadTest {
 		scope.inTransaction(
 				entityManager -> {
 					Session s = ( Session ) entityManager.getDelegate();
-					Employer emp = ( Employer ) s.load( Employer.class.getName(), empId );
+					Employer emp = ( Employer ) s.getReference( Employer.class.getName(), empId );
 					emp.getId();
 					assertFalse( Hibernate.isInitialized( emp ) );
-					Node node = ( Node ) s.load( Node.class.getName(), nodeName );
+					Node node = ( Node ) s.getReference( Node.class.getName(), nodeName );
 					assertEquals( node.getName(), nodeName );
 					assertFalse( Hibernate.isInitialized( node ) );
 				}
@@ -195,7 +195,7 @@ public class GetLoadTest {
 				entityManager -> {
 					Session s = ( Session ) entityManager.getDelegate();
 
-					Workload proxy = s.load(Workload.class, workload.id);
+					Workload proxy = s.getReference(Workload.class, workload.id);
 					proxy.getId();
 
 					assertFalse( Hibernate.isInitialized( proxy ) );
@@ -218,7 +218,7 @@ public class GetLoadTest {
 
 						assertNull( s.get( Workload.class, 999 ) );
 
-						Workload proxy = s.load( Workload.class, 999 );
+						Workload proxy = s.getReference( Workload.class, 999 );
 						assertFalse( Hibernate.isInitialized( proxy ) );
 
 						proxy.getId();
@@ -263,7 +263,7 @@ public class GetLoadTest {
 
 						assertNull( s.get( Employee.class, 999 ) );
 
-						Employee proxy = s.load( Employee.class, 999 );
+						Employee proxy = s.getReference( Employee.class, 999 );
 						assertFalse( Hibernate.isInitialized( proxy ) );
 
 						proxy.getId();

@@ -115,7 +115,7 @@ public class OptimisticLockTest {
 
 		scope.inTransaction(
 				session -> {
-					Document document = (Document) session.load( entityName, doc.getId() );
+					Document document = (Document) session.getReference( entityName, doc.getId() );
 					session.remove( document );
 				}
 		);
@@ -170,7 +170,7 @@ public class OptimisticLockTest {
 
 		scope.inTransaction(
 				session -> {
-					Document document = (Document) session.load( entityName, doc.getId() );
+					Document document = (Document) session.getReference( entityName, doc.getId() );
 					session.remove( document );
 				}
 		);

@@ -70,7 +70,7 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingDynamicUpdateTest {
 
 		scope.inTransaction(
 				session -> {
-					Animal animal = session.load( Animal.class, "animal" );
+					Animal animal = session.getReference( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
 					assertEquals( LoadState.NOT_LOADED , PersistenceUtilHelper.isLoadedWithoutReference( animal, "sex", metadataCache ) );
 					assertEquals( "female", animal.getSex() );
@@ -108,7 +108,7 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingDynamicUpdateTest {
 
 		scope.inTransaction(
 				session -> {
-					Animal animal = session.load( Animal.class, "animal" );
+					Animal animal = session.getReference( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
 					assertEquals( LoadState.NOT_LOADED , PersistenceUtilHelper.isLoadedWithoutReference( animal, "sex", metadataCache ) );
 					animal.setSex( "other" );
@@ -156,7 +156,7 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingDynamicUpdateTest {
 
 		scope.inTransaction(
 				session -> {
-					final Animal animal = session.load( Animal.class, "animal" );
+					final Animal animal = session.getReference( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
 					assertEquals( LoadState.NOT_LOADED , PersistenceUtilHelper.isLoadedWithoutReference( animal, "age", metadataCache ) );
 					session.merge( animalInitialized );
@@ -236,7 +236,7 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingDynamicUpdateTest {
 		);
 
 		final Animal animalUninitialized = scope.fromTransaction( session -> {
-					final Animal animal = session.load( Animal.class, "animal" );
+					final Animal animal = session.getReference( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
 					assertEquals( LoadState.NOT_LOADED , PersistenceUtilHelper.isLoadedWithoutReference( animal, "age", metadataCache ) );
 					assertFalse( Hibernate.isInitialized( animal ) ); //checking again against side effects of using PersistenceUtilHelper
@@ -246,7 +246,7 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingDynamicUpdateTest {
 
 		scope.inTransaction(
 				session -> {
-					final Animal animal = session.load( Animal.class, "animal" );
+					final Animal animal = session.getReference( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
 					assertEquals( LoadState.NOT_LOADED , PersistenceUtilHelper.isLoadedWithoutReference( animal, "age", metadataCache ) );
 					session.merge( animalUninitialized );
@@ -279,7 +279,7 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingDynamicUpdateTest {
 		);
 
 		final Animal animalUninitialized = scope.fromTransaction( session -> {
-					final Animal animal = session.load( Animal.class, "animal" );
+					final Animal animal = session.getReference( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
 					assertEquals( LoadState.NOT_LOADED , PersistenceUtilHelper.isLoadedWithoutReference( animal, "age", metadataCache ) );
 					assertFalse( Hibernate.isInitialized( animal ) );

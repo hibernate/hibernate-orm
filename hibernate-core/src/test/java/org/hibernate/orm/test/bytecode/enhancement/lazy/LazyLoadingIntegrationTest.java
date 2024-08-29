@@ -73,7 +73,7 @@ public class LazyLoadingIntegrationTest {
     @Test
     public void test(SessionFactoryScope scope) {
         scope.inTransaction( s -> {
-            Child loadedChild = s.load( Child.class, lastChildID );
+            Child loadedChild = s.getReference( Child.class, lastChildID );
             checkDirtyTracking( loadedChild );
 
             loadedChild.name = "Barrabas";

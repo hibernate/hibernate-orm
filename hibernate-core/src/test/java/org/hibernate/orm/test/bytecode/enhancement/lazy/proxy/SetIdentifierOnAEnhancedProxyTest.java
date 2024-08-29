@@ -85,7 +85,7 @@ public class SetIdentifierOnAEnhancedProxyTest {
 		scope.inTransaction(
 				session -> {
 					stats.clear();
-					Child loadedChild = session.load( Child.class, lastChildID );
+					Child loadedChild = session.getReference( Child.class, lastChildID );
 
 					final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) loadedChild;
 					final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
@@ -102,7 +102,7 @@ public class SetIdentifierOnAEnhancedProxyTest {
 
 		scope.inTransaction(
 				session -> {
-					Child loadedChild = session.load( Child.class, lastChildID );
+					Child loadedChild = session.getReference( Child.class, lastChildID );
 					assertThat( loadedChild ).isNotNull();
 				}
 		);
@@ -120,7 +120,7 @@ public class SetIdentifierOnAEnhancedProxyTest {
 					ModelId id = new ModelId();
 					id.setId1( 1L );
 					id.setId2( 2L );
-					Parent parent = session.load( Parent.class, id );
+					Parent parent = session.getReference( Parent.class, id );
 
 					final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) parent;
 					final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
@@ -142,7 +142,7 @@ public class SetIdentifierOnAEnhancedProxyTest {
 
 		scope.inTransaction(
 				session -> {
-					Child loadedChild = session.load( Child.class, lastChildID );
+					Child loadedChild = session.getReference( Child.class, lastChildID );
 					assertThat( loadedChild ).isNotNull();
 				}
 		);
@@ -160,7 +160,7 @@ public class SetIdentifierOnAEnhancedProxyTest {
 					ModelId id = new ModelId();
 					id.setId1( 1L );
 					id.setId2( 2L );
-					Parent parent = session.load( Parent.class, id );
+					Parent parent = session.getReference( Parent.class, id );
 
 					final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) parent;
 					final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
@@ -189,7 +189,7 @@ public class SetIdentifierOnAEnhancedProxyTest {
 				() -> scope.inTransaction(
 						session -> {
 							stats.clear();
-							Child loadedChild = session.load( Child.class, lastChildID );
+							Child loadedChild = session.getReference( Child.class, lastChildID );
 
 							final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) loadedChild;
 							final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();

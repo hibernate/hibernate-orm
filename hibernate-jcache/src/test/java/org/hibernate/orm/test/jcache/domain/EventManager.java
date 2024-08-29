@@ -32,7 +32,7 @@ public class EventManager {
 		session.beginTransaction();
 
 		List emailList = new ArrayList();
-		Event event = (Event)session.load(Event.class, eventId);
+		Event event = (Event)session.getReference(Event.class, eventId);
 		for (Iterator it = event.getParticipants().iterator(); it.hasNext(); ) {
 			Person person = (Person)it.next();
 			emailList.addAll(person.getEmailAddresses());
@@ -163,8 +163,8 @@ public class EventManager {
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 
-		Person aPerson = (Person)session.load(Person.class, personId);
-		Event anEvent = (Event)session.load(Event.class, eventId);
+		Person aPerson = (Person)session.getReference(Person.class, personId);
+		Event anEvent = (Event)session.getReference(Event.class, eventId);
 
 		aPerson.getEvents().add(anEvent);
 
@@ -175,7 +175,7 @@ public class EventManager {
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 
-		Person aPerson = (Person)session.load(Person.class, personId);
+		Person aPerson = (Person)session.getReference(Person.class, personId);
 		account.setPerson(aPerson);
 
 		session.persist(account);
@@ -188,7 +188,7 @@ public class EventManager {
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 
-		Account account = (Account)session.load(Account.class, accountId);
+		Account account = (Account)session.getReference(Account.class, accountId);
 
 		session.getTransaction().commit();
 		return account;
@@ -199,7 +199,7 @@ public class EventManager {
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 
-		Person aPerson = (Person)session.load(Person.class, personId);
+		Person aPerson = (Person)session.getReference(Person.class, personId);
 
 		// The getEmailAddresses() might trigger a lazy load of the collection
 		aPerson.getEmailAddresses().add(emailAddress);
@@ -212,7 +212,7 @@ public class EventManager {
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 
-		Person aPerson = (Person)session.load(Person.class, personId);
+		Person aPerson = (Person)session.getReference(Person.class, personId);
 		pN.setPersonId(personId.longValue());
 		aPerson.getPhoneNumbers().add(pN);
 
@@ -224,7 +224,7 @@ public class EventManager {
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 
-		Person aPerson = (Person)session.load(Person.class, personId);
+		Person aPerson = (Person)session.getReference(Person.class, personId);
 		aPerson.addTalisman(talisman);
 
 		session.getTransaction().commit();

@@ -859,7 +859,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 
 		t = s.beginTransaction();
-		entity = (IntegerVersioned) s.load( IntegerVersioned.class, entity.getId() );
+		entity = (IntegerVersioned) s.getReference( IntegerVersioned.class, entity.getId() );
 		assertEquals( "version not incremented", initialVersion + 1, entity.getVersion() );
 
 		s.remove( entity );
@@ -894,7 +894,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 
 		t = s.beginTransaction();
-		entity = (TimestampVersioned) s.load( TimestampVersioned.class, entity.getId() );
+		entity = (TimestampVersioned) s.getReference( TimestampVersioned.class, entity.getId() );
 		assertTrue( "version not incremented", entity.getVersion().after( initialVersion ) );
 
 		s.remove( entity );
@@ -1035,7 +1035,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 				.executeUpdate();
 		assertEquals( "Incorrect entity-updated count", 1, count );
 
-		Animal tadpole = (Animal) s.load( Animal.class, data.polliwog.getId() );
+		Animal tadpole = (Animal) s.getReference( Animal.class, data.polliwog.getId() );
 		assertEquals( "Update did not take effect", "Tadpole", tadpole.getDescription() );
 
 		count = s.createQuery( "update Animal set bodyWeight = bodyWeight + :w1 + :w2" )

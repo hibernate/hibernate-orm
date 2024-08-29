@@ -44,7 +44,7 @@ public class DirtyCalculationEventTests {
 		jfrEvents.reset();
 		String sessionId = scope.fromTransaction(
 				session -> {
-					TestEntity testEntity = session.load( TestEntity.class, 1 );
+					TestEntity testEntity = session.getReference( TestEntity.class, 1 );
 					testEntity.setName( "new name" );
 					return session.getSessionIdentifier().toString();
 				}

@@ -196,7 +196,7 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		// make sure we get the correct people back, from cache
 		// first, jboss
 		doInHibernateSessionBuilder( this::jboss, session -> {
-			Customer customer = session.load( Customer.class, 1L );
+			Customer customer = session.getReference( Customer.class, 1L );
 			Assert.assertEquals( "steve", customer.getName() );
 			// also, make sure this came from second level
 			Assert.assertEquals( 1, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
@@ -205,7 +205,7 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		sessionFactory.getStatistics().clear();
 		// then, acme
 		doInHibernateSessionBuilder( this::acme, session -> {
-			Customer customer = session.load( Customer.class, 1L );
+			Customer customer = session.getReference( Customer.class, 1L );
 			Assert.assertEquals( "john", customer.getName() );
 			// also, make sure this came from second level
 			Assert.assertEquals( 1, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
@@ -216,7 +216,7 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		sessionFactory.getCache().evictEntityData();
 		// first jboss
 		doInHibernateSessionBuilder( this::jboss, session -> {
-			Customer customer = session.load( Customer.class, 1L );
+			Customer customer = session.getReference( Customer.class, 1L );
 			Assert.assertEquals( "steve", customer.getName() );
 			// also, make sure this came from second level
 			Assert.assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
@@ -225,7 +225,7 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		sessionFactory.getStatistics().clear();
 		// then, acme
 		doInHibernateSessionBuilder( this::acme, session -> {
-			Customer customer = session.load( Customer.class, 1L );
+			Customer customer = session.getReference( Customer.class, 1L );
 			Assert.assertEquals( "john", customer.getName() );
 			// also, make sure this came from second level
 			Assert.assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );

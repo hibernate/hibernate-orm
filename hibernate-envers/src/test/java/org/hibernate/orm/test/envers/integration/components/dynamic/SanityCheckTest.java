@@ -47,7 +47,7 @@ public class SanityCheckTest extends BaseEnversFunctionalTestCase {
 
 		session.getTransaction().commit();
 		session.getTransaction().begin();
-		PlainEntity load = (PlainEntity) session.load( PlainEntity.class, 1L );
+		PlainEntity load = (PlainEntity) session.getReference( PlainEntity.class, 1L );
 
 		Assert.assertEquals( plainEntity, load );
 		session.getTransaction().commit();

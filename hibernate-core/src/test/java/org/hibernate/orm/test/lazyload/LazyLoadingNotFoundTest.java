@@ -38,7 +38,7 @@ public class LazyLoadingNotFoundTest {
 	@TestForIssue(jiraKey = "HHH-11179")
 	public void testNonExistentLazyInitOutsideTransaction(SessionFactoryScope scope) {
 		Child loadedChild = scope.fromTransaction(
-				session -> session.load( Child.class, -1L )
+				session -> session.getReference( Child.class, -1L )
 		);
 
 		try {

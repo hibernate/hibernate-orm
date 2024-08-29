@@ -61,7 +61,7 @@ public class IdClassGeneratedValueTest {
 				session -> {
 					List<Simple> simpleList = session.createQuery( "select s from Simple s" ).list();
 					assertEquals( 2, simpleList.size() );
-					Simple s1 = session.load( Simple.class, new SimplePK( 1L, 2L ) );
+					Simple s1 = session.getReference( Simple.class, new SimplePK( 1L, 2L ) );
 					assertEquals( s1.getQuantity(), 10 );
 					session.clear();
 				}
@@ -82,7 +82,7 @@ public class IdClassGeneratedValueTest {
 				session -> {
 					List<Simple> simpleList = session.createQuery( "select s from Simple s" ).list();
 					assertEquals( 1, simpleList.size() );
-					Simple s1 = session.load( Simple.class, new SimplePK( 1L, 2L ) );
+					Simple s1 = session.getReference( Simple.class, new SimplePK( 1L, 2L ) );
 					assertEquals( s1.getQuantity(), 10 );
 				}
 		);
@@ -105,7 +105,7 @@ public class IdClassGeneratedValueTest {
 				session -> {
 					List<Simple2> simpleList = session.createQuery( "select s from Simple2 s" ).list();
 					assertEquals( simpleList.size(), 2 );
-					Simple2 s1 = session.load( Simple2.class, new SimplePK( s1Id1, 200L ) );
+					Simple2 s1 = session.getReference( Simple2.class, new SimplePK( s1Id1, 200L ) );
 					assertEquals( s1.getQuantity(), 10 );
 					session.clear();
 				}
@@ -132,7 +132,7 @@ public class IdClassGeneratedValueTest {
 				session -> {
 					List<Multiple> simpleList = session.createQuery( "select m from Multiple m" ).list();
 					assertEquals( simpleList.size(), 2 );
-					Multiple m1 = session.load(
+					Multiple m1 = session.getReference(
 							Multiple.class,
 							new MultiplePK( m1Ids.get( 0 ), m1Ids.get( 1 ), 1000L )
 					);

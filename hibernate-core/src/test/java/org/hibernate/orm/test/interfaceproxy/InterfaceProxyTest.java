@@ -69,24 +69,24 @@ public class InterfaceProxyTest {
 		try (Session session = openSession( scope )) {
 			session.beginTransaction();
 			try {
-				Document d = (Document) session.load( ItemImpl.class, did );
+				Document d = (Document) session.getReference( ItemImpl.class, did );
 				assertEquals( did, d.getId() );
 				assertEquals( "Hibernate in Action", d.getName() );
 				assertNotNull( d.getContent() );
 
-				SecureDocument d2 = (SecureDocument) session.load( ItemImpl.class, d2id );
+				SecureDocument d2 = (SecureDocument) session.getReference( ItemImpl.class, d2id );
 				assertEquals( d2id, d2.getId() );
 				assertEquals( "Secret", d2.getName() );
 				assertNotNull( d2.getContent() );
 
 				session.clear();
 
-				d = session.load( DocumentImpl.class, did );
+				d = session.getReference( DocumentImpl.class, did );
 				assertEquals( did, d.getId() );
 				assertEquals( "Hibernate in Action", d.getName() );
 				assertNotNull( d.getContent() );
 
-				d2 = session.load( SecureDocumentImpl.class, d2id );
+				d2 = session.getReference( SecureDocumentImpl.class, d2id );
 				assertEquals( d2id, d2.getId() );
 				assertEquals( "Secret", d2.getName() );
 				assertNotNull( d2.getContent() );
@@ -94,7 +94,7 @@ public class InterfaceProxyTest {
 
 				//s.clear();
 
-				d2 = session.load( SecureDocumentImpl.class, did );
+				d2 = session.getReference( SecureDocumentImpl.class, did );
 				assertEquals( did, d2.getId() );
 				assertEquals( "Hibernate in Action", d2.getName() );
 				assertNotNull( d2.getContent() );

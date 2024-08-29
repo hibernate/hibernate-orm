@@ -61,7 +61,7 @@ public class EmbeddableWithMany2OneTest {
 					// same query!
 					session.createQuery( "from Person p where p.address.country.id = 'US'" )
 							.list();
-					Person p = session.load( Person.class, person.getId() );
+					Person p = session.getReference( Person.class, person.getId() );
 					session.remove( p );
 					List countries = session.createQuery( "from Country" ).list();
 					assertEquals( 1, countries.size() );

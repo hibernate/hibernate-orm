@@ -75,7 +75,7 @@ public class MapOperationTests {
 
 		scope.inTransaction(
 				session -> {
-					final EntityOfMaps entity = session.load( EntityOfMaps.class, 1 );
+					final EntityOfMaps entity = session.getReference( EntityOfMaps.class, 1 );
 					session.remove( entity );
 				}
 		);

@@ -72,7 +72,7 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		s = openSession();
 		s.beginTransaction();
 		//		MyEnhancedReferenceData loaded = (MyEnhancedReferenceData) s.get( MyEnhancedReferenceData.class, 1 );
-		MyEnhancedReferenceData loaded = (MyEnhancedReferenceData) s.load( MyEnhancedReferenceData.class, 1 );
+		MyEnhancedReferenceData loaded = s.getReference( MyEnhancedReferenceData.class, 1 );
 		s.getTransaction().commit();
 		s.close();
 

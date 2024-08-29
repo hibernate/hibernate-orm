@@ -145,7 +145,7 @@ public class Qux implements Lifecycle {
 	public Qux getChild() throws HibernateException, SQLException {
 		store =true;
 		this.childKey = child==null ? null : child.getKey();
-		if (childKey!=null && child==null) child = (Qux) session.load(Qux.class, childKey);
+		if (childKey!=null && child==null) child = (Qux) session.getReference(Qux.class, childKey);
 		return child;
 	}
 

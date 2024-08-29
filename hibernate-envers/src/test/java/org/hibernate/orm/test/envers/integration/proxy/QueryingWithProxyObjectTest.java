@@ -46,7 +46,7 @@ public class QueryingWithProxyObjectTest extends BaseEnversFunctionalTestCase {
 	public void testQueryingWithProxyObject() {
 		StrTestEntity originalSte = new StrTestEntity( "data", id );
 		// Load the proxy instance
-		StrTestEntity proxySte = (StrTestEntity) getSession().load( StrTestEntity.class, id );
+		StrTestEntity proxySte = (StrTestEntity) getSession().getReference( StrTestEntity.class, id );
 
 		Assert.assertTrue( getAuditReader().isEntityClassAudited( proxySte.getClass() ) );
 

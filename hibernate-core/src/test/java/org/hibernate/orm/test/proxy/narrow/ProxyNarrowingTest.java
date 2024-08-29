@@ -63,7 +63,7 @@ public class ProxyNarrowingTest {
 					assertTrue( Hibernate.isInitialized( abstractEntityProxy ) );
 
 					// load the concrete class via session.load to trigger the StatefulPersistenceContext.narrowProxy code
-					ConcreteEntity concreteEntityProxy = session.load(
+					ConcreteEntity concreteEntityProxy = session.getReference(
 							ConcreteEntity.class,
 							abstractEntityProxy.getId()
 					);

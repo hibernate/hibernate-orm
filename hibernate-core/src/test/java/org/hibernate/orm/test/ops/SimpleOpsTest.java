@@ -66,7 +66,7 @@ public class SimpleOpsTest extends AbstractOperationTestCase {
 
 		SimpleEntity simpleEntity = scope.fromTransaction(
 				session -> {
-					SimpleEntity entity = session.load( SimpleEntity.class, id );
+					SimpleEntity entity = session.getReference( SimpleEntity.class, id );
 					assertFalse( Hibernate.isInitialized( entity ) );
 					assertThat( entity.getId(), is( 1L ) );
 					assertThat( entity.getName(), is( "new name" ) );

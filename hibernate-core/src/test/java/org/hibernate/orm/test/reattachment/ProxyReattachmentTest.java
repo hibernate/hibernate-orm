@@ -45,7 +45,7 @@ public class ProxyReattachmentTest {
 
 		Parent parent = scope.fromTransaction(
 				session -> {
-					Parent p = session.load( Parent.class, "p" );
+					Parent p = session.getReference( Parent.class, "p" );
 					// evict...
 					session.evict( p );
 					// now try to reattach...
@@ -70,7 +70,7 @@ public class ProxyReattachmentTest {
 
 		Parent parent = scope.fromTransaction(
 				session -> {
-					Parent p = session.load( Parent.class, "p" );
+					Parent p = session.getReference( Parent.class, "p" );
 					// clear...
 					session.clear();
 					// now try to reattach...
@@ -97,7 +97,7 @@ public class ProxyReattachmentTest {
 
 		scope.inTransaction(
 				session -> {
-					Parent parent = session.load( Parent.class, p.getName() );
+					Parent parent = session.getReference( Parent.class, p.getName() );
 					session.remove( parent );
 					// re-attach
 					session.persist( parent );

@@ -64,7 +64,7 @@ public class OneToOnePrimaryKeyJoinColumnMapper extends AbstractOneToOneMapper {
 				.getEntityDescriptor( entityName );
 		if ( entityPersister.hasProxy() ) {
 			// If possible create a proxy. Returning complete object may affect performance.
-			return versionsReader.getSession().load( entityClass, primaryKey );
+			return versionsReader.getSession().getReference( entityClass, primaryKey );
 		}
 		else {
 			// If proxy is not allowed (e.g. @Proxy(lazy=false)) construct the original object.

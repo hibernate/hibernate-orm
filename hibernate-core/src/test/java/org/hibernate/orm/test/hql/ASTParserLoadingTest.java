@@ -1656,7 +1656,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		s.createQuery( "from PropertySet p join p.generalProperties gp where gp.id is not null" ).list();
 
-		s.remove( s.load( PropertySet.class, id ) );
+		s.remove( s.getReference( PropertySet.class, id ) );
 
 		s.getTransaction().commit();
 		s.close();
@@ -2127,7 +2127,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.persist( plat );
 		s.flush();
 		s.clear();
-		plat = (Mammal) s.load(Mammal.class, plat.getId() );
+		plat = (Mammal) s.getReference(Mammal.class, plat.getId() );
 		assertFalse( Hibernate.isInitialized(plat) );
 		Object plat2 = s.createQuery("from Animal a").uniqueResult();
 		assertSame( plat, plat2 );
@@ -2941,7 +2941,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		Transaction txn = session.beginTransaction();
 
 		for ( Long createdAnimalId : createdAnimalIds ) {
-			Animal animal = session.load( Animal.class, createdAnimalId );
+			Animal animal = session.getReference( Animal.class, createdAnimalId );
 			session.remove( animal );
 		}
 

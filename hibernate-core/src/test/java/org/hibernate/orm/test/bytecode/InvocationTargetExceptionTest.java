@@ -41,7 +41,7 @@ public class InvocationTargetExceptionTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		bean = ( Bean ) s.load( Bean.class, bean.getSomeString() );
+		bean = ( Bean ) s.getReference( Bean.class, bean.getSomeString() );
 		assertFalse( Hibernate.isInitialized( bean ) );
 		try {
 			bean.throwException();

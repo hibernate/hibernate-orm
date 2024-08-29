@@ -115,7 +115,7 @@ public class WithClauseTest {
 		scope.inTransaction(
 				(session) -> {
 					List list = session.createQuery( "from Human h inner join h.offspring o with o.mother.father = :cousin" )
-							.setParameter( "cousin", session.load( Human.class, Long.valueOf( "123" ) ) )
+							.setParameter( "cousin", session.getReference( Human.class, Long.valueOf( "123" ) ) )
 							.list();
 					assertTrue( list.isEmpty(), "ad-hoc did take effect" );
 				}

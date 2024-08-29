@@ -428,7 +428,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		c = ( Customer ) s.load( Customer.class, c.getId() );
+		c = ( Customer ) s.getReference( Customer.class, c.getId() );
 		assertNotNull( c );
 		assertTrue( Hibernate.isInitialized( c.getTickets() ) );
 		assertNotNull( c.getTickets() );
@@ -458,7 +458,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		c = ( Customer ) s.load( Customer.class, c.getId() );
+		c = ( Customer ) s.getReference( Customer.class, c.getId() );
 		assertNotNull( c );
 		assertFalse( Hibernate.isInitialized( c.getDiscountTickets() ) );
 		assertNotNull( c.getDiscountTickets() );

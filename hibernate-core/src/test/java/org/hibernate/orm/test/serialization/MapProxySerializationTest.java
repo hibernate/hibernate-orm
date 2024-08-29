@@ -73,7 +73,7 @@ public class MapProxySerializationTest {
 	@TestForIssue(jiraKey = "HHH-7686")
 	public void testInitializedProxySerializationIfTargetInPersistenceContext(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
-			final Map<String, Object> child = (Map<String, Object>) s.load( "ChildEntity", 1L );
+			final Map<String, Object> child = (Map<String, Object>) s.getReference( "ChildEntity", 1L );
 
 			final Map<String, Object> parent = (Map<String, Object>) child.get( "parent" );
 
@@ -105,7 +105,7 @@ public class MapProxySerializationTest {
 	@TestForIssue(jiraKey = "HHH-7686")
 	public void testUninitializedProxySerializationIfTargetInPersistenceContext(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
-			final Map<String, Object> child = (Map<String, Object>) s.load( "ChildEntity", 1L );
+			final Map<String, Object> child = (Map<String, Object>) s.getReference( "ChildEntity", 1L );
 
 			final Map<String, Object> parent = (Map<String, Object>) child.get( "parent" );
 
@@ -140,7 +140,7 @@ public class MapProxySerializationTest {
 	@Test
 	public void testProxyInitializationWithoutTX(SessionFactoryScope scope) {
 		final Map<String, Object> parent = scope.fromTransaction( s -> {
-			final Map<String, Object> child = (Map<String, Object>) s.load( "ChildEntity", 1L );
+			final Map<String, Object> child = (Map<String, Object>) s.getReference( "ChildEntity", 1L );
 			return (Map<String, Object>) child.get( "parent" );
 		});
 		// assert we have an uninitialized proxy
@@ -163,7 +163,7 @@ public class MapProxySerializationTest {
 	@TestForIssue(jiraKey = "HHH-7686")
 	public void testProxyInitializationWithoutTXAfterDeserialization(SessionFactoryScope scope) {
 		final Map<String, Object> deserializedParent = scope.fromTransaction( s -> {
-			final Map<String, Object> child = (Map<String, Object>) s.load( "ChildEntity", 1L );
+			final Map<String, Object> child = (Map<String, Object>) s.getReference( "ChildEntity", 1L );
 			final Map<String, Object> parent = (Map<String, Object>) child.get( "parent" );
 
 			// destroy AbstractLazyInitializer internal state

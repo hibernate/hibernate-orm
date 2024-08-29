@@ -121,13 +121,13 @@ public class MultiLoadTest {
 		scope.inTransaction(
 				session -> {
 					// delete one of them (but do not flush)...
-					SimpleEntity s4 = session.load(SimpleEntity.class, 5);
+					SimpleEntity s4 = session.getReference(SimpleEntity.class, 5);
 					session.remove( s4 );
 
 					assertFalse( Hibernate.isInitialized( s4 ) );
 
 					// as a baseline, assert based on how load() handles it
-					SimpleEntity s5 = session.load( SimpleEntity.class, 5 );
+					SimpleEntity s5 = session.getReference( SimpleEntity.class, 5 );
 					assertNotNull( s5 );
 					assertFalse( Hibernate.isInitialized( s5 ) );
 				}
@@ -140,12 +140,12 @@ public class MultiLoadTest {
 		scope.inTransaction(
 				session -> {
 					// delete one of them (but do not flush)...
-					SimpleEntity s4 = session.load( SimpleEntity.class, 5 );
+					SimpleEntity s4 = session.getReference( SimpleEntity.class, 5 );
 					Hibernate.initialize( s4 );
 					session.remove( s4 );
 
 					// as a baseline, assert based on how load() handles it
-					SimpleEntity s5 = session.load( SimpleEntity.class, 5 );
+					SimpleEntity s5 = session.getReference( SimpleEntity.class, 5 );
 					assertNotNull( s5 );
 				}
 		);
@@ -157,7 +157,7 @@ public class MultiLoadTest {
 		scope.inTransaction(
 				session -> {
 					// delete one of them (but do not flush)...
-					SimpleEntity s4 = session.load( SimpleEntity.class, 5 );
+					SimpleEntity s4 = session.getReference( SimpleEntity.class, 5 );
 					Hibernate.initialize( s4 );
 					session.remove( s4 );
 
@@ -174,7 +174,7 @@ public class MultiLoadTest {
 		scope.inTransaction(
 				session -> {
 					// delete one of them (but do not flush)...
-					SimpleEntity s4 = session.load( SimpleEntity.class, 5 );
+					SimpleEntity s4 = session.getReference( SimpleEntity.class, 5 );
 					Hibernate.initialize( s4 );
 					session.remove( s4 );
 
@@ -191,7 +191,7 @@ public class MultiLoadTest {
 		scope.inTransaction(
 				session -> {
 					// delete one of them (but do not flush)...
-					session.remove( session.load( SimpleEntity.class, 5 ) );
+					session.remove( session.getReference( SimpleEntity.class, 5 ) );
 
 					// and then, assert how get() handles it
 					SimpleEntity s5 = session.get( SimpleEntity.class, 5 );
@@ -249,7 +249,7 @@ public class MultiLoadTest {
 	public void testBasicMultiLoadWithManagedAndNoChecking(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					SimpleEntity first = session.byId( SimpleEntity.class ).load( 1 );
+					SimpleEntity first = session.byId( SimpleEntity.class ).getReference( 1 );
 					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids( 56 ) );
 					assertEquals( 56, list.size() );
 					// this check is HIGHLY specific to implementation in the batch loader
@@ -263,7 +263,7 @@ public class MultiLoadTest {
 	public void testBasicMultiLoadWithManagedAndChecking(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					SimpleEntity first = session.byId( SimpleEntity.class ).load( 1 );
+					SimpleEntity first = session.byId( SimpleEntity.class ).getReference( 1 );
 					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class )
 							.enableSessionCheck( true )
 							.multiLoad( ids( 56 ) );

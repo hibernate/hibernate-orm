@@ -69,7 +69,7 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.beginTransaction();
 		s.setDefaultReadOnly( true );
 		assertTrue( s.isDefaultReadOnly() );
-		dp = (DataPoint) s.load( DataPoint.class, new Long( dpId ) );
+		dp = (DataPoint) s.getReference( DataPoint.class, new Long( dpId ) );
 		s.setDefaultReadOnly( false );
 		assertFalse( "was initialized", Hibernate.isInitialized( dp ) );
 		assertTrue( s.isReadOnly( dp ) );
@@ -512,7 +512,7 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.setCacheMode( CacheMode.IGNORE );
 		t = s.beginTransaction();
 		s.setDefaultReadOnly( true );
-		dp = (DataPoint) s.load( DataPoint.class, dp.getId() );
+		dp = (DataPoint) s.getReference( DataPoint.class, dp.getId() );
 		assertTrue( s.isReadOnly( dp ) );
 		assertFalse( Hibernate.isInitialized( dp ) );
 		s.refresh( dp );
@@ -569,7 +569,7 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.setCacheMode( CacheMode.IGNORE );
 		t = s.beginTransaction();
 		s.setDefaultReadOnly( true );
-		dp = (DataPoint) s.load( DataPoint.class, dp.getId() );
+		dp = (DataPoint) s.getReference( DataPoint.class, dp.getId() );
 		assertFalse( Hibernate.isInitialized( dp ) );
 		assertTrue( s.isReadOnly( dp ) );
 		s.evict( dp );
@@ -864,7 +864,7 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.setCacheMode( CacheMode.IGNORE );
 		t = s.beginTransaction();
 		s.setDefaultReadOnly( true );
-		DataPoint dpProxy = s.load( DataPoint.class, new Long( dp.getId() ) );
+		DataPoint dpProxy = s.getReference( DataPoint.class, new Long( dp.getId() ) );
 		assertTrue( s.isReadOnly( dpProxy ) );
 		assertFalse( Hibernate.isInitialized( dpProxy ) );
 		s.evict( dpProxy );

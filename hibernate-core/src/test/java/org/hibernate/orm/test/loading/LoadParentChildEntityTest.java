@@ -42,7 +42,7 @@ public class LoadParentChildEntityTest {
 
 		scope.inTransaction(
 				session -> {
-					ContainingEntity load = session.load( ContainingEntity.class, 1 );
+					ContainingEntity load = session.getReference( ContainingEntity.class, 1 );
 					assertThat( load.getChild() ).isNotNull();
 					assertThat( load.getParent() ).isNull();
 				}
@@ -50,7 +50,7 @@ public class LoadParentChildEntityTest {
 
 		scope.inTransaction(
 				session -> {
-					ContainingEntity load = session.load( ContainingEntity.class, 2 );
+					ContainingEntity load = session.getReference( ContainingEntity.class, 2 );
 					assertThat( load.getParent() ).isNotNull();
 					assertThat( load.getChild() ).isNull();
 				}

@@ -120,7 +120,7 @@ public class SimpleUpdateTestWithLazyLoading  {
 		scope.inTransaction(
 				session -> {
 					stats.clear();
-					Child loadedChild = session.load( Child.class, lastChildID );
+					Child loadedChild = session.getReference( Child.class, lastChildID );
 
 					final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) loadedChild;
 					final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
@@ -152,7 +152,7 @@ public class SimpleUpdateTestWithLazyLoading  {
 
 		scope.inTransaction(
 				session -> {
-					Child loadedChild = session.load( Child.class, lastChildID );
+					Child loadedChild = session.getReference( Child.class, lastChildID );
 					assertThat( loadedChild.getName(), is( updatedName ) );
 
 					assertFalse( Hibernate.isInitialized( loadedChild.getRelatives() ) );
@@ -168,7 +168,7 @@ public class SimpleUpdateTestWithLazyLoading  {
 		scope.inTransaction( s -> {
 			final Statistics stats = scope.getSessionFactory().getStatistics();
 			stats.clear();
-			Child loadedChild = s.load( Child.class, lastChildID );
+			Child loadedChild = s.getReference( Child.class, lastChildID );
 
 			loadedChild.setName( updatedName );
 
@@ -184,7 +184,7 @@ public class SimpleUpdateTestWithLazyLoading  {
 		} );
 
 		scope.inTransaction( s -> {
-			Child loadedChild = s.load( Child.class, lastChildID );
+			Child loadedChild = s.getReference( Child.class, lastChildID );
 			assertThat( Hibernate.isInitialized( loadedChild ), is( false ) );
 			assertThat( loadedChild.getName(), is( updatedName ) );
 			assertThat( Hibernate.isInitialized( loadedChild ), is( true ) );
@@ -199,7 +199,7 @@ public class SimpleUpdateTestWithLazyLoading  {
 		scope.inTransaction( s -> {
 			final Statistics stats = scope.getSessionFactory().getStatistics();
 			stats.clear();
-			Child loadedChild = s.load( Child.class, lastChildID );
+			Child loadedChild = s.getReference( Child.class, lastChildID );
 
 
 			assertEquals( 0, stats.getPrepareStatementCount() );
@@ -213,7 +213,7 @@ public class SimpleUpdateTestWithLazyLoading  {
 		} );
 
 		scope.inTransaction( s -> {
-			Child loadedChild = s.load( Child.class, lastChildID );
+			Child loadedChild = s.getReference( Child.class, lastChildID );
 			assertThat( loadedChild.getRelatives().size(), is( 2 ) );
 		} );
 	}

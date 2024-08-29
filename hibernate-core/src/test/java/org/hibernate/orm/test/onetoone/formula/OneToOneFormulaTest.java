@@ -203,7 +203,7 @@ public class OneToOneFormulaTest extends BaseSessionFactoryFunctionalTest {
 			Address a = new Address();
 			a.setType( "HOME" );
 			a.setPerson( person );
-			a = session.load( Address.class, a );
+			a = session.getReference( Address.class, a );
 			assertFalse( Hibernate.isInitialized( a ) );
 			a.getPerson();
 			a.getType();

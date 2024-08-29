@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serial;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -1284,7 +1285,8 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		}
 
 		// then check the Session-scoped interceptor prototype
-		final Supplier<? extends Interceptor> statelessInterceptorImplementorSupplier = options.getStatelessInterceptorImplementorSupplier();
+		final Supplier<? extends Interceptor> statelessInterceptorImplementorSupplier =
+				options.getStatelessInterceptorImplementorSupplier();
 		if ( statelessInterceptorImplementorSupplier != null ) {
 			return statelessInterceptorImplementorSupplier.get();
 		}
@@ -1329,7 +1331,8 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			this.defaultBatchFetchSize = sessionFactoryOptions.getDefaultBatchFetchSize();
 			this.subselectFetchEnabled = sessionFactoryOptions.isSubselectFetchEnabled();
 
-			final CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver = sessionFactory.getCurrentTenantIdentifierResolver();
+			final CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver =
+					sessionFactory.getCurrentTenantIdentifierResolver();
 			if ( currentTenantIdentifierResolver != null ) {
 				tenantIdentifier = currentTenantIdentifierResolver.resolveCurrentTenantIdentifier();
 			}
@@ -1485,7 +1488,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			return this;
 		}
 
-		@Override
+		@Override @Deprecated(forRemoval = true)
 		public SessionBuilderImpl tenantIdentifier(String tenantIdentifier) {
 			this.tenantIdentifier = tenantIdentifier;
 			return this;
@@ -1677,6 +1680,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	 *
 	 * @throws IOException Can be thrown by the stream
 	 */
+	@Serial
 	private void writeObject(ObjectOutputStream out) throws IOException {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Serializing: %s", getUuid() );
@@ -1693,6 +1697,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	 * @throws IOException Can be thrown by the stream
 	 * @throws ClassNotFoundException Again, can be thrown by the stream
 	 */
+	@Serial
 	private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
 		LOG.trace( "Deserializing" );
 		in.defaultReadObject();
@@ -1712,12 +1717,14 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	 *
 	 * @throws InvalidObjectException Thrown if we could not resolve the factory by uuid/name.
 	 */
+	@Serial
 	private Object readResolve() throws InvalidObjectException {
 		LOG.trace( "Resolving serialized SessionFactory" );
 		return locateSessionFactoryOnDeserialization( getUuid(), name );
 	}
 
-	private static SessionFactory locateSessionFactoryOnDeserialization(String uuid, String name) throws InvalidObjectException{
+	private static SessionFactory locateSessionFactoryOnDeserialization(String uuid, String name)
+			throws InvalidObjectException{
 		final SessionFactory uuidResult = SessionFactoryRegistry.INSTANCE.getSessionFactory( uuid );
 		if ( uuidResult != null ) {
 			LOG.debugf( "Resolved SessionFactory by UUID [%s]", uuid );

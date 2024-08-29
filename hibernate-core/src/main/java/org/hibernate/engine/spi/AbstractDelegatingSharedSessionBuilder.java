@@ -117,7 +117,7 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	public SharedSessionBuilder tenantIdentifier(String tenantIdentifier) {
 		delegate.tenantIdentifier( tenantIdentifier );
 		return this;

@@ -81,7 +81,7 @@ public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	public SessionBuilder tenantIdentifier(String tenantIdentifier) {
 		delegate.tenantIdentifier( tenantIdentifier );
 		return this;

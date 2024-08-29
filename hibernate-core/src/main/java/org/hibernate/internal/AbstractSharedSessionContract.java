@@ -9,6 +9,7 @@ package org.hibernate.internal;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serial;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Locale;
@@ -1566,6 +1567,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		getLoadQueryInfluencers().disableFilter( filterName );
 	}
 
+	@Serial
 	private void writeObject(ObjectOutputStream oos) throws IOException {
 		if ( log.isTraceEnabled() ) {
 			log.trace( "Serializing " + getClass().getSimpleName() + " [" );
@@ -1600,6 +1602,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		jdbcCoordinator.serialize( oos );
 	}
 
+	@Serial
 	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException, SQLException {
 		if ( log.isTraceEnabled() ) {
 			log.trace( "Deserializing " + getClass().getSimpleName() );

@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Test;
 
 @SessionFactory
 @DomainModel(annotatedClasses = NamedNativeQueryWithResultMappingTest.Mapped.class)
-@FailureExpected( jiraKey = "HHH-18537", reason = "Call to #createNamedSelectionQuery for native-query, which never worked." )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-18537" )
 public class NamedNativeQueryWithResultMappingTest {
 	@Test void test(SessionFactoryScope scope) {

@@ -1065,14 +1065,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private <R> SelectionQuery<R> createNamedNativeSelectionQuery(
 			NamedNativeQueryMemento memento,
 			Class<R> expectedResultType) {
-		throw new UnsupportedOperationException(
-				String.format(
-						Locale.ROOT,
-						"Support for `@%s` + `%s` is not (yet) implemented",
-						NamedNativeQuery.class.getName(),
-						SelectionQuery.class.getName()
-				)
-		);
+		return memento.toQuery( this, expectedResultType );
 	}
 
 	private <R> SqmSelectionQuery<R> createNamedSqmSelectionQuery(

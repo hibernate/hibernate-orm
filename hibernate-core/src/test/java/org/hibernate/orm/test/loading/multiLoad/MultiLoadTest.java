@@ -24,6 +24,7 @@ import org.hibernate.stat.Statistics;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -249,7 +250,7 @@ public class MultiLoadTest {
 	public void testBasicMultiLoadWithManagedAndNoChecking(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					SimpleEntity first = session.byId( SimpleEntity.class ).getReference( 1 );
+					SimpleEntity first = session.byId( SimpleEntity.class ).load( 1 );
 					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids( 56 ) );
 					assertEquals( 56, list.size() );
 					// this check is HIGHLY specific to implementation in the batch loader
@@ -261,6 +262,36 @@ public class MultiLoadTest {
 
 	@Test
 	public void testBasicMultiLoadWithManagedAndChecking(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					SimpleEntity first = session.byId( SimpleEntity.class ).load( 1 );
+					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class )
+							.enableSessionCheck( true )
+							.multiLoad( ids( 56 ) );
+					assertEquals( 56, list.size() );
+					// this check is HIGHLY specific to implementation in the batch loader
+					// which puts existing managed entities first...
+					assertSame( first, list.get( 0 ) );
+				}
+		);
+	}
+
+	@Test @FailureExpected(jiraKey = "HHH-18544")
+	public void testBasicMultiLoadWithManagedAndNoCheckingProxied(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					SimpleEntity first = session.byId( SimpleEntity.class ).getReference( 1 );
+					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids( 56 ) );
+					assertEquals( 56, list.size() );
+					// this check is HIGHLY specific to implementation in the batch loader
+					// which puts existing managed entities first...
+					assertSame( first, list.get( 0 ) );
+				}
+		);
+	}
+
+	@Test @FailureExpected(jiraKey = "HHH-18544")
+	public void testBasicMultiLoadWithManagedAndCheckingProxied(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					SimpleEntity first = session.byId( SimpleEntity.class ).getReference( 1 );

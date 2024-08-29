@@ -46,6 +46,7 @@ import jakarta.persistence.ColumnResult;
 import jakarta.persistence.ConstructorResult;
 import jakarta.persistence.EntityResult;
 import jakarta.persistence.FieldResult;
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.SqlResultSetMapping;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
@@ -231,6 +232,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		private final NavigablePath navigablePath;
 		private final String entityName;
 		private final String discriminatorColumn;
+		private final LockModeType lockMode;
 
 		private final Map<String, AttributeFetchDescriptor> explicitFetchMappings;
 
@@ -239,6 +241,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			this.navigablePath = new NavigablePath( entityName );
 
 			this.discriminatorColumn = entityResult.discriminatorColumn();
+			this.lockMode = entityResult.lockMode();
 
 			this.explicitFetchMappings = extractFetchMappings( navigablePath, entityResult );
 		}
@@ -288,7 +291,9 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 			return new ResultMementoEntityJpa(
 					entityDescriptor,
-					LockMode.READ,
+					lockMode == LockModeType.OPTIMISTIC
+							? LockMode.NONE
+							: LockMode.fromJpaLockMode( lockMode ),
 					discriminatorMemento,
 					fetchMementos
 			);

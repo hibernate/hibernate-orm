@@ -123,8 +123,6 @@ public class EntityResultTests extends AbstractUsageTest {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-18535", reason = "Support for @EntityResult(lockMode) not implemented yet")
-	@Jira( "https://hibernate.atlassian.net/browse/HHH-18535" )
 	public void testImplicitAttributeMappingWithLockMode(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -66,4 +66,5 @@ public interface EventSource extends SessionImplementor {
 	// ordering is improved.
 	void removeOrphanBeforeUpdates(String entityName, Object child);
 
+	Object load(String entityName, Object identifier);
 }

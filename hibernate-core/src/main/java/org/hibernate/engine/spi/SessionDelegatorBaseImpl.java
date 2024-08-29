@@ -37,11 +37,9 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.MergeContext;
 import org.hibernate.event.spi.PersistContext;
-import org.hibernate.event.spi.RefreshContext;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jdbc.ReturningWork;
@@ -810,36 +808,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void evict(Object object) {
 		delegate.evict( object );
-	}
-
-	@Override
-	public <T> T load(Class<T> theClass, Object id, LockMode lockMode) {
-		return delegate.load( theClass, id, lockMode );
-	}
-
-	@Override
-	public <T> T load(Class<T> theClass, Object id, LockOptions lockOptions) {
-		return delegate.load( theClass, id, lockOptions );
-	}
-
-	@Override
-	public Object load(String entityName, Object id, LockMode lockMode) {
-		return delegate.load( entityName, id, lockMode );
-	}
-
-	@Override
-	public Object load(String entityName, Object id, LockOptions lockOptions) {
-		return delegate.load( entityName, id, lockOptions );
-	}
-
-	@Override
-	public <T> T load(Class<T> theClass, Object id) {
-		return delegate.load( theClass, id );
-	}
-
-	@Override
-	public Object load(String entityName, Object id) {
-		return delegate.load( entityName, id );
 	}
 
 	@Override

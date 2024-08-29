@@ -14,7 +14,7 @@ import org.hibernate.type.SqlTypes;
  * @deprecated Use {@link TimestampUtcAsJdbcTimestampJdbcType}
  * @author Christian Beikov
  */
-@Deprecated(forRemoval = true)
+@Deprecated(since="6.4", forRemoval = true)
 public class InstantAsTimestampJdbcType extends TimestampUtcAsJdbcTimestampJdbcType {
 	public static final InstantAsTimestampJdbcType INSTANCE = new InstantAsTimestampJdbcType();
 }

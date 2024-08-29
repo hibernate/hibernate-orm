@@ -323,24 +323,11 @@ public interface JavaType<T> extends Serializable {
 	 * Creates the {@link JavaType} for the given {@link ParameterizedType}
 	 * based on this {@link JavaType} registered for the raw type.
 	 *
-	 * @deprecated Use {@link #createJavaType(ParameterizedType, TypeConfiguration)} instead
-	 */
-	@Deprecated(since = "6.1")
-	default JavaType<T> createJavaType(ParameterizedType parameterizedType) {
-		return this;
-	}
-
-	/**
-	 * Creates the {@link JavaType} for the given {@link ParameterizedType}
-	 * based on this {@link JavaType} registered for the raw type.
-	 *
 	 * @since 6.1
 	 */
 	@Incubating
-	default JavaType<T> createJavaType(
-			ParameterizedType parameterizedType,
-			TypeConfiguration typeConfiguration) {
-		return createJavaType( parameterizedType );
+	default JavaType<T> createJavaType(ParameterizedType parameterizedType, TypeConfiguration typeConfiguration) {
+		return this;
 	}
 
 	/**

@@ -852,7 +852,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return a SQL expression that will occur in a {@code check} constraint
 	 * @deprecated use {@link #getCheckCondition(String, Long[])} instead
 	 */
-	@Deprecated(forRemoval = true)
+	@Deprecated(since="6.5", forRemoval = true)
 	public String getCheckCondition(String columnName, long[] values) {
 		Long[] boxedValues = new Long[values.length];
 		for ( int i = 0; i<values.length; i++ ) {

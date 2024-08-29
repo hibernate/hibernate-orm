@@ -14,7 +14,7 @@ import org.hibernate.type.SqlTypes;
  * @deprecated Use {@link TimestampUtcAsOffsetDateTimeJdbcType}
  * @author Christian Beikov
  */
-@Deprecated(forRemoval = true)
+@Deprecated(since="6.4", forRemoval = true)
 public class InstantAsTimestampWithTimeZoneJdbcType extends TimestampUtcAsOffsetDateTimeJdbcType {
 	public static final InstantAsTimestampWithTimeZoneJdbcType INSTANCE = new InstantAsTimestampWithTimeZoneJdbcType();
 }

@@ -99,7 +99,7 @@ public final class QueryHints {
 	 * Use {@link org.hibernate.procedure.ProcedureCall} or
 	 * {@link jakarta.persistence.StoredProcedureQuery} instead.
 	 */
-	@Deprecated
+	@Deprecated(since="6")
 	public static final String CALLABLE_FUNCTION = HibernateHints.HINT_CALLABLE_FUNCTION;
 
 	/**

@@ -19,7 +19,7 @@ import jakarta.persistence.criteria.Nulls;
  *
  * @deprecated Use Jakarta Persistence {@linkplain Nulls} instead.
  */
-@Deprecated
+@Deprecated(since="7")
 public enum NullPrecedence {
 	/**
 	 * Null precedence not specified. Relies on the RDBMS implementation.

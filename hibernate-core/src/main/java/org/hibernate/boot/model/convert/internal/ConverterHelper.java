@@ -65,7 +65,7 @@ public class ConverterHelper {
 			}
 		}
 		else {
-			throw new HibernateException( "Unexpected java.lang.reflect.Member type from org.hibernate.annotations.common.reflection.java.JavaXMember : " + member );
+			throw new HibernateException( "Unexpected java.lang.reflect.Member type from org.hibernate.models.spi.MemberDetails : " + member );
 		}
 
 		throw new HibernateException(

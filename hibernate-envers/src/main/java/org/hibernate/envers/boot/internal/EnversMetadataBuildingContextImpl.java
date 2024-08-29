@@ -6,19 +6,19 @@
  */
 package org.hibernate.envers.boot.internal;
 
-import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.envers.boot.spi.EnversMetadataBuildingContext;
 import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.configuration.internal.MappingCollector;
 import org.hibernate.envers.configuration.internal.metadata.AuditEntityConfigurationRegistry;
 import org.hibernate.envers.configuration.internal.metadata.AuditEntityNameRegister;
+import org.hibernate.models.spi.ClassDetailsRegistry;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -102,8 +102,13 @@ public class EnversMetadataBuildingContextImpl implements EnversMetadataBuilding
 	}
 
 	@Override
-	public ReflectionManager getReflectionManager() {
-		return configuration.getReflectionManager();
+	public SourceModelBuildingContext getSourceModelBuildingContext() {
+		return metadataCollector.getSourceModelBuildingContext();
+	}
+
+	@Override
+	public ClassDetailsRegistry getClassDetailsRegistry() {
+		return metadataCollector.getClassDetailsRegistry();
 	}
 
 	@Override

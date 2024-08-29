@@ -6,13 +6,12 @@
  */
 package org.hibernate.envers.configuration.internal.metadata.reader;
 
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.envers.AuditOverride;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.boot.internal.ModifiedColumnNameResolver;
 import org.hibernate.envers.boot.spi.EnversMetadataBuildingContext;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.MappedSuperclass;
 
@@ -56,13 +55,13 @@ public class ComponentAuditedPropertiesReader extends AuditedPropertiesReader {
 
 	@Override
 	protected boolean checkAudited(
-			XProperty property,
+			MemberDetails memberDetails,
 			PropertyAuditingData propertyData,
 			String propertyName,
 			Audited allClassAudited,
 			String modifiedFlagSuffix) {
 		// Checking if this property is explicitly audited or if all properties are.
-		final Audited aud = property.getAnnotation( Audited.class );
+		final Audited aud = memberDetails.getDirectAnnotationUsage( Audited.class );
 		if ( aud != null ) {
 			propertyData.setRelationTargetAuditMode( aud.targetAuditMode() );
 			propertyData.setUsingModifiedFlag( checkUsingModifiedFlag( aud ) );
@@ -74,7 +73,7 @@ public class ComponentAuditedPropertiesReader extends AuditedPropertiesReader {
 		else {
 
 			// get declaring class for property
-			final XClass declaringClass = property.getDeclaringClass();
+			final ClassDetails declaringClass = memberDetails.getDeclaringType();
 
 			// check component data to make sure that no audit overrides were not defined at
 			// the parent class or the embeddable at the property level.
@@ -88,7 +87,7 @@ public class ComponentAuditedPropertiesReader extends AuditedPropertiesReader {
 							if ( "".equals( auditOverride.getName() ) ) {
 								classNotAuditedOverride = true;
 							}
-							if ( property.getName().equals( auditOverride.getName() ) ) {
+							if ( memberDetails.resolveAttributeName().equals( auditOverride.getName() ) ) {
 								return false;
 							}
 						}
@@ -96,7 +95,7 @@ public class ComponentAuditedPropertiesReader extends AuditedPropertiesReader {
 							if ( "".equals( auditOverride.getName() ) ) {
 								classAuditedOverride = true;
 							}
-							if ( property.getName().equals( auditOverride.getName() ) ) {
+							if ( memberDetails.resolveAttributeName().equals( auditOverride.getName() ) ) {
 								return true;
 							}
 						}
@@ -105,12 +104,12 @@ public class ComponentAuditedPropertiesReader extends AuditedPropertiesReader {
 			}
 
 			// make sure taht if the class or property are explicitly 'isAudited=false', use that.
-			if ( classNotAuditedOverride || isOverriddenNotAudited( property) || isOverriddenNotAudited( declaringClass ) ) {
+			if ( classNotAuditedOverride || isOverriddenNotAudited( memberDetails ) || isOverriddenNotAudited( declaringClass ) ) {
 				return false;
 			}
 
 			// make sure that if the class or property are explicitly 'isAudited=true', use that.
-			if ( classAuditedOverride || isOverriddenAudited( property ) || isOverriddenAudited( declaringClass ) ) {
+			if ( classAuditedOverride || isOverriddenAudited( memberDetails ) || isOverriddenAudited( declaringClass ) ) {
 				return true;
 			}
 
@@ -122,7 +121,7 @@ public class ComponentAuditedPropertiesReader extends AuditedPropertiesReader {
 			// assumption here is if a component reader is looking at a @MappedSuperclass, it should be treated
 			// as not being audited if we have reached htis point; allowing components and any @Embeddable
 			// class being audited by default.
-			if ( declaringClass.isAnnotationPresent( MappedSuperclass.class ) ) {
+			if ( declaringClass.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
 				return false;
 			}
 		}

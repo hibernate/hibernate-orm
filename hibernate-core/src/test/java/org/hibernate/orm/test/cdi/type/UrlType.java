@@ -60,12 +60,14 @@ public class UrlType implements UserType<URL> {
 	}
 
 	@Override
-	public URL nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public URL nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+			throws SQLException {
 		throw new UnsupportedOperationException( "Not used" );
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, URL value, int index, SharedSessionContractImplementor session) throws SQLException {
+	public void nullSafeSet(PreparedStatement st, URL value, int index, SharedSessionContractImplementor session)
+			throws SQLException {
 		throw new UnsupportedOperationException( "Not used" );
 	}
 

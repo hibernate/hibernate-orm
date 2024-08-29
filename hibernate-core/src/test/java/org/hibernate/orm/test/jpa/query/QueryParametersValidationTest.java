@@ -133,7 +133,8 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 		}
 
 		@Override
-		public Boolean nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+		public Boolean nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+				throws SQLException {
 			return "Y".equals( rs.getString( position ) );
 		}
 

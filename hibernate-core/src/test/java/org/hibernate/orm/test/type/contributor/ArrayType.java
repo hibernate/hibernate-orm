@@ -66,12 +66,14 @@ public class ArrayType implements UserType<Array>, BindableType<Array>, BasicVal
     }
 
     @Override
-    public Array nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+    public Array nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+            throws SQLException {
         return jdbcType.getExtractor( javaType ).extract( rs, position, session );
     }
 
     @Override
-    public void nullSafeSet(PreparedStatement st, Array value, int index, SharedSessionContractImplementor session) throws SQLException {
+    public void nullSafeSet(PreparedStatement st, Array value, int index, SharedSessionContractImplementor session)
+            throws SQLException {
         jdbcType.getBinder( javaType ).bind( st, value, index, session );
     }
 

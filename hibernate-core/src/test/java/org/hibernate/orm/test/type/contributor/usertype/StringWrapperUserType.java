@@ -51,7 +51,8 @@ public class StringWrapperUserType implements UserType<StringWrapper> {
     }
 
     @Override
-    public StringWrapper nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+    public StringWrapper nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+            throws SQLException {
         String columnValue = (String) rs.getObject( position );
         log.debugv( "Result set column {0} value is {1}", position, columnValue );
         return columnValue == null ? null : fromString( columnValue );
@@ -60,7 +61,7 @@ public class StringWrapperUserType implements UserType<StringWrapper> {
     @Override
     public void nullSafeSet(
             PreparedStatement st, StringWrapper value, int index, SharedSessionContractImplementor session)
-            throws HibernateException, SQLException {
+            throws SQLException {
         if ( value == null ) {
             log.debugv("Binding null to parameter {0} ",index);
             st.setNull( index, Types.VARCHAR );

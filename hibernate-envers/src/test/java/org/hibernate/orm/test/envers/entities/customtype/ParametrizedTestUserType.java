@@ -38,13 +38,14 @@ public class ParametrizedTestUserType implements UserType<String>, Parameterized
 	}
 
 	@Override
-	public String nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public String nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+			throws SQLException {
 		final String string = rs.getString( position );
 		return rs.wasNull() ? null : string;
 	}
 
 	public void nullSafeSet(PreparedStatement st, String value, int index, SharedSessionContractImplementor session)
-			throws HibernateException, SQLException {
+			throws SQLException {
 		if ( value != null ) {
 			if ( !value.startsWith( param1 ) ) {
 				value = param1 + value;

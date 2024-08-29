@@ -49,14 +49,15 @@ public class DefaultValueIntegerType implements UserType<Integer>, Parameterized
 	}
 
 	@Override
-	public Integer nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public Integer nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+			throws SQLException {
 		Number result = (Number) rs.getObject( position );
 		return result == null ? defaultValue : Integer.valueOf( result.intValue() );
 	}
 
 	@Override
 	public void nullSafeSet(PreparedStatement st, Integer value, int index, SharedSessionContractImplementor session)
-			throws HibernateException, SQLException {
+			throws SQLException {
 		if ( value == null || defaultValue.equals( value ) ) {
 			log.trace( "binding null to parameter: " + index );
 			st.setNull( index, Types.INTEGER );

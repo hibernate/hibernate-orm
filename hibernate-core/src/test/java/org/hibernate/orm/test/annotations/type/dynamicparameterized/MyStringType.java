@@ -98,12 +98,14 @@ public class MyStringType implements UserType<String>, DynamicParameterizedType 
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, String value, int index, SharedSessionContractImplementor session) throws SQLException {
+	public void nullSafeSet(PreparedStatement st, String value, int index, SharedSessionContractImplementor session)
+			throws SQLException {
 		st.setString( index, this.value );
 	}
 
 	@Override
-	public String nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public String nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+			throws SQLException {
 		return rs.getString( position );
 	}
 

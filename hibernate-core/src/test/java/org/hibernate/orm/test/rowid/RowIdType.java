@@ -41,13 +41,14 @@ public class RowIdType implements UserType<Object>{
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+			throws SQLException {
 		return rs.getObject( position );
 	}
 
 	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
-			throws HibernateException, SQLException {
+			throws SQLException {
 		throw new UnsupportedOperationException();
 	}
 

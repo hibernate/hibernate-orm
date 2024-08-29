@@ -141,7 +141,7 @@ public class BasicTypeRegistryTest extends BaseUnitTestCase {
 		}
 
 		@Override
-		public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+		public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session) throws SQLException {
 			return null;
 		}
 

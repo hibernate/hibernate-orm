@@ -221,7 +221,8 @@ public class EnumType<T extends Enum<T>>
 	}
 
 	@Override
-	public T nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public T nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+			throws SQLException {
 		verifyConfigured();
 		return jdbcType.getExtractor( enumJavaType ).extract( rs, position, session );
 	}
@@ -233,7 +234,8 @@ public class EnumType<T extends Enum<T>>
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, T value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
+	public void nullSafeSet(PreparedStatement st, T value, int index, SharedSessionContractImplementor session)
+			throws SQLException {
 		verifyConfigured();
 		jdbcType.getBinder( enumJavaType ).bind( st, value, index, session );
 	}

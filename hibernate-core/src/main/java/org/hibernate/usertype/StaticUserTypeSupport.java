@@ -115,7 +115,8 @@ public class StaticUserTypeSupport<T> implements UserType<T> {
 	}
 
 	@Override
-	public T nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public T nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+			throws SQLException {
 		final Object extracted = jdbcValueExtractor.extract( rs, position, session );
 
 		if ( valueConverter != null ) {
@@ -127,7 +128,8 @@ public class StaticUserTypeSupport<T> implements UserType<T> {
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, T value, int index, SharedSessionContractImplementor session) throws SQLException {
+	public void nullSafeSet(PreparedStatement st, T value, int index, SharedSessionContractImplementor session)
+			throws SQLException {
 		final Object valueToBind;
 		if ( valueConverter != null ) {
 			valueToBind = valueConverter.toRelationalValue( value );

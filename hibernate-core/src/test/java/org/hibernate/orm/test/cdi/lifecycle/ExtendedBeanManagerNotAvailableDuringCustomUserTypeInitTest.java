@@ -93,13 +93,15 @@ public class ExtendedBeanManagerNotAvailableDuringCustomUserTypeInitTest {
 		}
 
 		@Override
-		public Object nullSafeGet(ResultSet rs, int i, SharedSessionContractImplementor sharedSessionContractImplementor, Object o) throws SQLException {
+		public Object nullSafeGet(ResultSet rs, int i, SharedSessionContractImplementor sharedSessionContractImplementor)
+				throws SQLException {
 			String xmldoc = rs.getString(i);
 			return rs.wasNull() ? null : xmldoc;
 		}
 
 		@Override
-		public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException  {
+		public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
+				throws SQLException  {
 			if (value == null) {
 				st.setNull(index, Types.OTHER);
 			} else {

@@ -26,7 +26,8 @@ public class FirstLetterType extends org.hibernate.type.EnumType<FirstLetter> {
 	}
 
 	@Override
-	public FirstLetter nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public FirstLetter nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+			throws SQLException {
 		String persistValue = (String) rs.getObject( position );
 		if ( rs.wasNull() ) {
 			return null;
@@ -36,7 +37,7 @@ public class FirstLetterType extends org.hibernate.type.EnumType<FirstLetter> {
 
 	@Override
 	public void nullSafeSet(PreparedStatement st, FirstLetter value, int index, SharedSessionContractImplementor session)
-			throws HibernateException, SQLException {
+			throws SQLException {
 		if ( value == null ) {
 			st.setNull( index, getSqlType() );
 		}

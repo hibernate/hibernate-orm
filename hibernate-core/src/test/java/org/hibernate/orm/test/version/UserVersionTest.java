@@ -143,8 +143,7 @@ public class UserVersionTest extends BaseSessionFactoryFunctionalTest {
 		public CustomVersion nullSafeGet(
 				ResultSet resultSet,
 				int position,
-				SharedSessionContractImplementor session,
-				Object owner) throws HibernateException, SQLException {
+				SharedSessionContractImplementor session) throws SQLException {
 			return new CustomVersion( resultSet.getLong( position ) );
 		}
 
@@ -153,7 +152,7 @@ public class UserVersionTest extends BaseSessionFactoryFunctionalTest {
 				PreparedStatement statement,
 				CustomVersion value,
 				int index,
-				SharedSessionContractImplementor session) throws HibernateException, SQLException {
+				SharedSessionContractImplementor session) throws SQLException {
 			statement.setLong( index, value.getRev() );
 		}
 

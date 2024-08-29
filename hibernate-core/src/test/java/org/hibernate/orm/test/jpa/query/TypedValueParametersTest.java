@@ -161,7 +161,8 @@ public class TypedValueParametersTest {
 		}
 
 		@Override
-		public List<String> nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+		public List<String> nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+				throws SQLException {
 			String string = rs.getString( position );
 
 			if (rs.wasNull()) {

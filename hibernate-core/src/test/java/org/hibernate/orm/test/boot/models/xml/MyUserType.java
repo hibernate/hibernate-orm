@@ -41,7 +41,7 @@ public class MyUserType implements UserType<UUID> {
 	}
 
 	@Override
-	public UUID nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner)
+	public UUID nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
 			throws SQLException {
 		return null;
 	}

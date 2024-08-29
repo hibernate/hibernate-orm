@@ -134,7 +134,7 @@ public class UserTypeFunctionsTest {
 		}
 
 		@Override
-		public YearMonth nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner)
+		public YearMonth nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
 				throws SQLException {
 			int intValue = rs.getInt( position );
 			if ( rs.wasNull() ) {

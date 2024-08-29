@@ -62,7 +62,8 @@ public class EnumUserType<T extends Enum<T>> implements UserType<T>, Parameteriz
 	}
 
 	@Override
-	public T nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public T nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+			throws SQLException {
 		final String name = rs.getString( position );
 		if ( rs.wasNull() ) {
 			return null;
@@ -79,7 +80,7 @@ public class EnumUserType<T extends Enum<T>> implements UserType<T>, Parameteriz
 			PreparedStatement preparedStatement,
 			T value,
 			int index,
-			SharedSessionContractImplementor session) throws HibernateException, SQLException {
+			SharedSessionContractImplementor session) throws SQLException {
 		if ( null == value ) {
 			preparedStatement.setNull( index, Types.VARCHAR );
 		}

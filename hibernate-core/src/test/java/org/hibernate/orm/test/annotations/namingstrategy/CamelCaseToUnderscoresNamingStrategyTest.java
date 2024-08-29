@@ -62,6 +62,18 @@ public class CamelCaseToUnderscoresNamingStrategyTest extends BaseUnitTestCase {
 				"abcd_efgh_i21",
 				( (Selectable) entityBinding.getProperty( "AbcdEfghI21" ).getSelectables().get( 0 ) ).getText()
 		);
+		assertEquals(
+				"hello1",
+				( (Selectable) entityBinding.getProperty( "hello1" ).getSelectables().get( 0 ) ).getText()
+		);
+		assertEquals(
+				"hello1_d2",
+				( (Selectable) entityBinding.getProperty( "hello1D2" ).getSelectables().get( 0 ) ).getText()
+		);
+		assertEquals(
+				"hello3d4",
+				( (Selectable) entityBinding.getProperty( "hello3d4" ).getSelectables().get( 0 ) ).getText()
+		);
 	}
 
 	@Entity
@@ -70,42 +82,48 @@ public class CamelCaseToUnderscoresNamingStrategyTest extends BaseUnitTestCase {
 		@Id
 		protected String AbcdEfghI21;
 		protected String wordWithDigitD1;
+		protected String hello1;
+		protected String hello1D2;
+		protected String hello3d4;
 
-		@ElementCollection
-		protected Set<AddressEntry> address = new HashSet();
-
-		public B() {
-		}
-
-		public B(String AbcdEfghI21, String wordWithDigitD1) {
-			this.AbcdEfghI21 = AbcdEfghI21;
-			this.wordWithDigitD1 = wordWithDigitD1;
-		}
-
-		// Default to table A_AddressEntry
-		public Set<AddressEntry> getAddress() {
-			return address;
-		}
-
-		public void setAddress(Set<AddressEntry> addr) {
-			this.address = addr;
-		}
-
-		public String getId() {
+		public String getAbcdEfghI21() {
 			return AbcdEfghI21;
 		}
 
-		public void setId(String AbcdEfghI21) {
-			this.AbcdEfghI21 = AbcdEfghI21;
+		public void setAbcdEfghI21(String abcdEfghI21) {
+			AbcdEfghI21 = abcdEfghI21;
 		}
 
-		public String getName() {
+		public String getWordWithDigitD1() {
 			return wordWithDigitD1;
 		}
 
-		public void setName(String wordWithDigitD1) {
+		public void setWordWithDigitD1(String wordWithDigitD1) {
 			this.wordWithDigitD1 = wordWithDigitD1;
 		}
 
+		public String getHello1() {
+			return hello1;
+		}
+
+		public void setHello1(String hello1) {
+			this.hello1 = hello1;
+		}
+
+		public String getHello1D2() {
+			return hello1D2;
+		}
+
+		public void setHello1D2(String hello1D2) {
+			this.hello1D2 = hello1D2;
+		}
+
+		public String getHello3d4() {
+			return hello3d4;
+		}
+
+		public void setHello3d4(String hello3d4) {
+			this.hello3d4 = hello3d4;
+		}
 	}
 }

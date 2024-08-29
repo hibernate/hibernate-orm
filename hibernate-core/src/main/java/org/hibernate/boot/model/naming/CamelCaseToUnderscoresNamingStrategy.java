@@ -86,14 +86,6 @@ public class CamelCaseToUnderscoresNamingStrategy implements PhysicalNamingStrat
 	}
 
 	private boolean isUnderscoreRequired(final char before, final char current, final char after) {
-		if (Character.isDigit(current)) {
-			if (Character.isDigit(before)) {
-				return false;
-			}
-			if (Character.isLowerCase(before)) {
-				return true;
-			}
-		}
 		return (Character.isLowerCase(before) || Character.isDigit(before)) && Character.isUpperCase(current) && (Character.isLowerCase(after) || Character.isDigit(after));
 	}
 

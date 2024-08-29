@@ -13,10 +13,7 @@ import java.util.Locale;
 import java.util.Set;
 import jakarta.persistence.Column;
 
-import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.DefaultRevisionEntity;
 import org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity;
@@ -48,7 +45,12 @@ import org.hibernate.envers.internal.revisioninfo.RevisionInfoQueryCreator;
 import org.hibernate.envers.internal.revisioninfo.RevisionTimestampValueResolver;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.service.ServiceRegistry;
+
+import static org.hibernate.envers.configuration.internal.ModelsHelper.getMemberDetails;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -80,11 +82,11 @@ public class RevisionInfoConfiguration {
 	private final Class<?> revisionInfoClass;
 	private final boolean useDefaultRevisionInfoMapping;
 
-	public RevisionInfoConfiguration(Configuration config, MetadataImplementor metadata, ReflectionManager reflectionManager) {
+	public RevisionInfoConfiguration(Configuration config, InFlightMetadataCollector metadata) {
 		this.configuration = config;
 
 		// Generate the resolver metadata
-		RevisionEntityResolver resolver = new RevisionEntityResolver( metadata, reflectionManager );
+		final RevisionEntityResolver resolver = new RevisionEntityResolver( metadata );
 
 		// initialize attributes from resolver
 		this.revisionInfoClass = resolver.revisionInfoClass;
@@ -262,8 +264,7 @@ public class RevisionInfoConfiguration {
 
 	private class RevisionEntityResolver {
 
-		private final MetadataImplementor metadata;
-		private final ReflectionManager reflectionManager;
+		private final InFlightMetadataCollector metadata;
 
 		private boolean revisionEntityFound;
 		private boolean revisionNumberFound;
@@ -282,9 +283,8 @@ public class RevisionInfoConfiguration {
 		private String revisionPropSqlType;
 		private RevisionTimestampValueResolver timestampValueResolver;
 
-		public RevisionEntityResolver(MetadataImplementor metadata, ReflectionManager reflectionManager) {
+		public RevisionEntityResolver(InFlightMetadataCollector metadata) {
 			this.metadata = metadata;
-			this.reflectionManager = reflectionManager;
 			this.revisionInfoEntityName = getDefaultEntityName();
 			this.revisionInfoIdData = createPropertyData( "id", "field" );
 			this.revisionInfoTimestampData = createPropertyData( "timestamp", "field" );
@@ -312,8 +312,10 @@ public class RevisionInfoConfiguration {
 					continue;
 				}
 
-				XClass clazz = reflectionManager.toXClass( persistentClass.getMappedClass() );
-				final RevisionEntity revisionEntity = clazz.getAnnotation( RevisionEntity.class );
+				final ClassDetails classDetails = metadata.getClassDetailsRegistry().resolveClassDetails(
+						persistentClass.getClassName()
+				);
+				final RevisionEntity revisionEntity = classDetails.getDirectAnnotationUsage( RevisionEntity.class );
 				if ( revisionEntity == null ) {
 					// not annotated, skip
 					continue;
@@ -324,13 +326,13 @@ public class RevisionInfoConfiguration {
 				}
 
 				// Verify that the revision entity isn't audited
-				if ( clazz.getAnnotation( Audited.class ) != null ) {
+				if ( classDetails.hasDirectAnnotationUsage( Audited.class ) ) {
 					throw new EnversMappingException( "The @RevisionEntity entity cannot be audited" );
 				}
 
 				revisionEntityFound = true;
 
-				resolveConfiguration( clazz );
+				resolveConfiguration( classDetails );
 
 				if ( !revisionNumberFound || !revisionTimestampFound ) {
 					// A revision number and timestamp fields must be annotated or the revision entity mapping
@@ -436,115 +438,116 @@ public class RevisionInfoConfiguration {
 					|| modifiedEntityNamesFound;
 		}
 
-		private void resolveConfiguration(XClass clazz) {
-			final XClass superclazz = clazz.getSuperclass();
-			if ( !Object.class.getName().equals( superclazz.getName() ) ) {
+		private void resolveConfiguration(ClassDetails classDetails) {
+			final ClassDetails superclass = classDetails.getSuperClass();
+			if ( !Object.class.getName().equals( superclass.getName() ) ) {
 				// traverse to the top of the entity hierarchy
-				resolveConfiguration( superclazz );
+				resolveConfiguration( superclass );
 			}
-			resolveConfigurationFromProperties( clazz, "field" );
-			resolveConfigurationFromProperties( clazz, "property" );
+			resolveConfigurationFromProperties( classDetails, "field" );
+			resolveConfigurationFromProperties( classDetails, "property" );
 		}
 
-		private void resolveConfigurationFromProperties(XClass clazz, String accessType) {
-			for ( XProperty property : clazz.getDeclaredProperties( accessType ) ) {
-				final RevisionNumber revisionNumber = property.getAnnotation( RevisionNumber.class );
+		private void resolveConfigurationFromProperties(ClassDetails classDetails, String accessType) {
+			for ( MemberDetails member : getMemberDetails( classDetails, accessType ) ) {
+				final RevisionNumber revisionNumber = member.getDirectAnnotationUsage( RevisionNumber.class );
 				if ( revisionNumber != null ) {
-					resolveRevisionNumberFromProperty( property, accessType );
+					resolveRevisionNumberFromProperty( member, accessType );
 				}
 
-				final RevisionTimestamp revisionTimestamp = property.getAnnotation( RevisionTimestamp.class );
+				final RevisionTimestamp revisionTimestamp = member.getDirectAnnotationUsage( RevisionTimestamp.class );
 				if ( revisionTimestamp != null ) {
-					resolveRevisionTimestampFromProperty( property, accessType );
+					resolveRevisionTimestampFromProperty( member, accessType );
 				}
 
-				final ModifiedEntityNames modifiedEntityNames = property.getAnnotation( ModifiedEntityNames.class );
+				final ModifiedEntityNames modifiedEntityNames = member.getDirectAnnotationUsage( ModifiedEntityNames.class );
 				if ( modifiedEntityNames != null ) {
-					resolveModifiedEntityNamesFromProperty( property, accessType );
+					resolveModifiedEntityNamesFromProperty( member, accessType );
 				}
 			}
 		}
 
-		private void resolveRevisionNumberFromProperty(XProperty property, String accessType) {
+		private void resolveRevisionNumberFromProperty(MemberDetails memberDetails, String accessType) {
 			if ( revisionNumberFound ) {
 				throw new EnversMappingException( "Only one property can be defined with @RevisionNumber" );
 			}
 
-			final XClass propertyType = property.getType();
-			if ( isAnyType( propertyType, Integer.class, Integer.TYPE ) ) {
-				revisionInfoIdData = createPropertyData( property, accessType );
+			final TypeDetails type = memberDetails.getType();
+			if ( isAnyType( type, Integer.class, Integer.TYPE ) ) {
+				revisionInfoIdData = createPropertyData( memberDetails, accessType );
 				revisionNumberFound = true;
 			}
-			else if ( isAnyType( propertyType, Long.class, Long.TYPE ) ) {
-				revisionInfoIdData = createPropertyData( property, accessType );
+			else if ( isAnyType( type, Long.class, Long.TYPE ) ) {
+				revisionInfoIdData = createPropertyData( memberDetails, accessType );
 				revisionPropType = "long";
 				revisionNumberFound = true;
 			}
 			else {
-				throwUnexpectedAnnotatedType( property, RevisionNumber.class, "int, Integer, long, or Long" );
+				throwUnexpectedAnnotatedType( memberDetails, RevisionNumber.class, "int, Integer, long, or Long" );
 			}
 
 			// Getting the @Column definition of the revision number property, to later use that information
 			// to generate the same mapping for the relation from an audit table's revision number to the
 			// revision entity's revision number field.
-			final Column column = property.getAnnotation( Column.class );
+			final Column column = memberDetails.getDirectAnnotationUsage( Column.class );
 			if ( column != null ) {
 				revisionPropSqlType = column.columnDefinition();
 			}
 		}
 		
-		private void resolveRevisionTimestampFromProperty(XProperty property, String accessType) {
+		private void resolveRevisionTimestampFromProperty(MemberDetails memberDetails, String accessType) {
 			if ( revisionTimestampFound ) {
 				throw new EnversMappingException( "Only one property can be defined with @RevisionTimestamp" );
 			}
 
-			final XClass propertyType = property.getType();
-			if ( isAnyType( propertyType, Long.class, Long.TYPE, Date.class, LocalDateTime.class, Instant.class, java.sql.Date.class ) ) {
-				revisionInfoTimestampData = createPropertyData( property, accessType );
+			final TypeDetails type = memberDetails.getType();
+			if ( isAnyType( type, Long.class, Long.TYPE, Date.class, LocalDateTime.class, Instant.class, java.sql.Date.class ) ) {
+				revisionInfoTimestampData = createPropertyData( memberDetails, accessType );
 				revisionTimestampFound = true;
 			}
 			else {
-				throwUnexpectedAnnotatedType( property, RevisionTimestamp.class, "long, Long, Date, LocalDateTime, Instant, or java.sql.Date" );
+				throwUnexpectedAnnotatedType( memberDetails, RevisionTimestamp.class, "long, Long, Date, LocalDateTime, Instant, or java.sql.Date" );
 			}
 		}
 		
-		private void resolveModifiedEntityNamesFromProperty(XProperty property, String accessType) {
+		private void resolveModifiedEntityNamesFromProperty(MemberDetails memberDetails, String accessType) {
 			if ( modifiedEntityNamesFound ) {
 				throw new EnversMappingException( "Only one property can be defined with @ModifiedEntityNames" );
 			}
 
-			final XClass propertyType = property.getType();
-			if ( isAnyType( propertyType, Set.class ) ) {
-				final XClass elementType = property.getElementClass();
+			final TypeDetails type = memberDetails.getType();
+			if ( isAnyType( type, Set.class ) ) {
+				final TypeDetails elementType = memberDetails.getElementType();
 				if ( isAnyType( elementType, String.class ) ) {
-					modifiedEntityNamesData = createPropertyData( property, accessType );
+					modifiedEntityNamesData = createPropertyData( memberDetails, accessType );
 					modifiedEntityNamesFound = true;
 					return;
 				}
 			}
 
-			throwUnexpectedAnnotatedType( property, ModifiedEntityNames.class, "Set<String>" );
+			throwUnexpectedAnnotatedType( memberDetails, ModifiedEntityNames.class, "Set<String>" );
 		}
 
-		private PropertyData createPropertyData(XProperty property, String accessType) {
-			return createPropertyData( property.getName(), accessType );
+		private PropertyData createPropertyData(MemberDetails memberDetails, String accessType) {
+			return createPropertyData( memberDetails.resolveAttributeName(), accessType );
 		}
 
 		private PropertyData createPropertyData(String name, String accessType) {
 			return new PropertyData( name, name, accessType );
 		}
 
-		private boolean isAnyType(XClass clazz, Class<?>... types) {
+		private boolean isAnyType(TypeDetails typeDetails, Class<?>... types) {
 			for ( Class<?> type : types ) {
-				if ( isType( clazz, type ) ) {
+				if ( isType( typeDetails, type ) ) {
 					return true;
 				}
 			}
 			return false;
 		}
 
-		private boolean isType(XClass clazz, Class<?> type) {
-			return reflectionManager.equals( clazz, type );
+		private boolean isType(TypeDetails typeDetails, Class<?> type) {
+			final String className = typeDetails != null ? typeDetails.determineRawClass().getClassName() : null;
+			return className != null && className.equals( type.getName() );
 		}
 
 		private Class<? extends RevisionListener> getRevisionListenerClass(Class<? extends RevisionListener> defaultListener) {
@@ -554,12 +557,12 @@ public class RevisionInfoConfiguration {
 			return defaultListener;
 		}
 		
-		private void throwUnexpectedAnnotatedType(XProperty property, Class<?> annotation, String allowedTypes) {
+		private void throwUnexpectedAnnotatedType(MemberDetails memberDetails, Class<?> annotation, String allowedTypes) {
 			throw new EnversMappingException(
 					String.format(
 							Locale.ENGLISH,
 							"The field '%s' annotated with '@%s' must be of type: %s",
-							property.getName(),
+							memberDetails.resolveAttributeName(),
 							annotation.getName(),
 							allowedTypes
 					)

@@ -98,6 +98,7 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 
 		initialized = true;
 
+		final InFlightMetadataCollector metadataCollector = (InFlightMetadataCollector) metadata;
 		this.serviceRegistry = metadata.getMetadataBuildingOptions().getServiceRegistry();
 		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 
@@ -105,12 +106,12 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 		final Properties properties = new Properties();
 		properties.putAll( cfgService.getSettings() );
 
-		this.configuration = new Configuration( properties, this, metadata );
+		this.configuration = new Configuration( properties, this, metadataCollector );
 		this.auditProcessManager = new AuditProcessManager( configuration.getRevisionInfo().getRevisionInfoGenerator() );
 
 		final EnversMetadataBuildingContext metadataBuildingContext = new EnversMetadataBuildingContextImpl(
 				configuration,
-				(InFlightMetadataCollector) metadata,
+				metadataCollector,
 				effectiveMappingDefaults,
 				mappingCollector
 		);

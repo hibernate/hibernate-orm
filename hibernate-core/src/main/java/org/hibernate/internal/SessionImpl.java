@@ -648,11 +648,6 @@ public class SessionImpl
 	}
 
 	@Override
-	public void lock(String entityName, Object object, LockMode lockMode) throws HibernateException {
-		fireLock( new LockEvent( entityName, object, lockMode, this ) );
-	}
-
-	@Override
 	public void lock(Object object, LockMode lockMode) throws HibernateException {
 		fireLock( new LockEvent( object, lockMode, this ) );
 	}

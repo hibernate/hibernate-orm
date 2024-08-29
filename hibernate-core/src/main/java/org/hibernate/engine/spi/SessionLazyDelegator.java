@@ -228,11 +228,6 @@ public class SessionLazyDelegator implements Session {
 		this.lazySession.get().lock( object, lockMode );
 	}
 
-	@Override @Deprecated
-	public void lock(String entityName, Object object, LockMode lockMode) {
-		this.lazySession.get().lock( entityName, object, lockMode );
-	}
-
 	@Override
 	public void lock(Object object, LockOptions lockOptions) {
 		this.lazySession.get().lock( object, lockOptions );

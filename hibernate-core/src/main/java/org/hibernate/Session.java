@@ -490,7 +490,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param object a detached instance of a persistent class
 	 * @param replicationMode the replication mode to use
 	 *
-	 * @deprecated With no real replacement
+	 * @deprecated With no real replacement. For some use cases try
+	 *             {@link StatelessSession#upsert(Object)}.
 	 */
 	@Deprecated( since = "6.0" )
 	void replicate(Object object, ReplicationMode replicationMode);
@@ -505,7 +506,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param object a detached instance of a persistent class
 	 * @param replicationMode the replication mode to use
 	 *
-	 * @deprecated With no real replacement
+	 * @deprecated With no real replacement. For some use cases try
+	 *             {@link StatelessSession#upsert(Object)}.
 	 */
 	@Deprecated( since = "6.0" )
 	void replicate(String entityName, Object object, ReplicationMode replicationMode) ;
@@ -613,26 +615,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @since 6.2
 	 */
 	void lock(Object object, LockOptions lockOptions);
-
-	/**
-	 * Obtain the specified lock level on the given managed instance associated
-	 * with this session. This may be used to:
-	 * <ul>
-	 * <li>perform a version check with {@link LockMode#READ}, or
-	 * <li>upgrade to a pessimistic lock with {@link LockMode#PESSIMISTIC_WRITE}).
-	 * </ul>
-	 * <p>
-	 * This operation cascades to associated instances if the association is
-	 * mapped with {@link org.hibernate.annotations.CascadeType#LOCK}.
-	 *
-	 * @param entityName the name of the entity
-	 * @param object a persistent instance associated with this session
-	 * @param lockMode the lock level
-	 *
-	 * @deprecated use {@link #lock(Object, LockMode)}
-	 */
-	@Deprecated(since = "6.2")
-	void lock(String entityName, Object object, LockMode lockMode);
 
 	/**
 	 * Reread the state of the given managed instance associated with this session

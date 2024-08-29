@@ -17,8 +17,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.hibernate.Length;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
@@ -212,12 +210,12 @@ public class MySQLDialect extends Dialect {
 	protected static DatabaseVersion createVersion(DialectResolutionInfo info, DatabaseVersion defaultVersion) {
 		final String versionString = info.getDatabaseVersion();
 		if ( versionString != null ) {
-			final Matcher matcher = Pattern.compile("^(\\d+)\\.(\\d+)\\.(\\d+).*").matcher(versionString);
-			if ( matcher.matches() && matcher.groupCount() >= 3  ) {
+			final String[] components = StringHelper.split(".-", versionString);
+			if ( components.length >= 3 ) {
 				try {
-					final int majorVersion = Integer.parseInt( matcher.group(1));
-					final int minorVersion = Integer.parseInt( matcher.group(2) );
-					final int patchLevel = Integer.parseInt( matcher.group(3) );
+					final int majorVersion = Integer.parseInt( components[0] );
+					final int minorVersion = Integer.parseInt( components[1] );
+					final int patchLevel = Integer.parseInt( components[2] );
 					return DatabaseVersion.make( majorVersion, minorVersion, patchLevel );
 				}
 				catch (NumberFormatException ex) {

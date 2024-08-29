@@ -222,11 +222,44 @@ stage('Build') {
 							def repo2 = tempDir + '/repo2'
 							// build Hibernate ORM two times without any cache and "publish" the resulting artifacts to different maven repositories
 							// so that we can compare them afterwards:
-							sh "./gradlew --no-daemon clean publishToMavenLocal --no-build-cache -Dmaven.repo.local=$repo1"
-							sh "./gradlew --no-daemon clean publishToMavenLocal --no-build-cache -Dmaven.repo.local=$repo2"
+							sh "./gradlew --no-daemon clean publishToMavenLocal --no-build-cache -Dmaven.repo.local=${repo1}"
+							sh "./gradlew --no-daemon clean publishToMavenLocal --no-build-cache -Dmaven.repo.local=${repo2}"
 
-							sh "sh ci/compare-build-results.sh $repo1 $repo2"
+							sh "sh ci/compare-build-results.sh ${repo1} ${repo2}"
 							sh "cat .buildcompare"
+						}
+					}
+				}
+			}
+		})
+		executions.put('Strict JAXP configuration', {
+			runBuildOnNode(NODE_PATTERN_BASE) {
+				// we want to test with JDK 23 where the strict settings were introduced
+				def testJavaHome = tool(name: "OpenJDK 23 Latest", type: 'jdk')
+				def javaHome = tool(name: DEFAULT_JDK_TOOL, type: 'jdk')
+				// Use withEnv instead of setting env directly, as that is global!
+				// See https://github.com/jenkinsci/pipeline-plugin/blob/master/TUTORIAL.md
+				withEnv(["JAVA_HOME=${javaHome}", "PATH+JAVA=${javaHome}/bin"]) {
+					stage('Checkout') {
+						checkout scm
+					}
+					stage('Test') {
+						withGradle {
+							def tempDir = pwd(tmp: true)
+							def jaxpStrictProperties = tempDir + '/jaxp-strict.properties'
+							def jaxpStrictTemplate = testJavaHome + '/conf/jaxp-strict.properties.template'
+
+							echo 'Copy strict JAXP configuration properties.'
+							sh "cp $jaxpStrictTemplate $jaxpStrictProperties"
+
+							// explicitly calling toString here to prevent Jenkins failures like:
+							//  > Scripts not permitted to use method groovy.lang.GroovyObject invokeMethod java.lang.String java.lang.Object (org.codehaus.groovy.runtime.GStringImpl positive)
+							String args = ("-Ptest.jdk.version=23 -Porg.gradle.java.installations.paths=${javaHome},${testJavaHome}"
+								+ " -Ptest.jdk.launcher.args=\"-Djava.xml.config.file=${jaxpStrictProperties}\"").toString()
+
+							timeout( [time: 60, unit: 'MINUTES'] ) {
+								ciBuild(args)
+							}
 						}
 					}
 				}
@@ -273,6 +306,14 @@ void ciBuild(buildEnv, String args) {
   // it has limited access, essentially it can only push build scans.
   def develocityCredentialsId = buildEnv.node ? 'ge.hibernate.org-access-key-pr' : 'ge.hibernate.org-access-key'
 
+  ciBuild(develocityCredentialsId, args)
+}
+
+void ciBuild(String args) {
+  ciBuild('ge.hibernate.org-access-key-pr', args)
+}
+
+void ciBuild(String develocityCredentialsId, String args) {
   withCredentials([string(credentialsId: develocityCredentialsId,
       variable: 'DEVELOCITY_ACCESS_KEY')]) {
     withGradle { // withDevelocity, actually: https://plugins.jenkins.io/gradle/#plugin-content-capturing-build-scans-from-jenkins-pipeline

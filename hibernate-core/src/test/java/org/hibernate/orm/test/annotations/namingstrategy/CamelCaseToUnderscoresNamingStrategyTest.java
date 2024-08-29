@@ -1,8 +1,5 @@
 package org.hibernate.orm.test.annotations.namingstrategy;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy;
@@ -17,7 +14,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -47,8 +43,7 @@ public class CamelCaseToUnderscoresNamingStrategyTest extends BaseUnitTestCase {
 
 	@Test
 	public void testWithWordWithDigitNamingStrategy() throws Exception {
-		Metadata metadata = new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( B.class )
+		Metadata metadata = new MetadataSources( serviceRegistry ).addAnnotatedClass( B.class )
 				.getMetadataBuilder()
 				.applyPhysicalNamingStrategy( new CamelCaseToUnderscoresNamingStrategy() )
 				.build();
@@ -56,7 +51,9 @@ public class CamelCaseToUnderscoresNamingStrategyTest extends BaseUnitTestCase {
 		PersistentClass entityBinding = metadata.getEntityBinding( B.class.getName() );
 		assertEquals(
 				"word_with_digit_d1",
-				( (Selectable) entityBinding.getProperty( "wordWithDigitD1" ).getSelectables().get( 0 ) ).getText()
+				( (Selectable) entityBinding.getProperty( "wordWithDigitD1" )
+						.getSelectables()
+						.get( 0 ) ).getText()
 		);
 		assertEquals(
 				"abcd_efgh_i21",

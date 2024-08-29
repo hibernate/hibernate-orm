@@ -204,6 +204,35 @@ stage('Build') {
 			}
 		})
 	}
+	// Don't run additional checks when this is a PR
+	if ( !helper.scmSource.pullRequest ) {
+		executions.put('Reproducible build check', {
+			runBuildOnNode(NODE_PATTERN_BASE) {
+				def javaHome = tool(name: DEFAULT_JDK_TOOL, type: 'jdk')
+				// Use withEnv instead of setting env directly, as that is global!
+				// See https://github.com/jenkinsci/pipeline-plugin/blob/master/TUTORIAL.md
+				withEnv(["JAVA_HOME=${javaHome}", "PATH+JAVA=${javaHome}/bin"]) {
+					stage('Checkout') {
+						checkout scm
+					}
+					stage('Test') {
+						withGradle {
+							def tempDir = pwd(tmp: true)
+							def repo1 = tempDir + '/repo1'
+							def repo2 = tempDir + '/repo2'
+							// build Hibernate ORM two times without any cache and "publish" the resulting artifacts to different maven repositories
+							// so that we can compare them afterwards:
+							sh "./gradlew --no-daemon clean publishToMavenLocal --no-build-cache -Dmaven.repo.local=$repo1"
+							sh "./gradlew --no-daemon clean publishToMavenLocal --no-build-cache -Dmaven.repo.local=$repo2"
+
+							sh "sh ci/compare-build-results.sh $repo1 $repo2"
+							sh "cat .buildcompare"
+						}
+					}
+				}
+			}
+		})
+	}
 	parallel(executions)
 }
 

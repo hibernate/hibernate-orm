@@ -368,7 +368,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 		long start = System.currentTimeMillis();
 		thread.start();
 		try {
-			s2.buildLockRequest( opt ).lock( kit2 );
+			s2.lock( kit2, opt );
 		}
 		catch ( PessimisticEntityLockException e ) {
 			assertTrue( e.getCause() instanceof LockTimeoutException );

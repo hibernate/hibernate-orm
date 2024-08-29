@@ -148,7 +148,7 @@ public class MutableNaturalIdTest {
 		scope.inTransaction(
 				(session) -> {
 					try {
-						session.buildLockRequest( LockOptions.NONE ).lock( created );
+						session.lock( created, LockOptions.NONE );
 
 						name.set( created, "Gavin" );
 						final User loaded = session

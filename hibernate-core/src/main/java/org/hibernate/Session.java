@@ -22,7 +22,6 @@ import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
-import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -636,31 +635,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void lock(String entityName, Object object, LockMode lockMode);
 
 	/**
-	 * Build a new {@linkplain LockRequest lock request} that specifies:
-	 * <ul>
-	 * <li>the {@link LockMode} to use,
-	 * <li>the {@linkplain LockRequest#setTimeOut(int) pessimistic lock timeout},
-	 *     and
-	 * <li>the {@linkplain LockRequest#setLockScope(PessimisticLockScope) scope}
-	 *     that is, whether the lock extends to rows of owned collections.
-	 * </ul>
-	 * <p>
-	 * Timeout and scope are ignored if the specified {@code LockMode} represents
-	 * a flavor of {@linkplain LockMode#OPTIMISTIC optimistic} locking.
-	 * <p>
-	 * Call {@link LockRequest#lock(Object)} to actually obtain the requested lock
-	 * on a managed entity instance.
-	 *
-	 * @param lockOptions contains the lock level
-	 *
-	 * @return a {@link LockRequest} that can be used to lock any given object.
-	 *
-	 * @deprecated use {@link #lock(Object, LockOptions)}
-	 */
-	@Deprecated(since = "6.2")
-	LockRequest buildLockRequest(LockOptions lockOptions);
-
-	/**
 	 * Reread the state of the given managed instance associated with this session
 	 * from the underlying database. This may be useful:
 	 * <ul>
@@ -1156,125 +1130,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return the session builder
 	 */
 	SharedSessionBuilder sessionWithOptions();
-
-	/**
-	 * A set of {@linkplain LockOptions locking options} attached
-	 * to the session.
-	 *
-	 * @deprecated simply construct a {@link LockOptions} and pass
-	 *             it to {@link #lock(Object, LockOptions)}.
-	 */
-	@Deprecated(since = "6.2")
-	interface LockRequest {
-		/**
-		 * A timeout value indicating that the database should not
-		 * wait at all to acquire a pessimistic lock which is not
-		 * immediately available. This has the same effect as
-		 * {@link LockMode#UPGRADE_NOWAIT}.
-		 */
-		int PESSIMISTIC_NO_WAIT = LockOptions.NO_WAIT;
-
-		/**
-		 * A timeout value indicating that attempting to acquire
-		 * that there is no timeout for the lock acquisition.
-		 */
-		int PESSIMISTIC_WAIT_FOREVER = LockOptions.WAIT_FOREVER;
-
-		/**
-		 * Get the lock mode.
-		 *
-		 * @return the lock mode.
-		 */
-		LockMode getLockMode();
-
-		/**
-		 * Specify the {@link LockMode} to be used. The default is {@link LockMode#NONE}.
-		 *
-		 * @param lockMode the lock mode to use for this request
-		 *
-		 * @return this {@code LockRequest} instance for operation chaining.
-		 */
-		LockRequest setLockMode(LockMode lockMode);
-
-		/**
-		 * Get the timeout setting.
-		 *
-		 * @return timeout in milliseconds, -1 for indefinite wait and 0 for no wait.
-		 */
-		int getTimeOut();
-
-		/**
-		 * Specify the pessimistic lock timeout. The default pessimistic lock
-		 * behavior is to wait forever for the lock. Lock timeout support is
-		 * not available in every {@link org.hibernate.dialect.Dialect dialect}
-		 * of SQL.
-		 *
-		 * @param timeout is time in milliseconds to wait for lock.
-		 *                -1 means wait forever and 0 means no wait.
-		 *
-		 * @return this {@code LockRequest} instance for operation chaining.
-		 */
-		LockRequest setTimeOut(int timeout);
-
-		/**
-		 * Check if locking extends to owned collections and associated entities.
-		 *
-		 * @return true if locking will be extended to owned collections and associated entities
-		 *
-		 * @deprecated use {@link #getLockScope()}
-		 */
-		@Deprecated(since = "6.2")
-		boolean getScope();
-
-		/**
-		 * Obtain the {@link PessimisticLockScope}, which determines if locking
-		 * extends to owned collections and associated entities.
-		 */
-		default PessimisticLockScope getLockScope() {
-			return getScope() ? PessimisticLockScope.EXTENDED : PessimisticLockScope.NORMAL;
-		}
-
-		/**
-		 * Specify whether the {@link LockMode} should extend to owned collections
-		 * and associated entities. An association must be mapped with
-		 * {@link org.hibernate.annotations.CascadeType#LOCK} for this setting to
-		 * have any effect.
-		 *
-		 * @param scope {@code true} to cascade locks; {@code false} to not.
-		 *
-		 * @return {@code this}, for method chaining
-		 *
-		 * @deprecated use {@link #setLockScope(PessimisticLockScope)}
-		 */
-		@Deprecated(since = "6.2")
-		LockRequest setScope(boolean scope);
-
-		/**
-		 * Set the {@link PessimisticLockScope}, which determines if locking
-		 * extends to owned collections and associated entities.
-		 */
-		default LockRequest setLockScope(PessimisticLockScope scope) {
-			return setScope( scope == PessimisticLockScope.EXTENDED );
-		}
-
-		/**
-		 * Perform the requested locking.
-		 *
-		 * @param entityName the name of the entity to lock
-		 * @param object the instance of the entity to lock
-		 *
-		 * @deprecated use {@link #lock(Object)}
-		 */
-		@Deprecated(since = "6.2")
-		void lock(String entityName, Object object);
-
-		/**
-		 * Perform the requested locking.
-		 *
-		 * @param object the instance of the entity to lock
-		 */
-		void lock(Object object);
-	}
 
 	/**
 	 * Add one or more listeners to the Session

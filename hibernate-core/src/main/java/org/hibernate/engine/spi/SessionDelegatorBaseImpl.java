@@ -910,11 +910,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		delegate.lock( object, lockOptions );
 	}
 
-	@Override @Deprecated
-	public LockRequest buildLockRequest(LockOptions lockOptions) {
-		return delegate.buildLockRequest( lockOptions );
-	}
-
 	@Override
 	public void refresh(Object object) {
 		delegate.refresh( object );

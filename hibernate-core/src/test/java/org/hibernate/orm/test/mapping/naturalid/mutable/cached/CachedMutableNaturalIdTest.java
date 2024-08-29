@@ -295,7 +295,7 @@ public abstract class CachedMutableNaturalIdTest {
 		scope.inTransaction(
 				(session) -> {
 					// HHH-7513 failure during reattachment
-					session.buildLockRequest( LockOptions.NONE ).lock( created );
+					session.lock( created, LockOptions.NONE );
 					session.remove( created.assA );
 					session.remove( created );
 				}

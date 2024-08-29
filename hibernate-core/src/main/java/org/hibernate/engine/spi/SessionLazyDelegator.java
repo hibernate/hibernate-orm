@@ -239,12 +239,6 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	@Deprecated
-	public LockRequest buildLockRequest(LockOptions lockOptions) {
-		return this.lazySession.get().buildLockRequest( lockOptions );
-	}
-
-	@Override
 	public void refresh(Object object) {
 		this.lazySession.get().refresh( object );
 	}

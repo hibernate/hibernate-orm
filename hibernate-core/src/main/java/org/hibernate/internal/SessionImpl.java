@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Reader;
+import java.io.Serial;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.Clob;
@@ -1986,7 +1987,7 @@ public class SessionImpl
 		// SharedSessionBuilder
 
 
-		@Override @Deprecated
+		@Override @Deprecated(forRemoval = true)
 		public SharedSessionBuilderImpl tenantIdentifier(String tenantIdentifier) {
 			super.tenantIdentifier( tenantIdentifier );
 			tenantIdChanged = true;
@@ -2865,6 +2866,7 @@ public class SessionImpl
 	 *
 	 * @throws IOException Indicates a general IO stream exception
 	 */
+	@Serial
 	private void writeObject(ObjectOutputStream oos) throws IOException {
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "Serializing Session [%s]", getSessionIdentifier() );
@@ -2886,6 +2888,7 @@ public class SessionImpl
 	 * @throws IOException Indicates a general IO stream exception
 	 * @throws ClassNotFoundException Indicates a class resolution issue
 	 */
+	@Serial
 	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException, SQLException {
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "Deserializing Session [%s]", getSessionIdentifier() );

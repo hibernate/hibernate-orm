@@ -116,7 +116,7 @@ public interface SessionBuilder {
 	 * @return {@code this}, for method chaining
 	 * @deprecated Use {@link #tenantIdentifier(Object)} instead
 	 */
-	@Deprecated(forRemoval = true)
+	@Deprecated(since = "6.4", forRemoval = true)
 	SessionBuilder tenantIdentifier(String tenantIdentifier);
 
 	/**

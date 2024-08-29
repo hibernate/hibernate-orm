@@ -90,7 +90,7 @@ public class MultiPathCascadeTest {
 
 		scope.inTransaction(
 				session -> {
-					A aLoaded = session.load( A.class, new Long( a.getId() ) );
+					A aLoaded = session.getReference( A.class, new Long( a.getId() ) );
 					assertInstanceOf( HibernateProxy.class, aLoaded );
 					assertSame( aLoaded, session.merge( a ) );
 				}

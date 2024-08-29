@@ -56,16 +56,16 @@ public class IdBagTest {
 					criteria.from( User.class );
 					User gavin = s.createQuery( criteria ).uniqueResult();
 //					User gavin = (User) s.createCriteria( User.class ).uniqueResult();
-					Group admins = s.load( Group.class, "admins" );
-					Group plebs = s.load( Group.class, "plebs" );
-					Group banned = s.load( Group.class, "banned" );
+					Group admins = s.getReference( Group.class, "admins" );
+					Group plebs = s.getReference( Group.class, "plebs" );
+					Group banned = s.getReference( Group.class, "banned" );
 					gavin.getGroups().add( admins );
 					gavin.getGroups().remove( plebs );
 					//gavin.getGroups().add(banned);
 
 					s.remove( plebs );
 					s.remove( banned );
-					s.remove( s.load( Group.class, "moderators" ) );
+					s.remove( s.getReference( Group.class, "moderators" ) );
 					s.remove( admins );
 					s.remove( gavin );
 				}

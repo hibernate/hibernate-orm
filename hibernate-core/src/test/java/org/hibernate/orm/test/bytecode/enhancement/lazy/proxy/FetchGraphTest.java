@@ -107,7 +107,7 @@ public class FetchGraphTest {
 
 		scope.inSession(
 				session -> {
-					final DEntity entityD = session.load( DEntity.class, 1L );
+					final DEntity entityD = session.getReference( DEntity.class, 1L );
 					assertThat( stats.getPrepareStatementCount(), is( 0L ) );
 					assert !Hibernate.isPropertyInitialized( entityD, "a" );
 					assert !Hibernate.isPropertyInitialized( entityD, "c" );
@@ -141,7 +141,7 @@ public class FetchGraphTest {
 
 		scope.inSession(
 				session -> {
-					final EEntity entityE = session.load( EEntity.class, 17L );
+					final EEntity entityE = session.getReference( EEntity.class, 17L );
 					assertThat( stats.getPrepareStatementCount(), is( 0L ) );
 					assert !Hibernate.isPropertyInitialized( entityE, "d" );
 
@@ -356,7 +356,7 @@ public class FetchGraphTest {
 				session -> {
 					final AEntity entityA = session.get( AEntity.class, 1L );
 
-					final DEntity entityD = session.load( DEntity.class, 1L );
+					final DEntity entityD = session.getReference( DEntity.class, 1L );
 					assert !Hibernate.isInitialized( entityD );
 					Hibernate.initialize( entityD );
 					assert Hibernate.isPropertyInitialized( entityD, "a" );
@@ -383,7 +383,7 @@ public class FetchGraphTest {
 					// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 					// Load a D
 
-					final DEntity entityD = session.load( DEntity.class, 1L );
+					final DEntity entityD = session.getReference( DEntity.class, 1L );
 
 					assertThat( entityD instanceof HibernateProxy, is( false ) );
 					assertThat( entityD instanceof PersistentAttributeInterceptable, is( true ) );
@@ -611,7 +611,7 @@ public class FetchGraphTest {
 	public void testLoadAndDeleteDEntity(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					DEntity entity = session.load( DEntity.class, 1L );
+					DEntity entity = session.getReference( DEntity.class, 1L );
 					session.remove( entity );
 					session.remove( entity.getE() );
 					session.remove( entity.getA() );
@@ -654,7 +654,7 @@ public class FetchGraphTest {
 	public void testLoadAndDeleteEEntity(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					EEntity entity = session.load( EEntity.class, 17L );
+					EEntity entity = session.getReference( EEntity.class, 17L );
 					session.remove( entity );
 					session.remove( entity.getD() );
 				}

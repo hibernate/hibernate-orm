@@ -50,7 +50,7 @@ public class GetLoadJpaComplianceTest {
 
 						assertNull( s.get( Workload.class, 999 ) );
 
-						Workload proxy = s.load( Workload.class, 999 );
+						Workload proxy = s.getReference( Workload.class, 999 );
 						assertFalse( Hibernate.isInitialized( proxy ) );
 
 						proxy.getId();
@@ -103,7 +103,7 @@ public class GetLoadJpaComplianceTest {
 
 						assertNull( s.get( Employee.class, 999 ) );
 
-						Employee proxy = s.load( Employee.class, 999 );
+						Employee proxy = s.getReference( Employee.class, 999 );
 						assertFalse( Hibernate.isInitialized( proxy ) );
 
 						proxy.getId();

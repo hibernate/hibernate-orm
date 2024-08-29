@@ -448,7 +448,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 
 		scope.inTransaction(
 				session -> {
-					VersionedNode parentLoad = (VersionedNode) session.load( parent.getClass(), parent.getId() );
+					VersionedNode parentLoad = session.getReference( parent.getClass(), parent.getId() );
 					session.merge( parent );
 				}
 		);

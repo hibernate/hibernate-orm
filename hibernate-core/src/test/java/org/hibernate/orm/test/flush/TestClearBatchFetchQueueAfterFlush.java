@@ -58,9 +58,9 @@ public class TestClearBatchFetchQueueAfterFlush extends BaseCoreFunctionalTestCa
 		s.getTransaction().commit();
 		s.clear();
 
-		bookStore1 = s.load( BookStore.class, bookStore1.getId() );
-		bookStore2 = s.load( BookStore.class, bookStore2.getId() );
-		bookStore3 = s.load( BookStore.class, bookStore3.getId() );
+		bookStore1 = s.getReference( BookStore.class, bookStore1.getId() );
+		bookStore2 = s.getReference( BookStore.class, bookStore2.getId() );
+		bookStore3 = s.getReference( BookStore.class, bookStore3.getId() );
 
 		s.beginTransaction();
 		s.remove( bookStore2 );

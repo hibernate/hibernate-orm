@@ -80,7 +80,7 @@ public class LazyToOnesProxyWithSubclassesTest {
 
 					assertEquals( 1, stats.getPrepareStatementCount() );
 
-					Animal animal = session.load( Animal.class, "A Human" );
+					Animal animal = session.getReference( Animal.class, "A Human" );
 					assertFalse( Hibernate.isInitialized( animal ) );
 					assertEquals( 1, stats.getPrepareStatementCount() );
 				}

@@ -86,7 +86,7 @@ public class LazyLoadingTest {
     @Test
     public void test(SessionFactoryScope scope) {
         scope.inTransaction( s -> {
-            Child loadedChild = s.load( Child.class, lastChildID );
+            Child loadedChild = s.getReference( Child.class, lastChildID );
             assertThat( loadedChild, not( instanceOf( HibernateProxy.class ) ) );
             assertThat( loadedChild, instanceOf( PersistentAttributeInterceptable.class ) );
             final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) loadedChild;

@@ -140,7 +140,7 @@ public class ABCTest {
 
 		scope.inTransaction(
 				session -> {
-					C1 c1 = session.load( C1.class, c.getId() );
+					C1 c1 = session.getReference( C1.class, c.getId() );
 					assertTrue(
 							c1.getAddress().equals( "foo bar" ) &&
 									( c1.getCount() == 23432 ) &&

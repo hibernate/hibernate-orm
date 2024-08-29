@@ -88,7 +88,7 @@ public class SetOperationTests {
 	public void testLoad(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final EntityOfSets entity = session.load( EntityOfSets.class, 1 );
+					final EntityOfSets entity = session.getReference( EntityOfSets.class, 1 );
 					assertThat( entity, notNullValue() );
 					assertThat( entity, isNotInitialized() );
 				}
@@ -140,7 +140,7 @@ public class SetOperationTests {
 	public void testDeleteWithElementCollectionData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final EntityOfSets entity = session.load( EntityOfSets.class, 1 );
+					final EntityOfSets entity = session.getReference( EntityOfSets.class, 1 );
 					session.remove( entity );
 				}
 		);

@@ -114,7 +114,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 		CollectionCacheEntry cachedData = fromSession(
 				session -> {
 					// Force a collection into the second level cache, with its non-filtered elements
-					Salesperson sp = session.load( Salesperson.class, testData.steveId );
+					Salesperson sp = session.getReference( Salesperson.class, testData.steveId );
 					Hibernate.initialize( sp.getOrders() );
 					assertTrue( "No cache for collection", persister.hasCache() );
 					Object cacheKey = cache.generateCacheKey(
@@ -156,7 +156,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 		inSession(
 				session -> {
 					session.enableFilter( "fulfilledOrders" ).setParameter( "asOfDate", testData.lastMonth.getTime() );
-					Salesperson sp = session.load( Salesperson.class, testData.steveId );
+					Salesperson sp = session.getReference( Salesperson.class, testData.steveId );
 					assertEquals( "Filtered-collection not bypassing 2L-cache", 1, sp.getOrders().size() );
 				}
 		);
@@ -164,7 +164,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 		// Finally, make sure that the original cached version did not get over-written
 		inSession(
 				session -> {
-					Salesperson sp = session.load( Salesperson.class, testData.steveId );
+					Salesperson sp = session.getReference( Salesperson.class, testData.steveId );
 					assertEquals( "Actual cached version got over-written", 2, sp.getOrders().size() );
 				}
 		);
@@ -767,7 +767,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 							.setParameter( "asOfDate", testData.lastMonth.getTime() );
 
 					log.info( "Performing load of Department..." );
-					Department department = session.load( Department.class, testData.deptId );
+					Department department = session.getReference( Department.class, testData.deptId );
 					Set salespersons = department.getSalespersons();
 					assertEquals( "Incorrect salesperson count", 1, salespersons.size() );
 

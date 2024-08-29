@@ -122,7 +122,7 @@ public class BackrefTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		// load 'me' to associate it with the new session as a proxy (this may have occurred as 'prior work'
 		// to the reattachment below)...
-		Object meProxy = s.load( Parent.class, me.getName() );
+		Object meProxy = s.getReference( Parent.class, me.getName() );
 		assertFalse( Hibernate.isInitialized( meProxy ) );
 		// now, do the reattchment...
 		s.merge( me );

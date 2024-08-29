@@ -245,7 +245,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		er = s.load( Employer.class, er.getId() );
+		er = s.getReference( Employer.class, er.getId() );
 		assertNotNull( er );
 		assertNotNull( er.getEmployees() );
 		assertEquals( 1, er.getEmployees().size() );
@@ -384,7 +384,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		er = s.load( Employer.class, er.getId() );
+		er = s.getReference( Employer.class, er.getId() );
 		assertNotNull( er );
 		assertNotNull( er.getEmployees() );
 		assertEquals( 2, er.getEmployees().size() );
@@ -441,7 +441,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		f = s.load( Friend.class, f.getId() );
+		f = s.getReference( Friend.class, f.getId() );
 		assertNotNull( f );
 		assertNotNull( f.getFriends() );
 		assertEquals( 1, f.getFriends().size() );
@@ -509,10 +509,10 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		m1 = s.load( Man.class, m1pk );
+		m1 = s.getReference( Man.class, m1pk );
 		assertFalse( m1.getWomens().isEmpty() );
 		assertEquals( 1, m1.getWomens().size() );
-		w1 = s.load( Woman.class, w1pk );
+		w1 = s.getReference( Woman.class, w1pk );
 		assertFalse( w1.getMens().isEmpty() );
 		assertEquals( 2, w1.getMens().size() );
 

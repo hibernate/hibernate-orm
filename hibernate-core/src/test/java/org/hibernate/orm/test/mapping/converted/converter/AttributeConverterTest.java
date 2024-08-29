@@ -489,7 +489,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 				s = sf.openSession();
 				s.beginTransaction();
-				entity = s.load( EntityWithConvertibleField.class, entityID );
+				entity = s.getReference( EntityWithConvertibleField.class, entityID );
 				assertEquals( ConvertibleEnum.VALUE, entity.getConvertibleEnum() );
 				s.getTransaction().commit();
 				s.close();

@@ -44,7 +44,7 @@ public class OptionalOneToOneTest {
 
 		scope.inTransaction(
 				session -> {
-					Person me = session.load( Person.class, name );
+					Person me = session.getReference( Person.class, name );
 					assertNull( me.address );
 					session.remove( me );
 				}

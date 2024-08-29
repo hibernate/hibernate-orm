@@ -91,7 +91,7 @@ public class LazyCollectionLoadingTest {
     @Test
     public void testTransaction(SessionFactoryScope scope) {
         scope.inTransaction( s -> {
-            Parent parent = s.load( Parent.class, parentID );
+            Parent parent = s.getReference( Parent.class, parentID );
             assertThat( parent, notNullValue() );
             assertThat( parent, not( instanceOf( HibernateProxy.class ) ) );
             assertFalse( isPropertyInitialized( parent, "children" ) );
@@ -141,7 +141,7 @@ public class LazyCollectionLoadingTest {
     @Test
     public void testNoTransaction(SessionFactoryScope scope) {
         scope.inTransaction( s -> {
-            parent = s.load( Parent.class, parentID );
+            parent = s.getReference( Parent.class, parentID );
             assertThat( parent, notNullValue() );
             assertThat( parent, not( instanceOf( HibernateProxy.class ) ) );
             assertFalse( isPropertyInitialized( parent, "children" ) );

@@ -43,7 +43,7 @@ public class LoadContainedInDoubleContainingTest {
 	@Test
 	public void test(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			OtherContained otherContained = session.load( OtherContained.class, 2 );
+			OtherContained otherContained = session.getReference( OtherContained.class, 2 );
 			String text = otherContained.getText();
 			assertThat( text ).isEqualTo( "initial" );
 		} );

@@ -139,7 +139,7 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 
 		// make sure we get the steve back, from cache if same tenant (jboss)
 		doInHibernate( "jboss", session -> {
-			Customer customer = session.load( Customer.class, 1L );
+			Customer customer = session.getReference( Customer.class, 1L );
 			Assert.assertEquals( "steve", customer.getName() );
 			// also, make sure this came from second level
 			Assert.assertEquals( 1, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
@@ -149,7 +149,7 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 
 		// then make sure we get the steve back, from db if other tenant (acme)
 		doInHibernate( "acme", session -> {
-			Customer customer = session.load( Customer.class, 1L );
+			Customer customer = session.getReference( Customer.class, 1L );
 			Assert.assertEquals( "steve", customer.getName() );
 			// also, make sure this doesn't came from second level
 			Assert.assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
@@ -161,7 +161,7 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 
 		// first jboss
 		doInHibernate( "jboss", session -> {
-			Customer customer = session.load( Customer.class, 1L );
+			Customer customer = session.getReference( Customer.class, 1L );
 			Assert.assertEquals( "steve", customer.getName() );
 			// also, make sure this doesn't came from second level
 			Assert.assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
@@ -170,14 +170,14 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 		sessionFactory.getStatistics().clear();
 		// then, acme
 		doInHibernate( "acme", session -> {
-			Customer customer = session.load( Customer.class, 1L );
+			Customer customer = session.getReference( Customer.class, 1L );
 			Assert.assertEquals( "steve", customer.getName() );
 			// also, make sure this doesn't came from second level
 			Assert.assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
 		} );
 
 		doInHibernate( "jboss", session -> {
-			Customer customer = session.load( Customer.class, 1L );
+			Customer customer = session.getReference( Customer.class, 1L );
 			session.remove( customer );
 		} );
 	}

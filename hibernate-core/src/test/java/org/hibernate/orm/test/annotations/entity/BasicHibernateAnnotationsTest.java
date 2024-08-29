@@ -295,10 +295,10 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		topic = (Topic) s.load( Topic.class, topic.getId() );
+		topic = (Topic) s.getReference( Topic.class, topic.getId() );
 		
 		s.enableFilter("byState").setParameter("state", "published");
-		topic = (Topic) s.load( Topic.class, topic.getId() );
+		topic = (Topic) s.getReference( Topic.class, topic.getId() );
 		assertNotNull(topic); 
 		assertTrue(topic.getNarratives().size() == 1); 
 		assertEquals("published", topic.getNarratives().iterator().next().getState());
@@ -392,8 +392,8 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 
 		tx = s.beginTransaction();
 		s.clear();
-		team2 = (SoccerTeam)s.load(team2.getClass(), team2.getId());
-		team = (SoccerTeam)s.load(team.getClass(), team.getId());
+		team2 = (SoccerTeam)s.getReference(team2.getClass(), team2.getId());
+		team = (SoccerTeam)s.getReference(team.getClass(), team.getId());
 		int count = ( (Long) s.createQuery( "select count(*) from Player" ).list().get( 0 ) ).intValue();
 		assertEquals("expected count of 2 but got = " + count, count, 2);
 

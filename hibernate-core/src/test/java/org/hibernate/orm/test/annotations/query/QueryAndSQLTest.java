@@ -652,7 +652,7 @@ public class QueryAndSQLTest {
 					session.clear();
 					session.getSessionFactory().getCache().evictEntityData( Chaos.class );
 
-					Chaos resultChaos = session.load( Chaos.class, chaos.getId() );
+					Chaos resultChaos = session.getReference( Chaos.class, chaos.getId() );
 					assertEquals( upperName, resultChaos.getName() );
 					assertEquals( "nickname", resultChaos.getNickname() );
 				}
@@ -686,14 +686,14 @@ public class QueryAndSQLTest {
 					session.clear();
 					session.getSessionFactory().getCache().evictEntityData( Chaos.class );
 
-					Chaos resultChaos = session.load( Chaos.class, chaos.getId() );
+					Chaos resultChaos = session.getReference( Chaos.class, chaos.getId() );
 					assertEquals( 2, resultChaos.getParticles().size() );
 					resultChaos.getParticles().remove( resultChaos.getParticles().iterator().next() );
 					resultChaos.getParticles().remove( resultChaos.getParticles().iterator().next() );
 					session.flush();
 
 					session.clear();
-					resultChaos = session.load( Chaos.class, chaos.getId() );
+					resultChaos = session.getReference( Chaos.class, chaos.getId() );
 					assertEquals( 0, resultChaos.getParticles().size() );
 				}
 		);

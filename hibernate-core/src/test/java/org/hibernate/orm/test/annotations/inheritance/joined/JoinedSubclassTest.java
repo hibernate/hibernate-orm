@@ -167,13 +167,13 @@ public class JoinedSubclassTest {
 					session.flush();
 					session.clear();
 
-					c1 = session.load( Client.class, c1.getId() );
+					c1 = session.getReference( Client.class, c1.getId() );
 					assertEquals( 5000.0, c1.getAccount().getBalance(), 0.01 );
 
 					session.flush();
 					session.clear();
 
-					a1 = session.load( Account.class, a1.getId() );
+					a1 = session.getReference( Account.class, a1.getId() );
 					Set<Client> clients = a1.getClients();
 					assertEquals( 1, clients.size() );
 					Iterator<Client> it = clients.iterator();

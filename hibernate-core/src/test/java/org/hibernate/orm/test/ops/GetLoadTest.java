@@ -75,10 +75,10 @@ public class GetLoadTest {
 
 		scope.inTransaction(
 				session -> {
-					Employer e = session.load( Employer.class, emp.getId() );
+					Employer e = session.getReference( Employer.class, emp.getId() );
 					e.getId();
 					assertFalse( Hibernate.isInitialized( e ) );
-					Node n = session.load( Node.class, node.getName() );
+					Node n = session.getReference( Node.class, node.getName() );
 					assertThat( n.getName(), is( "foo" ) );
 					assertFalse( Hibernate.isInitialized( n ) );
 				}
@@ -95,10 +95,10 @@ public class GetLoadTest {
 
 		scope.inTransaction(
 				session -> {
-					Employer e = (Employer) session.load( "org.hibernate.orm.test.ops.Employer", emp.getId() );
+					Employer e = (Employer) session.getReference( "org.hibernate.orm.test.ops.Employer", emp.getId() );
 					e.getId();
 					assertFalse( Hibernate.isInitialized( e ) );
-					Node n = (Node) session.load( "org.hibernate.orm.test.ops.Node", node.getName() );
+					Node n = (Node) session.getReference( "org.hibernate.orm.test.ops.Node", node.getName() );
 					assertThat( n.getName(), is( "foo" ) );
 					assertFalse( Hibernate.isInitialized( n ) );
 				}

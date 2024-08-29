@@ -60,7 +60,7 @@ public class ReferenceCacheTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 //		MyReferenceData loaded = (MyReferenceData) s.get( MyReferenceData.class, 1 );
-		MyReferenceData loaded = (MyReferenceData) s.load( MyReferenceData.class, 1 );
+		MyReferenceData loaded = (MyReferenceData) s.getReference( MyReferenceData.class, 1 );
 		s.getTransaction().commit();
 		s.close();
 

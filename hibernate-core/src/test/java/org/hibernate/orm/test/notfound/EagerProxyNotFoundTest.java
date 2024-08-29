@@ -54,7 +54,7 @@ public class EagerProxyNotFoundTest {
 				session -> {
 					final Task task = new Task();
 					task.id = 1;
-					task.employeeEagerNotFoundIgnore = session.load( Employee.class, 2 );
+					task.employeeEagerNotFoundIgnore = session.getReference( Employee.class, 2 );
 					session.persist( task );
 				} );
 
@@ -72,13 +72,13 @@ public class EagerProxyNotFoundTest {
 				session -> {
 					final Task task = new Task();
 					task.id = 1;
-					task.employeeEagerNotFoundIgnore = session.load( Employee.class, 2 );
+					task.employeeEagerNotFoundIgnore = session.getReference( Employee.class, 2 );
 					session.persist( task );
 				} );
 
 		scope.inTransaction(
 				session -> {
-					session.load( Employee.class, 2 );
+					session.getReference( Employee.class, 2 );
 					final Task task = session.createQuery( "from Task", Task.class ).getSingleResult();
 					assertNotNull( task );
 					assertNull( task.employeeEagerNotFoundIgnore );
@@ -91,7 +91,7 @@ public class EagerProxyNotFoundTest {
 				session -> {
 					final Task task = new Task();
 					task.id = 1;
-					task.employeeLazy = session.load( Employee.class, 2 );
+					task.employeeLazy = session.getReference( Employee.class, 2 );
 					task.employeeEagerNotFoundIgnore = task.employeeLazy;
 					session.persist( task );
 				} );
@@ -113,14 +113,14 @@ public class EagerProxyNotFoundTest {
 				session -> {
 					final Task task = new Task();
 					task.id = 1;
-					task.employeeLazy = session.load( Employee.class, 2 );
+					task.employeeLazy = session.getReference( Employee.class, 2 );
 					task.employeeEagerNotFoundIgnore = task.employeeLazy;
 					session.persist( task );
 				} );
 
 		scope.inTransaction(
 				session -> {
-					final Employee employeeProxy = session.load( Employee.class, 2 );
+					final Employee employeeProxy = session.getReference( Employee.class, 2 );
 					final Task task = session.createQuery( "from Task", Task.class ).getSingleResult();
 					assertNotNull( task );
 					assertNull( task.employeeEagerNotFoundIgnore );
@@ -186,7 +186,7 @@ public class EagerProxyNotFoundTest {
 		try {
 			scope.inTransaction(
 					session -> {
-						session.load( Employee.class, 1 );
+						session.getReference( Employee.class, 1 );
 						session.createQuery( "from Task", Task.class ).getSingleResult();
 					} );
 			fail( "EntityNotFoundException should have been thrown because Task.employee.location is not found " +
@@ -249,7 +249,7 @@ public class EagerProxyNotFoundTest {
 		try {
 			scope.inTransaction(
 					session -> {
-						session.load( Employee.class, 1 );
+						session.getReference( Employee.class, 1 );
 						Task task = session.createQuery( "from Task", Task.class ).getSingleResult();
 						assertNotNull( task );
 						Employee employeeEagerNotFoundIgnore = task.getEmployeeEagerNotFoundIgnore();

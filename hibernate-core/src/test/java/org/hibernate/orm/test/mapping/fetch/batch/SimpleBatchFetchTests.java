@@ -48,8 +48,8 @@ public class SimpleBatchFetchTests {
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
-			final EmployeeGroup group1 = session.load( EmployeeGroup.class, 1 );
-			final EmployeeGroup group2 = session.load( EmployeeGroup.class, 2 );
+			final EmployeeGroup group1 = session.getReference( EmployeeGroup.class, 1 );
+			final EmployeeGroup group2 = session.getReference( EmployeeGroup.class, 2 );
 
 			assertThat( Hibernate.isInitialized( group1 ) ).isFalse();
 			assertThat( Hibernate.isInitialized( group2 ) ).isFalse();

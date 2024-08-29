@@ -71,7 +71,7 @@ public class BasicAttributesLazyGroupTest {
 	@Test
 	public void testLoad(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final Review review = session.load( Review.class, 1L );
+			final Review review = session.getReference( Review.class, 1L );
 
 			assertFalse( Hibernate.isPropertyInitialized( review, "rating" ) );
 			assertFalse( Hibernate.isPropertyInitialized( review, "comment" ) );
@@ -86,7 +86,7 @@ public class BasicAttributesLazyGroupTest {
 	@Test
 	public void testLoad2(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final Review review = session.load( Review.class, 1L );
+			final Review review = session.getReference( Review.class, 1L );
 
 			assertFalse( Hibernate.isPropertyInitialized( review, "rating" ) );
 			assertFalse( Hibernate.isPropertyInitialized( review, "comment" ) );
@@ -101,7 +101,7 @@ public class BasicAttributesLazyGroupTest {
 	@Test
 	public void testLoad3(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final Review review = session.load( Review.class, 1L );
+			final Review review = session.getReference( Review.class, 1L );
 
 			assertThat( review.getComment(), is( "My first review" ) );
 			assertThat( review.getRating(), is( Rating.ONE ) );
@@ -111,7 +111,7 @@ public class BasicAttributesLazyGroupTest {
 	@Test
 	public void testLoad4(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final Review review = session.load( Review.class, 1L );
+			final Review review = session.getReference( Review.class, 1L );
 			assertThat( review.getRating(), is( Rating.ONE ) );
 			assertThat( review.getComment(), is( "My first review" ) );
 		} );

@@ -220,7 +220,7 @@ public class SimpleInheritanceTest {
 		scope.inTransaction(
 				s -> {
 					// load the superclass proxy.
-					Person pLoad = s.load( Person.class, employee.getId() );
+					Person pLoad = s.getReference( Person.class, employee.getId() );
 					assertTrue( pLoad instanceof HibernateProxy );
 					Person pGet = s.get( Person.class, employee.getId() );
 					Person pQuery = (Person) s.createQuery(
@@ -269,7 +269,7 @@ public class SimpleInheritanceTest {
 		scope.inTransaction(
 				s -> {
 					// load the superclass proxy.
-					Person pLoad = s.load( Person.class, employee.getId() );
+					Person pLoad = s.getReference( Person.class, employee.getId() );
 					assertTrue( pLoad instanceof HibernateProxy );
 					// evict the proxy
 					s.evict( pLoad );

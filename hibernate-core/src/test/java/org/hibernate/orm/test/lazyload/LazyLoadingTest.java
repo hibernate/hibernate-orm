@@ -84,7 +84,7 @@ public class LazyLoadingTest {
 	public void testLazyCollectionLoadingAfterEndTransaction(SessionFactoryScope scope) {
 		Parent loadedParent = scope.fromTransaction(
 				session ->
-						session.load( Parent.class, parentID )
+						session.getReference( Parent.class, parentID )
 		);
 
 		assertFalse( Hibernate.isInitialized( loadedParent.getChildren() ) );
@@ -99,7 +99,7 @@ public class LazyLoadingTest {
 
 		Child loadedChild = scope.fromTransaction(
 				sesison ->
-						sesison.load( Child.class, lastChildID )
+						sesison.getReference( Child.class, lastChildID )
 		);
 
 		Parent p = loadedChild.getParent();
@@ -167,7 +167,7 @@ public class LazyLoadingTest {
 
 		scope.inTransaction(
 				session -> {
-					Account account = session.load( Account.class, accountId );
+					Account account = session.getReference( Account.class, accountId );
 					Client client = account.getClient();
 					client.getId();
 					assertThat( Hibernate.isInitialized( client ), is( false ) );

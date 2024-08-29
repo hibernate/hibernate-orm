@@ -99,8 +99,8 @@ public class SubselectFetchCollectionFromBatchTest {
 
 		scope.inTransaction( (s) -> {
 			EmployeeGroup[] loadedGroups = new EmployeeGroup[] {
-					s.load(EmployeeGroup.class, createdGroups[0].getId()),
-					s.load(EmployeeGroup.class, createdGroups[1].getId())
+					s.getReference(EmployeeGroup.class, createdGroups[0].getId()),
+					s.getReference(EmployeeGroup.class, createdGroups[1].getId())
 			};
 
 			// there should have been no SQL queries performed and loadedGroups should only contain proxies
@@ -226,8 +226,8 @@ public class SubselectFetchCollectionFromBatchTest {
 
 		scope.inTransaction( (s) -> {
 			EmployeeGroup[] loadedGroups = new EmployeeGroup[] {
-					s.load(EmployeeGroup.class, createdIds[0]),
-					s.load(EmployeeGroup.class, createdIds[1])
+					s.getReference(EmployeeGroup.class, createdIds[0]),
+					s.getReference(EmployeeGroup.class, createdIds[1])
 			};
 
 			// loadedGroups should only contain proxies

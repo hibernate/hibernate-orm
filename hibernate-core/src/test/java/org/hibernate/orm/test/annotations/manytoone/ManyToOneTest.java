@@ -189,7 +189,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		discount = s.load( Discount.class, discount.getId() );
+		discount = s.getReference( Discount.class, discount.getId() );
 		assertNotNull( discount );
 		assertFalse( Hibernate.isInitialized( discount.getOwner() ) );
 		tx.commit();

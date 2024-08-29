@@ -50,7 +50,7 @@ public class PropertyRefTest {
 
 		scope.inTransaction(
 				session -> {
-					User u = session.load( User.class, user.getId() );
+					User u = session.getReference( User.class, user.getId() );
 					session.remove( u );
 				}
 		);

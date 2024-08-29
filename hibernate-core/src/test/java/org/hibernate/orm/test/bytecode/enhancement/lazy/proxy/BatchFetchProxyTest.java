@@ -134,7 +134,7 @@ public class BatchFetchProxyTest {
 
 					List<Employer> employers = new ArrayList<>();
 					for ( int i = 0 ; i < NUMBER_OF_ENTITIES ; i++ ) {
-						employers.add( session.load( Employer.class, i + 1) );
+						employers.add( session.getReference( Employer.class, i + 1) );
 					}
 
 					assertEquals( 0, statistics.getPrepareStatementCount() );
@@ -167,7 +167,7 @@ public class BatchFetchProxyTest {
 
 					List<Employer> employers = new ArrayList<>();
 					for ( int i = 0 ; i < NUMBER_OF_ENTITIES ; i++ ) {
-						employers.add( session.load( Employer.class, i + 1) );
+						employers.add( session.getReference( Employer.class, i + 1) );
 					}
 
 					assertEquals( 0, statistics.getPrepareStatementCount() );

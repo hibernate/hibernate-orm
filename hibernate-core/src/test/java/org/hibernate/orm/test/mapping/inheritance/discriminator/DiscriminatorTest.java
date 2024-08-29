@@ -214,7 +214,7 @@ public class DiscriminatorTest {
 		scope.inTransaction(
 				s -> {
 					// load the superclass proxy.
-					Person pLoad = s.load( Person.class, e.getId() );
+					Person pLoad = s.getReference( Person.class, e.getId() );
 					assertTrue( pLoad instanceof HibernateProxy );
 					Person pGet = s.get( Person.class, e.getId() );
 					Person pQuery = (Person) s.createQuery( "from Person where id = :id" )
@@ -241,7 +241,7 @@ public class DiscriminatorTest {
 		scope.inTransaction(
 				s -> {
 					// load the superclass proxy.
-					Person pLoad = s.load( Person.class, e.getId() );
+					Person pLoad = s.getReference( Person.class, e.getId() );
 					assertTrue( pLoad instanceof HibernateProxy );
 					Person pGet = s.get( Person.class, e.getId() );
 					Person pQuery = (Person) s.createQuery( "from Person where id = :id" )
@@ -285,7 +285,7 @@ public class DiscriminatorTest {
 		scope.inTransaction(
 				s -> {
 					// load the superclass proxy.
-					Person pLoad = s.load( Person.class, e.getId() );
+					Person pLoad = s.getReference( Person.class, e.getId() );
 					assertTrue( pLoad instanceof HibernateProxy );
 					// evict the proxy
 					s.evict( pLoad );

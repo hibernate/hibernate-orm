@@ -40,7 +40,7 @@ public class DirectPropertyAccessorTest {
 			s.flush();
 			s.clear();
 
-			o = ( Order ) s.load( Order.class, 1 );
+			o = ( Order ) s.getReference( Order.class, 1 );
 			assertFalse( Hibernate.isInitialized( o ) );
 			o.getOrderNumber();
 			// If you mapped with field access, any method, except id, call initializes the proxy

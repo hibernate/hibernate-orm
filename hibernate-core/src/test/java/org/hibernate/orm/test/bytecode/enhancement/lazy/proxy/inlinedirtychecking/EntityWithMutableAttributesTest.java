@@ -100,7 +100,7 @@ public class EntityWithMutableAttributesTest {
 	public void testLoad(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					User user = session.load( User.class, 1 );
+					User user = session.getReference( User.class, 1 );
 					assertThat(
 							user, instanceOf( PersistentAttributeInterceptable.class )
 					);
@@ -117,7 +117,7 @@ public class EntityWithMutableAttributesTest {
 	public void testMutableAttributeIsUpdated(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					User user = session.load( User.class, 1 );
+					User user = session.getReference( User.class, 1 );
 					user.getDate().setTime( 0 );
 				}
 		);

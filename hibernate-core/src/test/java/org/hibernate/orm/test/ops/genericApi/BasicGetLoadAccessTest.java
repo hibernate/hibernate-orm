@@ -87,17 +87,17 @@ public class BasicGetLoadAccessTest {
 		// test `load` access
 		scope.inTransaction(
 				session ->
-						session.load( User.class, 1 )
+						session.getReference( User.class, 1 )
 		);
 
 		scope.inTransaction(
 				session ->
-						session.load( User.class, 1, LockMode.PESSIMISTIC_WRITE )
+						session.get( User.class, 1, LockMode.PESSIMISTIC_WRITE )
 		);
 
 		scope.inTransaction(
 				session ->
-						session.load( User.class, 1, LockOptions.UPGRADE )
+						session.get( User.class, 1, LockOptions.UPGRADE )
 		);
 
 		scope.inTransaction(

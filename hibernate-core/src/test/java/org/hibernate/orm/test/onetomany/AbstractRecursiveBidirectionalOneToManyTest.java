@@ -85,7 +85,7 @@ public abstract class AbstractRecursiveBidirectionalOneToManyTest extends BaseSe
 		inTransaction(
 				session -> {
 					session.setCacheMode( getSessionCacheMode() );
-					Node node3 = session.load( Node.class, new Integer( 3 ) );
+					Node node3 = session.getReference( Node.class, new Integer( 3 ) );
 					Node node2 = node3.getParentNode();
 					Node node1 = node2.getParentNode();
 
@@ -99,7 +99,7 @@ public abstract class AbstractRecursiveBidirectionalOneToManyTest extends BaseSe
 		inTransaction(
 				session -> {
 					session.setCacheMode( getSessionCacheMode() );
-					Node node3 = session.load( Node.class, new Integer( 3 ) );
+					Node node3 = session.getReference( Node.class, new Integer( 3 ) );
 					Node node2 = node3.getParentNode();
 					Node node1 = node2.getParentNode();
 
@@ -114,7 +114,7 @@ public abstract class AbstractRecursiveBidirectionalOneToManyTest extends BaseSe
 		inTransaction(
 				session -> {
 					session.setCacheMode( getSessionCacheMode() );
-					Node node3 = session.load( Node.class, new Integer( 3 ) );
+					Node node3 = session.getReference( Node.class, new Integer( 3 ) );
 					Node node2 = node3.getParentNode();
 					Node node1 = node2.getParentNode();
 

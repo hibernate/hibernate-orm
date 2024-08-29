@@ -61,7 +61,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 
 		scope.inTransaction(
 				session -> {
-					DataPoint dp = session.load( DataPoint.class, new Long( dpId ) );
+					DataPoint dp = session.getReference( DataPoint.class, new Long( dpId ) );
 					assertFalse( Hibernate.isInitialized( dp ), "was initialized" );
 					session.setReadOnly( dp, true );
 					assertFalse( Hibernate.isInitialized( dp ), "was initialized during setReadOnly" );

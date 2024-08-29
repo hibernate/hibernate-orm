@@ -66,8 +66,8 @@ public class SubselectFetchTest {
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			session.remove( session.load( Parent.class, "foo" ) );
-			session.remove( session.load( Parent.class, "bar" ) );
+			session.remove( session.getReference( Parent.class, "foo" ) );
+			session.remove( session.getReference( Parent.class, "bar" ) );
 		} );
 	}
 
@@ -277,7 +277,7 @@ public class SubselectFetchTest {
 		}
 		finally {
 			scope.inTransaction( (session) -> {
-				session.remove( session.load( Parent.class, "aaa" ) );
+				session.remove( session.getReference( Parent.class, "aaa" ) );
 			} );
 		}
 	}

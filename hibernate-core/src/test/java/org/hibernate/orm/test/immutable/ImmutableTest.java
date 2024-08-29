@@ -99,7 +99,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 				s -> {
 					s.beginTransaction();
 					try {
-						Contract c = s.load( Contract.class, contract.getId() );
+						Contract c = s.getReference( Contract.class, contract.getId() );
 //						Contract c = (Contract) s.createCriteria(Contract.class).uniqueResult();
 						assertTrue( s.isReadOnly( c ) );
 						assertEquals( "gavin", c.getCustomerName() );
@@ -161,7 +161,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 
 		inSession(
 				s -> {
-					Contract c = s.load( Contract.class, contract.getId() );
+					Contract c = s.getReference( Contract.class, contract.getId() );
 					assertTrue( s.isReadOnly( c ) );
 					assertEquals( "gavin", c.getCustomerName() );
 					assertEquals( 2, c.getVariations().size() );

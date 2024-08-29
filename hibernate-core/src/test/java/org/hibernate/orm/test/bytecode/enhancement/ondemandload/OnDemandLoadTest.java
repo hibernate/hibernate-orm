@@ -83,7 +83,7 @@ public class OnDemandLoadTest {
 
         scope.inTransaction( s -> {
             // first load the store, making sure it is not initialized
-            store[0] = s.load( Store.class, 1L );
+            store[0] = s.getReference( Store.class, 1L );
             assertNotNull( store[0] );
             assertFalse( isPropertyInitialized( store[0], "inventories" ) );
 

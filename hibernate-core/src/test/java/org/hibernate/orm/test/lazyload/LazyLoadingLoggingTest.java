@@ -71,7 +71,7 @@ public class LazyLoadingLoggingTest {
 	public void testNoSession(SessionFactoryScope scope) {
 		Address address = scope.fromTransaction(
 				session ->
-						session.load( Address.class, 1L )
+						session.getReference( Address.class, 1L )
 		);
 
 		try {
@@ -93,7 +93,7 @@ public class LazyLoadingLoggingTest {
 	public void testDisconnect(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Address address = session.load( Address.class, 1L );
+					Address address = session.getReference( Address.class, 1L );
 					AbstractSharedSessionContract sessionContract = (AbstractSharedSessionContract) session;
 					sessionContract.getJdbcCoordinator().close();
 

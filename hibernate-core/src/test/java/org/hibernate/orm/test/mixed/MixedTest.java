@@ -77,26 +77,26 @@ public class MixedTest {
 				.openSession()) {
 			session.beginTransaction();
 			try {
-				Item id = session.load( Item.class, did );
+				Item id = session.getReference( Item.class, did );
 				assertEquals( did, id.getId() );
 				assertEquals( "Hibernate in Action", id.getName() );
 				assertEquals( "/", id.getParent().getName() );
 
-				Item id2 = session.load( Item.class, d2id );
+				Item id2 = session.getReference( Item.class, d2id );
 				assertEquals( d2id, id2.getId() );
 				assertEquals( "Secret", id2.getName() );
 				assertEquals( "/", id2.getParent().getName() );
 
 				id.setName( "HiA" );
 
-				SecureDocument d2 = session.load( SecureDocument.class, d2id );
+				SecureDocument d2 = session.getReference( SecureDocument.class, d2id );
 				d2.setOwner( "max" );
 
 				session.flush();
 
 				session.clear();
 
-				Document d = session.load( Document.class, did );
+				Document d = session.getReference( Document.class, did );
 				assertEquals( did, d.getId() );
 				assertEquals( "HiA", d.getName() );
 				assertNotNull( d.getContent() );
@@ -104,7 +104,7 @@ public class MixedTest {
 				assertNotNull( d.getCreated() );
 				assertNotNull( d.getModified() );
 
-				d2 = session.load( SecureDocument.class, d2id );
+				d2 = session.getReference( SecureDocument.class, d2id );
 				assertEquals( d2id, d2.getId() );
 				assertEquals( "Secret", d2.getName() );
 				assertNotNull( d2.getContent() );

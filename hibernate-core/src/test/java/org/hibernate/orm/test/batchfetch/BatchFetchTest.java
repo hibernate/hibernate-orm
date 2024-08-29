@@ -149,13 +149,13 @@ public class BatchFetchTest {
 				session -> {
 					// load them all as proxies
 					for ( int i = 0; i < size; i++ ) {
-						BatchLoadableEntity entity = session.load( BatchLoadableEntity.class, i );
+						BatchLoadableEntity entity = session.getReference( BatchLoadableEntity.class, i );
 						assertFalse( Hibernate.isInitialized( entity ) );
 					}
 					scope.getSessionFactory().getStatistics().clear();
 					// now start initializing them...
 					for ( int i = 0; i < size; i++ ) {
-						BatchLoadableEntity entity = session.load( BatchLoadableEntity.class, i );
+						BatchLoadableEntity entity = session.getReference( BatchLoadableEntity.class, i );
 						Hibernate.initialize( entity );
 						assertTrue( Hibernate.isInitialized( entity ) );
 					}

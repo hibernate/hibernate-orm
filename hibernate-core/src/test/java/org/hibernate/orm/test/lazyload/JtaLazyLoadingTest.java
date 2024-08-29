@@ -79,7 +79,7 @@ public class JtaLazyLoadingTest {
 	public void testLazyCollectionLoadingAfterEndTransaction(SessionFactoryScope scope) {
 		Parent loadedParent = scope.fromTransaction(
 				session ->
-						session.load( Parent.class, parentID )
+						session.getReference( Parent.class, parentID )
 
 		);
 
@@ -95,7 +95,7 @@ public class JtaLazyLoadingTest {
 
 		Child loadedChild = scope.fromTransaction(
 				session ->
-						session.load( Child.class, lastChildID )
+						session.getReference( Child.class, lastChildID )
 		);
 
 		Parent p = loadedChild.getParent();

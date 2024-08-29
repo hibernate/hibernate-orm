@@ -232,7 +232,7 @@ public class CreateTest extends AbstractOperationTestCase {
 
 		scope.inTransaction(
 				session -> {
-					Employer er1 = session.load( Employer.class, er.getId() );
+					Employer er1 = session.getReference( Employer.class, er.getId() );
 					assertNotNull( er1 );
 					assertNotNull( er1.getEmployees() );
 					assertThat( er1.getEmployees().size(), is( 1 ) );

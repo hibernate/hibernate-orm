@@ -279,7 +279,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 
 		merged.setInjectedString( null );
 
-		User loaded = s.load( User.class, merged.getName() );
+		User loaded = s.getReference( User.class, merged.getName() );
 		// the session-bound instance was not instantiated by the interceptor, load simply returns it
 		assertSame( merged, loaded );
 		assertNull( merged.getInjectedString() );
@@ -288,7 +288,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.evict( merged );
 
-		User reloaded = s.load( User.class, merged.getName() );
+		User reloaded = s.getReference( User.class, merged.getName() );
 		// Interceptor IS called for instantiating the persistent instance associated to the session when using load
 		assertEquals( injectedString, reloaded.getInjectedString() );
 		assertEquals( u.getName(), reloaded.getName() );

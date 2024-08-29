@@ -156,7 +156,7 @@ public class LazyLoadingTest {
 		Store s = scope.fromTransaction(
 				session -> {
 					// first load the store, making sure it is not initialized
-					Store store = session.load( Store.class, 1 );
+					Store store = session.getReference( Store.class, 1 );
 					assertNotNull( store );
 					assertFalse( Hibernate.isInitialized( store ) );
 

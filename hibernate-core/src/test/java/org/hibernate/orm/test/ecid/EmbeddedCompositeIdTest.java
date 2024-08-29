@@ -113,8 +113,8 @@ public class EmbeddedCompositeIdTest {
 				session -> {
 					Course ucid = new Course( "mat2000", "Monash", null );
 					Course cid = new Course( "eng5000", "BHS", null );
-					Course luc = session.load( Course.class, ucid );
-					Course lc = session.load( Course.class, cid );
+					Course luc = session.getReference( Course.class, ucid );
+					Course lc = session.getReference( Course.class, cid );
 					assertFalse( Hibernate.isInitialized( luc ) );
 					assertFalse( Hibernate.isInitialized( lc ) );
 					assertEquals( UniversityCourse.class, Hibernate.getClass( luc ) );

@@ -53,7 +53,7 @@ public class VirtualEntitySingleIdMapper extends SingleIdMapper {
 
 		// Either loads the entity from the session's 1LC if it already exists or potentially creates a
 		// proxy object to represent the entity by identifier so that we can reference it in the map.
-		final Object entity = session.load( this.entityName, value );
+		final Object entity = session.getReference( this.entityName, value );
 		data.put( propertyData.getName(), entity );
 	}
 

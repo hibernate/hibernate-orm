@@ -67,7 +67,7 @@ public class CacheAnnotationTests extends BaseCoreFunctionalTestCase {
 		} );
 
 		doInHibernate( this::sessionFactory, session -> {
-			NoCacheConcurrencyStrategyEntity entity = session.load( NoCacheConcurrencyStrategyEntity.class, this.entityId );
+			NoCacheConcurrencyStrategyEntity entity = session.getReference( NoCacheConcurrencyStrategyEntity.class, this.entityId );
 			assertEquals( "name", entity.getName() );
 		} );
 	}

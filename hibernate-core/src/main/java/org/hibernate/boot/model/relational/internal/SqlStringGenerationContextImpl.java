@@ -139,11 +139,6 @@ public class SqlStringGenerationContextImpl
 	}
 
 	@Override
-	public IdentifierHelper getIdentifierHelper() {
-		return identifierHelper;
-	}
-
-	@Override
 	public Identifier toIdentifier(String text) {
 		return identifierHelper != null ? identifierHelper.toIdentifier( text ) : Identifier.toIdentifier( text );
 	}

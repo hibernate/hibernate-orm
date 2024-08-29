@@ -204,7 +204,7 @@ public class MySQLDialect extends Dialect {
 		registerKeywords( info );
 	}
 
-	@Deprecated
+	@Deprecated(since="6.6")
 	protected static DatabaseVersion createVersion(DialectResolutionInfo info) {
 		return createVersion( info, MINIMUM_VERSION );
 	}
@@ -443,7 +443,7 @@ public class MySQLDialect extends Dialect {
 		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
 	}
 
-	@Deprecated
+	@Deprecated(since="6.4")
 	protected static int getCharacterSetBytesPerCharacter(DatabaseMetaData databaseMetaData) {
 		if ( databaseMetaData != null ) {
 			try (java.sql.Statement s = databaseMetaData.getConnection().createStatement() ) {

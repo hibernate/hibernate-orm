@@ -61,14 +61,14 @@ public interface AvailableSettings
 	/**
 	 * @deprecated Use {@link #JAKARTA_LOCK_SCOPE} instead
 	 */
-	@Deprecated
+	@Deprecated(since="6.3")
 	@SuppressWarnings("DeprecatedIsStillUsed")
 	String JPA_LOCK_SCOPE = LegacySpecHints.HINT_JAVAEE_LOCK_SCOPE;
 
 	/**
 	 * @deprecated Use {@link #JAKARTA_LOCK_TIMEOUT} instead
 	 */
-	@Deprecated
+	@Deprecated(since="6.3")
 	@SuppressWarnings("DeprecatedIsStillUsed")
 	String JPA_LOCK_TIMEOUT = LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
 
@@ -137,7 +137,7 @@ public interface AvailableSettings
 	 *
 	 * @since 5.2
 	 */
-	@Deprecated(forRemoval = true)
+	@Deprecated(since="6.6", forRemoval = true)
 	String ALLOW_REFRESH_DETACHED_ENTITY = "hibernate.allow_refresh_detached_entity";
 
 	/**

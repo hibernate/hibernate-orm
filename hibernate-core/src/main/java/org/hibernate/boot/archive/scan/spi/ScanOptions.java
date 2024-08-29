@@ -37,6 +37,6 @@ public interface ScanOptions {
 	 * @deprecated With move to unified schema, this setting is now deprecated and will
 	 * be removed once support for reading {@code hbm.xml} files is fully removed.
 	 */
-	@Deprecated
+	@Deprecated(since="5")
 	boolean canDetectHibernateMappingFiles();
 }

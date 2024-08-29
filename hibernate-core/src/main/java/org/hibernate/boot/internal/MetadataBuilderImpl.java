@@ -69,7 +69,6 @@ import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.CoreLogging;

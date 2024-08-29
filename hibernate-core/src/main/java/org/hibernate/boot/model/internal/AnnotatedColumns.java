@@ -140,14 +140,6 @@ public class AnnotatedColumns {
 		this.table = table;
 	}
 
-	/**
-	 * @deprecated Use {@link #setTable(Table)} instead
-	 */
-	@Deprecated
-	void setTableInternal(Table table) {
-		this.table = table;
-	}
-
 	public void addColumn(AnnotatedColumn child) {
 		columns.add( child );
 	}

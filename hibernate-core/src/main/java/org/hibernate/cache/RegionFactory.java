@@ -13,6 +13,6 @@ package org.hibernate.cache;
  *
  * @deprecated Moved, but still need this definition for ehcache 
  */
-@Deprecated
+@Deprecated(since="4")
 public interface RegionFactory extends org.hibernate.cache.spi.RegionFactory {
 }

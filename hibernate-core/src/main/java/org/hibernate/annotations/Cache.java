@@ -103,6 +103,6 @@ public @interface Cache {
 	 *
 	 * @deprecated Use {@link #includeLazy()} for the sake of typesafety.
 	 */
-	@Deprecated
+	@Deprecated(since="6.4")
 	String include() default "all";
 }

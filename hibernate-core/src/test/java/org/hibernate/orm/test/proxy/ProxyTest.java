@@ -593,7 +593,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 
 		dp = s.load( DataPoint.class, dp.getId());
 		assertFalse( Hibernate.isInitialized( dp ) );
-		s.buildLockRequest( LockOptions.UPGRADE ).lock( dp );
+		s.lock( dp, LockOptions.UPGRADE );
 		assertSame( LockOptions.UPGRADE.getLockMode(), s.getCurrentLockMode( dp ) );
 
 		s.remove( dp );

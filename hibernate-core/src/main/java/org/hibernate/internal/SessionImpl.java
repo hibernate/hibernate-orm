@@ -652,18 +652,9 @@ public class SessionImpl
 		fireLock( new LockEvent( entityName, object, lockMode, this ) );
 	}
 
-	@Override @Deprecated
-	public LockRequest buildLockRequest(LockOptions lockOptions) {
-		return new LockRequestImpl( lockOptions );
-	}
-
 	@Override
 	public void lock(Object object, LockMode lockMode) throws HibernateException {
 		fireLock( new LockEvent( object, lockMode, this ) );
-	}
-
-	private void fireLock(String entityName, Object object, LockOptions options) {
-		fireLock( new LockEvent( entityName, object, options, this ) );
 	}
 
 	private void fireLock(Object object, LockOptions options) {
@@ -2164,59 +2155,6 @@ public class SessionImpl
 		}
 	}
 
-	@Deprecated
-	private class LockRequestImpl implements LockRequest {
-		private final LockOptions lockOptions;
-
-		private LockRequestImpl(LockOptions lockOptions) {
-			this.lockOptions = new LockOptions();
-			LockOptions.copy( lockOptions, this.lockOptions );
-		}
-
-		@Override
-		public LockMode getLockMode() {
-			return lockOptions.getLockMode();
-		}
-
-		@Override
-		public LockRequest setLockMode(LockMode lockMode) {
-			lockOptions.setLockMode( lockMode );
-			return this;
-		}
-
-		@Override
-		public int getTimeOut() {
-			return lockOptions.getTimeOut();
-		}
-
-		@Override
-		public LockRequest setTimeOut(int timeout) {
-			lockOptions.setTimeOut( timeout );
-			return this;
-		}
-
-		@Override @Deprecated @SuppressWarnings("deprecation")
-		public boolean getScope() {
-			return lockOptions.getScope();
-		}
-
-		@Override @Deprecated @SuppressWarnings("deprecation")
-		public LockRequest setScope(boolean scope) {
-			lockOptions.setScope( scope );
-			return this;
-		}
-
-		@Override @Deprecated @SuppressWarnings("deprecation")
-		public void lock(String entityName, Object object) throws HibernateException {
-			fireLock( entityName, object, lockOptions );
-		}
-
-		@Override
-		public void lock(Object object) throws HibernateException {
-			fireLock( object, lockOptions );
-		}
-	}
-
 	@Override
 	protected void addSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
 		transactionObserver = new TransactionObserver() {
@@ -2586,7 +2524,7 @@ public class SessionImpl
 
 		final LockOptions lockOptions = buildLockOptions( lockModeType, properties );
 		try {
-			buildLockRequest( lockOptions ).lock( entity );
+			fireLock( entity, lockOptions );
 		}
 		catch (RuntimeException e) {
 			throw getExceptionConverter().convert( e, lockOptions );

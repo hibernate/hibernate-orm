@@ -18,9 +18,9 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 import org.hibernate.Session;
-import org.hibernate.annotations.QueryHints;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.jpa.HibernateHints;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.result.Output;
@@ -82,7 +82,7 @@ public class OracleStoredProcedureTest {
 	public void testUnRegisteredParameter(EntityManagerFactoryScope scope) {
 		scope.inTransaction( (em) -> {
 			final StoredProcedureQuery function = em.createStoredProcedureQuery( "find_char", Integer.class );
-			function.setHint( QueryHints.CALLABLE_FUNCTION, "true" );
+			function.setHint( HibernateHints.HINT_CALLABLE_FUNCTION, "true" );
 			// search-string
 			function.registerStoredProcedureParameter( 1, String.class, ParameterMode.IN );
 			// source-string
@@ -101,7 +101,7 @@ public class OracleStoredProcedureTest {
 	public void testUnRegisteredParameterByName2(EntityManagerFactoryScope scope) {
 		scope.inTransaction( (em) -> {
 			final StoredProcedureQuery function = em.createStoredProcedureQuery( "find_char", Integer.class );
-			function.setHint( QueryHints.CALLABLE_FUNCTION, "true" );
+			function.setHint( HibernateHints.HINT_CALLABLE_FUNCTION, "true" );
 			// search-string
 			function.registerStoredProcedureParameter( "search_char", String.class, ParameterMode.IN );
 			// source-string
@@ -120,7 +120,7 @@ public class OracleStoredProcedureTest {
 	public void testUnRegisteredParameterByNameInvertedParameterRegistrationOrder(EntityManagerFactoryScope scope) {
 		scope.inTransaction( (em) -> {
 			final StoredProcedureQuery function = em.createStoredProcedureQuery( "find_char", Integer.class );
-			function.setHint( QueryHints.CALLABLE_FUNCTION, "true" );
+			function.setHint( HibernateHints.HINT_CALLABLE_FUNCTION, "true" );
 			// search-string
 			function.registerStoredProcedureParameter( "string", String.class, ParameterMode.IN );
 			// source-string

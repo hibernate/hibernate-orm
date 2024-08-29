@@ -1405,8 +1405,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return procedureCall;
 	}
 
-	protected abstract Object load(String entityName, Object identifier);
-
 	@Override
 	public ExceptionConverter getExceptionConverter() {
 		if ( exceptionConverter == null ) {

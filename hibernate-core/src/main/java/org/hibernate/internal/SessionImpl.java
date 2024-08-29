@@ -946,11 +946,6 @@ public class SessionImpl
 	}
 
 	@Override @Deprecated
-	public <T> T load(Class<T> entityClass, Object id) throws HibernateException {
-		return this.byId( entityClass ).getReference( id );
-	}
-
-	@Override @Deprecated
 	public Object load(String entityName, Object id) throws HibernateException {
 		return this.byId( entityName ).getReference( id );
 	}
@@ -1054,26 +1049,6 @@ public class SessionImpl
 			event.setResult( null );
 			loadEvent = event;
 		}
-	}
-
-	@Override @Deprecated
-	public <T> T load(Class<T> entityClass, Object id, LockMode lockMode) throws HibernateException {
-		return this.byId( entityClass ).with( new LockOptions( lockMode ) ).getReference( id );
-	}
-
-	@Override @Deprecated
-	public <T> T load(Class<T> entityClass, Object id, LockOptions lockOptions) throws HibernateException {
-		return this.byId( entityClass ).with( lockOptions ).getReference( id );
-	}
-
-	@Override @Deprecated
-	public Object load(String entityName, Object id, LockMode lockMode) throws HibernateException {
-		return this.byId( entityName ).with( new LockOptions( lockMode ) ).getReference( id );
-	}
-
-	@Override @Deprecated
-	public Object load(String entityName, Object id, LockOptions lockOptions) throws HibernateException {
-		return this.byId( entityName ).with( lockOptions ).getReference( id );
 	}
 
 	@Override

@@ -187,42 +187,6 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	@Deprecated
-	public <T> T load(Class<T> theClass, Object id, LockMode lockMode) {
-		return this.lazySession.get().load( theClass, id, lockMode );
-	}
-
-	@Override
-	@Deprecated
-	public <T> T load(Class<T> theClass, Object id, LockOptions lockOptions) {
-		return this.lazySession.get().load( theClass, id, lockOptions );
-	}
-
-	@Override
-	@Deprecated
-	public Object load(String entityName, Object id, LockMode lockMode) {
-		return this.lazySession.get().load( entityName, id, lockMode );
-	}
-
-	@Override
-	@Deprecated
-	public Object load(String entityName, Object id, LockOptions lockOptions) {
-		return this.lazySession.get().load( entityName, id, lockOptions );
-	}
-
-	@Override
-	@Deprecated
-	public <T> T load(Class<T> theClass, Object id) {
-		return this.lazySession.get().load( theClass, id );
-	}
-
-	@Override
-	@Deprecated
-	public Object load(String entityName, Object id) {
-		return this.lazySession.get().load( entityName, id );
-	}
-
-	@Override
 	public void load(Object object, Object id) {
 		this.lazySession.get().load( object, id );
 	}

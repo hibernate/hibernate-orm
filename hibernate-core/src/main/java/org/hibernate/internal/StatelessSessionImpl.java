@@ -881,11 +881,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
-	protected Object load(String entityName, Object identifier) {
-		return null;
-	}
-
 	public boolean isDefaultReadOnly() {
 		return false;
 	}

@@ -71,9 +71,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	void batchContainedStatementsOnRelease();
 
 	@LogMessage(level = WARN)
-	@Message(value = "c3p0 properties were encountered, but the %s provider class was not found on the classpath; these properties are going to be ignored.",
+	@Message(value = "Configuration settings with for connection provider '%s' are set, but the connection provider is not on the classpath; these properties will be ignored",
 			id = 22)
-	void c3p0ProviderClassNotFound(String c3p0ProviderClassName);
+	void providerClassNotFound(String c3p0ProviderClassName);
 
 	@LogMessage(level = WARN)
 	@Message(value = "I/O reported cached file could not be found: [%s]: %s", id = 23)
@@ -367,11 +367,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = DEBUG)
 	@Message(value = "'hibernate.properties' not found", id = 206)
 	void propertiesNotFound();
-
-	@LogMessage(level = WARN)
-	@Message(value = "proxool properties were encountered, but the %s provider class was not found on the classpath; these properties are going to be ignored.",
-			id = 209)
-	void proxoolProviderClassNotFound(String proxoolProviderClassName);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Queries executed to database: %s", id = 210)
@@ -899,11 +894,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Cannot unset session in a collection because an unexpected session is defined. A persistent collection may only be associated with one session at a time. %s", id = 471 )
 	void logCannotUnsetUnexpectedSessionInCollection(String msg);
 
-	@LogMessage(level = WARN)
-	@Message(value = "Hikari properties were encountered, but the Hikari ConnectionProvider was not found on the classpath; these properties are going to be ignored.",
-			id = 472)
-	void hikariProviderClassNotFound();
-
 	@LogMessage(level = INFO)
 	@Message(value = "Omitting cached file [%s] as the mapping file is newer", id = 473)
 	void cachedFileObsolete(File cachedFile);
@@ -941,19 +931,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "A ManagedEntity was associated with a stale PersistenceContext. A ManagedEntity may only be associated with one PersistenceContext at a time; %s", id = 480)
 	void stalePersistenceContextInEntityEntry(String msg);
 
-	@LogMessage(level = WARN)
-	@Message(value = "Vibur properties were encountered, but the Vibur ConnectionProvider was not found on the classpath; these properties are going to be ignored.",
-			id = 484)
-	void viburProviderClassNotFound();
-
 	@LogMessage(level = ERROR)
 	@Message(value = "Illegally attempted to associate a proxy for entity [%s] with id [%s] with two open sessions.", id = 485)
 	void attemptToAssociateProxyWithTwoOpenSessions(String entityName, Object id);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Agroal properties were encountered, but the Agroal ConnectionProvider was not found on the classpath; these properties are going to be ignored.",
-			id = 486)
-	void agroalProviderClassNotFound();
 
 	@LogMessage(level = WARN)
 	@Message(value = "The query: [%s] attempts to update an immutable entity: %s",
@@ -1050,9 +1030,4 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Failed to discover types for enhancement from class: %s",
 			id = 516)
 	void enhancementDiscoveryFailed(String className, @Cause Throwable cause);
-
-	@LogMessage(level = WARN)
-	@Message(value = "UCP properties were encountered, but the UCP ConnectionProvider was not found on the classpath; these properties are going to be ignored.",
-		id = 517)
-	void ucpProviderClassNotFound();
 }

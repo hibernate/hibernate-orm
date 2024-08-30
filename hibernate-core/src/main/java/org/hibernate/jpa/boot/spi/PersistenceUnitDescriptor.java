@@ -7,7 +7,6 @@
 package org.hibernate.jpa.boot.spi;
 
 import java.net.URL;
-import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import jakarta.persistence.SharedCacheMode;

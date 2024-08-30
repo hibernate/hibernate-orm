@@ -27,8 +27,6 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
@@ -38,13 +36,11 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
-import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 import static org.hibernate.engine.spi.CascadingActions.CHECK_ON_FLUSH;
 import static org.hibernate.pretty.MessageHelper.infoString;
-import static org.hibernate.type.ForeignKeyDirection.TO_PARENT;
 
 /**
  * Delegate responsible for, in conjunction with the various
@@ -364,10 +360,9 @@ public final class Cascade {
 							);
 						}
 
-						if ( type instanceof CollectionType
-								|| type instanceof OneToOneType && ( (OneToOneType) type ).getForeignKeyDirection() == ForeignKeyDirection.TO_PARENT ) {
+						if ( isForeignKeyToParent( type ) ) {
 							// If FK direction is to-parent, we must remove the orphan *before* the queued update(s)
-							// occur.  Otherwise, replacing the association on a managed entity, without manually
+							// occur. Otherwise, replacing the association on a managed entity, without manually
 							// nulling and flushing, causes FK constraint violations.
 							eventSource.removeOrphanBeforeUpdates( entityName, loadedValue );
 						}
@@ -379,6 +374,12 @@ public final class Cascade {
 				}
 			}
 		}
+	}
+
+	private static boolean isForeignKeyToParent(Type type) {
+		return type instanceof CollectionType
+			|| type instanceof OneToOneType
+				&& ((OneToOneType) type).getForeignKeyDirection() == ForeignKeyDirection.TO_PARENT;
 	}
 
 	/**

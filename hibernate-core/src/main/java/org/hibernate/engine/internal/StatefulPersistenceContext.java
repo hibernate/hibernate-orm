@@ -889,7 +889,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	private Object removeProxyByKey(final EntityKey key) {
 		final EntityHolderImpl entityHolder;
 		if ( entitiesByKey != null && ( entityHolder = entitiesByKey.get( key ) ) != null ) {
-			Object proxy = entityHolder.proxy;
+			final Object proxy = entityHolder.proxy;
 			entityHolder.proxy = null;
 			return proxy;
 		}
@@ -901,17 +901,16 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( !persister.hasProxy() ) {
 			return impl;
 		}
-		final Object proxy = getProxy( key );
-		return ( proxy != null ) ? narrowProxy( proxy, persister, key, impl ) : impl;
+		else {
+			final Object proxy = getProxy( key );
+			return proxy != null ? narrowProxy( proxy, persister, key, impl ) : impl;
+		}
 	}
 
 	@Override
 	public Object proxyFor(Object impl) throws HibernateException {
 		final EntityEntry e = getEntry( impl );
-		if ( e == null ) {
-			return impl;
-		}
-		return proxyFor( e.getPersister(), e.getEntityKey(), impl );
+		return e == null ? impl : proxyFor( e.getPersister(), e.getEntityKey(), impl );
 	}
 
 	@Override

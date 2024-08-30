@@ -11,7 +11,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.ResultSetReturn;
@@ -19,6 +18,7 @@ import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.event.spi.EventManager;
 import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 
 /**
@@ -29,7 +29,6 @@ import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 public class ResultSetReturnImpl implements ResultSetReturn {
 	private final JdbcCoordinator jdbcCoordinator;
 
-	private final Dialect dialect;
 	private final SqlStatementLogger sqlStatementLogger;
 	private final SqlExceptionHelper sqlExceptionHelper;
 
@@ -40,7 +39,6 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	 */
 	public ResultSetReturnImpl(JdbcCoordinator jdbcCoordinator, JdbcServices jdbcServices) {
 		this.jdbcCoordinator = jdbcCoordinator;
-		this.dialect = jdbcServices.getDialect();
 		this.sqlStatementLogger = jdbcServices.getSqlStatementLogger();
 		this.sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();
 	}
@@ -54,16 +52,17 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 		try {
 			final ResultSet rs;
-			final EventManager eventManager = jdbcCoordinator.getJdbcSessionOwner().getEventManager();
-			final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+			final EventManager eventManager = getEventManager();
+			final HibernateMonitoringEvent executionEvent =
+					eventManager.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				jdbcExecuteStatementStart();
 				rs = statement.executeQuery();
 			}
 			finally {
-				eventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
+				eventManager.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
 				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( sql, executeStartNanos, context() );
+				endSlowQueryLogging(sql, executeStartNanos);
 			}
 			postExtract( rs, statement );
 			return rs;
@@ -73,37 +72,43 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 	}
 
+	private EventManager getEventManager() {
+		return jdbcCoordinator.getJdbcSessionOwner().getEventManager();
+	}
+
+	private JdbcEventHandler getEventHandler() {
+		return jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getEventHandler();
+	}
+
 	private JdbcSessionContext context() {
 		return jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext();
 	}
 
 	private void jdbcExecuteStatementEnd() {
-		jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getEventHandler().jdbcExecuteStatementEnd();
+		getEventHandler().jdbcExecuteStatementEnd();
 	}
 
 	private void jdbcExecuteStatementStart() {
-		jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getEventHandler().jdbcExecuteStatementStart();
+		getEventHandler().jdbcExecuteStatementStart();
 	}
 
 	@Override
 	public ResultSet extract(Statement statement, String sql) {
 		sqlStatementLogger.logStatement( sql );
-		long executeStartNanos = 0;
-		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
-			executeStartNanos = System.nanoTime();
-		}
+		long executeStartNanos = beginSlowQueryLogging();
 		try {
 			final ResultSet rs;
-			final EventManager eventManager = jdbcCoordinator.getJdbcSessionOwner().getEventManager();
-			final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+			final EventManager eventManager = getEventManager();
+			final HibernateMonitoringEvent executionEvent =
+					eventManager.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				jdbcExecuteStatementStart();
 				rs = statement.executeQuery( sql );
 			}
 			finally {
-				eventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
+				eventManager.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
 				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( sql, executeStartNanos, context() );
+				endSlowQueryLogging( sql, executeStartNanos );
 			}
 			postExtract( rs, statement );
 			return rs;
@@ -116,14 +121,12 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	@Override
 	public ResultSet execute(PreparedStatement statement, String sql) {
 		// sql logged by StatementPreparerImpl
-		long executeStartNanos = 0;
-		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
-			executeStartNanos = System.nanoTime();
-		}
+		long executeStartNanos = beginSlowQueryLogging();
 		try {
 			final ResultSet rs;
-			final EventManager eventManager = jdbcCoordinator.getJdbcSessionOwner().getEventManager();
-			final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+			final EventManager eventManager = getEventManager();
+			final HibernateMonitoringEvent executionEvent =
+					eventManager.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				jdbcExecuteStatementStart();
 				if ( !statement.execute() ) {
@@ -134,9 +137,9 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 				rs = statement.getResultSet();
 			}
 			finally {
-				eventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
+				eventManager.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
 				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( sql, executeStartNanos, context() );
+				endSlowQueryLogging( sql, executeStartNanos );
 			}
 			postExtract( rs, statement );
 			return rs;
@@ -149,14 +152,12 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	@Override
 	public ResultSet execute(Statement statement, String sql) {
 		sqlStatementLogger.logStatement( sql );
-		long executeStartNanos = 0;
-		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
-			executeStartNanos = System.nanoTime();
-		}
+		long executeStartNanos = beginSlowQueryLogging();
 		try {
 			final ResultSet rs;
-			final EventManager eventManager = jdbcCoordinator.getJdbcSessionOwner().getEventManager();
-			final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+			final EventManager eventManager = getEventManager();
+			final HibernateMonitoringEvent executionEvent =
+					eventManager.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				jdbcExecuteStatementStart();
 				if ( !statement.execute( sql ) ) {
@@ -167,9 +168,9 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 				rs = statement.getResultSet();
 			}
 			finally {
-				eventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
+				eventManager.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
 				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( sql, executeStartNanos, context() );
+				endSlowQueryLogging( sql, executeStartNanos );
 			}
 			postExtract( rs, statement );
 			return rs;
@@ -182,13 +183,10 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	@Override
 	public int executeUpdate(PreparedStatement statement, String sql) {
 		assert statement != null;
-
-		long executeStartNanos = 0;
-		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
-			executeStartNanos = System.nanoTime();
-		}
-		final EventManager eventManager = jdbcCoordinator.getJdbcSessionOwner().getEventManager();
-		final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+		long executeStartNanos = beginSlowQueryLogging();
+		final EventManager eventManager = getEventManager();
+		final HibernateMonitoringEvent executionEvent =
+				eventManager.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			jdbcExecuteStatementStart();
 			return statement.executeUpdate();
@@ -197,21 +195,19 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			throw sqlExceptionHelper.convert( e, "could not execute statement", sql );
 		}
 		finally {
-			eventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
+			eventManager.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
 			jdbcExecuteStatementEnd();
-			sqlStatementLogger.logSlowQuery( sql, executeStartNanos, context() );
+			endSlowQueryLogging( sql, executeStartNanos );
 		}
 	}
 
 	@Override
 	public int executeUpdate(Statement statement, String sql) {
 		sqlStatementLogger.logStatement( sql );
-		long executeStartNanos = 0;
-		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
-			executeStartNanos = System.nanoTime();
-		}
-		final EventManager eventManager = jdbcCoordinator.getJdbcSessionOwner().getEventManager();
-		final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+		long executeStartNanos = beginSlowQueryLogging();
+		final EventManager eventManager = getEventManager();
+		final HibernateMonitoringEvent executionEvent =
+				eventManager.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			jdbcExecuteStatementStart();
 			return statement.executeUpdate( sql );
@@ -220,10 +216,18 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			throw sqlExceptionHelper.convert( e, "could not execute statement", sql );
 		}
 		finally {
-			eventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
+			eventManager.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
 			jdbcExecuteStatementEnd();
-			sqlStatementLogger.logSlowQuery( sql, executeStartNanos, context() );
+			endSlowQueryLogging( sql, executeStartNanos );
 		}
+	}
+
+	private void endSlowQueryLogging(String sql, long executeStartNanos) {
+		sqlStatementLogger.logSlowQuery(sql, executeStartNanos, context() );
+	}
+
+	private long beginSlowQueryLogging() {
+		return sqlStatementLogger.getLogSlowQuery() > 0 ? System.nanoTime() : 0;
 	}
 
 	private void postExtract(ResultSet rs, Statement st) {

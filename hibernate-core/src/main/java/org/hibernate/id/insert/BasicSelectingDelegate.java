@@ -35,9 +35,11 @@ public class BasicSelectingDelegate extends AbstractSelectingDelegate {
 
 	@Override
 	protected String getSelectSQL() {
-		if ( persister.getIdentitySelectString() == null && !dialect().getIdentityColumnSupport().supportsInsertSelectIdentity() ) {
+		final String identitySelectString = persister.getIdentitySelectString();
+		if ( identitySelectString == null
+				&& !dialect().getIdentityColumnSupport().supportsInsertSelectIdentity() ) {
 			throw CoreLogging.messageLogger( BasicSelectingDelegate.class ).nullIdentitySelectString();
 		}
-		return persister.getIdentitySelectString();
+		return identitySelectString;
 	}
 }

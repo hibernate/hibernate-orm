@@ -45,7 +45,6 @@ import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.Type;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;

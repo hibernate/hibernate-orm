@@ -39,7 +39,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.event.spi.EventEngine;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FastSessionServices;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
@@ -205,12 +204,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		return delegate.getDefinedFetchProfileNames();
 	}
 
-	@Override
-	public IdentifierGenerator getIdentifierGenerator(String rootEntityName) {
-		return delegate.getIdentifierGenerator( rootEntityName );
-	}
-
-	@Override
+	@Override @Deprecated
 	public Generator getGenerator(String rootEntityName) {
 		return delegate.getGenerator( rootEntityName );
 	}

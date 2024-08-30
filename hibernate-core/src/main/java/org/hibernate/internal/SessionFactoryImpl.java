@@ -73,7 +73,6 @@ import org.hibernate.event.spi.EventEngine;
 import org.hibernate.generator.Generator;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.Configurable;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.internal.util.StringHelper;
@@ -657,6 +656,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		getCache().prime( regionConfigs );
 	}
 
+	@Override
 	public SessionImplementor openSession() throws HibernateException {
 		//The defaultSessionOpenOptions can't be used in some cases; for example when using a TenantIdentifierResolver.
 		if ( defaultSessionOpenOptions != null ) {
@@ -678,6 +678,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		}
 	}
 
+	@Override
 	public Session getCurrentSession() throws HibernateException {
 		if ( currentSessionContext == null ) {
 			throw new HibernateException( "No CurrentSessionContext configured" );
@@ -695,6 +696,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		return new StatelessSessionBuilderImpl( this );
 	}
 
+	@Override
 	public StatelessSession openStatelessSession() {
 		if ( this.defaultStatelessOptions != null ) {
 			return this.defaultStatelessOptions.openStatelessSession();
@@ -704,6 +706,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		}
 	}
 
+	@Override
 	public StatelessSession openStatelessSession(Connection connection) {
 		return withStatelessOptions().connection( connection ).openStatelessSession();
 	}
@@ -897,13 +900,17 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		);
 	}
 
+	@Override
 	public Type getIdentifierType(String className) throws MappingException {
 		return runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( className ).getIdentifierType();
 	}
+
+	@Override
 	public String getIdentifierPropertyName(String className) throws MappingException {
 		return runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( className ).getIdentifierPropertyName();
 	}
 
+	@Override
 	public Type getReferencedPropertyType(String className, String propertyName) throws MappingException {
 		return runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( className ).getPropertyType( propertyName );
 	}
@@ -984,6 +991,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		serviceRegistry.destroy();
 	}
 
+	@Override
 	public CacheImplementor getCache() {
 		validateNotClosed();
 		return cacheAccess;
@@ -1150,10 +1158,12 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		return autoEnabledFilters;
 	}
 
+	@Override
 	public boolean containsFetchProfileDefinition(String name) {
 		return fetchProfiles.containsKey( name );
 	}
 
+	@Override
 	public Set<String> getDefinedFilterNames() {
 		return unmodifiableSet( filters.keySet() );
 	}
@@ -1163,12 +1173,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		return unmodifiableSet( fetchProfiles.keySet() );
 	}
 
-	@Deprecated
-	public IdentifierGenerator getIdentifierGenerator(String rootEntityName) {
-		return (IdentifierGenerator) getGenerator( rootEntityName );
-	}
-
-	@Deprecated
+	@Override @Deprecated
 	public Generator getGenerator(String rootEntityName) {
 		return identifierGenerators.get( rootEntityName );
 	}
@@ -1250,6 +1255,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		return sessionFactoryOptions.getEntityNotFoundDelegate();
 	}
 
+	@Override
 	public FetchProfile getFetchProfile(String name) {
 		return fetchProfiles.get( name );
 	}

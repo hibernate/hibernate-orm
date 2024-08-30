@@ -1651,12 +1651,9 @@ public class SessionImpl
 			object = lazyInitializer.getImplementation();
 		}
 		final EntityEntry entry = persistenceContext.getEntry( object );
-		if ( entry == null ) {
-			return guessEntityName( object );
-		}
-		else {
-			return entry.getPersister().getEntityName();
-		}
+		return entry == null
+				? guessEntityName( object )
+				: entry.getPersister().getEntityName();
 	}
 
 	@Override
@@ -1670,12 +1667,9 @@ public class SessionImpl
 			}
 			object = lazyInitializer.getImplementation();
 		}
-		if ( entry == null ) {
-			return guessEntityName( object );
-		}
-		else {
-			return entry.getPersister().getEntityName();
-		}
+		return entry == null
+				? guessEntityName( object )
+				: entry.getPersister().getEntityName();
 	}
 
 	@Override
@@ -1690,7 +1684,7 @@ public class SessionImpl
 			object = lazyInitializer.getImplementation();
 		}
 
-		EntityEntry entry = persistenceContext.getEntry( object );
+		final EntityEntry entry = persistenceContext.getEntry( object );
 		if ( entry == null ) {
 			throwTransientObjectException( object );
 		}
@@ -1705,7 +1699,7 @@ public class SessionImpl
 			return (T) getReference( lazyInitializer.getPersistentClass(), lazyInitializer.getIdentifier() );
 		}
 		else {
-			EntityPersister persister = getEntityPersister( null, object );
+			final EntityPersister persister = getEntityPersister( null, object );
 			return (T) getReference( persister.getMappedClass(), persister.getIdentifier(object, this) );
 		}
 	}

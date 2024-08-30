@@ -25,10 +25,9 @@ public enum ReplicationMode {
 	 */
 	EXCEPTION {
 		@Override
-		public boolean shouldOverwriteCurrentVersion(
-				Object entity,
-				Object currentVersion, Object newVersion,
-				BasicType<Object> versionType) {
+		public <T> boolean shouldOverwriteCurrentVersion(
+				T currentVersion, T newVersion,
+				BasicType<T> versionType) {
 			throw new AssertionFailure( "should not be called" );
 		}
 	},
@@ -37,10 +36,9 @@ public enum ReplicationMode {
 	 */
 	IGNORE {
 		@Override
-		public boolean shouldOverwriteCurrentVersion(
-				Object entity,
-				Object currentVersion, Object newVersion,
-				BasicType<Object> versionType) {
+		public <T> boolean shouldOverwriteCurrentVersion(
+				T currentVersion, T newVersion,
+				BasicType<T> versionType) {
 			return false;
 		}
 	},
@@ -49,10 +47,9 @@ public enum ReplicationMode {
 	 */
 	OVERWRITE {
 		@Override
-		public boolean shouldOverwriteCurrentVersion(
-				Object entity,
-				Object currentVersion, Object newVersion,
-				BasicType<Object> versionType) {
+		public <T> boolean shouldOverwriteCurrentVersion(
+				T currentVersion, T newVersion,
+				BasicType<T> versionType) {
 			return true;
 		}
 	},
@@ -61,10 +58,9 @@ public enum ReplicationMode {
 	 */
 	LATEST_VERSION {
 		@Override
-		public boolean shouldOverwriteCurrentVersion(
-				Object entity,
-				Object currentVersion, Object newVersion,
-				BasicType<Object> versionType) {
+		public <T> boolean shouldOverwriteCurrentVersion(
+				T currentVersion, T newVersion,
+				BasicType<T> versionType) {
 			// always overwrite non-versioned data (because we don't know which is newer)
 			return versionType == null
 				|| versionType.getJavaTypeDescriptor().getComparator()
@@ -82,9 +78,7 @@ public enum ReplicationMode {
 	 *
 	 * @return {@code true} indicates the data should be overwritten; {@code false} indicates it should not.
 	 */
-	public abstract boolean shouldOverwriteCurrentVersion(
-			Object entity,
-			Object currentVersion, Object newVersion,
-			BasicType<Object> versionType);
-
+	public abstract <T> boolean shouldOverwriteCurrentVersion(
+			T currentVersion, T newVersion,
+			BasicType<T> versionType);
 }

@@ -163,11 +163,12 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 
 	private DatabaseConnectionInfo buildDbInfo(ServiceRegistryImplementor registry, Dialect dialect) {
 		if ( !isMultiTenancyEnabled( registry ) ) {
-			final ConnectionProvider cp = registry.requireService( ConnectionProvider.class );
-			return cp.getDatabaseConnectionInfo( dialect );
+			return registry.requireService( ConnectionProvider.class )
+					.getDatabaseConnectionInfo( dialect );
 		}
 		else {
-			final MultiTenantConnectionProvider<?> mcp = registry.requireService( MultiTenantConnectionProvider.class );
+			final MultiTenantConnectionProvider<?> mcp =
+					registry.requireService( MultiTenantConnectionProvider.class );
 			return mcp.getDatabaseConnectionInfo( dialect );
 		}
 	}

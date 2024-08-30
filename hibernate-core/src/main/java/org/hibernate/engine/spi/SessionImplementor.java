@@ -11,9 +11,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.event.spi.MergeContext;
-import org.hibernate.event.spi.PersistContext;
-import org.hibernate.event.spi.RefreshContext;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryImplementor;
@@ -102,30 +99,6 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	 * Cascade the lock operation to the given child entity.
 	 */
 	void lock(String entityName, Object child, LockOptions lockOptions);
-
-	/**
-	 * @deprecated  OperationalContext should cover this overload I believe
-	 */
-	@Deprecated
-	void merge(String entityName, Object object, MergeContext copiedAlready) throws HibernateException;
-
-	/**
-	 * @deprecated  OperationalContext should cover this overload I believe
-	 */
-	@Deprecated
-	void persist(String entityName, Object object, PersistContext createdAlready) throws HibernateException;
-
-	/**
-	 * @deprecated  OperationalContext should cover this overload I believe
-	 */
-	@Deprecated
-	void persistOnFlush(String entityName, Object object, PersistContext copiedAlready);
-
-	/**
-	 * @deprecated  OperationalContext should cover this overload I believe
-	 */
-	@Deprecated
-	void removeOrphanBeforeUpdates(String entityName, Object child);
 
 	@Override
 	default SessionImplementor asSessionImplementor() {

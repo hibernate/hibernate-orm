@@ -38,8 +38,6 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.event.spi.EventManager;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.MergeContext;
-import org.hibernate.event.spi.PersistContext;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jdbc.ReturningWork;
@@ -1128,26 +1126,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void forceFlush(EntityKey e) throws HibernateException {
 		delegate.forceFlush( e );
-	}
-
-	@Override
-	public void merge(String entityName, Object object, MergeContext copiedAlready) throws HibernateException {
-		delegate.merge( entityName, object, copiedAlready );
-	}
-
-	@Override
-	public void persist(String entityName, Object object, PersistContext createdAlready) throws HibernateException {
-		delegate.persist( entityName, object, createdAlready );
-	}
-
-	@Override
-	public void persistOnFlush(String entityName, Object object, PersistContext copiedAlready) {
-		delegate.persistOnFlush( entityName, object, copiedAlready );
-	}
-
-	@Override
-	public void removeOrphanBeforeUpdates(String entityName, Object child) {
-		delegate.removeOrphanBeforeUpdates( entityName, child );
 	}
 
 	@Override

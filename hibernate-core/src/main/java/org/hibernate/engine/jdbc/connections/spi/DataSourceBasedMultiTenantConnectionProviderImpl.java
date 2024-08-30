@@ -125,14 +125,19 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 	@Override
 	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
 		return new DatabaseConnectionInfoImpl(
-				"Multi-tenant - " + tenantIdentifierForAny,
+				null,
 				null,
 				dialect.getVersion(),
 				null,
 				null,
 				null,
 				null
-		);
+		) {
+			@Override
+			public String toInfoString() {
+				return "\tMulti-tenant datasource JNDI name [" + jndiName + ']';
+			}
+		};
 	}
 
 }

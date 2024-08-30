@@ -139,13 +139,20 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	@Override
 	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
 		return new DatabaseConnectionInfoImpl(
-				"Connecting through datasource '" + (dataSourceJndiName != null ? dataSourceJndiName : dataSource) + "'",
+				null,
 				null,
 				dialect.getVersion(),
 				null,
 				null,
 				null,
 				null
-		);
+		) {
+			@Override
+			public String toInfoString() {
+				return dataSourceJndiName != null
+						? "\tDatasource JND name [" + dataSourceJndiName + "]"
+						: "\tProvided DataSource";
+			}
+		};
 	}
 }

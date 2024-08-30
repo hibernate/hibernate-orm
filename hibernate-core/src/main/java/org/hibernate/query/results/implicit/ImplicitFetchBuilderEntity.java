@@ -14,7 +14,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import org.hibernate.engine.FetchTiming;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -60,7 +60,7 @@ public class ImplicitFetchBuilderEntity implements ImplicitFetchBuilder {
 		else {
 			associationKeyPropertyName = fetchable.getReferencedPropertyName();
 			NavigablePath path = relativePath.getValue();
-			for ( String part : associationKeyPropertyName.split( "\\." ) ) {
+			for ( String part : StringHelper.split( ".", associationKeyPropertyName ) ) {
 				path = path.append( part );
 			}
 			associationKeyFetchPath = path;

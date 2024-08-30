@@ -240,13 +240,13 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		}
 		try (Reader reader = filer.getResource(StandardLocation.SOURCE_OUTPUT, ENTITY_INDEX, value)
 				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
-			return Set.of(buffered.readLine().split(" "));
+			return Set.of(split(" ", buffered.readLine()));
 		}
 		catch (IOException e) {
 		}
 		try (Reader reader = filer.getResource(StandardLocation.CLASS_PATH, ENTITY_INDEX, '.' + value)
 				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
-			return Set.of(buffered.readLine().split(" "));
+			return Set.of(split(" ", buffered.readLine()));
 		}
 		catch (IOException e) {
 		}

@@ -7,6 +7,8 @@
 package org.hibernate.boot.model.source.internal.hbm;
 
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmColumnType;
@@ -14,6 +16,8 @@ import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.source.spi.ColumnSource;
 import org.hibernate.boot.model.source.spi.JdbcDataType;
 import org.hibernate.boot.model.source.spi.SizeSource;
+
+import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 
 /**
  * @author Steve Ebersole
@@ -65,14 +69,12 @@ class ColumnSourceImpl
 		this.columnElement = columnElement;
 		this.nullable = nullable;
 
-		this.indexConstraintNames = CommaSeparatedStringHelper.splitAndCombine(
-				indexConstraintNames,
-				columnElement.getIndex()
-		);
-		this.ukConstraintNames = CommaSeparatedStringHelper.splitAndCombine(
-				ukConstraintNames,
-				columnElement.getUniqueKey()
-		);
+		this.indexConstraintNames =
+				splitAndCombine( indexConstraintNames,
+						columnElement.getIndex() );
+		this.ukConstraintNames =
+				splitAndCombine( ukConstraintNames,
+						columnElement.getUniqueKey() );
 	}
 
 	@Override
@@ -153,5 +155,16 @@ class ColumnSourceImpl
 	@Override
 	public Set<String> getUniqueKeyConstraintNames() {
 		return ukConstraintNames;
+	}
+
+	public static Set<String> splitAndCombine(Set<String> stringSet, String values) {
+		if ( values == null || values.isEmpty() ) {
+			return stringSet;
+		}
+		else {
+			HashSet<String> set = new HashSet<>( stringSet );
+			Collections.addAll( set, splitAtCommas( values ) );
+			return set;
+		}
 	}
 }

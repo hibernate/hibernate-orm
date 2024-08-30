@@ -48,6 +48,7 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.dialect.NullOrdering;
@@ -169,7 +170,7 @@ public class CockroachLegacyDialect extends Dialect {
 		// What the DB select returns is similar to "CockroachDB CCL v21.2.10 (x86_64-unknown-linux-gnu, built 2022/05/02 17:38:58, go1.16.6)"
 		Matcher m = CRDB_VERSION_PATTERN.matcher( versionString == null ? "" : versionString );
 		if ( m.find() ) {
-			String[] versionParts = m.group().substring( 1 ).split( "\\." );
+			String[] versionParts = StringHelper.split( ".", m.group().substring( 1 ) );
 			// if we got to this point, there is at least a major version, so no need to check [].length > 0
 			int majorVersion = Integer.parseInt( versionParts[0] );
 			int minorVersion = versionParts.length > 1 ? Integer.parseInt( versionParts[1] ) : 0;

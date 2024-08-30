@@ -212,7 +212,7 @@ public class MySQLDialect extends Dialect {
 	protected static DatabaseVersion createVersion(DialectResolutionInfo info, DatabaseVersion defaultVersion) {
 		final String versionString = info.getDatabaseVersion();
 		if ( versionString != null ) {
-			final String[] components = StringHelper.split(".-", versionString);
+			final String[] components = StringHelper.split( ".-", versionString );
 			if ( components.length >= 3 ) {
 				try {
 					final int majorVersion = Integer.parseInt( components[0] );

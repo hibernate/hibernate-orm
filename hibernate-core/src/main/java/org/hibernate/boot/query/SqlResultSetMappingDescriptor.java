@@ -15,6 +15,7 @@ import java.util.Map;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -338,7 +339,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				String columnName) {
 			this.entityName = entityName;
 			this.propertyPath = propertyPath;
-			this.propertyPathParts = propertyPath.split( "\\." );
+			this.propertyPathParts = StringHelper.split( ".", propertyPath );
 			this.navigablePath = entityPath;
 			this.columnNames = new ArrayList<>();
 			columnNames.add( columnName );

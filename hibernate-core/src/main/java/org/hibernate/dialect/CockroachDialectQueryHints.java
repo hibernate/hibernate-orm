@@ -7,6 +7,8 @@
 
 package org.hibernate.dialect;
 
+import org.hibernate.internal.util.StringHelper;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -48,7 +50,7 @@ class CockroachDialectQueryHints {
 	}
 
 	private IndexHint parseIndexHints(String hint) {
-		var parts = hint.split( "@" );
+		var parts = StringHelper.split( "@", hint );
 		if ( parts.length == 2 ) {
 			return new IndexHint( parts[0], hint );
 		}

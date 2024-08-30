@@ -276,7 +276,7 @@ public class HibernateProcessor extends AbstractProcessor {
 				context.setSuppressedWarnings(new String[] {"deprecation", "rawtypes"});
 			}
 			else {
-				context.setSuppressedWarnings( suppressedWarnings.replace(" ","").split(",") );
+				context.setSuppressedWarnings( suppressedWarnings.replace(" ","").split(",\\s*") );
 			}
 		}
 

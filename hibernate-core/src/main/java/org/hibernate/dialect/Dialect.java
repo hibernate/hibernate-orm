@@ -206,7 +206,7 @@ import static java.lang.Math.log;
 import static org.hibernate.cfg.AvailableSettings.NON_CONTEXTUAL_LOB_CREATION;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
-import static org.hibernate.internal.util.StringHelper.parseCommaSeparatedString;
+import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
@@ -666,7 +666,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @see java.sql.DatabaseMetaData#getSQLKeywords()
 	 */
 	protected void registerKeywords(DialectResolutionInfo info) {
-		for ( String keyword : parseCommaSeparatedString( info.getSQLKeywords() ) ) {
+		for ( String keyword : splitAtCommas( info.getSQLKeywords() ) ) {
 			registerKeyword( keyword );
 		}
 	}

@@ -129,7 +129,7 @@ public final class Context {
 		String ormXmlOption = options.get( HibernateProcessor.ORM_XML_OPTION );
 		if ( ormXmlOption != null ) {
 			ormXmlFiles = new ArrayList<>();
-			for ( String ormFile : ormXmlOption.split( "," ) ) {
+			for ( String ormFile : ormXmlOption.split( ",\\s*" ) ) {
 				if ( !ormFile.startsWith("/") ) {
 					ormFile = "/" + ormFile;
 				}

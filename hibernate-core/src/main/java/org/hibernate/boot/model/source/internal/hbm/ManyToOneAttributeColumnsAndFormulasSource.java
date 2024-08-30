@@ -11,6 +11,8 @@ import java.util.Set;
 
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToOneType;
 
+import static org.hibernate.internal.util.StringHelper.splitAtCommas;
+
 /**
  * ColumnAndFormulaSource implementation handling many-to-one attribute mappings.
  *
@@ -57,7 +59,7 @@ public class ManyToOneAttributeColumnsAndFormulasSource extends RelationalValueS
 
 	@Override
 	public Set<String> getIndexConstraintNames() {
-		return CommaSeparatedStringHelper.split( manyToOneMapping.getIndex() );
+		return Set.of( splitAtCommas( manyToOneMapping.getIndex() ) );
 	}
 
 	@Override
@@ -67,6 +69,6 @@ public class ManyToOneAttributeColumnsAndFormulasSource extends RelationalValueS
 
 	@Override
 	public Set<String> getUniqueKeyConstraintNames() {
-		return CommaSeparatedStringHelper.split( manyToOneMapping.getUniqueKey() );
+		return Set.of( splitAtCommas( manyToOneMapping.getUniqueKey() ) );
 	}
 }

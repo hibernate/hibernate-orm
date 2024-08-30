@@ -32,6 +32,7 @@ import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
@@ -666,8 +667,8 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			String defaultImportFile,
 			GenerationTarget[] targets) {
 		final String[] importFiles =
-				getString( HBM2DDL_IMPORT_FILES, options.getConfigurationValues(), defaultImportFile )
-						.split( "," );
+				StringHelper.split( ",",
+						getString( HBM2DDL_IMPORT_FILES, options.getConfigurationValues(), defaultImportFile ) );
 		final String charsetName = getCharsetName( options );
 		final ClassLoaderService classLoaderService = getClassLoaderService();
 		for ( String currentFile : importFiles ) {

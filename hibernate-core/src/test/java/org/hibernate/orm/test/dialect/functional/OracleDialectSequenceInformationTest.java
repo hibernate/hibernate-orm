@@ -10,7 +10,6 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Optional;
-import java.util.stream.StreamSupport;
 
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -26,6 +25,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static java.util.stream.StreamSupport.stream;
 import static org.hibernate.testing.transaction.TransactionUtil.doInAutoCommit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -75,36 +75,36 @@ public class OracleDialectSequenceInformationTest extends BaseNonConfigCoreFunct
 		return TransactionUtil.doWithJDBC(
 				sessionFactory().getServiceRegistry(),
 				connection -> {
-					JdbcEnvironment jdbcEnvironment = sessionFactory().getJdbcServices().getJdbcEnvironment();
-					SequenceInformationExtractorOracleDatabaseImpl sequenceExtractor = SequenceInformationExtractorOracleDatabaseImpl.INSTANCE;
-					Iterable<SequenceInformation> sequenceInformations = sequenceExtractor.extractMetadata(
-							new ExtractionContext.EmptyExtractionContext() {
-
-								@Override
-								public Connection getJdbcConnection() {
-									return connection;
-								}
-
-								@Override
-								public JdbcEnvironment getJdbcEnvironment() {
-									return jdbcEnvironment;
-								}
-							} );
-
+					final JdbcEnvironment jdbcEnvironment =
+							sessionFactory().getJdbcServices().getJdbcEnvironment();
 					// lets skip system sequences
-					Optional<SequenceInformation> foundSequence = StreamSupport.stream(
-									sequenceInformations.spliterator(),
-									false
-							)
-							.filter( sequence -> sequenceName.equals( sequence.getSequenceName()
-																			  .getSequenceName()
-																			  .getText()
-																			  .toUpperCase() ) )
+					Optional<SequenceInformation> foundSequence =
+							stream( sequenceInformation( connection, jdbcEnvironment ).spliterator(), false )
+							.filter( sequence -> isSameSequence( sequenceName, sequence ) )
 							.findFirst();
-
 					assertTrue( sequenceName + " not found", foundSequence.isPresent() );
-
 					return foundSequence.get();
+				}
+		);
+	}
+
+	private static boolean isSameSequence(String sequenceName, SequenceInformation sequence) {
+		return sequenceName.equals( sequence.getSequenceName().getSequenceName().getText().toUpperCase() );
+	}
+
+	private static Iterable<SequenceInformation> sequenceInformation(Connection connection, JdbcEnvironment jdbcEnvironment)
+			throws SQLException {
+		return SequenceInformationExtractorOracleDatabaseImpl.INSTANCE.extractMetadata(
+				new ExtractionContext.EmptyExtractionContext() {
+					@Override
+					public Connection getJdbcConnection() {
+						return connection;
+					}
+
+					@Override
+					public JdbcEnvironment getJdbcEnvironment() {
+						return jdbcEnvironment;
+					}
 				}
 		);
 	}

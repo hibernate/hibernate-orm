@@ -13,6 +13,7 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.ClassLoaderAccess;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
 import jakarta.validation.groups.Default;
@@ -72,7 +73,7 @@ public class GroupsPerOperation {
 
 		if ( property instanceof String ) {
 			String stringProperty = (String) property;
-			String[] groupNames = stringProperty.split( "," );
+			String[] groupNames = StringHelper.split( ",", stringProperty );
 			if ( groupNames.length == 1 && groupNames[0].isEmpty() ) {
 				return EMPTY_GROUPS;
 			}

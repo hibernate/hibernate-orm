@@ -14,8 +14,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
+import java.util.regex.Pattern;
 
-import org.hibernate.boot.model.source.internal.hbm.CommaSeparatedStringHelper;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.internal.AliasConstantsHelper;
@@ -28,6 +28,8 @@ public final class StringHelper {
 	private static final int ALIAS_TRUNCATE_LENGTH = 10;
 	public static final String WHITESPACE = " \n\r\f\t";
 	public static final String[] EMPTY_STRINGS = ArrayHelper.EMPTY_STRING_ARRAY;
+
+	private static final Pattern COMMA_SEPARATED_PATTERN = Pattern.compile( "\\s*,\\s*" );
 
 	private StringHelper() { /* static methods only - hide constructor */
 	}
@@ -843,8 +845,10 @@ public final class StringHelper {
 		return value;
 	}
 
-	public static List<String> parseCommaSeparatedString(String incomingString) {
-		return CommaSeparatedStringHelper.parseCommaSeparatedString( incomingString );
+	public static String[] splitAtCommas(String incomingString) {
+		return incomingString==null || incomingString.isBlank()
+				? EMPTY_STRINGS
+				: COMMA_SEPARATED_PATTERN.split( incomingString );
 	}
 
 	public static <T> String join(Collection<T> values, Renderer<T> renderer) {

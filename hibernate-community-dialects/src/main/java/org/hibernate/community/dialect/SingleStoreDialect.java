@@ -58,6 +58,7 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Column;
@@ -184,7 +185,7 @@ public class SingleStoreDialect extends Dialect {
 	private static DatabaseVersion createVersion(DialectResolutionInfo info) {
 		final String versionString = info.getDatabaseVersion();
 		if ( versionString != null ) {
-			final String[] components = versionString.split( "\\." );
+			final String[] components = StringHelper.split( ".", versionString );
 			if ( components.length >= 3 ) {
 				try {
 					final int majorVersion = Integer.parseInt( components[0] );

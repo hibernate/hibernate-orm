@@ -41,6 +41,7 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
@@ -164,7 +165,7 @@ public class H2Dialect extends Dialect {
 			return 0;
 		}
 
-		final String[] bits = databaseVersion.split("[. \\-]");
+		final String[] bits = StringHelper.split( ". -", databaseVersion );
 		return bits.length > 2 ? Integer.parseInt( bits[2] ) : 0;
 	}
 

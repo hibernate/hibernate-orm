@@ -173,7 +173,7 @@ public class MySQLLegacyDialect extends Dialect {
 
 	protected static DatabaseVersion createVersion(DialectResolutionInfo info) {
 		final String versionString = info.getDatabaseVersion();
-		final String[] components = versionString.split( "\\." );
+		final String[] components = StringHelper.split( ".", versionString );
 		if ( components.length >= 3 ) {
 			try {
 				final int majorVersion = Integer.parseInt( components[0] );

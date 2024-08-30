@@ -134,7 +134,7 @@ public class QualifiedNameParser {
 		boolean schemaWasQuoted = false;
 		boolean nameWasQuoted;
 
-		final String[] tokens = text.split( "\\." );
+		final String[] tokens = StringHelper.split( ".", text );
 		if ( tokens.length == 0 || tokens.length == 1 ) {
 			// we have just a local name...
 			name = text;

@@ -13,6 +13,14 @@ Associations describe how two or more entities form a relationship based on a da
 `@ManyToOne` is the most common association, having a direct equivalent in the relational database as well (e.g. foreign key),
 and so it establishes a relationship between a child entity and a parent.
 
+[NOTE]
+====
+A `@ManyToOne` association that is mapped to an entity using a unique key that is not the primary key will be fetched eagerly even
+if the fetch strategy is set to `FetchType.LAZY`. This can lead to N+1 query issues if the fetch mode is set to `FetchMode.SELECT` which would be the default for a lazy loaded entity.
+
+This is because proxying by unique keys other than the primary key is https://hibernate.atlassian.net/browse/HHH-18421[not yet supported].
+====
+
 [[associations-many-to-one-example]]
 .`@ManyToOne` association
 ====
@@ -157,6 +165,14 @@ then we can annotate the association with the `orphanRemoval` attribute and diss
 The `@OneToOne` association can either be unidirectional or bidirectional.
 A unidirectional association follows the relational database foreign key semantics, the client-side owning the relationship.
 A bidirectional association features a `mappedBy` `@OneToOne` parent side too.
+
+[NOTE]
+====
+A `@OneToOne` association that is mapped to an entity using a unique key that is not the primary key will be fetched eagerly even
+if the fetch strategy is set to `FetchType.LAZY`. This can lead to N+1 query issues if the fetch mode is set to `FetchMode.SELECT` which would be the default for a lazy loaded entity.
+
+This is because proxying by unique keys other than the primary key is https://hibernate.atlassian.net/browse/HHH-18421[not yet supported].
+====
 
 [[associations-one-to-one-unidirectional]]
 ===== Unidirectional `@OneToOne`

@@ -25,7 +25,7 @@ public class MatchingConstructorTest {
 	@BeforeAll
 	public void prepareData(final SessionFactoryScope scope) {
 		scope.inTransaction(
-				session -> session.save( new TestEntity( 1, 42, "test", 13 ) )
+				session -> session.persist( new TestEntity( 1, 42, "test", 13 ) )
 		);
 	}
 

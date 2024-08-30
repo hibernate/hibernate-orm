@@ -12,13 +12,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import org.hibernate.HibernateException;
-import org.hibernate.boot.model.source.internal.hbm.CommaSeparatedStringHelper;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.cursor.internal.StandardRefCursorSupport;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
@@ -26,6 +22,8 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.SQLStateType;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
+
+import static java.util.stream.StreamSupport.stream;
 
 /**
  * Standard implementation of ExtractedDatabaseMetaData
@@ -200,10 +198,6 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 			return this;
 		}
 
-		private Set<String> parseKeywords(String extraKeywordsString) {
-			return CommaSeparatedStringHelper.split( extraKeywordsString );
-		}
-
 		public Builder setConnectionSchemaName(String connectionSchemaName) {
 			this.connectionSchemaName = connectionSchemaName;
 			return this;
@@ -279,28 +273,10 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	 * @return sequence information List
 	 */
 	private List<SequenceInformation> sequenceInformationList() {
-		final JdbcEnvironment jdbcEnvironment = this.jdbcEnvironment;
-		final Dialect dialect = this.jdbcEnvironment.getDialect();
-
 		Connection connection = null;
 		try {
 			connection = connectionAccess.obtainConnection();
-			final Connection c = connection;
-			Iterable<SequenceInformation> sequenceInformationIterable = dialect
-					.getSequenceInformationExtractor()
-					.extractMetadata( new ExtractionContext.EmptyExtractionContext() {
-										@Override
-										public Connection getJdbcConnection() {
-											return c;
-										}
-
-										@Override
-										public JdbcEnvironment getJdbcEnvironment() {
-											return jdbcEnvironment;
-										}
-									}
-					);
-			return StreamSupport.stream( sequenceInformationIterable.spliterator(), false )
+			return stream( sequenceInformation( connection, jdbcEnvironment ).spliterator(), false )
 					.collect( Collectors.toList() );
 		}
 		catch (SQLException e) {
@@ -311,11 +287,26 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 				try {
 					connectionAccess.releaseConnection( connection );
 				}
-				catch (SQLException throwables) {
+				catch (SQLException exception) {
 					//ignored
 				}
 			}
 		}
 	}
 
+	private static Iterable<SequenceInformation> sequenceInformation(Connection connection, JdbcEnvironment jdbcEnvironment)
+			throws SQLException {
+		return jdbcEnvironment.getDialect().getSequenceInformationExtractor().extractMetadata(
+				new ExtractionContext.EmptyExtractionContext() {
+					@Override
+					public Connection getJdbcConnection() {
+						return connection;
+					}
+					@Override
+					public JdbcEnvironment getJdbcEnvironment() {
+						return jdbcEnvironment;
+					}
+				}
+		);
+	}
 }

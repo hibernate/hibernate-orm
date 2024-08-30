@@ -20,7 +20,6 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
-import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
@@ -37,6 +36,7 @@ import org.hibernate.event.internal.EmptyEventManager;
 import org.hibernate.event.spi.EventManager;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.ConnectionInfoLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.JpaCompliance;
@@ -112,7 +112,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 				getExplicitDatabaseVersion( configurationValues, explicitDatabaseMajorVersion, explicitDatabaseMinorVersion );
 
 		if ( explicitDatabaseMajorVersion == null && explicitDatabaseMinorVersion == null && explicitDatabaseVersion != null ) {
-			final String[] parts = explicitDatabaseVersion.split( "\\." );
+			final String[] parts = StringHelper.split( ".", explicitDatabaseVersion );
 			try {
 				final int potentialMajor = Integer.parseInt( parts[0] );
 				if ( parts.length > 1 ) {

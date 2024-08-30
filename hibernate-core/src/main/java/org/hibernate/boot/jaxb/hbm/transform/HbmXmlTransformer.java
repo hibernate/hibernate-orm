@@ -3370,7 +3370,7 @@ public class HbmXmlTransformer {
 
 		if ( isNotEmpty( s ) ) {
 			s = s.toLowerCase( Locale.ROOT ).replaceAll( " ", "" );
-			final String[] split = s.split( "," );
+			final String[] split = StringHelper.split( ",", s );
 			for ( String hbmCascade : split ) {
 				if ( hbmCascade.contains( "all" ) ) {
 					cascadeType.setCascadeAll( new JaxbEmptyTypeImpl() );

@@ -25,6 +25,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
@@ -2474,7 +2475,7 @@ public class ToOneAttributeMapping
 
 		Object value = domainValue;
 		ManagedMappingType managedType = entityType;
-		final String[] pathParts = attributePath.split( "\\." );
+		final String[] pathParts = StringHelper.split( ".", attributePath );
 		for ( int i = 0; i < pathParts.length; i++ ) {
 			assert managedType != null;
 

@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -304,7 +305,7 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 				this.customWriteExpressionEnd = "";
 			}
 			else {
-				final String[] parts = customWriteExpression.split( "\\?" );
+				final String[] parts = StringHelper.split( ".", customWriteExpression );
 				assert parts.length == 2;
 				this.customWriteExpressionStart = parts[0];
 				this.customWriteExpressionEnd = parts[1];

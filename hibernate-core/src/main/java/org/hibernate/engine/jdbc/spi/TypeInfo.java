@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.util.LinkedHashSet;
 
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 
 import org.jboss.logging.Logger;
@@ -127,7 +128,7 @@ public class TypeInfo {
 		if ( value == null || value.length() == 0 ) {
 			return ArrayHelper.EMPTY_STRING_ARRAY;
 		}
-		return value.split( "," );
+		return StringHelper.split( ",", value );
 	}
 
 	public String getTypeName() {

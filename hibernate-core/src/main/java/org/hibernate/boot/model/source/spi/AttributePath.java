@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.internal.util.StringHelper;
+
 /**
  * An attribute path is, generally speaking, the path of attribute names back
  * to a "root" (which is either an entity or a persistent collection).  The
@@ -45,7 +47,7 @@ public class AttributePath extends AbstractAttributeKey {
 		}
 
 		AttributePath attributePath = new AttributePath();
-		for ( String part : path.split( "\\." ) ) {
+		for ( String part : StringHelper.split( ".", path ) ) {
 			attributePath = attributePath.append( part );
 		}
 		return attributePath;

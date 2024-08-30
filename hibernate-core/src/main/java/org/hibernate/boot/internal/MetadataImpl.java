@@ -9,7 +9,6 @@ package org.hibernate.boot.internal;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +16,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.regex.Pattern;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -62,19 +60,17 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UserDefinedObjectType;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
-import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.internal.NamedObjectRepositoryImpl;
 import org.hibernate.query.named.NamedObjectRepository;
-import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.cfg.AvailableSettings.EVENT_LISTENER_PREFIX;
+import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 
 /**
  * Container for configuration data collected during binding the metamodel.
@@ -84,7 +80,6 @@ import static org.hibernate.cfg.AvailableSettings.EVENT_LISTENER_PREFIX;
  * @author Gail Badner
  */
 public class MetadataImpl implements MetadataImplementor, Serializable {
-	private static final Pattern LISTENER_SEPARATION_PATTERN = Pattern.compile( "\\s*,\\s*" );
 
 	private final UUID uuid;
 	private final MetadataBuildingOptions metadataBuildingOptions;
@@ -370,30 +365,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		);
 	}
 
-	private Map<String, NamedSqmQueryMemento<?>> buildNamedSqmMementos(SessionFactoryImplementor sessionFactory) {
-		final HashMap<String, NamedSqmQueryMemento<?>> map = new HashMap<>();
-		if ( namedQueryMap != null ) {
-			namedQueryMap.forEach( (key, value) -> map.put( key, value.resolve( sessionFactory ) ) );
-		}
-		return map;
-	}
-
-	private Map<String, NamedNativeQueryMemento<?>> buildNamedNativeMementos(SessionFactoryImplementor sessionFactory) {
-		final HashMap<String, NamedNativeQueryMemento<?>> map = new HashMap<>();
-		if ( namedNativeQueryMap != null ) {
-			namedNativeQueryMap.forEach( (key, value) -> map.put( key, value.resolve( sessionFactory ) ) );
-		}
-		return map;
-	}
-
-	private Map<String, NamedCallableQueryMemento> buildProcedureCallMementos(SessionFactoryImplementor sessionFactory) {
-		final Map<String, NamedCallableQueryMemento> map = new HashMap<>();
-		if ( namedProcedureCallMap != null ) {
-			namedProcedureCallMap.forEach( (key, value) -> map.put( key, value.resolve( sessionFactory ) ) );
-		}
-		return map;
-	}
-
 	@Override
 	public void orderColumns(boolean forceOrdering) {
 		final ColumnOrderingStrategy columnOrderingStrategy = metadataBuildingOptions.getColumnOrderingStrategy();
@@ -544,7 +515,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			String listeners,
 			EventType<T> eventType) {
 		final EventListenerGroup<T> eventListenerGroup = eventListenerRegistry.getEventListenerGroup( eventType );
-		for ( String listenerImpl : LISTENER_SEPARATION_PATTERN.split( listeners ) ) {
+		for ( String listenerImpl : splitAtCommas( listeners ) ) {
 			@SuppressWarnings("unchecked")
 			T listener = (T) instantiate( listenerImpl, classLoaderService );
 			if ( !eventType.baseListenerInterface().isInstance( listener ) ) {

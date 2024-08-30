@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
@@ -35,7 +36,7 @@ public enum ValidationMode {
 			modes.add( ValidationMode.AUTO );
 		}
 		else {
-			for ( String modeInString : modeProperty.toString().split( "," ) ) {
+			for ( String modeInString : StringHelper.split( ",", modeProperty.toString() ) ) {
 				modes.add( getMode(modeInString) );
 			}
 		}

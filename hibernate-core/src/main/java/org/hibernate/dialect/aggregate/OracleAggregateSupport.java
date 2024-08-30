@@ -18,6 +18,7 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleArrayJdbcType;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.UserDefinedArrayType;
@@ -538,7 +539,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 				this.customWriteExpressionEnd = "";
 			}
 			else {
-				final String[] parts = customWriteExpression.split( "\\?" );
+				final String[] parts = StringHelper.split( "?", customWriteExpression );
 				assert parts.length == 2;
 				this.customWriteExpressionStart = parts[0];
 				this.customWriteExpressionEnd = parts[1];

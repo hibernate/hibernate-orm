@@ -16,6 +16,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.ForeignKey;
@@ -320,7 +321,7 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 				SchemaCreatorImpl.DEFAULT_IMPORT_FILE
 		);
 
-		for ( String currentFile : importFiles.split( "," ) ) {
+		for ( String currentFile : StringHelper.split( ",", importFiles ) ) {
 			final String resourceName = currentFile.trim();
 			if ( resourceName.isEmpty() ) {
 				//skip empty resource names

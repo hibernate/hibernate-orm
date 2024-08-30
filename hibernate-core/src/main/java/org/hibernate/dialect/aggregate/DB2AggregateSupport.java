@@ -21,6 +21,7 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DB2StructJdbcType;
 import org.hibernate.dialect.XmlHelper;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -283,7 +284,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 				this.customWriteExpressionEnd = "";
 			}
 			else {
-				final String[] parts = customWriteExpression.split( "\\?" );
+				final String[] parts = StringHelper.split( "?", customWriteExpression );
 				assert parts.length == 2;
 				this.customWriteExpressionStart = parts[0];
 				this.customWriteExpressionEnd = parts[1];

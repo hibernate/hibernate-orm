@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.Objects;
 
 import org.hibernate.Incubating;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.spi.DotIdentifierSequence;
 
 /**
@@ -41,7 +42,7 @@ public class SelectablePath implements Serializable, DotIdentifierSequence {
 		if ( path == null || path.isEmpty() ) {
 			return null;
 		}
-		final String[] parts = path.split( "\\." );
+		final String[] parts = StringHelper.split( ".", path );
 		SelectablePath selectablePath = new SelectablePath( parts[0] );
 		for ( int i = 1; i < parts.length; i++ ) {
 			selectablePath = selectablePath.append( parts[i] );

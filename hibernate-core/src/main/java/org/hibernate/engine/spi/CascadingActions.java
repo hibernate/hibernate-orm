@@ -339,7 +339,7 @@ public class CascadingActions {
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
 			if ( child != null && isChildTransient( session, child, entityName ) ) {
-				throw new TransientObjectException( "persistent instance references an unsaved transient instance of '"
+				throw new TransientObjectException( "Persistent instance references an unsaved transient instance of '"
 						+ entityName + "' (save the transient instance before flushing)" );
 				//TODO: should be TransientPropertyValueException
 //				throw new TransientPropertyValueException(

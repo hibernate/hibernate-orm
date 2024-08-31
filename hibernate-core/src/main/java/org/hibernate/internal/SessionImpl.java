@@ -572,7 +572,7 @@ public class SessionImpl
 
 		final EntityEntry e = persistenceContext.getEntry( object );
 		if ( e == null ) {
-			throw new TransientObjectException( "Given object not associated with the session" );
+			throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
 		}
 
 		if ( e.getStatus().isDeletedOrGone() ) {
@@ -1419,14 +1419,14 @@ public class SessionImpl
 		final LazyInitializer lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
 			if ( lazyInitializer.getSession() != this ) {
-				throw new TransientObjectException( "The proxy was not associated with this session" );
+				throw new IllegalArgumentException( "Given proxy is not associated with the persistence context" );
 			}
 			return lazyInitializer.getInternalIdentifier();
 		}
 		else {
 			final EntityEntry entry = persistenceContext.getEntry( object );
 			if ( entry == null ) {
-				throw new TransientObjectException( "The instance was not associated with this session" );
+				throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
 			}
 			return entry.getId();
 		}
@@ -1682,14 +1682,14 @@ public class SessionImpl
 		final LazyInitializer lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
 			if ( !persistenceContext.containsProxy( object ) ) {
-				throw new TransientObjectException( "proxy was not associated with the session" );
+				throw new IllegalArgumentException( "Given proxy is not associated with the persistence context" );
 			}
 			object = lazyInitializer.getImplementation();
 		}
 
 		final EntityEntry entry = persistenceContext.getEntry( object );
 		if ( entry == null ) {
-			throwTransientObjectException( object );
+			throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
 		}
 		return entry.getPersister().getEntityName();
 	}
@@ -1705,13 +1705,6 @@ public class SessionImpl
 			final EntityPersister persister = getEntityPersister( null, object );
 			return (T) getReference( persister.getMappedClass(), persister.getIdentifier(object, this) );
 		}
-	}
-
-	private void throwTransientObjectException(Object object) throws HibernateException {
-		throw new TransientObjectException(
-				"object references an unsaved transient instance - save the transient instance before flushing: " +
-						guessEntityName( object )
-		);
 	}
 
 	@Override

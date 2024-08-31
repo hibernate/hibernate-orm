@@ -502,8 +502,8 @@ public class ActionQueue {
 			final String path = transientEntities.getNonNullableTransientPropertyPaths(transientEntity).iterator().next();
 			//TODO: should be TransientPropertyValueException
 			throw new TransientObjectException( "Persistent instance of '" + insertAction.getEntityName()
-					+ "' with id '" + insertAction.getId()
-					+ "' references an unsaved transient instance via attribute '" + path
+					+ "' with id [" + insertAction.getId()
+					+ "] references an unsaved transient instance via attribute '" + path
 					+ "' (save the transient instance before flushing)" );
 		}
 

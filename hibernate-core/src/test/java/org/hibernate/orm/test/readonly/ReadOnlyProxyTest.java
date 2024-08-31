@@ -1285,7 +1285,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.setReadOnly( dpLoaded, true );
 		checkReadOnly( s, dpLoaded, true );
 		assertFalse( Hibernate.isInitialized( dpLoaded ) );
-		DataPoint dpMerged = (DataPoint) s.merge( dp );
+		DataPoint dpMerged = s.merge( dp );
 		assertSame( dpLoaded, dpMerged );
 		assertTrue( Hibernate.isInitialized( dpLoaded ) );
 		assertEquals( "changed", dpLoaded.getDescription() );
@@ -1336,7 +1336,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		checkReadOnly( s, dpLoaded, false );
 		s.setReadOnly( dpLoaded, true );
 		checkReadOnly( s, dpLoaded, true );
-		DataPoint dpMerged = (DataPoint) s.merge( dp );
+		DataPoint dpMerged = s.merge( dp );
 		assertSame( dpLoaded, dpMerged );
 		assertEquals( "changed", dpLoaded.getDescription() );
 		checkReadOnly( s, dpLoaded, true );
@@ -1385,7 +1385,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.setReadOnly( dpLoaded, true );
 		checkReadOnly( s, dpLoaded, true );
 		assertFalse( Hibernate.isInitialized( dpLoaded ) );
-		DataPoint dpMerged = (DataPoint) s.merge( dpEntity );
+		DataPoint dpMerged = s.merge( dpEntity );
 		assertSame( dpLoaded, dpMerged );
 		assertTrue( Hibernate.isInitialized( dpLoaded ) );
 		assertEquals( "changed", dpLoaded.getDescription() );
@@ -1437,7 +1437,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		checkReadOnly( s, dpLoaded, false );
 		s.setReadOnly( dpLoaded, true );
 		checkReadOnly( s, dpLoaded, true );
-		DataPoint dpMerged = (DataPoint) s.merge( dpEntity );
+		DataPoint dpMerged = s.merge( dpEntity );
 		assertSame( dpLoaded, dpMerged );
 		assertEquals( "changed", dpLoaded.getDescription() );
 		checkReadOnly( s, dpLoaded, true );
@@ -1484,7 +1484,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		assertFalse( s.isReadOnly( dpEntity ) );
 		s.setReadOnly( dpEntity, true );
 		assertTrue( s.isReadOnly( dpEntity ) );
-		DataPoint dpMerged = (DataPoint) s.merge( dp );
+		DataPoint dpMerged = s.merge( dp );
 		assertSame( dpEntity, dpMerged );
 		assertEquals( "changed", dpEntity.getDescription() );
 		assertTrue( s.isReadOnly( dpEntity ) );
@@ -1695,7 +1695,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 			( (HibernateProxy) dp ).getHibernateLazyInitializer().isReadOnly();
 			fail( "should have failed because session was detached" );
 		}
-		catch (TransientObjectException ex) {
+		catch (IllegalStateException ex) {
 			// expected
 			assertFalse( ( (HibernateProxy) dp ).getHibernateLazyInitializer().isReadOnlySettingAvailable() );
 		}
@@ -1729,7 +1729,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 			s.isReadOnly( dp );
 			fail( "should have failed because proxy was detached" );
 		}
-		catch (TransientObjectException ex) {
+		catch (IllegalStateException ex) {
 			// expected
 			assertFalse( ( (HibernateProxy) dp ).getHibernateLazyInitializer().isReadOnlySettingAvailable() );
 		}
@@ -1759,7 +1759,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 			( (HibernateProxy) dp ).getHibernateLazyInitializer().isReadOnly();
 			fail( "should have failed because proxy was detached" );
 		}
-		catch (TransientObjectException ex) {
+		catch (IllegalStateException ex) {
 			// expected
 			assertFalse( ( (HibernateProxy) dp ).getHibernateLazyInitializer().isReadOnlySettingAvailable() );
 		}
@@ -1823,7 +1823,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 			( (HibernateProxy) dp ).getHibernateLazyInitializer().setReadOnly( true );
 			fail( "should have failed because session was detached" );
 		}
-		catch (TransientObjectException ex) {
+		catch (IllegalStateException ex) {
 			// expected
 			assertFalse( ( (HibernateProxy) dp ).getHibernateLazyInitializer().isReadOnlySettingAvailable() );
 		}
@@ -1892,7 +1892,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 			s.setReadOnly( dp, true );
 			fail( "should have failed because proxy was detached" );
 		}
-		catch (TransientObjectException ex) {
+		catch (IllegalStateException ex) {
 			// expected
 			assertFalse( ( (HibernateProxy) dp ).getHibernateLazyInitializer().isReadOnlySettingAvailable() );
 		}
@@ -1922,7 +1922,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 			( (HibernateProxy) dp ).getHibernateLazyInitializer().setReadOnly( true );
 			fail( "should have failed because proxy was detached" );
 		}
-		catch (TransientObjectException ex) {
+		catch (IllegalStateException ex) {
 			// expected
 			assertFalse( ( (HibernateProxy) dp ).getHibernateLazyInitializer().isReadOnlySettingAvailable() );
 		}

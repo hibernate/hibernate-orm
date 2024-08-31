@@ -373,10 +373,9 @@ public final class ForeignKeys {
 
 	private static void throwIfTransient(String entityName, Object object, SharedSessionContractImplementor session) {
 		if ( isTransient( entityName, object, Boolean.FALSE, session ) ) {
-			throw new TransientObjectException(
-					"object references an unsaved transient instance - save the transient instance before flushing: " +
-							(entityName == null ? session.guessEntityName(object) : entityName)
-			);
+			throw new TransientObjectException( "Entity references an unsaved transient instance of '"
+					+ (entityName == null ? session.guessEntityName(object) : entityName)
+					+ "' (make the transient instance persistent before flushing)" );
 		}
 	}
 

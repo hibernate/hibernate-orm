@@ -20,7 +20,6 @@ import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventSource;
@@ -132,7 +131,8 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			persister = source.getEntityPersister( event.getEntityName(), object );
 			id = persister.getIdentifier( object, event.getSession() );
 			if ( id == null ) {
-				throw new TransientObjectException( "transient instance passed to refresh");
+				throw new TransientObjectException( "Cannot refresh instance of entity '" + persister.getEntityName()
+						+ "' because it has a null identifier" );
 			}
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(

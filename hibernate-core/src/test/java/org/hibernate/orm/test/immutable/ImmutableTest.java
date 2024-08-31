@@ -65,6 +65,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 	protected void applySettings(StandardServiceRegistryBuilder builer) {
 		builer.applySetting( Environment.GENERATE_STATISTICS, "true" );
 		builer.applySetting( Environment.STATEMENT_BATCH_SIZE, "0" );
+		builer.applySetting( Environment.ALLOW_REFRESH_DETACHED_ENTITY, "true" );
 	}
 
 	@Override

@@ -80,7 +80,7 @@ public class RefreshTest {
 	@Test
 	public void testRefreshWithNullId(SessionFactoryScope scope) {
 		Assertions.assertThrows(
-				TransientObjectException.class,
+				IllegalArgumentException.class,
 				() -> {
 					scope.inTransaction(
 							session -> {

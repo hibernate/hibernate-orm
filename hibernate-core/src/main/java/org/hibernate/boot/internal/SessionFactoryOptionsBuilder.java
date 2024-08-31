@@ -337,7 +337,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.allowRefreshDetachedEntity = configurationService.getSetting(
 				ALLOW_REFRESH_DETACHED_ENTITY,
 				BOOLEAN,
-				true
+				false
 		);
 
 		this.flushBeforeCompletionEnabled = configurationService.getSetting( FLUSH_BEFORE_COMPLETION, BOOLEAN, true );

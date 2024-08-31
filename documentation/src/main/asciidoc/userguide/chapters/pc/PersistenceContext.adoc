@@ -933,44 +933,6 @@ And finally, serialization will make the deserialized form be detached (the orig
 
 Detached data can still be manipulated, however, the persistence context will no longer automatically know about these modifications, and the application will need to intervene to make the changes persistent again.
 
-[[pc-detach-reattach]]
-==== Reattaching detached data
-
-Reattachment is the process of taking an incoming entity instance that is in the detached state and re-associating it with the current persistence context.
-
-[IMPORTANT]
-====
-Jakarta Persistence does not support reattaching detached data. This is only available through Hibernate `org.hibernate.Session`.
-====
-
-[[pc-detach-reattach-lock-example]]
-.Reattaching a detached entity using `lock`
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-detach-reattach-lock-example]
-----
-====
-
-[[pc-detach-reattach-saveOrUpdate-example]]
-.Reattaching a detached entity using `saveOrUpdate`
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-detach-reattach-saveOrUpdate-example]
-----
-====
-
-[NOTE]
-====
-The method name `update` is a bit misleading here.
-It does not mean that an `SQL` `UPDATE` is immediately performed.
-It does, however, mean that an `SQL` `UPDATE` will be performed when the persistence context is flushed since Hibernate does not know its previous state against which to compare for changes.
-If the entity is mapped with `select-before-update`, Hibernate will pull the current state from the database and see if an update is needed.
-====
-
-Provided the entity is detached, `update` and `saveOrUpdate` operate exactly the same.
-
 [[pc-merge]]
 ==== Merging detached data
 
@@ -1273,17 +1235,6 @@ include::{example-dir-pc}/CascadeDetachTest.java[tags=pc-cascade-detach-example]
 
 Although unintuitively, `CascadeType.LOCK` does not propagate a lock request from a parent entity to its children.
 Such a use case requires the use of the `PessimisticLockScope.EXTENDED` value of the `jakarta.persistence.lock.scope` property.
-
-However, `CascadeType.LOCK` allows us to reattach a parent entity along with its children to the currently running Persistence Context.
-
-[[pc-cascade-lock-example]]
-.`CascadeType.LOCK` example
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/CascadeLockTest.java[tags=pc-cascade-lock-example]
-----
-====
 
 [[pc-cascade-refresh]]
 ==== `CascadeType.REFRESH`

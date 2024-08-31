@@ -50,7 +50,6 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
-import org.hibernate.TransientObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
@@ -121,7 +120,6 @@ import org.hibernate.loader.internal.LoadAccessContext;
 import org.hibernate.loader.internal.NaturalIdLoadAccessImpl;
 import org.hibernate.loader.internal.SimpleNaturalIdLoadAccessImpl;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.proxy.LazyInitializer;
@@ -194,6 +192,7 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 import static org.hibernate.jpa.internal.util.CacheModeHelper.interpretCacheMode;
 import static org.hibernate.jpa.internal.util.LockOptionsHelper.applyPropertiesToLockOptions;
+import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
@@ -853,8 +852,8 @@ public class SessionImpl
 
 	@Override
 	public void removeOrphanBeforeUpdates(String entityName, Object child) {
-		// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.  This should be removed once action/task
-		// ordering is improved.
+		// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.
+		//       This should be removed once action/task ordering is improved.
 		final boolean traceEnabled = log.isTraceEnabled();
 		if ( traceEnabled ) {
 			logRemoveOrphanBeforeUpdates( "begin", entityName, child );
@@ -878,13 +877,13 @@ public class SessionImpl
 			log.tracef(
 					"%s remove orphan before updates: [%s]",
 					timing,
-					entityEntry == null ? entityName : MessageHelper.infoString( entityName, entityEntry.getId() )
+					entityEntry == null ? entityName : infoString( entityName, entityEntry.getId() )
 			);
 		}
 	}
 
 	private void fireDelete(final DeleteEvent event) {
-		try{
+		try {
 			pulseTransactionCoordinator();
 			fastSessionServices.eventListenerGroup_DELETE
 					.fireEventOnEachListener( event, DeleteEventListener::onDelete );
@@ -905,7 +904,7 @@ public class SessionImpl
 	}
 
 	private void fireDelete(final DeleteEvent event, final DeleteContext transientEntities) {
-		try{
+		try {
 			pulseTransactionCoordinator();
 			fastSessionServices.eventListenerGroup_DELETE
 					.fireEventOnEachListener( event, transientEntities, DeleteEventListener::onDelete );
@@ -958,7 +957,7 @@ public class SessionImpl
 		if ( log.isDebugEnabled() ) {
 			final EntityPersister persister = getFactory().getMappingMetamodel()
 					.getEntityDescriptor( entityName );
-			log.debugf( "Initializing proxy: %s", MessageHelper.infoString( persister, id, getFactory() ) );
+			log.debugf( "Initializing proxy: %s", infoString( persister, id, getFactory() ) );
 		}
 		LoadEvent event = loadEvent;
 		loadEvent = null;
@@ -1338,7 +1337,7 @@ public class SessionImpl
 		if ( log.isDebugEnabled() ) {
 			log.debugf(
 					"Flushing to force deletion of re-saved object: %s",
-					MessageHelper.infoString( key.getPersister(), key.getIdentifier(), getFactory() )
+					infoString( key.getPersister(), key.getIdentifier(), getFactory() )
 			);
 		}
 

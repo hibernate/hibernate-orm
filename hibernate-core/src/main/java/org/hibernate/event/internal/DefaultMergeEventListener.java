@@ -57,6 +57,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTracker;
 import static org.hibernate.event.internal.EntityState.getEntityState;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Defines the default copy event listener used by hibernate for copying entities
@@ -111,7 +112,7 @@ public class DefaultMergeEventListener
 		// NOTE : `original` is the value being merged
 		if ( original != null ) {
 			final EventSource source = event.getSession();
-			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( original );
+			final LazyInitializer lazyInitializer = extractLazyInitializer( original );
 			if ( lazyInitializer != null ) {
 				if ( lazyInitializer.isUninitialized() ) {
 					LOG.trace( "Ignoring uninitialized proxy" );
@@ -122,9 +123,11 @@ public class DefaultMergeEventListener
 				}
 			}
 			else if ( isPersistentAttributeInterceptable( original ) ) {
-				final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( original ).$$_hibernate_getInterceptor();
+				final PersistentAttributeInterceptor interceptor =
+						asPersistentAttributeInterceptable( original ).$$_hibernate_getInterceptor();
 				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-					final EnhancementAsProxyLazinessInterceptor proxyInterceptor = (EnhancementAsProxyLazinessInterceptor) interceptor;
+					final EnhancementAsProxyLazinessInterceptor proxyInterceptor =
+							(EnhancementAsProxyLazinessInterceptor) interceptor;
 					LOG.trace( "Ignoring uninitialized enhanced-proxy" );
 					event.setResult( source.load( proxyInterceptor.getEntityName(), proxyInterceptor.getIdentifier() ) );
 				}

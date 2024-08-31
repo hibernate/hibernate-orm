@@ -52,16 +52,15 @@ public class LoaderHelper {
 		final LockMode requestedLockMode = lockOptions.getLockMode();
 		if ( requestedLockMode.greaterThan( entry.getLockMode() ) ) {
 			// Request is for a more restrictive lock than the lock already held
+			final EntityPersister persister = entry.getPersister();
 
 			if ( entry.getStatus().isDeletedOrGone()) {
 				throw new ObjectDeletedException(
 						"attempted to lock a deleted instance",
 						entry.getId(),
-						entry.getPersister().getEntityName()
+						persister.getEntityName()
 				);
 			}
-
-			final EntityPersister persister = entry.getPersister();
 
 			if ( LoaderLogging.LOADER_LOGGER.isTraceEnabled() ) {
 				LoaderLogging.LOADER_LOGGER.tracef(
@@ -77,7 +76,7 @@ public class LoaderHelper {
 			Object ck = null;
 			try {
 				if ( cachingEnabled ) {
-					EntityDataAccess cache = persister.getCacheAccessStrategy();
+					final EntityDataAccess cache = persister.getCacheAccessStrategy();
 					ck = cache.generateCacheKey( entry.getId(), persister, session.getFactory(), session.getTenantIdentifier() );
 					lock = cache.lockItem( session, ck, entry.getVersion() );
 				}
@@ -99,9 +98,8 @@ public class LoaderHelper {
 
 				if ( persister.isVersioned() && requestedLockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT  ) {
 					// todo : should we check the current isolation mode explicitly?
-					Object nextVersion = persister.forceVersionIncrement(
-							entry.getId(), entry.getVersion(), false, session
-					);
+					final Object nextVersion =
+							persister.forceVersionIncrement( entry.getId(), entry.getVersion(), false, session );
 					entry.forceLocked( object, nextVersion );
 				}
 				else {

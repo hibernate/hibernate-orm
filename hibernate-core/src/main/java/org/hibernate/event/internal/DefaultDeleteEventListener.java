@@ -179,7 +179,8 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 
 			final Object id = persister.getIdentifier( entity, source );
 			if ( id == null ) {
-				throw new TransientObjectException("the detached instance passed to delete() had a null identifier");
+				throw new TransientObjectException( "Cannot delete instance of entity '" + persister.getEntityName()
+						+ "' because it has a null identifier" );
 			}
 
 			final PersistenceContext persistenceContext = source.getPersistenceContextInternal();

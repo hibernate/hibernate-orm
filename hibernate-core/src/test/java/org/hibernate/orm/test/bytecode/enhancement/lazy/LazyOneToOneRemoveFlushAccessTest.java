@@ -77,7 +77,7 @@ public class LazyOneToOneRemoveFlushAccessTest {
 		catch (Exception e) {
 			if ( shouldThrow ) {
 				assertThat( e.getCause() ).isInstanceOf( TransientObjectException.class )
-						.hasMessageContaining( "persistent instance references an unsaved transient instance" );
+						.hasMessageContaining( "references an unsaved transient instance" );
 			}
 			else {
 				fail( "Test should work with transient strictness disabled, instead threw", e );

@@ -77,7 +77,8 @@ public class DefaultReplicateEventListener
 		// except null (that is, even ids which look like they're unsaved)
 		final Object id = persister.getIdentifier( entity, source );
 		if ( id == null ) {
-			throw new TransientObjectException( "instance with null id passed to replicate()" );
+			throw new TransientObjectException( "Cannot replicate instance of entity '" + persister.getEntityName()
+					+ "' because it has a null identifier" );
 		}
 
 		final Object oldVersion = replicationMode == ReplicationMode.EXCEPTION

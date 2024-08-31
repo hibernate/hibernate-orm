@@ -71,8 +71,8 @@ public class DefaultLockEventListener extends AbstractLockUpgradeEventListener i
 			final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
 			final Object id = persister.getIdentifier( entity, source );
 			if ( !ForeignKeys.isNotTransient( event.getEntityName(), entity, Boolean.FALSE, source ) ) {
-				throw new TransientObjectException( "cannot lock an unsaved transient instance: "
-						+ persister.getEntityName() );
+				throw new TransientObjectException( "Cannot lock unsaved transient instance of entity '"
+						+ persister.getEntityName() + "'" );
 			}
 			entry = reassociate( event, entity, id, persister );
 			cascadeOnLock( event, persister, entity );

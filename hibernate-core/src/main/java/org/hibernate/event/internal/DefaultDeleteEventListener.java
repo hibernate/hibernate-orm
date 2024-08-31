@@ -9,6 +9,7 @@ package org.hibernate.event.internal;
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.NonUniqueObjectException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.EntityDeleteAction;
@@ -44,15 +45,14 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
-import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
 import static org.hibernate.engine.internal.Collections.skipRemoval;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Defines the default delete event listener used by hibernate for deleting entities
@@ -103,7 +103,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 
 	private boolean optimizeUnloadedDelete(DeleteEvent event) {
 		final Object object = event.getObject();
-		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		final LazyInitializer lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
 			if ( lazyInitializer.isUninitialized() ) {
 				final EventSource source = event.getSession();
@@ -158,54 +158,76 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		final Object entity = persistenceContext.unproxyAndReassociate( event.getObject() );
 		final EntityEntry entityEntry = persistenceContext.getEntry( entity );
 		if ( entityEntry == null ) {
-			deleteTransientInstance( event, transientEntities, entity );
+			deleteUnmanagedInstance( event, transientEntities, entity );
 		}
 		else {
 			deletePersistentInstance( event, transientEntities, entity, entityEntry );
 		}
 	}
 
-	private void deleteTransientInstance(DeleteEvent event, DeleteContext transientEntities, Object entity) {
-		LOG.trace( "Entity was not persistent in delete processing" );
-
+	private void deleteUnmanagedInstance(DeleteEvent event, DeleteContext transientEntities, Object entity) {
+		LOG.trace( "Deleted entity was not associated with current session" );
 		final EventSource source = event.getSession();
-
 		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
 		if ( ForeignKeys.isTransient( persister.getEntityName(), entity, null, source ) ) {
 			deleteTransientEntity( source, entity, persister, transientEntities );
 		}
 		else {
 			performDetachedEntityDeletionCheck( event );
+			deleteDetachedEntity( event, transientEntities, entity, persister, source );
+		}
+	}
 
-			final Object id = persister.getIdentifier( entity, source );
-			if ( id == null ) {
-				throw new TransientObjectException( "Cannot delete instance of entity '" + persister.getEntityName()
-						+ "' because it has a null identifier" );
+	private void deleteDetachedEntity(DeleteEvent event, DeleteContext transientEntities, Object entity, EntityPersister persister, EventSource source) {
+		final Object id = persister.getIdentifier( entity, source );
+		if ( id == null ) {
+			throw new TransientObjectException( "Cannot delete instance of entity '"
+					+ persister.getEntityName() + "' because it has a null identifier" );
+		}
+
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		final EntityKey key = source.generateEntityKey( id, persister);
+		final Object version = persister.getVersion(entity);
+
+//		persistenceContext.checkUniqueness( key, entity );
+		flushAndEvictExistingEntity( key, version, persister, source );
+
+		new OnUpdateVisitor( source, id, entity ).process( entity, persister );
+
+		final EntityEntry entityEntry = persistenceContext.addEntity(
+				entity,
+				persister.isMutable() ? Status.MANAGED : Status.READ_ONLY,
+				persister.getValues(entity),
+				key,
+				version,
+				LockMode.NONE,
+				true,
+				persister,
+				false
+		);
+		persister.afterReassociate(entity, source);
+
+		delete( event, transientEntities, source, entity, persister, id, version, entityEntry );
+	}
+
+	/**
+	 * Since Hibernate 7, if a detached instance is passed to remove(),
+	 * and if there is already an existing managed entity with the same
+	 * id, flush and evict it, after checking that the versions match.
+	 */
+	private static void flushAndEvictExistingEntity(
+			EntityKey key, Object version, EntityPersister persister, EventSource source) {
+		final Object existingEntity = source.getPersistenceContextInternal().getEntity( key );
+		if ( existingEntity != null ) {
+			source.flush();
+			if ( !persister.isVersioned()
+					|| persister.getVersionType()
+							.isEqual( version, persister.getVersion( existingEntity ) ) ) {
+				source.evict( existingEntity );
 			}
-
-			final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
-			final EntityKey key = source.generateEntityKey( id, persister );
-
-			persistenceContext.checkUniqueness( key, entity);
-
-			new OnUpdateVisitor( source, id, entity ).process( entity, persister );
-
-			final Object version = persister.getVersion( entity );
-
-			final EntityEntry entityEntry = persistenceContext.addEntity(
-					entity,
-					persister.isMutable() ? Status.MANAGED : Status.READ_ONLY,
-					persister.getValues( entity ),
-					key,
-					version,
-					LockMode.NONE,
-					true,
-					persister,
-					false
-			);
-			persister.afterReassociate( entity, source );
-
-			delete( event, transientEntities, source, entity, persister, id, version, entityEntry );
+			else {
+				throw new NonUniqueObjectException( key.getIdentifier(), key.getEntityName() );
+			}
 		}
 	}
 
@@ -288,7 +310,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	}
 
 	private boolean hasRegisteredRemoveCallbacks(EntityPersister persister) {
-		Class<?> mappedClass = persister.getMappedClass();
+		final Class<?> mappedClass = persister.getMappedClass();
 		return callbackRegistry.hasRegisteredCallbacks( mappedClass, CallbackType.PRE_REMOVE )
 			|| callbackRegistry.hasRegisteredCallbacks( mappedClass, CallbackType.POST_REMOVE );
 	}
@@ -296,25 +318,23 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	/**
 	 * Called when we have recognized an attempt to delete a detached entity.
 	 * <p>
-	 * This is perfectly valid in Hibernate usage; JPA, however, forbids this.
-	 * Thus, this is a hook for HEM to affect this behavior.
-	 *
-	 * @param event The event.
+	 * This is perfectly legal in regular Hibernate usage; the JPA spec,
+	 * however, forbids it.
 	 */
 	protected void performDetachedEntityDeletionCheck(DeleteEvent event) {
 		if ( jpaBootstrap ) {
 			disallowDeletionOfDetached( event );
 		}
-		// ok in normal Hibernate usage to delete a detached entity; JPA however
-		// forbids it, thus this is a hook for HEM to affect this behavior
 	}
 
 	private void disallowDeletionOfDetached(DeleteEvent event) {
-		EventSource source = event.getSession();
-		String entityName = event.getEntityName();
-		EntityPersister persister = source.getEntityPersister( entityName, event.getObject() );
-		Object id =  persister.getIdentifier( event.getObject(), source );
-		entityName = entityName == null ? source.guessEntityName( event.getObject() ) : entityName;
+		final EventSource source = event.getSession();
+		final String explicitEntityName = event.getEntityName();
+		final EntityPersister persister = source.getEntityPersister( explicitEntityName, event.getObject() );
+		final Object id =  persister.getIdentifier( event.getObject(), source );
+		final String entityName = explicitEntityName == null
+				? source.guessEntityName( event.getObject() )
+				: explicitEntityName;
 		throw new IllegalArgumentException( "Removing a detached instance " + entityName + "#" + id );
 	}
 

@@ -664,8 +664,12 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * Mark a persistence instance associated with this session for removal from
 	 * the underlying database. Ths operation cascades to associated instances if
 	 * the association is mapped {@link jakarta.persistence.CascadeType#REMOVE}.
+	 * <p>
+	 * Except when operating in fully JPA-compliant mode, this operation does,
+	 * contrary to the JPA specification, accept a detached entity instance.
 	 *
-	 * @param object the managed persistent instance to remove
+	 * @param object the managed persistent instance to remove, or a detached
+	 *               instance unless operating in fully JPA-compliant mode
 	 */
 	@Override
 	void remove(Object object);

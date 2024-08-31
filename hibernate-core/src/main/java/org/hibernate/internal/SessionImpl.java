@@ -864,8 +864,8 @@ public class SessionImpl
 
 	@Override
 	public void removeOrphanBeforeUpdates(String entityName, Object child) {
-		// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.  This should be removed once action/task
-		// ordering is improved.
+		// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.
+		//       This should be removed once action/task ordering is improved.
 		final boolean traceEnabled = log.isTraceEnabled();
 		if ( traceEnabled ) {
 			logRemoveOrphanBeforeUpdates( "begin", entityName, child );

@@ -9,6 +9,7 @@ package org.hibernate.orm.test.bytecode.enhancement.orphan;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.orm.test.orphan.Part;
 import org.hibernate.orm.test.orphan.Product;
@@ -18,8 +19,10 @@ import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -41,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		EnhancerTestContext.class, // supports laziness and dirty-checking
 		DefaultEnhancementContext.class
 })
+@ServiceRegistry(settings = @Setting(name = AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY, value = "true"))
 public class OrphanTest {
 
 	@AfterEach

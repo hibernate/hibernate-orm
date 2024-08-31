@@ -86,7 +86,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
-import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 import static org.hibernate.metamodel.mapping.ForeignKeyDescriptor.Nature.TARGET;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
@@ -163,12 +162,9 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			lockMode = rowProcessingState.determineEffectiveLockMode( initializer.sourceAlias );
 			if ( initializer.isResultInitializer() ) {
 				uniqueKeyAttributePath = rowProcessingState.getEntityUniqueKeyAttributePath();
-				if ( uniqueKeyAttributePath != null ) {
-					uniqueKeyPropertyTypes = initializer.getParentEntityAttributeTypes( uniqueKeyAttributePath );
-				}
-				else {
-					uniqueKeyPropertyTypes = null;
-				}
+				uniqueKeyPropertyTypes = uniqueKeyAttributePath != null
+						? initializer.getParentEntityAttributeTypes( uniqueKeyAttributePath )
+						: null;
 				canUseEmbeddedIdentifierInstanceAsEntity = rowProcessingState.getEntityId() != null
 						&& initializer.couldUseEmbeddedIdentifierInstanceAsEntity;
 			}
@@ -178,13 +174,10 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 				canUseEmbeddedIdentifierInstanceAsEntity = false;
 			}
 			hasCallbackActions = rowProcessingState.hasCallbackActions();
-			if ( initializer.discriminatorAssembler == null
-					|| rowProcessingState.isQueryCacheHit() && entityDescriptor.useShallowQueryCacheLayout() && !entityDescriptor.storeDiscriminatorInShallowQueryCacheLayout() ) {
-				defaultConcreteDescriptor = entityDescriptor;
-			}
-			else {
-				defaultConcreteDescriptor = null;
-			}
+			defaultConcreteDescriptor =
+					hasConcreteDescriptor( rowProcessingState, initializer.discriminatorAssembler, entityDescriptor )
+							? entityDescriptor
+							: null;
 		}
 
 		/*
@@ -204,6 +197,16 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			this.entityInstanceForNotify = original.entityInstanceForNotify;
 			this.entityHolder = original.entityHolder;
 		}
+	}
+
+	private static boolean hasConcreteDescriptor(
+			RowProcessingState rowProcessingState,
+			BasicResultAssembler<?> discriminatorAssembler,
+			EntityPersister entityDescriptor) {
+		return discriminatorAssembler == null
+			|| rowProcessingState.isQueryCacheHit()
+				&& entityDescriptor.useShallowQueryCacheLayout()
+				&& !entityDescriptor.storeDiscriminatorInShallowQueryCacheLayout();
 	}
 
 	public EntityInitializerImpl(
@@ -229,8 +232,9 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 				: entityDescriptor.getRootEntityDescriptor().getEntityPersister();
 		keyTypeForEqualsHashCode = entityDescriptor.getIdentifierType().getTypeForEqualsHashCode();
 		// The id can only be the entity instance if this is a non-aggregated id that has no containing class
-		couldUseEmbeddedIdentifierInstanceAsEntity = entityDescriptor.getIdentifierMapping() instanceof CompositeIdentifierMapping
-				&& !( (CompositeIdentifierMapping) entityDescriptor.getIdentifierMapping() ).hasContainingClass();
+		couldUseEmbeddedIdentifierInstanceAsEntity =
+				entityDescriptor.getIdentifierMapping() instanceof CompositeIdentifierMapping
+						&& !( (CompositeIdentifierMapping) entityDescriptor.getIdentifierMapping() ).hasContainingClass();
 
 		this.navigablePath = resultDescriptor.getNavigablePath();
 		this.sourceAlias = sourceAlias;
@@ -258,7 +262,8 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			hasKeyManyToOne = initializer != null && initializer.isLazyCapable();
 		}
 
-		assert entityDescriptor.hasSubclasses() == (discriminatorFetch != null) : "Discriminator should only be fetched if the entity has subclasses";
+		assert entityDescriptor.hasSubclasses() == (discriminatorFetch != null)
+				: "Discriminator should only be fetched if the entity has subclasses";
 		discriminatorAssembler = discriminatorFetch != null
 				? (BasicResultAssembler<?>) discriminatorFetch.createAssembler( this, creationState )
 				: null;
@@ -286,12 +291,16 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		final BitSet[] lazySets = new BitSet[subMappingTypes.size() + 1];
 		final BitSet[] maybeLazySets = new BitSet[subMappingTypes.size() + 1];
 		final MutabilityPlan[][] updatableAttributeMutabilityPlans = new MutabilityPlan[subMappingTypes.size() + 1][];
-		assemblers[rootEntityDescriptor.getSubclassId()] = new DomainResultAssembler[rootEntityDescriptor.getNumberOfFetchables()];
-		updatableAttributeMutabilityPlans[rootEntityDescriptor.getSubclassId()] = new MutabilityPlan[rootEntityDescriptor.getNumberOfAttributeMappings()];
+		assemblers[rootEntityDescriptor.getSubclassId()] =
+				new DomainResultAssembler[rootEntityDescriptor.getNumberOfFetchables()];
+		updatableAttributeMutabilityPlans[rootEntityDescriptor.getSubclassId()] =
+				new MutabilityPlan[rootEntityDescriptor.getNumberOfAttributeMappings()];
 
 		for ( EntityMappingType subMappingType : subMappingTypes ) {
-			assemblers[subMappingType.getSubclassId()] = new DomainResultAssembler[subMappingType.getNumberOfFetchables()];
-			updatableAttributeMutabilityPlans[subMappingType.getSubclassId()] = new MutabilityPlan[subMappingType.getNumberOfAttributeMappings()];
+			assemblers[subMappingType.getSubclassId()] =
+					new DomainResultAssembler[subMappingType.getNumberOfFetchables()];
+			updatableAttributeMutabilityPlans[subMappingType.getSubclassId()] =
+					new MutabilityPlan[subMappingType.getNumberOfAttributeMappings()];
 		}
 
 		boolean hasLazySubInitializers = false;
@@ -345,7 +354,8 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			}
 			for ( EntityMappingType subMappingType : declaringType.getSubMappingTypes() ) {
 				assemblers[subMappingType.getSubclassId()][stateArrayPosition] = stateAssembler;
-				updatableAttributeMutabilityPlans[subMappingType.getSubclassId()][stateArrayPosition] = updatableAttributeMutabilityPlans[subclassId][stateArrayPosition];
+				updatableAttributeMutabilityPlans[subMappingType.getSubclassId()][stateArrayPosition] =
+						updatableAttributeMutabilityPlans[subclassId][stateArrayPosition];
 				if ( subInitializer != null ) {
 					if ( subInitializers[subMappingType.getSubclassId()] == null ) {
 						subInitializers[subMappingType.getSubclassId()] = new Initializer<?>[size];
@@ -355,12 +365,14 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 						maybeLazySets[subMappingType.getSubclassId()] = new BitSet(size);
 					}
 					subInitializers[subMappingType.getSubclassId()][stateArrayPosition] = subInitializer;
-					eagerSubInitializers[subMappingType.getSubclassId()][stateArrayPosition] = eagerSubInitializers[subclassId][stateArrayPosition];
-					collectionContainingSubInitializers[subMappingType.getSubclassId()][stateArrayPosition] = collectionContainingSubInitializers[subclassId][stateArrayPosition];
-					if (lazySets[subclassId].get( stateArrayPosition ) ) {
+					eagerSubInitializers[subMappingType.getSubclassId()][stateArrayPosition] =
+							eagerSubInitializers[subclassId][stateArrayPosition];
+					collectionContainingSubInitializers[subMappingType.getSubclassId()][stateArrayPosition] =
+							collectionContainingSubInitializers[subclassId][stateArrayPosition];
+					if ( lazySets[subclassId].get( stateArrayPosition ) ) {
 						lazySets[subMappingType.getSubclassId()].set( stateArrayPosition );
 					}
-					if (maybeLazySets[subclassId].get( stateArrayPosition ) ) {
+					if ( maybeLazySets[subclassId].get( stateArrayPosition ) ) {
 						maybeLazySets[subMappingType.getSubclassId()].set( stateArrayPosition );
 					}
 				}
@@ -411,9 +423,10 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 
 		this.assemblers = assemblers;
 		this.subInitializers = subInitializers;
-		this.subInitializersForResolveFromInitialized = rootEntityDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()
-				? subInitializers
-				: eagerSubInitializers;
+		this.subInitializersForResolveFromInitialized =
+				rootEntityDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()
+						? subInitializers
+						: eagerSubInitializers;
 		this.collectionContainingSubInitializers = collectionContainingSubInitializers;
 		this.lazySets = Arrays.stream( lazySets ).map( ImmutableBitSet::valueOf ).toArray( ImmutableBitSet[]::new );
 		this.maybeLazySets = Arrays.stream( maybeLazySets )
@@ -531,7 +544,8 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		}
 		else {
 			//noinspection unchecked
-			final Initializer<InitializerData> initializer = (Initializer<InitializerData>) identifierAssembler.getInitializer();
+			final Initializer<InitializerData> initializer =
+					(Initializer<InitializerData>) identifierAssembler.getInitializer();
 			if ( initializer != null ) {
 				final InitializerData subData = initializer.getData( rowProcessingState );
 				initializer.resolveKey( subData );
@@ -785,7 +799,8 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 	}
 
 	private void deepCopy(EntityPersister containerDescriptor, Object[] source, Object[] target) {
-		final MutabilityPlan<Object>[] updatableAttributeMutabilityPlan = updatableAttributeMutabilityPlans[containerDescriptor.getSubclassId()];
+		final MutabilityPlan<Object>[] updatableAttributeMutabilityPlan =
+				updatableAttributeMutabilityPlans[containerDescriptor.getSubclassId()];
 		for ( int i = 0; i < updatableAttributeMutabilityPlan.length; i++ ) {
 			final Object sourceValue = source[i];
 			if ( updatableAttributeMutabilityPlan[i] != null
@@ -830,11 +845,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 	protected Type[] getParentEntityAttributeTypes(String attributeName) {
 		Type[] types = parentEntityAttributeTypes.get( attributeName );
 		if ( types == null ) {
-			types = new Type[
-					entityDescriptor.getRootEntityDescriptor()
-							.getSubclassEntityNames()
-							.size()
-					];
+			types = new Type[entityDescriptor.getRootEntityDescriptor().getSubclassEntityNames().size()];
 			initializeAttributeType( types, entityDescriptor, attributeName );
 			for ( EntityMappingType subMappingType : entityDescriptor.getSubMappingTypes() ) {
 				initializeAttributeType( types, subMappingType.getEntityPersister(), attributeName );
@@ -855,12 +866,12 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			@Nullable BasicResultAssembler<?> discriminatorAssembler,
 			EntityPersister entityDescriptor)
 			throws WrongClassException {
-		if ( discriminatorAssembler == null
-				|| rowProcessingState.isQueryCacheHit() && entityDescriptor.useShallowQueryCacheLayout() && !entityDescriptor.storeDiscriminatorInShallowQueryCacheLayout() ) {
+		if ( hasConcreteDescriptor( rowProcessingState, discriminatorAssembler, entityDescriptor ) ) {
 			return entityDescriptor;
 		}
 		else {
-			assert entityDescriptor.hasSubclasses() : "Reading a discriminator from a result set should only happen if the entity has subclasses";
+			assert entityDescriptor.hasSubclasses()
+					: "Reading a discriminator from a result set should only happen if the entity has subclasses";
 			final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
 			assert discriminatorMapping != null;
 			final Object discriminator = discriminatorAssembler.extractRawValue( rowProcessingState );
@@ -888,9 +899,16 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 	}
 
 	protected boolean useEmbeddedIdentifierInstanceAsEntity(EntityInitializerData data) {
-		return data.canUseEmbeddedIdentifierInstanceAsEntity
-				&& ( data.concreteDescriptor = determineConcreteEntityDescriptor( data.getRowProcessingState(), discriminatorAssembler, entityDescriptor ) ) != null
+		if ( data.canUseEmbeddedIdentifierInstanceAsEntity ) {
+			data.concreteDescriptor =
+					determineConcreteEntityDescriptor( data.getRowProcessingState(),
+							discriminatorAssembler, entityDescriptor );
+			return data.concreteDescriptor != null
 				&& data.concreteDescriptor.isInstance( data.getRowProcessingState().getEntityId() );
+		}
+		else {
+			return false;
+		}
 	}
 
 	@Override
@@ -918,7 +936,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 				resolveKey( data );
 				assert data.getState() == State.MISSING;
 				assert referencedModelPart instanceof ToOneAttributeMapping
-						&& ( (ToOneAttributeMapping) referencedModelPart ).getSideNature() == TARGET;
+					&& ( (ToOneAttributeMapping) referencedModelPart ).getSideNature() == TARGET;
 				return;
 			}
 			// If the entity initializer is null, we know the entity is fully initialized,
@@ -1132,7 +1150,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 
 	private boolean isProxyInstance(Object proxy) {
 		return proxy != null
-				&& ( proxy instanceof MapProxy || entityDescriptor.getJavaType().getJavaTypeClass().isInstance( proxy ) );
+			&& ( proxy instanceof MapProxy || entityDescriptor.getJavaType().getJavaTypeClass().isInstance( proxy ) );
 	}
 
 	private boolean isExistingEntityInitialized(Object existingEntity) {

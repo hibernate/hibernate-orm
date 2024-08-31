@@ -301,7 +301,6 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 			session.persist( new Contact( 1L, "Lukasz", "Antoniak", "owner", folder1 ) );
 			session.persist( new Contact( 2L, "Kinga", "Mroz", "co-owner", folder2 ) );
 			session.flush();
-			session.clear();
 			session.refresh( folder1 );
 			session.refresh( folder2 );
 			session.clear();

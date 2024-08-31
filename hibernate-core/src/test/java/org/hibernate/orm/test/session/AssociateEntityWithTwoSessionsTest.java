@@ -14,6 +14,7 @@ import jakarta.persistence.ManyToOne;
 
 import org.hibernate.LockMode;
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.proxy.AbstractLazyInitializer;
 
@@ -23,6 +24,7 @@ import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.Rule;
 import org.junit.jupiter.api.Test;
 
@@ -36,10 +38,9 @@ import static org.junit.Assert.fail;
 /**
  * @author Vlad Mihalcea
  */
-@Jpa(annotatedClasses = {
-		AssociateEntityWithTwoSessionsTest.Location.class,
-		AssociateEntityWithTwoSessionsTest.Event.class
-})
+@Jpa(annotatedClasses = {AssociateEntityWithTwoSessionsTest.Location.class,
+						AssociateEntityWithTwoSessionsTest.Event.class},
+		properties = @Setting(name = AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY, value = "true"))
 public class AssociateEntityWithTwoSessionsTest {
 
 	@Rule
@@ -65,8 +66,8 @@ public class AssociateEntityWithTwoSessionsTest {
 		triggerable.reset();
 
 		scope.inTransaction( entityManager -> {
-			Event event1 = entityManager.find( Event.class, event.id );
-			Location location1 = event1.getLocation();
+			Event e = entityManager.find( Event.class, event.id );
+			Location location1 = e.getLocation();
 
 			try {
 				scope.inTransaction( _entityManager -> {

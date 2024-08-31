@@ -14,13 +14,16 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.TransientObjectException;
 import org.hibernate.UnresolvableObjectException;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -42,6 +45,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 				"org/hibernate/orm/test/readonly/TextHolder.hbm.xml"
 		}
 )
+@ServiceRegistry(settings = @Setting(name = AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY, value = "true"))
 public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 
 	@Test

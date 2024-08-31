@@ -659,6 +659,7 @@ public class SessionImpl
 
 	private void fireLock(LockEvent event) {
 		checkOpen();
+		checkEntityManaged( event.getEntityName(), event.getObject() );
 		pulseTransactionCoordinator();
 		fastSessionServices.eventListenerGroup_LOCK
 				.fireEventOnEachListener( event, LockEventListener::onLock );
@@ -1163,18 +1164,7 @@ public class SessionImpl
 
 	private void fireRefresh(final RefreshEvent event) {
 		try {
-			if ( !getSessionFactory().getSessionFactoryOptions().isAllowRefreshDetachedEntity() ) {
-				if ( event.getEntityName() != null ) {
-					if ( !contains( event.getEntityName(), event.getObject() ) ) {
-						throw new IllegalArgumentException( "Entity not managed" );
-					}
-				}
-				else {
-					if ( !contains( event.getObject() ) ) {
-						throw new IllegalArgumentException( "Entity not managed" );
-					}
-				}
-			}
+			checkEntityManaged( event.getEntityName(), event.getObject() );
 			pulseTransactionCoordinator();
 			fastSessionServices.eventListenerGroup_REFRESH
 					.fireEventOnEachListener( event, RefreshEventListener::onRefresh );
@@ -1195,6 +1185,7 @@ public class SessionImpl
 
 	private void fireRefresh(final RefreshContext refreshedAlready, final RefreshEvent event) {
 		try {
+			checkEntityManaged( event.getEntityName(), event.getObject() );
 			pulseTransactionCoordinator();
 			fastSessionServices.eventListenerGroup_REFRESH
 					.fireEventOnEachListener( event, refreshedAlready, RefreshEventListener::onRefresh );
@@ -1207,6 +1198,18 @@ public class SessionImpl
 		}
 	}
 
+	private void checkEntityManaged(String entityName, Object entity) {
+		if ( !getSessionFactory().getSessionFactoryOptions().isAllowRefreshDetachedEntity() ) {
+			if ( !managed( entityName, entity ) ) {
+				throw new IllegalArgumentException(
+						"Given entity is not associated with the persistence context" );
+			}
+		}
+	}
+
+	private boolean managed(String entityName, Object entity) {
+		return entityName == null ? contains( entity ) : contains( entityName, entity );
+	}
 
 	// replicate() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

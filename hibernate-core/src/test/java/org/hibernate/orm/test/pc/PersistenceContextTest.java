@@ -256,34 +256,6 @@ public class PersistenceContextTest extends BaseEntityManagerFunctionalTestCase 
 			Session session = entityManager.unwrap(Session.class);
 			Long personId = _personId;
 
-			//tag::pc-detach-reattach-lock-example[]
-			Person person = session.byId(Person.class).load(personId);
-			//Clear the Session so the person entity becomes detached
-			session.clear();
-			person.setName("Mr. John Doe");
-
-			session.lock(person, LockMode.NONE);
-			//end::pc-detach-reattach-lock-example[]
-		});
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			Session session = entityManager.unwrap(Session.class);
-			Long personId = _personId;
-
-			//tag::pc-detach-reattach-saveOrUpdate-example[]
-			Person person = session.byId(Person.class).load(personId);
-			//Clear the Session so the person entity becomes detached
-			session.clear();
-			person.setName("Mr. John Doe");
-
-			session.merge(person);
-			//end::pc-detach-reattach-saveOrUpdate-example[]
-		});
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			Session session = entityManager.unwrap(Session.class);
-			Long personId = _personId;
-
 			Person personDetachedReference = session.byId(Person.class).load(personId);
 			//Clear the Session so the person entity becomes detached
 			session.clear();

@@ -597,7 +597,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * The modes {@link LockMode#WRITE} and {@link LockMode#UPGRADE_SKIPLOCKED}
 	 * are not legal arguments to {@code lock()}.
 	 *
-	 * @param object a persistent instance
+	 * @param object a persistent instance associated with this session
 	 * @param lockMode the lock level
 	 */
 	void lock(Object object, LockMode lockMode);
@@ -609,7 +609,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * This operation cascades to associated instances if the association is
 	 * mapped with {@link org.hibernate.annotations.CascadeType#LOCK}.
 	 *
-	 * @param object a persistent instance
+	 * @param object a persistent instance associated with this session
 	 * @param lockOptions the lock options
 	 *
 	 * @since 6.2

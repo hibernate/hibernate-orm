@@ -1162,8 +1162,8 @@ public class SessionImpl
 	}
 
 	private void fireRefresh(final RefreshEvent event) {
+		checkEntityManaged( event.getEntityName(), event.getObject() );
 		try {
-			checkEntityManaged( event.getEntityName(), event.getObject() );
 			pulseTransactionCoordinator();
 			fastSessionServices.eventListenerGroup_REFRESH
 					.fireEventOnEachListener( event, RefreshEventListener::onRefresh );
@@ -1183,8 +1183,8 @@ public class SessionImpl
 	}
 
 	private void fireRefresh(final RefreshContext refreshedAlready, final RefreshEvent event) {
+		checkEntityManaged( event.getEntityName(), event.getObject() );
 		try {
-			checkEntityManaged( event.getEntityName(), event.getObject() );
 			pulseTransactionCoordinator();
 			fastSessionServices.eventListenerGroup_REFRESH
 					.fireEventOnEachListener( event, refreshedAlready, RefreshEventListener::onRefresh );

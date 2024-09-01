@@ -73,7 +73,6 @@ public class PrivateConstructorTest {
 
 		scope.inTransaction(
 				entityManager -> {
-					Triggerable triggerable = logInspection.watchForLogMessages( "HHH000143:" );
 					Child childReference = entityManager.getReference( Child.class, child.getId() );
 					try {
 						assertEquals( child.getParent().getName(), childReference.getParent().getName() );
@@ -84,7 +83,6 @@ public class PrivateConstructorTest {
 								"Bytecode enhancement failed because no public, protected or package-private default constructor was found for entity"
 						) );
 					}
-					assertTrue( triggerable.wasTriggered() );
 				}
 		);
 	}

@@ -54,11 +54,11 @@ public final class LockModeConverter {
 	/**
 	 * Convert from JPA defined {@link LockModeType} to Hibernate-specific {@link LockMode}.
 	 *
-	 * @param lockMode The JPA {@link LockModeType}
+	 * @param lockModeType The JPA {@link LockModeType}
 	 * @return The Hibernate {@link LockMode}.
 	 */
-	public static LockMode convertToLockMode(LockModeType lockMode) {
-		switch ( lockMode ) {
+	public static LockMode convertToLockMode(LockModeType lockModeType) {
+		switch ( lockModeType ) {
 			case NONE:
 				return LockMode.NONE;
 			case READ:
@@ -74,7 +74,7 @@ public final class LockModeConverter {
 			case PESSIMISTIC_FORCE_INCREMENT:
 				return LockMode.PESSIMISTIC_FORCE_INCREMENT;
 			default:
-				throw new AssertionFailure( "Unknown LockModeType: " + lockMode );
+				throw new AssertionFailure( "Unknown LockModeType: " + lockModeType );
 		}
 	}
 }

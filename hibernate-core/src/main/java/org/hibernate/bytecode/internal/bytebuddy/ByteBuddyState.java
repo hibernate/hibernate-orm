@@ -321,7 +321,9 @@ public final class ByteBuddyState {
 			return ClassLoadingStrategy.UsingLookup.of( MethodHandles.privateLookupIn( originalClass, LOOKUP ) );
 		}
 		catch (Throwable e) {
-			throw new HibernateException( LOG.bytecodeEnhancementFailedUnableToGetPrivateLookupFor( originalClass.getName() ), e );
+			throw new HibernateException( "Bytecode enhancement failed for class '" + originalClass.getName()
+					+ "' (it might be due to the Java module system preventing Hibernate ORM from defining an enhanced class in the same package"
+					+ " - in this case, the class should be opened and exported to Hibernate ORM)", e );
 		}
 	}
 

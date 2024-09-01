@@ -6,9 +6,10 @@
  */
 package org.hibernate.id.insert;
 
+import org.hibernate.HibernateException;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.EventType;
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
@@ -38,7 +39,9 @@ public class BasicSelectingDelegate extends AbstractSelectingDelegate {
 		final String identitySelectString = persister.getIdentitySelectString();
 		if ( identitySelectString == null
 				&& !dialect().getIdentityColumnSupport().supportsInsertSelectIdentity() ) {
-			throw CoreLogging.messageLogger( BasicSelectingDelegate.class ).nullIdentitySelectString();
+			throw new HibernateException( "Cannot retrieve the generated identity, because '"
+					+ AvailableSettings.USE_GET_GENERATED_KEYS
+					+ "' was disabled and the dialect does not support selecting the last generated identity" );
 		}
 		return identitySelectString;
 	}

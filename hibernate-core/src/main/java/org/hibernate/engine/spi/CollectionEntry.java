@@ -8,7 +8,6 @@ package org.hibernate.engine.spi;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -226,7 +225,8 @@ public final class CollectionEntry implements Serializable {
 			ignore = false;
 		}
 		else if ( !isProcessed() ) {
-			throw new HibernateException( LOG.collectionNotProcessedByFlush( collection.getRole() ) );
+			throw new HibernateException( "Collection '" + collection.getRole() + "' was not processed by flush"
+					+ " (this is likely due to unsafe use of the session, for example, current use in multiple threads, or updates during entity lifecycle callbacks)");
 		}
 		collection.setSnapshot( loadedKey, role, snapshot );
 	}

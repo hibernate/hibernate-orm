@@ -76,7 +76,7 @@ public class GetAndIsVariantGetterTest {
 			fail( "Expecting a failure" );
 		}
 		catch (MappingException e) {
-			assertThat( e.getMessage(), startsWith( "HHH000474: Ambiguous persistent property methods detected on" ) );
+			assertThat( e.getMessage(), startsWith( "Ambiguous persistent property methods" ) );
 		}
 	}
 

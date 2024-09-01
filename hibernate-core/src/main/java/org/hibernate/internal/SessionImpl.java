@@ -50,7 +50,6 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
-import org.hibernate.TransientObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
@@ -61,6 +60,7 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.ActionQueue;
+import org.hibernate.engine.spi.ActionQueue.TransactionCompletionProcesses;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
@@ -121,7 +121,6 @@ import org.hibernate.loader.internal.LoadAccessContext;
 import org.hibernate.loader.internal.NaturalIdLoadAccessImpl;
 import org.hibernate.loader.internal.SimpleNaturalIdLoadAccessImpl;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.proxy.LazyInitializer;
@@ -161,6 +160,7 @@ import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.metamodel.Metamodel;
 
 import static java.lang.Boolean.parseBoolean;
+import static java.lang.Integer.parseInt;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.CacheMode.fromJpaModes;
@@ -193,7 +193,8 @@ import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 import static org.hibernate.jpa.internal.util.CacheModeHelper.interpretCacheMode;
-import static org.hibernate.jpa.internal.util.LockOptionsHelper.applyPropertiesToLockOptions;
+import static org.hibernate.internal.LockOptionsHelper.applyPropertiesToLockOptions;
+import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
@@ -237,60 +238,60 @@ public class SessionImpl
 
 	private transient TransactionObserver transactionObserver;
 
-	// TODO: this is unused and can be removed
-	private transient boolean isEnforcingFetchGraph;
-
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 
 		final HibernateMonitoringEvent sessionOpenEvent = getEventManager().beginSessionOpenEvent();
+		try {
 
-		persistenceContext = createPersistenceContext();
-		actionQueue = createActionQueue();
+			persistenceContext = createPersistenceContext();
+			actionQueue = createActionQueue();
 
-		autoClear = options.shouldAutoClear();
-		autoClose = options.shouldAutoClose();
+			autoClear = options.shouldAutoClear();
+			autoClose = options.shouldAutoClose();
 
-		if ( options instanceof SharedSessionCreationOptions ) {
-			final SharedSessionCreationOptions sharedOptions = (SharedSessionCreationOptions) options;
-			final ActionQueue.TransactionCompletionProcesses transactionCompletionProcesses
-					= sharedOptions.getTransactionCompletionProcesses();
-			if ( sharedOptions.isTransactionCoordinatorShared() && transactionCompletionProcesses != null ) {
-				actionQueue.setTransactionCompletionProcesses(
-						transactionCompletionProcesses,
-						true
-				);
+			setUpTransactionCompletionProcesses( options );
+
+			loadQueryInfluencers = new LoadQueryInfluencers( factory, options );
+
+			if ( properties != null ) {
+				//There might be custom properties for this session that affect the LockOptions state
+				applyPropertiesToLockOptions( properties, this::getLockOptionsForWrite );
+			}
+			setCacheMode( fastSessionServices.initialSessionCacheMode );
+
+			// NOTE : pulse() already handles auto-join-ability correctly
+			getTransactionCoordinator().pulse();
+
+			// do not override explicitly set flush mode ( SessionBuilder#flushMode() )
+			if ( getHibernateFlushMode() == null ) {
+				setHibernateFlushMode( getInitialFlushMode() );
+			}
+
+			setUpMultitenancy( factory, loadQueryInfluencers );
+
+			final StatisticsImplementor statistics = factory.getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.openSession();
+			}
+
+			if ( log.isTraceEnabled() ) {
+				log.tracef( "Opened Session [%s] at timestamp: %s", getSessionIdentifier(), currentTimeMillis() );
 			}
 		}
-
-		loadQueryInfluencers = new LoadQueryInfluencers( factory, options );
-
-		final StatisticsImplementor statistics = factory.getStatistics();
-		if ( statistics.isStatisticsEnabled() ) {
-			statistics.openSession();
+		finally {
+			getEventManager().completeSessionOpenEvent( sessionOpenEvent, this );
 		}
+	}
 
-		if ( properties != null ) {
-			//There might be custom properties for this session that affect the LockOptions state
-			applyPropertiesToLockOptions( properties, this::getLockOptionsForWrite );
+	private void setUpTransactionCompletionProcesses(SessionCreationOptions options) {
+		if ( options instanceof SharedSessionCreationOptions sharedOptions
+				&& sharedOptions.isTransactionCoordinatorShared() ) {
+			final TransactionCompletionProcesses processes = sharedOptions.getTransactionCompletionProcesses();
+			if ( processes != null ) {
+				actionQueue.setTransactionCompletionProcesses( processes, true );
+			}
 		}
-		setCacheMode( fastSessionServices.initialSessionCacheMode );
-
-		// NOTE : pulse() already handles auto-join-ability correctly
-		getTransactionCoordinator().pulse();
-
-		// do not override explicitly set flush mode ( SessionBuilder#flushMode() )
-		if ( getHibernateFlushMode() == null ) {
-			setHibernateFlushMode( getInitialFlushMode() );
-		}
-
-		setUpMultitenancy( factory, loadQueryInfluencers );
-
-		if ( log.isTraceEnabled() ) {
-			log.tracef( "Opened Session [%s] at timestamp: %s", getSessionIdentifier(), currentTimeMillis() );
-		}
-
-		getEventManager().completeSessionOpenEvent( sessionOpenEvent, this );
 	}
 
 	private FlushMode getInitialFlushMode() {
@@ -346,7 +347,7 @@ public class SessionImpl
 				HINT_JAVAEE_LOCK_TIMEOUT,
 				this::getSessionProperty,
 				// treat WAIT_FOREVER the same as null
-				(value) -> !Integer.valueOf( LockOptions.WAIT_FOREVER ).equals( value )
+				value -> !Integer.valueOf( LockOptions.WAIT_FOREVER ).equals( value )
 		);
 		if ( specLockTimeout != null ) {
 			query.setHint( HINT_SPEC_LOCK_TIMEOUT, specLockTimeout );
@@ -354,12 +355,9 @@ public class SessionImpl
 	}
 
 	private Object getSessionProperty(final String name) {
-		if ( properties == null ) {
-			return fastSessionServices.defaultSessionProperties.get( name );
-		}
-		else {
-			return properties.get( name );
-		}
+		return properties == null
+				? fastSessionServices.defaultSessionProperties.get( name )
+				: properties.get( name );
 	}
 
 	@Override
@@ -401,12 +399,11 @@ public class SessionImpl
 			if ( getFactory().getSessionFactoryOptions().getJpaCompliance().isJpaClosedComplianceEnabled() ) {
 				throw new IllegalStateException( "Illegal call to #close() on already closed Session/EntityManager" );
 			}
-
 			log.trace( "Already closed" );
-			return;
 		}
-
-		closeWithoutOpenChecks();
+		else {
+			closeWithoutOpenChecks();
+		}
 	}
 
 	public void closeWithoutOpenChecks() throws HibernateException {
@@ -416,15 +413,13 @@ public class SessionImpl
 
 		final EventManager eventManager = getEventManager();
 		final HibernateMonitoringEvent sessionClosedEvent = eventManager.beginSessionClosedEvent();
-
-		// todo : we want this check if usage is JPA, but not native Hibernate usage
-		final SessionFactoryImplementor sessionFactory = getSessionFactory();
 		try {
-			if ( sessionFactory.getSessionFactoryOptions().isJpaBootstrap() ) {
-				// Original hibernate-entitymanager EM#close behavior
+			if ( isJpaBootstrap() ) {
+				// Original HEM close behavior
 				checkSessionFactoryOpen();
 				checkOpenOrWaitingForAutoClose();
-				if ( fastSessionServices.discardOnClose || !isTransactionInProgressAndNotMarkedForRollback() ) {
+				if ( fastSessionServices.discardOnClose
+						|| !isTransactionInProgressAndNotMarkedForRollback() ) {
 					super.close();
 				}
 				else {
@@ -433,17 +428,21 @@ public class SessionImpl
 				}
 			}
 			else {
+				// Regular Hibernate behavior
 				super.close();
 			}
 		}
 		finally {
-			final StatisticsImplementor statistics = sessionFactory.getStatistics();
+			final StatisticsImplementor statistics = getSessionFactory().getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.closeSession();
 			}
-
 			eventManager.completeSessionClosedEvent( sessionClosedEvent, this );
 		}
+	}
+
+	private boolean isJpaBootstrap() {
+		return getSessionFactory().getSessionFactoryOptions().isJpaBootstrap();
 	}
 
 	private boolean isTransactionInProgressAndNotMarkedForRollback() {
@@ -619,10 +618,8 @@ public class SessionImpl
 
 	@Override
 	public void delayedAfterCompletion() {
-		TransactionCoordinator coordinator = getTransactionCoordinator();
-		if ( coordinator instanceof JtaTransactionCoordinatorImpl ) {
-			( (JtaTransactionCoordinatorImpl) coordinator).getSynchronizationCallbackCoordinator()
-					.processAnyDelayedAfterCompletion();
+		if ( getTransactionCoordinator() instanceof JtaTransactionCoordinatorImpl impl ) {
+			impl.getSynchronizationCallbackCoordinator().processAnyDelayedAfterCompletion();
 		}
 	}
 
@@ -653,17 +650,36 @@ public class SessionImpl
 		fireLock( new LockEvent( object, lockMode, this ) );
 	}
 
-	private void fireLock(Object object, LockOptions options) {
-		fireLock( new LockEvent( object, options, this ) );
-	}
-
 	private void fireLock(LockEvent event) {
 		checkOpen();
 		checkEntityManaged( event.getEntityName(), event.getObject() );
-		pulseTransactionCoordinator();
-		fastSessionServices.eventListenerGroup_LOCK
-				.fireEventOnEachListener( event, LockEventListener::onLock );
-		delayedAfterCompletion();
+		try {
+			pulseTransactionCoordinator();
+			checkTransactionNeededForLock( event.getLockMode() );
+			fastSessionServices.eventListenerGroup_LOCK
+					.fireEventOnEachListener( event, LockEventListener::onLock );
+		}
+		catch ( RuntimeException e ) {
+			convertIfJpaBootstrap( e, event.getLockOptions() );
+		}
+		finally {
+			delayedAfterCompletion();
+		}
+	}
+
+	private void convertIfJpaBootstrap(RuntimeException exception, LockOptions lockOptions) {
+		if ( !isJpaBootstrap() && exception instanceof HibernateException ) {
+			throw exception;
+		}
+		else if ( exception instanceof MappingException ) {
+			// I believe this is now obsolete everywhere we do it,
+			// but we do it everywhere else, so let's do it here
+			throw getExceptionConverter()
+					.convert( new IllegalArgumentException( exception.getMessage(), exception ) );
+		}
+		else {
+			throw getExceptionConverter().convert( exception, lockOptions );
+		}
 	}
 
 	// persist() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -730,9 +746,8 @@ public class SessionImpl
 	}
 
 	private void firePersist(final PersistContext copiedAlready, final PersistEvent event) {
-		pulseTransactionCoordinator();
-
 		try {
+			pulseTransactionCoordinator();
 			//Uses a capturing lambda in this case as we need to carry the additional Map parameter:
 			fastSessionServices.eventListenerGroup_PERSIST
 					.fireEventOnEachListener( event, copiedAlready, PersistEventListener::onPersist );
@@ -878,13 +893,13 @@ public class SessionImpl
 			log.tracef(
 					"%s remove orphan before updates: [%s]",
 					timing,
-					entityEntry == null ? entityName : MessageHelper.infoString( entityName, entityEntry.getId() )
+					entityEntry == null ? entityName : infoString( entityName, entityEntry.getId() )
 			);
 		}
 	}
 
 	private void fireDelete(final DeleteEvent event) {
-		try{
+		try {
 			pulseTransactionCoordinator();
 			fastSessionServices.eventListenerGroup_DELETE
 					.fireEventOnEachListener( event, DeleteEventListener::onDelete );
@@ -905,7 +920,7 @@ public class SessionImpl
 	}
 
 	private void fireDelete(final DeleteEvent event, final DeleteContext transientEntities) {
-		try{
+		try {
 			pulseTransactionCoordinator();
 			fastSessionServices.eventListenerGroup_DELETE
 					.fireEventOnEachListener( event, transientEntities, DeleteEventListener::onDelete );
@@ -956,9 +971,8 @@ public class SessionImpl
 	@Override
 	public Object immediateLoad(String entityName, Object id) throws HibernateException {
 		if ( log.isDebugEnabled() ) {
-			final EntityPersister persister = getFactory().getMappingMetamodel()
-					.getEntityDescriptor( entityName );
-			log.debugf( "Initializing proxy: %s", MessageHelper.infoString( persister, id, getFactory() ) );
+			final EntityPersister persister = requireEntityPersister( entityName );
+			log.debugf( "Initializing proxy: %s", infoString( persister, id, getFactory() ) );
 		}
 		LoadEvent event = loadEvent;
 		loadEvent = null;
@@ -1140,43 +1154,35 @@ public class SessionImpl
 
 	@Override
 	public void refresh(Object object) throws HibernateException {
-		checkOpen();
 		fireRefresh( new RefreshEvent( object, this ) );
 	}
 
 	@Override
 	public void refresh(Object object, LockMode lockMode) throws HibernateException {
-		checkOpen();
 		fireRefresh( new RefreshEvent( object, lockMode, this ) );
 	}
 
 	@Override
 	public void refresh(Object object, LockOptions lockOptions) throws HibernateException {
-		checkOpen();
 		fireRefresh( new RefreshEvent( object, lockOptions, this ) );
 	}
 
 	@Override
 	public void refresh(String entityName, Object object, RefreshContext refreshedAlready) throws HibernateException {
-		checkOpenOrWaitingForAutoClose();
 		fireRefresh( refreshedAlready, new RefreshEvent( entityName, object, this ) );
 	}
 
 	private void fireRefresh(final RefreshEvent event) {
+		checkOpen();
+		checkEntityManaged( event.getEntityName(), event.getObject() );
 		try {
-			checkEntityManaged( event.getEntityName(), event.getObject() );
 			pulseTransactionCoordinator();
+			checkTransactionNeededForLock( event.getLockMode() );
 			fastSessionServices.eventListenerGroup_REFRESH
 					.fireEventOnEachListener( event, RefreshEventListener::onRefresh );
 		}
-		catch (RuntimeException e) {
-			if ( !getSessionFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
-				if ( e instanceof HibernateException ) {
-					throw e;
-				}
-			}
-			//including HibernateException
-			throw getExceptionConverter().convert( e );
+		catch ( RuntimeException e ) {
+			convertIfJpaBootstrap( e, event.getLockOptions() );
 		}
 		finally {
 			delayedAfterCompletion();
@@ -1184,14 +1190,13 @@ public class SessionImpl
 	}
 
 	private void fireRefresh(final RefreshContext refreshedAlready, final RefreshEvent event) {
+		// called from cascades
+		checkOpenOrWaitingForAutoClose();
+		checkEntityManaged( event.getEntityName(), event.getObject() );
 		try {
-			checkEntityManaged( event.getEntityName(), event.getObject() );
 			pulseTransactionCoordinator();
 			fastSessionServices.eventListenerGroup_REFRESH
 					.fireEventOnEachListener( event, refreshedAlready, RefreshEventListener::onRefresh );
-		}
-		catch (RuntimeException e) {
-			throw getExceptionConverter().convert( e );
 		}
 		finally {
 			delayedAfterCompletion();
@@ -1304,17 +1309,14 @@ public class SessionImpl
 	}
 
 	private void doFlush() {
-		pulseTransactionCoordinator();
-		checkTransactionNeededForUpdateOperation();
-
 		try {
+			pulseTransactionCoordinator();
+			checkTransactionNeededForUpdateOperation();
 			if ( persistenceContext.getCascadeLevel() > 0 ) {
 				throw new HibernateException( "Flush during cascade is dangerous" );
 			}
-
-			FlushEvent event = new FlushEvent( this );
 			fastSessionServices.eventListenerGroup_FLUSH
-					.fireEventOnEachListener( event, FlushEventListener::onFlush );
+					.fireEventOnEachListener( new FlushEvent( this ), FlushEventListener::onFlush );
 			delayedAfterCompletion();
 		}
 		catch ( RuntimeException e ) {
@@ -1338,7 +1340,7 @@ public class SessionImpl
 		if ( log.isDebugEnabled() ) {
 			log.debugf(
 					"Flushing to force deletion of re-saved object: %s",
-					MessageHelper.infoString( key.getPersister(), key.getIdentifier(), getFactory() )
+					infoString( key.getPersister(), key.getIdentifier(), getFactory() )
 			);
 		}
 
@@ -1355,10 +1357,7 @@ public class SessionImpl
 
 	@Override
 	public Object instantiate(String entityName, Object id) throws HibernateException {
-		final EntityPersister persister = getFactory().getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityName );
-		return instantiate( persister, id );
+		return instantiate( requireEntityPersister( entityName ), id );
 	}
 
 	/**
@@ -1368,11 +1367,8 @@ public class SessionImpl
 	public Object instantiate(EntityPersister persister, Object id) throws HibernateException {
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
-		Object result = getInterceptor().instantiate(
-				persister.getEntityName(),
-				persister.getRepresentationStrategy(),
-				id
-		);
+		Object result = getInterceptor()
+				.instantiate( persister.getEntityName(), persister.getRepresentationStrategy(), id );
 		if ( result == null ) {
 			result = persister.instantiate( id, this );
 		}
@@ -1384,9 +1380,7 @@ public class SessionImpl
 	public EntityPersister getEntityPersister(final String entityName, final Object object) {
 		checkOpenOrWaitingForAutoClose();
 		if ( entityName == null ) {
-			return getFactory().getRuntimeMetamodels()
-					.getMappingMetamodel()
-					.getEntityDescriptor( guessEntityName( object ) );
+			return requireEntityPersister( guessEntityName( object ) );
 		}
 		else {
 			// try block is a hack around fact that currently tuplizers are not
@@ -1395,9 +1389,7 @@ public class SessionImpl
 			// influence this decision if we were not able to based on the
 			// given entityName
 			try {
-				return getFactory().getRuntimeMetamodels()
-						.getMappingMetamodel()
-						.getEntityDescriptor( entityName )
+				return requireEntityPersister( entityName )
 						.getSubclassEntityPersister( object, getFactory() );
 			}
 			catch ( HibernateException e ) {
@@ -1488,7 +1480,7 @@ public class SessionImpl
 			// A session is considered to contain an entity only if the entity has
 			// an entry in the session's persistence context and the entry reports
 			// that the entity has not been removed
-			EntityEntry entry = persistenceContext.getEntry( object );
+			final EntityEntry entry = persistenceContext.getEntry( object );
 			delayedAfterCompletion();
 
 			if ( entry == null ) {
@@ -1497,14 +1489,16 @@ public class SessionImpl
 					try {
 						final String entityName = getEntityNameResolver().resolveEntityName( object );
 						if ( entityName == null ) {
-							throw new IllegalArgumentException( "Could not resolve entity name for class '" + object.getClass() + "'" );
+							throw new IllegalArgumentException( "Could not resolve entity name for class '"
+									+ object.getClass() + "'" );
 						}
-						getFactory().getRuntimeMetamodels()
-								.getMappingMetamodel()
-								.getEntityDescriptor( entityName );
+						else {
+							requireEntityPersister( entityName );
+						}
 					}
 					catch ( HibernateException e ) {
-						throw new IllegalArgumentException( "Class '" + object.getClass() + "' is not an entity class", e );
+						throw new IllegalArgumentException( "Class '" + object.getClass()
+								+ "' is not an entity class", e );
 					}
 				}
 				return false;
@@ -1535,8 +1529,7 @@ public class SessionImpl
 			if ( lazyInitializer == null && persistenceContext.getEntry( object ) == null ) {
 				// check if it is an entity -> if not throw an exception (per JPA)
 				try {
-					getFactory().getMappingMetamodel()
-							.getEntityDescriptor( entityName );
+					requireEntityPersister( entityName );
 				}
 				catch (HibernateException e) {
 					throw new IllegalArgumentException( "Not an entity [" + entityName + "] : " + object );
@@ -1636,9 +1629,9 @@ public class SessionImpl
 	public void initializeCollection(PersistentCollection<?> collection, boolean writing) {
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
-		InitializeCollectionEvent event = new InitializeCollectionEvent( collection, this );
 		fastSessionServices.eventListenerGroup_INIT_COLLECTION
-				.fireEventOnEachListener( event, InitializeCollectionEventListener::onInitializeCollection );
+				.fireEventOnEachListener( new InitializeCollectionEvent( collection, this ),
+						InitializeCollectionEventListener::onInitializeCollection );
 		delayedAfterCompletion();
 	}
 
@@ -1721,8 +1714,10 @@ public class SessionImpl
 
 	@Override
 	public String toString() {
-		final StringBuilder string = new StringBuilder( 500 )
-				.append( "SessionImpl(" ).append( System.identityHashCode( this ) );
+		final StringBuilder string =
+				new StringBuilder( 500 )
+						.append( "SessionImpl(" )
+						.append( System.identityHashCode( this ) );
 		if ( !isClosed() ) {
 			if ( log.isTraceEnabled() ) {
 				string.append( persistenceContext )
@@ -2134,7 +2129,7 @@ public class SessionImpl
 		}
 
 		@Override
-		public ActionQueue.TransactionCompletionProcesses getTransactionCompletionProcesses() {
+		public TransactionCompletionProcesses getTransactionCompletionProcesses() {
 			return shareTransactionContext ?
 					session.getActionQueue().getTransactionCompletionProcesses() :
 					null;
@@ -2175,15 +2170,11 @@ public class SessionImpl
 	}
 
 	private EntityPersister requireEntityPersister(Class<?> entityClass) {
-		return getFactory().getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityClass );
+		return getFactory().getMappingMetamodel().getEntityDescriptor( entityClass );
 	}
 
 	private EntityPersister requireEntityPersister(String entityName) {
-		return getFactory().getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityName );
+		return getFactory().getMappingMetamodel().getEntityDescriptor( entityName );
 	}
 
 	@Override
@@ -2233,26 +2224,6 @@ public class SessionImpl
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// HibernateEntityManagerImplementor impl
-
-
-//	@Override
-//	public LockOptions getLockRequest(LockModeType lockModeType, Map<String, Object> properties) {
-//		LockOptions lockOptions = new LockOptions();
-//		if ( this.lockOptions != null ) { //otherwise the default LockOptions constructor is the same as DEFAULT_LOCK_OPTIONS
-//			LockOptions.copy( this.lockOptions, lockOptions );
-//		}
-//		lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
-//		if ( properties != null ) {
-//			LockOptionsHelper.applyPropertiesToLockOptions( properties, () -> lockOptions );
-//		}
-//		return lockOptions;
-//	}
-
-
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// EntityManager impl
 
 	@Override
@@ -2292,13 +2263,13 @@ public class SessionImpl
 		LockOptions lockOptions = null;
 		try {
 			if ( lockModeType != null ) {
-				checkTransactionNeededForLock( lockModeType );
+				checkTransactionNeededForLock( LockModeTypeHelper.getLockMode( lockModeType ) );
 				lockOptions = buildLockOptions( lockModeType, properties );
 			}
 
 			final EffectiveEntityGraph effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
 			effectiveEntityGraph.applyConfiguredGraph( properties );
-			loadQueryInfluencers.setReadOnly( getReadOnlyHint( properties ) );
+			loadQueryInfluencers.setReadOnly( readOnlyHint( properties ) );
 
 			return byId( entityClass )
 					.with( determineAppropriateLocalCacheMode( properties ) )
@@ -2306,17 +2277,14 @@ public class SessionImpl
 					.load( primaryKey );
 		}
 		catch ( EntityNotFoundException enfe ) {
-			/*
-			This may happen if the entity has an associations mapped with @NotFound(action = NotFoundAction.EXCEPTION)
-			and this associated entity is not found.
-			 */
+			// This may happen if the entity has an associations mapped with
+			// @NotFound(action = NotFoundAction.EXCEPTION) and this associated
+			// entity is not found
 			if ( enfe instanceof FetchNotFoundException ) {
 				throw enfe;
 			}
-			/*
-			This may happen if the entity has an associations which is filtered by a FilterDef
-			and this associated entity is not found.
-			 */
+			// This may happen if the entity has an associations which is
+			// filtered by a FilterDef and this associated entity is not found
 			if ( enfe instanceof EntityFilterException ) {
 				throw enfe;
 			}
@@ -2370,30 +2338,28 @@ public class SessionImpl
 		CacheRetrieveMode retrieveMode = getCacheRetrieveMode();
 		LockOptions lockOptions = new LockOptions();
 		for ( FindOption option : options ) {
-			if ( option instanceof CacheStoreMode ) {
-				storeMode = (CacheStoreMode) option;
+			if ( option instanceof CacheStoreMode cacheStoreMode ) {
+				storeMode = cacheStoreMode;
 			}
-			else if ( option instanceof CacheRetrieveMode ) {
-				retrieveMode = (CacheRetrieveMode) option;
+			else if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
+				retrieveMode = cacheRetrieveMode;
 			}
-			else if ( option instanceof LockModeType ) {
-				lockOptions.setLockMode( LockModeTypeHelper.getLockMode( (LockModeType) option ) );
+			else if ( option instanceof LockModeType lockModeType ) {
+				lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
 			}
-			else if ( option instanceof LockMode ) {
-				lockOptions.setLockMode( (LockMode) option );
+			else if ( option instanceof LockMode lockMode ) {
+				lockOptions.setLockMode( lockMode );
 			}
-			else if ( option instanceof LockOptions ) {
-				lockOptions = (LockOptions) option;
+			else if ( option instanceof LockOptions lockOpts ) {
+				lockOptions = lockOpts;
 			}
-			else if ( option instanceof PessimisticLockScope ) {
-				lockOptions.setLockScope( (PessimisticLockScope) option );
+			else if ( option instanceof PessimisticLockScope pessimisticLockScope ) {
+				lockOptions.setLockScope( pessimisticLockScope );
 			}
-			else if ( option instanceof Timeout ) {
-				final Timeout timeout = (Timeout) option;
+			else if ( option instanceof Timeout timeout ) {
 				lockOptions.setTimeOut( timeout.milliseconds() );
 			}
-			else if ( option instanceof EnabledFetchProfile ) {
-				final EnabledFetchProfile enabledFetchProfile = (EnabledFetchProfile) option;
+			else if ( option instanceof EnabledFetchProfile enabledFetchProfile ) {
 				loadAccess.enableFetchProfile( enabledFetchProfile.profileName() );
 			}
 			else if ( option instanceof ReadOnlyMode ) {
@@ -2413,19 +2379,23 @@ public class SessionImpl
 	public <T> T find(EntityGraph<T> entityGraph, Object primaryKey, FindOption... options) {
 		final RootGraph<T> graph = (RootGraph<T>) entityGraph;
 		final Class<T> entityClass = graph.getGraphedType().getJavaType();
-		return loadAccessWithOptions( entityClass, options )
-				.withLoadGraph( graph )
-				.load( primaryKey );
+		return loadAccessWithOptions( entityClass, options ).withLoadGraph( graph ).load( primaryKey );
 	}
 
-	private void checkTransactionNeededForLock(LockModeType lockModeType) {
-		if ( lockModeType != LockModeType.NONE ) {
+	private void checkTransactionNeededForLock(LockMode lockMode) {
+		if ( !LockMode.PESSIMISTIC_READ.greaterThan( lockMode ) ) {
 			checkTransactionNeededForUpdateOperation();
 		}
 	}
 
-	private static Boolean getReadOnlyHint(Map<String, Object> properties) {
-		return properties == null ? null : (Boolean) properties.get( HINT_READ_ONLY );
+	private static Boolean readOnlyHint(Map<String, Object> properties) {
+		if ( properties == null ) {
+			return null;
+		}
+		else {
+			final Object value = properties.get( HINT_READ_ONLY );
+			return value == null ? null : ConfigurationHelper.getBoolean( value );
+		}
 	}
 
 	protected CacheMode determineAppropriateLocalCacheMode(Map<String, Object> localProperties) {
@@ -2437,24 +2407,26 @@ public class SessionImpl
 		}
 		if ( retrieveMode == null ) {
 			// use the EM setting
-			retrieveMode = fastSessionServices.getCacheRetrieveMode( this.properties );
+			retrieveMode = fastSessionServices.getCacheRetrieveMode( properties );
 		}
 		if ( storeMode == null ) {
 			// use the EM setting
-			storeMode = fastSessionServices.getCacheStoreMode( this.properties );
+			storeMode = fastSessionServices.getCacheStoreMode( properties );
 		}
 		return interpretCacheMode( storeMode, retrieveMode );
 	}
 
 	private static CacheRetrieveMode determineCacheRetrieveMode(Map<String, Object> settings) {
-		final CacheRetrieveMode cacheRetrieveMode = (CacheRetrieveMode) settings.get( JPA_SHARED_CACHE_RETRIEVE_MODE );
+		final CacheRetrieveMode cacheRetrieveMode =
+				(CacheRetrieveMode) settings.get( JPA_SHARED_CACHE_RETRIEVE_MODE );
 		return cacheRetrieveMode == null
 				? (CacheRetrieveMode) settings.get( JAKARTA_SHARED_CACHE_RETRIEVE_MODE )
 				: cacheRetrieveMode;
 	}
 
 	private static CacheStoreMode determineCacheStoreMode(Map<String, Object> settings) {
-		final CacheStoreMode cacheStoreMode = (CacheStoreMode) settings.get( JPA_SHARED_CACHE_STORE_MODE );
+		final CacheStoreMode cacheStoreMode =
+				(CacheStoreMode) settings.get( JPA_SHARED_CACHE_STORE_MODE );
 		return cacheStoreMode == null
 				? (CacheStoreMode) settings.get( JAKARTA_SHARED_CACHE_STORE_MODE )
 				: cacheStoreMode;
@@ -2496,40 +2468,35 @@ public class SessionImpl
 
 	@Override
 	public void lock(Object entity, LockModeType lockModeType) {
-		lock( entity, lockModeType, (Map<String,Object>) null );
+		lock( entity, LockModeTypeHelper.getLockMode( lockModeType ) );
 	}
 
 	@Override
 	public void lock(Object entity, LockModeType lockModeType, Map<String, Object> properties) {
-		checkOpen();
-		checkTransactionNeededForUpdateOperation();
-
-		if ( !contains( entity ) ) {
-			throw new IllegalArgumentException( "entity not in the persistence context" );
-		}
-
-		final LockOptions lockOptions = buildLockOptions( lockModeType, properties );
-		try {
-			fireLock( entity, lockOptions );
-		}
-		catch (RuntimeException e) {
-			throw getExceptionConverter().convert( e, lockOptions );
-		}
+		lock( entity, buildLockOptions( lockModeType, properties ) );
 	}
 
 	@Override
 	public void lock(Object entity, LockModeType lockMode, LockOption... options) {
-		LockOptions lockOptions = new LockOptions( LockModeTypeHelper.getLockMode(lockMode) );
+		lock( entity, buildLockOptions( lockMode, options ) );
+	}
+
+	private static LockOptions buildLockOptions(LockModeType lockMode, LockOption[] options) {
+		final LockOptions lockOptions = new LockOptions( LockModeTypeHelper.getLockMode( lockMode ) );
 		for ( LockOption option : options ) {
-			if ( option instanceof PessimisticLockScope ) {
-				lockOptions.setLockScope( (PessimisticLockScope) option );
+			if ( option instanceof PessimisticLockScope lockScope ) {
+				lockOptions.setLockScope( lockScope );
 			}
-			else if ( option instanceof Timeout ) {
-				final Timeout timeout = (Timeout) option;
+			else if ( option instanceof Timeout timeout ) {
 				lockOptions.setTimeOut( timeout.milliseconds() );
 			}
 		}
-		lock( entity, lockOptions );
+		return lockOptions;
+	}
+
+	@Override
+	public void refresh(Object entity, LockModeType lockModeType) {
+		refresh( entity, LockModeTypeHelper.getLockMode( lockModeType ) );
 	}
 
 	@Override
@@ -2538,39 +2505,18 @@ public class SessionImpl
 	}
 
 	@Override
-	public void refresh(Object entity, LockModeType lockModeType) {
-		refresh( entity, lockModeType, null );
-	}
-
-	@Override
 	public void refresh(Object entity, LockModeType lockModeType, Map<String, Object> properties) {
 		checkOpen();
-
 		final CacheMode previousCacheMode = getCacheMode();
 		final CacheMode refreshCacheMode = determineAppropriateLocalCacheMode( properties );
-
-		LockOptions lockOptions = null;
 		try {
 			setCacheMode( refreshCacheMode );
-
-			if ( !contains( entity ) ) {
-				throw getExceptionConverter().convert( new IllegalArgumentException( "Entity not managed" ) );
-			}
-
-			if ( lockModeType != null ) {
-				checkTransactionNeededForLock( lockModeType );
-				lockOptions = buildLockOptions( lockModeType, properties );
-				refresh( entity, lockOptions );
-			}
-			else {
+			if ( lockModeType == null ) {
 				refresh( entity );
 			}
-		}
-		catch ( MappingException e ) {
-			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
-		}
-		catch ( RuntimeException e ) {
-			throw getExceptionConverter().convert( e, lockOptions );
+			else {
+				refresh( entity, buildLockOptions( lockModeType, properties ) );
+			}
 		}
 		finally {
 			setCacheMode( previousCacheMode );
@@ -2582,23 +2528,22 @@ public class SessionImpl
 		CacheStoreMode storeMode = getCacheStoreMode();
 		LockOptions lockOptions = new LockOptions();
 		for ( RefreshOption option : options ) {
-			if ( option instanceof CacheStoreMode ) {
-				storeMode = (CacheStoreMode) option;
+			if ( option instanceof CacheStoreMode cacheStoreMode ) {
+				storeMode = cacheStoreMode;
 			}
-			else if ( option instanceof LockModeType ) {
-				lockOptions.setLockMode( LockModeTypeHelper.getLockMode( (LockModeType) option ) );
+			else if ( option instanceof LockModeType lockModeType ) {
+				lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
 			}
-			else if ( option instanceof LockMode ) {
-				lockOptions.setLockMode( (LockMode) option );
+			else if ( option instanceof LockMode lockMode ) {
+				lockOptions.setLockMode( lockMode );
 			}
-			else if ( option instanceof LockOptions ) {
-				lockOptions = (LockOptions) option;
+			else if ( option instanceof LockOptions lockOpts ) {
+				lockOptions = lockOpts;
 			}
-			else if ( option instanceof PessimisticLockScope ) {
-				lockOptions.setLockScope( (PessimisticLockScope) option );
+			else if ( option instanceof PessimisticLockScope pessimisticLockScope ) {
+				lockOptions.setLockScope( pessimisticLockScope );
 			}
-			else if ( option instanceof Timeout ) {
-				final Timeout timeout = (Timeout) option;
+			else if ( option instanceof Timeout timeout ) {
 				lockOptions.setTimeOut( timeout.milliseconds() );
 			}
 		}
@@ -2616,7 +2561,7 @@ public class SessionImpl
 	}
 
 	private LockOptions buildLockOptions(LockModeType lockModeType, Map<String, Object> properties) {
-		LockOptions lockOptions = new LockOptions();
+		final LockOptions lockOptions = new LockOptions();
 		if ( this.lockOptions != null ) { //otherwise the default LockOptions constructor is the same as DEFAULT_LOCK_OPTIONS
 			LockOptions.copy( this.lockOptions, lockOptions );
 		}
@@ -2725,15 +2670,15 @@ public class SessionImpl
 				break;
 			case USE_SUBSELECT_FETCH:
 			case HINT_ENABLE_SUBSELECT_FETCH:
-				setSubselectFetchingEnabled( Boolean.parseBoolean( value.toString() ) );
+				setSubselectFetchingEnabled( parseBoolean( value.toString() ) );
 				break;
 			case DEFAULT_BATCH_FETCH_SIZE:
 			case HINT_BATCH_FETCH_SIZE:
-				setFetchBatchSize( Integer.parseInt( value.toString() ) );
+				setFetchBatchSize( parseInt( value.toString() ) );
 				break;
 			case STATEMENT_BATCH_SIZE:
 			case HINT_JDBC_BATCH_SIZE:
-				setJdbcBatchSize( Integer.parseInt( value.toString() ) );
+				setJdbcBatchSize( parseInt( value.toString() ) );
 				break;
 		}
 	}
@@ -2758,9 +2703,9 @@ public class SessionImpl
 	public ProcedureCall createNamedStoredProcedureQuery(String name) {
 		checkOpen();
 		try {
-			final NamedCallableQueryMemento memento = getFactory().getQueryEngine()
-					.getNamedObjectRepository()
-					.getCallableQueryMemento( name );
+			final NamedCallableQueryMemento memento =
+					getFactory().getQueryEngine().getNamedObjectRepository()
+							.getCallableQueryMemento( name );
 			if ( memento == null ) {
 				throw new IllegalArgumentException( "No @NamedStoredProcedureQuery was found with that name : " + name );
 			}

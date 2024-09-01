@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.internal.util;
+package org.hibernate.internal;
 
 import java.util.Map;
 import java.util.function.Supplier;
@@ -13,12 +13,13 @@ import jakarta.persistence.PessimisticLockScope;
 
 import org.hibernate.LockOptions;
 
+import static jakarta.persistence.PessimisticLockScope.EXTENDED;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
 
-public final class LockOptionsHelper {
+final class LockOptionsHelper {
 
 	private LockOptionsHelper() {
 		//utility class, not to be constructed
@@ -30,59 +31,49 @@ public final class LockOptionsHelper {
 	 * nothing to set.
 	 *
 	 * @param props The configuration properties
-	 * @param lockOptionsSupplier The reference to the lock to modify
+	 * @param lockOptions The reference to the lock to modify
 	 */
-	public static void applyPropertiesToLockOptions(final Map<String, Object> props, final Supplier<LockOptions> lockOptionsSupplier) {
+	public static void applyPropertiesToLockOptions(Map<String, Object> props, Supplier<LockOptions> lockOptions) {
+		applyScope( props, lockOptions );
+		applyTimeout( props, lockOptions );
+	}
+
+	private static void applyScope(Map<String, Object> props, Supplier<LockOptions> lockOptions) {
 		String lockScopeHint = JPA_LOCK_SCOPE;
 		Object lockScope = props.get( lockScopeHint );
 		if ( lockScope == null ) {
 			lockScopeHint = JAKARTA_LOCK_SCOPE;
 			lockScope = props.get( lockScopeHint );
 		}
-		if ( lockScope instanceof String && PessimisticLockScope.valueOf( (String) lockScope ) == PessimisticLockScope.EXTENDED ) {
-			lockOptionsSupplier.get().setScope( true );
+
+		if ( lockScope instanceof String string ) {
+			lockOptions.get().setScope( EXTENDED.name().equalsIgnoreCase( string ) );
 		}
 		else if ( lockScope instanceof PessimisticLockScope ) {
-			boolean extended = PessimisticLockScope.EXTENDED.equals( lockScope );
-			lockOptionsSupplier.get().setScope( extended );
+			lockOptions.get().setScope( EXTENDED == lockScope );
 		}
 		else if ( lockScope != null ) {
 			throw new PersistenceException( "Unable to parse " + lockScopeHint + ": " + lockScope );
 		}
+	}
 
+	private static void applyTimeout(Map<String, Object> props, Supplier<LockOptions> lockOptions) {
 		String timeoutHint = JPA_LOCK_TIMEOUT;
 		Object lockTimeout = props.get( timeoutHint );
 		if (lockTimeout == null) {
 			timeoutHint = JAKARTA_LOCK_TIMEOUT;
 			lockTimeout = props.get( timeoutHint );
 		}
-		int timeout = 0;
-		boolean timeoutSet = false;
-		if ( lockTimeout instanceof String ) {
-			timeout = Integer.parseInt( (String) lockTimeout );
-			timeoutSet = true;
+
+		if ( lockTimeout instanceof String string ) {
+			lockOptions.get().setTimeOut( Integer.parseInt( string ) );
 		}
-		else if ( lockTimeout instanceof Number ) {
-			timeout = ( (Number) lockTimeout ).intValue();
-			timeoutSet = true;
+		else if ( lockTimeout instanceof Number number ) {
+			int timeout = number.intValue();
+			lockOptions.get().setTimeOut( timeout );
 		}
 		else if ( lockTimeout != null ) {
 			throw new PersistenceException( "Unable to parse " + timeoutHint + ": " + lockTimeout );
-		}
-
-		if ( timeoutSet ) {
-			if ( timeout == LockOptions.SKIP_LOCKED ) {
-				lockOptionsSupplier.get().setTimeOut( LockOptions.SKIP_LOCKED );
-			}
-			else if ( timeout < 0 ) {
-				lockOptionsSupplier.get().setTimeOut( LockOptions.WAIT_FOREVER );
-			}
-			else if ( timeout == 0 ) {
-				lockOptionsSupplier.get().setTimeOut( LockOptions.NO_WAIT );
-			}
-			else {
-				lockOptionsSupplier.get().setTimeOut( timeout );
-			}
 		}
 	}
 

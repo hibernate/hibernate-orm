@@ -20,8 +20,9 @@ import org.hibernate.FlushMode;
  * @author Emmanuel Bernard
  */
 public abstract class ConfigurationHelper {
+
 	public static void overrideProperties(Properties properties, Map<?,?> overrides) {
-		for ( Map.Entry entry : overrides.entrySet() ) {
+		for ( Map.Entry<?,?> entry : overrides.entrySet() ) {
 			if ( entry.getKey() != null && entry.getValue() != null ) {
 				properties.put( entry.getKey(), entry.getValue() );
 			}
@@ -29,25 +30,21 @@ public abstract class ConfigurationHelper {
 	}
 
 	public static FlushMode getFlushMode(Object value, FlushMode defaultFlushMode) {
-		final FlushMode flushMode;
-		if ( value instanceof FlushMode ) {
-			flushMode = (FlushMode) value;
+		if ( value instanceof FlushMode mode ) {
+			return mode;
 		}
-		else if ( value instanceof jakarta.persistence.FlushModeType ) {
-			flushMode = ConfigurationHelper.getFlushMode( (jakarta.persistence.FlushModeType) value );
+		else if ( value instanceof jakarta.persistence.FlushModeType flushModeType ) {
+			return getFlushMode( flushModeType );
 		}
-		else if ( value instanceof String ) {
-			flushMode = ConfigurationHelper.getFlushMode( (String) value );
+		else if ( value instanceof String string ) {
+			return getFlushMode( string );
 		}
 		else {
-			flushMode = defaultFlushMode;
+			if ( defaultFlushMode == null ) {
+				throw new PersistenceException( "Unable to parse org.hibernate.flushMode: " + value );
+			}
+			return defaultFlushMode;
 		}
-
-		if ( flushMode == null ) {
-			throw new PersistenceException( "Unable to parse org.hibernate.flushMode: " + value );
-		}
-
-		return flushMode;
 	}
 
 	public static FlushMode getFlushMode(Object value) {
@@ -55,11 +52,7 @@ public abstract class ConfigurationHelper {
 	}
 
 	private static FlushMode getFlushMode(String flushMode)  {
-		if ( flushMode == null ) {
-			return null;
-		}
-		flushMode = flushMode.toUpperCase( Locale.ROOT );
-		return FlushMode.valueOf( flushMode );
+		return flushMode == null ? null : FlushMode.valueOf( flushMode.toUpperCase(Locale.ROOT) );
 	}
 
 	private static FlushMode getFlushMode(FlushModeType flushMode)  {
@@ -74,29 +67,38 @@ public abstract class ConfigurationHelper {
 	}
 
 	public static Integer getInteger(Object value) {
-		if ( value instanceof Integer ) {
-			return (Integer) value;
+		if ( value instanceof Integer integer ) {
+			return integer;
+		}
+		else if ( value instanceof String string ) {
+			return Integer.valueOf( string );
 		}
 		else {
-			return Integer.valueOf( (String) value );
+			throw new IllegalArgumentException( "value must be a string or integer: " + value );
 		}
 	}
 
 	public static Boolean getBoolean(Object value) {
-		if ( value instanceof Boolean ) {
-			return (Boolean) value;
+		if ( value instanceof Boolean bool ) {
+			return bool;
+		}
+		else if ( value instanceof String string ) {
+			return Boolean.valueOf( string );
 		}
 		else {
-			return Boolean.valueOf( (String) value );
+			throw new IllegalArgumentException( "value must be a string or boolean: " + value );
 		}
 	}
 
 	public static CacheMode getCacheMode(Object value) {
-		if ( value instanceof CacheMode ) {
-			return (CacheMode) value;
+		if ( value instanceof CacheMode cacheMode ) {
+			return cacheMode;
+		}
+		else if ( value instanceof String string ) {
+			return CacheMode.valueOf( string );
 		}
 		else {
-			return CacheMode.valueOf( (String) value );
+			throw new IllegalArgumentException( "value must be a string or CacheMode: " + value );
 		}
 	}
 }

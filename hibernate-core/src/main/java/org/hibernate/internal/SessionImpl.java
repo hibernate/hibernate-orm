@@ -354,10 +354,10 @@ public class SessionImpl
 		}
 	}
 
-	private Object getSessionProperty(final String name) {
+	private Object getSessionProperty(String propertyName) {
 		return properties == null
-				? fastSessionServices.defaultSessionProperties.get( name )
-				: properties.get( name );
+				? fastSessionServices.defaultSessionProperties.get( propertyName )
+				: properties.get( propertyName );
 	}
 
 	@Override
@@ -464,9 +464,7 @@ public class SessionImpl
 
 		final ActionQueue actionQueue = getActionQueue();
 		if ( actionQueue.hasBeforeTransactionActions() || actionQueue.hasAfterTransactionActions() ) {
-			log.warn(
-					"On close, shared Session had before/after transaction actions that have not yet been processed"
-			);
+			log.warn( "On close, shared Session had before/after transaction actions that have not yet been processed" );
 		}
 		return false;
 	}
@@ -575,11 +573,8 @@ public class SessionImpl
 		}
 
 		if ( e.getStatus().isDeletedOrGone() ) {
-			throw new ObjectDeletedException(
-					"The given object was deleted",
-					e.getId(),
-					e.getPersister().getEntityName()
-			);
+			throw new ObjectDeletedException( "The given object was deleted", e.getId(),
+					e.getPersister().getEntityName() );
 		}
 
 		return e.getLockMode();
@@ -895,6 +890,7 @@ public class SessionImpl
 	}
 
 	private void fireDelete(final DeleteEvent event) {
+		checkEntityManagedIfJpa( event.getEntityName(), event.getObject() );
 		try {
 			pulseTransactionCoordinator();
 			fastSessionServices.eventListenerGroup_DELETE
@@ -916,6 +912,7 @@ public class SessionImpl
 	}
 
 	private void fireDelete(final DeleteEvent event, final DeleteContext transientEntities) {
+		checkEntityManagedIfJpa( event.getEntityName(), event.getObject() );
 		try {
 			pulseTransactionCoordinator();
 			fastSessionServices.eventListenerGroup_DELETE
@@ -1204,8 +1201,17 @@ public class SessionImpl
 	private void checkEntityManaged(String entityName, Object entity) {
 		if ( !getSessionFactory().getSessionFactoryOptions().isAllowRefreshDetachedEntity() ) {
 			if ( !managed( entityName, entity ) ) {
-				throw new IllegalArgumentException(
-						"Given entity is not associated with the persistence context" );
+				throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
+			}
+		}
+	}
+
+	private void checkEntityManagedIfJpa(String entityName, Object entity) {
+		if ( getSessionFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
+			if ( !managed( entityName, entity )
+					// just in case it was already deleted
+					&& !persistenceContext.isEntryFor( entity ) ) {
+				throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
 			}
 		}
 	}
@@ -1423,8 +1429,9 @@ public class SessionImpl
 	}
 
 	/**
-	 * Get the id value for an object that is actually associated with the session. This
-	 * is a bit stricter than getEntityIdentifierIfNotUnsaved().
+	 * Get the id value for an object that is actually associated with the session.
+	 * This is a bit stricter than
+	 * {@link org.hibernate.engine.internal.ForeignKeys#getEntityIdentifierIfNotUnsaved}.
 	 */
 	@Override
 	public Object getContextEntityIdentifier(Object object) {
@@ -1457,20 +1464,20 @@ public class SessionImpl
 		try {
 			final LazyInitializer lazyInitializer = extractLazyInitializer( object );
 			if ( lazyInitializer != null ) {
-				//do not use proxiesByKey, since not all
-				//proxies that point to this session's
-				//instances are in that collection!
+				// don't use proxiesByKey, since not all
+				// proxies that point to this session's
+				// instances are in that collection!
 				if ( lazyInitializer.isUninitialized() ) {
-					//if it is an uninitialized proxy, pointing
-					//with this session, then when it is accessed,
-					//the underlying instance will be "contained"
+					// if it's an uninitialized proxy associated
+					// with this session, then when it is accessed,
+					// the underlying instance will be "contained"
 					return lazyInitializer.getSession() == this;
 				}
 				else {
-					//if it is initialized, see if the underlying
-					//instance is contained, since we need to
-					//account for the fact that it might have been
-					//evicted
+					// if it's initialized, see if the underlying
+					// instance is contained, since we need to
+					// account for the fact that it might have been
+					// evicted
 					object = lazyInitializer.getImplementation();
 				}
 			}

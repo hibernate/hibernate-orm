@@ -30,7 +30,6 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.service.spi.JpaBootstrapSensitive;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.FlushEntityEvent;
 import org.hibernate.event.spi.FlushEntityEventListener;
@@ -50,13 +49,9 @@ import static org.hibernate.engine.internal.Collections.skipRemoval;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractFlushingEventListener implements JpaBootstrapSensitive {
+public abstract class AbstractFlushingEventListener {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, AbstractFlushingEventListener.class.getName() );
-
-	@Override
-	public void wasJpaBootstrap(boolean wasJpaBootstrap) {
-	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Pre-flushing section

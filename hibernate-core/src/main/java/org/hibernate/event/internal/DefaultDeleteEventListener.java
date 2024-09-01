@@ -28,7 +28,6 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.event.service.spi.JpaBootstrapSensitive;
 import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.DeleteEvent;
 import org.hibernate.event.spi.DeleteEventListener;
@@ -60,20 +59,14 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  *
  * @author Steve Ebersole
  */
-public class DefaultDeleteEventListener implements DeleteEventListener,	CallbackRegistryConsumer, JpaBootstrapSensitive {
+public class DefaultDeleteEventListener implements DeleteEventListener,	CallbackRegistryConsumer {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultDeleteEventListener.class );
 
 	private CallbackRegistry callbackRegistry;
-	private boolean jpaBootstrap;
 
 	@Override
 	public void injectCallbackRegistry(CallbackRegistry callbackRegistry) {
 		this.callbackRegistry = callbackRegistry;
-	}
-
-	@Override
-	public void wasJpaBootstrap(boolean wasJpaBootstrap) {
-		this.jpaBootstrap = wasJpaBootstrap;
 	}
 
 	/**
@@ -173,7 +166,6 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			deleteTransientEntity( source, entity, persister, transientEntities );
 		}
 		else {
-			performDetachedEntityDeletionCheck( event );
 			deleteDetachedEntity( event, transientEntities, entity, persister, source );
 		}
 	}
@@ -313,29 +305,6 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		final Class<?> mappedClass = persister.getMappedClass();
 		return callbackRegistry.hasRegisteredCallbacks( mappedClass, CallbackType.PRE_REMOVE )
 			|| callbackRegistry.hasRegisteredCallbacks( mappedClass, CallbackType.POST_REMOVE );
-	}
-
-	/**
-	 * Called when we have recognized an attempt to delete a detached entity.
-	 * <p>
-	 * This is perfectly legal in regular Hibernate usage; the JPA spec,
-	 * however, forbids it.
-	 */
-	protected void performDetachedEntityDeletionCheck(DeleteEvent event) {
-		if ( jpaBootstrap ) {
-			disallowDeletionOfDetached( event );
-		}
-	}
-
-	private void disallowDeletionOfDetached(DeleteEvent event) {
-		final EventSource source = event.getSession();
-		final String explicitEntityName = event.getEntityName();
-		final EntityPersister persister = source.getEntityPersister( explicitEntityName, event.getObject() );
-		final Object id =  persister.getIdentifier( event.getObject(), source );
-		final String entityName = explicitEntityName == null
-				? source.guessEntityName( event.getObject() )
-				: explicitEntityName;
-		throw new IllegalArgumentException( "Given entity is not associated with the persistence context [" + entityName + "#" + id + "]" );
 	}
 
 	/**

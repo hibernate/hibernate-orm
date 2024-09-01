@@ -155,7 +155,7 @@ public class JPALockTest extends AbstractJPATest {
 
 		inTransaction(
 				session ->
-						session.remove( item )
+						session.remove( session.getReference(item) )
 		);
 	}
 
@@ -270,7 +270,7 @@ public class JPALockTest extends AbstractJPATest {
 
 		inTransaction(
 				session -> {
-					session.remove( item );
+					session.remove( session.getReference(item) );
 				}
 		);
 	}

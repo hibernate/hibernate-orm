@@ -63,7 +63,7 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 		// clean up
 		inTransaction(
 				session ->
-						session.remove( merged )
+						session.remove( session.getReference(merged) )
 		);
 	}
 
@@ -72,7 +72,6 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 		sessionFactoryScope().inSession(
 				session -> {
 					Transaction t = session.beginTransaction();
-
 					User u = new User( "steve", "superSecret" );
 					session.persist( u );
 					u.setUserName( "Steve" );
@@ -84,8 +83,6 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 						//expected
 						t.rollback();
 					}
-					u.setUserName( "steve" );
-					session.remove( u );
 					session.close();
 				}
 		);

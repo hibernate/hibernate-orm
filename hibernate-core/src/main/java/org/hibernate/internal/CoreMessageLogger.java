@@ -17,6 +17,7 @@ import java.util.Set;
 import javax.naming.NamingException;
 
 import org.hibernate.HibernateException;
+import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.cache.CacheException;
 import org.hibernate.dialect.Dialect;
@@ -964,4 +965,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Failed to discover types for enhancement from class: %s",
 			id = 516)
 	void enhancementDiscoveryFailed(String className, @Cause Throwable cause);
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "JDBCException was thrown for a transaction marked for rollback. " +
+			" This is probably due to an operation failing fast due to the transaction being marked for rollback.")
+	void jdbcExceptionThrownWithTransactionRolledBack(@Cause JDBCException e);
 }

@@ -309,14 +309,14 @@ public class SessionImpl
 	}
 
 	private LockOptions getLockOptionsForRead() {
-		return this.lockOptions == null ? fastSessionServices.defaultLockOptions : this.lockOptions;
+		return lockOptions == null ? fastSessionServices.defaultLockOptions : lockOptions;
 	}
 
 	private LockOptions getLockOptionsForWrite() {
-		if ( this.lockOptions == null ) {
-			this.lockOptions = new LockOptions();
+		if ( lockOptions == null ) {
+			lockOptions = new LockOptions();
 		}
-		return this.lockOptions;
+		return lockOptions;
 	}
 
 	protected void applyQuerySettingsAndHints(SelectionQuery<?> query) {
@@ -647,7 +647,9 @@ public class SessionImpl
 
 	@Override
 	public void lock(Object object, LockMode lockMode) throws HibernateException {
-		fireLock( new LockEvent( object, lockMode, this ) );
+		final LockOptions lockOptions = copySessionLockOptions();
+		lockOptions.setLockMode( lockMode );
+		fireLock( new LockEvent( object, lockOptions, this ) );
 	}
 
 	private void fireLock(LockEvent event) {
@@ -852,13 +854,7 @@ public class SessionImpl
 			logRemoveOrphanBeforeUpdates( "before continuing", entityName, object );
 		}
 		fireDelete(
-				new DeleteEvent(
-						entityName,
-						object,
-						isCascadeDeleteEnabled,
-						removingOrphanBeforeUpates,
-						this
-				),
+				new DeleteEvent( entityName, object, isCascadeDeleteEnabled, removingOrphanBeforeUpates, this ),
 				transientEntities
 		);
 		if ( traceEnabled && removingOrphanBeforeUpates ) {
@@ -1159,7 +1155,9 @@ public class SessionImpl
 
 	@Override
 	public void refresh(Object object, LockMode lockMode) throws HibernateException {
-		fireRefresh( new RefreshEvent( object, lockMode, this ) );
+		final LockOptions lockOptions = copySessionLockOptions();
+		lockOptions.setLockMode( lockMode );
+		fireRefresh( new RefreshEvent( object, lockOptions, this ) );
 	}
 
 	@Override
@@ -2260,11 +2258,10 @@ public class SessionImpl
 	public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockModeType, Map<String, Object> properties) {
 		checkOpen();
 
-		LockOptions lockOptions = null;
+		final LockOptions lockOptions = lockModeType == null ? null : buildLockOptions( lockModeType, properties );
 		try {
 			if ( lockModeType != null ) {
 				checkTransactionNeededForLock( LockModeTypeHelper.getLockMode( lockModeType ) );
-				lockOptions = buildLockOptions( lockModeType, properties );
 			}
 
 			final EffectiveEntityGraph effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
@@ -2276,33 +2273,34 @@ public class SessionImpl
 					.with( lockOptions )
 					.load( primaryKey );
 		}
-		catch ( EntityNotFoundException enfe ) {
+		catch ( FetchNotFoundException e ) {
 			// This may happen if the entity has an associations mapped with
 			// @NotFound(action = NotFoundAction.EXCEPTION) and this associated
 			// entity is not found
-			if ( enfe instanceof FetchNotFoundException ) {
-				throw enfe;
-			}
+			throw e;
+		}
+		catch ( EntityFilterException e ) {
 			// This may happen if the entity has an associations which is
 			// filtered by a FilterDef and this associated entity is not found
-			if ( enfe instanceof EntityFilterException ) {
-				throw enfe;
-			}
-			// DefaultLoadEventListener#returnNarrowedProxy() may throw ENFE (see HHH-7861 for details),
-			// which find() should not throw.  Find() should return null if the entity was not found.
-			if ( log.isDebugEnabled() ) {
-				String entityName = entityClass != null ? entityClass.getName(): null;
-				String identifierValue = primaryKey != null ? primaryKey.toString() : null ;
-				log.ignoringEntityNotFound( entityName, identifierValue );
-			}
+			throw e;
+		}
+		catch ( EntityNotFoundException e ) {
+			// We swallow other sorts of EntityNotFoundException and return null
+			// For example, DefaultLoadEventListener.proxyImplementation() throws
+			// EntityNotFoundException if there's an existing proxy in the session,
+			// but the underlying database row has been deleted (see HHH-7861)
+			logIgnoringEntityNotFound( entityClass, primaryKey );
 			return null;
 		}
 		catch ( ObjectDeletedException e ) {
-			//the spec is silent about people doing remove() find() on the same PC
+			// the spec is silent about people doing remove() find() on the same PC
 			return null;
 		}
 		catch ( ObjectNotFoundException e ) {
-			//should not happen on the entity itself with get
+			// should not happen on the entity itself with get
+			// TODO: in fact this will occur instead of EntityNotFoundException
+			//       when using StandardEntityNotFoundDelegate, so probably we
+			//       should return null here, as we do above
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
@@ -2310,13 +2308,9 @@ public class SessionImpl
 		}
 		catch ( JDBCException e ) {
 			if ( accessTransaction().isActive() && accessTransaction().getRollbackOnly() ) {
-				// Assume this is similar to the WildFly / IronJacamar "feature" described under HHH-12472.
-				// Just log the exception and return null.
-				if ( log.isDebugEnabled() ) {
-					log.debug( "JDBCException was thrown for a transaction marked for rollback; " +
-									"this is probably due to an operation failing fast due to the " +
-									"transaction marked for rollback.", e );
-				}
+				// Assume situation HHH-12472 running on WildFly
+				// Just log the exception and return null
+				log.jdbcExceptionThrownWithTransactionRolledBack( e );
 				return null;
 			}
 			else {
@@ -2332,11 +2326,20 @@ public class SessionImpl
 		}
 	}
 
+	private static <T> void logIgnoringEntityNotFound(Class<T> entityClass, Object primaryKey) {
+		if ( log.isDebugEnabled() ) {
+			log.ignoringEntityNotFound(
+					entityClass != null ? entityClass.getName(): null,
+					primaryKey != null ? primaryKey.toString() : null
+			);
+		}
+	}
+
 	private <T> IdentifierLoadAccessImpl<T> loadAccessWithOptions(Class<T> entityClass, FindOption[] options) {
-		final IdentifierLoadAccessImpl<T> loadAccess = byId(entityClass);
+		final IdentifierLoadAccessImpl<T> loadAccess = byId( entityClass );
 		CacheStoreMode storeMode = getCacheStoreMode();
 		CacheRetrieveMode retrieveMode = getCacheRetrieveMode();
-		LockOptions lockOptions = new LockOptions();
+		LockOptions lockOptions = copySessionLockOptions();
 		for ( FindOption option : options ) {
 			if ( option instanceof CacheStoreMode cacheStoreMode ) {
 				storeMode = cacheStoreMode;
@@ -2481,8 +2484,9 @@ public class SessionImpl
 		lock( entity, buildLockOptions( lockMode, options ) );
 	}
 
-	private static LockOptions buildLockOptions(LockModeType lockMode, LockOption[] options) {
-		final LockOptions lockOptions = new LockOptions( LockModeTypeHelper.getLockMode( lockMode ) );
+	private LockOptions buildLockOptions(LockModeType lockModeType, LockOption[] options) {
+		final LockOptions lockOptions = copySessionLockOptions();
+		lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
 		for ( LockOption option : options ) {
 			if ( option instanceof PessimisticLockScope lockScope ) {
 				lockOptions.setLockScope( lockScope );
@@ -2492,6 +2496,23 @@ public class SessionImpl
 			}
 		}
 		return lockOptions;
+	}
+
+	private LockOptions buildLockOptions(LockModeType lockModeType, Map<String, Object> properties) {
+		final LockOptions lockOptions = copySessionLockOptions();
+		lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
+		if ( properties != null ) {
+			applyPropertiesToLockOptions( properties, () -> lockOptions );
+		}
+		return lockOptions;
+	}
+
+	private LockOptions copySessionLockOptions() {
+		final LockOptions copiedLockOptions = new LockOptions();
+		if ( lockOptions != null ) {
+			LockOptions.copy( lockOptions, copiedLockOptions );
+		}
+		return copiedLockOptions;
 	}
 
 	@Override
@@ -2526,7 +2547,7 @@ public class SessionImpl
 	@Override
 	public void refresh(Object entity, RefreshOption... options) {
 		CacheStoreMode storeMode = getCacheStoreMode();
-		LockOptions lockOptions = new LockOptions();
+		LockOptions lockOptions = copySessionLockOptions();
 		for ( RefreshOption option : options ) {
 			if ( option instanceof CacheStoreMode cacheStoreMode ) {
 				storeMode = cacheStoreMode;
@@ -2558,18 +2579,6 @@ public class SessionImpl
 		finally {
 			setCacheMode( previousCacheMode );
 		}
-	}
-
-	private LockOptions buildLockOptions(LockModeType lockModeType, Map<String, Object> properties) {
-		final LockOptions lockOptions = new LockOptions();
-		if ( this.lockOptions != null ) { //otherwise the default LockOptions constructor is the same as DEFAULT_LOCK_OPTIONS
-			LockOptions.copy( this.lockOptions, lockOptions );
-		}
-		lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
-		if ( properties != null ) {
-			applyPropertiesToLockOptions( properties, () -> lockOptions );
-		}
-		return lockOptions;
 	}
 
 	@Override

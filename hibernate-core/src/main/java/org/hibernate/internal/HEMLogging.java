@@ -11,8 +11,6 @@ import org.jboss.logging.Logger;
 import java.lang.invoke.MethodHandles;
 
 /**
- * Sad when you need helpers for generating loggers...
- *
  * @author Steve Ebersole
  */
 public class HEMLogging {

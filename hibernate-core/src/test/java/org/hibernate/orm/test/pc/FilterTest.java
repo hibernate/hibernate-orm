@@ -318,7 +318,7 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
                     () -> Hibernate.initialize( account.getParentAccount() )
             );
             // Account with id 1 does not exist
-            assertTrue( exception.getMessage().endsWith( " 1" ) );
+            assertTrue( exception.getMessage().endsWith( "#1]" ) );
         } );
     }
 

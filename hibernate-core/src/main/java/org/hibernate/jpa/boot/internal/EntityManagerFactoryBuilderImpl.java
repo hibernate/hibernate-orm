@@ -21,6 +21,7 @@ import java.util.function.Consumer;
 import javax.sql.DataSource;
 
 import org.hibernate.Internal;
+import org.hibernate.ObjectNotFoundException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.CacheRegionDefinition;
@@ -185,8 +186,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		 */
 		public static final JpaEntityNotFoundDelegate INSTANCE = new JpaEntityNotFoundDelegate();
 
-		public void handleEntityNotFound(String entityName, Object id) {
-			throw new EntityNotFoundException( "Unable to find " + entityName  + " with id " + id );
+		public void handleEntityNotFound(String entityName, Object identifier) {
+			final ObjectNotFoundException exception = new ObjectNotFoundException( entityName, identifier );
+			throw new EntityNotFoundException( exception.getMessage(), exception);
 		}
 	}
 

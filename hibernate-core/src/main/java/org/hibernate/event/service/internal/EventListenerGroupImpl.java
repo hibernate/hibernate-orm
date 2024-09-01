@@ -7,7 +7,6 @@
 package org.hibernate.event.service.internal;
 
 import java.lang.reflect.Array;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -32,6 +31,8 @@ import org.jboss.logging.Logger;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singleton;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 
 /**
  * Standard EventListenerGroup implementation
@@ -42,8 +43,26 @@ import static java.util.Collections.emptyList;
 class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 	private static final Logger log = Logger.getLogger( EventListenerGroupImpl.class );
-	private static final Set<DuplicationStrategy> DEFAULT_DUPLICATION_STRATEGIES = Collections.unmodifiableSet( makeDefaultDuplicationStrategy() );
-	private static final CompletableFuture COMPLETED = CompletableFuture.completedFuture( null );
+
+	private static final DuplicationStrategy DEFAULT_DUPLICATION_STRATEGY =
+			new DuplicationStrategy() {
+				@Override
+				public boolean areMatch(Object listener, Object original) {
+					return listener.getClass().equals( original.getClass() );
+				}
+				@Override
+				public Action getAction() {
+					return Action.ERROR;
+				}
+			};
+	private static final Set<DuplicationStrategy> DEFAULT_DUPLICATION_STRATEGIES =
+			singleton( DEFAULT_DUPLICATION_STRATEGY );
+
+	private static final CompletableFuture<?> COMPLETED = completedFuture( null );
+	@SuppressWarnings("unchecked")
+	private static <R> CompletableFuture<R> nullCompletion() {
+		return (CompletableFuture<R>) COMPLETED;
+	}
 
 	private final EventType<T> eventType;
 	private final CallbackRegistry callbackRegistry;
@@ -56,10 +75,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	private volatile T[] listeners = null;
 	private volatile List<T> listenersAsList = emptyList();
 
-	public EventListenerGroupImpl(
-			EventType<T> eventType,
-			CallbackRegistry callbackRegistry,
-			boolean isJpaBootstrap) {
+	public EventListenerGroupImpl(EventType<T> eventType, CallbackRegistry callbackRegistry, boolean isJpaBootstrap) {
 		this.eventType = eventType;
 		this.callbackRegistry = callbackRegistry;
 		this.isJpaBootstrap = isJpaBootstrap;
@@ -83,7 +99,8 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 	@Override
 	public void clear() {
-		//Odd semantics: we're expected (for backwards compatibility) to also clear the default DuplicationStrategy.
+		//Odd semantics: we're expected (for backwards compatibility)
+		//               to also clear the default DuplicationStrategy.
 		duplicationStrategies = new LinkedHashSet<>();
 		setListeners( null );
 	}
@@ -92,13 +109,10 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	// ensure consistency between the two fields by delegating any mutation to both
 	// fields to this method.
 	private synchronized void setListeners(T[] newListeners) {
-		this.listeners = newListeners;
-		if ( newListeners == null || newListeners.length == 0 ) {
-			this.listenersAsList = emptyList();
-		}
-		else {
-			this.listenersAsList = asList( newListeners );
-		}
+		listeners = newListeners;
+		listenersAsList = newListeners == null || newListeners.length == 0
+				? emptyList()
+				: asList( newListeners );
 	}
 
 	@Override
@@ -107,7 +121,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	}
 
 	@Override
-	public final <U> void fireLazyEventOnEachListener(final Supplier<U> eventSupplier, final BiConsumer<T,U> actionOnEvent) {
+	public final <U> void fireLazyEventOnEachListener(Supplier<U> eventSupplier, BiConsumer<T,U> actionOnEvent) {
 		final T[] ls = listeners;
 		if ( ls != null && ls.length != 0 ) {
 			final U event = eventSupplier.get();
@@ -119,7 +133,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	}
 
 	@Override
-	public final <U> void fireEventOnEachListener(final U event, final BiConsumer<T,U> actionOnEvent) {
+	public final <U> void fireEventOnEachListener(U event, BiConsumer<T,U> actionOnEvent) {
 		final T[] ls = listeners;
 		if ( ls != null ) {
 			//noinspection ForLoopReplaceableByForEach
@@ -130,7 +144,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	}
 
 	@Override
-	public <U,X> void fireEventOnEachListener(final U event, final X parameter, final EventActionWithParameter<T, U, X> actionOnEvent) {
+	public <U,X> void fireEventOnEachListener(U event, X parameter, EventActionWithParameter<T, U, X> actionOnEvent) {
 		final T[] ls = listeners;
 		if ( ls != null ) {
 			//noinspection ForLoopReplaceableByForEach
@@ -144,9 +158,9 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	public <R, U, RL> CompletionStage<R> fireEventOnEachListener(
 			final U event,
 			final Function<RL, Function<U, CompletionStage<R>>> fun) {
-		CompletionStage<R> ret = COMPLETED;
+		CompletionStage<R> ret = nullCompletion();
 		final T[] ls = listeners;
-		if ( ls != null && ls.length != 0 ) {
+		if ( ls != null ) {
 			for ( T listener : ls ) {
 				//to preserve atomicity of the Session methods
 				//call apply() from within the arg of thenCompose()
@@ -159,9 +173,9 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	@Override
 	public <R, U, RL, X> CompletionStage<R> fireEventOnEachListener(
 			U event, X param, Function<RL, BiFunction<U, X, CompletionStage<R>>> fun) {
-		CompletionStage<R> ret = COMPLETED;
+		CompletionStage<R> ret = nullCompletion();
 		final T[] ls = listeners;
-		if ( ls != null && ls.length != 0 ) {
+		if ( ls != null ) {
 			for ( T listener : ls ) {
 				//to preserve atomicity of the Session methods
 				//call apply() from within the arg of thenCompose()
@@ -173,9 +187,9 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 	@Override
 	public <R, U, RL> CompletionStage<R> fireLazyEventOnEachListener(
-			final Supplier<U> eventSupplier,
-			final Function<RL, Function<U, CompletionStage<R>>> fun) {
-		CompletionStage<R> ret = COMPLETED;
+			Supplier<U> eventSupplier,
+			Function<RL, Function<U, CompletionStage<R>>> fun) {
+		CompletionStage<R> ret = nullCompletion();
 		final T[] ls = listeners;
 		if ( ls != null && ls.length != 0 ) {
 			final U event = eventSupplier.get();
@@ -191,7 +205,8 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	@Override
 	public void addDuplicationStrategy(DuplicationStrategy strategy) {
 		if ( duplicationStrategies == DEFAULT_DUPLICATION_STRATEGIES ) {
-			duplicationStrategies = makeDefaultDuplicationStrategy();
+			// At minimum make sure we do not register the same exact listener class multiple times.
+			duplicationStrategies = new LinkedHashSet<>( DEFAULT_DUPLICATION_STRATEGIES );
 		}
 		duplicationStrategies.add( strategy );
 	}
@@ -212,19 +227,17 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 	private void internalAppend(T listener) {
 		prepareListener( listener );
-		final T[] listenersRead = this.listeners;
+		final T[] listenersRead = listeners;
 		final T[] listenersWrite;
 
 		if ( listenersRead == null ) {
-			//noinspection unchecked
-			listenersWrite = (T[]) Array.newInstance( eventType.baseListenerInterface(), 1 );
+			listenersWrite = createListenerArrayForWrite( 1 );
 			listenersWrite[0] = listener;
 		}
 		else {
 			final int size = listenersRead.length;
 
-			//noinspection unchecked
-			listenersWrite = (T[]) Array.newInstance( eventType.baseListenerInterface(), size+1 );
+			listenersWrite = createListenerArrayForWrite( size + 1 );
 
 			// first copy the existing listeners
 			System.arraycopy( listenersRead, 0, listenersWrite, 0, size );
@@ -251,19 +264,17 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 	private void internalPrepend(T listener) {
 		prepareListener( listener );
-		final T[] listenersRead = this.listeners;
+		final T[] listenersRead = listeners;
 		final T[] listenersWrite;
 
 		if ( listenersRead == null ) {
-			//noinspection unchecked
-			listenersWrite = (T[]) Array.newInstance( eventType.baseListenerInterface(), 1 );
+			listenersWrite = createListenerArrayForWrite( 1 );
 			listenersWrite[0] = listener;
 		}
 		else {
 			final int size = listenersRead.length;
 
-			//noinspection unchecked
-			listenersWrite = (T[]) Array.newInstance( eventType.baseListenerInterface(), size+1 );
+			listenersWrite = createListenerArrayForWrite( size + 1 );
 
 			// put the new one first
 			listenersWrite[0] = listener;
@@ -275,13 +286,15 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	}
 
 	private void handleListenerAddition(T listener, Consumer<T> additionHandler) {
-		final T[] listenersRead = this.listeners;
+		final T[] listenersRead = listeners;
 		if ( listenersRead == null ) {
 			additionHandler.accept( listener );
 			return;
 		}
-		final T[] listenersWrite = (T[]) Array.newInstance( eventType.baseListenerInterface(), listenersRead.length );
-		System.arraycopy( listenersRead, 0, listenersWrite, 0, listenersRead.length );
+		int size = listenersRead.length;
+
+		final T[] listenersWrite = createListenerArrayForWrite( size );
+		System.arraycopy( listenersRead, 0, listenersWrite, 0, size );
 
 		final boolean debugEnabled = log.isDebugEnabled();
 
@@ -292,39 +305,36 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 			//		strategy's action.  Control it returned immediately after applying the action
 			//		on match - meaning no further strategies are checked...
 
-			for ( int i = 0; i < listenersRead.length; i++ ) {
+			for ( int i = 0; i < size; i++ ) {
 				final T existingListener = listenersRead[i];
 				if ( debugEnabled ) {
-					log.debugf(
-							"Checking incoming listener [`%s`] for match against existing listener [`%s`]",
-							listener,
-							existingListener
-					);
+					log.debugf( "Checking incoming listener [`%s`] for match against existing listener [`%s`]",
+							listener, existingListener );
 				}
 
 				if ( strategy.areMatch( listener,  existingListener ) ) {
 					if ( debugEnabled ) {
-						log.debugf( "Found listener match between `%s` and `%s`", listener, existingListener );
+						log.debugf( "Found listener match between `%s` and `%s`",
+								listener, existingListener );
 					}
 
-					switch ( strategy.getAction() ) {
-						case ERROR: {
+					final DuplicationStrategy.Action action = strategy.getAction();
+					switch (action) {
+						case ERROR:
 							throw new EventListenerRegistrationException( "Duplicate event listener found" );
-						}
-						case KEEP_ORIGINAL: {
+						case KEEP_ORIGINAL:
 							if ( debugEnabled ) {
-								log.debugf( "Skipping listener registration (%s) : `%s`", strategy.getAction(), listener );
+								log.debugf( "Skipping listener registration (%s) : `%s`",
+										action, listener );
 							}
 							return;
-						}
-						case REPLACE_ORIGINAL: {
+						case REPLACE_ORIGINAL:
 							if ( debugEnabled ) {
-								log.debugf( "Replacing listener registration (%s) : `%s` -> `%s`", strategy.getAction(), existingListener, listener );
+								log.debugf( "Replacing listener registration (%s) : `%s` -> `%s`",
+										action, existingListener, listener );
 							}
 							prepareListener( listener );
-
 							listenersWrite[i] = listener;
-						}
 					}
 
 					// we've found a match - we should return: the match action has already been applied at this point
@@ -335,10 +345,15 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 			}
 		}
 
-		// we did not find any match.. add it
+		// we did not find any match, add it
 		checkAgainstBaseInterface( listener );
 		performInjections( listener );
 		additionHandler.accept( listener );
+	}
+
+	@SuppressWarnings("unchecked")
+	private T[] createListenerArrayForWrite(int len) {
+		return (T[]) Array.newInstance( eventType.baseListenerInterface(), len );
 	}
 
 	private void prepareListener(T listener) {
@@ -347,20 +362,18 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	}
 
 	private void performInjections(T listener) {
-		if ( listener instanceof CallbackRegistryConsumer ) {
-			( (CallbackRegistryConsumer) listener ).injectCallbackRegistry( callbackRegistry );
+		if ( listener instanceof CallbackRegistryConsumer consumer ) {
+			consumer.injectCallbackRegistry( callbackRegistry );
 		}
-
-		if ( listener instanceof JpaBootstrapSensitive ) {
-			( (JpaBootstrapSensitive) listener ).wasJpaBootstrap( isJpaBootstrap );
+		if ( listener instanceof JpaBootstrapSensitive sensitive ) {
+			sensitive.wasJpaBootstrap( isJpaBootstrap );
 		}
 	}
 
 	private void checkAgainstBaseInterface(T listener) {
 		if ( !eventType.baseListenerInterface().isInstance( listener ) ) {
-			throw new EventListenerRegistrationException(
-					"Listener did not implement expected interface [" + eventType.baseListenerInterface().getName() + "]"
-			);
+			throw new EventListenerRegistrationException( "Listener did not implement expected interface ["
+					+ eventType.baseListenerInterface().getName() + "]" );
 		}
 	}
 
@@ -372,26 +385,6 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	@Override
 	@Deprecated
 	public final Iterable<T> listeners() {
-		return this.listenersAsList;
+		return listenersAsList;
 	}
-
-	private static Set<DuplicationStrategy> makeDefaultDuplicationStrategy() {
-		final Set<DuplicationStrategy> duplicationStrategies = new LinkedHashSet<>();
-		duplicationStrategies.add(
-				// At minimum make sure we do not register the same exact listener class multiple times.
-				new DuplicationStrategy() {
-					@Override
-					public boolean areMatch(Object listener, Object original) {
-						return listener.getClass().equals( original.getClass() );
-					}
-
-					@Override
-					public Action getAction() {
-						return Action.ERROR;
-					}
-				}
-		);
-		return duplicationStrategies;
-	}
-
 }

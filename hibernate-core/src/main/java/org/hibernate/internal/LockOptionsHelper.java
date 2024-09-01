@@ -14,6 +14,7 @@ import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.LockOptions;
 
 import static jakarta.persistence.PessimisticLockScope.EXTENDED;
+import static jakarta.persistence.PessimisticLockScope.NORMAL;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
@@ -47,10 +48,10 @@ final class LockOptionsHelper {
 		}
 
 		if ( lockScope instanceof String string ) {
-			lockOptions.get().setScope( EXTENDED.name().equalsIgnoreCase( string ) );
+			lockOptions.get().setLockScope( EXTENDED.name().equalsIgnoreCase( string ) ? EXTENDED : NORMAL );
 		}
-		else if ( lockScope instanceof PessimisticLockScope ) {
-			lockOptions.get().setScope( EXTENDED == lockScope );
+		else if ( lockScope instanceof PessimisticLockScope pessimisticLockScope ) {
+			lockOptions.get().setLockScope( pessimisticLockScope );
 		}
 		else if ( lockScope != null ) {
 			throw new PersistenceException( "Unable to parse " + lockScopeHint + ": " + lockScope );

@@ -6,6 +6,7 @@
  */
 package org.hibernate.event.spi;
 
+import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 
@@ -63,7 +64,7 @@ public class LockEvent extends AbstractEvent {
 	}
 
 	public boolean getLockScope() {
-		return lockOptions.getScope();
+		return lockOptions.getLockScope() == PessimisticLockScope.EXTENDED;
 	}
 
 	public String getEntityName() {

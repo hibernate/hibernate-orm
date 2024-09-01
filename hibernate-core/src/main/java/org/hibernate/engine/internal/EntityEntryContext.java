@@ -32,14 +32,16 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttrib
 import static org.hibernate.engine.internal.ManagedTypeHelper.isManagedEntity;
 
 /**
- * Defines a context for maintaining the relation between an entity associated with the Session ultimately owning this
- * EntityEntryContext instance and that entity's corresponding EntityEntry.  2 approaches are supported:<ul>
+ * Defines a context for maintaining the relation between an entity associated with the
+ * {@code Session} ultimately owning this {@code EntityEntryContext} instance and that
+ * entity's corresponding {@link EntityEntry}. Two approaches are supported:<ul>
  *     <li>
- *         the entity->EntityEntry association is maintained in a Map within this class
+ *         the entity to {@link EntityEntry} association is maintained in a {code @Map}
+ *         within this class, or
  *     </li>
  *     <li>
- *         the EntityEntry is injected into the entity via it implementing the {@link ManagedEntity} contract,
- *         either directly or through bytecode enhancement.
+ *         the {@link EntityEntry} is injected into the entity via it implementing the
+ *         {@link ManagedEntity} contract, either directly or through bytecode enhancement.
  *     </li>
  * </ul>
  *
@@ -70,7 +72,7 @@ public class EntityEntryContext {
 	}
 
 	/**
-	 * Adds the entity and entry to this context, associating them together
+	 * Adds the entity and {@link EntityEntry} to this context, associating them.
 	 *
 	 * @param entity The entity
 	 * @param entityEntry The entry
@@ -163,7 +165,8 @@ public class EntityEntryContext {
 				// it is not associated
 				return null;
 			}
-			final AbstractEntityEntry entityEntry = (AbstractEntityEntry) managedEntity.$$_hibernate_getEntityEntry();
+			final AbstractEntityEntry entityEntry =
+					(AbstractEntityEntry) managedEntity.$$_hibernate_getEntityEntry();
 
 			if ( entityEntry.getPersister().isMutable() ) {
 				return entityEntry.getPersistenceContext() == persistenceContext
@@ -209,7 +212,7 @@ public class EntityEntryContext {
 	}
 
 	/**
-	 * Does this entity exist in this context, associated with an EntityEntry?
+	 * Does this entity exist in this context, associated with an {@link EntityEntry}?
 	 *
 	 * @param entity The entity to check
 	 *
@@ -220,16 +223,15 @@ public class EntityEntryContext {
 	}
 
 	/**
-	 * Retrieve the associated EntityEntry for the entity
+	 * Retrieve the associated {@link EntityEntry} for the given entity.
 	 *
-	 * @param entity The entity to retrieve the EntityEntry for
+	 * @param entity The entity
 	 *
-	 * @return The associated EntityEntry
+	 * @return The associated {@link EntityEntry}
 	 */
 	public EntityEntry getEntityEntry(Object entity) {
 		// locate a ManagedEntity for the entity, but only if it is associated with the same PersistenceContext.
 		final ManagedEntity managedEntity = getAssociatedManagedEntity( entity );
-
 		// and get/return the EntityEntry from the ManagedEntry
 		return managedEntity == null
 				? null
@@ -237,11 +239,11 @@ public class EntityEntryContext {
 	}
 
 	/**
-	 * Remove an entity from the context, returning the EntityEntry which was associated with it
+	 * Remove an entity from the context, returning its {@link EntityEntry}.
 	 *
 	 * @param entity The entity to remove
 	 *
-	 * @return Tjee EntityEntry
+	 * @return The removed {@link EntityEntry}
 	 */
 	public EntityEntry removeEntityEntry(Object entity) {
 		// locate a ManagedEntity for the entity, but only if it is associated with the same PersistenceContext.
@@ -308,10 +310,12 @@ public class EntityEntryContext {
 	}
 
 	/**
-	 * The main bugaboo with IdentityMap that warranted this class in the first place.
-	 *
-	 * Return an array of all the entity/EntityEntry pairs in this context.  The array is to make sure
-	 * that the iterators built off of it are safe from concurrency/reentrancy
+	 * The main bugaboo with {@code IdentityMap} that warranted this class in the
+	 * first place.
+	 * <p>
+	 * Return an array of all the entity/{@link EntityEntry} pairs in this context.
+	 * The array is to make sure that the iterators built off of it are safe from
+	 * concurrency/reentrancy.
 	 *
 	 * @return The safe array
 	 */
@@ -366,7 +370,7 @@ public class EntityEntryContext {
 	}
 
 	/**
-	 * Clear this context of all managed entities
+	 * Clear this context of all managed entities.
 	 */
 	public void clear() {
 		dirty = true;
@@ -395,7 +399,7 @@ public class EntityEntryContext {
 	}
 
 	/**
-	 * Down-grade locks to NONE for all entities in this context
+	 * Down-grade locks to {@link LockMode#NONE} for all entities in this context
 	 */
 	public void downgradeLocks() {
 		processEachManagedEntity( EntityEntryContext::downgradeLockOnManagedEntity );
@@ -546,7 +550,7 @@ public class EntityEntryContext {
 	}
 
 	/**
-	 * The wrapper for entity classes which do not implement ManagedEntity
+	 * The wrapper for entity classes which do not implement {@link ManagedEntity}.
 	 */
 	private static class ManagedEntityImpl implements ManagedEntity {
 		private final Object entityInstance;
@@ -685,9 +689,8 @@ public class EntityEntryContext {
 			return managedEntity.$$_hibernate_useTracker();
 		}
 
-		/*
-		Check instance type of EntityEntry and if type is ImmutableEntityEntry, check to see if entity is referenced cached in the second level cache
-		 */
+		// Check instance type of EntityEntry and if type is ImmutableEntityEntry,
+		// check to see if entity is referenced cached in the second level cache
 		private boolean canClearEntityEntryReference() {
 			EntityEntry entityEntry = managedEntity.$$_hibernate_getEntityEntry();
 			return !(entityEntry instanceof ImmutableEntityEntry)

@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.cascade2;
 
+import jakarta.persistence.RollbackException;
 import org.hibernate.Session;
 
 import org.hibernate.TransientObjectException;
@@ -60,8 +61,8 @@ public class CascadeTest extends AbstractJPATest {
 				s.getTransaction().commit();
 				fail( "expecting TransientObjectException on flush" );
 			}
-			catch (IllegalStateException e) {
-				assertTyping( TransientObjectException.class, e.getCause() );
+			catch (RollbackException e) {
+				assertTyping( TransientObjectException.class, e.getCause().getCause() );
 				s.getTransaction().rollback();
 			}
 			finally {
@@ -91,9 +92,9 @@ public class CascadeTest extends AbstractJPATest {
 				s.getTransaction().commit();
 				fail( "expecting TransientObjectException on flush" );
 			}
-			catch (IllegalStateException e) {
+			catch (RollbackException e) {
 				// expected result
-				assertInstanceOf( TransientObjectException.class, e.getCause() );
+				assertInstanceOf( TransientObjectException.class, e.getCause().getCause() );
 				s.getTransaction().rollback();
 			}
 			finally {
@@ -123,9 +124,9 @@ public class CascadeTest extends AbstractJPATest {
 				s.getTransaction().commit();
 				fail( "expecting TransientObjectException on flush" );
 			}
-			catch (IllegalStateException e) {
+			catch (RollbackException e) {
 				// expected result
-				assertInstanceOf( TransientObjectException.class, e.getCause() );
+				assertInstanceOf( TransientObjectException.class, e.getCause().getCause() );
 				s.getTransaction().rollback();
 			}
 			finally {
@@ -153,9 +154,9 @@ public class CascadeTest extends AbstractJPATest {
 				s.getTransaction().commit();
 				fail( "expecting TransientObjectException on flush" );
 			}
-			catch (IllegalStateException e) {
+			catch (RollbackException e) {
 				// expected result
-				assertInstanceOf( TransientObjectException.class, e.getCause() );
+				assertInstanceOf( TransientObjectException.class, e.getCause().getCause() );
 				s.getTransaction().rollback();
 			}
 			finally {
@@ -183,9 +184,9 @@ public class CascadeTest extends AbstractJPATest {
 				s.getTransaction().commit();
 				fail( "expecting TransientObjectException on flush" );
 			}
-			catch (IllegalStateException e) {
+			catch (RollbackException e) {
 				// expected result
-				assertInstanceOf( TransientObjectException.class, e.getCause() );
+				assertInstanceOf( TransientObjectException.class, e.getCause().getCause() );
 				s.getTransaction().rollback();
 			}
 			finally {
@@ -211,9 +212,9 @@ public class CascadeTest extends AbstractJPATest {
 				s.getTransaction().commit();
 				fail( "expecting TransientObjectException on flush" );
 			}
-			catch (IllegalStateException e) {
+			catch (RollbackException e) {
 				// expected result
-				assertInstanceOf( TransientObjectException.class, e.getCause() );
+				assertInstanceOf( TransientObjectException.class, e.getCause().getCause() );
 				s.getTransaction().rollback();
 			}
 			finally {
@@ -239,9 +240,9 @@ public class CascadeTest extends AbstractJPATest {
 				s.getTransaction().commit();
 				fail( "expecting TransientObjectException on flush" );
 			}
-			catch (IllegalStateException e) {
+			catch (RollbackException e) {
 				// expected result
-				assertInstanceOf( TransientObjectException.class, e.getCause() );
+				assertInstanceOf( TransientObjectException.class, e.getCause().getCause() );
 				s.getTransaction().rollback();
 			}
 			finally {
@@ -268,9 +269,9 @@ public class CascadeTest extends AbstractJPATest {
 				s.getTransaction().commit();
 				fail( "expecting TransientObjectException on flush" );
 			}
-			catch (IllegalStateException e) {
+			catch (RollbackException e) {
 				// expected result
-				assertInstanceOf( TransientObjectException.class, e.getCause() );
+				assertInstanceOf( TransientObjectException.class, e.getCause().getCause() );
 				s.getTransaction().rollback();
 			}
 			finally {
@@ -297,9 +298,9 @@ public class CascadeTest extends AbstractJPATest {
 				s.getTransaction().commit();
 				fail( "expecting TransientObjectException on flush" );
 			}
-			catch (IllegalStateException e) {
+			catch (RollbackException e) {
 				// expected result
-				assertInstanceOf( TransientObjectException.class, e.getCause() );
+				assertInstanceOf( TransientObjectException.class, e.getCause().getCause() );
 				s.getTransaction().rollback();
 			}
 			finally {

@@ -8,6 +8,7 @@ package org.hibernate.orm.test.jpa.lock;
 
 import java.math.BigDecimal;
 
+import jakarta.persistence.OptimisticLockException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -151,7 +152,8 @@ public class RepeatableReadTest extends AbstractJPATest {
 						s1.lock( item, LockMode.PESSIMISTIC_WRITE );
 						fail( "expected UPGRADE lock failure" );
 					}
-					catch (StaleObjectStateException expected) {
+					catch (OptimisticLockException expected) {
+						assertTrue( expected.getCause() instanceof StaleObjectStateException );
 						// this is the expected behavior
 					}
 					catch (SQLGrammarException t) {

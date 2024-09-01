@@ -36,8 +36,9 @@ public class RemovedEntityTest extends AbstractJPATest {
 
 		boolean contains = fromTransaction(
 				session -> {
-					session.remove( item );
-					return session.contains( item );
+					Item reference = session.getReference( item );
+					session.remove( reference );
+					return session.contains( reference );
 				}
 		);
 
@@ -58,7 +59,7 @@ public class RemovedEntityTest extends AbstractJPATest {
 
 		Item item = fromTransaction(
 				session -> {
-					session.remove( it );
+					session.remove( session.get( Item.class, id ) );
 					return session.get( Item.class, id );
 				}
 		);
@@ -108,7 +109,7 @@ public class RemovedEntityTest extends AbstractJPATest {
 		// clean up
 		inTransaction(
 				session ->
-						session.remove( item )
+						session.remove( session.getReference(item) )
 		);
 	}
 
@@ -138,7 +139,7 @@ public class RemovedEntityTest extends AbstractJPATest {
 		// clean up
 		inTransaction(
 				session ->
-						session.remove( item )
+						session.remove( session.getReference(item) )
 		);
 	}
 
@@ -173,7 +174,7 @@ public class RemovedEntityTest extends AbstractJPATest {
 		// clean up
 		inTransaction(
 				session ->
-						session.remove( item )
+						session.remove( session.getReference(item) )
 		);
 	}
 }

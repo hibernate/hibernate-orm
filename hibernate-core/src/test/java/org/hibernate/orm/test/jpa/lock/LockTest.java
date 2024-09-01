@@ -15,6 +15,8 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import jakarta.persistence.Timeout;
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
@@ -85,7 +87,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		} );
 
 		doInJPA( this::entityManagerFactory, em -> {
-			Map<String, Object> properties = new HashMap<String, Object>();
+			Map<String, Object> properties = new HashMap<>();
 			properties.put( AvailableSettings.JAKARTA_LOCK_TIMEOUT, 0L );
 			em.find( Lock.class, 1, LockModeType.PESSIMISTIC_WRITE, properties );
 		} );
@@ -119,7 +121,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			doInJPA( this::entityManagerFactory, entityManager -> {
 				TransactionUtil.withJdbcTimeout( entityManager.unwrap( Session.class ), () -> {
 					try {
-						Map<String, Object> properties = new HashMap<String, Object>();
+						Map<String, Object> properties = new HashMap<>();
 						properties.put( AvailableSettings.JAKARTA_LOCK_TIMEOUT, 0L );
 
 						entityManager.find( Lock.class, lock.getId(), LockModeType.PESSIMISTIC_WRITE, properties );
@@ -305,7 +307,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 		doInJPA( this::entityManagerFactory, _entityManagaer -> {
 			Map<String, Object> properties = new HashMap<>();
-			properties.put( AvailableSettings.JPA_LOCK_TIMEOUT, LockOptions.SKIP_LOCKED );
+			properties.put( AvailableSettings.JAKARTA_LOCK_TIMEOUT, LockOptions.SKIP_LOCKED );
 			_entityManagaer.find( Lock.class, lock.getId(), LockModeType.PESSIMISTIC_READ, properties );
 
 			try {
@@ -703,9 +705,9 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 							Lock lock2 = _entityManager.getReference( Lock.class, lock.getId() );
 							lock2.getName();		//  force entity to be read
 							log.info( "testContendedPessimisticReadLockTimeout: (BG) read write-locked entity" );
-							Map<String, Object> props = new HashMap<String, Object>();
+							Map<String, Object> props = new HashMap<>();
 							// timeout is in milliseconds
-							props.put( AvailableSettings.JPA_LOCK_TIMEOUT, 1000 );
+							props.put( AvailableSettings.JAKARTA_LOCK_TIMEOUT, 1000 );
 							try {
 								_entityManager.lock( lock2, LockModeType.PESSIMISTIC_READ, props );
 							}
@@ -786,9 +788,9 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 							Lock lock2 = _entityManager.getReference( Lock.class, lock.getId() );
 							lock2.getName();		//  force entity to be read
 							log.info( "testContendedPessimisticWriteLockTimeout: (BG) read write-locked entity" );
-							Map<String, Object> props = new HashMap<String, Object>();
+							Map<String, Object> props = new HashMap<>();
 							// timeout is in milliseconds
-							props.put( AvailableSettings.JPA_LOCK_TIMEOUT, 1000 );
+							props.put( AvailableSettings.JAKARTA_LOCK_TIMEOUT, 1000 );
 							try {
 								_entityManager.lock( lock2, LockModeType.PESSIMISTIC_WRITE, props );
 							}
@@ -867,11 +869,8 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 							Lock lock2 = _entityManager.getReference( Lock.class, lock.getId() );
 							lock2.getName();		//  force entity to be read
 							log.info( "testContendedPessimisticWriteLockNoWait: (BG) read write-locked entity" );
-							Map<String, Object> props = new HashMap<String, Object>();
-							// timeout of zero means no wait (for lock)
-							props.put( AvailableSettings.JPA_LOCK_TIMEOUT, 0 );
 							try {
-								_entityManager.lock( lock2, LockModeType.PESSIMISTIC_WRITE, props );
+								_entityManager.lock( lock2, LockModeType.PESSIMISTIC_WRITE, Timeout.ms(0) );
 							}
 							catch ( LockTimeoutException e ) {
 								// success
@@ -904,8 +903,8 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 			doInJPA( this::entityManagerFactory, em -> {
 				Lock _lock = em.getReference( Lock.class, lock.getId() );
+				assertFalse( Hibernate.isInitialized(_lock) );
 				em.lock( _lock, LockModeType.PESSIMISTIC_WRITE );
-				final Integer id = _lock.getId();
 				_lock.getName();		// force entity to be read
 				log.info( "testContendedPessimisticWriteLockNoWait: got write lock" );
 
@@ -1019,7 +1018,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	public void testQueryTimeoutEMProps() throws Exception {
 		final CountDownLatch latch = new CountDownLatch( 1 );
 
-		final Map<String, Object> timeoutProps = new HashMap<String, Object>();
+		final Map<String, Object> timeoutProps = new HashMap<>();
 		timeoutProps.put( HINT_SPEC_QUERY_TIMEOUT, 500 ); // 1 sec timeout (should round up)
 		final Lock lock = new Lock();
 
@@ -1106,8 +1105,8 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 		final CountDownLatch latch = new CountDownLatch( 1 );
 
-		final Map<String, Object> timeoutProps = new HashMap<String, Object>();
-		timeoutProps.put( AvailableSettings.JPA_LOCK_TIMEOUT, 1000 ); // 1 second timeout
+		final Map<String, Object> timeoutProps = new HashMap<>();
+		timeoutProps.put( AvailableSettings.JAKARTA_LOCK_TIMEOUT, 1000 ); // 1 second timeout
 		final Lock lock = new Lock();
 
 		FutureTask<Boolean> bgTask = new FutureTask<>(
@@ -1156,8 +1155,8 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 			doInJPA( this::entityManagerFactory, em -> {
 				Lock _lock = em.getReference( Lock.class, lock.getId() );
+				assertFalse( Hibernate.isInitialized(_lock) );
 				em.lock( _lock, LockModeType.PESSIMISTIC_WRITE );
-				final Integer id = _lock.getId();
 				_lock.getName();		// force entity to be read
 				log.info( "testLockTimeoutEMProps: got write lock" );
 

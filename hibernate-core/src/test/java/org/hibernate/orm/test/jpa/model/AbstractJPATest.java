@@ -9,28 +9,11 @@ package org.hibernate.orm.test.jpa.model;
 import java.sql.Connection;
 
 import org.hibernate.Session;
-import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.MetadataBuilderImplementor;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.spi.CascadingAction;
-import org.hibernate.engine.spi.CascadingActions;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.internal.DefaultAutoFlushEventListener;
-import org.hibernate.event.internal.DefaultFlushEntityEventListener;
-import org.hibernate.event.internal.DefaultFlushEventListener;
-import org.hibernate.event.internal.DefaultPersistEventListener;
-import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.event.spi.AutoFlushEventListener;
-import org.hibernate.event.spi.EventType;
-import org.hibernate.event.spi.FlushEntityEventListener;
-import org.hibernate.event.spi.FlushEventListener;
-import org.hibernate.event.spi.PersistContext;
-import org.hibernate.event.spi.PersistEventListener;
-import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.proxy.EntityNotFoundDelegate;
 
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
@@ -52,6 +35,8 @@ public abstract class AbstractJPATest extends BaseSessionFactoryFunctionalTest {
 		};
 	}
 
+	// mimic specific exception aspects of the JPA environment ~~~~~~~~~~~~~~~~
+
 	@Override
 	protected void applySettings(StandardServiceRegistryBuilder builder) {
 		builder.applySetting( Environment.JPA_QUERY_COMPLIANCE, "true" );
@@ -61,97 +46,22 @@ public abstract class AbstractJPATest extends BaseSessionFactoryFunctionalTest {
 	@Override
 	protected void configure(SessionFactoryBuilder builder) {
 		super.configure( builder );
-		builder.applyEntityNotFoundDelegate( new JPAEntityNotFoundDelegate() );
+		builder.applyEntityNotFoundDelegate( (entityName, id) -> {
+			throw new EntityNotFoundException( "Unable to find " + entityName + " with id " + id );
+		} );
 	}
 
 	@Override
-	public void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
-		builder.applyIntegrator(
-				new Integrator() {
-					@Override
-					public void integrate(
-							Metadata metadata,
-							BootstrapContext bootstrapContext,
-							SessionFactoryImplementor sessionFactory) {
-						integrate( sessionFactory );
-					}
-
-					private void integrate(SessionFactoryImplementor sessionFactory) {
-						EventListenerRegistry eventListenerRegistry = sessionFactory.getServiceRegistry().getService(
-								EventListenerRegistry.class );
-						eventListenerRegistry.setListeners( EventType.PERSIST, buildPersistEventListeners() );
-						eventListenerRegistry.setListeners(
-								EventType.PERSIST_ONFLUSH, buildPersisOnFlushEventListeners()
-						);
-						eventListenerRegistry.setListeners( EventType.AUTO_FLUSH, buildAutoFlushEventListeners() );
-						eventListenerRegistry.setListeners( EventType.FLUSH, buildFlushEventListeners() );
-						eventListenerRegistry.setListeners( EventType.FLUSH_ENTITY, buildFlushEntityEventListeners() );
-					}
-				}
-		);
+	protected void applyMetadataBuilder(MetadataBuilder metadataBuilder) {
+		((MetadataBuilderImplementor) metadataBuilder).getBootstrapContext().markAsJpaBootstrap();
 	}
 
-	// mimic specific exception aspects of the JPA environment ~~~~~~~~~~~~~~~~
-
-	private static class JPAEntityNotFoundDelegate implements EntityNotFoundDelegate {
-		public void handleEntityNotFound(String entityName, Object id) {
-			throw new EntityNotFoundException( "Unable to find " + entityName + " with id " + id );
-		}
-	}
-
-	// mimic specific event aspects of the JPA environment ~~~~~~~~~~~~~~~~~~~~
-
-	protected PersistEventListener[] buildPersistEventListeners() {
-		return new PersistEventListener[] { new JPAPersistEventListener() };
-	}
-
-	protected PersistEventListener[] buildPersisOnFlushEventListeners() {
-		return new PersistEventListener[] { new JPAPersistOnFlushEventListener() };
-	}
-
-	protected AutoFlushEventListener[] buildAutoFlushEventListeners() {
-		return new AutoFlushEventListener[] { JPAAutoFlushEventListener.INSTANCE };
-	}
-
-	protected FlushEventListener[] buildFlushEventListeners() {
-		return new FlushEventListener[] { JPAFlushEventListener.INSTANCE };
-	}
-
-	protected FlushEntityEventListener[] buildFlushEntityEventListeners() {
-		return new FlushEntityEventListener[] { new JPAFlushEntityEventListener() };
-	}
-
-	public static class JPAPersistEventListener extends DefaultPersistEventListener {
-		// overridden in JPA impl for entity callbacks...
-	}
-
-	public static class JPAPersistOnFlushEventListener extends JPAPersistEventListener {
-		@Override
-		protected CascadingAction<PersistContext> getCascadeAction() {
-			return CascadingActions.PERSIST_ON_FLUSH;
-		}
-	}
-
-	public static class JPAAutoFlushEventListener extends DefaultAutoFlushEventListener {
-		// not sure why EM code has this ...
-		public static final AutoFlushEventListener INSTANCE = new JPAAutoFlushEventListener();
-	}
-
-	public static class JPAFlushEventListener extends DefaultFlushEventListener {
-		// not sure why EM code has this ...
-		public static final FlushEventListener INSTANCE = new JPAFlushEventListener();
-	}
-
-	public static class JPAFlushEntityEventListener extends DefaultFlushEntityEventListener {
-		// in JPA, used mainly for preUpdate callbacks...
-	}
+	// a useful method that doesn't really belong here ~~~~~~~~~~~~~~~~
 
 	protected boolean readCommittedIsolationMaintained(String scenario) {
 		final int isolation;
-		try (Session testSession = sessionFactory().openSession()) {
-			isolation = testSession.doReturningWork(
-					Connection::getTransactionIsolation
-			);
+		try ( Session testSession = sessionFactory().openSession() ) {
+			isolation = testSession.doReturningWork(Connection::getTransactionIsolation);
 		}
 		if ( isolation < Connection.TRANSACTION_READ_COMMITTED ) {
 			SkipLog.reportSkip( "environment does not support at least read committed isolation", scenario );

@@ -24,6 +24,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.Target;
 import org.hibernate.annotations.Type;
+import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.spi.AccessType;
@@ -56,8 +57,6 @@ import jakarta.persistence.Transient;
  * @author Steve Ebersole
  */
 public class PropertyContainer {
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, PropertyContainer.class.getName() );
 
 	/**
 	 * The class for which this container is created.
@@ -201,14 +200,7 @@ public class PropertyContainer {
 			// HHH-10242 detect registration of the same property getter twice - eg boolean isId() + UUID getId()
 			final MethodDetails previous = persistentAttributesFromGetters.get( name );
 			if ( previous != null ) {
-				throw new org.hibernate.boot.MappingException(
-						LOG.ambiguousPropertyMethods(
-								classDetails.getName(),
-								previous.getName(),
-								getterDetails.getName()
-						),
-						new Origin( SourceType.ANNOTATION, classDetails.getName() )
-				);
+				throwAmbiguousPropertyException( classDetails, previous, getterDetails );
 			}
 
 			persistentAttributeMap.put( name, getterDetails );
@@ -226,6 +218,19 @@ public class PropertyContainer {
 			persistentAttributeMap.put( name, componentDetails );
 			persistentAttributesFromComponents.put( name, componentDetails );
 		}
+	}
+
+	private static void throwAmbiguousPropertyException(
+			ClassDetails classDetails, MethodDetails previous, MethodDetails getterDetails) {
+		throw new MappingException(
+				String.format(
+						"Ambiguous persistent property methods declared by '%s': '%s' and '%s' (mark one '@Transient')",
+						classDetails.getName(),
+						previous.getName(),
+						getterDetails.getName()
+				),
+				new Origin( SourceType.ANNOTATION, classDetails.getName() )
+		);
 	}
 
 	/**
@@ -259,22 +264,13 @@ public class PropertyContainer {
 				// HHH-10242 detect registration of the same property getter twice - eg boolean isId() + UUID getId()
 				final MethodDetails previous = persistentAttributesFromGetters.get( name );
 				if ( previous != null && getterDetails != previous ) {
-					throw new org.hibernate.boot.MappingException(
-							LOG.ambiguousPropertyMethods(
-									classDetails.getName(),
-									previous.getName(),
-									getterDetails.getName()
-							),
-							new Origin( SourceType.ANNOTATION, classDetails.getName() )
-					);
+					throwAmbiguousPropertyException( classDetails, previous, getterDetails );
 				}
 
-				if ( persistentAttributeMap.containsKey( name ) ) {
-					continue;
+				if ( !persistentAttributeMap.containsKey( name ) ) {
+					persistentAttributeMap.put( name, getterDetails );
+					persistentAttributesFromGetters.put( name, getterDetails );
 				}
-
-				persistentAttributeMap.put( name, getterDetails );
-				persistentAttributesFromGetters.put( name, getterDetails );
 			}
 
 			// When a user uses the `property` access strategy for the entity owning an embeddable,

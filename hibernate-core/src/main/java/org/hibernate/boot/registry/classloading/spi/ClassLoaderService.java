@@ -101,7 +101,7 @@ public interface ClassLoaderService extends ResourceLocator, ResourceStreamLocat
 	 */
 	<S> Collection<S> loadJavaServices(Class<S> serviceContract);
 
-	<T> T generateProxy(InvocationHandler handler, Class... interfaces);
+	<T> T generateProxy(InvocationHandler handler, Class<?>... interfaces);
 
 	/**
 	 * Loading a Package from the ClassLoader.

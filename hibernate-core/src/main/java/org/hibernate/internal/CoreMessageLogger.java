@@ -238,15 +238,11 @@ public interface CoreMessageLogger extends BasicLogger {
 			String incrementParam,
 			int incrementSize,
 			String positiveOrNegative,
-			int defaultIncrementSize
-	);
+			int defaultIncrementSize);
 
 	@LogMessage(level = DEBUG)
 	@Message(value = "HQL: %s, time: %sms, rows: %s", id = 117)
-	void hql(
-			String hql,
-			Long valueOf,
-			Long valueOf2);
+	void hql(String hql, Long valueOf, Long valueOf2);
 
 	@LogMessage(level = WARN)
 	@Message(value = "HSQLDB supports only READ_UNCOMMITTED isolation", id = 118)
@@ -258,15 +254,11 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = ERROR)
 	@Message(value = "IllegalArgumentException in class: %s, getter method of property: %s", id = 122)
-	void illegalPropertyGetterArgument(
-			String name,
-			String propertyName);
+	void illegalPropertyGetterArgument(String name, String propertyName);
 
 	@LogMessage(level = ERROR)
 	@Message(value = "IllegalArgumentException in class: %s, setter method of property: %s", id = 123)
-	void illegalPropertySetterArgument(
-			String name,
-			String propertyName);
+	void illegalPropertySetterArgument(String name, String propertyName);
 
 	@LogMessage(level = DEBUG)
 	@Message(value = "Could not bind JNDI listener", id = 127)
@@ -282,22 +274,11 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = ERROR)
 	@Message(value = "Invalid JNDI name: %s", id = 135)
-	void invalidJndiName(
-			String name,
-			@Cause JndiNameException e);
+	void invalidJndiName(String name, @Cause JndiNameException e);
 
 	@LogMessage(level = INFO)
 	@Message(value = "java.sql.Types mapped the same code [%s] multiple times; was [%s]; now [%s]", id = 141)
-	void JavaSqlTypesMappedSameCodeMultipleTimes(
-			int code,
-			String old,
-			String name);
-
-	@Message(value = "Bytecode enhancement failed: %s", id = 142)
-	String bytecodeEnhancementFailed(String entityName);
-
-	@Message(value = "Bytecode enhancement failed because no public, protected or package-private default constructor was found for entity: %s. Private constructors don't work with runtime proxies", id = 143)
-	String bytecodeEnhancementFailedBecauseOfDefaultConstructor(String entityName);
+	void JavaSqlTypesMappedSameCodeMultipleTimes(int code, String old, String name);
 
 	@LogMessage(level = DEBUG)
 	@Message(value = "Lazy property fetching available for: %s", id = 157)
@@ -395,9 +376,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Recognized obsolete hibernate namespace %s. Use namespace %s instead. Refer to Hibernate 3.6 Migration Guide",
 			id = 223)
-	void recognizedObsoleteHibernateNamespace(
-			String oldHibernateNamespace,
-			String hibernateNamespace);
+	void recognizedObsoleteHibernateNamespace(String oldHibernateNamespace, String hibernateNamespace);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Running hbm2ddl schema export", id = 227)
@@ -439,9 +418,7 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = WARN)
 	@Message(value = "SQL Error: %s, SQLState: %s", id = 247)
-	void sqlWarning(
-			int errorCode,
-			String sqlState);
+	void sqlWarning(int errorCode, String sqlState);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Start time: %s", id = 251)
@@ -491,9 +468,7 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = WARN)
 	@Message(value = "Unable to apply constraints on DDL for %s", id = 274)
-	void unableToApplyConstraints(
-			String className,
-			@Cause Exception e);
+	void unableToApplyConstraints(String className, @Cause Exception e);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Could not bind factory to JNDI", id = 277)
@@ -525,9 +500,7 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = ERROR)
 	@Message(value = "Unable to construct current session context [%s]", id = 302)
-	void unableToConstructCurrentSessionContext(
-			String impl,
-			@Cause Throwable e);
+	void unableToConstructCurrentSessionContext(String impl, @Cause Throwable e);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Could not copy system properties, system properties will be ignored", id = 304)
@@ -535,9 +508,7 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = WARN)
 	@Message(value = "Could not create proxy factory for:%s", id = 305)
-	void unableToCreateProxyFactory(
-			String entityName,
-			@Cause HibernateException e);
+	void unableToCreateProxyFactory(String entityName, @Cause HibernateException e);
 
 	@LogMessage(level = ERROR)
 	@Message(value = "Error creating schema ", id = 306)
@@ -545,9 +516,7 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = WARN)
 	@Message(value = "Could not deserialize cache file [%s]: %s", id = 307)
-	void unableToDeserializeCache(
-			String path,
-			SerializationException error);
+	void unableToDeserializeCache(String path, SerializationException error);
 
 	/**
 	 * @deprecated Use {@link org.hibernate.engine.jdbc.batch.JdbcBatchLogging#unableToExecuteBatch} instead
@@ -581,9 +550,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Problem loading properties from hibernate.properties", id = 329)
 	void unableToLoadProperties();
 
-	@Message(value = "Unable to locate config file: %s", id = 330)
-	String unableToLocateConfigFile(String path);
-
 	@LogMessage(level = WARN)
 	@Message(value = "Unable to locate requested UUID generation strategy class: %s", id = 334)
 	void unableToLocateUuidGenerationStrategy(String strategyClassName);
@@ -607,9 +573,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Could not obtain connection to query metadata", id = 342)
 	void unableToObtainConnectionToQueryMetadata(@Cause Exception e);
-
-	@Message(value = "Unable to query java.sql.DatabaseMetaData", id = 347)
-	String unableToQueryDatabaseMetadata();
 
 	@LogMessage(level = ERROR)
 	@Message(value = "Could not read or init a hi value", id = 351)
@@ -699,10 +662,7 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = INFO)
 	@Message(value = "Explicit segment value for id generator [%s.%s] suggested; using default [%s]", id = 398)
-	void usingDefaultIdGeneratorSegmentValue(
-			String tableName,
-			String segmentColumnName,
-			String defaultToUse);
+	void usingDefaultIdGeneratorSegmentValue(String tableName, String segmentColumnName, String defaultToUse);
 
 	/**
 	 * @deprecated Use {@link org.hibernate.dialect.DialectLogging#usingDialect} instead
@@ -719,9 +679,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Using %s which does not generate IETF RFC 4122 compliant UUID values; consider using %s instead",
 			id = 409)
-	void usingUuidHexGenerator(
-			String name,
-			String name2);
+	void usingUuidHexGenerator(String name, String name2);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Hibernate ORM core version %s", id = 412)
@@ -883,9 +841,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Unable to interpret type [%s] as an AttributeConverter due to an exception: %s", id = 468)
 	void logBadHbmAttributeConverterType(String type, String exceptionMessage);
 
-	@Message(value = "The ClassLoaderService can not be reused. This instance was stopped already.", id = 469)
-	HibernateException usingStoppedClassLoaderService();
-
 	@LogMessage(level = WARN)
 	@Message(value = "An unexpected session is defined for a collection, but the collection is not connected to that session. A persistent collection may only be associated with one session at a time. Overwriting session. %s", id = 470)
 	void logUnexpectedSessionInCollectionNotConnected(String msg);
@@ -897,12 +852,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = INFO)
 	@Message(value = "Omitting cached file [%s] as the mapping file is newer", id = 473)
 	void cachedFileObsolete(File cachedFile);
-
-	@Message(
-			value = "Ambiguous persistent property methods detected on %s; mark one as @Transient: [%s] and [%s]",
-			id = 474
-	)
-	String ambiguousPropertyMethods(String entityName, String oneMethodSig, String secondMethodSig);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Cannot locate column information using identifier [%s]; ignoring index [%s]", id = 475 )
@@ -920,13 +869,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Unsuccessful: %s", id = 478)
 	void unsuccessfulSchemaManagementCommand(String command);
 
-	@Message(
-			value = "Collection [%s] was not processed by flush()."
-			+ " This is likely due to unsafe use of the session (e.g. used in multiple threads concurrently, updates during entity lifecycle hooks).",
-			id = 479
-	)
-	String collectionNotProcessedByFlush(@Nullable String role);
-
 	@LogMessage(level = WARN)
 	@Message(value = "A ManagedEntity was associated with a stale PersistenceContext. A ManagedEntity may only be associated with one PersistenceContext at a time; %s", id = 480)
 	void stalePersistenceContextInEntityEntry(String msg);
@@ -939,10 +881,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "The query: [%s] attempts to update an immutable entity: %s",
 			id = 487)
 	void immutableEntityUpdateQuery(String sourceQuery, String querySpaces);
-
-	@Message(value = "Bytecode enhancement failed for class: %1$s. It might be due to the Java module system preventing Hibernate ORM from defining an enhanced class "
-			+ "in the same package as class %1$s. In this case, the class should be opened and exported to Hibernate ORM.", id = 488)
-	String bytecodeEnhancementFailedUnableToGetPrivateLookupFor(String className);
 
 	@LogMessage(level = INFO)
 	@Message(value = "No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)", id = 489)
@@ -1021,10 +959,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Unable to create the ReflectionOptimizer for [%s]: %s",
 			id = 513)
 	void unableToGenerateReflectionOptimizer(String className, String cause);
-
-	@Message(value = "Can't retrieve the generated identity value, because the dialect does not support selecting the last generated identity and 'hibernate.jdbc.use_get_generated_keys' was disabled",
-			id = 515)
-	HibernateException nullIdentitySelectString();
 
 	@LogMessage(level = WARN)
 	@Message(value = "Failed to discover types for enhancement from class: %s",

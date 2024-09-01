@@ -13,19 +13,15 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.PrimeAmongSecondarySupertypes;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyConfiguration;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.type.CompositeType;
 
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_CLASS_ARRAY;
 
 public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
-
-	private static final CoreMessageLogger LOG = messageLogger( ByteBuddyProxyFactory.class );
 
 	private final ByteBuddyProxyHelper byteBuddyProxyHelper;
 
@@ -63,11 +59,7 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 	}
 
 	private Class<?>[] toArray(Set<Class<?>> interfaces) {
-		if ( interfaces == null ) {
-			return ArrayHelper.EMPTY_CLASS_ARRAY;
-		}
-
-		return interfaces.toArray( new Class[interfaces.size()] );
+		return interfaces == null ? EMPTY_CLASS_ARRAY : interfaces.toArray(EMPTY_CLASS_ARRAY);
 	}
 
 	@Override
@@ -115,14 +107,12 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 			return (PrimeAmongSecondarySupertypes) proxyClass.getConstructor().newInstance();
 		}
 		catch (NoSuchMethodException e) {
-			String logMessage = LOG.bytecodeEnhancementFailedBecauseOfDefaultConstructor( entityName );
-			LOG.error( logMessage, e );
-			throw new HibernateException( logMessage, e );
+			throw new HibernateException(
+					"Bytecode enhancement failed because no public, protected or package-private default constructor was found for entity '"
+							+ entityName + "' (private constructors don't work with runtime proxies)", e );
 		}
 		catch (Throwable t) {
-			String logMessage = LOG.bytecodeEnhancementFailed( entityName );
-			LOG.error( logMessage, t );
-			throw new HibernateException( logMessage, t );
+			throw new HibernateException( "Bytecode enhancement failed for entity '" + entityName + "'", t );
 		}
 	}
 

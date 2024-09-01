@@ -66,7 +66,7 @@ public class DefaultLockEventListener extends AbstractLockUpgradeEventListener i
 		//TODO: if object was an uninitialized proxy, this is inefficient,
 		//      resulting in two SQL selects
 		
-		EntityEntry entry = persistenceContext.getEntry(entity);
+		EntityEntry entry = persistenceContext.getEntry( entity );
 		if ( entry == null ) {
 			final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
 			final Object id = persister.getIdentifier( entity, source );

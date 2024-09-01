@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.internal.CoreLogging;
@@ -208,7 +209,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> T generateProxy(InvocationHandler handler, Class... interfaces) {
+	public <T> T generateProxy(InvocationHandler handler, Class<?>... interfaces) {
 		return (T) Proxy.newProxyInstance(
 				getAggregatedClassLoader(),
 				interfaces,
@@ -240,7 +241,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	private AggregatedClassLoader getAggregatedClassLoader() {
 		final AggregatedClassLoader aggregated = this.aggregatedClassLoader;
 		if ( aggregated == null ) {
-			throw log.usingStoppedClassLoaderService();
+			throw new HibernateException( "The ClassLoaderService cannot be reused (this instance was stopped already)" );
 		}
 		return aggregated;
 	}

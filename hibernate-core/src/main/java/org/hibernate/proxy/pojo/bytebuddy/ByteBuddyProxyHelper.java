@@ -6,8 +6,6 @@
  */
 package org.hibernate.proxy.pojo.bytebuddy;
 
-import static org.hibernate.internal.CoreLogging.messageLogger;
-
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -20,7 +18,6 @@ import java.util.function.Function;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState;
 import org.hibernate.engine.spi.PrimeAmongSecondarySupertypes;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyConfiguration;
@@ -39,7 +36,6 @@ import net.bytebuddy.pool.TypePool;
 
 public class ByteBuddyProxyHelper implements Serializable {
 
-	private static final CoreMessageLogger LOG = messageLogger( ByteBuddyProxyHelper.class );
 	private static final String PROXY_NAMING_SUFFIX = "HibernateProxy";
 	private static final TypeDescription OBJECT = TypeDescription.ForLoadedType.of(Object.class);
 
@@ -130,13 +126,11 @@ public class ByteBuddyProxyHelper implements Serializable {
 			return hibernateProxy;
 		}
 		catch (Throwable t) {
-			final String message = LOG.bytecodeEnhancementFailed( serializableProxy.getEntityName() );
-			LOG.error( message, t );
-			throw new HibernateException( message, t );
+			throw new HibernateException( "Bytecode enhancement failed for entity '"
+					+ serializableProxy.getEntityName() + "'", t );
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private static Method resolveIdGetterMethod(SerializableProxy serializableProxy) {
 		if ( serializableProxy.getIdentifierGetterMethodName() == null ) {
 			return null;
@@ -159,7 +153,6 @@ public class ByteBuddyProxyHelper implements Serializable {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private static Method resolveIdSetterMethod(SerializableProxy serializableProxy) {
 		if ( serializableProxy.getIdentifierSetterMethodName() == null ) {
 			return null;

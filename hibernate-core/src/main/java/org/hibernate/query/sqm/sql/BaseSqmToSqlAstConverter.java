@@ -5248,19 +5248,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( treatTypeRestriction == null ) {
 			return expression;
 		}
-		final BasicValuedMapping mappingModelExpressible = (BasicValuedMapping) expression.getExpressionType();
-		final List<CaseSearchedExpression.WhenFragment> whenFragments = new ArrayList<>( 1 );
-		whenFragments.add(
-				new CaseSearchedExpression.WhenFragment(
-						treatTypeRestriction,
-						expression
-				)
+		var caseSearchedExpression = CaseSearchedExpression.ofType(
+				expression.getExpressionType(),
+				lhs::toHqlString
 		);
-		return new CaseSearchedExpression(
-				mappingModelExpressible,
-				whenFragments,
-				null
-		);
+		caseSearchedExpression.when( treatTypeRestriction, expression );
+		return caseSearchedExpression;
 	}
 
 	private Predicate consumeConjunctTreatTypeRestrictions() {
@@ -7168,34 +7161,37 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final boolean oldInNestedContext = inNestedContext;
 
 		inNestedContext = true;
-		MappingModelExpressible<?> resolved = determineCurrentExpressible( expression );
+		JdbcMappingContainer resolved = determineCurrentExpressible( expression );
 
 		Expression otherwise = null;
 		for ( SqmCaseSearched.WhenFragment<?> whenFragment : expression.getWhenFragments() ) {
 			final Predicate whenPredicate = visitNestedTopLevelPredicate( whenFragment.getPredicate() );
-			final MappingModelExpressible<?> alreadyKnown = resolved;
+			final JdbcMappingContainer alreadyKnown = resolved;
 			inferrableTypeAccessStack.push(
 					() -> alreadyKnown == null && inferenceSupplier != null ? inferenceSupplier.get() : alreadyKnown
 			);
 			final Expression resultExpression = (Expression) whenFragment.getResult().accept( this );
 			inferrableTypeAccessStack.pop();
-			resolved = (MappingModelExpressible<?>) highestPrecedence( resolved, resultExpression.getExpressionType() );
+			resolved = highestPrecedence( resolved, resultExpression.getExpressionType() );
 
 			whenFragments.add( new CaseSearchedExpression.WhenFragment( whenPredicate, resultExpression ) );
 		}
 
 		if ( expression.getOtherwise() != null ) {
-			final MappingModelExpressible<?> alreadyKnown = resolved;
+			final JdbcMappingContainer alreadyKnown = resolved;
 			inferrableTypeAccessStack.push(
 					() -> alreadyKnown == null && inferenceSupplier != null ? inferenceSupplier.get() : alreadyKnown
 			);
 			otherwise = (Expression) expression.getOtherwise().accept( this );
 			inferrableTypeAccessStack.pop();
-			resolved = (MappingModelExpressible<?>) highestPrecedence( resolved, otherwise.getExpressionType() );
+			resolved = highestPrecedence( resolved, otherwise.getExpressionType() );
 		}
 
+		var caseSearchedExpression = CaseSearchedExpression.ofType( resolved, expression::toHqlString );
+		caseSearchedExpression.getWhenFragments().addAll( whenFragments );
+		caseSearchedExpression.otherwise( otherwise );
 		inNestedContext = oldInNestedContext;
-		return new CaseSearchedExpression( resolved, whenFragments, otherwise );
+		return caseSearchedExpression;
 	}
 
 	private MappingModelExpressible<?> determineCurrentExpressible(SqmTypedNode<?> expression) {

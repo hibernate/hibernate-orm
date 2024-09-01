@@ -232,8 +232,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	private static boolean isTransactionCoordinatorShared(SessionCreationOptions options) {
-		return options instanceof SharedSessionCreationOptions
-			&& ( (SharedSessionCreationOptions) options ).isTransactionCoordinatorShared();
+		return options instanceof SharedSessionCreationOptions sharedSessionCreationOptions
+			&& sharedSessionCreationOptions.isTransactionCoordinatorShared();
 	}
 
 	protected final void setUpMultitenancy(SessionFactoryImplementor factory, LoadQueryInfluencers loadQueryInfluencers) {

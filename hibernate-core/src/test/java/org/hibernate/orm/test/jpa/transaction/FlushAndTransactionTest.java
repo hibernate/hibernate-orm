@@ -50,8 +50,9 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 		catch (TransactionRequiredException e) {
 			//success
 		}
+		em.lock( book, LockModeType.READ );
 		try {
-			em.lock( book, LockModeType.READ );
+			em.lock( book, LockModeType.PESSIMISTIC_READ );
 			fail( "lock has to be inside a Tx" );
 		}
 		catch (TransactionRequiredException e) {

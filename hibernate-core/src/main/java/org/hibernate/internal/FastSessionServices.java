@@ -68,7 +68,6 @@ import org.hibernate.jpa.LegacySpecHints;
 import org.hibernate.jpa.SpecHints;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
-import org.hibernate.jpa.internal.util.LockOptionsHelper;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
@@ -88,6 +87,7 @@ import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
+import static org.hibernate.internal.LockOptionsHelper.applyPropertiesToLockOptions;
 
 /**
  * Internal component.
@@ -282,9 +282,9 @@ public final class FastSessionServices {
 	}
 
 	private static LockOptions initializeDefaultLockOptions(final Map<String, Object> defaultSessionProperties) {
-		LockOptions def = new LockOptions();
-		LockOptionsHelper.applyPropertiesToLockOptions( defaultSessionProperties, () -> def );
-		return def;
+		final LockOptions lockOptions = new LockOptions();
+		applyPropertiesToLockOptions( defaultSessionProperties, () -> lockOptions );
+		return lockOptions;
 	}
 
 	private static <T> EventListenerGroup<T> listeners(EventListenerRegistry elr, EventType<T> type) {

@@ -22,6 +22,7 @@ import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
+import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.CacheMode;
@@ -349,7 +350,7 @@ public abstract class AbstractQuery<R>
 			hints.put( HINT_JAVAEE_LOCK_TIMEOUT, getLockOptions().getTimeOut() );
 		}
 
-		if ( getLockOptions().getScope() ) {
+		if ( getLockOptions().getLockScope() == PessimisticLockScope.EXTENDED ) {
 			hints.put( HINT_SPEC_LOCK_SCOPE, getLockOptions().getLockScope() );
 			hints.put( HINT_JAVAEE_LOCK_SCOPE, getLockOptions().getLockScope() );
 		}

@@ -6,6 +6,7 @@
  */
 package org.hibernate.event.spi;
 
+import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 
@@ -130,11 +131,11 @@ public class LoadEvent extends AbstractEvent {
 	}
 
 	public int getLockTimeout() {
-		return this.lockOptions.getTimeOut();
+		return lockOptions.getTimeOut();
 	}
 
 	public boolean getLockScope() {
-		return this.lockOptions.getScope();
+		return lockOptions.getLockScope() == PessimisticLockScope.EXTENDED;
 	}
 
 	public Object getResult() {

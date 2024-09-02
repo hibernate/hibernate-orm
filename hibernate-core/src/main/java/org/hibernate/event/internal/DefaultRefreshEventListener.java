@@ -17,7 +17,6 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
-import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -32,14 +31,13 @@ import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
-import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
 import static org.hibernate.pretty.MessageHelper.infoString;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Defines the default refresh event listener used by hibernate for refreshing entities
@@ -71,14 +69,13 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			// cascade refresh and the refresh of the parent will take care of initializing the lazy
 			// entity and setting the correct lock on it, this is needed only when the refresh is called directly on a lazy entity
 			if ( refreshedAlready.isEmpty() ) {
-				final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+				final LazyInitializer lazyInitializer = extractLazyInitializer( object );
 				final EntityPersister persister;
 				if ( lazyInitializer != null ) {
 					persister = source.getEntityPersister( lazyInitializer.getEntityName(), object );
 				}
 				else if ( !isTransient ) {
-					final EntityEntry entry = persistenceContext.getEntry( object );
-					persister = entry.getPersister();
+					persister = persistenceContext.getEntry( object ).getPersister();
 				}
 				else {
 					persister = source.getEntityPersister( source.guessEntityName( object ), object );
@@ -275,7 +272,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		if ( result != null ) {
 			// apply `postRefreshLockMode`, if needed
 			if ( postRefreshLockMode != null ) {
-				// if we get here, there was a previous entry, and we need to re-set its lock-mode
+				// if we get here, there was a previous entry, and we need to reset its lock mode
 				//		- however, the refresh operation actually creates a new entry, so get it
 				persistenceContext.getEntry( result ).setLockMode( postRefreshLockMode );
 			}
@@ -312,13 +309,12 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 
 	private static void evictCachedCollections(Type[] types, Object id, EventSource source)
 			throws HibernateException {
-		final ActionQueue actionQueue = source.getActionQueue();
 		final SessionFactoryImplementor factory = source.getFactory();
-		final MappingMetamodelImplementor metamodel = factory.getRuntimeMetamodels().getMappingMetamodel();
+		final MappingMetamodelImplementor metamodel = factory.getMappingMetamodel();
 		for ( Type type : types ) {
-			if ( type instanceof CollectionType ) {
-				final String role = ((CollectionType) type).getRole();
-				final CollectionPersister collectionPersister = metamodel.getCollectionDescriptor( role );
+			if ( type instanceof CollectionType collectionType ) {
+				final CollectionPersister collectionPersister =
+						metamodel.getCollectionDescriptor( collectionType.getRole() );
 				if ( collectionPersister.hasCache() ) {
 					final CollectionDataAccess cache = collectionPersister.getCacheAccessStrategy();
 					final Object ck = cache.generateCacheKey(
@@ -329,12 +325,11 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 					);
 					final SoftLock lock = cache.lockItem( source, ck, null );
 					cache.remove( source, ck );
-					actionQueue.registerProcess( (success, session) -> cache.unlockItem( session, ck, lock ) );
+					source.getActionQueue().registerProcess( (success, session) -> cache.unlockItem( session, ck, lock ) );
 				}
 			}
-			else if ( type instanceof ComponentType ) {
+			else if ( type instanceof ComponentType compositeType ) {
 				// Only components can contain collections
-				ComponentType compositeType = (ComponentType) type;
 				evictCachedCollections( compositeType.getSubtypes(), id, source );
 			}
 		}

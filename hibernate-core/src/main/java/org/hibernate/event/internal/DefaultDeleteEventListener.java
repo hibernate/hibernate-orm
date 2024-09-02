@@ -38,6 +38,7 @@ import org.hibernate.internal.FastSessionServices;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.jpa.event.spi.CallbackType;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -463,12 +464,12 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 
 		final String[] propertyNames = persister.getPropertyNames();
 		final BytecodeEnhancementMetadata enhancementMetadata = persister.getBytecodeEnhancementMetadata();
+		final MappingMetamodelImplementor metamodel = persister.getFactory().getMappingMetamodel();
 		for ( int i = 0; i < types.length; i++) {
 			if ( types[i] instanceof CollectionType collectionType
 					&& !enhancementMetadata.isAttributeLoaded( parent, propertyNames[i] ) ) {
 				final CollectionPersister collectionDescriptor =
-						persister.getFactory().getMappingMetamodel()
-								.getCollectionDescriptor( collectionType.getRole() );
+						metamodel.getCollectionDescriptor( collectionType.getRole() );
 				if ( collectionDescriptor.needsRemove() || collectionDescriptor.hasCache() ) {
 					final Object keyOfOwner = collectionType.getKeyOfOwner( parent, eventSource.getSession() );
 					// This will make sure that a CollectionEntry exists

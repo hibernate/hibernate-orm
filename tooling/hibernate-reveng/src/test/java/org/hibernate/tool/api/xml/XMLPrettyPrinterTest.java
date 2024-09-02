@@ -20,6 +20,8 @@ public class XMLPrettyPrinterTest {
 	        "    <bar>foobar</bar>\n" +
 			"</foo>\n";
 	
+	private static final String XML_COMMENT = "<!-- Just a comment! -->";
+	
 	private static final String fileName = "foobarfile.xml";
 
 	@TempDir 
@@ -41,6 +43,20 @@ public class XMLPrettyPrinterTest {
 		XMLPrettyPrinter.prettyPrintFile(xmlFile);
 		String result = Files.readString(xmlFile.toPath());
 		assertEquals(XML_AFTER, result);
+	}
+	
+	@Test
+	public void testXmlPrettyPrintWithStrategy() throws Exception {
+		XMLPrettyPrinter.prettyPrintFile(xmlFile, new FooBarStrategy());
+		String result = Files.readString(xmlFile.toPath());
+		assertEquals(XML_AFTER + XML_COMMENT, result);
+	}
+	
+	public static class FooBarStrategy implements XMLPrettyPrinterStrategy {
+		@Override
+		public String prettyPrint(String xml) throws Exception {
+			return XML_AFTER + XML_COMMENT;
+		}		
 	}
 	
 }

@@ -9,7 +9,7 @@ package org.hibernate.event.internal;
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.NonUniqueObjectException;
+import org.hibernate.StaleObjectStateException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.EntityDeleteAction;
@@ -22,7 +22,6 @@ import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.internal.Nullability.NullabilityCheckType;
-import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
@@ -39,7 +38,6 @@ import org.hibernate.internal.FastSessionServices;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.jpa.event.spi.CallbackType;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -129,17 +127,16 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	}
 
 	private static void deleteOwnedCollections(Type type, Object key, EventSource session) {
-		final MappingMetamodelImplementor mappingMetamodel = session.getFactory().getMappingMetamodel();
-		final ActionQueue actionQueue = session.getActionQueue();
-		if ( type instanceof CollectionType ) {
-			final String role = ( (CollectionType) type ).getRole();
-			final CollectionPersister persister = mappingMetamodel.getCollectionDescriptor(role);
+		if ( type instanceof CollectionType collectionType ) {
+			final CollectionPersister persister =
+					session.getFactory().getMappingMetamodel()
+							.getCollectionDescriptor( collectionType.getRole() );
 			if ( !persister.isInverse() && !skipRemoval( session, persister, key ) ) {
-				actionQueue.addAction( new CollectionRemoveAction( persister, key, session ) );
+				session.getActionQueue().addAction( new CollectionRemoveAction( persister, key, session ) );
 			}
 		}
-		else if ( type instanceof ComponentType ) {
-			final Type[] subtypes = ( (ComponentType) type ).getSubtypes();
+		else if ( type instanceof ComponentType componentType ) {
+			final Type[] subtypes = componentType.getSubtypes();
 			for ( Type subtype : subtypes ) {
 				deleteOwnedCollections( subtype, key, session );
 			}
@@ -170,14 +167,14 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		}
 	}
 
-	private void deleteDetachedEntity(DeleteEvent event, DeleteContext transientEntities, Object entity, EntityPersister persister, EventSource source) {
+	private void deleteDetachedEntity(
+			DeleteEvent event, DeleteContext transientEntities, Object entity, EntityPersister persister, EventSource source) {
 		final Object id = persister.getIdentifier( entity, source );
 		if ( id == null ) {
 			throw new TransientObjectException( "Cannot delete instance of entity '"
 					+ persister.getEntityName() + "' because it has a null identifier" );
 		}
 
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		final EntityKey key = source.generateEntityKey( id, persister);
 		final Object version = persister.getVersion(entity);
 
@@ -186,6 +183,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 
 		new OnUpdateVisitor( source, id, entity ).process( entity, persister );
 
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		final EntityEntry entityEntry = persistenceContext.addEntity(
 				entity,
 				persister.isMutable() ? Status.MANAGED : Status.READ_ONLY,
@@ -218,7 +216,8 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 				source.evict( existingEntity );
 			}
 			else {
-				throw new NonUniqueObjectException( key.getIdentifier(), key.getEntityName() );
+				throw new StaleObjectStateException( key.getEntityName(), key.getIdentifier(),
+						"Persistence context contains a more recent version of the given entity" );
 			}
 		}
 	}
@@ -441,7 +440,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		final Type[] types = persister.getPropertyTypes();
 		final Object[] deletedState = new Object[types.length];
 		if ( !persister.hasCollections() || !persister.hasUninitializedLazyProperties( parent ) ) {
-			boolean[] copyability = new boolean[types.length];
+			final boolean[] copyability = new boolean[types.length];
 			java.util.Arrays.fill( copyability, true );
 			TypeHelper.deepCopy( currentState, types, copyability, deletedState, eventSource );
 			return deletedState;
@@ -450,10 +449,11 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		final String[] propertyNames = persister.getPropertyNames();
 		final BytecodeEnhancementMetadata enhancementMetadata = persister.getBytecodeEnhancementMetadata();
 		for ( int i = 0; i < types.length; i++) {
-			if ( types[i] instanceof CollectionType && !enhancementMetadata.isAttributeLoaded( parent, propertyNames[i] ) ) {
-				final CollectionType collectionType = (CollectionType) types[i];
-				final CollectionPersister collectionDescriptor = persister.getFactory().getMappingMetamodel()
-						.getCollectionDescriptor( collectionType.getRole() );
+			if ( types[i] instanceof CollectionType collectionType
+					&& !enhancementMetadata.isAttributeLoaded( parent, propertyNames[i] ) ) {
+				final CollectionPersister collectionDescriptor =
+						persister.getFactory().getMappingMetamodel()
+								.getCollectionDescriptor( collectionType.getRole() );
 				if ( collectionDescriptor.needsRemove() || collectionDescriptor.hasCache() ) {
 					final Object keyOfOwner = collectionType.getKeyOfOwner( parent, eventSource.getSession() );
 					// This will make sure that a CollectionEntry exists
@@ -491,7 +491,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			Object entity,
 			DeleteContext transientEntities) throws HibernateException {
 
-		CacheMode cacheMode = session.getCacheMode();
+		final CacheMode cacheMode = session.getCacheMode();
 		session.setCacheMode( CacheMode.GET );
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
@@ -518,7 +518,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			Object entity,
 			DeleteContext transientEntities) throws HibernateException {
 
-		CacheMode cacheMode = session.getCacheMode();
+		final CacheMode cacheMode = session.getCacheMode();
 		session.setCacheMode( CacheMode.GET );
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();

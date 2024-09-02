@@ -1175,7 +1175,8 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 				if ( statistics.isStatisticsEnabled() ) {
 					statistics.optimisticFailure( data.concreteDescriptor.getEntityName() );
 				}
-				throw new StaleObjectStateException( data.concreteDescriptor.getEntityName(), entry.getId() );
+				throw new StaleObjectStateException( data.concreteDescriptor.getEntityName(), entry.getId(),
+						"Query result contains conflicting version of entity already held in persistence context" );
 			}
 		}
 

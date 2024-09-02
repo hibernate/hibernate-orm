@@ -20,11 +20,23 @@ public class StaleObjectStateException extends StaleStateException {
 
 	/**
 	 * Constructs a {@code StaleObjectStateException} using the supplied information.
-	 *  @param entityName The name of the entity
+	 *
+	 * @param entityName The name of the entity
 	 * @param identifier The identifier of the entity
 	 */
 	public StaleObjectStateException(String entityName, Object identifier) {
-		super( "Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect)" );
+		this( entityName, identifier,
+				"Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect)" );
+	}
+
+	/**
+	 * Constructs a {@code StaleObjectStateException} using the supplied information.
+	 *
+	 * @param entityName The name of the entity
+	 * @param identifier The identifier of the entity
+	 */
+	public StaleObjectStateException(String entityName, Object identifier, String message) {
+		super( message );
 		this.entityName = entityName;
 		this.identifier = identifier;
 	}

@@ -46,7 +46,12 @@ public class LoaderHelper {
 	/**
 	 * Ensure the {@linkplain LockMode} associated with the entity in relation to a
 	 * persistence context is {@linkplain LockMode#greaterThan great or equal} to the
-	 * requested mode.
+	 * requested mode, performing a pessimistic lock upgrade on a given entity, if needed.
+	 *
+	 * @param object The entity for which to upgrade the lock.
+	 * @param entry The entity's {@link EntityEntry} instance.
+	 * @param lockOptions Contains the requested lock mode.
+	 * @param session The session which is the source of the event being processed.
 	 */
 	public static void upgradeLock(Object object, EntityEntry entry, LockOptions lockOptions, EventSource session) {
 		final LockMode requestedLockMode = lockOptions.getLockMode();

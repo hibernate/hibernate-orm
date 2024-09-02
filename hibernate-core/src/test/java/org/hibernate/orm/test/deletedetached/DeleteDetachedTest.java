@@ -56,6 +56,20 @@ public class DeleteDetachedTest {
 		});
 		scope.inTransaction(s -> assertNotNull(s.find(Thing.class, thing.id)));
 	}
+	@Test void testAlreadyRemoved(SessionFactoryScope scope) {
+		Thing thing = new Thing();
+		thing.stuff = "Some stuff about the thing";
+		scope.inTransaction(s -> s.persist(thing));
+		scope.inTransaction(s -> {
+			Thing otherThing = s.find(Thing.class, thing.id);
+			assertNotNull(otherThing);
+			s.remove(otherThing);
+			s.remove(thing);
+			assertFalse(s.contains(thing));
+			assertFalse(s.contains(otherThing));
+		});
+		scope.inTransaction(s -> assertNull(s.find(Thing.class, thing.id)));
+	}
 	@Entity
 	static class Thing {
 		@GeneratedValue @Id long id;

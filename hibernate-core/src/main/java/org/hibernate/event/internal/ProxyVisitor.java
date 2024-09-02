@@ -9,6 +9,7 @@ package org.hibernate.event.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
@@ -23,14 +24,12 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 		super(session);
 	}
 
-	Object processEntity(Object value, EntityType entityType) throws HibernateException {
-
+	Object processEntity(Object value, EntityType entityType) {
 		if ( value != null ) {
-			getSession().getPersistenceContext().reassociateIfUninitializedProxy(value);
+			getSession().getPersistenceContext().reassociateIfUninitializedProxy( value );
 			// if it is an initialized proxy, let cascade
 			// handle it later on
 		}
-
 		return null;
 	}
 
@@ -39,11 +38,8 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 	 * was snapshotted and detached?
 	 */
 	protected static boolean isOwnerUnchanged(
-			final CollectionPersister persister,
-			final Object id,
-			final PersistentCollection<?> snapshot
-	) {
-		return isCollectionSnapshotValid(snapshot)
+			CollectionPersister persister, Object id, PersistentCollection<?> snapshot) {
+		return isCollectionSnapshotValid( snapshot )
 			&& persister.getRole().equals( snapshot.getRole() )
 			&& id.equals( snapshot.getKey() );
 	}
@@ -62,21 +58,16 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 	protected void reattachCollection(PersistentCollection<?> collection, CollectionType type)
 			throws HibernateException {
 		final EventSource session = getSession();
+		final MappingMetamodelImplementor metamodel = session.getFactory().getMappingMetamodel();
 		if ( collection.wasInitialized() ) {
-			final CollectionPersister persister = session.getFactory()
-					.getRuntimeMetamodels()
-					.getMappingMetamodel()
-					.getCollectionDescriptor( type.getRole() );
+			final CollectionPersister persister = metamodel.getCollectionDescriptor( type.getRole() );
 			session.getPersistenceContext().addInitializedDetachedCollection( persister, collection );
 		}
 		else {
 			if ( !isCollectionSnapshotValid( collection ) ) {
 				throw new HibernateException( "could not re-associate uninitialized transient collection" );
 			}
-			final CollectionPersister persister = session.getFactory()
-					.getRuntimeMetamodels()
-					.getMappingMetamodel()
-					.getCollectionDescriptor( collection.getRole() );
+			final CollectionPersister persister = metamodel.getCollectionDescriptor( collection.getRole() );
 			session.getPersistenceContext().addUninitializedDetachedCollection( persister, collection );
 		}
 	}

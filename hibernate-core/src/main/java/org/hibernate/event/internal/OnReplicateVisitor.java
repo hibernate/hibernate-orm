@@ -15,12 +15,13 @@ import org.hibernate.type.CollectionType;
 /**
  * When an entity is passed to replicate(), and there is an existing row, we must
  * inspect all its collections and
- * 1. associate any uninitialized PersistentCollections with this session
- * 2. associate any initialized PersistentCollections with this session, using the
- * existing snapshot
- * 3. execute a collection removal (SQL DELETE) for each null collection property
- * or "new" collection
- *
+ * <ol>
+ * <li> associate any uninitialized PersistentCollections with this session
+ * <li> associate any initialized PersistentCollections with this session, using the
+ *      existing snapshot
+ * <li> execute a collection removal (SQL DELETE) for each null collection property
+ *      or "new" collection
+ *</ol>
  * @author Gavin King
  */
 public class OnReplicateVisitor extends ReattachVisitor {
@@ -39,33 +40,28 @@ public class OnReplicateVisitor extends ReattachVisitor {
 		}
 
 		final EventSource session = getSession();
-		final CollectionPersister persister = session.getFactory()
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getCollectionDescriptor( type.getRole() );
-
+		final CollectionPersister persister =
+				session.getFactory().getMappingMetamodel()
+						.getCollectionDescriptor( type.getRole() );
 		if ( isUpdate ) {
 			removeCollection( persister, extractCollectionKeyFromOwner( persister ), session );
 		}
-		if ( collection instanceof PersistentCollection ) {
-			final PersistentCollection<?> wrapper = (PersistentCollection<?>) collection;
-			wrapper.setCurrentSession( session );
-			if ( wrapper.wasInitialized() ) {
-				session.getPersistenceContextInternal().addNewCollection( persister, wrapper );
+		if ( collection instanceof PersistentCollection<?> persistentCollection ) {
+			persistentCollection.setCurrentSession( session );
+			if ( persistentCollection.wasInitialized() ) {
+				session.getPersistenceContextInternal().addNewCollection( persister, persistentCollection );
 			}
 			else {
-				reattachCollection( wrapper, type );
+				reattachCollection( persistentCollection, type );
 			}
 		}
 //		else {
-			// otherwise a null or brand new collection
+			// otherwise a null or brand-new collection
 			// this will also (inefficiently) handle arrays, which
 			// have no snapshot, so we can't do any better
 			//processArrayOrNewCollection(collection, type);
 //		}
-
 		return null;
-
 	}
 
 }

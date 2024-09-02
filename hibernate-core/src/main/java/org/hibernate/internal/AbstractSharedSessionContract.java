@@ -143,7 +143,7 @@ import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.getFlushModeTy
  * @author Steve Ebersole
  */
 public abstract class AbstractSharedSessionContract implements SharedSessionContractImplementor {
-	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( SessionImpl.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( SessionImpl.class );
 
 	private transient SessionFactoryImpl factory;
 	protected transient FastSessionServices fastSessionServices;

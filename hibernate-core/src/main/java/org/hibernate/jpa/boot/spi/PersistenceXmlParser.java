@@ -30,7 +30,8 @@ import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.EntityManagerMessageLogger;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
@@ -39,8 +40,6 @@ import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
-import static org.hibernate.internal.HEMLogging.messageLogger;
-
 /**
  * Used by Hibernate to parse {@code persistence.xml} files in SE environments.
  *
@@ -48,7 +47,7 @@ import static org.hibernate.internal.HEMLogging.messageLogger;
  */
 public final class PersistenceXmlParser {
 
-	private static final EntityManagerMessageLogger LOG = messageLogger( PersistenceXmlParser.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( PersistenceXmlParser.class );
 
 	/**
 	 * @return A {@link PersistenceXmlParser} using no settings at all.
@@ -160,10 +159,10 @@ public final class PersistenceXmlParser {
 	}
 
 	@SuppressWarnings("removal")
-	protected void parsePersistenceXml(Map<String, PersistenceUnitDescriptor> persistenceUnits,
+	private void parsePersistenceXml(Map<String, PersistenceUnitDescriptor> persistenceUnits,
 			URL xmlUrl, PersistenceUnitTransactionType defaultTransactionType) {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef( "Attempting to parse persistence.xml file : %s", xmlUrl.toExternalForm() );
+		if ( log.isTraceEnabled() ) {
+			log.tracef( "Attempting to parse persistence.xml file : %s", xmlUrl.toExternalForm() );
 		}
 
 		final URL persistenceUnitRootUrl = ArchiveHelper.getJarURLFromURLEntry( xmlUrl, "/META-INF/persistence.xml" );
@@ -175,12 +174,12 @@ public final class PersistenceXmlParser {
 			final JaxbPersistenceImpl.JaxbPersistenceUnitImpl jaxbPersistenceUnit = jaxbPersistenceUnits.get( i );
 
 			if ( persistenceUnits.containsKey( jaxbPersistenceUnit.getName() ) ) {
-				LOG.duplicatedPersistenceUnitName( jaxbPersistenceUnit.getName() );
+				log.duplicatedPersistenceUnitName( jaxbPersistenceUnit.getName() );
 				continue;
 			}
 
-			final ParsedPersistenceXmlDescriptor persistenceUnitDescriptor = new ParsedPersistenceXmlDescriptor(
-					persistenceUnitRootUrl );
+			final ParsedPersistenceXmlDescriptor persistenceUnitDescriptor =
+					new ParsedPersistenceXmlDescriptor( persistenceUnitRootUrl );
 			bindPersistenceUnit( jaxbPersistenceUnit, persistenceUnitDescriptor );
 
 			// per JPA spec, any settings passed in to PersistenceProvider bootstrap methods should override
@@ -196,7 +195,7 @@ public final class PersistenceXmlParser {
 			ParsedPersistenceXmlDescriptor persistenceUnitDescriptor) {
 		final String name = jaxbPersistenceUnit.getName();
 		if ( StringHelper.isNotEmpty( name ) ) {
-			LOG.tracef( "Persistence unit name from persistence.xml : %s", name );
+			log.tracef( "Persistence unit name from persistence.xml : %s", name );
 			persistenceUnitDescriptor.setName( name );
 		}
 

@@ -44,7 +44,7 @@ import jakarta.persistence.RollbackException;
  * @author Andrea Boriero
  */
 public class ExceptionConverterImpl implements ExceptionConverter {
-	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( ExceptionConverterImpl.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( ExceptionConverterImpl.class );
 
 	private final SharedSessionContractImplementor session;
 	private final boolean isJpaBootstrap;

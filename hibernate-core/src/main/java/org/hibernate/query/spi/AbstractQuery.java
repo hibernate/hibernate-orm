@@ -32,8 +32,8 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.internal.EntityManagerMessageLogger;
-import org.hibernate.internal.HEMLogging;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.AvailableHints;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
@@ -75,7 +75,7 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 public abstract class AbstractQuery<R>
 		extends AbstractSelectionQuery<R>
 		implements QueryImplementor<R> {
-	protected static final EntityManagerMessageLogger log = HEMLogging.messageLogger( AbstractQuery.class );
+	protected static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractQuery.class );
 
 	public AbstractQuery(SharedSessionContractImplementor session) {
 		super( session );

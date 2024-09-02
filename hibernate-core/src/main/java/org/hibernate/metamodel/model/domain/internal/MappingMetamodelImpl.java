@@ -32,8 +32,8 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.internal.EntityManagerMessageLogger;
-import org.hibernate.internal.HEMLogging;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.QueryParameterBindingTypeResolverImpl;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
@@ -99,7 +99,7 @@ import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetti
 public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 		implements MappingMetamodelImplementor, MetamodelImplementor, Serializable {
 	// todo : Integrate EntityManagerLogger into CoreMessageLogger
-	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( MappingMetamodelImpl.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( MappingMetamodelImpl.class );
 
 	//NOTE: we suppress deprecation warnings because at the moment we
 	//implement a deprecated API so have to override deprecated things

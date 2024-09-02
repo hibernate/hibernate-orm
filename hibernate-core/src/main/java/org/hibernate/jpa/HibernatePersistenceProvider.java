@@ -6,8 +6,6 @@
  */
 package org.hibernate.jpa;
 
-import static org.hibernate.internal.HEMLogging.messageLogger;
-
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
@@ -22,7 +20,8 @@ import jakarta.persistence.spi.PersistenceUnitInfo;
 import jakarta.persistence.spi.ProviderUtil;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.internal.EntityManagerMessageLogger;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.boot.spi.PersistenceConfigurationDescriptor;
 import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
 import org.hibernate.jpa.boot.spi.Bootstrap;
@@ -39,7 +38,7 @@ import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
  * @author Brett Meyer
  */
 public class HibernatePersistenceProvider implements PersistenceProvider {
-	private static final EntityManagerMessageLogger log = messageLogger( HibernatePersistenceProvider.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( HibernatePersistenceProvider.class );
 
 	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
 	

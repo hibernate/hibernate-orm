@@ -1334,7 +1334,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 				final EnumJavaType javaType = new EnumJavaType<>( type );
 				final JdbcType jdbcType =
 						javaType.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
-				return new BasicTypeImpl<>( javaType, jdbcType );
+				return typeConfiguration.getBasicTypeRegistry().resolve( javaType, jdbcType );
 			}
 			else {
 				return result;

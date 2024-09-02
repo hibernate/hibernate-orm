@@ -20,7 +20,6 @@ import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
-import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
 public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<T>
@@ -49,7 +48,8 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 		// Always determine the recommended type to make sure this is a valid basic java type
 		return indicators.getTypeConfiguration().getJdbcTypeRegistry().resolveTypeConstructorDescriptor(
 				indicators.getPreferredSqlTypeCodeForArray(),
-				new BasicTypeImpl<>( componentJavaType, componentJavaType.getRecommendedJdbcType( indicators ) ),
+				indicators.getTypeConfiguration().getBasicTypeRegistry().resolve(
+						componentJavaType, componentJavaType.getRecommendedJdbcType( indicators ) ),
 				ColumnTypeInformation.EMPTY
 		);
 	}

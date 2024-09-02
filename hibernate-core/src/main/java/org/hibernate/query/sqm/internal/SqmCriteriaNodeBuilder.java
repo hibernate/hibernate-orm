@@ -44,7 +44,6 @@ import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
-import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
@@ -1540,7 +1539,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				final EnumJavaType javaType = new EnumJavaType<>( type );
 				final JdbcType jdbcType =
 						javaType.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
-				return new BasicTypeImpl<>( javaType, jdbcType );
+				return typeConfiguration.getBasicTypeRegistry().resolve( javaType, jdbcType );
 			}
 			else {
 				return result;

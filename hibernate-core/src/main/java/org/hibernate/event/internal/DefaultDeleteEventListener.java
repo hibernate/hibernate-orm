@@ -209,6 +209,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			EntityKey key, Object version, EntityPersister persister, EventSource source) {
 		final Object existingEntity = source.getPersistenceContextInternal().getEntity( key );
 		if ( existingEntity != null ) {
+			LOG.flushAndEvictOnRemove( key.getEntityName() );
 			source.flush();
 			if ( !persister.isVersioned()
 					|| persister.getVersionType()

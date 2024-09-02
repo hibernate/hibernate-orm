@@ -124,9 +124,7 @@ public class DefaultMergeEventListener
 			else if ( isPersistentAttributeInterceptable( original ) ) {
 				final PersistentAttributeInterceptor interceptor =
 						asPersistentAttributeInterceptable( original ).$$_hibernate_getInterceptor();
-				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-					final EnhancementAsProxyLazinessInterceptor proxyInterceptor =
-							(EnhancementAsProxyLazinessInterceptor) interceptor;
+				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor proxyInterceptor ) {
 					LOG.trace( "Ignoring uninitialized enhanced-proxy" );
 					event.setResult( source.load( proxyInterceptor.getEntityName(), proxyInterceptor.getIdentifier() ) );
 				}
@@ -350,15 +348,14 @@ public class DefaultMergeEventListener
 		}
 		@Override
 		protected Object processCollection(Object collection, CollectionType collectionType) {
-			if ( collection instanceof PersistentCollection ) {
-				final PersistentCollection<?> coll = (PersistentCollection<?>) collection;
+			if ( collection instanceof PersistentCollection<?> persistentCollection ) {
 				final CollectionPersister persister =
 						getSession().getFactory().getMappingMetamodel()
 								.getCollectionDescriptor( collectionType.getRole() );
 				final CollectionEntry collectionEntry =
-						getSession().getPersistenceContextInternal().getCollectionEntry( coll );
-				if ( !coll.equalsSnapshot( persister ) ) {
-					collectionEntry.resetStoredSnapshot( coll, coll.getSnapshot( persister ) );
+						getSession().getPersistenceContextInternal().getCollectionEntry( persistentCollection );
+				if ( !persistentCollection.equalsSnapshot( persister ) ) {
+					collectionEntry.resetStoredSnapshot( persistentCollection, persistentCollection.getSnapshot( persister ) );
 				}
 			}
 			return null;

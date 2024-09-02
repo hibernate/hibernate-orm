@@ -50,9 +50,7 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  *
  * @author Steve Ebersole.
  */
-public abstract class AbstractSaveEventListener<C>
-		extends AbstractReassociateEventListener
-		implements CallbackRegistryConsumer {
+public abstract class AbstractSaveEventListener<C> implements CallbackRegistryConsumer {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractSaveEventListener.class );
 
 	private CallbackRegistry callbackRegistry;

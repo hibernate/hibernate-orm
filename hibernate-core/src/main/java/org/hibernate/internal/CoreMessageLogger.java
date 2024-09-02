@@ -968,6 +968,12 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = DEBUG)
 	@Message(value = "JDBCException was thrown for a transaction marked for rollback. " +
-			" This is probably due to an operation failing fast due to the transaction being marked for rollback.")
+			" This is probably due to an operation failing fast due to the transaction being marked for rollback.",
+			id = 520)
 	void jdbcExceptionThrownWithTransactionRolledBack(@Cause JDBCException e);
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "Flushing and evicting managed instance of type [%s] before removing detached instance with same id",
+			id = 530)
+	void flushAndEvictOnRemove(String entityName);
 }

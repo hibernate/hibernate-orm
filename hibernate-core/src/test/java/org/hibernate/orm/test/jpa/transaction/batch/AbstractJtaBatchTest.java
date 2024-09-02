@@ -8,7 +8,7 @@ package org.hibernate.orm.test.jpa.transaction.batch;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
-import org.hibernate.internal.HEMLogging;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.jpa.boot.spi.ProviderChecker;
 
 import org.hibernate.testing.jta.JtaAwareConnectionProviderImpl;
@@ -34,7 +34,7 @@ public abstract class AbstractJtaBatchTest extends AbstractBatchingTest {
 
 	@RegisterExtension
 	public LoggerInspectionExtension logger = LoggerInspectionExtension.builder()
-			.setLogger( HEMLogging.messageLogger( ProviderChecker.class.getName() )	)
+			.setLogger( CoreLogging.messageLogger( ProviderChecker.class.getName() )	)
 			.build();
 
 	@BeforeEach

@@ -22,8 +22,8 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.internal.EntityManagerMessageLogger;
-import org.hibernate.internal.HEMLogging;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Component;
@@ -75,7 +75,7 @@ import jakarta.persistence.metamodel.Type;
  */
 @Internal
 public class MetadataContext {
-	private static final EntityManagerMessageLogger LOG = HEMLogging.messageLogger( MetadataContext.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( MetadataContext.class );
 
 	private final JpaMetamodelImplementor jpaMetamodel;
 	private final RuntimeModelCreationContext runtimeModelCreationContext;
@@ -288,8 +288,8 @@ public class MetadataContext {
 
 	@SuppressWarnings("unchecked")
 	public void wrapUp() {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Wrapping up metadata context..." );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Wrapping up metadata context..." );
 		}
 
 		final boolean staticMetamodelScanEnabled =
@@ -300,8 +300,8 @@ public class MetadataContext {
 		for ( Object mapping : orderedMappings ) {
 			if ( PersistentClass.class.isAssignableFrom( mapping.getClass() ) ) {
 				final PersistentClass safeMapping = (PersistentClass) mapping;
-				if ( LOG.isTraceEnabled() ) {
-					LOG.trace( "Starting entity [" + safeMapping.getEntityName() + ']' );
+				if ( log.isTraceEnabled() ) {
+					log.trace( "Starting entity [" + safeMapping.getEntityName() + ']' );
 				}
 				try {
 					final EntityDomainType<Object> jpaMapping = (EntityDomainType<Object>)
@@ -343,15 +343,15 @@ public class MetadataContext {
 					}
 				}
 				finally {
-					if ( LOG.isTraceEnabled() ) {
-						LOG.trace( "Completed entity [" + safeMapping.getEntityName() + ']' );
+					if ( log.isTraceEnabled() ) {
+						log.trace( "Completed entity [" + safeMapping.getEntityName() + ']' );
 					}
 				}
 			}
 			else if ( MappedSuperclass.class.isAssignableFrom( mapping.getClass() ) ) {
 				final MappedSuperclass safeMapping = (MappedSuperclass) mapping;
-				if ( LOG.isTraceEnabled() ) {
-					LOG.trace( "Starting mapped superclass [" + safeMapping.getMappedClass().getName() + ']' );
+				if ( log.isTraceEnabled() ) {
+					log.trace( "Starting mapped superclass [" + safeMapping.getMappedClass().getName() + ']' );
 				}
 				try {
 					final MappedSuperclassDomainType<Object> jpaType = (MappedSuperclassDomainType<Object>)
@@ -387,8 +387,8 @@ public class MetadataContext {
 					}
 				}
 				finally {
-					if ( LOG.isTraceEnabled() ) {
-						LOG.trace( "Completed mapped superclass [" + safeMapping.getMappedClass().getName() + ']' );
+					if ( log.isTraceEnabled() ) {
+						log.trace( "Completed mapped superclass [" + safeMapping.getMappedClass().getName() + ']' );
 					}
 				}
 			}
@@ -646,8 +646,8 @@ public class MetadataContext {
 	private <X> Set<SingularPersistentAttribute<? super X, ?>> buildIdClassAttributes(
 			IdentifiableDomainType<X> ownerType,
 			List<Property> properties) {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Building old-school composite identifier [" + ownerType.getJavaType().getName() + ']' );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Building old-school composite identifier [" + ownerType.getJavaType().getName() + ']' );
 		}
 		Set<SingularPersistentAttribute<? super X, ?>> attributes = new HashSet<>();
 		for ( Property property : properties ) {
@@ -732,14 +732,14 @@ public class MetadataContext {
 			injectField( metamodelClass, name, attribute, allowNonDeclaredFieldReference );
 		}
 		catch (NoSuchFieldException e) {
-			LOG.unableToLocateStaticMetamodelField( metamodelClass.getName(), name );
+			log.unableToLocateStaticMetamodelField( metamodelClass.getName(), name );
 //			throw new AssertionFailure(
 //					"Unable to locate static metamodel field : " + metamodelClass.getName() + '#' + name
 //			);
 		}
 	}
 
-	private static <X> void injectField(
+	private static void injectField(
 			Class<?> metamodelClass, String name, Object model,
 			boolean allowNonDeclaredFieldReference)
 				throws NoSuchFieldException {
@@ -770,7 +770,7 @@ public class MetadataContext {
 //								+ "; expected type :  " + attribute.getClass().getName()
 //								+ "; encountered type : " + field.getType().getName()
 //				);
-			LOG.illegalArgumentOnStaticMetamodelFieldInjection(
+			log.illegalArgumentOnStaticMetamodelFieldInjection(
 					metamodelClass.getName(),
 					name,
 					model.getClass().getName(),

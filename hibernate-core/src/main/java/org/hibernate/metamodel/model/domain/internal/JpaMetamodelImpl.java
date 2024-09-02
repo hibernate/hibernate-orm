@@ -33,8 +33,8 @@ import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
-import org.hibernate.internal.EntityManagerMessageLogger;
-import org.hibernate.internal.HEMLogging;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.mapping.MappedSuperclass;
@@ -43,7 +43,6 @@ import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.internal.MetadataContext;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
@@ -76,7 +75,7 @@ import jakarta.persistence.metamodel.Type;
  * @author Steve Ebersole
  */
 public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
-	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( JpaMetamodel.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( JpaMetamodel.class );
 
 	private static class ImportInfo<T> {
 		final String importedName;

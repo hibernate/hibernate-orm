@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.tool.api.export.ArtifactCollector;
-import org.hibernate.tool.internal.xml.XMLPrettyPrinter;
+import org.hibernate.tool.api.xml.XMLPrettyPrinter;
 
 /**
  * Callback class that all exporters are given to allow better feedback and

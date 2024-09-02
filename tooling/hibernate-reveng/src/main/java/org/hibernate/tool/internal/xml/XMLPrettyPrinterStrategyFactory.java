@@ -30,7 +30,6 @@ public final class XMLPrettyPrinterStrategyFactory {
                 throw new RuntimeException(e);
             }
         }
-
         return null;
     }
 }

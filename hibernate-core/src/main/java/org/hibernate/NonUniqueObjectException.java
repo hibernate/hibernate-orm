@@ -41,7 +41,7 @@ public class NonUniqueObjectException extends HibernateException {
 	 */
 	public NonUniqueObjectException(Object entityId, String entityName) {
 		this(
-				"A different object with the same identifier value was already associated with the session",
+				"A different object with the same identifier value was already associated with this persistence context",
 				entityId,
 				entityName
 		);

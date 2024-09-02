@@ -84,13 +84,12 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 
 	@Override
 	public void setLockMode(LockMode lockMode) {
-		switch ( lockMode ) {
-			case NONE:
-			case READ:
-				setCompressedValue( LOCK_MODE, lockMode );
-				break;
-			default:
-				throw new UnsupportedLockAttemptException( "Lock mode not supported" );
+		if ( lockMode.greaterThan(LockMode.READ) ) {
+			throw new UnsupportedLockAttemptException( "Lock mode "
+					+ lockMode + " not supported for read-only entity" );
+		}
+		else {
+			setCompressedValue( LOCK_MODE, lockMode );
 		}
 	}
 

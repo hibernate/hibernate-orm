@@ -176,50 +176,64 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		}
 
 		final EntityKey key = source.generateEntityKey( id, persister);
-		final Object version = persister.getVersion(entity);
+		final Object version = persister.getVersion( entity );
 
 //		persistenceContext.checkUniqueness( key, entity );
-		flushAndEvictExistingEntity( key, version, persister, source );
+		if ( !flushAndEvictExistingEntity( key, version, persister, source ) ) {
 
-		new OnUpdateVisitor( source, id, entity ).process( entity, persister );
+			new OnUpdateVisitor( source, id, entity ).process( entity, persister );
 
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
-		final EntityEntry entityEntry = persistenceContext.addEntity(
-				entity,
-				persister.isMutable() ? Status.MANAGED : Status.READ_ONLY,
-				persister.getValues(entity),
-				key,
-				version,
-				LockMode.NONE,
-				true,
-				persister,
-				false
-		);
-		persister.afterReassociate(entity, source);
+			final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+			final EntityEntry entityEntry = persistenceContext.addEntity(
+					entity,
+					persister.isMutable() ? Status.MANAGED : Status.READ_ONLY,
+					persister.getValues(entity),
+					key,
+					version,
+					LockMode.NONE,
+					true,
+					persister,
+					false
+			);
+			persister.afterReassociate( entity, source );
 
-		delete( event, transientEntities, source, entity, persister, id, version, entityEntry );
+			delete( event, transientEntities, source, entity, persister, id, version, entityEntry );
+		}
 	}
 
 	/**
 	 * Since Hibernate 7, if a detached instance is passed to remove(),
 	 * and if there is already an existing managed entity with the same
 	 * id, flush and evict it, after checking that the versions match.
+	 *
+	 * @return true if the managed entity was already deleted
 	 */
-	private static void flushAndEvictExistingEntity(
+	private static boolean flushAndEvictExistingEntity(
 			EntityKey key, Object version, EntityPersister persister, EventSource source) {
-		final Object existingEntity = source.getPersistenceContextInternal().getEntity( key );
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		final Object existingEntity = persistenceContext.getEntity( key );
 		if ( existingEntity != null ) {
-			LOG.flushAndEvictOnRemove( key.getEntityName() );
-			source.flush();
-			if ( !persister.isVersioned()
-					|| persister.getVersionType()
-							.isEqual( version, persister.getVersion( existingEntity ) ) ) {
-				source.evict( existingEntity );
+			if ( persistenceContext.getEntry( existingEntity ).getStatus().isDeletedOrGone() ) {
+				// already deleted, no work to do
+				return true;
 			}
 			else {
-				throw new StaleObjectStateException( key.getEntityName(), key.getIdentifier(),
-						"Persistence context contains a more recent version of the given entity" );
+				LOG.flushAndEvictOnRemove( key.getEntityName() );
+				source.flush();
+				if ( !persister.isVersioned()
+						|| persister.getVersionType()
+								.isEqual( version, persister.getVersion( existingEntity ) ) ) {
+					source.evict( existingEntity );
+					return false;
+				}
+				else {
+					throw new StaleObjectStateException( key.getEntityName(), key.getIdentifier(),
+							"Persistence context contains a more recent version of the given entity" );
+				}
 			}
+		}
+		else {
+			return false;
 		}
 	}
 

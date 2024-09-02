@@ -109,13 +109,13 @@ public class ArrayConstructorFunction extends AbstractSqmSelfRenderingFunctionDe
 					if ( firstType == null ) {
 						firstType = argumentType;
 					}
-					else if ( firstType != argumentType ) {
+					else if ( firstType.getSingleJdbcMapping() != argumentType.getSingleJdbcMapping() ) {
 						throw new FunctionArgumentException(
 								String.format(
 										"All array arguments must have a type compatible to the first argument type [%s], but argument %d has type '%s'",
-										firstType,
+										firstType.getSingleJdbcMapping(),
 										i + 1,
-										argumentType
+										argumentType.getSingleJdbcMapping()
 								)
 						);
 					}

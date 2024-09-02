@@ -74,11 +74,8 @@ public abstract class AbstractVisitor {
 	 * to processValue().
 	 */
 	Object processComponent(Object component, CompositeType componentType) throws HibernateException {
-		if (component!=null) {
-			processValues(
-				componentType.getPropertyValues(component, session),
-				componentType.getSubtypes()
-			);
+		if ( component!=null ) {
+			processValues( componentType.getPropertyValues(component, session), componentType.getSubtypes() );
 		}
 		return null;
 	}
@@ -88,19 +85,18 @@ public abstract class AbstractVisitor {
 	 * correct handler for the property type.
 	 */
 	final Object processValue(Object value, Type type) throws HibernateException {
-
-		if ( type instanceof CollectionType ) {
+		if ( type instanceof CollectionType collectionType ) {
 			//even process null collections
-			return processCollection( value, (CollectionType) type );
+			return processCollection( value, collectionType );
 		}
-		else if ( type instanceof EntityType ) {
-			return processEntity( value, (EntityType) type );
+		else if ( type instanceof EntityType entityType ) {
+			return processEntity( value, entityType );
 		}
-		else if ( type instanceof ComponentType ) {
-			return processComponent( value, (ComponentType) type );
+		else if ( type instanceof ComponentType componentType ) {
+			return processComponent( value, componentType );
 		}
-		else if ( type instanceof AnyType ) {
-			return processComponent( value, (AnyType) type );
+		else if ( type instanceof AnyType anyType ) {
+			return processComponent( value, anyType );
 		}
 		else {
 			return null;
@@ -111,20 +107,15 @@ public abstract class AbstractVisitor {
 	 * Walk the tree starting from the given entity.
 	 *
 	 */
-	public void process(Object object, EntityPersister persister)
-	throws HibernateException {
-		processEntityPropertyValues(
-			persister.getValues( object ),
-			persister.getPropertyTypes()
-		);
+	public void process(Object object, EntityPersister persister) throws HibernateException {
+		processEntityPropertyValues( persister.getValues( object ), persister.getPropertyTypes() );
 	}
 
 	/**
 	 * Visit a collection. Default superclass
 	 * implementation is a no-op.
 	 */
-	Object processCollection(Object collection, CollectionType type)
-	throws HibernateException {
+	Object processCollection(Object collection, CollectionType type) throws HibernateException {
 		return null;
 	}
 
@@ -133,8 +124,7 @@ public abstract class AbstractVisitor {
 	 * entity. Default superclass implementation is
 	 * a no-op.
 	 */
-	Object processEntity(Object value, EntityType entityType)
-	throws HibernateException {
+	Object processEntity(Object value, EntityType entityType) throws HibernateException {
 		return null;
 	}
 

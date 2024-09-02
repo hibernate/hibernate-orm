@@ -30,42 +30,37 @@ public class OnUpdateVisitor extends ReattachVisitor {
 
 	@Override
 	Object processCollection(Object collection, CollectionType type) throws HibernateException {
-
 		if ( collection == CollectionType.UNFETCHED_COLLECTION ) {
 			return null;
 		}
 
 		final EventSource session = getSession();
-
-		final CollectionPersister persister = session.getFactory()
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getCollectionDescriptor( type.getRole() );
-
+		final CollectionPersister persister =
+				session.getFactory().getMappingMetamodel()
+						.getCollectionDescriptor( type.getRole() );
 		final Object collectionKey = extractCollectionKeyFromOwner( persister );
-		if ( ( collection instanceof PersistentCollection ) ) {
-			PersistentCollection<?> wrapper = (PersistentCollection<?>) collection;
-			if ( wrapper.setCurrentSession(session) ) {
+		if ( collection instanceof PersistentCollection<?> persistentCollection ) {
+			if ( persistentCollection.setCurrentSession( session ) ) {
 				//a "detached" collection!
-				if ( !isOwnerUnchanged( persister, collectionKey, wrapper ) ) {
+				if ( !isOwnerUnchanged( persister, collectionKey, persistentCollection ) ) {
 					// if the collection belonged to a different entity,
 					// clean up the existing state of the collection
 					removeCollection( persister, collectionKey, session );
 				}
-				reattachCollection(wrapper, type);
+				reattachCollection( persistentCollection, type );
 			}
 			else {
 				// a collection loaded in the current session
 				// can not possibly be the collection belonging
 				// to the entity passed to update()
-				removeCollection(persister, collectionKey, session);
+				removeCollection( persister, collectionKey, session );
 			}
 		}
 		else {
 			// null or brand-new collection
 			// this will also (inefficiently) handle arrays, which have
 			// no snapshot, so we can't do any better
-			removeCollection(persister, collectionKey, session);
+			removeCollection( persister, collectionKey, session );
 		}
 
 		return null;

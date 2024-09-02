@@ -9,9 +9,10 @@ package org.hibernate.event.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.internal.Collections;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.type.CollectionType;
+
+import static org.hibernate.engine.internal.Collections.processReachableCollection;
 
 /**
  * Process collections reachable from an entity. This
@@ -29,33 +30,32 @@ public class FlushVisitor extends AbstractVisitor {
 	}
 
 	Object processCollection(Object collection, CollectionType type) throws HibernateException {
-		
 		if ( collection == CollectionType.UNFETCHED_COLLECTION ) {
 			return null;
 		}
-
-		if ( collection != null ) {
+		else if ( collection != null ) {
 			final EventSource session = getSession();
-			final PersistentCollection<?> coll;
+			final PersistentCollection<?> persistentCollection;
 			if ( type.hasHolder() ) {
-				coll = session.getPersistenceContextInternal().getCollectionHolder(collection);
+				persistentCollection = session.getPersistenceContextInternal().getCollectionHolder( collection );
 			}
 			else if ( collection == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 				final Object keyOfOwner = type.getKeyOfOwner( owner, session );
-				coll = (PersistentCollection<?>) type.getCollection( keyOfOwner, session, owner, Boolean.FALSE );
+				persistentCollection = (PersistentCollection<?>)
+						type.getCollection( keyOfOwner, session, owner, Boolean.FALSE );
 			}
-			else if ( collection instanceof PersistentCollection ) {
-				coll = (PersistentCollection<?>) collection;
+			else if ( collection instanceof PersistentCollection<?> wrapper ) {
+				persistentCollection = wrapper;
 			}
 			else {
 				return null;
 			}
-
-			Collections.processReachableCollection( coll, type, owner, session );
+			processReachableCollection( persistentCollection, type, owner, session );
+			return null;
 		}
-
-		return null;
-
+		else {
+			return null;
+		}
 	}
 
 	@Override

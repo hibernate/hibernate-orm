@@ -42,22 +42,21 @@ public class EvictVisitor extends AbstractVisitor {
 		if ( collection != null ) {
 			evictCollection( collection, type );
 		}
-
 		return null;
 	}
 	
 	public void evictCollection(Object value, CollectionType type) {
-		final PersistentCollection<?> collection;
 		final EventSource session = getSession();
+		final PersistentCollection<?> collection;
 		if ( type.hasHolder() ) {
-			collection = session.getPersistenceContextInternal().removeCollectionHolder(value);
+			collection = session.getPersistenceContextInternal().removeCollectionHolder( value );
 		}
-		else if ( value instanceof PersistentCollection ) {
-			collection = (PersistentCollection<?>) value;
+		else if ( value instanceof PersistentCollection<?> persistentCollection ) {
+			collection = persistentCollection;
 		}
 		else if ( value == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
-			final Object keyOfOwner = type.getKeyOfOwner( owner, session );
-			collection = (PersistentCollection<?>) type.getCollection( keyOfOwner, session, owner, false );
+			collection = (PersistentCollection<?>)
+					type.getCollection( type.getKeyOfOwner( owner, session ), session, owner, false );
 		}
 		else {
 			return; //EARLY EXIT!

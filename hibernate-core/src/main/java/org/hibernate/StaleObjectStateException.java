@@ -25,8 +25,7 @@ public class StaleObjectStateException extends StaleStateException {
 	 * @param identifier The identifier of the entity
 	 */
 	public StaleObjectStateException(String entityName, Object identifier) {
-		this( entityName, identifier,
-				"Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect)" );
+		this( entityName, identifier, "Row was already updated or deleted by another transaction" );
 	}
 
 	/**

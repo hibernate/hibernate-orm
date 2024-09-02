@@ -6,14 +6,12 @@
  */
 package org.hibernate.orm.test.boot;
 
-import org.hibernate.boot.model.process.internal.ScanningCoordinator;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.PersistenceSettings;
-import org.hibernate.internal.SessionFactoryRegistry;
 
+import org.hibernate.internal.SessionFactoryRegistryMessageLogger;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Logger;
-import org.hibernate.testing.orm.junit.LoggingInspections;
 import org.hibernate.testing.orm.junit.MessageKeyInspection;
 import org.hibernate.testing.orm.junit.MessageKeyWatcher;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -29,8 +27,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @MessageKeyInspection(
-		messageKey = "HHH000277",
-		logger = @Logger( loggerNameClass = SessionFactoryRegistry.class )
+		messageKey = "HHH020277",
+		logger = @Logger( loggerName = SessionFactoryRegistryMessageLogger.LOGGER_NAME )
 )
 public class SessionFactoryNamingTests {
 	@Test

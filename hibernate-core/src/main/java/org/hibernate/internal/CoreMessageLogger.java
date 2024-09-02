@@ -14,7 +14,6 @@ import java.sql.SQLWarning;
 import java.util.Properties;
 import java.util.ServiceConfigurationError;
 import java.util.Set;
-import javax.naming.NamingException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
@@ -22,8 +21,6 @@ import org.hibernate.LockMode;
 import org.hibernate.cache.CacheException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.internal.LobCreationLogging;
-import org.hibernate.engine.jndi.JndiException;
-import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.service.Service;
@@ -194,22 +191,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	void expectedType(String name,
 			@Nullable String string);
 
-	@LogMessage(level = INFO)
-	@Message(value = "Bound factory to JNDI name: %s", id = 94)
-	void factoryBoundToJndiName(String name);
-
-	@LogMessage(level = INFO)
-	@Message(value = "A factory was renamed from [%s] to [%s] in JNDI", id = 96)
-	void factoryJndiRename(String oldName, String newName);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Unbound factory from JNDI name: %s", id = 97)
-	void factoryUnboundFromJndiName(String name);
-
-	@LogMessage(level = INFO)
-	@Message(value = "A factory was unbound from name: %s", id = 98)
-	void factoryUnboundFromName(String name);
-
 	@LogMessage(level = ERROR)
 	@Message(value = "an assertion failure occurred" + " (this may indicate a bug in Hibernate, but is more likely due"
 			+ " to unsafe use of the session): %s", id = 99)
@@ -261,10 +242,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "IllegalArgumentException in class: %s, setter method of property: %s", id = 123)
 	void illegalPropertySetterArgument(String name, String propertyName);
 
-	@LogMessage(level = DEBUG)
-	@Message(value = "Could not bind JNDI listener", id = 127)
-	void couldNotBindJndiListener();
-
 	@LogMessage(level = INFO)
 	@Message(value = "Instantiating explicit connection provider: %s", id = 130)
 	void instantiatingExplicitConnectionProvider(String providerClassName);
@@ -272,10 +249,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = ERROR)
 	@Message(value = "Array element type error\n%s", id = 132)
 	void invalidArrayElementType(String message);
-
-	@LogMessage(level = ERROR)
-	@Message(value = "Invalid JNDI name: %s", id = 135)
-	void invalidJndiName(String name, @Cause JndiNameException e);
 
 	@LogMessage(level = INFO)
 	@Message(value = "java.sql.Types mapped the same code [%s] multiple times; was [%s]; now [%s]", id = 141)
@@ -298,10 +271,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	void missingArguments(
 			int anticipatedNumberOfArguments,
 			int numberOfArguments);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Naming exception occurred accessing factory: %s", id = 178)
-	void namingExceptionAccessingFactory(NamingException exception);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Narrowing proxy to %s - this operation breaks ==", id = 179)
@@ -472,10 +441,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToApplyConstraints(String className, @Cause Exception e);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Could not bind factory to JNDI", id = 277)
-	void unableToBindFactoryToJndi(@Cause JndiException e);
-
-	@LogMessage(level = WARN)
 	@Message(value = "Unable to cleanup temporary id table after use [%s]", id = 283)
 	void unableToCleanupTemporaryIdTable(Throwable t);
 
@@ -622,10 +587,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = INFO)
 	@Message(value = "Error stopping service [%s]", id = 369)
 	void unableToStopService(Class<? extends Service> class1, @Cause Exception e);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Could not unbind factory from JNDI", id = 374)
-	void unableToUnbindFactoryFromJndi(@Cause JndiException e);
 
 	@LogMessage(level = ERROR)
 	@Message(value = "Could not updateQuery hi value in: %s", id = 376)

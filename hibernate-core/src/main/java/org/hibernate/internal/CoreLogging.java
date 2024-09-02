@@ -23,7 +23,7 @@ public class CoreLogging {
 	private CoreLogging() {
 	}
 
-	public static CoreMessageLogger messageLogger(Class classNeedingLogging) {
+	public static CoreMessageLogger messageLogger(Class<?> classNeedingLogging) {
 		return messageLogger( classNeedingLogging.getName() );
 	}
 
@@ -31,7 +31,7 @@ public class CoreLogging {
 		return Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, loggerName );
 	}
 
-	public static Logger logger(Class classNeedingLogging) {
+	public static Logger logger(Class<?> classNeedingLogging) {
 		return Logger.getLogger( classNeedingLogging );
 	}
 

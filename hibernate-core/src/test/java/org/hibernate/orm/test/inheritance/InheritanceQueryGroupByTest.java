@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.inheritance;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -14,6 +15,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -84,6 +86,7 @@ public class InheritanceQueryGroupByTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = InformixDialect.class , reason = "Informix does not support case expressions within the GROUP BY clause")
 	public void testGroupByJoined(SessionFactoryScope scope) {
 		testGroupBy( scope, "joinedParent", JoinedParent.class, "joined_child_one", 1 );
 	}
@@ -160,6 +163,7 @@ public class InheritanceQueryGroupByTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = InformixDialect.class , reason = "Informix does not support case expressions within the GROUP BY clause")
 	public void testGroupByAndOrderByJoined(SessionFactoryScope scope) {
 		testGroupByAndOrderBy( scope, "joinedParent", JoinedParent.class, "joined_child_one", 1 );
 	}

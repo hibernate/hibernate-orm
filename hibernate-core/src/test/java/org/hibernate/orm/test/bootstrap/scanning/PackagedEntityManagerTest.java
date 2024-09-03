@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.bootstrap.scanning;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;

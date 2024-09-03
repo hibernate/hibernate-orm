@@ -207,8 +207,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean orderUpdatesEnabled;
 	private boolean orderInsertsEnabled;
 	private boolean collectionsInDefaultFetchGroupEnabled = true;
-	private boolean UnownedAssociationTransientCheck;
-	private boolean passProcedureParameterNames;
+	private final boolean UnownedAssociationTransientCheck;
+	private final boolean passProcedureParameterNames;
 
 	// JPA callbacks
 	private final boolean callbacksEnabled;

@@ -26,6 +26,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
+import org.hibernate.dialect.VarcharUUIDJdbcType;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -74,6 +75,7 @@ import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
+import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -91,6 +93,7 @@ import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
@@ -216,6 +219,7 @@ public class InformixDialect extends Dialect {
 						.withTypeCapacity( getMaxNVarcharLength(), columnType( NVARCHAR ) )
 						.build()
 		);
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "char(36)", this ) );
 	}
 
 	@Override
@@ -811,5 +815,6 @@ public class InformixDialect extends Dialect {
 		super.contributeTypes( typeContributions, serviceRegistry );
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
 		jdbcTypeRegistry.addDescriptor( Types.NCLOB, ClobJdbcType.DEFAULT );
+		typeContributions.contributeJdbcType( VarcharUUIDJdbcType.INSTANCE );
 	}
 }

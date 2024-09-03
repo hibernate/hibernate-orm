@@ -80,7 +80,7 @@ import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceException;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
+import jakarta.persistence.PersistenceUnitTransactionType;
 
 import static java.lang.Boolean.parseBoolean;
 import static java.util.Collections.unmodifiableMap;
@@ -792,36 +792,40 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			MergedSettings mergedSettings) {
 		final PersistenceUnitTransactionType txnType =
 				determineTransactionType( persistenceUnit, integrationSettingsCopy, mergedSettings );
-
-		final boolean hasTxStrategy =
-				mergedSettings.getConfigurationValues().containsKey( TRANSACTION_COORDINATOR_STRATEGY );
-		final boolean definiteJtaCoordinator;
-		if ( hasTxStrategy ) {
-			log.overridingTransactionStrategyDangerous( TRANSACTION_COORDINATOR_STRATEGY );
-			// see if we can tell whether it is a JTA coordinator
-			final Object strategy =
-					mergedSettings.getConfigurationValues().get( TRANSACTION_COORDINATOR_STRATEGY );
-			definiteJtaCoordinator =
-					strategy instanceof TransactionCoordinatorBuilder transactionCoordinatorBuilder
-							&& transactionCoordinatorBuilder.isJta();
-		}
-		else {
-			if ( txnType == PersistenceUnitTransactionType.JTA ) {
-				mergedSettings.getConfigurationValues().put( TRANSACTION_COORDINATOR_STRATEGY,
-						JtaTransactionCoordinatorBuilderImpl.class );
-				definiteJtaCoordinator = true;
-			}
-			else if ( txnType == PersistenceUnitTransactionType.RESOURCE_LOCAL ) {
-				mergedSettings.getConfigurationValues().put( TRANSACTION_COORDINATOR_STRATEGY,
-						JdbcResourceLocalTransactionCoordinatorBuilderImpl.class );
-				definiteJtaCoordinator = false;
-			}
-			else {
-				throw new IllegalStateException( "Could not determine TransactionCoordinator strategy to use" );
-			}
-		}
-
+		final boolean definiteJtaCoordinator =
+				mergedSettings.getConfigurationValues().containsKey( TRANSACTION_COORDINATOR_STRATEGY )
+						? handeTransactionCoordinatorStrategy( mergedSettings )
+						: handleTransactionType( mergedSettings, txnType );
 		mergedSettings.getConfigurationValues().put( IS_JTA_TXN_COORD, definiteJtaCoordinator );
+	}
+
+	private static boolean handeTransactionCoordinatorStrategy(MergedSettings mergedSettings) {
+		final boolean definiteJtaCoordinator;
+		log.overridingTransactionStrategyDangerous( TRANSACTION_COORDINATOR_STRATEGY );
+		// see if we can tell whether it is a JTA coordinator
+		final Object strategy =
+				mergedSettings.getConfigurationValues().get( TRANSACTION_COORDINATOR_STRATEGY );
+		definiteJtaCoordinator =
+				strategy instanceof TransactionCoordinatorBuilder transactionCoordinatorBuilder
+						&& transactionCoordinatorBuilder.isJta();
+		return definiteJtaCoordinator;
+	}
+
+	private static boolean handleTransactionType(MergedSettings mergedSettings, PersistenceUnitTransactionType txnType) {
+		switch (txnType) {
+			case JTA:
+				mergedSettings.getConfigurationValues()
+						.put( TRANSACTION_COORDINATOR_STRATEGY,
+								JtaTransactionCoordinatorBuilderImpl.class );
+				return true;
+			case RESOURCE_LOCAL:
+				mergedSettings.getConfigurationValues()
+						.put( TRANSACTION_COORDINATOR_STRATEGY,
+								JdbcResourceLocalTransactionCoordinatorBuilderImpl.class );
+				return false;
+			default:
+				throw new IllegalStateException( "Could not determine TransactionCoordinator strategy to use" );
+		}
 	}
 
 	private static PersistenceUnitTransactionType determineTransactionType(
@@ -839,8 +843,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		if ( intgTxnType != null ) {
 			txnType = interpretTransactionType( intgTxnType );
 		}
-		else if ( persistenceUnit.getTransactionType() != null ) {
-			txnType = persistenceUnit.getTransactionType();
+		else if ( persistenceUnit.getPersistenceUnitTransactionType() != null ) {
+			txnType = persistenceUnit.getPersistenceUnitTransactionType();
 		}
 		else {
 			Object puPropTxnType = mergedSettings.getConfigurationValues().get( JAKARTA_TRANSACTION_TYPE );

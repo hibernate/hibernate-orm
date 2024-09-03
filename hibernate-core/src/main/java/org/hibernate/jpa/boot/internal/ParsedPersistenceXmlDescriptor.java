@@ -12,24 +12,31 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import jakarta.persistence.spi.PersistenceUnitInfo;
 import org.hibernate.boot.archive.internal.ArchiveHelper;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
 
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
+import jakarta.persistence.PersistenceUnitTransactionType;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
+
+import static org.hibernate.boot.archive.internal.ArchiveHelper.getURLFromPath;
 
 /**
- * Describes the information gleaned from a {@code <persistence-unit/>} element in a {@code persistence.xml} file
- * whether parsed directly by Hibernate or passed to us by an EE container as a
- * {@link jakarta.persistence.spi.PersistenceUnitInfo}.
- *
- * Easier to consolidate both views into a single contract and extract information through that shared contract.
+ * Describes the information gleaned from a {@code <persistence-unit/>}
+ * element in a {@code persistence.xml} file whether parsed directly by
+ * Hibernate or passed to us by an EE container as an instance of
+ * {@link PersistenceUnitInfo}.
+ * <p>
+ * Easier to consolidate both views into a single contract and extract
+ * information through that shared contract.
  *
  * @author Steve Ebersole
  */
-public class ParsedPersistenceXmlDescriptor implements org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor {
+public class ParsedPersistenceXmlDescriptor implements PersistenceUnitDescriptor {
 	private final URL persistenceUnitRootUrl;
 
 	private String name;
@@ -94,8 +101,13 @@ public class ParsedPersistenceXmlDescriptor implements org.hibernate.jpa.boot.sp
 	}
 
 	@Override
-	public PersistenceUnitTransactionType getTransactionType() {
+	public PersistenceUnitTransactionType getPersistenceUnitTransactionType() {
 		return transactionType;
+	}
+
+	@Override @SuppressWarnings("removal")
+	public jakarta.persistence.spi.PersistenceUnitTransactionType getTransactionType() {
+		return PersistenceUnitTransactionTypeHelper.toDeprecatedForm( transactionType );
 	}
 
 	public void setTransactionType(PersistenceUnitTransactionType transactionType) {
@@ -187,9 +199,7 @@ public class ParsedPersistenceXmlDescriptor implements org.hibernate.jpa.boot.sp
 	}
 
 	public void addJarFileUrls(List<String> jarFiles) {
-		jarFiles.forEach( (jarFile) -> {
-			addJarFileUrl( ArchiveHelper.getURLFromPath( jarFile ) );
-		} );
+		jarFiles.forEach( jarFile -> addJarFileUrl( getURLFromPath( jarFile ) ) );
 	}
 
 	@Override

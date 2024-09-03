@@ -10,7 +10,6 @@ import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -43,7 +42,6 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
-import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.orm.test.mapping.basic.bitset.BitSetType;
 import org.hibernate.orm.test.mapping.basic.bitset.BitSetUserType;
 import org.hibernate.service.ServiceRegistry;
@@ -637,7 +635,7 @@ public class BootstrapTest {
         }
 
         @Override
-        public PersistenceUnitTransactionType getTransactionType() {
+        public jakarta.persistence.spi.PersistenceUnitTransactionType getTransactionType() {
             return transactionType;
         }
 

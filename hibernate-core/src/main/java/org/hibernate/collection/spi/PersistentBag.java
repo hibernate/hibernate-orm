@@ -415,7 +415,7 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 
 	@Override
 	public boolean addAll(Collection<? extends E> values) {
-		if ( values.size() == 0 ) {
+		if ( values.isEmpty() ) {
 			return false;
 		}
 		if ( !isOperationQueueEnabled() ) {

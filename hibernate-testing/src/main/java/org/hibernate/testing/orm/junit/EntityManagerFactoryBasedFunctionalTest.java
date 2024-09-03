@@ -16,6 +16,7 @@ import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import jakarta.persistence.PersistenceUnitTransactionType;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
@@ -34,7 +35,6 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
@@ -201,8 +201,13 @@ public class EntityManagerFactoryBasedFunctionalTest
 			return false;
 		}
 
+		@Override @SuppressWarnings("removal")
+		public jakarta.persistence.spi.PersistenceUnitTransactionType getTransactionType() {
+			return null;
+		}
+
 		@Override
-		public PersistenceUnitTransactionType getTransactionType() {
+		public PersistenceUnitTransactionType getPersistenceUnitTransactionType() {
 			return null;
 		}
 

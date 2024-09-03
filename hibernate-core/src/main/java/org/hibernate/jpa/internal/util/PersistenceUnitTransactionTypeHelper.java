@@ -7,10 +7,14 @@
 package org.hibernate.jpa.internal.util;
 
 import jakarta.persistence.PersistenceException;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
+import jakarta.persistence.PersistenceUnitTransactionType;
+
+import static jakarta.persistence.PersistenceUnitTransactionType.JTA;
+import static jakarta.persistence.PersistenceUnitTransactionType.RESOURCE_LOCAL;
 
 /**
  * @author Steve Ebersole
+ * @author Gavin King
  */
 public class PersistenceUnitTransactionTypeHelper {
 	private PersistenceUnitTransactionTypeHelper() {
@@ -20,23 +24,39 @@ public class PersistenceUnitTransactionTypeHelper {
 		if ( value == null ) {
 			return null;
 		}
-
-		if ( value instanceof PersistenceUnitTransactionType ) {
-			return (PersistenceUnitTransactionType) value;
-		}
-
-		final String stringValue = value.toString().trim();
-		if ( stringValue.isEmpty() ) {
-			return null;
-		}
-		else if ( stringValue.equalsIgnoreCase( "JTA" ) ) {
-			return PersistenceUnitTransactionType.JTA;
-		}
-		else if ( stringValue.equalsIgnoreCase( "RESOURCE_LOCAL" ) ) {
-			return PersistenceUnitTransactionType.RESOURCE_LOCAL;
+		else if ( value instanceof PersistenceUnitTransactionType transactionType ) {
+			return transactionType;
 		}
 		else {
-			throw new PersistenceException( "Unknown TransactionType: '" + stringValue + '\'' );
+			final String stringValue = value.toString().trim();
+			if ( stringValue.isEmpty() ) {
+				return null;
+			}
+			else if ( JTA.name().equalsIgnoreCase( stringValue ) ) {
+				return JTA;
+			}
+			else if ( RESOURCE_LOCAL.name().equalsIgnoreCase( stringValue ) ) {
+				return RESOURCE_LOCAL;
+			}
+			else {
+				throw new PersistenceException( "Unknown TransactionType: '" + stringValue + "'" );
+			}
 		}
+	}
+
+	@SuppressWarnings("removal")
+	public static jakarta.persistence.spi.PersistenceUnitTransactionType toDeprecatedForm(PersistenceUnitTransactionType type) {
+		return type == null ? null : switch (type) {
+			case JTA -> jakarta.persistence.spi.PersistenceUnitTransactionType.JTA;
+			case RESOURCE_LOCAL -> jakarta.persistence.spi.PersistenceUnitTransactionType.RESOURCE_LOCAL;
+		};
+	}
+
+	@SuppressWarnings("removal")
+	public static PersistenceUnitTransactionType toNewForm(jakarta.persistence.spi.PersistenceUnitTransactionType type) {
+		return type == null ? null : switch (type) {
+			case JTA -> PersistenceUnitTransactionType.JTA;
+			case RESOURCE_LOCAL -> PersistenceUnitTransactionType.RESOURCE_LOCAL;
+		};
 	}
 }

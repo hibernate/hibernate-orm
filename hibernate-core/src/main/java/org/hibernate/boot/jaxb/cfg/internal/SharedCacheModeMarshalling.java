@@ -9,7 +9,6 @@ package org.hibernate.boot.jaxb.cfg.internal;
 import org.hibernate.internal.util.StringHelper;
 
 import jakarta.persistence.SharedCacheMode;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
 /**
  * @author Steve Ebersole

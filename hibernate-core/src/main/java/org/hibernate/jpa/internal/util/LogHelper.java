@@ -54,7 +54,7 @@ public final class LogHelper {
 				.append( descriptor.getNonJtaDataSource() )
 				.append( "\n\t" )
 				.append( "Transaction type: " )
-				.append( descriptor.getTransactionType() )
+				.append( descriptor.getPersistenceUnitTransactionType() )
 				.append( "\n\t" )
 				.append( "PU root URL: " )
 				.append( descriptor.getPersistenceUnitRootUrl() )

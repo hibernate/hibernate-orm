@@ -50,7 +50,7 @@ public class PersistenceUnitInfoAdapter implements PersistenceUnitInfo {
 		return List.of();
 	}
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	public PersistenceUnitTransactionType getTransactionType() {
 		return PersistenceUnitTransactionType.RESOURCE_LOCAL;
 	}

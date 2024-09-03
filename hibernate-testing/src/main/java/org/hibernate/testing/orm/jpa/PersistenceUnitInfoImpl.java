@@ -20,11 +20,13 @@ import javax.sql.DataSource;
 
 import org.hibernate.jpa.HibernatePersistenceProvider;
 
+import static java.util.Collections.emptyList;
+
 /**
  * Implementation of {@link PersistenceUnitInfo} for testing use.
- *
+ * <p>
  * This implementation provides a bean-like contract for providing PU information.
- *
+ * <p>
  * See {@link PersistenceUnitInfoAdapter} for an override-based solution
  *
  * @author Steve Ebersole
@@ -36,9 +38,10 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 
 	private String scopeAnnotationName;
 	private List<String> qualifierAnnotationNames = List.of();
-	private PersistenceUnitTransactionType transactionType;
 	private SharedCacheMode cacheMode;
 	private ValidationMode validationMode;
+	@SuppressWarnings("removal")
+	private PersistenceUnitTransactionType transactionType;
 
 	private List<String> mappingFiles;
 	private List<String> managedClassNames;
@@ -81,12 +84,12 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 		return HibernatePersistenceProvider.class.getName();
 	}
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	public PersistenceUnitTransactionType getTransactionType() {
 		return transactionType;
 	}
 
-	public void setTransactionType(PersistenceUnitTransactionType transactionType) {
+	public void setTransactionType(@SuppressWarnings("removal") PersistenceUnitTransactionType transactionType) {
 		this.transactionType = transactionType;
 	}
 
@@ -110,7 +113,7 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 
 	@Override
 	public List<String> getMappingFileNames() {
-		return mappingFiles == null ? Collections.emptyList() : mappingFiles;
+		return mappingFiles == null ? emptyList() : mappingFiles;
 	}
 
 	public void applyMappingFiles(String... mappingFiles) {
@@ -122,7 +125,7 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 
 	@Override
 	public List<String> getManagedClassNames() {
-		return managedClassNames == null ? Collections.emptyList() : managedClassNames;
+		return managedClassNames == null ? emptyList() : managedClassNames;
 	}
 
 	public void applyManagedClassNames(String... managedClassNames) {

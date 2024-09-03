@@ -11,25 +11,18 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
+import java.util.Properties;
+
 import jakarta.persistence.spi.PersistenceUnitInfo;
 
-import org.hibernate.SessionFactoryObserver;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
-import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
 import org.hibernate.tool.schema.Action;
-import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
-import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.domain.DomainModelDescriptor;
@@ -40,9 +33,11 @@ import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 import org.junit.jupiter.api.extension.TestInstancePostProcessor;
-import org.junit.platform.commons.support.AnnotationSupport;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.jpa.boot.spi.Bootstrap.getEntityManagerFactoryBuilder;
+import static org.junit.platform.commons.support.AnnotationSupport.findAnnotation;
 
 /**
  * hibernate-testing implementation of a few JUnit5 contracts to support SessionFactory-based testing,
@@ -64,11 +59,9 @@ public class EntityManagerFactoryExtension
 	}
 
 	public static EntityManagerFactoryScope findEntityManagerFactoryScope(
-			Object testScope,
-			Optional<Jpa> emfAnnWrapper,
-			ExtensionContext context) {
+			Object testScope, Optional<Jpa> optionalJpa, ExtensionContext context) {
 
-		if ( emfAnnWrapper.isEmpty() ) {
+		if ( optionalJpa.isEmpty() ) {
 			// No annotation on the test class, should be on the test methods
 			return null;
 		}
@@ -78,149 +71,151 @@ public class EntityManagerFactoryExtension
 		if ( existing != null ) {
 			return existing;
 		}
-
-		if ( !context.getElement().isPresent() ) {
-			throw new RuntimeException( "Unable to determine how to handle given ExtensionContext : " + context.getDisplayName() );
+		if ( context.getElement().isEmpty() ) {
+			throw new RuntimeException( "Unable to determine how to handle given ExtensionContext : "
+					+ context.getDisplayName() );
 		}
-		final Jpa emfAnn = emfAnnWrapper.get();
 
-		final PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( emfAnn.persistenceUnitName() );
-		( (Map<Object, Object>) Environment.getProperties() ).forEach(
-				(key, value) ->
-						pui.getProperties().put( key, value )
-		);
+		final Jpa jpa = optionalJpa.get();
+		final PersistenceUnitInfoImpl pui = createPersistenceUnitInfo( jpa );
+		collectProperties( pui, jpa );
+		managedClassesAndMappings( jpa, pui );
+		final Map<String, Object> integrationSettings = collectIntegrationSettings( jpa );
+		// statement inspector
+		setupStatementInspector( jpa, integrationSettings );
+		ServiceRegistryUtil.applySettings( integrationSettings );
+		final EntityManagerFactoryScopeImpl scope =
+				new EntityManagerFactoryScopeImpl( pui, integrationSettings );
+		store.put( EMF_KEY, scope );
+		return scope;
+	}
 
-		pui.setTransactionType( emfAnn.transactionType() );
-		pui.setCacheMode( emfAnn.sharedCacheMode() );
-		pui.setValidationMode( emfAnn.validationMode() );
-		pui.setExcludeUnlistedClasses( emfAnn.excludeUnlistedClasses() );
-
+	private static void collectProperties(PersistenceUnitInfoImpl pui, Jpa jpa) {
+		final Properties properties = pui.getProperties();
+		properties.putAll( Environment.getProperties() );
 		// JpaCompliance
-		pui.getProperties().put( AvailableSettings.JPA_COMPLIANCE, emfAnn.jpaComplianceEnabled() );
-		pui.getProperties().put( AvailableSettings.JPA_QUERY_COMPLIANCE, emfAnn.queryComplianceEnabled() );
-		pui.getProperties().put( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, emfAnn.transactionComplianceEnabled() );
-		pui.getProperties().put( AvailableSettings.JPA_CLOSED_COMPLIANCE, emfAnn.closedComplianceEnabled() );
-		pui.getProperties().put( AvailableSettings.JPA_PROXY_COMPLIANCE, emfAnn.proxyComplianceEnabled() );
-		pui.getProperties().put( AvailableSettings.JPA_CACHING_COMPLIANCE, emfAnn.cacheComplianceEnabled() );
-		pui.getProperties().put( AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, emfAnn.generatorScopeComplianceEnabled() );
-		pui.getProperties().put( AvailableSettings.JPA_ORDER_BY_MAPPING_COMPLIANCE, emfAnn.orderByMappingComplianceEnabled() );
-		pui.getProperties().put( AvailableSettings.JPA_LOAD_BY_ID_COMPLIANCE, emfAnn.loadByIdComplianceEnabled() );
-
-		final Setting[] properties = emfAnn.properties();
-		for ( int i = 0; i < properties.length; i++ ) {
-			final Setting property = properties[i];
-			pui.getProperties().setProperty( property.name(), property.value() );
+		setJpaComplianceProperties( properties, jpa );
+		for ( Setting property : jpa.properties() ) {
+			properties.setProperty( property.name(), property.value() );
 		}
-
-		pui.getProperties().setProperty(
+		properties.setProperty(
 				AvailableSettings.GENERATE_STATISTICS,
-				Boolean.toString( emfAnn.generateStatistics() )
+				Boolean.toString( jpa.generateStatistics() )
 		);
-
-		if ( emfAnn.exportSchema() ) {
-			pui.getProperties().setProperty(
+		if ( jpa.exportSchema() ) {
+			properties.setProperty(
 					AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION,
 					Action.CREATE_DROP.getExternalHbm2ddlName()
 			);
 		}
+	}
 
-		if ( emfAnn.annotatedPackageNames().length > 0 ) {
-			pui.applyManagedClassNames( emfAnn.annotatedPackageNames() );
+	private static PersistenceUnitInfoImpl createPersistenceUnitInfo(Jpa jpa) {
+		final PersistenceUnitInfoImpl pui =
+				new PersistenceUnitInfoImpl( jpa.persistenceUnitName() );
+		pui.setTransactionType( jpa.transactionType() );
+		pui.setCacheMode( jpa.sharedCacheMode() );
+		pui.setValidationMode( jpa.validationMode() );
+		pui.setExcludeUnlistedClasses( jpa.excludeUnlistedClasses() );
+		return pui;
+	}
+
+	private static void managedClassesAndMappings(Jpa jpa, PersistenceUnitInfoImpl pui) {
+		if ( jpa.annotatedPackageNames().length > 0 ) {
+			pui.applyManagedClassNames( jpa.annotatedPackageNames() );
 		}
 
-		if ( emfAnn.annotatedClassNames().length > 0 ) {
-			pui.applyManagedClassNames( emfAnn.annotatedClassNames() );
+		if ( jpa.annotatedClassNames().length > 0 ) {
+			pui.applyManagedClassNames( jpa.annotatedClassNames() );
 		}
 
-		if ( emfAnn.annotatedClasses().length > 0 ) {
-			for ( int i = 0; i < emfAnn.annotatedClasses().length; i++ ) {
-				pui.applyManagedClassNames( emfAnn.annotatedClasses()[i].getName() );
+		if ( jpa.annotatedClasses().length > 0 ) {
+			for (int i = 0; i < jpa.annotatedClasses().length; i++ ) {
+				pui.applyManagedClassNames( jpa.annotatedClasses()[i].getName() );
 			}
 		}
 
-		if ( emfAnn.xmlMappings().length > 0 ) {
-			pui.applyMappingFiles( emfAnn.xmlMappings() );
+		if ( jpa.xmlMappings().length > 0 ) {
+			pui.applyMappingFiles( jpa.xmlMappings() );
 		}
 
-		if ( emfAnn.standardModels().length > 0 ) {
-			for ( int i = 0; i < emfAnn.standardModels().length; i++ ) {
-				final StandardDomainModel standardDomainModel = emfAnn.standardModels()[i];
-				for ( int i1 = 0; i1 < standardDomainModel.getDescriptor().getAnnotatedClasses().length; i1++ ) {
-					final Class<?> annotatedClass = standardDomainModel.getDescriptor().getAnnotatedClasses()[i1];
-					pui.applyManagedClassNames( annotatedClass.getName() );
-				}
+		for ( StandardDomainModel standardDomainModel : jpa.standardModels() ) {
+			for ( Class<?> annotatedClass : standardDomainModel.getDescriptor().getAnnotatedClasses() ) {
+				pui.applyManagedClassNames( annotatedClass.getName() );
 			}
 		}
 
-		if ( emfAnn.modelDescriptorClasses().length > 0 ) {
-			for ( int i = 0; i < emfAnn.modelDescriptorClasses().length; i++ ) {
-				final Class<? extends DomainModelDescriptor> modelDescriptorClass = emfAnn.modelDescriptorClasses()[i];
-				final DomainModelDescriptor domainModelDescriptor = instantiateDomainModelDescriptor(
-						modelDescriptorClass );
-				for ( int i1 = 0; i1 < domainModelDescriptor.getAnnotatedClasses().length; i1++ ) {
-					final Class<?> annotatedClass = domainModelDescriptor.getAnnotatedClasses()[i1];
-					pui.applyManagedClassNames( annotatedClass.getName() );
-				}
+		for ( Class<? extends DomainModelDescriptor> modelDescriptorClass :
+				jpa.modelDescriptorClasses() ) {
+			final DomainModelDescriptor domainModelDescriptor =
+					instantiateDomainModelDescriptor( modelDescriptorClass );
+			final Class<?>[] annotatedClasses = domainModelDescriptor.getAnnotatedClasses();
+			for ( Class<?> annotatedClass : annotatedClasses ) {
+				pui.applyManagedClassNames( annotatedClass.getName() );
 			}
 		}
+	}
 
+	private static Map<String, Object> collectIntegrationSettings(Jpa jpa) {
 		final Map<String, Object> integrationSettings = new HashMap<>();
-
 		integrationSettings.put( PersistentTableStrategy.DROP_ID_TABLES, "true" );
 		integrationSettings.put( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		integrationSettings.put( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
-		for ( int i = 0; i < emfAnn.integrationSettings().length; i++ ) {
-			final Setting setting = emfAnn.integrationSettings()[i];
+		final Setting[] settings = jpa.integrationSettings();
+		for ( Setting setting : settings ) {
 			integrationSettings.put( setting.name(), setting.value() );
 		}
-
-		for ( SettingProvider providerAnn : emfAnn.settingProviders() ) {
+		for ( SettingProvider providerAnn : jpa.settingProviders() ) {
 			final Class<? extends SettingProvider.Provider<?>> providerImpl = providerAnn.provider();
 			try {
-				final SettingProvider.Provider<?> provider = providerImpl.getConstructor().newInstance();
-				integrationSettings.put( providerAnn.settingName(), provider.getSetting() );
+				integrationSettings.put( providerAnn.settingName(),
+						providerImpl.getConstructor().newInstance().getSetting() );
 			}
 			catch (Exception e) {
 				log.error( "Error obtaining setting provider for " + providerImpl.getName(), e );
 			}
 		}
+		return integrationSettings;
+	}
 
-		// statement inspector
-		if ( emfAnn.useCollectingStatementInspector() ) {
-			String inspectorSetting = (String) integrationSettings.get( AvailableSettings.STATEMENT_INSPECTOR );
-			if ( !(inspectorSetting == null || inspectorSetting.isBlank()) ) {
+	private static void setupStatementInspector(Jpa jpa, Map<String, Object> integrationSettings) {
+		if ( jpa.useCollectingStatementInspector() ) {
+			final String inspectorSetting = (String) integrationSettings.get( AvailableSettings.STATEMENT_INSPECTOR );
+			if ( inspectorSetting != null && !inspectorSetting.isBlank() ) {
 				log.warn( String.format( "Overriding the explicit \"%1s\" statement inspector setting", inspectorSetting ) );
 			}
 			integrationSettings.put( AvailableSettings.STATEMENT_INSPECTOR, new SQLStatementInspector() );
 		}
-
-		ServiceRegistryUtil.applySettings( integrationSettings );
-		final EntityManagerFactoryScopeImpl scope = new EntityManagerFactoryScopeImpl( pui, integrationSettings );
-
-		store.put( EMF_KEY, scope );
-
-		return scope;
 	}
 
-	private static DomainModelDescriptor instantiateDomainModelDescriptor(Class<? extends DomainModelDescriptor> modelDescriptorClass) {
+	private static void setJpaComplianceProperties(Properties properties, Jpa jpa) {
+		properties.put( AvailableSettings.JPA_COMPLIANCE, jpa.jpaComplianceEnabled() );
+		properties.put( AvailableSettings.JPA_QUERY_COMPLIANCE, jpa.queryComplianceEnabled() );
+		properties.put( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, jpa.transactionComplianceEnabled() );
+		properties.put( AvailableSettings.JPA_CLOSED_COMPLIANCE, jpa.closedComplianceEnabled() );
+		properties.put( AvailableSettings.JPA_PROXY_COMPLIANCE, jpa.proxyComplianceEnabled() );
+		properties.put( AvailableSettings.JPA_CACHING_COMPLIANCE, jpa.cacheComplianceEnabled() );
+		properties.put( AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, jpa.generatorScopeComplianceEnabled() );
+		properties.put( AvailableSettings.JPA_ORDER_BY_MAPPING_COMPLIANCE, jpa.orderByMappingComplianceEnabled() );
+		properties.put( AvailableSettings.JPA_LOAD_BY_ID_COMPLIANCE, jpa.loadByIdComplianceEnabled() );
+	}
+
+	private static DomainModelDescriptor instantiateDomainModelDescriptor(
+			Class<? extends DomainModelDescriptor> modelDescriptorClass) {
 		// first, see if it has a static singleton reference and use that if so
 		try {
-			final Field[] declaredFields = modelDescriptorClass.getDeclaredFields();
-			for ( int i = 0; i < declaredFields.length; i++ ) {
-				final Field field = declaredFields[i];
-				if ( ReflectHelper.isStaticField( field ) ) {
+			for ( Field field : modelDescriptorClass.getDeclaredFields() ) {
+				if ( ReflectHelper.isStaticField(field) ) {
 					final Object value = field.get( null );
-					if ( value instanceof DomainModelDescriptor ) {
-						return (DomainModelDescriptor) value;
+					if ( value instanceof DomainModelDescriptor descriptor ) {
+						return descriptor;
 					}
 				}
 			}
 		}
 		catch (IllegalAccessException e) {
-			throw new RuntimeException(
-					"Problem accessing DomainModelDescriptor fields : " + modelDescriptorClass.getName(),
-					e
-			);
+			throw new RuntimeException( "Problem accessing DomainModelDescriptor fields : "
+					+ modelDescriptorClass.getName(), e );
 		}
 
 		// no singleton field, try to instantiate it via reflection
@@ -228,86 +223,38 @@ public class EntityManagerFactoryExtension
 			return modelDescriptorClass.getConstructor( null ).newInstance( null );
 		}
 		catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-			throw new RuntimeException(
-					"Problem instantiation DomainModelDescriptor : " + modelDescriptorClass.getName(),
-					e
-			);
+			throw new RuntimeException( "Problem instantiation DomainModelDescriptor : "
+					+ modelDescriptorClass.getName(), e );
 		}
-	}
-
-	private static void prepareSchemaExport(
-			SessionFactoryImplementor sessionFactory,
-			MetadataImplementor model) {
-		final Map<String, Object> baseProperties = sessionFactory.getProperties();
-
-		final Set<ActionGrouping> groupings = ActionGrouping.interpret( model, baseProperties );
-		if ( !groupings.isEmpty() ) {
-			// the properties contained explicit settings for auto schema tooling - skip the annotation
-			return;
-		}
-
-		final HashMap<String,Object> settings = new HashMap<>( baseProperties );
-		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP );
-
-		final StandardServiceRegistry serviceRegistry = model.getMetadataBuildingOptions().getServiceRegistry();
-
-
-		SchemaManagementToolCoordinator.process(
-				model,
-				serviceRegistry,
-				settings,
-				action -> sessionFactory.addObserver(
-						new SessionFactoryObserver() {
-							@Override
-							public void sessionFactoryClosing(org.hibernate.SessionFactory factory) {
-								action.perform( serviceRegistry );
-							}
-						}
-				)
-		);
 	}
 
 	@Override
 	public void beforeEach(ExtensionContext context) {
 		log.tracef( "#beforeEach(%s)", context.getDisplayName() );
-		final Optional<Jpa> emfAnnWrapper = AnnotationSupport.findAnnotation(
-				context.getRequiredTestMethod(),
-				Jpa.class
-		);
-
-		if ( emfAnnWrapper.isEmpty() ) {
-			// assume the annotation is defined on the class-level...
-			return;
+		final Optional<Jpa> optionalJpa = findAnnotation( context.getRequiredTestMethod(), Jpa.class );
+		if ( optionalJpa.isPresent() ) {
+			findEntityManagerFactoryScope( context.getRequiredTestMethod(), optionalJpa, context );
 		}
-
-		findEntityManagerFactoryScope( context.getRequiredTestMethod(), emfAnnWrapper, context );
+		// else assume the annotation is defined on the class-level...
 	}
 
 	@Override
 	public void postProcessTestInstance(Object testInstance, ExtensionContext context) {
 		log.tracef( "#postProcessTestInstance(%s, %s)", testInstance, context.getDisplayName() );
-
-		final Optional<Jpa> emfAnnWrapper = AnnotationSupport.findAnnotation(
-				context.getRequiredTestClass(),
-				Jpa.class
-		);
-
-		findEntityManagerFactoryScope( testInstance, emfAnnWrapper, context );
+		final Optional<Jpa> optionalJpa = findAnnotation( context.getRequiredTestClass(), Jpa.class );
+		findEntityManagerFactoryScope( testInstance, optionalJpa, context );
 	}
 
 	@Override
 	public void handleTestExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
 		log.tracef( "#handleTestExecutionException(%s, %s)", context.getDisplayName(), throwable );
-
 		try {
-			final Object testInstance = context.getRequiredTestInstance();
-			final ExtensionContext.Store store = locateExtensionStore( testInstance, context );
+			final ExtensionContext.Store store = locateExtensionStore( context.getRequiredTestInstance(), context );
 			final EntityManagerFactoryScopeImpl scope = (EntityManagerFactoryScopeImpl) store.get( EMF_KEY );
 			scope.releaseEntityManagerFactory();
 		}
 		catch (Exception ignore) {
 		}
-
 		throw throwable;
 	}
 
@@ -323,12 +270,8 @@ public class EntityManagerFactoryExtension
 		}
 
 		protected jakarta.persistence.EntityManagerFactory createEntityManagerFactory() {
-			final EntityManagerFactoryBuilder emfBuilder = Bootstrap.getEntityManagerFactoryBuilder(
-					new PersistenceUnitInfoDescriptor( persistenceUnitInfo ),
-					integrationSettings
-			);
-
-			return emfBuilder.build();
+			final PersistenceUnitInfoDescriptor descriptor = new PersistenceUnitInfoDescriptor( persistenceUnitInfo );
+			return getEntityManagerFactoryBuilder( descriptor, integrationSettings ).build();
 		}
 	}
 }

@@ -86,6 +86,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.metamodel.mapping.ForeignKeyDescriptor.Nature.TARGET;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
@@ -1605,10 +1606,21 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		if ( rowIdAssembler != null ) {
 			rowIdAssembler.resolveState( data.getRowProcessingState() );
 		}
+		if ( data.concreteDescriptor == null ) {
+			data.concreteDescriptor = data.defaultConcreteDescriptor;
+			if ( data.concreteDescriptor == null ) {
+				data.concreteDescriptor = determineConcreteEntityDescriptor(
+						data.getRowProcessingState(),
+						castNonNull( discriminatorAssembler ),
+						entityDescriptor
+				);
+			}
+		}
 		resolveEntityState( data );
 	}
 
 	protected void resolveEntityState(EntityInitializerData data) {
+		assert data.concreteDescriptor != null;
 		final RowProcessingState rowProcessingState = data.getRowProcessingState();
 		for ( final DomainResultAssembler<?> assembler : assemblers[data.concreteDescriptor.getSubclassId()] ) {
 			if ( assembler != null ) {

@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 import org.hibernate.Internal;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
+import org.hibernate.jpa.boot.internal.MergedSettings;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 
 import jakarta.persistence.spi.PersistenceUnitInfo;
@@ -93,7 +94,7 @@ public final class Bootstrap {
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
 			PersistenceUnitDescriptor persistenceUnitDescriptor,
 			Map integration,
-			Consumer<EntityManagerFactoryBuilderImpl.MergedSettings> mergedSettingsBaseline) {
+			Consumer<MergedSettings> mergedSettingsBaseline) {
 		return new EntityManagerFactoryBuilderImpl( persistenceUnitDescriptor, integration, mergedSettingsBaseline );
 	}
 
@@ -124,7 +125,7 @@ public final class Bootstrap {
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
 			PersistenceUnitInfo persistenceUnitInfo,
 			Map integration,
-			Consumer<EntityManagerFactoryBuilderImpl.MergedSettings> mergedSettingsBaseline) {
+			Consumer<MergedSettings> mergedSettingsBaseline) {
 		return getEntityManagerFactoryBuilder( new PersistenceUnitInfoDescriptor( persistenceUnitInfo ), integration, mergedSettingsBaseline );
 	}
 }

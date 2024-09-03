@@ -7,10 +7,6 @@
 package org.hibernate.orm.test.exceptionhandling;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +15,7 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
+import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -32,11 +29,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.PropertiesHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.HibernatePersistenceProvider;
-import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
@@ -49,8 +43,10 @@ import org.junit.After;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
+import jakarta.persistence.PersistenceUnitTransactionType;
 
+import static org.hibernate.internal.util.config.ConfigurationHelper.resolvePlaceHolders;
+import static org.hibernate.jpa.boot.spi.Bootstrap.getEntityManagerFactoryBuilder;
 import static org.junit.Assert.fail;
 
 /**
@@ -106,7 +102,6 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 	}
 
 	@BeforeClassOnce
-	@SuppressWarnings( {"UnusedDeclaration"})
 	public void buildSessionOrEntityManagerFactory() {
 		switch ( bootstrapMethod ) {
 			case JPA:
@@ -116,44 +111,38 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 				buildSessionFactory();
 				break;
 		}
-
 		afterSessionOrEntityManagerFactoryBuilt();
 	}
 
 	private void buildEntityManagerFactory() {
 		log.trace( "Building EntityManagerFactory" );
 
-		Properties properties = buildProperties();
-		ArrayList<Class> classes = new ArrayList<Class>();
-
-		classes.addAll( Arrays.asList( getAnnotatedClasses() ) );
-		properties.put( org.hibernate.cfg.AvailableSettings.LOADED_CLASSES, classes );
+		final Properties properties = buildProperties();
+		properties.put( AvailableSettings.LOADED_CLASSES, List.of( getAnnotatedClasses() ) );
 		ServiceRegistryUtil.applySettings( properties );
 
-		sessionFactory =  Bootstrap.getEntityManagerFactoryBuilder(
-				buildPersistenceUnitDescriptor(),
-				properties
-		).build().unwrap( SessionFactoryImplementor.class );
+		sessionFactory =
+				getEntityManagerFactoryBuilder( buildPersistenceUnitDescriptor(), properties )
+						.build().unwrap( SessionFactoryImplementor.class );
 
-		serviceRegistry = (StandardServiceRegistryImpl) sessionFactory.getServiceRegistry()
-				.getParentServiceRegistry();
+		serviceRegistry = (StandardServiceRegistryImpl)
+				sessionFactory.getServiceRegistry().getParentServiceRegistry();
 	}
 
 	private void buildSessionFactory() {
 		// for now, build the configuration to get all the property settings
-		Configuration configuration = new Configuration();
+		final Configuration configuration = new Configuration();
 		configuration.setProperties( buildProperties() );
 
-		Class<?>[] annotatedClasses = getAnnotatedClasses();
+		final Class<?>[] annotatedClasses = getAnnotatedClasses();
 		if ( annotatedClasses != null ) {
 			for ( Class<?> annotatedClass : annotatedClasses ) {
 				configuration.addAnnotatedClass( annotatedClass );
 			}
 		}
 
-		BootstrapServiceRegistry bootRegistry = buildBootstrapServiceRegistry();
-		serviceRegistry = buildServiceRegistry( bootRegistry, configuration );
-		sessionFactory = ( SessionFactoryImplementor ) configuration.buildSessionFactory( serviceRegistry );
+		serviceRegistry = buildServiceRegistry( buildBootstrapServiceRegistry(), configuration );
+		sessionFactory = (SessionFactoryImplementor) configuration.buildSessionFactory( serviceRegistry );
 
 		afterSessionOrEntityManagerFactoryBuilt();
 	}
@@ -196,7 +185,12 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 		}
 
 		@Override
-		public PersistenceUnitTransactionType getTransactionType() {
+		public PersistenceUnitTransactionType getPersistenceUnitTransactionType() {
+			return null;
+		}
+
+		@Override @SuppressWarnings("removal")
+		public jakarta.persistence.spi.PersistenceUnitTransactionType getTransactionType() {
 			return null;
 		}
 
@@ -270,25 +264,24 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
 	}
 
-	private StandardServiceRegistryImpl buildServiceRegistry(BootstrapServiceRegistry bootRegistry, Configuration configuration) {
-		Properties properties = new Properties();
+	private StandardServiceRegistryImpl buildServiceRegistry(
+			BootstrapServiceRegistry bootRegistry, Configuration configuration) {
+		final Properties properties = new Properties();
 		properties.putAll( configuration.getProperties() );
-		ConfigurationHelper.resolvePlaceHolders( properties );
-
-		StandardServiceRegistryBuilder cfgRegistryBuilder = configuration.getStandardServiceRegistryBuilder();
-
-		StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder( bootRegistry, cfgRegistryBuilder.getAggregatedCfgXml() )
-				.applySettings( properties );
+		resolvePlaceHolders( properties );
+		final LoadedConfig loadedConfig =
+				configuration.getStandardServiceRegistryBuilder().getAggregatedCfgXml();
+		final StandardServiceRegistryBuilder registryBuilder =
+				new StandardServiceRegistryBuilder( bootRegistry, loadedConfig )
+						.applySettings( properties );
 		ServiceRegistryUtil.applySettings( registryBuilder );
-
 		return (StandardServiceRegistryImpl) registryBuilder.build();
 	}
 
 	private Properties buildProperties() {
-		Properties properties = Environment.getProperties();
-
+		final Properties properties = Environment.getProperties();
 		properties.put( AvailableSettings.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
-		for ( Map.Entry<Class, String> entry : getCachedClasses().entrySet() ) {
+		for ( Map.Entry<Class<?>, String> entry : getCachedClasses().entrySet() ) {
 			properties.put( AvailableSettings.CLASS_CACHE_PREFIX + "." + entry.getKey().getName(), entry.getValue() );
 		}
 		for ( Map.Entry<String, String> entry : getCachedCollections().entrySet() ) {
@@ -314,7 +307,7 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 		return NO_CLASSES;
 	}
 
-	public Map<Class, String> getCachedClasses() {
+	public Map<Class<?>, String> getCachedClasses() {
 		return new HashMap<>();
 	}
 
@@ -330,15 +323,13 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 	}
 
 	@After
-	public final void afterTest() throws Exception {
+	public final void afterTest()  {
 		completeStrayTransaction();
-
 		cleanupSession();
-
 	}
 
 	@AfterClassOnce
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@SuppressWarnings("UnusedDeclaration")
 	protected void releaseSessionFactory() {
 		if ( sessionFactory == null ) {
 			return;
@@ -364,7 +355,9 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 			return;
 		}
 
-		if ( ( (SessionImplementor) session ).isClosed() ) {
+		final SessionImplementor sessionImplementor = (SessionImplementor) session;
+
+		if ( sessionImplementor.isClosed() ) {
 			// nothing to do
 			return;
 		}
@@ -374,13 +367,15 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 			return;
 		}
 
-		final TransactionCoordinator.TransactionDriver tdc =
-				( (SessionImplementor) session ).getTransactionCoordinator().getTransactionDriverControl();
-
-		if ( tdc.getStatus().canRollback() ) {
+		if ( canRollBack( sessionImplementor ) ) {
 			session.getTransaction().rollback();
 		}
 		session.close();
+	}
+
+	private static boolean canRollBack(SessionImplementor sessionImplementor) {
+		return sessionImplementor.getTransactionCoordinator()
+				.getTransactionDriverControl().getStatus().canRollback();
 	}
 
 	private void cleanupSession() {

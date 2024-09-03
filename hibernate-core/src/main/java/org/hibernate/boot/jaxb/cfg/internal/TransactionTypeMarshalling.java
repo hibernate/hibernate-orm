@@ -8,12 +8,12 @@ package org.hibernate.boot.jaxb.cfg.internal;
 
 import org.hibernate.internal.util.StringHelper;
 
-import jakarta.persistence.AccessType;
 import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("removal")
 public class TransactionTypeMarshalling {
 	public static PersistenceUnitTransactionType fromXml(String name) {
 		if ( StringHelper.isEmpty( name ) ) {
@@ -23,9 +23,6 @@ public class TransactionTypeMarshalling {
 	}
 
 	public static String toXml(PersistenceUnitTransactionType transactionType) {
-		if ( transactionType == null ) {
-			return null;
-		}
-		return transactionType.name();
+		return transactionType == null ? null : transactionType.name();
 	}
 }

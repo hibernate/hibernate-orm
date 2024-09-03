@@ -34,15 +34,15 @@ public interface PersistenceSettings {
 	String JAKARTA_PERSISTENCE_PROVIDER = "jakarta.persistence.provider";
 
 	/**
-	 * Specifies the {@linkplain jakarta.persistence.spi.PersistenceUnitTransactionType
+	 * Specifies the {@linkplain jakarta.persistence.PersistenceUnitTransactionType
 	 * type of transactions} supported by the entity managers. The default depends on
 	 * whether the program is considered to be executing in a Java SE or EE environment:
 	 * <ul>
 	 *     <li>For Java SE, the default is
-	 *     {@link jakarta.persistence.spi.PersistenceUnitTransactionType#RESOURCE_LOCAL
+	 *     {@link jakarta.persistence.PersistenceUnitTransactionType#RESOURCE_LOCAL
 	 *     RESOURCE_LOCAL}.
 	 *     <li>For Java EE, the default is
-	 *     {@link jakarta.persistence.spi.PersistenceUnitTransactionType#JTA JTA}.
+	 *     {@link jakarta.persistence.PersistenceUnitTransactionType#JTA JTA}.
 	 * </ul>
 	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.2

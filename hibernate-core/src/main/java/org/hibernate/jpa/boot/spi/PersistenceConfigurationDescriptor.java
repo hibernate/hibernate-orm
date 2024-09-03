@@ -19,7 +19,8 @@ import org.hibernate.jpa.HibernatePersistenceProvider;
 import jakarta.persistence.PersistenceConfiguration;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
+import jakarta.persistence.PersistenceUnitTransactionType;
+import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
 
 /**
  * PersistenceUnitDescriptor wrapper around {@linkplain PersistenceConfiguration}
@@ -34,7 +35,6 @@ public class PersistenceConfigurationDescriptor implements PersistenceUnitDescri
 
 	public PersistenceConfigurationDescriptor(PersistenceConfiguration persistenceConfiguration) {
 		this.persistenceConfiguration = persistenceConfiguration;
-
 		this.properties = CollectionHelper.asProperties( persistenceConfiguration.properties() );
 		this.managedClassNames = persistenceConfiguration.managedClasses().stream().map( Class::getName ).toList();
 	}
@@ -65,13 +65,14 @@ public class PersistenceConfigurationDescriptor implements PersistenceUnitDescri
 		return true;
 	}
 
-	@SuppressWarnings("removal")
+	@Override @SuppressWarnings("removal")
+	public jakarta.persistence.spi.PersistenceUnitTransactionType getTransactionType() {
+		return PersistenceUnitTransactionTypeHelper.toDeprecatedForm( getPersistenceUnitTransactionType() );
+	}
+
 	@Override
-	public PersistenceUnitTransactionType getTransactionType() {
-		return switch ( persistenceConfiguration.transactionType() ) {
-			case JTA -> PersistenceUnitTransactionType.JTA;
-			case RESOURCE_LOCAL -> PersistenceUnitTransactionType.RESOURCE_LOCAL;
-		};
+	public PersistenceUnitTransactionType getPersistenceUnitTransactionType() {
+		return persistenceConfiguration.transactionType();
 	}
 
 	@Override

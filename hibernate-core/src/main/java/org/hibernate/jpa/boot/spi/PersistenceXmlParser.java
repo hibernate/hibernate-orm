@@ -22,6 +22,7 @@ import org.hibernate.boot.archive.internal.ArchiveHelper;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl;
+import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl;
 import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl.JaxbPropertiesImpl;
 import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl.JaxbPropertiesImpl.JaxbPropertyImpl;
 import org.hibernate.boot.jaxb.internal.ConfigurationBinder;
@@ -38,7 +39,12 @@ import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 
 import jakarta.persistence.PersistenceException;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
+import jakarta.persistence.PersistenceUnitTransactionType;
+import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
+
+import static jakarta.persistence.PersistenceUnitTransactionType.JTA;
+import static jakarta.persistence.PersistenceUnitTransactionType.RESOURCE_LOCAL;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
  * Used by Hibernate to parse {@code persistence.xml} files in SE environments.
@@ -124,10 +130,9 @@ public final class PersistenceXmlParser {
 	 *
 	 * @return Map of persistence-unit descriptors keyed by the PU name
 	 */
-	@SuppressWarnings("removal")
 	public Map<String, PersistenceUnitDescriptor> parse(List<URL> persistenceXmlUrls) {
-		Map<String, PersistenceUnitDescriptor> persistenceUnits = new HashMap<>();
-		parsePersistenceXml( persistenceUnits, persistenceXmlUrls, PersistenceUnitTransactionType.RESOURCE_LOCAL );
+		final Map<String, PersistenceUnitDescriptor> persistenceUnits = new HashMap<>();
+		parsePersistenceXml( persistenceUnits, persistenceXmlUrls, RESOURCE_LOCAL );
 		return persistenceUnits;
 	}
 
@@ -142,7 +147,6 @@ public final class PersistenceXmlParser {
 	 */
 	public Map<String, PersistenceUnitDescriptor> parse(
 			List<URL> persistenceXmlUrls,
-			@SuppressWarnings("removal")
 			PersistenceUnitTransactionType transactionType) {
 		Map<String, PersistenceUnitDescriptor> persistenceUnits = new HashMap<>();
 		parsePersistenceXml( persistenceUnits, persistenceXmlUrls, transactionType );
@@ -151,14 +155,12 @@ public final class PersistenceXmlParser {
 
 	private void parsePersistenceXml(Map<String, PersistenceUnitDescriptor> persistenceUnits,
 			List<URL> xmlUrls,
-			@SuppressWarnings("removal")
 			PersistenceUnitTransactionType defaultTransactionType) {
 		for ( URL xmlUrl : xmlUrls ) {
 			parsePersistenceXml( persistenceUnits, xmlUrl, defaultTransactionType );
 		}
 	}
 
-	@SuppressWarnings("removal")
 	private void parsePersistenceXml(Map<String, PersistenceUnitDescriptor> persistenceUnits,
 			URL xmlUrl, PersistenceUnitTransactionType defaultTransactionType) {
 		if ( log.isTraceEnabled() ) {
@@ -168,10 +170,10 @@ public final class PersistenceXmlParser {
 		final URL persistenceUnitRootUrl = ArchiveHelper.getJarURLFromURLEntry( xmlUrl, "/META-INF/persistence.xml" );
 
 		final JaxbPersistenceImpl jaxbPersistence = loadUrlWithJaxb( xmlUrl );
-		final List<JaxbPersistenceImpl.JaxbPersistenceUnitImpl> jaxbPersistenceUnits = jaxbPersistence.getPersistenceUnit();
+		final List<JaxbPersistenceUnitImpl> jaxbPersistenceUnits = jaxbPersistence.getPersistenceUnit();
 
 		for ( int i = 0; i < jaxbPersistenceUnits.size(); i++ ) {
-			final JaxbPersistenceImpl.JaxbPersistenceUnitImpl jaxbPersistenceUnit = jaxbPersistenceUnits.get( i );
+			final JaxbPersistenceUnitImpl jaxbPersistenceUnit = jaxbPersistenceUnits.get( i );
 
 			if ( persistenceUnits.containsKey( jaxbPersistenceUnit.getName() ) ) {
 				log.duplicatedPersistenceUnitName( jaxbPersistenceUnit.getName() );
@@ -191,7 +193,7 @@ public final class PersistenceXmlParser {
 	}
 
 	private void bindPersistenceUnit(
-			JaxbPersistenceImpl.JaxbPersistenceUnitImpl jaxbPersistenceUnit,
+			JaxbPersistenceUnitImpl jaxbPersistenceUnit,
 			ParsedPersistenceXmlDescriptor persistenceUnitDescriptor) {
 		final String name = jaxbPersistenceUnit.getName();
 		if ( StringHelper.isNotEmpty( name ) ) {
@@ -199,11 +201,7 @@ public final class PersistenceXmlParser {
 			persistenceUnitDescriptor.setName( name );
 		}
 
-		//noinspection removal
-		final PersistenceUnitTransactionType transactionType = jaxbPersistenceUnit.getTransactionType();
-		if ( transactionType != null ) {
-			persistenceUnitDescriptor.setTransactionType( transactionType );
-		}
+		setTransactionType( jaxbPersistenceUnit, persistenceUnitDescriptor );
 
 		persistenceUnitDescriptor.setProviderClassName( jaxbPersistenceUnit.getProvider() );
 		persistenceUnitDescriptor.setNonJtaDataSource( jaxbPersistenceUnit.getNonJtaDataSource() );
@@ -218,11 +216,21 @@ public final class PersistenceXmlParser {
 		final JaxbPropertiesImpl propertyContainer = jaxbPersistenceUnit.getPropertyContainer();
 		if ( propertyContainer != null ) {
 			for ( JaxbPropertyImpl property : propertyContainer.getProperties() ) {
-				persistenceUnitDescriptor.getProperties().put(
-						property.getName(),
-						property.getValue()
-				);
+				persistenceUnitDescriptor.getProperties()
+						.put( property.getName(), property.getValue() );
 			}
+		}
+	}
+
+	@SuppressWarnings("removal")
+	private static void setTransactionType(
+			JaxbPersistenceUnitImpl jaxbPersistenceUnit,
+			ParsedPersistenceXmlDescriptor persistenceUnitDescriptor) {
+		final jakarta.persistence.spi.PersistenceUnitTransactionType transactionType =
+				jaxbPersistenceUnit.getTransactionType();
+		if ( transactionType != null ) {
+			persistenceUnitDescriptor.setTransactionType(
+					PersistenceUnitTransactionTypeHelper.toNewForm( transactionType ) );
 		}
 	}
 
@@ -233,18 +241,20 @@ public final class PersistenceXmlParser {
 		return false;
 	}
 
-	@SuppressWarnings({"deprecation", "removal"})
+	@SuppressWarnings("deprecation")
 	private void applyIntegrationOverrides(Map<?,?> integration, PersistenceUnitTransactionType defaultTransactionType,
 			ParsedPersistenceXmlDescriptor persistenceUnitDescriptor) {
 		if ( integration.containsKey( AvailableSettings.JAKARTA_PERSISTENCE_PROVIDER ) ) {
-			persistenceUnitDescriptor.setProviderClassName( (String) integration.get( AvailableSettings.JAKARTA_PERSISTENCE_PROVIDER ) );
+			persistenceUnitDescriptor.setProviderClassName( (String)
+					integration.get( AvailableSettings.JAKARTA_PERSISTENCE_PROVIDER ) );
 		}
 		else if ( integration.containsKey( AvailableSettings.JPA_PERSISTENCE_PROVIDER ) ) {
 			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
 					AvailableSettings.JPA_PERSISTENCE_PROVIDER,
 					AvailableSettings.JAKARTA_PERSISTENCE_PROVIDER
 			);
-			persistenceUnitDescriptor.setProviderClassName( (String) integration.get( AvailableSettings.JPA_PERSISTENCE_PROVIDER ) );
+			persistenceUnitDescriptor.setProviderClassName( (String)
+					integration.get( AvailableSettings.JPA_PERSISTENCE_PROVIDER ) );
 		}
 
 		if ( integration.containsKey( AvailableSettings.JPA_TRANSACTION_TYPE ) ) {
@@ -288,11 +298,10 @@ public final class PersistenceXmlParser {
 		ConfigurationHelper.overrideProperties( properties, integration );
 	}
 
-	@SuppressWarnings("removal")
 	private void applyTransactionTypeOverride(ParsedPersistenceXmlDescriptor persistenceUnitDescriptor,
 			PersistenceUnitTransactionType defaultTransactionType) {
 		// if transaction type is set already, use that value
-		if ( persistenceUnitDescriptor.getTransactionType() == null ) {
+		if ( persistenceUnitDescriptor.getPersistenceUnitTransactionType() == null ) {
 			// else
 			//		if JTA DS
 			//			use JTA
@@ -301,10 +310,10 @@ public final class PersistenceXmlParser {
 			//		else
 			//			use defaultTransactionType
 			if ( persistenceUnitDescriptor.getJtaDataSource() != null ) {
-				persistenceUnitDescriptor.setTransactionType( PersistenceUnitTransactionType.JTA );
+				persistenceUnitDescriptor.setTransactionType( JTA );
 			}
 			else if ( persistenceUnitDescriptor.getNonJtaDataSource() != null ) {
-				persistenceUnitDescriptor.setTransactionType( PersistenceUnitTransactionType.RESOURCE_LOCAL );
+				persistenceUnitDescriptor.setTransactionType( RESOURCE_LOCAL );
 			}
 			else {
 				persistenceUnitDescriptor.setTransactionType( defaultTransactionType );
@@ -312,16 +321,15 @@ public final class PersistenceXmlParser {
 		}
 	}
 
-	@SuppressWarnings("removal")
 	private static PersistenceUnitTransactionType parseTransactionType(String value) {
-		if ( StringHelper.isEmpty( value ) ) {
+		if ( isEmpty( value ) ) {
 			return null;
 		}
-		else if ( value.equalsIgnoreCase( "JTA" ) ) {
-			return PersistenceUnitTransactionType.JTA;
+		else if ( JTA.name().equalsIgnoreCase( value ) ) {
+			return JTA;
 		}
-		else if ( value.equalsIgnoreCase( "RESOURCE_LOCAL" ) ) {
-			return PersistenceUnitTransactionType.RESOURCE_LOCAL;
+		else if ( RESOURCE_LOCAL.name().equalsIgnoreCase( value ) ) {
+			return RESOURCE_LOCAL;
 		}
 		else {
 			throw new PersistenceException( "Unknown persistence unit transaction type : " + value );
@@ -335,13 +343,11 @@ public final class PersistenceXmlParser {
 			// avoid JAR locking on Windows and Tomcat
 			conn.setUseCaches( false );
 
-			try (InputStream inputStream = conn.getInputStream()) {
+			try ( InputStream inputStream = conn.getInputStream() ) {
 				final StreamSource inputSource = new StreamSource( inputStream );
 				final ConfigurationBinder configurationBinder = new ConfigurationBinder( classLoaderService );
-				final Binding<JaxbPersistenceImpl> binding = configurationBinder.bind(
-						inputSource,
-						new Origin( SourceType.URL, resourceName )
-				);
+				final Binding<JaxbPersistenceImpl> binding =
+						configurationBinder.bind( inputSource, new Origin( SourceType.URL, resourceName ) );
 				return binding.getRoot();
 			}
 			catch (IOException e) {

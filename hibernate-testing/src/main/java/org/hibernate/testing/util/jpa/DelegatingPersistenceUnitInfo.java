@@ -43,7 +43,7 @@ public class DelegatingPersistenceUnitInfo implements PersistenceUnitInfo {
 		return delegate.getQualifierAnnotationNames();
 	}
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	public PersistenceUnitTransactionType getTransactionType() {
 		return delegate.getTransactionType();
 	}

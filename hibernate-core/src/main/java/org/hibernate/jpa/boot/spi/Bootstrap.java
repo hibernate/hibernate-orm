@@ -18,7 +18,7 @@ import org.hibernate.jpa.boot.internal.MergedSettings;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 
 import jakarta.persistence.spi.PersistenceUnitInfo;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
+import jakarta.persistence.PersistenceUnitTransactionType;
 
 /**
  * Entry into the bootstrap process.
@@ -64,7 +64,6 @@ public final class Bootstrap {
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
 			URL persistenceXmlUrl,
 			String persistenceUnitName,
-			@SuppressWarnings("removal")
 			PersistenceUnitTransactionType transactionType,
 			Map integration) {
 		return new EntityManagerFactoryBuilderImpl(

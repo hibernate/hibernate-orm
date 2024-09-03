@@ -75,7 +75,6 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.Configurable;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.internal.ExceptionMapperLegacyJpaImpl;
 import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.hibernate.mapping.Collection;
@@ -146,6 +145,7 @@ import static org.hibernate.cfg.PersistenceSettings.SESSION_FACTORY_JNDI_NAME;
 import static org.hibernate.engine.config.spi.StandardConverters.STRING;
 import static org.hibernate.internal.FetchProfileHelper.getFetchProfiles;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.jpa.HibernateHints.HINT_TENANT_ID;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
@@ -457,17 +457,16 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		for ( PersistentClass model : bootMetamodel.getEntityBindings() ) {
 			if ( !model.isInherited() ) {
 				final KeyValue id = model.getIdentifier();
-				final Generator generator = id.createGenerator( dialect, (RootClass) model, model.getIdentifierProperty() );
-				if ( generator instanceof Configurable ) {
-					final Configurable identifierGenerator = (Configurable) generator;
-					identifierGenerator.initialize( sqlStringGenerationContext );
+				final Generator generator =
+						id.createGenerator( dialect, (RootClass) model, model.getIdentifierProperty() );
+				if ( generator instanceof Configurable configurable ) {
+					configurable.initialize( sqlStringGenerationContext );
 				}
 				//TODO: this isn't a great place to do this
-				if ( generator.allowAssignedIdentifiers() && id instanceof SimpleValue ) {
-					final SimpleValue simpleValue = (SimpleValue) id;
-					if ( simpleValue.getNullValue() == null ) {
-						simpleValue.setNullValue( "undefined" );
-					}
+				if ( generator.allowAssignedIdentifiers()
+						&& id instanceof SimpleValue simpleValue
+						&& simpleValue.getNullValue() == null ) {
+					simpleValue.setNullValue( "undefined" );
 				}
 				generators.put( model.getEntityName(), generator );
 			}
@@ -559,12 +558,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
 		assert configurationService != null;
-		final String puName = configurationService.getSetting( PersistenceSettings.PERSISTENCE_UNIT_NAME, STRING );
-		if ( puName != null ) {
-			return puName;
-		}
-
-		return null;
+		return configurationService.getSetting( PersistenceSettings.PERSISTENCE_UNIT_NAME, STRING );
 	}
 
 	private String determineJndiName(
@@ -574,19 +568,21 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
 		assert cfgService != null;
 		final String explicitJndiName = cfgService.getSetting( SESSION_FACTORY_JNDI_NAME, STRING );
-		if ( StringHelper.isNotEmpty( explicitJndiName ) ) {
+		if ( isNotEmpty( explicitJndiName ) ) {
 			return explicitJndiName;
 		}
 
 		final String puName = cfgService.getSetting( PERSISTENCE_UNIT_NAME, STRING );
 		// do not use name for JNDI if explicitly asked not to or if name comes from JPA persistence-unit name
-		final boolean nameIsNotJndiName = options.isSessionFactoryNameAlsoJndiName() == Boolean.FALSE || StringHelper.isNotEmpty( puName );
+		final boolean nameIsNotJndiName =
+				options.isSessionFactoryNameAlsoJndiName() == Boolean.FALSE
+						|| isNotEmpty( puName );
 		return !nameIsNotJndiName ? name : null;
 	}
 
 	private SessionBuilderImpl createDefaultSessionOpenOptionsIfPossible() {
-		final CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver = getCurrentTenantIdentifierResolver();
-		if ( currentTenantIdentifierResolver == null ) {
+		final CurrentTenantIdentifierResolver<Object> tenantIdResolver = getCurrentTenantIdentifierResolver();
+		if ( tenantIdResolver == null ) {
 			return withOptions();
 		}
 		else {
@@ -698,8 +694,8 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 	@Override
 	public StatelessSession openStatelessSession() {
-		if ( this.defaultStatelessOptions != null ) {
-			return this.defaultStatelessOptions.openStatelessSession();
+		if ( defaultStatelessOptions != null ) {
+			return defaultStatelessOptions.openStatelessSession();
 		}
 		else {
 			return withStatelessOptions().openStatelessSession();
@@ -799,12 +795,10 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		if ( map != null ) {
 			for ( Map.Entry<K, V> o : map.entrySet() ) {
 				final K key = o.getKey();
-				if ( key instanceof String ) {
-					final String sKey = (String) key;
-					if ( HINT_TENANT_ID.equals( sKey ) ) {
-						continue;
+				if ( key instanceof String string ) {
+					if ( !HINT_TENANT_ID.equals( string ) ) {
+						session.setProperty( string, o.getValue() );
 					}
-					session.setProperty( sKey, o.getValue() );
 				}
 			}
 		}
@@ -849,7 +843,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		return queryEngine.getCriteriaBuilder();
 	}
 
-	@Override
+	@Override @Deprecated
 	public MetamodelImplementor getMetamodel() {
 		validateNotClosed();
 		return (MetamodelImplementor) runtimeMetamodels.getMappingMetamodel();
@@ -1033,7 +1027,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 		// then try as a native-SQL or JPQL query
 		try {
-			QueryImplementor<?> hibernateQuery = query.unwrap( QueryImplementor.class );
+			final QueryImplementor<?> hibernateQuery = query.unwrap( QueryImplementor.class );
 			if ( hibernateQuery != null ) {
 				// create and register the proper NamedQueryDefinition...
 				if ( hibernateQuery instanceof NativeQueryImplementor ) {
@@ -1119,9 +1113,8 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		return getJpaMetamodel().getNamedEntityGraphs( entityType );
 	}
 
-	@Override
+	@Override @SuppressWarnings({"unchecked", "rawtypes"})
 	public void runInTransaction(Consumer<EntityManager> work) {
-		//noinspection unchecked,rawtypes
 		inTransaction( (Consumer) work );
 	}
 
@@ -1146,11 +1139,11 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	}
 
 	public FilterDefinition getFilterDefinition(String filterName) throws HibernateException {
-		FilterDefinition def = filters.get( filterName );
-		if ( def == null ) {
+		final FilterDefinition filterDefinition = filters.get( filterName );
+		if ( filterDefinition == null ) {
 			throw new UnknownFilterException( filterName );
 		}
-		return def;
+		return filterDefinition;
 	}
 
 	@Override
@@ -1563,7 +1556,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			return this;
 		}
 
-		@Override
+		@Override @Deprecated
 		public StatelessSessionBuilder tenantIdentifier(String tenantIdentifier) {
 			this.tenantIdentifier = tenantIdentifier;
 			return this;

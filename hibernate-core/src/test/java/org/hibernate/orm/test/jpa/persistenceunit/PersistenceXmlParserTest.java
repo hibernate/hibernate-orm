@@ -32,9 +32,8 @@ import org.junit.jupiter.api.Test;
 
 import org.jboss.logging.Logger;
 
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
+import jakarta.persistence.PersistenceUnitTransactionType;
 
-@SuppressWarnings("removal")
 @JiraKey("HHH-18231")
 public class PersistenceXmlParserTest {
 
@@ -81,30 +80,38 @@ public class PersistenceXmlParserTest {
 		assertThat( result.get( "multipu1" ) )
 				.returns( "multipu1", PersistenceUnitDescriptor::getName )
 				.returns(
-						PersistenceUnitTransactionType.RESOURCE_LOCAL, PersistenceUnitDescriptor::getTransactionType );
+						PersistenceUnitTransactionType.RESOURCE_LOCAL,
+						PersistenceUnitDescriptor::getPersistenceUnitTransactionType );
 		assertThat( result.get( "multipu2" ) )
 				.returns( "multipu2", PersistenceUnitDescriptor::getName )
 				.returns(
-						PersistenceUnitTransactionType.RESOURCE_LOCAL, PersistenceUnitDescriptor::getTransactionType );
+						PersistenceUnitTransactionType.RESOURCE_LOCAL,
+						PersistenceUnitDescriptor::getPersistenceUnitTransactionType );
 		assertThat( result.get( "multipu3" ) )
 				.returns( "multipu3", PersistenceUnitDescriptor::getName )
-				.returns( PersistenceUnitTransactionType.JTA, PersistenceUnitDescriptor::getTransactionType );
+				.returns( PersistenceUnitTransactionType.JTA,
+						PersistenceUnitDescriptor::getPersistenceUnitTransactionType );
 	}
 
 	@Test
 	public void parse_defaultTransactionType() {
 		var parser = PersistenceXmlParser.create();
-		var result = parser.parse( List.of( findPuResource( "multipu" ) ), PersistenceUnitTransactionType.JTA );
+		var result =
+				parser.parse( List.of( findPuResource( "multipu" ) ),
+						PersistenceUnitTransactionType.JTA );
 		assertThat( result.get( "multipu1" ) )
 				.returns( "multipu1", PersistenceUnitDescriptor::getName )
 				.returns(
-						PersistenceUnitTransactionType.JTA, PersistenceUnitDescriptor::getTransactionType );
+						PersistenceUnitTransactionType.JTA,
+						PersistenceUnitDescriptor::getPersistenceUnitTransactionType );
 		assertThat( result.get( "multipu2" ) )
 				.returns( "multipu2", PersistenceUnitDescriptor::getName )
-				.returns( PersistenceUnitTransactionType.RESOURCE_LOCAL, PersistenceUnitDescriptor::getTransactionType );
+				.returns( PersistenceUnitTransactionType.RESOURCE_LOCAL,
+						PersistenceUnitDescriptor::getPersistenceUnitTransactionType );
 		assertThat( result.get( "multipu3" ) )
 				.returns( "multipu3", PersistenceUnitDescriptor::getName )
-				.returns( PersistenceUnitTransactionType.JTA, PersistenceUnitDescriptor::getTransactionType );
+				.returns( PersistenceUnitTransactionType.JTA,
+						PersistenceUnitDescriptor::getPersistenceUnitTransactionType );
 	}
 
 	private static URL findPuResource(String resourceName) {

@@ -23,6 +23,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
+import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
@@ -38,13 +39,11 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.build.AllowSysOut;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
-import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
@@ -58,6 +57,8 @@ import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 
+import static java.lang.Thread.currentThread;
+import static org.hibernate.internal.util.config.ConfigurationHelper.resolvePlaceHolders;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.fail;
 
@@ -66,7 +67,7 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings( {"deprecation"} )
+@SuppressWarnings("deprecation")
 public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	public static final String VALIDATE_DATA_CLEANUP = "hibernate.test.validateDataCleanup";
 
@@ -178,7 +179,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	protected Configuration constructConfiguration(BootstrapServiceRegistry bootstrapServiceRegistry) {
-		Configuration configuration = new Configuration( bootstrapServiceRegistry );
+		final Configuration configuration = new Configuration( bootstrapServiceRegistry );
 		configuration.setProperty( AvailableSettings.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
 		if ( createSchema() ) {
 			configuration.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
@@ -203,7 +204,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	protected void addMappings(Configuration configuration) {
-		String[] mappings = getMappings();
+		final String[] mappings = getMappings();
 		if ( mappings != null ) {
 			for ( String mapping : mappings ) {
 				if ( mapping.startsWith( "/" ) ) {
@@ -214,22 +215,22 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 				}
 			}
 		}
-		Class<?>[] annotatedClasses = getAnnotatedClasses();
+		final Class<?>[] annotatedClasses = getAnnotatedClasses();
 		if ( annotatedClasses != null ) {
 			for ( Class<?> annotatedClass : annotatedClasses ) {
 				configuration.addAnnotatedClass( annotatedClass );
 			}
 		}
-		String[] annotatedPackages = getAnnotatedPackages();
+		final String[] annotatedPackages = getAnnotatedPackages();
 		if ( annotatedPackages != null ) {
 			for ( String annotatedPackage : annotatedPackages ) {
 				configuration.addPackage( annotatedPackage );
 			}
 		}
-		String[] xmlFiles = getOrmXmlFiles();
+		final String[] xmlFiles = getOrmXmlFiles();
 		if ( xmlFiles != null ) {
 			for ( String xmlFile : xmlFiles ) {
-				try ( InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFile ) ) {
+				try ( InputStream is = currentThread().getContextClassLoader().getResourceAsStream( xmlFile ) ) {
 					configuration.addInputStream( is );
 				}
 				catch (IOException e) {
@@ -265,7 +266,8 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	protected void applyCacheSettings(Configuration configuration) {
 		if ( getCacheConcurrencyStrategy() != null ) {
-			configuration.setProperty( AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY, getCacheConcurrencyStrategy() );
+			configuration.setProperty( AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY,
+					getCacheConcurrencyStrategy() );
 			configuration.setSharedCacheMode( SharedCacheMode.ALL );
 		}
 	}
@@ -287,18 +289,18 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
 	}
 
-	protected StandardServiceRegistryImpl buildServiceRegistry(BootstrapServiceRegistry bootRegistry, Configuration configuration) {
+	protected StandardServiceRegistryImpl buildServiceRegistry(
+			BootstrapServiceRegistry bootRegistry, Configuration configuration) {
 		try {
-			Properties properties = new Properties();
+			final Properties properties = new Properties();
 			properties.putAll( configuration.getProperties() );
-			ConfigurationHelper.resolvePlaceHolders( properties );
-
-			StandardServiceRegistryBuilder cfgRegistryBuilder = configuration.getStandardServiceRegistryBuilder();
-
-			StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder( bootRegistry, cfgRegistryBuilder.getAggregatedCfgXml() )
-					.applySettings( properties );
+			resolvePlaceHolders( properties );
+			final LoadedConfig loadedConfig =
+					configuration.getStandardServiceRegistryBuilder().getAggregatedCfgXml();
+			final StandardServiceRegistryBuilder registryBuilder =
+					new StandardServiceRegistryBuilder( bootRegistry, loadedConfig )
+							.applySettings( properties );
 			ServiceRegistryUtil.applySettings( registryBuilder );
-
 			prepareBasicRegistryBuilder( registryBuilder );
 			return (StandardServiceRegistryImpl) registryBuilder.build();
 		}
@@ -333,7 +335,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	@AfterClassOnce
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@SuppressWarnings("UnusedDeclaration")
 	protected void releaseSessionFactory() {
 		if ( sessionFactory == null ) {
 			return;
@@ -356,7 +358,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	@OnFailure
 	@OnExpectedFailure
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@SuppressWarnings("UnusedDeclaration")
 	public void onFailure() {
 		if ( rebuildSessionFactoryOnError() ) {
 			rebuildSessionFactory();
@@ -381,18 +383,13 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			ReflectHelper.getMethod( Class.forName( "org.h2.util.DateTimeUtils" ), "resetCalendar" )
 					.invoke( null );
 		}
-
 		completeStrayTransaction();
-
 		if ( isCleanupTestDataRequired() ) {
 			cleanupTestData();
 		}
 		cleanupTest();
-
 		cleanupSession();
-
 		assertAllDataRemoved();
-
 	}
 
 	private void completeStrayTransaction() {
@@ -401,7 +398,9 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			return;
 		}
 
-		if ( ( (SessionImplementor) session ).isClosed() ) {
+		final SessionImplementor sessionImplementor = (SessionImplementor) session;
+
+		if ( sessionImplementor.isClosed() ) {
 			// nothing to do
 			return;
 		}
@@ -411,13 +410,15 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			return;
 		}
 
-		final TransactionCoordinator.TransactionDriver tdc =
-				( (SessionImplementor) session ).getTransactionCoordinator().getTransactionDriverControl();
-
-		if ( tdc.getStatus().canRollback() ) {
+		if ( canRollback( sessionImplementor ) ) {
 			session.getTransaction().rollback();
 		}
 		session.close();
+	}
+
+	private static boolean canRollback(SessionImplementor sessionImplementor) {
+		return sessionImplementor.getTransactionCoordinator()
+				.getTransactionDriverControl().getStatus().canRollback();
 	}
 
 	protected void cleanupCache() {
@@ -435,18 +436,22 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	protected void cleanupTestData() throws Exception {
-		if(isCleanupTestDataUsingBulkDelete()) {
-			doInHibernate( this::sessionFactory, s -> {
-				s.createQuery( "delete from java.lang.Object" ).executeUpdate();
-			} );
-		}
-		else {
-			// Because of https://hibernate.atlassian.net/browse/HHH-5529,
-			// we can't rely on a Bulk Delete query which will not clear the link tables in @ElementCollection or unidirectional collections
-			doInHibernate( this::sessionFactory, s -> {
-				s.createQuery( "from java.lang.Object", Object.class ).list().forEach( s::remove );
-			} );
-		}
+		sessionFactory.getSchemaManager().truncateMappedObjects();
+//		if ( isCleanupTestDataUsingBulkDelete() ) {
+//			doInHibernate( this::sessionFactory, session -> {
+//				session.createMutationQuery( "delete from java.lang.Object" )
+//						.executeUpdate();
+//			} );
+//		}
+//		else {
+//			// Because of https://hibernate.atlassian.net/browse/HHH-5529,
+//			// we can't rely on a Bulk Delete query which will not clear the link tables in @ElementCollection or unidirectional collections
+//			doInHibernate( this::sessionFactory, session -> {
+//				session.createSelectionQuery( "from java.lang.Object", Object.class )
+//						.getResultList()
+//						.forEach( session::remove );
+//			} );
+//		}
 	}
 
 	private void cleanupSession() {
@@ -457,7 +462,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	public static class RollbackWork implements Work {
-
 		@Override
 		public void execute(Connection connection) throws SQLException {
 			connection.rollback();
@@ -476,13 +480,13 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			return;
 		}
 
-		Session tmpSession = sessionFactory.openSession();
-		Transaction transaction = tmpSession.beginTransaction();
+		final Session tmpSession = sessionFactory.openSession();
+		final Transaction transaction = tmpSession.beginTransaction();
 		try {
-
-			List<?> list = tmpSession.createQuery( "select o from java.lang.Object o" ).list();
-
-			Map<String,Integer> items = new HashMap<>();
+			final List<?> list =
+					tmpSession.createSelectionQuery( "select o from java.lang.Object o", Object.class )
+							.getResultList();
+			final Map<String,Integer> items = new HashMap<>();
 			if ( !list.isEmpty() ) {
 				for ( Object element : list ) {
 					Integer l = items.get( tmpSession.getEntityName( element ) );
@@ -500,12 +504,12 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		}
 		finally {
 			try {
-				if(transaction.getStatus().canRollback()){
+				if ( transaction.getStatus().canRollback() ) {
 					transaction.rollback();
 				}
 				tmpSession.close();
 			}
-			catch( Throwable t ) {
+			catch ( Throwable t ) {
 				// intentionally empty
 			}
 		}

@@ -793,6 +793,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public T translate(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions) {
 		try {
 			this.jdbcParameterBindings = jdbcParameterBindings;
+			if ( jdbcParameterBindings != null && jdbcParameterBindings.getAffectedTableNames() != null ) {
+				affectedTableNames.addAll( jdbcParameterBindings.getAffectedTableNames() );
+			}
 
 			final Statement statement = statementStack.pop();
 

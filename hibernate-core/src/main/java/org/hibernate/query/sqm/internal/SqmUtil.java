@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.function.Function;
 
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -662,28 +663,32 @@ public class SqmUtil {
 		if ( parameterType == null ) {
 			throw new SqlTreeCreationException( "Unable to interpret mapping-model type for Query parameter : " + domainParam );
 		}
-		else if ( parameterType instanceof PluralAttributeMapping ) {
+		else if ( parameterType instanceof PluralAttributeMapping pluralAttributeMapping ) {
 			// Default to the collection element
-			parameterType = ( (PluralAttributeMapping) parameterType ).getElementDescriptor();
+			parameterType = pluralAttributeMapping.getElementDescriptor();
 		}
 
-		if ( parameterType instanceof EntityIdentifierMapping ) {
-			final EntityIdentifierMapping identifierMapping = (EntityIdentifierMapping) parameterType;
+		if ( parameterType instanceof EntityIdentifierMapping identifierMapping) {
 			final EntityMappingType entityMapping = identifierMapping.findContainingEntityMapping();
 			if ( entityMapping.getRepresentationStrategy().getInstantiator().isInstance( bindValue, session.getFactory() ) ) {
 				bindValue = identifierMapping.getIdentifierIfNotUnsaved( bindValue, session );
 			}
 		}
-		else if ( parameterType instanceof EntityMappingType ) {
-			final EntityIdentifierMapping identifierMapping = ( (EntityMappingType) parameterType ).getIdentifierMapping();
+		else if ( parameterType instanceof EntityMappingType entityMappingType ) {
+			jdbcParameterBindings.addAffectedTableName(
+					entityMappingType.getEntityPersister().getTableName()
+			);
+			final EntityIdentifierMapping identifierMapping = entityMappingType.getIdentifierMapping();
 			final EntityMappingType entityMapping = identifierMapping.findContainingEntityMapping();
 			parameterType = identifierMapping;
 			if ( entityMapping.getRepresentationStrategy().getInstantiator().isInstance( bindValue, session.getFactory() ) ) {
 				bindValue = identifierMapping.getIdentifierIfNotUnsaved( bindValue, session );
 			}
 		}
-		else if ( parameterType instanceof EntityAssociationMapping ) {
-			EntityAssociationMapping association = (EntityAssociationMapping) parameterType;
+		else if ( parameterType instanceof EntityAssociationMapping association) {
+			jdbcParameterBindings.addAffectedTableName(
+					association.getAssociatedEntityMappingType().getEntityPersister().getTableName()
+			);
 			if ( association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
 				// If the association is the target, we must use the identifier of the EntityMappingType
 				bindValue = association.getAssociatedEntityMappingType().getIdentifierMapping()

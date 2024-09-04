@@ -8,6 +8,7 @@ package org.hibernate.sql.exec.spi;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Set;
 import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -105,5 +106,13 @@ public interface JdbcParameterBindings {
 						jdbcValue
 				)
 		);
+	}
+
+	default Set<String> getAffectedTableNames(){
+		return null;
+	}
+
+	default void addAffectedTableName(String tableName){
+
 	}
 }

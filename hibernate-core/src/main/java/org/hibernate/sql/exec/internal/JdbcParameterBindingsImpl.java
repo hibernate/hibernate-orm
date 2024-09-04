@@ -8,9 +8,11 @@ package org.hibernate.sql.exec.internal;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiConsumer;
 
 import org.hibernate.dialect.Dialect;
@@ -37,6 +39,7 @@ import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
  */
 public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 	private Map<JdbcParameter, JdbcParameterBinding> bindingMap;
+	private Set<String> affectedTableName;
 
 	public JdbcParameterBindingsImpl(int expectedParameterCount) {
 		if ( expectedParameterCount > 0 ) {
@@ -184,5 +187,18 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 		if ( bindingMap != null ) {
 			bindingMap.clear();
 		}
+	}
+
+	@Override
+	public Set<String> getAffectedTableNames() {
+		return affectedTableName;
+	}
+
+	@Override
+	public void addAffectedTableName(String tableName) {
+		if ( affectedTableName == null ) {
+			affectedTableName = new HashSet<>( bindingMap.size() );
+		}
+		affectedTableName.add( tableName );
 	}
 }

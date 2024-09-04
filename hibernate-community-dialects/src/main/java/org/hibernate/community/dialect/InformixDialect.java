@@ -42,7 +42,11 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
+import org.hibernate.mapping.PrimaryKey;
+import org.hibernate.mapping.Table;
+import org.hibernate.mapping.UniqueKey;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.spi.QueryOptions;
@@ -70,6 +74,7 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.internal.StandardForeignKeyExporter;
+import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -135,6 +140,30 @@ public class InformixDialect extends Dialect {
 				}
 			}
 			return results;
+		}
+	};
+	private final StandardTableExporter informixTableExporter = new StandardTableExporter( this ) {
+		@Override
+		protected String primaryKeyString(PrimaryKey key) {
+			final StringBuilder constraint = new StringBuilder();
+			constraint.append( "primary key (" );
+			boolean first = true;
+			for ( Column column : key.getColumns() ) {
+				if ( first ) {
+					first = false;
+				}
+				else {
+					constraint.append(", ");
+				}
+				constraint.append( column.getQuotedName( dialect ) );
+			}
+			constraint.append(')');
+			final UniqueKey orderingUniqueKey = key.getOrderingUniqueKey();
+			if ( orderingUniqueKey != null && orderingUniqueKey.isNameExplicit() ) {
+				constraint.append( " constraint " )
+						.append( orderingUniqueKey.getName() ).append( ' ' );
+			}
+			return constraint.toString();
 		}
 	};
 
@@ -660,6 +689,11 @@ public class InformixDialect extends Dialect {
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return InformixIdentityColumnSupport.INSTANCE;
+	}
+
+	@Override
+	public Exporter<Table> getTableExporter() {
+		return this.informixTableExporter;
 	}
 
 	@Override

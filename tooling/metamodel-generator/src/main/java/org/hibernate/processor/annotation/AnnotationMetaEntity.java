@@ -250,12 +250,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	@Override
 	public @Nullable String getSupertypeName() {
-		if ( repository ) {
-			return null;
-		}
-		else {
-			return findMappedSuperClass( this, context );
-		}
+		return repository ? null : findMappedSuperClass( this, context );
 	}
 
 	@Override
@@ -275,7 +270,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				mergeInMembers( entityToMerge.getMembers() );
 			}
 		}
-
 		return new ArrayList<>( members.values() );
 	}
 
@@ -289,7 +283,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			// propagate types to be imported
 			importType( attribute.getMetaType() );
 			importType( attribute.getTypeDeclaration() );
-
 			members.put( attribute.getPropertyName(), attribute );
 		}
 	}
@@ -298,7 +291,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		// store the entity in order do the merge lazily in case of
 		// an uninitialized embeddedable or mapped superclass
 		if ( !initialized ) {
-			this.entityToMerge = other;
+			entityToMerge = other;
 		}
 		else {
 			mergeInMembers( other.getMembers() );
@@ -1133,7 +1126,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			addQueryMethod( method, returnType, null );
 		}
 		else if ( kind == TypeKind.DECLARED ) {
-			final DeclaredType declaredType = (DeclaredType) ununiIfPossible(method, returnType);
+			final DeclaredType declaredType = (DeclaredType) unUniIfPossible(method, returnType);
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
 			final List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
 			switch ( typeArguments.size() ) {
@@ -1165,7 +1158,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private TypeMirror ununiIfPossible(ExecutableElement method, TypeMirror returnType) {
+	private TypeMirror unUniIfPossible(ExecutableElement method, TypeMirror returnType) {
 		final TypeMirror result = ununi( returnType );
 		if ( repository ) {
 			if ( usingReactiveSession( sessionType ) )  {
@@ -1324,7 +1317,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private void addLifecycleMethod(ExecutableElement method) {
-		final TypeMirror returnType = ununiIfPossible( method, method.getReturnType() );
+		final TypeMirror returnType = unUniIfPossible( method, method.getReturnType() );
 		if ( method.getParameters().size() != 1 ) {
 			message( method,
 					"must have exactly one parameter",

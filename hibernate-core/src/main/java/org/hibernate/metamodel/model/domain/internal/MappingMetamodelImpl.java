@@ -748,11 +748,6 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 		return null;
 	}
 
-	@Override
-	public void close() {
-		// anything to do ?
-	}
-
 	private String[] doGetImplementors(Class<?> clazz) throws MappingException {
 		final ArrayList<String> results = new ArrayList<>();
 		for ( EntityPersister checkPersister : entityPersisters().values() ) {

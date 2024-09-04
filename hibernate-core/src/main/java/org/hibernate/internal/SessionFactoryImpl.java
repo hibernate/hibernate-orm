@@ -41,7 +41,6 @@ import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.UnknownFilterException;
 import org.hibernate.binder.internal.TenantIdBinder;
-import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -52,15 +51,12 @@ import org.hibernate.cache.cfg.internal.DomainDataRegionConfigImpl;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.context.internal.JTASessionContext;
 import org.hibernate.context.internal.ManagedSessionContext;
 import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.FetchProfile;
@@ -103,9 +99,6 @@ import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy;
-import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableStrategy;
-import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.relational.SchemaManager;
 import org.hibernate.relational.internal.SchemaManagerImpl;
@@ -138,14 +131,12 @@ import static jakarta.persistence.SynchronizationType.SYNCHRONIZED;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.cfg.AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_VALIDATION_FACTORY;
-import static org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY;
-import static org.hibernate.cfg.PersistenceSettings.PERSISTENCE_UNIT_NAME;
-import static org.hibernate.cfg.PersistenceSettings.SESSION_FACTORY_JNDI_NAME;
-import static org.hibernate.engine.config.spi.StandardConverters.STRING;
 import static org.hibernate.internal.FetchProfileHelper.getFetchProfiles;
-import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
-import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.SessionFactorySettings.deprecationCheck;
+import static org.hibernate.internal.SessionFactorySettings.determineJndiName;
+import static org.hibernate.internal.SessionFactorySettings.getSessionFactoryName;
+import static org.hibernate.internal.SessionFactorySettings.getSettings;
+import static org.hibernate.internal.SessionFactorySettings.maskOutSensitiveInformation;
 import static org.hibernate.jpa.HibernateHints.HINT_TENANT_ID;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
@@ -262,8 +253,8 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			//noinspection unchecked
 			tenantIdentifierJavaType = jdbcMapping.getJavaTypeDescriptor();
 		}
-		for (Map.Entry<String, FilterDefinition> filterEntry : filters.entrySet()) {
-			if (filterEntry.getValue().isAutoEnabled()) {
+		for ( Map.Entry<String, FilterDefinition> filterEntry : filters.entrySet() ) {
+			if ( filterEntry.getValue().isAutoEnabled() ) {
 				autoEnabledFilters.add( filterEntry.getValue() );
 			}
 		}
@@ -295,7 +286,8 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			// create runtime metamodels (mapping and JPA)
 			final RuntimeMetamodelsImpl runtimeMetamodelsImpl = new RuntimeMetamodelsImpl();
 			runtimeMetamodels = runtimeMetamodelsImpl;
-			final MappingMetamodelImpl mappingMetamodelImpl = new MappingMetamodelImpl( typeConfiguration, serviceRegistry );
+			final MappingMetamodelImpl mappingMetamodelImpl =
+					new MappingMetamodelImpl( typeConfiguration, serviceRegistry );
 			runtimeMetamodelsImpl.setMappingMetamodel( mappingMetamodelImpl );
 			fastSessionServices = new FastSessionServices( this );
 			initializeMappingModel( mappingMetamodelImpl, bootstrapContext, bootMetamodel, options );
@@ -337,38 +329,16 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		LOG.debug( "Instantiated SessionFactory" );
 	}
 
-	private static void deprecationCheck(Map<String, Object> settings) {
-		for ( String s:settings.keySet() ) {
-			switch (s) {
-				case "hibernate.hql.bulk_id_strategy.global_temporary.create_tables":
-					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.global_temporary.create_tables", GlobalTemporaryTableStrategy.CREATE_ID_TABLES );
-				case "hibernate.hql.bulk_id_strategy.global_temporary.drop_tables":
-					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.global_temporary.drop_tables", GlobalTemporaryTableStrategy.DROP_ID_TABLES );
-				case "hibernate.hql.bulk_id_strategy.persistent.create_tables":
-					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.persistent.create_tables", PersistentTableStrategy.CREATE_ID_TABLES );
-				case "hibernate.hql.bulk_id_strategy.persistent.drop_tables":
-					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.persistent.drop_tables", PersistentTableStrategy.DROP_ID_TABLES );
-				case "hibernate.hql.bulk_id_strategy.persistent.schema":
-					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.persistent.schema", PersistentTableStrategy.SCHEMA );
-				case "hibernate.hql.bulk_id_strategy.persistent.catalog":
-					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.persistent.catalog", PersistentTableStrategy.CATALOG );
-				case "hibernate.hql.bulk_id_strategy.local_temporary.drop_tables":
-					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.local_temporary.drop_tables", LocalTemporaryTableStrategy.DROP_ID_TABLES );
-			}
-		}
-	}
-
 	private void initializeMappingModel(
 			MappingMetamodelImpl mappingMetamodelImpl,
 			BootstrapContext bootstrapContext,
 			MetadataImplementor bootMetamodel,
 			SessionFactoryOptions options) {
-		final TypeConfiguration typeConfiguration = mappingMetamodelImpl.getTypeConfiguration();
 		mappingMetamodelImpl.finishInitialization( runtimeModelCreationContext(
 				bootstrapContext,
 				bootMetamodel,
 				mappingMetamodelImpl,
-				typeConfiguration,
+				mappingMetamodelImpl.getTypeConfiguration(),
 				options
 		) );
 	}
@@ -527,58 +497,6 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		integratorObserver.integrators.clear();
 	}
 
-
-	private static Map<String, Object> getSettings(SessionFactoryOptions options, SessionFactoryServiceRegistry serviceRegistry) {
-		final Map<String, Object> settings = serviceRegistry.requireService( ConfigurationService.class ).getSettings();
-		final Map<String,Object> result = new HashMap<>( settings );
-		if ( !settings.containsKey( JPA_VALIDATION_FACTORY ) && !settings.containsKey( JAKARTA_VALIDATION_FACTORY ) ) {
-			final Object reference = options.getValidatorFactoryReference();
-			if ( reference != null ) {
-				result.put( JPA_VALIDATION_FACTORY, reference );
-				result.put( JAKARTA_VALIDATION_FACTORY, reference );
-			}
-		}
-		return result;
-	}
-
-	private static String getSessionFactoryName(SessionFactoryOptions options, SessionFactoryServiceRegistry serviceRegistry) {
-		final String sessionFactoryName = options.getSessionFactoryName();
-		if ( sessionFactoryName != null ) {
-			return sessionFactoryName;
-		}
-
-		final CfgXmlAccessService cfgXmlAccessService = serviceRegistry.requireService( CfgXmlAccessService.class );
-		if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
-			final String nameFromAggregation = cfgXmlAccessService.getAggregatedConfig().getSessionFactoryName();
-			if ( nameFromAggregation != null ) {
-				return nameFromAggregation;
-			}
-		}
-
-
-		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
-		assert configurationService != null;
-		return configurationService.getSetting( PersistenceSettings.PERSISTENCE_UNIT_NAME, STRING );
-	}
-
-	private String determineJndiName(
-			String name,
-			SessionFactoryOptions options,
-			SessionFactoryServiceRegistry serviceRegistry) {
-		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
-		assert cfgService != null;
-		final String explicitJndiName = cfgService.getSetting( SESSION_FACTORY_JNDI_NAME, STRING );
-		if ( isNotEmpty( explicitJndiName ) ) {
-			return explicitJndiName;
-		}
-
-		final String puName = cfgService.getSetting( PERSISTENCE_UNIT_NAME, STRING );
-		// do not use name for JNDI if explicitly asked not to or if name comes from JPA persistence-unit name
-		final boolean nameIsNotJndiName =
-				options.isSessionFactoryNameAlsoJndiName() == Boolean.FALSE
-						|| isNotEmpty( puName );
-		return !nameIsNotJndiName ? name : null;
-	}
 
 	private SessionBuilderImpl createDefaultSessionOpenOptionsIfPossible() {
 		final CurrentTenantIdentifierResolver<Object> tenantIdResolver = getCurrentTenantIdentifierResolver();
@@ -888,7 +806,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		LOG.debug( "Returning a Reference to the SessionFactory" );
 		return new Reference(
 				SessionFactoryImpl.class.getName(),
-				new StringRefAddr("uuid", getUuid()),
+				new StringRefAddr( "uuid", getUuid() ),
 				SessionFactoryRegistry.ObjectFactoryImpl.class.getName(),
 				null
 		);
@@ -954,20 +872,16 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 				runtimeMetamodels.getMappingMetamodel().forEachEntityDescriptor(
 						entityPersister -> {
 							if ( entityPersister.getSqmMultiTableMutationStrategy() != null ) {
-								entityPersister.getSqmMultiTableMutationStrategy().release(
-										this,
-										jdbcConnectionAccess
-								);
+								entityPersister.getSqmMultiTableMutationStrategy()
+										.release( this, jdbcConnectionAccess );
 							}
 							if ( entityPersister.getSqmMultiTableInsertStrategy() != null ) {
-								entityPersister.getSqmMultiTableInsertStrategy().release(
-										this,
-										jdbcConnectionAccess
-								);
+								entityPersister.getSqmMultiTableInsertStrategy()
+										.release( this, jdbcConnectionAccess );
 							}
 						}
 				);
-				( (MappingMetamodelImpl) runtimeMetamodels.getMappingMetamodel() ).close();
+//				( (MappingMetamodelImpl) runtimeMetamodels.getMappingMetamodel() ).close();
 			}
 
 			if ( queryEngine != null ) {
@@ -1324,18 +1238,18 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 			// set up default builder values...
 			final SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
-			this.statementInspector = sessionFactoryOptions.getStatementInspector();
-			this.connectionHandlingMode = sessionFactoryOptions.getPhysicalConnectionHandlingMode();
-			this.autoClose = sessionFactoryOptions.isAutoCloseSessionEnabled();
-			this.defaultBatchFetchSize = sessionFactoryOptions.getDefaultBatchFetchSize();
-			this.subselectFetchEnabled = sessionFactoryOptions.isSubselectFetchEnabled();
+			statementInspector = sessionFactoryOptions.getStatementInspector();
+			connectionHandlingMode = sessionFactoryOptions.getPhysicalConnectionHandlingMode();
+			autoClose = sessionFactoryOptions.isAutoCloseSessionEnabled();
+			defaultBatchFetchSize = sessionFactoryOptions.getDefaultBatchFetchSize();
+			subselectFetchEnabled = sessionFactoryOptions.isSubselectFetchEnabled();
 
 			final CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver =
 					sessionFactory.getCurrentTenantIdentifierResolver();
 			if ( currentTenantIdentifierResolver != null ) {
 				tenantIdentifier = currentTenantIdentifierResolver.resolveCurrentTenantIdentifier();
 			}
-			this.jdbcTimeZone = sessionFactoryOptions.getJdbcTimeZone();
+			jdbcTimeZone = sessionFactoryOptions.getJdbcTimeZone();
 		}
 
 
@@ -1770,21 +1684,6 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		boolean isNamed = ois.readBoolean();
 		final String name = isNamed ? ois.readUTF() : null;
 		return (SessionFactoryImpl) locateSessionFactoryOnDeserialization( uuid, name );
-	}
-
-	private static void maskOutSensitiveInformation(Map<String, Object> props) {
-		maskOutIfSet( props, AvailableSettings.JPA_JDBC_USER );
-		maskOutIfSet( props, AvailableSettings.JPA_JDBC_PASSWORD );
-		maskOutIfSet( props, AvailableSettings.JAKARTA_JDBC_USER );
-		maskOutIfSet( props, AvailableSettings.JAKARTA_JDBC_PASSWORD );
-		maskOutIfSet( props, AvailableSettings.USER );
-		maskOutIfSet( props, AvailableSettings.PASS );
-	}
-
-	private static void maskOutIfSet(Map<String, Object> props, String setting) {
-		if ( props.containsKey( setting ) ) {
-			props.put( setting, "****" );
-		}
 	}
 
 	/**

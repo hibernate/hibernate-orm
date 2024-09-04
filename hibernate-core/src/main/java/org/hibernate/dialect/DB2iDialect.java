@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.LockOptions;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
@@ -40,6 +41,9 @@ public class DB2iDialect extends DB2Dialect {
 
 	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 7, 1 );
 	final static DatabaseVersion DB2_LUW_VERSION = DB2Dialect.MINIMUM_VERSION;
+
+	private static final String FOR_UPDATE_SQL = " for update with rs";
+	private static final String FOR_UPDATE_SKIP_LOCKED_SQL = FOR_UPDATE_SQL + " skip locked data";
 
 	public DB2iDialect(DialectResolutionInfo info) {
 		this( info.makeCopyOrDefault( MINIMUM_VERSION ) );
@@ -124,6 +128,7 @@ public class DB2iDialect extends DB2Dialect {
 		}
 	}
 
+
 	@Override
 	public LimitHandler getLimitHandler() {
 		return getVersion().isSameOrAfter(7, 3)
@@ -170,5 +175,36 @@ public class DB2iDialect extends DB2Dialect {
 	@Override
 	public String getRowIdColumnString(String rowId) {
 		return rowId( rowId ) + " rowid not null generated always";
+	}
+
+	@Override
+	public String getForUpdateString() {
+		return FOR_UPDATE_SQL;
+	}
+
+	@Override
+	public String getForUpdateSkipLockedString() {
+		return supportsSkipLocked()
+				? FOR_UPDATE_SKIP_LOCKED_SQL
+				: FOR_UPDATE_SQL;
+	}
+
+	@Override
+	public String getForUpdateSkipLockedString(String aliases) {
+		return getForUpdateSkipLockedString();
+	}
+
+	@Override
+	public String getWriteLockString(int timeout) {
+		return timeout == LockOptions.SKIP_LOCKED && supportsSkipLocked()
+				? FOR_UPDATE_SKIP_LOCKED_SQL
+				: FOR_UPDATE_SQL;
+	}
+
+	@Override
+	public String getReadLockString(int timeout) {
+		return timeout == LockOptions.SKIP_LOCKED && supportsSkipLocked()
+				? FOR_UPDATE_SKIP_LOCKED_SQL
+				: FOR_UPDATE_SQL;
 	}
 }

@@ -28,7 +28,6 @@ import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultsHelper;
-import org.hibernate.query.results.TableGroupImpl;
 import org.hibernate.query.results.complete.CompleteFetchBuilder;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -196,15 +195,17 @@ public class DynamicResultBuilderEntityStandard
 		final TableGroup tableGroup = fromClauseAccess.resolveTableGroup(
 				elementNavigablePath,
 				np -> {
-					final TableReference tableReference = entityMapping.createPrimaryTableReference(
-							new SqlAliasBaseConstant( tableAlias ),
-							creationState
-					);
-
 					if ( lockMode != null ) {
 						domainResultCreationState.getSqlAstCreationState().registerLockMode( tableAlias, lockMode );
 					}
-					return new TableGroupImpl( elementNavigablePath, tableAlias, tableReference, entityMapping );
+					return entityMapping.createRootTableGroup(
+							true,
+							navigablePath,
+							tableAlias,
+							new SqlAliasBaseConstant( tableAlias ),
+							null,
+							creationState
+					);
 				}
 		);
 		final TableReference tableReference = tableGroup.getPrimaryTableReference();

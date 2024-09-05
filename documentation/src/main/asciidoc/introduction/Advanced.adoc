@@ -46,6 +46,8 @@ _Typically_, but not necessarily, a `@FilterDef` specifies a default restriction
 package org.hibernate.example;
 ----
 
+Note that filter restrictions are always written in the native SQL dialect of the database, _not_ in HQL.
+
 The restriction must contain a reference to the parameter of the filter, specified using the usual syntax for named parameters.
 
 Any entity or collection which is affected by a filter must be annotated link:{doc-javadoc-url}org/hibernate/annotations/Filter.html[`@Filter`]:

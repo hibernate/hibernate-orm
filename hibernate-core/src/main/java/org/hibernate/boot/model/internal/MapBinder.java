@@ -14,10 +14,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.MapKeyCompositeType;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.AccessType;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.engine.jdbc.Size;
@@ -36,6 +33,10 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
+import org.hibernate.models.internal.ClassTypeDetailsImpl;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.BasicType;
 import org.hibernate.usertype.CompositeUserType;
@@ -44,6 +45,7 @@ import org.hibernate.usertype.UserCollectionType;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.MapKeyClass;
 import jakarta.persistence.MapKeyColumn;
@@ -107,11 +109,29 @@ public class MapBinder extends CollectionBinder {
 		};
 	}
 
-	private void makeOneToManyMapKeyColumnNullableIfNotInProperty(
-			final XProperty property) {
+	@Override
+	protected boolean mappingDefinedAttributeOverrideOnElement(MemberDetails property) {
+		if ( property.hasDirectAnnotationUsage( AttributeOverride.class ) ) {
+			return namedMapValue( property.getDirectAnnotationUsage( AttributeOverride.class ) );
+		}
+		if ( property.hasDirectAnnotationUsage( AttributeOverrides.class ) ) {
+			final AttributeOverrides annotations = property.getDirectAnnotationUsage( AttributeOverrides.class );
+			for ( AttributeOverride attributeOverride : annotations.value() ) {
+				if ( namedMapValue( attributeOverride ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private boolean namedMapValue(AttributeOverride annotation) {
+		return annotation.name().startsWith( "value." );
+	}
+
+	private void makeOneToManyMapKeyColumnNullableIfNotInProperty(MemberDetails property) {
 		final Map map = (Map) this.collection;
-		if ( map.isOneToMany() &&
-				property.isAnnotationPresent( MapKeyColumn.class ) ) {
+		if ( map.isOneToMany() && property.hasDirectAnnotationUsage( MapKeyColumn.class ) ) {
 			final Value indexValue = map.getIndex();
 			if ( indexValue.getColumnSpan() != 1 ) {
 				throw new AssertionFailure( "Map key mapped by @MapKeyColumn does not have 1 column" );
@@ -150,11 +170,11 @@ public class MapBinder extends CollectionBinder {
 	}
 
 	private void bindKeyFromAssociationTable(
-			XClass elementType,
+			TypeDetails elementType,
 			java.util.Map<String, PersistentClass> persistentClasses,
 			boolean hasMapKeyProperty,
 			String mapKeyPropertyName,
-			XProperty property,
+			MemberDetails property,
 			boolean isEmbedded,
 			AnnotatedColumns mapKeyColumns,
 			AnnotatedJoinColumns mapKeyManyToManyColumns) {
@@ -170,7 +190,7 @@ public class MapBinder extends CollectionBinder {
 
 	private void handleMapKey(
 			java.util.Map<String, PersistentClass> persistentClasses,
-			XProperty property,
+			MemberDetails property,
 			boolean isEmbedded,
 			AnnotatedColumns mapKeyColumns,
 			AnnotatedJoinColumns mapKeyManyToManyColumns) {
@@ -184,14 +204,15 @@ public class MapBinder extends CollectionBinder {
 			bindManyToManyInverseForeignKey( collectionEntity, mapKeyManyToManyColumns, element, false );
 		}
 		else {
-			final XClass keyClass = mapKeyClass( mapKeyType );
+			final ClassDetails keyClass = mapKeyClass( mapKeyType );
+			final TypeDetails keyTypeDetails = new ClassTypeDetailsImpl( keyClass, TypeDetails.Kind.CLASS );
 			handleMapKey(
 					property,
 					mapKeyColumns,
 					mapKeyType,
-					keyClass,
-					annotatedMapKeyType( property, isEmbedded, mapKeyType, keyClass ),
-					buildCollectionPropertyHolder( property, keyClass ),
+					keyTypeDetails,
+					annotatedMapKeyType( property, isEmbedded, mapKeyType, keyTypeDetails ),
+					buildCollectionPropertyHolder( property, keyTypeDetails ),
 					accessType( property, collection.getOwner() )
 			);
 		}
@@ -205,10 +226,10 @@ public class MapBinder extends CollectionBinder {
 	}
 
 	private AnnotatedClassType annotatedMapKeyType(
-			XProperty property,
+			MemberDetails property,
 			boolean isEmbedded,
 			String mapKeyType,
-			XClass keyClass) {
+			TypeDetails keyTypeDetails) {
 		if ( isPrimitive( mapKeyType ) ) {
 			return NONE;
 		}
@@ -216,32 +237,31 @@ public class MapBinder extends CollectionBinder {
 			// force in case of attribute override naming the key
 			return isEmbedded || mappingDefinedAttributeOverrideOnMapKey( property )
 					? EMBEDDABLE
-					: buildingContext.getMetadataCollector().getClassType( keyClass );
+					: buildingContext.getMetadataCollector().getClassType( keyTypeDetails.determineRawClass() );
 		}
 	}
 
-	private XClass mapKeyClass(String mapKeyType) {
+	private ClassDetails mapKeyClass(String mapKeyType) {
 		if ( isPrimitive( mapKeyType ) ) {
 			return null;
 		}
 		else {
-			final BootstrapContext bootstrapContext = buildingContext.getBootstrapContext();
-			final Class<Object> mapKeyClass = bootstrapContext.getClassLoaderAccess().classForName( mapKeyType );
-			return bootstrapContext.getReflectionManager().toXClass( mapKeyClass );
+			return buildingContext.getMetadataCollector().getSourceModelBuildingContext().getClassDetailsRegistry().resolveClassDetails( mapKeyType );
 		}
 	}
 
-	private static String getKeyType(XProperty property) {
+	private static String getKeyType(MemberDetails property) {
 		//target has priority over reflection for the map key type
 		//JPA 2 has priority
-		final Class<?> target = property.isAnnotationPresent( MapKeyClass.class )
-				? property.getAnnotation( MapKeyClass.class ).value()
+		final MapKeyClass mapKeyClassAnn = property.getDirectAnnotationUsage( MapKeyClass.class );
+		final Class<?> target = mapKeyClassAnn != null
+				? mapKeyClassAnn.value()
 				: void.class;
-		return void.class.equals( target ) ? property.getMapKey().getName() : target.getName();
+		return void.class.equals( target ) ? property.getMapKeyType().getName() : target.getName();
 	}
 
 	private void handleMapKeyProperty(
-			XClass elementType,
+			TypeDetails elementType,
 			java.util.Map<String, PersistentClass> persistentClasses,
 			String mapKeyPropertyName) {
 		final PersistentClass associatedClass = persistentClasses.get( elementType.getName() );
@@ -255,7 +275,7 @@ public class MapBinder extends CollectionBinder {
 					+ "' not found in target entity '" + associatedClass.getEntityName() + "'" );
 		}
 		// HHH-11005 - if InheritanceType.JOINED then need to find class defining the column
-		final InheritanceState inheritanceState = inheritanceStatePerClass.get( elementType );
+		final InheritanceState inheritanceState = inheritanceStatePerClass.get( elementType.determineRawClass() );
 		final PersistentClass targetEntity = InheritanceType.JOINED == inheritanceState.getType()
 				? mapProperty.getPersistentClass()
 				: associatedClass;
@@ -265,8 +285,13 @@ public class MapBinder extends CollectionBinder {
 	}
 
 	private CollectionPropertyHolder buildCollectionPropertyHolder(
-			XProperty property,
-			XClass keyClass) {
+			MemberDetails property,
+			TypeDetails keyClass) {
+		return buildCollectionPropertyHolder( property, keyClass.determineRawClass() );
+	}
+	private CollectionPropertyHolder buildCollectionPropertyHolder(
+			MemberDetails property,
+			ClassDetails keyClass) {
 		final CollectionPropertyHolder holder = buildPropertyHolder(
 				collection,
 				qualify( collection.getRole(), "mapkey" ),
@@ -283,13 +308,12 @@ public class MapBinder extends CollectionBinder {
 		return holder;
 	}
 
-	private void handleForeignKey(XProperty property, ManyToOne element) {
-		final jakarta.persistence.ForeignKey foreignKey = getMapKeyForeignKey( property );
+	private void handleForeignKey(MemberDetails property, ManyToOne element) {
+		final ForeignKey foreignKey = getMapKeyForeignKey( property );
 		if ( foreignKey != null ) {
 			final ConstraintMode constraintMode = foreignKey.value();
 			if ( constraintMode == ConstraintMode.NO_CONSTRAINT
-					|| constraintMode == ConstraintMode.PROVIDER_DEFAULT
-							&& getBuildingContext().getBuildingOptions().isNoConstraintByDefault() ) {
+					|| constraintMode == ConstraintMode.PROVIDER_DEFAULT && getBuildingContext().getBuildingOptions().isNoConstraintByDefault() ) {
 				element.disableForeignKey();
 			}
 			else {
@@ -315,28 +339,28 @@ public class MapBinder extends CollectionBinder {
 	}
 
 	private void handleMapKey(
-			XProperty property,
+			MemberDetails property,
 			AnnotatedColumns mapKeyColumns,
 			String mapKeyType,
-			XClass keyClass,
+			TypeDetails keyTypeDetails,
 			AnnotatedClassType classType,
 			CollectionPropertyHolder holder,
 			AccessType accessType) {
-		final Class<? extends CompositeUserType<?>> compositeUserType =
-				resolveCompositeUserType( property, keyClass, buildingContext );
+		final Class<? extends CompositeUserType<?>> compositeUserType
+				= resolveCompositeUserType( property, keyTypeDetails, buildingContext );
 		if ( classType == EMBEDDABLE || compositeUserType != null ) {
-			handleCompositeMapKey( keyClass, holder, accessType, compositeUserType );
+			handleCompositeMapKey( keyTypeDetails, holder, accessType, compositeUserType );
 		}
 		else {
-			handleMapKey( property, mapKeyColumns, mapKeyType, keyClass, holder, accessType );
+			handleMapKey( property, mapKeyColumns, mapKeyType, keyTypeDetails, holder, accessType );
 		}
 	}
 
 	private void handleMapKey(
-			XProperty property,
+			MemberDetails property,
 			AnnotatedColumns mapKeyColumns,
 			String mapKeyType,
-			XClass keyClass,
+			TypeDetails keyTypeDetails,
 			CollectionPropertyHolder holder,
 			AccessType accessType) {
 		final BasicValueBinder elementBinder = new BasicValueBinder( BasicValueBinder.Kind.MAP_KEY, buildingContext );
@@ -353,9 +377,9 @@ public class MapBinder extends CollectionBinder {
 		//the algorithm generally does not apply for map key anyway
 		elementBinder.setType(
 				property,
-				keyClass,
+				keyTypeDetails,
 				collection.getOwnerEntityName(),
-				holder.mapKeyAttributeConverterDescriptor( property, keyClass )
+				holder.mapKeyAttributeConverterDescriptor( property, keyTypeDetails )
 		);
 		elementBinder.setPersistentClassName( propertyHolder.getEntityName() );
 		elementBinder.setAccessType( accessType );
@@ -363,17 +387,17 @@ public class MapBinder extends CollectionBinder {
 	}
 
 	private void handleCompositeMapKey(
-			XClass keyClass,
+			TypeDetails keyTypeDetails,
 			CollectionPropertyHolder holder,
 			AccessType accessType,
 			Class<? extends CompositeUserType<?>> compositeUserType) {
 		getMap().setIndex( fillEmbeddable(
 				holder,
-				propertyPreloadedData( keyClass ),
+				propertyPreloadedData( keyTypeDetails ),
 				accessType,
 				//TODO be smart with isNullable
 				true,
-				new EntityBinder(),
+				new EntityBinder( buildingContext ),
 				false,
 				false,
 				true,
@@ -385,56 +409,53 @@ public class MapBinder extends CollectionBinder {
 		) );
 	}
 
-	private PropertyPreloadedData propertyPreloadedData(XClass keyClass) {
+	private PropertyPreloadedData propertyPreloadedData(TypeDetails keyTypeDetails) {
 		return isHibernateExtensionMapping()
-				? new PropertyPreloadedData( AccessType.PROPERTY, "index", keyClass )
+				? new PropertyPreloadedData( AccessType.PROPERTY, "index", keyTypeDetails )
 				// "key" is the JPA 2 prefix for map keys
-				: new PropertyPreloadedData( AccessType.PROPERTY, "key", keyClass );
+				: new PropertyPreloadedData( AccessType.PROPERTY, "key", keyTypeDetails );
 	}
 
 	private static Class<? extends CompositeUserType<?>> resolveCompositeUserType(
-			XProperty property,
-			XClass returnedClass,
+			MemberDetails property,
+			TypeDetails returnedClass,
 			MetadataBuildingContext context) {
-		final MapKeyCompositeType compositeType = property.getAnnotation( MapKeyCompositeType.class );
+		final MapKeyCompositeType compositeType = property.getDirectAnnotationUsage( MapKeyCompositeType.class );
 		if ( compositeType != null ) {
 			return compositeType.value();
 		}
 
 		if ( returnedClass != null ) {
-			final Class<?> embeddableClass = context.getBootstrapContext()
-					.getReflectionManager()
-					.toClass( returnedClass );
-			if ( embeddableClass != null ) {
-				return context.getMetadataCollector().findRegisteredCompositeUserType( embeddableClass );
-			}
+			return context.getMetadataCollector().findRegisteredCompositeUserType( returnedClass.determineRawClass().toJavaClass() );
 		}
 
 		return null;
 	}
 
-	private jakarta.persistence.ForeignKey getMapKeyForeignKey(XProperty property) {
-		final MapKeyJoinColumns mapKeyJoinColumns = property.getAnnotation( MapKeyJoinColumns.class );
-		final MapKeyJoinColumn mapKeyJoinColumn = property.getAnnotation( MapKeyJoinColumn.class );
+	private jakarta.persistence.ForeignKey getMapKeyForeignKey(MemberDetails property) {
+		final MapKeyJoinColumns mapKeyJoinColumns = property.getDirectAnnotationUsage( MapKeyJoinColumns.class );
 		if ( mapKeyJoinColumns != null ) {
 			return mapKeyJoinColumns.foreignKey();
 		}
-		else if ( mapKeyJoinColumn != null ) {
+
+		final MapKeyJoinColumn mapKeyJoinColumn = property.getDirectAnnotationUsage( MapKeyJoinColumn.class );
+		if ( mapKeyJoinColumn != null ) {
 			return mapKeyJoinColumn.foreignKey();
 		}
-		else {
-			return null;
-		}
+
+		return null;
 	}
 
-	private boolean mappingDefinedAttributeOverrideOnMapKey(XProperty property) {
-		if ( property.isAnnotationPresent( AttributeOverride.class ) ) {
-			return namedMapKey( property.getAnnotation( AttributeOverride.class ) );
+	private boolean mappingDefinedAttributeOverrideOnMapKey(MemberDetails property) {
+		final AttributeOverride overrideAnn = property.getDirectAnnotationUsage( AttributeOverride.class );
+		if ( overrideAnn != null ) {
+			return namedMapKey( overrideAnn );
 		}
-		if ( property.isAnnotationPresent( AttributeOverrides.class ) ) {
-			final AttributeOverrides annotations = property.getAnnotation( AttributeOverrides.class );
-			for ( AttributeOverride attributeOverride : annotations.value() ) {
-				if ( namedMapKey( attributeOverride ) ) {
+
+		final AttributeOverrides overridesAnn = property.getDirectAnnotationUsage( AttributeOverrides.class );
+		if ( overridesAnn != null ) {
+			for ( AttributeOverride nestedAnn : overridesAnn.value() ) {
+				if ( namedMapKey( nestedAnn ) ) {
 					return true;
 				}
 			}

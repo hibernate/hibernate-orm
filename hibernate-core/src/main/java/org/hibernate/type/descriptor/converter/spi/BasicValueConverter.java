@@ -7,9 +7,7 @@
 package org.hibernate.type.descriptor.converter.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 

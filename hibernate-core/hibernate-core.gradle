@@ -27,7 +27,7 @@ dependencies {
     api jakartaLibs.jpa
     api jakartaLibs.jta
 
-    implementation libs.hcann
+    implementation libs.hibernateModels
     implementation libs.jandex
     implementation libs.classmate
     implementation libs.byteBuddy
@@ -45,6 +45,9 @@ dependencies {
     compileOnly libs.jackson
     compileOnly libs.jacksonXml
     compileOnly dbLibs.postgresql
+
+//    annotationProcessor project( ":annotation-descriptor-generator" )
+    compileOnly project( ":annotation-descriptor-generator" )
 
     testImplementation project(':hibernate-testing')
     testImplementation project(':hibernate-ant')
@@ -71,7 +74,7 @@ dependencies {
     testRuntimeOnly libs.jacksonXml
     testRuntimeOnly libs.jacksonJsr310
 
-    testAnnotationProcessor project( ':hibernate-jpamodelgen' )
+    testAnnotationProcessor project( ':hibernate-processor' )
 
     // NOTE: it seems like, since 4.10, the Antlr Tool no longer defines
     // transitive dep on the corresponding Antlr Runtime.  At least, I get
@@ -119,8 +122,13 @@ xjc {
             xjcBindingFile = file( 'src/main/xjb/hbm-mapping-bindings.xjb' )
             xjcExtensions += ['inheritance', 'simplify']
         }
+        configuration {
+            xsdFile = file( 'src/main/resources/org/hibernate/xsd/cfg/configuration-3.2.0.xsd' )
+            xjcBindingFile = file( 'src/main/xjb/configuration-bindings.xjb' )
+            xjcExtensions += ['inheritance', 'simplify']
+        }
         mapping {
-            xsdFile = file( 'src/main/resources/org/hibernate/xsd/mapping/mapping-3.1.0.xsd' )
+            xsdFile = file( 'src/main/resources/org/hibernate/xsd/mapping/mapping-7.0.xsd' )
             xjcBindingFile = file( 'src/main/xjb/mapping-bindings.xjb' )
             xjcExtensions += ['inheritance', 'simplify']
         }
@@ -201,6 +209,22 @@ artifacts {
     tests testJar
 }
 
+tasks.register( "generateAnnotationClasses", JavaCompile ) {
+    description = "Generate concrete classes for Hibernate and JPA annotations"
+
+    source = sourceSets.main.allJava
+    include "org/hibernate/annotations/*"
+    classpath = sourceSets.main.runtimeClasspath + sourceSets.main.compileClasspath
+    options.annotationProcessorPath = sourceSets.main.compileClasspath
+    options.compilerArgs = [
+            "-proc:only",
+            "-processor",
+            "org.hibernate.orm.build.annotations.ClassGeneratorProcessor"
+    ]
+
+    destinationDirectory.set( project.layout.buildDirectory.dir( "generated/sources/annotations/" ) )
+}
+
 task generateEnversStaticMetamodel(
         type: JavaCompile,
         description: "Generate the Hibernate Envers revision entity static metamodel classes." ) {
@@ -240,65 +264,10 @@ tasks.withType( Test.class ).each { test ->
     test.beforeTest { descriptor ->
         //println "Starting test: " + descriptor
     }
-    if ( project.db == "h2" || project.db == "hsqldb" || project.db == "derby" ) {
+    if ( project.db == "h2" || project.db == "hsqldb" ) {
         // Parallel test runs when running with in-memory databases
         test.maxParallelForks = Runtime.runtime.availableProcessors().intdiv( 2 ) ?: 1
     }
-}
-
-// Tests with records
-if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
-
-    // Add a new source set, which contains tests that can run on JDK17+
-    sourceSets {
-        testJava17 {
-            java {
-                srcDirs = ['src/test/java17']
-            }
-            // Refer to the main test resources to avoid processing variables twice
-            resources {
-                srcDirs tasks.processTestResources
-            }
-        }
-    }
-
-    // For the new source set, we need to configure the source and target version to 17
-    compileTestJava17Java {
-        javaCompiler = javaToolchains.compilerFor {
-            languageVersion = jdkVersions.test.compiler
-        }
-        sourceCompatibility = 17
-        targetCompatibility = 17
-        // We also depend on the main test resources
-        dependsOn( tasks.processTestResources )
-    }
-
-    // The source set gets a custom configuration which extends the normal test implementation config
-    configurations {
-        testJava17Implementation.extendsFrom(testImplementation, testRuntimeOnly)
-        testJava17CompileOnly.extendsFrom(testCompileOnly)
-    }
-
-    // Add the output from src/main/java as dependency
-    dependencies {
-        testJava17Implementation files(sourceSets.main.output.classesDirs) {
-            builtBy compileJava
-        }
-    }
-
-    // We execute the Java 17 tests in a custom test task
-    task testJava17(type: Test) {
-        javaLauncher = javaToolchains.launcherFor {
-            languageVersion = jdkVersions.test.launcher
-        }
-        useJUnitPlatform()
-        testClassesDirs = sourceSets.testJava17.output.classesDirs
-        classpath = sourceSets.testJava17.runtimeClasspath
-    }
-
-    testClasses.dependsOn compileTestJava17Java
-    // And run this as part of the check task by default
-    check.dependsOn testJava17
 }
 
 tasks.named( "javadoc", Javadoc ) {

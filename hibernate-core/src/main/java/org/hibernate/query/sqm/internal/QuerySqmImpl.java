@@ -25,7 +25,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
-import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.Generator;
@@ -41,7 +40,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
@@ -142,7 +140,7 @@ public class QuerySqmImpl<R>
 	 * Creates a Query instance from a named HQL memento
 	 */
 	public QuerySqmImpl(
-			NamedHqlQueryMementoImpl memento,
+			NamedHqlQueryMementoImpl<?> memento,
 			Class<R> expectedResultType,
 			SharedSessionContractImplementor session) {
 		this(
@@ -155,7 +153,7 @@ public class QuerySqmImpl<R>
 	}
 
 	public QuerySqmImpl(
-			NamedCriteriaQueryMementoImpl memento,
+			NamedCriteriaQueryMementoImpl<?> memento,
 			Class<R> resultType,
 			SharedSessionContractImplementor session) {
 		this( (SqmStatement<R>) memento.getSqmStatement(), resultType, session );
@@ -612,10 +610,10 @@ public class QuerySqmImpl<R>
 		final SqmInsertStatement<R> sqmInsert = (SqmInsertStatement<R>) getSqmStatement();
 
 		final String entityNameToInsert = sqmInsert.getTarget().getModel().getHibernateEntityName();
-		final AbstractEntityPersister persister = (AbstractEntityPersister)
+		final EntityPersister persister =
 				getSessionFactory().getMappingMetamodel().getEntityDescriptor( entityNameToInsert );
 
-		boolean useMultiTableInsert = persister.isMultiTable();
+		boolean useMultiTableInsert = persister.hasMultipleTables();
 		if ( !useMultiTableInsert && !isSimpleValuesInsert( sqmInsert, persister ) ) {
 			final Generator identifierGenerator = persister.getGenerator();
 			if ( identifierGenerator instanceof BulkInsertionCapableIdentifierGenerator
@@ -892,7 +890,7 @@ public class QuerySqmImpl<R>
 	// Named query externalization
 
 	@Override
-	public NamedQueryMemento toMemento(String name) {
+	public NamedQueryMemento<R> toMemento(String name) {
 		if ( CRITERIA_HQL_STRING.equals( getQueryString() ) ) {
 			final SqmStatement<R> sqmStatement;
 			if ( !getSession().isCriteriaCopyTreeEnabled() ) {
@@ -902,8 +900,9 @@ public class QuerySqmImpl<R>
 				// the statement has already been copied
 				sqmStatement = getSqmStatement();
 			}
-			return new NamedCriteriaQueryMementoImpl(
+			return new NamedCriteriaQueryMementoImpl<>(
 					name,
+					getResultType(),
 					sqmStatement,
 					getQueryOptions().getLimit().getFirstRow(),
 					getQueryOptions().getLimit().getMaxRows(),
@@ -921,8 +920,9 @@ public class QuerySqmImpl<R>
 			);
 		}
 
-		return new NamedHqlQueryMementoImpl(
+		return new NamedHqlQueryMementoImpl<>(
 				name,
+				getResultType(),
 				getQueryString(),
 				getQueryOptions().getLimit().getFirstRow(),
 				getQueryOptions().getLimit().getMaxRows(),
@@ -970,10 +970,6 @@ public class QuerySqmImpl<R>
 			return (T) getQueryOptions().getAppliedGraph();
 		}
 
-		if ( EntityGraphQueryHint.class.isAssignableFrom( cls ) ) {
-			return (T) new EntityGraphQueryHint( getQueryOptions().getAppliedGraph() );
-		}
-
 		throw new PersistenceException( "Unrecognized unwrap type [" + cls.getName() + "]" );
 	}
 
@@ -1003,6 +999,15 @@ public class QuerySqmImpl<R>
 	@Override
 	public SqmQueryImplementor<R> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
 		super.setCacheStoreMode( cacheStoreMode );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setTimeout(Integer timeout) {
+		if ( timeout == null ) {
+			timeout = -1;
+		}
+		setTimeout( (int) timeout );
 		return this;
 	}
 

@@ -14,7 +14,7 @@ buildscript {
 		mavenCentral()
 	}
 	dependencies {
-		classpath 'de.thetaphi:forbiddenapis:3.5.1'
+		classpath buildscriptLibs.forbiddenapis
 	}
 }
 
@@ -32,6 +32,7 @@ apply plugin: 'org.hibernate.orm.database-service'
 apply plugin: 'org.hibernate.orm.build.java-module'
 
 apply plugin: 'org.checkerframework'
+apply plugin: 'de.thetaphi.forbiddenapis'
 
 apply plugin: "jacoco"
 apply plugin: 'checkstyle'
@@ -56,6 +57,15 @@ if ( !project.description ) {
 	project.description = "The Hibernate ORM $project.name module"
 }
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Reproducible Builds
+
+// https://docs.gradle.org/current/userguide/working_with_files.html#sec:reproducible_archives
+// Configure archive tasks to produce reproducible archives:
+tasks.withType(AbstractArchiveTask).configureEach {
+	preserveFileTimestamps = false
+	reproducibleFileOrder = true
+}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Configurations and Dependencies
@@ -175,10 +185,13 @@ tasks.withType( JavaCompile ) {
 	options.fork = true
 	options.forkOptions.memoryMaximumSize = '768m'
 
-//	javaCompileTask.options.compilerArgs += [
+	options.compilerArgs += [
+			// disable adding @Generated annotation in the logger impls to make
+			// the logging annotation processor create the same sources each time.
+			"-Aorg.jboss.logging.tools.addGeneratedAnnotation=false"
 //			"-nowarn",
 //			"-encoding", "UTF-8"
-//	]
+	]
 }
 
 
@@ -488,43 +501,20 @@ checkerFramework {
 	]
 }
 
+tasks.forbiddenApisMain {
+	// unfortunately we currently have many uses of default Locale implicitly (~370)
+	// which need to be fixed before we can enable the "unsafe" check
+	//bundledSignatures += ["jdk-system-out", "jdk-non-portable", "jdk-unsafe-${jdkVersions.baseline}"]
+	bundledSignatures += ["jdk-system-out", "jdk-non-portable"]
 
-task forbiddenApisSystemOut(type: CheckForbiddenApis, dependsOn: compileJava) {
-	bundledSignatures += 'jdk-system-out'
-	suppressAnnotations += ['org.hibernate.internal.build.AllowSysOut', 'org.hibernate.internal.build.AllowPrintStacktrace']
+	suppressAnnotations += [
+			"org.hibernate.internal.build.AllowSysOut",
+			"org.hibernate.internal.build.AllowPrintStacktrace",
+			"org.hibernate.internal.build.AllowNonPortable"
+	]
 }
 
-task forbiddenApisUnsafe(type: CheckForbiddenApis, dependsOn: compileJava) {
-	bundledSignatures += "jdk-unsafe-${jdkVersions.baseline}".toString()
-
-	// unfortunately we currently have many uses of default Locale implicitly (~370) which need to be fixed
-	// before we can fully enabled this check
-	//
-	// No idea how findbugs was missing these b4
-	ignoreFailures = true
+tasks.forbiddenApisTest {
+	enabled = false
 }
 
-task forbiddenApisNonPortable(type: CheckForbiddenApis, dependsOn: compileJava) {
-	bundledSignatures += 'jdk-non-portable'
-	suppressAnnotations += ['org.hibernate.internal.build.AllowNonPortable']
-}
-
-task forbiddenApis {
-	description 'Grouping task for all defined forbidden-apis tasks'
-}
-
-project.tasks.withType( CheckForbiddenApis ) {
-	outputs.upToDateWhen { true }
-
-	classesDirs = project.sourceSets.main.output
-	classpath = configurations.runtimeClasspath + configurations.compileClasspath
-	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
-
-	// This slows down the checks a little, but is necessary to avoid the gradle daemon holding on
-	// to class definitions loaded previously - even possibly in a previous build.
-	disableClassloadingCache = true
-
-	tasks.forbiddenApis.finalizedBy it
-}
-
-project.tasks.check.finalizedBy tasks.forbiddenApis

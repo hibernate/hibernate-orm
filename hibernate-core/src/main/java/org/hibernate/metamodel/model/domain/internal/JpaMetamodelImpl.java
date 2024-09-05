@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.ObjectStreamException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -32,8 +33,8 @@ import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
-import org.hibernate.internal.EntityManagerMessageLogger;
-import org.hibernate.internal.HEMLogging;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.mapping.MappedSuperclass;
@@ -42,7 +43,6 @@ import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.internal.MetadataContext;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
@@ -75,7 +75,7 @@ import jakarta.persistence.metamodel.Type;
  * @author Steve Ebersole
  */
 public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
-	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( JpaMetamodel.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( JpaMetamodel.class );
 
 	private static class ImportInfo<T> {
 		final String importedName;
@@ -138,7 +138,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	@Override
-	public <X> EntityDomainType<X> entity(String entityName) {
+	public EntityDomainType<?> entity(String entityName) {
 		if ( entityName == null ) {
 			return null;
 		}
@@ -146,12 +146,11 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		if ( !( managedType instanceof EntityDomainType<?> ) ) {
 			return null;
 		}
-		//noinspection unchecked
-		return (EntityDomainType<X>) managedType;
+		return (EntityDomainType<?>) managedType;
 	}
 
 	@Override
-	public <X> EmbeddableDomainType<X> embeddable(String embeddableName) {
+	public EmbeddableDomainType<?> embeddable(String embeddableName) {
 		if ( embeddableName == null ) {
 			return null;
 		}
@@ -159,8 +158,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		if ( !( managedType instanceof EmbeddableDomainType<?> ) ) {
 			return null;
 		}
-		//noinspection unchecked
-		return (EmbeddableDomainType<X>) managedType;
+		return (EmbeddableDomainType<?>) managedType;
 	}
 
 	@Override
@@ -172,9 +170,10 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			entityName = importInfo.importedName;
 		}
 
-		final EntityDomainType<X> entityDescriptor = entity( entityName );
+		final EntityDomainType<?> entityDescriptor = entity( entityName );
 		if ( entityDescriptor != null ) {
-			return entityDescriptor;
+			//noinspection unchecked
+			return (EntityDomainType<X>) entityDescriptor;
 		}
 
 		if ( loadedClass == null ) {
@@ -346,9 +345,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		}
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	public <T> RootGraphImplementor<T> findEntityGraphByName(String name) {
-		//noinspection unchecked
 		return (RootGraphImplementor<T>) entityGraphMap.get( name );
 	}
 
@@ -365,6 +363,24 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 					@SuppressWarnings("unchecked")
 					final RootGraphImplementor<? super T> result = (RootGraphImplementor<? super T>) entityGraph;
 					results.add( result );
+				}
+			}
+			return results;
+		}
+	}
+
+	@Override
+	public <T> Map<String, EntityGraph<? extends T>> getNamedEntityGraphs(Class<T> entityClass) {
+		final EntityDomainType<T> entityType = entity( entityClass );
+		if ( entityType == null ) {
+			throw new IllegalArgumentException( "Given class is not an entity: " + entityClass.getName() );
+		}
+		else {
+			final Map<String, EntityGraph<? extends T>> results = new HashMap<>();
+			for ( RootGraphImplementor<?> entityGraph : entityGraphMap.values() ) {
+				if ( entityGraph.appliesTo( entityType ) ) {
+					//noinspection unchecked
+					results.put( entityGraph.getName(), (EntityGraph<? extends T>) entityGraph );
 				}
 			}
 			return results;
@@ -428,7 +444,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 					definition.getEntityName(),
 					definition.getJpaEntityName()
 			);
-			final EntityDomainType<Object> entityType = entity( definition.getEntityName() );
+			final EntityDomainType<Object> entityType = (EntityDomainType<Object>) entity( definition.getEntityName() );
 			if ( entityType == null ) {
 				throw new IllegalArgumentException(
 						"Attempted to register named entity graph [" + definition.getRegisteredName()
@@ -461,7 +477,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			GraphImplementor<?> graphNode) {
 		for ( NamedAttributeNode namedAttributeNode : namedAttributeNodes ) {
 			final String value = namedAttributeNode.value();
-			AttributeNodeImplementor<?> attributeNode = graphNode.addAttributeNode( value );
+			final AttributeNodeImplementor<?> attributeNode = graphNode.findOrCreateAttributeNode( value );
 			if ( StringHelper.isNotEmpty( namedAttributeNode.subgraph() ) ) {
 				final SubGraphImplementor<?> subgraph = attributeNode.makeSubGraph();
 				applyNamedSubgraphs(
@@ -499,7 +515,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 	private <X> Class<X> resolveRequestedClass(String entityName) {
 		try {
-			return getServiceRegistry().requireService( ClassLoaderService.class ).classForName( entityName );
+			return getServiceRegistry().requireService( ClassLoaderService.class )
+					.classForName( entityName );
 		}
 		catch (ClassLoadingException e) {
 			return null;
@@ -520,7 +537,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		{
 			final String proxyEntityName = entityProxyInterfaceMap.get( javaType );
 			if ( proxyEntityName != null ) {
-				return entity( proxyEntityName );
+				return (EntityDomainType<T>) entity( proxyEntityName );
 			}
 		}
 
@@ -544,28 +561,18 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 					// we should add it to the collecting set of matching descriptors.  it should
 					// be added aside from a few cases...
 
-					// it should not be added if its direct super (if one) is defined without
-					// explicit-polymorphism.  The super itself will get added and the initializers
-					// for entity mappings already handle loading subtypes - adding it would be redundant
+					// if the managed-type has a super type and the java type is assignable from the super type,
+					// do not add the managed-type as the super itself will get added and the initializers for
+					// entity mappings already handle loading subtypes - adding it would be redundant and lead to
+					// incorrect results
 					final ManagedDomainType<?> superType = managedType.getSuperType();
 					if ( superType != null
 							&& superType.getPersistenceType() == Type.PersistenceType.ENTITY
 							&& javaType.isAssignableFrom( superType.getJavaType() ) ) {
-						final EntityMappingType superMapping = getMappingMetamodel()
-								.getEntityDescriptor( ( (EntityDomainType<?>) superType ).getHibernateEntityName() );
-						if ( !superMapping.isExplicitPolymorphism() ) {
-							continue;
-						}
-					}
-
-					// it should not be added if it is mapped with explicit polymorphism itself
-					final EntityMappingType entityPersister = getMappingMetamodel()
-							.getEntityDescriptor( managedType.getTypeName() );
-					if ( entityPersister.isExplicitPolymorphism() ) {
 						continue;
 					}
 
-					// aside from these special cases, add it
+					// otherwise, add it
 					matchingDescriptors.add( (EntityDomainType<? extends T>) managedType );
 				}
 			}
@@ -597,7 +604,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting,
 			Collection<NamedEntityGraphDefinition> namedEntityGraphDefinitions,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		bootMetamodel.getImports().forEach( ( k, v ) ->  this.nameToImportMap.put( k, new ImportInfo<>( v, null ) ) );
+		bootMetamodel.getImports()
+				.forEach( ( k, v ) ->  this.nameToImportMap.put( k, new ImportInfo<>( v, null ) ) );
 		this.entityProxyInterfaceMap.putAll( entityProxyInterfaceMap );
 
 		final MetadataContext context = new MetadataContext(
@@ -690,61 +698,47 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 				.add( enumClassName );
 	}
 
-	private EntityDomainType<?> locateOrBuildEntityType(
+	private <T> EntityDomainType<T> locateOrBuildEntityType(
 			PersistentClass persistentClass,
 			MetadataContext context,
-			TypeConfiguration typeConfiguration) {
-		EntityDomainType<?> entityType = context.locateEntityType( persistentClass );
-		if ( entityType == null ) {
-			entityType = buildEntityType( persistentClass, context, typeConfiguration );
-		}
-		return entityType;
+			final TypeConfiguration typeConfiguration) {
+		@SuppressWarnings("unchecked")
+		final EntityDomainType<T> entityType =
+				(EntityDomainType<T>)
+						context.locateEntityType( persistentClass );
+		return entityType == null
+				? buildEntityType( persistentClass, context, typeConfiguration )
+				: entityType;
 	}
 
-	@SuppressWarnings("unchecked")
-	private EntityTypeImpl<?> buildEntityType(
+	private <T> EntityTypeImpl<T> buildEntityType(
 			PersistentClass persistentClass,
 			MetadataContext context,
 			TypeConfiguration typeConfiguration) {
 		context.pushEntityWorkedOn( persistentClass );
-
-		final MappedSuperclass superMappedSuperclass = persistentClass.getSuperMappedSuperclass();
-
-		IdentifiableDomainType<?> superType = superMappedSuperclass == null
-				? null
-				: locateOrBuildMappedSuperclassType( superMappedSuperclass, context, typeConfiguration );
-
-		//no mappedSuperclass, check for a super entity
-		if ( superType == null ) {
-			final PersistentClass superPersistentClass = persistentClass.getSuperclass();
-			superType = superPersistentClass == null
-					? null
-					: locateOrBuildEntityType( superPersistentClass, context, typeConfiguration );
-		}
-
-		final Class<?> javaTypeClass = persistentClass.getMappedClass();
-		final JavaType<?> javaType;
-		if ( javaTypeClass == null || javaTypeClass == Map.class ) {
-			// dynamic map
-			javaType = new DynamicModelJavaType();
-		}
-		else {
-			javaType = context.getTypeConfiguration()
-					.getJavaTypeRegistry()
-					.resolveEntityTypeDescriptor( javaTypeClass );
-		}
-
-		final EntityTypeImpl<?> entityType = new EntityTypeImpl(
-				javaType,
-				superType,
-				persistentClass,
-				this
-		);
-
+		final EntityTypeImpl<T> entityType =
+				new EntityTypeImpl<>(
+						javaType( persistentClass, context ),
+						supertypeForPersistentClass( persistentClass, context, typeConfiguration ),
+						persistentClass,
+						this
+				);
 		context.registerEntityType( persistentClass, entityType );
 		context.popEntityWorkedOn( persistentClass );
-
 		return entityType;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T> JavaType<T> javaType(PersistentClass persistentClass, MetadataContext context) {
+		final Class<T> javaTypeClass = (Class<T>) persistentClass.getMappedClass();
+		if ( javaTypeClass == null || Map.class.isAssignableFrom( javaTypeClass ) ) {
+			// dynamic map
+			return (JavaType<T>) new DynamicModelJavaType();
+		}
+		else {
+			return context.getTypeConfiguration().getJavaTypeRegistry()
+					.resolveEntityTypeDescriptor( javaTypeClass );
+		}
 	}
 
 	private void handleUnusedMappedSuperclasses(MetadataContext context, TypeConfiguration typeConfiguration) {
@@ -757,50 +751,81 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		}
 	}
 
-	private MappedSuperclassDomainType<?> locateOrBuildMappedSuperclassType(
+	private <T> MappedSuperclassDomainType<T> locateOrBuildMappedSuperclassType(
 			MappedSuperclass mappedSuperclass,
 			MetadataContext context,
 			TypeConfiguration typeConfiguration) {
-		MappedSuperclassDomainType<?> mappedSuperclassType = context.locateMappedSuperclassType( mappedSuperclass );
-		if ( mappedSuperclassType == null ) {
-			mappedSuperclassType = buildMappedSuperclassType( mappedSuperclass, context, typeConfiguration );
-		}
+		@SuppressWarnings("unchecked")
+		final MappedSuperclassDomainType<T> mappedSuperclassType =
+				(MappedSuperclassDomainType<T>)
+						context.locateMappedSuperclassType( mappedSuperclass );
+		return mappedSuperclassType == null
+				? buildMappedSuperclassType( mappedSuperclass, context, typeConfiguration )
+				: mappedSuperclassType;
+	}
+
+	private <T> MappedSuperclassTypeImpl<T> buildMappedSuperclassType(
+			MappedSuperclass mappedSuperclass,
+			MetadataContext context,
+			TypeConfiguration typeConfiguration) {
+		final IdentifiableDomainType<? super T> superType =
+				supertypeForMappedSuperclass( mappedSuperclass, context, typeConfiguration );
+		final JavaType<T> javaType =
+				context.getTypeConfiguration().getJavaTypeRegistry()
+						.resolveManagedTypeDescriptor( mappedSuperclass.getMappedClass() );
+		final MappedSuperclassTypeImpl<T> mappedSuperclassType =
+				new MappedSuperclassTypeImpl<>( javaType, mappedSuperclass, superType, this );
+		context.registerMappedSuperclassType( mappedSuperclass, mappedSuperclassType );
 		return mappedSuperclassType;
 	}
 
-	@SuppressWarnings("unchecked")
-	private MappedSuperclassTypeImpl<?> buildMappedSuperclassType(
+	private <T> IdentifiableDomainType<? super T> supertypeForPersistentClass(
+			PersistentClass persistentClass,
+			MetadataContext context,
+			TypeConfiguration typeConfiguration) {
+		final MappedSuperclass superMappedSuperclass = persistentClass.getSuperMappedSuperclass();
+		final IdentifiableDomainType<? super T> supertype =
+				superMappedSuperclass == null
+						? null
+						: locateOrBuildMappedSuperclassType( superMappedSuperclass, context, typeConfiguration );
+
+		//no mappedSuperclass, check for a super entity
+		if ( supertype == null ) {
+			final PersistentClass superPersistentClass = persistentClass.getSuperclass();
+			return superPersistentClass == null
+					? null
+					: locateOrBuildEntityType( superPersistentClass, context, typeConfiguration );
+		}
+		else {
+			return supertype;
+		}
+	}
+
+	private <T> IdentifiableDomainType<? super T> supertypeForMappedSuperclass(
 			MappedSuperclass mappedSuperclass,
 			MetadataContext context,
 			TypeConfiguration typeConfiguration) {
 		final MappedSuperclass superMappedSuperclass = mappedSuperclass.getSuperMappedSuperclass();
-		IdentifiableDomainType<?> superType = superMappedSuperclass == null
-				? null
-				: locateOrBuildMappedSuperclassType( superMappedSuperclass, context, typeConfiguration );
+		final IdentifiableDomainType<T> superType =
+				superMappedSuperclass == null
+						? null
+						: locateOrBuildMappedSuperclassType( superMappedSuperclass, context, typeConfiguration );
 		//no mappedSuperclass, check for a super entity
 		if ( superType == null ) {
 			final PersistentClass superPersistentClass = mappedSuperclass.getSuperPersistentClass();
-			superType = superPersistentClass == null
+			return superPersistentClass == null
 					? null
 					: locateOrBuildEntityType( superPersistentClass, context, typeConfiguration );
 		}
-		final JavaType<?> javaType = context.getTypeConfiguration()
-				.getJavaTypeRegistry()
-				.resolveManagedTypeDescriptor( mappedSuperclass.getMappedClass() );
-		final MappedSuperclassTypeImpl<?> mappedSuperclassType = new MappedSuperclassTypeImpl(
-				javaType,
-				mappedSuperclass,
-				superType,
-				this
-		);
-
-		context.registerMappedSuperclassType( mappedSuperclass, mappedSuperclassType );
-		return mappedSuperclassType;
+		else {
+			return superType;
+		}
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Serialization
 
+	@Serial
 	private Object writeReplace() throws ObjectStreamException {
 		return new SerialForm( typeConfiguration.getSessionFactory() );
 	}
@@ -812,6 +837,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			this.sessionFactory = sessionFactory;
 		}
 
+		@Serial
 		private Object readResolve() {
 			return sessionFactory.getJpaMetamodel();
 		}

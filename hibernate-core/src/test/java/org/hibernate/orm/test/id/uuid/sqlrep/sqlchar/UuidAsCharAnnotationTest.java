@@ -57,11 +57,11 @@ public class UuidAsCharAnnotationTest {
 
 		final UUIDPair uuidPair = scope.fromTransaction( session -> {
 			final Node root = new Node( "root" );
-			session.save( root );
+			session.persist( root );
 			assertThat( root.id, notNullValue());
 
 			final Node child = new Node( "child", root );
-			session.save( child );
+			session.persist( child );
 			assertThat( child.id, notNullValue() );
 
 			return new UUIDPair( root.id, child.id );

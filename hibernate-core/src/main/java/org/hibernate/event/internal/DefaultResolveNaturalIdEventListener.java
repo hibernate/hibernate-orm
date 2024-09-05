@@ -27,9 +27,7 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  * @author Eric Dalquist
  * @author Steve Ebersole
  */
-public class DefaultResolveNaturalIdEventListener
-		extends AbstractLockUpgradeEventListener
-		implements ResolveNaturalIdEventListener {
+public class DefaultResolveNaturalIdEventListener implements ResolveNaturalIdEventListener {
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultResolveNaturalIdEventListener.class );
 

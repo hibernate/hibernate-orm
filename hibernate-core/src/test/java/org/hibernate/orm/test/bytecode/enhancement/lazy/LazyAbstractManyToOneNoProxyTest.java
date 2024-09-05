@@ -1,6 +1,6 @@
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
-import org.hibernate.annotations.Proxy;
+import org.hibernate.annotations.ConcreteProxy;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -74,9 +74,7 @@ public class LazyAbstractManyToOneNoProxyTest {
 					assertThat( user ).isNotNull();
 					assertThat( user.getName() ).isEqualTo( USER_1_NAME );
 
-					// The User#team type has subclasses so even if it is lazy we need to initialize it because we do not know
-					// the real type and Proxy creation is disabled
-					assertThat( statementInspector.getSqlQueries().size() ).isEqualTo( 2 );
+					assertThat( statementInspector.getSqlQueries().size() ).isEqualTo( 1 );
 
 					statementInspector.clear();
 
@@ -84,14 +82,15 @@ public class LazyAbstractManyToOneNoProxyTest {
 					assertThat( team ).isInstanceOf( UserGroup.class );
 					UserGroup userGroup = (UserGroup) team;
 					assertThat( userGroup.getName() ).isEqualTo( USER_GROUP_1_NAME );
-					assertThat( statementInspector.getSqlQueries().size() ).isEqualTo( 0 );
+
+					// accessing the name
+					assertThat( statementInspector.getSqlQueries().size() ).isEqualTo( 1 );
 				}
 		);
 	}
 
 	@Entity(name = "User")
 	@Table(name = "usr_tbl")
-	@Proxy(lazy = false)
 	public static class User {
 		@Id
 		Long id;
@@ -127,7 +126,7 @@ public class LazyAbstractManyToOneNoProxyTest {
 	@Entity(name = "ActorGroup")
 	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	@DiscriminatorColumn(name = "TYPE")
-	@Proxy(lazy = false)
+	@ConcreteProxy
 	public abstract static class ActorGroup {
 		@Id
 		Long id;
@@ -141,7 +140,6 @@ public class LazyAbstractManyToOneNoProxyTest {
 	}
 
 	@Entity(name = "UserGroup")
-	@Proxy(lazy = false)
 	@DiscriminatorValue("USERS")
 	public static class UserGroup extends ActorGroup {
 

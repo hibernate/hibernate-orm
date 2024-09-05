@@ -23,15 +23,15 @@ import org.hibernate.dialect.function.CastingConcatFunction;
 import org.hibernate.dialect.function.ChrLiteralEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
-import org.hibernate.dialect.function.DerbyLpadEmulation;
-import org.hibernate.dialect.function.DerbyRpadEmulation;
+import org.hibernate.community.dialect.function.DerbyLpadEmulation;
+import org.hibernate.community.dialect.function.DerbyRpadEmulation;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
-import org.hibernate.dialect.pagination.DerbyLimitHandler;
+import org.hibernate.community.dialect.pagination.DerbyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.sequence.DerbySequenceSupport;
+import org.hibernate.community.dialect.sequence.DerbySequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
@@ -65,7 +65,7 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDerbyDatabaseImpl;
+import org.hibernate.community.dialect.sequence.SequenceInformationExtractorDerbyDatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.BasicType;
@@ -73,7 +73,6 @@ import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.BigDecimalJavaType;
-import org.hibernate.type.descriptor.jdbc.DecimalJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcType;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
@@ -686,7 +685,6 @@ public class DerbyLegacyDialect extends Dialect {
 		if ( getVersion().isBefore( 10, 7 ) ) {
 			jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, SmallIntJdbcType.INSTANCE );
 		}
-		jdbcTypeRegistry.addDescriptor( Types.NUMERIC, DecimalJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( Types.TIMESTAMP_WITH_TIMEZONE, TimestampJdbcType.INSTANCE );
 
 		// Derby requires a custom binder for binding untyped nulls that resolves the type through the statement

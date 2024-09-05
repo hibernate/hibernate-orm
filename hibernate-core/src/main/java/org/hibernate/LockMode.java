@@ -6,6 +6,8 @@
  */
 package org.hibernate;
 
+import jakarta.persistence.FindOption;
+import jakarta.persistence.RefreshOption;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 
 import jakarta.persistence.LockModeType;
@@ -42,7 +44,7 @@ import java.util.Locale;
  * @see LockOptions
  * @see org.hibernate.annotations.OptimisticLocking
  */
-public enum LockMode {
+public enum LockMode implements FindOption, RefreshOption {
 	/**
 	 * No lock required. If an object is requested with this lock
 	 * mode, a {@link #READ} lock will be obtained if it turns out

@@ -125,9 +125,9 @@ public class DiscrimSubclassFilterTest {
 		ups.setCompany( "UPS" );
 		ups.setRegion( "US" );
 
-		s.save( john );
-		s.save( cust );
-		s.save( ups );
+		s.persist( john );
+		s.persist( cust );
+		s.persist( ups );
 
 		s.flush();
 	}

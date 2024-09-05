@@ -6,15 +6,7 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.cfg.AvailableSettings;
 
@@ -30,6 +22,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -37,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Gail Badner
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( "HHH-13607" )
 @DomainModel(
 		annotatedClasses = {
@@ -122,7 +121,7 @@ public class NaturalIdInUninitializedAssociationTest {
 	public void cleanUpTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.delete( session.get( AnEntity.class, 3 ) );
+					session.remove( session.get( AnEntity.class, 3 ) );
 				}
 		);
 	}
@@ -133,11 +132,9 @@ public class NaturalIdInUninitializedAssociationTest {
 		private int id;
 
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-		@LazyToOne(LazyToOneOption.NO_PROXY )
 		private EntityMutableNaturalId entityMutableNaturalId;
 
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-		@LazyToOne(LazyToOneOption.NO_PROXY )
 		private EntityImmutableNaturalId entityImmutableNaturalId;
 	}
 

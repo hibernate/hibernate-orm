@@ -16,12 +16,11 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.NamedNativeQuery;
 
-import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
+import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -114,20 +113,7 @@ public class CollectionLoaderTest extends BaseEntityManagerFunctionalTestCase {
 	@SQLInsert(sql = "INSERT INTO person (name, id, valid) VALUES (?, ?, true) ", check = COUNT)
 	@SQLUpdate(sql = "UPDATE person SET name = ? where id = ? ")
 	@SQLDelete(sql = "UPDATE person SET valid = false WHERE id = ? ")
-	@Loader(namedQuery = "find_valid_person")
-	@NamedNativeQuery(
-		name = "find_valid_person",
-		query = "SELECT id, name " +
-				"FROM person " +
-				"WHERE id = ? and valid = true",
-		resultClass = Person.class
-	)
-	@NamedNativeQuery(
-		name = "find_valid_phones",
-		query = "SELECT phones " +
-				"FROM Person_phones " +
-				"WHERE person_id = ? and valid = true "
-	)
+	@SQLSelect(sql = "SELECT id, name FROM person WHERE id = ? and valid = true")
 	public static class Person {
 
 		@Id
@@ -139,7 +125,7 @@ public class CollectionLoaderTest extends BaseEntityManagerFunctionalTestCase {
 		@ElementCollection
 		@SQLInsert(sql = "INSERT INTO person_phones (person_id, phones, valid) VALUES (?, ?, true) ")
 		@SQLDeleteAll(sql = "UPDATE person_phones SET valid = false WHERE person_id = ?")
-		@Loader(namedQuery = "find_valid_phones")
+		@SQLSelect(sql = "SELECT phones FROM Person_phones WHERE person_id = ? and valid = true")
 		private List<String> phones = new ArrayList<>();
 
 		public Long getId() {

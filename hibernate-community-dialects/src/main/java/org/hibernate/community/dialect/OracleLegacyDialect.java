@@ -68,6 +68,7 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -1230,6 +1231,12 @@ public class OracleLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public int getDefaultTimestampPrecision() {
+		// 9 is supported at least since v10
+		return getVersion().isSameOrAfter( 10 ) ? 9 : 6;
+	}
+
+	@Override
 	public CallableStatementSupport getCallableStatementSupport() {
 		// Oracle supports returning cursors
 		return StandardCallableStatementSupport.REF_CURSOR_INSTANCE;
@@ -1564,4 +1571,12 @@ public class OracleLegacyDialect extends Dialect {
 		return false;
 	}
 
+
+	@Override
+	public String appendCheckConstraintOptions(CheckConstraint checkConstraint, String sqlCheckConstraint) {
+		if ( StringHelper.isNotEmpty( checkConstraint.getOptions() ) ) {
+			return sqlCheckConstraint + " " + checkConstraint.getOptions();
+		}
+		return sqlCheckConstraint;
+	}
 }

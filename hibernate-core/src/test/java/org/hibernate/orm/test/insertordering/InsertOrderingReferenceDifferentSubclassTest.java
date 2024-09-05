@@ -41,8 +41,8 @@ public class InsertOrderingReferenceDifferentSubclassTest extends BaseInsertOrde
 
 			subclassA2.referenceB = subclassB1;
 
-			session.save( subclassA1 );
-			session.save( subclassA2 );
+			session.persist( subclassA1 );
+			session.persist( subclassA2 );
 
 			clearBatches();
 		} );

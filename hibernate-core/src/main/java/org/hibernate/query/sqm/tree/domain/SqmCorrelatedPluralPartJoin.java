@@ -9,20 +9,19 @@ package org.hibernate.query.sqm.tree.domain;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 /**
  * @author Christian Beikov
  */
-public class SqmCorrelatedPluralPartJoin<O, T> extends SqmPluralPartJoin<O, T> implements SqmCorrelation<O, T> {
+public class SqmCorrelatedPluralPartJoin<O, T> extends SqmPluralPartJoin<O, T> implements SqmCorrelatedJoin<O, T> {
 
 	private final SqmCorrelatedRootJoin<O> correlatedRootJoin;
 	private final SqmPluralPartJoin<O, T> correlationParent;
 
 	public SqmCorrelatedPluralPartJoin(SqmPluralPartJoin<O, T> correlationParent) {
 		super(
-				(SqmFrom<?, O>) correlationParent.getLhs(),
+				correlationParent.getLhs(),
 				correlationParent.getNavigablePath(),
 				correlationParent.getReferencedPathSource(),
 				correlationParent.getExplicitAlias(),
@@ -50,11 +49,6 @@ public class SqmCorrelatedPluralPartJoin<O, T> extends SqmPluralPartJoin<O, T> i
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitCorrelatedPluralPartJoin( this );
-	}
-
-	@Override
-	public SqmFrom<?, T> getLhs() {
-		return (SqmFrom<?, T>) super.getLhs();
 	}
 
 	@Override

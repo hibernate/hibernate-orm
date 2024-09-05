@@ -10,8 +10,6 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.hibernate.Incubating;
-import org.hibernate.Internal;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
@@ -21,7 +19,6 @@ import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -76,10 +73,6 @@ public interface BootstrapContext {
 	 * Options specific to building the {@linkplain Metadata boot metamodel}
 	 */
 	MetadataBuildingOptions getMetadataBuildingOptions();
-
-	default IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
-		return getMetadataBuildingOptions().getIdentifierGeneratorFactory();
-	}
 
 	/**
 	 * Whether the bootstrap was initiated from JPA bootstrapping.
@@ -157,16 +150,6 @@ public interface BootstrapContext {
 	 * @return The scanner
 	 */
 	Object getScanner();
-
-	/**
-	 * Retrieve the Hibernate Commons Annotations {@link ReflectionManager}.
-	 *
-	 * @apiNote Supported for internal use only. This method will go away as
-	 *          we migrate away from Hibernate Commons Annotations to Jandex for
-	 *          annotation handling and XMl to annotation merging.
-	 */
-	@Internal
-	ReflectionManager getReflectionManager();
 
 	/**
 	 * Access to the Jandex index passed by call to

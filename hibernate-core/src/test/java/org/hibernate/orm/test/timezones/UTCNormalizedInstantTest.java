@@ -2,6 +2,7 @@ package org.hibernate.orm.test.timezones;
 
 import java.time.Instant;
 import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
 import java.util.TimeZone;
 
 import org.hibernate.annotations.JdbcTypeCode;
@@ -28,9 +29,13 @@ public class UTCNormalizedInstantTest {
 
 	@Test void test(SessionFactoryScope scope) {
 		final Instant instant;
-		if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseDialect ) {
+		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+		if ( dialect instanceof SybaseDialect ) {
 			// Sybase has 1/300th sec precision
 			instant = Instant.now().with( ChronoField.NANO_OF_SECOND, 0L );
+		}
+		else if ( dialect.getDefaultTimestampPrecision() == 6 ) {
+			instant = Instant.now().truncatedTo( ChronoUnit.MICROS );
 		}
 		else {
 			instant = Instant.now();
@@ -44,14 +49,13 @@ public class UTCNormalizedInstantTest {
 		});
 		scope.inSession( s-> {
 			final Zoned z = s.find(Zoned.class, id);
-			final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 			assertEquals(
-					DateTimeUtils.roundToDefaultPrecision( z.utcInstant, dialect ),
-					DateTimeUtils.roundToDefaultPrecision( instant, dialect )
+					DateTimeUtils.adjustToDefaultPrecision( z.utcInstant, dialect ),
+					DateTimeUtils.adjustToDefaultPrecision( instant, dialect )
 			);
 			assertEquals(
-					DateTimeUtils.roundToDefaultPrecision( z.localInstant, dialect ),
-					DateTimeUtils.roundToDefaultPrecision( instant, dialect )
+					DateTimeUtils.adjustToDefaultPrecision( z.localInstant, dialect ),
+					DateTimeUtils.adjustToDefaultPrecision( instant, dialect )
 			);
 		});
 	}
@@ -62,30 +66,36 @@ public class UTCNormalizedInstantTest {
 		SharedDriverManagerConnectionProviderImpl.getInstance().onDefaultTimeZoneChange();
 		try {
 			final Instant instant;
-			if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseDialect ) {
-				// Sybase has 1/300th sec precision
-				instant = Instant.now().with( ChronoField.NANO_OF_SECOND, 0L );
-			}
-			else {
-				instant = Instant.now();
-			}
-			long id = scope.fromTransaction( s-> {
-				final Zoned z = new Zoned();
-				z.utcInstant = instant;
-				z.localInstant = instant;
-				s.persist(z);
-				return z.id;
-			});
-			scope.inSession( s-> {
-				final Zoned z = s.find(Zoned.class, id);
-				final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+			final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+		if ( dialect instanceof SybaseDialect ) {
+			// Sybase has 1/300th sec precision
+			instant = Instant.now().with( ChronoField.NANO_OF_SECOND, 0L );
+		}
+		else if ( dialect.getDefaultTimestampPrecision() == 6 ) {
+			instant = Instant.now().truncatedTo( ChronoUnit.MICROS );
+		}
+		else {
+			instant = Instant.now();
+		}
+		long id = scope.fromTransaction( s-> {
+			final Zoned z = new Zoned();
+			z.utcInstant = instant;
+			z.localInstant = instant;
+			s.persist(z);
+			return z.id;
+		});
+		scope.inSession( s-> {
+			final Zoned z = s.find(Zoned.class, id);
+			Instant expected = DateTimeUtils.adjustToDefaultPrecision( z.utcInstant, dialect );
+			Instant actual = DateTimeUtils.adjustToDefaultPrecision( instant, dialect );
 				assertEquals(
-						DateTimeUtils.roundToDefaultPrecision( z.utcInstant, dialect ),
-						DateTimeUtils.roundToDefaultPrecision( instant, dialect )
-				);
-				assertEquals(
-						DateTimeUtils.roundToDefaultPrecision( z.localInstant, dialect ),
-						DateTimeUtils.roundToDefaultPrecision( instant, dialect )
+					expected,
+					actual
+			);
+			expected = DateTimeUtils.adjustToDefaultPrecision( z.localInstant, dialect );
+			assertEquals(
+					expected,
+					actual
 				);
 			});
 		}

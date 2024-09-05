@@ -8,6 +8,7 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy.backref;
 
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.orm.test.bytecode.enhancement.lazy.NoDirtyCheckingContext;
@@ -19,8 +20,10 @@ import org.hibernate.orm.test.collection.backref.map.compkey.Product;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -42,6 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SessionFactory
 @BytecodeEnhanced
 @CustomEnhancementContext({ NoDirtyCheckingContext.class, DirtyCheckEnhancementContext.class })
+@ServiceRegistry(settings = @Setting(name = AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY, value = "true"))
 public class BackrefCompositeMapKeyTest {
 
 	@Test
@@ -59,7 +63,7 @@ public class BackrefCompositeMapKeyTest {
 
 					prod.getParts().remove( mapKey );
 
-					session.delete( prod );
+					session.remove( prod );
 				}
 		);
 
@@ -90,7 +94,7 @@ public class BackrefCompositeMapKeyTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( session.get( Product.class, "Widget" ) )
+						session.remove( session.get( Product.class, "Widget" ) )
 		);
 	}
 
@@ -115,7 +119,7 @@ public class BackrefCompositeMapKeyTest {
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 
@@ -147,69 +151,7 @@ public class BackrefCompositeMapKeyTest {
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
-				}
-		);
-	}
-
-	@Test
-	public void testOrphanDeleteOnSaveOrUpdate(SessionFactoryScope scope) {
-		Product prod = new Product( "Widget" );
-		MapKey mapKey = new MapKey( "Top" );
-		scope.inTransaction(
-				session -> {
-					Part part = new Part( "Widge", "part if a Widget" );
-					prod.getParts().put( mapKey, part );
-					Part part2 = new Part( "Get", "another part if a Widget" );
-					prod.getParts().put( new MapKey( "Bottom" ), part2 );
-					session.persist( prod );
-				}
-		);
-
-		prod.getParts().remove( mapKey );
-
-		scope.inTransaction(
-				session ->
-						session.saveOrUpdate( prod )
-		);
-
-		scope.inTransaction(
-				session -> {
-					assertNull( session.get( Part.class, "Widge" ) );
-					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
-				}
-		);
-	}
-
-	@Test
-	public void testOrphanDeleteOnSaveOrUpdateAfterSerialization(SessionFactoryScope scope) {
-		Product prod = new Product( "Widget" );
-		MapKey mapKey = new MapKey( "Top" );
-		scope.inTransaction(
-				session -> {
-					Part part = new Part( "Widge", "part if a Widget" );
-					prod.getParts().put( mapKey, part );
-					Part part2 = new Part( "Get", "another part if a Widget" );
-					prod.getParts().put( new MapKey( "Bottom" ), part2 );
-					session.persist( prod );
-				}
-		);
-
-		prod.getParts().remove( mapKey );
-
-		Product cloned = (Product) SerializationHelper.clone( prod );
-
-		scope.inTransaction(
-				session ->
-						session.saveOrUpdate( cloned )
-		);
-
-		scope.inTransaction(
-				session -> {
-					assertNull( session.get( Part.class, "Widge" ) );
-					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}
@@ -252,7 +194,7 @@ public class BackrefCompositeMapKeyTest {
 					assertTrue( Hibernate.isInitialized( prod.getParts() ) );
 					assertNull( prod.getParts().get( new MapKey( "Top" ) ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}
@@ -283,7 +225,7 @@ public class BackrefCompositeMapKeyTest {
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}

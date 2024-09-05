@@ -15,7 +15,7 @@ import org.hibernate.MappingException;
  *
  * @deprecated use {@code DB2SequenceSupport}
  */
-@Deprecated
+@Deprecated(since="6.4")
 public class LegacyDB2SequenceSupport implements SequenceSupport {
 
 	public static final SequenceSupport INSTANCE = new LegacyDB2SequenceSupport();

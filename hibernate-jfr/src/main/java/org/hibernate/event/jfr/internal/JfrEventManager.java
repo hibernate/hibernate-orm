@@ -533,6 +533,6 @@ public class JfrEventManager implements EventManager {
 	}
 
 	private String getEntityName(EntityPersister persister) {
-		return StatsHelper.INSTANCE.getRootEntityRole( persister ).getFullPath();
+		return StatsHelper.getRootEntityRole( persister ).getFullPath();
 	}
 }

@@ -176,7 +176,7 @@ public final class JtaStatusHelper {
 	 *
 	 * @return True if the code indicates a roll back; false otherwise.
 	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@SuppressWarnings("unused")
 	public static boolean isMarkedForRollback(int status) {
 		return status == Status.STATUS_MARKED_ROLLBACK;
 	}

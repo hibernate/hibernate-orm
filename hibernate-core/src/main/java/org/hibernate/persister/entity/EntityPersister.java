@@ -41,8 +41,8 @@ import org.hibernate.internal.TableGroupFilterAliasGenerator;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
-import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
@@ -57,6 +57,8 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.tree.from.RootTableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
@@ -249,7 +251,10 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * entity spaces.
 	 *
 	 * @return The synchronization spaces.
+	 *
+	 * @deprecated No longer called
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	default String[] getSynchronizationSpaces() {
 		return (String[]) getQuerySpaces();
 	}
@@ -792,7 +797,11 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * (is the property optimistic-locked)
 	 */
 	boolean[] getPropertyVersionability();
+
 	boolean[] getPropertyLaziness();
+
+	boolean[] getNonLazyPropertyUpdateability();
+
 	/**
 	 * Get the cascade styles of the properties (optional operation)
 	 */
@@ -854,14 +863,6 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * Get the NaturalId cache (optional operation)
 	 */
 	NaturalIdDataAccess getNaturalIdCacheAccessStrategy();
-
-	/**
-	 * Get the user-visible metadata for the class (optional operation)
-	 *
-	 * @deprecated This operation is no longer called by Hibernate.
-	 */
-	@Deprecated(since = "6.0")
-	ClassMetadata getClassMetadata();
 
 	/**
 	 * The batch size for batch loading.
@@ -1222,9 +1223,13 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	FilterAliasGenerator getFilterAliasGenerator(final String rootAlias);
 
 	default FilterAliasGenerator getFilterAliasGenerator(TableGroup rootTableGroup) {
-		assert this instanceof Joinable;
-		return new TableGroupFilterAliasGenerator( ( (Joinable) this ).getTableName(), rootTableGroup );
+		return new TableGroupFilterAliasGenerator( getTableName(), rootTableGroup );
 	}
+
+	/**
+	 * The table to join to.
+	 */
+	String getTableName();
 
 	/**
 	 * Converts an array of attribute names to a set of indexes, according to the entity metamodel
@@ -1318,5 +1323,133 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 */
 	String getIdentitySelectString();
 
+	/**
+	 * Get the names of columns used to persist the identifier
+	 */
 	String[] getIdentifierColumnNames();
+
+	/**
+	 * Get the result set aliases used for the identifier columns, given a suffix
+	 */
+	String[] getIdentifierAliases(String suffix);
+
+	/**
+	 * Locks are always applied to the "root table".
+	 *
+	 * @return The root table name
+	 */
+	String getRootTableName();
+
+	/**
+	 * Get the names of columns on the root table used to persist the identifier.
+	 *
+	 * @return The root table identifier column names.
+	 */
+	String[] getRootTableIdentifierColumnNames();
+
+	/**
+	 * For versioned entities, get the name of the column (again, expected on the
+	 * root table) used to store the version values.
+	 *
+	 * @return The version column name.
+	 */
+	String getVersionColumnName();
+
+	/**
+	 * Get the result set aliases used for the property columns, given a suffix (properties of this class, only).
+	 */
+	String[] getPropertyAliases(String suffix, int i);
+
+	/**
+	 * Get the result set aliases used for the identifier columns, given a suffix
+	 */
+	String getDiscriminatorAlias(String suffix);
+
+	boolean hasMultipleTables();
+
+	String[] getTableNames();
+
+	/**
+	 * @deprecated Only ever used from places where we really want to use<ul>
+	 *     <li>{@link SelectStatement} (select generator)</li>
+	 *     <li>{@link InsertSelectStatement}</li>
+	 *     <li>{@link org.hibernate.sql.ast.tree.update.UpdateStatement}</li>
+	 *     <li>{@link org.hibernate.sql.ast.tree.delete.DeleteStatement}</li>
+	 * </ul>
+	 */
+	@Deprecated( since = "6.2" )
+	String getTableName(int j);
+
+	String[] getKeyColumns(int j);
+
+	int getTableSpan();
+
+	boolean isInverseTable(int j);
+
+	boolean isNullableTable(int j);
+
+	boolean hasDuplicateTables();
+
+	int getSubclassTableSpan();
+
+	String getSubclassTableName(int j);
+
+	String getTableNameForColumn(String columnName);
+
+	/**
+	 * @return the column name for the discriminator as specified in the mapping.
+	 *
+	 * @deprecated Use {@link EntityDiscriminatorMapping#getSelectionExpression()} instead
+	 */
+	@Deprecated
+	String getDiscriminatorColumnName();
+
+	/**
+	 * Get the discriminator type
+	 */
+	Type getDiscriminatorType();
+
+	/**
+	 * Does the result set contain rowids?
+	 */
+	boolean hasRowId();
+
+	String[] getSubclassPropertyColumnNames(int i);
+
+	/**
+	 * Return the column alias names used to persist/query the named property of the class or a subclass (optional operation).
+	 */
+	String[] getSubclassPropertyColumnAliases(String propertyName, String suffix);
+
+	int countSubclassProperties();
+
+	/**
+	 * Get the column names for the given property path
+	 */
+	String[] getPropertyColumnNames(String propertyPath);
+
+	/**
+	 * All columns to select, when loading.
+	 */
+	String selectFragment(String alias, String suffix);
+
+	/**
+	 * Retrieve the information needed to properly deal with this entity's discriminator
+	 * in a query.
+	 *
+	 * @return The entity discriminator metadata
+	 */
+	DiscriminatorMetadata getTypeDiscriminatorMetadata();
+
+	/**
+	 * Given a property path, return the corresponding column name(s).
+	 * 
+	 * @deprecated No longer used in ORM core
+	 */
+	@Deprecated(since = "7.0", forRemoval = true)
+	String[] toColumns(String propertyName);
+
+	boolean isSharedColumn(String columnExpression);
+
+	String[][] getConstraintOrderedTableKeyColumnClosure();
 }

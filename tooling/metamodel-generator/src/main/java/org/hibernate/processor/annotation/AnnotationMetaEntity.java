@@ -17,7 +17,6 @@ import org.hibernate.processor.ProcessLaterException;
 import org.hibernate.processor.model.ImportContext;
 import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
-import org.hibernate.processor.util.AccessType;
 import org.hibernate.processor.util.AccessTypeInformation;
 import org.hibernate.processor.util.Constants;
 import org.hibernate.processor.validation.ProcessorSessionFactory;
@@ -54,6 +53,7 @@ import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -62,6 +62,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
+
+import jakarta.persistence.AccessType;
 
 import static java.beans.Introspector.decapitalize;
 import static java.lang.Boolean.FALSE;
@@ -154,7 +156,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 * The field or method call to obtain the session
 	 */
 	private String sessionGetter = "entityManager";
-	
+
 	private final Map<String,String> memberTypes = new HashMap<>();
 
 	/**
@@ -248,12 +250,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	@Override
 	public @Nullable String getSupertypeName() {
-		if ( repository ) {
-			return null;
-		}
-		else {
-			return findMappedSuperClass( this, context );
-		}
+		return repository ? null : findMappedSuperClass( this, context );
 	}
 
 	@Override
@@ -273,7 +270,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				mergeInMembers( entityToMerge.getMembers() );
 			}
 		}
-
 		return new ArrayList<>( members.values() );
 	}
 
@@ -287,7 +283,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			// propagate types to be imported
 			importType( attribute.getMetaType() );
 			importType( attribute.getTypeDeclaration() );
-
 			members.put( attribute.getPropertyName(), attribute );
 		}
 	}
@@ -296,7 +291,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		// store the entity in order do the merge lazily in case of
 		// an uninitialized embeddedable or mapped superclass
 		if ( !initialized ) {
-			this.entityToMerge = other;
+			entityToMerge = other;
 		}
 		else {
 			mergeInMembers( other.getMembers() );
@@ -580,7 +575,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 		return null;
 	}
-	
+
 	private void setupSession() {
 		if ( element.getTypeParameters().isEmpty() ) {
 			jakartaDataRepository = hasAnnotation( element, JD_REPOSITORY );
@@ -1131,7 +1126,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			addQueryMethod( method, returnType, null );
 		}
 		else if ( kind == TypeKind.DECLARED ) {
-			final DeclaredType declaredType = (DeclaredType) ununiIfPossible(method, returnType);
+			final DeclaredType declaredType = (DeclaredType) unUniIfPossible(method, returnType);
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
 			final List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
 			switch ( typeArguments.size() ) {
@@ -1163,7 +1158,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private TypeMirror ununiIfPossible(ExecutableElement method, TypeMirror returnType) {
+	private TypeMirror unUniIfPossible(ExecutableElement method, TypeMirror returnType) {
 		final TypeMirror result = ununi( returnType );
 		if ( repository ) {
 			if ( usingReactiveSession( sessionType ) )  {
@@ -1322,7 +1317,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private void addLifecycleMethod(ExecutableElement method) {
-		final TypeMirror returnType = ununiIfPossible( method, method.getReturnType() );
+		final TypeMirror returnType = unUniIfPossible( method, method.getReturnType() );
 		if ( method.getParameters().size() != 1 ) {
 			message( method,
 					"must have exactly one parameter",
@@ -2537,7 +2532,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			return returnTypeName.equals( UNI_VOID )
 				|| returnTypeName.equals( UNI_BOOLEAN )
 				|| returnTypeName.equals( UNI_INTEGER );
-			
 		}
 		else {
 			// non-reactive
@@ -2576,7 +2570,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 			}
 			else if ( selection instanceof JpaEntityJoin ) {
-				final JpaEntityJoin<?> from = (JpaEntityJoin<?>) selection;
+				final JpaEntityJoin<?,?> from = (JpaEntityJoin<?,?>) selection;
 				returnTypeCorrect = checkReturnedEntity( from.getModel(), returnType );
 			}
 			else if ( selection instanceof JpaRoot ) {

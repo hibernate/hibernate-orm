@@ -26,13 +26,13 @@ import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.internal.SessionFactoryImpl;
-import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.type.format.FormatMapper;
+
+import jakarta.persistence.criteria.Nulls;
 
 /**
  * @author Gail Badner
@@ -72,14 +72,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		addSessionFactoryObservers( new SessionFactoryObserverForNamedQueryValidation( metadata ) );
 		addSessionFactoryObservers( new SessionFactoryObserverForSchemaExport( metadata ) );
 		addSessionFactoryObservers( new SessionFactoryObserverForRegistration() );
-	}
-
-	/**
-	 * @deprecated This constructor will be removed
-	 */
-	@Deprecated(since = "6.2", forRemoval = true)
-	public SessionFactoryBuilderImpl(MetadataImplementor metadata, SessionFactoryOptionsBuilder optionsBuilder) {
-		this( metadata, optionsBuilder, metadata.getTypeConfiguration().getMetadataBuildingContext().getBootstrapContext() );
 	}
 
 	@Override
@@ -209,12 +201,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyBatchFetchStyle(BatchFetchStyle style) {
-		this.optionsBuilder.applyBatchFetchStyle( style );
-		return this;
-	}
-
-	@Override
 	public SessionFactoryBuilder applyDelayedEntityLoaderCreations(boolean delay) {
 		this.optionsBuilder.applyDelayedEntityLoaderCreations( delay );
 		return this;
@@ -239,7 +225,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyDefaultNullPrecedence(NullPrecedence nullPrecedence) {
+	public SessionFactoryBuilder applyDefaultNullPrecedence(Nulls nullPrecedence) {
 		this.optionsBuilder.applyDefaultNullPrecedence( nullPrecedence );
 		return this;
 	}
@@ -415,12 +401,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder enableJpaTransactionCompliance(boolean enabled) {
 		this.optionsBuilder.enableJpaTransactionCompliance( enabled );
-		return this;
-	}
-
-	@Override
-	public SessionFactoryBuilder enableJpaListCompliance(boolean enabled) {
-		this.optionsBuilder.enableJpaListCompliance( enabled );
 		return this;
 	}
 

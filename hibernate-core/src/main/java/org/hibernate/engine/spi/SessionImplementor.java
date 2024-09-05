@@ -11,16 +11,15 @@ import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.event.spi.DeleteContext;
-import org.hibernate.event.spi.MergeContext;
-import org.hibernate.event.spi.PersistContext;
-import org.hibernate.event.spi.RefreshContext;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.type.descriptor.WrapperOptions;
+
+import jakarta.persistence.criteria.CriteriaSelect;
 
 /**
  * Defines the "internal contract" between {@link Session} and other parts of Hibernate
@@ -77,6 +76,9 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	@Override
 	RootGraphImplementor<?> getEntityGraph(String graphName);
 
+	@Override
+	<T> QueryImplementor<T> createQuery(CriteriaSelect<T> selectQuery);
+
 	/**
 	 * Get the {@link ActionQueue} associated with this session.
 	 */
@@ -97,42 +99,6 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	 * Cascade the lock operation to the given child entity.
 	 */
 	void lock(String entityName, Object child, LockOptions lockOptions);
-
-	/**
-	 * @deprecated  OperationalContext should cover this overload I believe
-	 */
-	@Deprecated
-	void merge(String entityName, Object object, MergeContext copiedAlready) throws HibernateException;
-
-	/**
-	 * @deprecated  OperationalContext should cover this overload I believe
-	 */
-	@Deprecated
-	void persist(String entityName, Object object, PersistContext createdAlready) throws HibernateException;
-
-	/**
-	 * @deprecated  OperationalContext should cover this overload I believe
-	 */
-	@Deprecated
-	void persistOnFlush(String entityName, Object object, PersistContext copiedAlready);
-
-	/**
-	 * @deprecated  OperationalContext should cover this overload I believe
-	 */
-	@Deprecated
-	void refresh(String entityName, Object object, RefreshContext refreshedAlready) throws HibernateException;
-
-	/**
-	 * @deprecated  OperationalContext should cover this overload I believe
-	 */
-	@Deprecated
-	void delete(String entityName, Object child, boolean isCascadeDeleteEnabled, DeleteContext transientEntities);
-
-	/**
-	 * @deprecated  OperationalContext should cover this overload I believe
-	 */
-	@Deprecated
-	void removeOrphanBeforeUpdates(String entityName, Object child);
 
 	@Override
 	default SessionImplementor asSessionImplementor() {

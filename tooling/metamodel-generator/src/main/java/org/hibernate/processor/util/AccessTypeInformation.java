@@ -6,6 +6,7 @@
  */
 package org.hibernate.processor.util;
 
+import jakarta.persistence.AccessType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -14,7 +15,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Hardy Ferentschik
  */
 public class AccessTypeInformation {
-	private final String fqcn;
+	private final String fullyQualifiedName;
 
 	/**
 	 * Access type explicitly specified in xml or on an entity.
@@ -29,8 +30,11 @@ public class AccessTypeInformation {
 
 	static final AccessType DEFAULT_ACCESS_TYPE = AccessType.FIELD;
 
-	public AccessTypeInformation(String fqcn, @Nullable AccessType explicitAccessType, @Nullable AccessType defaultAccessType) {
-		this.fqcn = fqcn;
+	public AccessTypeInformation(
+			String fullyQualifiedName,
+			@Nullable AccessType explicitAccessType,
+			@Nullable AccessType defaultAccessType) {
+		this.fullyQualifiedName = fullyQualifiedName;
 		this.explicitAccessType = explicitAccessType;
 		this.defaultAccessType = defaultAccessType;
 	}
@@ -68,7 +72,7 @@ public class AccessTypeInformation {
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( "AccessTypeInformation" );
-		sb.append( "{fqcn='" ).append( fqcn ).append( '\'' );
+		sb.append( "{fqcn='" ).append(fullyQualifiedName).append( '\'' );
 		sb.append( ", explicitAccessType=" ).append( explicitAccessType );
 		sb.append( ", defaultAccessType=" ).append( defaultAccessType );
 		sb.append( '}' );

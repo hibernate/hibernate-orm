@@ -14,7 +14,6 @@ import java.util.TreeSet;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Comment;
-import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
@@ -35,6 +34,7 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.UserDefinedObjectType;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.internal.EmbeddableHelper;
+import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.sql.Template;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -48,19 +48,19 @@ public class AggregateComponentSecondPass implements SecondPass {
 
 	private final PropertyHolder propertyHolder;
 	private final Component component;
-	private final XClass componentXClass;
+	private final ClassDetails componentClassDetails;
 	private final String propertyName;
 	private final MetadataBuildingContext context;
 
 	public AggregateComponentSecondPass(
 			PropertyHolder propertyHolder,
 			Component component,
-			XClass componentXClass,
+			ClassDetails componentClassDetails,
 			String propertyName,
 			MetadataBuildingContext context) {
 		this.propertyHolder = propertyHolder;
 		this.component = component;
-		this.componentXClass = componentXClass;
+		this.componentClassDetails = componentClassDetails;
 		this.propertyName = propertyName;
 		this.context = context;
 	}
@@ -93,7 +93,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 					structName.getSchemaName()
 			);
 			final UserDefinedObjectType udt = new UserDefinedObjectType( "orm", namespace, structName.getObjectName() );
-			final Comment comment = componentXClass.getAnnotation( Comment.class );
+			final Comment comment = componentClassDetails.getDirectAnnotationUsage( Comment.class );
 			if ( comment != null ) {
 				udt.setComment( comment.value() );
 			}
@@ -196,8 +196,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 	private static void validateComponent(Component component, String basePath, boolean inArray) {
 		for ( Property property : component.getProperties() ) {
 			final Value value = property.getValue();
-			if ( value instanceof Component ) {
-				final Component c = (Component) value;
+			if ( value instanceof Component c ) {
 				validateComponent( c, qualify( basePath, property.getName() ), inArray );
 			}
 			else if ( value instanceof ToOne ) {
@@ -433,7 +432,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 						String.format(
 								"Struct [%s] of class [%s] is defined by multiple components with different mappings [%s] and [%s] for column [%s]",
 								udt1.getName(),
-								componentXClass.getName(),
+								componentClassDetails.getName(),
 								column1.getSqlType(),
 								column2.getSqlType(),
 								column1.getCanonicalName()
@@ -448,7 +447,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 							"Struct [%s] is defined by multiple components %s but some columns are missing in [%s]: %s",
 							udt1.getName(),
 							findComponentClasses(),
-							componentXClass.getName(),
+							componentClassDetails.getName(),
 							missingColumns
 					)
 			);

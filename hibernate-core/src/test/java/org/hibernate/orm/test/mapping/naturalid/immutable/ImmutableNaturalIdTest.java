@@ -163,7 +163,7 @@ public class ImmutableNaturalIdTest {
 		scope.inTransaction(
 				(session) -> {
 					final User steve = session.bySimpleNaturalId( User.class ).load( "steve" );
-					session.delete( steve );
+					session.remove( steve );
 				}
 		);
 

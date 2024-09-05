@@ -29,7 +29,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.annotations.Imported;
 import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
@@ -62,10 +61,17 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
+import org.hibernate.boot.models.categorize.internal.ClassLoaderServiceLoading;
+import org.hibernate.boot.models.internal.GlobalRegistrationsImpl;
+import org.hibernate.boot.models.internal.ModelsHelper;
+import org.hibernate.boot.models.spi.GlobalRegistrations;
+import org.hibernate.boot.models.xml.internal.PersistenceUnitMetadataImpl;
+import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -74,13 +80,13 @@ import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.RecoverableException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.Generator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -99,6 +105,9 @@ import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.models.internal.SourceModelBuildingContextImpl;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -114,6 +123,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.MapsId;
 
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
+import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 
 /**
  * The implementation of the {@linkplain InFlightMetadataCollector in-flight
@@ -131,6 +141,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	private final BootstrapContext bootstrapContext;
 	private final MetadataBuildingOptions options;
 
+	private final GlobalRegistrations globalRegistrations;
+	private final PersistenceUnitMetadata persistenceUnitMetadata;
+
 	private final AttributeConverterManager attributeConverterManager = new AttributeConverterManager();
 
 	private final UUID uuid;
@@ -138,7 +151,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	private final Map<String,PersistentClass> entityBindingMap = new HashMap<>();
 	private final List<Component> composites = new ArrayList<>();
 	private final Map<Class<?>, Component> genericComponentsMap = new HashMap<>();
-	private final Map<XClass, List<XClass>> embeddableSubtypes = new HashMap<>();
+	private final Map<ClassDetails, List<ClassDetails>> embeddableSubtypes = new HashMap<>();
 	private final Map<Class<?>, DiscriminatorType<?>> embeddableDiscriminatorTypesMap = new HashMap<>();
 	private final Map<String,Collection> collectionBindingMap = new HashMap<>();
 
@@ -149,8 +162,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 
 	private Database database;
 
-	private final Map<String, NamedHqlQueryDefinition> namedQueryMap = new HashMap<>();
-	private final Map<String, NamedNativeQueryDefinition> namedNativeQueryMap = new HashMap<>();
+	private final Map<String, NamedHqlQueryDefinition<?>> namedQueryMap = new HashMap<>();
+	private final Map<String, NamedNativeQueryDefinition<?>> namedNativeQueryMap = new HashMap<>();
 	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap = new HashMap<>();
 	private final Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappingMap = new HashMap<>();
 
@@ -168,19 +181,27 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	private final Set<String> defaultSqlResultSetMappingNames = new HashSet<>();
 	private final Set<String> defaultNamedProcedureNames = new HashSet<>();
 	private Map<Class<?>, MappedSuperclass> mappedSuperClasses;
-	private Map<XClass, Map<String, PropertyData>> propertiesAnnotatedWithMapsId;
-	private Map<XClass, Map<String, PropertyData>> propertiesAnnotatedWithIdAndToOne;
+	private Map<ClassDetails, Map<String, PropertyData>> propertiesAnnotatedWithMapsId;
+	private Map<ClassDetails, Map<String, PropertyData>> propertiesAnnotatedWithIdAndToOne;
 	private Map<String, String> mappedByResolver;
 	private Map<String, String> propertyRefResolver;
 	private Set<DelayedPropertyReferenceHandler> delayedPropertyReferenceHandlers;
 	private List<Function<MetadataBuildingContext, Boolean>> valueResolvers;
 
+	private final SourceModelBuildingContext sourceModelBuildingContext;
+
 	public InFlightMetadataCollectorImpl(
 			BootstrapContext bootstrapContext,
+			SourceModelBuildingContext sourceModelBuildingContext,
 			MetadataBuildingOptions options) {
 		this.bootstrapContext = bootstrapContext;
-		this.uuid = UUID.randomUUID();
+		this.sourceModelBuildingContext = sourceModelBuildingContext;
 		this.options = options;
+
+		this.uuid = UUID.randomUUID();
+
+		this.globalRegistrations = new GlobalRegistrationsImpl( sourceModelBuildingContext, bootstrapContext );
+		this.persistenceUnitMetadata = new PersistenceUnitMetadataImpl();
 
 		for ( Map.Entry<String, SqmFunctionDescriptor> sqlFunctionEntry : bootstrapContext.getSqlFunctions().entrySet() ) {
 			if ( sqlFunctionMap == null ) {
@@ -192,6 +213,26 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		}
 
 		bootstrapContext.getAuxiliaryDatabaseObjectList().forEach( getDatabase()::addAuxiliaryDatabaseObject );
+	}
+
+	public InFlightMetadataCollectorImpl(
+			BootstrapContext bootstrapContext,
+			MetadataBuildingOptions options) {
+		this(
+				bootstrapContext,
+				createModelBuildingContext( bootstrapContext ),
+				options
+		);
+	}
+
+	private static SourceModelBuildingContext createModelBuildingContext(BootstrapContext bootstrapContext) {
+		final ClassLoaderService classLoaderService = bootstrapContext.getServiceRegistry().getService( ClassLoaderService.class );
+		final ClassLoaderServiceLoading classLoading = new ClassLoaderServiceLoading( classLoaderService );
+		return new SourceModelBuildingContextImpl(
+				classLoading,
+				bootstrapContext.getJandexView(),
+				ModelsHelper::preFillRegistries
+		);
 	}
 
 	@Override
@@ -207,6 +248,21 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	@Override
 	public BootstrapContext getBootstrapContext() {
 		return bootstrapContext;
+	}
+
+	@Override
+	public SourceModelBuildingContext getSourceModelBuildingContext() {
+		return sourceModelBuildingContext;
+	}
+
+	@Override
+	public GlobalRegistrations getGlobalRegistrations() {
+		return globalRegistrations;
+	}
+
+	@Override
+	public PersistenceUnitMetadata getPersistenceUnitMetadata() {
+		return persistenceUnitMetadata;
 	}
 
 	@Override
@@ -290,13 +346,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 	@Override
-	public void registerEmbeddableSubclass(XClass superclass, XClass subclass) {
+	public void registerEmbeddableSubclass(ClassDetails superclass, ClassDetails subclass) {
 		embeddableSubtypes.computeIfAbsent( superclass, c -> new ArrayList<>() ).add( subclass );
 	}
 
 	@Override
-	public List<XClass> getEmbeddableSubclasses(XClass superclass) {
-		final List<XClass> subclasses = embeddableSubtypes.get( superclass );
+	public List<ClassDetails> getEmbeddableSubclasses(ClassDetails superclass) {
+		final List<ClassDetails> subclasses = embeddableSubtypes.get( superclass );
 		return subclasses != null ? subclasses : List.of();
 	}
 
@@ -515,18 +571,24 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 	private CollectionTypeRegistrationDescriptor toDescriptor(CollectionTypeRegistration registrationAnnotation) {
-		final Map<String,String> parameters;
-		if ( registrationAnnotation.parameters().length > 0 ) {
-			parameters = new HashMap<>();
-			for ( Parameter parameter : registrationAnnotation.parameters() ) {
-				parameters.put( parameter.name(), parameter.value() );
-			}
-		}
-		else {
-			parameters = null;
-		}
-		return new CollectionTypeRegistrationDescriptor( registrationAnnotation.type(), parameters );
+		return new CollectionTypeRegistrationDescriptor(
+				registrationAnnotation.type(),
+				extractParameters( registrationAnnotation.parameters() )
+		);
 	}
+
+	private Map<String,String> extractParameters(Parameter[] annotationUsages) {
+		if ( CollectionHelper.isEmpty( annotationUsages ) ) {
+			return null;
+		}
+
+		final Map<String,String> result = mapOfSize( annotationUsages.length );
+		for ( Parameter parameter : annotationUsages ) {
+			result.put( parameter.name(), parameter.value() );
+		}
+		return result;
+	}
+
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -699,7 +761,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Named query handling
 
-	public NamedHqlQueryDefinition getNamedHqlQueryMapping(String name) {
+	public NamedHqlQueryDefinition<?> getNamedHqlQueryMapping(String name) {
 		if ( name == null ) {
 			throw new IllegalArgumentException( "null is not a valid query name" );
 		}
@@ -707,12 +769,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 	@Override
-	public void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition> definitionConsumer) {
+	public void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition<?>> definitionConsumer) {
 		namedQueryMap.values().forEach( definitionConsumer );
 	}
 
 	@Override
-	public void addNamedQuery(NamedHqlQueryDefinition def) {
+	public void addNamedQuery(NamedHqlQueryDefinition<?> def) {
 		if ( def == null ) {
 			throw new IllegalArgumentException( "Named query definition is null" );
 		}
@@ -727,7 +789,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		applyNamedQuery( def.getRegistrationName(), def );
 	}
 
-	private void applyNamedQuery(String name, NamedHqlQueryDefinition query) {
+	private void applyNamedQuery(String name, NamedHqlQueryDefinition<?> query) {
 		checkQueryName( name );
 		namedQueryMap.put( name.intern(), query );
 	}
@@ -739,7 +801,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 	@Override
-	public void addDefaultQuery(NamedHqlQueryDefinition queryDefinition) {
+	public void addDefaultQuery(NamedHqlQueryDefinition<?> queryDefinition) {
 		applyNamedQuery( queryDefinition.getRegistrationName(), queryDefinition );
 		defaultNamedQueryNames.add( queryDefinition.getRegistrationName() );
 	}
@@ -748,17 +810,17 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	// Named native-query handling
 
 	@Override
-	public NamedNativeQueryDefinition getNamedNativeQueryMapping(String name) {
+	public NamedNativeQueryDefinition<?> getNamedNativeQueryMapping(String name) {
 		return namedNativeQueryMap.get( name );
 	}
 
 	@Override
-	public void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition> definitionConsumer) {
+	public void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition<?>> definitionConsumer) {
 		namedNativeQueryMap.values().forEach( definitionConsumer );
 	}
 
 	@Override
-	public void addNamedNativeQuery(NamedNativeQueryDefinition def) {
+	public void addNamedNativeQuery(NamedNativeQueryDefinition<?> def) {
 		if ( def == null ) {
 			throw new IllegalArgumentException( "Named native query definition object is null" );
 		}
@@ -773,13 +835,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		applyNamedNativeQuery( def.getRegistrationName(), def );
 	}
 
-	private void applyNamedNativeQuery(String name, NamedNativeQueryDefinition query) {
+	private void applyNamedNativeQuery(String name, NamedNativeQueryDefinition<?> query) {
 		checkQueryName( name );
 		namedNativeQueryMap.put( name.intern(), query );
 	}
 
 	@Override
-	public void addDefaultNamedNativeQuery(NamedNativeQueryDefinition query) {
+	public void addDefaultNamedNativeQuery(NamedNativeQueryDefinition<?> query) {
 		applyNamedNativeQuery( query.getRegistrationName(), query );
 		defaultNamedNativeQueryNames.add( query.getRegistrationName() );
 	}
@@ -1238,9 +1300,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		}
 
 		if ( logicalName == null ) {
-			throw new MappingException(
-					"Unable to find column with physical name " + physicalNameString + " in table " + table.getName()
-			);
+			throw new MappingException( "Unable to find column with physical name '"
+					+ physicalNameString + "' in table '" + table.getName() + "'" );
 		}
 		return logicalName.render();
 	}
@@ -1253,7 +1314,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	private final Map<String,AnnotatedClassType> annotatedClassTypeMap = new HashMap<>();
 
 	@Override
-	public AnnotatedClassType getClassType(XClass clazz) {
+	public AnnotatedClassType getClassType(ClassDetails clazz) {
 		AnnotatedClassType type = annotatedClassTypeMap.get( clazz.getName() );
 		if ( type == null ) {
 			return addClassType( clazz );
@@ -1264,32 +1325,32 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 	@Override
-	public AnnotatedClassType addClassType(XClass clazz) {
+	public AnnotatedClassType addClassType(ClassDetails clazz) {
 		final AnnotatedClassType type = getAnnotatedClassType(clazz);
 		annotatedClassTypeMap.put( clazz.getName(), type );
 		return type;
 	}
 
-	private static AnnotatedClassType getAnnotatedClassType(XClass clazz) {
-		if ( clazz.isAnnotationPresent( Entity.class ) ) {
-			if ( clazz.isAnnotationPresent( Embeddable.class ) ) {
+	private static AnnotatedClassType getAnnotatedClassType(ClassDetails clazz) {
+		if ( clazz.hasDirectAnnotationUsage( Entity.class ) ) {
+			if ( clazz.hasDirectAnnotationUsage( Embeddable.class ) ) {
 				throw new AnnotationException( "Invalid class annotated both '@Entity' and '@Embeddable': '" + clazz.getName() + "'" );
 			}
-			else if ( clazz.isAnnotationPresent( jakarta.persistence.MappedSuperclass.class ) ) {
+			else if ( clazz.hasDirectAnnotationUsage( jakarta.persistence.MappedSuperclass.class ) ) {
 				throw new AnnotationException( "Invalid class annotated both '@Entity' and '@MappedSuperclass': '" + clazz.getName() + "'" );
 			}
 			return AnnotatedClassType.ENTITY;
 		}
-		else if ( clazz.isAnnotationPresent( Embeddable.class ) ) {
-			if ( clazz.isAnnotationPresent( jakarta.persistence.MappedSuperclass.class ) ) {
+		else if ( clazz.hasDirectAnnotationUsage( Embeddable.class ) ) {
+			if ( clazz.hasDirectAnnotationUsage( jakarta.persistence.MappedSuperclass.class ) ) {
 				throw new AnnotationException( "Invalid class annotated both '@Embeddable' and '@MappedSuperclass': '" + clazz.getName() + "'" );
 			}
 			return AnnotatedClassType.EMBEDDABLE;
 		}
-		else if ( clazz.isAnnotationPresent( jakarta.persistence.MappedSuperclass.class ) ) {
+		else if ( clazz.hasDirectAnnotationUsage( jakarta.persistence.MappedSuperclass.class ) ) {
 			return AnnotatedClassType.MAPPED_SUPERCLASS;
 		}
-		else if ( clazz.isAnnotationPresent( Imported.class ) ) {
+		else if ( clazz.hasDirectAnnotationUsage( Imported.class ) ) {
 			return AnnotatedClassType.IMPORTED;
 		}
 		else {
@@ -1314,7 +1375,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 	@Override
-	public PropertyData getPropertyAnnotatedWithMapsId(XClass entityType, String propertyName) {
+	public PropertyData getPropertyAnnotatedWithMapsId(ClassDetails entityType, String propertyName) {
 		if ( propertiesAnnotatedWithMapsId == null ) {
 			return null;
 		}
@@ -1324,35 +1385,36 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 	@Override
-	public void addPropertyAnnotatedWithMapsId(XClass entityType, PropertyData property) {
+	public void addPropertyAnnotatedWithMapsId(ClassDetails entityType, PropertyData property) {
 		if ( propertiesAnnotatedWithMapsId == null ) {
 			propertiesAnnotatedWithMapsId = new HashMap<>();
 		}
 
-		Map<String, PropertyData> map = propertiesAnnotatedWithMapsId.get( entityType );
-		if ( map == null ) {
-			map = new HashMap<>();
-			propertiesAnnotatedWithMapsId.put( entityType, map );
-		}
-		map.put( property.getProperty().getAnnotation( MapsId.class ).value(), property );
+		final Map<String, PropertyData> map = propertiesAnnotatedWithMapsId.computeIfAbsent(
+				entityType,
+				k -> new HashMap<>()
+		);
+		map.put(
+				property.getAttributeMember().getDirectAnnotationUsage( MapsId.class ).value(),
+				property
+		);
 	}
 
 	@Override
-	public void addPropertyAnnotatedWithMapsIdSpecj(XClass entityType, PropertyData property, String mapsIdValue) {
+	public void addPropertyAnnotatedWithMapsIdSpecj(ClassDetails entityType, PropertyData property, String mapsIdValue) {
 		if ( propertiesAnnotatedWithMapsId == null ) {
 			propertiesAnnotatedWithMapsId = new HashMap<>();
 		}
 
-		Map<String, PropertyData> map = propertiesAnnotatedWithMapsId.get( entityType );
-		if ( map == null ) {
-			map = new HashMap<>();
-			propertiesAnnotatedWithMapsId.put( entityType, map );
-		}
+		final Map<String, PropertyData> map = propertiesAnnotatedWithMapsId.computeIfAbsent(
+				entityType,
+				k -> new HashMap<>()
+		);
 		map.put( mapsIdValue, property );
 	}
 
 	@Override
-	public PropertyData getPropertyAnnotatedWithIdAndToOne(XClass entityType, String propertyName) {
+	public PropertyData getPropertyAnnotatedWithIdAndToOne(ClassDetails entityType, String propertyName) {
 		if ( propertiesAnnotatedWithIdAndToOne == null ) {
 			return null;
 		}
@@ -1362,16 +1424,15 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 	@Override
-	public void addToOneAndIdProperty(XClass entityType, PropertyData property) {
+	public void addToOneAndIdProperty(ClassDetails entityType, PropertyData property) {
 		if ( propertiesAnnotatedWithIdAndToOne == null ) {
 			propertiesAnnotatedWithIdAndToOne = new HashMap<>();
 		}
 
-		Map<String, PropertyData> map = propertiesAnnotatedWithIdAndToOne.get( entityType );
-		if ( map == null ) {
-			map = new HashMap<>();
-			propertiesAnnotatedWithIdAndToOne.put( entityType, map );
-		}
+		final Map<String, PropertyData> map = propertiesAnnotatedWithIdAndToOne.computeIfAbsent(
+				entityType,
+				k -> new HashMap<>()
+		);
 		map.put( property.getPropertyName(), property );
 	}
 
@@ -1936,17 +1997,17 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 				try {
 					pass.doSecondPass( getEntityBindingMap() );
 				}
-				catch (RecoverableException e) {
+				catch (FailedSecondPassException e) {
 					failingSecondPasses.add( pass );
 					if ( originalException == null ) {
 						originalException = (RuntimeException) e.getCause();
 					}
 				}
 			}
-			stopProcess = failingSecondPasses.size() == 0 || failingSecondPasses.size() == endOfQueueFkSecondPasses.size();
+			stopProcess = failingSecondPasses.isEmpty() || failingSecondPasses.size() == endOfQueueFkSecondPasses.size();
 			endOfQueueFkSecondPasses = failingSecondPasses;
 		}
-		if ( endOfQueueFkSecondPasses.size() > 0 ) {
+		if ( !endOfQueueFkSecondPasses.isEmpty() ) {
 			throw originalException;
 		}
 	}
@@ -2133,7 +2194,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			handleIdentifierValueBinding(
 					entityBinding.getIdentifier(),
 					dialect,
-					(RootClass) entityBinding
+					(RootClass) entityBinding,
+					entityBinding.getIdentifierProperty()
 			);
 
 		}
@@ -2146,26 +2208,20 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			handleIdentifierValueBinding(
 					( (IdentifierCollection) collection ).getIdentifier(),
 					dialect,
+					null,
 					null
 			);
 		}
 	}
 
 	private void handleIdentifierValueBinding(
-			KeyValue identifierValueBinding,
-			Dialect dialect,
-			RootClass entityBinding) {
+			KeyValue identifierValueBinding, Dialect dialect, RootClass entityBinding, Property identifierProperty) {
 		// todo : store this result (back into the entity or into the KeyValue, maybe?)
 		// 		This process of instantiating the id-generator is called multiple times.
 		//		It was done this way in the old code too, so no "regression" here; but
 		//		it could be done better
 		try {
-			final Generator generator = identifierValueBinding.createGenerator(
-					bootstrapContext.getIdentifierGeneratorFactory(),
-					dialect,
-					entityBinding
-			);
-
+			final Generator generator = identifierValueBinding.createGenerator( dialect, entityBinding, identifierProperty );
 			if ( generator instanceof ExportableProducer ) {
 				( (ExportableProducer) generator ).registerExportables( getDatabase() );
 			}

@@ -7,20 +7,23 @@
 package org.hibernate.jpa.boot.spi;
 
 import java.net.URL;
-import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
+import jakarta.persistence.PersistenceUnitTransactionType;
 
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
 
 /**
- * Abstraction for dealing with either {@code <persistence-unit/>} information whether that comes from
- * an EE container in the form of {@link jakarta.persistence.spi.PersistenceUnitInfo} or in an SE environment
- * where Hibernate has parsed the {@code persistence.xml} file itself.
+ * Abstraction for dealing with {@code <persistence-unit/>} information
+ * specified in the {@code persistence.xml} file, which might be:
+ * <ul>
+ * <li>passed by the Jakarta EE container as an instance of
+ *     {@link jakarta.persistence.spi.PersistenceUnitInfo}, or,
+ * <li>in an SE environment, parsed by Hibernate itself.
+ * </ul>
  *
  * @author Steve Ebersole
  */
@@ -64,7 +67,14 @@ public interface PersistenceUnitDescriptor {
 	 */
 	boolean isExcludeUnlistedClasses();
 
-	PersistenceUnitTransactionType getTransactionType();
+	PersistenceUnitTransactionType getPersistenceUnitTransactionType();
+
+	/**
+	 * @deprecated since {@link jakarta.persistence.spi.PersistenceUnitTransactionType}
+	 *             will be removed in JPA 4
+	 */
+	@Deprecated(since = "7", forRemoval = true) @SuppressWarnings("removal")
+	jakarta.persistence.spi.PersistenceUnitTransactionType getTransactionType();
 
 	ValidationMode getValidationMode();
 

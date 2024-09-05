@@ -28,8 +28,8 @@ import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
-import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.engine.jdbc.Size;
@@ -57,12 +57,12 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
-import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.persister.entity.Loadable;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SortDirection;
+import org.hibernate.query.internal.NullPrecedenceHelper;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
@@ -71,7 +71,6 @@ import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.FrameExclusion;
 import org.hibernate.query.sqm.FrameKind;
 import org.hibernate.query.sqm.FrameMode;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
@@ -89,6 +88,7 @@ import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlTreeCreationException;
+import org.hibernate.sql.ast.internal.TableGroupHelper;
 import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
 import org.hibernate.sql.ast.tree.AbstractUpdateOrDeleteStatement;
 import org.hibernate.sql.ast.tree.MutationStatement;
@@ -226,6 +226,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import jakarta.persistence.criteria.Nulls;
 
 import static org.hibernate.persister.entity.DiscriminatorHelper.jdbcLiteral;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.DIVIDE_PORTABLE;
@@ -2585,12 +2587,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				appendSql( searchBySpecification.getCteColumn().getColumnExpression() );
 				final SortDirection sortOrder = searchBySpecification.getSortOrder();
 				if ( sortOrder != null ) {
-					NullPrecedence nullPrecedence = searchBySpecification.getNullPrecedence();
-					if ( nullPrecedence == null || nullPrecedence == NullPrecedence.NONE ) {
+					Nulls nullPrecedence = searchBySpecification.getNullPrecedence();
+					if ( nullPrecedence == null || nullPrecedence == Nulls.NONE ) {
 						nullPrecedence = sessionFactory.getSessionFactoryOptions().getDefaultNullPrecedence();
 					}
-					final boolean renderNullPrecedence = nullPrecedence != null &&
-							!nullPrecedence.isDefaultOrdering( sortOrder, dialect.getNullOrdering() );
+					final boolean renderNullPrecedence = nullPrecedence != null
+							&& !NullPrecedenceHelper.isDefaultOrdering( nullPrecedence, sortOrder, dialect.getNullOrdering() );
 					if ( sortOrder == SortDirection.DESCENDING ) {
 						appendSql( " desc" );
 					}
@@ -2598,7 +2600,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						appendSql( " asc" );
 					}
 					if ( renderNullPrecedence ) {
-						if ( searchBySpecification.getNullPrecedence() == NullPrecedence.FIRST ) {
+						if ( searchBySpecification.getNullPrecedence() == Nulls.FIRST ) {
 							appendSql( " nulls first" );
 						}
 						else {
@@ -2722,7 +2724,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
 					}
-					if ( searchBySpecification.getNullPrecedence() != NullPrecedence.NONE ) {
+					if ( searchBySpecification.getNullPrecedence() != Nulls.NONE ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for search specifications with explicit null precedence" );
 					}
 					final int selectionIndex = currentCteStatement.getCteTable()
@@ -2754,7 +2756,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
 					}
-					if ( searchBySpecification.getNullPrecedence() != NullPrecedence.NONE ) {
+					if ( searchBySpecification.getNullPrecedence() != Nulls.NONE ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for search specifications with explicit null precedence" );
 					}
 					final int selectionIndex = currentCteStatement.getCteTable()
@@ -2781,7 +2783,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
 					}
-					if ( searchBySpecification.getNullPrecedence() != NullPrecedence.NONE ) {
+					if ( searchBySpecification.getNullPrecedence() != Nulls.NONE ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for search specifications with explicit null precedence" );
 					}
 					final int selectionIndex = currentCteStatement.getCteTable()
@@ -2803,7 +2805,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
 					}
-					if ( searchBySpecification.getNullPrecedence() != NullPrecedence.NONE ) {
+					if ( searchBySpecification.getNullPrecedence() != Nulls.NONE ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for search specifications with explicit null precedence" );
 					}
 					final int selectionIndex = currentCteStatement.getCteTable()
@@ -2864,7 +2866,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
 					}
-					if ( searchBySpecification.getNullPrecedence() != NullPrecedence.NONE ) {
+					if ( searchBySpecification.getNullPrecedence() != Nulls.NONE ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for search specifications with explicit null precedence" );
 					}
 					final int selectionIndex = currentCteStatement.getCteTable()
@@ -2902,7 +2904,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
 					}
-					if ( searchBySpecification.getNullPrecedence() != NullPrecedence.NONE ) {
+					if ( searchBySpecification.getNullPrecedence() != Nulls.NONE ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for search specifications with explicit null precedence" );
 					}
 					final int selectionIndex = currentCteStatement.getCteTable()
@@ -2941,7 +2943,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
 					}
-					if ( searchBySpecification.getNullPrecedence() != NullPrecedence.NONE ) {
+					if ( searchBySpecification.getNullPrecedence() != Nulls.NONE ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for search specifications with explicit null precedence" );
 					}
 					final int selectionIndex = currentCteStatement.getCteTable()
@@ -2980,7 +2982,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
 					}
-					if ( searchBySpecification.getNullPrecedence() != NullPrecedence.NONE ) {
+					if ( searchBySpecification.getNullPrecedence() != Nulls.NONE ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for search specifications with explicit null precedence" );
 					}
 					final int selectionIndex = currentCteStatement.getCteTable()
@@ -3317,8 +3319,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			case LONG:
 				return castNumberToString( expression, 19, 0 );
 			case FIXED:
-				if ( expression.getExpressionType() instanceof SqlTypedMapping ) {
-					final SqlTypedMapping sqlTypedMapping = (SqlTypedMapping) expression.getExpressionType();
+				if ( expression.getExpressionType() instanceof SqlTypedMapping sqlTypedMapping ) {
 					if ( sqlTypedMapping.getPrecision() != null && sqlTypedMapping.getScale() != null ) {
 						return castNumberToString(
 								expression,
@@ -3943,8 +3944,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( expression instanceof Literal ) {
 			appendSql( "()" );
 		}
-		else if ( expression instanceof Summarization ) {
-			Summarization summarization = (Summarization) expression;
+		else if ( expression instanceof Summarization summarization ) {
 			appendSql( summarization.getKind().sqlText() );
 			appendSql( OPEN_PARENTHESIS );
 			renderCommaSeparated( summarization.getGroupings() );
@@ -4380,7 +4380,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public void visitSortSpecification(SortSpecification sortSpecification) {
 		final Expression sortExpression = sortSpecification.getSortExpression();
-		final NullPrecedence nullPrecedence = sortSpecification.getNullPrecedence();
+		final Nulls nullPrecedence = sortSpecification.getNullPrecedence();
 		final SortDirection sortOrder = sortSpecification.getSortOrder();
 		final boolean ignoreCase = sortSpecification.isIgnoreCase();
 		final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( sortExpression );
@@ -4400,13 +4400,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected void visitSortSpecification(
 			Expression sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence,
+			Nulls nullPrecedence,
 			boolean ignoreCase) {
-		if ( nullPrecedence == null || nullPrecedence == NullPrecedence.NONE ) {
+		if ( nullPrecedence == null || nullPrecedence == Nulls.NONE ) {
 			nullPrecedence = sessionFactory.getSessionFactoryOptions().getDefaultNullPrecedence();
 		}
-		final boolean renderNullPrecedence = nullPrecedence != null &&
-				!nullPrecedence.isDefaultOrdering( sortOrder, dialect.getNullOrdering() );
+		final boolean renderNullPrecedence = nullPrecedence != null
+				&& !NullPrecedenceHelper.isDefaultOrdering( nullPrecedence, sortOrder, dialect.getNullOrdering() );
 		final boolean supportsNullPrecedence = renderNullPrecedence && supportsNullPrecedence();
 		if ( renderNullPrecedence && !supportsNullPrecedence ) {
 			emulateSortSpecificationNullPrecedence( sortExpression, nullPrecedence );
@@ -4423,7 +4423,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		if ( renderNullPrecedence && supportsNullPrecedence ) {
 			appendSql( " nulls " );
-			appendSql( nullPrecedence == NullPrecedence.LAST ? "last" : "first" );
+			appendSql( nullPrecedence == Nulls.LAST ? "last" : "first" );
 		}
 	}
 
@@ -4449,12 +4449,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return dialect.supportsNullPrecedence();
 	}
 
-	protected void emulateSortSpecificationNullPrecedence(Expression sortExpression, NullPrecedence nullPrecedence) {
+	protected void emulateSortSpecificationNullPrecedence(Expression sortExpression, Nulls nullPrecedence) {
 		// TODO: generate "virtual" select items and use them here positionally
 		appendSql( "case when (" );
 		resolveAliasedExpression( sortExpression ).accept( this );
 		appendSql( ") is null then " );
-		if ( nullPrecedence == NullPrecedence.FIRST ) {
+		if ( nullPrecedence == Nulls.FIRST ) {
 			appendSql( "0 else 1" );
 		}
 		else {
@@ -5676,7 +5676,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							new SortSpecification(
 									new SqlSelectionExpression( sqlSelections.get( i ) ),
 									SortDirection.ASCENDING,
-									NullPrecedence.NONE
+									Nulls.NONE
 							)
 					);
 				}
@@ -5974,8 +5974,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		processNestedTableGroupJoins( tableGroup, null );
 		processTableGroupJoins( tableGroup );
 		ModelPartContainer modelPart = tableGroup.getModelPart();
-		if ( modelPart instanceof AbstractEntityPersister ) {
-			String[] querySpaces = (String[]) ( (AbstractEntityPersister) modelPart ).getQuerySpaces();
+		if ( modelPart instanceof EntityPersister ) {
+			String[] querySpaces = (String[]) ( (EntityPersister) modelPart ).getQuerySpaces();
 			for ( int i = 0; i < querySpaces.length; i++ ) {
 				registerAffectedTable( querySpaces[i] );
 			}
@@ -6017,8 +6017,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			processTableGroupJoins( tableGroup );
 		}
 		ModelPartContainer modelPart = tableGroup.getModelPart();
-		if ( modelPart instanceof AbstractEntityPersister ) {
-			String[] querySpaces = (String[]) ( (AbstractEntityPersister) modelPart ).getQuerySpaces();
+		if ( modelPart instanceof EntityPersister ) {
+			String[] querySpaces = (String[]) ( (EntityPersister) modelPart ).getQuerySpaces();
 			for ( int i = 0; i < querySpaces.length; i++ ) {
 				registerAffectedTable( querySpaces[i] );
 			}
@@ -6035,10 +6035,60 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void renderTableGroup(TableGroup tableGroup, Predicate predicate, List<TableGroupJoin> tableGroupJoinCollector) {
-		// Without reference joins or nested join groups, even a real table group does not need parenthesis
-		final boolean realTableGroup = tableGroup.isRealTableGroup()
-				&& ( CollectionHelper.isNotEmpty( tableGroup.getTableReferenceJoins() )
-				|| hasNestedTableGroupsToRender( tableGroup.getNestedTableGroupJoins() ) );
+		final boolean realTableGroup;
+		int swappedJoinIndex = -1;
+		boolean forceLeftJoin = false;
+		if ( tableGroup.isRealTableGroup() ) {
+			if ( hasNestedTableGroupsToRender( tableGroup.getNestedTableGroupJoins() ) ) {
+				// If there are nested table groups, we need to render a real table group
+				realTableGroup = true;
+			}
+			else {
+				// Determine the reference join indexes of the table reference used in the predicate
+				final int referenceJoinIndexForPredicateSwap = TableGroupHelper.findReferenceJoinForPredicateSwap(
+						tableGroup,
+						predicate
+				);
+				if ( referenceJoinIndexForPredicateSwap == TableGroupHelper.REAL_TABLE_GROUP_REQUIRED ) {
+					// Means that real table group rendering is necessary
+					realTableGroup = true;
+				}
+				else if ( referenceJoinIndexForPredicateSwap == TableGroupHelper.NO_TABLE_GROUP_REQUIRED ) {
+					// Means that no swap is necessary to avoid the table group rendering
+					realTableGroup = false;
+					forceLeftJoin = !tableGroup.canUseInnerJoins();
+				}
+				else {
+					// Means that real table group rendering can be avoided if the primary table reference is swapped
+					// with the table reference join at the given index
+					realTableGroup = false;
+					forceLeftJoin = !tableGroup.canUseInnerJoins();
+					swappedJoinIndex = referenceJoinIndexForPredicateSwap;
+
+					// Render the table reference of the table reference join first
+					final TableReferenceJoin tableReferenceJoin = tableGroup.getTableReferenceJoins().get( swappedJoinIndex );
+					renderNamedTableReference( tableReferenceJoin.getJoinedTableReference(), LockMode.NONE );
+					// along with the predicate for the table group
+					if ( predicate != null ) {
+						appendSql( " on " );
+						predicate.accept( this );
+					}
+
+					// Then render the join syntax and fall through to rendering the primary table reference
+					appendSql( WHITESPACE );
+					if ( tableGroup.canUseInnerJoins() ) {
+						appendSql( tableReferenceJoin.getJoinType().getText() );
+					}
+					else {
+						append( "left " );
+					}
+					appendSql( "join " );
+				}
+			}
+		}
+		else {
+			realTableGroup = false;
+		}
 		if ( realTableGroup ) {
 			appendSql( OPEN_PARENTHESIS );
 		}
@@ -6066,7 +6116,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			tableGroupJoins = null;
 		}
 
-		if ( predicate != null ) {
+		// Predicate was already rendered when swappedJoinIndex is not equal to -1
+		if ( predicate != null && swappedJoinIndex == -1 ) {
 			appendSql( " on " );
 			predicate.accept( this );
 		}
@@ -6084,7 +6135,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		if ( !realTableGroup ) {
-			renderTableReferenceJoins( tableGroup );
+			renderTableReferenceJoins( tableGroup, swappedJoinIndex, forceLeftJoin );
 			processNestedTableGroupJoins( tableGroup, tableGroupJoinCollector );
 		}
 		if ( tableGroupJoinCollector != null ) {
@@ -6100,8 +6151,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		ModelPartContainer modelPart = tableGroup.getModelPart();
-		if ( modelPart instanceof AbstractEntityPersister ) {
-			String[] querySpaces = (String[]) ( (AbstractEntityPersister) modelPart ).getQuerySpaces();
+		if ( modelPart instanceof EntityPersister ) {
+			String[] querySpaces = (String[]) ( (EntityPersister) modelPart ).getQuerySpaces();
 			for ( int i = 0; i < querySpaces.length; i++ ) {
 				registerAffectedTable( querySpaces[i] );
 			}
@@ -6363,21 +6414,43 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void renderTableReferenceJoins(TableGroup tableGroup) {
+		renderTableReferenceJoins( tableGroup, -1, false );
+	}
+
+	protected void renderTableReferenceJoins(TableGroup tableGroup, int swappedJoinIndex, boolean forceLeftJoin) {
 		final List<TableReferenceJoin> joins = tableGroup.getTableReferenceJoins();
 		if ( joins == null || joins.isEmpty() ) {
 			return;
 		}
 
-		for ( TableReferenceJoin tableJoin : joins ) {
-			appendSql( WHITESPACE );
-			appendSql( tableJoin.getJoinType().getText() );
-			appendSql( "join " );
-
-			renderNamedTableReference( tableJoin.getJoinedTableReference(), LockMode.NONE );
-
-			if ( tableJoin.getPredicate() != null && !tableJoin.getPredicate().isEmpty() ) {
+		if ( swappedJoinIndex != -1 ) {
+			// Finish the join against the primary table reference after the swap
+			final TableReferenceJoin swappedJoin = joins.get( swappedJoinIndex );
+			if ( swappedJoin.getPredicate() != null && !swappedJoin.getPredicate().isEmpty() ) {
 				appendSql( " on " );
-				tableJoin.getPredicate().accept( this );
+				swappedJoin.getPredicate().accept( this );
+			}
+		}
+
+		for ( int i = 0; i < joins.size(); i++ ) {
+			// Skip the swapped join since it was already rendered
+			if ( swappedJoinIndex != i ) {
+				final TableReferenceJoin tableJoin = joins.get( i );
+				appendSql( WHITESPACE );
+				if ( forceLeftJoin ) {
+					append( "left " );
+				}
+				else {
+					appendSql( tableJoin.getJoinType().getText() );
+				}
+				appendSql( "join " );
+
+				renderNamedTableReference( tableJoin.getJoinedTableReference(), LockMode.NONE );
+
+				if ( tableJoin.getPredicate() != null && !tableJoin.getPredicate().isEmpty() ) {
+					appendSql( " on " );
+					tableJoin.getPredicate().accept( this );
+				}
 			}
 		}
 	}
@@ -6735,28 +6808,28 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private boolean isNullsFirst(SortSpecification sortSpecification) {
-		NullPrecedence nullPrecedence = sortSpecification.getNullPrecedence();
-		if ( nullPrecedence == null || nullPrecedence == NullPrecedence.NONE ) {
+		Nulls nullPrecedence = sortSpecification.getNullPrecedence();
+		if ( nullPrecedence == null || nullPrecedence == Nulls.NONE ) {
 			switch ( dialect.getNullOrdering() ) {
 				case FIRST:
-					nullPrecedence = NullPrecedence.FIRST;
+					nullPrecedence = Nulls.FIRST;
 					break;
 				case LAST:
-					nullPrecedence = NullPrecedence.LAST;
+					nullPrecedence = Nulls.LAST;
 					break;
 				case SMALLEST:
 					nullPrecedence = sortSpecification.getSortOrder() == SortDirection.ASCENDING
-							? NullPrecedence.FIRST
-							: NullPrecedence.LAST;
+							? Nulls.FIRST
+							: Nulls.LAST;
 					break;
 				case GREATEST:
 					nullPrecedence = sortSpecification.getSortOrder() == SortDirection.DESCENDING
-							? NullPrecedence.FIRST
-							: NullPrecedence.LAST;
+							? Nulls.FIRST
+							: Nulls.LAST;
 					break;
 			}
 		}
-		return nullPrecedence == NullPrecedence.FIRST;
+		return nullPrecedence == Nulls.FIRST;
 	}
 
 	private int getSortSelectionIndex(QuerySpec querySpec, SortSpecification sortSpecification) {
@@ -6961,14 +7034,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		appendSql( getCastTypeName( castTarget, sessionFactory.getTypeConfiguration() ) );
 	}
 
-	/**
-	 * @deprecated Use {@link #getSqlTypeName(SqlTypedMapping, TypeConfiguration)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public static String getSqlTypeName(SqlTypedMapping castTarget, SessionFactoryImplementor factory) {
-		return getSqlTypeName( castTarget, factory.getTypeConfiguration() );
-	}
-
 	public static String getSqlTypeName(SqlTypedMapping castTarget, TypeConfiguration typeConfiguration) {
 		if ( castTarget.getColumnDefinition() != null ) {
 			return castTarget.getColumnDefinition();
@@ -6986,14 +7051,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 			return ddlType.getTypeName( castTargetSize, expressionType, ddlTypeRegistry );
 		}
-	}
-
-	/**
-	 * @deprecated Use {@link #getCastTypeName(SqlTypedMapping, TypeConfiguration)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public static String getCastTypeName(SqlTypedMapping castTarget, SessionFactoryImplementor factory) {
-		return getCastTypeName( castTarget, factory.getTypeConfiguration() );
 	}
 
 	public static String getCastTypeName(SqlTypedMapping castTarget, TypeConfiguration typeConfiguration) {
@@ -8553,18 +8610,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	/**
-	 * Some databases require a bit of syntactic noise when
-	 * there are no tables in the from clause.
-	 *
-	 * @return the SQL equivalent to Oracle's {@code from dual}.
-	 * @deprecated Use {@link #getDual()} instead
-	 */
-	@Deprecated(forRemoval = true)
-	protected String getFromDual() {
-		return " from " + getDual() + " d_";
-	}
-
-	/**
 	 * Returns a table expression that has one row.
 	 *
 	 * @return the SQL equivalent to Oracle's {@code dual}.
@@ -8639,8 +8684,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		private String[] determineKeyColumnNames(ModelPart modelPart) {
-			if ( modelPart instanceof Loadable ) {
-				return ( (Loadable) modelPart ).getIdentifierColumnNames();
+			if ( modelPart instanceof EntityPersister) {
+				return ( (EntityPersister) modelPart ).getIdentifierColumnNames();
 			}
 			else if ( modelPart instanceof PluralAttributeMapping ) {
 				return ((PluralAttributeMapping) modelPart).getCollectionDescriptor().getKeyColumnAliases( null );

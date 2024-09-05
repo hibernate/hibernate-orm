@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings({ "UnusedDeclaration" })
+@SuppressWarnings("unused")
 @BaseUnitTest
 public abstract class AbstractHolderTest {
 	protected abstract IntegralDataTypeHolder makeHolder();

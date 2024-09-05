@@ -42,10 +42,10 @@ public class CompositeIdTest {
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "delete from LineItem" ).executeUpdate();
-					session.createQuery( "delete from Order" ).executeUpdate();
-					session.createQuery( "delete from Customer" ).executeUpdate();
-					session.createQuery( "delete from Product" ).executeUpdate();
+					session.createMutationQuery( "delete from LineItem" ).executeUpdate();
+					session.createMutationQuery( "delete from Order" ).executeUpdate();
+					session.createMutationQuery( "delete from Customer" ).executeUpdate();
+					session.createMutationQuery( "delete from Product" ).executeUpdate();
 				}
 		);
 	}
@@ -54,7 +54,7 @@ public class CompositeIdTest {
 	public void testQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session ->
-						session.createQuery( "from LineItem ol where ol.order.id.customerId = 'C111'" ).list()
+						session.createQuery( "from LineItem ol where ol.order.id.customerId = 'C111'", LineItem.class ).list()
 		);
 	}
 
@@ -63,13 +63,13 @@ public class CompositeIdTest {
 		Product p = new Product();
 		p.setProductId( "A123" );
 		p.setDescription( "nipple ring" );
-		p.setPrice( new BigDecimal( 1.0 ) );
+		p.setPrice( new BigDecimal( "1.0" ) );
 		p.setNumberAvailable( 1004 );
 
 		Product p2 = new Product();
 		p2.setProductId( "X525" );
 		p2.setDescription( "nose stud" );
-		p2.setPrice( new BigDecimal( 3.0 ) );
+		p2.setPrice( new BigDecimal( "3.0" ) );
 		p2.setNumberAvailable( 105 );
 
 		scope.inTransaction(
@@ -161,12 +161,10 @@ public class CompositeIdTest {
 
 					statementInspector.clear();
 					session.flush();
-					statementInspector.assertExecutedCount( 4 );
-					statementInspector.assertIsSelect( 0 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 0 );
-					statementInspector.assertIsInsert( 1 );
+					statementInspector.assertExecutedCount( 3 );
+					statementInspector.assertIsInsert( 0 );
+					statementInspector.assertIsUpdate( 1 );
 					statementInspector.assertIsUpdate( 2 );
-					statementInspector.assertIsUpdate( 3 );
 
 
 					statementInspector.clear();
@@ -174,12 +172,10 @@ public class CompositeIdTest {
 					li2.setQuantity( 5 );
 
 					List bigOrders = session.createQuery( "from Order o where o.total>10.0" ).list();
-					statementInspector.assertExecutedCount( 3 );
-					statementInspector.assertIsSelect( 0 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 0 );
-					statementInspector.assertIsInsert( 1 );
-					statementInspector.assertIsSelect( 2 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 2, "join", 0 );
+					statementInspector.assertExecutedCount( 2 );
+					statementInspector.assertIsInsert( 0 );
+					statementInspector.assertIsSelect( 1 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 1, "join", 0 );
 
 					assertEquals( bigOrders.size(), 1 );
 				}
@@ -193,14 +189,14 @@ public class CompositeIdTest {
 					Product p = new Product();
 					p.setProductId( "A123" );
 					p.setDescription( "nipple ring" );
-					p.setPrice( new BigDecimal( 1.0 ) );
+					p.setPrice( new BigDecimal( "1.0" ) );
 					p.setNumberAvailable( 1004 );
 					session.persist( p );
 
 					Product p2 = new Product();
 					p2.setProductId( "X525" );
 					p2.setDescription( "nose stud" );
-					p2.setPrice( new BigDecimal( 3.0 ) );
+					p2.setPrice( new BigDecimal( "3.0" ) );
 					p2.setNumberAvailable( 105 );
 					session.persist( p2 );
 
@@ -239,7 +235,7 @@ public class CompositeIdTest {
 
 		scope.inTransaction(
 				session -> {
-					Order o = (Order) session.createQuery( "from Order o" ).uniqueResult();
+					Order o = session.createQuery( "from Order o", Order.class ).uniqueResult();
 					assertTrue( Hibernate.isInitialized( o.getLineItems() ) );
 					LineItem li = (LineItem) o.getLineItems().iterator().next();
 					assertTrue( Hibernate.isInitialized( li ) );
@@ -255,14 +251,14 @@ public class CompositeIdTest {
 					Product p = new Product();
 					p.setProductId( "A123" );
 					p.setDescription( "nipple ring" );
-					p.setPrice( new BigDecimal( 1.0 ) );
+					p.setPrice( new BigDecimal( "1.0" ) );
 					p.setNumberAvailable( 1004 );
 					session.persist( p );
 
 					Product p2 = new Product();
 					p2.setProductId( "X525" );
 					p2.setDescription( "nose stud" );
-					p2.setPrice( new BigDecimal( 3.0 ) );
+					p2.setPrice( new BigDecimal( "3.0" ) );
 					p2.setNumberAvailable( 105 );
 					session.persist( p2 );
 

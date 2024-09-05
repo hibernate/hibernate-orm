@@ -15,9 +15,11 @@ import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.annotations.GenericGenerator;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.fail;
@@ -25,10 +27,9 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Steve Ebersole
  */
-@Jpa(annotatedClasses = {
-		MergeWithTransientNonCascadedAssociationTest.Person.class,
-		MergeWithTransientNonCascadedAssociationTest.Address.class
-})
+@Jpa(annotatedClasses = {MergeWithTransientNonCascadedAssociationTest.Person.class,
+						MergeWithTransientNonCascadedAssociationTest.Address.class},
+		properties = @Setting(name = AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY, value = "true"))
 public class MergeWithTransientNonCascadedAssociationTest {
 	@Test
 	public void testMergeWithTransientNonCascadedAssociation(EntityManagerFactoryScope scope) {
@@ -60,7 +61,7 @@ public class MergeWithTransientNonCascadedAssociationTest {
 				entityManager -> {
 					person.address = null;
 					entityManager.unwrap( Session.class ).lock( person, LockMode.NONE );
-					entityManager.unwrap( Session.class ).delete( person );
+					entityManager.unwrap( Session.class ).remove( person );
 				}
 		);
 	}

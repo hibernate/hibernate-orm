@@ -8,7 +8,7 @@ package org.hibernate.orm.test.pagination;
 
 import java.util.List;
 
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
@@ -55,7 +55,7 @@ public class FetchClausePaginationTest {
                     entityContainingLists.addComponent( new SimpleComponent( "first-a2", "first-another-a2" ) );
                     entityContainingLists.addComponent( new SimpleComponent( "first-a3", "first-another-a2" ) );
 
-                    session.save( entityContainingLists );
+                    session.persist( entityContainingLists );
                 }
         );
     }

@@ -62,8 +62,8 @@ public class DerivedIdentityIdClassParentSameIdTypeEmbeddedIdDepTest {
 					Person p2 = session.get( Person.class, pId );
 					assertEquals( pId.firstName, d2.patient.firstName );
 					assertEquals( pId.firstName, p2.firstName );
-					session.delete( d2 );
-					session.delete( p2 );
+					session.remove( d2 );
+					session.remove( p2 );
 				}
 		);
 	}

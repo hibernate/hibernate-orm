@@ -41,14 +41,16 @@ public class StateType implements UserType<State> {
 	}
 
 	@Override
-	public State nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public State nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+			throws SQLException {
 		int result = rs.getInt( position );
 		if ( rs.wasNull() ) return null;
 		return State.values()[result];
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, State value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
+	public void nullSafeSet(PreparedStatement st, State value, int index, SharedSessionContractImplementor session)
+			throws HibernateException, SQLException {
 		if (value == null) {
 			st.setNull( index, Types.INTEGER );
 		}

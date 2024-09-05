@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.spi;
 
+import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
+
 /**
  * Contract for things that need to be aware of JPA {@code orm.xml}-defined persistence-unit-defaults.
  * Only {@link MetadataBuildingOptions} are supported to implement this contract.
@@ -30,4 +32,6 @@ public interface JpaOrmXmlPersistenceUnitDefaultAware {
 	 * @param jpaOrmXmlPersistenceUnitDefaults The {@code persistence-unit-defaults} values
 	 */
 	void apply(JpaOrmXmlPersistenceUnitDefaults jpaOrmXmlPersistenceUnitDefaults);
+
+	void apply(PersistenceUnitMetadata persistenceUnitMetadata);
 }

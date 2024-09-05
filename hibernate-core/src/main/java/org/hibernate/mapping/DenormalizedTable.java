@@ -112,16 +112,6 @@ public class DenormalizedTable extends Table {
 		return includedTable.getPrimaryKey();
 	}
 
-	@Override @Deprecated(forRemoval = true)
-	public Iterator<UniqueKey> getUniqueKeyIterator() {
-		if ( !includedTable.isPhysicalTable() ) {
-			for ( UniqueKey uniqueKey : includedTable.getUniqueKeys().values() ) {
-				createUniqueKey( uniqueKey.getColumns() );
-			}
-		}
-		return getUniqueKeys().values().iterator();
-	}
-
 	public Table getIncludedTable() {
 		return includedTable;
 	}

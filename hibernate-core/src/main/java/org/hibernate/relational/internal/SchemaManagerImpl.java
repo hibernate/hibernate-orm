@@ -11,10 +11,13 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.relational.SchemaManager;
 import org.hibernate.tool.schema.Action;
+import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import jakarta.persistence.SchemaValidationException;
 
 /**
  * Implementation of {@link SchemaManager}, backed by a {@link SessionFactoryImplementor}
@@ -88,4 +91,18 @@ public class SchemaManagerImpl implements SchemaManager {
 		);
 	}
 
+	@Override
+	public void validate() throws SchemaValidationException {
+		try {
+			validateMappedObjects();
+		}
+		catch ( SchemaManagementException sme ) {
+			throw new SchemaValidationException( sme.getMessage(), sme );
+		}
+	}
+
+	@Override
+	public void truncate() {
+		truncateMappedObjects();
+	}
 }

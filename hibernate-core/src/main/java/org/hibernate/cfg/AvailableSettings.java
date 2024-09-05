@@ -61,14 +61,14 @@ public interface AvailableSettings
 	/**
 	 * @deprecated Use {@link #JAKARTA_LOCK_SCOPE} instead
 	 */
-	@Deprecated
+	@Deprecated(since="6.3")
 	@SuppressWarnings("DeprecatedIsStillUsed")
 	String JPA_LOCK_SCOPE = LegacySpecHints.HINT_JAVAEE_LOCK_SCOPE;
 
 	/**
 	 * @deprecated Use {@link #JAKARTA_LOCK_TIMEOUT} instead
 	 */
-	@Deprecated
+	@Deprecated(since="6.3")
 	@SuppressWarnings("DeprecatedIsStillUsed")
 	String JPA_LOCK_TIMEOUT = LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
 
@@ -137,7 +137,7 @@ public interface AvailableSettings
 	 *
 	 * @since 5.2
 	 */
-	@Deprecated(forRemoval = true)
+	@Deprecated(since="6.6", forRemoval = true)
 	String ALLOW_REFRESH_DETACHED_ENTITY = "hibernate.allow_refresh_detached_entity";
 
 	/**
@@ -210,25 +210,4 @@ public interface AvailableSettings
 	 * {@code hibernate.event.listener.eventType packageName.ClassName1, packageName.ClassName2}
 	 */
 	String EVENT_LISTENER_PREFIX = "hibernate.event.listener";
-
-	/**
-	 * @deprecated There are much better ways to control the flush mode of a session,
-	 *             for example, {@link org.hibernate.SessionBuilder#flushMode} or
-	 *             {@link org.hibernate.Session#setHibernateFlushMode}.
-	 *
-	 * @see org.hibernate.jpa.HibernateHints#HINT_FLUSH_MODE
-	 */
-	@Deprecated(since = "6.2", forRemoval = true)
-	@SuppressWarnings("DeprecatedIsStillUsed")
-	String FLUSH_MODE = "org.hibernate.flushMode";
-
-	/**
-	 * Specifies a class which implements {@link org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider},
-	 * and has a constructor with no parameters.
-	 *
-	 * @deprecated use {@link org.hibernate.id.factory.spi.GenerationTypeStrategyRegistration} instead
-	 */
-	@Deprecated(since = "6.0")
-	@SuppressWarnings("DeprecatedIsStillUsed")
-	String IDENTIFIER_GENERATOR_STRATEGY_PROVIDER = "hibernate.identifier_generator_strategy_provider";
 }

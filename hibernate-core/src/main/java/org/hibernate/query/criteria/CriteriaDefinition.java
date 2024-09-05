@@ -18,6 +18,8 @@ import org.hibernate.query.QueryProducer;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.spi.HibernateCriteriaBuilderDelegate;
 import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 import java.util.Collection;
 import java.util.List;
@@ -85,6 +87,28 @@ import java.util.function.Function;
  *     ...
  * });
  * </pre>
+ * A {@code CriteriaDefinition} may be used to modify another {@code CriteriaDefinition}:
+ * <pre>
+ * var bookFilter
+ *         = new CriteriaDefinition&lt;&gt;(sessionFactory, Book.class) {{
+ *             where(like(from(Book.class).get(Book_.title), "%Hibernate%"));
+ *         }};
+ * long count
+ *         = new CriteriaDefinition&lt;&gt;(bookFilter, Long.class) {{
+ *             select(count());
+ *         }}
+ *         .createSelectionQuery(session)
+ *         .getSingleResult();
+ * var books =
+ *         = new CriteriaDefinition&lt;&gt;(bookFilter) {{
+ *             var book = (Root&lt;Book&gt;) getRootList().get(0);
+ *             book.fetch(Book_.authors);
+ *             orderBy(desc(book.get(Book_.publicationDate)), asc(book.get(Book_.isbn)));
+ *         }}
+ *         .createSelectionQuery(session)
+ *         .setMaxResults(10)
+ *         .getResultList();
+ * </pre>
  *
  * @param <R> the query result type
  *
@@ -98,6 +122,37 @@ public abstract class CriteriaDefinition<R>
 		implements JpaCriteriaQuery<R> {
 
 	private final JpaCriteriaQuery<R> query;
+
+	/**
+	 * Construct a new {@code CriteriaDefinition} based on the given
+	 * {@code CriteriaDefinition}, with the same query return type.
+	 *
+	 * @param template the original query
+	 *
+	 * @since 7.0
+	 */
+	public CriteriaDefinition(CriteriaDefinition<R> template) {
+		super( template.getCriteriaBuilder() );
+		query = ((SqmSelectStatement<R>) template.query)
+				.copy( SqmCopyContext.simpleContext() );
+	}
+
+	/**
+	 * Construct a new {@code CriteriaDefinition} based on the given
+	 * {@code CriteriaDefinition}. This overload permits changing the
+	 * query return type. It is expected that {@link #select} be called
+	 * to rewrite the selection list.
+	 *
+	 * @param template the original query
+	 * @param resultType the new return type
+	 *
+	 * @since 7.0
+	 */
+	public CriteriaDefinition(CriteriaDefinition<?> template, Class<R> resultType) {
+		super( template.getCriteriaBuilder() );
+		query = ((SqmSelectStatement<?>) template.query)
+				.createCopy( SqmCopyContext.simpleContext(), resultType );
+	}
 
 	public CriteriaDefinition(SessionFactory factory, Class<R> resultType) {
 		super( factory.getCriteriaBuilder() );
@@ -285,6 +340,21 @@ public abstract class CriteriaDefinition<R>
 	@Override
 	public JpaPredicate getRestriction() {
 		return query.getRestriction();
+	}
+
+	@Override
+	public JpaCriteriaQuery<R> where(List<Predicate> restrictions) {
+		return query.where( restrictions );
+	}
+
+	@Override
+	public JpaCriteriaQuery<R> having(List<Predicate> restrictions) {
+		return query.having( restrictions );
+	}
+
+	@Override
+	public <U> JpaSubQuery<U> subquery(EntityType<U> type) {
+		return query.subquery( type );
 	}
 
 	@Override

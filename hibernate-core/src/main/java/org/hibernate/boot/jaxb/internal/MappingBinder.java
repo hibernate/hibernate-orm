@@ -15,22 +15,19 @@ import javax.xml.stream.events.StartElement;
 import org.hibernate.Internal;
 import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.boot.UnsupportedOrmXsdVersionException;
-import org.hibernate.boot.jaxb.JaxbLogger;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
-import org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer;
 import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.jaxb.internal.stax.HbmEventReader;
 import org.hibernate.boot.jaxb.internal.stax.JpaOrmXmlEventReader;
 import org.hibernate.boot.jaxb.internal.stax.MappingEventReader;
-import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
-import org.hibernate.boot.jaxb.spi.BindableMappingDescriptor;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.xsd.MappingXsdSupport;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -39,6 +36,7 @@ import org.jboss.logging.Logger;
 
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 
@@ -48,21 +46,18 @@ import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
  *
  * @author Steve Ebersole
  */
-public class MappingBinder extends AbstractBinder<BindableMappingDescriptor> {
+public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor> {
 	private static final Logger log = Logger.getLogger( MappingBinder.class );
 
 	private final XMLEventFactory xmlEventFactory = XMLEventFactory.newInstance();
 
 	private final Supplier<Options> optionsAccess;
-	private final Supplier<UnsupportedFeatureHandling> unsupportedHandlingAccess;
 
 	private JAXBContext hbmJaxbContext;
 	private JAXBContext entityMappingsJaxbContext;
 
 	public interface Options {
 		boolean validateMappings();
-
-		boolean transformHbmMappings();
 	}
 
 	public static final Options VALIDATING = new Options() {
@@ -70,22 +65,12 @@ public class MappingBinder extends AbstractBinder<BindableMappingDescriptor> {
 		public boolean validateMappings() {
 			return true;
 		}
-
-		@Override
-		public boolean transformHbmMappings() {
-			return false;
-		}
 	};
 
 	public static final Options NON_VALIDATING = new Options() {
 		@Override
 		public boolean validateMappings() {
 			return true;
-		}
-
-		@Override
-		public boolean transformHbmMappings() {
-			return false;
 		}
 	};
 
@@ -98,7 +83,6 @@ public class MappingBinder extends AbstractBinder<BindableMappingDescriptor> {
 			Supplier<UnsupportedFeatureHandling> unsupportedHandlingAccess) {
 		super( resourceStreamLocator );
 		this.optionsAccess = optionsAccess;
-		this.unsupportedHandlingAccess = unsupportedHandlingAccess;
 	}
 
 	/**
@@ -113,12 +97,11 @@ public class MappingBinder extends AbstractBinder<BindableMappingDescriptor> {
 
 	public MappingBinder(
 			ResourceStreamLocator resourceStreamLocator,
-			Function<String, Object> settingsAccess) {
+			@Nullable Function<String, Object> settingsAccess) {
 		super( resourceStreamLocator == null ? MappingBinder.class.getClassLoader()::getResourceAsStream : resourceStreamLocator );
 
 		if ( settingsAccess == null ) {
 			this.optionsAccess = () -> VALIDATING;
-			this.unsupportedHandlingAccess = () -> UnsupportedFeatureHandling.ERROR;
 		}
 		else {
 			this.optionsAccess = () -> new Options() {
@@ -130,20 +113,6 @@ public class MappingBinder extends AbstractBinder<BindableMappingDescriptor> {
 					}
 					return BOOLEAN.convert( setting );
 				}
-
-				@Override
-				public boolean transformHbmMappings() {
-					final Object setting = settingsAccess.apply( AvailableSettings.TRANSFORM_HBM_XML );
-					if ( setting == null ) {
-						return false;
-					}
-					return BOOLEAN.convert( setting );
-				}
-			};
-
-			this.unsupportedHandlingAccess = () -> {
-				final Object setting = settingsAccess.apply( AvailableSettings.TRANSFORM_HBM_XML_FEATURE_HANDLING );
-				return UnsupportedFeatureHandling.fromSetting( setting, UnsupportedFeatureHandling.ERROR );
 			};
 		}
 	}
@@ -153,8 +122,7 @@ public class MappingBinder extends AbstractBinder<BindableMappingDescriptor> {
 				serviceRegistry.getService( ClassLoaderService.class ),
 				(settingName) -> {
 					final ConfigurationService configurationService;
-					if ( serviceRegistry instanceof ServiceRegistryImplementor ) {
-						final ServiceRegistryImplementor serviceRegistryImplementor = (ServiceRegistryImplementor) serviceRegistry;
+					if ( serviceRegistry instanceof ServiceRegistryImplementor serviceRegistryImplementor ) {
 						configurationService = serviceRegistryImplementor.fromRegistryOrChildren( ConfigurationService.class );
 					}
 					else {
@@ -177,11 +145,6 @@ public class MappingBinder extends AbstractBinder<BindableMappingDescriptor> {
 					public boolean validateMappings() {
 						return false;
 					}
-
-					@Override
-					public boolean transformHbmMappings() {
-						return false;
-					}
 				},
 				unsupportedHandling
 		);
@@ -200,7 +163,7 @@ public class MappingBinder extends AbstractBinder<BindableMappingDescriptor> {
 	}
 
 	@Override
-	protected <X extends BindableMappingDescriptor> Binding<X> doBind(
+	protected <X extends JaxbBindableMappingDescriptor> Binding<X> doBind(
 			XMLEventReader staxEventReader,
 			StartElement rootElementStartEvent,
 			Origin origin) {
@@ -211,16 +174,13 @@ public class MappingBinder extends AbstractBinder<BindableMappingDescriptor> {
 			}
 
 			final XMLEventReader hbmReader = new HbmEventReader( staxEventReader, xmlEventFactory );
-			final JaxbHbmHibernateMapping hbmBindings = jaxb( hbmReader, MappingXsdSupport.INSTANCE.hbmXsd()
-					.getSchema(), hbmJaxbContext(), origin );
+			final JaxbHbmHibernateMapping hbmBindings = jaxb(
+					hbmReader,
+					MappingXsdSupport.INSTANCE.hbmXsd().getSchema(),
+					hbmJaxbContext(),
+					origin
+			);
 
-			if ( optionsAccess.get().transformHbmMappings() ) {
-				JaxbLogger.JAXB_LOGGER.tracef( "Performing on-the-fly hbm.xml -> mapping.xml transformation - %s ", origin );
-				//noinspection unchecked
-				return new Binding<>( (X) HbmXmlTransformer.transform( hbmBindings, origin, unsupportedHandlingAccess::get ), origin );
-			}
-
-			DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedHbmXmlProcessing( origin.getType(), origin.getName() );
 			//noinspection unchecked
 			return new Binding<>( (X) hbmBindings, origin );
 		}
@@ -230,8 +190,13 @@ public class MappingBinder extends AbstractBinder<BindableMappingDescriptor> {
 				log.debugf( "Performing JAXB binding of orm.xml document : %s", origin.toString() );
 
 				final XMLEventReader reader = new MappingEventReader( staxEventReader, xmlEventFactory );
-				final JaxbEntityMappings bindingRoot = jaxb( reader, MappingXsdSupport.latestDescriptor()
-						.getSchema(), mappingJaxbContext(), origin );
+				final JaxbEntityMappingsImpl bindingRoot = jaxb(
+						reader,
+						MappingXsdSupport.latestDescriptor().getSchema(),
+						mappingJaxbContext(),
+						origin
+				);
+
 				//noinspection unchecked
 				return new Binding<>( (X) bindingRoot, origin );
 			}
@@ -257,7 +222,7 @@ public class MappingBinder extends AbstractBinder<BindableMappingDescriptor> {
 	public JAXBContext mappingJaxbContext() {
 		if ( entityMappingsJaxbContext == null ) {
 			try {
-				entityMappingsJaxbContext = JAXBContext.newInstance( JaxbEntityMappings.class );
+				entityMappingsJaxbContext = JAXBContext.newInstance( JaxbEntityMappingsImpl.class );
 			}
 			catch (JAXBException e) {
 				throw new ConfigurationException( "Unable to build orm.xml JAXBContext", e );

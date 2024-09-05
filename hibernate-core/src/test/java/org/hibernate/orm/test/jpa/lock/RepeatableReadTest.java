@@ -8,6 +8,7 @@ package org.hibernate.orm.test.jpa.lock;
 
 import java.math.BigDecimal;
 
+import jakarta.persistence.OptimisticLockException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -65,7 +66,7 @@ public class RepeatableReadTest extends AbstractJPATest {
 		Item it = new Item( check );
 		inTransaction(
 				session -> {
-					session.save( it );
+					session.persist( it );
 				}
 		);
 
@@ -114,7 +115,7 @@ public class RepeatableReadTest extends AbstractJPATest {
 		Item it = new Item( check );
 		inTransaction(
 				session -> {
-					session.save( it );
+					session.persist( it );
 				}
 		);
 
@@ -151,7 +152,8 @@ public class RepeatableReadTest extends AbstractJPATest {
 						s1.lock( item, LockMode.PESSIMISTIC_WRITE );
 						fail( "expected UPGRADE lock failure" );
 					}
-					catch (StaleObjectStateException expected) {
+					catch (OptimisticLockException expected) {
+						assertTrue( expected.getCause() instanceof StaleObjectStateException );
 						// this is the expected behavior
 					}
 					catch (SQLGrammarException t) {
@@ -185,7 +187,7 @@ public class RepeatableReadTest extends AbstractJPATest {
 		Part p = new Part( new Item( "EJB3 Specification" ), check, "3.3.5.3", new BigDecimal( 0.0 ) );
 		inTransaction(
 				session -> {
-					session.save( p );
+					session.persist( p );
 				}
 		);
 
@@ -220,8 +222,8 @@ public class RepeatableReadTest extends AbstractJPATest {
 				session -> {
 					Part part = (Part) session.createQuery( "select p from Part p" ).list().get( 0 );
 
-					session.delete( part );
-					session.delete( part.getItem() );
+					session.remove( part );
+					session.remove( part.getItem() );
 				}
 		);
 	}
@@ -236,7 +238,7 @@ public class RepeatableReadTest extends AbstractJPATest {
 		Part p = new Part( new Item( "EJB3 Specification" ), check, "3.3.5.3", new BigDecimal( 0.0 ) );
 		inTransaction(
 				session -> {
-					session.save( p );
+					session.persist( p );
 				}
 		);
 
@@ -283,8 +285,8 @@ public class RepeatableReadTest extends AbstractJPATest {
 		inTransaction(
 				session -> {
 					Part part = session.get( Part.class, partId );
-					session.delete( part );
-					session.delete( part.getItem() );
+					session.remove( part );
+					session.remove( part.getItem() );
 				}
 		);
 	}

@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -236,6 +237,36 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		return path;
 	}
 
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType) {
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) {
+		return getTreatedPath( treatTarget );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType, String alias) {
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+		return getTreatedPath( treatTarget );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
+		return null;
+	}
+
 	/**
 	 * Utility that checks if this path's parent navigable path is compatible with the specified SQM parent,
 	 * and if not creates a copy of the navigable path with the correct parent.
@@ -289,16 +320,17 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <E, C extends java.util.Collection<E>> SqmPath<C> get(PluralAttribute<T, C, E> attribute) {
+	public <E, C extends Collection<E>> SqmExpression<C> get(PluralAttribute<? super T, C, E> attribute) {
+		//noinspection unchecked
 		return resolvePath( (PersistentAttribute<T, C>) attribute );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <K, V, M extends Map<K, V>> SqmPath<M> get(MapAttribute<T, K, V> map) {
-		return resolvePath( (PersistentAttribute<T, M>) map );
+	public <K, V, M extends Map<K, V>> SqmExpression<M> get(MapAttribute<? super T, K, V> attribute) {
+		//noinspection unchecked
+		return resolvePath( (PersistentAttribute<T, M>) attribute );
 	}
+
 
 	@Override
 	public String toString() {

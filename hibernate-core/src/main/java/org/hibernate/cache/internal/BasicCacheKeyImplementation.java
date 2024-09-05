@@ -31,10 +31,6 @@ public final class BasicCacheKeyImplementation implements Serializable {
 
 	/**
 	 * Being an internal contract the arguments are not being checked.
-	 * @param originalId
-	 * @param disassembledKey this must be the "disassembled" form of an ID
-	 * @param type
-	 * @param entityOrRoleName
 	 */
 	@Internal
 	public BasicCacheKeyImplementation(
@@ -47,10 +43,6 @@ public final class BasicCacheKeyImplementation implements Serializable {
 
 	/**
 	 * Being an internal contract the arguments are not being checked.
-	 * @param originalId
-	 * @param disassembledKey this must be the "disassembled" form of an ID
-	 * @param type
-	 * @param entityOrRoleName
 	 */
 	@Internal
 	public BasicCacheKeyImplementation(

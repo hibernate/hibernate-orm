@@ -106,14 +106,14 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 			final JavaType<?> explicitJavaType;
 
 			// see if this is a registered BasicType...
-			final BasicType<Object> registeredBasicType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( definition.type().getName() );
+			final BasicType<Object> registeredBasicType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( definedType.getName() );
 			if ( registeredBasicType != null ) {
 				explicitType = registeredBasicType;
 				explicitJavaType = registeredBasicType.getJavaTypeDescriptor();
 			}
 			else {
 				final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
-				final JavaType<Object> registeredJtd = jtdRegistry.getDescriptor( definition.type() );
+				final JavaType<Object> registeredJtd = jtdRegistry.getDescriptor( definedType );
 				final ManagedBeanRegistry beanRegistry =
 						sessionFactory.getServiceRegistry().requireService( ManagedBeanRegistry.class );
 				if ( BasicType.class.isAssignableFrom( registeredJtd.getJavaTypeClass() ) ) {
@@ -131,7 +131,7 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 				}
 				else {
 					explicitType = null;
-					explicitJavaType = jtdRegistry.getDescriptor( definition.type() );
+					explicitJavaType = jtdRegistry.getDescriptor( definedType );
 				}
 			}
 

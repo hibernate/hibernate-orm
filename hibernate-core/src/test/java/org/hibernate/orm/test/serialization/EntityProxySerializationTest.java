@@ -9,20 +9,10 @@ package org.hibernate.orm.test.serialization;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.proxy.AbstractLazyInitializer;
@@ -37,6 +27,13 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -44,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Selaron
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = {
 		EntityProxySerializationTest.SimpleEntity.class, EntityProxySerializationTest.ChildEntity.class
 })
@@ -77,9 +75,9 @@ public class EntityProxySerializationTest {
 			c2.setId( 2L );
 			c2.setParent( entity );
 
-			s.save( entity );
-			s.save( c1 );
-			s.save( c2 );
+			s.persist( entity );
+			s.persist( c1 );
+			s.persist( c2 );
 		} );
 	}
 
@@ -129,13 +127,14 @@ public class EntityProxySerializationTest {
 			// Load the target of the proxy without the proxy being made aware of it
 			s.detach( parent );
 			s.find( SimpleEntity.class, 1L );
-			s.update( parent );
+			SimpleEntity merged = s.merge( parent );
 
 			// assert we still have an uninitialized proxy
 			assertFalse( Hibernate.isInitialized( parent ) );
+			assertTrue( Hibernate.isInitialized( merged ) );
 
 			// serialize/deserialize the proxy
-			final SimpleEntity deserializedParent = (SimpleEntity) SerializationHelper.clone( parent );
+			final SimpleEntity deserializedParent = (SimpleEntity) SerializationHelper.clone( merged );
 
 			// assert the deserialized object is no longer a proxy, but the target of the proxy
 			assertFalse( deserializedParent instanceof HibernateProxy );
@@ -216,7 +215,6 @@ public class EntityProxySerializationTest {
 		}
 
 		@OneToMany(targetEntity = ChildEntity.class, mappedBy = "parent")
-		@LazyCollection(LazyCollectionOption.EXTRA)
 		@Fetch(FetchMode.SELECT)
 		public Set<ChildEntity> getChildren() {
 			return children;
@@ -245,7 +243,6 @@ public class EntityProxySerializationTest {
 
 		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumn
-		@LazyToOne(LazyToOneOption.PROXY)
 		public SimpleEntity getParent() {
 			return parent;
 		}

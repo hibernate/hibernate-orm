@@ -127,15 +127,15 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		s.save( stateProvince );
-		s.save( zoo1Mammal1 );
-		s.save( zoo1Mammal2 );
-		s.save( zoo1 );
-		s.save( zoo2Director1 );
-		s.save( zoo2Director2 );
-		s.save( zoo2 );
-		s.save( zoo3 );
-		s.save( zoo4 );
+		s.persist( stateProvince );
+		s.persist( zoo1Mammal1 );
+		s.persist( zoo1Mammal2 );
+		s.persist( zoo1 );
+		s.persist( zoo2Director1 );
+		s.persist( zoo2Director2 );
+		s.persist( zoo2 );
+		s.persist( zoo3 );
+		s.persist( zoo4 );
 		t.commit();
 		s.close();
 
@@ -151,39 +151,39 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		if ( zoo1 != null ) {
-			s.delete( zoo1 );
+			s.remove( zoo1 );
 			zoo1 = null;
 		}
 		if ( zoo2 != null ) {
-			s.delete( zoo2 );
+			s.remove( zoo2 );
 			zoo2 = null;
 		}
 		if ( zoo3 != null ) {
-			s.delete( zoo3 );
+			s.remove( zoo3 );
 			zoo3 = null;
 		}
 		if ( zoo4 != null ) {
-			s.delete( zoo4 );
+			s.remove( zoo4 );
 			zoo4 = null;
 		}
 		if ( zoo1Mammal1 != null ) {
-			s.delete( zoo1Mammal1 );
+			s.remove( zoo1Mammal1 );
 			zoo1Mammal1 = null;
 		}
 		if ( zoo1Mammal2 != null ) {
-			s.delete( zoo1Mammal2 );
+			s.remove( zoo1Mammal2 );
 			zoo1Mammal2 = null;
 		}
 		if ( zoo2Director1 != null ) {
-			s.delete( zoo2Director1 );
+			s.remove( zoo2Director1 );
 			zoo2Director1 = null;
 		}
 		if ( zoo2Director2 != null ) {
-			s.delete( zoo2Director2 );
+			s.remove( zoo2Director2 );
 			zoo2Director2 = null;			
 		}
 		if ( stateProvince != null ) {
-			s.delete( stateProvince );
+			s.remove( stateProvince );
 		}
 		t.commit();
 		s.close();

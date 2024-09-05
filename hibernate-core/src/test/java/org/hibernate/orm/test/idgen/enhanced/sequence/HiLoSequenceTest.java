@@ -47,7 +47,7 @@ public class HiLoSequenceTest {
 				(s) -> {
 					for ( int i = 0; i < increment; i++ ) {
 						final Entity entity = new Entity( "" + ( i + 1 ) );
-						s.save( entity );
+						s.persist( entity );
 
 						// initialization
 						assertEquals( 1, generator.getDatabaseStructure().getTimesAccessed() );
@@ -59,7 +59,7 @@ public class HiLoSequenceTest {
 
 					// now force a "clock over"
 					final Entity entity = new Entity( "" + increment );
-					s.save( entity );
+					s.persist( entity );
 					assertEquals( 2, generator.getDatabaseStructure().getTimesAccessed() ); // initialization
 					assertEquals( 2, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() ); // initialization
 					assertEquals( increment + 1, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );

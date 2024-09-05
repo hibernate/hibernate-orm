@@ -2,20 +2,8 @@ package org.hibernate.orm.test.bytecode.enhancement.cascade;
 
 import java.util.HashSet;
 import java.util.Set;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.proxy.HibernateProxy;
 
@@ -29,6 +17,17 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.jdbc.SQLStatementInspector.extractFromSession;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Bolek Ziobrowski
  * @author Gail Badner
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey("HHH-13129")
 @DomainModel(
 		annotatedClasses = {
@@ -133,7 +133,7 @@ public class CascadeOnUninitializedTest {
 					final SQLStatementInspector statementInspector = extractFromSession( session );
 					statementInspector.clear();
 
-					session.delete( detachedPerson );
+					session.remove( detachedPerson );
 
 					// 1) select Person#addresses
 					// 2) select Person#primaryAddress
@@ -184,7 +184,7 @@ public class CascadeOnUninitializedTest {
 
 		// deleting detachedPerson should result in detachedPerson.address being initialized,
 		// so that the DELETE operation can be cascaded to it.
-		scope.inTransaction( session -> session.delete( detachedPerson ) );
+		scope.inTransaction( session -> session.remove( detachedPerson ) );
 
 		// both the Person and its Address should be deleted
 		scope.inTransaction( session -> {
@@ -232,7 +232,6 @@ public class CascadeOnUninitializedTest {
 
 		@ManyToOne(cascade = { CascadeType.ALL }, fetch = FetchType.LAZY)
 		@JoinColumn(name = "primary_address_id")
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		private Address primaryAddress;
 
 		@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)

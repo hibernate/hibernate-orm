@@ -54,6 +54,7 @@ import org.hibernate.generator.Generator;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -131,12 +132,19 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 		final Generator generator = persister.getGenerator();
 		if ( !generator.generatedOnExecution( entity, this ) ) {
-			id = ( (BeforeExecutionGenerator) generator).generate( this, entity, null, INSERT );
+			if ( generator.generatesOnInsert() ) {
+				id = ( (BeforeExecutionGenerator) generator).generate( this, entity, null, INSERT );
+			}
+			else {
+				id = persister.getIdentifier( entity, this );
+				if ( id == null ) {
+					throw new IdentifierGenerationException( "Identifier of entity '" + persister.getEntityName() + "' must be manually assigned before calling 'insert()'" );
+				}
+			}
 			if ( firePreInsert(entity, id, state, persister) ) {
 				return id;
 			}
-			getInterceptor()
-					.onInsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
+			getInterceptor().onInsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
 			persister.getInsertCoordinator().insert( entity, id, state, this );
 		}
 		else {
@@ -871,11 +879,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public void setAutoClear(boolean enabled) {
 		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	protected Object load(String entityName, Object identifier) {
-		return null;
 	}
 
 	public boolean isDefaultReadOnly() {

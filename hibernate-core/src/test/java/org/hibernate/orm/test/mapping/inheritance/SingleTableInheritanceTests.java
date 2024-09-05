@@ -147,10 +147,10 @@ public class SingleTableInheritanceTests {
 		scope.inTransaction(
 				session -> {
 					session.createQuery( "from DomesticCustomer", DomesticCustomer.class ).list().forEach(
-							cust -> session.delete( cust )
+							cust -> session.remove( cust )
 					);
 					session.createQuery( "from ForeignCustomer", ForeignCustomer.class ).list().forEach(
-							cust -> session.delete( cust )
+							cust -> session.remove( cust )
 					);
 				}
 		);

@@ -132,5 +132,11 @@ public interface MetamodelImplementor extends MappingMetamodel, Metamodel {
 	 */
 	String[] getAllCollectionRoles();
 
-	void close();
+	/**
+	 * @deprecated No longer called
+	 */
+	@Deprecated(since = "7", forRemoval = true)
+	default void close() {
+		// nothing to do
+	}
 }

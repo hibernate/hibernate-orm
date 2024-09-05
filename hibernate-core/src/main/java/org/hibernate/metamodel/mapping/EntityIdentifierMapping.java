@@ -101,10 +101,9 @@ public interface EntityIdentifierMapping extends ValuedModelPart {
 			// deeper checks...
 			final String entityName = findContainingEntityMapping().getEntityName();
 			if ( ForeignKeys.isTransient( entityName, entity, Boolean.FALSE, session ) ) {
-				throw new TransientObjectException(
-						"object references an unsaved transient instance - save the transient instance before flushing: " +
-								(entityName == null ? session.guessEntityName( entity ) : entityName)
-				);
+				throw new TransientObjectException( "object references an unsaved transient instance of '"
+						+ (entityName == null ? session.guessEntityName( entity ) : entityName)
+						+ "' save the transient instance before flushing" );
 			}
 			id = getIdentifier( entity );
 		}

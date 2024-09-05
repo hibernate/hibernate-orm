@@ -10,12 +10,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
-import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -304,7 +304,7 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 				this.customWriteExpressionEnd = "";
 			}
 			else {
-				final String[] parts = customWriteExpression.split( "\\?" );
+				final String[] parts = StringHelper.split( "?", customWriteExpression );
 				assert parts.length == 2;
 				this.customWriteExpressionStart = parts[0];
 				this.customWriteExpressionEnd = parts[1];

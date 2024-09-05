@@ -45,7 +45,6 @@ import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.mutation.CollectionMutationTarget;
-import org.hibernate.persister.entity.Joinable;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
@@ -75,6 +74,8 @@ import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.SelectEagerCollectionFetch;
 
 import org.jboss.logging.Logger;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.boot.model.internal.SoftDeleteHelper.createNonSoftDeletedRestriction;
 import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
@@ -170,7 +171,7 @@ public class PluralAttributeMappingImpl
 			separateCollectionTable = null;
 		}
 		else {
-			separateCollectionTable = ( (Joinable) collectionDescriptor ).getTableName();
+			separateCollectionTable = collectionDescriptor.getTableName();
 		}
 
 		final int baseIndex;
@@ -684,9 +685,9 @@ public class PluralAttributeMappingImpl
 	public TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAliasBase explicitSqlAliasBase,
-			SqlAstJoinType requestedJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAstCreationState creationState) {
@@ -803,7 +804,7 @@ public class PluralAttributeMappingImpl
 		}
 	}
 
-	public SqlAstJoinType determineSqlJoinType(TableGroup lhs, SqlAstJoinType requestedJoinType, boolean fetched) {
+	public SqlAstJoinType determineSqlJoinType(TableGroup lhs, @Nullable SqlAstJoinType requestedJoinType, boolean fetched) {
 		if ( hasSoftDelete() ) {
 			return SqlAstJoinType.LEFT;
 		}
@@ -825,11 +826,11 @@ public class PluralAttributeMappingImpl
 	public TableGroup createRootTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAliasBase explicitSqlAliasBase,
-			SqlAstJoinType requestedJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType requestedJoinType,
 			boolean fetched,
-			Consumer<Predicate> predicateConsumer,
+			@Nullable Consumer<Predicate> predicateConsumer,
 			SqlAstCreationState creationState) {
 		return createRootTableGroupJoin(
 				navigablePath,
@@ -862,8 +863,10 @@ public class PluralAttributeMappingImpl
 		if ( collectionDescriptor.isOneToMany() ) {
 			tableGroup = createOneToManyTableGroup(
 					lhs.canUseInnerJoins() && joinType == SqlAstJoinType.INNER,
+					joinType,
 					navigablePath,
 					fetched,
+					addsPredicate,
 					explicitSourceAlias,
 					sqlAliasBase,
 					creationState
@@ -897,8 +900,10 @@ public class PluralAttributeMappingImpl
 
 	private TableGroup createOneToManyTableGroup(
 			boolean canUseInnerJoins,
+			SqlAstJoinType joinType,
 			NavigablePath navigablePath,
 			boolean fetched,
+			boolean addsPredicate,
 			String sourceAlias,
 			SqlAliasBase explicitSqlAliasBase,
 			SqlAstCreationState creationState) {
@@ -921,6 +926,12 @@ public class PluralAttributeMappingImpl
 				elementTableGroup,
 				creationState.getCreationContext().getSessionFactory()
 		);
+		// For inner joins we never need join nesting
+		final boolean nestedJoin = joinType != SqlAstJoinType.INNER
+				// For outer joins we need nesting if there might be an on-condition that refers to the element table
+				&& ( addsPredicate
+				|| isAffectedByEnabledFilters( creationState.getLoadQueryInfluencers(), creationState.applyOnlyLoadByKeyFilters() )
+				|| collectionDescriptor.hasWhereRestrictions() );
 
 		if ( indexDescriptor instanceof TableGroupJoinProducer ) {
 			final TableGroupJoin tableGroupJoin = ( (TableGroupJoinProducer) indexDescriptor ).createTableGroupJoin(
@@ -933,7 +944,7 @@ public class PluralAttributeMappingImpl
 					false,
 					creationState
 			);
-			tableGroup.registerIndexTableGroup( tableGroupJoin );
+			tableGroup.registerIndexTableGroup( tableGroupJoin, nestedJoin );
 		}
 
 		return tableGroup;
@@ -955,7 +966,7 @@ public class PluralAttributeMappingImpl
 				this,
 				creationState.getSqlAliasBaseGenerator()
 		);
-		final String collectionTableName = ( (Joinable) collectionDescriptor ).getTableName();
+		final String collectionTableName = collectionDescriptor.getTableName();
 		final TableReference collectionTableReference = new NamedTableReference(
 				collectionTableName,
 				sqlAliasBase.generateNewAlias(),
@@ -1023,7 +1034,9 @@ public class PluralAttributeMappingImpl
 		if ( getCollectionDescriptor().isOneToMany() ) {
 			return createOneToManyTableGroup(
 					canUseInnerJoins,
+					SqlAstJoinType.INNER,
 					navigablePath,
+					false,
 					false,
 					explicitSourceAlias,
 					explicitSqlAliasBase,

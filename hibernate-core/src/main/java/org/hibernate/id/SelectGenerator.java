@@ -9,10 +9,9 @@ package org.hibernate.id;
 import java.util.Properties;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
-import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
 import static org.hibernate.generator.internal.NaturalIdHelper.getNaturalIdPropertyNames;
@@ -78,7 +77,7 @@ import static org.hibernate.generator.internal.NaturalIdHelper.getNaturalIdPrope
  * @implNote This also implements the {@code select} generation type in {@code hbm.xml} mappings.
  */
 public class SelectGenerator
-		implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, StandardGenerator {
+		implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator {
 
 	/**
 	 * The property specifying the unique key name.
@@ -88,7 +87,7 @@ public class SelectGenerator
 	private String uniqueKeyPropertyName;
 
 	@Override
-	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) {
+	public void configure(GeneratorCreationContext creationContext, Properties parameters) {
 		uniqueKeyPropertyName = parameters.getProperty( KEY );
 	}
 

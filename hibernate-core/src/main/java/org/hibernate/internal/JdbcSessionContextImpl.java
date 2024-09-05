@@ -11,11 +11,10 @@ import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.resource.jdbc.spi.JdbcObserver;
+import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
@@ -28,7 +27,7 @@ public class JdbcSessionContextImpl implements JdbcSessionContext {
 	private final JdbcServices jdbcServices;
 	private final BatchBuilder batchBuilder;
 
-	private final transient JdbcObserver jdbcObserver;
+	private final transient JdbcEventHandler jdbcEventHandler;
 
 	public JdbcSessionContextImpl(
 			SessionFactoryImplementor sessionFactory,
@@ -36,13 +35,13 @@ public class JdbcSessionContextImpl implements JdbcSessionContext {
 			PhysicalConnectionHandlingMode connectionHandlingMode,
 			JdbcServices jdbcServices,
 			BatchBuilder batchBuilder,
-			JdbcObserver jdbcObserver) {
+			JdbcEventHandler jdbcEventHandler) {
 		this.sessionFactory = sessionFactory;
 		this.statementInspector = statementInspector;
 		this.connectionHandlingMode = connectionHandlingMode;
 		this.jdbcServices = jdbcServices;
 		this.batchBuilder = batchBuilder;
-		this.jdbcObserver = jdbcObserver;
+		this.jdbcEventHandler = jdbcEventHandler;
 
 		if ( statementInspector == null ) {
 			throw new IllegalArgumentException( "StatementInspector cannot be null" );
@@ -57,11 +56,6 @@ public class JdbcSessionContextImpl implements JdbcSessionContext {
 	@Override
 	public boolean isGetGeneratedKeysEnabled() {
 		return settings().isGetGeneratedKeysEnabled();
-	}
-
-	@Override @Deprecated
-	public int getFetchSize() {
-		return settings().getJdbcFetchSize();
 	}
 
 	@Override
@@ -99,19 +93,9 @@ public class JdbcSessionContextImpl implements JdbcSessionContext {
 		return statementInspector;
 	}
 
-	@Override @Deprecated
-	public JdbcObserver getObserver() {
-		return jdbcObserver;
-	}
-
-	@Override @Deprecated
-	public SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory;
-	}
-
-	@Override @Deprecated
-	public ServiceRegistry getServiceRegistry() {
-		return sessionFactory.getServiceRegistry();
+	@Override
+	public JdbcEventHandler getEventHandler() {
+		return jdbcEventHandler;
 	}
 
 	private SessionFactoryOptions settings() {

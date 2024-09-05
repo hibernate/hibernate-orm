@@ -59,7 +59,7 @@ public class CompositeElementTest extends BaseNonConfigCoreFunctionalTestCase {
 		Parent p = new Parent( "Parent" );
 		p.getChildren().add( c );
 		c.setParent( p );
-		s.save( p );
+		s.persist( p );
 		s.flush();
 
 		p.getChildren().remove( c );
@@ -86,7 +86,7 @@ public class CompositeElementTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete( p );
+		s.remove( p );
 		t.commit();
 		s.close();
 	}
@@ -99,7 +99,7 @@ public class CompositeElementTest extends BaseNonConfigCoreFunctionalTestCase {
 			Parent p = new Parent( "Parent" );
 			p.getChildren().add( c );
 			c.setParent( p );
-			s.save( p );
+			s.persist( p );
 			s.flush();
 
 			// Oracle returns BigDecimaal while other dialects return Integer;
@@ -136,7 +136,7 @@ public class CompositeElementTest extends BaseNonConfigCoreFunctionalTestCase {
 					"select child_position from ParentChild c where c.name='Child One'" )
 					.uniqueResult() );
 			assertEquals( 1, sqlValue.intValue() );
-			s.delete( p );
+			s.remove( p );
 		} );
 	}
 

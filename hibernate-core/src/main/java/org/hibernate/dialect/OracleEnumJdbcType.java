@@ -12,14 +12,13 @@ import org.hibernate.engine.jdbc.Size;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.converter.internal.EnumHelper;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -30,6 +29,7 @@ import java.util.Arrays;
 
 import static java.util.Collections.emptySet;
 import static org.hibernate.type.SqlTypes.NAMED_ENUM;
+import static org.hibernate.type.descriptor.converter.internal.EnumHelper.getEnumeratedValues;
 
 /**
  * Represents a named {@code enum} type on Oracle 23ai+.
@@ -63,7 +63,11 @@ public class OracleEnumJdbcType implements JdbcType {
 
 	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
-		return (appender, value, dialect, wrapperOptions) -> appender.appendSql( dialect.getEnumTypeDeclaration( (Class<? extends Enum<?>>) javaType.getJavaType() )+"." + ((Enum<?>) value).name() );
+		@SuppressWarnings("unchecked")
+		final Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) javaType.getJavaType();
+		return (appender, value, dialect, wrapperOptions)
+				-> appender.appendSql( dialect.getEnumTypeDeclaration( enumClass )
+						+ "." + ((Enum<?>) value).name() );
 	}
 
 	@Override
@@ -92,13 +96,13 @@ public class OracleEnumJdbcType implements JdbcType {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
-				st.setString( index, ((Enum<?>) value).name() );
+				st.setString( index, getJavaType().unwrap( value, String.class, options ) );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				st.setString( name, ((Enum<?>) value).name() );
+				st.setString( name, getJavaType().unwrap( value, String.class, options ) );
 			}
 		};
 	}
@@ -126,41 +130,28 @@ public class OracleEnumJdbcType implements JdbcType {
 	@Override
 	public void addAuxiliaryDatabaseObjects(
 			JavaType<?> javaType,
+			BasicValueConverter<?, ?> valueConverter,
 			Size columnSize,
 			Database database,
 			JdbcTypeIndicators context) {
-		addAuxiliaryDatabaseObjects( javaType, database, true );
-	}
-
-	@Override
-	public void addAuxiliaryDatabaseObjects(
-			JavaType<?> javaType,
-			Size columnSize,
-			Database database,
-			TypeConfiguration typeConfiguration) {
-		addAuxiliaryDatabaseObjects( javaType, database, true );
-	}
-
-	private void addAuxiliaryDatabaseObjects(
-			JavaType<?> javaType,
-			Database database,
-			boolean sortEnumValues) {
-		final Dialect dialect = database.getDialect();
+		@SuppressWarnings("unchecked")
 		final Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) javaType.getJavaType();
-		final String enumTypeName = enumClass.getSimpleName();
-		final String[] enumeratedValues = EnumHelper.getEnumeratedValues( enumClass );
-		if ( sortEnumValues ) {
+		@SuppressWarnings("unchecked")
+		final String[] enumeratedValues =
+				valueConverter == null
+						? getEnumeratedValues( enumClass )
+						: getEnumeratedValues( enumClass, (BasicValueConverter<Enum<?>,?>) valueConverter ) ;
+		if ( getDefaultSqlTypeCode() == NAMED_ENUM ) {
 			Arrays.sort( enumeratedValues );
 		}
-		final String[] create = getCreateEnumTypeCommand(
-				javaType.getJavaTypeClass().getSimpleName(),
-				enumeratedValues
-		);
+		final Dialect dialect = database.getDialect();
+		final String[] create =
+				getCreateEnumTypeCommand( javaType.getJavaTypeClass().getSimpleName(), enumeratedValues, dialect );
 		final String[] drop = dialect.getDropEnumTypeCommand( enumClass );
 		if ( create != null && create.length > 0 ) {
 			database.addAuxiliaryDatabaseObject(
 					new NamedAuxiliaryDatabaseObject(
-							enumTypeName,
+							enumClass.getSimpleName(),
 							database.getDefaultNamespace(),
 							create,
 							drop,
@@ -171,24 +162,7 @@ public class OracleEnumJdbcType implements JdbcType {
 		}
 	}
 
-	/**
-	 * Used to generate the CREATE DDL command for Data Use Case Domain based on VARCHAR2 values.
-	 *
-	 * @param name
-	 * @param values
-	 * @return the DDL command to create that enum
-	 */
-	public String[] getCreateEnumTypeCommand(String name, String[] values) {
-		final StringBuilder domain = new StringBuilder();
-		domain.append( "create domain " )
-				.append( name )
-				.append( " as enum (" );
-		String separator = "";
-		for ( String value : values ) {
-			domain.append( separator ).append( value ).append("='").append(value).append("'");
-			separator = ", ";
-		}
-		domain.append( ')' );
-		return new String[] { domain.toString() };
+	String[] getCreateEnumTypeCommand(String name, String[] values, Dialect dialect) {
+		return OracleDialect.getCreateVarcharEnumTypeCommand( name, values );
 	}
 }

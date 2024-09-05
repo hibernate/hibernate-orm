@@ -8,6 +8,7 @@ package org.hibernate.cfg;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
@@ -132,7 +133,7 @@ import org.jboss.logging.Logger;
  */
 @Internal
 public final class Environment implements AvailableSettings {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, Environment.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, Environment.class.getName());
 
 	private static final Properties GLOBAL_PROPERTIES;
 

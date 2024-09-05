@@ -96,7 +96,6 @@ public interface Generator extends Serializable {
 	 */
 	boolean generatedOnExecution();
 
-
 	/**
 	 * Determines if the property value is generated when a row is written to the database,
 	 * or in Java code that executes before the row is written.
@@ -138,7 +137,7 @@ public interface Generator extends Serializable {
 	 * values to be used as identifiers and falling back to generated values by default.
 	 *
 	 * @return {@code true} if this generator allows pre-assigned identifier values,
-	 * {@code false} otherwise (default).
+	 *         {@code false} otherwise (default).
 	 *
 	 * @since 6.5
 	 */

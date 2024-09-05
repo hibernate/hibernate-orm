@@ -20,8 +20,12 @@ import org.hibernate.tuple.entity.EntityBasedAssociationAttribute;
 import org.hibernate.tuple.entity.EntityBasedBasicAttribute;
 import org.hibernate.tuple.entity.EntityBasedCompositionAttribute;
 import org.hibernate.tuple.entity.VersionProperty;
+import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
+import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
 /**
@@ -218,22 +222,19 @@ public final class PropertyFactory {
 	}
 
 	private static NonIdentifierAttributeNature decode(Type type) {
-		if ( type.isAssociationType() ) {
-
-			if ( type.isComponentType() ) {
-				// an any type is both an association and a composite...
-				return NonIdentifierAttributeNature.ANY;
-			}
-
-			return type.isCollectionType()
-					? NonIdentifierAttributeNature.COLLECTION
-					: NonIdentifierAttributeNature.ENTITY;
+		if ( type instanceof CollectionType ) {
+			return NonIdentifierAttributeNature.COLLECTION;
+		}
+		else if ( type instanceof EntityType ) {
+			return NonIdentifierAttributeNature.ENTITY;
+		}
+		else if ( type instanceof AnyType ) {
+			return NonIdentifierAttributeNature.ANY;
+		}
+		else if ( type instanceof ComponentType ) {
+			return NonIdentifierAttributeNature.COMPOSITE;
 		}
 		else {
-			if ( type.isComponentType() ) {
-				return NonIdentifierAttributeNature.COMPOSITE;
-			}
-
 			return NonIdentifierAttributeNature.BASIC;
 		}
 	}

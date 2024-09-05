@@ -65,7 +65,7 @@ public class MultipleSessionFactoriesProxyTest extends BaseCoreFunctionalTestCas
 		s.flush();
 		s.clear();
 
-		container = s.load( Container.class, container.getId() );
+		container = s.getReference( Container.class, container.getId() );
 		assertFalse( Hibernate.isInitialized( container ) );
 		container.getId();
 		assertFalse( Hibernate.isInitialized( container ) );

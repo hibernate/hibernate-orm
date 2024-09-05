@@ -204,7 +204,7 @@ public class HibernateProcessor extends AbstractProcessor {
 
 		final boolean fullyAnnotationConfigured = handleSettings( processingEnvironment );
 		if ( !fullyAnnotationConfigured ) {
-			new JpaDescriptorParser( context ).parseXml();
+			new JpaDescriptorParser( context ).parseMappingXml();
 			if ( context.isFullyXmlConfigured() ) {
 				createMetaModelClasses();
 			}
@@ -276,7 +276,7 @@ public class HibernateProcessor extends AbstractProcessor {
 				context.setSuppressedWarnings(new String[] {"deprecation", "rawtypes"});
 			}
 			else {
-				context.setSuppressedWarnings( suppressedWarnings.replace(" ","").split(",") );
+				context.setSuppressedWarnings( suppressedWarnings.replace(" ","").split(",\\s*") );
 			}
 		}
 
@@ -367,7 +367,7 @@ public class HibernateProcessor extends AbstractProcessor {
 			try {
 				if ( !included( element )
 						|| hasAnnotation( element, Constants.EXCLUDE )
-						|| hasAnnotation( context.getElementUtils().getPackageOf(element), Constants.EXCLUDE ) ) {
+						|| hasPackageAnnotation( element, Constants.EXCLUDE ) ) {
 					// skip it completely
 				}
 				else if ( isEntityOrEmbeddable( element ) ) {
@@ -418,6 +418,11 @@ public class HibernateProcessor extends AbstractProcessor {
 				}
 			}
 		}
+	}
+
+	private boolean hasPackageAnnotation(Element element, String annotation) {
+		final PackageElement pack = context.getElementUtils().getPackageOf( element ); // null for module descriptor
+		return pack != null && hasAnnotation( pack, annotation );
 	}
 
 	private void createMetaModelClasses() {
@@ -584,9 +589,7 @@ public class HibernateProcessor extends AbstractProcessor {
 							&& alreadyExistingMetaEntity == null
 							// let a handwritten metamodel "override" the generated one
 							// (this is used in the Jakarta Data TCK)
-							&& element.getEnclosingElement().getEnclosedElements()
-								.stream().noneMatch(e -> e.getSimpleName()
-									.contentEquals('_' + element.getSimpleName().toString()))) {
+							&& !hasHandwrittenMetamodel(element) ) {
 						final AnnotationMetaEntity dataMetaEntity =
 								AnnotationMetaEntity.create( typeElement, context,
 										requiresLazyMemberInitialization,
@@ -601,6 +604,12 @@ public class HibernateProcessor extends AbstractProcessor {
 				}
 			}
 		}
+	}
+
+	private static boolean hasHandwrittenMetamodel(Element element) {
+		return element.getEnclosingElement().getEnclosedElements()
+				.stream().anyMatch(e -> e.getSimpleName()
+						.contentEquals('_' + element.getSimpleName().toString()));
 	}
 
 	private void indexEntityName(TypeElement typeElement) {

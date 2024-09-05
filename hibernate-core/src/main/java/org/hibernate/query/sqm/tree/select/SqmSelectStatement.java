@@ -13,17 +13,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.persistence.Tuple;
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Order;
-import jakarta.persistence.criteria.ParameterExpression;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Selection;
-
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.Internal;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
@@ -34,8 +28,18 @@ import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
+import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.ParameterExpression;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Selection;
+import jakarta.persistence.metamodel.EntityType;
+
+import static org.hibernate.query.sqm.spi.SqmCreationHelper.combinePredicates;
 import static org.hibernate.query.sqm.SqmQuerySource.CRITERIA;
 import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
 import static org.hibernate.query.sqm.tree.jpa.ParameterCollector.collectParameters;
@@ -122,7 +126,8 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 		return createCopy( context, getResultType() );
 	}
 
-	private <X> SqmSelectStatement<X> createCopy(SqmCopyContext context, Class<X> resultType) {
+	@Internal
+	public <X> SqmSelectStatement<X> createCopy(SqmCopyContext context, Class<X> resultType) {
 		final Set<SqmParameter<?>> parameters;
 		if ( this.parameters == null ) {
 			parameters = null;
@@ -270,6 +275,26 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	}
 
 	@Override
+	public <U> SqmSubQuery<U> subquery(EntityType<U> type) {
+		return new SqmSubQuery<>( this, type, nodeBuilder() );
+	}
+
+	@Override
+	public SqmSelectStatement<T> where(List<Predicate> restrictions) {
+		//noinspection rawtypes,unchecked
+		getQuerySpec().getWhereClause().applyPredicates( (List) restrictions );
+		return this;
+	}
+
+	@Override
+	public SqmSelectStatement<T> having(List<Predicate> restrictions) {
+		//noinspection unchecked,rawtypes
+		final SqmPredicate combined = combinePredicates( getQuerySpec().getHavingClausePredicate(), (List) restrictions );
+		getQuerySpec().setHavingClausePredicate( combined );
+		return this;
+	}
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public SqmSelectStatement<T> select(Selection<? extends T> selection) {
 		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
@@ -307,8 +332,8 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	@SuppressWarnings("unchecked")
 	private Selection<? extends T> getResultSelection(List<?> selectionList) {
 		final Class<T> resultType = getResultType();
-		final List<? extends JpaSelection<?>> selections =
-				(List<? extends JpaSelection<?>>) selectionList;
+		//noinspection rawtypes
+		final List<? extends JpaSelection<?>> selections = (List) selectionList;
 		if ( resultType == null || resultType == Object.class ) {
 			switch ( selectionList.size() ) {
 				case 0: {
@@ -320,12 +345,12 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 					return (Selection<? extends T>) selectionList.get( 0 );
 				}
 				default: {
-					return (Selection<? extends T>) nodeBuilder().array( selections );
+					return (Selection<? extends T>) nodeBuilder().array( (List) selectionList );
 				}
 			}
 		}
 		else if ( Tuple.class.isAssignableFrom( resultType ) ) {
-			return (Selection<? extends T>) nodeBuilder().tuple( selections );
+			return (Selection<? extends T>) nodeBuilder().tuple( (List) selectionList );
 		}
 		else if ( resultType.isArray() ) {
 			return nodeBuilder().array( resultType, selections );

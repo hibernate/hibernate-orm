@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.util.stream.Stream;
 
@@ -20,7 +21,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HANADialect;
@@ -61,7 +61,7 @@ public class MetadataAccessTests {
 	@RegisterExtension
 	public LoggerInspectionExtension logger = LoggerInspectionExtension
 			.builder().setLogger(
-					Logger.getMessageLogger( CoreMessageLogger.class, Dialect.class.getName() )
+					Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, Dialect.class.getName() )
 			).build();
 
 	@BeforeEach
@@ -104,8 +104,6 @@ public class MetadataAccessTests {
 		return Stream.of(
 				Arguments.of( "DB2", DB2Dialect.class,
 						getVersionConstant( DB2Dialect.class, "MINIMUM_VERSION") ),
-				Arguments.of( "Apache Derby", DerbyDialect.class,
-						getVersionConstant( DerbyDialect.class, "MINIMUM_VERSION") ),
 				Arguments.of( "EnterpriseDB", PostgresPlusDialect.class,
 						getVersionConstant( PostgreSQLDialect.class, "MINIMUM_VERSION") ),
 				Arguments.of( "H2", H2Dialect.class,

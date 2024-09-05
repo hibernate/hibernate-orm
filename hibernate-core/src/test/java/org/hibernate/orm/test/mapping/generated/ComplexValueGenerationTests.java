@@ -20,38 +20,38 @@ import java.time.YearMonth;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
-import org.hibernate.annotations.GeneratorType;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.generator.EventType;
 
-import org.hibernate.dialect.TiDBDialect;
+
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Steve Ebersole
  */
-@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "CURRENT_TIMESTAMP not supported as default value in Sybase")
-@SkipForDialect(dialectClass = MySQLDialect.class, reason = "See HHH-10196")
-@SkipForDialect(dialectClass = TiDBDialect.class, reason = "See HHH-10196")
+
+@RequiresDialectFeature( feature = DialectFeatureChecks.CurrentTimestampHasMicrosecondPrecision.class )
+@RequiresDialectFeature( feature = DialectFeatureChecks.UsesStandardCurrentTimestampFunction.class )
 @DomainModel( annotatedClasses = ComplexValueGenerationTests.AuditedEntity.class )
 @SessionFactory
+@SuppressWarnings("JUnitMalformedDeclaration")
 public class ComplexValueGenerationTests {
 	@Test
 	public void testGenerations(SessionFactoryScope scope) {
@@ -139,12 +139,12 @@ public class ComplexValueGenerationTests {
 		@Id
 		private Integer id;
 
-		@Generated( GenerationTime.INSERT )
+		@Generated
 		@ColumnDefault( "CURRENT_TIMESTAMP" )
 		@Column( nullable = false )
 		private Date createdDate;
 
-		@Generated( GenerationTime.ALWAYS )
+		@Generated(event = { EventType.INSERT, EventType.UPDATE } )
 		@ColumnDefault( "CURRENT_TIMESTAMP" )
 		@Column( nullable = false )
 		private Calendar alwaysDate;
@@ -197,7 +197,7 @@ public class ComplexValueGenerationTests {
 		@UpdateTimestamp
 		private Timestamp updated;
 
-		@GeneratorType( type = DefaultGeneratedValueTest.MyVmValueGenerator.class, when = GenerationTime.INSERT )
+		@StaticGeneration( value = "Bob" )
 		private String name;
 
 		@SuppressWarnings("unused")

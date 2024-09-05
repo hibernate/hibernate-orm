@@ -9,7 +9,6 @@ package org.hibernate.orm.test.interceptor;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -18,7 +17,6 @@ import java.util.Queue;
 import org.junit.Test;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.EmptyInterceptor;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -67,7 +65,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		t = s.beginTransaction();
 		u = s.get( User.class, "Gavin" );
 		assertEquals( 2, u.getActions().size() );
-		s.delete( u );
+		s.remove( u );
 		t.commit();
 		s.close();
 	}
@@ -87,7 +85,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		u = s.get( User.class, "Gavin" );
 		assertNotNull( u.getCreated() );
 		assertNotNull( u.getLastUpdated() );
-		s.delete( u );
+		s.remove( u );
 		t.commit();
 		s.close();
 	}
@@ -108,11 +106,11 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		s = openSession(
-				new EmptyInterceptor() {
+				new Interceptor() {
 					@Override
 					public boolean onFlushDirty(
 							Object entity,
-							Serializable id,
+							Object id,
 							Object[] currentState,
 							Object[] previousState,
 							String[] propertyNames,
@@ -137,7 +135,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		t = s.beginTransaction();
 		u = s.get( User.class, "Josh" );
 		assertEquals( "test", u.getPassword() );
-		s.delete( u );
+		s.remove( u );
 		t.commit();
 		s.close();
 
@@ -180,7 +178,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		final String checkComment = "generated from interceptor";
 
 		Session s = openSession(
-				new EmptyInterceptor() {
+				new Interceptor() {
 					@Override
 					public boolean onSave(
 							Object entity,
@@ -214,7 +212,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( i.getDetails() );
 		assertEquals( checkPerm, i.getDetails().getPerm1() );
 		assertEquals( checkComment, i.getDetails().getComment() );
-		s.delete( i );
+		s.remove( i );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -249,8 +247,8 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 					List<Log> logs = s.createQuery( criteria ).list();
 //		List logs = s.createCriteria(Log.class).list();
 					assertEquals( 2, logs.size() );
-					s.delete( u );
-					s.createQuery( "delete from Log" ).executeUpdate();
+					s.remove( u );
+					s.createMutationQuery( "delete from Log" ).executeUpdate();
 
 				}
 		);
@@ -281,7 +279,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 
 		merged.setInjectedString( null );
 
-		User loaded = s.load( User.class, merged.getName() );
+		User loaded = s.getReference( User.class, merged.getName() );
 		// the session-bound instance was not instantiated by the interceptor, load simply returns it
 		assertSame( merged, loaded );
 		assertNull( merged.getInjectedString() );
@@ -290,13 +288,13 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.evict( merged );
 
-		User reloaded = s.load( User.class, merged.getName() );
+		User reloaded = s.getReference( User.class, merged.getName() );
 		// Interceptor IS called for instantiating the persistent instance associated to the session when using load
 		assertEquals( injectedString, reloaded.getInjectedString() );
 		assertEquals( u.getName(), reloaded.getName() );
 		assertEquals( u.getPassword(), reloaded.getPassword() );
 
-		s.delete( reloaded );
+		s.remove( reloaded );
 		t.commit();
 		s.close();
 	}
@@ -354,7 +352,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 
 		s = sessionFactory().withOptions().statementInspector( statementInspector ).openSession();
 		t = s.beginTransaction();
-		s.delete( u );
+		s.remove( u );
 		t.commit();
 		s.close();
 

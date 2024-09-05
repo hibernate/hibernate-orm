@@ -78,7 +78,7 @@ public class MultiIdEntityLoadTests {
 		// using ordered results
 		scope.inTransaction(
 				session -> {
-					session.delete( session.get( BasicEntity.class, 2 ) );
+					session.remove( session.get( BasicEntity.class, 2 ) );
 
 					// test control - no delete-checking
 					{
@@ -129,7 +129,7 @@ public class MultiIdEntityLoadTests {
 		// using un-ordered results
 		scope.inTransaction(
 				session -> {
-					session.delete( session.get( BasicEntity.class, 2 ) );
+					session.remove( session.get( BasicEntity.class, 2 ) );
 
 					// test control - no delete-checking
 					{
@@ -184,18 +184,18 @@ public class MultiIdEntityLoadTests {
 					final BasicEntity first = new BasicEntity( 1, "first" );
 					final BasicEntity second = new BasicEntity( 2, "second" );
 					final BasicEntity third = new BasicEntity( 3, "third" );
-					session.save( first );
-					session.save( second );
-					session.save( third );
+					session.persist( first );
+					session.persist( second );
+					session.persist( third );
 
-					session.save(
+					session.persist(
 							new EntityWithAggregateId(
 									new EntityWithAggregateId.Key( "abc", "def"),
 									"ghi"
 							)
 					);
 
-					session.save(
+					session.persist(
 							new EntityWithAggregateId(
 									new EntityWithAggregateId.Key( "123", "456"),
 									"789"

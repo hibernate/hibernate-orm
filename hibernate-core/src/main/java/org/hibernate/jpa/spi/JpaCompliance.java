@@ -43,28 +43,6 @@ public interface JpaCompliance {
 	boolean isJpaTransactionComplianceEnabled();
 
 	/**
-	 * Controls how Hibernate interprets a mapped {@link java.util.List}
-	 * without no {@linkplain jakarta.persistence.OrderColumn order column}
-	 * specified. Historically Hibernate treats this as a "bag", which is a
-	 * concept JPA does not have.
-	 * <ul>
-	 * <li>If enabled, Hibernate will recognize this case as a
-	 *     {@linkplain org.hibernate.collection.spi.PersistentList list}.
-	 * <li>Otherwise, if disabled, Hibernate will treat it as a
-	 *     {@linkplain org.hibernate.collection.spi.PersistentBag "bag"}.
-	 * </ul>
-	 *
-	 * @return {@code true} indicates to behave in the spec-defined way,
-	 * interpreting the mapping as a "list", rather than a "bag"
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#JPA_LIST_COMPLIANCE
-	 *
-	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#DEFAULT_LIST_SEMANTICS} instead
-	 */
-	@Deprecated( since = "6.0" )
-	boolean isJpaListComplianceEnabled();
-
-	/**
 	 * JPA defines specific exceptions on specific methods when called on
 	 * {@link jakarta.persistence.EntityManager} and
 	 * {@link jakarta.persistence.EntityManagerFactory} when those objects
@@ -81,14 +59,9 @@ public interface JpaCompliance {
 	boolean isJpaClosedComplianceEnabled();
 
 	/**
-	 * JPA specifies that a {@link jakarta.persistence.CascadeType#PERSIST}
-	 * operation should occur at flush time. The legacy behavior of Hibernate
-	 * was a {@link org.hibernate.annotations.CascadeType#SAVE_UPDATE}.
-	 *
-	 * @return {@code true} indicates to behave in the spec-defined way
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#JPA_CASCADE_COMPLIANCE
+	 * @deprecated No longer has any effect.
 	 */
+	@Deprecated(since = "7.0")
 	boolean isJpaCascadeComplianceEnabled();
 
 	/**

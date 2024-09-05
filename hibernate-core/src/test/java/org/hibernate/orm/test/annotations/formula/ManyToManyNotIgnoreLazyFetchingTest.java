@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.annotations.formula;
 
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,7 +47,7 @@ public class ManyToManyNotIgnoreLazyFetchingTest extends BaseEntityManagerFuncti
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, AnnotationBinder.class.getName() )
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, AnnotationBinder.class.getName() )
 	);
 
 	private Triggerable triggerable = logInspection.watchForLogMessages( "HHH000491" );

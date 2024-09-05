@@ -41,6 +41,7 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
@@ -83,6 +84,7 @@ import static org.hibernate.query.sqm.TemporalUnit.SECOND;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.CHAR;
+import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.DOUBLE;
 import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
@@ -92,6 +94,7 @@ import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
 import static org.hibernate.type.SqlTypes.NCHAR;
+import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.OTHER;
 import static org.hibernate.type.SqlTypes.UUID;
@@ -162,7 +165,7 @@ public class H2Dialect extends Dialect {
 			return 0;
 		}
 
-		final String[] bits = databaseVersion.split("[. \\-]");
+		final String[] bits = StringHelper.split( ". -", databaseVersion );
 		return bits.length > 2 ? Integer.parseInt( bits[2] ) : 0;
 	}
 
@@ -191,10 +194,15 @@ public class H2Dialect extends Dialect {
 	@Override
 	protected String columnType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
+			// h2 recognizes NCHAR and NCLOB as aliases
+			// but, according to the docs, not NVARCHAR
+			// so just normalize all these types
 			case NCHAR:
 				return columnType( CHAR );
 			case NVARCHAR:
 				return columnType( VARCHAR );
+			case NCLOB:
+				return columnType( CLOB );
 			default:
 				return super.columnType( sqlTypeCode );
 		}

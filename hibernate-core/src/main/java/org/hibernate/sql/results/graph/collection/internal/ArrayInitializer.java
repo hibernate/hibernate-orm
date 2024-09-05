@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import java.lang.reflect.Array;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -131,9 +132,11 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer<Abs
 		final Initializer<?> initializer = elementAssembler.getInitializer();
 		if ( initializer != null ) {
 			final RowProcessingState rowProcessingState = data.getRowProcessingState();
-			final Iterator iter = getCollectionInstance( data ).elements();
-			while ( iter.hasNext() ) {
-				initializer.resolveInstance( iter.next(), rowProcessingState );
+			final Integer index = listIndexAssembler.assemble( rowProcessingState );
+			if ( index != null ) {
+				final PersistentArrayHolder<?> arrayHolder = getCollectionInstance( data );
+				assert arrayHolder != null;
+				initializer.resolveInstance( Array.get( arrayHolder.getArray(), index ), rowProcessingState );
 			}
 		}
 	}

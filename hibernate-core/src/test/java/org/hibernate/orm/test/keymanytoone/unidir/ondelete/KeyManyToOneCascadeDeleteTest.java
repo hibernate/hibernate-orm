@@ -38,9 +38,9 @@ public class KeyManyToOneCascadeDeleteTest {
 					order2.setItem( "printer" );
 					session.getTransaction().begin();
 					try {
-						session.save( customer );
-						session.save( order1 );
-						session.save( order2 );
+						session.persist( customer );
+						session.persist( order1 );
+						session.persist( order2 );
 						session.getTransaction().commit();
 					}
 					catch (Exception e) {
@@ -54,7 +54,7 @@ public class KeyManyToOneCascadeDeleteTest {
 					session.getTransaction().begin();
 					try {
 						customer = session.get( Customer.class, customer.getId() );
-						session.delete( customer );
+						session.remove( customer );
 						session.getTransaction().commit();
 					}
 					catch (Exception e) {

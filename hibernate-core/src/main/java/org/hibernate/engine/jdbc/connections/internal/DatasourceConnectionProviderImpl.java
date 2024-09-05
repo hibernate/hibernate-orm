@@ -12,7 +12,8 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import org.hibernate.HibernateException;
-import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
@@ -22,13 +23,17 @@ import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.InjectService;
 import org.hibernate.service.spi.Stoppable;
 
+import static org.hibernate.cfg.JdbcSettings.DATASOURCE;
+
 /**
  * A {@link ConnectionProvider} that manages connections from an underlying {@link DataSource}.
  * <p>
  * The {@link DataSource} to use may be specified by either:<ul>
- * <li>injection using {@link #setDataSource}
- * <li>declaring the {@link DataSource} instance using the {@value Environment#DATASOURCE} config property
- * <li>declaring the JNDI name under which the {@link DataSource} is found via the {@value Environment#DATASOURCE} config property
+ * <li>injection using {@link #setDataSource},
+ * <li>passing the {@link DataSource} instance using {@value JdbcSettings#DATASOURCE},
+ *     {@value JdbcSettings#JAKARTA_JTA_DATASOURCE}, or {@value JdbcSettings#JAKARTA_NON_JTA_DATASOURCE}, or
+ * <li>declaring the JNDI name under which the {@link DataSource} is found via {@value JdbcSettings#DATASOURCE},
+ *     {@value JdbcSettings#JAKARTA_JTA_DATASOURCE}, or {@value JdbcSettings#JAKARTA_NON_JTA_DATASOURCE}.
  * </ul>
  *
  * @author Gavin King
@@ -53,7 +58,7 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	}
 
 	@InjectService( required = false )
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void setJndiService(JndiService jndiService) {
 		this.jndiService = jndiService;
 	}
@@ -83,7 +88,7 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	@Override
 	public void configure(Map<String, Object> configValues) {
 		if ( dataSource == null ) {
-			final Object dataSourceSetting = configValues.get( Environment.DATASOURCE );
+			final Object dataSourceSetting = configValues.get( DATASOURCE );
 			if ( dataSourceSetting instanceof DataSource ) {
 				dataSource = (DataSource) dataSourceSetting;
 			}
@@ -91,7 +96,7 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 				final String dataSourceJndiName = (String) dataSourceSetting;
 				if ( dataSourceJndiName == null ) {
 					throw new HibernateException(
-							"DataSource to use was not injected nor specified by [" + Environment.DATASOURCE
+							"DataSource to use was not injected nor specified by [" + DATASOURCE
 									+ "] configuration property"
 					);
 				}
@@ -106,8 +111,8 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 			throw new HibernateException( "Unable to determine appropriate DataSource to use" );
 		}
 
-		user = (String) configValues.get( Environment.USER );
-		pass = (String) configValues.get( Environment.PASS );
+		user = (String) configValues.get( AvailableSettings.USER );
+		pass = (String) configValues.get( AvailableSettings.PASS );
 		useCredentials = user != null || pass != null;
 		available = true;
 	}
@@ -139,13 +144,20 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	@Override
 	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
 		return new DatabaseConnectionInfoImpl(
-				"Connecting through datasource" + dataSourceJndiName,
+				null,
 				null,
 				dialect.getVersion(),
 				null,
 				null,
 				null,
 				null
-		);
+		) {
+			@Override
+			public String toInfoString() {
+				return dataSourceJndiName != null
+						? "\tDatasource JNDI name [" + dataSourceJndiName + "]"
+						: "\tProvided DataSource";
+			}
+		};
 	}
 }

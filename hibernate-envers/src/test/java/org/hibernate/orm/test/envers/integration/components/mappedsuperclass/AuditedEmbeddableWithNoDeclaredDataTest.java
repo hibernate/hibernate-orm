@@ -32,7 +32,8 @@ public class AuditedEmbeddableWithNoDeclaredDataTest extends BaseEnversJPAFuncti
         return new Class[] {
                 EntityWithAuditedEmbeddableWithNoDeclaredData.class,
                 AbstractAuditedEmbeddable.class,
-                AuditedEmbeddableWithDeclaredData.class
+                AuditedEmbeddableWithDeclaredData.class,
+                AuditedEmbeddableWithNoDeclaredData.class,
         };
     }
 

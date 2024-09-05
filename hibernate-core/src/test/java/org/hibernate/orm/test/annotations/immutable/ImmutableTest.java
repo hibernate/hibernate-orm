@@ -52,7 +52,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		assertNotNull(germany);
 		germany.setName("France");
 		assertEquals("Local name can be changed", "France", germany.getName());
-		s.save(germany);
+		s.persist(germany);
 		tx.commit();
 		s.close();
 
@@ -97,7 +97,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		// try adding a state
 		State foobar = new State();
 		foobar.setName("foobar");
-		s.save(foobar);
+		s.persist(foobar);
 		germany.getStates().add(foobar);
 		try {
 			tx.commit();

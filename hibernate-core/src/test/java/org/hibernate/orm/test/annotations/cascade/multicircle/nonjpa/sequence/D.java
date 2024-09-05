@@ -25,7 +25,6 @@ public class D extends AbstractEntity {
     @jakarta.persistence.OneToMany(mappedBy = "d")
 	@org.hibernate.annotations.Cascade({
 			org.hibernate.annotations.CascadeType.PERSIST,
-			org.hibernate.annotations.CascadeType.SAVE_UPDATE,
 			org.hibernate.annotations.CascadeType.MERGE,
 			org.hibernate.annotations.CascadeType.REFRESH
 	})

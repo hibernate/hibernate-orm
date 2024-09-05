@@ -20,9 +20,12 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.generator.Generator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 
@@ -55,13 +58,10 @@ public class GeneratedValueTest {
 
 			PersistentClass entityBinding = metadata.getEntityBinding( TheEntity.class.getName() );
 			assertEquals( UUID.class, entityBinding.getIdentifier().getType().getReturnedClass() );
-			IdentifierGenerator generator = entityBinding.getIdentifier().createIdentifierGenerator(
-					metadata.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
-					metadata.getDatabase().getDialect(),
-					null,
-					null,
-					(RootClass) entityBinding
-			);
+			KeyValue keyValue = entityBinding.getIdentifier();
+			Dialect dialect = metadata.getDatabase().getDialect();
+			final Generator generator1 = keyValue.createGenerator( dialect, (RootClass) entityBinding);
+			IdentifierGenerator generator = generator1 instanceof IdentifierGenerator ? (IdentifierGenerator) generator1 : null;
 			assertTyping( UUIDGenerator.class, generator );
 
 			// now a functional test
@@ -72,7 +72,7 @@ public class GeneratedValueTest {
 				Session s = sf.openSession();
 				s.beginTransaction();
 				try {
-					s.save( theEntity );
+					s.persist( theEntity );
 					s.getTransaction().commit();
 					s.close();
 
@@ -81,7 +81,7 @@ public class GeneratedValueTest {
 					s = sf.openSession();
 					s.beginTransaction();
 
-					s.delete( theEntity );
+					s.remove( theEntity );
 					s.getTransaction().commit();
 				}
 				catch (Exception e) {

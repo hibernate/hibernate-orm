@@ -53,8 +53,8 @@ public class UserTypeNonComparableIdTest {
 
 		scope.inTransaction(
 				session -> {
-					session.delete( session.get( SomeEntity.class, e1.getCustomId() ) );
-					session.delete( session.get( SomeEntity.class, e2.getCustomId() ) );
+					session.remove( session.get( SomeEntity.class, e1.getCustomId() ) );
+					session.remove( session.get( SomeEntity.class, e2.getCustomId() ) );
 				}
 		);
 	}
@@ -118,7 +118,7 @@ public class UserTypeNonComparableIdTest {
 		}
 
 		@Override
-		public CustomId nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner)
+		public CustomId nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
 				throws SQLException {
 			Long value = rs.getLong( position );
 
@@ -130,7 +130,7 @@ public class UserTypeNonComparableIdTest {
 				PreparedStatement preparedStatement,
 				CustomId customId,
 				int index,
-				SharedSessionContractImplementor sessionImplementor) throws HibernateException, SQLException {
+				SharedSessionContractImplementor sessionImplementor) throws SQLException {
 			if ( customId == null ) {
 				preparedStatement.setNull( index, Types.BIGINT );
 			}

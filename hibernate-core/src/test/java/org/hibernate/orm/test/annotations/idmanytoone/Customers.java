@@ -7,7 +7,9 @@
 
 //$
 package org.hibernate.orm.test.annotations.idmanytoone;
+
 import java.io.Serializable;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,7 +19,6 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name="Customers")
-@org.hibernate.annotations.Proxy(lazy=false)
 public class Customers implements Serializable {
 
 	private static final long serialVersionUID = -885167444315163039L;
@@ -27,7 +28,6 @@ public class Customers implements Serializable {
 	private int customerID;
 
 	@OneToMany(mappedBy="owner", cascade= CascadeType.ALL, targetEntity=ShoppingBaskets.class)
-	@org.hibernate.annotations.LazyCollection(org.hibernate.annotations.LazyCollectionOption.TRUE)
 	private java.util.Set shoppingBasketses = new java.util.HashSet();
 
 	public void setCustomerID(int value) {

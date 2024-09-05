@@ -68,9 +68,9 @@ public class SubQueryTest {
 					BasicEntity entity1 = new BasicEntity( 1, "e1" );
 					BasicEntity entity2 = new BasicEntity( 2, "e2" );
 					BasicEntity entity3 = new BasicEntity( 3, "e1" );
-					session.save( entity1 );
-					session.save( entity2 );
-					session.save( entity3 );
+					session.persist( entity1 );
+					session.persist( entity2 );
+					session.persist( entity3 );
 				}
 		);
 	}

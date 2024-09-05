@@ -168,10 +168,7 @@ public class SessionFactoryExtension
 			throw new IllegalStateException( "Could not determine SessionFactory producer" );
 		}
 
-		final SessionFactoryScopeImpl sfScope = new SessionFactoryScopeImpl(
-				domainModelScope,
-				producer
-		);
+		final SessionFactoryScopeImpl sfScope = new SessionFactoryScopeImpl( domainModelScope, producer );
 
 		if ( testInstance instanceof SessionFactoryScopeAware ) {
 			( (SessionFactoryScopeAware) testInstance ).injectSessionFactoryScope( sfScope );

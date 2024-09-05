@@ -17,7 +17,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 
 import org.hibernate.Hibernate;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -254,7 +254,7 @@ public class OneToManySizeTest {
 		scope.inTransaction(
 				(session) -> {
 					for ( Company company : session.createQuery( "from Company", Company.class ).list() ) {
-						session.delete( company );
+						session.remove( company );
 					}
 				}
 		);

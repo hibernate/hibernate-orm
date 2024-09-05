@@ -12,9 +12,10 @@ import org.hibernate.LockMode;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -47,7 +48,7 @@ import static org.hibernate.internal.util.StringHelper.*;
 @ServiceRegistry( services = @ServiceRegistry.Service(
 		role = ParameterMarkerStrategy.class,
 		impl = ParameterMarkerStrategyTests.ParameterMarkerStrategyImpl.class
-) )
+), settings = @Setting(name = AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY, value = "true") )
 @DomainModel( annotatedClasses = {
 		EntityOfBasics.class,
 		ParameterMarkerStrategyTests.EntityWithFilters.class,

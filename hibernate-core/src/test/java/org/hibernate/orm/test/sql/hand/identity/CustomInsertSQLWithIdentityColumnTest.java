@@ -41,8 +41,8 @@ public class CustomInsertSQLWithIdentityColumnTest extends BaseCoreFunctionalTes
 		session.beginTransaction();
 		Organization org = new Organization( "hola!" );
 		try {
-			session.save( org );
-			session.delete( org );
+			session.persist( org );
+			session.remove( org );
 			fail( "expecting bad custom insert statement to fail" );
 		}
 		catch( JDBCException e ) {

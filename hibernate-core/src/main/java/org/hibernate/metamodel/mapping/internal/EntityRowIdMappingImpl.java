@@ -115,11 +115,6 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 	}
 
 	@Override
-	public int getJdbcTypeCount() {
-		return 1;
-	}
-
-	@Override
 	public JdbcMapping getJdbcMapping(int index) {
 		if ( index != 0 ) {
 			throw new IndexOutOfBoundsException( index );

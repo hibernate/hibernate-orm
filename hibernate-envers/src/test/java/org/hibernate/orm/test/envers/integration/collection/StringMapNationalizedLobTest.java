@@ -15,9 +15,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 
 import org.hibernate.annotations.Nationalized;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -39,7 +39,7 @@ import static org.junit.Assert.assertEquals;
 @TestForIssue(jiraKey = "HHH-9834")
 @SkipForDialect(OracleDialect.class)
 @SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-11477", comment = "@Lob field in HQL predicate fails with error about text = bigint")
-@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA doesn't support comparing LOBs with the = operator")
+@SkipForDialect(value = HANADialect.class, comment = "HANA doesn't support comparing LOBs with the = operator")
 @SkipForDialect(value = SybaseDialect.class, comment = "Sybase doesn't support comparing LOBs with the = operator")
 @SkipForDialect(value = DB2Dialect.class, comment = "DB2 jdbc driver doesn't support setNString")
 @SkipForDialect(value = DerbyDialect.class, comment = "Derby jdbc driver doesn't support setNString")

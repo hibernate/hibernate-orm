@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -32,6 +33,8 @@ import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
@@ -219,6 +222,21 @@ public class FullyQualifiedReflectivePathTerminal
 
 	@Override
 	public SqmPredicate equalTo(Object that) {
+		return null;
+	}
+
+	@Override
+	public Predicate notEqualTo(Expression value) {
+		return null;
+	}
+
+	@Override
+	public Predicate notEqualTo(Object value) {
+		return null;
+	}
+
+	@Override
+	public SqmExpression cast(Class type) {
 		return null;
 	}
 

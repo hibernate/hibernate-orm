@@ -45,7 +45,8 @@ public class CustomEnumUserType implements UserType<CustomEnum> {
 	}
 
 	@Override
-	public CustomEnum nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public CustomEnum nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+			throws SQLException {
 		String name = rs.getString( position );
 		if ( rs.wasNull() ) {
 			return null;
@@ -54,7 +55,7 @@ public class CustomEnumUserType implements UserType<CustomEnum> {
 	}
 
 	public void nullSafeSet(PreparedStatement st, CustomEnum value, int index, SharedSessionContractImplementor session)
-			throws HibernateException, SQLException {
+			throws SQLException {
 		if ( value == null ) {
 			st.setNull( index, Types.VARCHAR );
 		}

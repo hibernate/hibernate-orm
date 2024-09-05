@@ -6,12 +6,15 @@
  */
 package org.hibernate.orm.test.refresh;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.refresh.TestEntity;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +27,7 @@ import org.junit.jupiter.api.Test;
 		annotatedClasses = TestEntity.class
 )
 @SessionFactory
+@ServiceRegistry(settings = @Setting(name = AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY, value = "true"))
 public class RefreshDetachedInstanceWhenIsAllowedTest {
 	private TestEntity testEntity;
 
@@ -32,7 +36,7 @@ public class RefreshDetachedInstanceWhenIsAllowedTest {
 		testEntity = new TestEntity();
 		scope.inTransaction(
 				session ->
-						session.save( testEntity )
+						session.persist( testEntity )
 		);
 	}
 

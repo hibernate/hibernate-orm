@@ -42,7 +42,7 @@ transitive dependencies based on the features being used or not.
 |hibernate-core| The core object/relational mapping engine
 |hibernate-envers| Entity versioning and auditing
 |hibernate-spatial| Support for spatial/GIS data types using https://github.com/GeoLatte/geolatte-geom[GeoLatte]
-|hibernate-jpamodelgen| An annotation processor that generates a JPA-compliant metamodel, plus optional Hibernate extras
+|hibernate-processor| An annotation processor that generates a JPA-compliant metamodel, plus optional Hibernate extras
 |hibernate-vector| Support for mathematical vector types and functions useful for AI/ML topics like vector similarity search and Retrieval-Augmented Generation (RAG)
 |===
 

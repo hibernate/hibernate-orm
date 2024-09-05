@@ -13,6 +13,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
@@ -56,7 +57,7 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 */
 	@Override
 	Object processComponent(Object component, CompositeType componentType) throws HibernateException {
-		Type[] types = componentType.getSubtypes();
+		final Type[] types = componentType.getSubtypes();
 		if ( component == null ) {
 			processValues( new Object[types.length], types );
 		}
@@ -97,12 +98,11 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 * @return The value from the owner that identifies the grouping into the collection
 	 */
 	final Object extractCollectionKeyFromOwner(CollectionPersister role) {
-		if ( role.getCollectionType().useLHSPrimaryKey() ) {
+		final CollectionType collectionType = role.getCollectionType();
+		if ( collectionType.useLHSPrimaryKey() ) {
 			return ownerIdentifier;
 		}
-		return role.getOwnerEntityPersister().getPropertyValue(
-				owner,
-				role.getCollectionType().getLHSPropertyName()
-		);
+		return role.getOwnerEntityPersister()
+				.getPropertyValue( owner, collectionType.getLHSPropertyName() );
 	}
 }

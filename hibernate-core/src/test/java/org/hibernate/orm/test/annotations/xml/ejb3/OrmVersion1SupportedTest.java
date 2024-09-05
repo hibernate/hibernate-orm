@@ -20,6 +20,8 @@ import org.junit.Test;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -34,6 +36,7 @@ public class OrmVersion1SupportedTest extends BaseCoreFunctionalTestCase {
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
 			Logger.getMessageLogger(
+					MethodHandles.lookup(),
 					CoreMessageLogger.class,
 					"org.hibernate.internal.util.xml.ErrorLogger"
 			)

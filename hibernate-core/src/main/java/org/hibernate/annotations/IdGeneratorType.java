@@ -25,7 +25,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <pre>
  * public class CustomSequenceGenerator implements BeforeExecutionGenerator {
  *     public CustomSequenceGenerator(CustomSequence config, Member annotatedMember,
- *                                    CustomIdGeneratorCreationContext context) {
+ *                                    GeneratorCreationContext context) {
  *         ...
  *     }
  *     ...
@@ -68,6 +68,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * A {@code @IdGeneratorType} annotation must have retention policy
  * {@link RetentionPolicy#RUNTIME}.
+ * <p>
+ * If a {@code Generator} may be used to generate values of non-identifier
+ * fields, its generator annotation should also be meta-annotated
+ * {@link ValueGenerationType @ValueGenerationType}.
  *
  * @see Generator
  * @see AnnotationBasedGenerator

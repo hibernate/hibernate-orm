@@ -230,13 +230,9 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	}
 
 	private EntityMappingType determineConcreteType(Object entity, SharedSessionContractImplementor session) {
-		final String entityName;
-		if ( session == null ) {
-			entityName = sessionFactory.bestGuessEntityName( entity );
-		}
-		else {
-			entityName = session.bestGuessEntityName( entity );
-		}
+		final String entityName = session == null
+				? sessionFactory.bestGuessEntityName( entity )
+				: session.bestGuessEntityName( entity );
 		return sessionFactory
 				.getRuntimeMetamodels()
 				.getEntityMappingType( entityName );

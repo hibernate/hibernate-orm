@@ -54,7 +54,7 @@ public class OptionalOneToOneMapsIdQueryTest extends BaseNonConfigCoreFunctional
 
 		doInHibernate( this::sessionFactory, session -> {
 			final FooHasBarWithIdNamedId foo = session.get( FooHasBarWithIdNamedId.class, 1L );
-			session.delete( foo.bar );
+			session.remove( foo.bar );
 			foo.bar = null;
 		});
 
@@ -105,7 +105,7 @@ public class OptionalOneToOneMapsIdQueryTest extends BaseNonConfigCoreFunctional
 
 		doInHibernate( this::sessionFactory, session -> {
 			final FooHasBarWithNoIdOrPropNamedId foo = session.get( FooHasBarWithNoIdOrPropNamedId.class, 1L );
-			session.delete( foo.bar );
+			session.remove( foo.bar );
 			foo.bar = null;
 		});
 
@@ -176,7 +176,7 @@ public class OptionalOneToOneMapsIdQueryTest extends BaseNonConfigCoreFunctional
 
 		doInHibernate( this::sessionFactory, session -> {
 			final FooHasBarWithNonIdPropNamedId foo = session.get( FooHasBarWithNonIdPropNamedId.class, 1L );
-			session.delete( foo.bar );
+			session.remove( foo.bar );
 			foo.bar = null;
 		});
 

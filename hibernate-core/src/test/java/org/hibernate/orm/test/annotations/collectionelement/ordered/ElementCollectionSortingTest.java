@@ -83,8 +83,8 @@ public class ElementCollectionSortingTest {
 					lukasz.getNickNamesDescendingNaturalSort().add( "lantoniak" );
 					lukasz.getNickNamesDescendingNaturalSort().add( "antoniak" );
 
-					session.save( steve );
-					session.save( lukasz );
+					session.persist( steve );
+					session.persist( lukasz );
 					session.flush();
 
 					session.clear();

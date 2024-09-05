@@ -20,7 +20,7 @@ The following example shows an `Interceptor` implementation that automatically l
 
 [[events-interceptors-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-event}/InterceptorTest.java[tags=events-interceptors-example]
 ----
@@ -37,7 +37,7 @@ A Session-scoped interceptor is specified when a session is opened.
 
 [[events-interceptors-session-scope-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-event}/InterceptorTest.java[tags=events-interceptors-session-scope-example]
 ----
@@ -50,7 +50,7 @@ Ensure that you do not store session-specific states since multiple sessions wil
 
 [[events-interceptors-session-factory-scope-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-event}/InterceptorTest.java[tags=events-interceptors-session-factory-scope-example]
 ----
@@ -82,12 +82,12 @@ Here is an example of a custom load event listener:
 [[events-interceptors-load-listener-example]]
 .Custom `LoadListener` example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-event}/ListenerTest.java[tags=events-interceptors-load-listener-example-part1]
 ----
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-event}/ListenerTest.java[tags=events-interceptors-load-listener-example-part2]
 ----
@@ -135,7 +135,7 @@ The entity listener class is then associated with the entity using the `jakarta.
 [[events-jpa-callbacks-example]]
 .Example of specifying Jakarta Persistence callbacks
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-event}/ListenerTest.java[tags=events-jpa-callbacks-example]
 ----
@@ -173,7 +173,7 @@ Default entity listeners can only be defined in XML mapping files.
 [[events-default-listener-mapping-example]]
 .Default event listener mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-event}/DefaultEntityListener.java[tags=events-default-listener-mapping-example]
 ----
@@ -186,12 +186,12 @@ include::{example-dir-event-resources}/DefaultEntityListener-orm.xml[tags=events
 
 Considering that all entities extend the `BaseEntity` class:
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-event}/BaseEntity.java[tags=events-default-listener-mapping-example]
 ----
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-event}/DefaultEntityListenerTest.java[tags=events-default-listener-mapping-example]
 ----
@@ -201,7 +201,7 @@ When persisting a `Person` or `Book` entity, the `createdOn` is going to be set 
 [[events-default-listener-persist-example]]
 .Default event listener persist event
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-event}/DefaultEntityListenerTest.java[tags=events-default-listener-persist-example]
 ----
@@ -217,7 +217,7 @@ When updating a `Person` or `Book` entity, the `updatedOn` is going to be set by
 [[events-default-listener-update-example]]
 .Default event listener update event
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-event}/DefaultEntityListenerTest.java[tags=events-default-listener-update-example]
 ----
@@ -242,7 +242,7 @@ while `@ExcludeSuperclassListeners` is used to ignore the default entity listene
 [[events-exclude-default-listener-mapping-example]]
 .Exclude default event listener mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-event}/DefaultEntityListenerTest.java[tags=events-exclude-default-listener-mapping-example]
 ----
@@ -255,7 +255,7 @@ because the `Publisher` entity was marked with the `@ExcludeDefaultListeners` an
 [[events-exclude-default-listener-persist-example]]
 .Excluding default event listener events
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-event}/DefaultEntityListenerTest.java[tags=events-exclude-default-listener-persist-example]
 ----

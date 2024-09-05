@@ -8,7 +8,6 @@ package org.hibernate.boot.model.relational;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 
 /**
  * A context provided to methods responsible for generating SQL strings on startup.
@@ -20,16 +19,6 @@ public interface SqlStringGenerationContext {
 	 * to generate SQL fragments that are specific to each vendor.
 	 */
 	Dialect getDialect();
-
-	/**
-	 * @return The helper for dealing with identifiers in the current JDBC environment.
-	 * <p>
-	 * Note that the Identifiers returned from this helper already account for auto-quoting.
-	 *
-	 * @deprecated Use {@link #toIdentifier(String)} instead.
-	 */
-	@Deprecated
-	IdentifierHelper getIdentifierHelper();
 
 	/**
 	 * Generate an Identifier instance from its simple name as obtained from mapping

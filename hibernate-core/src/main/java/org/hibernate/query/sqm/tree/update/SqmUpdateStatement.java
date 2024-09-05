@@ -34,10 +34,14 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
 import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.ParameterExpression;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -253,6 +257,11 @@ public class SqmUpdateStatement<T>
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitUpdateStatement( this );
+	}
+
+	@Override
+	public <U> SqmSubQuery<U> subquery(EntityType<U> type) {
+		return new SqmSubQuery<>( this, type, nodeBuilder() );
 	}
 
 	public <Y> void applyAssignment(SqmPath<Y> targetPath, SqmExpression<? extends Y> value) {

@@ -60,7 +60,7 @@ public class SimpleLazyGroupUpdateTest {
     @BeforeEach
     public void prepare(SessionFactoryScope scope) {
         scope.inTransaction( s -> {
-            s.save( new TestEntity( 1L, "entity 1", "blah", REALLY_BIG_STRING ) );
+            s.persist( new TestEntity( 1L, "entity 1", "blah", REALLY_BIG_STRING ) );
         } );
     }
 

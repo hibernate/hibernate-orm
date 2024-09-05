@@ -54,7 +54,7 @@ public class MapCompositeElementTest {
 			final Product prod = s.get(Product.class, "Some Thing");
 			assertEquals( prod.getParts().size(), 1 );
 			assertEquals( ( (Part) prod.getParts().get("Top") ).getDescription(), "The brand new top part" );
-			s.delete(prod);
+			s.remove(prod);
 		} );
 	}
 
@@ -99,8 +99,8 @@ public class MapCompositeElementTest {
 			assertEquals( list.size(), 1 );
 			assertSame( list.get(0), item );
 
-			s.delete(item);
-			s.delete(prod);
+			s.remove(item);
+			s.remove(prod);
 		} );
 	}
 

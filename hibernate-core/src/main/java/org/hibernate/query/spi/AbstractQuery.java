@@ -22,6 +22,7 @@ import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
+import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.CacheMode;
@@ -31,8 +32,8 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.internal.EntityManagerMessageLogger;
-import org.hibernate.internal.HEMLogging;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.AvailableHints;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
@@ -74,14 +75,14 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 public abstract class AbstractQuery<R>
 		extends AbstractSelectionQuery<R>
 		implements QueryImplementor<R> {
-	protected static final EntityManagerMessageLogger log = HEMLogging.messageLogger( AbstractQuery.class );
+	protected static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractQuery.class );
 
 	public AbstractQuery(SharedSessionContractImplementor session) {
 		super( session );
 	}
 
 	@Override
-	protected void applyOptions(NamedQueryMemento memento) {
+	protected void applyOptions(NamedQueryMemento<?> memento) {
 		if ( memento.getHints() != null ) {
 			memento.getHints().forEach( this::setHint );
 		}
@@ -331,7 +332,7 @@ public abstract class AbstractQuery<R>
 	// JPA hint handling
 
 
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@SuppressWarnings("unused")
 	public Set<String> getSupportedHints() {
 		return AvailableHints.getDefinedHints();
 	}
@@ -349,7 +350,7 @@ public abstract class AbstractQuery<R>
 			hints.put( HINT_JAVAEE_LOCK_TIMEOUT, getLockOptions().getTimeOut() );
 		}
 
-		if ( getLockOptions().getScope() ) {
+		if ( getLockOptions().getLockScope() == PessimisticLockScope.EXTENDED ) {
 			hints.put( HINT_SPEC_LOCK_SCOPE, getLockOptions().getLockScope() );
 			hints.put( HINT_JAVAEE_LOCK_SCOPE, getLockOptions().getLockScope() );
 		}

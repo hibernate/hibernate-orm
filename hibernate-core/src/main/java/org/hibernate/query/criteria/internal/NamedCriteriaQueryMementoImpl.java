@@ -22,9 +22,12 @@ import org.hibernate.query.sqm.internal.SqmSelectionQueryImpl;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
-public class NamedCriteriaQueryMementoImpl extends AbstractNamedQueryMemento implements NamedSqmQueryMemento, Serializable {
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-	private final SqmStatement sqmStatement;
+public class NamedCriteriaQueryMementoImpl<E> extends AbstractNamedQueryMemento<E>
+		implements NamedSqmQueryMemento<E>, Serializable {
+
+	private final SqmStatement<E> sqmStatement;
 	private final Integer firstResult;
 	private final Integer maxResults;
 
@@ -33,7 +36,8 @@ public class NamedCriteriaQueryMementoImpl extends AbstractNamedQueryMemento imp
 
 	public NamedCriteriaQueryMementoImpl(
 			String name,
-			SqmStatement sqmStatement,
+			@Nullable Class<E> resultType,
+			SqmStatement<E> sqmStatement,
 			Integer firstResult,
 			Integer maxResults,
 			Boolean cacheable,
@@ -47,7 +51,7 @@ public class NamedCriteriaQueryMementoImpl extends AbstractNamedQueryMemento imp
 			String comment,
 			Map<String, String> parameterTypes,
 			Map<String, Object> hints) {
-		super( name, cacheable, cacheRegion, cacheMode, flushMode, readOnly, timeout, fetchSize, comment, hints );
+		super( name, resultType, cacheable, cacheRegion, cacheMode, flushMode, readOnly, timeout, fetchSize, comment, hints );
 		this.sqmStatement = sqmStatement;
 		this.firstResult = firstResult;
 		this.maxResults = maxResults;
@@ -67,8 +71,8 @@ public class NamedCriteriaQueryMementoImpl extends AbstractNamedQueryMemento imp
 	}
 
 	@Override
-	public <T> SqmQueryImplementor<T> toQuery(SharedSessionContractImplementor session) {
-		return toQuery(session, null);
+	public SqmQueryImplementor<E> toQuery(SharedSessionContractImplementor session) {
+		return toQuery( session, getResultType() );
 	}
 
 	@Override
@@ -86,7 +90,7 @@ public class NamedCriteriaQueryMementoImpl extends AbstractNamedQueryMemento imp
 	}
 
 	@Override
-	public SqmStatement<?> getSqmStatement() {
+	public SqmStatement<E> getSqmStatement() {
 		return sqmStatement;
 	}
 
@@ -111,9 +115,10 @@ public class NamedCriteriaQueryMementoImpl extends AbstractNamedQueryMemento imp
 	}
 
 	@Override
-	public NamedSqmQueryMemento makeCopy(String name) {
-		return new NamedCriteriaQueryMementoImpl(
+	public NamedSqmQueryMemento<E> makeCopy(String name) {
+		return new NamedCriteriaQueryMementoImpl<E>(
 				name,
+				getResultType(),
 				sqmStatement,
 				firstResult,
 				maxResults,

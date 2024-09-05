@@ -7,11 +7,10 @@
 package org.hibernate.processor.validation;
 
 import jakarta.persistence.AccessType;
-import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.DiscriminatorMetadata;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Queryable;
+import org.hibernate.persister.entity.Joinable;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.Type;
 
@@ -30,7 +29,7 @@ import static org.hibernate.processor.validation.MockSessionFactory.typeConfigur
  * @author Gavin King
  */
 @SuppressWarnings("nullness")
-public abstract class MockEntityPersister implements EntityPersister, Queryable, DiscriminatorMetadata {
+public abstract class MockEntityPersister implements EntityPersister, Joinable, DiscriminatorMetadata {
 
 	private static final String[] ID_COLUMN = {"id"};
 
@@ -67,6 +66,8 @@ public abstract class MockEntityPersister implements EntityPersister, Queryable,
 				.orElse(null);
 	}
 
+	abstract boolean isSamePersister(MockEntityPersister entityPersister);
+
 	abstract boolean isSubclassPersister(MockEntityPersister entityPersister);
 
 	@Override
@@ -88,11 +89,6 @@ public abstract class MockEntityPersister implements EntityPersister, Queryable,
 
 	@Override
 	public String getEntityName() {
-		return entityName;
-	}
-
-	@Override
-	public String getName() {
 		return entityName;
 	}
 
@@ -130,20 +126,10 @@ public abstract class MockEntityPersister implements EntityPersister, Queryable,
 	}
 
 	@Override
-	public Type toType(String propertyName) throws QueryException {
-		Type type = getPropertyType(propertyName);
-		if (type == null) {
-			throw new QueryException(getEntityName()
-					+ " has no mapped "
-					+ propertyName);
-		}
-		return type;
-	}
-
-	@Override
 	public String getRootEntityName() {
 		for (MockEntityPersister persister : factory.getMockEntityPersisters()) {
-			if (this != persister && persister.isSubclassPersister(this)) {
+			if (this != persister && !persister.isSamePersister(this)
+					&& persister.isSubclassPersister(this)) {
 				return persister.getRootEntityName();
 			}
 		}
@@ -160,11 +146,6 @@ public abstract class MockEntityPersister implements EntityPersister, Queryable,
 			}
 		}
 		return names;
-	}
-
-	@Override
-	public Declarer getSubclassPropertyDeclarer(String s) {
-		return Declarer.CLASS;
 	}
 
 	@Override
@@ -185,11 +166,6 @@ public abstract class MockEntityPersister implements EntityPersister, Queryable,
 	@Override
 	public EntityPersister getEntityPersister() {
 		return this;
-	}
-
-	@Override
-	public String[] getKeyColumnNames() {
-		return getIdentifierColumnNames();
 	}
 
 	@Override
@@ -225,11 +201,6 @@ public abstract class MockEntityPersister implements EntityPersister, Queryable,
 	@Override
 	public String getMappedSuperclass() {
 		return null;
-	}
-
-	@Override
-	public boolean consumesEntityAlias() {
-		return true;
 	}
 
 	@Override

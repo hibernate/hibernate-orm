@@ -176,25 +176,32 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		}
 		else {
 			setImplicit( false );
-			if ( !joinColumn.columnDefinition().isEmpty() ) {
-				setSqlType( getBuildingContext().getObjectNameNormalizer()
-						.applyGlobalQuoting( joinColumn.columnDefinition() ) );
+
+			final String name = joinColumn.name();
+			if ( !name.isEmpty() ) {
+				setLogicalColumnName( name );
 			}
-			if ( !joinColumn.name().isEmpty() ) {
-				setLogicalColumnName( joinColumn.name() );
+
+			final String columnDefinition = joinColumn.columnDefinition();
+			if ( !columnDefinition.isEmpty() ) {
+				setSqlType( getBuildingContext().getObjectNameNormalizer().applyGlobalQuoting( columnDefinition ) );
 			}
+
 			setNullable( joinColumn.nullable() );
 			setUnique( joinColumn.unique() );
 			setInsertable( joinColumn.insertable() );
 			setUpdatable( joinColumn.updatable() );
 			setReferencedColumn( joinColumn.referencedColumnName() );
+			applyColumnCheckConstraint( joinColumn );
+			setOptions( joinColumn.options() );
 
-			if ( joinColumn.table().isEmpty() ) {
+			final String table = joinColumn.table();
+			if ( table.isEmpty() ) {
 				setExplicitTableName( "" );
 			}
 			else {
 				final Database database = getBuildingContext().getMetadataCollector().getDatabase();
-				final Identifier logicalIdentifier = database.toIdentifier( joinColumn.table() );
+				final Identifier logicalIdentifier = database.toIdentifier( table );
 				final Identifier physicalIdentifier = getBuildingContext().getBuildingOptions()
 						.getPhysicalNamingStrategy()
 						.toPhysicalTableName( logicalIdentifier, database.getJdbcEnvironment() );
@@ -228,16 +235,20 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		final String columnName;
 		final String columnDefinition;
 		final String referencedColumnName;
+		final String options;
 		if ( primaryKeyJoinColumn != null ) {
 			columnName = primaryKeyJoinColumn.name();
 			columnDefinition = primaryKeyJoinColumn.columnDefinition();
 			referencedColumnName = primaryKeyJoinColumn.referencedColumnName();
+			options = primaryKeyJoinColumn.options();
 		}
 		else {
 			columnName = joinColumn.name();
 			columnDefinition = joinColumn.columnDefinition();
 			referencedColumnName = joinColumn.referencedColumnName();
+			options = joinColumn.options();
 		}
+
 		final ObjectNameNormalizer normalizer = context.getObjectNameNormalizer();
 		final String columnDef = columnDefinition.isEmpty() ? null
 				: normalizer.toDatabaseIdentifierText( columnDefinition );
@@ -251,6 +262,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 //		column.setPropertyHolder(propertyHolder);
 //		column.setJoins(joins);
 //		column.setContext( context );
+		column.setOptions( options );
 		column.setImplicit( false );
 		column.setNullable( false );
 		column.setParent( parent );
@@ -506,5 +518,9 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 
 	public void setParent(AnnotatedJoinColumns parent) {
 		super.setParent( parent );
+	}
+
+	private void applyColumnCheckConstraint(jakarta.persistence.JoinColumn column) {
+		applyCheckConstraints( column.check() );
 	}
 }

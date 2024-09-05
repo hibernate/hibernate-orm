@@ -30,6 +30,9 @@ import org.hibernate.property.access.spi.Setter;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.type.AnyType;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 import org.hibernate.type.WrapperArrayHandling;
@@ -134,20 +137,15 @@ public class Property implements Serializable, MetaAttributable {
 		}
 	}
 
-	/**
-	 * @deprecated this method is no longer used
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	public boolean isPrimitive(Class<?> clazz) {
-		return getGetter( clazz ).getReturnTypeClass().isPrimitive();
-	}
-
 	public CascadeStyle getCascadeStyle() throws MappingException {
 		final Type type = value.getType();
-		if ( type.isComponentType() ) {
-			return getCompositeCascadeStyle( (CompositeType) type, cascade );
+		if ( type instanceof AnyType ) {
+			return getCascadeStyle( cascade );
 		}
-		else if ( type.isCollectionType() ) {
+		if ( type instanceof ComponentType ) {
+			return getCompositeCascadeStyle( (ComponentType) type, cascade );
+		}
+		else if ( type instanceof CollectionType ) {
 			final Collection collection = (Collection) value;
 			return getCollectionCascadeStyle( collection.getElement().getType(), cascade );
 		}
@@ -157,9 +155,15 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	private static CascadeStyle getCompositeCascadeStyle(CompositeType compositeType, String cascade) {
-		if ( compositeType.isAnyType() ) {
+		if ( compositeType instanceof AnyType ) {
 			return getCascadeStyle( cascade );
 		}
+		else {
+			return getCompositeCascadeStyle( (ComponentType) compositeType, cascade );
+		}
+	}
+
+	private static CascadeStyle getCompositeCascadeStyle(ComponentType compositeType, String cascade) {
 		final int length = compositeType.getSubtypes().length;
 		for ( int i=0; i<length; i++ ) {
 			if ( compositeType.getCascadeStyle(i) != CascadeStyles.NONE ) {
@@ -170,9 +174,15 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	private static CascadeStyle getCollectionCascadeStyle(Type elementType, String cascade) {
-		return elementType.isComponentType()
-				? getCompositeCascadeStyle( (CompositeType) elementType, cascade )
-				: getCascadeStyle( cascade );
+		if ( elementType instanceof AnyType ) {
+			return getCascadeStyle( cascade );
+		}
+		else if ( elementType instanceof ComponentType ) {
+			return getCompositeCascadeStyle( (ComponentType) elementType, cascade );
+		}
+		else {
+			return getCascadeStyle( cascade );
+		}
 	}
 	
 	private static CascadeStyle getCascadeStyle(String cascade) {
@@ -250,15 +260,6 @@ public class Property implements Serializable, MetaAttributable {
 
 	public void setPropertyAccessStrategy(PropertyAccessStrategy propertyAccessStrategy) {
 		this.propertyAccessStrategy = propertyAccessStrategy;
-	}
-
-	/**
-	 * Approximate!
-	 * @deprecated this method is no longer used
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	boolean isNullable() {
-		return value==null || value.isNullable();
 	}
 
 	public boolean isBasicPropertyAccessor() {
@@ -369,14 +370,6 @@ public class Property implements Serializable, MetaAttributable {
 	
 	public void setSelectable(boolean selectable) {
 		this.selectable = selectable;
-	}
-
-	/**
-	 * @deprecated this method is no longer used
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	public String getAccessorPropertyName(RepresentationMode mode) {
-		return getName();
 	}
 
 	// todo : remove
@@ -532,6 +525,11 @@ public class Property implements Serializable, MetaAttributable {
 		@Override
 		public PersistentClass getPersistentClass() {
 			return persistentClass;
+		}
+
+		@Override
+		public RootClass getRootClass() {
+			return persistentClass.getRootClass();
 		}
 
 		@Override

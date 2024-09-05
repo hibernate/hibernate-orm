@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine.jdbc.env.internal;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -19,7 +20,6 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
-import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
@@ -32,22 +32,21 @@ import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.engine.jdbc.internal.JdbcServicesImpl;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.internal.EmptyEventManager;
 import org.hibernate.event.spi.EventManager;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.ConnectionInfoLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.resource.jdbc.spi.JdbcObserver;
+import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
@@ -81,6 +80,7 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
  */
 public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEnvironment> {
 	private static final CoreMessageLogger log = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			JdbcEnvironmentInitiator.class.getName()
 	);
@@ -89,7 +89,8 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 
 	/**
 	 * @deprecated This setting was never a documented feature of Hibernate,
-	 *			 is not supported, and will be removed.
+	 *			   is not supported, and will be removed. Use
+	 *			   {@value org.hibernate.cfg.JdbcSettings#ALLOW_METADATA_ON_BOOT}.
 	 */
 	@Deprecated(since="6", forRemoval = true)
 	private static final String USE_JDBC_METADATA_DEFAULTS = "hibernate.temp.use_jdbc_metadata_defaults";
@@ -111,7 +112,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 				getExplicitDatabaseVersion( configurationValues, explicitDatabaseMajorVersion, explicitDatabaseMinorVersion );
 
 		if ( explicitDatabaseMajorVersion == null && explicitDatabaseMinorVersion == null && explicitDatabaseVersion != null ) {
-			final String[] parts = explicitDatabaseVersion.split( "\\." );
+			final String[] parts = StringHelper.split( ".", explicitDatabaseVersion );
 			try {
 				final int potentialMajor = Integer.parseInt( parts[0] );
 				if ( parts.length > 1 ) {
@@ -162,11 +163,12 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 
 	private DatabaseConnectionInfo buildDbInfo(ServiceRegistryImplementor registry, Dialect dialect) {
 		if ( !isMultiTenancyEnabled( registry ) ) {
-			final ConnectionProvider cp = registry.requireService( ConnectionProvider.class );
-			return cp.getDatabaseConnectionInfo( dialect );
+			return registry.requireService( ConnectionProvider.class )
+					.getDatabaseConnectionInfo( dialect );
 		}
 		else {
-			final MultiTenantConnectionProvider<?> mcp = registry.requireService( MultiTenantConnectionProvider.class );
+			final MultiTenantConnectionProvider<?> mcp =
+					registry.requireService( MultiTenantConnectionProvider.class );
 			return mcp.getDatabaseConnectionInfo( dialect );
 		}
 	}
@@ -608,17 +610,16 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 	 * This is a temporary JdbcSessionOwner for the purpose of passing a connection to the Dialect for initialization.
 	 */
 	private static class TemporaryJdbcSessionOwner implements JdbcSessionOwner, JdbcSessionContext {
+		private static final JdbcEventHandler EMPTY_JDBC_EVENT_HANDLER = new JdbcEventHandler();
 
 		private final JdbcConnectionAccess jdbcConnectionAccess;
 		private final JdbcServices jdbcServices;
-		private final ServiceRegistryImplementor serviceRegistry;
 		private final boolean jtaTrackByThread;
 		private final boolean preferUserTransaction;
 		private final boolean connectionProviderDisablesAutoCommit;
 		private final PhysicalConnectionHandlingMode connectionHandlingMode;
 		private final JpaCompliance jpaCompliance;
 		private final SqlExceptionHelper sqlExceptionHelper;
-		private static final EmptyJdbcObserver EMPTY_JDBC_OBSERVER = EmptyJdbcObserver.INSTANCE;
 		TransactionCoordinator transactionCoordinator;
 		private final EmptyEventManager eventManager;
 
@@ -630,7 +631,6 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			this.jdbcConnectionAccess = jdbcConnectionAccess;
 			this.jdbcServices = jdbcServices;
 			this.sqlExceptionHelper = sqlExceptionHelper;
-			this.serviceRegistry = serviceRegistry;
 			final ConfigurationService configuration = serviceRegistry.requireService( ConfigurationService.class );
 			this.jtaTrackByThread = configuration.getSetting( JTA_TRACK_BY_THREAD, BOOLEAN, true );
 			this.preferUserTransaction = getBoolean( PREFER_USER_TRANSACTION, configuration.getSettings() );
@@ -713,11 +713,6 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			return null;
 		}
 
-		@Override @Deprecated
-		public int getFetchSize() {
-			return 0;
-		}
-
 		@Override
 		public boolean doesConnectionProviderDisableAutoCommit() {
 			return connectionProviderDisablesAutoCommit;
@@ -753,19 +748,9 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			return null;
 		}
 
-		@Override @Deprecated
-		public JdbcObserver getObserver() {
-			return EMPTY_JDBC_OBSERVER;
-		}
-
 		@Override
-		public SessionFactoryImplementor getSessionFactory() {
-			return null;
-		}
-
-		@Override
-		public ServiceRegistry getServiceRegistry() {
-			return serviceRegistry;
+		public JdbcEventHandler getEventHandler() {
+			return EMPTY_JDBC_EVENT_HANDLER;
 		}
 
 		@Override
@@ -786,61 +771,6 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		@Override
 		public SqlExceptionHelper getSqlExceptionHelper() {
 			return sqlExceptionHelper;
-		}
-
-		private static class EmptyJdbcObserver implements JdbcObserver{
-
-			public static final EmptyJdbcObserver INSTANCE = new EmptyJdbcObserver();
-
-			@Override
-			public void jdbcConnectionAcquisitionStart() {
-
-			}
-
-			@Override
-			public void jdbcConnectionAcquisitionEnd(Connection connection) {
-
-			}
-
-			@Override
-			public void jdbcConnectionReleaseStart() {
-
-			}
-
-			@Override
-			public void jdbcConnectionReleaseEnd() {
-
-			}
-
-			@Override
-			public void jdbcPrepareStatementStart() {
-
-			}
-
-			@Override
-			public void jdbcPrepareStatementEnd() {
-
-			}
-
-			@Override
-			public void jdbcExecuteStatementStart() {
-
-			}
-
-			@Override
-			public void jdbcExecuteStatementEnd() {
-
-			}
-
-			@Override
-			public void jdbcExecuteBatchStart() {
-
-			}
-
-			@Override
-			public void jdbcExecuteBatchEnd() {
-
-			}
 		}
 	}
 }

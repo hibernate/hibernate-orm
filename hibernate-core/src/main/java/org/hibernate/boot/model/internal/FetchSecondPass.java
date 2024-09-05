@@ -41,21 +41,22 @@ public class FetchSecondPass implements SecondPass {
 
 	@Override
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
-
-		final FetchProfile profile = buildingContext.getMetadataCollector().getFetchProfile( fetch.profile() );
+		final String profileName = fetch.profile();
+		final FetchProfile profile = buildingContext.getMetadataCollector().getFetchProfile( profileName );
 		if ( profile == null ) {
-			throw new AnnotationException( "Property '" + qualify( propertyHolder.getPath(), propertyName )
-					+ "' refers to an unknown fetch profile named '" + fetch.profile() + "'" );
-		}
-		if ( profile.getSource() == ANNOTATIONS ) {
-			profile.addFetch(
-					new FetchProfile.Fetch(
-							propertyHolder.getEntityName(),
-							propertyName,
-							fetch.mode(),
-							fetch.fetch()
-					)
+			throw new AnnotationException(
+					"Property '" + qualify( propertyHolder.getPath(), propertyName )
+							+ "' refers to an unknown fetch profile named '" + profileName + "'"
 			);
+		}
+
+		if ( profile.getSource() == ANNOTATIONS ) {
+			profile.addFetch( new FetchProfile.Fetch(
+					propertyHolder.getEntityName(),
+					propertyName,
+					fetch.mode(),
+					fetch.fetch()
+			) );
 		}
 		// otherwise, it's a fetch profile defined in XML, and it overrides
 		// the annotations, so we simply ignore this annotation completely

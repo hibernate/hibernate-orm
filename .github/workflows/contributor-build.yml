@@ -16,6 +16,7 @@ on:
     branches:
       - 'main'
 
+
 permissions: {} # none
 
 # See https://github.com/hibernate/hibernate-orm/pull/4615 for a description of the behavior we're getting.
@@ -31,7 +32,7 @@ jobs:
   build:
     permissions:
       contents: read
-    name: Java 11
+    name: Java 17
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -39,7 +40,6 @@ jobs:
         include:
           - rdbms: h2
           - rdbms: hsqldb
-          - rdbms: derby
           - rdbms: mysql
           - rdbms: mariadb
           - rdbms: postgresql
@@ -77,11 +77,11 @@ jobs:
         env:
           RDBMS: ${{ matrix.rdbms }}
         run: ci/database-start.sh
-      - name: Set up Java 11
+      - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '11'
+          java-version: '17'
       - name: Get year/month for cache key
         id: get-date
         run: echo "yearmonth=$(/bin/date -u "+%Y-%m")" >> $GITHUB_OUTPUT

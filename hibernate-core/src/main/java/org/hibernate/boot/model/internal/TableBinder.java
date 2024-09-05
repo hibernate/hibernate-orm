@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model.internal;
 
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import org.hibernate.AnnotationException;
@@ -23,6 +24,9 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Any;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -54,7 +58,7 @@ import static org.hibernate.internal.util.StringHelper.unquote;
  * @author Emmanuel Bernard
  */
 public class TableBinder {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, TableBinder.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, TableBinder.class.getName() );
 
 	private MetadataBuildingContext buildingContext;
 
@@ -74,6 +78,7 @@ public class TableBinder {
 	private boolean isJPA2ElementCollection;
 	private UniqueConstraint[] uniqueConstraints;
 	private Index[] indexes;
+	private String options;
 
 	public void setBuildingContext(MetadataBuildingContext buildingContext) {
 		this.buildingContext = buildingContext;
@@ -105,6 +110,10 @@ public class TableBinder {
 
 	public void setJpaIndex(Index[] indexes){
 		this.indexes = indexes;
+	}
+
+	public void setOptions(String options) {
+		this.options = options;
 	}
 
 	public void setJPA2ElementCollection(boolean isJPA2ElementCollection) {
@@ -290,6 +299,7 @@ public class TableBinder {
 				isAbstract,
 				uniqueConstraints,
 				indexes,
+				options,
 				buildingContext,
 				null,
 				null
@@ -440,6 +450,7 @@ public class TableBinder {
 				isAbstract,
 				uniqueConstraints,
 				null,
+				null,
 				buildingContext,
 				null,
 				null
@@ -462,6 +473,7 @@ public class TableBinder {
 				isAbstract,
 				uniqueConstraints,
 				null,
+				null,
 				buildingContext,
 				subselect,
 				denormalizedSuperTableXref
@@ -475,15 +487,22 @@ public class TableBinder {
 			boolean isAbstract,
 			UniqueConstraint[] uniqueConstraints,
 			Index[] indexes,
+			String options,
 			MetadataBuildingContext buildingContext,
 			String subselect,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
 		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
 
-		final Table table =
-				addTable( nullIfEmpty( schema ), nullIfEmpty( catalog ),
-						logicalName, isAbstract, buildingContext, subselect,
-						denormalizedSuperTableXref, metadataCollector );
+		final Table table = addTable(
+				nullIfEmpty( schema ),
+				nullIfEmpty( catalog ),
+				logicalName,
+				isAbstract,
+				buildingContext,
+				subselect,
+				denormalizedSuperTableXref,
+				metadataCollector
+		);
 
 		if ( uniqueConstraints != null ) {
 			new IndexBinder( buildingContext ).bindUniqueConstraints( table, uniqueConstraints );
@@ -493,6 +512,9 @@ public class TableBinder {
 			new IndexBinder( buildingContext ).bindIndexes( table, indexes );
 		}
 
+		if ( options != null ) {
+			table.setOptions( options );
+		}
 		metadataCollector.addTableNameBinding( logicalName, table );
 
 		return table;
@@ -684,7 +706,7 @@ public class TableBinder {
 					catch (MappingException ignore) {
 					}
 				}
-				if ( referencedColumn == null ) {
+				if ( referencedColumn == null || columns == null ) {
 					throw me;
 				}
 			}
@@ -841,12 +863,35 @@ public class TableBinder {
 		}
 	}
 
-	static void addIndexes(Table table, org.hibernate.annotations.Index[] indexes, MetadataBuildingContext context) {
-		for ( org.hibernate.annotations.Index index : indexes ) {
-			//no need to handle inSecondPass here since it is only called from EntityBinder
-			context.getMetadataCollector().addSecondPass(
-					new IndexOrUniqueKeySecondPass( table, index.name(), index.columnNames(), context )
-			);
+	static void addJpaIndexes(Table table, Index[] indexes, MetadataBuildingContext context) {
+		new IndexBinder( context ).bindIndexes( table, indexes );
+	}
+
+	static void addTableCheck(
+			Table table,
+			jakarta.persistence.CheckConstraint[] checkConstraintAnnotationUsages) {
+		if ( CollectionHelper.isNotEmpty( checkConstraintAnnotationUsages ) ) {
+			for ( jakarta.persistence.CheckConstraint checkConstraintAnnotationUsage : checkConstraintAnnotationUsages ) {
+				table.addCheck(
+						new CheckConstraint(
+								checkConstraintAnnotationUsage.name(),
+								checkConstraintAnnotationUsage.constraint(),
+								checkConstraintAnnotationUsage.options()
+						)
+				);
+			}
+		}
+	}
+
+	static void addTableComment(Table table, String comment) {
+		if ( StringHelper.isNotEmpty( comment ) ) {
+			table.setComment( comment );
+		}
+	}
+
+	static void addTableOptions(Table table, String options) {
+		if ( StringHelper.isNotEmpty( options ) ) {
+			table.setOptions( options );
 		}
 	}
 

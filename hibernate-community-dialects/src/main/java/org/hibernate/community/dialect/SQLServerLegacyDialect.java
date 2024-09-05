@@ -49,6 +49,8 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.FetchClauseType;
@@ -812,18 +814,9 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 		};
 	}
 
-	/**
-	 * SQL server supports up to 7 decimal digits of
-	 * fractional second precision in a datetime2,
-	 * but since its duration arithmetic functions
-	 * try to fit durations into an int,
-	 * which is impossible with such high precision,
-	 * so default to generating {@code datetime2(3)}
-	 * columns.
-	 */
 	@Override
 	public int getDefaultTimestampPrecision() {
-		return 6; //microseconds!
+		return 7;
 	}
 
 	@Override
@@ -1167,5 +1160,22 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	@Override
 	public boolean supportsFromClauseInUpdate() {
 		return true;
+	}
+
+	@Override
+	public String getCheckConstraintString(CheckConstraint checkConstraint) {
+		final String constraintName = checkConstraint.getName();
+		return constraintName == null
+				?
+				" check " + getCheckConstraintOptions( checkConstraint ) + "(" + checkConstraint.getConstraint() + ")"
+				:
+				" constraint " + constraintName + " check " + getCheckConstraintOptions( checkConstraint ) + "(" + checkConstraint.getConstraint() + ")";
+	}
+
+	private String getCheckConstraintOptions(CheckConstraint checkConstraint) {
+		if ( StringHelper.isNotEmpty( checkConstraint.getOptions() ) ) {
+			return checkConstraint.getOptions() + " ";
+		}
+		return "";
 	}
 }

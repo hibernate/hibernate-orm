@@ -89,8 +89,8 @@ public class ClassLoaderServiceImplTest {
     		Assert.fail("Should have thrown an HibernateException -- the ClassLoaderService instance was closed.");
     	}
     	catch (HibernateException e) {
-    		String message = e.getMessage();
-    		Assert.assertEquals( "HHH000469: The ClassLoaderService can not be reused. This instance was stopped already.", message);
+			Assert.assertEquals( "The ClassLoaderService cannot be reused (this instance was stopped already)",
+					e.getMessage() );
     	}
     }
 

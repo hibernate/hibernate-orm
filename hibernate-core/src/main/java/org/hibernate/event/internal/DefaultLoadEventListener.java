@@ -106,7 +106,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			}
 			else {
 				//return a proxy if appropriate
-				Object result = event.getLockMode() == LockMode.NONE
+				final Object result = event.getLockMode() == LockMode.NONE
 						? proxyOrLoad( event, persister, keyToLoad, loadType )
 						: lockAndLoad( event, persister, keyToLoad, loadType );
 				event.setResult( result );
@@ -123,17 +123,16 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		// we may have the jpa requirement of allowing find-by-id where id is the "simple pk value" of a
 		// dependent objects parent. This is part of its generally goofy derived identity "feature"
 		final EntityIdentifierMapping idMapping = persister.getIdentifierMapping();
-		if ( idMapping instanceof CompositeIdentifierMapping ) {
-			final CompositeIdentifierMapping compositeIdMapping = (CompositeIdentifierMapping) idMapping;
+		if ( idMapping instanceof CompositeIdentifierMapping compositeIdMapping ) {
 			final EmbeddableMappingType partMappingType = compositeIdMapping.getPartMappingType();
 			if ( partMappingType.getNumberOfAttributeMappings() == 1 ) {
 				final AttributeMapping singleIdAttribute = partMappingType.getAttributeMapping( 0 );
-				if ( singleIdAttribute.getMappedType() instanceof EntityMappingType ) {
-					final EntityMappingType parentIdTargetMapping = (EntityMappingType) singleIdAttribute.getMappedType();
+				if ( singleIdAttribute.getMappedType() instanceof EntityMappingType parentIdTargetMapping ) {
 					final EntityIdentifierMapping parentIdTargetIdMapping = parentIdTargetMapping.getIdentifierMapping();
-					final MappingType parentIdType = parentIdTargetIdMapping instanceof CompositeIdentifierMapping
-							? ((CompositeIdentifierMapping) parentIdTargetIdMapping).getMappedIdEmbeddableTypeDescriptor()
-							: parentIdTargetIdMapping.getMappedType();
+					final MappingType parentIdType =
+							parentIdTargetIdMapping instanceof CompositeIdentifierMapping compositeMapping
+									? compositeMapping.getMappedIdEmbeddableTypeDescriptor()
+									: parentIdTargetIdMapping.getMappedType();
 					if ( parentIdType.getMappedJavaType().getJavaTypeClass().isInstance( event.getEntityId() ) ) {
 						// yep that's what we have...
 						loadByDerivedIdentitySimplePkValue(
@@ -309,8 +308,8 @@ public class DefaultLoadEventListener implements LoadEventListener {
 //		else {
 			// if the entity defines a HibernateProxy factory, see if there is an
 			// existing proxy associated with the PC - and if so, use it
-			final Object proxy;
-			if ( holder != null && ( proxy = holder.getProxy() ) != null ) {
+			final Object proxy = holder == null ? null : holder.getProxy();
+			if ( proxy != null ) {
 				LOG.trace( "Entity proxy found in session cache" );
 				if ( LOG.isDebugEnabled() && HibernateProxy.extractLazyInitializer( proxy ).isUnwrap() ) {
 					LOG.debug( "Ignoring NO_PROXY to honor laziness" );
@@ -372,7 +371,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Entity proxy found in session cache" );
 		}
-		LazyInitializer li = HibernateProxy.extractLazyInitializer( proxy );
+		final LazyInitializer li = HibernateProxy.extractLazyInitializer( proxy );
 		if ( li.isUnwrap() ) {
 			return li.getImplementation();
 		}
@@ -389,7 +388,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	}
 
 	private Object proxyImplementation(LoadEvent event, EntityPersister persister, EntityKey keyToLoad, LoadType options) {
-		Object entity = load( event, persister, keyToLoad, options );
+		final Object entity = load( event, persister, keyToLoad, options );
 		if ( entity != null ) {
 			return entity;
 		}
@@ -415,7 +414,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	 * @param persister The persister corresponding to the entity to be loaded
 	 * @param keyToLoad The key of the entity to be loaded
 	 * @param options The defined load options
-	 * @param holder
+	 * @param holder an {@link EntityHolder} for the key
 	 *
 	 * @return The created/existing proxy
 	 */
@@ -467,7 +466,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	 * @return The loaded entity
 	 */
 	private Object lockAndLoad(LoadEvent event, EntityPersister persister, EntityKey keyToLoad, LoadType options) {
-		final SessionImplementor source = event.getSession();;
+		final SessionImplementor source = event.getSession();
 		final EntityDataAccess cache = persister.getCacheAccessStrategy();
 
 		final SoftLock lock;

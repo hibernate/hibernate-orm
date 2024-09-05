@@ -25,7 +25,7 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
-import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.results.TableGroupImpl;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
@@ -299,7 +299,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 	}
 
 	protected boolean isTableOptional(String tableExpression) {
-		final AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityDescriptor.getEntityPersister();
+		final EntityPersister entityPersister = entityDescriptor.getEntityPersister();
 		for ( int i = 0; i < entityPersister.getTableSpan(); i++ ) {
 			if ( tableExpression.equals( entityPersister.getTableName( i ) )
 					&& entityPersister.isNullableTable( i ) ) {

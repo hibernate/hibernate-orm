@@ -19,25 +19,33 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
-import javax.xml.validation.Schema;
 
+import org.hibernate.MappingException;
+import org.hibernate.boot.jaxb.Origin;
+import org.hibernate.boot.jaxb.SourceType;
+import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl;
+import org.hibernate.boot.jaxb.internal.ConfigurationBinder;
+import org.hibernate.boot.jaxb.internal.MappingBinder;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclassImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitDefaultsImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitMetadataImpl;
+import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.processor.Context;
-import org.hibernate.processor.util.AccessType;
 import org.hibernate.processor.util.AccessTypeInformation;
 import org.hibernate.processor.util.FileTimeStampChecker;
 import org.hibernate.processor.util.StringUtil;
 import org.hibernate.processor.util.TypeUtils;
 import org.hibernate.processor.util.xml.XmlParserHelper;
-import org.hibernate.processor.util.xml.XmlParsingException;
-import org.hibernate.processor.xml.jaxb.Entity;
-import org.hibernate.processor.xml.jaxb.EntityMappings;
-import org.hibernate.processor.xml.jaxb.Persistence;
-import org.hibernate.processor.xml.jaxb.PersistenceUnitDefaults;
-import org.hibernate.processor.xml.jaxb.PersistenceUnitMetadata;
 
+import jakarta.persistence.AccessType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -49,20 +57,23 @@ public class JpaDescriptorParser {
 	private static final String DEFAULT_ORM_XML_LOCATION = "/META-INF/orm.xml";
 	private static final String SERIALIZATION_FILE_NAME = "Hibernate-Static-Metamodel-Generator.tmp";
 
-	private static final String PERSISTENCE_SCHEMA = "persistence_3_0.xsd";
-	private static final String ORM_SCHEMA = "orm_3_1.xsd";
-
 	private final Context context;
-	private final List<EntityMappings> entityMappings;
+	private final List<JaxbEntityMappingsImpl> entityMappings;
 	private final XmlParserHelper xmlParserHelper;
+	private final ConfigurationBinder configurationBinder;
+	private final MappingBinder mappingBinder;
 
 	public JpaDescriptorParser(Context context) {
 		this.context = context;
 		this.entityMappings = new ArrayList<>();
 		this.xmlParserHelper = new XmlParserHelper( context );
+
+		final ResourceStreamLocatorImpl resourceStreamLocator = new ResourceStreamLocatorImpl( context );
+		this.configurationBinder = new ConfigurationBinder( resourceStreamLocator );
+		this.mappingBinder = new MappingBinder( resourceStreamLocator, (Function<String,Object>) null );
 	}
 
-	public void parseXml() {
+	public void parseMappingXml() {
 		Collection<String> mappingFileNames = determineMappingFileNames();
 
 		if ( context.doLazyXmlParsing() && mappingFilesUnchanged( mappingFileNames ) ) {
@@ -78,23 +89,23 @@ public class JpaDescriptorParser {
 			determineAnnotationAccessTypes();
 		}
 
-		for ( EntityMappings mappings : entityMappings ) {
+		for ( JaxbEntityMappingsImpl mappings : entityMappings ) {
 			String defaultPackageName = mappings.getPackage();
-			parseEntities( mappings.getEntity(), defaultPackageName );
-			parseEmbeddable( mappings.getEmbeddable(), defaultPackageName );
-			parseMappedSuperClass( mappings.getMappedSuperclass(), defaultPackageName );
+			parseEntities( mappings.getEntities(), defaultPackageName );
+			parseEmbeddable( mappings.getEmbeddables(), defaultPackageName );
+			parseMappedSuperClass( mappings.getMappedSuperclasses(), defaultPackageName );
 		}
 	}
 
 	private Collection<String> determineMappingFileNames() {
 		Collection<String> mappingFileNames = new ArrayList<>();
 
-		Persistence persistence = getPersistence();
+		JaxbPersistenceImpl persistence = getPersistence();
 		if ( persistence != null ) {
 			// get mapping file names from persistence.xml
-			List<Persistence.PersistenceUnit> persistenceUnits = persistence.getPersistenceUnit();
-			for ( Persistence.PersistenceUnit unit : persistenceUnits ) {
-				mappingFileNames.addAll( unit.getMappingFile() );
+			List<JaxbPersistenceImpl.JaxbPersistenceUnitImpl> persistenceUnits = persistence.getPersistenceUnit();
+			for ( JaxbPersistenceImpl.JaxbPersistenceUnitImpl unit : persistenceUnits ) {
+				mappingFileNames.addAll( unit.getMappingFiles() );
 			}
 		}
 
@@ -107,19 +118,26 @@ public class JpaDescriptorParser {
 		return mappingFileNames;
 	}
 
-	private @Nullable Persistence getPersistence() {
-		Persistence persistence = null;
-		String persistenceXmlLocation = context.getPersistenceXmlLocation();
+	private @Nullable JaxbPersistenceImpl getPersistence() {
+		JaxbPersistenceImpl persistence = null;
+
+		final String persistenceXmlLocation = context.getPersistenceXmlLocation();
 		final InputStream stream = xmlParserHelper.getInputStreamForResource( persistenceXmlLocation );
 		if ( stream == null ) {
 			return null;
 		}
 
 		try {
-			Schema schema = xmlParserHelper.getSchema( PERSISTENCE_SCHEMA );
-			persistence = xmlParserHelper.getJaxbRoot( stream, Persistence.class, schema );
+			final Binding<JaxbPersistenceImpl> binding = configurationBinder.bind(
+					stream,
+					new Origin( SourceType.RESOURCE, persistenceXmlLocation )
+			);
+			persistence = binding.getRoot();
 		}
-		catch (XmlParsingException e) {
+		catch (MappingException e) {
+			throw e;
+		}
+		catch (Exception e) {
 			context.logMessage(
 					Diagnostic.Kind.WARNING, "Unable to parse persistence.xml: " + e.getMessage()
 			);
@@ -137,26 +155,31 @@ public class JpaDescriptorParser {
 	}
 
 	private void loadEntityMappings(Collection<String> mappingFileNames) {
+		final ResourceStreamLocatorImpl resourceStreamLocator = new ResourceStreamLocatorImpl( context );
+
 		for ( String mappingFile : mappingFileNames ) {
-			final InputStream stream = xmlParserHelper.getInputStreamForResource( mappingFile );
-			if ( stream == null ) {
+			final InputStream inputStream = resourceStreamLocator.locateResourceStream( mappingFile );
+			if ( inputStream == null ) {
+				// todo (jpa32) : log
 				continue;
 			}
 			try {
-				final Schema schema = xmlParserHelper.getSchema( ORM_SCHEMA );
-				final EntityMappings mapping = xmlParserHelper.getJaxbRoot( stream, EntityMappings.class, schema );
-				if ( mapping != null ) {
-					entityMappings.add( mapping );
+				final Binding<JaxbBindableMappingDescriptor> binding = mappingBinder.bind(
+						inputStream,
+						new Origin( SourceType.RESOURCE, mappingFile )
+				);
+				if ( binding != null ) {
+					entityMappings.add( (JaxbEntityMappingsImpl) binding.getRoot() );
 				}
 			}
-			catch (XmlParsingException e) {
+			catch (Exception e) {
 				context.logMessage(
 						Diagnostic.Kind.WARNING, "Unable to parse " + mappingFile + ": " + e.getMessage()
 				);
 			}
 			finally {
 				try {
-					stream.close();
+					inputStream.close();
 				}
 				catch (IOException e) {
 					// eat it
@@ -236,8 +259,8 @@ public class JpaDescriptorParser {
 		return new FileTimeStampChecker();
 	}
 
-	private void parseEntities(Collection<Entity> entities, String defaultPackageName) {
-		for ( Entity entity : entities ) {
+	private void parseEntities(List<JaxbEntityImpl> entities, String defaultPackageName) {
+		for ( JaxbEntityImpl entity : entities ) {
 			String fqcn = StringUtil.determineFullyQualifiedClassName( defaultPackageName, entity.getClazz() );
 
 			if ( !xmlMappedTypeExists( fqcn ) ) {
@@ -262,9 +285,9 @@ public class JpaDescriptorParser {
 	}
 
 	private void parseEmbeddable(
-			Collection<org.hibernate.processor.xml.jaxb.Embeddable> embeddables,
+			List<JaxbEmbeddableImpl> embeddables,
 			String defaultPackageName) {
-		for ( org.hibernate.processor.xml.jaxb.Embeddable embeddable : embeddables ) {
+		for ( JaxbEmbeddableImpl embeddable : embeddables ) {
 			String fqcn = StringUtil.determineFullyQualifiedClassName( defaultPackageName, embeddable.getClazz() );
 			// we have to extract the package name from the fqcn. Maybe the entity was setting a fqcn directly
 			String pkg = StringUtil.packageNameFromFqcn( fqcn );
@@ -289,9 +312,9 @@ public class JpaDescriptorParser {
 	}
 
 	private void parseMappedSuperClass(
-			Collection<org.hibernate.processor.xml.jaxb.MappedSuperclass> mappedSuperClasses,
+			List<JaxbMappedSuperclassImpl> mappedSuperClasses,
 			String defaultPackageName) {
-		for ( org.hibernate.processor.xml.jaxb.MappedSuperclass mappedSuperClass : mappedSuperClasses ) {
+		for ( JaxbMappedSuperclassImpl mappedSuperClass : mappedSuperClasses ) {
 			String fqcn = StringUtil.determineFullyQualifiedClassName(
 					defaultPackageName, mappedSuperClass.getClazz()
 			);
@@ -306,8 +329,7 @@ public class JpaDescriptorParser {
 				continue;
 			}
 
-			XmlMetaEntity metaEntity = new XmlMetaEntity(
-					mappedSuperClass, pkg, getXmlMappedType( fqcn ), context
+			XmlMetaEntity metaEntity = new XmlMetaEntity( mappedSuperClass, pkg, getXmlMappedType( fqcn ), context
 			);
 
 			if ( context.containsMetaEntity( fqcn ) ) {
@@ -330,71 +352,53 @@ public class JpaDescriptorParser {
 		return utils.getTypeElement( fullyQualifiedClassName );
 	}
 
-	private AccessType determineEntityAccessType(EntityMappings mappings) {
-		AccessType accessType = context.getPersistenceUnitDefaultAccessType();
-		final org.hibernate.processor.xml.jaxb.AccessType mappingsAccess = mappings.getAccess();
+	private AccessType determineEntityAccessType(JaxbEntityMappingsImpl mappings) {
+		final AccessType contextAccessType = context.getPersistenceUnitDefaultAccessType();
+		final AccessType mappingsAccess = mappings.getAccess();
 		if ( mappingsAccess != null ) {
-			accessType = mapXmlAccessTypeToJpaAccessType( mappingsAccess );
+			return mappingsAccess;
 		}
-		return accessType;
+		return contextAccessType;
 	}
 
 	private void determineXmlAccessTypes() {
-		for ( EntityMappings mappings : entityMappings ) {
+		for ( JaxbEntityMappingsImpl mappings : entityMappings ) {
 			String fqcn;
 			String packageName = mappings.getPackage();
 			AccessType defaultAccessType = determineEntityAccessType( mappings );
 
-			for ( Entity entity : mappings.getEntity() ) {
-				String name = entity.getClazz();
+			for ( JaxbEntityImpl entity : mappings.getEntities() ) {
+				final String name = entity.getClazz();
 				fqcn = StringUtil.determineFullyQualifiedClassName( packageName, name );
-				AccessType explicitAccessType = null;
-				org.hibernate.processor.xml.jaxb.AccessType type = entity.getAccess();
-				if ( type != null ) {
-					explicitAccessType = mapXmlAccessTypeToJpaAccessType( type );
-				}
-				AccessTypeInformation accessInfo = new AccessTypeInformation(
-						fqcn, explicitAccessType, defaultAccessType
-				);
+				final AccessType explicitAccessType = entity.getAccess();
+				final AccessTypeInformation accessInfo = new AccessTypeInformation( fqcn, explicitAccessType, defaultAccessType );
 				context.addAccessTypeInformation( fqcn, accessInfo );
 			}
 
-			for ( org.hibernate.processor.xml.jaxb.MappedSuperclass mappedSuperClass : mappings.getMappedSuperclass() ) {
-				String name = mappedSuperClass.getClazz();
+			for ( JaxbMappedSuperclassImpl mappedSuperClass : mappings.getMappedSuperclasses() ) {
+				final String name = mappedSuperClass.getClazz();
 				fqcn = StringUtil.determineFullyQualifiedClassName( packageName, name );
-				AccessType explicitAccessType = null;
-				org.hibernate.processor.xml.jaxb.AccessType type = mappedSuperClass.getAccess();
-				if ( type != null ) {
-					explicitAccessType = mapXmlAccessTypeToJpaAccessType( type );
-				}
-				AccessTypeInformation accessInfo = new AccessTypeInformation(
-						fqcn, explicitAccessType, defaultAccessType
-				);
+				final AccessType explicitAccessType = mappedSuperClass.getAccess();
+				final AccessTypeInformation accessInfo = new AccessTypeInformation( fqcn, explicitAccessType, defaultAccessType );
 				context.addAccessTypeInformation( fqcn, accessInfo );
 			}
 
-			for ( org.hibernate.processor.xml.jaxb.Embeddable embeddable : mappings.getEmbeddable() ) {
-				String name = embeddable.getClazz();
+			for ( JaxbEmbeddableImpl embeddable : mappings.getEmbeddables() ) {
+				final String name = embeddable.getClazz();
 				fqcn = StringUtil.determineFullyQualifiedClassName( packageName, name );
-				AccessType explicitAccessType = null;
-				org.hibernate.processor.xml.jaxb.AccessType type = embeddable.getAccess();
-				if ( type != null ) {
-					explicitAccessType = mapXmlAccessTypeToJpaAccessType( type );
-				}
-				AccessTypeInformation accessInfo = new AccessTypeInformation(
-						fqcn, explicitAccessType, defaultAccessType
-				);
+				final AccessType explicitAccessType = embeddable.getAccess();
+				final AccessTypeInformation accessInfo = new AccessTypeInformation( fqcn, explicitAccessType, defaultAccessType );
 				context.addAccessTypeInformation( fqcn, accessInfo );
 			}
 		}
 	}
 
 	private void determineAnnotationAccessTypes() {
-		for ( EntityMappings mappings : entityMappings ) {
+		for ( JaxbEntityMappingsImpl mappings : entityMappings ) {
 			String fqcn;
 			String packageName = mappings.getPackage();
 
-			for ( Entity entity : mappings.getEntity() ) {
+			for ( JaxbEntityImpl entity : mappings.getEntities() ) {
 				String name = entity.getClazz();
 				fqcn = StringUtil.determineFullyQualifiedClassName( packageName, name );
 				TypeElement element = context.getTypeElementForFullyQualifiedName( fqcn );
@@ -403,7 +407,7 @@ public class JpaDescriptorParser {
 				}
 			}
 
-			for ( org.hibernate.processor.xml.jaxb.MappedSuperclass mappedSuperClass : mappings.getMappedSuperclass() ) {
+			for ( JaxbMappedSuperclassImpl mappedSuperClass : mappings.getMappedSuperclasses() ) {
 				String name = mappedSuperClass.getClazz();
 				fqcn = StringUtil.determineFullyQualifiedClassName( packageName, name );
 				TypeElement element = context.getTypeElementForFullyQualifiedName( fqcn );
@@ -430,16 +434,16 @@ public class JpaDescriptorParser {
 	 * </ul>
 	 */
 	private void determineDefaultAccessTypeAndMetaCompleteness() {
-		for ( EntityMappings mappings : entityMappings ) {
-			PersistenceUnitMetadata meta = mappings.getPersistenceUnitMetadata();
+		for ( JaxbEntityMappingsImpl mappings : entityMappings ) {
+			JaxbPersistenceUnitMetadataImpl meta = mappings.getPersistenceUnitMetadata();
 			if ( meta != null ) {
 				context.mappingDocumentFullyXmlConfigured( meta.getXmlMappingMetadataComplete() != null );
 
-				PersistenceUnitDefaults persistenceUnitDefaults = meta.getPersistenceUnitDefaults();
+				JaxbPersistenceUnitDefaultsImpl persistenceUnitDefaults = meta.getPersistenceUnitDefaults();
 				if ( persistenceUnitDefaults != null ) {
-					org.hibernate.processor.xml.jaxb.AccessType xmlAccessType = persistenceUnitDefaults.getAccess();
-					if ( xmlAccessType != null ) {
-						context.setPersistenceUnitDefaultAccessType( mapXmlAccessTypeToJpaAccessType( xmlAccessType ) );
+					final jakarta.persistence.AccessType xmlJpaAccessType = persistenceUnitDefaults.getAccess();
+					if ( xmlJpaAccessType != null ) {
+						context.setPersistenceUnitDefaultAccessType( xmlJpaAccessType );
 					}
 				}
 			}
@@ -447,15 +451,5 @@ public class JpaDescriptorParser {
 				context.mappingDocumentFullyXmlConfigured( false );
 			}
 		}
-	}
-
-	private AccessType mapXmlAccessTypeToJpaAccessType(org.hibernate.processor.xml.jaxb.AccessType xmlAccessType) {
-		switch ( xmlAccessType ) {
-			case FIELD:
-				return AccessType.FIELD;
-			case PROPERTY:
-				return AccessType.PROPERTY;
-		}
-		throw new IllegalArgumentException( "Unknown access type: " + xmlAccessType );
 	}
 }

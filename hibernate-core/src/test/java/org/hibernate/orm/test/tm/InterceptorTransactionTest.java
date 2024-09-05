@@ -15,7 +15,7 @@ import jakarta.persistence.Id;
 
 import jakarta.transaction.Status;
 
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
@@ -174,7 +174,7 @@ public class InterceptorTransactionTest extends BaseJpaOrNativeBootstrapFunction
 		assertNull( interceptor.afterTransactionCompletionAssertionPassed );
 
 		SimpleEntity entity = new SimpleEntity( "Hello World" );
-		session.save( entity );
+		session.persist( entity );
 
 		interceptor.reset();
 
@@ -205,7 +205,7 @@ public class InterceptorTransactionTest extends BaseJpaOrNativeBootstrapFunction
 		assertNull( interceptor.afterTransactionCompletionAssertionPassed );
 
 		SimpleEntity entity = new SimpleEntity( "Hello World" );
-		session.save( entity );
+		session.persist( entity );
 
 		interceptor.reset();
 
@@ -248,7 +248,7 @@ public class InterceptorTransactionTest extends BaseJpaOrNativeBootstrapFunction
 		assertNull( interceptor.afterTransactionCompletionAssertionPassed );
 
 		SimpleEntity entity = new SimpleEntity( "Hello World" );
-		session.save( entity );
+		session.persist( entity );
 
 		interceptor.reset();
 
@@ -307,7 +307,7 @@ public class InterceptorTransactionTest extends BaseJpaOrNativeBootstrapFunction
 		}
 	}
 
-	private class TransactionInterceptor extends EmptyInterceptor {
+	private class TransactionInterceptor implements Interceptor {
 		private boolean afterTransactionBeginMethodCalled;
 		private Boolean afterTransactionBeginAssertionPassed;
 

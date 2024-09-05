@@ -17,12 +17,10 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaListJoin;
 import org.hibernate.query.criteria.JpaPredicate;
-import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 import jakarta.persistence.criteria.Expression;
@@ -166,18 +164,6 @@ public class SqmListJoin<O,E>
 			return addTreat( new SqmTreatedListJoin<>( this, treatTarget, alias, fetch ) );
 		}
 		return treat;
-	}
-
-	@Override
-	public SqmAttributeJoin<O, E> makeCopy(SqmCreationProcessingState creationProcessingState) {
-		return new SqmListJoin<>(
-				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
-				getAttribute(),
-				getExplicitAlias(),
-				getSqmJoinType(),
-				isFetched(),
-				nodeBuilder()
-		);
 	}
 
 }

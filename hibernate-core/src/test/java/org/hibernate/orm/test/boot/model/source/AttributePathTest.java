@@ -21,7 +21,7 @@ public class AttributePathTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-10863")
 	public void testCollectionElement() {
-		AttributePath attributePath = AttributePath.parse( "items.collection&&element.name" );
+		AttributePath attributePath = AttributePath.parse( "items.{element}.name" );
 
 		assertFalse( attributePath.isCollectionElement() );
 		assertTrue( attributePath.getParent().isCollectionElement() );

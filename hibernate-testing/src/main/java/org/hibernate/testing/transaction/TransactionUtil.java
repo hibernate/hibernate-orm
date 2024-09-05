@@ -27,7 +27,7 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DialectDelegateWrapper;
@@ -636,7 +636,7 @@ public class TransactionUtil {
 				st.execute( String.format( "SET LOCK_TIMEOUT %d", millis == 0L ? -1L : millis ) );
 			}
 		}
-		else if ( extractedDialect instanceof AbstractHANADialect ) {
+		else if ( extractedDialect instanceof HANADialect ) {
 			try (Statement st = connection.createStatement()) {
 				//Prepared Statements fail for SET commands
 				st.execute( String.format( "SET TRANSACTION LOCK WAIT TIMEOUT %d", millis ) );

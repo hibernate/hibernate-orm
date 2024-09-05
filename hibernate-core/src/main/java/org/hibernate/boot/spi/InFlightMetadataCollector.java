@@ -16,7 +16,6 @@ import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionTypeRegistration;
-import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -31,6 +30,8 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
+import org.hibernate.boot.models.spi.GlobalRegistrations;
+import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
@@ -46,6 +47,10 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.models.spi.AnnotationDescriptorRegistry;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ClassDetailsRegistry;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.usertype.CompositeUserType;
@@ -63,6 +68,19 @@ import jakarta.persistence.AttributeConverter;
  */
 public interface InFlightMetadataCollector extends MetadataImplementor {
 	BootstrapContext getBootstrapContext();
+
+	SourceModelBuildingContext getSourceModelBuildingContext();
+
+	default ClassDetailsRegistry getClassDetailsRegistry() {
+		return getSourceModelBuildingContext().getClassDetailsRegistry();
+	}
+
+	default AnnotationDescriptorRegistry getAnnotationDescriptorRegistry() {
+		return getSourceModelBuildingContext().getAnnotationDescriptorRegistry();
+	}
+
+	GlobalRegistrations getGlobalRegistrations();
+	PersistenceUnitMetadata getPersistenceUnitMetadata();
 
 	/**
 	 * Add the {@link PersistentClass} for an entity mapping.
@@ -84,9 +102,9 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 
 	void registerGenericComponent(Component component);
 
-	void registerEmbeddableSubclass(XClass superclass, XClass subclass);
+	void registerEmbeddableSubclass(ClassDetails superclass, ClassDetails subclass);
 
-	List<XClass> getEmbeddableSubclasses(XClass superclass);
+	List<ClassDetails> getEmbeddableSubclasses(ClassDetails superclass);
 
 	/**
 	 * Adds an import (for use in HQL).
@@ -161,12 +179,12 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	 *
 	 * @throws DuplicateMappingException If a query already exists with that name.
 	 */
-	void addNamedQuery(NamedHqlQueryDefinition query) throws DuplicateMappingException;
+	void addNamedQuery(NamedHqlQueryDefinition<?> query) throws DuplicateMappingException;
 
 	/**
 	 * Adds metadata for a named SQL query to this collector.
 	 */
-	void addNamedNativeQuery(NamedNativeQueryDefinition query) throws DuplicateMappingException;
+	void addNamedNativeQuery(NamedNativeQueryDefinition<?> query) throws DuplicateMappingException;
 
 	/**
 	 * Adds the metadata for a named SQL result set mapping to this collector.
@@ -299,26 +317,25 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 
 	void addDefaultIdentifierGenerator(IdentifierGeneratorDefinition generatorDefinition);
 
-	void addDefaultQuery(NamedHqlQueryDefinition queryDefinition);
+	void addDefaultQuery(NamedHqlQueryDefinition<?> queryDefinition);
 
-	void addDefaultNamedNativeQuery(NamedNativeQueryDefinition query);
+	void addDefaultNamedNativeQuery(NamedNativeQueryDefinition<?> query);
 
 	void addDefaultResultSetMapping(NamedResultSetMappingDescriptor definition);
 
 	void addDefaultNamedProcedureCall(NamedProcedureCallDefinitionImpl procedureCallDefinition);
-
-	AnnotatedClassType addClassType(XClass clazz);
-	AnnotatedClassType getClassType(XClass clazz);
+	AnnotatedClassType addClassType(ClassDetails classDetails);
+	AnnotatedClassType getClassType(ClassDetails classDetails);
 
 	void addMappedSuperclass(Class<?> type, MappedSuperclass mappedSuperclass);
 	MappedSuperclass getMappedSuperclass(Class<?> type);
 
-	PropertyData getPropertyAnnotatedWithMapsId(XClass persistentXClass, String propertyName);
-	void addPropertyAnnotatedWithMapsId(XClass entity, PropertyData propertyAnnotatedElement);
-	void addPropertyAnnotatedWithMapsIdSpecj(XClass entity, PropertyData specJPropertyData, String s);
+	PropertyData getPropertyAnnotatedWithMapsId(ClassDetails persistentClassDetails, String propertyName);
+	void addPropertyAnnotatedWithMapsId(ClassDetails entityClassDetails, PropertyData propertyAnnotatedElement);
+	void addPropertyAnnotatedWithMapsIdSpecj(ClassDetails entityClassDetails, PropertyData specJPropertyData, String s);
 
-	void addToOneAndIdProperty(XClass entity, PropertyData propertyAnnotatedElement);
-	PropertyData getPropertyAnnotatedWithIdAndToOne(XClass persistentXClass, String propertyName);
+	void addToOneAndIdProperty(ClassDetails entityClassDetails, PropertyData propertyAnnotatedElement);
+	PropertyData getPropertyAnnotatedWithIdAndToOne(ClassDetails persistentClassDetails, String propertyName);
 
 	boolean isInSecondPass();
 

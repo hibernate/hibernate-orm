@@ -12,21 +12,30 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Objects;
+import java.util.Properties;
 
-import org.hibernate.HibernateException;
 import org.hibernate.Internal;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.generator.values.internal.GeneratedValuesHelper;
+import org.hibernate.TransientObjectException;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
+import org.hibernate.id.enhanced.StandardNamingStrategy;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.SqlTypedMapping;
-import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.EntityType;
+import org.hibernate.type.Type;
+
+import static org.hibernate.cfg.MappingSettings.ID_DB_STRUCTURE_NAMING_STRATEGY;
+import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifierIfNotUnsaved;
+import static org.hibernate.internal.log.IncubationLogger.INCUBATION_LOGGER;
+import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
+import static org.hibernate.spi.NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
 
 /**
  * Factory and helper methods for {@link IdentifierGenerator} framework.
@@ -53,71 +62,6 @@ public final class IdentifierGeneratorHelper {
 			return "SHORT_CIRCUIT_INDICATOR";
 		}
 	};
-
-	/**
-	 * Marker object returned from {@link IdentifierGenerator#generate} to indicate that the entity's
-	 * identifier will be generated as part of the database insertion.
-	 *
-	 * @deprecated Use a {@link org.hibernate.generator.OnExecutionGenerator}
-	 */
-	@Deprecated(forRemoval = true, since = "6.2")
-	public static final Serializable POST_INSERT_INDICATOR = new Serializable() {
-		@Override
-		public String toString() {
-			return "POST_INSERT_INDICATOR";
-		}
-	};
-
-	/**
-	 * Get the generated identifier when using identity columns
-	 *
-	 * @param path           The {@link NavigableRole#getFullPath()}
-	 * @param resultSet      The result set from which to extract the generated identity
-	 * @param wrapperOptions The session
-	 * @return The generated identity value
-	 * @throws SQLException       Can be thrown while accessing the result set
-	 * @throws HibernateException Indicates a problem reading back a generated identity value.
-	 *
-	 * @deprecated Use {@link GeneratedValuesHelper#getGeneratedValues} instead
-	 */
-	@Deprecated( since = "6.5", forRemoval = true )
-	public static Object getGeneratedIdentity(
-			String path,
-			ResultSet resultSet,
-			PostInsertIdentityPersister persister,
-			WrapperOptions wrapperOptions) throws SQLException {
-		if ( !resultSet.next() ) {
-			throw new HibernateException( "The database returned no natively generated identity value : " + path );
-		}
-
-		JdbcMapping identifierType = ( (SqlTypedMapping) persister.getIdentifierMapping() ).getJdbcMapping();
-		Object id = identifierType.getJdbcValueExtractor()
-				.extract( resultSet, columnIndex( resultSet, persister ), wrapperOptions );
-		LOG.debugf( "Natively generated identity (%s) : %s", path, id );
-		return id;
-	}
-
-	private static int columnIndex(ResultSet resultSet, PostInsertIdentityPersister persister) {
-		try {
-			ResultSetMetaData metaData = resultSet.getMetaData();
-			String keyColumnName = persister.getRootTableKeyColumnNames()[0];
-			Dialect dialect = persister.getFactory().getJdbcServices().getDialect();
-			for ( int i = 1 ; i<=metaData.getColumnCount(); i++ ) {
-				if ( equal( keyColumnName, metaData.getColumnName(i), dialect ) ) {
-					return i;
-				}
-			}
-		}
-		catch (SQLException e) {
-			LOG.debugf( "Could not determine column index from JDBC metadata", e );
-		}
-		return 1;
-	}
-
-	private static boolean equal(String keyColumnName, String alias, Dialect dialect) {
-		return alias.equalsIgnoreCase( keyColumnName )
-				|| alias.equalsIgnoreCase( StringHelper.unquote( keyColumnName, dialect ) );
-	}
 
 	public static IntegralDataTypeHolder getIntegralDataTypeHolder(Class<?> integralType) {
 		if ( integralType == Long.class
@@ -186,6 +130,68 @@ public final class IdentifierGeneratorHelper {
 			return ( (BigDecimalHolder) holder ).value;
 		}
 		throw new IdentifierGenerationException( "Unknown IntegralDataTypeHolder impl [" + holder + "]" );
+	}
+
+	public static Object getForeignId(
+			String entityName, String propertyName, SharedSessionContractImplementor sessionImplementor, Object object) {
+		final EntityPersister entityDescriptor =
+				sessionImplementor.getFactory().getMappingMetamodel()
+						.getEntityDescriptor( entityName );
+		if ( sessionImplementor.isSessionImplementor()
+				&& sessionImplementor.asSessionImplementor().contains( entityName, object ) ) {
+			//abort the save (the object is already saved by a circular cascade)
+			return SHORT_CIRCUIT_INDICATOR;
+			//throw new IdentifierGenerationException("save associated object first, or disable cascade for inverse association");
+		}
+		else {
+			return identifier( sessionImplementor, entityType( propertyName, entityDescriptor ),
+					associatedEntity( entityName, propertyName, object, entityDescriptor ) );
+		}
+	}
+
+	private static Object associatedEntity(
+			String entityName, String propertyName, Object object, EntityPersister entityDescriptor) {
+		final Object associatedObject = entityDescriptor.getPropertyValue( object, propertyName );
+		if ( associatedObject == null ) {
+			throw new IdentifierGenerationException( "Could not assign id from null association '" + propertyName
+					+ "' of entity '" + entityName + "'" );
+		}
+		return associatedObject;
+	}
+
+	private static Object identifier(
+			SharedSessionContractImplementor sessionImplementor,
+			EntityType foreignValueSourceType,
+			Object associatedEntity) {
+		final String associatedEntityName = foreignValueSourceType.getAssociatedEntityName();
+		try {
+			return getEntityIdentifierIfNotUnsaved( associatedEntityName, associatedEntity, sessionImplementor );
+		}
+		catch (TransientObjectException toe) {
+			if ( sessionImplementor.isSessionImplementor() ) {
+				sessionImplementor.asSessionImplementor().persist( associatedEntityName, associatedEntity );
+				return sessionImplementor.getContextEntityIdentifier( associatedEntity );
+			}
+			else if ( sessionImplementor.isStatelessSession() ) {
+				return sessionImplementor.asStatelessSession().insert( associatedEntityName, associatedEntity );
+			}
+			else {
+				throw new IdentifierGenerationException("sessionImplementor is neither Session nor StatelessSession");
+			}
+		}
+	}
+
+	private static EntityType entityType(String propertyName, EntityPersister entityDescriptor) {
+		final Type propertyType = entityDescriptor.getPropertyType( propertyName );
+		if ( propertyType instanceof EntityType ) {
+			// the normal case
+			return (EntityType) propertyType;
+		}
+		else {
+			// try identifier mapper
+			final String mapperPropertyName = IDENTIFIER_MAPPER_PROPERTY + "." + propertyName;
+			return (EntityType) entityDescriptor.getPropertyType( mapperPropertyName );
+		}
 	}
 
 	@Internal
@@ -343,7 +349,7 @@ public final class IdentifierGeneratorHelper {
 
 		@Override
 		public int hashCode() {
-			return (int) ( value ^ ( value >>> 32 ) );
+			return Long.hashCode(value);
 		}
 	}
 
@@ -627,6 +633,31 @@ public final class IdentifierGeneratorHelper {
 		public int hashCode() {
 			return Objects.hashCode( value );
 		}
+	}
+
+	public static ImplicitDatabaseObjectNamingStrategy getNamingStrategy(Properties params, ServiceRegistry serviceRegistry) {
+		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
+
+		final String namingStrategySetting = coalesceSuppliedValues(
+				() -> {
+					final String localSetting = getString( ID_DB_STRUCTURE_NAMING_STRATEGY, params );
+					if ( localSetting != null ) {
+						INCUBATION_LOGGER.incubatingSetting( ID_DB_STRUCTURE_NAMING_STRATEGY );
+					}
+					return localSetting;
+				},
+				() -> {
+					final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
+					final String globalSetting = getString( ID_DB_STRUCTURE_NAMING_STRATEGY, configurationService.getSettings() );
+					if ( globalSetting != null ) {
+						INCUBATION_LOGGER.incubatingSetting( ID_DB_STRUCTURE_NAMING_STRATEGY );
+					}
+					return globalSetting;
+				},
+				StandardNamingStrategy.class::getName
+		);
+
+		return strategySelector.resolveStrategy( ImplicitDatabaseObjectNamingStrategy.class, namingStrategySetting );
 	}
 
 	/**

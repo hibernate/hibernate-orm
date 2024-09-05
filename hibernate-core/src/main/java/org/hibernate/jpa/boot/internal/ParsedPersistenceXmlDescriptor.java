@@ -9,27 +9,34 @@ package org.hibernate.jpa.boot.internal;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
-import jakarta.persistence.SharedCacheMode;
-import jakarta.persistence.ValidationMode;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
+import jakarta.persistence.spi.PersistenceUnitInfo;
+import org.hibernate.boot.archive.internal.ArchiveHelper;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
 
+import jakarta.persistence.SharedCacheMode;
+import jakarta.persistence.ValidationMode;
+import jakarta.persistence.PersistenceUnitTransactionType;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
+
+import static org.hibernate.boot.archive.internal.ArchiveHelper.getURLFromPath;
+
 /**
- * Describes the information gleaned from a {@code <persistence-unit/>} element in a {@code persistence.xml} file
- * whether parsed directly by Hibernate or passed to us by an EE container as a
- * {@link jakarta.persistence.spi.PersistenceUnitInfo}.
- *
- * Easier to consolidate both views into a single contract and extract information through that shared contract.
+ * Describes the information gleaned from a {@code <persistence-unit/>}
+ * element in a {@code persistence.xml} file whether parsed directly by
+ * Hibernate or passed to us by an EE container as an instance of
+ * {@link PersistenceUnitInfo}.
+ * <p>
+ * Easier to consolidate both views into a single contract and extract
+ * information through that shared contract.
  *
  * @author Steve Ebersole
  */
-public class ParsedPersistenceXmlDescriptor implements org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor {
+public class ParsedPersistenceXmlDescriptor implements PersistenceUnitDescriptor {
 	private final URL persistenceUnitRootUrl;
 
 	private String name;
@@ -94,8 +101,13 @@ public class ParsedPersistenceXmlDescriptor implements org.hibernate.jpa.boot.sp
 	}
 
 	@Override
-	public PersistenceUnitTransactionType getTransactionType() {
+	public PersistenceUnitTransactionType getPersistenceUnitTransactionType() {
 		return transactionType;
+	}
+
+	@Override @SuppressWarnings("removal")
+	public jakarta.persistence.spi.PersistenceUnitTransactionType getTransactionType() {
+		return PersistenceUnitTransactionTypeHelper.toDeprecatedForm( transactionType );
 	}
 
 	public void setTransactionType(PersistenceUnitTransactionType transactionType) {
@@ -130,8 +142,12 @@ public class ParsedPersistenceXmlDescriptor implements org.hibernate.jpa.boot.sp
 		return validationMode;
 	}
 
+	public void setValidationMode(ValidationMode validationMode) {
+		this.validationMode = validationMode;
+	}
+
 	public void setValidationMode(String validationMode) {
-		this.validationMode = ValidationMode.valueOf( validationMode );
+		setValidationMode( ValidationMode.valueOf( validationMode ) );
 	}
 
 	@Override
@@ -139,8 +155,12 @@ public class ParsedPersistenceXmlDescriptor implements org.hibernate.jpa.boot.sp
 		return sharedCacheMode;
 	}
 
+	public void setSharedCacheMode(SharedCacheMode sharedCacheMode) {
+		this.sharedCacheMode = sharedCacheMode;
+	}
+
 	public void setSharedCacheMode(String sharedCacheMode) {
-		this.sharedCacheMode = SharedCacheMode.valueOf( sharedCacheMode );
+		setSharedCacheMode( SharedCacheMode.valueOf( sharedCacheMode ) );
 	}
 
 	@Override
@@ -176,6 +196,10 @@ public class ParsedPersistenceXmlDescriptor implements org.hibernate.jpa.boot.sp
 
 	public void addJarFileUrl(URL jarFileUrl) {
 		jarFileUrls.add( jarFileUrl );
+	}
+
+	public void addJarFileUrls(List<String> jarFiles) {
+		jarFiles.forEach( jarFile -> addJarFileUrl( getURLFromPath( jarFile ) ) );
 	}
 
 	@Override

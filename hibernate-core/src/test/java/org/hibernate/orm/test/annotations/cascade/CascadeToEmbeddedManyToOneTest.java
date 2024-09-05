@@ -36,9 +36,9 @@ public class CascadeToEmbeddedManyToOneTest {
 					pairHolders.forEach(
 							pairHolder -> {
 								PersonPair pair = pairHolder.getPair();
-								session.delete( pairHolder );
-								session.delete(pair.getLeft());
-								session.delete(pair.getRight());
+								session.remove( pairHolder );
+								session.remove(pair.getLeft());
+								session.remove(pair.getRight());
 							}
 					);
 				}

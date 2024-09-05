@@ -8,6 +8,7 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
 import java.util.HashSet;
 import java.util.Set;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -17,9 +18,6 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
 
 /**
  * @author Steve Ebersole
@@ -75,7 +73,6 @@ public abstract class Customer {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn
-	@LazyToOne(LazyToOneOption.NO_PROXY)
 	public Address getAddress() {
 		return address;
 	}
@@ -86,7 +83,6 @@ public abstract class Customer {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn
-	@LazyToOne(LazyToOneOption.NO_PROXY)
 	public Customer getParentCustomer() {
 		return parentCustomer;
 	}

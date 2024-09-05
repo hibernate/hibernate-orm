@@ -37,7 +37,8 @@ public class RevisionTypeType implements UserType<RevisionType>, Serializable {
 	}
 
 	@Override
-	public RevisionType nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public RevisionType nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+			throws SQLException {
 		byte byteValue = rs.getByte( position );
 		if ( rs.wasNull() ) {
 			return null;
@@ -47,12 +48,12 @@ public class RevisionTypeType implements UserType<RevisionType>, Serializable {
 
 	@Override
 	public void nullSafeSet(PreparedStatement preparedStatement, RevisionType value, int index, SharedSessionContractImplementor session)
-			throws HibernateException, SQLException {
+			throws SQLException {
 		if ( value == null ) {
 			preparedStatement.setNull( index, Types.TINYINT );
 		}
 		else {
-			preparedStatement.setByte( index, ( (RevisionType) value ).getRepresentation() );
+			preparedStatement.setByte( index, value.getRepresentation() );
 		}
 	}
 

@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.jpa.persistenceunit;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
@@ -19,7 +20,7 @@ import java.util.Set;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
+import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -44,7 +45,7 @@ public class DuplicatePersistenceUnitNameTest extends BaseUnitTestCase {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, PersistenceXmlParser.class.getName() )
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, PersistenceXmlParser.class.getName() )
 	);
 
 	@Before
@@ -61,32 +62,14 @@ public class DuplicatePersistenceUnitNameTest extends BaseUnitTestCase {
 
 	@Test
 	public void testDuplicatePersistenceUnitNameLogAWarnMessage() {
-		final Map<String, Object> properties = new HashMap<String, Object>();
-		properties.put( AvailableSettings.CLASSLOADERS, Arrays.asList( new TestClassLoader() ) );
-		PersistenceXmlParser.locatePersistenceUnits( properties );
+		PersistenceXmlParser.create().parse( List.of(
+				findAsResource(
+						"org/hibernate/jpa/test/persistenceunit/META-INF/persistence.xml"
+				),
+				findAsResource(
+						"org/hibernate/jpa/test/persistenceunit/META-INF/persistenceUnitForNameDuplicationTest.xml"
+				)
+		) );
 		assertTrue( "The warn HHH015018 has not been logged ", triggerable.wasTriggered() );
-	}
-
-	private static class TestClassLoader extends ClassLoader {
-		final List<URL> urls;
-
-		public TestClassLoader() {
-			urls = Arrays.asList(
-				findAsResource(
-					"org/hibernate/jpa/test/persistenceunit/META-INF/persistence.xml"
-				)
-				,
-				findAsResource(
-					"org/hibernate/jpa/test/persistenceunit/META-INF/persistenceUnitForNameDuplicationTest.xml"
-				)
-			);
-		}
-
-		@Override
-		protected Enumeration<URL> findResources(String name) throws IOException {
-			return name.equals( "META-INF/persistence.xml" ) ?
-					Collections.enumeration( urls ) :
-					Collections.emptyEnumeration();
-		}
 	}
 }

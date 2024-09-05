@@ -25,6 +25,7 @@ import jakarta.persistence.Version;
 import org.hibernate.FlushMode;
 import org.hibernate.Transaction;
 import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.DynamicUpdate;
 
 import org.hibernate.testing.TestForIssue;
@@ -85,13 +86,13 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest {
 	public void cleanup(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			if ( up.getId() != null ) {
-				s.delete( up );
+				s.remove( up );
 			}
 			if ( vp.getId() != null ) {
-				s.delete( vp );
+				s.remove( vp );
 			}
 			if ( c.getId() != null ) {
-				s.delete( c );
+				s.remove( c );
 			}
 		} );
 	}
@@ -107,15 +108,15 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest {
 				vp.addChild( vmvp );
 
 				// Persist Child associated with versioned parent
-				s.saveOrUpdate( c );
+				s.merge( c );
 				assertNotEquals( Integer.valueOf( 0 ), c.getId() );
 
 				// Persist VersionParent
-				s.saveOrUpdate( vp );
+				s.merge( vp );
 				assertNotEquals( Integer.valueOf( 0 ), vp.getId() );
 
 				// Persist versioned mapping now that parent id is generated
-				s.saveOrUpdate( vmvp );
+				s.merge( vmvp );
 				assertNotNull( vmvp.getId() );
 				assertNotEquals( Integer.valueOf( 0 ), vmvp.getId().getParentId() );
 				assertNotEquals( Integer.valueOf( 0 ), vmvp.getId().getChildId() );
@@ -148,15 +149,15 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest {
 				up.addVersionedMappings( vmup );
 
 				// Persist child associated with versioned mapping of unversioned parent
-				s.saveOrUpdate( c );
+				s.merge( c );
 				assertNotEquals( Integer.valueOf( 0 ), c.getId() );
 
 				// Persist unversioned parent
-				s.saveOrUpdate( up );
+				s.merge( up );
 				assertNotEquals( Integer.valueOf( 0 ), up.getId() );
 
 				// Persist versioned mapping
-				s.saveOrUpdate( vmup );
+				s.merge( vmup );
 				assertNotNull( vmup.getId() );
 				assertNotEquals( Integer.valueOf( 0 ), vmup.getId().getParentId() );
 				assertNotEquals( Integer.valueOf( 0 ), vmup.getId().getChildId() );
@@ -329,7 +330,7 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest {
 				jakarta.persistence.CascadeType.REMOVE
 		}, orphanRemoval = true)
 		@Cascade({
-				org.hibernate.annotations.CascadeType.DELETE,
+				CascadeType.REMOVE,
 				org.hibernate.annotations.CascadeType.LOCK,
 				org.hibernate.annotations.CascadeType.REPLICATE
 		})
@@ -440,7 +441,7 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest {
 				jakarta.persistence.CascadeType.REMOVE
 		}, orphanRemoval = true)
 		@Cascade({
-				org.hibernate.annotations.CascadeType.DELETE,
+				CascadeType.REMOVE,
 				org.hibernate.annotations.CascadeType.LOCK,
 				org.hibernate.annotations.CascadeType.REPLICATE
 		})

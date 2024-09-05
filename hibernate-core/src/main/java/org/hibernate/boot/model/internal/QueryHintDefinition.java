@@ -7,7 +7,6 @@
 package org.hibernate.boot.model.internal;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
@@ -18,6 +17,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.LockModeConverter;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.jpa.LegacySpecHints;
@@ -26,6 +26,8 @@ import org.hibernate.jpa.SpecHints;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.QueryHint;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 
 /**
  * @author Strong Liu
@@ -36,11 +38,11 @@ public class QueryHintDefinition {
 
 	public QueryHintDefinition(String queryName, final QueryHint[] hints) {
 		this.queryName = queryName;
-		if ( hints == null || hints.length == 0 ) {
+		if ( CollectionHelper.isEmpty( hints ) ) {
 			hintsMap = Collections.emptyMap();
 		}
 		else {
-			final Map<String, Object> hintsMap = new HashMap<>();
+			final Map<String, Object> hintsMap = mapOfSize( hints.length );
 			for ( QueryHint hint : hints ) {
 				hintsMap.put( hint.name(), hint.value() );
 			}

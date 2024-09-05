@@ -7,10 +7,12 @@
 package org.hibernate.boot.model.internal;
 
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.ParameterizedType;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -41,15 +43,13 @@ import org.hibernate.annotations.MapKeyMutability;
 import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.Mutability;
 import org.hibernate.annotations.Nationalized;
-import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.PartitionKey;
 import org.hibernate.annotations.Target;
 import org.hibernate.annotations.TimeZoneColumn;
 import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.annotations.Type;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.internal.AnyKeyType;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.spi.AccessType;
@@ -62,6 +62,11 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Table;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.ParameterizedTypeDetails;
+import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -75,12 +80,14 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.internal.ParameterizedTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
 
 import org.jboss.logging.Logger;
 
+import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -93,7 +100,7 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Version;
 
-import static org.hibernate.boot.model.internal.HCANNHelper.findAnnotation;
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
 /**
  * A stateful binder responsible for creating instances of {@link BasicValue}.
@@ -107,7 +114,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	//      forward this class should undergo major changes: see the comments in #setType
 	//		but as always the "design" of these classes make it unclear exactly how to change it properly.
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, BasicValueBinder.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, BasicValueBinder.class.getName() );
 
 	public enum Kind {
 		ATTRIBUTE( ValueMappingAccess.INSTANCE ),
@@ -142,7 +149,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	private Function<TypeConfiguration, MutabilityPlan> explicitMutabilityAccess;
 	private Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess;
 
-	private XProperty xproperty;
+	private MemberDetails xproperty;
 	private AccessType accessType;
 
 	private ConverterDescriptor converterDescriptor;
@@ -179,6 +186,9 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		this.buildingContext = buildingContext;
 	}
 
+	protected SourceModelBuildingContext getSourceModelContext() {
+		return buildingContext.getMetadataCollector().getSourceModelBuildingContext();
+	}
 
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
@@ -319,13 +329,13 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 
 	public void setType(
-			XProperty modelXProperty,
-			XClass modelPropertyTypeXClass,
+			MemberDetails valueMember,
+			TypeDetails typeDetails,
 			String declaringClassName,
 			ConverterDescriptor converterDescriptor) {
-		this.xproperty = modelXProperty;
-		boolean isArray = modelXProperty.isArray();
-		if ( modelPropertyTypeXClass == null && !isArray ) {
+		this.xproperty = valueMember;
+		boolean isArray = valueMember.isArray();
+		if ( typeDetails == null && !isArray ) {
 			// we cannot guess anything
 			return;
 		}
@@ -338,74 +348,66 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 //			throw new AssertionFailure( "Expecting just one column, but found `" + Arrays.toString( columns ) + "`" );
 //		}
 
-		final XClass modelTypeXClass = isArray
-				? modelXProperty.getElementClass()
-				: modelPropertyTypeXClass;
-
-		// If we get into this method we know that there is a Java type for the value
-		//		and that it is safe to load on the app classloader.
-		final java.lang.reflect.Type modelJavaType = resolveJavaType( modelTypeXClass );
-		if ( modelJavaType == null ) {
-			throw new IllegalStateException( "BasicType requires Java type" );
-		}
+		final TypeDetails modelClassDetails = isArray
+				? valueMember.getElementType()
+				: typeDetails;
 
 		if ( kind != Kind.LIST_INDEX && kind != Kind.MAP_KEY  ) {
-			isLob = modelXProperty.isAnnotationPresent( Lob.class );
+			isLob = valueMember.hasDirectAnnotationUsage( Lob.class );
 		}
 
 		if ( getDialect().getNationalizationSupport() == NationalizationSupport.EXPLICIT ) {
-			isNationalized = HCANNHelper.findAnnotation( modelXProperty, Nationalized.class ) != null
-					|| buildingContext.getBuildingOptions().useNationalizedCharacterData();
+			isNationalized = buildingContext.getBuildingOptions().useNationalizedCharacterData()
+					|| valueMember.locateAnnotationUsage( Nationalized.class, getSourceModelContext() ) != null;
 		}
 
-		applyJpaConverter( modelXProperty, converterDescriptor );
+		applyJpaConverter( valueMember, converterDescriptor );
 
-		final Class<? extends UserType<?>> userTypeImpl = kind.mappingAccess.customType( modelXProperty );
+		final Class<? extends UserType<?>> userTypeImpl = kind.mappingAccess.customType( valueMember, getSourceModelContext() );
 		if ( userTypeImpl != null ) {
-			applyExplicitType( userTypeImpl, kind.mappingAccess.customTypeParameters( modelXProperty ) );
+			applyExplicitType( userTypeImpl, kind.mappingAccess.customTypeParameters( valueMember, getSourceModelContext() ) );
 
 			// An explicit custom UserType has top precedence when we get to BasicValue resolution.
 			return;
 		}
-		else if ( modelTypeXClass != null ) {
-			final Class<?> basicClass = buildingContext.getBootstrapContext()
-					.getReflectionManager()
-					.toClass( modelTypeXClass );
+		else if ( modelClassDetails != null ) {
+			final ClassDetails rawClassDetails = modelClassDetails.determineRawClass();
+			final Class<?> basicClass = rawClassDetails.toJavaClass();
 			final Class<? extends UserType<?>> registeredUserTypeImpl =
 					buildingContext.getMetadataCollector().findRegisteredUserType( basicClass );
 			if ( registeredUserTypeImpl != null ) {
-				applyExplicitType( registeredUserTypeImpl, new Parameter[0] );
+				applyExplicitType( registeredUserTypeImpl, Collections.emptyMap() );
 				return;
 			}
 		}
 
 		switch ( kind ) {
 			case ATTRIBUTE: {
-				prepareBasicAttribute( declaringClassName, modelXProperty, modelPropertyTypeXClass );
+				prepareBasicAttribute( declaringClassName, valueMember, typeDetails );
 				break;
 			}
 			case ANY_DISCRIMINATOR: {
-				prepareAnyDiscriminator( modelXProperty );
+				prepareAnyDiscriminator( valueMember );
 				break;
 			}
 			case ANY_KEY: {
-				prepareAnyKey( modelXProperty );
+				prepareAnyKey( valueMember );
 				break;
 			}
 			case COLLECTION_ID: {
-				prepareCollectionId( modelXProperty );
+				prepareCollectionId( valueMember );
 				break;
 			}
 			case LIST_INDEX: {
-				prepareListIndex( modelXProperty );
+				prepareListIndex( valueMember );
 				break;
 			}
 			case MAP_KEY: {
-				prepareMapKey( modelXProperty, modelPropertyTypeXClass );
+				prepareMapKey( valueMember, typeDetails );
 				break;
 			}
 			case COLLECTION_ELEMENT: {
-				prepareCollectionElement( modelXProperty, modelPropertyTypeXClass );
+				prepareCollectionElement( valueMember, typeDetails );
 				break;
 			}
 			default: {
@@ -415,30 +417,13 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 	}
 
-	private void applyExplicitType(Class<? extends UserType<?>> impl, Parameter[] params) {
+	private void applyExplicitType(Class<? extends UserType<?>> impl, Map<String,String> params) {
 		this.explicitCustomType = impl;
-		this.explicitLocalTypeParams = extractTypeParams( params );
+		this.explicitLocalTypeParams = params;
 	}
 
-	private Map<String,String> extractTypeParams(Parameter[] parameters) {
-		if ( parameters == null || parameters.length == 0 ) {
-			return Collections.emptyMap();
-		}
-
-		if ( parameters.length == 1 ) {
-			return Collections.singletonMap( parameters[0].name(), parameters[0].value() );
-		}
-
-		final Map<String,String> map = new HashMap<>();
-		for ( Parameter parameter: parameters ) {
-			map.put( parameter.name(), parameter.value() );
-		}
-
-		return map;
-	}
-
-	private void prepareCollectionId(XProperty modelXProperty) {
-		final CollectionId collectionIdAnn = modelXProperty.getAnnotation( CollectionId.class );
+	private void prepareCollectionId(MemberDetails attributeMember) {
+		final CollectionId collectionIdAnn = attributeMember.getDirectAnnotationUsage( CollectionId.class );
 		if ( collectionIdAnn == null ) {
 			throw new MappingException( "idbag mapping missing @CollectionId" );
 		}
@@ -450,10 +435,9 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		implicitJavaTypeAccess = (typeConfiguration) -> null;
 
 		explicitJavaTypeAccess = (typeConfiguration) -> {
-
-			final CollectionIdJavaType javaTypeAnn = findAnnotation( modelXProperty, CollectionIdJavaType.class );
+			final CollectionIdJavaType javaTypeAnn = attributeMember.locateAnnotationUsage( CollectionIdJavaType.class, getSourceModelContext() );
 			if ( javaTypeAnn != null ) {
-				final Class<? extends BasicJavaType<?>> javaTypeClass = normalizeJavaType( javaTypeAnn.value() );
+				final Class<? extends BasicJavaType<?>> javaTypeClass = javaTypeAnn.value();
 				if ( javaTypeClass != null ) {
 					if ( useDeferredBeanContainerAccess ) {
 						return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( javaTypeClass );
@@ -467,9 +451,9 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		};
 
 		explicitJdbcTypeAccess = (typeConfiguration) -> {
-			final CollectionIdJdbcType jdbcTypeAnn = findAnnotation( modelXProperty, CollectionIdJdbcType.class );
+			final CollectionIdJdbcType jdbcTypeAnn = attributeMember.locateAnnotationUsage( CollectionIdJdbcType.class, getSourceModelContext() );
 			if ( jdbcTypeAnn != null ) {
-				final Class<? extends JdbcType> jdbcTypeClass = normalizeJdbcType( jdbcTypeAnn.value() );
+				final Class<? extends JdbcType> jdbcTypeClass = jdbcTypeAnn.value();
 				if ( jdbcTypeClass != null ) {
 					if ( useDeferredBeanContainerAccess ) {
 						return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( jdbcTypeClass );
@@ -479,10 +463,11 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 				}
 			}
 
-			final CollectionIdJdbcTypeCode jdbcTypeCodeAnn = findAnnotation( modelXProperty, CollectionIdJdbcTypeCode.class );
+			final CollectionIdJdbcTypeCode jdbcTypeCodeAnn = attributeMember.locateAnnotationUsage( CollectionIdJdbcTypeCode.class, getSourceModelContext() );
 			if ( jdbcTypeCodeAnn != null ) {
-				if ( jdbcTypeCodeAnn.value() != Integer.MIN_VALUE ) {
-					return typeConfiguration.getJdbcTypeRegistry().getDescriptor( jdbcTypeCodeAnn.value() );
+				final int code = jdbcTypeCodeAnn.value();
+				if ( code != Integer.MIN_VALUE ) {
+					return typeConfiguration.getJdbcTypeRegistry().getDescriptor( code );
 				}
 			}
 
@@ -490,7 +475,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		};
 
 		explicitMutabilityAccess = (typeConfiguration) -> {
-			final CollectionIdMutability mutabilityAnn = findAnnotation( modelXProperty, CollectionIdMutability.class );
+			final CollectionIdMutability mutabilityAnn = attributeMember.locateAnnotationUsage( CollectionIdMutability.class, getSourceModelContext() );
 			if ( mutabilityAnn != null ) {
 				final Class<? extends MutabilityPlan<?>> mutabilityClass = mutabilityAnn.value();
 				if ( mutabilityClass != null ) {
@@ -526,7 +511,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			}
 
 			// if there is a UserType, see if its Class is annotated with mutability-related annotations
-			final Class<? extends UserType<?>> customTypeImpl = Kind.ATTRIBUTE.mappingAccess.customType( modelXProperty );
+			final Class<? extends UserType<?>> customTypeImpl = Kind.ATTRIBUTE.mappingAccess.customType( attributeMember, getSourceModelContext() );
 			if ( customTypeImpl != null ) {
 				final Mutability customTypeMutabilityAnn = customTypeImpl.getAnnotation( Mutability.class );
 				if ( customTypeMutabilityAnn != null ) {
@@ -550,18 +535,22 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	}
 
 	private void prepareMapKey(
-			XProperty mapAttribute,
-			XClass modelPropertyTypeXClass) {
-		final XClass mapKeyClass = modelPropertyTypeXClass == null ? mapAttribute.getMapKey() : modelPropertyTypeXClass;
-		final java.lang.reflect.Type javaType = resolveJavaType( mapKeyClass );
-		implicitJavaTypeAccess = typeConfiguration -> javaType;
+			MemberDetails attributeMember,
+			TypeDetails explicitMapKeyTypeDetails) {
+		final TypeDetails mapKeyClass = explicitMapKeyTypeDetails == null
+				? attributeMember.getMapKeyType()
+				: explicitMapKeyTypeDetails;
+		implicitJavaTypeAccess = typeConfiguration -> {
+			final ClassDetails rawKeyClassDetails = mapKeyClass.determineRawClass();
+			return rawKeyClassDetails.toJavaClass();
+		};
 
-		final MapKeyEnumerated mapKeyEnumeratedAnn = mapAttribute.getAnnotation( MapKeyEnumerated.class );
+		final MapKeyEnumerated mapKeyEnumeratedAnn = attributeMember.getDirectAnnotationUsage( MapKeyEnumerated.class );
 		if ( mapKeyEnumeratedAnn != null ) {
 			enumType = mapKeyEnumeratedAnn.value();
 		}
 
-		final MapKeyTemporal mapKeyTemporalAnn = mapAttribute.getAnnotation( MapKeyTemporal.class );
+		final MapKeyTemporal mapKeyTemporalAnn = attributeMember.getDirectAnnotationUsage( MapKeyTemporal.class );
 		if ( mapKeyTemporalAnn != null ) {
 			temporalPrecision = mapKeyTemporalAnn.value();
 		}
@@ -569,9 +558,9 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		final boolean useDeferredBeanContainerAccess = !buildingContext.getBuildingOptions().isAllowExtensionsInCdi();
 
 		explicitJdbcTypeAccess = typeConfiguration -> {
-			final MapKeyJdbcType jdbcTypeAnn = findAnnotation( mapAttribute, MapKeyJdbcType.class );
+			final MapKeyJdbcType jdbcTypeAnn = attributeMember.locateAnnotationUsage( MapKeyJdbcType.class, getSourceModelContext() );
 			if ( jdbcTypeAnn != null ) {
-				final Class<? extends JdbcType> jdbcTypeClass = normalizeJdbcType( jdbcTypeAnn.value() );
+				final Class<? extends JdbcType> jdbcTypeClass = jdbcTypeAnn.value();
 				if ( jdbcTypeClass != null ) {
 					if ( useDeferredBeanContainerAccess ) {
 						return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( jdbcTypeClass );
@@ -580,7 +569,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 				}
 			}
 
-			final MapKeyJdbcTypeCode jdbcTypeCodeAnn = findAnnotation( mapAttribute, MapKeyJdbcTypeCode.class );
+			final MapKeyJdbcTypeCode jdbcTypeCodeAnn = attributeMember.locateAnnotationUsage( MapKeyJdbcTypeCode.class, getSourceModelContext() );
 			if ( jdbcTypeCodeAnn != null ) {
 				final int jdbcTypeCode = jdbcTypeCodeAnn.value();
 				if ( jdbcTypeCode != Integer.MIN_VALUE ) {
@@ -592,9 +581,9 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		};
 
 		explicitJavaTypeAccess = typeConfiguration -> {
-			final MapKeyJavaType javaTypeAnn = findAnnotation( mapAttribute, MapKeyJavaType.class );
+			final MapKeyJavaType javaTypeAnn = attributeMember.locateAnnotationUsage( MapKeyJavaType.class, getSourceModelContext() );
 			if ( javaTypeAnn != null ) {
-				final Class<? extends BasicJavaType<?>> javaTypeClass = normalizeJavaType( javaTypeAnn.value() );
+				final Class<? extends BasicJavaType<?>> javaTypeClass = javaTypeAnn.value();
 				if ( javaTypeClass != null ) {
 					if ( useDeferredBeanContainerAccess ) {
 						return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( javaTypeClass );
@@ -603,17 +592,16 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 				}
 			}
 
-			final MapKeyClass mapKeyClassAnn = mapAttribute.getAnnotation( MapKeyClass.class );
+			final MapKeyClass mapKeyClassAnn = attributeMember.getDirectAnnotationUsage( MapKeyClass.class );
 			if ( mapKeyClassAnn != null ) {
-				return (BasicJavaType<?>) typeConfiguration.getJavaTypeRegistry()
-						.getDescriptor( mapKeyClassAnn.value() );
+				return (BasicJavaType<?>) typeConfiguration.getJavaTypeRegistry().getDescriptor( mapKeyClassAnn.value() );
 			}
 
 			return null;
 		};
 
 		explicitMutabilityAccess = typeConfiguration -> {
-			final MapKeyMutability mutabilityAnn = findAnnotation( mapAttribute, MapKeyMutability.class );
+			final MapKeyMutability mutabilityAnn = attributeMember.locateAnnotationUsage( MapKeyMutability.class, getSourceModelContext() );
 			if ( mutabilityAnn != null ) {
 				final Class<? extends MutabilityPlan<?>> mutabilityClass = mutabilityAnn.value();
 				if ( mutabilityClass != null ) {
@@ -649,7 +637,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			}
 
 			// if there is a UserType, see if its Class is annotated with mutability-related annotations
-			final Class<? extends UserType<?>> customTypeImpl = Kind.MAP_KEY.mappingAccess.customType( mapAttribute );
+			final Class<? extends UserType<?>> customTypeImpl = Kind.MAP_KEY.mappingAccess.customType( attributeMember, getSourceModelContext() );
 			if ( customTypeImpl != null ) {
 				final Mutability customTypeMutabilityAnn = customTypeImpl.getAnnotation( Mutability.class );
 				if ( customTypeMutabilityAnn != null ) {
@@ -666,7 +654,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		};
 	}
 
-	private void prepareListIndex(XProperty listAttribute) {
+	private void prepareListIndex(MemberDetails attributeMember) {
 		implicitJavaTypeAccess = typeConfiguration -> Integer.class;
 
 		final boolean useDeferredBeanContainerAccess = !buildingContext.getBuildingOptions().isAllowExtensionsInCdi();
@@ -675,9 +663,9 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 						.requireService( ManagedBeanRegistry.class );
 
 		explicitJavaTypeAccess = (typeConfiguration) -> {
-			final ListIndexJavaType javaTypeAnn = findAnnotation( listAttribute, ListIndexJavaType.class );
+			final ListIndexJavaType javaTypeAnn = attributeMember.locateAnnotationUsage( ListIndexJavaType.class, getSourceModelContext() );
 			if ( javaTypeAnn != null ) {
-				final Class<? extends BasicJavaType<?>> javaTypeClass = normalizeJavaType( javaTypeAnn.value() );
+				final Class<? extends BasicJavaType<?>> javaTypeClass = javaTypeAnn.value();
 				if ( javaTypeClass != null ) {
 					if ( useDeferredBeanContainerAccess ) {
 						return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( javaTypeClass );
@@ -691,9 +679,9 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		};
 
 		explicitJdbcTypeAccess = (typeConfiguration) -> {
-			final ListIndexJdbcType jdbcTypeAnn = findAnnotation( listAttribute, ListIndexJdbcType.class );
+			final ListIndexJdbcType jdbcTypeAnn = attributeMember.locateAnnotationUsage( ListIndexJdbcType.class, getSourceModelContext() );
 			if ( jdbcTypeAnn != null ) {
-				final Class<? extends JdbcType> jdbcTypeClass = normalizeJdbcType( jdbcTypeAnn.value() );
+				final Class<? extends JdbcType> jdbcTypeClass = jdbcTypeAnn.value();
 				if ( jdbcTypeClass != null ) {
 					if ( useDeferredBeanContainerAccess ) {
 						return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( jdbcTypeClass );
@@ -703,7 +691,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 				}
 			}
 
-			final ListIndexJdbcTypeCode jdbcTypeCodeAnn = findAnnotation( listAttribute, ListIndexJdbcTypeCode.class );
+			final ListIndexJdbcTypeCode jdbcTypeCodeAnn = attributeMember.locateAnnotationUsage( ListIndexJdbcTypeCode.class, getSourceModelContext() );
 			if ( jdbcTypeCodeAnn != null ) {
 				return typeConfiguration.getJdbcTypeRegistry().getDescriptor( jdbcTypeCodeAnn.value() );
 			}
@@ -712,24 +700,26 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		};
 	}
 
-	private void prepareCollectionElement(XProperty attributeXProperty, XClass elementTypeXClass) {
-
-		XClass xclass = elementTypeXClass == null && attributeXProperty.isArray() 
-				? attributeXProperty.getElementClass() 
-				: elementTypeXClass;
-		final java.lang.reflect.Type javaType = resolveJavaType( xclass );
+	private void prepareCollectionElement(
+			MemberDetails attributeMember,
+			TypeDetails explicitElementTypeDetails) {
+		final TypeDetails elementTypeDetails = explicitElementTypeDetails == null && attributeMember.isArray()
+				? attributeMember.getElementType()
+				: explicitElementTypeDetails;
+		final ClassDetails rawElementType = elementTypeDetails.determineRawClass();
+		final java.lang.reflect.Type javaType = rawElementType.toJavaClass();
 		final Class<Object> javaTypeClass = ReflectHelper.getClass( javaType );
 
 		implicitJavaTypeAccess = typeConfiguration -> javaType;
 
-		final Temporal temporalAnn = attributeXProperty.getAnnotation( Temporal.class );
+		final Temporal temporalAnn = attributeMember.getDirectAnnotationUsage( Temporal.class );
 		if ( temporalAnn != null ) {
+			DEPRECATION_LOGGER.deprecatedAnnotation( Temporal.class, attributeMember.getName() );
 			temporalPrecision = temporalAnn.value();
 			if ( temporalPrecision == null ) {
 				throw new IllegalStateException(
 						"No jakarta.persistence.TemporalType defined for @jakarta.persistence.Temporal " +
-								"associated with attribute " + attributeXProperty.getDeclaringClass().getName() +
-								'.' + attributeXProperty.getName()
+								"associated with attribute " + attributeMember.getName()
 				);
 			}
 		}
@@ -738,14 +728,13 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		}
 
 		if ( javaTypeClass.isEnum() ) {
-			final Enumerated enumeratedAnn = attributeXProperty.getAnnotation( Enumerated.class );
+			final Enumerated enumeratedAnn = attributeMember.getDirectAnnotationUsage( Enumerated.class );
 			if ( enumeratedAnn != null ) {
 				enumType = enumeratedAnn.value();
 				if ( enumType == null ) {
 					throw new IllegalStateException(
 							"jakarta.persistence.EnumType was null on @jakarta.persistence.Enumerated " +
-									" associated with attribute " + attributeXProperty.getDeclaringClass().getName() +
-									'.' + attributeXProperty.getName()
+									" associated with attribute " + attributeMember.getName()
 					);
 				}
 			}
@@ -754,42 +743,51 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			enumType = null;
 		}
 
-		normalSupplementalDetails( attributeXProperty);
+		normalSupplementalDetails( attributeMember);
 
 		// layer in support for JPA's approach for specifying a specific Java type for the collection elements...
-		final ElementCollection elementCollectionAnn = attributeXProperty.getAnnotation( ElementCollection.class );
-		if ( elementCollectionAnn != null
-				&& elementCollectionAnn.targetClass() != null
-				&& elementCollectionAnn.targetClass() != void.class ) {
-			final Function<TypeConfiguration, BasicJavaType> original = explicitJavaTypeAccess;
-			explicitJavaTypeAccess = (typeConfiguration) -> {
-				final BasicJavaType<?> originalResult = original.apply( typeConfiguration );
-				if ( originalResult != null ) {
-					return originalResult;
-				}
+		final ElementCollection elementCollectionAnn = attributeMember.getDirectAnnotationUsage( ElementCollection.class );
+		if ( elementCollectionAnn != null ) {
+			final Class<?> targetClassDetails = elementCollectionAnn.targetClass();
+			if ( targetClassDetails != void.class) {
+				//noinspection rawtypes
+				final Function<TypeConfiguration, BasicJavaType> original = explicitJavaTypeAccess;
+				explicitJavaTypeAccess = (typeConfiguration) -> {
+					final BasicJavaType<?> originalResult = original.apply( typeConfiguration );
+					if ( originalResult != null ) {
+						return originalResult;
+					}
 
-				return (BasicJavaType<?>) typeConfiguration
-						.getJavaTypeRegistry()
-						.getDescriptor( elementCollectionAnn.targetClass() );
-			};
+					return (BasicJavaType<?>) typeConfiguration
+							.getJavaTypeRegistry()
+							.getDescriptor( targetClassDetails );
+				};
+			}
 		}
 	}
 
-	private void prepareBasicAttribute(String declaringClassName, XProperty attributeDescriptor, XClass attributeType) {
-		
-		final java.lang.reflect.Type javaType = resolveJavaType( attributeType );
-		final Class<Object> javaTypeClass = ReflectHelper.getClass( javaType );
+	private void prepareBasicAttribute(
+			String declaringClassName,
+			MemberDetails attributeMember,
+			TypeDetails attributeType) {
+		final Class<Object> javaTypeClass = attributeType.determineRawClass().toJavaClass();
+		implicitJavaTypeAccess = ( typeConfiguration -> {
+			if ( attributeType.getTypeKind() == TypeDetails.Kind.PARAMETERIZED_TYPE ) {
+				return ParameterizedTypeImpl.from( attributeType.asParameterizedType() );
+			}
+			return attributeType.determineRawClass().toJavaClass();
+		} );
 
-		implicitJavaTypeAccess = typeConfiguration -> javaType;
-
-		final Temporal temporalAnn = attributeDescriptor.getAnnotation( Temporal.class );
+		//noinspection deprecation
+		final var temporalAnn = attributeMember.getDirectAnnotationUsage( Temporal.class );
 		if ( temporalAnn != null ) {
+			//noinspection deprecation
+			DEPRECATION_LOGGER.deprecatedAnnotation( Temporal.class, declaringClassName + "." + attributeMember.getName() );
 			this.temporalPrecision = temporalAnn.value();
 			if ( this.temporalPrecision == null ) {
 				throw new IllegalStateException(
 						"No jakarta.persistence.TemporalType defined for @jakarta.persistence.Temporal " +
-								"associated with attribute " + attributeDescriptor.getDeclaringClass().getName() +
-								'.' + attributeDescriptor.getName()
+								"associated with attribute " + declaringClassName + "." + attributeMember.getName()
 				);
 			}
 		}
@@ -797,15 +795,14 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			this.temporalPrecision = null;
 		}
 
-		final Enumerated enumeratedAnn = attributeDescriptor.getAnnotation( Enumerated.class );
+		final Enumerated enumeratedAnn = attributeMember.getDirectAnnotationUsage( Enumerated.class );
 		if ( enumeratedAnn != null ) {
 			this.enumType = enumeratedAnn.value();
-			if ( canUseEnumerated( javaType, javaTypeClass ) ) {
+			if ( canUseEnumerated( attributeType, javaTypeClass ) ) {
 				if ( this.enumType == null ) {
 					throw new IllegalStateException(
 							"jakarta.persistence.EnumType was null on @jakarta.persistence.Enumerated " +
-									" associated with attribute " + attributeDescriptor.getDeclaringClass().getName() +
-									'.' + attributeDescriptor.getName()
+									" associated with attribute " + declaringClassName + "." + attributeMember.getName()
 					);
 				}
 			}
@@ -814,7 +811,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 						String.format(
 								"Property '%s.%s' is annotated '@Enumerated' but its type '%s' is not an enum",
 								declaringClassName,
-								attributeDescriptor.getName(),
+								attributeMember.getName(),
 								attributeType.getName()
 						)
 				);
@@ -824,45 +821,41 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			this.enumType = null;
 		}
 
-		normalSupplementalDetails( attributeDescriptor);
+		normalSupplementalDetails( attributeMember );
 	}
 
-	private boolean canUseEnumerated(java.lang.reflect.Type javaType, Class<Object> javaTypeClass) {
+	private boolean canUseEnumerated(TypeDetails javaType, Class<Object> javaTypeClass) {
 		if ( javaTypeClass.isEnum() || javaTypeClass.isArray() && javaTypeClass.getComponentType().isEnum() ) {
 			return true;
 		}
-		if ( Collection.class.isAssignableFrom( javaTypeClass ) ) {
-			final java.lang.reflect.Type[] typeArguments = ( (ParameterizedType) javaType ).getActualTypeArguments();
-			if ( typeArguments.length != 0 ) {
-				return ReflectHelper.getClass( typeArguments[0] ).isEnum();
+		if ( javaType.isImplementor( Collection.class ) ) {
+			final ParameterizedTypeDetails parameterizedType = javaType.asParameterizedType();
+			final List<TypeDetails> typeArguments = parameterizedType.getArguments();
+			if ( !typeArguments.isEmpty() ) {
+				return typeArguments.get( 0 ).isImplementor( Enum.class );
 			}
 		}
 		return false;
 	}
 
-	private void prepareAnyDiscriminator(XProperty modelXProperty) {
-		final AnyDiscriminator anyDiscriminatorAnn = findAnnotation( modelXProperty, AnyDiscriminator.class );
+	private void prepareAnyDiscriminator(MemberDetails memberDetails) {
+		final AnyDiscriminator anyDiscriminatorAnn = memberDetails.locateAnnotationUsage( AnyDiscriminator.class, getSourceModelContext() );
 
 		implicitJavaTypeAccess = (typeConfiguration) -> {
 			if ( anyDiscriminatorAnn != null ) {
-				switch ( anyDiscriminatorAnn.value() ) {
-					case CHAR: {
-						return Character.class;
-					}
-					case INTEGER: {
-						return Integer.class;
-					}
-					default: {
-						return String.class;
-					}
-				}
+				final DiscriminatorType anyDiscriminatorType = anyDiscriminatorAnn.value();
+				return switch ( anyDiscriminatorType ) {
+					case CHAR -> Character.class;
+					case INTEGER -> Integer.class;
+					default -> String.class;
+				};
 			}
 
 			return String.class;
 		};
 
-		normalJdbcTypeDetails( modelXProperty);
-		normalMutabilityDetails( modelXProperty );
+		normalJdbcTypeDetails( memberDetails);
+		normalMutabilityDetails( memberDetails );
 
 		// layer AnyDiscriminator into the JdbcType resolution
 		final Function<TypeConfiguration, JdbcType> originalJdbcTypeResolution = explicitJdbcTypeAccess;
@@ -880,39 +873,52 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		};
 	}
 
-	private void prepareAnyKey(XProperty modelXProperty) {
+	private void prepareAnyKey(MemberDetails memberDetails) {
 		implicitJavaTypeAccess = (typeConfiguration) -> null;
 
 		final boolean useDeferredBeanContainerAccess = !buildingContext.getBuildingOptions().isAllowExtensionsInCdi();
 
 		explicitJavaTypeAccess = (typeConfiguration) -> {
-			final AnyKeyJavaType javaTypeAnn = findAnnotation( modelXProperty, AnyKeyJavaType.class );
+			final AnyKeyJavaType javaTypeAnn = memberDetails.locateAnnotationUsage( AnyKeyJavaType.class, getSourceModelContext() );
 			if ( javaTypeAnn != null ) {
-				final Class<? extends BasicJavaType<?>> javaTypeClass = normalizeJavaType( javaTypeAnn.value() );
+				final Class<? extends BasicJavaType<?>> implClass = javaTypeAnn.value();
 
-				if ( javaTypeClass != null ) {
+				if ( implClass != null ) {
 					if ( useDeferredBeanContainerAccess ) {
-						return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( javaTypeClass );
+						return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( implClass );
 					}
-					return getManagedBeanRegistry().getBean( javaTypeClass ).getBeanInstance();
+					return getManagedBeanRegistry().getBean( implClass ).getBeanInstance();
 				}
 			}
 
-			final AnyKeyJavaClass javaClassAnn = findAnnotation( modelXProperty, AnyKeyJavaClass.class );
+			final AnyKeyJavaClass javaClassAnn = memberDetails.locateAnnotationUsage( AnyKeyJavaClass.class, getSourceModelContext() );
 			if ( javaClassAnn != null ) {
+				final Class<?> impl = javaClassAnn.value();
 				//noinspection rawtypes
 				return (BasicJavaType) typeConfiguration
 						.getJavaTypeRegistry()
-						.getDescriptor( javaClassAnn.value() );
+						.getDescriptor( impl );
+			}
+
+			// mainly used in XML interpretation
+			final AnyKeyType anyKeyTypeAnn = memberDetails.locateAnnotationUsage( AnyKeyType.class, getSourceModelContext() );
+			if ( anyKeyTypeAnn != null ) {
+				final String namedType = anyKeyTypeAnn.value();
+				final BasicType<Object> registeredType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( namedType );
+				if ( registeredType == null ) {
+					throw new MappingException( "Unrecognized @AnyKeyType value - " + namedType );
+				}
+				//noinspection rawtypes
+				return (BasicJavaType) registeredType.getJavaTypeDescriptor();
 			}
 
 			throw new MappingException("Could not determine key type for '@Any' mapping (specify '@AnyKeyJavaType' or '@AnyKeyJavaClass')");
 		};
 
 		explicitJdbcTypeAccess = (typeConfiguration) -> {
-			final AnyKeyJdbcType jdbcTypeAnn = findAnnotation( modelXProperty, AnyKeyJdbcType.class );
+			final AnyKeyJdbcType jdbcTypeAnn = memberDetails.locateAnnotationUsage( AnyKeyJdbcType.class, getSourceModelContext() );
 			if ( jdbcTypeAnn != null ) {
-				final Class<? extends JdbcType> jdbcTypeClass = normalizeJdbcType( jdbcTypeAnn.value() );
+				final Class<? extends JdbcType> jdbcTypeClass = jdbcTypeAnn.value();
 				if ( jdbcTypeClass != null ) {
 					if ( useDeferredBeanContainerAccess ) {
 						return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( jdbcTypeClass );
@@ -922,10 +928,11 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 				}
 			}
 
-			final AnyKeyJdbcTypeCode jdbcTypeCodeAnn = findAnnotation( modelXProperty, AnyKeyJdbcTypeCode.class );
+			final AnyKeyJdbcTypeCode jdbcTypeCodeAnn = memberDetails.locateAnnotationUsage( AnyKeyJdbcTypeCode.class, getSourceModelContext() );
 			if ( jdbcTypeCodeAnn != null ) {
-				if ( jdbcTypeCodeAnn.value() != Integer.MIN_VALUE ) {
-					return typeConfiguration.getJdbcTypeRegistry().getDescriptor( jdbcTypeCodeAnn.value() );
+				final int code = jdbcTypeCodeAnn.value();
+				if ( code != Integer.MIN_VALUE ) {
+					return typeConfiguration.getJdbcTypeRegistry().getDescriptor( code );
 				}
 			}
 
@@ -933,12 +940,11 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		};
 	}
 
-	private void normalJdbcTypeDetails(XProperty attributeXProperty) {
+	private void normalJdbcTypeDetails(MemberDetails attributeMember) {
 		explicitJdbcTypeAccess = typeConfiguration -> {
-
-			final org.hibernate.annotations.JdbcType jdbcTypeAnn = findAnnotation( attributeXProperty, org.hibernate.annotations.JdbcType.class );
+			final org.hibernate.annotations.JdbcType jdbcTypeAnn = attributeMember.locateAnnotationUsage( org.hibernate.annotations.JdbcType.class, getSourceModelContext() );
 			if ( jdbcTypeAnn != null ) {
-				final Class<? extends JdbcType> jdbcTypeClass = normalizeJdbcType( jdbcTypeAnn.value() );
+				final Class<? extends JdbcType> jdbcTypeClass = jdbcTypeAnn.value();
 				if ( jdbcTypeClass != null ) {
 					if ( !buildingContext.getBuildingOptions().isAllowExtensionsInCdi() ) {
 						return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( jdbcTypeClass );
@@ -947,7 +953,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 				}
 			}
 
-			final JdbcTypeCode jdbcTypeCodeAnn = findAnnotation( attributeXProperty, JdbcTypeCode.class );
+			final JdbcTypeCode jdbcTypeCodeAnn = attributeMember.locateAnnotationUsage( JdbcTypeCode.class, getSourceModelContext() );
 			if ( jdbcTypeCodeAnn != null ) {
 				final int jdbcTypeCode = jdbcTypeCodeAnn.value();
 				if ( jdbcTypeCode != Integer.MIN_VALUE ) {
@@ -965,10 +971,10 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		};
 	}
 
-	private void normalMutabilityDetails(XProperty attributeXProperty) {
+	private void normalMutabilityDetails(MemberDetails attributeMember) {
 		explicitMutabilityAccess = typeConfiguration -> {
 			// Look for `@Mutability` on the attribute
-			final Mutability mutabilityAnn = findAnnotation( attributeXProperty, Mutability.class );
+			final Mutability mutabilityAnn = attributeMember.locateAnnotationUsage( Mutability.class, getSourceModelContext() );
 			if ( mutabilityAnn != null ) {
 				final Class<? extends MutabilityPlan<?>> mutability = mutabilityAnn.value();
 				if ( mutability != null ) {
@@ -977,8 +983,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			}
 
 			// Look for `@Immutable` on the attribute
-			final Immutable immutableAnn = attributeXProperty.getAnnotation( Immutable.class );
-			if ( immutableAnn != null ) {
+			if ( attributeMember.hasDirectAnnotationUsage( Immutable.class ) ) {
 				return ImmutableMutabilityPlan.instance();
 			}
 
@@ -1030,7 +1035,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			}
 
 			// if a custom UserType is specified, see if the UserType Class is annotated `@Mutability`
-			final Class<? extends UserType<?>> customTypeImpl = Kind.ATTRIBUTE.mappingAccess.customType( attributeXProperty );
+			final Class<? extends UserType<?>> customTypeImpl = Kind.ATTRIBUTE.mappingAccess.customType( attributeMember, getSourceModelContext() );
 			if ( customTypeImpl != null ) {
 				final Mutability customTypeMutabilityAnn = customTypeImpl.getAnnotation( Mutability.class );
 				if ( customTypeMutabilityAnn != null ) {
@@ -1066,11 +1071,9 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		return getManagedBeanRegistry().getBean( mutability ).getBeanInstance();
 	}
 
-	private void normalSupplementalDetails(XProperty attributeXProperty) {
-
+	private void normalSupplementalDetails(MemberDetails attributeMember) {
 		explicitJavaTypeAccess = typeConfiguration -> {
-			final org.hibernate.annotations.JavaType javaType =
-					findAnnotation( attributeXProperty, org.hibernate.annotations.JavaType.class );
+			final org.hibernate.annotations.JavaType javaType = attributeMember.locateAnnotationUsage( org.hibernate.annotations.JavaType.class, getSourceModelContext() );
 			if ( javaType != null ) {
 				final Class<? extends BasicJavaType<?>> javaTypeClass = normalizeJavaType( javaType.value() );
 				if ( javaTypeClass != null ) {
@@ -1081,51 +1084,51 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 				}
 			}
 
-			final Target targetAnn = findAnnotation( attributeXProperty, Target.class );
+			//noinspection deprecation
+			final var targetAnn = attributeMember.locateAnnotationUsage( Target.class, getSourceModelContext() );
 			if ( targetAnn != null ) {
+				//noinspection deprecation
+				DEPRECATION_LOGGER.deprecatedAnnotation( Target.class, attributeMember.getName() );
 				return (BasicJavaType<?>) typeConfiguration.getJavaTypeRegistry().getDescriptor( targetAnn.value() );
 			}
 
 			return null;
 		};
 
-		final org.hibernate.annotations.JdbcTypeCode jdbcType =
-				findAnnotation( attributeXProperty, org.hibernate.annotations.JdbcTypeCode.class );
+		final JdbcTypeCode jdbcType = attributeMember.locateAnnotationUsage( JdbcTypeCode.class, getSourceModelContext() );
 		if ( jdbcType != null ) {
 			jdbcTypeCode = jdbcType.value();
 		}
 
-		normalJdbcTypeDetails( attributeXProperty);
-		normalMutabilityDetails( attributeXProperty );
+		normalJdbcTypeDetails( attributeMember);
+		normalMutabilityDetails( attributeMember );
 
-		final Enumerated enumerated = attributeXProperty.getAnnotation( Enumerated.class );
+		final Enumerated enumerated = attributeMember.getDirectAnnotationUsage( Enumerated.class );
 		if ( enumerated != null ) {
 			enumType = enumerated.value();
 		}
 
-		final Temporal temporal = attributeXProperty.getAnnotation( Temporal.class );
+		final Temporal temporal = attributeMember.getDirectAnnotationUsage( Temporal.class );
 		if ( temporal != null ) {
 			temporalPrecision = temporal.value();
 		}
 
-		final TimeZoneStorage timeZoneStorage = attributeXProperty.getAnnotation( TimeZoneStorage.class );
+		final TimeZoneStorage timeZoneStorage = attributeMember.getDirectAnnotationUsage( TimeZoneStorage.class );
 		if ( timeZoneStorage != null ) {
 			timeZoneStorageType = timeZoneStorage.value();
-			final TimeZoneColumn timeZoneColumnAnn = attributeXProperty.getAnnotation( TimeZoneColumn.class );
+			final TimeZoneColumn timeZoneColumnAnn = attributeMember.getDirectAnnotationUsage( TimeZoneColumn.class );
 			if ( timeZoneColumnAnn != null ) {
 				if ( timeZoneStorageType != TimeZoneStorageType.AUTO && timeZoneStorageType != TimeZoneStorageType.COLUMN ) {
 					throw new IllegalStateException(
 							"@TimeZoneColumn can not be used in conjunction with @TimeZoneStorage( " + timeZoneStorageType +
-									" ) with attribute " + attributeXProperty.getDeclaringClass().getName() +
-									'.' + attributeXProperty.getName()
+									" ) with attribute " + attributeMember.getDeclaringType().getName() +
+									'.' + attributeMember.getName()
 					);
 				}
 			}
 		}
-		final PartitionKey partitionKey = attributeXProperty.getAnnotation( PartitionKey.class );
-		if ( partitionKey != null ) {
-			this.partitionKey = true;
-		}
+
+		this.partitionKey = attributeMember.hasDirectAnnotationUsage( PartitionKey.class );
 	}
 
 	private static Class<? extends UserType<?>> normalizeUserType(Class<? extends UserType<?>> userType) {
@@ -1140,59 +1143,53 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		return javaType;
 	}
 
-	private java.lang.reflect.Type resolveJavaType(XClass returnedClassOrElement) {
-		return buildingContext.getBootstrapContext()
-				.getReflectionManager()
-				.toType( returnedClassOrElement );
-	}
-
 	@Override
 	public Dialect getDialect() {
 		return buildingContext.getMetadataCollector().getDatabase().getDialect();
 	}
 
-	private void applyJpaConverter(XProperty property, ConverterDescriptor attributeConverterDescriptor) {
+	private void applyJpaConverter(MemberDetails attributeMember, ConverterDescriptor attributeConverterDescriptor) {
 		if ( attributeConverterDescriptor == null ) {
 			return;
 		}
 
-		LOG.debugf( "Applying JPA converter [%s:%s]", persistentClassName, property.getName() );
+		LOG.debugf( "Applying JPA converter [%s:%s]", persistentClassName, attributeMember.getName() );
 
-		if ( property.isAnnotationPresent( Id.class ) ) {
-			LOG.debugf( "Skipping AttributeConverter checks for Id attribute [%s]", property.getName() );
+		if ( attributeMember.hasDirectAnnotationUsage( Id.class ) ) {
+			LOG.debugf( "Skipping AttributeConverter checks for Id attribute [%s]", attributeMember.getName() );
 			return;
 		}
 
-		if ( property.isAnnotationPresent( Version.class ) ) {
-			LOG.debugf( "Skipping AttributeConverter checks for version attribute [%s]", property.getName() );
+		if ( attributeMember.hasDirectAnnotationUsage( Version.class ) ) {
+			LOG.debugf( "Skipping AttributeConverter checks for version attribute [%s]", attributeMember.getName() );
 			return;
 		}
 
 		if ( kind == Kind.MAP_KEY ) {
-			if ( property.isAnnotationPresent( MapKeyTemporal.class ) ) {
-				LOG.debugf( "Skipping AttributeConverter checks for map-key annotated as MapKeyTemporal [%s]", property.getName() );
+			if ( attributeMember.hasDirectAnnotationUsage( MapKeyTemporal.class ) ) {
+				LOG.debugf( "Skipping AttributeConverter checks for map-key annotated as MapKeyTemporal [%s]", attributeMember.getName() );
 				return;
 			}
 
-			if ( property.isAnnotationPresent( MapKeyEnumerated.class ) ) {
-				LOG.debugf( "Skipping AttributeConverter checks for map-key annotated as MapKeyEnumerated [%s]", property.getName() );
+			if ( attributeMember.hasDirectAnnotationUsage( MapKeyEnumerated.class ) ) {
+				LOG.debugf( "Skipping AttributeConverter checks for map-key annotated as MapKeyEnumerated [%s]", attributeMember.getName() );
 				return;
 			}
 		}
 		else {
-			if ( property.isAnnotationPresent( Temporal.class ) ) {
-				LOG.debugf( "Skipping AttributeConverter checks for Temporal attribute [%s]", property.getName() );
+			if ( attributeMember.hasDirectAnnotationUsage( Temporal.class ) ) {
+				LOG.debugf( "Skipping AttributeConverter checks for Temporal attribute [%s]", attributeMember.getName() );
 				return;
 			}
 
-			if ( property.isAnnotationPresent( Enumerated.class ) ) {
-				LOG.debugf( "Skipping AttributeConverter checks for Enumerated attribute [%s]", property.getName() );
+			if ( attributeMember.hasDirectAnnotationUsage( Enumerated.class ) ) {
+				LOG.debugf( "Skipping AttributeConverter checks for Enumerated attribute [%s]", attributeMember.getName() );
 				return;
 			}
 		}
 
 		if ( isAssociation() ) {
-			LOG.debugf( "Skipping AttributeConverter checks for association attribute [%s]", property.getName() );
+			LOG.debugf( "Skipping AttributeConverter checks for association attribute [%s]", attributeMember.getName() );
 			return;
 		}
 
@@ -1464,16 +1461,16 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	 * Access to detail of basic value mappings based on {@link Kind}
 	 */
 	private interface BasicMappingAccess {
-		Class<? extends UserType<?>> customType(XProperty xProperty);
-		Parameter[] customTypeParameters(XProperty xProperty);
+		Class<? extends UserType<?>> customType(MemberDetails attributeMember, SourceModelBuildingContext sourceModelContext);
+		Map<String,String> customTypeParameters(MemberDetails attributeMember, SourceModelBuildingContext sourceModelContext);
 	}
 
 	private static class ValueMappingAccess implements BasicMappingAccess {
 		public static final ValueMappingAccess INSTANCE = new ValueMappingAccess();
 
 		@Override
-		public Class<? extends UserType<?>> customType(XProperty xProperty) {
-			final Type customType = findAnnotation( xProperty, Type.class );
+		public Class<? extends UserType<?>> customType(MemberDetails attributeMember, SourceModelBuildingContext sourceModelContext) {
+			final Type customType = attributeMember.locateAnnotationUsage( Type.class, sourceModelContext );
 			if ( customType == null ) {
 				return null;
 			}
@@ -1482,12 +1479,13 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		}
 
 		@Override
-		public Parameter[] customTypeParameters(XProperty xProperty) {
-			final Type customType = findAnnotation( xProperty, Type.class );
+		public Map<String,String> customTypeParameters(MemberDetails attributeMember, SourceModelBuildingContext sourceModelContext) {
+			final Type customType = attributeMember.locateAnnotationUsage( Type.class, sourceModelContext );
 			if ( customType == null ) {
 				return null;
 			}
-			return customType.parameters();
+
+			return AnnotationHelper.extractParameterMap( customType.parameters() );
 		}
 	}
 
@@ -1495,15 +1493,13 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		public static final AnyDiscriminatorMappingAccess INSTANCE = new AnyDiscriminatorMappingAccess();
 
 		@Override
-		public Class<? extends UserType<?>> customType(XProperty xProperty) {
+		public Class<? extends UserType<?>> customType(MemberDetails attributeMember, SourceModelBuildingContext sourceModelContext) {
 			return null;
 		}
 
-		private static final Parameter[] EMPTY_PARAMS = new Parameter[0];
-
 		@Override
-		public Parameter[] customTypeParameters(XProperty xProperty) {
-			return EMPTY_PARAMS;
+		public Map<String,String> customTypeParameters(MemberDetails attributeMember, SourceModelBuildingContext sourceModelContext) {
+			return Collections.emptyMap();
 		}
 	}
 
@@ -1511,15 +1507,13 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		public static final AnyKeyMappingAccess INSTANCE = new AnyKeyMappingAccess();
 
 		@Override
-		public Class<? extends UserType<?>> customType(XProperty xProperty) {
+		public Class<? extends UserType<?>> customType(MemberDetails attributeMember, SourceModelBuildingContext sourceModelContext) {
 			return null;
 		}
 
-		private static final Parameter[] EMPTY_PARAMS = new Parameter[0];
-
 		@Override
-		public Parameter[] customTypeParameters(XProperty xProperty) {
-			return EMPTY_PARAMS;
+		public Map<String,String> customTypeParameters(MemberDetails attributeMember, SourceModelBuildingContext sourceModelContext) {
+			return Collections.emptyMap();
 		}
 	}
 
@@ -1527,8 +1521,8 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		public static final MapKeyMappingAccess INSTANCE = new MapKeyMappingAccess();
 
 		@Override
-		public Class<? extends UserType<?>> customType(XProperty xProperty) {
-			final MapKeyType customType = findAnnotation( xProperty, MapKeyType.class );
+		public Class<? extends UserType<?>> customType(MemberDetails attributeMember, SourceModelBuildingContext sourceModelContext) {
+			final MapKeyType customType = attributeMember.locateAnnotationUsage( MapKeyType.class, sourceModelContext );
 			if ( customType == null ) {
 				return null;
 			}
@@ -1537,12 +1531,13 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		}
 
 		@Override
-		public Parameter[] customTypeParameters(XProperty xProperty) {
-			final MapKeyType customType = findAnnotation( xProperty, MapKeyType.class );
+		public Map<String,String> customTypeParameters(MemberDetails attributeMember, SourceModelBuildingContext sourceModelContext) {
+			final MapKeyType customType = attributeMember.locateAnnotationUsage( MapKeyType.class, sourceModelContext );
 			if ( customType == null ) {
 				return null;
 			}
-			return customType.parameters();
+
+			return AnnotationHelper.extractParameterMap( customType.parameters() );
 		}
 	}
 
@@ -1550,8 +1545,8 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		public static final CollectionIdMappingAccess INSTANCE = new CollectionIdMappingAccess();
 
 		@Override
-		public Class<? extends UserType<?>> customType(XProperty xProperty) {
-			final CollectionIdType customType = findAnnotation( xProperty, CollectionIdType.class );
+		public Class<? extends UserType<?>> customType(MemberDetails attributeMember, SourceModelBuildingContext sourceModelBuildingContext) {
+			final CollectionIdType customType = attributeMember.locateAnnotationUsage( CollectionIdType.class, sourceModelBuildingContext );
 			if ( customType == null ) {
 				return null;
 			}
@@ -1560,12 +1555,13 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		}
 
 		@Override
-		public Parameter[] customTypeParameters(XProperty xProperty) {
-			final CollectionIdType customType = findAnnotation( xProperty, CollectionIdType.class );
+		public Map<String,String> customTypeParameters(MemberDetails attributeMember, SourceModelBuildingContext sourceModelContext) {
+			final CollectionIdType customType = attributeMember.locateAnnotationUsage( CollectionIdType.class, sourceModelContext );
 			if ( customType == null ) {
 				return null;
 			}
-			return customType.parameters();
+
+			return AnnotationHelper.extractParameterMap( customType.parameters() );
 		}
 	}
 
@@ -1573,13 +1569,13 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		public static final ListIndexMappingAccess INSTANCE = new ListIndexMappingAccess();
 
 		@Override
-		public Class<? extends UserType<?>> customType(XProperty xProperty) {
+		public Class<? extends UserType<?>> customType(MemberDetails attributeMember, SourceModelBuildingContext sourceModelContext) {
 			return null;
 		}
 
 		@Override
-		public Parameter[] customTypeParameters(XProperty xProperty) {
-			return null;
+		public Map<String,String> customTypeParameters(MemberDetails attributeMember, SourceModelBuildingContext sourceModelContext) {
+			return Collections.emptyMap();
 		}
 	}
 }

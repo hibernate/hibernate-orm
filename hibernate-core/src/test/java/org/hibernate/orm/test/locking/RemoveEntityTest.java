@@ -48,19 +48,19 @@ public class RemoveEntityTest {
 				session -> {
 					EmployeeEntity emp = new EmployeeEntity();
 					emp.setEmail( EMPLOYEE_TO_DELETE_MAIL );
-					session.save( emp );
+					session.persist( emp );
 
 					LinkEntity linkEntity = new LinkEntity();
 					linkEntity.setEmployeeId( emp.getEmployeeId() );
-					session.save( linkEntity );
+					session.persist( linkEntity );
 
 					Set<LinkEntity> link = Set.of( linkEntity );
 					emp.setFolderLink( link );
-					session.save( emp );
+					session.persist( emp );
 
 					emp = new EmployeeEntity();
 					emp.setEmail( "demo-user2@mail.com" );
-					session.save( emp );
+					session.persist( emp );
 				}
 		);
 	}

@@ -9,6 +9,17 @@ package org.hibernate.orm.test.collection.delayedOperation;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.hibernate.Hibernate;
+
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,18 +29,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
-
-import org.hibernate.Hibernate;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -84,7 +83,7 @@ public class ListDelayedOperationTest {
 				session -> {
 					Parent parent = session.get( Parent.class, parentId );
 					parent.getChildren().clear();
-					session.delete( parent );
+					session.remove( parent );
 				}
 		);
 
@@ -92,7 +91,7 @@ public class ListDelayedOperationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5855")
+	@JiraKey( "HHH-5855")
 	public void testSimpleAddDetached(SessionFactoryScope scope) {
 		// Create 2 detached Child objects.
 		Child c1 = new Child( "Darwin" );
@@ -111,7 +110,7 @@ public class ListDelayedOperationTest {
 					Parent p = session.get( Parent.class, parentId );
 					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 					// add detached Child c
-					p.addChild( c1 );
+					p.addChild( session.merge( c1 ) );
 					// collection should still be uninitialized
 					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 
@@ -149,7 +148,7 @@ public class ListDelayedOperationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5855")
+	@JiraKey( "HHH-5855")
 	public void testSimpleAddTransient(SessionFactoryScope scope) {
 		// Add a transient Child and commit.
 		scope.inTransaction(
@@ -195,7 +194,7 @@ public class ListDelayedOperationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5855")
+	@JiraKey( "HHH-5855")
 	public void testSimpleAddManaged(SessionFactoryScope scope) {
 		// Add 2 Child entities
 		Child c1 = new Child( "Darwin" );
@@ -251,7 +250,7 @@ public class ListDelayedOperationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5855")
+	@JiraKey( "HHH-5855")
 	public void testSimpleRemoveDetached(SessionFactoryScope scope) {
 		// Get the 2 Child entities and detach.
 		Child c1 = scope.fromTransaction(
@@ -302,7 +301,6 @@ public class ListDelayedOperationTest {
 					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 					// remove a detached element and commit
 					p.removeChild( c2 );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
 					p = (Parent) session.merge( p );
 					Hibernate.initialize( p );
 				}
@@ -319,50 +317,6 @@ public class ListDelayedOperationTest {
 		);
 	}
 
-/* STILL WORKING ON THIS ONE...
-	@Test
-	@TestForIssue( jiraKey = "HHH-5855")
-	public void testSimpleRemoveManaged() {
-		// Remove a managed entity element and commit
-		Session s = openSession();
-		s.getTransaction().begin();
-		Parent p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		// get c1 so it is managed, then remove and commit
-		p.removeChild( s.get( Child.class, childId1 ) );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.getTransaction().begin();
-		p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		assertEquals( 1, p.getChildren().size() );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.getTransaction().begin();
-		p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		// get c1 so it is managed, then remove, merge and commit
-		p.removeChild( s.get( Child.class, childId2 ) );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		s.merge( p );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.getTransaction().begin();
-		p = s.get( Parent.class, parentId );
-		assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-		assertEquals( 0, p.getChildren().size() );
-		s.getTransaction().commit();
-		s.close();
-	}
-*/
-
 	@Entity(name = "Parent")
 	public static class Parent {
 
@@ -371,7 +325,6 @@ public class ListDelayedOperationTest {
 		private Long id;
 
 		@OneToMany(cascade = CascadeType.ALL, mappedBy = "parent", orphanRemoval = true)
-		@LazyCollection(LazyCollectionOption.EXTRA)
 		@OrderColumn
 		private List<Child> children = new ArrayList<>();
 

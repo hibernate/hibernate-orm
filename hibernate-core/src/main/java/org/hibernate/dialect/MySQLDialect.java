@@ -47,6 +47,8 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.CastType;
@@ -202,7 +204,7 @@ public class MySQLDialect extends Dialect {
 		registerKeywords( info );
 	}
 
-	@Deprecated
+	@Deprecated(since="6.6")
 	protected static DatabaseVersion createVersion(DialectResolutionInfo info) {
 		return createVersion( info, MINIMUM_VERSION );
 	}
@@ -210,7 +212,7 @@ public class MySQLDialect extends Dialect {
 	protected static DatabaseVersion createVersion(DialectResolutionInfo info, DatabaseVersion defaultVersion) {
 		final String versionString = info.getDatabaseVersion();
 		if ( versionString != null ) {
-			final String[] components = versionString.split( "\\." );
+			final String[] components = StringHelper.split( ".-", versionString );
 			if ( components.length >= 3 ) {
 				try {
 					final int majorVersion = Integer.parseInt( components[0] );
@@ -273,15 +275,15 @@ public class MySQLDialect extends Dialect {
 
 			// on MySQL 8, the nchar/nvarchar types use a deprecated character set
 			case NCHAR:
-				return "char($l) character set utf8";
+				return "char($l) character set utf8mb4";
 			case NVARCHAR:
-				return "varchar($l) character set utf8";
+				return "varchar($l) character set utf8mb4";
 
 			// the maximum long LOB length is 4_294_967_295, bigger than any Java string
 			case BLOB:
 				return "longblob";
 			case NCLOB:
-				return "longtext character set utf8";
+				return "longtext character set utf8mb4";
 			case CLOB:
 				return "longtext";
 
@@ -324,7 +326,7 @@ public class MySQLDialect extends Dialect {
 			case NCHAR:
 			case NVARCHAR:
 			case LONG32NVARCHAR:
-				return "char character set utf8";
+				return "char character set utf8mb4";
 			case BINARY:
 			case VARBINARY:
 			case LONG32VARBINARY:
@@ -380,10 +382,10 @@ public class MySQLDialect extends Dialect {
 								castType( NCHAR ),
 								this
 						)
-						.withTypeCapacity( getMaxVarcharLength(), "varchar($l) character set utf8" )
-						.withTypeCapacity( maxMediumLobLen, "mediumtext character set utf8" );
+						.withTypeCapacity( getMaxVarcharLength(), "varchar($l) character set utf8mb4" )
+						.withTypeCapacity( maxMediumLobLen, "mediumtext character set utf8mb4" );
 		if ( getMaxVarcharLength() < maxLobLen ) {
-			nvarcharBuilder.withTypeCapacity( maxLobLen, "text character set utf8" );
+			nvarcharBuilder.withTypeCapacity( maxLobLen, "text character set utf8mb4" );
 		}
 		ddlTypeRegistry.addDescriptor( nvarcharBuilder.build() );
 
@@ -431,9 +433,9 @@ public class MySQLDialect extends Dialect {
 		ddlTypeRegistry.addDescriptor(
 				CapacityDependentDdlType.builder( NCLOB,
 								columnType( NCLOB ), castType( NCHAR ), this )
-						.withTypeCapacity( maxTinyLobLen, "tinytext character set utf8" )
-						.withTypeCapacity( maxMediumLobLen, "mediumtext character set utf8" )
-						.withTypeCapacity( maxLobLen, "text character set utf8" )
+						.withTypeCapacity( maxTinyLobLen, "tinytext character set utf8mb4" )
+						.withTypeCapacity( maxMediumLobLen, "mediumtext character set utf8mb4" )
+						.withTypeCapacity( maxLobLen, "text character set utf8mb4" )
 						.build()
 		);
 
@@ -441,7 +443,7 @@ public class MySQLDialect extends Dialect {
 		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
 	}
 
-	@Deprecated
+	@Deprecated(since="6.4")
 	protected static int getCharacterSetBytesPerCharacter(DatabaseMetaData databaseMetaData) {
 		if ( databaseMetaData != null ) {
 			try (java.sql.Statement s = databaseMetaData.getConnection().createStatement() ) {
@@ -1570,5 +1572,13 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public boolean supportsFromClauseInUpdate() {
 		return true;
+	}
+
+	@Override
+	public String appendCheckConstraintOptions(CheckConstraint checkConstraint, String sqlCheckConstraint) {
+		if ( StringHelper.isNotEmpty( checkConstraint.getOptions() ) ) {
+			return sqlCheckConstraint + " " + checkConstraint.getOptions();
+		}
+		return sqlCheckConstraint;
 	}
 }

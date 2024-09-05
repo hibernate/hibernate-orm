@@ -6,12 +6,14 @@
  */
 package org.hibernate.orm.test.jpa.persistenceunit;
 
+import static org.hibernate.internal.util.ConfigHelper.findAsResource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -19,8 +21,8 @@ import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.ConfigHelper;
-import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
-import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
@@ -47,12 +49,9 @@ public class ExcludeUnlistedClassesTest extends BaseUnitTestCase {
 	
 	@Test
 	public void testExcludeUnlistedClasses() {
-		// see src/test/resources/org/hibernate/jpa/test/persistenceunit/persistence.xml
-		
-		final Map<String, Object> properties = new HashMap<String, Object>();
-		properties.put( AvailableSettings.CLASSLOADERS, Arrays.asList( new TestClassLoader() ) );
-		final List<ParsedPersistenceXmlDescriptor> parsedDescriptors = PersistenceXmlParser.locatePersistenceUnits(
-				properties );
+		final Collection<PersistenceUnitDescriptor> parsedDescriptors = PersistenceXmlParser.create()
+				.parse( List.of( findAsResource( "org/hibernate/jpa/test/persistenceunit/META-INF/persistence.xml" ) ) )
+				.values();
 		
 		doTest( parsedDescriptors, "ExcludeUnlistedClassesTest1", false );
 		doTest( parsedDescriptors, "ExcludeUnlistedClassesTest2", true );
@@ -60,9 +59,9 @@ public class ExcludeUnlistedClassesTest extends BaseUnitTestCase {
 		doTest( parsedDescriptors, "ExcludeUnlistedClassesTest4", true );
 	}
 	
-	private void doTest(List<ParsedPersistenceXmlDescriptor> parsedDescriptors,
+	private void doTest(Collection<PersistenceUnitDescriptor> parsedDescriptors,
 			final String persistenceUnitName, final boolean shouldExclude) {
-		for (final ParsedPersistenceXmlDescriptor descriptor : parsedDescriptors) {
+		for (final PersistenceUnitDescriptor descriptor : parsedDescriptors) {
 			if (descriptor.getName().equals( persistenceUnitName )) {
 				assertEquals(descriptor.isExcludeUnlistedClasses(), shouldExclude);
 				return;
@@ -70,32 +69,4 @@ public class ExcludeUnlistedClassesTest extends BaseUnitTestCase {
 		}
 		fail("Could not find the persistence unit: " + persistenceUnitName);
 	}
-
-    private static class TestClassLoader extends ClassLoader {
-    	
-    	@Override
-        protected Enumeration<URL> findResources(String name) throws IOException {
-    		if (name.equals( "META-INF/persistence.xml" )) {
-    			final URL puUrl = ConfigHelper.findAsResource(
-    					"org/hibernate/jpa/test/persistenceunit/META-INF/persistence.xml" );
-    			return new Enumeration<URL>() {
-        			boolean hasMore = true;
-        			
-    				@Override
-    				public boolean hasMoreElements() {
-    					return hasMore;
-    				}
-
-    				@Override
-    				public URL nextElement() {
-    					hasMore = false;
-    					return puUrl;
-    				}
-    			};
-    		}
-    		else {
-    			return java.util.Collections.emptyEnumeration();
-    		}
-        }
-    }
 }

@@ -109,6 +109,7 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Tuple;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.metamodel.SingularAttribute;
 
 import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
@@ -139,7 +140,7 @@ public class NativeQueryImpl<R>
 	 * Constructs a NativeQueryImpl given a sql query defined in the mappings.
 	 */
 	public NativeQueryImpl(
-			NamedNativeQueryMemento memento,
+			NamedNativeQueryMemento<?> memento,
 			SharedSessionContractImplementor session) {
 		this(
 				memento,
@@ -147,8 +148,8 @@ public class NativeQueryImpl<R>
 					if ( memento.getResultMappingName() != null ) {
 						return buildResultSetMapping( memento.getResultMappingName(), false, session );
 					}
-					else if ( memento.getResultMappingClass() != null ) {
-						return buildResultSetMapping( memento.getResultMappingClass().getName(), false, session );
+					else if ( memento.getResultType() != null ) {
+						return buildResultSetMapping( memento.getResultType().getName(), false, session );
 					}
 
 					return buildResultSetMapping( memento.getSqlString(), false, session );
@@ -165,10 +166,10 @@ public class NativeQueryImpl<R>
 						}
 					}
 
-					if ( memento.getResultMappingClass() != null ) {
+					if ( memento.getResultType() != null ) {
 						resultSetMapping.addResultBuilder(
 								resultClassBuilder(
-										memento.getResultMappingClass(),
+										memento.getResultType(),
 										context
 								)
 						);
@@ -185,7 +186,7 @@ public class NativeQueryImpl<R>
 	 * Constructs a NativeQueryImpl given a sql query defined in the mappings.
 	 */
 	public NativeQueryImpl(
-			NamedNativeQueryMemento memento,
+			NamedNativeQueryMemento<?> memento,
 			Class<R> resultJavaType,
 			SharedSessionContractImplementor session) {
 		this(
@@ -206,9 +207,9 @@ public class NativeQueryImpl<R>
 						}
 					}
 
-					if ( memento.getResultMappingClass() != null ) {
+					if ( memento.getResultType() != null ) {
 						resultSetMapping.addResultBuilder( resultClassBuilder(
-								memento.getResultMappingClass(),
+								memento.getResultType(),
 								context
 						) );
 						return true;
@@ -245,7 +246,7 @@ public class NativeQueryImpl<R>
 	 * Constructs a NativeQueryImpl given a sql query defined in the mappings.
 	 */
 	public NativeQueryImpl(
-			NamedNativeQueryMemento memento,
+			NamedNativeQueryMemento<?> memento,
 			String resultSetMappingName,
 			SharedSessionContractImplementor session) {
 		this(
@@ -266,7 +267,7 @@ public class NativeQueryImpl<R>
 	}
 
 	public NativeQueryImpl(
-			NamedNativeQueryMemento memento,
+			NamedNativeQueryMemento<?> memento,
 			Supplier<ResultSetMapping> resultSetMappingCreator,
 			ResultSetMappingHandler resultSetMappingHandler,
 			SharedSessionContractImplementor session) {
@@ -380,7 +381,7 @@ public class NativeQueryImpl<R>
 			);
 	}
 
-	protected void applyOptions(NamedNativeQueryMemento memento) {
+	protected void applyOptions(NamedNativeQueryMemento<?> memento) {
 		super.applyOptions( memento );
 
 		if ( memento.getMaxResults() != null ) {
@@ -457,13 +458,13 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NamedNativeQueryMemento toMemento(String name) {
-		return new NamedNativeQueryMementoImpl(
+	public NamedNativeQueryMemento<?> toMemento(String name) {
+		return new NamedNativeQueryMementoImpl<>(
 				name,
+				extractResultClass( resultSetMapping ),
 				sqlString,
 				originalSqlString,
 				resultSetMapping.getMappingIdentifier(),
-				extractResultClass( resultSetMapping ),
 				querySpaces,
 				isCacheable(),
 				getCacheRegion(),
@@ -1200,6 +1201,15 @@ public class NativeQueryImpl<R>
 	@Override
 	public NativeQueryImplementor<R> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
 		super.setCacheStoreMode( cacheStoreMode );
+		return this;
+	}
+
+	@Override
+	public TypedQuery<R> setTimeout(Integer timeout) {
+		if ( timeout == null ) {
+			timeout = -1;
+		}
+		super.setTimeout( (int) timeout );
 		return this;
 	}
 

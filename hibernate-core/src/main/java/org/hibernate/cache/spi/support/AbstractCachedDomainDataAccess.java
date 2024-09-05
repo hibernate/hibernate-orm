@@ -6,6 +6,7 @@
  */
 package org.hibernate.cache.spi.support;
 
+import org.hibernate.Internal;
 import org.hibernate.cache.spi.DomainDataRegion;
 import org.hibernate.cache.spi.access.CachedDomainDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -34,7 +35,8 @@ public abstract class AbstractCachedDomainDataAccess implements CachedDomainData
 		return region;
 	}
 
-	protected DomainDataStorageAccess getStorageAccess() {
+	@Internal
+	public DomainDataStorageAccess getStorageAccess() {
 		return storageAccess;
 	}
 

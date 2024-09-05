@@ -9,7 +9,6 @@ package org.hibernate.orm.test.jpa;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +17,7 @@ import java.util.Properties;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
+import jakarta.persistence.PersistenceUnitTransactionType;
 
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -42,6 +41,8 @@ import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 
+import static java.util.Collections.emptyMap;
+
 /**
  * A base class for all ejb tests.
  *
@@ -58,8 +59,8 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	private StandardServiceRegistryImpl serviceRegistry;
 	private SessionFactoryImplementor entityManagerFactory;
 
-	private EntityManager em;
-	private ArrayList<EntityManager> isolatedEms = new ArrayList<EntityManager>();
+	private EntityManager entityManager;
+	private final List<EntityManager> isolatedEntityManagers = new ArrayList<>();
 
 	protected Dialect getDialect() {
 		return dialect;
@@ -74,24 +75,18 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	}
 
 	@Before
-	@SuppressWarnings( {"UnusedDeclaration"})
 	public void buildEntityManagerFactory() {
 		log.trace( "Building EntityManagerFactory" );
-		EntityManagerFactoryBuilder entityManagerFactoryBuilder = Bootstrap.getEntityManagerFactoryBuilder(
-				buildPersistenceUnitDescriptor(),
-				buildSettings()
-		);
+		final EntityManagerFactoryBuilder entityManagerFactoryBuilder =
+				Bootstrap.getEntityManagerFactoryBuilder( buildPersistenceUnitDescriptor(), buildSettings() );
 		applyMetadataImplementor( entityManagerFactoryBuilder.metadata() );
 		entityManagerFactory = entityManagerFactoryBuilder.build().unwrap( SessionFactoryImplementor.class );
-
-		serviceRegistry = (StandardServiceRegistryImpl) entityManagerFactory.getServiceRegistry()
-				.getParentServiceRegistry();
-
+		serviceRegistry = (StandardServiceRegistryImpl)
+				entityManagerFactory.getServiceRegistry().getParentServiceRegistry();
 		afterEntityManagerFactoryBuilt();
 	}
 
 	protected void applyMetadataImplementor(MetadataImplementor metadataImplementor) {
-
 	}
 
 	protected PersistenceUnitDescriptor buildPersistenceUnitDescriptor() {
@@ -131,7 +126,12 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		}
 
 		@Override
-		public PersistenceUnitTransactionType getTransactionType() {
+		public PersistenceUnitTransactionType getPersistenceUnitTransactionType() {
+			return null;
+		}
+
+		@Override @SuppressWarnings("removal")
+		public jakarta.persistence.spi.PersistenceUnitTransactionType getTransactionType() {
 			return null;
 		}
 
@@ -195,11 +195,9 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	protected Map buildSettings() {
-		Map settings = getConfig();
+	protected Map<Object,Object> buildSettings() {
+		final Map<Object,Object> settings = getConfig();
 		addMappings( settings );
-
 		if ( createSchema() ) {
 			settings.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 		}
@@ -208,9 +206,8 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		return settings;
 	}
 
-	@SuppressWarnings("unchecked")
-	protected void addMappings(Map settings) {
-		String[] mappings = getMappings();
+	protected void addMappings(Map<Object,Object> settings) {
+		final String[] mappings = getMappings();
 		if ( mappings != null ) {
 			settings.put( AvailableSettings.HBM_XML_FILES, String.join( ",", mappings ) );
 		}
@@ -222,24 +219,22 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		return NO_MAPPINGS;
 	}
 
-	protected Map getConfig() {
-		Map<Object, Object> config = Environment.getProperties();
-		ArrayList<Class> classes = new ArrayList<Class>();
+	protected Map<Object,Object> getConfig() {
+		final Map<Object, Object> config = Environment.getProperties();
 
 		config.put( AvailableSettings.CLASSLOADERS, getClass().getClassLoader() );
 
-		classes.addAll( Arrays.asList( getAnnotatedClasses() ) );
+		List<Class<?>> classes = new ArrayList<>( Arrays.asList( getAnnotatedClasses() ) );
 		config.put( AvailableSettings.LOADED_CLASSES, classes );
-		for ( Map.Entry<Class, String> entry : getCachedClasses().entrySet() ) {
+		for ( Map.Entry<Class<?>, String> entry : getCachedClasses().entrySet() ) {
 			config.put( AvailableSettings.CLASS_CACHE_PREFIX + "." + entry.getKey().getName(), entry.getValue() );
 		}
 		for ( Map.Entry<String, String> entry : getCachedCollections().entrySet() ) {
 			config.put( AvailableSettings.COLLECTION_CACHE_PREFIX + "." + entry.getKey(), entry.getValue() );
 		}
 		if ( getEjb3DD().length > 0 ) {
-			ArrayList<String> dds = new ArrayList<>();
-			dds.addAll( Arrays.asList( getEjb3DD() ) );
-			config.put( AvailableSettings.ORM_XML_FILES, dds );
+			config.put( AvailableSettings.ORM_XML_FILES,
+					new ArrayList<>( Arrays.asList( getEjb3DD() ) ) );
 		}
 
 		config.put( PersistentTableStrategy.DROP_ID_TABLES, "true" );
@@ -250,7 +245,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		return config;
 	}
 
-	protected void addConfigOptions(Map options) {
+	protected void addConfigOptions(Map<Object,Object> options) {
 	}
 
 	protected static final Class<?>[] NO_CLASSES = new Class[0];
@@ -259,12 +254,12 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		return NO_CLASSES;
 	}
 
-	public Map<Class, String> getCachedClasses() {
-		return new HashMap<Class, String>();
+	public Map<Class<?>, String> getCachedClasses() {
+		return new HashMap<>();
 	}
 
 	public Map<String, String> getCachedCollections() {
-		return new HashMap<String, String>();
+		return new HashMap<>();
 	}
 
 	public String[] getEjb3DD() {
@@ -280,7 +275,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 
 
 	@After
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@SuppressWarnings("unused")
 	public void releaseResources() {
 		try {
 			releaseUnclosedEntityManagers();
@@ -294,9 +289,9 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	}
 
 	private void releaseUnclosedEntityManagers() {
-		releaseUnclosedEntityManager( this.em );
+		releaseUnclosedEntityManager( this.entityManager);
 
-		for ( EntityManager isolatedEm : isolatedEms ) {
+		for ( EntityManager isolatedEm : isolatedEntityManagers) {
 			releaseUnclosedEntityManager( isolatedEm );
 		}
 	}
@@ -322,34 +317,34 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	}
 
 	protected EntityManager getOrCreateEntityManager() {
-		if ( em == null || !em.isOpen() ) {
-			em = entityManagerFactory.createEntityManager();
+		if ( entityManager == null || !entityManager.isOpen() ) {
+			entityManager = entityManagerFactory.createEntityManager();
 		}
-		return em;
+		return entityManager;
 	}
 
 	protected EntityManager createIsolatedEntityManager() {
-		EntityManager isolatedEm = entityManagerFactory.createEntityManager();
-		isolatedEms.add( isolatedEm );
-		return isolatedEm;
+		final EntityManager isolatedEntityManager = entityManagerFactory.createEntityManager();
+		isolatedEntityManagers.add( isolatedEntityManager );
+		return isolatedEntityManager;
 	}
 
-	protected EntityManager createIsolatedEntityManager(Map props) {
-		EntityManager isolatedEm = entityManagerFactory.createEntityManager(props);
-		isolatedEms.add( isolatedEm );
-		return isolatedEm;
+	protected EntityManager createIsolatedEntityManager(Map<?,?> properties) {
+		final EntityManager isolatedEntityManager = entityManagerFactory.createEntityManager( properties );
+		isolatedEntityManagers.add( isolatedEntityManager );
+		return isolatedEntityManager;
 	}
 
 	protected EntityManager createEntityManager() {
-		return createEntityManager( Collections.emptyMap() );
+		return createEntityManager( emptyMap() );
 	}
 
-	protected EntityManager createEntityManager(Map properties) {
+	protected EntityManager createEntityManager(Map<?,?> properties) {
 		// always reopen a new EM and close the existing one
-		if ( em != null && em.isOpen() ) {
-			em.close();
+		if ( entityManager != null && entityManager.isOpen() ) {
+			entityManager.close();
 		}
-		em = entityManagerFactory.createEntityManager( properties );
-		return em;
+		entityManager = entityManagerFactory.createEntityManager( properties );
+		return entityManager;
 	}
 }

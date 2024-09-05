@@ -63,13 +63,11 @@ import org.hibernate.event.spi.PreUpsertEventListener;
 import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.event.spi.ReplicateEventListener;
 import org.hibernate.event.spi.ResolveNaturalIdEventListener;
-import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.jpa.LegacySpecHints;
 import org.hibernate.jpa.SpecHints;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
-import org.hibernate.jpa.internal.util.LockOptionsHelper;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
@@ -89,6 +87,7 @@ import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
+import static org.hibernate.internal.LockOptionsHelper.applyPropertiesToLockOptions;
 
 /**
  * Internal component.
@@ -154,9 +153,6 @@ public final class FastSessionServices {
 	public final EventListenerGroup<RefreshEventListener> eventListenerGroup_REFRESH;
 	public final EventListenerGroup<ReplicateEventListener> eventListenerGroup_REPLICATE;
 	public final EventListenerGroup<ResolveNaturalIdEventListener> eventListenerGroup_RESOLVE_NATURAL_ID;
-	public final EventListenerGroup<SaveOrUpdateEventListener> eventListenerGroup_SAVE;
-	public final EventListenerGroup<SaveOrUpdateEventListener> eventListenerGroup_SAVE_UPDATE;
-	public final EventListenerGroup<SaveOrUpdateEventListener> eventListenerGroup_UPDATE;
 
 	//Intentionally Package private:
 	final boolean disallowOutOfTransactionUpdateOperations;
@@ -186,7 +182,6 @@ public final class FastSessionServices {
 	//Private fields:
 	private final CacheStoreMode defaultCacheStoreMode;
 	private final CacheRetrieveMode defaultCacheRetrieveMode;
-	private final ConnectionObserverStatsBridge defaultJdbcObservers;
 	private final FormatMapper jsonFormatMapper;
 	private final FormatMapper xmlFormatMapper;
 	private final MutationExecutorService mutationExecutorService;
@@ -236,9 +231,6 @@ public final class FastSessionServices {
 		this.eventListenerGroup_REFRESH = listeners( eventListenerRegistry, EventType.REFRESH );
 		this.eventListenerGroup_REPLICATE = listeners( eventListenerRegistry, EventType.REPLICATE );
 		this.eventListenerGroup_RESOLVE_NATURAL_ID = listeners( eventListenerRegistry, EventType.RESOLVE_NATURAL_ID );
-		this.eventListenerGroup_SAVE = listeners( eventListenerRegistry, EventType.SAVE );
-		this.eventListenerGroup_SAVE_UPDATE = listeners( eventListenerRegistry, EventType.SAVE_UPDATE );
-		this.eventListenerGroup_UPDATE = listeners( eventListenerRegistry, EventType.UPDATE );
 
 		//Other highly useful constants:
 		this.dialect = jdbcServices.getJdbcEnvironment().getDialect();
@@ -272,7 +264,6 @@ public final class FastSessionServices {
 		this.defaultCacheRetrieveMode = determineCacheRetrieveMode( defaultSessionProperties );
 		this.initialSessionCacheMode = CacheModeHelper.interpretCacheMode( defaultCacheStoreMode, defaultCacheRetrieveMode );
 		this.discardOnClose = sessionFactoryOptions.isReleaseResourcesOnCloseEnabled();
-		this.defaultJdbcObservers = new ConnectionObserverStatsBridge( sessionFactory );
 		this.defaultSessionEventListeners = sessionFactoryOptions.getBaselineSessionEventsListenerBuilder();
 		this.defaultLockOptions = initializeDefaultLockOptions( defaultSessionProperties );
 		this.initialSessionFlushMode = initializeDefaultFlushMode( defaultSessionProperties );
@@ -291,9 +282,9 @@ public final class FastSessionServices {
 	}
 
 	private static LockOptions initializeDefaultLockOptions(final Map<String, Object> defaultSessionProperties) {
-		LockOptions def = new LockOptions();
-		LockOptionsHelper.applyPropertiesToLockOptions( defaultSessionProperties, () -> def );
-		return def;
+		final LockOptions lockOptions = new LockOptions();
+		applyPropertiesToLockOptions( defaultSessionProperties, () -> lockOptions );
+		return lockOptions;
 	}
 
 	private static <T> EventListenerGroup<T> listeners(EventListenerRegistry elr, EventType<T> type) {
@@ -381,10 +372,6 @@ public final class FastSessionServices {
 			return ( CacheStoreMode ) settings.get( JAKARTA_SHARED_CACHE_STORE_MODE );
 		}
 		return cacheStoreMode;
-	}
-
-	public ConnectionObserverStatsBridge getDefaultJdbcObserver() {
-		return defaultJdbcObservers;
 	}
 
 	public JdbcValuesMappingProducerProvider getJdbcValuesMappingProducerProvider() {

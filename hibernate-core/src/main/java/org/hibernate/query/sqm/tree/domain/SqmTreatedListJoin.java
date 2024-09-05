@@ -9,18 +9,22 @@ package org.hibernate.query.sqm.tree.domain;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
-import org.hibernate.query.hql.spi.SqmCreationProcessingState;
+import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
 import org.hibernate.spi.NavigablePath;
+
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> implements SqmTreatedPath<T,S> {
+public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> implements SqmTreatedAttributeJoin<O,T,S> {
 	private final SqmListJoin<O,T> wrappedPath;
 	private final TreatableDomainType<S> treatTarget;
 
@@ -126,9 +130,25 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 	}
 
 	@Override
-	public SqmAttributeJoin<O, S> makeCopy(SqmCreationProcessingState creationProcessingState) {
-		return new SqmTreatedListJoin<>( wrappedPath, treatTarget, getAlias() );
+	public SqmTreatedListJoin<O,T,S> on(JpaExpression<Boolean> restriction) {
+		return (SqmTreatedListJoin<O,T,S>) super.on( restriction );
 	}
+
+	@Override
+	public SqmTreatedListJoin<O,T,S> on(Expression<Boolean> restriction) {
+		return (SqmTreatedListJoin<O, T, S>) super.on( restriction );
+	}
+
+	@Override
+	public SqmTreatedListJoin<O,T,S> on(JpaPredicate... restrictions) {
+		return (SqmTreatedListJoin<O, T, S>) super.on( restrictions );
+	}
+
+	@Override
+	public SqmTreatedListJoin<O,T,S> on(Predicate... restrictions) {
+		return (SqmTreatedListJoin<O, T, S>) super.on( restrictions );
+	}
+
 
 	@Override
 	public void appendHqlString(StringBuilder sb) {

@@ -33,8 +33,9 @@ public class PostgreSQLArrayJdbcType extends ArrayJdbcType {
 
 	@Override
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		//noinspection unchecked
-		final ValueBinder<Object> elementBinder = getElementJdbcType().getBinder( ( (BasicPluralJavaType<Object>) javaTypeDescriptor ).getElementJavaType() );
+		@SuppressWarnings("unchecked")
+		final BasicPluralJavaType<X> pluralJavaType = (BasicPluralJavaType<X>) javaTypeDescriptor;
+		final ValueBinder<X> elementBinder = getElementJdbcType().getBinder( pluralJavaType.getElementJavaType() );
 		return new BasicBinder<>( javaTypeDescriptor, this ) {
 
 			@Override

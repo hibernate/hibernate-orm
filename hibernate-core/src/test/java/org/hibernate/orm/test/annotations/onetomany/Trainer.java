@@ -15,8 +15,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.annotations.ForeignKey;
-
 /**
  * Unidirectional one to many sample
  *

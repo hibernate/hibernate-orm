@@ -17,9 +17,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.results.TableGroupImpl;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -81,13 +79,13 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 		final SqmUpdateStatement<?> updateStatement = (SqmUpdateStatement<?>) getSqmDeleteOrUpdateStatement();
 		final EntityMappingType entityDescriptor = getEntityDescriptor();
 
-		final AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityDescriptor.getEntityPersister();
+		final EntityPersister entityPersister = entityDescriptor.getEntityPersister();
 		final String rootEntityName = entityPersister.getRootEntityName();
 		final EntityPersister rootEntityDescriptor = factory.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( rootEntityName );
 
-		final String hierarchyRootTableName = ( (Joinable) rootEntityDescriptor ).getTableName();
+		final String hierarchyRootTableName = rootEntityDescriptor.getTableName();
 		final TableReference hierarchyRootTableReference = updatingTableGroup.resolveTableReference(
 				updatingTableGroup.getNavigablePath(),
 				hierarchyRootTableName

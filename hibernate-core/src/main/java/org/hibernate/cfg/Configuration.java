@@ -137,8 +137,8 @@ public class Configuration {
 	private List<UserTypeRegistration> userTypeRegistrations;
 	private final List<TypeContributor> typeContributorRegistrations = new ArrayList<>();
 	private final List<FunctionContributor> functionContributorRegistrations = new ArrayList<>();
-	private final Map<String, NamedHqlQueryDefinition> namedQueries = new HashMap<>();
-	private final Map<String, NamedNativeQueryDefinition> namedSqlQueries = new HashMap<>();
+	private final Map<String, NamedHqlQueryDefinition<?>> namedQueries = new HashMap<>();
+	private final Map<String, NamedNativeQueryDefinition<?>> namedSqlQueries = new HashMap<>();
 	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap = new HashMap<>();
 	private final Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappings = new HashMap<>();
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap = new HashMap<>();
@@ -158,9 +158,6 @@ public class Configuration {
 	private CustomEntityDirtinessStrategy customEntityDirtinessStrategy;
 	private ColumnOrderingStrategy columnOrderingStrategy;
 	private SharedCacheMode sharedCacheMode;
-
-	@Deprecated(since = "6", forRemoval = true)
-	public static final String ARTEFACT_PROCESSING_ORDER = AvailableSettings.ARTIFACT_PROCESSING_ORDER;
 
 	/**
 	 * Create a new instance, using a default {@link BootstrapServiceRegistry}
@@ -1005,17 +1002,6 @@ public class Configuration {
 	}
 
 	/**
-	 * @deprecated use {@link #addSqlFunction(String, SqmFunctionDescriptor)}
-	 */
-	@Deprecated(since = "6.5", forRemoval = true)
-	public Map<String,SqmFunctionDescriptor> getSqlFunctions() {
-		if ( customFunctionDescriptors == null ) {
-			customFunctionDescriptors = new HashMap<>();
-		}
-		return customFunctionDescriptors;
-	}
-
-	/**
 	 * Adds a {@linkplain SqmFunctionDescriptor function descriptor} to
 	 * this configuration.
 	 *
@@ -1158,7 +1144,7 @@ public class Configuration {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// todo : decide about these
 
-	public Map<String, NamedNativeQueryDefinition> getNamedSQLQueries() {
+	public Map<String, NamedNativeQueryDefinition<?>> getNamedSQLQueries() {
 		return namedSqlQueries;
 	}
 
@@ -1171,7 +1157,7 @@ public class Configuration {
 	}
 
 
-	public Map<String, NamedHqlQueryDefinition> getNamedQueries() {
+	public Map<String, NamedHqlQueryDefinition<?>> getNamedQueries() {
 		return namedQueries;
 	}
 

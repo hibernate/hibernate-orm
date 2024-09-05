@@ -15,8 +15,11 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.Hibernate;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.AnyType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
+import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
 import jakarta.validation.Path;
@@ -54,17 +57,17 @@ public class HibernateTraversableResolver implements TraversableResolver {
 
 	private void addAssociationsToTheSetForOneProperty(String name, Type type, String prefix, SessionFactoryImplementor factory) {
 
-		if ( type.isCollectionType() ) {
+		if ( type instanceof CollectionType ) {
 			CollectionType collType = (CollectionType) type;
 			Type assocType = collType.getElementType( factory );
 			addAssociationsToTheSetForOneProperty(name, assocType, prefix, factory);
 		}
 		//ToOne association
-		else if ( type.isEntityType() || type.isAnyType() ) {
+		else if ( type instanceof EntityType || type instanceof AnyType ) {
 			associations.add( prefix + name );
 		}
-		else if ( type.isComponentType() ) {
-			CompositeType componentType = (CompositeType) type;
+		else if ( type instanceof ComponentType ) {
+			ComponentType componentType = (ComponentType) type;
 			addAssociationsToTheSetForAllProperties(
 					componentType.getPropertyNames(),
 					componentType.getSubtypes(),

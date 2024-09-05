@@ -22,6 +22,8 @@ import org.hibernate.query.sqm.internal.SqmSelectionQueryImpl;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Definition of a named query, defined in the mapping metadata.
  * Additionally, as of JPA 2.1, named query definition can also come
@@ -30,7 +32,9 @@ import org.hibernate.query.sqm.tree.SqmStatement;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implements NamedSqmQueryMemento, Serializable {
+public class NamedHqlQueryMementoImpl<R> extends AbstractNamedQueryMemento<R>
+		implements NamedSqmQueryMemento<R>, Serializable {
+
 	private final String hqlString;
 
 	private final Integer firstResult;
@@ -41,6 +45,7 @@ public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implemen
 
 	public NamedHqlQueryMementoImpl(
 			String name,
+			@Nullable Class<R> resultType,
 			String hqlString,
 			Integer firstResult,
 			Integer maxResults,
@@ -57,6 +62,7 @@ public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implemen
 			Map<String,Object> hints) {
 		super(
 				name,
+				resultType,
 				cacheable,
 				cacheRegion,
 				cacheMode,
@@ -100,9 +106,10 @@ public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implemen
 	}
 
 	@Override
-	public NamedSqmQueryMemento makeCopy(String name) {
-		return new NamedHqlQueryMementoImpl(
+	public NamedSqmQueryMemento<R> makeCopy(String name) {
+		return new NamedHqlQueryMementoImpl<>(
 				name,
+				getResultType(),
 				hqlString,
 				firstResult,
 				maxResults,
@@ -122,12 +129,12 @@ public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implemen
 
 	@Override
 	public void validate(QueryEngine queryEngine) {
-		queryEngine.getHqlTranslator().translate( hqlString, null );
+		queryEngine.getHqlTranslator().translate( hqlString, getResultType() );
 	}
 
 	@Override
-	public <T> SqmQueryImplementor<T> toQuery(SharedSessionContractImplementor session) {
-		return toQuery( session, null );
+	public SqmQueryImplementor<R> toQuery(SharedSessionContractImplementor session) {
+		return toQuery( session, getResultType() );
 	}
 
 	@Override
@@ -140,7 +147,7 @@ public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implemen
 	}
 
 	@Override
-	public SqmStatement<?> getSqmStatement() {
+	public SqmStatement<R> getSqmStatement() {
 		return null;
 	}
 

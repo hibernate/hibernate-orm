@@ -46,7 +46,7 @@ public class CacheAnnotationTests extends BaseCoreFunctionalTestCase {
 	public void testCacheWriteConcurrencyStrategyNone() {
 		doInHibernate( this::sessionFactory, session -> {
 			NoCacheConcurrencyStrategyEntity entity = new NoCacheConcurrencyStrategyEntity();
-			session.save( entity );
+			session.persist( entity );
 			session.flush();
 			session.clear();
 		} );
@@ -58,7 +58,7 @@ public class CacheAnnotationTests extends BaseCoreFunctionalTestCase {
 		doInHibernate( this::sessionFactory, session -> {
 			NoCacheConcurrencyStrategyEntity entity = new NoCacheConcurrencyStrategyEntity();
 			entity.setName( "name" );
-			session.save( entity );
+			session.persist( entity );
 			session.flush();
 
 			this.entityId = entity.getId();
@@ -67,7 +67,7 @@ public class CacheAnnotationTests extends BaseCoreFunctionalTestCase {
 		} );
 
 		doInHibernate( this::sessionFactory, session -> {
-			NoCacheConcurrencyStrategyEntity entity = session.load( NoCacheConcurrencyStrategyEntity.class, this.entityId );
+			NoCacheConcurrencyStrategyEntity entity = session.getReference( NoCacheConcurrencyStrategyEntity.class, this.entityId );
 			assertEquals( "name", entity.getName() );
 		} );
 	}

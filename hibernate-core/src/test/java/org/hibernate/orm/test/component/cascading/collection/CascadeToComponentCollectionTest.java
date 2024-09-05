@@ -73,7 +73,7 @@ public class CascadeToComponentCollectionTest extends BaseCoreFunctionalTestCase
 		session.close();
 	}
 
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@SuppressWarnings("unused")
 	@Test
 	public void testMergingOriginallyNullComponent() {
 		// step1, we create a definition with one value, but with a null component

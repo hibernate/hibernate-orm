@@ -301,7 +301,6 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 			session.persist( new Contact( 1L, "Lukasz", "Antoniak", "owner", folder1 ) );
 			session.persist( new Contact( 2L, "Kinga", "Mroz", "co-owner", folder2 ) );
 			session.flush();
-			session.clear();
 			session.refresh( folder1 );
 			session.refresh( folder2 );
 			session.clear();
@@ -368,7 +367,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 		long start = System.currentTimeMillis();
 		thread.start();
 		try {
-			s2.buildLockRequest( opt ).lock( kit2 );
+			s2.lock( kit2, opt );
 		}
 		catch ( PessimisticEntityLockException e ) {
 			assertTrue( e.getCause() instanceof LockTimeoutException );
@@ -383,7 +382,7 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 
 		s2.getTransaction().rollback();
 		s.getTransaction().begin();
-		s.delete( kit );
+		s.remove( kit );
 		s.getTransaction().commit();
 	}
 

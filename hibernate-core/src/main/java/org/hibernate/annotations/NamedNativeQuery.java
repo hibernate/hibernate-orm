@@ -13,7 +13,6 @@ import java.lang.annotation.Target;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
-import org.hibernate.Remove;
 
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
@@ -135,16 +134,10 @@ public @interface NamedNativeQuery {
 	/**
 	 * The cache interaction mode for this query.
 	 *
-	 * @deprecated use {@link #cacheStoreMode()} and
-	 *            {@link #cacheRetrieveMode()} since
-	 *            {@link CacheModeType} is deprecated
-	 *
+	 * @see org.hibernate.query.SelectionQuery#setCacheMode(CacheMode)
 	 * @see org.hibernate.jpa.HibernateHints#HINT_CACHE_MODE
 	 */
-	@Deprecated(since = "6.2") @Remove
-	//TODO: actually, we won't remove it, we'll change its
-	//      type to CacheMode and then un-deprecate it
-	CacheModeType cacheMode() default CacheModeType.NORMAL;
+	CacheMode cacheMode() default CacheMode.NORMAL;
 
 	/**
 	 * Whether the results should be loaded in read-only mode.

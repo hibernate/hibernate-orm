@@ -66,7 +66,7 @@ public class EmbeddedTest {
 	public void cleanup(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			for ( Person person : session.createQuery( "from Person", Person.class ).getResultList() ) {
-				session.delete( person );
+				session.remove( person );
 			}
 			session.createQuery( "delete from InternetProvider" ).executeUpdate();
 			session.createQuery( "delete from Manager" ).executeUpdate();
@@ -347,7 +347,7 @@ public class EmbeddedTest {
 					assertNotNull( "Floating leg retrieved as null", floating );
 					assertEquals( Frequency.SEMIANNUALLY, fixed.getPaymentFrequency() );
 					assertEquals( Frequency.QUARTERLY, floating.getPaymentFrequency() );
-					session.delete( vanillaSwap );
+					session.remove( vanillaSwap );
 				}
 		);
 	}
@@ -444,7 +444,7 @@ public class EmbeddedTest {
 					assertEquals( 1.1, spreadDeal.getShortSwap().getFloatLeg().getRateSpread(), 0.01 );
 					assertEquals( 0.8, spreadDeal.getSwap().getFloatLeg().getRateSpread(), 0.01 );
 					assertEquals( 0.8, spreadDeal.getLongSwap().getFloatLeg().getRateSpread(), 0.01 );
-					session.delete( spreadDeal );
+					session.remove( spreadDeal );
 				}
 		);
 	}
@@ -471,7 +471,7 @@ public class EmbeddedTest {
 						Book loadedBook = session.get( Book.class, book.getIsbn() );
 						assertNotNull( loadedBook.getSummary() );
 						assertEquals( book.getSummary().getText(), loadedBook.getSummary().getText() );
-						session.delete( loadedBook );
+						session.remove( loadedBook );
 						tx.commit();
 					}
 					catch (Exception e) {
@@ -504,7 +504,7 @@ public class EmbeddedTest {
 					Book loadedBook = session.get( Book.class, book.getIsbn() );
 					assertNotNull( loadedBook.getSummary() );
 					assertEquals( loadedBook, loadedBook.getSummary().getSummarizedBook() );
-					session.delete( loadedBook );
+					session.remove( loadedBook );
 				}
 		);
 	}
@@ -544,9 +544,9 @@ public class EmbeddedTest {
 					);
 					assertNotNull( "2nd Many to one not set", internetProvider.getOwner().getOrigin() );
 					assertEquals( "Wrong 2nd link", nat.getName(), internetProvider.getOwner().getOrigin().getName() );
-					session.delete( internetProvider );
-					session.delete( internetProvider.getOwner().getCorporationType() );
-					session.delete( internetProvider.getOwner().getOrigin() );
+					session.remove( internetProvider );
+					session.remove( internetProvider.getOwner().getCorporationType() );
+					session.remove( internetProvider.getOwner().getOrigin() );
 				}
 		);
 	}
@@ -579,8 +579,8 @@ public class EmbeddedTest {
 					assertEquals( "Wrong number of elements", 1, topManagement.size() );
 					Manager manager = topManagement.iterator().next();
 					assertEquals( "Wrong element", "Bill", manager.getName() );
-					session.delete( manager );
-					session.delete( internetProvider );
+					session.remove( manager );
+					session.remove( internetProvider );
 				}
 		);
 	}
@@ -640,8 +640,8 @@ public class EmbeddedTest {
 				session -> {
 					InternetProvider internetProvider = session.get( InternetProvider.class, provider.getId() );
 					Manager manager = internetProvider.getOwner().getTopManagement().iterator().next();
-					session.delete( manager );
-					session.delete( internetProvider );
+					session.remove( manager );
+					session.remove( internetProvider );
 				}
 		);
 	}

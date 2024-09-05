@@ -266,7 +266,7 @@ public class C3P0ConnectionProvider
 	 *
 	 * @deprecated Use {@link #stop} instead
 	 */
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	@Deprecated
 	public void close() {
 		stop();

@@ -9,14 +9,10 @@ package org.hibernate.orm.test.cfg.persister;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.annotations.Persister;
-import org.hibernate.persister.entity.SingleTableEntityPersister;
-
 /**
  * @author Emmanuel Bernard
  */
 @Entity
-@Persister( impl = SingleTableEntityPersister.class)
 public class Window {
 	@Id
 	public Long getId() { return id; }

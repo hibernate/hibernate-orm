@@ -314,13 +314,9 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 		final TableReference tableRef = tableGroup.getPrimaryTableReference();
 		// The H2 parser can't handle a sub-query as first element in a nested join
 		// i.e. `join ( (select ...) alias join ... )`, so we have to introduce a dummy table reference
-		if ( tableRef instanceof QueryPartTableReference || tableRef.getTableId().startsWith( "(select" ) ) {
-			final boolean realTableGroup = tableGroup.isRealTableGroup()
-					&& ( isNotEmpty( tableGroup.getTableReferenceJoins() )
-					|| hasNestedTableGroupsToRender( tableGroup.getNestedTableGroupJoins() ) );
-			if ( realTableGroup ) {
-				appendSql( "dual cross join " );
-			}
+		if ( getSqlBuffer().charAt( getSqlBuffer().length() - 1 ) == '('
+				&& ( tableRef instanceof QueryPartTableReference || tableRef.getTableId().startsWith( "(select" ) ) ) {
+			appendSql( "dual cross join " );
 		}
 		return super.renderPrimaryTableReference( tableGroup, lockMode );
 	}

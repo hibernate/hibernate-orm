@@ -13,6 +13,8 @@ import org.hibernate.spatial.HSMessageLogger;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
+
 /**
  * Central service for spatial integration
  *
@@ -27,6 +29,7 @@ public class SpatialService implements Service {
 	public static final String INTEGRATION_ENABLED = "hibernate.integration.spatial.enabled";
 
 	private static final HSMessageLogger log = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			HSMessageLogger.class,
 			SpatialService.class.getName()
 	);

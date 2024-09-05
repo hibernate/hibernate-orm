@@ -9,9 +9,10 @@ package org.hibernate.orm.test.query.hql;
 import org.hamcrest.Matchers;
 import org.hibernate.QueryException;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
@@ -56,8 +57,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import org.hamcrest.Matchers;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -570,6 +569,7 @@ public class FunctionTests {
 
 	@Test
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support any form of date truncation")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix doesn't support any form of date truncation")
 	public void testDateTruncFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

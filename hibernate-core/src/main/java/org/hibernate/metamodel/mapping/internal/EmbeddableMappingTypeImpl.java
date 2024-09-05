@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping.internal;
 import java.io.Serializable;
 import java.util.BitSet;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -18,16 +19,13 @@ import java.util.function.Function;
 
 import org.hibernate.MappingException;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.BasicValue;
@@ -39,9 +37,6 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.DiscriminatorConverter;
-import org.hibernate.metamodel.mapping.DiscriminatorType;
-import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorConverter;
 import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -59,7 +54,6 @@ import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -79,15 +73,11 @@ import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 import org.hibernate.type.spi.TypeConfiguration;
-
-import static org.hibernate.internal.util.StringHelper.qualify;
-import static org.hibernate.persister.entity.DiscriminatorHelper.getDiscriminatorType;
 
 import static org.hibernate.type.SqlTypes.JSON;
 import static org.hibernate.type.SqlTypes.JSON_ARRAY;
@@ -178,7 +168,6 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	private final Map<String, ConcreteEmbeddableTypeImpl> concreteEmbeddableBySubclass;
 	private final Map<Object, ConcreteEmbeddableTypeImpl> concreteEmbeddableByDiscriminator;
 
-	private final boolean createEmptyCompositesEnabled;
 	private final SelectableMapping aggregateMapping;
 	private final boolean aggregateMappingRequiresColumnWriter;
 	private final boolean preferSelectAggregateMapping;
@@ -221,12 +210,6 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			this.concreteEmbeddableBySubclass = null;
 		}
 
-		this.createEmptyCompositesEnabled = ConfigurationHelper.getBoolean(
-				Environment.CREATE_EMPTY_COMPOSITES_ENABLED,
-				creationContext.getServiceRegistry()
-						.requireService( ConfigurationService.class )
-						.getSettings()
-		);
 		final AggregateColumn aggregateColumn = bootDescriptor.getAggregateColumn();
 		if ( aggregateColumn != null ) {
 			final Dialect dialect = creationContext.getDialect();
@@ -365,7 +348,6 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		this.discriminatorMapping = null;
 		this.concreteEmbeddableBySubclass = null;
 		this.concreteEmbeddableByDiscriminator = null;
-		this.createEmptyCompositesEnabled = inverseMappingType.isCreateEmptyCompositesEnabled();
 		this.aggregateMapping = null;
 		this.aggregateMappingRequiresColumnWriter = false;
 		this.preferSelectAggregateMapping = false;
@@ -471,8 +453,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					else {
 						columnExpression = selectable.getText( dialect );
 					}
-					if ( selectable instanceof Column ) {
-						final Column column = (Column) selectable;
+					if ( selectable instanceof Column column ) {
 						containingTableExpression = MappingModelCreationHelper.getTableIdentifierExpression(
 								column.getValue().getTable(),
 								creationProcess
@@ -495,8 +476,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				final Integer temporalPrecision;
 				final boolean isLob;
 				final boolean nullable;
-				if ( selectable instanceof Column ) {
-					final Column column = (Column) selectable;
+				if ( selectable instanceof Column column ) {
 					columnDefinition = column.getSqlType();
 					length = column.getLength();
 					precision = column.getPrecision();
@@ -547,9 +527,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 				columnPosition++;
 			}
-			else if ( subtype instanceof AnyType ) {
+			else if ( subtype instanceof AnyType anyType ) {
 				final Any bootValueMapping = (Any) value;
-				final AnyType anyType = (AnyType) subtype;
 
 				final PropertyAccess propertyAccess = representationStrategy.resolvePropertyAccess( bootPropertyDescriptor );
 				final boolean nullable = bootValueMapping.isNullable();
@@ -584,8 +563,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						creationProcess
 				);
 			}
-			else if ( subtype instanceof CompositeType ) {
-				final CompositeType subCompositeType = (CompositeType) subtype;
+			else if ( subtype instanceof CompositeType subCompositeType ) {
 				final int columnSpan = subCompositeType.getColumnSpan( creationProcess.getCreationContext().getMetadata() );
 				final String subTableExpression;
 				final String[] subRootTableKeyColumnNames;
@@ -871,7 +849,9 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	@Override
 	public Collection<ConcreteEmbeddableType> getConcreteEmbeddableTypes() {
 		//noinspection unchecked
-		return (Collection<ConcreteEmbeddableType>) (Collection<?>) concreteEmbeddableBySubclass.values();
+		return concreteEmbeddableBySubclass == null
+				? Collections.singleton( this )
+				: (Collection<ConcreteEmbeddableType>) (Collection<?>) concreteEmbeddableBySubclass.values();
 	}
 
 	@Override
@@ -936,8 +916,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			SharedSessionContractImplementor session) {
 		final int size = attributeMappings.size();
 		int span = 0;
-		if ( domainValue instanceof Object[] ) {
-			final Object[] values = (Object[]) domainValue;
+		if ( domainValue instanceof Object[] values ) {
 			assert values.length == size + ( isPolymorphic() ? 1 : 0 );
 			int i = 0;
 			for ( ; i < size; i++ ) {
@@ -1041,8 +1020,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		}
 		final int size = attributeMappings.size();
 		int span = 0;
-		if ( domainValue instanceof Object[] ) {
-			final Object[] values = (Object[]) domainValue;
+		if ( domainValue instanceof Object[] values ) {
 			assert values.length == size + ( isPolymorphic() ? 1 : 0 );
 			int i = 0;
 			for ( ; i < size; i++ ) {
@@ -1116,11 +1094,6 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		return valueMapping.findContainingEntityMapping();
 	}
 
-
-	@Override
-	public boolean isCreateEmptyCompositesEnabled() {
-		return createEmptyCompositesEnabled;
-	}
 
 	@Override
 	public SelectableMapping getAggregateMapping() {

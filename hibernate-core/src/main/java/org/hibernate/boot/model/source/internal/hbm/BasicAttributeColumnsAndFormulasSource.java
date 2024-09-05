@@ -12,6 +12,8 @@ import java.util.Set;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmBasicAttributeType;
 import org.hibernate.boot.model.source.spi.SizeSource;
 
+import static org.hibernate.internal.util.StringHelper.splitAtCommas;
+
 /**
  * ColumnAndFormulaSource implementation handling basic attribute mappings.
  *
@@ -69,7 +71,7 @@ public class BasicAttributeColumnsAndFormulasSource
 
 	@Override
 	public Set<String> getIndexConstraintNames() {
-		return CommaSeparatedStringHelper.split( basicAttributeMapping.getIndex() );
+		return Set.of( splitAtCommas( basicAttributeMapping.getIndex() ) );
 	}
 
 	@Override
@@ -79,6 +81,6 @@ public class BasicAttributeColumnsAndFormulasSource
 
 	@Override
 	public Set<String> getUniqueKeyConstraintNames() {
-		return CommaSeparatedStringHelper.split( basicAttributeMapping.getUniqueKey() );
+		return Set.of( splitAtCommas( basicAttributeMapping.getUniqueKey() ) );
 	}
 }

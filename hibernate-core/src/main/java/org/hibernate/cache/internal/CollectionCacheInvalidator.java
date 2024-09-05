@@ -11,6 +11,7 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.action.internal.CollectionAction;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -29,7 +30,6 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 import org.jboss.logging.Logger;
@@ -53,13 +53,11 @@ public class CollectionCacheInvalidator
 	public static boolean PROPAGATE_EXCEPTION = false;
 
 	@Override
-	public void integrate(Metadata metadata, SessionFactoryImplementor sessionFactory,
-			SessionFactoryServiceRegistry serviceRegistry) {
-		integrate( serviceRegistry, sessionFactory );
-	}
-
-	@Override
-	public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
+	public void integrate(
+			Metadata metadata,
+			BootstrapContext bootstrapContext,
+			SessionFactoryImplementor sessionFactory) {
+		integrate( sessionFactory );
 	}
 
 	@Override
@@ -82,7 +80,7 @@ public class CollectionCacheInvalidator
 		evictCache( event.getEntity(), event.getPersister(), event.getSession(), event.getOldState() );
 	}
 
-	private void integrate(SessionFactoryServiceRegistry serviceRegistry, SessionFactoryImplementor sessionFactory) {
+	private void integrate(SessionFactoryImplementor sessionFactory) {
 		final SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
 		if ( !sessionFactoryOptions.isAutoEvictCollectionCache() ) {
 			// feature is disabled
@@ -92,7 +90,7 @@ public class CollectionCacheInvalidator
 			// Nothing to do, if caching is disabled
 			return;
 		}
-		EventListenerRegistry eventListenerRegistry = serviceRegistry.requireService( EventListenerRegistry.class );
+		final EventListenerRegistry eventListenerRegistry = sessionFactory.getServiceRegistry().requireService( EventListenerRegistry.class );
 		eventListenerRegistry.appendListeners( EventType.POST_INSERT, this );
 		eventListenerRegistry.appendListeners( EventType.POST_DELETE, this );
 		eventListenerRegistry.appendListeners( EventType.POST_UPDATE, this );

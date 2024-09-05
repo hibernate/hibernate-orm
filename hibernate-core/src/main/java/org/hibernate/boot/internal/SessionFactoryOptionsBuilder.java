@@ -54,12 +54,12 @@ import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
-import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
-import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.internal.NullPrecedenceHelper;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -74,13 +74,14 @@ import org.hibernate.type.format.jackson.JacksonIntegration;
 import org.hibernate.type.format.jakartajson.JakartaJsonIntegration;
 import org.hibernate.type.format.jaxb.JaxbXmlFormatMapper;
 
+import jakarta.persistence.criteria.Nulls;
+
 import static org.hibernate.cfg.AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_UPDATE_OUTSIDE_TRANSACTION;
 import static org.hibernate.cfg.AvailableSettings.AUTO_CLOSE_SESSION;
 import static org.hibernate.cfg.AvailableSettings.AUTO_EVICT_COLLECTION_CACHE;
 import static org.hibernate.cfg.AvailableSettings.AUTO_SESSION_EVENTS_LISTENER;
-import static org.hibernate.cfg.AvailableSettings.BATCH_FETCH_STYLE;
 import static org.hibernate.cfg.AvailableSettings.BATCH_VERSIONED_DATA;
 import static org.hibernate.cfg.AvailableSettings.CACHE_REGION_PREFIX;
 import static org.hibernate.cfg.AvailableSettings.CALLABLE_NAMED_PARAMS_ENABLED;
@@ -168,7 +169,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	// SessionFactory behavior
 	private final boolean jpaBootstrap;
 	private String sessionFactoryName;
-	private boolean sessionFactoryNameAlsoJndiName;
+	private Boolean sessionFactoryNameAlsoJndiName;
 
 	// Session behavior
 	private boolean flushBeforeCompletionEnabled;
@@ -198,17 +199,16 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean checkNullability;
 	private boolean initializeLazyStateOutsideTransactions;
 	private TempTableDdlTransactionHandling tempTableDdlTransactionHandling;
-	private BatchFetchStyle batchFetchStyle;
 	private boolean delayBatchFetchLoaderCreations;
 	private int defaultBatchFetchSize;
 	private Integer maximumFetchDepth;
 	private boolean subselectFetchEnabled;
-	private NullPrecedence defaultNullPrecedence;
+	private Nulls defaultNullPrecedence;
 	private boolean orderUpdatesEnabled;
 	private boolean orderInsertsEnabled;
 	private boolean collectionsInDefaultFetchGroupEnabled = true;
-	private boolean UnownedAssociationTransientCheck;
-	private boolean passProcedureParameterNames;
+	private final boolean UnownedAssociationTransientCheck;
+	private final boolean passProcedureParameterNames;
 
 	// JPA callbacks
 	private final boolean callbacksEnabled;
@@ -337,7 +337,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.allowRefreshDetachedEntity = configurationService.getSetting(
 				ALLOW_REFRESH_DETACHED_ENTITY,
 				BOOLEAN,
-				true
+				false
 		);
 
 		this.flushBeforeCompletionEnabled = configurationService.getSetting( FLUSH_BEFORE_COMPLETION, BOOLEAN, true );
@@ -377,24 +377,25 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				configurationSettings.get( MULTI_TENANT_IDENTIFIER_RESOLVER )
 		);
 
-		this.batchFetchStyle = BatchFetchStyle.interpret( configurationSettings.get( BATCH_FETCH_STYLE ) );
 		this.delayBatchFetchLoaderCreations = configurationService.getSetting( DELAY_ENTITY_LOADER_CREATIONS, BOOLEAN, true );
 		this.defaultBatchFetchSize = getInt( DEFAULT_BATCH_FETCH_SIZE, configurationSettings, -1 );
 		this.subselectFetchEnabled = getBoolean( USE_SUBSELECT_FETCH, configurationSettings );
 		this.maximumFetchDepth = getInteger( MAX_FETCH_DEPTH, configurationSettings );
 
 		final Object defaultNullPrecedence = configurationSettings.get( DEFAULT_NULL_ORDERING );
-		if ( defaultNullPrecedence instanceof NullPrecedence ) {
-			this.defaultNullPrecedence = (NullPrecedence) defaultNullPrecedence;
+		if ( defaultNullPrecedence instanceof Nulls jpaValue ) {
+			this.defaultNullPrecedence = jpaValue;
+		}
+		else if ( defaultNullPrecedence instanceof NullPrecedence hibernateValue ) {
+			this.defaultNullPrecedence = hibernateValue.getJpaValue();
 		}
 		else if ( defaultNullPrecedence instanceof String ) {
-			this.defaultNullPrecedence = NullPrecedence.parse( (String) defaultNullPrecedence );
+			this.defaultNullPrecedence = NullPrecedenceHelper.parse( (String) defaultNullPrecedence );
 		}
 		else if ( defaultNullPrecedence != null ) {
 			throw new IllegalArgumentException( "Configuration property " + DEFAULT_NULL_ORDERING
 					+ " value [" + defaultNullPrecedence + "] is not supported" );
 		}
-
 		this.orderUpdatesEnabled = getBoolean( ORDER_UPDATES, configurationSettings );
 		this.orderInsertsEnabled = getBoolean( ORDER_INSERTS, configurationSettings );
 
@@ -926,7 +927,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public boolean isSessionFactoryNameAlsoJndiName() {
+	public Boolean isSessionFactoryNameAlsoJndiName() {
 		return sessionFactoryNameAlsoJndiName;
 	}
 
@@ -1021,11 +1022,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public BatchFetchStyle getBatchFetchStyle() {
-		return batchFetchStyle;
-	}
-
-	@Override
 	public boolean isDelayBatchFetchLoaderCreationsEnabled() {
 		return delayBatchFetchLoaderCreations;
 	}
@@ -1046,7 +1042,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public NullPrecedence getDefaultNullPrecedence() {
+	public Nulls getDefaultNullPrecedence() {
 		return defaultNullPrecedence;
 	}
 
@@ -1438,14 +1434,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.tempTableDdlTransactionHandling = handling;
 	}
 
-	/**
-	 * @deprecated : No longer used internally
-	 */
-	@Deprecated(since = "6.0")
-	public void applyBatchFetchStyle(BatchFetchStyle style) {
-		this.batchFetchStyle = style;
-	}
-
 	public void applyDelayedEntityLoaderCreations(boolean delay) {
 		this.delayBatchFetchLoaderCreations = delay;
 	}
@@ -1462,7 +1450,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.subselectFetchEnabled = subselectFetchEnabled;
 	}
 
-	public void applyDefaultNullPrecedence(NullPrecedence nullPrecedence) {
+	public void applyDefaultNullPrecedence(Nulls nullPrecedence) {
 		this.defaultNullPrecedence = nullPrecedence;
 	}
 
@@ -1584,10 +1572,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void enableJpaTransactionCompliance(boolean enabled) {
 		mutableJpaCompliance().setTransactionCompliance( enabled );
-	}
-
-	public void enableJpaListCompliance(boolean enabled) {
-		mutableJpaCompliance().setListCompliance( enabled );
 	}
 
 	public void enableJpaCascadeCompliance(boolean enabled) {

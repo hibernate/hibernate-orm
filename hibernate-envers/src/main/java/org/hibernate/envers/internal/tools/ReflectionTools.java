@@ -10,8 +10,6 @@ import java.lang.reflect.Field;
 import java.util.Locale;
 import java.util.Map;
 
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.envers.exception.AuditException;
@@ -128,36 +126,6 @@ public abstract class ReflectionTools {
 						cls.getName()
 				)
 		);
-	}
-
-	/**
-	 * @param clazz Source class.
-	 * @param propertyName Property name.
-	 *
-	 * @return Property object or {@code null} if none with expected name has been found.
-	 */
-	public static XProperty getProperty(XClass clazz, String propertyName) {
-		XProperty property = getProperty( clazz, propertyName, "field" );
-		if ( property == null ) {
-			property = getProperty( clazz, propertyName, "property" );
-		}
-		return property;
-	}
-
-	/**
-	 * @param clazz Source class.
-	 * @param propertyName Property name.
-	 * @param accessType Expected access type. Legal values are <i>field</i> and <i>property</i>.
-	 *
-	 * @return Property object or {@code null} if none with expected name and access type has been found.
-	 */
-	public static XProperty getProperty(XClass clazz, String propertyName, String accessType) {
-		for ( XProperty property : clazz.getDeclaredProperties( accessType ) ) {
-			if ( propertyName.equals( property.getName() ) ) {
-				return property;
-			}
-		}
-		return null;
 	}
 
 	/**

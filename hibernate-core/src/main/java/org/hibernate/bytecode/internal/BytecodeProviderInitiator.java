@@ -17,27 +17,13 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
-import static org.hibernate.internal.util.NullnessUtil.castNonNull;
-
 public final class BytecodeProviderInitiator implements StandardServiceInitiator<BytecodeProvider> {
 
 	/**
 	 * @deprecated Register a {@link BytecodeProvider} through Java {@linkplain java.util.ServiceLoader services}.
 	 */
-	@Deprecated( forRemoval = true )
+	@Deprecated( forRemoval = true, since = "6.2" )
 	public static final String BYTECODE_PROVIDER_NAME_BYTEBUDDY = "bytebuddy";
-
-	/**
-	 * @deprecated Register a {@link BytecodeProvider} through Java {@linkplain java.util.ServiceLoader services}.
-	 */
-	@Deprecated( forRemoval = true )
-	public static final String BYTECODE_PROVIDER_NAME_NONE = "none";
-
-	/**
-	 * @deprecated Deprecated with no replacement
-	 */
-	@Deprecated( forRemoval = true )
-	public static final String BYTECODE_PROVIDER_NAME_DEFAULT = BYTECODE_PROVIDER_NAME_BYTEBUDDY;
 
 	/**
 	 * Singleton access

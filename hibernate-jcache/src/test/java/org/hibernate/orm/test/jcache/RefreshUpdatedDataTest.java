@@ -21,7 +21,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.SybaseASEDialect;
@@ -190,10 +190,10 @@ public class RefreshUpdatedDataTest {
 		inTransaction(
 				sessionFactory,
 				s -> {
-					s.delete( s.getReference( ReadWriteCacheableItem.class, 1L ) );
-					s.delete( s.getReference( ReadWriteVersionedCacheableItem.class, 1L ) );
-					s.delete( s.getReference( NonStrictReadWriteCacheableItem.class, 1L ) );
-					s.delete( s.getReference( NonStrictReadWriteVersionedCacheableItem.class, 1L ) );
+					s.remove( s.getReference( ReadWriteCacheableItem.class, 1L ) );
+					s.remove( s.getReference( ReadWriteVersionedCacheableItem.class, 1L ) );
+					s.remove( s.getReference( NonStrictReadWriteCacheableItem.class, 1L ) );
+					s.remove( s.getReference( NonStrictReadWriteVersionedCacheableItem.class, 1L ) );
 				}
 		);
 	}

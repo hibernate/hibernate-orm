@@ -30,8 +30,8 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
 
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
 
@@ -75,9 +75,9 @@ public class MyStringType implements UserType<String>, DynamicParameterizedType 
 
 		String entity = params.getProperty( DynamicParameterizedType.ENTITY );
 		String propertyName = params.getProperty( DynamicParameterizedType.PROPERTY );
-		XProperty xproperty = (XProperty) params.get( DynamicParameterizedType.XPROPERTY );
+		FieldDetails xproperty = (FieldDetails) params.get( DynamicParameterizedType.XPROPERTY );
 		Assert.assertEquals( propertyName, xproperty.getName() );
-		Assert.assertEquals( entity, xproperty.getDeclaringClass().getName() );
+		Assert.assertEquals( entity, xproperty.getDeclaringType().getName() );
 		Assert.assertEquals( String.class.getName(), xproperty.getType().getName() );
 
 		String tableName = propertyName.toUpperCase().split( "_" )[0];
@@ -98,12 +98,14 @@ public class MyStringType implements UserType<String>, DynamicParameterizedType 
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, String value, int index, SharedSessionContractImplementor session) throws SQLException {
+	public void nullSafeSet(PreparedStatement st, String value, int index, SharedSessionContractImplementor session)
+			throws SQLException {
 		st.setString( index, this.value );
 	}
 
 	@Override
-	public String nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public String nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+			throws SQLException {
 		return rs.getString( position );
 	}
 

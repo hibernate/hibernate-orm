@@ -7,16 +7,8 @@
 package org.hibernate.orm.test.mapping.lazytoone.polymorphic;
 
 import java.math.BigDecimal;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.proxy.HibernateProxy;
 
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
@@ -30,6 +22,13 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -39,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = {
 				PolymorphicToOneExplicitOptionTests.Order.class,
@@ -153,7 +153,6 @@ public class PolymorphicToOneExplicitOptionTests {
 		private Integer id;
 		private BigDecimal amount;
 		@ManyToOne( fetch = LAZY, optional = false )
-		@LazyToOne( LazyToOneOption.NO_PROXY )
 		private Customer customer;
 
 		public Order() {

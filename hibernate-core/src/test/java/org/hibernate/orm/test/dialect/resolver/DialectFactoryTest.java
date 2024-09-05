@@ -10,7 +10,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.*;
@@ -141,10 +140,6 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		testDetermination( "PostgreSQL", 9, 6, PostgreSQLDialect.class, resolver );
 		testDetermination( "PostgreSQL", 10, 0, PostgreSQLDialect.class, resolver );
 		testDetermination( "EnterpriseDB", 9, 2, PostgresPlusDialect.class, resolver );
-		testDetermination( "Apache Derby", 10, 4, DerbyDialect.class, resolver );
-		testDetermination( "Apache Derby", 10, 5, DerbyDialect.class, resolver );
-		testDetermination( "Apache Derby", 10, 6, DerbyDialect.class, resolver );
-		testDetermination( "Apache Derby", 11, 5, DerbyDialect.class, resolver );
 		testDetermination( "Microsoft SQL Server Database", SQLServerDialect.class, resolver );
 		testDetermination( "Microsoft SQL Server", SQLServerDialect.class, resolver );
 		testDetermination( "Sybase SQL Server", SybaseASEDialect.class, resolver );

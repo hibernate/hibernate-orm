@@ -8,12 +8,15 @@ package org.hibernate.orm.test.orphan;
 
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.SerializationHelper;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -28,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		xmlMappings = "org/hibernate/orm/test/orphan/Product.hbm.xml"
 )
 @SessionFactory
+@ServiceRegistry(settings = @Setting(name = AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY, value = "true"))
 public class OrphanTest {
 
 	@AfterEach
@@ -60,7 +64,7 @@ public class OrphanTest {
 
 					prod.getParts().remove( part );
 
-					session.delete( prod );
+					session.remove( prod );
 				}
 		);
 
@@ -99,7 +103,7 @@ public class OrphanTest {
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}
@@ -130,7 +134,7 @@ public class OrphanTest {
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}
@@ -166,79 +170,7 @@ public class OrphanTest {
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
-				}
-		);
-	}
-
-	@Test
-	@SuppressWarnings("unchecked")
-	public void testOrphanDeleteOnSaveOrUpdate(SessionFactoryScope scope) {
-		Product prod = new Product();
-		Part part = new Part();
-		scope.inTransaction(
-				session -> {
-					prod.setName( "Widget" );
-					part.setName( "Widge" );
-					part.setDescription( "part if a Widget" );
-					prod.getParts().add( part );
-					Part part2 = new Part();
-					part2.setName( "Get" );
-					part2.setDescription( "another part if a Widget" );
-					prod.getParts().add( part2 );
-					session.persist( prod );
-				}
-		);
-
-		prod.getParts().remove( part );
-
-		scope.inTransaction(
-				session ->
-						session.saveOrUpdate( prod )
-		);
-
-		scope.inTransaction(
-				session -> {
-					assertNull( session.get( Part.class, "Widge" ) );
-					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
-				}
-		);
-	}
-
-	@Test
-	@SuppressWarnings("unchecked")
-	public void testOrphanDeleteOnSaveOrUpdateAfterSerialization(SessionFactoryScope scope) {
-		Product prod = new Product();
-		Part part = new Part();
-		scope.inTransaction(
-				session -> {
-					prod.setName( "Widget" );
-					part.setName( "Widge" );
-					part.setDescription( "part if a Widget" );
-					prod.getParts().add( part );
-					Part part2 = new Part();
-					part2.setName( "Get" );
-					part2.setDescription( "another part if a Widget" );
-					prod.getParts().add( part2 );
-					session.persist( prod );
-				}
-		);
-
-		prod.getParts().remove( part );
-
-		Product cloned = (Product) SerializationHelper.clone( prod );
-
-		scope.inTransaction(
-				session ->
-					session.saveOrUpdate( cloned )
-		);
-
-		scope.inTransaction(
-				session -> {
-					assertNull( session.get( Part.class, "Widge" ) );
-					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}
@@ -279,7 +211,7 @@ public class OrphanTest {
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}
@@ -315,7 +247,7 @@ public class OrphanTest {
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}
@@ -346,7 +278,7 @@ public class OrphanTest {
 		scope.inTransaction(
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}
@@ -384,7 +316,7 @@ public class OrphanTest {
 		scope.inTransaction(
 				session -> {
 					assertNotNull( session.get( Part.class, "Widge" ) );
-					session.delete( session.get( Product.class, "Widget" ) );
+					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
 	}

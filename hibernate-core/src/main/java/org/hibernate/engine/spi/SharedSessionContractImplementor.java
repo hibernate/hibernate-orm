@@ -19,7 +19,6 @@ import org.hibernate.Interceptor;
 import org.hibernate.StatelessSession;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.graph.GraphSemantic;
 import org.hibernate.query.Query;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
@@ -542,25 +541,6 @@ public interface SharedSessionContractImplementor
 	}
 
 	default void autoPreFlush(){
-	}
-
-	/**
-	 * Are we currently enforcing a {@linkplain GraphSemantic#FETCH fetch graph}?
-	 *
-	 * @deprecated this is not used  anywhere
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	default boolean isEnforcingFetchGraph() {
-		return false;
-	}
-
-	/**
-	 * Enable or disable {@linkplain GraphSemantic#FETCH fetch graph} enforcement.
-	 *
-	 * @deprecated this is not used  anywhere
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	default void setEnforcingFetchGraph(boolean enforcingFetchGraph) {
 	}
 
 	/**

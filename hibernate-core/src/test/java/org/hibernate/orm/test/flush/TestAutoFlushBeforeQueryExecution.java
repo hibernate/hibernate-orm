@@ -15,6 +15,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -46,10 +47,10 @@ public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCas
 		Transaction txn = s.beginTransaction();
 		Publisher publisher = new Publisher();
 		publisher.setName( "name" );
-		s.save( publisher );
-		assertTrue( "autoflush entity create", s.createQuery( "from Publisher p" ).list().size() == 1 );
+		s.persist( publisher );
+		assertTrue( "autoflush entity create", s.createQuery( "from Publisher p", Publisher.class ).list().size() == 1 );
 		publisher.setName( "name" );
-		assertTrue( "autoflush entity update", s.createQuery( "from Publisher p where p.name='name'" ).list().size() == 1 );
+		assertTrue( "autoflush entity update", s.createQuery( "from Publisher p where p.name='name'", Publisher.class ).list().size() == 1 );
 		txn.commit();
 		s.close();
 
@@ -82,7 +83,7 @@ public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCas
 		assertEquals( 0, actionQueue.numberOfCollectionRemovals() );
 
 		author1.setPublisher( null );
-		s.delete( author1 );
+		s.remove( author1 );
 		publisher.getAuthors().clear();
 		assertEquals( 0, actionQueue.numberOfCollectionRemovals() );
 		assertTrue( "autoflush collection update",
@@ -110,7 +111,7 @@ public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCas
 		assertTrue( persistenceContext.getCollectionsByKey().values().contains( author2.getBooks() ) );
 		assertEquals( 0, actionQueue.numberOfCollectionRemovals() );
 
-		s.delete(publisher);
+		s.remove(publisher);
 		assertTrue( "autoflush delete", s.createQuery( "from Publisher p" ).list().size()==0 );
 		txn.commit();
 		s.close();
@@ -122,12 +123,12 @@ public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCas
 		Transaction txn = s.beginTransaction();
 		Publisher publisher = new Publisher();
 		publisher.setName( "name" );
-		s.save( publisher );
+		s.persist( publisher );
 		assertTrue( "autoflush entity create", s.createQuery( "from Publisher p" ).list().size() == 1 );
 		publisher.setName( "name" );
 		assertTrue( "autoflush entity update", s.createQuery( "from Publisher p where p.name='name'" ).list().size() == 1 );
 		UnrelatedEntity unrelatedEntity = new UnrelatedEntity( );
-		s.save( unrelatedEntity );
+		s.persist( unrelatedEntity );
 		txn.commit();
 		s.close();
 
@@ -157,7 +158,7 @@ public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCas
 		assertEquals( 0, actionQueue.numberOfCollectionRemovals() );
 
 		author1.setPublisher( null );
-		s.delete( author1 );
+		s.remove( author1 );
 		publisher.getAuthors().clear();
 		assertEquals( 0, actionQueue.numberOfCollectionRemovals() );
 		assertTrue( s.createQuery( "from UnrelatedEntity" ).list().size() == 1 );
@@ -194,9 +195,9 @@ public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCas
 		assertTrue( persistenceContext.getCollectionsByKey().values().contains( author2.getBooks() ) );
 		assertEquals( 0, actionQueue.numberOfCollectionRemovals() );
 
-		s.delete(publisher);
+		s.remove(publisher);
 		assertTrue( "autoflush delete", s.createQuery( "from UnrelatedEntity" ).list().size()==1 );
-		s.delete( unrelatedEntity );
+		s.remove( unrelatedEntity );
 		txn.commit();
 		s.close();
 	}
@@ -214,20 +215,15 @@ public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCas
 					@Override
 					public void integrate(
 							Metadata metadata,
-							SessionFactoryImplementor sessionFactory,
-							SessionFactoryServiceRegistry serviceRegistry) {
-						integrate( serviceRegistry );
+							BootstrapContext bootstrapContext,
+							SessionFactoryImplementor sessionFactory) {
+						integrate( sessionFactory );
 					}
 
-					private void integrate(SessionFactoryServiceRegistry serviceRegistry) {
-						serviceRegistry.getService( EventListenerRegistry.class )
+					private void integrate(SessionFactoryImplementor sessionFactory) {
+						sessionFactory.getServiceRegistry().getService( EventListenerRegistry.class )
 								.getEventListenerGroup( EventType.PRE_UPDATE )
 								.appendListener( InitializingPreUpdateEventListener.INSTANCE );
-					}
-
-					@Override
-					public void disintegrate(
-							SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
 					}
 				}
 		);

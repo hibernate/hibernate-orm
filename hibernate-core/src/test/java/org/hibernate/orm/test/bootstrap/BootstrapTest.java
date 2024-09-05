@@ -10,7 +10,6 @@ import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -30,6 +29,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.internal.DefaultAutoFlushEventListener;
@@ -42,7 +42,6 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
-import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.orm.test.mapping.basic.bitset.BitSetType;
 import org.hibernate.orm.test.mapping.basic.bitset.BitSetUserType;
 import org.hibernate.service.ServiceRegistry;
@@ -50,7 +49,9 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Entity;
@@ -78,7 +79,7 @@ public class BootstrapTest {
         ClassLoader customClassLoader = Thread.currentThread().getContextClassLoader();
         Integrator customIntegrator = new BeanValidationIntegrator();
 
-        //tag::bootstrap-bootstrap-native-registry-BootstrapServiceRegistry-example[]
+        //tag::example-bootstrap-native-BootstrapServiceRegistry[]
         BootstrapServiceRegistryBuilder bootstrapRegistryBuilder =
             new BootstrapServiceRegistryBuilder();
         // add a custom ClassLoader
@@ -87,21 +88,21 @@ public class BootstrapTest {
         bootstrapRegistryBuilder.applyIntegrator(customIntegrator);
 
         BootstrapServiceRegistry bootstrapRegistry = bootstrapRegistryBuilder.build();
-        //end::bootstrap-bootstrap-native-registry-BootstrapServiceRegistry-example[]
+        //end::example-bootstrap-native-BootstrapServiceRegistry[]
     }
 
     @Test
     public void test_bootstrap_bootstrap_native_registry_StandardServiceRegistryBuilder_example_1() {
-        //tag::bootstrap-bootstrap-native-registry-StandardServiceRegistryBuilder-example[]
+        //tag::example-bootstrap-native-StandardServiceRegistryBuilder[]
         // An example using an implicitly built BootstrapServiceRegistry
         StandardServiceRegistryBuilder standardRegistryBuilder =
             new StandardServiceRegistryBuilder();
-        //end::bootstrap-bootstrap-native-registry-StandardServiceRegistryBuilder-example[]
+        //end::example-bootstrap-native-StandardServiceRegistryBuilder[]
     }
 
     @Test
     public void test_bootstrap_bootstrap_native_registry_StandardServiceRegistryBuilder_example_2() {
-        //tag::bootstrap-bootstrap-native-registry-StandardServiceRegistryBuilder-example[]
+        //tag::example-bootstrap-native-StandardServiceRegistryBuilder[]
 
         // An example using an explicitly built BootstrapServiceRegistry
         BootstrapServiceRegistry bootstrapRegistry =
@@ -109,7 +110,144 @@ public class BootstrapTest {
 
         StandardServiceRegistryBuilder standardRegistryBuilder =
             new StandardServiceRegistryBuilder(bootstrapRegistry);
-        //end::bootstrap-bootstrap-native-registry-StandardServiceRegistryBuilder-example[]
+        //end::example-bootstrap-native-StandardServiceRegistryBuilder[]
+    }
+
+    @Test
+    @Disabled
+    public void testMetadataSources() {
+        //tag::example-bootstrap-native-MetadataSources[]
+        ServiceRegistry standardRegistry =
+                new StandardServiceRegistryBuilder().build();
+
+        MetadataSources sources = new MetadataSources(standardRegistry);
+
+        // add a class using JPA/Hibernate annotations for mapping
+        sources.addAnnotatedClass(MyEntity.class);
+
+        // add the name of a class using JPA/Hibernate annotations for mapping.
+        // differs from above in that accessing the Class is deferred which is
+        // important if using runtime bytecode-enhancement
+        sources.addAnnotatedClassName("org.hibernate.example.Customer");
+
+        // Read package-level metadata.
+        sources.addPackage("hibernate.example");
+
+        // Adds the named JPA orm.xml resource as a source: which performs the
+        // classpath lookup and parses the XML
+        sources.addResource("org/hibernate/example/Product.orm.xml");
+        //end::example-bootstrap-native-MetadataSources[]
+    }
+
+    @Test
+    @Disabled
+    public void testMetadataSourcesChaining() {
+        //tag::example-bootstrap-native-MetadataSources-chained[]
+        ServiceRegistry standardRegistry =
+                new StandardServiceRegistryBuilder().build();
+
+        MetadataSources sources = new MetadataSources(standardRegistry)
+                .addAnnotatedClass(MyEntity.class)
+                .addAnnotatedClassName("org.hibernate.example.Customer")
+                .addPackage("hibernate.example")
+                .addResource("org/hibernate/example/Product.orm.xml");
+        //end::example-bootstrap-native-MetadataSources-chained[]
+    }
+
+    @Test
+    public void testBuildMetadataNoBuilder() {
+        ServiceRegistry standardRegistry = new StandardServiceRegistryBuilder().build();
+        MetadataSources sources = new MetadataSources(standardRegistry).addAnnotatedClass(MyEntity.class);
+
+        //tag::example-bootstrap-native-Metadata-no-builder[]
+        Metadata metadata = sources.buildMetadata();
+        //end::example-bootstrap-native-Metadata-no-builder[]
+    }
+
+    @Test
+    public void testBuildMetadataUsingBuilder() {
+        ServiceRegistry standardRegistry = new StandardServiceRegistryBuilder().build();
+        MetadataSources sources = new MetadataSources(standardRegistry).addAnnotatedClass(MyEntity.class);
+
+        //tag::example-bootstrap-native-Metadata-using-builder[]
+        Metadata metadata = sources.getMetadataBuilder()
+                // configure second-level caching
+                .applyAccessType( AccessType.READ_WRITE )
+                // default catalog
+                .applyImplicitCatalogName( "my_catalog" )
+                // default schema
+                .applyImplicitSchemaName( "my_schema" )
+                .build();
+        //end::example-bootstrap-native-Metadata-using-builder[]
+    }
+
+    @Test
+    public void testBuildSessionFactoryNoBuilder() {
+        ServiceRegistry standardRegistry = new StandardServiceRegistryBuilder().build();
+        Metadata metadata = new MetadataSources(standardRegistry)
+                .addAnnotatedClass(MyEntity.class)
+                .buildMetadata();
+
+        //tag::example-bootstrap-native-SessionFactory-no-builder[]
+        final SessionFactory sessionFactory = metadata.buildSessionFactory();
+        //end::example-bootstrap-native-SessionFactory-no-builder[]
+
+        sessionFactory.close();
+    }
+
+    @Test
+    public void testBuildSessionFactoryUsingBuilder() {
+        ServiceRegistry standardRegistry = new StandardServiceRegistryBuilder().build();
+        Metadata metadata = new MetadataSources(standardRegistry)
+                .addAnnotatedClass(MyEntity.class)
+                .buildMetadata();
+
+        //tag::example-bootstrap-native-SessionFactory-using-builder[]
+        final SessionFactory sessionFactory = metadata.getSessionFactoryBuilder()
+                .applyStatisticsSupport( true )
+                .build();
+        //end::example-bootstrap-native-SessionFactory-using-builder[]
+
+        sessionFactory.close();
+    }
+
+    @Test
+    public void testNativeBuilders() {
+        //tag::example-bootstrap-native-MetadataBuilder[]
+        ServiceRegistry standardRegistry =
+                new StandardServiceRegistryBuilder().build();
+
+        MetadataSources sources = new MetadataSources(standardRegistry);
+        // ...
+        //end::example-bootstrap-native-MetadataBuilder[]
+
+        sources.addAnnotatedClass(MyEntity.class);
+
+        //tag::example-bootstrap-native-MetadataBuilder[]
+        final MetadataBuilder metadataBuilder = sources.getMetadataBuilder();
+
+        // configure second-level caching
+        metadataBuilder.applyAccessType( AccessType.READ_WRITE );
+
+        // default catalog
+        metadataBuilder.applyImplicitCatalogName( "my_catalog" );
+
+        // default schema
+        metadataBuilder.applyImplicitSchemaName( "my_schema" );
+        //end::example-bootstrap-native-MetadataBuilder[]
+
+        //tag::example-bootstrap-native-Metadata[]
+        Metadata metadata = metadataBuilder.build();
+        // or Metadata metadata = sources.buildMetadata()
+        //end::example-bootstrap-native-Metadata[]
+
+        //tag::example-bootstrap-native-SessionFactoryBuilder[]
+        SessionFactoryBuilder sessionFactoryBuilder
+                = metadata.getSessionFactoryBuilder();
+
+        // collect statistics
+        sessionFactoryBuilder.applyStatisticsSupport( true );
+        //end::example-bootstrap-native-SessionFactoryBuilder[]
     }
 
     @Test
@@ -429,9 +567,7 @@ public class BootstrapTest {
     //end::bootstrap-jpa-compliant-PersistenceUnit-example[]
 
     //tag::bootstrap-jpa-compliant-PersistenceUnit-configurable-example[]
-    @PersistenceUnit(
-        unitName = "CRM"
-   )
+    @PersistenceUnit(unitName="CRM")
     private EntityManagerFactory entityManagerFactory;
     //end::bootstrap-jpa-compliant-PersistenceUnit-configurable-example[]
 
@@ -489,7 +625,17 @@ public class BootstrapTest {
         }
 
         @Override
-        public PersistenceUnitTransactionType getTransactionType() {
+        public String getScopeAnnotationName() {
+            return null;
+        }
+
+        @Override
+        public List<String> getQualifierAnnotationNames() {
+            return List.of();
+        }
+
+        @Override
+        public jakarta.persistence.spi.PersistenceUnitTransactionType getTransactionType() {
             return transactionType;
         }
 

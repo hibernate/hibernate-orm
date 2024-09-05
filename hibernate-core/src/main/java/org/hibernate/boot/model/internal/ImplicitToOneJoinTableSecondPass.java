@@ -6,18 +6,20 @@
  */
 package org.hibernate.boot.model.internal;
 
-import jakarta.persistence.JoinTable;
+import java.util.Map;
+
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.boot.spi.SecondPass;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 
-import java.util.Map;
+import jakarta.persistence.JoinTable;
 
 import static org.hibernate.boot.model.internal.ToOneBinder.getReferenceEntityName;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -86,17 +88,26 @@ public class ImplicitToOneJoinTableSecondPass implements SecondPass {
 	private TableBinder createTableBinder() {
 		final TableBinder tableBinder = new TableBinder();
 		tableBinder.setBuildingContext( context );
-		if ( !joinTable.schema().isEmpty() ) {
-			tableBinder.setSchema( joinTable.schema() );
+
+		final String schema = joinTable.schema();
+		if ( StringHelper.isNotEmpty( schema ) ) {
+			tableBinder.setSchema( schema );
 		}
-		if ( !joinTable.catalog().isEmpty() ) {
-			tableBinder.setCatalog( joinTable.catalog() );
+
+		final String catalog = joinTable.catalog();
+		if ( StringHelper.isNotEmpty( catalog ) ) {
+			tableBinder.setCatalog( catalog );
 		}
-		if ( !joinTable.name().isEmpty() ) {
-			tableBinder.setName( joinTable.name() );
+
+		final String tableName = joinTable.name();
+		if ( StringHelper.isNotEmpty( tableName ) ) {
+			tableBinder.setName( tableName );
 		}
+
 		tableBinder.setUniqueConstraints( joinTable.uniqueConstraints() );
 		tableBinder.setJpaIndex( joinTable.indexes() );
+		tableBinder.setOptions( joinTable.options() );
+
 		return tableBinder;
 	}
 

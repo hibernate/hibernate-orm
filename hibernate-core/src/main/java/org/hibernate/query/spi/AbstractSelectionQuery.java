@@ -81,7 +81,7 @@ public abstract class AbstractSelectionQuery<R>
 		super( session );
 	}
 
-	protected void applyOptions(NamedQueryMemento memento) {
+	protected void applyOptions(NamedQueryMemento<?> memento) {
 		if ( memento.getHints() != null ) {
 			memento.getHints().forEach( this::applyHint );
 		}
@@ -426,17 +426,6 @@ public abstract class AbstractSelectionQuery<R>
 	@Override
 	public SelectionQuery<R> setHibernateLockMode(LockMode lockMode) {
 		getLockOptions().setLockMode( lockMode );
-		return this;
-	}
-
-	/**
-	 * Specify a LockMode to apply to a specific alias defined in the query
-	 *
-	 * @deprecated use {{@link #setLockMode(String, LockMode)}}
-	 */
-	@Override @Deprecated
-	public SelectionQuery<R> setAliasSpecificLockMode(String alias, LockMode lockMode) {
-		getLockOptions().setAliasSpecificLockMode( alias, lockMode );
 		return this;
 	}
 

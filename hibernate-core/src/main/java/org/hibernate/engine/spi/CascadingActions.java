@@ -22,6 +22,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.CollectionType;
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Iterator;
 
 import static java.util.Collections.emptyIterator;
@@ -33,6 +34,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
  */
 public class CascadingActions {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			CascadingAction.class.getName()
 	);
@@ -80,11 +82,11 @@ public class CascadingActions {
 	};
 
 	/**
-	 * @see org.hibernate.Session#delete(Object)
+	 * Used in legacy {@code Session#delete} method, which has been removed
 	 *
 	 * @deprecated Use {@link #REMOVE}
 	 */
-	@Deprecated(since = "6.6")
+	@Deprecated(since = "6.6", forRemoval = true)
 	public static final CascadingAction<DeleteContext> DELETE = REMOVE;
 
 	/**
@@ -197,48 +199,6 @@ public class CascadingActions {
 		@Override
 		public String toString() {
 			return "ACTION_EVICT";
-		}
-	};
-
-	/**
-	 * @see org.hibernate.Session#saveOrUpdate(Object)
-	 */
-	public static final CascadingAction<PersistContext> SAVE_UPDATE = new BaseCascadingAction<>() {
-		@Override
-		public void cascade(
-				EventSource session,
-				Object child,
-				String entityName,
-				PersistContext nothing,
-				boolean isCascadeDeleteEnabled)
-				throws HibernateException {
-			LOG.tracev( "Cascading to save or update: {0}", entityName );
-			session.saveOrUpdate( entityName, child );
-		}
-
-		@Override
-		public Iterator<?> getCascadableChildrenIterator(
-				EventSource session,
-				CollectionType collectionType,
-				Object collection) {
-			// saves / updates don't cascade to uninitialized collections
-			return getLoadedElementsIterator( session, collectionType, collection );
-		}
-
-		@Override
-		public boolean deleteOrphans() {
-			// orphans should be deleted during save/update
-			return true;
-		}
-
-		@Override
-		public boolean performOnLazyProperty() {
-			return false;
-		}
-
-		@Override
-		public String toString() {
-			return "ACTION_SAVE_UPDATE";
 		}
 	};
 
@@ -379,7 +339,7 @@ public class CascadingActions {
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
 			if ( child != null && isChildTransient( session, child, entityName ) ) {
-				throw new TransientObjectException( "persistent instance references an unsaved transient instance of '"
+				throw new TransientObjectException( "Persistent instance references an unsaved transient instance of '"
 						+ entityName + "' (save the transient instance before flushing)" );
 				//TODO: should be TransientPropertyValueException
 //				throw new TransientPropertyValueException(

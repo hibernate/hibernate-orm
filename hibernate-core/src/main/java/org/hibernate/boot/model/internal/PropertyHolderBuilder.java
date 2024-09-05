@@ -8,14 +8,14 @@ package org.hibernate.boot.model.internal;
 
 import java.util.Map;
 
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
 
 /**
  * This factory is here to build a PropertyHolder and prevent .mapping interface adding
@@ -27,11 +27,11 @@ public final class PropertyHolderBuilder {
 	}
 
 	public static PropertyHolder buildPropertyHolder(
-			XClass clazzToProcess,
+			ClassDetails clazzToProcess,
 			PersistentClass persistentClass,
 			EntityBinder entityBinder,
 			MetadataBuildingContext context,
-			Map<XClass, InheritanceState> inheritanceStatePerClass) {
+			Map<ClassDetails, InheritanceState> inheritanceStatePerClass) {
 		return new ClassPropertyHolder(
 				persistentClass,
 				clazzToProcess,
@@ -54,8 +54,9 @@ public final class PropertyHolderBuilder {
 			String path,
 			PropertyData inferredData,
 			PropertyHolder parent,
-			MetadataBuildingContext context) {
-		return new ComponentPropertyHolder( component, path, inferredData, parent, context );
+			MetadataBuildingContext context,
+			Map<ClassDetails, InheritanceState> inheritanceStatePerClass) {
+		return new ComponentPropertyHolder( component, path, inferredData, parent, context, inheritanceStatePerClass );
 	}
 
 	/**
@@ -64,8 +65,8 @@ public final class PropertyHolderBuilder {
 	public static CollectionPropertyHolder buildPropertyHolder(
 			Collection collection,
 			String path,
-			XClass clazzToProcess,
-			XProperty property,
+			ClassDetails clazzToProcess,
+			MemberDetails property,
 			PropertyHolder parentPropertyHolder,
 			MetadataBuildingContext context) {
 		return new CollectionPropertyHolder(
@@ -86,7 +87,7 @@ public final class PropertyHolderBuilder {
 			PersistentClass persistentClass,
 			Map<String, Join> joins,
 			MetadataBuildingContext context,
-			Map<XClass, InheritanceState> inheritanceStatePerClass) {
+			Map<ClassDetails, InheritanceState> inheritanceStatePerClass) {
 		return new ClassPropertyHolder( persistentClass, null, joins, context, inheritanceStatePerClass );
 	}
 }

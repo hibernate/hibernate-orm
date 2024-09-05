@@ -40,7 +40,7 @@ public class FetchingTest extends AbstractJPATest {
 					p = (Person) session.createQuery( "select p from Person p where p.firstName = :name" )
 							.setParameter( "name", "Gavin" ).uniqueResult();
 					assertFalse( Hibernate.isInitialized( p.getStays() ) );
-					session.delete( p );
+					session.remove( p );
 				}
 		);
 	}
@@ -79,7 +79,7 @@ public class FetchingTest extends AbstractJPATest {
 							Hibernate.isInitialized( stay3.getVeryOldPerson() ),
 							"FetchMode.JOIN should overrides lazy options"
 					);
-					session.delete( stay3.getVeryOldPerson() );
+					session.remove( stay3.getVeryOldPerson() );
 				}
 		);
 	}

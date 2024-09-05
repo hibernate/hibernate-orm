@@ -12,8 +12,6 @@ import org.hibernate.JDBCException;
 import org.hibernate.exception.internal.SQLStateConversionDelegate;
 import org.hibernate.exception.internal.StandardSQLExceptionConverter;
 import org.hibernate.exception.spi.SQLExceptionConverter;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * A helper to centralize conversion of {@link SQLException}s to {@link JDBCException}s.
@@ -23,7 +21,6 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Steve Ebersole
  */
 public class BasicSQLExceptionConverter {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BasicSQLExceptionConverter.class );
 
 	/**
 	 * Singleton access
@@ -33,7 +30,6 @@ public class BasicSQLExceptionConverter {
 	/**
 	 * Message
 	 */
-	public static final String MSG = LOG.unableToQueryDatabaseMetadata();
 
 	private static final SQLExceptionConverter CONVERTER = new StandardSQLExceptionConverter(
 			new SQLStateConversionDelegate(() -> sqle ->"???" )
@@ -46,7 +42,7 @@ public class BasicSQLExceptionConverter {
 	 * @return The converted exception.
 	 */
 	public JDBCException convert(SQLException sqlException) {
-		return CONVERTER.convert( sqlException, MSG, null );
+		return CONVERTER.convert( sqlException, "Unable to query java.sql.DatabaseMetaData", null );
 	}
 
 }

@@ -236,12 +236,12 @@
 			<one-to-many class="org.hibernate.orm.test.legacy.Sortable"/>
 		</set>
 		
-		<bag name="parts" lazy="true" cascade="save-update">
+		<bag name="parts" lazy="true" cascade="merge,persist">
 			<key column="baz"/>
 			<one-to-many class="org.hibernate.orm.test.legacy.Part"/>
 		</bag>
 		
-		<bag name="moreParts" lazy="true" cascade="save-update">
+		<bag name="moreParts" lazy="true" cascade="merge,persist">
 			<key column="baz"/>
 			<many-to-many column="part" class="org.hibernate.orm.test.legacy.Part"/>
 		</bag>

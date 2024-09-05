@@ -141,20 +141,13 @@ public class ArrayJdbcType implements JdbcType {
 		}
 	}
 
-	protected Object[] getArray(
-			BasicBinder<?> binder,
-			ValueBinder<Object> elementBinder,
-			Object value,
-			WrapperOptions options) throws SQLException {
+	protected <T> Object[] getArray(BasicBinder<?> binder, ValueBinder<T> elementBinder, T value, WrapperOptions options)
+			throws SQLException {
 		final JdbcType elementJdbcType = ( (ArrayJdbcType) binder.getJdbcType() ).getElementJdbcType();
 		//noinspection unchecked
-		final JavaType<Object> javaType = (JavaType<Object>) binder.getJavaType();
+		final JavaType<T> javaType = (JavaType<T>) binder.getJavaType();
 		if ( elementJdbcType instanceof AggregateJdbcType ) {
-			final Object[] domainObjects = javaType.unwrap(
-					value,
-					Object[].class,
-					options
-			);
+			final T[] domainObjects = (T[]) javaType.unwrap( value, Object[].class, options );
 			final Object[] objects = new Object[domainObjects.length];
 			for ( int i = 0; i < domainObjects.length; i++ ) {
 				objects[i] = elementBinder.getBindValue( domainObjects[i], options );
@@ -163,22 +156,15 @@ public class ArrayJdbcType implements JdbcType {
 		}
 		else {
 			final TypeConfiguration typeConfiguration = options.getSessionFactory().getTypeConfiguration();
-			final JdbcType underlyingJdbcType = typeConfiguration.getJdbcTypeRegistry()
-					.getDescriptor( elementJdbcType.getDefaultSqlTypeCode() );
+			final JdbcType underlyingJdbcType =
+					typeConfiguration.getJdbcTypeRegistry().getDescriptor( elementJdbcType.getDefaultSqlTypeCode() );
 			final Class<?> preferredJavaTypeClass = elementJdbcType.getPreferredJavaTypeClass( options );
-			final Class<?> elementJdbcJavaTypeClass;
-			if ( preferredJavaTypeClass == null ) {
-				elementJdbcJavaTypeClass = underlyingJdbcType.getJdbcRecommendedJavaTypeMapping(
-						null,
-						null,
-						typeConfiguration
-				).getJavaTypeClass();
-			}
-			else {
-				elementJdbcJavaTypeClass = preferredJavaTypeClass;
-			}
-			//noinspection unchecked
-			final Class<Object[]> arrayClass = (Class<Object[]>)
+			final Class<?> elementJdbcJavaTypeClass =
+					preferredJavaTypeClass == null
+							? underlyingJdbcType.getJdbcRecommendedJavaTypeMapping(null, null, typeConfiguration )
+									.getJavaTypeClass()
+							: preferredJavaTypeClass;
+			final Class<? extends Object[]> arrayClass = (Class<? extends Object[]>)
 					Array.newInstance( elementJdbcJavaTypeClass, 0 ).getClass();
 			return javaType.unwrap( value, arrayClass, options );
 		}
@@ -192,11 +178,8 @@ public class ArrayJdbcType implements JdbcType {
 			final Object[] domainObjects = new Object[Array.getLength( rawArray )];
 			for ( int i = 0; i < domainObjects.length; i++ ) {
 				final Object[] aggregateRawValues = aggregateJdbcType.extractJdbcValues( Array.get( rawArray, i ), options );
-				final StructAttributeValues attributeValues = StructHelper.getAttributeValues(
-						embeddableMappingType,
-						aggregateRawValues,
-						options
-				);
+				final StructAttributeValues attributeValues =
+						StructHelper.getAttributeValues( embeddableMappingType, aggregateRawValues, options );
 				domainObjects[i] = instantiate( embeddableMappingType, attributeValues, options.getSessionFactory() );
 			}
 			return extractor.getJavaType().wrap( domainObjects, options );
@@ -208,8 +191,9 @@ public class ArrayJdbcType implements JdbcType {
 
 	@Override
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		//noinspection unchecked
-		final ValueBinder<Object> elementBinder = elementJdbcType.getBinder( ( (BasicPluralJavaType<Object>) javaTypeDescriptor ).getElementJavaType() );
+		@SuppressWarnings("unchecked")
+		final BasicPluralJavaType<X> pluralJavaType = (BasicPluralJavaType<X>) javaTypeDescriptor;
+		final ValueBinder<X> elementBinder = elementJdbcType.getBinder( pluralJavaType.getElementJavaType() );
 		return new BasicBinder<>( javaTypeDescriptor, this ) {
 
 			@Override
@@ -284,9 +268,9 @@ public class ArrayJdbcType implements JdbcType {
 	 */
 	@Override
 	public boolean equals(Object o) {
-		return o != null &&
-				getClass() == o.getClass() &&
-				getElementJdbcType().equals( ( (ArrayJdbcType) o ).getElementJdbcType() );
+		return o != null
+			&& getClass() == o.getClass()
+			&& getElementJdbcType().equals( ( (ArrayJdbcType) o ).getElementJdbcType() );
 	}
 
 	@Override

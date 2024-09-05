@@ -74,13 +74,13 @@ public class ManyToOneWithEmbeddedAndNotOptionalFieldTest {
 					client.setLog( log );
 
 
-					session.save( client );
+					session.persist( client );
 
 					user.setName( "Fab" );
 
 					user.setClient( client );
 
-					session.save( user );
+					session.persist( user );
 				}
 		);
 		userId = user.getId();

@@ -6,23 +6,21 @@
  */
 package org.hibernate.tuple;
 
+import java.util.EnumSet;
 import java.util.Locale;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.annotations.GenerationTime;
 import org.hibernate.generator.EventType;
 
 /**
- * Represents the timing of {@link ValueGeneration value generation} that occurs
- * in the Java program, or in the database.
+ * Represents the {@linkplain #getEventTypes timing} of value generation.
  *
  * @author Steve Ebersole
  *
- * @see ValueGeneration
- *
  * @deprecated Replaced by {@link EventType} as id-generation has been
  * redefined using the new broader {@linkplain org.hibernate.generator generation}
- * approach.
+ * approach.  For 7.0, this is kept around to support {@code hbm.xml} mappings and
+ * will be removed in 8.0 once we finally drop {@code hbm.xml} support.
  */
 @Deprecated(since = "6.2", forRemoval = true)
 public enum GenerationTiming {
@@ -85,20 +83,14 @@ public enum GenerationTiming {
 	}
 
 	/**
-	 * @return the equivalent instance of {@link GenerationTime}
+	 * Return the equivalent set of {@linkplain EventType event types}
 	 */
-	public GenerationTime getEquivalent() {
-		switch (this) {
-			case ALWAYS:
-				return GenerationTime.ALWAYS;
-			case INSERT:
-				return GenerationTime.INSERT;
-			case UPDATE:
-				return GenerationTime.UPDATE;
-			case NEVER:
-				return GenerationTime.NEVER;
-			default:
-				throw new AssertionFailure("unknown timing");
-		}
+	public EnumSet<EventType> getEventTypes() {
+		return switch ( this ) {
+			case ALWAYS -> EnumSet.allOf( EventType.class );
+			case INSERT -> EnumSet.of( EventType.INSERT );
+			case UPDATE -> EnumSet.of( EventType.UPDATE );
+			case NEVER -> null;
+		};
 	}
 }

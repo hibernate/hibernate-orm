@@ -93,7 +93,7 @@ public class OnDemandLoadWithCollectionInDefaultFetchGroupFalseTest {
 
         scope.inTransaction( s -> {
             // first load the store, making sure it is not initialized
-            store[0] = s.load( Store.class, 1L );
+            store[0] = s.getReference( Store.class, 1L );
             assertNotNull( store[0] );
             assertFalse( isPropertyInitialized( store[0], "inventories" ) );
 
@@ -173,10 +173,10 @@ public class OnDemandLoadWithCollectionInDefaultFetchGroupFalseTest {
     public void cleanup(SessionFactoryScope scope) throws Exception {
         scope.inTransaction( s -> {
             Store store = s.find( Store.class, 1L );
-            s.delete( store );
+            s.remove( store );
 
             Product product= s.find( Product.class, "007" );
-            s.delete( product );
+            s.remove( product );
         } );
     }
 

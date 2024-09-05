@@ -6,28 +6,25 @@
  */
 package org.hibernate.orm.test.version.sybase;
 
+import org.hibernate.Session;
+import org.hibernate.annotations.Generated;
+import org.hibernate.dialect.SybaseASEDialect;
+import org.hibernate.generator.EventType;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
+import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
+
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
-import org.junit.Test;
-
-import org.hibernate.Session;
-import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
-
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
-
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -74,7 +71,7 @@ public class SybaseTimestampComparisonAnnotationsTest extends BaseCoreFunctional
 
 		s = openSession();
 		s.getTransaction().begin();
-		s.delete( thing );
+		s.remove( thing );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -91,7 +88,7 @@ public class SybaseTimestampComparisonAnnotationsTest extends BaseCoreFunctional
 		private long id;
 
 		@Version
-		@Generated(GenerationTime.ALWAYS)
+		@Generated(event = { EventType.INSERT,EventType.UPDATE})
 		@Column(name = "ver", columnDefinition = "timestamp")
 		private byte[] version;
 

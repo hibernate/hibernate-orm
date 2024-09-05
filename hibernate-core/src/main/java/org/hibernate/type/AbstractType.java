@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -21,12 +20,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @author Gavin King
  */
 public abstract class AbstractType implements Type {
-
-	@Deprecated(forRemoval = true)
-	protected static final Size LEGACY_DICTATED_SIZE = new Size();
-
-	@Deprecated(forRemoval = true)
-	protected static final Size LEGACY_DEFAULT_SIZE = new Size( 19, 2, 255L ); // to match legacy behavior
 
 	@Override
 	public boolean isAssociationType() {
@@ -126,7 +119,8 @@ public abstract class AbstractType implements Type {
 	}
 
 	private boolean needsReplacement(ForeignKeyDirection foreignKeyDirection) {
-		if ( isAssociationType() ) {
+		// Collection and OneToOne are the only associations that could be TO_PARENT
+		if ( this instanceof CollectionType || this instanceof OneToOneType ) {
 			final AssociationType associationType = (AssociationType) this;
 			return associationType.getForeignKeyDirection() == foreignKeyDirection;
 		}

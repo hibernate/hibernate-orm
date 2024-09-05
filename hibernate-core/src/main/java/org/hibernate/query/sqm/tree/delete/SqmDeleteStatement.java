@@ -24,6 +24,8 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.metamodel.EntityType;
 
 /**
  * @author Steve Ebersole
@@ -34,31 +36,6 @@ public class SqmDeleteStatement<T>
 
 	public SqmDeleteStatement(NodeBuilder nodeBuilder) {
 		super( SqmQuerySource.HQL, nodeBuilder );
-	}
-
-	/**
-	 * @deprecated was previously used for HQL. Use {@link SqmDeleteStatement#SqmDeleteStatement(NodeBuilder)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public SqmDeleteStatement(SqmRoot<T> target, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
-		super( target, querySource, nodeBuilder );
-	}
-
-	/**
-	 * @deprecated was previously used for Criteria. Use {@link SqmDeleteStatement#SqmDeleteStatement(Class,NodeBuilder)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public SqmDeleteStatement(Class<T> targetEntity, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
-		super(
-				new SqmRoot<>(
-						nodeBuilder.getDomainModel().entity( targetEntity ),
-						null,
-						false,
-						nodeBuilder
-				),
-				querySource,
-				nodeBuilder
-		);
 	}
 
 	public SqmDeleteStatement(Class<T> targetEntity, NodeBuilder nodeBuilder) {
@@ -135,5 +112,10 @@ public class SqmDeleteStatement<T>
 		SqmFromClause.appendJoins( root, sb );
 		SqmFromClause.appendTreatJoins( root, sb );
 		super.appendHqlString( sb );
+	}
+
+	@Override
+	public <U> Subquery<U> subquery(EntityType<U> type) {
+		throw new UnsupportedOperationException( "DELETE query cannot be sub-query" );
 	}
 }

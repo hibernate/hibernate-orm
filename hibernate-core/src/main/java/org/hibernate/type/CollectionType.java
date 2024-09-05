@@ -7,6 +7,7 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -39,7 +40,6 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.pretty.MessageHelper;
@@ -60,7 +60,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  */
 public abstract class CollectionType extends AbstractType implements AssociationType {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionType.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, CollectionType.class.getName() );
 
 	@Internal
 	public static final Object UNFETCHED_COLLECTION = new MarkerObject( "UNFETCHED COLLECTION" );
@@ -467,9 +467,9 @@ public abstract class CollectionType extends AbstractType implements Association
 			throws MappingException {
 		try {
 
-			QueryableCollection collectionPersister = (QueryableCollection) factory.getRuntimeMetamodels().getMappingMetamodel().getCollectionDescriptor( role );
+			CollectionPersister collectionPersister = factory.getRuntimeMetamodels().getMappingMetamodel().getCollectionDescriptor( role );
 
-			if ( !collectionPersister.getElementType().isEntityType() ) {
+			if ( !( collectionPersister.getElementType() instanceof EntityType ) ) {
 				throw new MappingException(
 						"collection was not an association: " +
 						collectionPersister.getRole()

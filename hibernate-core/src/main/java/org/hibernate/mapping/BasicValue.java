@@ -355,8 +355,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 		final Selectable selectable = getColumn();
 		final Size size;
-		if ( selectable instanceof Column ) {
-			Column column = (Column) selectable;
+		if ( selectable instanceof Column column ) {
 			resolveColumn( column, getDialect() );
 			size = column.calculateColumnSize( getDialect(), getBuildingContext().getMetadataCollector() );
 		}
@@ -364,13 +363,13 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			size = Size.nil();
 		}
 
-		resolution.getJdbcType()
-				.addAuxiliaryDatabaseObjects(
-						resolution.getRelationalJavaType(),
-						size,
-						getBuildingContext().getMetadataCollector().getDatabase(),
-						this
-				);
+		resolution.getJdbcType().addAuxiliaryDatabaseObjects(
+				resolution.getRelationalJavaType(),
+				resolution.getValueConverter(),
+				size,
+				getBuildingContext().getMetadataCollector().getDatabase(),
+				this
+		);
 
 		return resolution;
 	}

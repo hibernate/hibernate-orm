@@ -63,7 +63,7 @@ public class InsertOrderingWithCascadeOnPersist {
 		// This block resulted in a Foreign Key ConstraintViolation because the inserts were ordered incorrectly.
 		scope.inTransaction( session -> {
 			// Add marketResult to existing Bid
-			final MarketBid bid = session.load( MarketBid.class, bidId );
+			final MarketBid bid = session.getReference( MarketBid.class, bidId );
 			final MarketResult result = new MarketResult();
 			result.setMarketBid( bid );
 			session.persist( result );

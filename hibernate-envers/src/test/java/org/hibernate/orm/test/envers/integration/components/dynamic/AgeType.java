@@ -39,13 +39,14 @@ public class AgeType implements UserType<Age> {
 	}
 
 	@Override
-	public Age nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public Age nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+			throws SQLException {
 		return new Age( rs.getInt( position ) );
 	}
 
 	@Override
 	public void nullSafeSet(PreparedStatement st, Age value, int index, SharedSessionContractImplementor session)
-			throws HibernateException, SQLException {
+			throws SQLException {
 		st.setInt( index, value.getAgeInYears() );
 	}
 

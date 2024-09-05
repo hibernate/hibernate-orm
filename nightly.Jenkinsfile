@@ -16,7 +16,7 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 @Library('hibernate-jenkins-pipeline-helpers@1.13') _
 import org.hibernate.jenkins.pipeline.helpers.job.JobHelper
 
-@Field final String DEFAULT_JDK_VERSION = '11'
+@Field final String DEFAULT_JDK_VERSION = '17'
 @Field final String DEFAULT_JDK_TOOL = "OpenJDK ${DEFAULT_JDK_VERSION} Latest"
 @Field final String NODE_PATTERN_BASE = 'Worker&&Containers'
 @Field List<BuildEnvironment> environments
@@ -29,7 +29,7 @@ stage('Configure') {
 		// Minimum supported versions
 		new BuildEnvironment( dbName: 'hsqldb_2_6' ),
 		new BuildEnvironment( dbName: 'mysql_8_0' ),
-		new BuildEnvironment( dbName: 'mariadb_10_4' ),
+		new BuildEnvironment( dbName: 'mariadb_10_5' ),
 		new BuildEnvironment( dbName: 'postgresql_12' ),
 		new BuildEnvironment( dbName: 'edb_12' ),
 		new BuildEnvironment( dbName: 'db2_10_5', longRunning: true ),
@@ -116,11 +116,11 @@ stage('Build') {
 									sh "./docker_db.sh mysql_8_0"
 									state[buildEnv.tag]['containerName'] = "mysql"
 									break;
-								case "mariadb_10_4":
+								case "mariadb_10_5":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('mariadb:10.4.31').pull()
+										docker.image('mariadb:10.5.25').pull()
 									}
-									sh "./docker_db.sh mariadb_10_4"
+									sh "./docker_db.sh mariadb_10_5"
 									state[buildEnv.tag]['containerName'] = "mariadb"
 									break;
 								case "postgresql_12":

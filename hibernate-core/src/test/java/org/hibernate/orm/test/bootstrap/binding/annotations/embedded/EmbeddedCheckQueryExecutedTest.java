@@ -94,8 +94,8 @@ public class EmbeddedCheckQueryExecutedTest {
 				session -> {
 					InternetProvider internetProvider = session.get( InternetProvider.class, provider.getId() );
 					Manager manager = internetProvider.getOwner().getTopManagement().iterator().next();
-					session.delete( manager );
-					session.delete( internetProvider );
+					session.remove( manager );
+					session.remove( internetProvider );
 				}
 		);
 	}
@@ -140,8 +140,8 @@ public class EmbeddedCheckQueryExecutedTest {
 				session -> {
 					InternetProvider internetProvider = session.get( InternetProvider.class, provider.getId() );
 					Manager manager = internetProvider.getOwner().getTopManagement().iterator().next();
-					session.delete( manager );
-					session.delete( internetProvider );
+					session.remove( manager );
+					session.remove( internetProvider );
 				}
 		);
 	}

@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.orm.test.event.collection.AbstractCollectionEventTest;
 import org.hibernate.orm.test.event.collection.ChildEntity;
 import org.hibernate.orm.test.event.collection.CollectionListeners;
@@ -23,7 +23,7 @@ import org.hibernate.testing.SkipForDialect;
  */
 public abstract class AbstractAssociationCollectionEventTest extends AbstractCollectionEventTest {
 	@Test
-	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
+	@SkipForDialect(value = HANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testDeleteParentButNotChild() {
 		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithOneChild( "parent", "child" );
@@ -34,7 +34,7 @@ public abstract class AbstractAssociationCollectionEventTest extends AbstractCol
 		parent = ( ParentWithCollection ) s.get( parent.getClass(), parent.getId() );
 		child = ( ChildEntity ) s.get( child.getClass(), child.getId() );
 		parent.removeChild( child );
-		s.delete( parent );
+		s.remove( parent );
 		tx.commit();
 		s.close();
 		int index = 0;

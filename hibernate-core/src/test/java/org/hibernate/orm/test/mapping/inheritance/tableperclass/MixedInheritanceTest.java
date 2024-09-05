@@ -173,7 +173,7 @@ public class MixedInheritanceTest {
 		scope.inTransaction(
 				session -> {
 					session.createQuery( "from Person", Person.class ).list().forEach(
-							cust -> session.delete( cust )
+							cust -> session.remove( cust )
 					);
 				}
 		);

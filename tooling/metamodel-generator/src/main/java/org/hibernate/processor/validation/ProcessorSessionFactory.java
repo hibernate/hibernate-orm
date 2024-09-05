@@ -240,13 +240,13 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		}
 		try (Reader reader = filer.getResource(StandardLocation.SOURCE_OUTPUT, ENTITY_INDEX, value)
 				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
-			return Set.of(buffered.readLine().split(" "));
+			return Set.of(split(" ", buffered.readLine()));
 		}
 		catch (IOException e) {
 		}
 		try (Reader reader = filer.getResource(StandardLocation.CLASS_PATH, ENTITY_INDEX, '.' + value)
 				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
-			return Set.of(buffered.readLine().split(" "));
+			return Set.of(split(" ", buffered.readLine()));
 		}
 		catch (IOException e) {
 		}
@@ -367,6 +367,12 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		}
 
 		@Override
+		boolean isSamePersister(MockEntityPersister entityPersister) {
+			EntityPersister persister = (EntityPersister) entityPersister;
+			return typeUtil.isSameType( persister.type.asType(), type.asType() );
+		}
+
+		@Override
 		boolean isSubclassPersister(MockEntityPersister entityPersister) {
 			EntityPersister persister = (EntityPersister) entityPersister;
 			return typeUtil.isSubtype( persister.type.asType(), type.asType() );
@@ -426,19 +432,9 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	@Override
-	String findEntityName(String typeName) {
-		for ( final Map.Entry<String, String> e : entityNameMappings.entrySet() ) {
-			if ( typeName.equals( e.getKey() ) || typeName.equals( e.getValue() ) ) {
-				return e.getKey();
-			}
-		}
-		return null;
-	}
-
-	@Override
 	String qualifyName(String entityName) {
 		TypeElement entityClass = findEntityClass(entityName);
-		return entityClass == null ? null : entityClass.getSimpleName().toString();
+		return entityClass == null ? null : entityClass.getQualifiedName().toString();
 	}
 
 	@Override

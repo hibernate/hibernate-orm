@@ -72,7 +72,7 @@ public class LoadANonExistingEntityTest {
 		statistics.clear();
 
 		scope.inTransaction( session -> {
-					Employer nonExisting = session.load( Employer.class, -1 );
+					Employer nonExisting = session.getReference( Employer.class, -1 );
 					assertEquals( 0, statistics.getPrepareStatementCount() );
 					assertFalse( Hibernate.isInitialized( nonExisting ) );
 					try {
@@ -93,7 +93,7 @@ public class LoadANonExistingEntityTest {
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
 		scope.inTransaction( session -> {
-					Employer nonExisting = session.load( Employer.class, -1 );
+					Employer nonExisting = session.getReference( Employer.class, -1 );
 					assertEquals( 0, statistics.getPrepareStatementCount() );
 					assertFalse( Hibernate.isInitialized( nonExisting ) );
 					try {
@@ -114,7 +114,7 @@ public class LoadANonExistingEntityTest {
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
 		scope.inTransaction( session -> {
-					Employer nonExisting = session.load( Employer.class, -1 );
+					Employer nonExisting = session.getReference( Employer.class, -1 );
 					assertEquals( 0, statistics.getPrepareStatementCount() );
 					assertFalse( Hibernate.isInitialized( nonExisting ) );
 					try {

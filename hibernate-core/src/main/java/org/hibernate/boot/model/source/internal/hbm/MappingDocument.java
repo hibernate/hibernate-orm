@@ -27,8 +27,8 @@ import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
 import org.hibernate.boot.query.HbmResultSetMappingDescriptor;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.internal.util.StringHelper;
@@ -47,7 +47,7 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 	private final JaxbHbmHibernateMapping documentRoot;
 	private final Origin origin;
 	private final MetadataBuildingContext rootBuildingContext;
-	private final MappingDefaults mappingDefaults;
+	private final EffectiveMappingDefaults mappingDefaults;
 
 	private final ToolingHintContext toolingHintContext;
 
@@ -67,12 +67,12 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 
 		// todo : allow for a split in default-lazy for singular/plural
 
-		this.mappingDefaults = new OverriddenMappingDefaults.Builder( rootBuildingContext.getMappingDefaults() )
+		this.mappingDefaults = new OverriddenMappingDefaults.Builder( rootBuildingContext.getEffectiveDefaults() )
 				.setImplicitSchemaName( documentRoot.getSchema() )
 				.setImplicitCatalogName( documentRoot.getCatalog() )
 				.setImplicitPackageName( documentRoot.getPackage() )
 				.setImplicitPropertyAccessorName( documentRoot.getDefaultAccess() )
-				.setImplicitCascadeStyleName( documentRoot.getDefaultCascade() )
+//				.setImplicitCascadeStyleName( documentRoot.getDefaultCascade() )
 				.setEntitiesImplicitlyLazy( documentRoot.isDefaultLazy() )
 				.setAutoImportEnabled( documentRoot.isAutoImport() )
 				.setPluralAttributesImplicitlyLazy( documentRoot.isDefaultLazy() )
@@ -112,12 +112,12 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 	public String determineEntityName(String entityName, String clazz) {
 		return entityName != null
 				? entityName
-				: qualifyIfNeeded( clazz, mappingDefaults.getImplicitPackageName() );
+				: qualifyIfNeeded( clazz, mappingDefaults.getDefaultPackageName() );
 	}
 
 	@Override
 	public String qualifyClassName(String name) {
-		return qualifyIfNeeded( name, mappingDefaults.getImplicitPackageName() );
+		return qualifyIfNeeded( name, mappingDefaults.getDefaultPackageName() );
 	}
 
 	@Override
@@ -141,7 +141,7 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 	}
 
 	@Override
-	public MappingDefaults getMappingDefaults() {
+	public EffectiveMappingDefaults getEffectiveDefaults() {
 		return mappingDefaults;
 	}
 

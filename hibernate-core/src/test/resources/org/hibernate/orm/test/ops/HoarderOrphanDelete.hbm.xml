@@ -20,8 +20,8 @@
             <generator class="native"/>
         </id>
         <property name="name"/>
-        <many-to-one name="favoriteItem" cascade="persist,merge,save-update" />
-        <set name="items" cascade="persist,merge,save-update">
+        <many-to-one name="favoriteItem" cascade="persist,merge" />
+        <set name="items" cascade="persist,merge">
             <key column="HOARDER_ID"/>
             <one-to-many class="Item" />
         </set>
@@ -33,12 +33,12 @@
         </id>
         <version name="version"/>
         <property name="name" not-null="true" />
-        <many-to-one name="category" cascade="persist,merge,save-update"/>
+        <many-to-one name="category" cascade="persist,merge"/>
         <set name="colors">
             <key column="itemId"/>
             <element type="string" not-null="true"/>
         </set>
-        <list name="subItemsBackref" lazy="true" cascade="persist,merge,save-update,delete-orphan">
+        <list name="subItemsBackref" lazy="true" cascade="persist,merge,delete-orphan">
             <key column="parentItem" not-null="true"/>
             <index column="indx"/>
             <one-to-many class="SubItem"/>
@@ -59,8 +59,8 @@
         </id>
         <version name="version" />
         <property name="name" not-null="true" />
-        <many-to-one name="exampleItem" cascade="persist,merge,save-update" />
-        <set name="subCategories" lazy="true" cascade="persist,merge,save-update,delete-orphan">
+        <many-to-one name="exampleItem" cascade="persist,merge" />
+        <set name="subCategories" lazy="true" cascade="persist,merge,delete-orphan">
             <key column="parentCategory" not-null="false"/>
             <one-to-many class="SubCategory"/>
         </set>

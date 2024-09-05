@@ -13,10 +13,13 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.Hibernate;
+import org.hibernate.cfg.MappingSettings;
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -30,9 +33,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Gavin King
  */
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/unionsubclass2/Person.hbm.xml"
-)
+@DomainModel(xmlMappings = "org/hibernate/orm/test/unionsubclass2/Person.hbm.xml")
 @SessionFactory
 public class UnionSubclassTest {
 	protected String[] getMappings() {
@@ -64,9 +65,9 @@ public class UnionSubclassTest {
 					yomomma.setName( "mum" );
 					yomomma.setSex( 'F' );
 
-					s.save( yomomma );
-					s.save( mark );
-					s.save( joe );
+					s.persist( yomomma );
+					s.persist( mark );
+					s.persist( joe );
 
 					try {
 						assertEquals( s.createQuery( "from java.io.Serializable" ).list().size(), 0 );
@@ -130,9 +131,9 @@ public class UnionSubclassTest {
 //					s.createCriteria( Person.class ).add(
 //							Restrictions.in( "address", new Address[] {	mark.getAddress(),	joe.getAddress()} ) ).list();
 
-					s.delete( mark );
-					s.delete( joe );
-					s.delete( yomomma );
+					s.remove( mark );
+					s.remove( joe );
+					s.remove( yomomma );
 					assertTrue( s.createQuery( "from Person" ).list().isEmpty() );
 
 				}
@@ -178,8 +179,8 @@ public class UnionSubclassTest {
 					assertEquals( result.size(), 1 );
 					assertEquals( ( (BigDecimal) result.get( 0 ) ).intValue(), 1000 );
 
-					s.delete( p );
-					s.delete( q );
+					s.remove( p );
+					s.remove( q );
 				}
 		);
 	}
@@ -292,8 +293,8 @@ public class UnionSubclassTest {
 									.uniqueResult()
 							).doubleValue();
 					assertEquals( 1d, expiryViaSql, 0.01d );
-					s.delete( p );
-					s.delete( e );
+					s.remove( p );
+					s.remove( e );
 				}
 		);
 	}

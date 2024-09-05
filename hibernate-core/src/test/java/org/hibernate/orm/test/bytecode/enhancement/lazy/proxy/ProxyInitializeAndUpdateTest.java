@@ -66,7 +66,7 @@ public class ProxyInitializeAndUpdateTest {
 
 		scope.inTransaction(
 				session -> {
-					Animal animal = session.load( Animal.class, "animal" );
+					Animal animal = session.getReference( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
 					assertEquals( "female", animal.getSex() );
 					assertTrue( Hibernate.isInitialized( animal ) );
@@ -101,7 +101,7 @@ public class ProxyInitializeAndUpdateTest {
 
 		scope.inTransaction(
 				session -> {
-					Animal animal = session.load( Animal.class, "animal" );
+					Animal animal = session.getReference( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
 					animal.setSex( "other" );
 					// Setting the attribute value should have initialized animal.
@@ -146,7 +146,7 @@ public class ProxyInitializeAndUpdateTest {
 
 		scope.inTransaction(
 				session -> {
-					final Animal animal = session.load( Animal.class, "animal" );
+					final Animal animal = session.getReference( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
 					final Animal animalMerged = (Animal) session.merge( animalInitialized );
 					assertSame( animal, animalMerged );
@@ -226,7 +226,7 @@ public class ProxyInitializeAndUpdateTest {
 		);
 
 		final Animal animalUninitialized = scope.fromTransaction( session -> {
-					final Animal animal = session.load( Animal.class, "animal" );
+					final Animal animal = session.getReference( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
 					return animal;
 				}
@@ -234,7 +234,7 @@ public class ProxyInitializeAndUpdateTest {
 
 		scope.inTransaction(
 				session -> {
-					final Animal animal = session.load( Animal.class, "animal" );
+					final Animal animal = session.getReference( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
 					final Animal animalMerged = (Animal) session.merge( animalUninitialized );
 					assertSame( animal, animalMerged );
@@ -265,7 +265,7 @@ public class ProxyInitializeAndUpdateTest {
 		);
 
 		final Animal animalUninitialized = scope.fromTransaction( session -> {
-					final Animal animal = session.load( Animal.class, "animal" );
+					final Animal animal = session.getReference( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
 					return animal;
 				}
@@ -273,7 +273,7 @@ public class ProxyInitializeAndUpdateTest {
 
 		scope.inTransaction(
 				session -> {
-					final Animal animal = session.load( Animal.class, "animal" );
+					final Animal animal = session.getReference( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
 					animal.setSex( "other" );
 					assertTrue( Hibernate.isInitialized( animal ) );

@@ -6,7 +6,9 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -53,7 +55,9 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 			boolean[] discriminatorAbstract,
 			DiscriminatorType<?> incomingDiscriminatorType) {
 		//noinspection unchecked
-		super( entityDescriptor, (DiscriminatorType<Object>) incomingDiscriminatorType, (BasicType<Object>) incomingDiscriminatorType.getUnderlyingJdbcMapping() );
+		super( entityDescriptor,
+				(DiscriminatorType<Object>) incomingDiscriminatorType,
+				(BasicType<Object>) incomingDiscriminatorType.getUnderlyingJdbcMapping() );
 
 		for ( int i = 0; i < discriminatorValues.length; i++ ) {
 			if ( !discriminatorAbstract[i] ) {
@@ -253,6 +257,24 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 
 		public CaseStatementDiscriminatorExpression(TableGroup entityTableGroup) {
 			this.entityTableGroup = entityTableGroup;
+		}
+
+		public List<TableReference> getUsedTableReferences() {
+			final ArrayList<TableReference> usedTableReferences = new ArrayList<>( tableDiscriminatorDetailsMap.size() );
+			tableDiscriminatorDetailsMap.forEach(
+					(tableName, tableDiscriminatorDetails) -> {
+						final TableReference tableReference = entityTableGroup.getTableReference(
+								entityTableGroup.getNavigablePath(),
+								tableName,
+								false
+						);
+
+						if ( tableReference != null ) {
+							usedTableReferences.add( tableReference );
+						}
+					}
+			);
+			return usedTableReferences;
 		}
 
 		@Override

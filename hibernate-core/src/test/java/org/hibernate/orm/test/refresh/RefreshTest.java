@@ -80,7 +80,7 @@ public class RefreshTest {
 	@Test
 	public void testRefreshWithNullId(SessionFactoryScope scope) {
 		Assertions.assertThrows(
-				TransientObjectException.class,
+				IllegalArgumentException.class,
 				() -> {
 					scope.inTransaction(
 							session -> {
@@ -205,7 +205,7 @@ public class RefreshTest {
 	public static class RealmAttributeEntity {
 
 		@Id
-		@ManyToOne(fetch= FetchType.LAZY)
+		@ManyToOne(fetch= FetchType.LAZY, cascade = CascadeType.PERSIST)
 		@JoinColumn(name = "REALM_ID")
 		protected RealmEntity realm;
 

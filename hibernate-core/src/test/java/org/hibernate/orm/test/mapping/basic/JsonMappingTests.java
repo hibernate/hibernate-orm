@@ -17,15 +17,13 @@ import jakarta.json.JsonValue;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
-import org.hibernate.dialect.AbstractHANADialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.HANADialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -192,7 +190,7 @@ public abstract class JsonMappingTests {
 
 	@Test
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support comparing CLOBs with the = operator")
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "HANA doesn't support comparing LOBs with the = operator")
+	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA doesn't support comparing LOBs with the = operator")
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase doesn't support comparing LOBs with the = operator")
 	@SkipForDialect(dialectClass = OracleDialect.class, matchSubTypes = true, reason = "Oracle doesn't support comparing JSON with the = operator")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase doesn't support comparing CLOBs with the = operator")

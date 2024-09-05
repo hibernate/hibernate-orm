@@ -111,7 +111,7 @@ public class SubqueryOperatorsTest {
 							Long.MAX_VALUE,
 							"aaa"
 					);
-					session.save( entity );
+					session.persist( entity );
 
 					SimpleEntity second_entity = new SimpleEntity(
 							2,
@@ -121,7 +121,7 @@ public class SubqueryOperatorsTest {
 							Long.MAX_VALUE,
 							"zzz"
 					);
-					session.save( second_entity );
+					session.persist( second_entity );
 
 				}
 		);

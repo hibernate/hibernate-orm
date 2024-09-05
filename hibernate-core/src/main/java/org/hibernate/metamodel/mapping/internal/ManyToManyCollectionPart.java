@@ -56,6 +56,8 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.EntityType;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static java.util.Objects.requireNonNullElse;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.createInverseModelPart;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getPropertyOrder;
@@ -258,14 +260,13 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 	public TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAliasBase explicitSqlAliasBase,
-			SqlAstJoinType requestedJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAstCreationState creationState) {
 		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
-
 		final LazyTableGroup lazyTableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,
@@ -302,11 +303,11 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 	public LazyTableGroup createRootTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAliasBase explicitSqlAliasBase,
-			SqlAstJoinType requestedJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType requestedJoinType,
 			boolean fetched,
-			Consumer<Predicate> predicateConsumer,
+			@Nullable Consumer<Predicate> predicateConsumer,
 			SqlAstCreationState creationState) {
 		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
 		final boolean canUseInnerJoin = joinType == SqlAstJoinType.INNER || lhs.canUseInnerJoins();
@@ -393,7 +394,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 				fkTargetModelPart = resolveNamedTargetPart( mapKeyPropertyName, entityMappingType, collectionDescriptor );
 			}
 			else {
-				fkTargetModelPart = getAssociatedEntityMappingType().getIdentifierMapping();
+				fkTargetModelPart = getAssociatedEntityMappingType().getIdentifierMappingForJoin();
+//				fkTargetModelPart = getAssociatedEntityMappingType().getIdentifierMapping();
 			}
 		}
 		else if ( StringHelper.isNotEmpty( bootCollectionDescriptor.getMappedByProperty() ) ) {
@@ -449,7 +451,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 		}
 		else {
 			// non-inverse @ManyToMany
-			fkTargetModelPart = getAssociatedEntityMappingType().getIdentifierMapping();
+			fkTargetModelPart = getAssociatedEntityMappingType().getIdentifierMappingForJoin();
+//			fkTargetModelPart = getAssociatedEntityMappingType().getIdentifierMapping();
 		}
 
 		if ( getNature() == Nature.ELEMENT ) {

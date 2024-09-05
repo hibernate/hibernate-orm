@@ -22,7 +22,7 @@ import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureParameter;
 import jakarta.persistence.StoredProcedureQuery;
 
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.result.Output;
@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Vlad Mihalcea, Jonathan Bregler
  */
-@RequiresDialect(AbstractHANADialect.class)
+@RequiresDialect(HANADialect.class)
 @DomainModel(
 		annotatedClasses = {
 				Person.class,
@@ -282,7 +282,7 @@ public class HANAStoredProcedureTest {
 	@JiraKey( "HHH-12138")
 	public void testStoredProcedureReturnValue(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			Integer phoneCount = session
+			Integer phoneCount = (Integer) session
 					.createNativeQuery( "SELECT fn_count_phones(:personId) FROM SYS.DUMMY", Integer.class )
 					.setParameter( "personId", 1 )
 					.getSingleResult();

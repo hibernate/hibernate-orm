@@ -25,22 +25,26 @@ import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.sqm.FrameKind;
 import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.AbstractQuery;
 import jakarta.persistence.criteria.CollectionJoin;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.ListJoin;
 import jakarta.persistence.criteria.MapJoin;
+import jakarta.persistence.criteria.Nulls;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.criteria.TemporalField;
 
 /**
  * A JPA {@link CriteriaBuilder} is a source of objects which may be composed
@@ -174,15 +178,35 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	<T> JpaCriteriaQuery<T> except(boolean all, CriteriaQuery<? extends T> query1, CriteriaQuery<?>... queries);
 
-	default <T> JpaSubQuery<T> unionAll(Subquery<? extends T> query1, Subquery<?>... queries) {
-		return union( true, query1, queries );
-	}
+	@Override
+	<T> CriteriaSelect<T> union(CriteriaSelect<? extends T> left, CriteriaSelect<? extends T> right);
+
+	<T> JpaCriteriaQuery<T> union(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right);
 
 	default <T> JpaSubQuery<T> union(Subquery<? extends T> query1, Subquery<?>... queries) {
 		return union( false, query1, queries );
 	}
 
 	<T> JpaSubQuery<T> union(boolean all, Subquery<? extends T> query1, Subquery<?>... queries);
+
+	default <T> JpaSubQuery<T> unionAll(JpaSubQuery<? extends T> query1, JpaSubQuery<? extends T> query2) {
+		return union( true, query1, query2 );
+	}
+
+	@Override
+	<T> CriteriaSelect<T> unionAll(CriteriaSelect<? extends T> left, CriteriaSelect<? extends T> right);
+
+	<T> JpaCriteriaQuery<T> unionAll(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right);
+
+	@Override
+	<T> CriteriaSelect<T> intersect(CriteriaSelect<? super T> left, CriteriaSelect<? super T> right);
+
+	@Override
+	<T> CriteriaSelect<T> intersectAll(CriteriaSelect<? super T> left, CriteriaSelect<? super T> right);
+
+	<T> JpaCriteriaQuery<T> intersect(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right);
+
+	<T> JpaCriteriaQuery<T> intersectAll(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right);
 
 	default <T> JpaSubQuery<T> intersectAll(Subquery<? extends T> query1, Subquery<?>... queries) {
 		return intersect( true, query1, queries );
@@ -193,6 +217,16 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	}
 
 	<T> JpaSubQuery<T> intersect(boolean all, Subquery<? extends T> query1, Subquery<?>... queries);
+
+	@Override
+	<T> CriteriaSelect<T> except(CriteriaSelect<T> left, CriteriaSelect<?> right);
+
+	@Override
+	<T> CriteriaSelect<T> exceptAll(CriteriaSelect<T> left, CriteriaSelect<?> right);
+
+	<T> JpaCriteriaQuery<T> except(CriteriaQuery<T> left, CriteriaQuery<?> right);
+
+	<T> JpaCriteriaQuery<T> exceptAll(CriteriaQuery<T> left, CriteriaQuery<?> right);
 
 	default <T> JpaSubQuery<T> exceptAll(Subquery<? extends T> query1, Subquery<?>... queries) {
 		return except( true, query1, queries );
@@ -346,11 +380,11 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	@Override
 	JpaCompoundSelection<Tuple> tuple(Selection<?>... selections);
-	JpaCompoundSelection<Tuple> tuple(List<? extends JpaSelection<?>> selections);
+	JpaCompoundSelection<Tuple> tuple(List<Selection<?>> selections);
 
 	@Override
 	JpaCompoundSelection<Object[]> array(Selection<?>... selections);
-	JpaCompoundSelection<Object[]> array(List<? extends JpaSelection<?>> selections);
+	JpaCompoundSelection<Object[]> array(List<Selection<?>> selections);
 
 	<Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, Selection<?>... selections);
 	<Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, List<? extends JpaSelection<?>> selections);
@@ -1001,10 +1035,34 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Ordering
 
-	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence, boolean ignoreCase);
-	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence);
-	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder);
+
 	JpaOrder sort(JpaExpression<?> sortExpression);
+
+	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder);
+
+	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, Nulls nullPrecedence);
+
+	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, Nulls nullPrecedence, boolean ignoreCase);
+
+	/**
+	 * @deprecated Use {@linkplain #sort(JpaExpression, SortDirection, Nulls)} instead
+	 */
+	@Deprecated
+	default JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
+		return sort( sortExpression, sortOrder, nullPrecedence.getJpaValue() );
+	}
+
+	/**
+	 * @deprecated Use {@linkplain #sort(JpaExpression, SortDirection, Nulls, boolean)} instead
+	 */
+	@Deprecated
+	default JpaOrder sort(
+			JpaExpression<?> sortExpression,
+			SortDirection sortOrder,
+			NullPrecedence nullPrecedence,
+			boolean ignoreCase) {
+		return sort( sortExpression, sortOrder, nullPrecedence.getJpaValue(), ignoreCase );
+	}
 
 	@Override
 	JpaOrder asc(Expression<?> x);
@@ -2695,7 +2753,6 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 */
 	@Incubating
 	JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator);
-	
 	/**
 	 * Whether an array contains an element.
 	 *
@@ -2760,7 +2817,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Whether an array is a subset of another array.
 	 *
 	 * @since 6.4
-	 * @deprecated Replaced with {@link #arrayIncludes(Expression, T[])}
+	 * @deprecated Replaced with {@link #arrayIncludes(Expression, Object[])}
 	 */
 	@Incubating
 	@Deprecated(forRemoval = true)
@@ -2772,7 +2829,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Whether an array is a subset of another array.
 	 *
 	 * @since 6.4
-	 * @deprecated Replaced with {@link #arrayIncludes(T[], Expression)}
+	 * @deprecated Replaced with {@link #arrayIncludes(Object[], Expression)}
 	 */
 	@Incubating
 	@Deprecated(forRemoval = true)
@@ -2796,7 +2853,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Whether an array is a subset of another array with nullable elements.
 	 *
 	 * @since 6.4
-	 * @deprecated Replaced with {@link #arrayIncludesNullable(Expression, T[])}
+	 * @deprecated Replaced with {@link #arrayIncludesNullable(Expression, Object[])}
 	 */
 	@Incubating
 	@Deprecated(forRemoval = true)
@@ -2808,7 +2865,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Whether an array is a subset of another array with nullable elements.
 	 *
 	 * @since 6.4
-	 * @deprecated Replaced with {@link #arrayIncludesNullable(T[], Expression)}
+	 * @deprecated Replaced with {@link #arrayIncludesNullable(Object[], Expression)}
 	 */
 	@Incubating
 	@Deprecated(forRemoval = true)
@@ -2880,7 +2937,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Whether one array has any elements common with another array.
 	 *
 	 * @since 6.4
-	 * @deprecated Replaced with {@link #arrayIntersects(Expression, T[])}
+	 * @deprecated Replaced with {@link #arrayIntersects(Expression, Object[])}
 	 */
 	@Incubating
 	@Deprecated(forRemoval = true)
@@ -2892,7 +2949,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Whether one array has any elements common with another array.
 	 *
 	 * @since 6.4
-	 * @deprecated Replaced with {@link #arrayIntersects(T[], Expression)}
+	 * @deprecated Replaced with {@link #arrayIntersects(Object[], Expression)}
 	 */
 	@Incubating
 	@Deprecated(forRemoval = true)
@@ -2916,7 +2973,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Whether one array has any elements common with another array, supporting {@code null} elements.
 	 *
 	 * @since 6.4
-	 * @deprecated Replaced with {@link #arrayIntersectsNullable(Expression, T[])}
+	 * @deprecated Replaced with {@link #arrayIntersectsNullable(Expression, Object[])}
 	 */
 	@Incubating
 	@Deprecated(forRemoval = true)
@@ -2928,7 +2985,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Whether one array has any elements common with another array, supporting {@code null} elements.
 	 *
 	 * @since 6.4
-	 * @deprecated Replaced with {@link #arrayIntersectsNullable(T[], Expression)}
+	 * @deprecated Replaced with {@link #arrayIntersectsNullable(Object[], jakarta.persistence.criteria.Expression)}
 	 */
 	@Incubating
 	@Deprecated(forRemoval = true)
@@ -3606,4 +3663,17 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 */
 	@Incubating
 	<E> JpaPredicate collectionIntersectsNullable(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
+
+
+	@Override
+	JpaPredicate and(List<Predicate> restrictions);
+
+	@Override
+	JpaPredicate or(List<Predicate> restrictions);
+
+	@Override
+	JpaExpression<String> concat(List<Expression<String>> expressions);
+
+	@Override
+	<N, T extends Temporal> JpaExpression<N> extract(TemporalField<N, T> field, Expression<T> temporal);
 }

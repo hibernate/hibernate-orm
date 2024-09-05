@@ -33,12 +33,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Gavin King
  */
-@DomainModel(
-		xmlMappings = {
-				"org/hibernate/orm/test/mapping/inheritance/discriminator/SimpleInheritance.hbm.xml",
-				"org/hibernate/orm/test/mapping/inheritance/discriminator/Person.hbm.xml"
-		}
-)
+@DomainModel( xmlMappings = "org/hibernate/orm/test/mapping/inheritance/discriminator/SimpleInheritance.hbm.xml")
 @SessionFactory
 public class SimpleInheritanceTest {
 
@@ -71,9 +66,9 @@ public class SimpleInheritanceTest {
 					yomomma.setName( "mum" );
 					yomomma.setSex( 'F' );
 
-					s.save( yomomma );
-					s.save( mark );
-					s.save( joe );
+					s.persist( yomomma );
+					s.persist( mark );
+					s.persist( joe );
 
 					try {
 						s.createQuery( "from java.io.Serializable" ).list();
@@ -115,9 +110,9 @@ public class SimpleInheritanceTest {
 					mark = s.get( Employee.class, mark.getId() );
 					joe = s.get( Customer.class, joe.getId() );
 
-					s.delete( mark );
-					s.delete( joe );
-					s.delete( yomomma );
+					s.remove( mark );
+					s.remove( joe );
+					s.remove( yomomma );
 					assertTrue( s.createQuery( "from Person" ).list().isEmpty() );
 
 				}
@@ -133,7 +128,7 @@ public class SimpleInheritanceTest {
 					employee.setName( "Steve" );
 					employee.setSex( 'M' );
 					employee.setTitle( "grand poobah" );
-					s.save( employee );
+					s.persist( employee );
 				}
 		);
 
@@ -155,7 +150,7 @@ public class SimpleInheritanceTest {
 		);
 
 		scope.inTransaction(
-				session -> session.delete( employee )
+				session -> session.remove( employee )
 		);
 	}
 
@@ -167,14 +162,14 @@ public class SimpleInheritanceTest {
 					p.setId( 5 );
 					p.setName( "Emmanuel" );
 					p.setSex( 'M' );
-					s.save( p );
+					s.persist( p );
 					Employee q = new Employee();
 					q.setId( 6 );
 					q.setName( "Steve" );
 					q.setSex( 'M' );
 					q.setTitle( "Mr" );
 					q.setSalary( new BigDecimal( 1000 ) );
-					s.save( q );
+					s.persist( q );
 
 					List result = s.createQuery( "from Person where salary > 100" )
 							.list();
@@ -203,8 +198,8 @@ public class SimpleInheritanceTest {
 		assertEquals( result.size(), 1 );
 		assertEquals( result.get(0), new BigDecimal(1000) );*/
 
-					s.delete( p );
-					s.delete( q );
+					s.remove( p );
+					s.remove( q );
 				}
 		);
 	}
@@ -218,14 +213,14 @@ public class SimpleInheritanceTest {
 					employee.setName( "Steve" );
 					employee.setSex( 'M' );
 					employee.setTitle( "grand poobah" );
-					s.save( employee );
+					s.persist( employee );
 				}
 		);
 
 		scope.inTransaction(
 				s -> {
 					// load the superclass proxy.
-					Person pLoad = s.load( Person.class, employee.getId() );
+					Person pLoad = s.getReference( Person.class, employee.getId() );
 					assertTrue( pLoad instanceof HibernateProxy );
 					Person pGet = s.get( Person.class, employee.getId() );
 					Person pQuery = (Person) s.createQuery(
@@ -253,7 +248,7 @@ public class SimpleInheritanceTest {
 		);
 
 		scope.inTransaction(
-				s -> s.delete( employee )
+				s -> s.remove( employee )
 		);
 	}
 
@@ -266,7 +261,7 @@ public class SimpleInheritanceTest {
 					employee.setName( "Steve" );
 					employee.setSex( 'M' );
 					employee.setTitle( "grand poobah" );
-					s.save( employee );
+					s.persist( employee );
 				}
 
 		);
@@ -274,7 +269,7 @@ public class SimpleInheritanceTest {
 		scope.inTransaction(
 				s -> {
 					// load the superclass proxy.
-					Person pLoad = s.load( Person.class, employee.getId() );
+					Person pLoad = s.getReference( Person.class, employee.getId() );
 					assertTrue( pLoad instanceof HibernateProxy );
 					// evict the proxy
 					s.evict( pLoad );
@@ -300,7 +295,7 @@ public class SimpleInheritanceTest {
 		);
 
 		scope.inTransaction(
-				s -> s.delete( employee )
+				s -> s.remove( employee )
 		);
 	}
 }

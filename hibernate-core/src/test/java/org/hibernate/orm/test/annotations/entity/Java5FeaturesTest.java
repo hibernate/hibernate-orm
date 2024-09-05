@@ -88,13 +88,13 @@ public class Java5FeaturesTest extends BaseCoreFunctionalTestCase {
 		communityBid = (CommunityBid) s.get( CommunityBid.class, communityBid.getId() );
 		assertNull( bid.getNote() );
 		assertEquals( Starred.OK, communityBid.getCommunityNote() );
-		s.delete( bid );
+		s.remove( bid );
 		s.clear();
 		communityBid = (CommunityBid) s.createNativeQuery( "select {b.*} from Bid b where b.id = ?" )
 				.addEntity( "b", CommunityBid.class )
 				.setParameter( 1, communityBid.getId() ).uniqueResult();
 		assertEquals( Starred.OK, communityBid.getCommunityNote() );
-		s.delete( communityBid );
+		s.remove( communityBid );
 		tx.commit();
 		s.close();
 	}
@@ -118,7 +118,7 @@ public class Java5FeaturesTest extends BaseCoreFunctionalTestCase {
 		tx = s.beginTransaction();
 		bid = (Bid) s.get( Bid.class, bid.getId() );
 		assertEquals( null, bid.getApproved() );
-		s.delete( bid );
+		s.remove( bid );
 		tx.commit();
 		s.close();
 	}

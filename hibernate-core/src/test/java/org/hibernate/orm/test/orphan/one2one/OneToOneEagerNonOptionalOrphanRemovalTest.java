@@ -55,10 +55,10 @@ public class OneToOneEagerNonOptionalOrphanRemovalTest {
 			final Engine engine2 = new Engine( 2, 295 );
 			final Car car = new Car( 1, engine1, color );
 
-			session.save( engine1 );
-			session.save( engine2 );
-			session.save( color );
-			session.save( car );
+			session.persist( engine1 );
+			session.persist( engine2 );
+			session.persist( color );
+			session.persist( car );
 		} );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -67,7 +67,7 @@ public class OneToOneEagerNonOptionalOrphanRemovalTest {
 			final Car car = session.find( Car.class, 1 );
 			final Engine engine = session.find( Engine.class, 2 );
 			car.setEngine( engine );
-			session.update( car );
+			session.merge( car );
 		} );
 
 		scope.inTransaction( session -> {
@@ -84,8 +84,8 @@ public class OneToOneEagerNonOptionalOrphanRemovalTest {
 			final PaintColor color = new PaintColor( 2, "Blue" );
 			final Car car = session.find( Car.class, 1 );
 			car.setPaintColor( color );
-			session.save( color );
-			session.update( car );
+			session.persist( color );
+			session.merge( car );
 		} );
 
 		scope.inTransaction( session -> {

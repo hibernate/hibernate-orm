@@ -38,46 +38,6 @@ public class TransientObjectExceptionHandlingTest extends BaseExceptionHandlingT
 	}
 
 	@Test
-	public void testSave() {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		A a = new A();
-		a.id = 1;
-		a.aInfo = new AInfo();
-		try {
-			s.save( a );
-			fail( "should have thrown an exception" );
-		}
-		catch (RuntimeException expected) {
-			exceptionExpectations.onTransientObjectOnSaveAndSaveOrUpdate( expected );
-		}
-		finally {
-			tx.rollback();
-			s.close();
-		}
-	}
-
-	@Test
-	public void testSaveOrUpdate() {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		A a = new A();
-		a.id = 1;
-		a.aInfo = new AInfo();
-		try {
-			s.saveOrUpdate( a );
-			fail( "should have thrown an exception" );
-		}
-		catch (RuntimeException expected) {
-			exceptionExpectations.onTransientObjectOnSaveAndSaveOrUpdate( expected );
-		}
-		finally {
-			tx.rollback();
-			s.close();
-		}
-	}
-
-	@Test
 	public void testPersist() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -118,14 +78,14 @@ public class TransientObjectExceptionHandlingTest extends BaseExceptionHandlingT
 	}
 
 	@Test
-	public void testUpdateFlush() {
+	public void testMergeFlush() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		A a = new A();
 		a.id = 1;
 		a.aInfo = new AInfo();
 		try {
-			s.update( a );
+			s.merge( a );
 			s.flush();
 			fail( "should have thrown an exception" );
 		}

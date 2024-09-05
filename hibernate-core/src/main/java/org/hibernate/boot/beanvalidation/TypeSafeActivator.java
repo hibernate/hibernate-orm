@@ -7,6 +7,7 @@
 package org.hibernate.boot.beanvalidation;
 
 import java.lang.annotation.Annotation;
+import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -60,14 +61,14 @@ import static org.hibernate.cfg.ValidationSettings.JPA_VALIDATION_FACTORY;
  */
 class TypeSafeActivator {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, TypeSafeActivator.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, TypeSafeActivator.class.getName() );
 
 	/**
 	 * Used to validate a supplied ValidatorFactory instance as being castable to ValidatorFactory.
 	 *
 	 * @param object The supplied ValidatorFactory instance.
 	 */
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public static void validateSuppliedFactory(Object object) {
 		if ( !(object instanceof ValidatorFactory) ) {
 			throw new IntegrationException(
@@ -77,7 +78,7 @@ class TypeSafeActivator {
 		}
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public static void activate(ActivationContext activationContext) {
 		final ValidatorFactory factory;
 		try {

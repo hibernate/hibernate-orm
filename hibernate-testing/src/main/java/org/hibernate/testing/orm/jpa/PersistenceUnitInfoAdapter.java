@@ -7,7 +7,6 @@
 package org.hibernate.testing.orm.jpa;
 
 import java.net.URL;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import jakarta.persistence.SharedCacheMode;
@@ -19,17 +18,20 @@ import javax.sql.DataSource;
 
 import org.hibernate.jpa.HibernatePersistenceProvider;
 
+import static java.lang.System.identityHashCode;
+import static java.util.Collections.emptyList;
+
 /**
  * Implementation of {@link PersistenceUnitInfo} for testing use.
- *
+ * <p>
  * Expected usage is to override methods relevant to their specific tests.
- *
+ * <p>
  * See {@link PersistenceUnitInfoImpl} for a more bean-like implementation
  *
  * @author Steve Ebersole
  */
 public class PersistenceUnitInfoAdapter implements PersistenceUnitInfo {
-	private final String name = "persistenceUnitInfoAdapter@" + System.identityHashCode( this );
+	private final String name = "persistenceUnitInfoAdapter@" + identityHashCode( this );
 	private Properties properties;
 
 	public String getPersistenceUnitName() {
@@ -40,6 +42,17 @@ public class PersistenceUnitInfoAdapter implements PersistenceUnitInfo {
 		return HibernatePersistenceProvider.class.getName();
 	}
 
+	@Override
+	public String getScopeAnnotationName() {
+		return null;
+	}
+
+	@Override
+	public List<String> getQualifierAnnotationNames() {
+		return List.of();
+	}
+
+	@Override @SuppressWarnings("removal")
 	public PersistenceUnitTransactionType getTransactionType() {
 		return null;
 	}
@@ -53,11 +66,11 @@ public class PersistenceUnitInfoAdapter implements PersistenceUnitInfo {
 	}
 
 	public List<String> getMappingFileNames() {
-		return Collections.emptyList();
+		return emptyList();
 	}
 
 	public List<URL> getJarFileUrls() {
-		return Collections.emptyList();
+		return emptyList();
 	}
 
 	public URL getPersistenceUnitRootUrl() {
@@ -65,7 +78,7 @@ public class PersistenceUnitInfoAdapter implements PersistenceUnitInfo {
 	}
 
 	public List<String> getManagedClassNames() {
-		return Collections.emptyList();
+		return emptyList();
 	}
 
 	public boolean excludeUnlistedClasses() {

@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.StaleObjectStateException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.stat.Statistics;
@@ -35,7 +36,7 @@ import static org.junit.Assert.fail;
  */
 public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
-	public void testAlwaysTransactionalOperations() throws Exception {
+	public void testAlwaysTransactionalOperations() {
 		Book book = new Book();
 		book.name = "Le petit prince";
 		EntityManager em = getOrCreateEntityManager();
@@ -46,14 +47,15 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 			em.flush();
 			fail( "flush has to be inside a Tx" );
 		}
-		catch ( TransactionRequiredException e ) {
+		catch (TransactionRequiredException e) {
 			//success
 		}
+		em.lock( book, LockModeType.READ );
 		try {
-			em.lock( book, LockModeType.READ );
+			em.lock( book, LockModeType.PESSIMISTIC_READ );
 			fail( "lock has to be inside a Tx" );
 		}
-		catch ( TransactionRequiredException e ) {
+		catch (TransactionRequiredException e) {
 			//success
 		}
 		em.getTransaction().begin();
@@ -63,7 +65,7 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	public void testTransactionalOperationsWhenExtended() throws Exception {
+	public void testTransactionalOperationsWhenExtended() {
 		Book book = new Book();
 		book.name = "Le petit prince";
 		EntityManager em = getOrCreateEntityManager();
@@ -107,7 +109,7 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	public void testMergeWhenExtended() throws Exception {
+	public void testMergeWhenExtended() {
 		Book book = new Book();
 		book.name = "Le petit prince";
 		EntityManager em = getOrCreateEntityManager();
@@ -151,7 +153,7 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	public void testCloseAndTransaction() throws Exception {
+	public void testCloseAndTransaction() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		Book book = new Book();
@@ -163,7 +165,7 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 			em.flush();
 			fail( "direct action on a closed em should fail" );
 		}
-		catch ( IllegalStateException e ) {
+		catch (IllegalStateException e) {
 			//success
 		}
 		finally {
@@ -174,7 +176,7 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	public void testTransactionCommitDoesNotFlush() throws Exception {
+	public void testTransactionCommitDoesNotFlush() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		Book book = new Book();
@@ -192,7 +194,7 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	public void testTransactionAndContains() throws Exception {
+	public void testTransactionAndContains() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		Book book = new Book();
@@ -212,7 +214,7 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	public void testRollbackOnlyOnPersistenceException() throws Exception {
+	public void testRollbackOnlyOnPersistenceException() {
 		Book book = new Book();
 		book.name = "Stolen keys";
 		book.id = null; //new Integer( 50 );
@@ -231,7 +233,7 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 			em.flush();
 			fail( "optimistic locking exception" );
 		}
-		catch ( PersistenceException e ) {
+		catch (PersistenceException e) {
 			//success
 		}
 
@@ -239,7 +241,7 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 			em.getTransaction().commit();
 			fail( "Commit should be rollbacked" );
 		}
-		catch ( RollbackException e ) {
+		catch (RollbackException e) {
 			//success
 		}
 		finally {
@@ -248,7 +250,7 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	public void testRollbackExceptionOnOptimisticLockException() throws Exception {
+	public void testRollbackExceptionOnOptimisticLockException() {
 		Book book = new Book();
 		book.name = "Stolen keys";
 		book.id = null; //new Integer( 50 );
@@ -262,15 +264,15 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 		em.flush();
 		em.clear();
 		book.setName( "kitty kid2" ); //non updated version
-		em.unwrap( Session.class ).update( book );
 		try {
+			em.unwrap( Session.class ).merge( book );
 			em.getTransaction().commit();
 			fail( "Commit should be rollbacked" );
 		}
-		catch ( RollbackException e ) {
+		catch (OptimisticLockException e) {
 			assertTrue(
 					"During flush a StateStateException is wrapped into a OptimisticLockException",
-					e.getCause() instanceof OptimisticLockException
+					e.getCause() instanceof StaleObjectStateException
 			);
 		}
 		finally {
@@ -280,7 +282,7 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	public void testRollbackClearPC() throws Exception {
+	public void testRollbackClearPC() {
 		Book book = new Book();
 		book.name = "Stolen keys";
 		EntityManager em = getOrCreateEntityManager();
@@ -298,7 +300,7 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	public void testSetRollbackOnlyAndFlush() throws Exception {
+	public void testSetRollbackOnlyAndFlush() {
 		Book book = new Book();
 		book.name = "The jungle book";
 		EntityManager em = getOrCreateEntityManager();

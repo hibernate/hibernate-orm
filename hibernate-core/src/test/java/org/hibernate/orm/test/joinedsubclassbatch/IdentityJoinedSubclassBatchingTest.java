@@ -104,7 +104,7 @@ public class IdentityJoinedSubclassBatchingTest {
 				e.setAddress( "buckhead" );
 				e.setZip( "30305" );
 				e.setCountry( "USA" );
-				s.save( e );
+				s.persist( e );
 				if ( i % nBeforeFlush == 0 && i > 0 ) {
 					s.flush();
 					s.clear();
@@ -131,7 +131,7 @@ public class IdentityJoinedSubclassBatchingTest {
 
 				while ( sr.next() ) {
 					Employee e = (Employee) sr.get();
-					s.delete( e );
+					s.remove( e );
 				}
 			}
 		} );
@@ -150,7 +150,7 @@ public class IdentityJoinedSubclassBatchingTest {
 				e.setAddress( "buckhead" );
 				e.setZip( "30305" );
 				e.setCountry( "USA" );
-				s.save( e );
+				s.persist( e );
 			}
 		} );
 
@@ -166,7 +166,7 @@ public class IdentityJoinedSubclassBatchingTest {
 
 				while ( sr.next() ) {
 					Employee e = (Employee) sr.get();
-					s.delete( e );
+					s.remove( e );
 				}
 			}
 		} );
@@ -185,7 +185,7 @@ public class IdentityJoinedSubclassBatchingTest {
 			e.setAddress( "buckhead" );
 			e.setZip( "30305" );
 			e.setCountry( "USA" );
-			s.save( e );
+			s.persist( e );
 			s.flush();
 
 			long numberOfInsertedEmployee = (long) s.createQuery( "select count(e) from Employee e" ).uniqueResult();
@@ -200,7 +200,7 @@ public class IdentityJoinedSubclassBatchingTest {
 
 				while ( sr.next() ) {
 					Employee e = (Employee) sr.get();
-					s.delete( e );
+					s.remove( e );
 				}
 			}
 		} );

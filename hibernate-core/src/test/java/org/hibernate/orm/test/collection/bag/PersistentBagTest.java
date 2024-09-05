@@ -8,13 +8,16 @@ package org.hibernate.orm.test.collection.bag;
 
 import java.util.ArrayList;
 
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.collection.spi.PersistentBag;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @author Steve Ebersole
  */
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TRANSFORM_HBM_XML, value = "true"))
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNoColumnInsert.class)
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/collection/bag/Mappings.hbm.xml"
@@ -43,7 +47,7 @@ public class PersistentBagTest {
 
 		scope.inTransaction(
 				session -> {
-					session.save( parent );
+					session.persist( parent );
 					session.flush();
 					// at this point, the list on parent has now been replaced with a PersistentBag...
 					PersistentBag children = (PersistentBag) parent.getChildren();
@@ -62,7 +66,7 @@ public class PersistentBagTest {
 					assertFalse( children.isDirty() );
 
 					children.clear();
-					session.delete( child );
+					session.remove( child );
 					assertTrue( children.isDirty() );
 
 					session.flush();
@@ -70,7 +74,7 @@ public class PersistentBagTest {
 					children.clear();
 					assertFalse( children.isDirty() );
 
-					session.delete( parent );
+					session.remove( parent );
 				}
 		);
 	}
@@ -106,7 +110,7 @@ public class PersistentBagTest {
 				session -> {
 					Order order = session.get( Order.class, orderId );
 					assertEquals( 2, order.getItems().size() );
-					session.delete( order );
+					session.remove( order );
 				}
 		);
 	}

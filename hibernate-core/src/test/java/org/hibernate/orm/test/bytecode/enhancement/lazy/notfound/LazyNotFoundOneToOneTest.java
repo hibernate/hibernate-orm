@@ -6,6 +6,18 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.notfound;
 
+import org.hibernate.Hibernate;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
+
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.Entity;
@@ -16,27 +28,13 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
-import org.hibernate.Hibernate;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
-import org.hibernate.annotations.NotFound;
-import org.hibernate.annotations.NotFoundAction;
-
-import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNull;
-
-import org.junit.jupiter.api.Test;
 
 /**
  * @author Gail Badner
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey("HHH-12226")
 @DomainModel(
 		annotatedClasses = {
@@ -62,7 +60,7 @@ public class LazyNotFoundOneToOneTest {
 				}
 		);
 
-		scope.inTransaction( session -> session.delete( session.get( Lazy.class, ID ) ) );
+		scope.inTransaction( session -> session.remove( session.get( Lazy.class, ID ) ) );
 
 		scope.inTransaction( session -> {
 					SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getSessionFactory()
@@ -93,7 +91,6 @@ public class LazyNotFoundOneToOneTest {
 		private Integer id;
 
 		@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-		@LazyToOne(value = LazyToOneOption.NO_PROXY)
 		@NotFound(action = NotFoundAction.IGNORE)
 		@JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
 		private Lazy lazy;

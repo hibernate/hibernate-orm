@@ -64,8 +64,8 @@ public class InWithHeterogeneousCollectionTest extends BaseCoreFunctionalTestCas
 	@Before
 	public void setup() {
 		doInHibernate( this::sessionFactory, session -> {
-			session.save( new Event( 1L, "EventName1", "EventName1".toLowerCase( Locale.ROOT ) ) );
-			session.save( new Event( 2L, "EventName2", "my-tag" ) );
+			session.persist( new Event( 1L, "EventName1", "EventName1".toLowerCase( Locale.ROOT ) ) );
+			session.persist( new Event( 2L, "EventName2", "my-tag" ) );
 		} );
 	}
 

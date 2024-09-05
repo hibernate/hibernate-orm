@@ -6,6 +6,7 @@
  */
 package org.hibernate.event.internal;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
@@ -29,7 +30,6 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.service.spi.JpaBootstrapSensitive;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.FlushEntityEvent;
 import org.hibernate.event.spi.FlushEntityEventListener;
@@ -49,16 +49,9 @@ import static org.hibernate.engine.internal.Collections.skipRemoval;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractFlushingEventListener implements JpaBootstrapSensitive {
+public abstract class AbstractFlushingEventListener {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, AbstractFlushingEventListener.class.getName() );
-
-	private boolean jpaBootstrap;
-
-	@Override
-	public void wasJpaBootstrap(boolean wasJpaBootstrap) {
-		this.jpaBootstrap = wasJpaBootstrap;
-	}
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, AbstractFlushingEventListener.class.getName() );
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Pre-flushing section
@@ -198,17 +191,11 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 	}
 
 	protected PersistContext getContext(EventSource session) {
-		return jpaBootstrap || isJpaCascadeComplianceEnabled( session ) ? PersistContext.create() : null;
+		return PersistContext.create();
 	}
 
 	protected CascadingAction<PersistContext> getCascadingAction(EventSource session) {
-		return jpaBootstrap || isJpaCascadeComplianceEnabled( session )
-				? CascadingActions.PERSIST_ON_FLUSH
-				: CascadingActions.SAVE_UPDATE;
-	}
-
-	private static boolean isJpaCascadeComplianceEnabled(EventSource session) {
-		return session.getSessionFactory().getSessionFactoryOptions().getJpaCompliance().isJpaCascadeComplianceEnabled();
+		return CascadingActions.PERSIST_ON_FLUSH;
 	}
 
 	/**
@@ -286,14 +273,13 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 			EventSource source,
 			Object key,
 			EntityEntry entry) {
-		final FlushEntityEvent entityEvent = possiblyValidExistingInstance;
-		if ( entityEvent == null || !entityEvent.isAllowedToReuse() ) {
+		if ( possiblyValidExistingInstance == null || !possiblyValidExistingInstance.isAllowedToReuse() ) {
 			//need to create a new instance
 			return new FlushEntityEvent( source, key, entry );
 		}
 		else {
-			entityEvent.resetAndReuseEventInstance( key, entry );
-			return entityEvent;
+			possiblyValidExistingInstance.resetAndReuseEventInstance( key, entry );
+			return possiblyValidExistingInstance;
 		}
 	}
 

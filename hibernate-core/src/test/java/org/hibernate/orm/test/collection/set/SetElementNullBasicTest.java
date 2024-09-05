@@ -53,7 +53,7 @@ public class SetElementNullBasicTest extends BaseCoreFunctionalTestCase {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
 					assertEquals( 0, getCollectionElementRows( entityId ).size() );
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}
@@ -82,7 +82,7 @@ public class SetElementNullBasicTest extends BaseCoreFunctionalTestCase {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
 					assertEquals( 0, getCollectionElementRows( entityId ).size() );
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}
@@ -113,7 +113,7 @@ public class SetElementNullBasicTest extends BaseCoreFunctionalTestCase {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
 					assertEquals( 0, getCollectionElementRows( entityId ).size() );
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}

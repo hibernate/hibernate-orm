@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers.internal.reader;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Map;
 
 import org.hibernate.envers.internal.EnversMessageLogger;
@@ -25,6 +26,7 @@ import static org.hibernate.envers.internal.tools.Triple.make;
  */
 public class FirstLevelCache {
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			EnversMessageLogger.class,
 			FirstLevelCache.class.getName()
 	);

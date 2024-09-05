@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings({ "UnusedDeclaration" })
+@SuppressWarnings("unused")
 @SessionFactory
 public abstract class LongStringTest {
 	private static final int LONG_STRING_SIZE = 10000;
@@ -36,7 +36,7 @@ public abstract class LongStringTest {
 		Long id = scope.fromTransaction(
 				session -> {
 					LongStringHolder entity = new LongStringHolder();
-					session.save( entity );
+					session.persist( entity );
 					return entity.getId();
 				}
 		);
@@ -89,7 +89,7 @@ public abstract class LongStringTest {
 							assertEquals( empty, entity.getLongString() );
 						}
 					}
-					session.delete( entity );
+					session.remove( entity );
 				}
 		);
 	}

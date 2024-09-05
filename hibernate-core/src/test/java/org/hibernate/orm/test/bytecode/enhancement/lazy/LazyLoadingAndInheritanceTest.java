@@ -64,7 +64,7 @@ public class LazyLoadingAndInheritanceTest {
 	@Test
 	public void test(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
-			Containing containing = s.load( Containing.class, containingID );
+			Containing containing = s.getReference( Containing.class, containingID );
 			Contained contained = containing.contained;
 			assertThat( contained ).isNotNull();
 			assertThat( Hibernate.isPropertyInitialized( contained, "name" ) ).isFalse();

@@ -44,7 +44,7 @@ public class RegisterUserEventListenersTest extends BaseEnversFunctionalTestCase
 		Session session = openSession();
 		session.getTransaction().begin();
 		StrTestEntity entity = new StrTestEntity( "str1" );
-		session.save( entity );
+		session.persist( entity );
 		session.getTransaction().commit();
 		session.close();
 

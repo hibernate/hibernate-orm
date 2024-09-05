@@ -25,7 +25,7 @@ import org.hibernate.query.sqm.FetchClauseType;
 /**
  * @author Steve Ebersole
  */
-public interface JpaSubQuery<T> extends Subquery<T>, JpaSelectCriteria<T>, JpaExpression<T>, JpaCteContainer {
+public interface JpaSubQuery<T> extends Subquery<T>, JpaSelectCriteria<T>, JpaCriteriaSelect<T>, JpaExpression<T>, JpaCteContainer {
 
 	JpaSubQuery<T> multiselect(Selection<?>... selections);
 
@@ -33,7 +33,7 @@ public interface JpaSubQuery<T> extends Subquery<T>, JpaSelectCriteria<T>, JpaEx
 
 	<X> JpaCrossJoin<X> correlate(JpaCrossJoin<X> parentCrossJoin);
 
-	<X> JpaEntityJoin<X> correlate(JpaEntityJoin<X> parentEntityJoin);
+	<X> JpaEntityJoin<T,X> correlate(JpaEntityJoin<T,X> parentEntityJoin);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Limit/Offset/Fetch clause

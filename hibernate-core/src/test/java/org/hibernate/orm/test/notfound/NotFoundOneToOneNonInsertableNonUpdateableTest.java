@@ -52,7 +52,7 @@ public class NotFoundOneToOneNonInsertableNonUpdateableTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( session.get( PersonInfo.class, ID ) )
+						session.remove( session.get( PersonInfo.class, ID ) )
 		);
 
 		scope.inTransaction(
@@ -61,7 +61,7 @@ public class NotFoundOneToOneNonInsertableNonUpdateableTest {
 					assertNotNull( person );
 					assertNull( person.personInfo );
 
-					session.delete( person );
+					session.remove( person );
 				}
 		);
 	}

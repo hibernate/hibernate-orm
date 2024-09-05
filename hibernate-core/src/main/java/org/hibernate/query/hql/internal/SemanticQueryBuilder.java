@@ -170,7 +170,6 @@ import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
-import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmConflictClause;
 import org.hibernate.query.sqm.tree.insert.SqmConflictUpdateAction;
@@ -277,38 +276,36 @@ import static org.hibernate.type.spi.TypeConfiguration.isJdbcTemporalType;
 public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implements SqmCreationState {
 
 	private static final Logger log = Logger.getLogger( SemanticQueryBuilder.class );
-	private static final Set<String> JPA_STANDARD_FUNCTIONS;
+	private static final Set<String> JPA_STANDARD_FUNCTIONS = Set.of(
+			"avg",
+			"max",
+			"min",
+			"sum",
+			"count",
+			"length",
+			"locate",
+			"abs",
+			"sqrt",
+			"mod",
+			"size",
+			"index",
+			"current_date",
+			"current_time",
+			"current_timestamp",
+			"concat",
+			"substring",
+			"trim",
+			"lower",
+			"upper",
+			"coalesce",
+			"nullif",
+			"left",
+			"right",
+			"replace"
+	);
 
 	private static final BasicTypeImpl<Object> OBJECT_BASIC_TYPE =
 			new BasicTypeImpl<>( new UnknownBasicJavaType<>(Object.class), ObjectJdbcType.INSTANCE );
-
-	static {
-		final Set<String> jpaStandardFunctions = new HashSet<>();
-		// Extracted from the BNF in JPA spec 4.14.
-		jpaStandardFunctions.add( "avg" );
-		jpaStandardFunctions.add( "max" );
-		jpaStandardFunctions.add( "min" );
-		jpaStandardFunctions.add( "sum" );
-		jpaStandardFunctions.add( "count" );
-		jpaStandardFunctions.add( "length" );
-		jpaStandardFunctions.add( "locate" );
-		jpaStandardFunctions.add( "abs" );
-		jpaStandardFunctions.add( "sqrt" );
-		jpaStandardFunctions.add( "mod" );
-		jpaStandardFunctions.add( "size" );
-		jpaStandardFunctions.add( "index" );
-		jpaStandardFunctions.add( "current_date" );
-		jpaStandardFunctions.add( "current_time" );
-		jpaStandardFunctions.add( "current_timestamp" );
-		jpaStandardFunctions.add( "concat" );
-		jpaStandardFunctions.add( "substring" );
-		jpaStandardFunctions.add( "trim" );
-		jpaStandardFunctions.add( "lower" );
-		jpaStandardFunctions.add( "upper" );
-		jpaStandardFunctions.add( "coalesce" );
-		jpaStandardFunctions.add( "nullif" );
-		JPA_STANDARD_FUNCTIONS = jpaStandardFunctions;
-	}
 
 	/**
 	 * Main entry point into analysis of HQL/JPQL parse tree - producing
@@ -1074,11 +1071,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		else {
 			firstIndex = 0;
 		}
-		if ( creationOptions.useStrictJpaCompliance() ) {
-			throw new StrictJpaComplianceViolation(
-					StrictJpaComplianceViolation.Type.SET_OPERATIONS
-			);
-		}
 		final SqmQueryPart<?> firstQueryPart = (SqmQueryPart<?>) children.get( firstIndex ).accept( this );
 		SqmQueryGroup<?> queryGroup;
 		if ( firstQueryPart instanceof SqmQueryGroup<?>) {
@@ -1295,10 +1287,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 	}
 
+	@SuppressWarnings("rawtypes")
 	private EntityDomainType<R> getResultEntity() {
 		final JpaMetamodelImplementor jpaMetamodel = creationContext.getJpaMetamodel();
 		if ( expectedResultEntity != null ) {
-			final EntityDomainType<R> entityDescriptor = jpaMetamodel.entity( expectedResultEntity );
+			final EntityDomainType entityDescriptor = jpaMetamodel.entity( expectedResultEntity );
 			if ( entityDescriptor == null ) {
 				throw new SemanticException( "Query has no 'from' clause, and the result type '"
 						+ expectedResultEntity + "' is not an entity type", query );
@@ -2221,9 +2214,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		dotIdentifierConsumerStack.push( new QualifiedJoinPathConsumer( sqmRoot, joinType, fetch, alias, this ) );
 		try {
-			final SqmQualifiedJoin<X, ?> join = getJoin( sqmRoot, joinType, qualifiedJoinTargetContext, alias, fetch );
+			final SqmJoin<X, ?> join = getJoin( sqmRoot, joinType, qualifiedJoinTargetContext, alias, fetch );
 			final HqlParser.JoinRestrictionContext joinRestrictionContext = parserJoin.joinRestriction();
-			if ( join instanceof SqmEntityJoin<?> || join instanceof SqmDerivedJoin<?> || join instanceof SqmCteJoin<?> ) {
+			if ( join instanceof SqmEntityJoin<?,?> || join instanceof SqmDerivedJoin<?> || join instanceof SqmCteJoin<?> ) {
 				sqmRoot.addSqmJoin( join );
 			}
 			else if ( join instanceof SqmAttributeJoin<?, ?> ) {
@@ -2269,7 +2262,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@SuppressWarnings("unchecked")
-	private <X> SqmQualifiedJoin<X, ?> getJoin(
+	private <X> SqmJoin<X, ?> getJoin(
 			SqmRoot<X> sqmRoot,
 			SqmJoinType joinType,
 			HqlParser.JoinTargetContext joinTargetContext,
@@ -2277,7 +2270,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			boolean fetch) {
 		if ( joinTargetContext instanceof HqlParser.JoinPathContext ) {
 			final HqlParser.JoinPathContext joinPathContext = (HqlParser.JoinPathContext) joinTargetContext;
-			return (SqmQualifiedJoin<X, ?>) joinPathContext.path().accept( this );
+			return (SqmJoin<X, ?>) joinPathContext.path().accept( this );
 		}
 		else if ( joinTargetContext instanceof HqlParser.JoinSubqueryContext ) {
 			if ( fetch ) {
@@ -2296,7 +2289,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			final DotIdentifierConsumer identifierConsumer = dotIdentifierConsumerStack.pop();
 			final SqmSubQuery<X> subQuery = (SqmSubQuery<X>) joinSubqueryContext.subquery().accept( this );
 			dotIdentifierConsumerStack.push( identifierConsumer );
-			final SqmQualifiedJoin<X, ?> join = new SqmDerivedJoin<>( subQuery, alias, joinType, lateral, sqmRoot );
+			final SqmJoin<X, ?> join = new SqmDerivedJoin<>( subQuery, alias, joinType, lateral, sqmRoot );
 			processingStateStack.getCurrent().getPathRegistry().register( join );
 			return join;
 		}

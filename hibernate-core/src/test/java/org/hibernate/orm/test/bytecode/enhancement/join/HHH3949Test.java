@@ -9,8 +9,6 @@ package org.hibernate.orm.test.bytecode.enhancement.join;
 import java.util.List;
 
 import org.hibernate.Session;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
@@ -20,6 +18,8 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -36,9 +36,7 @@ import static org.hibernate.Hibernate.isPropertyInitialized;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( "HHH-3949" )
 @DomainModel(
         annotatedClasses = {
@@ -71,21 +69,21 @@ public class HHH3949Test {
             Person person1 = new Person( "Johnny" );
             Person person2 = new Person( "Ricky" );
             Person person3 = new Person( "Rosy" );
-            s.save( person1 );
-            s.save( person2 );
-            s.save( person3 );
+            s.persist( person1 );
+            s.persist( person2 );
+            s.persist( person3 );
 
             Vehicle vehicle1 = new Vehicle( "Volkswagen Golf" );
             vehicle1.setDriver( person1 );
-            s.save( vehicle1 );
+            s.persist( vehicle1 );
 
             Vehicle vehicle2 = new Vehicle( "Subaru Impreza" );
             vehicle2.setDriver( person2 );
             person2.setVehicle( vehicle2 );
-            s.save( vehicle2 );
+            s.persist( vehicle2 );
 
             Vehicle vehicle3 = new Vehicle( "Renault Truck" );
-            s.save( vehicle3 );
+            s.persist( vehicle3 );
         } );
     }
 
@@ -201,7 +199,6 @@ public class HHH3949Test {
         String name;
 
         @OneToOne( optional = true, mappedBy = "driver", fetch = FetchType.LAZY )
-        @LazyToOne( LazyToOneOption.NO_PROXY )
         Vehicle vehicle;
 
         Person() {

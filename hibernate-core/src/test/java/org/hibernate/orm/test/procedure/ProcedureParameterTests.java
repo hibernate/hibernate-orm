@@ -6,9 +6,9 @@
  */
 package org.hibernate.orm.test.procedure;
 
-import org.hibernate.annotations.QueryHints;
 import org.hibernate.dialect.H2Dialect;
 
+import org.hibernate.jpa.HibernateHints;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -41,7 +41,7 @@ public class ProcedureParameterTests {
 		// registering and binding all 3 parameters
 		scope.inTransaction( (em) -> {
 			final StoredProcedureQuery query = em.createStoredProcedureQuery("locate" );
-			query.setHint( QueryHints.CALLABLE_FUNCTION, "true" );
+			query.setHint( HibernateHints.HINT_CALLABLE_FUNCTION, "true" );
 			// search-tring
 			query.registerStoredProcedureParameter( 1, String.class, ParameterMode.IN );
 			// source-string
@@ -62,7 +62,7 @@ public class ProcedureParameterTests {
 
 		scope.inTransaction( (em) -> {
 			final StoredProcedureQuery query = em.createStoredProcedureQuery("locate" );
-			query.setHint( QueryHints.CALLABLE_FUNCTION, "true" );
+			query.setHint( HibernateHints.HINT_CALLABLE_FUNCTION, "true" );
 			// search-string
 			query.registerStoredProcedureParameter( 1, String.class, ParameterMode.IN );
 			// source-string
@@ -86,7 +86,7 @@ public class ProcedureParameterTests {
 		// function's default value defined on the database to be applied
 		scope.inTransaction( (em) -> {
 			final StoredProcedureQuery query = em.createStoredProcedureQuery("locate" );
-			query.setHint( QueryHints.CALLABLE_FUNCTION, "true" );
+			query.setHint( HibernateHints.HINT_CALLABLE_FUNCTION, "true" );
 			// search-string
 			query.registerStoredProcedureParameter( 1, String.class, ParameterMode.IN );
 			// source-string

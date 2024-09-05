@@ -32,8 +32,8 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.internal.EntityManagerMessageLogger;
-import org.hibernate.internal.HEMLogging;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.QueryParameterBindingTypeResolverImpl;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
@@ -59,7 +59,6 @@ import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.derived.AnonymousTupleSqmPathSource;
@@ -78,6 +77,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import jakarta.persistence.EntityGraph;
 import jakarta.persistence.metamodel.EmbeddableType;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.ManagedType;
@@ -99,7 +99,7 @@ import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetti
 public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 		implements MappingMetamodelImplementor, MetamodelImplementor, Serializable {
 	// todo : Integrate EntityManagerLogger into CoreMessageLogger
-	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( MappingMetamodelImpl.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( MappingMetamodelImpl.class );
 
 	//NOTE: we suppress deprecation warnings because at the moment we
 	//implement a deprecated API so have to override deprecated things
@@ -315,9 +315,9 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 					modelCreationContext
 			);
 			collectionPersisterMap.put( model.getRole(), persister );
-			Type indexType = persister.getIndexType();
-			if ( indexType != null && indexType.isEntityType() && !indexType.isAnyType() ) {
-				String entityName = ( (org.hibernate.type.EntityType) indexType ).getAssociatedEntityName();
+			final Type indexType = persister.getIndexType();
+			if ( indexType instanceof org.hibernate.type.EntityType ) {
+				final String entityName = ( (org.hibernate.type.EntityType) indexType ).getAssociatedEntityName();
 				Set<String> roles = collectionRolesByEntityParticipant.get( entityName );
 				//noinspection Java8MapApi
 				if ( roles == null ) {
@@ -326,9 +326,9 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 				}
 				roles.add( persister.getRole() );
 			}
-			Type elementType = persister.getElementType();
-			if ( elementType.isEntityType() && !elementType.isAnyType() ) {
-				String entityName = ( (org.hibernate.type.EntityType) elementType ).getAssociatedEntityName();
+			final Type elementType = persister.getElementType();
+			if ( elementType instanceof org.hibernate.type.EntityType ) {
+				final String entityName = ( (org.hibernate.type.EntityType) elementType ).getAssociatedEntityName();
 				Set<String> roles = collectionRolesByEntityParticipant.get( entityName );
 				//noinspection Java8MapApi
 				if ( roles == null ) {
@@ -495,12 +495,12 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	}
 
 	@Override
-	public <X> EntityDomainType<X> entity(String entityName) {
+	public EntityDomainType<?> entity(String entityName) {
 		return jpaMetamodel.entity( entityName );
 	}
 
 	@Override
-	public <X> EmbeddableDomainType<X> embeddable(String embeddableName) {
+	public EmbeddableDomainType<?> embeddable(String embeddableName) {
 		return jpaMetamodel.embeddable( embeddableName );
 	}
 
@@ -689,6 +689,11 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	}
 
 	@Override
+	public <T> Map<String, EntityGraph<? extends T>> getNamedEntityGraphs(Class<T> entityType) {
+		return jpaMetamodel.getNamedEntityGraphs( entityType );
+	}
+
+	@Override
 	public <T> List<RootGraphImplementor<? super T>> findEntityGraphsByJavaType(Class<T> entityClass) {
 		return jpaMetamodel.findEntityGraphsByJavaType( entityClass );
 	}
@@ -743,42 +748,28 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 		return null;
 	}
 
-	@Override
-	public void close() {
-		// anything to do ?
-	}
-
 	private String[] doGetImplementors(Class<?> clazz) throws MappingException {
-		ArrayList<String> results = new ArrayList<>();
+		final ArrayList<String> results = new ArrayList<>();
 		for ( EntityPersister checkPersister : entityPersisters().values() ) {
-			if ( checkPersister instanceof Queryable ) {
-				final String checkQueryableEntityName = ((EntityMappingType) checkPersister).getEntityName();
-				final boolean isMappedClass = clazz.getName().equals( checkQueryableEntityName );
-				if ( checkPersister.isExplicitPolymorphism() ) {
-					if ( isMappedClass ) {
-						return new String[] { clazz.getName() }; // NOTE EARLY EXIT
-					}
-				}
-				else {
-					if ( isMappedClass ) {
-						results.add( checkQueryableEntityName );
+			final String checkQueryableEntityName = ((EntityMappingType) checkPersister).getEntityName();
+			final boolean isMappedClass = clazz.getName().equals( checkQueryableEntityName );
+			if ( isMappedClass ) {
+				results.add( checkQueryableEntityName );
+			}
+			else {
+				final Class<?> mappedClass = checkPersister.getMappedClass();
+				if ( mappedClass != null && clazz.isAssignableFrom( mappedClass ) ) {
+					final boolean assignableSuperclass;
+					if ( checkPersister.isInherited() ) {
+						final String superTypeName = checkPersister.getSuperMappingType().getEntityName();
+						final Class<?> mappedSuperclass = getEntityDescriptor( superTypeName ).getMappedClass();
+						assignableSuperclass = clazz.isAssignableFrom( mappedSuperclass );
 					}
 					else {
-						final Class<?> mappedClass = checkPersister.getMappedClass();
-						if ( mappedClass != null && clazz.isAssignableFrom( mappedClass ) ) {
-							final boolean assignableSuperclass;
-							if ( checkPersister.isInherited() ) {
-								final String superTypeName = checkPersister.getSuperMappingType().getEntityName();
-								Class<?> mappedSuperclass = getEntityDescriptor( superTypeName ).getMappedClass();
-								assignableSuperclass = clazz.isAssignableFrom( mappedSuperclass );
-							}
-							else {
-								assignableSuperclass = false;
-							}
-							if ( !assignableSuperclass ) {
-								results.add( checkQueryableEntityName );
-							}
-						}
+						assignableSuperclass = false;
+					}
+					if ( !assignableSuperclass ) {
+						results.add( checkQueryableEntityName );
 					}
 				}
 			}

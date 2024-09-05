@@ -245,6 +245,14 @@ public final class CollectionHelper {
 		return new ArrayList<>( Math.max( expectedNumberOfElements + 1, DEFAULT_LIST_CAPACITY ) );
 	}
 
+	public static <T> ArrayList<T> populatedArrayList(int expectedNumberOfElements, T value) {
+		final ArrayList<T> list = new ArrayList<>( Math.max( expectedNumberOfElements + 1, DEFAULT_LIST_CAPACITY ) );
+		for ( int i = 0; i < expectedNumberOfElements; i++ ) {
+			list.add( value );
+		}
+		return list;
+	}
+
 	public static <T> Set<T> makeCopy(Set<T> source) {
 		if ( source == null ) {
 			return null;
@@ -296,6 +304,13 @@ public final class CollectionHelper {
 		final HashSet<T> set = new HashSet<>( determineProperSizing( values.length ) );
 		Collections.addAll( set, values );
 		return set;
+	}
+
+	public static <T> Set<T> setOf(Collection<T> values) {
+		if ( isEmpty( values ) ) {
+			return Collections.emptySet();
+		}
+		return new HashSet<>( values );
 	}
 
 	public static Properties asProperties(Map<?,?> map) {
@@ -477,6 +492,14 @@ public final class CollectionHelper {
 		return combined;
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static List combineUntyped(List list1, List list2) {
+		final ArrayList combined = arrayList( list1.size() + list2.size() );
+		combined.addAll( list1 );
+		combined.addAll( list2 );
+		return combined;
+	}
+
 	public static <O> List<O> combine(List<O>... lists) {
 		final ArrayList<O> combined = new ArrayList<>();
 		for ( int i = 0; i < lists.length; i++ ) {
@@ -503,5 +526,39 @@ public final class CollectionHelper {
 			result.addAll( Arrays.asList( values ) );
 		}
 		return result;
+	}
+
+	public static <E> List<E> mutableJoin(Collection<E> first, Collection<E> second) {
+		final int totalCount = ( first == null ? 0 : first.size() )
+				+ ( second == null ? 0 : second.size() );
+		if ( totalCount == 0 ) {
+			return new ArrayList<>();
+		}
+		final ArrayList<E> joined = new ArrayList<>( totalCount );
+		if ( first != null ) {
+			joined.addAll( first );
+		}
+		if ( second != null ) {
+			joined.addAll( second );
+		}
+		return joined;
+	}
+
+	public static <E> List<E> mutableJoin(Collection<E> first, Collection<E>... others) {
+		// it can be empty, but not null
+		assert first != null;
+
+		if ( isEmpty( others ) ) {
+			final ArrayList<E> list = new ArrayList<>( first.size() );
+			list.addAll( first );
+			return list;
+		}
+
+		final List<E> joined = arrayList( first.size() + ( isEmpty( others ) ? 0 : others.length * 8 ) );
+		joined.addAll( first );
+		for ( Collection<E> other : others ) {
+			joined.addAll( other );
+		}
+		return joined;
 	}
 }

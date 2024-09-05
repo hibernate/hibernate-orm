@@ -48,7 +48,7 @@ public class BaseIdEntityByteCodeTest {
 		} );
 
 		scope.inTransaction( session -> {
-			ContainingEntity entity = session.load( ContainingEntity.class, 1 );
+			ContainingEntity entity = session.getReference( ContainingEntity.class, 1 );
 			ContainedEmbeddable containedEmbeddable = entity.getContainedEmbeddable();
 			assertThat( containedEmbeddable.getText() ).isEqualTo( "initialValue" );
 		} );

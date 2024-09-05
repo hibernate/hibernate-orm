@@ -39,7 +39,7 @@ public class SerializableTypeTest {
 		SerializableHolder serializableHolder = scope.fromTransaction(
 				session -> {
 					SerializableHolder holder = new SerializableHolder();
-					session.save( holder );
+					session.persist( holder );
 					return holder;
 				}
 		);
@@ -85,7 +85,7 @@ public class SerializableTypeTest {
 					SerializableHolder holder = session.get( SerializableHolder.class, id );
 					SerializableData serialData = (SerializableData) holder.getSerialData();
 					assertEquals( empty, serialData.getPayload() );
-					session.delete( holder );
+					session.remove( holder );
 				}
 		);
 	}

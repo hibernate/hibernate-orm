@@ -573,14 +573,6 @@ public final class StandardBasicTypes {
 	);
 
 	/**
-	 * The standard Hibernate type for mapping {@link Byte Byte[]} to JDBC {@link org.hibernate.type.SqlTypes#VARBINARY VARBINARY}.
-	 *
-	 * @deprecated use {@link #BINARY_WRAPPER} instead
-	 */
-	@Deprecated(forRemoval = true)
-	public static final BasicTypeReference<Byte[]> WRAPPER_BINARY = BINARY_WRAPPER;
-
-	/**
 	 * The standard Hibernate type for mapping {@code byte[]} to JDBC {@link org.hibernate.type.SqlTypes#LONGVARBINARY LONGVARBINARY}.
 	 *
 	 * @see #MATERIALIZED_BLOB

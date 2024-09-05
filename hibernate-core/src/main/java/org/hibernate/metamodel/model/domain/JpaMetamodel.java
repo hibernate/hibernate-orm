@@ -7,7 +7,10 @@
 package org.hibernate.metamodel.model.domain;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+import jakarta.persistence.EntityGraph;
 import jakarta.persistence.metamodel.EmbeddableType;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.ManagedType;
@@ -57,12 +60,12 @@ public interface JpaMetamodel extends Metamodel {
 	/**
 	 * Access to an entity supporting Hibernate's entity-name feature
 	 */
-	<X> EntityDomainType<X> entity(String entityName);
+	EntityDomainType<?> entity(String entityName);
 
 	/**
 	 * Access to an embeddable type from FQN
 	 */
-	<X> EmbeddableDomainType<X> embeddable(String embeddableName);
+	EmbeddableDomainType<?> embeddable(String embeddableName);
 
 	/**
 	 * Specialized handling for resolving entity-name references in
@@ -130,6 +133,8 @@ public interface JpaMetamodel extends Metamodel {
 	<T> RootGraphImplementor<T> findEntityGraphByName(String name);
 
 	<T> List<RootGraphImplementor<? super T>> findEntityGraphsByJavaType(Class<T> entityClass);
+
+	<T> Map<String, EntityGraph<? extends T>> getNamedEntityGraphs(Class<T> entityType);
 
 	JpaCompliance getJpaCompliance();
 }

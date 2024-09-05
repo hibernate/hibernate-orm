@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers.configuration.internal;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -37,6 +38,7 @@ import org.jboss.logging.Logger;
  */
 public class ClassesAuditingData {
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			EnversMessageLogger.class,
 			ClassesAuditingData.class.getName()
 	);

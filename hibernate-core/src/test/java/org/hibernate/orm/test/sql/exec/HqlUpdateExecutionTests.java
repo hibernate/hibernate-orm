@@ -74,8 +74,8 @@ public class HqlUpdateExecutionTests {
 	public void testSimpleUpdateWithData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.save( new BasicEntity( 1, "abc" ) );
-					session.save( new BasicEntity( 2, "def" ) );
+					session.persist( new BasicEntity( 1, "abc" ) );
+					session.persist( new BasicEntity( 2, "def" ) );
 				}
 		);
 
@@ -117,8 +117,8 @@ public class HqlUpdateExecutionTests {
 	public void testSimpleRestrictedUpdateWithData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.save( new BasicEntity( 1, "abc" ) );
-					session.save( new BasicEntity( 2, "def" ) );
+					session.persist( new BasicEntity( 1, "abc" ) );
+					session.persist( new BasicEntity( 2, "def" ) );
 				}
 		);
 

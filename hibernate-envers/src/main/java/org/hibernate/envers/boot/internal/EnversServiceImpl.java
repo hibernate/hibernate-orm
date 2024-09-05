@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -87,13 +88,17 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 	}
 
 	@Override
-	public void initialize(MetadataImplementor metadata, MappingCollector mappingCollector) {
+	public void initialize(
+			MetadataImplementor metadata,
+			MappingCollector mappingCollector,
+			EffectiveMappingDefaults effectiveMappingDefaults) {
 		if ( initialized ) {
 			throw new UnsupportedOperationException( "EnversService#initialize should be called only once" );
 		}
 
 		initialized = true;
 
+		final InFlightMetadataCollector metadataCollector = (InFlightMetadataCollector) metadata;
 		this.serviceRegistry = metadata.getMetadataBuildingOptions().getServiceRegistry();
 		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 
@@ -101,12 +106,13 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 		final Properties properties = new Properties();
 		properties.putAll( cfgService.getSettings() );
 
-		this.configuration = new Configuration( properties, this, metadata );
+		this.configuration = new Configuration( properties, this, metadataCollector );
 		this.auditProcessManager = new AuditProcessManager( configuration.getRevisionInfo().getRevisionInfoGenerator() );
 
 		final EnversMetadataBuildingContext metadataBuildingContext = new EnversMetadataBuildingContextImpl(
 				configuration,
-				(InFlightMetadataCollector) metadata,
+				metadataCollector,
+				effectiveMappingDefaults,
 				mappingCollector
 		);
 

@@ -132,8 +132,8 @@ public class LazyCollectionDeletedAllowProxyTest {
 			details.setPost( post );
 			post.setAdditionalDetails( details );
 			details.setDetails( "Some data" );
-
-			postId = (Long) s.save( post );
+			s.persist( post );
+			postId = post.id;
 		} );
 	}
 
@@ -143,7 +143,7 @@ public class LazyCollectionDeletedAllowProxyTest {
 			Query query = s.createQuery( "from Post" );
 			List<Post> posts = query.getResultList();
 			posts.forEach( post -> {
-				s.delete( post );
+				s.remove( post );
 			} );
 		} );
 	}

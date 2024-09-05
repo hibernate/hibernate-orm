@@ -12,7 +12,6 @@ import java.util.Date;
 
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.query.Query;
 import org.hibernate.type.StandardBasicTypes;
@@ -87,7 +86,7 @@ public class MySQLTimestampPropertyTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( eQueriedWithTimestamp )
+						session.remove( eQueriedWithTimestamp )
 		);
 	}
 
@@ -134,7 +133,7 @@ public class MySQLTimestampPropertyTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( eQueriedWithTimestamp )
+						session.remove( eQueriedWithTimestamp )
 		);
 	}
 
@@ -181,7 +180,7 @@ public class MySQLTimestampPropertyTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( eQueriedWithTimestamp )
+						session.remove( eQueriedWithTimestamp )
 		);
 	}
 
@@ -195,12 +194,12 @@ public class MySQLTimestampPropertyTest {
 		private Date ts;
 
 		@Temporal(value = TemporalType.TIMESTAMP)
-		@Generated(value = GenerationTime.INSERT)
+		@Generated
 		@ColumnDefault(value = "CURRENT_TIMESTAMP(6)")
 		private Date tsColumnDefault;
 
 		@Temporal(value = TemporalType.TIMESTAMP)
-		@Generated(value = GenerationTime.INSERT)
+		@Generated
 		@Column(columnDefinition = "datetime(6) default NOW(6)")
 		private Date tsColumnDefinition;
 

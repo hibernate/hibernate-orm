@@ -17,11 +17,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
-import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.Remove;
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.relational.ContributableDatabaseObject;
@@ -32,9 +29,7 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.tool.schema.extract.spi.TableInformation;
 
-import org.hibernate.tool.schema.internal.StandardTableMigrator;
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.emptyList;
@@ -75,6 +70,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	private boolean hasDenormalizedTables;
 	private String comment;
 	private String viewQuery;
+	private String options;
 
 	private List<Function<SqlStringGenerationContext, InitCommand>> initCommandProducers;
 
@@ -324,24 +320,8 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return unmodifiableMap( indexes );
 	}
 
-	/**
-	 * @deprecated No longer used, should be removed
-	 */
-	@Deprecated(since = "6.0", forRemoval = true)
-	public Iterator<ForeignKey> getForeignKeyIterator() {
-		return getForeignKeys().values().iterator();
-	}
-
 	public Map<ForeignKeyKey, ForeignKey> getForeignKeys() {
 		return unmodifiableMap( foreignKeys );
-	}
-
-	/**
-	 * @deprecated No longer used, should be removed
-	 */
-	@Deprecated(since = "6.0", forRemoval = true)
-	public Iterator<UniqueKey> getUniqueKeyIterator() {
-		return getUniqueKeys().values().iterator();
 	}
 
 	public Map<String, UniqueKey> getUniqueKeys() {
@@ -453,16 +433,6 @@ public class Table implements Serializable, ContributableDatabaseObject {
 				&& Identifier.areEqual( schema, table.schema )
 				&& Identifier.areEqual( catalog, table.catalog );
 		}
-	}
-
-	@Deprecated(since = "6.2") @Remove
-	public Iterator<String> sqlAlterStrings(
-			Dialect dialect,
-			Metadata metadata,
-			TableInformation tableInfo,
-			SqlStringGenerationContext sqlStringGenerationContext) throws HibernateException {
-		return StandardTableMigrator.sqlAlterStrings(this, dialect, metadata, tableInfo, sqlStringGenerationContext )
-				.iterator();
 	}
 
 	public boolean isPrimaryKey(Column column) {
@@ -589,25 +559,6 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		}
 	}
 
-	/**
-	 * If there is one given column, mark it unique, otherwise
-	 * create a {@link UniqueKey} comprising the given columns.
-	 * @deprecated Use {@link #createUniqueKey(List, MetadataBuildingContext)}
-	 */
-	@Deprecated(since = "6.5", forRemoval = true)
-	public void createUniqueKey(List<Column> keyColumns) {
-		if ( keyColumns.size() == 1 ) {
-			keyColumns.get(0).setUnique( true );
-		}
-		else {
-			String keyName = Constraint.generateName( "UK_", this, keyColumns );
-			UniqueKey uniqueKey = getOrCreateUniqueKey( keyName );
-			for ( Column keyColumn : keyColumns ) {
-				uniqueKey.addColumn( keyColumn );
-			}
-		}
-	}
-
 	public UniqueKey getUniqueKey(String keyName) {
 		return uniqueKeys.get( keyName );
 	}
@@ -615,9 +566,8 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	public UniqueKey getOrCreateUniqueKey(String keyName) {
 		UniqueKey uniqueKey = uniqueKeys.get( keyName );
 		if ( uniqueKey == null ) {
-			uniqueKey = new UniqueKey();
+			uniqueKey = new UniqueKey( this );
 			uniqueKey.setName( keyName );
-			uniqueKey.setTable( this );
 			uniqueKeys.put( keyName, uniqueKey );
 		}
 		return uniqueKey;
@@ -640,8 +590,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 		ForeignKey foreignKey = foreignKeys.get( key );
 		if ( foreignKey == null ) {
-			foreignKey = new ForeignKey();
-			foreignKey.setTable( this );
+			foreignKey = new ForeignKey( this );
 			foreignKey.setReferencedEntityName( referencedEntityName );
 			foreignKey.setKeyDefinition( keyDefinition );
 			for ( Column keyColumn : keyColumns ) {
@@ -774,22 +723,6 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		this.comment = comment;
 	}
 
-	/**
-	 * @deprecated No longer used, should be removed
-	 */
-	@Deprecated(since = "6.0", forRemoval = true)
-	public Iterator<String> getCheckConstraintsIterator() {
-		return getCheckConstraints().iterator();
-	}
-
-	/**
-	 * @deprecated No longer used, should be removed
-	 */
-	@Deprecated(since = "6.2", forRemoval = true)
-	public List<String> getCheckConstraints() {
-		return checkConstraints.stream().map( CheckConstraint::getConstraint ).collect( toList() );
-	}
-
 	public List<CheckConstraint> getChecks() {
 		return unmodifiableList( checkConstraints );
 	}
@@ -883,5 +816,13 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			}
 			return unmodifiableList( initCommands );
 		}
+	}
+
+	public String getOptions() {
+		return options;
+	}
+
+	public void setOptions(String options) {
+		this.options = options;
 	}
 }

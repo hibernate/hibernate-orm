@@ -115,20 +115,20 @@ public class StatelessQueryScrollingTest {
 					Resource yourClock = new Resource( "clock", you );
 					Task task = new Task( me, "clean", yourClock, now ); // :)
 
-					session.save( me );
-					session.save( you );
-					session.save( yourClock );
-					session.save( task );
+					session.persist( me );
+					session.persist( you );
+					session.persist( yourClock );
+					session.persist( task );
 
 					User u3 = new User( "U3" );
 					User u4 = new User( "U4" );
 					Resource it = new Resource( "it", u4 );
 					Task task2 = new Task( u3, "beat", it, now ); // :))
 
-					session.save( u3 );
-					session.save( u4 );
-					session.save( it );
-					session.save( task2 );
+					session.persist( u3 );
+					session.persist( u4 );
+					session.persist( it );
+					session.persist( task2 );
 				}
 		);
 
@@ -137,22 +137,22 @@ public class StatelessQueryScrollingTest {
 					Producer p1 = new Producer( 1, "Acme" );
 					Producer p2 = new Producer( 2, "ABC" );
 
-					session.save( p1 );
-					session.save( p2 );
+					session.persist( p1 );
+					session.persist( p2 );
 
 					Vendor v1 = new Vendor( 1, "v1" );
 					Vendor v2 = new Vendor( 2, "v2" );
 
-					session.save( v1 );
-					session.save( v2 );
+					session.persist( v1 );
+					session.persist( v2 );
 
 					final Product product1 = new Product( 1, "123", v1, p1 );
 					final Product product2 = new Product( 2, "456", v1, p1 );
 					final Product product3 = new Product( 3, "789", v1, p2 );
 
-					session.save( product1 );
-					session.save( product2 );
-					session.save( product3 );
+					session.persist( product1 );
+					session.persist( product2 );
+					session.persist( product3 );
 				}
 		);
 	}

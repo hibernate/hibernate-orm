@@ -26,7 +26,7 @@ The most basic SQL query is to get a list of scalars (column) values.
 [[sql-jpa-all-columns-scalar-query-example]]
 .Jakarta Persistence native query selecting all columns
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-all-columns-scalar-query-example]
 ----
@@ -35,7 +35,7 @@ include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-all-columns-scala
 [[sql-jpa-custom-column-selection-scalar-query-example]]
 .Jakarta Persistence native query with a custom column selection
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-custom-column-selection-scalar-query-example]
 ----
@@ -44,7 +44,7 @@ include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-custom-column-sel
 [[sql-hibernate-all-columns-scalar-query-example]]
 .Hibernate native query selecting all columns
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-all-columns-scalar-query-example]
 ----
@@ -53,7 +53,7 @@ include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-all-columns
 [[sql-hibernate-custom-column-selection-scalar-query-example]]
 .Hibernate native query with a custom column selection
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-custom-column-selection-scalar-query-example]
 ----
@@ -67,7 +67,7 @@ To avoid the overhead of using `ResultSetMetadata`, or simply to be more explici
 [[sql-hibernate-scalar-query-explicit-result-set-example]]
 .Hibernate native query with explicit result set selection
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-scalar-query-explicit-result-set-example]
 ----
@@ -81,7 +81,7 @@ It is possible to leave out the type information for all or some of the scalars.
 [[sql-hibernate-scalar-query-partial-explicit-result-set-example]]
 .Hibernate native query with result set selection that's a partially explicit
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-scalar-query-partial-explicit-result-set-example]
 ----
@@ -100,7 +100,7 @@ The above queries were all about returning scalar values, basically returning th
 [[sql-jpa-entity-query-example]]
 .Jakarta Persistence native query selecting entities
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-entity-query-example]
 ----
@@ -109,7 +109,7 @@ include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-entity-query-exam
 [[sql-hibernate-entity-query-example]]
 .Hibernate native query selecting entities
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-entity-query-example]
 ----
@@ -121,7 +121,7 @@ the following query will also return a `List` where each element is a `Person` e
 [[sql-jpa-entity-query-explicit-result-set-example]]
 .Jakarta Persistence native query selecting entities with explicit result set
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-entity-query-explicit-result-set-example]
 ----
@@ -130,7 +130,7 @@ include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-entity-query-expl
 [[sql-hibernate-entity-query-explicit-result-set-example]]
 .Hibernate native query selecting entities with explicit result set
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-entity-query-explicit-result-set-example]
 ----
@@ -146,7 +146,7 @@ otherwise, a database-specific _column not found_ error will occur.
 [[sql-jpa-entity-associations-query-many-to-one-example]]
 .Jakarta Persistence native query selecting entities with many-to-one association
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-entity-associations-query-many-to-one-example]
 ----
@@ -155,7 +155,7 @@ include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-entity-associatio
 [[sql-hibernate-entity-associations-query-many-to-one-example]]
 .Hibernate native query selecting entities with many-to-one association
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-entity-associations-query-many-to-one-example]
 ----
@@ -169,7 +169,7 @@ It is possible to eagerly join the `Phone` and the `Person` entities to avoid th
 [[sql-hibernate-entity-associations-query-many-to-one-join-example]]
 .Hibernate native query selecting entities with joined many-to-one association
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-entity-associations-query-many-to-one-join-example]
 ----
@@ -191,7 +191,7 @@ Joined entities will only be present for their respective association.
 [[sql-hibernate-entity-associations-query-many-to-one-join-tuple-transformer-example]]
 .Hibernate native query selecting entities with joined many-to-one association and `TupleTransformer`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-entity-associations-query-many-to-one-join-tuple-transformer-example]
 ----
@@ -203,7 +203,7 @@ It is possible to do the same eager joining for collections (e.g. the `Phone#cal
 [[sql-jpa-entity-associations-query-one-to-many-join-example]]
 .Jakarta Persistence native query selecting entities with joined one-to-many association
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-entity-associations-query-one-to-many-join-example]
 ----
@@ -217,7 +217,7 @@ include::{extrasdir}/sql-jpa-entity-associations-query-one-to-many-join-example.
 [[sql-hibernate-entity-associations-query-one-to-many-join-example]]
 .Hibernate native query selecting entities with joined one-to-many association
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-entity-associations-query-one-to-many-join-example]
 ----
@@ -242,7 +242,7 @@ Column alias injection is needed in the following query which otherwise throws `
 [[sql-jpa-multi-entity-query-example]]
 .Jakarta Persistence native query selecting entities with the same column names
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-multi-entity-query-example]
 ----
@@ -251,7 +251,7 @@ include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-multi-entity-quer
 [[sql-hibernate-multi-entity-query-example]]
 .Hibernate native query selecting entities with the same column names
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-multi-entity-query-example]
 ----
@@ -267,7 +267,7 @@ The following form is not vulnerable to column name duplication:
 [[sql-hibernate-multi-entity-query-alias-example]]
 .Hibernate native query selecting entities with the same column names and aliases
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-multi-entity-query-alias-example]
 ----
@@ -330,7 +330,7 @@ It is possible to apply a `ResultTransformer` to native SQL queries, allowing it
 [[sql-hibernate-dto-query-example]]
 .Hibernate native query selecting DTOs
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/PersonSummaryDTO.java[tags=sql-hibernate-dto-query-example, indent=0]
 
@@ -362,7 +362,7 @@ Native SQL queries which query for entities that are mapped as part of an inheri
 [[sql-hibernate-inheritance-query-example]]
 .Hibernate native query selecting subclasses
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-inheritance-query-example]
 ----
@@ -381,7 +381,7 @@ Native SQL queries support ordinal as well as named parameters:
 [[sql-jpa-query-parameters-example]]
 .Jakarta Persistence native query with parameters
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-query-parameters-example]
 ----
@@ -390,7 +390,7 @@ include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-query-parameters-
 [[sql-hibernate-query-parameters-example]]
 .Hibernate native query with parameters
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-query-parameters-example]
 ----
@@ -433,7 +433,7 @@ To fetch a single column of given table, the named query looks as follows:
 [[sql-scalar-NamedNativeQuery-example]]
 .Single scalar value `NamedNativeQuery`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-model}/Person.java[tags=sql-scalar-NamedNativeQuery-example]
 ----
@@ -442,7 +442,7 @@ include::{example-dir-model}/Person.java[tags=sql-scalar-NamedNativeQuery-exampl
 [[sql-jpa-scalar-named-query-example]]
 .Jakarta Persistence named native query selecting a scalar value
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-scalar-named-query-example]
 ----
@@ -451,7 +451,7 @@ include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-scalar-named-quer
 [[sql-hibernate-scalar-named-query-example]]
 .Hibernate named native query selecting a scalar value
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-scalar-named-query-example]
 ----
@@ -462,7 +462,7 @@ Selecting multiple scalar values is done like this:
 [[sql-multiple-scalar-values-NamedNativeQuery-example]]
 .Multiple scalar values `NamedNativeQuery`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-model}/Person.java[tags=sql-multiple-scalar-values-NamedNativeQuery-example]
 ----
@@ -473,7 +473,7 @@ Without specifying an explicit result type, Hibernate will assume an `Object` ar
 [[sql-jpa-multiple-scalar-values-named-query-example]]
 .Jakarta Persistence named native query selecting multiple scalar values
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-multiple-scalar-values-named-query-example]
 ----
@@ -482,7 +482,7 @@ include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-multiple-scalar-v
 [[sql-hibernate-multiple-scalar-values-named-query-example]]
 .Hibernate named native query selecting multiple scalar values
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-multiple-scalar-values-named-query-example]
 ----
@@ -493,7 +493,7 @@ It's possible to use a DTO to store the resulting scalar values:
 [[sql-ConstructorResult-dto-example]]
 .DTO to store multiple scalar values
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-model}/PersonNames.java[tags=sql-ConstructorResult-dto-example]
 ----
@@ -502,7 +502,7 @@ include::{example-dir-model}/PersonNames.java[tags=sql-ConstructorResult-dto-exa
 [[sql-multiple-scalar-values-dto-NamedNativeQuery-example]]
 .Multiple scalar values `NamedNativeQuery` with `ConstructorResult`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-model}/Person.java[tags=sql-multiple-scalar-values-dto-NamedNativeQuery-example]
 ----
@@ -511,7 +511,7 @@ include::{example-dir-model}/Person.java[tags=sql-multiple-scalar-values-dto-Nam
 [[sql-jpa-multiple-scalar-values-dto-named-query-example]]
 .Jakarta Persistence named native query selecting multiple scalar values into a DTO
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-multiple-scalar-values-dto-named-query-example]
 ----
@@ -520,7 +520,7 @@ include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-multiple-scalar-v
 [[sql-hibernate-multiple-scalar-values-dto-named-query-example]]
 .Hibernate named native query selecting multiple scalar values into a DTO
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-multiple-scalar-values-dto-named-query-example]
 ----
@@ -532,7 +532,7 @@ to customize the named query using various configurations such as fetch mode, ca
 [[sql-multiple-scalar-values-dto-NamedNativeQuery-hibernate-example]]
 .Multiple scalar values using `ConstructorResult` and Hibernate `NamedNativeQuery`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-model}/Phone.java[tags=sql-multiple-scalar-values-dto-NamedNativeQuery-hibernate-example]
 ----
@@ -541,7 +541,7 @@ include::{example-dir-model}/Phone.java[tags=sql-multiple-scalar-values-dto-Name
 [[sql-hibernate-multiple-scalar-values-dto-hibernate-named-query-example]]
 .Hibernate `NamedNativeQuery` named native query selecting multiple scalar values into a DTO
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-multiple-scalar-values-dto-hibernate-named-query-example]
 ----
@@ -555,7 +555,7 @@ Considering the following named query:
 [[sql-entity-NamedNativeQuery-example]]
 .Single-entity `NamedNativeQuery`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-model}/Person.java[tags=sql-entity-NamedNativeQuery-example]
 ----
@@ -571,7 +571,7 @@ Executing this named native query can be done as follows:
 [[sql-jpa-entity-named-query-example]]
 .Jakarta Persistence named native entity query
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-entity-named-query-example]
 ----
@@ -580,7 +580,7 @@ include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-entity-named-quer
 [[sql-hibernate-entity-named-query-example]]
 .Hibernate named native entity query
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-entity-named-query-example]
 ----
@@ -591,7 +591,7 @@ To join multiple entities, you need to use a `SqlResultSetMapping` for each enti
 [[sql-entity-associations-NamedNativeQuery-example]]
 .Joined-entities `NamedNativeQuery`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-model}/Person.java[tags=sql-entity-associations-NamedNativeQuery-example]
 ----
@@ -600,7 +600,7 @@ include::{example-dir-model}/Person.java[tags=sql-entity-associations-NamedNativ
 [[sql-jpa-entity-associations_named-query-example]]
 .Jakarta Persistence named native entity query with joined associations
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-entity-associations_named-query-example]
 ----
@@ -609,7 +609,7 @@ include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-entity-associatio
 [[sql-hibernate-entity-associations_named-query-example]]
 .Hibernate named native entity query with joined associations
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-entity-associations_named-query-example]
 ----
@@ -622,7 +622,7 @@ For this example, the following entities are going to be used:
 [[sql-composite-key-entity-associations_named-query-example]]
 .Entity associations with composite keys and named native queries
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/Dimensions.java[tags=sql-composite-key-entity-associations_named-query-example, indent=0]
 
@@ -637,7 +637,7 @@ include::{doc-emeddable-example-dir}/SpaceShip.java[tags=sql-composite-key-entit
 [[sql-jpa-composite-key-entity-associations_named-query-example]]
 .Jakarta Persistence named native entity query with joined associations and composite keys
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-composite-key-entity-associations_named-query-example]
 ----
@@ -646,7 +646,7 @@ include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-composite-key-ent
 [[sql-hibernate-composite-key-entity-associations_named-query-example]]
 .Hibernate named native entity query with joined associations and composite keys
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-composite-key-entity-associations_named-query-example]
 ----
@@ -681,7 +681,7 @@ With these placeholders, you can imply the catalog, schema, or both catalog and 
 
 So, when running the following native query:
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 @NamedNativeQuery(
     name = "last_30_days_hires",
@@ -712,7 +712,7 @@ parameter type, a `REF_CURSOR` or it could just return the result like a functio
 [[sql-sp-out-mysql-example]]
 .MySQL stored procedure with `OUT` parameter type
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/MySQLStoredProcedureTest.java[tags=sql-sp-out-mysql-example]
 ----
@@ -723,7 +723,7 @@ To use this stored procedure, you can execute the following Jakarta Persistence 
 [[sql-jpa-call-sp-out-mysql-example]]
 .Calling a MySQL stored procedure with `OUT` parameter type using Jakarta Persistence
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/MySQLStoredProcedureTest.java[tags=sql-jpa-call-sp-out-mysql-example]
 ----
@@ -732,7 +732,7 @@ include::{doc-emeddable-example-dir}/MySQLStoredProcedureTest.java[tags=sql-jpa-
 [[sql-hibernate-call-sp-out-mysql-example]]
 .Calling a MySQL stored procedure with `OUT` parameter type using Hibernate
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/MySQLStoredProcedureTest.java[tags=sql-hibernate-call-sp-out-mysql-example]
 ----
@@ -743,7 +743,7 @@ If the stored procedure outputs the result directly without an `OUT` parameter t
 [[sql-sp-mysql-return-no-out-example]]
 .MySQL stored procedure without an `OUT` parameter type
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/MySQLStoredProcedureTest.java[tags=sql-sp-no-out-mysql-example]
 ----
@@ -754,7 +754,7 @@ You can retrieve the results of the aforementioned MySQL stored procedure as fol
 [[sql-jpa-call-sp-no-out-mysql-example]]
 .Calling a MySQL stored procedure and fetching the result set without an `OUT` parameter type using Jakarta Persistence
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/MySQLStoredProcedureTest.java[tags=sql-jpa-call-sp-no-out-mysql-example]
 ----
@@ -763,7 +763,7 @@ include::{doc-emeddable-example-dir}/MySQLStoredProcedureTest.java[tags=sql-jpa-
 [[sql-hibernate-call-sp-no-out-mysql-example]]
 .Calling a MySQL stored procedure and fetching the result set without an `OUT` parameter type using Hibernate
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/MySQLStoredProcedureTest.java[tags=sql-hibernate-call-sp-no-out-mysql-example]
 ----
@@ -774,7 +774,7 @@ For a `REF_CURSOR` result sets, we'll consider the following Oracle stored proce
 [[sql-sp-ref-cursor-oracle-example]]
 .Oracle `REF_CURSOR` stored procedure
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/OracleStoredProcedureTest.java[tags=sql-sp-ref-cursor-oracle-example]
 ----
@@ -790,7 +790,7 @@ This function can be called using the standard Java Persistence API:
 [[sql-jpa-call-sp-ref-cursor-oracle-example]]
 .Calling an Oracle `REF_CURSOR` stored procedure using Jakarta Persistence
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/OracleStoredProcedureTest.java[tags=sql-jpa-call-sp-ref-cursor-oracle-example]
 ----
@@ -799,7 +799,7 @@ include::{doc-emeddable-example-dir}/OracleStoredProcedureTest.java[tags=sql-jpa
 [[sql-hibernate-call-sp-ref-cursor-oracle-example]]
 .Calling an Oracle `REF_CURSOR` stored procedure using Hibernate
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/OracleStoredProcedureTest.java[tags=sql-hibernate-call-sp-ref-cursor-oracle-example]
 ----
@@ -810,7 +810,7 @@ If the database defines an SQL function:
 [[sql-function-mysql-example]]
 .MySQL function
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/MySQLStoredProcedureTest.java[tags=sql-function-mysql-example]
 ----
@@ -827,7 +827,7 @@ This limitation is acknowledged and will be addressed by the https://hibernate.a
 [[sql-call-function-mysql-example]]
 .Calling a MySQL function
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/MySQLStoredProcedureTest.java[tags=sql-call-function-mysql-example]
 ----
@@ -852,7 +852,7 @@ For this purpose, Jakarta Persistence defines the {jpaJavadocUrlPrefix}NamedStor
 [[sql-sp-ref-cursor-oracle-named-query-example]]
 .Oracle `REF_CURSOR` named query stored procedure
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-model}/Person.java[tags=sql-sp-ref-cursor-oracle-named-query-example]
 ----
@@ -863,7 +863,7 @@ Calling this stored procedure is straightforward, as illustrated by the followin
 [[sql-jpa-call-sp-ref-cursor-oracle-named-query-example]]
 .Calling an Oracle `REF_CURSOR` stored procedure using a Jakarta Persistence named query
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/OracleStoredProcedureTest.java[tags=sql-jpa-call-sp-ref-cursor-oracle-named-query-example]
 ----
@@ -887,7 +887,7 @@ To filter collections, the `@SQLRestriction` annotation allows customizing the u
 [[sql-custom-crud-example]]
 .Custom CRUD
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/CustomSQLTest.java[tags=sql-custom-crud-example]
 ----
@@ -926,7 +926,7 @@ Overriding SQL statements for secondary tables is also possible.
 [[sql-custom-crud-secondary-table-example]]
 .Overriding SQL statements for secondary tables
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/CustomSQLSecondaryTableTest.java[tags=sql-custom-crud-secondary-table-example]
 ----
@@ -945,7 +945,7 @@ Assuming the following stored procedure:
 [[sql-sp-soft-delete-example]]
 .Oracle stored procedure to soft-delete a given entity
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/OracleCustomSQLWithStoredProcedureTest.java[tags=sql-sp-soft-delete-example]
 ----
@@ -956,7 +956,7 @@ The entity can use this stored procedure to soft-delete the entity in question:
 [[sql-sp-custom-crud-example]]
 .Customizing the entity delete statement to use the Oracle stored procedure= instead
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{doc-emeddable-example-dir}/OracleCustomSQLWithStoredProcedureTest.java[tags=sql-sp-custom-crud-example]
 ----

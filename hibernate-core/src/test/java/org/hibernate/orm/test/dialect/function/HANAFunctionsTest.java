@@ -14,14 +14,14 @@ import java.math.BigDecimal;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.query.Query;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-@RequiresDialect(AbstractHANADialect.class)
+@RequiresDialect(HANADialect.class)
 public class HANAFunctionsTest extends BaseCoreFunctionalTestCase {
 
 	@Override
@@ -41,7 +41,7 @@ public class HANAFunctionsTest extends BaseCoreFunctionalTestCase {
 		product.setPrice( new BigDecimal( 1.298 ) );
 		try ( Session s = openSession() ) {
 			Transaction tx = s.beginTransaction();
-			s.save( product );
+			s.persist( product );
 			tx.commit();
 		}
 	}

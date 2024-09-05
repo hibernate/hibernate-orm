@@ -24,7 +24,7 @@
         <many-to-one name="parent" class="VersionedEntity"/>
         <set name="children"
 			inverse="true"
-			cascade="persist,merge,save-update,evict,delete">
+			cascade="persist,merge,evict,delete">
 			<key column="parent"/>
 			<one-to-many class="VersionedEntity"/>
 		</set>

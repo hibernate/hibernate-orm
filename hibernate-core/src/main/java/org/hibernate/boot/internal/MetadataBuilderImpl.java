@@ -7,7 +7,6 @@
 package org.hibernate.boot.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Callable;
@@ -27,6 +26,12 @@ import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.cfgxml.spi.MappingReference;
+import org.hibernate.boot.jaxb.Origin;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
+import org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer;
+import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
+import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.TypeContributions;
@@ -42,6 +47,7 @@ import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategyStandard;
+import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -59,19 +65,16 @@ import org.hibernate.boot.spi.MetadataSourcesContributor;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.MetadataSourceType;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.NullnessHelper;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -94,6 +97,7 @@ import jakarta.persistence.SharedCacheMode;
 import static org.hibernate.cfg.AvailableSettings.JPA_COMPLIANCE;
 import static org.hibernate.cfg.AvailableSettings.WRAPPER_ARRAY_HANDLING;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
 /**
  * @author Steve Ebersole
@@ -109,7 +113,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		this( sources, getStandardServiceRegistry( sources.getServiceRegistry() ) );
 	}
 
-	private static StandardServiceRegistry getStandardServiceRegistry(ServiceRegistry serviceRegistry) {
+	public static StandardServiceRegistry getStandardServiceRegistry(ServiceRegistry serviceRegistry) {
 		if ( serviceRegistry == null ) {
 			throw new HibernateException( "ServiceRegistry passed to MetadataBuilder cannot be null" );
 		}
@@ -343,13 +347,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		return this;
 	}
 
-	@Override
-	@Deprecated
-	public MetadataBuilder applySourceProcessOrdering(MetadataSourceType... sourceTypes) {
-		Collections.addAll( options.sourceProcessOrdering, sourceTypes );
-		return this;
-	}
-
 	public MetadataBuilder allowSpecjSyntax() {
 		this.options.specjProprietarySyntaxEnabled = true;
 		return this;
@@ -446,7 +443,52 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			}
 		}
 
-		return MetadataBuildingProcess.build( sources, bootstrapContext, options );
+		final MetadataImplementor bootModel = MetadataBuildingProcess.build( sources, bootstrapContext, options );
+
+		if ( CollectionHelper.isNotEmpty( sources.getHbmXmlBindings() ) ) {
+			final ConfigurationService configurationService = bootstrapContext.getServiceRegistry().getService( ConfigurationService.class );
+			final boolean transformHbm = configurationService != null
+					&& configurationService.getSetting( MappingSettings.TRANSFORM_HBM_XML, BOOLEAN,false );
+
+			if ( !transformHbm ) {
+				for ( Binding<JaxbHbmHibernateMapping> hbmXmlBinding : sources.getHbmXmlBindings() ) {
+					final Origin origin = hbmXmlBinding.getOrigin();
+					DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedHbmXmlProcessing( origin.getType(), origin.getName() );
+				}
+			}
+			else {
+				final List<Binding<JaxbEntityMappingsImpl>> transformed = HbmXmlTransformer.transform(
+						sources.getHbmXmlBindings(),
+						bootModel,
+						bootstrapContext.getServiceRegistry(),
+						UnsupportedFeatureHandling.fromSetting(
+								configurationService.getSettings().get( AvailableSettings.TRANSFORM_HBM_XML_FEATURE_HANDLING ),
+								UnsupportedFeatureHandling.ERROR
+						)
+				);
+
+				final MetadataSources newSources = new MetadataSources( bootstrapContext.getServiceRegistry() );
+				if ( sources.getAnnotatedClasses() != null ) {
+					sources.getAnnotatedClasses().forEach( newSources::addAnnotatedClass );
+				}
+				if ( sources.getAnnotatedClassNames() != null ) {
+					sources.getAnnotatedClassNames().forEach( newSources::addAnnotatedClassName );
+				}
+				if ( sources.getAnnotatedPackages() != null ) {
+					sources.getAnnotatedPackages().forEach( newSources::addPackage );
+				}
+				if ( sources.getExtraQueryImports() != null ) {
+					sources.getExtraQueryImports().forEach( newSources::addQueryImport );
+				}
+				for ( Binding<JaxbEntityMappingsImpl> mappingXmlBinding : transformed ) {
+					newSources.addMappingXmlBinding( mappingXmlBinding );
+				}
+
+				return (MetadataImplementor) newSources.buildMetadata();
+			}
+		}
+
+		return bootModel;
 	}
 
 	@Override
@@ -587,7 +629,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			implements MetadataBuildingOptions, JpaOrmXmlPersistenceUnitDefaultAware {
 		private final StandardServiceRegistry serviceRegistry;
 		private final MappingDefaultsImpl mappingDefaults;
-		private final IdentifierGeneratorFactory identifierGeneratorFactory;
 		private final TimeZoneStorageType defaultTimezoneStorage;
 		private final WrapperArrayHandling wrapperArrayHandling;
 
@@ -610,7 +651,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private boolean useNationalizedCharacterData;
 		private boolean specjProprietarySyntaxEnabled;
 		private boolean noConstraintByDefault;
-		private final ArrayList<MetadataSourceType> sourceProcessOrdering;
 
 		private final String schemaCharset;
 		private final boolean xmlMappingEnabled;
@@ -618,7 +658,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 		public MetadataBuildingOptionsImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
-			this.identifierGeneratorFactory = serviceRegistry.getService( IdentifierGeneratorFactory.class );
 
 			final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
 			final ConfigurationService configService = serviceRegistry.requireService( ConfigurationService.class );
@@ -755,8 +794,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					}
 			);
 
-			this.sourceProcessOrdering = resolveInitialSourceProcessOrdering( configService );
-
 			this.useNationalizedCharacterData = configService.getSetting(
 					AvailableSettings.USE_NATIONALIZED_CHARACTER_DATA,
 					BOOLEAN,
@@ -776,28 +813,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			);
 		}
 
-		private ArrayList<MetadataSourceType> resolveInitialSourceProcessOrdering(ConfigurationService configService) {
-			final ArrayList<MetadataSourceType> initialSelections = new ArrayList<>();
-
-			final String sourceProcessOrderingSetting = configService.getSetting(
-					AvailableSettings.ARTIFACT_PROCESSING_ORDER,
-					StandardConverters.STRING
-			);
-			if ( sourceProcessOrderingSetting != null ) {
-				final String[] orderChoices = StringHelper.split( ",; ", sourceProcessOrderingSetting, false );
-				initialSelections.addAll( CollectionHelper.arrayList( orderChoices.length ) );
-				for ( String orderChoice : orderChoices ) {
-					initialSelections.add( MetadataSourceType.parsePrecedence( orderChoice ) );
-				}
-			}
-			if ( initialSelections.isEmpty() ) {
-				initialSelections.add( MetadataSourceType.HBM );
-				initialSelections.add( MetadataSourceType.CLASS );
-			}
-
-			return initialSelections;
-		}
-
 		@Override
 		public StandardServiceRegistry getServiceRegistry() {
 			return serviceRegistry;
@@ -806,11 +821,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public MappingDefaults getMappingDefaults() {
 			return mappingDefaults;
-		}
-
-		@Override
-		public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
-			return identifierGeneratorFactory;
 		}
 
 		@Override
@@ -953,11 +963,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
-		public List<MetadataSourceType> getSourceProcessOrdering() {
-			return sourceProcessOrdering;
-		}
-
-		@Override
 		public String getSchemaCharset() {
 			return schemaCharset;
 		}
@@ -983,15 +988,30 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			}
 
 			if ( mappingDefaults.getImplicitCatalogName() == null ) {
-				mappingDefaults.implicitCatalogName = StringHelper.nullIfEmpty(
+				mappingDefaults.implicitCatalogName = nullIfEmpty(
 						jpaOrmXmlPersistenceUnitDefaults.getDefaultCatalogName()
 				);
 			}
 
 			if ( mappingDefaults.getImplicitSchemaName() == null ) {
-				mappingDefaults.implicitSchemaName = StringHelper.nullIfEmpty(
+				mappingDefaults.implicitSchemaName = nullIfEmpty(
 						jpaOrmXmlPersistenceUnitDefaults.getDefaultSchemaName()
 				);
+			}
+		}
+
+		@Override
+		public void apply(PersistenceUnitMetadata persistenceUnitMetadata) {
+			if ( !mappingDefaults.implicitlyQuoteIdentifiers ) {
+				mappingDefaults.implicitlyQuoteIdentifiers = persistenceUnitMetadata.useQuotedIdentifiers();
+			}
+
+			if ( mappingDefaults.getImplicitCatalogName() == null ) {
+				mappingDefaults.implicitCatalogName = nullIfEmpty( persistenceUnitMetadata.getDefaultCatalog() );
+			}
+
+			if ( mappingDefaults.getImplicitSchemaName() == null ) {
+				mappingDefaults.implicitSchemaName = nullIfEmpty( persistenceUnitMetadata.getDefaultSchema() );
 			}
 		}
 

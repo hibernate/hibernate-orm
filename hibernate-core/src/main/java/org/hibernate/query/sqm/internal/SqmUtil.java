@@ -41,8 +41,11 @@ import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
+import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Order;
@@ -63,6 +66,7 @@ import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -72,7 +76,6 @@ import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
-import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
@@ -102,6 +105,7 @@ import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.Tuple;
+import jakarta.persistence.metamodel.Type;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.util.stream.Collectors.toList;
@@ -189,7 +193,7 @@ public class SqmUtil {
 					// we need to render the target side if in group/order by
 					if ( association.getTargetKeyPropertyNames().contains( sqmPath.getReferencedPathSource().getPathName() )
 							&& ( clause == Clause.GROUP || clause == Clause.ORDER
-							|| !isFkOptimizationAllowed( sqmPath.getLhs() )
+							|| !isFkOptimizationAllowed( sqmPath.getLhs(), association )
 							|| queryPart.getFirstQuerySpec().groupByClauseContains( sqmPath.getNavigablePath(), sqlAstCreationState )
 							|| queryPart.getFirstQuerySpec().orderByClauseContains( sqmPath.getNavigablePath(), sqlAstCreationState ) ) ) {
 						return association.getAssociatedEntityMappingType();
@@ -218,20 +222,104 @@ public class SqmUtil {
 	 * a join that cannot be dereferenced through the foreign key on the associated table,
 	 * i.e. a join that's neither {@linkplain SqmJoinType#INNER} nor {@linkplain SqmJoinType#LEFT}
 	 * or one that has an explicit on clause predicate.
+	 *
+	 * @deprecated Use {@link #isFkOptimizationAllowed(SqmPath, EntityAssociationMapping)} instead
 	 */
+	@Deprecated(forRemoval = true, since = "6.6.1")
 	public static boolean isFkOptimizationAllowed(SqmPath<?> sqmPath) {
 		if ( sqmPath instanceof SqmJoin<?, ?> ) {
 			final SqmJoin<?, ?> sqmJoin = (SqmJoin<?, ?>) sqmPath;
 			switch ( sqmJoin.getSqmJoinType() ) {
-				case INNER:
 				case LEFT:
-					return !( sqmJoin instanceof SqmQualifiedJoin<?, ?>)
-							|| ( (SqmQualifiedJoin<?, ?>) sqmJoin ).getJoinPredicate() == null;
+					final EntityAssociationMapping associationMapping = resolveAssociationMapping( sqmJoin );
+					if ( associationMapping != null && isFiltered( associationMapping ) ) {
+						return false;
+					}
+					// FallThrough intended
+				case INNER:
+					return sqmJoin.getJoinPredicate() == null;
 				default:
 					return false;
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Utility that returns {@code false} when the provided {@link SqmPath sqmPath} is
+	 * a join that cannot be dereferenced through the foreign key on the associated table,
+	 * i.e. a join that's neither {@linkplain SqmJoinType#INNER} nor {@linkplain SqmJoinType#LEFT}
+	 * or one that has an explicit on clause predicate.
+	 */
+	public static boolean isFkOptimizationAllowed(SqmPath<?> sqmPath, EntityAssociationMapping associationMapping) {
+		if ( sqmPath instanceof SqmJoin<?, ?> ) {
+			final SqmJoin<?, ?> sqmJoin = (SqmJoin<?, ?>) sqmPath;
+			switch ( sqmJoin.getSqmJoinType() ) {
+				case LEFT:
+					if ( isFiltered( associationMapping ) ) {
+						return false;
+					}
+					// FallThrough intended
+				case INNER:
+					return sqmJoin.getJoinPredicate() == null;
+				default:
+					return false;
+			}
+		}
+		return false;
+	}
+
+	private static boolean isFiltered(EntityAssociationMapping associationMapping) {
+			final EntityMappingType entityMappingType = associationMapping.getAssociatedEntityMappingType();
+			return !associationMapping.isFkOptimizationAllowed()
+					// When the identifier mappings are different we have a joined subclass entity
+					// which will filter rows based on a discriminator predicate
+					|| entityMappingType.getIdentifierMappingForJoin() != entityMappingType.getIdentifierMapping();
+	}
+
+	private static @Nullable EntityAssociationMapping resolveAssociationMapping(SqmJoin<?, ?> sqmJoin) {
+		if ( sqmJoin instanceof SqmSingularJoin<?, ?> ) {
+			final SqmSingularJoin<?, ?> singularJoin = (SqmSingularJoin<?, ?>) sqmJoin;
+			if ( singularJoin.getAttribute().getSqmPathType() instanceof EntityDomainType<?> ) {
+				return resolveAssociationMapping( singularJoin );
+			}
+		}
+		return null;
+	}
+
+	private static @Nullable EntityAssociationMapping resolveAssociationMapping(SqmSingularJoin<?, ?> sqmJoin) {
+		SingularPersistentAttribute<?, ?> attribute = sqmJoin.getAttribute();
+		ManagedDomainType<?> declaringType = attribute.getDeclaringType();
+		if ( declaringType.getPersistenceType() != Type.PersistenceType.ENTITY ) {
+			final StringBuilder pathBuilder = new StringBuilder();
+			do {
+				if ( pathBuilder.length() > 0 ) {
+					pathBuilder.insert(0, '.');
+				}
+				pathBuilder.insert( 0, attribute.getName() );
+				final SqmFrom<?, ?> lhs = sqmJoin.getLhs();
+				if ( !(lhs instanceof SqmSingularJoin<?, ?> ) ) {
+					return null;
+				}
+				sqmJoin = (SqmSingularJoin<?, ?>) lhs;
+				attribute = sqmJoin.getAttribute();
+				declaringType = attribute.getDeclaringType();
+			} while (declaringType.getPersistenceType() != Type.PersistenceType.ENTITY );
+			pathBuilder.insert(0, '.');
+			pathBuilder.insert( 0, attribute.getName() );
+			final EntityPersister entityDescriptor = sqmJoin.nodeBuilder()
+					.getSessionFactory()
+					.getMappingMetamodel()
+					.getEntityDescriptor( ( (EntityDomainType<?>) declaringType ).getHibernateEntityName() );
+			return (EntityAssociationMapping) entityDescriptor.findByPath( pathBuilder.toString() );
+		}
+		else {
+			final EntityPersister entityDescriptor = sqmJoin.nodeBuilder()
+					.getSessionFactory()
+					.getMappingMetamodel()
+					.getEntityDescriptor( ( (EntityDomainType<?>) declaringType ).getHibernateEntityName() );
+			return (EntityAssociationMapping) entityDescriptor.findAttributeMapping( attribute.getName() );
+		}
 	}
 
 	public static List<NavigablePath> getWhereClauseNavigablePaths(SqmQuerySpec<?> querySpec) {
@@ -732,7 +820,7 @@ public class SqmUtil {
 			return new SqmSortSpecification(
 					new SqmAliasedNodeRef( element, builder.getIntegerType(), builder ),
 					order.getDirection(),
-					order.getNullPrecedence(),
+					order.getNullPrecedence().getJpaValue(),
 					order.isCaseInsensitive()
 			);
 		}

@@ -55,7 +55,7 @@ As Oracle AI Vector Search supports different types of elements (to ensure bette
 
 [[vector-module-usage-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-vector}/PGVectorTest.java[tags=usage-example]
 ----
@@ -111,7 +111,7 @@ which is `1 - inner_product( v1, v2 ) / ( vector_norm( v1 ) * vector_norm( v2 ) 
 
 [[vector-module-functions-cosine-distance-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-vector}/PGVectorTest.java[tags=cosine-distance-example]
 ----
@@ -126,7 +126,7 @@ The `l2_distance()` function is an alias.
 
 [[vector-module-functions-euclidean-distance-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-vector}/PGVectorTest.java[tags=euclidean-distance-example]
 ----
@@ -141,7 +141,7 @@ The `l1_distance()` function is an alias.
 
 [[vector-module-functions-taxicab-distance-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-vector}/PGVectorTest.java[tags=taxicab-distance-example]
 ----
@@ -156,7 +156,7 @@ and the `inner_product()` function as well, but multiplies the result time `-1`.
 
 [[vector-module-functions-inner-product-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-vector}/PGVectorTest.java[tags=inner-product-example]
 ----
@@ -169,7 +169,7 @@ Determines the dimensions of a vector.
 
 [[vector-module-functions-vector-dims-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-vector}/PGVectorTest.java[tags=vector-dims-example]
 ----
@@ -183,7 +183,7 @@ which is `sqrt( sum( v_i^2 ) )`.
 
 [[vector-module-functions-vector-norm-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-vector}/PGVectorTest.java[tags=vector-norm-example]
 ----

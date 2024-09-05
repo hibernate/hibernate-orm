@@ -10,22 +10,18 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.net.URL;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.hibernate.Internal;
+import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
@@ -83,37 +79,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		orderedClassLoaderSet.add( ClassLoaderServiceImpl.class.getClassLoader() );
 
 		// now build the aggregated class loader...
-		this.aggregatedClassLoader = AccessController.doPrivileged( new PrivilegedAction<AggregatedClassLoader>() {
-			public AggregatedClassLoader run() {
-				return new AggregatedClassLoader( orderedClassLoaderSet, lookupPrecedence );
-			}
-		} );
-	}
-
-	/**
-	 * No longer used/supported!
-	 *
-	 * @param configValues The config values
-	 *
-	 * @return The built service
-	 *
-	 * @deprecated No longer used/supported!
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	@Internal
-	public static ClassLoaderServiceImpl fromConfigSettings(Map configValues) {
-		final List<ClassLoader> providedClassLoaders = new ArrayList<>();
-
-		final Collection<ClassLoader> classLoaders = (Collection<ClassLoader>) configValues.get( AvailableSettings.CLASSLOADERS );
-		if ( classLoaders != null ) {
-			providedClassLoaders.addAll( classLoaders );
-		}
-
-		return new ClassLoaderServiceImpl(
-				providedClassLoaders,
-				TcclLookupPrecedence.from( configValues, TcclLookupPrecedence.AFTER )
-		);
+		this.aggregatedClassLoader = new AggregatedClassLoader( orderedClassLoaderSet, lookupPrecedence );
 	}
 
 	@Override
@@ -243,7 +209,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> T generateProxy(InvocationHandler handler, Class... interfaces) {
+	public <T> T generateProxy(InvocationHandler handler, Class<?>... interfaces) {
 		return (T) Proxy.newProxyInstance(
 				getAggregatedClassLoader(),
 				interfaces,
@@ -275,7 +241,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	private AggregatedClassLoader getAggregatedClassLoader() {
 		final AggregatedClassLoader aggregated = this.aggregatedClassLoader;
 		if ( aggregated == null ) {
-			throw log.usingStoppedClassLoaderService();
+			throw new HibernateException( "The ClassLoaderService cannot be reused (this instance was stopped already)" );
 		}
 		return aggregated;
 	}

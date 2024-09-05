@@ -115,7 +115,7 @@ public class MicrometerStatisticsTest extends BaseCoreFunctionalTestCase {
 		Session session = openSession();
 		session.beginTransaction();
 		Account account = new Account( new AccountId( 1), "testAcct");
-		session.save( account );
+		session.persist( account );
 		session.getTransaction().commit();
 		session.close();
 
@@ -127,7 +127,7 @@ public class MicrometerStatisticsTest extends BaseCoreFunctionalTestCase {
 		// clean up
 		session = openSession();
 		session.beginTransaction();
-		session.delete( account );
+		session.remove( account );
 		session.getTransaction().commit();
 		session.close();
 

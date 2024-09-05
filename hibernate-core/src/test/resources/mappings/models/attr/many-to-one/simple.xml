@@ -1,0 +1,27 @@
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright: Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="3.2">
+    <entity class="org.hibernate.orm.test.boot.models.xml.attr.ManyToOneTests$SimpleEntity" metadata-complete="true" access="FIELD">
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+            <many-to-one name="parent"
+                         target-entity="org.hibernate.orm.test.boot.models.xml.attr.ManyToOneTests$SimpleEntity"
+                         fetch-mode="SELECT"
+                         optimistic-lock="false"
+                         not-found="IGNORE">
+                <join-column name="parent_fk" insertable="false" updatable="false"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+                <on-delete>CASCADE</on-delete>
+            </many-to-one>
+        </attributes>
+    </entity>
+</entity-mappings>

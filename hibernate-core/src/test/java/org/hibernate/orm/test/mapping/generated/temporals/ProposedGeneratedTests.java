@@ -7,21 +7,20 @@
 package org.hibernate.orm.test.mapping.generated.temporals;
 
 import java.time.Instant;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 import org.hibernate.HibernateError;
-import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.generator.EventType;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -33,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DomainModel( annotatedClasses = ProposedGeneratedTests.GeneratedInstantEntity.class )
 @SessionFactory
 @RequiresDialectFeature(feature = DialectFeatureChecks.CurrentTimestampHasMicrosecondPrecision.class, comment = "Without this, we might not see an update to the timestamp")
-@SkipForDialect( dialectClass = SybaseASEDialect.class, matchSubTypes = true, reason = "CURRENT_TIMESTAMP not supported in insert/update in Sybase ASE. Also see https://groups.google.com/g/comp.databases.sybase/c/j-RxPnF3img" )
+@RequiresDialectFeature( feature = DialectFeatureChecks.UsesStandardCurrentTimestampFunction.class )
 public class ProposedGeneratedTests {
 	@Test
 	public void test(SessionFactoryScope scope) throws InterruptedException {
@@ -89,9 +88,9 @@ public class ProposedGeneratedTests {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Proposed update to the legacy `Generated` annotation
 
-		@ProposedGenerated( timing = GenerationTiming.INSERT, sqlDefaultValue = "current_timestamp" )
+		@ProposedGenerated( timing = EventType.INSERT, sqlDefaultValue = "current_timestamp" )
 		public Instant createdAt;
-		@ProposedGenerated( timing = GenerationTiming.ALWAYS, sqlDefaultValue = "current_timestamp" )
+		@ProposedGenerated( timing = {EventType.INSERT, EventType.UPDATE}, sqlDefaultValue = "current_timestamp" )
 		public Instant updatedAt;
 
 		public GeneratedInstantEntity() {

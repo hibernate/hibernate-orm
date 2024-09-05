@@ -61,8 +61,8 @@ public class EntityWithOneToOneSharingPrimaryKeyTest {
 
 		scope.inTransaction(
 				session -> {
-					session.save( other );
-					session.save( entity );
+					session.persist( other );
+					session.persist( entity );
 				}
 		);
 	}

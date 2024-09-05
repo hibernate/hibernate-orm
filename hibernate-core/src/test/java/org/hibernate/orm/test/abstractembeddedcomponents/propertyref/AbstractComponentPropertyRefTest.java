@@ -32,7 +32,7 @@ public class AbstractComponentPropertyRefTest {
 		AddressImpl address = new AddressImpl();
 		scope.inTransaction(
 				session -> {
-					session.save( server );
+					session.persist( server );
 					server.setAddress( address );
 					address.setServer( server );
 					session.flush();
@@ -45,8 +45,8 @@ public class AbstractComponentPropertyRefTest {
 
 		scope.inTransaction(
 				session -> {
-					session.delete( address );
-					session.delete( server );
+					session.remove( address );
+					session.remove( server );
 				}
 		);
 	}

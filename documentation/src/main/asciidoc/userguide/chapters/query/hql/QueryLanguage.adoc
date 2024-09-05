@@ -109,7 +109,7 @@ For example, the simplest query in HQL has no `select` clause at all:
 
 [[hql-select-simplest-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-select-simplest-example]
 ----
@@ -123,14 +123,14 @@ HQL doesn't require a `select` clause, but JPQL _does_.
 
 Naturally, the previous query may be written with a `select` clause:
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-select-simplest-jpql-example]
 ----
 
 When there's no explicit `select` clause, the select list is implied by the result type of the query:
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-select-no-from]
 ----
@@ -157,7 +157,7 @@ Looking carefully at the BNF given above, you might notice that the `select` lis
 Of course, standard SQL, and JPQL, require that the `select` list comes at the beginning.
 But it's more natural to put it last:
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-select-last-example]
 ----
@@ -184,7 +184,7 @@ For example:
 
 [[hql-update-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-update-example]
 ----
@@ -196,7 +196,7 @@ A single HQL `update` statement might result in multiple SQL update statements e
 [[hql-update-examples]]
 //.Example update queries
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/../batch/BatchTests.java[tags=batch-bulk-jpql-update-example]
 
@@ -224,7 +224,7 @@ Adding the keyword `versioned`&mdash;writing `update versioned`&mdash;specifies 
 [[hql-update-versioned-example]]
 //.Example update queries
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/../batch/BatchTests.java[tags=batch-bulk-hql-update-version-example]
 ----
@@ -239,7 +239,7 @@ it is undefined which row is updated or whether an error is thrown.
 [[hql-update-join-example]]
 //.Example update join queries
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/../query/hql/UpdateJoinTests.java[tags=hql-update-join-example]
 ----
@@ -275,7 +275,7 @@ A `delete` statement may use implicit or explicit joins.
 [[hql-delete-join-example]]
 //.Example delete join queries
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/../query/hql/DeleteJoinTests.java[tags=hql-delete-join-example]
 ----
@@ -421,7 +421,7 @@ To escape a single quote within a string literal, use a doubled single quote: `'
 [[hql-string-literals-example]]
 //.String literals examples
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-string-literals-example]
 ----
@@ -435,7 +435,7 @@ Numeric literals come in several different forms.
 [[hql-numeric-literals-example]]
 //.Numeric literal examples
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-numeric-literals-example]
 ----
@@ -536,7 +536,7 @@ Literal values of a Java enumerated type may be written without needing to speci
 
 [[hql-enum-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-enum-example]
 ----
@@ -551,7 +551,7 @@ HQL allows any Java `static` constant to be used in HQL, but it must be referenc
 
 [[hql-java-constant-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-java-constant-example]
 ----
@@ -580,7 +580,7 @@ See <<hql-string-functions, below>> for details of the `concat()` function.
 [[hql-concatenation-example]]
 //.Concatenation operation example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-concatenation-example]
 ----
@@ -596,7 +596,7 @@ The basic SQL arithmetic operators, `+`,`-`,`*`, and `/` are joined by the remai
 [[hql-numeric-arithmetic-example]]
 //.Numeric arithmetic examples
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-numeric-arithmetic-example]
 ----
@@ -679,7 +679,7 @@ For example:
 [[hql-simple-case-expressions-example]]
 //.Simple case expression example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-simple-case-expressions-example]
 ----
@@ -701,7 +701,7 @@ For example:
 [[hql-searched-case-expressions-example]]
 //.Searched case expression example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-searched-case-expressions-example]
 ----
@@ -712,7 +712,7 @@ A `case` expression may contain complex expression, including operator expressio
 [[hql-case-arithmetic-expressions-example]]
 //.Case expression with arithmetic operation example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-case-arithmetic-expressions-example]
 ----
@@ -767,7 +767,7 @@ This is mainly useful when dealing with entity inheritance hierarchies.
 [[hql-entity-type-exp-example]]
 //.Entity type expression examples
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-entity-type-exp-example]
 ----
@@ -781,7 +781,7 @@ This is useful when dealing with entity or embeddable inheritance hierarchies.
 
 [[hql-treat-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-treat-example]
 ----
@@ -802,7 +802,7 @@ The target type is an unqualified Java class name:
 `String`, `Long`, `Integer`, `Double`, `Float`, `Character`, `Byte`, `BigInteger`, `BigDecimal`, `LocalDate`, `LocalTime`, `LocalDateTime`, etc.
 
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-cast-function-example]
 ----
@@ -814,7 +814,7 @@ include::{example-dir-hql}/HQLTest.java[tags=hql-cast-function-example]
 The function `str(x)` is a synonym for `cast(x as String)`.
 
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-str-function-example]
 ----
@@ -839,7 +839,7 @@ An abbreviated `case` expression that returns the first non-null operand.
 
 [[hql-coalesce-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-coalesce-example]
 ----
@@ -855,7 +855,7 @@ Evaluates to null if its operands are equal, or to its first argument otherwise.
 
 [[hql-nullif-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-nullif-example]
 ----
@@ -883,7 +883,7 @@ Field types include: `day`, `month`, `year`, `second`, `minute`, `hour`, `day of
 For a full list of field types, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/query/TemporalUnit.html[`TemporalUnit`].
 
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-extract-function-example]
 ----
@@ -905,7 +905,7 @@ The following functions are abbreviations for `extract()`:
 TIP: These abbreviations aren't part of the JPQL standard, but on the other hand they're a lot less verbose.
 
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-year-function-example]
 ----
@@ -968,7 +968,7 @@ IMPORTANT: Contrary to Java, positions of characters within strings are indexed 
 Accepts a variable number of arguments, and produces a string by concatenating them.
 
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-concat-function-example]
 ----
@@ -980,7 +980,7 @@ The JPQL function `locate()` determines the position of a substring within anoth
 - The optional third argument is used to specify a position at which to start the search.
 
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-locate-function-example]
 ----
@@ -991,7 +991,7 @@ include::{example-dir-hql}/HQLTest.java[tags=hql-locate-function-example]
 The `position()` function has a similar purpose, but follows the ANSI SQL syntax.
 
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-position-function-example]
 ----
@@ -1004,7 +1004,7 @@ Returns a substring of the given string.
 - The optional third argument specifies the maximum length of the substring.
 
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-substring-function-example]
 ----
@@ -1015,7 +1015,7 @@ The `trim()` function follows the syntax and semantics of ANSI SQL.
 It may be used to trim `leading` characters, `trailing` characters, or both.
 
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-trim-function-example]
 ----
@@ -1034,15 +1034,15 @@ trimSpecification
 ====
 
 //====
-//[source, JAVA, indent=0]
+//[source, java, indent=0]
 //----
 //include::{sourcedir}/HQLTest.java[tags=hql-length-function-example]
 //----
-//[source, JAVA, indent=0]
+//[source, java, indent=0]
 //----
 //include::{sourcedir}/HQLTest.java[tags=hql-upper-function-example]
 //----
-//[source, JAVA, indent=0]
+//[source, java, indent=0]
 //----
 //include::{sourcedir}/HQLTest.java[tags=hql-lower-function-example]
 //----
@@ -1091,15 +1091,15 @@ Of course, we also have a number of functions for working with numeric values.
 |===
 
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-abs-function-example]
 ----
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-mod-function-example]
 ----
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-sqrt-function-example]
 ----
@@ -1133,7 +1133,7 @@ The number of elements of a collection or to-many association.
 
 [[hql-size-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-size-example]
 ----
@@ -1215,7 +1215,7 @@ To retrieve the result as `List<?>`, use the `array_list()` function.
 
 [[hql-array-constructor-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayConstructorTest.java[tags=hql-array-example]
 ----
@@ -1226,7 +1226,7 @@ which is syntax sugar that translates to the array constructor function.
 
 [[hql-array-constructor-hql-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayConstructorTest.java[tags=hql-array-hql-example]
 ----
@@ -1239,7 +1239,7 @@ An <<hql-aggregate-functions-orderedset,ordered set aggregate function>> that ag
 
 [[hql-array-agg-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayAggregateTest.java[tags=hql-array-agg-example]
 ----
@@ -1252,7 +1252,7 @@ Returns the 1-based position of an element in the array. Returns 0 if the elemen
 
 [[hql-array-position-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayPositionTest.java[tags=hql-array-position-example]
 ----
@@ -1263,7 +1263,7 @@ which is overloaded to also accept an array argument.
 
 [[hql-array-position-hql-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayPositionTest.java[tags=hql-array-position-hql-example]
 ----
@@ -1277,7 +1277,7 @@ To retrieve the result as `List<Integer>`, use the `array_positions_list()` func
 
 [[hql-array-positions-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayPositionsTest.java[tags=hql-array-positions-example]
 ----
@@ -1290,7 +1290,7 @@ Returns size of the passed array. Returns `null` if the array is `null`.
 
 [[hql-array-length-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayLengthTest.java[tags=hql-array-length-example]
 ----
@@ -1301,7 +1301,7 @@ which is overloaded to also accept an array argument.
 
 [[hql-array-length-hql-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayLengthTest.java[tags=hql-array-length-hql-example]
 ----
@@ -1314,7 +1314,7 @@ Concatenates arrays with each other in order. Returns `null` if one of the argum
 
 [[hql-array-concat-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayConcatTest.java[tags=hql-array-concat-example]
 ----
@@ -1324,7 +1324,7 @@ Arrays can also be concatenated with the `||` (double-pipe) operator.
 
 [[hql-array-concat-pipe-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayConcatTest.java[tags=hql-array-concat-pipe-example]
 ----
@@ -1334,7 +1334,7 @@ In addition, the `||` (double-pipe) operator also support concatenating single e
 
 [[hql-array-concat-pipe-element-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayConcatTest.java[tags=hql-array-concat-pipe-element-example]
 ----
@@ -1347,7 +1347,7 @@ Prepends element to array. Returns `null` if the array argument is `null`.
 
 [[hql-array-prepend-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayPrependTest.java[tags=hql-array-prepend-example]
 ----
@@ -1360,7 +1360,7 @@ Appends element to array. Returns `null` if the array argument is `null`.
 
 [[hql-array-append-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayAppendTest.java[tags=hql-array-append-example]
 ----
@@ -1375,7 +1375,7 @@ is undefined when the second argument, the element to search, is `null`.
 
 [[hql-array-contains-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayContainsTest.java[tags=hql-array-contains-example]
 ----
@@ -1387,7 +1387,7 @@ This is syntax sugar that translates to the `array_contains` function.
 
 [[hql-array-contains-hql-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayContainsTest.java[tags=hql-array-contains-hql-example]
 ----
@@ -1403,7 +1403,7 @@ is undefined when the second argument contains a `null`.
 [[hql-array-contains-array-example]]
 [[hql-array-includes-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayIncludesTest.java[tags=hql-array-includes-example]
 ----
@@ -1414,7 +1414,7 @@ To search for `null` elements, the `array_includes_nullable` function must be us
 [[hql-array-contains-array-nullable-example]]
 [[hql-array-includes-nullable-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayIncludesTest.java[tags=hql-array-includes-nullable-example]
 ----
@@ -1426,7 +1426,7 @@ This is syntax sugar that translates to the `array_includes` function.
 
 [[hql-array-includes-hql-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayIncludesTest.java[tags=hql-array-includes-hql-example]
 ----
@@ -1444,7 +1444,7 @@ Only `array_intersects_nullable` is guaranteed to produce correct results for `n
 [[hql-array-overlaps-example]]
 [[hql-array-intersects-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayIntersectsTest.java[tags=hql-array-intersects-example]
 ----
@@ -1453,7 +1453,7 @@ include::{array-example-dir-hql}/ArrayIntersectsTest.java[tags=hql-array-interse
 [[hql-array-overlaps-nullable-example]]
 [[hql-array-intersects-nullable-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayIntersectsTest.java[tags=hql-array-intersects-nullable-example]
 ----
@@ -1465,7 +1465,7 @@ This is syntax sugar that translates to the `array_intersects` function.
 [[hql-array-overlaps-hql-example]]
 [[hql-array-intersects-hql-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayIntersectsTest.java[tags=hql-array-intersects-hql-example]
 ----
@@ -1479,7 +1479,7 @@ and also if the index is bigger than the array length.
 
 [[hql-array-get-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayGetTest.java[tags=hql-array-get-example]
 ----
@@ -1492,7 +1492,7 @@ Returns an array copy with the given element placed at the given 1-based index, 
 
 [[hql-array-set-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArraySetTest.java[tags=hql-array-set-example]
 ----
@@ -1505,7 +1505,7 @@ Returns an array copy with the given element removed from the array. Allows remo
 
 [[hql-array-remove-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayRemoveTest.java[tags=hql-array-remove-example]
 ----
@@ -1518,7 +1518,7 @@ Returns an array copy with the element at the given index removed from the array
 
 [[hql-array-remove-index-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayRemoveIndexTest.java[tags=hql-array-remove-index-example]
 ----
@@ -1532,7 +1532,7 @@ and also if the index is out of bounds.
 
 [[hql-array-slice-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArraySliceTest.java[tags=hql-array-slice-example]
 ----
@@ -1544,7 +1544,7 @@ This is syntax sugar that translates to the `array_slice` function.
 
 [[hql-array-slice-hql-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArraySliceTest.java[tags=hql-array-slice-hql-example]
 ----
@@ -1557,7 +1557,7 @@ Returns an array copy which has elements matching the second argument replaced b
 
 [[hql-array-replace-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayReplaceTest.java[tags=hql-array-replace-example]
 ----
@@ -1571,7 +1571,7 @@ It is an error if any array has a length smaller than the second argument.
 
 [[hql-array-trim-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayTrimTest.java[tags=hql-array-trim-example]
 ----
@@ -1586,7 +1586,7 @@ To retrieve the result as `List<?>`, use the `array_fill_list()` function.
 
 [[hql-array-fill-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayFillTest.java[tags=hql-array-fill-example]
 ----
@@ -1602,7 +1602,7 @@ Returns `null` if the first argument is `null`.
 
 [[hql-array-to-string-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayToStringTest.java[tags=hql-array-to-string-example]
 ----
@@ -1613,7 +1613,7 @@ which is a short version of `concat('[', array_to_string(array, ',', 'null'), ']
 
 [[hql-array-to-string-hql-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayToStringTest.java[tags=hql-array-to-string-hql-example]
 ----
@@ -1649,7 +1649,7 @@ Then at startup Hibernate will log a list of type signatures of all registered f
 
 [[hql-var-function-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-native-function-example]
 ----
@@ -1695,7 +1695,7 @@ The operands should be of the same type.
 [[hql-relational-comparisons-example]]
 //.Relational comparison examples
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-relational-comparisons-example]
 ----
@@ -1711,7 +1711,7 @@ Of course, all three operands must be of compatible type.
 [[hql-between-predicate-example]]
 //.Between examples
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-between-predicate-example]
 ----
@@ -1732,7 +1732,7 @@ The following operators make it easier to deal with null values.
 [[hql-null-predicate-example]]
 //.Nullness checking examples
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-null-predicate-example]
 ----
@@ -1782,7 +1782,7 @@ The expression on the right is a pattern, where:
 [[hql-like-predicate-example]]
 //.Like predicate examples
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-like-predicate-example]
 ----
@@ -1795,7 +1795,7 @@ For example, to match all stored procedures prefixed with `Dr_`, the like criter
 [[hql-like-predicate-escape-example]]
 //.Like with escape symbol
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-like-predicate-escape-example]
 ----
@@ -1863,7 +1863,7 @@ Even embedded attributes are allowed, although that feature depends on the level
 [[hql-in-predicate-example]]
 //.In predicate examples
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-in-predicate-example]
 ----
@@ -1872,7 +1872,7 @@ include::{example-dir-hql}/HQLTest.java[tags=hql-in-predicate-example]
 [[hql-collection-expressions-in-example]]
 //.In indices example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-collection-expressions-in-example]
 ----
@@ -1926,7 +1926,7 @@ The qualifiers are unary prefix operators: `all`, `every`, `any`, and `some`.
 [[hql-all-subquery-comparison-qualifier-example]]
 //.Subquery comparison example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-all-subquery-comparison-qualifier-example]
 ----
@@ -1935,12 +1935,12 @@ include::{example-dir-hql}/HQLTest.java[tags=hql-all-subquery-comparison-qualifi
 [[hql-collection-expressions-all-some-example]]
 //.All elements and some elements
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-collection-expressions-all-example]
 ----
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-collection-expressions-some-example]
 ----
@@ -1961,7 +1961,7 @@ As you can surely guess, `not exists` evaluates to true if the thing to the righ
 [[hql-collection-expressions-exists-example]]
 //.Exists elements example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-collection-expressions-exists-example]
 ----
@@ -1982,7 +1982,7 @@ The following operators apply to collection-valued attributes and to-many associ
 [[hql-empty-collection-predicate-example]]
 //.Empty collection expression examples
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-empty-collection-predicate-example]
 ----
@@ -1991,7 +1991,7 @@ include::{example-dir-hql}/HQLTest.java[tags=hql-empty-collection-predicate-exam
 [[hql-member-of-collection-predicate-example]]
 //.Member-of collection expression examples
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-member-of-collection-predicate-example]
 ----
@@ -2037,7 +2037,7 @@ Remember, the _entity name_ is the value of the `name` member of the `@Entity` a
 [[hql-root-reference-jpql-example]]
 //.Entity name for root entity reference
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-select-simplest-jpql-example]
 ----
@@ -2051,7 +2051,7 @@ Then Hibernate will query every entity which inherits the named type.
 [[hql-root-reference-jpql-fqn-example]]
 //.Class name for root entity reference
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-select-simplest-jpql-fqn-example]
 ----
@@ -2067,7 +2067,7 @@ Of course, there may be multiple root entities.
 include::{example-dir-hql}/HQLTest.java[tags=hql-multiple-root-reference-jpql-example]
 ----
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-multiple-same-root-reference-jpql-example]
 ----
@@ -2092,7 +2092,7 @@ Consider:
 
 [[hql-polymorphism-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-polymorphism-example, indent=0]
 ----
@@ -2109,9 +2109,6 @@ The query `from java.lang.Object` is completely legal. (But not very useful!)
 It returns every object of every mapped entity type.
 ====
 
-This behavior may be slightly adjusted using the `@Polymorphism` annotation.
-
-See <<chapters/domain/inheritance.adoc#entity-inheritance-polymorphism>> for more.
 
 [[hql-derived-root]]
 ==== Derived roots
@@ -2121,7 +2118,7 @@ It must declare an identification variable.
 
 [[hql-derived-root-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-derived-root-example, indent=0]
 ----
@@ -2210,7 +2207,7 @@ include::{example-dir-hql}/HQLTest.java[tags=hql-explicit-inner-join-example]
 [[hql-explicit-outer-join-example]]
 //.Explicit left (outer) join examples
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-explicit-outer-join-example]
 ----
@@ -2237,7 +2234,7 @@ Join conditions occurring in the `with` or `on` clause are added to the `on` cla
 [[hql-explicit-join-with-example]]
 //.HQL `with` clause join example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-explicit-join-with-example]
 ----
@@ -2248,7 +2245,7 @@ The following query is arguably less clear, but semantically equivalent:
 [[hql-explicit-join-jpql-on-example]]
 //.JPQL `on` clause join example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-explicit-join-jpql-on-example]
 ----
@@ -2275,7 +2272,7 @@ For example, if `Person` has a one-to-many association named `phones`, the use o
 [[hql-explicit-fetch-join-example]]
 //.Fetch join example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-explicit-fetch-join-example]
 ----
@@ -2312,7 +2309,7 @@ An explicit join may narrow the type of the joined entity using `treat()`.
 
 [[hql-join-treat-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-join-treat-example]
 ----
@@ -2335,7 +2332,7 @@ The `lateral` keyword just distinguishes the two cases.
 
 [[hql-derived-join-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-derived-join-example, indent=0]
 ----
@@ -2382,7 +2379,7 @@ In the second case, Hibernate with automatically add a join to the generated SQL
 [[hql-implicit-join-example]]
 //.Simple implicit join example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-implicit-join-example]
 ----
@@ -2399,7 +2396,7 @@ Note that:
 [[hql-implicit-join-alias-example]]
 //.Reused implicit join
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-implicit-join-alias-example]
 ----
@@ -2417,7 +2414,7 @@ When a join involves a collection or many-valued association, the declared ident
 [[hql-collection-valued-associations-example]]
 //.Collection references example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-collection-valued-associations]
 ----
@@ -2446,7 +2443,7 @@ In particular, `index()` and `key()` obtain a reference to a list index or map k
 [[hql-collection-qualification-example]]
 //.Qualified collection references example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-model}/Phone.java[tags=hql-collection-qualification-example, indent=0]
 
@@ -2461,7 +2458,7 @@ The functions `element()`, `index()`, `key()`, and `value()` may even be applied
 
 [[hql-collection-implicit-join-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-collection-implicit-join-example, indent=0]
 ----
@@ -2472,7 +2469,7 @@ An element of an indexed collection (an array, list, or map) may even be identif
 [[hql-collection-index-operator-example]]
 //.Index operator examples
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-collection-index-operator-example]
 ----
@@ -2505,7 +2502,7 @@ But if there are multiple expressions in the select list then:
 [[hql-select-clause-projection-example]]
 //.Query results as lists
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=jpql-projection-example]
 ----
@@ -2541,7 +2538,7 @@ The `select new` construct packages the query results into a user-written Java c
 [[hql-select-clause-dynamic-instantiation-example]]
 //.Query results via `select new`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/CallStatistics.java[tags=hql-select-clause-dynamic-instantiation-example]
 
@@ -2563,7 +2560,7 @@ Alternatively, using the syntax `select new map`, the query may specify that eac
 [[hql-select-clause-dynamic-map-instantiation-example]]
 //.Query results as maps
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-select-clause-dynamic-map-instantiation-example]
 ----
@@ -2577,7 +2574,7 @@ Or, using the syntax `select new list`, the query may specify that each result s
 [[hql-select-clause-dynamic-list-instantiation-example]]
 //.Query results as lists
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-select-clause-dynamic-list-instantiation-example]
 ----
@@ -2599,7 +2596,7 @@ It's only effect is to add `distinct` to the generated SQL.
 [[hql-distinct-projection-query-example]]
 //.Using `distinct` to remove duplicate rows
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/SelectDistinctTest.java[tags=hql-distinct-projection-query-example]
 ----
@@ -2646,7 +2643,7 @@ There are also <<hql-aggregate-functions-orderedset,ordered set aggregate functi
 [[hql-aggregate-functions-example]]
 //.Aggregate function examples
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-aggregate-functions-example]
 ----
@@ -2684,7 +2681,7 @@ The `elements()` and `indices()` functions we met <<hql-elements-indices,earlier
 [[hql-collection-expressions-example]]
 //.Collection-related expressions examples
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-collection-expressions-example]
 ----
@@ -2703,12 +2700,12 @@ All aggregate functions support the inclusion of a _filter clause_, a sort of mi
 [[hql-aggregate-functions-filter-example]]
 //.Using filter with aggregate functions
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-aggregate-functions-simple-filter-example]
 ----
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-aggregate-functions-filter-example]
 ----
@@ -2742,7 +2739,7 @@ This function has different names on different databases, but HQL abstracts thes
 
 [[hql-aggregate-functions-within-group-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-aggregate-functions-within-group-example]
 ----
@@ -2849,7 +2846,7 @@ Consider the following queries:
 [[hql-group-by-example]]
 //.Group by example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-group-by-example]
 ----
@@ -2881,7 +2878,7 @@ If that ended up being too much data to deal with, we might want to restrict the
 [[hql-group-by-having-example]]
 //.Having example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-group-by-having-example]
 ----
@@ -2903,7 +2900,7 @@ Just like in SQL, `all` suppresses the elimination of duplicate results.
 
 [[hql-union-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-union-example]
 ----
@@ -2968,7 +2965,7 @@ Therefore, the sorting of null values may also be explicitly specified:
 [[hql-order-by-example]]
 //.Order by example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-order-by-example]
 ----
@@ -3005,7 +3002,7 @@ These two queries are identical:
 [[hql-limit-example]]
 //.Order by example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-limit-example]
 ----
@@ -3026,7 +3023,7 @@ This next query is accepted by HQL, and no more than 50 results are returned by 
 [[hql-bad-limit-example]]
 //.Order by example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-bad-limit-example]
 ----
@@ -3087,7 +3084,7 @@ whereas `NOT MATERIALIZED` will cause the subquery to be inlined into every use 
 
 [[hql-cte-materialized-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-cte-materialized-example, indent=0]
 ----
@@ -3106,7 +3103,7 @@ Recursive CTEs must follow a very particular shape, which is
 
 [[hql-cte-recursive-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-cte-recursive-example, indent=0]
 ----
@@ -3152,7 +3149,7 @@ A DBMS has two possible orders when executing the recursive query part
 
 [[hql-cte-recursive-search-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-cte-recursive-search-example, indent=0]
 ----
@@ -3180,7 +3177,7 @@ cycleClause
 
 [[hql-cte-recursive-cycle-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-cte-recursive-cycle-example, indent=0]
 ----

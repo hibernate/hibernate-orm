@@ -11,13 +11,11 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.MappingException;
-import org.hibernate.Remove;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.persister.entity.EntityPersister;
 
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
@@ -29,11 +27,6 @@ import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
  */
 public class RootClass extends PersistentClass implements TableOwner, SoftDeletable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( RootClass.class );
-
-	@Deprecated(since = "6.2") @Remove
-	public static final String DEFAULT_IDENTIFIER_COLUMN_NAME = "id";
-	@Deprecated(since = "6.2") @Remove
-	public static final String DEFAULT_DISCRIMINATOR_COLUMN_NAME = "class";
 
 	private Property identifierProperty;
 	private KeyValue identifier;
@@ -48,8 +41,6 @@ public class RootClass extends PersistentClass implements TableOwner, SoftDeleta
 	private Value discriminator;
 	private boolean mutable = true;
 	private boolean embeddedIdentifier;
-	private boolean explicitPolymorphism;
-	private Class<? extends EntityPersister> entityPersisterClass;
 	private boolean forceDiscriminator;
 	private boolean concreteProxy;
 	private String where;
@@ -126,6 +117,10 @@ public class RootClass extends PersistentClass implements TableOwner, SoftDeleta
 		return polymorphic;
 	}
 
+	/**
+	 * @deprecated No longer supported
+	 */
+	@Deprecated
 	public void setPolymorphic(boolean polymorphic) {
 		this.polymorphic = polymorphic;
 	}
@@ -154,11 +149,6 @@ public class RootClass extends PersistentClass implements TableOwner, SoftDeleta
 	public void addSubclass(Subclass subclass) throws MappingException {
 		super.addSubclass( subclass );
 		setPolymorphic( true );
-	}
-
-	@Override
-	public boolean isExplicitPolymorphism() {
-		return explicitPolymorphism;
 	}
 
 	@Override
@@ -195,18 +185,8 @@ public class RootClass extends PersistentClass implements TableOwner, SoftDeleta
 	}
 
 	@Override
-	public Class<? extends EntityPersister> getEntityPersisterClass() {
-		return entityPersisterClass;
-	}
-
-	@Override
 	public Table getRootTable() {
 		return getTable();
-	}
-
-	@Override
-	public void setEntityPersisterClass(Class<? extends EntityPersister> persister) {
-		this.entityPersisterClass = persister;
 	}
 
 	@Override
@@ -227,8 +207,11 @@ public class RootClass extends PersistentClass implements TableOwner, SoftDeleta
 		this.embeddedIdentifier = embeddedIdentifier;
 	}
 
+	/**
+	 * @deprecated No longer supported
+	 */
+	@Deprecated
 	public void setExplicitPolymorphism(boolean explicitPolymorphism) {
-		this.explicitPolymorphism = explicitPolymorphism;
 	}
 
 	public void setIdentifier(KeyValue identifier) {

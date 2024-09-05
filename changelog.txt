@@ -3,1326 +3,156 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
-
-Changes in 6.6.0.CR2 (August 6, 2024)
+Changes in 7.0.0.Beta1 (August 01, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 
-https://hibernate.atlassian.net/projects/HHH/versions/32320
+https://hibernate.atlassian.net/projects/HHH/versions/32319
 
 ** Bug
-    * [HHH-15725] - Criteria API Expression.as adds cast even when the cast type is equal to the expression type
-    * [HHH-17840] - Jackson JsonNode stored as JSON "null" value instead of database NULL
-    * [HHH-17914] - NPE getSqlString\(\) in debug mode
-    * [HHH-17949] - StatelessSession.upsert\(\) with @Version-ed entity on databases with no SQL merge
-    * [HHH-18012] - Subclass of super generic array AttributeConverter cannot be auto applied
-    * [HHH-18017] - Query cache on Polymorphic entities leads to InstantiationException \(Cannot instantiate abstract class\)
-    * [HHH-18062] - 'Could not instantiate entity ... due to argument type mismatch' with record @IdClass
-    * [HHH-18085] - Executing SELECT query twice in a transaction, leads to "Shared references of collection error"
-    * [HHH-18086] - Assertion Error when using JOIN FETCH on ToOneAttribute with multiple JOINs of parent entity
-    * [HHH-18108] - Duplicate class definition regression caused by ClassTransformer
-    * [HHH-18177] - org.hibernate.AssertionFailure: null identifier for collection of role thrown when merging entity with generated id
-    * [HHH-18229] - "UnsupportedOperationException: Re-work support for semi-resolve " with null value in column referenced by @JoinColumn
-    * [HHH-18272] - UnsupportedOperationException when order / group by clause contains aliased item
-    * [HHH-18278] - Metamodel generator is ignoring JPA/Hibernate annotations in package-info
-    * [HHH-18280] - Support named procedure parameters down to the JDBC level
-    * [HHH-18284] - Missing classes in org.hibernate.graalvm.internal.StaticClassLists
-    * [HHH-18285] - Non-polymorphic embeddable inheritance fails starting with Hibernate ORM 6.6
-    * [HHH-18288] - Subclasses of SINGLE\_TABLE Inheritance should not be allowed to define @Table
-    * [HHH-18291] - Regression in SemanticQueryBuilder 6.4.7.Final -> 6.4.8.Final. Also present in 6.5.2.Final.
-    * [HHH-18292] - Regression in SemanticQueryBuilder 6.4.9.Final -> 6.5.0.Final. Also present in 6.5.2.Final.
-    * [HHH-18302] - DB2CallableStatementSupport uses an invalid syntax for named parameters
-    * [HHH-18306] - Implicit instantiation for queries with single selection item broken
-    * [HHH-18312] - Informix nationalized JDBC types support
-    * [HHH-18313] - NullPointerException because JdbcIsolationDelegate.sqlExceptionHelper\(\) returns null
-    * [HHH-18330] - UnknownTableReferenceException in JPQL query when join fetching to-one in embedded id
-    * [HHH-18332] - DB2 stored procedures returning REF\_CURSORs are not working with the standard support
-    * [HHH-18334] - Teradata doesn't support variable limit
-    * [HHH-18338] - When an embeddable object is loaded before the entity it references, hibernate fails to start
-    * [HHH-18340] - method return type errors in AbstractDelegatingSessionFactoryBuilder
-    * [HHH-18343] - fix Altibase integration test failures since Hibernate 6.5.2
-    * [HHH-18347] - Casted parameter rendering broken for some DDL types when using @Column
-    * [HHH-18352] - Tuple comparison emulation performing bad
-    * [HHH-18357] - Null pointer exception in createCountQuery because Identifier descriptor is null in MappedSuperclass
-    * [HHH-18358] - Metemodel generator does not resolving entity type literals
-    * [HHH-18382] - Assertion error when using @DiscriminatorFormula for embeddable inheritance
-    * [HHH-18390] - JoinColumn leads to \`NullPointerException: Cannot invoke "Object.hashCode\(\)" because "value" is null\` on load
-    * [HHH-18406] - Oracle: schema update fails to create entity table if one of the fields is an array
-    * [HHH-18410] - Performance regression due to megamorphic calls
+    * [HHH-18314] - dialect for Db2 claims to be NationalizationSupport.EXPLICIT but never generates DDL with NCHAR/NVARCHAR
 
 ** Improvement
-	* [HHH-12836] - JtaPlatformInitiator.initiateService is logging same debug message twice
-	* [HHH-18296] - When JDBC drivers generate SQLWarnings with a "success" SQLState, do not log that at WARN level
-	* [HHH-18301] - Db2 supports 'drop table if exists' since version 11.5
-	* [HHH-18318] - fix user guide's bootstrap method reference link text
-	* [HHH-18320] - Correct some syntax errors in Locking chapter in user guide
-	* [HHH-18324] - Upgrade to Jandex 3.2.0
-	* [HHH-18327] - Connection pool configuration settings constants
-	* [HHH-18335] - improve partial order sorting in AnnotationMetadataSourceProcessorImpl
-	* [HHH-18339] - \`supportsFilterClause\` is not overridden to True for H2SqlAstTranslator
-	* [HHH-18342] - fix contradictive javadoc of org.hibernate.engine.spi.SharedSessionContractImplementor
-	* [HHH-18375] - Reuse previous row state when result cardinality is duplicated
-	* [HHH-18379] - Allow passing row count estimate to pre-size collections
-	* [HHH-18393] - Upgrade JBoss Logging Tools \(processor\) to 3.0.0.Final
-	* [HHH-18395] - Fix intermittent failures of clock based tests
-	* [HHH-18401] - SelectionQuery needs better validation of query return type
-	* [HHH-18411] - Add ability to specify a custom UuidGenerator.ValueGenerator
-	* [HHH-18412] - Upgrade JBoss Logging Tools \(processor\) to 3.0.1.Final
-	* [HHH-18454] - Skip connection provider retrieval and DB info logging when booting offline
+    * [HHH-18453] - Fix Java code block highlighting in User Guide
+    * [HHH-18448] - Add cast and notEqualTo methods to JpaExpression and SqmExpression
+    * [HHH-18441] - Create extension to PersistenceConfiguration
+    * [HHH-18440] - Rewrite the Bootstrapping chapter in the User Guide
+    * [HHH-18412] - Upgrade JBoss Logging Tools (processor) to 3.0.1.Final
+    * [HHH-18393] - Upgrade JBoss Logging Tools (processor) to 3.0.0.Final
+    * [HHH-18316] - use utf8mb4 instead of utf8 a.k.a utf8mb3 on MySQL
+    * [HHH-18097] - Replace `java.io.Closeable` with `java.lang.AutoCloseable`
+    * [HHH-18009] - Consolidate JdbcObserver and ConnectionObserver into JdbcEventHandler
+    * [HHH-17720] - Add common JAXB contracts for named queries
 
 ** New Feature
-	* [HHH-18224] - standardized logging of database connection
+    * [HHH-18304] - Transform hbm.xml key-many-to-one references
+    * [HHH-18281] - Transform <filter-def/> and <filter/>
+    * [HHH-18266] - HbmXmlTransformer hbm inverse
+    * [HHH-18265] - HbmXmlTransformer transform hbm <key column=""/> 
+    * [HHH-18264] - HbmXmlTransformer collection classification
+    * [HHH-18060] - HbmXmlTransformer work
+    * [HHH-17979] - Add @PropertyRef
+
+** Remove Feature
+    * [HHH-18452] - Remove deprecated org.hibernate.Interceptor methods
+    * [HHH-18449] - Remove deprecated Integrator#integrate form
+    * [HHH-18444] - Remove deprecate Session#refresh methods
+    * [HHH-18443] - Drop SessionFactoryBuilder#enableJpaListCompliance
+    * [HHH-18442] - Drop DynamicInsert#value and DynamicUpdate#value
+    * [HHH-18437] - Remove deprecations from JdbcSessionContext
+    * [HHH-18428] - Remove Session#delete
+    * [HHH-18199] - Remove @Where and @WhereJoinTable
+    * [HHH-18196] - Remove Session#save / Session#update / Session#saveOrUpdate
+    * [HHH-18195] - Remove @SelectBeforeUpdate
+    * [HHH-18194] - Remove @Proxy
+    * [HHH-18193] - Remove @Polymorphism
+    * [HHH-18191] - Remove @LazyToOne
+    * [HHH-18190] - Remove @LazyCollection
+    * [HHH-18189] - Remove @IndexColumn
+    * [HHH-18188] - Remove GenerationTime and its uses
+    * [HHH-18186] - Remove @GeneratorType
+    * [HHH-18184] - Remove CacheModeType and its uses
+    * [HHH-17697] - Remove deprecated annotations
+
+** Sub-task
+    * [HHH-18197] - Remove @Table
+    * [HHH-18192] - Remove @Loader
+    * [HHH-18187] - Remove @Index
+    * [HHH-18185] - Remove @ForeignKey
+    * [HHH-18075] - Transform property-ref
+    * [HHH-17888] - Remove support for MariaDB versions older than 10.5
 
 ** Task
-	* [HHH-18271] - Continue investigating performance drops compared to Hibernate 5
-	* [HHH-18293] - Upgrade to latest geolatte-geom version 1.9.1
-	* [HHH-18381] - Changes for Hibernate Reactive 2.4
-	* [HHH-18431] - Allow Hibernate Reactive to skip lazy initializations
+    * [HHH-18397] - Transform "foreign" generators
+    * [HHH-18396] - Transform property-ref pointing to a to-one attribute
+    * [HHH-18394] - Fix transformation of nested subclass mappings
+    * [HHH-18037] - Move DerbyDialect to hibernate-community-dialects
+    * [HHH-18010] - Investigate ConnectionObserver and friends
+    * [HHH-17583] - Cleanup for 7.0
+    * [HHH-17448] - Add newly standard column annotation attributes to Hibernate column annotations
 
 
-
-Changes in 6.6.0.CR1 (June 14, 2024)
+Changes in 7.0.0.Alpha3 (June 14, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 
-https://hibernate.atlassian.net/projects/HHH/versions/32289
+https://hibernate.atlassian.net/projects/HHH/versions/32304
 
 ** Bug
-    * [HHH-18267] - Informix insert value to identity column error
-    * [HHH-18259] - Joined Inheritence with Generated wrongly resolves columns for base entity
-    * [HHH-18256] - SQL fragment template wrongly prefixes literal type prefix
-    * [HHH-18251] - IdClass with Record not working with ToOne relation columns
-    * [HHH-18250] - Informix multi insert not supported
-    * [HHH-18246] - Informix nulls precedence support
-    * [HHH-18244] - Informix SelectItemReferenceStrategy error
-    * [HHH-18241] - revert change to semantics of 'null in ()'
-    * [HHH-18232] - DB2zDialect - Insert with GeneratedValue Id not working with DB2v12
-    * [HHH-18225] - Informix syntax error in DISTINCT clause before SKIP clause
-    * [HHH-18221] - Incomplete list of existing foreign keys - DatabaseMetaData.crossReferences(...) not used
-    * [HHH-18218] - Dynamic instantiation with generic entity attribute fails constructor argument type validation
-    * [HHH-18215] - QueryException raised for valid update SQL query - problems with aliases parsing
-    * [HHH-18214] - unhelpful error when query result type has no appropriate constructor
-    * [HHH-18213] - FirebirdDialect LimitHandler produces wrong query on Firebird 2.5 and older
-    * [HHH-18212] - Accessing a removed lazy association results in a NullPointerException 
-    * [HHH-18205] - hibernate.implicit_naming_strategy and hibernate.physical_naming_strategy ignored when using Configuration
-    * [HHH-18203] - JPMS: Cannot invoke "javax.lang.model.element.Element.getAnnotationMirrors()" because "element" is null
-    * [HHH-18202] - Error with distinct query + order by aggregate function on an association key
-    * [HHH-18201] - Addition/subtraction of duration to/from temporal parameter wrongly resolved as duration during query parsing
-    * [HHH-18179] - HibernateProcessor wrong warnings after upgrading to 6.5
-    * [HHH-18176] - upsert() with @Version-ed entity on Oracle
-    * [HHH-18175] - StatelessSession not incrementing @Version for entities with IDENTITY id generation
-    * [HHH-18172] - Fix embeddable inheritance for types extending @MappedSuperclass
-    * [HHH-18170] - Subquery randomly generating wrong SQL due to duplicate alias
-    * [HHH-18168] - Informix plural attribute size function support
-    * [HHH-18166] - Cascade behaviour different depending on bootstrap Hibernate or JPA for SAME cascade annotations
-    * [HHH-18163] - Informix foreign key on cascade delete syntax
-    * [HHH-18158] - EmbeddedId not working when Embedded is a generic record
-    * [HHH-18156] - OracleDatabaseCleaner doesn't support latest docker image "gvenzl/oracle-free"
-    * [HHH-18153] - Informix unique constraints on nullness columns
-    * [HHH-18151] - Bytecode enhancement incorrectly generates code for parameterized fields
-    * [HHH-18150] - Informix float and double precision in decimal digits
-    * [HHH-18149] - Metamodel generation fails if executed from Eclipse
-    * [HHH-18147] - Hibernate fails to persist an entity when a natural id association is a proxy
-    * [HHH-18140] - Error modify column type when project startup.
-    * [HHH-18138] - String based fetchGraphs do not resolve parameterized entity associated properties from MappedSuperclass
-    * [HHH-18137] - Hibernate Processor finder method doesn't find field from MappedSuperclass with private fields and field access
-    * [HHH-18121] - Error when using createCountQuery() from distinct dynamic instantiation query
-    * [HHH-18118] - In ScriptSourceInputFromUrl url is compared with itself
-    * [HHH-18117] - Character literal is not properly handled in query
-    * [HHH-18112] - Some dialects use the wrong default version
-    * [HHH-18107] - Package name in 2 classes doesn't correspond to the file path
-    * [HHH-18106] - @CheckHQL is reporting error when named query contains valid Java constant
-    * [HHH-18105] - Semicolon misssing in CSS file hibernate-layout.css line 98
-    * [HHH-18102] - @CheckHQL is not reporting error when non-existing enum constant is referenced in named HQL query
-    * [HHH-18098] - entities annotated @Cacheable(false) get added to second-level cache
-    * [HHH-18080] - hibernate.boot.allow_jdbc_metadata_access=false leads to warning about "0.0.0 version"
-    * [HHH-18077] - In key-based pagination next and previous keys seem to be swapped when moving to previous pages
-    * [HHH-18073] - BasicCollectionJavaType treat Set inconsistently
-
-
-Changes in 6.6.0.Alpha1 (April 25, 2024)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/32271
-
-** Bug
-    * [HHH-17969] - NPE copying SQM tree for criteria delete statement with null predicate
-
-** Improvement
-    * [HHH-17999] - Avoid runtime reflection for org.hibernate.jdbc.Expectation
-    * [HHH-17993] - Metamodel processing on bootstrap: avoid retrying same metamodel class name multiple times
-    * [HHH-17991] - Reduce overhead from @DialectOverride discovery
-    * [HHH-17988] - MetadataContext should consistently use ClassLoaderService
-    * [HHH-17987] - Improve allocation rate of ReflectHelper#setterMethodOrNull
-    * [HHH-17980] - Excessive contention during getter identification in the ByteBuddy enhancer
-    * [HHH-17954] - StatelessSession should no longer ignore changes to collections
-    * [HHH-17824] - Extend usage spectrum of @Jpa to the test method level
+    * [HHH-18135] - GenerationTypeStrategy implementations always throw UnsupportedOperationException
+    * [HHH-18081] - XML  <secondary-table/> element is not added to JdkClassDetails
+    * [HHH-11937] - Remove warnings about "empty composites" being experimental when feature is stabilized
+    * [HHH-11936] - Stabilize "empty composites" feature
 
 ** New Feature
-    * [HHH-17955] - Bean validation and StatelessSession
-    * [HHH-17818] - Add new ConcreteProxy annotation
+    * [HHH-18231] - SPI for persistence XML parsing
+    * [HHH-18057] - Support for JPA 3.2 column options
+    * [HHH-18056] - Support for JPA 32 table options
+    * [HHH-18055] - Support for JPA 3.2 table comment
+    * [HHH-18054] - Support for JPA 3.2 @CheckConstraint
+    * [HHH-16153] - Support JPA 3.2 `@EnumeratedValue`
 
+** Remove Feature
+    * [HHH-18222] - remove hibernate.create_empty_composites.enabled in Hibernate 7
+    * [HHH-18207] - remove deprecated Dialects
+    * [HHH-18139] - remove IdentifierGeneratorFactory and related code
 
-Changes in 6.4.1.Final (December 15, 2023)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/32216
-
-** Bug
-    * [HHH-17570] - Wrong name provided when checking Oracle autonomous JSON database
-    * [HHH-17561] - NullPointerException at OracleServerConfiguration class
-    * [HHH-17555] - equals hashcode combined with naturalId
-    * [HHH-17553] - java.util.ConcurrentModificationException: null when loading an entity
-    * [HHH-17551] - Gradle Enterprise improvements
-    * [HHH-17528] - Explicit selection of an @Embeddable property containing associated collections doesn't work
-    * [HHH-17525] - StackOverflowError when using @ManyToMany with composite id
-    * [HHH-17520] - Schema creation fails with interval second data type on PostgreSQL
-    * [HHH-17519] - Initializing a lazy association with a non aggregate id causes a NPE
-    * [HHH-17515] - DynamicInstantiationResult wrong java type constructor selected
-    * [HHH-17499] - SemanticException when querying embedded id entity with positional parameter
-    * [HHH-17494] - Metamodel generator produces an uncompilable class when an EntityGraph name contains a comma
-    * [HHH-17491] - UnknownEntityTypeException thrown when multiple subclasses define an attribute with the same name and one is a MappedSuperclass
-    * [HHH-17489] - ConcurrentModificationException after upgrading to 6.4.0
-    * [HHH-17466] - Exception on query: Could not convert 'java.util.Locale' to 'java.util.Locale' using 'org.hibernate.type.descriptor.java.LocaleJavaType' to wrap
-    * [HHH-17464] - 6.4.0 regression: NullPointerException in DefaultEvictEventListener#onEvict
-    * [HHH-17456] - java.util.UnknownFormatConversionException thrown why logging set to TRACE
-    * [HHH-17445] - Subquery correlated path expressions do not work with nullness predicates
-    * [HHH-17418] - Bytecode enchanced read accessor for a final field uses "missing" writer method
-    * [HHH-17416] - Using tuples in WHERE clause throws SemanticException
-    * [HHH-17413] - Invalid SQL with TYPE() function and CASE expression in SELECT clause
-    * [HHH-17408] - Unproxying leads to uninitialized one-to-one associations in some cases involving polymorphism
-    * [HHH-17407] - AssertionError when using JpaEntityJoin with correlated subqery if criteria copy tree is enabled
-    * [HHH-17405] - Cannot resolve path of generic mapped-superclass association path 
-    * [HHH-17402] - UnknownEntityTypeException: Unable to locate persister - when comparing generic interface ToOne attribute to parameter
-    * [HHH-17397] - Count with right join returns count on the left entity although requested by the right one
-    * [HHH-17395] - Refresh with PESSIMISTIC_WRITE ignored for lazy loaded entity
-    * [HHH-17393] - Incorrect return type for List attribute, wrap in additional list
-    * [HHH-17392] - UnsupportedOperationException when using row_number() window function without top level GROUP BY
-    * [HHH-17391] - AssertionError when using row_number() window function with ORDER BY
-    * [HHH-17387] - Can't use EAGER ManyToOne on parent abstract class of joined table entity
-    * [HHH-17379] - Right join does not return records from the right table if there is condition on ID field and there's no matching record in the from clause
-    * [HHH-17359] - Query Cache contains null values for entity associations when entity was already loaded
-    * [HHH-17334] - Duplicated columns when updating indexed @ElementCollection with non updatable fields
-    * [HHH-17293] - Schema validation fails on postgres interval seconds type
-    * [HHH-17280] - UnknownTableReferenceException in subquery selecting embeddable foreign key
-    * [HHH-16967] - Missing join on inheritance parent table to validate @Where condition
-    * [HHH-16756] - orphanRemoval does not work when bytecode enhancement is enabled
-    * [HHH-16306] - CountExpressionTest.testCountDistinctTuple fails on Sybase
-    * [HHH-16100] - Dynamic-map entity mode does not register a column for one-to-one associations
-    * [HHH-1645] - refresh with LockMode on an unitialized proxy does not work
-
-** Improvement
-    * [HHH-17554] - No join on the table of the parent class with JOINED inheritance strategy when the select not contains a column used in @Where or @SQLRestriction
-    * [HHH-16809] - Add JavaType#createArray
+** Sub-task
+    * [HHH-18095] - Transform hbm.xml column read/write fragments
+    * [HHH-18072] - Transform hbm.xml not-found
 
 ** Task
-    * [HHH-17565] - Add testing for JDK 22-ea
-    * [HHH-17546] - Update Cockroach CI testing to 23.1.12
-    * [HHH-17545] - Update SAP HANA JDBC driver to 2.19.11
-    * [HHH-17544] - Update SAP HANA CI testing to 2.00.072.00.20231123.1
-    * [HHH-17543] - Update DB2 CI testing to 11.5.9.0
-    * [HHH-17542] - Update DB2 JDBC driver to 11.5.9.0
-    * [HHH-17541] - Update SQL Server JDBC driver to 12.4.2
+    * [HHH-18127] - Leverage hibernate-models Annotation-as-Class
+    * [HHH-18096] - Support for JPA 3.2 database generator options
 
 
-Changes in 6.4.0.Final (November 23, 2023)
+Changes in 7.0.0.Alpha2 (May 03, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 
-https://hibernate.atlassian.net/projects/HHH/versions/32212
+https://hibernate.atlassian.net/projects/HHH/versions/32280
 
 ** Bug
-    * [HHH-17454] - SemanticException caused by type check when comparing generic path to parameter expression
-    * [HHH-17428] - Parameter place holder should start from 1 in StandardTemporaryTableExporter
-    * [HHH-17415] - NullPointerException: EntityValuedPathInterpretation - getNavigablePath()
-    * [HHH-17412] - Type comparison error due to surprising javac method selection
-    * [HHH-17411] - Fetch join on treated join leads to owner not selected error
-    * [HHH-17386] - Type inference source is not reset for top level predicates
-    * [HHH-17384] - OneToMany association with @NotFound results in SQL with different JOIN-type for SELECT (LEFT JOIN) and COUNT (JOIN)
-    * [HHH-17383] - Association is null in lazy initialized element collection
-    * [HHH-17382] - Dynamic instantiation leads to superclass fields not found when using injection
-    * [HHH-17381] - fix wrong groupId in Compatibility.adoc
-    * [HHH-17380] - Persisting an entity with a non generated id and @MapsId throws PropertyValueException
-    * [HHH-17370] - ServiceException: Unable to create requested service [org.hibernate.engine.jdbc.env.spi.JdbcEnvironment] due to: Cannot invoke "org.hibernate.resource.jdbc.spi.JdbcObserver.jdbcConnectionAcquisitionEnd(java.sql.Connection)" because "this.observer" is null
-    * [HHH-17344] - DB2zDialect NullPointerException
-    * [HHH-17328] - Retrieve entity using entity graph not adding type in the where clause for @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-    * [HHH-17313] - Session#setDefaultReadOnly is ignored by named queries
-    * [HHH-17308] - AssertionError when mixing @SQLSelect and composite ID
-    * [HHH-17299] - AssertionError in DiscriminatorPathInterpretation when treating a path with the same subtype
-    * [HHH-17294] - Non-Embeddable JSON objects are not marked as dirty when modified
-    * [HHH-17292] - MappedSuperclass with more than 1 subclass level leads to "UnknownPathException: Could not resolve attribute"
-    * [HHH-17102] - @SqlResultSetMapping doesn’t work with @Inheritance(strategy = InheritanceType.JOINED)
+    * [HHH-18053] - duration arithmetic with fractional seconds
+    * [HHH-18049] - Handle <exclude-default-listeners/> and <exclude-superclass-listeners/>
+    * [HHH-18042] - ConstructorResults defined in XML are not applied
+    * [HHH-18041] - With SharedCacheMode.DISABLE_SELECTIVE entities with cacheable false should not be cached
+    * [HHH-18039] - EntityListeners defined in XML should replace those from annotations, not add to
+    * [HHH-18038] - Fall back to persistence-unit name as SessionFactory name
+    * [HHH-18036] - Retrieving java.sql.Date from Oracle contains unwanted milliseconds
+    * [HHH-18028] - TCK test failure with attribute converter and Embeddable
+    * [HHH-18018] - Derby implementation for 'right' function wrongly passes parameter to 'length'
+
+** Improvement
+    * [HHH-18048] - Split notions of SessionFactory name and SessionFactory JNDI name
+    * [HHH-18005] - Remove AnnotationDescriptor#createUsage method calls that rely on lambdas for configuration
+    * [HHH-18003] - Create a PersistenceUnitDescriptor wrapper around JPA 3.2 PersistenceConfiguration
+    * [HHH-18000] - Remove XmlProcessingHelper methods for creating AnnotationUsage instances
+
+** New Feature
+    * [HHH-18025] - RefreshOptions & LockOptions for Hibernate 7
+    * [HHH-18001] - FindOptions for Hibernate 7
+
+** Task
+    * [HHH-18043] - Change SQL Server default timestamp precision to 7
+    * [HHH-18035] - Change Oracle default timestamp precision to 9
+    * [HHH-17982] - Setup JPA 3.2 TCK testing automation for ORM 7
+
+
+Changes in 7.0.0.Alpha1 (April 16, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32214
 
 ** Deprecation
     * [HHH-17441] - Deprecate @Comment
 
-** Improvement
-    * [HHH-17425] - Introduce new configuration parameters for offline Dialect initialization
-    * [HHH-17424] - Have Dialect manage more of ExtractedDatabaseMetadata
-    * [HHH-17417] - Workaround Oracle driver issue to reduce connection creation 
-    * [HHH-17409] - Support offset without limit in AbstractSimpleLimitHandler and Oracle12LimitHandler
-    * [HHH-17389] - Add getQueryHintString() for PostgreSQLDialect
-    * [HHH-17372] - Endless recursion between default implementations of SelectionQuery.getResultStream() and SelectionQuery.stream()
-    * [HHH-17355] - Smoothen rough edges with array functions
-    * [HHH-17340] - Fix typos in javadoc
-    * [HHH-17023] - Add support for Altibase dialect
-    * [HHH-15074] - Allow partial composite id generation for EmbeddedId
-
 ** New Feature
-    * [HHH-17357] - Support pgvector types and functions
-    * [HHH-17210] - Expose custom JFR events
-
-** Sub-task
-    * [HHH-17347] - Support for JDK which do not support JFR events
-
-** Task
-    * [HHH-17390] - Change scope of AbstyractEntityInitializer#resolveInstance
-    * [HHH-17367] - Add links to tutorials in documentation 
-    * [HHH-17362] - Define dependencies of hibernate-jpamodelgen as api
-    * [HHH-17350] - Work on hibernate-models, XSD and JAXB
-
-
-Changes in 6.4.0.CR1 (October 26, 2023)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/32185
-
-** Bug
-    * [HHH-17351] - Missing basic type registration after changing preferred jdbc type
-    * [HHH-17332] - NullPointerException in TupleMappingModelExpressible constructor
-    * [HHH-17329] - Query Cache contains null values when entity was loaded as proxy
-    * [HHH-17306] - NPE in AbstractEntityPersister#logStaticSQL() when debug logging is enabled
-    * [HHH-17302] - Use nocache for MariaDB sequences
-    * [HHH-17290] - Embeddable with a primitive field cannot be set to null
-    * [HHH-17288] - IdClass broken column mapping in `@OneToOne` when `mappedBy` is used by the owning side
-    * [HHH-17285] - @MapdKey fails with name attribute that represetns a path with dots separator
-    * [HHH-17283] - Subquery using Entity with composite Id causes SemanticException
-    * [HHH-17276] - Columns that are widened to LOB type aren't considered as LOBs
-    * [HHH-17264] - OracleAggregateSupport should use json_object to create empty json
-    * [HHH-17262] - JdbcTypeRecommendationException when using <mapping-file> of persistence.xml file 
-    * [HHH-17260] - ClassCastException when using SUM() on subquery root
-    * [HHH-17225] - Right join does not return records from the right table if there's no matching record in the from clause
-    * [HHH-17224] - Hibernate 6.x - native queries for multiple entities do not respect FetchMode.EAGER annotation directives
-    * [HHH-17223] - ClassCastException when using SUM() on COALESCE in criteria api
-    * [HHH-17211] - Hibernate entity with @Any attribute throws a null pointer exception on HQL select query
-    * [HHH-17208] - @Any mapping not working on HQL inserts
-    * [HHH-17193] - Error when merging entity with composite PK and nested to-many collection
-    * [HHH-17143] - More not-found fix ups
-    * [HHH-17108] - Error In Native Query when adding two Entity's and using composite key. Error: Unable to find column position by name.
-    * [HHH-16935] - Hibernate cdi extension Regression introduced by HHH-16096
-    * [HHH-16933] - JSON issue on Oracle 23c
-    * [HHH-16897] - Delete query for entity using table-per-class inheritance may result in NullPointerException
-    * [HHH-16592] - @MapsId and @ManyToOne
-    * [HHH-16486] - StandardTemporaryTableExporter generates queries with the wrong parameter marker
-
-** Improvement
-    * [HHH-17346] - Allow global registration of composite types via TypeContributor.
-    * [HHH-17322] - Allow custom generators to determine timing based on current entity state
-    * [HHH-17315] - Reduce Oracle database user privileges to avoid cross schemas clashes
-    * [HHH-17311] - Reversed soft delete support
-    * [HHH-17309] - Reduce entity key based HashMap accesses
-    * [HHH-17300] - @Table annotation on @MappedSuperclass should be reported as error
-    * [HHH-17284] - Fix indentation in caching tests/documentation
-    * [HHH-17279] - Simplify SqmTranslatorFactory and get rid of MultiTableSqmMutationConverter
-    * [HHH-17226] - Generify result retrieval in JdbcSelectExecutor, SelectQueryPlan and SqmSelectionQuery
-    * [HHH-17212] - Avoid jdbc isBeforeFirst() and isAfterLast() in scrollable results calls when possible
-    * [HHH-17176] - Map SDO_ORDINATE_ARRAY to BigDecimal[] for Oracle
-    * [HHH-17153] - Upgrade to ANTLR 4.13.0
-    * [HHH-17139] - Support Instant as the RevisionTimestamp type
-    * [HHH-17121] - Nullability improvements to LoadQueryInfluencers
-    * [HHH-16876] - Update Oracle testing to 23c
-    * [HHH-16840] - Allow serialization of ScanResultImpl to speed up the creation of the entityManagerFactory
-    * [HHH-16595] - Different SQL queries for @ManyToMany relationships in Hibernate 5 and 6
-    * [HHH-16510] - 65535 expressions supported for IN ( ... ) condition
-    * [HHH-15757] - SELECT without FROM
-    * [HHH-15754] - IF [NOT] EXISTS DDL
-    * [HHH-14822] - Allow non-string tenant identifiers and tenant resolver as managed bean
-
-** New Feature
-    * [HHH-17335] - Add more functions for working with arrays
-    * [HHH-17181] - Cannot register `CompositeUserType` using `TypeContributions.contributeType`
-    * [HHH-17164] - Proper, first-class soft-delete support
-
-
-Changes in 6.3.1.Final (September 19, 2023)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/32188
-
-** Bug
-    * [HHH-17221] - AssertionError initializing a collection with FetchMode.SUBSELECT and IdClass having only one field
-    * [HHH-17203] - ElementCollection doesn't consider @Where annotation on delete of elements
-    * [HHH-17202] - ArrayStoreException for single field id class entity collection batch loading
-    * [HHH-17201] - Unexpected value type exception for unordered multi id Load with ordered return disable
-    * [HHH-17189] - Audited annotations are ignored on embeddable super types
-    * [HHH-17177] - JDBC type code is ignored in XML mapping for an id attribute
-    * [HHH-17173] - Getting one-to-one association through a referenece to a bytecode enhanced entity fails
-    * [HHH-17168] - Investigate failures on db10_5 and Cockrachdb of FunctionTests.testCastBinaryWithLength
-    * [HHH-17167] - Unable to locate parameter for RESTRICT - DELETE error when removing entity with RowId
-    * [HHH-17166] - query methods returning primitive types incorrectly inferred to be mutation query methods
-    * [HHH-17165] - short method names in metamodel generator cause SIOBE
-    * [HHH-17163] - persist() should throw JPA's EntityExistsException if passed detached instance
-    * [HHH-17159] - java.lang.StackOverflowError during Update on Entity with Embeddable and JSON
-    * [HHH-17156] - NPE when an Embeddable column is reused in another class related by inheritance
-    * [HHH-17154] - NullPointerException is thrown when constructing EntityManagerFactoryBuilderImpl
-    * [HHH-17135] - CriteriaQuery error passing nullLiteral with entity type class
-    * [HHH-17131] - Regression in entity streams with associated collections resulting in result duplication
-    * [HHH-17105] - SQL clause from @WhereJoinTable is no longer used for DELETE queries (6.2 regression)
-    * [HHH-17104] - Bug with max() request inside projection
-    * [HHH-17100] - CustomType wrongly calls UserType#disassemble
-    * [HHH-17080] - [Envers] AuditReader.getRevisionNumberForDate(LocalDateTime) uses Epoch Seconds instead of Epoch Millis
-    * [HHH-17079] - NPE when using CompositeUserType with generic fields in Hibernate 6
-    * [HHH-17049] - Bytecode Enhancement, extra records created for associations created in constructor
-    * [HHH-16945] - CTE query cycle attribute evaluated incorrectly on MSSQL using collation "Latin1_General_CI_AS"
-    * [HHH-15968] - Sporadic ClassCastException when querying for Set<Enum>.
-
-** Improvement
-    * [HHH-17220] - Avoid runtime lookups of JdbcService from TableGenerator and TableStructure
-    * [HHH-17171] - JPA and multiple query roots
-    * [HHH-16768] - HQL parsed predicates don't validate type comparability
-
-** Task
-    * [HHH-17204] - Relax visibility of some methods for reactive upsert() support
-    * [HHH-17187] - Avoid 0 byte trailing UUID's in tests
-    * [HHH-17160] - Gradle 8.3 upgrade
-    * [HHH-17087] - Update container images to the latest version
-
-
-Changes in 6.3.0.Final (August 31, 2023)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/32177
-
-** Bug
-    * [HHH-17116] - AssertionError when using lateral join to subquery if criteria tree copy is enabled
-    * [HHH-17085] - SQLGrammarException when selecting property of grouped join association in HyperSQL and PostgreSQL
-    * [HHH-17081] - Loading an entity which uses joined inheritance fails if two or more implementations have the same association property name
-    * [HHH-17078] - Memory leak in ScrollableResultsConsumer 
-    * [HHH-17075] - Lazy loading of association with non-PK referencedColumnName always yields null when bytecode enhancement is enabled
-    * [HHH-17074] - Type inference in duration arithmetic is wrong
-    * [HHH-17072] - Tenant Id defined in XML mapping is ignored
-    * [HHH-17071] - Basic Collection of 'Converted' Embeddables stopped working with 6.2
-    * [HHH-17064] - Fetch mode select  causes StackOverflowError if used together with fetch type lazy
-    * [HHH-17046] - SchemaManager.truncateMappedObjects() does not repopulate table generators
-    * [HHH-17045] - Unable to locate parameter for RESTRICT - UPDATE error when updating entity with RowId
-    * [HHH-17041] - Embeddable and Generics throws IllegalArgumentException
-    * [HHH-17039] - Variable name confusion in documentation
-    * [HHH-17035] - Bytecode enhancement leads to StackOverflowError with specific setup involving different generic parameter names
-    * [HHH-17034] - Bytecode enhancement leads to broken constructor for a generic embedded field in a twice removed MappedSuperclass
-    * [HHH-17033] - Invalid SQL generated when implicit joins are used
-    * [HHH-17019] - EntityListener is not triggered for a LAZY loaded association when using bytecode enhancement
-    * [HHH-17016] - Using a legacy MySQL dialect leads to an error
-    * [HHH-17014] - Complete "Mapping Maps" chapter of User Guide
-    * [HHH-17009] - Hibernate 6.2 migration guide does explain how to deal with removal of AbstractPostInsertGenerator (affects IdentityGenerator)
-    * [HHH-17006] - Query for enum with IS NULL fails with NullPointerException (org.hibernate.metamodel.mapping.JdbcMapping.getJdbcValueBinder())
-    * [HHH-17004] - Nullpointer wenn using setFirstResult and setMaxResults in diffrent combinations 
-    * [HHH-17001] - An "on"-clause referencing the affected join node causes a StackOverflowException
-    * [HHH-17000] - Do not keep static references to log levels
-    * [HHH-16997] - Embedded components in HibernateProxy are not initilized when entity has reference to another entity of the same type
-    * [HHH-16989] - 'cast(string as String(10))' & 'cast(string as Binary(10))' broken on MySQL
-    * [HHH-16988] - AssertionError in AbstractSqmPath.copyTo when using subquery correlated to root with more than 1 level in the class hierarchy
-    * [HHH-16979] - SQLGrammarException for JOINED entity with additional join in query
-    * [HHH-16977] - NullPointerException in EntityEntryContext.downgradeLocks
-    * [HHH-16970] - Orphan removal not working in @Embeddable for FetchType.EAGER collections
-    * [HHH-16968] - StackOverflowError when using NaturalIdLoadAccess and bi-directional association
-    * [HHH-16966] - StackOverFlowError with @ManyToOne and @Proxy( lazy=false )
-    * [HHH-16962] - General documentation improvements
-    * [HHH-16959] - Fail to batch delete entities with nested embeddeds
-    * [HHH-16952] - Bytecode enhancement now requires embedded component to be @Embeddable
-    * [HHH-16939] - Optimistic and Pessimistic Force Increment Update Statements are not committed when using a batch
-    * [HHH-16938] - Meta annotation @AnyDiscriminatorValue does not work
-    * [HHH-16937] - Persisting entity with nullable @Any field throws “not-null property references a null or transient value”
-    * [HHH-16918] - Can't use the the primary id column as the joincolumn for @Any association
-    * [HHH-16911] - MapBackedClassValue ClassLoader leak
-    * [HHH-16901] - Embedded field in entity association from composite key not correctly instantiated
-    * [HHH-16891] - better typechecking of HQL arithmetic expressions
-    * [HHH-16878] - Invalid SQL generated for mutation when using association with @NotFound
-    * [HHH-16825] - Cascading an entity with a composite key causes NullPointerException in AbstractClassJavaType.extractHashCode
-    * [HHH-16823] - support for 'nvarchar' on MySQL 5.7
-    * [HHH-16819] - JAKARTA_JPA_GROUP_PREFIX is pointing towards incorrect value
-    * [HHH-16816] - Hibernate 6.2 could not execute certain delete statements
-    * [HHH-16798] - ClassCastException in Hibernate 6 when "join fetch" is used in a query with entity inheritance
-    * [HHH-16766] - Unable to fully load entity with IdClass lazily or with max fetch depth
-    * [HHH-16759] - Merge fails when entity has an Embedded Java record
-
-
-Changes in 6.3.0.CR1 (July 20, 2023)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/32084
-
-** Bug
-    * [HHH-16943] - Column ordering leads to wrong column order in unique constraints
-    * [HHH-16942] - OneToOne Mapping with PartitionKey fails
-    * [HHH-16923] - Deleting all entities of a given type fails when using a composite primary key and order_updates
-    * [HHH-16912] - Hibernate 6.2 breaks backward compatibility
-    * [HHH-16908] - Fail to compute column mapping on entity with idClass having one field as pk of a OneToOne association
-    * [HHH-16900] - Iteration of MutationOperation(s) triggers type pollution 
-    * [HHH-16892] - LocalXmlResourceResolver does not resolve dtd URLs that use https scheme
-    * [HHH-16890] - StackOverflowError when loading entities with @Proxy(lazy = false)
-    * [HHH-16872] - JDBC fetch size seems to be ignored post migration to hibernate6
-    * [HHH-16860] - OneToMany with inherited classes on both sides
-    * [HHH-16857] - JdbcLiteralFormatterCharacterData's lowercase 'n' causes invalid SQL syntax
-    * [HHH-16853] - Setting Named Query Parameters Is VERY Slow
-    * [HHH-16849] - When we use partition key in join columns generated query is incorrect and its failing.
-    * [HHH-16843] - HQL 'value = null'
-    * [HHH-16839] - Failing to update a one-to-one lazy association with `OptimisticLockType.DIRTY` and enabled bytecode enhancement
-    * [HHH-16833] - Assertion Error when inserting two entities linked with a OneToOne relation
-    * [HHH-16832] - Bytecode enhancement leads to broken constructor for a generic embedded field in a MappedSuperclass
-    * [HHH-16821] - Fail to delete entity that contains an embedded with a many to many association as field
-    * [HHH-16820] - When batching enabled the LockModeType is ignored
-    * [HHH-16818] - JPQL parser treats 'N' as a String and fails  org.hibernate.query.SemanticException: The assignment expression type [java.lang.String] did not match the assignment path type [java.lang.Character] 
-    * [HHH-16813] - Metamodel Generator adds @Generator annotations that cannot be compiled
-    * [HHH-16812] - StackOverflowError an embeddable's @Parent is a subclass in an inheritance tree
-    * [HHH-16811] - Dirty property lost and not detected with Batch Fetch, Embedded and FetchMode SELECT
-    * [HHH-16810] - Fail to delete entity with a composite id using an @IdClass with one of its fields mapped from the id of a @ManyToOne association
-    * [HHH-16802] - typecheck subquery predicates
-    * [HHH-16799] - Using bytecode enhancement may result in incorrect AccessType being picked
-    * [HHH-16772] - Generated bytecode for HibernateAccessOptimizer class is invalid and causes operand stack overflow issue.
-    * [HHH-16767] - From#getJoins throws exception if non-attribute was joined
-    * [HHH-16765] - Cannot parse quoted table name
-    * [HHH-16747] - interpretation of queries with no 'select', multiple elements in 'from', and no explicit result class
-    * [HHH-16742] - ArrayIndexOutOfBoundsException when calling Tuple.getElements()
-    * [HHH-16732] - HQL id() function does not work for @Any mappings
-    * [HHH-16707] - Saving entities using @MappedSuperclass does not work with classes in foreign packages
-    * [HHH-16669] - Batch loading prevents throwing ObjectNotFoundException on initialization of non-existent enhanced entity
-    * [HHH-16663] - TCK failure due to wrong refactoring in schema management Action enum
-    * [HHH-16619] - associations on fields beginning with underscore
-    * [HHH-16593] - mappedBy non-association
-    * [HHH-16586] - When merging a persisted entity with a null Version, Hibernate treats entity as transient instead of throwing an Exception
-    * [HHH-16578] - Incorrect validation error for tinyint, but and datetime
-    * [HHH-16563] - Hibernate 6.x.x should use jakarta.annotation.Generated
-    * [HHH-16556] - SQLServer2016Dialect deprecation javadoc has wrong version
-    * [HHH-16545] - PersistenceUtilHelper.MetadataCache is not Thread-Safe
-    * [HHH-16514] - Property sorting can lead to incorrect column mappings with derived embeddable keys
-    * [HHH-16494] - Right or full joining on single tablepolymorphic entities gives incorrect results
-    * [HHH-16485] - Insert ordering doesn't consider root entity names
-    * [HHH-16461] - @Version + session.refresh(entity, LockMode.PESSIMISTIC_WRITE) leads to StaleObjectStateException
-    * [HHH-16360] - On Postgresql with hbm2ddl.auto=update, timestamp columns are updated even when correct
-    * [HHH-16275] - LockTest.testLock*FkTarget fail on Sybase with timeout getting lock
-    * [HHH-16022] - bad error reporting of parsing failures
-    * [HHH-15917] - Unrelated Entity Join throws IllegalStateException
-
-
-Changes in 6.2.0.CR1 (December 22, 2022)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/32077
-
-** Bug
-    * [HHH-15900] - ID attributes  with "select" generator are mapped to identity columns
-    * [HHH-15847] - DDL check constraint creation broken
-    * [HHH-15828] - setting TIMEZONE_DEFAULT_STORAGE to COLUMN does not work
-    * [HHH-15820] - inconsistent DDL generated Instant and ZonedDateTime, OffsetDateTime on Oracle
-    * [HHH-15819] - extract(offset hour|minute from datetime) are broken
-    * [HHH-15814] - Add missing current timestamp methods in CockroachDB  dialect 
-    * [HHH-15801] - IdentifierGeneratorHelper should compare column names case insensitively
-    * [HHH-15775] - Connection error can result in UnknownServiceException, hiding actual exception
-    * [HHH-15767] - missing unique constraints from optional @OneToOne
-    * [HHH-15750] - Hibernate.isInitialized() broken for EnhancementAsProxyLazinessInterceptor
-    * [HHH-15748] - Use JSON DDL type on Oracle 21+ and BLOB on 12+
-    * [HHH-15741] - Explicit declaration assigned identifier generator does not work
-    * [HHH-15715] - broken links in 6 docs
-    * [HHH-15709] - HQL local datetime literals on Postgres, Cockroach H2
-    * [HHH-15704] - ManyToManyTest produces invalid foreign keys
-    * [HHH-15689] - SessionFactoryOptionsBuilder.addEntityNameResolvers() has no effect
-    * [HHH-15687] - IllegalArgumentException with Type parameters and multiple bounds
-    * [HHH-15682] - static final instances of LockOptions are mutable
-    * [HHH-15679] - Respect the offset of OffsetTime when persisting/loading data
-    * [HHH-15670] - RequiresDialectFeature.reverse() not implemented
-    * [HHH-15669] - Oracle 21 and 11 spatial test failure
-    * [HHH-15668] - Cockroach test failure: BatchOptimisticLockingTest.testBatchAndOptimisticLocking
-    * [HHH-15634] - Lazy basic property does not get updated on change
-    * [HHH-15627] - useless error message of multi-@JoinColumn mapping does not specify referencedColumnName
-    * [HHH-15571] - Bundle-Manifest has no 'Bundle-Version'
-    * [HHH-15565] - @Table(fetch=SELECT) is gone from H6
-    * [HHH-15549] - incorrect DDL mapping DECIMAL -> BOOLEAN on Oracle
-    * [HHH-15545] - @NotFound(Ignore) defaults to eager loading
-    * [HHH-15522] - Hibernate.isInitialized method not working for Envers Collections
-    * [HHH-15505] - Getter of loaded entity returns null when using bytecode enhancement on entity whose field is defined both in mapped superclass and concrete entity
-    * [HHH-15485] - Tests for Collections in default FetchGroup are not enabling this property
-    * [HHH-15463] - Adjust JdbcType based on DDL capacity for varchar/varbinary like types
-    * [HHH-15159] - Orphan removal of an entity with an @ElementCollection causes a ConstraintViolationException
-
-** Deprecation
-    * [HHH-15788] - deprecate GenerationTime
-    * [HHH-15772] - deprecate @Target, @Proxy, @Polymorphism
-    * [HHH-15714] - deprecate FilterKey and QuerySpacesHelper
-    * [HHH-15701] - deprecated CacheModeType
-    * [HHH-15697] - deprecate lock(entityName,...)
-    * [HHH-15684] - SelectionQuery.setAliasSpecificLockMode() confusion
-    * [HHH-15680] - deprecate LockRequest and buildLockRequest(), and have lock() accept LockOptions
-    * [HHH-15676] - deprecate SessionFactory.getFilterDefinition()
-
-** Improvement
-    * [HHH-15926] - allow @Type and @CompositeType to be applied as meta-annotations
-    * [HHH-15919] - add trunc() / truncate() to the portable HQL functions
-    * [HHH-15912] - adaptive handling of DDL types for Java enums mapped as ORDINAL
-    * [HHH-15899] - Add @PartitionKey annotation
-    * [HHH-15898] - Add @Instantiator annotation to mark canonical constructor for embeddables
-    * [HHH-15887] - Avoid megamorphic calls on JdbcValuesSourceProcessingState#getSession
-    * [HHH-15886] - Micro optimisations in NavigableRole equals and hashcode
-    * [HHH-15879] - Introduce a fetchable key for Fetchable within FetchableContainer
-    * [HHH-15878] - Micro optimisations of StatefulPersistenceContext#clear
-
-
-Changes in 6.1.2.Final (August 03, 2022)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/32087
-
-** Bug
-    * [HHH-15430] - Allow use of @Enumerated on basic collection
-    * [HHH-15428] - Converters for BasicCollectionType don't work
-    * [HHH-15423] - @Any discriminated association fails to be implicitly fetched due to UnsupportedOperationException
-    * [HHH-15420] - Getting Started Guide Code does not build
-    * [HHH-15418] -  Composite primary key with NativeQuery & alias not working
-    * [HHH-15417] - UUID with AttributeConverter, merge throws ClassCastException
-    * [HHH-15414] - For Oracle Dialect from version 8 Envers should not generate new revision when database replaces empty string with NULL during INSERT or UPDATE statements
-    * [HHH-15413] - For Oracle Dialect from version 8 Envers should use an ordered sequence 
-    * [HHH-15406] - Tests annotated with org.hibernate.testing.RequiresDialect having as value deprecated dialect are not executed
-    * [HHH-15403] - Likely Statement leak on invoking a stored procedure
-    * [HHH-15396] - Quick Start guide, hibernate-tutorials.zip link is broken
-    * [HHH-15395] - HibernateCriteriaBuider#power(Expression<? extends Number> x, Number y) throws ClassCastException
-    * [HHH-15392] - Reinstantiate support for Character values for like expression escape character
-    * [HHH-15391] - StackOverflow when applying a load entity graphs to a query
-    * [HHH-15390] - Calling  SqmQuery#getSqmStatement()#toHqlString() causes ClassCastExpection when using distinct in Criteria or HQL query
-    * [HHH-15379] - NPE building mapping from HBM for collections targeting a class that does not have an HBM mapping
-    * [HHH-15371] - Envers failure when run under SecurityManager
-    * [HHH-15323] - @AnyDiscriminator Unable to filter a polymorphic relationship in a query 
-    * [HHH-15218] - @OptimisticLocking(DIRTY) leads to wrong query during delete of circular reference
-
-** Improvement
-    * [HHH-15415] - Jackson and Jakarta Jsonb custom types to allow GraalVM compilation
-
-** New Feature
-    * [HHH-15352] - ScrollableResults.setFetchSize()
-
-** Task
-    * [HHH-15412] - Cleanup: remove reflection keeping JDK8 compatibility afloat in AggregatedServiceLoader
-    * [HHH-15411] - Introduce an system property to fully disable Hibernate's use of a system SecurityManager
-    * [HHH-15409] - Restore lazy initialization semantics for  MetadataSources#xmlMappingBinderAccess
-    * [HHH-15408] - QueryEngine to be more defensive with passed parameters
-    * [HHH-15407] - Need to expose more internal state from MetadataImpl to allow copies of metadata instances
-    * [HHH-15404] - Move annotation to intended package: org.hibernate.Remove (from org.hibernate.annotations.Remove)
-    * [HHH-15322] - Allow JNDI lookups using the osgi scheme
-
-
-Changes in 6.1.1.Final (July 01, 2022)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/32080
-
-** Bug
-    * [HHH-15369] - UnknownTableReferenceException when two subclasses have same field with different type
-    * [HHH-15361] - Update assignment type check should allow subtypes
-    * [HHH-15360] - Listagg with nulls clause emulation in H2 before 2.0
-    * [HHH-15358] - @Where annotation with globally_quoted_identifiers causes Unable to determine TableReference Exception
-    * [HHH-15357] - ClassCastException when selecting map key FK part
-    * [HHH-15354] - NPE building mapping from HBM for associations targeting a non existing entity
-    * [HHH-15349] - Comparing entity join alias with collection part fails
-    * [HHH-15347] - Parent identity check in NavigablePath#relativize is too strict
-    * [HHH-15346] - @ManyToOne associations not loaded correctly with default EAGER and batch fetch property set
-    * [HHH-15343] - NPE in type determination for case expression returning null literal
-    * [HHH-15342] - Inappropriate variation of HQL left join to SQL inner join
-    * [HHH-15341] - Disallow transient entities as parameters
-    * [HHH-15339] - Association in embedded id initialized to null when selected
-    * [HHH-15338] - Impossible to give same path expression multiple aliases
-    * [HHH-15331] - Constructor expressions in the SELECT clause ignores attribute converter
-    * [HHH-15324] - Hibernate (6.0.2) Regression. Sets Legacy java.persistence properties, then logs deprecation warnings on these which spams log
-    * [HHH-15314] - Hibernate Gradle plugin is not working for Kotlin projects
-
-** Improvement
-    * [HHH-15367] - Lift embedded/id-class to-one selection limitation for from clause subqueries
-    * [HHH-15329] - Remove workaround for HHH-10382
-    * [HHH-15325] - Avoid allocations from BitSet.stream() in AbstractEntityPersister.resolveDirtyAttributeIndexes()
-
-
-Changes in 6.1.0.Final (June 07, 2022)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/32066
-
-** Bug
-    * [HHH-15316] - Session.createQuery() doesn't accept JpaCriteriaInsertSelect
-    * [HHH-15297] - Invalid Automatic-Module-Name org.hibernate.orm.community-dialects
-    * [HHH-15294] - Type issues in CockroachDB dialect
-    * [HHH-15293] - CockroachDB BYTES type does not have a length specification
-    * [HHH-15291] - ClassCastException Regression in CriteriaBuilder
-    * [HHH-15288] - Switch to SMALLINT as recommended type for enums
-    * [HHH-15286] - Query with a Composite Identifier (@IdClass) throws an exception
-    * [HHH-15285] - Calling getJavaType() of @ElementCollection with basic types returns wrong type
-    * [HHH-15283] - NullPointerException from EntityManager.createNamedNativeQuery(…)
-    * [HHH-15281] - INSERTs/UPDATEs no longer executed as JDBC Batch statements if hibernate.temp.use_jdbc_metadata_defaults is set to false
-    * [HHH-15279] - NPE with Id on OneToOne referencing entity with multi-level EmbeddedId
-    * [HHH-15278] - NPE when NULL is used in a query projection
-    * [HHH-15270] - Inconsistent precedence of orm.xml implicit catalog over "default_catalog" in XML-mapped entities
-    * [HHH-15269] - Update NativeQuery unable to use h-schema placeholder, just emits placeholder contents into SQL
-    * [HHH-15267] - Some cache objects aren't implement Serializable interface
-    * [HHH-15266] - NullPointerException on
-    * [HHH-15265] - SchemaExport.execute does not add the configured schema to comments
-    * [HHH-15263] - @NamedQuery is not supported with UPDATE statement
-    * [HHH-15260] - Criteria query is unable to determine TableReference when combining subquery with join
-    * [HHH-15258] - Orphan removal for OneToMany relations is broken when used with GenerationType.IDENTITY
-    * [HHH-15256] - Query NPE when using ":param IS NULL" with a Left Join
-    * [HHH-15255] - Fix org.hibernate.orm.test.batch.BatchTest
-    * [HHH-15153] - @OneToOne does not support @EmbeddedId
-    * [HHH-15134] - Update a bytecode enhanced Entity with a Version attribute causes OptimisticLockException
-    * [HHH-15010] - @CreationTimestamp and @UpdateTimestamp documentation have an incomplete list of supported field types
-
-** Improvement
-    * [HHH-15300] - Unnecessary memory usage detected in SqlStatementLogger.logSlowQuery()
-    * [HHH-15292] - escape special html chars in JavaDoc
-    * [HHH-15276] - Introduce ConverterRegistration annotation
-    * [HHH-15259] - Explicitly add JavaDoc to make @deprecated hint visible in Eclipse
-
-** New Feature
-    * [HHH-15251] - Unified mapping XSD based on JPA 3.1
-    * [HHH-10999] - Arrays datatype support via java.sql.Array
-    * [HHH-3356] - Support for subselect (subquery) in from clause
-
-** Task
-    * [HHH-15274] - Small optimisation for how LazyAttributeLoadingInterceptor is dealing with lazy fields
-    * [HHH-14614] - Better support for JUnit 5 on-failure handling 
-
-
-Changes in 6.0.1.Final (May 06, 2022)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/32061
-
-** Bug
-    * [HHH-15246] - HQL fails to set enum col to NULL
-    * [HHH-15245] - Minor regression in CockroachDB test cases
-    * [HHH-15241] - fix nonexistent references in hibernate core's Javadoc
-    * [HHH-15240] - Defining a UserVersionType causes AssertionError from VersionResolution if running in JVM with "-ea" flag set
-    * [HHH-15239] - "user guide" for 5.6 is missing after 6.0 is released
-    * [HHH-15238] - Documentation: update JDBC logging configuration for 6.0
-    * [HHH-15236] - Fix signing of published artifacts
-    * [HHH-15233] - Query NPE when using ":param IS NULL" and the parameter value is an Entity 
-
-    * [HHH-15232] - OneToOne-Relation: Exception when using empty List in setParameter
-    * [HHH-15229] - Query returns null for broken foreign key reference and NotFoundAction.EXCEPTION
-    * [HHH-15225] - Jta transactions,  name queries with errors throw IllegalStateException instead of IllegalArgumentException when transaction is not active
-    * [HHH-15223] - Embeddables in the Query Result, the embeddable instance returned by the query will not be in the managed state 
-    * [HHH-15212] - SchemaExport.execute does not replace the ${schema}-placeholder in HBM database-object with configured schema
-    * [HHH-15211] - ClassCastException being thrown in transaction commit()
-    * [HHH-15202] - Unnecessary memory waste due to SubselectFetch
-    * [HHH-15201] - Composite ID with dynamic-map entities fails with an exception
-    * [HHH-15196] - LikeExpression.getTypedValues() should use the default Locale instead of Locale.ROOT for lowercasing.
-    * [HHH-15193] - Fix Gradle plugin - forcing dependency on hibernate-core SNAPSHOT
-    * [HHH-15174] - TimeZoneStorageType.NORMALIZE_UTC doesn't normalize to UTC
-    * [HHH-15168] - Trying to execute a native query without parameters throws a NPE
-    * [HHH-15167] - IllegalArgumentException occurred while calling setter for property 
-    * [HHH-15164] - Byte Code Enhancement : ClassNotFoundException: net.bytebuddy.NamingStrategy$SuffixingRandom$BaseNameResolver
-    * [HHH-15163] - hibernate-jpamodelgen 6.0 throws java.lang.ClassNotFoundException: jakarta.xml.bind.JAXBException at build time
-    * [HHH-15162] - Predicate with LENGTH(<clob>) is causing a QueryException
-    * [HHH-15161] - Insert statement not inferring types in select clause based on target paths
-    * [HHH-15154] - User Guide: "using passing" in section 11.11 FetchMode.SUBSELECT
-    * [HHH-15150] - Hibernate 6 EmbeddedId CacheKeys are no longer Serializable
-    * [HHH-15141] - Bytecode enhancement fails for a protected, embedded field in a MappedSuperclass from a different package than the entity
-
-** Improvement
-    * [HHH-15221] - Fix a logging error in JdbcValuesCacheHit
-    * [HHH-15220] - correct obvious typos in either comment or variable name
-    * [HHH-15210] - Oracle dialect should have MaxIdentifierLength to 128 for version equals or above 12.2
-    * [HHH-15208] - Upgrade to Micrometer 1.8.4
-    * [HHH-15207] - Upgrade GraalVM SDK to 22.0.0.2
-    * [HHH-15206] - Upgrade to ANTLR 4.10
-    * [HHH-15204] - Remove dependency to jakarta.activation:jakarta.activation-api
-    * [HHH-15200] - Support XML DDL type
-    * [HHH-15189] - Deprecation warning for lock timeout is always printed
-    * [HHH-15187] - Upgrade to HCANN 6.0.0.Final
-    * [HHH-15184] - Improve efficiency of Component#getSelectables()
-    * [HHH-15170] - Dedicated chapter for "Build Tool Support" 
-    * [HHH-15157] - Add HQL query to NoResultException
-    * [HHH-14992] - Stop building ZIP and TGZ dists to upload to SF
-    * [HHH-4384] - @JoinColumn must be set for @AssociationOverride to work
-
-** New Feature
-    * [HHH-15165] - Add GEOGRAPHY constant to SqlTypes
-
-** Task
-    * [HHH-15237] - Upgrade to Agroal 2.0
-    * [HHH-15226] - Publish a Gradle platform (Maven Bom++) for Hibernate ORM
-    * [HHH-15224] - Update list of modules in the documentation
-    * [HHH-15222] - Introduce an helper class SPI for decorating a Session instance when the instance is lazily provided
-    * [HHH-15219] - Re-introduce the ability to stop and then reactivate a ServiceRegistry
-    * [HHH-15209] - Upgrade to bytebuddy 1.12.9
-
-
-Changes in 6.0.0.Final (March 31, 2022)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/32049
-
-** Bug
-    * [HHH-15131] - JPA Compliance issue with Envers
-    * [HHH-15118] - PooledOptimizer generates duplicate ids when several JVMs initialize optimizer and sequence value is the initial value
-    * [HHH-15117] - ConstraintViolationException is thrown using same @SecondaryTable on two entities
-    * [HHH-15115] - Deleting an entity with Joined inheritance and default schema set is throwing and error
-    * [HHH-15113] - Exception setting ParameterExpressions on Update Queries
-    * [HHH-15111] - MappingException is thrown for @JoinColumn with referencedColumnName on a @SecondaryTable 
-    * [HHH-15105] - Getting the CacheRegionStatistics before executing a query leads to a NPE later on
-    * [HHH-15098] - suboptimal/incorrect behavior when updating managed oneToMany collection on entity with naturalId
-    * [HHH-15091] - EntityManager.persist does not verify the existence of the one side of a many-to-one relationship, introduced 5.4.17
-    * [HHH-14487] - PropertyAccessStrategyMapImpl imports wrong class
-
-** Improvement
-    * [HHH-15144] - Add IncubationLogger
-    * [HHH-15143] - Add an "implicit naming strategy" for database structures (sequence and tables) for identifier generators
-    * [HHH-15138] - Remove support for Eviction Listeners in BoundedConcurrentHashMap
-    * [HHH-15078] - Support for Tuple and SelectionQuery
-    * [HHH-15055] - Document SelectionQuery and MutationQuery
-    * [HHH-14672] - Allow specifying CHAR-based storage for UUID mappings
-    * [HHH-14510] - Remove deprecated id-gen related contracts and classes
-    * [HHH-13135] - Add support for KEY/NO KEY locking in PostgreSQL
-
-** New Feature
-    * [HHH-14739] - Implement ILike support in 6
-
-** Task
-    * [HHH-15139] - Improvements for QueryInterpretationCache
-    * [HHH-15133] - Use specified result-type to better infer "shape" of query results with implicit selections
-    * [HHH-15132] - Improvements for NavigablePath
-    * [HHH-15119] - Upgrade to ByteBuddy 1.12.8
-    * [HHH-15107] - Update build to make tests pass against JDK19
-    * [HHH-14884] - More improvements to Domain Model chapter of the User Guide
-    * [HHH-14872] - Re-enable hibernate-gradle-plugin
-
-
-Changes in 6.0.0.CR2 (March 09, 2022)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/32033
-
-** Bug
-    * [HHH-15084] - JpaCompliantLifecycleStrategy uses deprecated BeanManager method that's gone in CDI 4.0
-    * [HHH-15082] - JDBC Statement leaks after exceptions other than SQLException during insert/update/...
-    * [HHH-15073] - Criteria query built from JPA metamodel throws PersistenceException: Specified result type [long] did not match Query selection type [java.lang.Long]
-    * [HHH-15071] - "this.anticipatedType" is null
-    * [HHH-15068] - "CDI BeanManager not (yet) ready to use" when refferring to a user type by name and using an ExtendedBeanManager
-    * [HHH-15057] - JdbcSQLException: NULL not allowed for column "BOOKS_ORDER" when inserting into many-to-many list
-    * [HHH-15054] - NPE on cascade-delete for @OneToMany(mappedBy = ...) association
-    * [HHH-14932] - Spatial support for PostgreSQL 10+ uses invalid WKB dialect
-    * [HHH-13694] - Numeric Overflow Exception when retrieving the Meta-data for sequences from Oracle Database
-    * [HHH-10463] - Coalesce does not handle NULL values properly for PostgreSQL 
-    * [HHH-15090] - Access to public field with extended bytecode enhancement returns null for entity lazy-loaded from polymorphic toOne association
-
-** Improvement
-    * [HHH-15106] -  fk() SQM function
-    * [HHH-15099] - Improve handling of associations marked with @NotFound
-    * [HHH-15094] - Handle http://hibernate.org and https://* for all DTDs in LocalXmlResourceResolver
-
-** Task
-    * [HHH-15114] - Clean up deprecations
-    * [HHH-14604] - Sign published artifacts
-
-
-Changes in 6.0.0.CR1 (January 27, 2022)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/32013
-
-** Bug
-    * [HHH-15046] - DB2z and DB2i NullpointerException on initialization
-    * [HHH-15044] - Revert HHH-14826 fix because the provided test was wrong
-    * [HHH-15037] - Criteria Update/Delete with vararg parameters throws NullPointerException
-    * [HHH-15035] - Native query type discovery with h2 2.0.202 with float(..) DDL type
-    * [HHH-15014] - H2Dialect does not work properly with h2 2.0.202 on sub selects with tuples
-    * [HHH-15013] - H2Dialect does not work properly with h2 2.0.202 and sequences
-    * [HHH-15009] - H2Dialect does not work properly with h2 2.0.202 and updating schema 
-    * [HHH-14991] - Cache StoreMode property not renamed to Jakarta Persistence API
-    * [HHH-14985] - H2Dialect does not work properly with h2 2.0.202 on inserts
-    * [HHH-14958] - Use of CDI to create built-in generators upon metadata creation, leading to errors if CDI is not yet initialized
-    * [HHH-9688] - Combination of @OrderBy and @SortComparator
-
-** Improvement
-    * [HHH-15047] - Ensure all spatial functions have a valid FunctionReturnTypeResolver
-    * [HHH-15042] - Add Offset-Feature for DB2zDialect
-    * [HHH-15030] - Introduce SelectionQuery and MutationQuery
-    * [HHH-15021] - Support for UserCollectionType
-    * [HHH-15017] - Clean-up Query#setParameter overloads
-    * [HHH-14974] - Allow AttributeConverter as parameter type
-    * [HHH-14951] - Add @EmbeddableRepresentationStrategy
-    * [HHH-14950] - Support mapping of embeddables with no setters (assuming a custom instantiator or repo-strategy is used)
-    * [HHH-14808] - Refactor SpatialPredicates for H6
-    * [HHH-14807] - Upgrade spatial support for Oracle
-    * [HHH-14805] - Upgrade spatial support for SqlServer
-    * [HHH-14804] - Upgrade spatial support for MySQL
-    * [HHH-14682] - H2 supports COMMENT ON
-    * [HHH-13361] - Allow audited entities that use composite identifiers to support nested embeddables.
-    * [HHH-11836] - Create an @EndOfLife corollary to @Incubating
-    * [HHH-11696] - Remove (deprecated) Settings in favor of SessionFactoryOptions
-
-** New Feature
-    * [HHH-14855] - Support passing a String representation of EntityGraph we can parse through the graph-language parser 
-    * [HHH-11595] - Add complementing annotation for @CollectionTable for customizing audit table name
-    * [HHH-11433] - Allow usage of KEY expression in a join
+    * [HHH-17460] - Ongoing JPA 3.2 work
+    * [HHH-17459] - Allow resolution callbacks on select o.h.mapping objects
 
 ** Remove Feature
-    * [HHH-14866] - Drop `@ParamDef#type`
-    * [HHH-11447] - Remove org.hibernate.query.procedure.ProcedureParameter#enablePassingNulls and #isPassNullsEnabled
-
-** Sub-task
-    * [HHH-14497] - Drop legacy id-generator settings
-
-** Task
-    * [HHH-15040] - Upgrade to Hibernate Commons Annotations 6.0.0.CR1
-    * [HHH-15033] - Restrict JNDI lookups to "java" scheme
-    * [HHH-15031] - Upgrade to ByteBuddy 1.12.7
-    * [HHH-15029] - Remove deprecated JndiHelper
-    * [HHH-15028] - Upgrade to JBoss Logging 3.4.3.Final
-    * [HHH-15026] - Upgrade to Log4J 2.17.1
-    * [HHH-15024] - Upgrade to Jandex 2.4.2.Final
-    * [HHH-15018] - OracleTypesHelper shouldn't log stacktraces when the Oracle JDBC driver isn't loadable
-    * [HHH-15000] - Upgrade to Hibernate Commons Annotations 6.0.0.Beta1
-    * [HHH-14999] - Upgrade to Hibernate Validator 6.2.1.Final (EE) and 7.0.2.Final (Jakarta)
-    * [HHH-14998] - Upgrade to GraalVM 21.3.0
-    * [HHH-14997] - Upgrade to Agroal 1.14
-    * [HHH-14996] - Upgrade to JBoss Logging Processor (and matching Annotations) 2.2.1.Final
-    * [HHH-14995] - Upgrade to Jandex 2.4.1.Final
-    * [HHH-14905] - Verify that custom JavaType and JdbcType registration combo works
-    * [HHH-14886] - Add ability to influence CollectionSemantics
-    * [HHH-14885] - New composite user-type
-
-
-Changes in 6.0.0.Beta3 (December 18, 2021)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/32004
-
-** Bug
-    * [HHH-14972] - log4j2 <= 2.14.1 has an RCE (CVE-2021-44228)
-    * [HHH-14948] - Metamodel imports cache increases indefinitely for dynamically generated HQL aliases eventually leading to an OOM
-    * [HHH-14934] - java.lang.IllegalStateException: SqmJpaCriteriaParameterWrapper references for JpaCriteriaParameter already exhausted
-    * [HHH-14933] - Unable to set the original Selection back in CriteriaQuery
-    * [HHH-14922] - Inconsistent precedence of orm.xml implicit catalog/schema over "default_catalog"/"default_schema"
-    * [HHH-14280] - VirtualEntitySingleIdMapper throws a NullPointerException when the composite identifier contains a not audited entity (using @IdClass)
-    * [HHH-14211] - @Lob String mapping broken
-    * [HHH-11435] - Alias available in WITH clause although not defined yet and generates invalid SQL
-    * [HHH-9432] - SQL syntax failure when collection uses @Where annotation on audit join table.
-
-** Improvement
-    * [HHH-14977] - @Where is broken in 6.0
-    * [HHH-14949] - Support @Access on @ElementCollection (for embeddable elements)
-    * [HHH-14921] - Definition of the default catalog/schema on session factory creation
-    * [HHH-13393] - Add support for ZoneId and ZoneOffset
-    * [HHH-13082] - Support specifying an AttributeConverter class as a @ColumnResult#type
-    * [HHH-11896] - Support specification of 'on-clause' criterias when traversing relations in audit query API
-    * [HHH-11895] - Support traversal of components in audit queries
-    * [HHH-11735] - Support traversal of to-many associations in audit queries
-    * [HHH-11573] - No entity type expressions can be used in the Envers Query API
-    * [HHH-11452] - No scalar functions can be used in the Envers Query API
-    * [HHH-10558] - Add support for java.time.Year
-
-** New Feature
-    * [HHH-14981] - Support null precedence with Envers Query API
-    * [HHH-13817] - Envers: Please support nested criteria in revisionsOfEntity queries
-    * [HHH-8051] - targetAuditMode=RelationTargetAuditMode.NOT_AUDITED should allow for missing entity targets
-
-** Sub-task
-    * [HHH-14960] - Add @IdGeneratorType for better custom generator config
-    * [HHH-14718] - Drop deprecated generator implementations
+    * [HHH-17961] - Drop support for hibernate.mapping.precedence
+    * [HHH-17894] - Remove AdditionalJaxbMappingProducer
+    * [HHH-17893] - Remove MetadataContributor
+    * [HHH-17892] - Remove @Persister
 
 ** Task
-    * [HHH-14988] - Upgrade to ByteBuddy 1.12.5
-    * [HHH-14979] - Upgrade to Log4J 2 2.16.0
-
-
-Changes in 6.0.0.Beta2 (December 02, 2021)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/31969
-
-** Bug
-    * [HHH-14914] - Passing an ExtendedBeanManager which is never notified leads to runtime errors
-    * [HHH-14913] - sub-query modifiers are ignored
-    * [HHH-14877] - FetchMode.SUBSELECT ignored
-    * [HHH-14876] - Parameter padding for IN clauses doesn't work in Hibernate 6.0.0.Beta1
-    * [HHH-14875] - Slow query log seems to be missing in Hibernate 6.0.0.Beta1
-    * [HHH-14874] - Lazy loading of basic attributes in different @LazyGroups throws ArrayIndexOutOfBoundsException
-    * [HHH-9862] - Multiple TREAT operators does not work properly for joined inheritance
-    * [HHH-9229] - @Audited and @AuditOverride does not work consistently for embeddables that extend a mapped superclass
-    * [HHH-9228] - @AuditOverride has no affect if an embeddable is @Audited
-
-** Deprecation
-    * [HHH-11469] - Remove ModificationStore 
-
-** Improvement
-    * [HHH-14928] - Document CDI integration
-    * [HHH-14925] - Switch from BasicType to JavaType/JdbcType for Geometry types
-    * [HHH-14836] - Provide `ExtensionTypes` class to hold the non-standard type codes
-    * [HHH-14803] - Upgrade spatial support for MariaDB
-    * [HHH-14802] - Upgrade spatial support for CockroachDB
-    * [HHH-14801] - Upgrade spatial support for Postgis
-    * [HHH-14800] - Remove need for SpatialDialects
-    * [HHH-14738] - Update tests for hibernate-spatial to junit5 
-    * [HHH-14403] - Walk Fetchables for a container width-first rather than depth-first
-    * [HHH-12077] - Support short-naming of audit strategies via configuration.
-    * [HHH-11483] - Build models based on JAXB rather than using Dom4J
-    * [HHH-10496] - Allow RevisionTimestamp to be of type java.time.LocalDateTime
-
-** New Feature
-    * [HHH-14906] - Support H2GIS in Spatial
-    * [HHH-14663] - Add testing for s390x to Jenkins CI
-    * [HHH-14576] - Support TiDB
-    * [HHH-10925] - Add annotation to ignore specific tests based on audit strategy being used.
-    * [HHH-9062] - Validity audit strategy: end revision timestamp is not stored in tables for joined subclasses
-    * [HHH-6210] - ValidityAuditStrategy doesn't support a numeric column for the revision end timestamp
-    * [HHH-5529] - Bulk delete on Entity with @ElementCollection ignores the @CollectionTable
-
-** Task
-    * [HHH-14946] - Require JDK 11
-    * [HHH-14923] - Allow CriteriaQuery to determine its "return type" as part of setting the selection
-    * [HHH-14919] - Improve handling for java.sql.Date, Time and Timestamp
-    * [HHH-14890] - One-to-one mapped-by referencing embedded nested property doesn't work in Hibernate 6.0.0.Beta1
-    * [HHH-13395] - Update Envers to use the new Integrator signature.
-
-
-Changes in 6.0.0.Beta2 (December 02, 2021)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/31969
-
-** Bug
-    * [HHH-14914] - Passing an ExtendedBeanManager which is never notified leads to runtime errors
-    * [HHH-14913] - sub-query modifiers are ignored
-    * [HHH-14877] - FetchMode.SUBSELECT ignored
-    * [HHH-14876] - Parameter padding for IN clauses doesn't work in Hibernate 6.0.0.Beta1
-    * [HHH-14875] - Slow query log seems to be missing in Hibernate 6.0.0.Beta1
-    * [HHH-14874] - Lazy loading of basic attributes in different @LazyGroups throws ArrayIndexOutOfBoundsException
-    * [HHH-9862] - Multiple TREAT operators does not work properly for joined inheritance
-    * [HHH-9229] - @Audited and @AuditOverride does not work consistently for embeddables that extend a mapped superclass
-    * [HHH-9228] - @AuditOverride has no affect if an embeddable is @Audited
-
-** Deprecation
-    * [HHH-11469] - Remove ModificationStore 
-
-** Improvement
-    * [HHH-14928] - Document CDI integration
-    * [HHH-14925] - Switch from BasicType to JavaType/JdbcType for Geometry types
-    * [HHH-14836] - Provide `ExtensionTypes` class to hold the non-standard type codes
-    * [HHH-14803] - Upgrade spatial support for MariaDB
-    * [HHH-14802] - Upgrade spatial support for CockroachDB
-    * [HHH-14801] - Upgrade spatial support for Postgis
-    * [HHH-14800] - Remove need for SpatialDialects
-    * [HHH-14738] - Update tests for hibernate-spatial to junit5 
-    * [HHH-14403] - Walk Fetchables for a container width-first rather than depth-first
-    * [HHH-12077] - Support short-naming of audit strategies via configuration.
-    * [HHH-11483] - Build models based on JAXB rather than using Dom4J
-    * [HHH-10496] - Allow RevisionTimestamp to be of type java.time.LocalDateTime
-
-** New Feature
-    * [HHH-14906] - Support H2GIS in Spatial
-    * [HHH-14663] - Add testing for s390x to Jenkins CI
-    * [HHH-14576] - Support TiDB
-    * [HHH-10925] - Add annotation to ignore specific tests based on audit strategy being used.
-    * [HHH-9062] - Validity audit strategy: end revision timestamp is not stored in tables for joined subclasses
-    * [HHH-6210] - ValidityAuditStrategy doesn't support a numeric column for the revision end timestamp
-    * [HHH-5529] - Bulk delete on Entity with @ElementCollection ignores the @CollectionTable
-
-** Task
-    * [HHH-14946] - Require JDK 11
-    * [HHH-14923] - Allow CriteriaQuery to determine its "return type" as part of setting the selection
-    * [HHH-14919] - Improve handling for java.sql.Date, Time and Timestamp
-    * [HHH-14890] - One-to-one mapped-by referencing embedded nested property doesn't work in Hibernate 6.0.0.Beta1
-    * [HHH-13395] - Update Envers to use the new Integrator signature.
-
-
-
-Changes in 6.0.0.Beta2 (December 02, 2021)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/31969
-
-** Bug
-	* [HHH-14914] - Passing an ExtendedBeanManager which is never notified leads to runtime errors
-	* [HHH-14913] - sub-query modifiers are ignored
-	* [HHH-14877] - FetchMode.SUBSELECT ignored
-	* [HHH-14876] - Parameter padding for IN clauses doesn't work in Hibernate 6.0.0.Beta1
-	* [HHH-14875] - Slow query log seems to be missing in Hibernate 6.0.0.Beta1
-	* [HHH-14874] - Lazy loading of basic attributes in different @LazyGroups throws ArrayIndexOutOfBoundsException
-	* [HHH-9862] - Multiple TREAT operators does not work properly for joined inheritance
-	* [HHH-9229] - @Audited and @AuditOverride does not work consistently for embeddables that extend a mapped superclass
-	* [HHH-9228] - @AuditOverride has no affect if an embeddable is @Audited
-
-** Deprecation
-	* [HHH-11469] - Remove ModificationStore
-
-** Improvement
-	* [HHH-14928] - Document CDI integration
-	* [HHH-14925] - Switch from BasicType to JavaType/JdbcType for Geometry types
-	* [HHH-14836] - Provide `ExtensionTypes` class to hold the non-standard type codes
-	* [HHH-14803] - Upgrade spatial support for MariaDB
-	* [HHH-14802] - Upgrade spatial support for CockroachDB
-	* [HHH-14801] - Upgrade spatial support for Postgis
-	* [HHH-14800] - Remove need for SpatialDialects
-	* [HHH-14738] - Update tests for hibernate-spatial to junit5
-	* [HHH-14403] - Walk Fetchables for a container width-first rather than depth-first
-	* [HHH-12077] - Support short-naming of audit strategies via configuration.
-	* [HHH-11483] - Build models based on JAXB rather than using Dom4J
-	* [HHH-10496] - Allow RevisionTimestamp to be of type java.time.LocalDateTime
-
-** New Feature
-	* [HHH-14906] - Support H2GIS in Spatial
-	* [HHH-14663] - Add testing for s390x to Jenkins CI
-	* [HHH-14576] - Support TiDB
-	* [HHH-10925] - Add annotation to ignore specific tests based on audit strategy being used.
-	* [HHH-9062] - Validity audit strategy: end revision timestamp is not stored in tables for joined subclasses
-	* [HHH-6210] - ValidityAuditStrategy doesn't support a numeric column for the revision end timestamp
-	* [HHH-5529] - Bulk delete on Entity with @ElementCollection ignores the @CollectionTable
-
-** Task
-	* [HHH-14946] - Require JDK 11
-	* [HHH-14923] - Allow CriteriaQuery to determine its "return type" as part of setting the selection
-	* [HHH-14919] - Improve handling for java.sql.Date, Time and Timestamp
-	* [HHH-14890] - One-to-one mapped-by referencing embedded nested property doesn't work in Hibernate 6.0.0.Beta1
-	* [HHH-13395] - Update Envers to use the new Integrator signature.
-
-
-
-Changes in 6.0.0.Beta1 (October 11, 2021)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/27100
-
-** Bug
-    * [HHH-14820] - type-defs with "global" parameters not working
-    * [HHH-14814] - Inconsistent rendering of table alias in delete queries
-    * [HHH-14772] - Session.find does not respect enabled filters
-    * [HHH-14764] - Testsuite: AssertionErrors must not be caught
-    * [HHH-14763] - Avoid supress exceptions in try/finally
-    * [HHH-14762] - Testsuite: Assert.notNull must not be used on primitive types
-    * [HHH-13140] - Criteria API multiselect aliases are not passed through to the JPQL query and they are not available in ResultTransformer
-    * [HHH-11280] - Proxy Narrowing (HHH-9071) breaks polymorphic query
-    * [HHH-10504] - SQLQuery with join returns the joined entity instead of the root one
-    * [HHH-7525] - @Formula annotation with native query returning entity value causes NullPointerException
-
-** Improvement
-    * [HHH-14865] - Re-work @Any and @ManyToAny support
-    * [HHH-14864] - Drop legacy Type-based annotations
-    * [HHH-14863] - Compositional definition of basic value mappings
-    * [HHH-14856] - Introduce @CustomType
-    * [HHH-14777] - Support LockOptions.SKIP_LOCKED for MariaDB 10.6+
-    * [HHH-14642] - verify/test Criteria in v6
-    * [HHH-14484] - Improve support for Firebird 4
-    * [HHH-14452] - Support set operations in JPA Criteria API
-    * [HHH-13717] - Implement HQL/Criteria TREAT support using SQM
-    * [HHH-12623] - Improve Javadoc comments for QueryHints.html#NATIVE_SPACES
-    * [HHH-11042] - Cannot count distinct on SQL Server on embedded ids
-    * [HHH-10825] - Improve concurrency design of ServiceBinding
-
-** New Feature
-    * [HHH-14188] - Enumerated "short name" handling in HQL
-    * [HHH-8172] - New matches query operator
-
-** Remove Feature
-    * [HHH-14870] - Rename {Xyz}TypeDescriptor as {Xyz}Type
-    * [HHH-14846] - Drop JMX integration
-    * [HHH-14844] - Drop JACC integration
-
-** Task
-    * [HHH-14871] - Temporarily disable hibernate-gradle-plugin
-    * [HHH-14848] - Move Ant tasks + support from hibernate-core into tooling/hibernate-ant
-    * [HHH-14837] - Migrate to Jakarta EE 
-    * [HHH-11755] - Drop "Serializable" from the Event Listener interfaces
-
-
-Changes in 6.0.0.Alpha9 (August 4, 2021)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/31944
-
-** Bug
-    * [HHH-14719] - Hibernate has a dependency on apache-derby:10.11.1.1 that is vulnerable to CVE-2015-1832 with a CVSS of 9.1 and CVE-2018-1313 with a CVSS of 5.3
-    * [HHH-14715 - Hibernate has a dependency to maven-core:3.0.5 that is vulnerable to CVE-2021-26291 with a CVSS of 9.1]
-    * [HHH-14704] - Union \+ OneToOne is broken in Hibernate 6
-
-** Improvement
-    * [HHH-14745] - Add FunctionContributor contract
-    * [HHH-14678] - Drop ResultSetWrapper and friends
-    * [HHH-14617] - Remove `QueryLiteralRendering` and `LiteralHandlingMode` from v6 codebase
-    * [HHH-14512] - Add Jenkinsfile for ORM
-    * [HHH-2407] - rework HQL translator
-    * [HHH-1615] - GROUP BY entity does not work
-
-** New Feature
-    * [HHH-14693] - Introduce hibernate-community-dialects module
-    * [HHH-10668] - Add SQL dialect for SQLite 3
-
-** Sub-task
-    * [HHH-14718] - Drop deprecated generator implementations
-    * [HHH-14495] - Use table name, rather than entity name, as base for per-entity implicit sequence naming
-    * [HHH-3688] - Formalize new HQL normalize phase
-    * [HHH-3687] - Formalize new HQL parse phase
-
-** Task
-    * [HHH-14605] - Handling for BLOB, CLOB and NCLOB relative to JavaTypeDescriptor `#isString` and `#isBinary`
-
-
-
-Changes in 6.0.0.Alpha8 (May 18, 2021)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/31932
-
-** Bug
-    * [HHH-14449] - ResultStream closing is not properly handled 
-
-** Improvement
-    * [HHH-14601] - fix typos of 'extracter' in v6
-    * [HHH-14600] - verify UUID in v6
-    * [HHH-10992] - Extend support for integrator-contributed domain and relational objects
-
-** Remove Feature
-    * [HHH-14598] - Drop `hibernate-infinispan`
-    * [HHH-14518] - Drop hibernate-osgi module
-
-** Task
-    * [HHH-14589] - Make sure documentation examples regarding basic-types work and update the section
-    * [HHH-14524] - Rename SqlType(X) as JdbcType(X)
-    * [HHH-14513] - Move publishing release artifacts from BinTray
-    * [HHH-12416] - Drop (or set up relocation) for hibernate-ehcache
-    * [HHH-11995] - Drop hibernate-entitymanager artifact
-    * [HHH-11994] - Drop hibernate-java8 artifact
-    * [HHH-11692] - Consider a new matches operator
-
-
-
-Changes in 6.0.0.Alpha7 (March 18, 2021)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/31878
-
-** Bug
-    * [HHH-14390] - StackOverflowError with @Fetch(FetchMode.SELECT) mapped for entity with an ID that is a bidirectional one-to-one eager association
-    * [HHH-14394] - Column "XYZ" must be in the GROUP BY list; SQL Error: 90016
-    * [HHH-14466] - StackOverflowError loading an entity with eager one-to-many if bidirectional and many-to-one side is the ID
-    * [HHH-14508] - Logging in debug mode gives an invalid conversion error in StandardRowReader.java
-
-** New Feature
-    * [HHH-1050] - HQL Unions
-    * [HHH-14188] - Enumerated "short name" handling in HQL
-    * [HHH-14285] - Create "project template"
-    * [HHH-14409] - Internal format of natural-id values
-
-** Task
-    * [HHH-14186] - @ColumnTransformer support
-    * [HHH-14192] - H2 compatibility: explicitly specify precision/scale for @Column in test
-    * [HHH-14195] - Generated DDL for UUID fields contains columns of length 255
-    * [HHH-14315] - Upgrade to Gradle 6.7 and use toolchains for per-JDK builds
-
-** Improvement
-    * [HHH-10282] - AttributeConverter for Enum within JPQL query
-    * [HHH-13077] - Optimize query plan call count
-    * [HHH-13658] - Make NO_PROXY unnecessary
-    * [HHH-13884] - Follow javax.persistence.criteria.Order.reverse() contract
-    * [HHH-14286] - Improvements to Hibernate's Gradle Plugin
-    * [HHH-14313] - New natural-id features
-    * [HHH-14318] - `@JoinFormula` and `@JoinColumnOrFormula` support
-    * [HHH-14452] - Support set operations in JPA Criteria API
-    * [HHH-14456] - Allow unwrap of DialectResolutionInfo to support detecting PostgreSQL forks
-    * [HHH-14478] - Allow DialectResolvers to be discovered by ServiceLoader
-
-** Sub-task
-    * [HHH-13757] - Second-level cache cleanup
-    * [HHH-14469] - Support schema-tooling on sub-sets of the relational model known to Hibernate
-    * [HHH-14491] - Apply default allocation/increment size for @GeneratedValue(AUTO)
-    * [HHH-14492] - Prefer sequence-per-entity (hierarchy) by default
-
-** Remove Feature
-    * [HHH-14450] - Drop ability to disable "enhanced proxies"
-
-
-
-
-Changes in 6.0.0.Alpha6 (August 20, 2020)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/31848
-
-** Bug
-    * [HHH-13828] - Drop EntityPersister extending the internal interface InFlightEntityMappingType
-
-** Improvement
-    * [HHH-14172] - Drop any/all usage of Javassist
-    * [HHH-14167] - JpaCompliance for @OrderBy handling
-    * [HHH-13745] - Verify HqlTranslator usability without SessionFactory
-
-** New Feature
-    * [HHH-13132] - HQL inline EntityGraph support
-    * [HHH-1523] - Rebuild fetches from query-cache hits
-
-** Task
-    * [HHH-14174] - Implent Collection#getElementByIndex
-    * [HHH-14173] - @Parent support
-    * [HHH-14171] - `@Formula` support
-    * [HHH-14170] - Implement RowId support
-    * [HHH-14169] - Implement SQM `member of` predicate
-    * [HHH-14168] - Support for custom Type/UserType impls
-    * [HHH-14166] - Allow nulls-precedence in HQL/SQM
-    * [HHH-14165] - Implement support for embeddable-valued QueryParameters
-    * [HHH-14164] - Verify / enable query result caching
-    * [HHH-14163] - Named ResultSet mappings
-    * [HHH-14162] - NativeQuery support
-    * [HHH-14161] - NamedQuery support
-
-
-
-Changes in 6.0.0.Alpha5 (April 24, 2020)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/browse/HHH/fixforversion/31821
-
-** Bug
-    * [HHH-13711] - H2 dialect not accurate for drop table since version 1.4.200
-
-** Task
-    * [HHH-13937] - Remove JUnit 5 as compile-time dependency
-    * [HHH-13953] - Upgrade dom4j to 2.1.3
-
-
-
-Changes in 6.0.0.Alpha4 (December 20, 2019)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/31817
-
-** Bug
-    * [HHH-13777] - UnsupportedOperationException is thrown for MappedSuperclass if the id is declared on subclasses
-
-** Task
-    * [HHH-13746] - Implement Load by Multiple Ids using SQL AST
-    * [HHH-13763] - Update all load-by-key handling to use SQL AST
-    * [HHH-13778] - `@OrderBy` handling using SQL AST
-
-** Improvement
-    * [HHH-13718] - secondary tables support
-    * [HHH-13769] - Avoid unnecessary joins
-
-
-Changes in 6.0.0.Alpha1 (November 23, 2019)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/31768/
-
-** Sub-task
-    * [HHH-13714] - HQL/Criteria UPDATE support
-    * [HHH-13715] - HQL/Criteria DELETE support
-
-** New Feature
-    * [HHH-11474] - Implement support for LIMIT and OFFSET clause
-
-** Task
-    * [HHH-13395] - Update Envers to use the new Integrator signature.
-    * [HHH-13725] - Implement ToOne Associations support
-    * [HHH-13732] - Implement OneToOne support
-
-** Improvement
-    * [HHH-11828] - Adjust EntityMode, Tuplizer and friends to the 6.0 metamodel (Navigable et.al.) contracts
-    * [HHH-13081] - Pass BootstrapContext to Integrator#integrate
-    * [HHH-13224] - Look at removing references to SessionFactory from various components
-
-** Remove Feature
-    * [HHH-10071] - Remove support for "collection properties" in HQL
-    * [HHH-11990] - Remove LogicalConnectionImplementor#makeShareableCopy
-
-
+    * [HHH-17444] - Ongoing JPA 32 work

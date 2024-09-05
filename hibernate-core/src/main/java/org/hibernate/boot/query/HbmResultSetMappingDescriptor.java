@@ -28,6 +28,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryScalarReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmResultSetMappingType;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
@@ -510,7 +511,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				MetadataBuildingContext context) {
 			this.parent = parent;
 			this.propertyPath = hbmPropertyMapping.getName();
-			this.propertyPathParts = propertyPath.split( "\\." );
+			this.propertyPathParts = StringHelper.split( ".", propertyPath );
 			this.columnAliases = extractColumnAliases( hbmPropertyMapping, context );
 
 			if ( columnAliases.size() > 1 ) {
@@ -818,7 +819,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 				final FetchParentMemento ownerMemento = hbmFetchParent.resolveParentMemento( resolutionContext );
 
-				final String[] parts = propertyPath.split( "\\." );
+				final String[] parts = StringHelper.split( ".", propertyPath );
 				NavigablePath navigablePath;
 				if ( ownerMemento.getFetchableContainer() instanceof PluralAttributeMapping ) {
 					navigablePath = ownerMemento.getNavigablePath().append( CollectionPart.Nature.ELEMENT.getName() );

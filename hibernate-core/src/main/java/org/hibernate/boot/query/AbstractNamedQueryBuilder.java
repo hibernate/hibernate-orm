@@ -13,11 +13,14 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractNamedQueryBuilder<T extends AbstractNamedQueryBuilder<T>> {
+public abstract class AbstractNamedQueryBuilder<R, T extends AbstractNamedQueryBuilder<R, T>> {
 	private final String name;
+	private @Nullable Class<R> resultClass;
 
 	private Boolean cacheable;
 	private String cacheRegion;
@@ -44,6 +47,13 @@ public abstract class AbstractNamedQueryBuilder<T extends AbstractNamedQueryBuil
 	}
 
 	protected abstract T getThis();
+
+	public T setResultClass(Class<R> resultClass) {
+		if ( resultClass != void.class ) {
+			this.resultClass = resultClass;
+		}
+		return getThis();
+	}
 
 	public T setCacheable(Boolean cacheable) {
 		this.cacheable = cacheable;
@@ -88,6 +98,10 @@ public abstract class AbstractNamedQueryBuilder<T extends AbstractNamedQueryBuil
 	public T setComment(String comment) {
 		this.comment = comment;
 		return getThis();
+	}
+
+	public Class<R> getResultClass() {
+		return resultClass;
 	}
 
 	public Boolean getCacheable() {

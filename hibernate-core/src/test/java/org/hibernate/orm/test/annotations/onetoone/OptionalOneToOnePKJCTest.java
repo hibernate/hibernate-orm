@@ -110,7 +110,7 @@ public class OptionalOneToOnePKJCTest extends BaseCoreFunctionalTestCase {
 //				.uniqueResult();
 		assertNotNull( owner );
 		assertNull( owner.getAddress() );
-		s.delete( owner );
+		s.remove( owner );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -148,7 +148,7 @@ public class OptionalOneToOnePKJCTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( party );
 		assertEquals( "id", party.partyId );
 		assertNull( party.partyAffiliate );
-		s.delete( party );
+		s.remove( party );
 		s.getTransaction().commit();
 		s.close();
 	}

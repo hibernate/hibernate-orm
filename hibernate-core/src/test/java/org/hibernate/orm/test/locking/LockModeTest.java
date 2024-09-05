@@ -69,7 +69,9 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	@BeforeEach
 	public void prepareTest() throws Exception {
 		doInHibernate( this::sessionFactory, session -> {
-			id = (Long) session.save( new A( "it" ) );
+			A a = new A( "it" );
+			session.persist( a );
+			id = a.getId();
 		} );
 	}
 
@@ -207,8 +209,6 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 			A a = session.get( A.class, id, LockMode.PESSIMISTIC_READ );
 			checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
 			session.refresh( a );
-			checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
-			session.refresh( A.class.getName(), a );
 			checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
 			session.refresh( a, Collections.emptyMap() );
 			checkLockMode( a, LockMode.PESSIMISTIC_READ, session );

@@ -7,6 +7,8 @@
 package org.hibernate.orm.test.id;
 
 import java.io.Serializable;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
@@ -14,7 +16,6 @@ import jakarta.persistence.ManyToOne;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
@@ -36,7 +37,6 @@ public class IdClassManyToOneCascadeTest extends BaseEntityManagerFunctionalTest
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-12251")
 	public void testMergeCascadesToManyToOne() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
@@ -47,9 +47,9 @@ public class IdClassManyToOneCascadeTest extends BaseEntityManagerFunctionalTest
 			someEntity.setId( 23L );
 			someEntity.setReferencedEntity( referencedEntity );
 
-			entityManager.merge( someEntity );
+			SomeEntity merged = entityManager.merge(someEntity);
 
-			assertTrue( entityManager.contains( referencedEntity ) );
+			assertTrue( entityManager.contains( merged.getReferencedEntity() ) );
 		} );
 	}
 
@@ -78,7 +78,7 @@ public class IdClassManyToOneCascadeTest extends BaseEntityManagerFunctionalTest
 		private long id;
 
 		@Id
-		@ManyToOne
+		@ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
 		private ReferencedEntity referencedEntity;
 
 		public ReferencedEntity getReferencedEntity() {

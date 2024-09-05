@@ -32,7 +32,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings( {"UnusedDeclaration"})
+@SuppressWarnings("unused")
 public abstract class CustomSQLTestSupport extends BaseCoreFunctionalTestCase {
 	public String getCacheConcurrencyStrategy() {
 		return null;
@@ -46,17 +46,18 @@ public abstract class CustomSQLTestSupport extends BaseCoreFunctionalTestCase {
 		Organization jboss = new Organization( "JBoss" );
 		Person gavin = new Person( "Gavin" );
 		Employment emp = new Employment( gavin, jboss, "AU" );
-		Object orgId = s.save( jboss );
-		s.save( ifa );
-		s.save( gavin );
-		s.save( emp );
+		s.persist( jboss );
+		Object orgId = jboss.getId();
+		s.persist( ifa );
+		s.persist( gavin );
+		s.persist( emp );
 		t.commit();
 
 		t = s.beginTransaction();
 		Person christian = new Person( "Christian" );
-		s.save( christian );
+		s.persist( christian );
 		Employment emp2 = new Employment( christian, jboss, "EU" );
-		s.save( emp2 );
+		s.persist( emp2 );
 		t.commit();
 		s.close();
 
@@ -75,7 +76,7 @@ public abstract class CustomSQLTestSupport extends BaseCoreFunctionalTestCase {
 		assertEquals( LockMode.PESSIMISTIC_WRITE , s.getCurrentLockMode( gavin ));
 		emp.setEndDate( new Date() );
 		Employment emp3 = new Employment( gavin, jboss, "US" );
-		s.save( emp3 );
+		s.persist( emp3 );
 		t.commit();
 		s.close();
 
@@ -88,16 +89,16 @@ public abstract class CustomSQLTestSupport extends BaseCoreFunctionalTestCase {
 		Iterator itr2 = o.getEmployments().iterator();
 		while ( itr2.hasNext() ) {
 			Employment e = ( Employment ) itr2.next();
-			s.delete( e );
+			s.remove( e );
 		}
 		itr2 = o.getEmployments().iterator();
 		while ( itr2.hasNext() ) {
 			Employment e = ( Employment ) itr2.next();
-			s.delete( e.getEmployee() );
+			s.remove( e.getEmployee() );
 		}
-		s.delete( o );
+		s.remove( o );
 		assertFalse( itr.hasNext() );
-		s.delete( ifa );
+		s.remove( ifa );
 		t.commit();
 		s.close();
 	}
@@ -108,25 +109,25 @@ public abstract class CustomSQLTestSupport extends BaseCoreFunctionalTestCase {
 		Transaction t = s.beginTransaction();
 		String description = buildLongString( 15000, 'a' );
 		TextHolder holder = new TextHolder( description );
-		s.save( holder );
+		s.persist( holder );
 		t.commit();
 		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
-		holder = ( TextHolder ) s.get(  TextHolder.class, holder.getId() );
+		holder = s.get(  TextHolder.class, holder.getId() );
 		assertEquals( description, holder.getDescription() );
 		description = buildLongString( 15000, 'b' );
 		holder.setDescription( description );
-		s.save( holder );
+		s.persist( holder );
 		t.commit();
 		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
-		holder = ( TextHolder ) s.get(  TextHolder.class, holder.getId() );
+		holder = s.get( TextHolder.class, holder.getId() );
 		assertEquals( description, holder.getDescription() );
-		s.delete( holder );
+		s.remove( holder );
 		t.commit();
 		s.close();
 	}
@@ -138,25 +139,25 @@ public abstract class CustomSQLTestSupport extends BaseCoreFunctionalTestCase {
 		// Make sure the last byte is non-zero as Sybase cuts that off
 		byte[] photo = buildLongByteArray( 14999, true );
 		ImageHolder holder = new ImageHolder( photo );
-		s.save( holder );
+		s.persist( holder );
 		t.commit();
 		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
-		holder = ( ImageHolder ) s.get(  ImageHolder.class, holder.getId() );
+		holder = s.get( ImageHolder.class, holder.getId() );
 		assertTrue( Arrays.equals( photo, holder.getPhoto() ) );
 		photo = buildLongByteArray( 15000, false );
 		holder.setPhoto( photo );
-		s.save( holder );
+		s.persist( holder );
 		t.commit();
 		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
-		holder = ( ImageHolder ) s.get(  ImageHolder.class, holder.getId() );
+		holder = s.get( ImageHolder.class, holder.getId() );
 		assertTrue( Arrays.equals( photo, holder.getPhoto() ) );
-		s.delete( holder );
+		s.remove( holder );
 		t.commit();
 		s.close();
 	}

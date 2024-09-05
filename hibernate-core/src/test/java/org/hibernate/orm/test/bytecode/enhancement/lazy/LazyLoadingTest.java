@@ -9,19 +9,8 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
@@ -37,6 +26,16 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -47,6 +46,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Luis Barreiro
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
         annotatedClasses = {
                 LazyLoadingTest.Parent.class, LazyLoadingTest.Child.class
@@ -86,7 +86,7 @@ public class LazyLoadingTest {
     @Test
     public void test(SessionFactoryScope scope) {
         scope.inTransaction( s -> {
-            Child loadedChild = s.load( Child.class, lastChildID );
+            Child loadedChild = s.getReference( Child.class, lastChildID );
             assertThat( loadedChild, not( instanceOf( HibernateProxy.class ) ) );
             assertThat( loadedChild, instanceOf( PersistentAttributeInterceptable.class ) );
             final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) loadedChild;
@@ -149,7 +149,6 @@ public class LazyLoadingTest {
         Long id;
 
         @ManyToOne( cascade = CascadeType.ALL, fetch = FetchType.LAZY )
-        @LazyToOne( LazyToOneOption.NO_PROXY )
         Parent parent;
 
         String name;

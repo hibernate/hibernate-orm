@@ -7,11 +7,12 @@
 package org.hibernate.boot.model.internal;
 
 import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.TypeDetails;
 
 /**
  * @author Emmanuel Bernard
@@ -26,12 +27,12 @@ public class WrappedInferredData implements PropertyData {
 	}
 
 	@Override
-	public XClass getClassOrElement() throws MappingException {
-		return wrappedInferredData.getClassOrElement();
+	public TypeDetails getClassOrElementType() throws MappingException {
+		return wrappedInferredData.getClassOrElementType();
 	}
 
 	@Override
-	public XClass getClassOrPluralElement() throws MappingException {
+	public ClassDetails getClassOrPluralElement() throws MappingException {
 		return wrappedInferredData.getClassOrPluralElement();
 	}
 
@@ -46,18 +47,18 @@ public class WrappedInferredData implements PropertyData {
 	}
 
 	@Override
-	public XProperty getProperty() {
-		return wrappedInferredData.getProperty();
+	public MemberDetails getAttributeMember() {
+		return wrappedInferredData.getAttributeMember();
 	}
 
 	@Override
-	public XClass getDeclaringClass() {
+	public ClassDetails getDeclaringClass() {
 		return wrappedInferredData.getDeclaringClass();
 	}
 
 	@Override
-	public XClass getPropertyClass() throws MappingException {
-		return wrappedInferredData.getPropertyClass();
+	public TypeDetails getPropertyType() throws MappingException {
+		return wrappedInferredData.getPropertyType();
 	}
 
 	@Override

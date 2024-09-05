@@ -81,7 +81,7 @@ public class NativeQueryEagerAssociationTest {
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-16191" )
 	public void testNativeQuery(SessionFactoryScope scope) {
-		final Classroom result = scope.fromTransaction(
+		final Classroom result = (Classroom) scope.fromTransaction(
 				session -> session.createNativeQuery( "select * from Classroom where id = 1", Classroom.class )
 						.getSingleResult()
 		);

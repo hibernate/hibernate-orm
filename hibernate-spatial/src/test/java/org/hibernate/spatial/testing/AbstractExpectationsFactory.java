@@ -7,6 +7,7 @@
 
 package org.hibernate.spatial.testing;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -43,6 +44,7 @@ public abstract class AbstractExpectationsFactory {
 	public final static int BOOLEAN = 5;
 	public final static int OBJECT = -1;
 	private static final HSMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			HSMessageLogger.class,
 			AbstractExpectationsFactory.class.getName()
 	);

@@ -49,8 +49,8 @@ public class EagerManyToOneEmbeddedIdFKTest {
 					System system = new System( 1, "sub1" );
 					system.setUser( user );
 
-					session.save( user );
-					session.save( system );
+					session.persist( user );
+					session.persist( system );
 				}
 		);
 	}

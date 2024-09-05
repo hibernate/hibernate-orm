@@ -355,11 +355,10 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * Apply the given {@linkplain LockOptions lock options} to this
 	 * query. Alias-specific lock modes in the given lock options are
 	 * merged with any alias-specific lock mode which have already been
-	 * {@linkplain #setAliasSpecificLockMode(String, LockMode) set}. If
-	 * a lock mode has already been specified for an alias that is among
-	 * the aliases in the given lock options, the lock mode specified in
-	 * the given lock options overrides the lock mode that was already
-	 * set.
+	 * {@linkplain #setLockMode(String, LockMode) set}. If a lock mode
+	 * has already been specified for an alias that is among the aliases
+	 * in the given lock options, the lock mode specified in the given
+	 * lock options overrides the lock mode that was already set.
 	 *
 	 * @param lockOptions The lock options to apply to the query.
 	 *

@@ -45,7 +45,7 @@ public class ManyToManyUnidirectionalFetchTest {
 		scope.inTransaction(
 				session -> {
 					Event event = new Event( 1L, "Hibernate" );
-					session.save( event );
+					session.persist( event );
 				}
 		);
 	}
@@ -55,7 +55,7 @@ public class ManyToManyUnidirectionalFetchTest {
 		scope.inTransaction(
 				session -> {
 					Event event = session.get( Event.class, 1L );
-					session.delete( event );
+					session.remove( event );
 				}
 		);
 	}
@@ -131,7 +131,7 @@ public class ManyToManyUnidirectionalFetchTest {
 					Event event = session.get( Event.class, 1l );
 					Speaker speaker = new Speaker( 2l, "Steve" );
 					event.addSpeaker( speaker );
-					session.save( speaker );
+					session.persist( speaker );
 				}
 		);
 	}

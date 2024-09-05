@@ -88,15 +88,13 @@ class ManyToOneWithAnyTest {
 				entityManager -> {
 					Session session = entityManager.unwrap( Session.class );
 					Library library = new Library();
-					library.setId( 1L );
 					library.setBooks( Set.of( new Book(), new Book() ) );
 
 					Shop shop = new Shop();
-					shop.setId( 1L );
 					shop.setBooks( Set.of( new Book(), new Book(), new Book() ) );
 
-					session.save( library );
-					session.save( shop );
+					session.persist( library );
+					session.persist( shop );
 					session.flush();
 					session.clear();
 

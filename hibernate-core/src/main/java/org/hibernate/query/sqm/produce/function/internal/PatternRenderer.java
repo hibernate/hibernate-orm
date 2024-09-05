@@ -138,11 +138,10 @@ public class PatternRenderer {
 	/**
 	 * The rendering code.
 	 *
-	 * @param sqlAppender
+	 * @param sqlAppender Target for appending
 	 * @param args The arguments to inject into the template
-	 * @return The rendered template with replacements
 	 */
-	@SuppressWarnings({ "UnusedDeclaration" })
+	@SuppressWarnings("unused")
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> args,

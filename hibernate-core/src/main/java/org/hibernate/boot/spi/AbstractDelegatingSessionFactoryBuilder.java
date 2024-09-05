@@ -18,13 +18,13 @@ import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.type.format.FormatMapper;
+
+import jakarta.persistence.criteria.Nulls;
 
 /**
  * Convenience base class for custom implementors of SessionFactoryBuilder, using delegation
@@ -157,12 +157,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public T applyBatchFetchStyle(BatchFetchStyle style) {
-		delegate.applyBatchFetchStyle( style );
-		return getThis();
-	}
-
-	@Override
 	public T applyDelayedEntityLoaderCreations(boolean delay) {
 		delegate.applyDelayedEntityLoaderCreations( delay );
 		return getThis();
@@ -187,7 +181,7 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public T applyDefaultNullPrecedence(NullPrecedence nullPrecedence) {
+	public T applyDefaultNullPrecedence(Nulls nullPrecedence) {
 		delegate.applyDefaultNullPrecedence( nullPrecedence );
 		return getThis();
 	}
@@ -377,12 +371,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	@Override
 	public T enableJpaCascadeCompliance(boolean enabled) {
 		delegate.enableJpaCascadeCompliance( enabled );
-		return getThis();
-	}
-
-	@Override
-	public T enableJpaListCompliance(boolean enabled) {
-		delegate.enableJpaListCompliance( enabled );
 		return getThis();
 	}
 

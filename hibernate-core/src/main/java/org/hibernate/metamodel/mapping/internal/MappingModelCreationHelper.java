@@ -78,12 +78,8 @@ import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Joinable;
 import org.hibernate.property.access.internal.ChainedPropertyAccessImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -119,6 +115,8 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_MESSAGE_LOGGER;
@@ -499,7 +497,7 @@ public class MappingModelCreationHelper {
 		final CollectionPersister collectionDescriptor = domainModel.findCollectionDescriptor( bootValueMapping.getRole() );
 		assert collectionDescriptor != null;
 
-		final String tableExpression = ( (Joinable) collectionDescriptor ).getTableName();
+		final String tableExpression = collectionDescriptor.getTableName();
 
 		final String sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( bootProperty.getName() );
 
@@ -565,16 +563,14 @@ public class MappingModelCreationHelper {
 
 				indexDescriptor = null;
 
-				assert collectionDescriptor instanceof SQLLoadableCollection;
-				final SQLLoadableCollection loadableCollection = (SQLLoadableCollection) collectionDescriptor;
-				final String identifierColumnName = loadableCollection.getIdentifierColumnName();
+				final String identifierColumnName = collectionDescriptor.getIdentifierColumnName();
 				assert identifierColumnName != null;
 
 				identifierDescriptor = new CollectionIdentifierDescriptorImpl(
 						collectionDescriptor,
 						tableExpression,
 						identifierColumnName,
-						(BasicType) loadableCollection.getIdentifierType()
+						(BasicType) collectionDescriptor.getIdentifierType()
 				);
 
 				break;
@@ -767,10 +763,10 @@ public class MappingModelCreationHelper {
 		final String lhsPropertyName = collectionDescriptor.getCollectionType().getLHSPropertyName();
 		final boolean isReferenceToPrimaryKey = lhsPropertyName == null;
 		final ManagedMappingType keyDeclaringType;
-		final String collectionTableName = ((AbstractCollectionPersister) collectionDescriptor).getTableName();
+		final String collectionTableName = collectionDescriptor.getTableName();
 
-		if ( collectionDescriptor.getElementType().isEntityType() ) {
-			keyDeclaringType = ( (QueryableCollection) collectionDescriptor ).getElementPersister();
+		if ( collectionDescriptor.getElementType() instanceof EntityType ) {
+			keyDeclaringType = collectionDescriptor.getElementPersister();
 		}
 		else {
 			// This is not "really correct" but it is as good as it gets.
@@ -781,7 +777,8 @@ public class MappingModelCreationHelper {
 		}
 
 		if ( isReferenceToPrimaryKey ) {
-			fkTargetPart = collectionDescriptor.getOwnerEntityPersister().getIdentifierMapping();
+			fkTargetPart = collectionDescriptor.getOwnerEntityPersister().getIdentifierMappingForJoin();
+//			fkTargetPart = collectionDescriptor.getOwnerEntityPersister().getIdentifierMapping();
 		}
 		else {
 			fkTargetPart = declaringType.findContainingEntityMapping().findSubPart( lhsPropertyName );
@@ -934,7 +931,8 @@ public class MappingModelCreationHelper {
 
 		final ModelPart fkTarget;
 		if ( bootValueMapping.isReferenceToPrimaryKey() ) {
-			fkTarget = referencedEntityDescriptor.getIdentifierMapping();
+			fkTarget = referencedEntityDescriptor.getIdentifierMappingForJoin();
+//			fkTarget = referencedEntityDescriptor.getIdentifierMapping();
 		}
 		else {
 			fkTarget = referencedEntityDescriptor.findByPath( bootValueMapping.getReferencedPropertyName() );
@@ -1683,9 +1681,9 @@ public class MappingModelCreationHelper {
 						public TableGroupJoin createTableGroupJoin(
 								NavigablePath navigablePath,
 								TableGroup lhs,
-								String explicitSourceAlias,
-								SqlAliasBase explicitSqlAliasBase,
-								SqlAstJoinType sqlAstJoinType,
+								@Nullable String explicitSourceAlias,
+								@Nullable SqlAliasBase explicitSqlAliasBase,
+								@Nullable SqlAstJoinType sqlAstJoinType,
 								boolean fetched,
 								boolean addsPredicate,
 								SqlAstCreationState creationState) {
@@ -1696,11 +1694,11 @@ public class MappingModelCreationHelper {
 						public TableGroup createRootTableGroupJoin(
 								NavigablePath navigablePath,
 								TableGroup lhs,
-								String explicitSourceAlias,
-								SqlAliasBase explicitSqlAliasBase,
-								SqlAstJoinType sqlAstJoinType,
+								@Nullable String explicitSourceAlias,
+								@Nullable SqlAliasBase explicitSqlAliasBase,
+								@Nullable SqlAstJoinType sqlAstJoinType,
 								boolean fetched,
-								Consumer<Predicate> predicateConsumer,
+								@Nullable Consumer<Predicate> predicateConsumer,
 								SqlAstCreationState creationState) {
 							return null;
 						}

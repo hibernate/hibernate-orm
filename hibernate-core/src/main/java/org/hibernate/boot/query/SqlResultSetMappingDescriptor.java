@@ -15,6 +15,8 @@ import java.util.Map;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
@@ -47,6 +49,7 @@ import jakarta.persistence.FieldResult;
 import jakarta.persistence.SqlResultSetMapping;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
+import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 import static org.hibernate.metamodel.mapping.EntityIdentifierMapping.ID_ROLE_NAME;
 
 /**
@@ -78,15 +81,11 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		);
 
 		for ( final EntityResult entityResult : entityResults ) {
-			resultDescriptors.add(
-					new EntityResultDescriptor( entityResult )
-			);
+			resultDescriptors.add( new EntityResultDescriptor( entityResult ) );
 		}
 
 		for ( final ConstructorResult constructorResult : constructorResults ) {
-			resultDescriptors.add(
-					new ConstructorResultDescriptor( constructorResult, mappingAnnotation )
-			);
+			resultDescriptors.add( new ConstructorResultDescriptor( constructorResult, mappingAnnotation ) );
 		}
 
 		for ( final ColumnResult columnResult : columnResults ) {
@@ -134,7 +133,9 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		private final ColumnResult columnResult;
 		private final String mappingName;
 
-		public JpaColumnResultDescriptor(ColumnResult columnResult, SqlResultSetMapping mappingAnnotation) {
+		public JpaColumnResultDescriptor(
+				ColumnResult columnResult,
+				SqlResultSetMapping mappingAnnotation) {
 			this.columnResult = columnResult;
 			this.mappingName = mappingAnnotation.name();
 		}
@@ -172,23 +173,32 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		private final Class<?> targetJavaType;
 		private final List<ArgumentDescriptor> argumentResultDescriptors;
 
-		public ConstructorResultDescriptor(ConstructorResult constructorResult, SqlResultSetMapping mappingAnnotation) {
+		public ConstructorResultDescriptor(
+				ConstructorResult constructorResult,
+				SqlResultSetMapping mappingAnnotation) {
 			this.mappingName = mappingAnnotation.name();
 			this.targetJavaType = constructorResult.targetClass();
 
+			argumentResultDescriptors = interpretArguments( constructorResult, mappingAnnotation );
+		}
+
+		private static List<ArgumentDescriptor> interpretArguments(
+				ConstructorResult constructorResult,
+				SqlResultSetMapping mappingAnnotation) {
 			final ColumnResult[] columnResults = constructorResult.columns();
-			if ( columnResults.length == 0 ) {
+			if ( ArrayHelper.isEmpty( columnResults ) ) {
 				throw new IllegalArgumentException( "ConstructorResult did not define any ColumnResults" );
 			}
 
-			this.argumentResultDescriptors = arrayList( columnResults.length );
-			for ( final ColumnResult columnResult : columnResults ) {
+			final List<ArgumentDescriptor> argumentResultDescriptors = arrayList( columnResults.length );
+			for ( ColumnResult columnResult : columnResults ) {
 				final JpaColumnResultDescriptor argumentResultDescriptor = new JpaColumnResultDescriptor(
 						columnResult,
 						mappingAnnotation
 				);
 				argumentResultDescriptors.add(new ArgumentDescriptor(argumentResultDescriptor));
 			}
+			return argumentResultDescriptors;
 		}
 
 		@Override
@@ -226,24 +236,35 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 		public EntityResultDescriptor(EntityResult entityResult) {
 			this.entityName = entityResult.entityClass().getName();
-			this.discriminatorColumn = entityResult.discriminatorColumn();
-
 			this.navigablePath = new NavigablePath( entityName );
 
-			this.explicitFetchMappings = new HashMap<>();
-			for ( int i = 0; i < entityResult.fields().length; i++ ) {
-				final FieldResult fieldResult = entityResult.fields()[ i ];
-				final AttributeFetchDescriptor existing = explicitFetchMappings.get( fieldResult.name() );
+			this.discriminatorColumn = entityResult.discriminatorColumn();
+
+			this.explicitFetchMappings = extractFetchMappings( navigablePath, entityResult );
+		}
+
+		private static Map<String, AttributeFetchDescriptor> extractFetchMappings(
+				NavigablePath navigablePath,
+				EntityResult entityResult) {
+			final FieldResult[] fields = entityResult.fields();
+			final Map<String, AttributeFetchDescriptor> explicitFetchMappings = mapOfSize( fields.length );
+
+			for ( int i = 0; i < fields.length; i++ ) {
+				final FieldResult fieldResult = fields[i];
+				final String fieldName = fieldResult.name();
+				final AttributeFetchDescriptor existing = explicitFetchMappings.get( fieldName );
 				if ( existing != null ) {
 					existing.addColumn( fieldResult );
 				}
 				else {
 					explicitFetchMappings.put(
-							fieldResult.name(),
-							AttributeFetchDescriptor.from( navigablePath, entityName, fieldResult )
+							fieldName,
+							AttributeFetchDescriptor.from( navigablePath, navigablePath.getFullPath(), fieldResult )
 					);
 				}
 			}
+
+			return explicitFetchMappings;
 		}
 
 		@Override
@@ -318,7 +339,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				String columnName) {
 			this.entityName = entityName;
 			this.propertyPath = propertyPath;
-			this.propertyPathParts = propertyPath.split( "\\." );
+			this.propertyPathParts = StringHelper.split( ".", propertyPath );
 			this.navigablePath = entityPath;
 			this.columnNames = new ArrayList<>();
 			columnNames.add( columnName );

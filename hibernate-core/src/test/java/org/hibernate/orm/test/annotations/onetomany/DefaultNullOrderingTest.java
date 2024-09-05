@@ -67,8 +67,8 @@ public class DefaultNullOrderingTest extends BaseCoreFunctionalTestCase {
 
 				// Cleanup data.
 				session.getTransaction().begin();
-				session.delete( monkey1 );
-				session.delete( monkey2 );
+				session.remove( monkey1 );
+				session.remove( monkey2 );
 				session.getTransaction().commit();
 			}
 			catch (Exception e) {
@@ -111,7 +111,7 @@ public class DefaultNullOrderingTest extends BaseCoreFunctionalTestCase {
 
 						// Cleanup data.
 						session.getTransaction().begin();
-						session.delete( troop );
+						session.remove( troop );
 						session.getTransaction().commit();
 					}
 					catch (Exception e) {
@@ -156,8 +156,8 @@ public class DefaultNullOrderingTest extends BaseCoreFunctionalTestCase {
 
 						// Cleanup data.
 						session.getTransaction().begin();
-						session.delete( monkey1 );
-						session.delete( monkey2 );
+						session.remove( monkey1 );
+						session.remove( monkey2 );
 						session.getTransaction().commit();
 					}
 					catch (Exception e) {

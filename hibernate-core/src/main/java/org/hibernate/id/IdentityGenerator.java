@@ -10,12 +10,12 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.OnExecutionGenerator;
-import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.id.insert.BasicSelectingDelegate;
 import org.hibernate.id.insert.GetGeneratedKeysDelegate;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.id.insert.InsertReturningDelegate;
 import org.hibernate.id.insert.UniqueKeySelectingDelegate;
+import org.hibernate.persister.entity.EntityPersister;
 
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.generator.internal.NaturalIdHelper.getNaturalIdPropertyNames;
@@ -40,7 +40,7 @@ import static org.hibernate.generator.values.internal.GeneratedValuesHelper.noCu
  * @implNote This also implements the {@code identity} generation type in {@code hbm.xml} mappings.
  */
 public class IdentityGenerator
-		implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, StandardGenerator {
+		implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator {
 
 	@Override
 	public boolean referenceColumnsInSql(Dialect dialect) {
@@ -53,7 +53,7 @@ public class IdentityGenerator
 	}
 
 	@Override
-	public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(PostInsertIdentityPersister persister) {
+	public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(EntityPersister persister) {
 		final SessionFactoryImplementor factory = persister.getFactory();
 		final Dialect dialect = factory.getJdbcServices().getDialect();
 		// Try to use generic delegates if the dialects supports them
@@ -66,7 +66,7 @@ public class IdentityGenerator
 		}
 		// Fall back to delegates which only handle identifiers
 		else if ( sessionFactoryOptions.isGetGeneratedKeysEnabled() ) {
-			return dialect.getIdentityColumnSupport().buildGetGeneratedKeysDelegate( persister, dialect );
+			return dialect.getIdentityColumnSupport().buildGetGeneratedKeysDelegate( persister );
 		}
 		else if ( persister.getNaturalIdentifierProperties() != null
 				&& !persister.getEntityMetamodel().isNaturalIdentifierInsertGenerated() ) {

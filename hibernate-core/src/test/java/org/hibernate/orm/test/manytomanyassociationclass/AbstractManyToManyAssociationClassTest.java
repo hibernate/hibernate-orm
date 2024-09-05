@@ -37,8 +37,8 @@ public abstract class AbstractManyToManyAssociationClassTest {
 				session -> {
 					user = new User( "user" );
 					group = new Group( "group" );
-					session.save( user );
-					session.save( group );
+					session.persist( user );
+					session.persist( group );
 					membership = createMembership( "membership" );
 					addMembership( user, group, membership );
 				}
@@ -49,9 +49,9 @@ public abstract class AbstractManyToManyAssociationClassTest {
 	protected void cleanupTest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "delete from " + membership.getClass().getName() );
-					session.createQuery( "delete from User" );
-					session.createQuery( "delete from Group" );
+					session.createMutationQuery( "delete from " + membership.getClass().getName() ).executeUpdate();
+					session.createMutationQuery( "delete from User" ).executeUpdate();
+					session.createMutationQuery( "delete from Group" ).executeUpdate();
 				}
 		);
 	}
@@ -129,8 +129,8 @@ public abstract class AbstractManyToManyAssociationClassTest {
 	public void testRemoveAndAddEqualCollection(SessionFactoryScope scope) {
 		deleteMembership( user, group, membership );
 		membership = createMembership( "membership" );
-		user.setMemberships( new HashSet() );
-		group.setMemberships( new HashSet() );
+		user.setMemberships( new HashSet<>() );
+		group.setMemberships( new HashSet<>() );
 		addMembership( user, group, membership );
 
 		scope.inTransaction(
@@ -219,8 +219,8 @@ public abstract class AbstractManyToManyAssociationClassTest {
 	public void testDeleteDetached(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.delete( user );
-					session.delete( group );
+					session.remove( user );
+					session.remove( group );
 				}
 		);
 

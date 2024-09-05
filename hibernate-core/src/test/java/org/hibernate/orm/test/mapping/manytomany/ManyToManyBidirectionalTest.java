@@ -58,11 +58,11 @@ public class ManyToManyBidirectionalTest {
 			bookByAuthor1AndAuthor2.addAuthor( author1 );
 			bookByAuthor1AndAuthor2.addAuthor( author2 );
 
-			session.save( author1 );
-			session.save( author2 );
-			session.save( bookByAuthor1 );
-			session.save( bookByAuthor2 );
-			session.save( bookByAuthor1AndAuthor2 );
+			session.persist( author1 );
+			session.persist( author2 );
+			session.persist( bookByAuthor1 );
+			session.persist( bookByAuthor2 );
+			session.persist( bookByAuthor1AndAuthor2 );
 
 		} );
 	}

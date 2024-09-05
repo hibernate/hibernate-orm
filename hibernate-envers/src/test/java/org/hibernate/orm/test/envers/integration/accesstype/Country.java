@@ -25,7 +25,7 @@ public class Country {
 	/**
 	 * Default constructor for persistence provider.
 	 */
-	@SuppressWarnings({"UnusedDeclaration"})
+	@SuppressWarnings("unused")
 	private Country() {
 	}
 

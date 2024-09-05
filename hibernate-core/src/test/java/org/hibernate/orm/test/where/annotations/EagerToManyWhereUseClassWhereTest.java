@@ -8,8 +8,15 @@ package org.hibernate.orm.test.where.annotations;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
+
+import org.hibernate.annotations.SQLJoinTableRestriction;
+import org.hibernate.annotations.SQLRestriction;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.Test;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -20,14 +27,6 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.SQLJoinTableRestriction;
-import org.hibernate.annotations.SQLRestriction;
-import org.hibernate.cfg.AvailableSettings;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -35,24 +34,17 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Tests association collections with AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS = true
- *
  * @author Gail Badner
  */
 public class EagerToManyWhereUseClassWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
-	protected Class[] getAnnotatedClasses() {
+	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Product.class, Category.class };
 	}
 
-	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		settings.put( AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS, "true" );
-	}
-
 	@Test
-	@TestForIssue( jiraKey = "HHH-13011" )
+	@JiraKey("HHH-13011")
 	public void testAssociatedWhereClause() {
 
 		Product product = new Product();

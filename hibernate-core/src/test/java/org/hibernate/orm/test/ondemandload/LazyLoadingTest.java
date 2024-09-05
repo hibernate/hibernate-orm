@@ -70,8 +70,8 @@ public class LazyLoadingTest {
 	public void cleanUpData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.delete( session.get( Store.class, 1 ) );
-					session.delete( session.get( Product.class, "007" ) );
+					session.remove( session.get( Store.class, 1 ) );
+					session.remove( session.get( Product.class, "007" ) );
 				}
 		);
 	}
@@ -156,7 +156,7 @@ public class LazyLoadingTest {
 		Store s = scope.fromTransaction(
 				session -> {
 					// first load the store, making sure it is not initialized
-					Store store = session.load( Store.class, 1 );
+					Store store = session.getReference( Store.class, 1 );
 					assertNotNull( store );
 					assertFalse( Hibernate.isInitialized( store ) );
 

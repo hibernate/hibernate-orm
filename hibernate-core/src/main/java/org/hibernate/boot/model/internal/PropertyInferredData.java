@@ -8,11 +8,17 @@ package org.hibernate.boot.model.internal;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Target;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.AccessType;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.models.internal.ClassTypeDetailsImpl;
+import org.hibernate.models.internal.dynamic.DynamicClassDetails;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ClassDetailsRegistry;
+import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.TypeDetails;
+import org.hibernate.models.spi.TypeVariableScope;
 
 import jakarta.persistence.Access;
 
@@ -25,23 +31,30 @@ import jakarta.persistence.Access;
 public class PropertyInferredData implements PropertyData {
 	private final AccessType defaultAccess;
 
-	private final XProperty property;
-	private final ReflectionManager reflectionManager;
-	private final XClass declaringClass;
+	private final ClassDetails declaringClass;
+	private final TypeVariableScope ownerType;
+	private final MemberDetails propertyMember;
+	private final MetadataBuildingContext buildingContext;
 
 	/**
 	 * Take the annotated element for lazy process
 	 */
-	public PropertyInferredData(XClass declaringClass, XProperty property, String propertyAccessor, ReflectionManager reflectionManager) {
+	public PropertyInferredData(
+			ClassDetails declaringClass,
+			TypeVariableScope ownerType,
+			MemberDetails propertyMember,
+			String propertyAccessor,
+			MetadataBuildingContext buildingContext) {
 		this.declaringClass = declaringClass;
-		this.property = property;
+		this.ownerType = ownerType;
+		this.propertyMember = propertyMember;
 		this.defaultAccess = AccessType.getAccessStrategy( propertyAccessor );
-		this.reflectionManager = reflectionManager;
+		this.buildingContext = buildingContext;
 	}
 
 	@Override
 	public String toString() {
-		return String.format( "PropertyInferredData{property=%s, declaringClass=%s}", property, declaringClass );
+		return String.format( "PropertyInferredData{property=%s, declaringClass=%s}", propertyMember, declaringClass );
 	}
 
 	@Override
@@ -50,7 +63,7 @@ public class PropertyInferredData implements PropertyData {
 
 		AccessType jpaAccessType = AccessType.DEFAULT;
 
-		Access access = property.getAnnotation( Access.class );
+		Access access = propertyMember.getDirectAnnotationUsage( Access.class );
 		if ( access != null ) {
 			jpaAccessType = AccessType.getAccessStrategy( access.value() );
 		}
@@ -63,59 +76,101 @@ public class PropertyInferredData implements PropertyData {
 
 	@Override
 	public String getPropertyName() throws MappingException {
-		return property.getName();
+		return propertyMember.resolveAttributeName();
 	}
 
 	@Override
-	public XClass getPropertyClass() throws MappingException {
-		if ( property.isAnnotationPresent( Target.class ) ) {
-			return reflectionManager.toXClass( property.getAnnotation( Target.class ).value() );
+	public TypeDetails getPropertyType() throws MappingException {
+		final org.hibernate.boot.internal.Target targetAnnotation = propertyMember.getDirectAnnotationUsage( org.hibernate.boot.internal.Target.class );
+		final SourceModelBuildingContext sourceModelContext = buildingContext.getMetadataCollector()
+				.getSourceModelBuildingContext();
+		if ( targetAnnotation != null ) {
+			final String targetName = targetAnnotation.value();
+			final SourceModelBuildingContext sourceModelBuildingContext = sourceModelContext;
+			final ClassDetails classDetails = sourceModelBuildingContext.getClassDetailsRegistry().resolveClassDetails(
+					targetName,
+					name -> new DynamicClassDetails( targetName, sourceModelBuildingContext )
+			);
+			return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );
 		}
-		else {
-			return property.getType();
+
+		final Target legacyTargetAnnotation = propertyMember.getDirectAnnotationUsage( Target.class );
+		if ( legacyTargetAnnotation != null ) {
+			return resolveLegacyTargetAnnotation( legacyTargetAnnotation, sourceModelContext );
 		}
+
+		return propertyMember.resolveRelativeType( ownerType );
+	}
+
+	private static ClassTypeDetailsImpl resolveLegacyTargetAnnotation(
+			Target legacyTargetAnnotation,
+			SourceModelBuildingContext sourceModelContext) {
+		final ClassDetailsRegistry classDetailsRegistry = sourceModelContext.getClassDetailsRegistry();
+		final ClassDetails targetClassDetails = classDetailsRegistry.resolveClassDetails( legacyTargetAnnotation.value().getName() );
+		return new ClassTypeDetailsImpl( targetClassDetails, TypeDetails.Kind.CLASS );
 	}
 
 	@Override
-	public XClass getClassOrElement() throws MappingException {
-		if ( property.isAnnotationPresent( Target.class ) ) {
-			return reflectionManager.toXClass( property.getAnnotation( Target.class ).value() );
+	public TypeDetails getClassOrElementType() throws MappingException {
+		final SourceModelBuildingContext sourceModelBuildingContext = buildingContext
+				.getMetadataCollector()
+				.getSourceModelBuildingContext();
+
+		final org.hibernate.boot.internal.Target annotationUsage = propertyMember.getDirectAnnotationUsage( org.hibernate.boot.internal.Target.class );
+		if ( annotationUsage != null ) {
+			final String targetName = annotationUsage.value();
+			final ClassDetails classDetails = sourceModelBuildingContext.getClassDetailsRegistry().resolveClassDetails(
+					targetName,
+					name -> new DynamicClassDetails( targetName, sourceModelBuildingContext )
+			);
+			return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );
 		}
-		else {
-			return property.getClassOrElementClass();
+
+		final Target legacyTargetAnnotation = propertyMember.getDirectAnnotationUsage( Target.class );
+		if ( legacyTargetAnnotation != null ) {
+			return resolveLegacyTargetAnnotation( legacyTargetAnnotation, sourceModelBuildingContext );
 		}
+
+		return propertyMember.resolveRelativeAssociatedType( ownerType );
 	}
 
 	@Override
-	public XClass getClassOrPluralElement() throws MappingException {
-		if ( property.isAnnotationPresent( Target.class ) ) {
-			return reflectionManager.toXClass( property.getAnnotation( Target.class ).value() );
+	public ClassDetails getClassOrPluralElement() throws MappingException {
+		final org.hibernate.boot.internal.Target xmlTarget = propertyMember.getDirectAnnotationUsage( org.hibernate.boot.internal.Target.class );
+		if ( xmlTarget != null ) {
+			return buildingContext.getMetadataCollector().getClassDetailsRegistry().getClassDetails( xmlTarget.value() );
 		}
-		else if ( property.isCollection() ) {
-			return property.getElementClass();
+
+		final Target legacyTarget = propertyMember.getDirectAnnotationUsage( Target.class );
+		if ( legacyTarget != null ) {
+			final String targetName = legacyTarget.value().getName();
+			return buildingContext.getMetadataCollector().getClassDetailsRegistry().getClassDetails( targetName );
 		}
-		else {
-			return property.getClassOrElementClass();
+
+		if ( propertyMember.isPlural() ) {
+			return propertyMember.getElementType().determineRawClass();
 		}
+
+		return propertyMember.getAssociatedType().determineRawClass();
 	}
 
 	@Override
 	public String getClassOrElementName() throws MappingException {
-		return getClassOrElement().getName();
+		return getClassOrElementType().getName();
 	}
 
 	@Override
 	public String getTypeName() throws MappingException {
-		return getPropertyClass().getName();
+		return getPropertyType().getName();
 	}
 
 	@Override
-	public XProperty getProperty() {
-		return property;
+	public MemberDetails getAttributeMember() {
+		return propertyMember;
 	}
 
 	@Override
-	public XClass getDeclaringClass() {
+	public ClassDetails getDeclaringClass() {
 		return declaringClass;
 	}
 }

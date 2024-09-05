@@ -7,8 +7,6 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
-import org.hibernate.query.hql.spi.SqmCreationProcessingState;
-import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -19,7 +17,7 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 /**
  * @author Christian Beikov
  */
-public class SqmCorrelatedListJoin<O, T> extends SqmListJoin<O, T> implements SqmCorrelation<O, T> {
+public class SqmCorrelatedListJoin<O, T> extends SqmListJoin<O, T> implements SqmCorrelatedJoin<O, T> {
 
 	private final SqmCorrelatedRootJoin<O> correlatedRootJoin;
 	private final SqmListJoin<O, T> correlationParent;
@@ -93,21 +91,6 @@ public class SqmCorrelatedListJoin<O, T> extends SqmListJoin<O, T> implements Sq
 	@Override
 	public SqmRoot<O> getCorrelatedRoot() {
 		return correlatedRootJoin;
-	}
-
-	@Override
-	public SqmCorrelatedListJoin<O, T> makeCopy(SqmCreationProcessingState creationProcessingState) {
-		final SqmPathRegistry pathRegistry = creationProcessingState.getPathRegistry();
-		return new SqmCorrelatedListJoin<>(
-				pathRegistry.findFromByPath( getLhs().getNavigablePath() ),
-				getAttribute(),
-				getExplicitAlias(),
-				getSqmJoinType(),
-				isFetched(),
-				nodeBuilder(),
-				pathRegistry.findFromByPath( correlatedRootJoin.getNavigablePath() ),
-				pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
-		);
 	}
 
 	@Override

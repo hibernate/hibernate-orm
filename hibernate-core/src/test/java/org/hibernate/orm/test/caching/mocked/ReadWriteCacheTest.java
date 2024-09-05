@@ -13,14 +13,14 @@ import jakarta.persistence.Cacheable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.cfg.Configuration;
 
 import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
@@ -80,7 +80,7 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 		doInHibernate( this::sessionFactory, session -> {
 			log.info( "Delete Book" );
 			Book book = session.get( Book.class, bookId );
-			session.delete( book );
+			session.remove( book );
 			interceptTransaction.set( true );
 		} );
 
@@ -161,7 +161,7 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 			log.info( "Update Book" );
 			Book book = session.get( Book.class, bookId );
 			book.setTitle( UPDATED_TITLE );
-			session.save( book );
+			session.persist( book );
 			interceptTransaction.set( true );
 		} );
 
@@ -251,7 +251,7 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 		Book book = new Book();
 		book.setId( bookId );
 		book.setTitle( ORIGINAL_TITLE );
-		session.save( book );
+		session.persist( book );
 	}
 
 	private Consumer<Configuration> getCacheConfig() {
@@ -296,7 +296,7 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	private final class TransactionInterceptor extends EmptyInterceptor {
+	private final class TransactionInterceptor implements Interceptor {
 		@Override
 		public void beforeTransactionCompletion(Transaction tx) {
 			if ( interceptTransaction.get() ) {

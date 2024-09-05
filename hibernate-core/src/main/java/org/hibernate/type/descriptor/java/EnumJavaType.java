@@ -6,15 +6,20 @@
  */
 package org.hibernate.type.descriptor.java;
 
-import jakarta.persistence.EnumType;
+import java.util.Set;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.boot.model.process.internal.EnumeratedValueConverter;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+
+import jakarta.persistence.EnumType;
 
 import static jakarta.persistence.EnumType.ORDINAL;
 import static org.hibernate.type.SqlTypes.CHAR;
@@ -243,27 +248,21 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 	 * Convert a value of the enum type to its name value
 	 */
 	public String toName(T domainForm) {
-		if ( domainForm == null ) {
-			return null;
-		}
-		return domainForm.name();
+		return domainForm == null ? null : domainForm.name();
 	}
 
 	/**
 	 * Interpret a string value as the named value of the enum type
 	 */
 	public T fromName(String relationalForm) {
-		if ( relationalForm == null ) {
-			return null;
-		}
-		return Enum.valueOf( getJavaTypeClass(), relationalForm.trim() );
+		return relationalForm == null ? null : Enum.valueOf( getJavaTypeClass(), relationalForm.trim() );
 	}
 
 	@Override
 	public String getCheckCondition(String columnName, JdbcType jdbcType, BasicValueConverter<?, ?> converter, Dialect dialect) {
-		if ( converter != null ) {
-			//TODO: actually convert the enum values to create the check constraint
-			return null;
+		if ( converter != null
+				&& jdbcType.getDefaultSqlTypeCode() != NAMED_ENUM ) {
+			return renderConvertedEnumCheckConstraint( columnName, jdbcType, converter, dialect );
 		}
 		else if ( jdbcType.isInteger() ) {
 			int max = getJavaTypeClass().getEnumConstants().length - 1;
@@ -275,5 +274,37 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 		else {
 			return null;
 		}
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private String renderConvertedEnumCheckConstraint(
+			String columnName,
+			JdbcType jdbcType,
+			BasicValueConverter<?, ?> converter,
+			Dialect dialect) {
+		final Set valueSet;
+		// for `@EnumeratedValue` we already have the possible values...
+		if ( converter instanceof EnumeratedValueConverter enumeratedValueConverter ) {
+			valueSet = enumeratedValueConverter.getRelationalValueSet();
+		}
+		else {
+			if ( !SqlTypes.isIntegral( jdbcType.getJdbcTypeCode() )
+					&& !SqlTypes.isCharacterType( jdbcType.getJdbcTypeCode() ) ) {
+				// we only support adding check constraints for generalized conversions to
+				// INTEGER, SMALLINT, TINYINT, (N)CHAR, (N)VARCHAR, LONG(N)VARCHAR
+				return null;
+			}
+
+			final Class<T> javaTypeClass = getJavaTypeClass();
+			final T[] enumConstants = javaTypeClass.getEnumConstants();
+			valueSet = CollectionHelper.setOfSize( enumConstants.length );
+			for ( T enumConstant : enumConstants ) {
+				//noinspection unchecked
+				final Object relationalValue = ( (BasicValueConverter) converter ).toRelationalValue( enumConstant );
+				valueSet.add( relationalValue );
+			}
+		}
+
+		return dialect.getCheckCondition( columnName, valueSet, jdbcType );
 	}
 }

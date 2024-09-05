@@ -85,7 +85,7 @@
 
 
         <jaxb:bindings node="//xsd:element[@name='hibernate-mapping']/xsd:complexType">
-        	<inheritance:implements>org.hibernate.boot.jaxb.spi.BindableMappingDescriptor</inheritance:implements>
+        	<inheritance:implements>org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor</inheritance:implements>
 		</jaxb:bindings>
 
 		<jaxb:bindings node="//xsd:complexType[@name='ToolingHintContainer']">
@@ -373,10 +373,6 @@
 
 		<jaxb:bindings node="//xsd:complexType[@name='key-type']//xsd:attribute[@name='column']">
 			<jaxb:property name="columnAttribute"/>
-		</jaxb:bindings>
-
-		<jaxb:bindings node="//xsd:attributeGroup[@name='table-information-group']//xsd:attribute[@name='subselect']">
-			<jaxb:property name="subselectAttribute"/>
 		</jaxb:bindings>
 
 		<jaxb:bindings node="//xsd:complexType[@name='multi-tenancy-type']//xsd:attribute[@name='column']">

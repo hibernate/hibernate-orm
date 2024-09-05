@@ -49,17 +49,17 @@ public class ColumnTransformerTest {
 							new Staff( 1, 2, 3, 4 )
 					);
 
-					session.save(
+					session.persist(
 							new Staff( 5, 6, 7, 8 )
 					);
 
 					final Staff staffWithElements = new Staff( 12 );
 					staffWithElements.setIntegers( asList( 1, 2, 3, 4 ) );
-					session.save( staffWithElements );
+					session.persist( staffWithElements );
 
 					final Staff staffWithElements2 = new Staff( 16 );
 					staffWithElements2.setIntegers2( asList( 5, 6, 7, 8 ) );
-					session.save( staffWithElements2 );
+					session.persist( staffWithElements2 );
 				}
 		);
 	}
@@ -70,7 +70,7 @@ public class ColumnTransformerTest {
 		scope.inTransaction(
 				session -> {
 					final List<Staff> list = session.createQuery( "from Staff", Staff.class ).list();
-					list.forEach( session::delete );
+					list.forEach( session::remove );
 				}
 		);
 	}

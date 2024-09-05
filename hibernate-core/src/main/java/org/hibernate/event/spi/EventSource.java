@@ -42,6 +42,7 @@ public interface EventSource extends SessionImplementor {
 	 * Cascade merge an entity instance
 	 */
 	void merge(String entityName, Object object, MergeContext copiedAlready) throws HibernateException;
+
 	/**
 	 * Cascade persist an entity instance
 	 */
@@ -51,19 +52,23 @@ public interface EventSource extends SessionImplementor {
 	 * Cascade persist an entity instance during the flush process
 	 */
 	void persistOnFlush(String entityName, Object object, PersistContext copiedAlready);
+
 	/**
 	 * Cascade refresh an entity instance
 	 */
 	void refresh(String entityName, Object object, RefreshContext refreshedAlready) throws HibernateException;
+
 	/**
 	 * Cascade delete an entity instance
 	 */
 	void delete(String entityName, Object child, boolean isCascadeDeleteEnabled, DeleteContext transientEntities);
+
 	/**
 	 * A specialized type of deletion for orphan removal that must occur prior to queued inserts and updates.
 	 */
-	// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.  This should be removed once action/task
-	// ordering is improved.
+	// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.
+	//       This should be removed once action/task ordering is improved.
 	void removeOrphanBeforeUpdates(String entityName, Object child);
 
+	Object load(String entityName, Object identifier);
 }

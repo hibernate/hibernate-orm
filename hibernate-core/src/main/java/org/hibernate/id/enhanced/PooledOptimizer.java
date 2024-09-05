@@ -7,6 +7,7 @@
 package org.hibernate.id.enhanced;
 
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
@@ -34,6 +35,7 @@ import org.jboss.logging.Logger;
  */
 public class PooledOptimizer extends AbstractOptimizer implements InitialValueAwareOptimizer {
 	private static final CoreMessageLogger log = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			PooledOptimizer.class.getName()
 	);

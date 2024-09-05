@@ -1,7 +1,5 @@
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
-import org.hibernate.annotations.Proxy;
-
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -85,7 +83,6 @@ public class LazyManyToOneNoProxyTest {
 
 	@Entity(name = "User")
 	@Table(name = "usr_tbl")
-	@Proxy(lazy = false)
 	public static class User {
 		@Id
 		Long id;
@@ -119,7 +116,6 @@ public class LazyManyToOneNoProxyTest {
 	}
 
 	@Entity(name = "UserGroup")
-	@Proxy(lazy = false)
 	public static class UserGroup {
 		@Id
 		Long id;

@@ -8,8 +8,21 @@ package org.hibernate.orm.test.annotations;
 
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
+
+import org.hibernate.Session;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.generator.internal.CurrentTimestampGeneration;
+
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SettingProvider;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -23,46 +36,36 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.Session;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.generator.internal.CurrentTimestampGeneration;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Before;
-import org.junit.Test;
-
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNot.not;
-import static org.hamcrest.core.IsNull.nullValue;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
  * @author Andrea Boriero
  */
 @JiraKey("HHH-11867")
-public class UpdateTimeStampInheritanceTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+				UpdateTimeStampInheritanceTest.Customer.class,
+				UpdateTimeStampInheritanceTest.AbstractPerson.class,
+				UpdateTimeStampInheritanceTest.Address.class
+		},
+		settingProviders = @SettingProvider(settingName = CurrentTimestampGeneration.CLOCK_SETTING_NAME, provider = UpdateTimeStampInheritanceTest.ClockProvider.class)
+)
+public class UpdateTimeStampInheritanceTest {
 	private static final String customerId = "1";
 	private static final MutableClock clock = new MutableClock();
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Customer.class, AbstractPerson.class, Address.class };
+	public static class ClockProvider implements SettingProvider.Provider<MutableClock> {
+
+		@Override
+		public MutableClock getSetting() {
+			return clock;
+		}
 	}
 
-	@Override
-	protected void addConfigOptions(Map options) {
-		super.addConfigOptions( options );
-		options.put( CurrentTimestampGeneration.CLOCK_SETTING_NAME, clock );
-	}
-
-	@Before
-	public void setUp() {
+	@BeforeEach
+	public void setUp(EntityManagerFactoryScope scope) {
 		clock.reset();
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Customer customer = new Customer();
 			customer.setId( customerId );
 			customer.addAddress( "address" );
@@ -71,50 +74,58 @@ public class UpdateTimeStampInheritanceTest extends BaseEntityManagerFunctionalT
 		clock.tick();
 	}
 
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			entityManager.createQuery( "delete Customer" ).executeUpdate();
+			entityManager.createQuery( "delete Address" ).executeUpdate();
+		} );
+	}
+
 	@Test
-	public void updateParentClassProperty() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void updateParentClassProperty(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Customer customer = entityManager.find( Customer.class, customerId );
-			assertThat( customer.getCreatedAt(), is( not( nullValue() ) ) );
-			assertThat( customer.getModifiedAt(), is( not( nullValue() ) ) );
+			assertThat( customer.getCreatedAt() ).isNotNull();
+			assertThat( customer.getModifiedAt() ).isNotNull();
 			assertModifiedAtWasNotUpdated( customer );
 			customer.setName( "xyz" );
 		} );
 		clock.tick();
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Customer customer = entityManager.find( Customer.class, customerId );
-			assertThat( customer.getCreatedAt(), is( not( nullValue() ) ) );
-			assertThat( customer.getModifiedAt(), is( not( nullValue() ) ) );
+			assertThat( customer.getCreatedAt() ).isNotNull();
+			assertThat( customer.getModifiedAt() ).isNotNull();
 			assertModifiedAtWasUpdated( customer );
 		} );
 	}
 
 	@Test
-	public void updateSubClassProperty() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void updateSubClassProperty(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Customer customer = entityManager.find( Customer.class, customerId );
-			assertThat( customer.getCreatedAt(), is( not( nullValue() ) ) );
-			assertThat( customer.getModifiedAt(), is( not( nullValue() ) ) );
+			assertThat( customer.getCreatedAt() ).isNotNull();
+			assertThat( customer.getModifiedAt() ).isNotNull();
 			assertModifiedAtWasNotUpdated( customer );
 			customer.setEmail( "xyz@" );
 		} );
 		clock.tick();
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Customer customer = entityManager.find( Customer.class, customerId );
-			assertThat( customer.getCreatedAt(), is( not( nullValue() ) ) );
-			assertThat( customer.getModifiedAt(), is( not( nullValue() ) ) );
+			assertThat( customer.getCreatedAt() ).isNotNull();
+			assertThat( customer.getModifiedAt() ).isNotNull();
 			assertModifiedAtWasUpdated( customer );
 		} );
 	}
 
 	@Test
-	public void updateParentClassOneToOneAssociation() throws Exception {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void updateParentClassOneToOneAssociation(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Customer customer = entityManager.find( Customer.class, customerId );
-			assertThat( customer.getCreatedAt(), is( not( nullValue() ) ) );
-			assertThat( customer.getModifiedAt(), is( not( nullValue() ) ) );
+			assertThat( customer.getCreatedAt() ).isNotNull();
+			assertThat( customer.getModifiedAt() ).isNotNull();
 			assertModifiedAtWasNotUpdated( customer );
 			Address a = new Address();
 			a.setStreet( "Lollard street" );
@@ -122,20 +133,20 @@ public class UpdateTimeStampInheritanceTest extends BaseEntityManagerFunctionalT
 		} );
 		clock.tick();
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Customer customer = entityManager.find( Customer.class, customerId );
-			assertThat( customer.getCreatedAt(), is( not( nullValue() ) ) );
-			assertThat( customer.getModifiedAt(), is( not( nullValue() ) ) );
+			assertThat( customer.getCreatedAt() ).isNotNull();
+			assertThat( customer.getModifiedAt() ).isNotNull();
 			assertModifiedAtWasUpdated( customer );
 		} );
 	}
 
 	@Test
-	public void updateSubClassOnrToOneAssociation() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void updateSubClassOnrToOneAssociation(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Customer customer = entityManager.find( Customer.class, customerId );
-			assertThat( customer.getCreatedAt(), is( not( nullValue() ) ) );
-			assertThat( customer.getModifiedAt(), is( not( nullValue() ) ) );
+			assertThat( customer.getCreatedAt() ).isNotNull();
+			assertThat( customer.getModifiedAt() ).isNotNull();
 			assertModifiedAtWasNotUpdated( customer );
 			Address a = new Address();
 			a.setStreet( "Lollard Street" );
@@ -143,20 +154,20 @@ public class UpdateTimeStampInheritanceTest extends BaseEntityManagerFunctionalT
 		} );
 		clock.tick();
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Customer customer = entityManager.find( Customer.class, customerId );
-			assertThat( customer.getCreatedAt(), is( not( nullValue() ) ) );
-			assertThat( customer.getModifiedAt(), is( not( nullValue() ) ) );
+			assertThat( customer.getCreatedAt() ).isNotNull();
+			assertThat( customer.getModifiedAt() ).isNotNull();
 			assertModifiedAtWasUpdated( customer );
 		} );
 	}
 
 	@Test
-	public void replaceParentClassElementCollection() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void replaceParentClassElementCollection(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Customer customer = entityManager.find( Customer.class, customerId );
-			assertThat( customer.getCreatedAt(), is( not( nullValue() ) ) );
-			assertThat( customer.getModifiedAt(), is( not( nullValue() ) ) );
+			assertThat( customer.getCreatedAt() ).isNotNull();
+			assertThat( customer.getModifiedAt() ).isNotNull();
 			assertModifiedAtWasNotUpdated( customer );
 			Set<String> adresses = new HashSet<>();
 			adresses.add( "another address" );
@@ -164,58 +175,59 @@ public class UpdateTimeStampInheritanceTest extends BaseEntityManagerFunctionalT
 		} );
 		clock.tick();
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Customer customer = entityManager.find( Customer.class, customerId );
-			assertThat( customer.getCreatedAt(), is( not( nullValue() ) ) );
-			assertThat( customer.getModifiedAt(), is( not( nullValue() ) ) );
+			assertThat( customer.getCreatedAt() ).isNotNull();
+			assertThat( customer.getModifiedAt() ).isNotNull();
 			assertModifiedAtWasUpdated( customer );
 		} );
 	}
 
 	@Test
-	public void replaceSubClassElementCollection() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void replaceSubClassElementCollection(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Customer customer = entityManager.find( Customer.class, customerId );
-			assertThat( customer.getCreatedAt(), is( not( nullValue() ) ) );
-			assertThat( customer.getModifiedAt(), is( not( nullValue() ) ) );
+			assertThat( customer.getCreatedAt() ).isNotNull();
+			assertThat( customer.getModifiedAt() ).isNotNull();
 			assertModifiedAtWasNotUpdated( customer );
 			Set<String> books = new HashSet<>();
 			customer.setBooks( books );
 		} );
 		clock.tick();
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Customer customer = entityManager.find( Customer.class, customerId );
-			assertThat( customer.getCreatedAt(), is( not( nullValue() ) ) );
-			assertThat( customer.getModifiedAt(), is( not( nullValue() ) ) );
+			assertThat( customer.getCreatedAt() );
+			assertThat( customer.getModifiedAt() );
 			assertModifiedAtWasUpdated( customer );
 		} );
 	}
 
 	@Test
-	public void updateDetachedEntity() {
+	public void mergeDetachedEntity(EntityManagerFactoryScope scope) {
 
-		Customer customer = doInJPA( this::entityManagerFactory, entityManager -> {
-			return entityManager.find( Customer.class, customerId );
-		} );
+		Customer customer = scope.fromTransaction(
+				entityManager ->
+						entityManager.find( Customer.class, customerId )
+		);
 
 		assertModifiedAtWasNotUpdated( customer );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			entityManager.unwrap( Session.class ).update( customer );
+		scope.inTransaction( entityManager -> {
+			entityManager.unwrap( Session.class ).merge( customer );
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			assertModifiedAtWasUpdated( entityManager.find( Customer.class, customerId ) );
+		scope.inTransaction( entityManager -> {
+			assertModifiedAtWasNotUpdated( entityManager.find( Customer.class, customerId ) );
 		} );
 	}
 
 	private void assertModifiedAtWasNotUpdated(Customer customer) {
-		assertTrue( (customer.getModifiedAt().getTime() - customer.getCreatedAt().getTime()) < 10 );
+		assertThat( ( customer.getModifiedAt().getTime() - customer.getCreatedAt().getTime() ) ).isLessThan( 10 );
 	}
 
 	private void assertModifiedAtWasUpdated(Customer customer) {
-		assertTrue( (customer.getModifiedAt().getTime() - customer.getCreatedAt().getTime()) > 10 );
+		assertThat( ( customer.getModifiedAt().getTime() - customer.getCreatedAt().getTime() ) ).isGreaterThan( 10 );
 	}
 
 	@Entity(name = "person")

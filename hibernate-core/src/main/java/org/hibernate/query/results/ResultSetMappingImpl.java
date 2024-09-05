@@ -24,7 +24,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.NonUniqueDiscoveredSqlAliasException;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
@@ -245,31 +244,26 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 		// As people should be able to just run native queries and work with tuples
 		if ( resultBuilders != null ) {
 			final Set<String> knownDuplicateAliases = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
-			if ( resultBuilders.size() == 1 && domainResults.size()  == 1 && domainResults.get( 0 ) instanceof EntityResult ) {
+			if ( resultBuilders.size() == 1 && domainResults.size()  == 1 && domainResults.get( 0 ) instanceof EntityResult entityResult ) {
 				// Special case for result set mappings that just fetch a single polymorphic entity
-				final EntityResult entityResult = (EntityResult) domainResults.get( 0 );
-				final boolean polymorphic = entityResult.getReferencedMappingContainer()
-						.getEntityPersister()
-						.getEntityMetamodel()
-						.isPolymorphic();
+				final EntityPersister persister = entityResult.getReferencedMappingContainer().getEntityPersister();
+				final boolean polymorphic = persister.getEntityMetamodel().isPolymorphic();
 				// We only need to check for duplicate aliases if we have join fetches,
 				// otherwise we assume that even if there are duplicate aliases, the values are equivalent.
 				// If we don't do that, there is no way to fetch joined inheritance entities
 				if ( polymorphic && ( legacyFetchBuilders == null || legacyFetchBuilders.isEmpty() )
 						&& !entityResult.hasJoinFetches() ) {
 					final Set<String> aliases = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
-					final AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityResult.getReferencedMappingContainer()
-							.getEntityPersister();
-					for ( String[] columns : entityPersister.getContraintOrderedTableKeyColumnClosure() ) {
+					for ( String[] columns : persister.getConstraintOrderedTableKeyColumnClosure() ) {
 						addColumns( aliases, knownDuplicateAliases, columns );
 					}
-					addColumn( aliases, knownDuplicateAliases, entityPersister.getDiscriminatorColumnName() );
-					addColumn( aliases, knownDuplicateAliases, entityPersister.getVersionColumnName() );
-					for ( int i = 0; i < entityPersister.countSubclassProperties(); i++ ) {
+					addColumn( aliases, knownDuplicateAliases, persister.getDiscriminatorColumnName() );
+					addColumn( aliases, knownDuplicateAliases, persister.getVersionColumnName() );
+					for (int i = 0; i < persister.countSubclassProperties(); i++ ) {
 						addColumns(
 								aliases,
 								knownDuplicateAliases,
-								entityPersister.getSubclassPropertyColumnNames( i )
+								persister.getSubclassPropertyColumnNames( i )
 						);
 					}
 				}

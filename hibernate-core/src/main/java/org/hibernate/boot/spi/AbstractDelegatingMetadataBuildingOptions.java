@@ -13,11 +13,10 @@ import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
+import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.TimeZoneSupport;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
@@ -51,11 +50,6 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	@Override
 	public MappingDefaults getMappingDefaults() {
 		return delegate.getMappingDefaults();
-	}
-
-	@Override
-	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
-		return delegate.getIdentifierGeneratorFactory();
 	}
 
 	@Override
@@ -149,14 +143,23 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	}
 
 	@Override
-	public List<MetadataSourceType> getSourceProcessOrdering() {
-		return delegate.getSourceProcessOrdering();
-	}
-
-	@Override
 	public void apply(JpaOrmXmlPersistenceUnitDefaults jpaOrmXmlPersistenceUnitDefaults) {
 		if ( delegate instanceof JpaOrmXmlPersistenceUnitDefaultAware ) {
 			( (JpaOrmXmlPersistenceUnitDefaultAware) delegate ).apply( jpaOrmXmlPersistenceUnitDefaults );
+		}
+		else {
+			throw new HibernateException(
+					"AbstractDelegatingMetadataBuildingOptions delegate did not " +
+							"implement JpaOrmXmlPersistenceUnitDefaultAware; " +
+							"cannot delegate JpaOrmXmlPersistenceUnitDefaultAware#apply"
+			);
+		}
+	}
+
+	@Override
+	public void apply(PersistenceUnitMetadata persistenceUnitMetadata) {
+		if ( delegate instanceof JpaOrmXmlPersistenceUnitDefaultAware ) {
+			( (JpaOrmXmlPersistenceUnitDefaultAware) delegate ).apply( persistenceUnitMetadata );
 		}
 		else {
 			throw new HibernateException(

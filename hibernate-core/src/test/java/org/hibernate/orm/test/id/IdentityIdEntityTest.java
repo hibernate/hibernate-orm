@@ -103,10 +103,10 @@ public class IdentityIdEntityTest {
 						IdentityEntity ie = new IdentityEntity();
 						ie.setTimestamp( new Date() );
 						session.persist( ie );
-						fail( "A HibernateException with message id HHH000515 should have been thrown" );
+						fail( "A HibernateException should have been thrown" );
 					}
 					catch (Exception e) {
-						assertTrue( e.getMessage().startsWith( "HHH000515" ) );
+						assertTrue( e.getMessage().contains( AvailableSettings.USE_GET_GENERATED_KEYS ) );
 					}
 				}
 		);

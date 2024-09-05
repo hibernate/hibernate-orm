@@ -37,16 +37,16 @@ public class OptionalOneToOneTest {
 				session -> {
 					Person me = new Person();
 					me.name = "Steve";
-					session.save( me );
+					session.persist( me );
 					return me.name;
 				}
 		);
 
 		scope.inTransaction(
 				session -> {
-					Person me = session.load( Person.class, name );
+					Person me = session.getReference( Person.class, name );
 					assertNull( me.address );
-					session.delete( me );
+					session.remove( me );
 				}
 		);
 	}

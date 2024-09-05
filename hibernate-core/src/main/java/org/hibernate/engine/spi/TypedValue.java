@@ -8,6 +8,7 @@ package org.hibernate.engine.spi;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.Serial;
 import java.io.Serializable;
 
 import org.hibernate.internal.util.ValueHolder;
@@ -58,16 +59,17 @@ public final class TypedValue implements Serializable {
 		}
 		final TypedValue that = (TypedValue) other;
 		return type.getReturnedClass() == that.type.getReturnedClass()
-				&& type.isEqual( that.value, value );
+			&& type.isEqual( that.value, value );
 	}
 
+	@Serial
 	private void readObject(ObjectInputStream ois)
 			throws ClassNotFoundException, IOException {
 		ois.defaultReadObject();
 		this.hashcode = hashCode(type, value);
 	}
 
-	private static ValueHolder hashCode(Type type, Object value) {
+	private static ValueHolder<Integer> hashCode(Type type, Object value) {
 		return new ValueHolder<>( () -> value == null ? 0 : type.getHashCode( value ) );
 	}
 }

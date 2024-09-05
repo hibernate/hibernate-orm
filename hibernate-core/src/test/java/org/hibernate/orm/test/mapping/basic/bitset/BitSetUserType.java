@@ -49,7 +49,7 @@ public class BitSetUserType implements UserType<BitSet> {
 
     @Override
     public BitSet nullSafeGet(ResultSet rs, int position,
-                              SharedSessionContractImplementor session, Object owner)
+                              SharedSessionContractImplementor session)
             throws SQLException {
         String columnValue = rs.getString(position);
         if (rs.wasNull()) {

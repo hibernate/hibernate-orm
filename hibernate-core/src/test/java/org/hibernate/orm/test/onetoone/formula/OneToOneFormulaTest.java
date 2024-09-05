@@ -96,7 +96,7 @@ public class OneToOneFormulaTest extends BaseSessionFactoryFunctionalTest {
 	@AfterEach
 	protected void cleanupTest() {
 		inTransaction( session -> {
-			session.delete( person );
+			session.remove( person );
 		} );
 	}
 
@@ -203,7 +203,7 @@ public class OneToOneFormulaTest extends BaseSessionFactoryFunctionalTest {
 			Address a = new Address();
 			a.setType( "HOME" );
 			a.setPerson( person );
-			a = session.load( Address.class, a );
+			a = session.getReference( Address.class, a );
 			assertFalse( Hibernate.isInitialized( a ) );
 			a.getPerson();
 			a.getType();
@@ -223,8 +223,8 @@ public class OneToOneFormulaTest extends BaseSessionFactoryFunctionalTest {
 		} );
 
 
-//		s.delete(a2);
-//		s.delete( s.get( Person.class, p.getName() ) ); //this is certainly undesirable! oh well...
+//		s.remove(a2);
+//		s.remove( s.get( Person.class, p.getName() ) ); //this is certainly undesirable! oh well...
 //
 //		t.commit();
 //		s.close();

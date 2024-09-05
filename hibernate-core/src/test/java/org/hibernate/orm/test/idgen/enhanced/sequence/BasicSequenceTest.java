@@ -50,7 +50,7 @@ public class BasicSequenceTest {
 				(s) -> {
 					for ( int i = 0; i < count; i++ ) {
 						final Entity entity = new Entity( "" + ( i + 1 ) );
-						s.save( entity );
+						s.persist( entity );
 
 						long expectedId = i + 1;
 
@@ -80,9 +80,9 @@ public class BasicSequenceTest {
 		scope.inTransaction(
 				(s) -> {
 					Entity entity1 = new Entity( "1" );
-					s.save( overriddenEntityName, entity1 );
+					s.persist( overriddenEntityName, entity1 );
 					Entity entity2 = new Entity( "2" );
-					s.save( overriddenEntityName, entity2 );
+					s.persist( overriddenEntityName, entity2 );
 
 					assertEquals( 1, entity1.getId().intValue() );
 					assertEquals( 2, entity2.getId().intValue() );

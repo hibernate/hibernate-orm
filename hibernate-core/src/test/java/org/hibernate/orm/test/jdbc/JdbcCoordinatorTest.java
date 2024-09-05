@@ -18,7 +18,7 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.resource.jdbc.spi.JdbcObserver;
+import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -61,12 +61,11 @@ public class JdbcCoordinatorTest {
 				jdbcConnectionAccess );
 
 		ServiceRegistry serviceRegistry = Mockito.mock( ServiceRegistry.class );
-		when( sessionContext.getServiceRegistry() ).thenReturn( serviceRegistry );
 		when( sessionContext.getPhysicalConnectionHandlingMode() ).thenReturn(
 				PhysicalConnectionHandlingMode.IMMEDIATE_ACQUISITION_AND_HOLD );
 
-		JdbcObserver jdbcObserver = Mockito.mock( JdbcObserver.class );
-		when( sessionContext.getObserver() ).thenReturn( jdbcObserver );
+		JdbcEventHandler jdbcEventHandler = Mockito.mock( JdbcEventHandler.class );
+		when( sessionContext.getEventHandler() ).thenReturn( jdbcEventHandler );
 
 		JdbcServices jdbcServices = Mockito.mock( JdbcServices.class );
 

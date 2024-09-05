@@ -32,7 +32,7 @@ public class EventManager {
 		session.beginTransaction();
 
 		List emailList = new ArrayList();
-		Event event = (Event)session.load(Event.class, eventId);
+		Event event = (Event)session.getReference(Event.class, eventId);
 		for (Iterator it = event.getParticipants().iterator(); it.hasNext(); ) {
 			Person person = (Person)it.next();
 			emailList.addAll(person.getEmailAddresses());
@@ -53,10 +53,10 @@ public class EventManager {
 		theEvent.setDate(theDate);
 		theEvent.setOrganizer(organizer);
 
-		Long eventId = (Long)session.save(theEvent);
+		session.persist( theEvent );
 
 		session.getTransaction().commit();
-		return eventId;
+		return theEvent.getId();
 	}
 
 	public Long createAndStorePerson(String firstName, String lastName) {
@@ -69,10 +69,10 @@ public class EventManager {
 		person.setFirstname(firstName);
 		person.setLastname(lastName);
 
-		Long personId = (Long)session.save(person);
+		session.persist(person);
 
 		session.getTransaction().commit();
-		return personId;
+		return person.getId();
 	}
 
 	public Long createAndStorePerson(Person person) {
@@ -81,10 +81,10 @@ public class EventManager {
 
 		session.beginTransaction();
 
-		Long personId = (Long)session.save(person);
+		session.persist(person);
 
 		session.getTransaction().commit();
-		return personId;
+		return person.getId();
 	}
 
 	public List listEvents() {
@@ -163,8 +163,8 @@ public class EventManager {
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 
-		Person aPerson = (Person)session.load(Person.class, personId);
-		Event anEvent = (Event)session.load(Event.class, eventId);
+		Person aPerson = (Person)session.getReference(Person.class, personId);
+		Event anEvent = (Event)session.getReference(Event.class, eventId);
 
 		aPerson.getEvents().add(anEvent);
 
@@ -175,20 +175,20 @@ public class EventManager {
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 
-		Person aPerson = (Person)session.load(Person.class, personId);
+		Person aPerson = (Person)session.getReference(Person.class, personId);
 		account.setPerson(aPerson);
 
-		Long accountId = (Long)session.save(account);
+		session.persist(account);
 
 		session.getTransaction().commit();
-		return accountId;
+		return account.getId();
 	}
 
 	public Account getAccount(Long accountId) {
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 
-		Account account = (Account)session.load(Account.class, accountId);
+		Account account = (Account)session.getReference(Account.class, accountId);
 
 		session.getTransaction().commit();
 		return account;
@@ -199,7 +199,7 @@ public class EventManager {
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 
-		Person aPerson = (Person)session.load(Person.class, personId);
+		Person aPerson = (Person)session.getReference(Person.class, personId);
 
 		// The getEmailAddresses() might trigger a lazy load of the collection
 		aPerson.getEmailAddresses().add(emailAddress);
@@ -212,7 +212,7 @@ public class EventManager {
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 
-		Person aPerson = (Person)session.load(Person.class, personId);
+		Person aPerson = (Person)session.getReference(Person.class, personId);
 		pN.setPersonId(personId.longValue());
 		aPerson.getPhoneNumbers().add(pN);
 
@@ -224,7 +224,7 @@ public class EventManager {
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 
-		Person aPerson = (Person)session.load(Person.class, personId);
+		Person aPerson = (Person)session.getReference(Person.class, personId);
 		aPerson.addTalisman(talisman);
 
 		session.getTransaction().commit();
@@ -238,16 +238,16 @@ public class EventManager {
 		// delete all existing calendars
 		List calendars = session.createQuery("from HolidayCalendar").setCacheable(true).list();
 		for (ListIterator li = calendars.listIterator(); li.hasNext(); ) {
-			session.delete(li.next());
+			session.remove(li.next());
 		}
 
 		HolidayCalendar calendar = new HolidayCalendar();
 		calendar.init();
 
-		Long calendarId = (Long)session.save(calendar);
+		session.persist(calendar);
 
 		session.getTransaction().commit();
-		return calendarId;
+		return calendar.getId();
 	}
 
 	public HolidayCalendar getHolidayCalendar() {

@@ -15,8 +15,8 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
 
 /**
  * An example custom generator.
@@ -34,7 +34,7 @@ public class CustomSequenceGenerator implements IdentifierGenerator {
 	public CustomSequenceGenerator(
 			Sequence config,
 			Member annotatedMember,
-			CustomIdGeneratorCreationContext context) {
+			GeneratorCreationContext context) {
 		//...
 //end::identifiers-IdGeneratorType-example[]
 		final String name = config.name();

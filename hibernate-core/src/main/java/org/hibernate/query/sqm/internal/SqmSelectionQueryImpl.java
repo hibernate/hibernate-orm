@@ -114,7 +114,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 	}
 
 	public SqmSelectionQueryImpl(
-			NamedHqlQueryMementoImpl memento,
+			NamedHqlQueryMementoImpl<?> memento,
 			Class<R> resultType,
 			SharedSessionContractImplementor session) {
 		this(
@@ -128,7 +128,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 	}
 
 	public SqmSelectionQueryImpl(
-			NamedCriteriaQueryMementoImpl memento,
+			NamedCriteriaQueryMementoImpl<?> memento,
 			Class<R> expectedResultType,
 			SharedSessionContractImplementor session) {
 		//noinspection unchecked
@@ -432,17 +432,6 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 	@Override
 	public SqmSelectionQuery<R> setHibernateLockMode(LockMode lockMode) {
 		super.setHibernateLockMode( lockMode );
-		return this;
-	}
-
-	/**
-	 * Specify a {@link LockMode} to apply to a specific alias defined in the query
-	 *
-	 * @deprecated use {{@link #setLockMode(String, LockMode)}}
-	 */
-	@Override @Deprecated
-	public SqmSelectionQuery<R> setAliasSpecificLockMode(String alias, LockMode lockMode) {
-		super.setAliasSpecificLockMode( alias, lockMode );
 		return this;
 	}
 

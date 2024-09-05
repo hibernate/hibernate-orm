@@ -12,7 +12,7 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.TestForIssue;
@@ -115,7 +115,7 @@ public class WithClauseTest {
 		scope.inTransaction(
 				(session) -> {
 					List list = session.createQuery( "from Human h inner join h.offspring o with o.mother.father = :cousin" )
-							.setParameter( "cousin", session.load( Human.class, Long.valueOf( "123" ) ) )
+							.setParameter( "cousin", session.getReference( Human.class, Long.valueOf( "123" ) ) )
 							.list();
 					assertTrue( list.isEmpty(), "ad-hoc did take effect" );
 				}
@@ -259,12 +259,12 @@ public class WithClauseTest {
 						father.getFriends().add( friend );
 						father.getFriends().add( friend2 );
 
-						session.save( mother );
-						session.save( father );
-						session.save( child1 );
-						session.save( child2 );
-						session.save( friend );
-						session.save( friend2 );
+						session.persist( mother );
+						session.persist( father );
+						session.persist( child1 );
+						session.persist( child2 );
+						session.persist( friend );
+						session.persist( friend2 );
 
 						father.setFamily( new HashMap() );
 						father.getFamily().put( "son1", child1 );
@@ -282,12 +282,12 @@ public class WithClauseTest {
 							father.getFamily().clear();
 							session.flush();
 						}
-						session.delete( session.createQuery( "from Human where description = 'friend2'" ).uniqueResult() );
-						session.delete( session.createQuery( "from Human where description = 'friend'" ).uniqueResult() );
-						session.delete( session.createQuery( "from Human where description = 'child1'" ).uniqueResult() );
-						session.delete( session.createQuery( "from Human where description = 'child2'" ).uniqueResult() );
-						session.delete( session.createQuery( "from Human where description = 'mother'" ).uniqueResult() );
-						session.delete( father );
+						session.remove( session.createQuery( "from Human where description = 'friend2'" ).uniqueResult() );
+						session.remove( session.createQuery( "from Human where description = 'friend'" ).uniqueResult() );
+						session.remove( session.createQuery( "from Human where description = 'child1'" ).uniqueResult() );
+						session.remove( session.createQuery( "from Human where description = 'child2'" ).uniqueResult() );
+						session.remove( session.createQuery( "from Human where description = 'mother'" ).uniqueResult() );
+						session.remove( father );
 						session.createQuery( "delete Animal" ).executeUpdate();
 						session.createQuery( "delete SimpleAssociatedEntity" ).executeUpdate();
 						session.createQuery( "delete SimpleEntityWithAssociation" ).executeUpdate();

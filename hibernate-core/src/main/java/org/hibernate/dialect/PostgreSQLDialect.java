@@ -547,46 +547,6 @@ public class PostgreSQLDialect extends Dialect {
 		}
 	}
 
-	/**
-	 * @deprecated No longer used, and should be removed
-	 */
-	@Deprecated(forRemoval = true)
-	protected void extractField(
-			StringBuilder pattern,
-			TemporalUnit unit,
-			TemporalType fromTimestamp,
-			TemporalType toTimestamp,
-			TemporalUnit toUnit) {
-		pattern.append( "extract(" );
-		pattern.append( translateDurationField( unit ) );
-		pattern.append( " from " );
-		if ( toTimestamp == TemporalType.DATE && fromTimestamp == TemporalType.DATE ) {
-			// special case subtraction of two
-			// dates results in an integer not
-			// an Interval
-			pattern.append( "age(?3,?2)" );
-		}
-		else {
-			switch ( unit ) {
-				case YEAR:
-				case MONTH:
-				case QUARTER:
-					pattern.append( "age(?3,?2)" );
-					break;
-				case DAY:
-				case HOUR:
-				case MINUTE:
-				case SECOND:
-				case EPOCH:
-					pattern.append( "?3-?2" );
-					break;
-				default:
-					throw new SemanticException( unit + " is not a legal field" );
-			}
-		}
-		pattern.append( ")" ).append( unit.conversionFactor( toUnit, this ) );
-	}
-
 	@Override
 	public TimeZoneSupport getTimeZoneSupport() {
 		return TimeZoneSupport.NORMALIZE;

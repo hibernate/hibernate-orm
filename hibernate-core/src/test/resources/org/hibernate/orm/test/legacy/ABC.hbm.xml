@@ -38,7 +38,7 @@
 	</class>
 
 	<class name="org.hibernate.orm.test.legacy.D" discriminator-value="0" proxy="org.hibernate.orm.test.legacy.D" table="TD">
-		<id name = "id" unsaved-value = "null">
+		<id name = "id" unsaved-value = "undefined">
 			<generator class="assigned"/>
 		</id>
 		<property name="amount"/>

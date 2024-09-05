@@ -9,6 +9,7 @@ package org.hibernate.internal;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serial;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Locale;
@@ -99,6 +100,7 @@ import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.resource.jdbc.internal.EmptyStatementInspector;
+import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -111,6 +113,7 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.TransactionRequiredException;
 import jakarta.persistence.Tuple;
+import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
@@ -140,7 +143,7 @@ import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.getFlushModeTy
  * @author Steve Ebersole
  */
 public abstract class AbstractSharedSessionContract implements SharedSessionContractImplementor {
-	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( SessionImpl.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( SessionImpl.class );
 
 	private transient SessionFactoryImpl factory;
 	protected transient FastSessionServices fastSessionServices;
@@ -229,8 +232,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	private static boolean isTransactionCoordinatorShared(SessionCreationOptions options) {
-		return options instanceof SharedSessionCreationOptions
-			&& ( (SharedSessionCreationOptions) options ).isTransactionCoordinatorShared();
+		return options instanceof SharedSessionCreationOptions sharedSessionCreationOptions
+			&& sharedSessionCreationOptions.isTransactionCoordinatorShared();
 	}
 
 	protected final void setUpMultitenancy(SessionFactoryImplementor factory, LoadQueryInfluencers loadQueryInfluencers) {
@@ -278,10 +281,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				fastSessionServices.jdbcServices,
 				fastSessionServices.batchBuilder,
 				// TODO: this object is deprecated and should be removed
-				new JdbcObserverImpl(
-						fastSessionServices.getDefaultJdbcObserver(),
+				new JdbcEventHandler(
+						factory.getStatistics(),
 						sessionEventsManager,
-						() -> jdbcCoordinator.abortBatch() // since jdbcCoordinator not yet initialized here
+						// since jdbcCoordinator not yet initialized here
+						() -> jdbcCoordinator
 				)
 		);
 	}
@@ -856,6 +860,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return interpretAndCreateSelectionQuery( hqlString, expectedResultType );
 	}
 
+
 	@Override
 	public <R> SelectionQuery<R> createSelectionQuery(CriteriaQuery<R> criteria) {
 		if ( criteria instanceof CriteriaDefinition ) {
@@ -886,8 +891,20 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
+	@Override
+	public <R> QueryImplementor<R> createQuery(TypedQueryReference<R> typedQueryReference) {
+		//noinspection unchecked
+		final QueryImplementor<R> query = (QueryImplementor<R>) createNamedQuery(
+				typedQueryReference.getName(),
+				typedQueryReference.getResultType()
+		);
+		for ( Map.Entry<String, Object> entry : typedQueryReference.getHints().entrySet() ) {
+			query.setHint( entry.getKey(), entry.getValue() );
+		}
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		return query;
+	}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// dynamic native (SQL) query handling
 
 	@Override @SuppressWarnings("rawtypes")
@@ -1389,8 +1406,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return procedureCall;
 	}
 
-	protected abstract Object load(String entityName, Object identifier);
-
 	@Override
 	public ExceptionConverter getExceptionConverter() {
 		if ( exceptionConverter == null ) {
@@ -1476,7 +1491,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	private <T> QueryImplementor<T> createCriteriaQuery(SqmStatement<T> criteria, Class<T> resultType) {
+	protected <T> QueryImplementor<T> createCriteriaQuery(SqmStatement<T> criteria, Class<T> resultType) {
 		final QuerySqmImpl<T> query = new QuerySqmImpl<>( criteria, resultType, this );
 		applyQuerySettingsAndHints( query );
 		return query;
@@ -1552,6 +1567,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		getLoadQueryInfluencers().disableFilter( filterName );
 	}
 
+	@Serial
 	private void writeObject(ObjectOutputStream oos) throws IOException {
 		if ( log.isTraceEnabled() ) {
 			log.trace( "Serializing " + getClass().getSimpleName() + " [" );
@@ -1586,6 +1602,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		jdbcCoordinator.serialize( oos );
 	}
 
+	@Serial
 	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException, SQLException {
 		if ( log.isTraceEnabled() ) {
 			log.trace( "Deserializing " + getClass().getSimpleName() );

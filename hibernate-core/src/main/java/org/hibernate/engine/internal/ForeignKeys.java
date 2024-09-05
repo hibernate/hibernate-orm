@@ -16,7 +16,8 @@ import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.AnyType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
@@ -106,21 +107,21 @@ public final class ForeignKeys {
 			if ( value == null ) {
 				return null;
 			}
-			else if ( type.isEntityType() ) {
+			else if ( type instanceof EntityType ) {
 				return nullifyEntityType( value, propertyName, (EntityType) type );
 			}
-			else if ( type.isAnyType() ) {
+			else if ( type instanceof AnyType ) {
 				return isNullifiable( null, value) ? null : value;
 			}
-			else if ( type.isComponentType() ) {
-				return nullifyCompositeType( value, propertyName, (CompositeType) type );
+			else if ( type instanceof ComponentType ) {
+				return nullifyCompositeType( value, propertyName, (ComponentType) type );
 			}
 			else {
 				return value;
 			}
 		}
 
-		private Object nullifyCompositeType(Object value, String propertyName, CompositeType compositeType) {
+		private Object nullifyCompositeType(Object value, String propertyName, ComponentType compositeType) {
 			final Object[] subvalues = compositeType.getPropertyValues(value, session );
 			final Type[] subtypes = compositeType.getSubtypes();
 			final String[] subPropertyNames = compositeType.getPropertyNames();
@@ -194,7 +195,7 @@ public final class ForeignKeys {
 			//       more than just initializing the associated entity.
 			return isDelete
 				&& value == UNFETCHED_PROPERTY
-				&& type.isEntityType()
+				&& type instanceof EntityType
 				&& !session.getPersistenceContextInternal().isNullifiableEntityKeysEmpty();
 		}
 
@@ -372,10 +373,9 @@ public final class ForeignKeys {
 
 	private static void throwIfTransient(String entityName, Object object, SharedSessionContractImplementor session) {
 		if ( isTransient( entityName, object, Boolean.FALSE, session ) ) {
-			throw new TransientObjectException(
-					"object references an unsaved transient instance - save the transient instance before flushing: " +
-							(entityName == null ? session.guessEntityName(object) : entityName)
-			);
+			throw new TransientObjectException( "Entity references an unsaved transient instance of '"
+					+ (entityName == null ? session.guessEntityName(object) : entityName)
+					+ "' (make the transient instance persistent before flushing)" );
 		}
 	}
 
@@ -432,7 +432,7 @@ public final class ForeignKeys {
 		if ( value == null ) {
 			// do nothing
 		}
-		else if ( type.isEntityType() ) {
+		else if ( type instanceof EntityType ) {
 			final EntityType entityType = (EntityType) type;
 			if ( !isNullable
 					&& !entityType.isOneToOne()
@@ -440,13 +440,13 @@ public final class ForeignKeys {
 				nonNullableTransientEntities.add( propertyName, value );
 			}
 		}
-		else if ( type.isAnyType() ) {
+		else if ( type instanceof AnyType ) {
 			if ( !isNullable && nullifier.isNullifiable( null, value ) ) {
 				nonNullableTransientEntities.add( propertyName, value );
 			}
 		}
-		else if ( type.isComponentType() ) {
-			final CompositeType compositeType = (CompositeType) type;
+		else if ( type instanceof ComponentType ) {
+			final ComponentType compositeType = (ComponentType) type;
 			final boolean[] subValueNullability = compositeType.getPropertyNullability();
 			if ( subValueNullability != null ) {
 				final String[] subPropertyNames = compositeType.getPropertyNames();

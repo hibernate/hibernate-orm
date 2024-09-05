@@ -65,6 +65,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 	protected void applySettings(StandardServiceRegistryBuilder builer) {
 		builer.applySetting( Environment.GENERATE_STATISTICS, "true" );
 		builer.applySetting( Environment.STATEMENT_BATCH_SIZE, "0" );
+		builer.applySetting( Environment.ALLOW_REFRESH_DETACHED_ENTITY, "true" );
 	}
 
 	@Override
@@ -99,7 +100,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 				s -> {
 					s.beginTransaction();
 					try {
-						Contract c = s.load( Contract.class, contract.getId() );
+						Contract c = s.getReference( Contract.class, contract.getId() );
 //						Contract c = (Contract) s.createCriteria(Contract.class).uniqueResult();
 						assertTrue( s.isReadOnly( c ) );
 						assertEquals( "gavin", c.getCustomerName() );
@@ -126,7 +127,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 
 		inTransaction(
 				s -> {
-					s.delete( contract );
+					s.remove( contract );
 
 					assertAllContractAndVariationsAreDeleted( s );
 				}
@@ -161,7 +162,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 
 		inSession(
 				s -> {
-					Contract c = s.load( Contract.class, contract.getId() );
+					Contract c = s.getReference( Contract.class, contract.getId() );
 					assertTrue( s.isReadOnly( c ) );
 					assertEquals( "gavin", c.getCustomerName() );
 					assertEquals( 2, c.getVariations().size() );
@@ -192,7 +193,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 
 		inTransaction(
 				s -> {
-					s.delete( contract );
+					s.remove( contract );
 
 					assertAllContractAndVariationsAreDeleted( s );
 				}
@@ -238,7 +239,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 					assertEquals( "more expensive", cv2.getText() );
 					assertTrue( s.isReadOnly( cv1 ) );
 					assertTrue( s.isReadOnly( cv2 ) );
-					s.delete( c );
+					s.remove( c );
 
 					assertAllContractAndVariationsAreDeleted( s );
 				}
@@ -285,7 +286,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 					assertEquals( "more expensive", cv2.getText() );
 					assertTrue( s.isReadOnly( cv1 ) );
 					assertTrue( s.isReadOnly( cv2 ) );
-					s.delete( c );
+					s.remove( c );
 
 					assertAllContractAndVariationsAreDeleted( s );
 				}
@@ -307,7 +308,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 
 		inTransaction(
 				s -> {
-					s.save( contract );
+					s.persist( contract );
 					assertTrue( s.isReadOnly( contract ) );
 					assertTrue( s.isReadOnly( contractVariation1 ) );
 					assertTrue( s.isReadOnly( contractVariation2 ) );
@@ -331,53 +332,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 					assertEquals( "more expensive", cv2.getText() );
 					assertTrue( s.isReadOnly( cv1 ) );
 					assertTrue( s.isReadOnly( cv2 ) );
-					s.delete( c );
-
-					assertAllContractAndVariationsAreDeleted( s );
-				}
-		);
-
-		assertUpdateCount( 0 );
-		assertDeleteCount( 3 );
-	}
-
-	@Test
-	public void testSaveOrUpdateImmutable() {
-		Contract contract = new Contract( null, "gavin", "phone" );
-		ContractVariation contractVariation1 = new ContractVariation( 1, contract );
-		contractVariation1.setText( "expensive" );
-		ContractVariation contractVariation2 = new ContractVariation( 2, contract );
-		contractVariation2.setText( "more expensive" );
-
-		clearCounts();
-
-		inTransaction(
-				s -> {
-					s.saveOrUpdate( contract );
-					assertTrue( s.isReadOnly( contract ) );
-					assertTrue( s.isReadOnly( contractVariation1 ) );
-					assertTrue( s.isReadOnly( contractVariation2 ) );
-				}
-		);
-
-		assertInsertCount( 3 );
-		assertUpdateCount( 0 );
-		clearCounts();
-
-		inTransaction(
-				s -> {
-					Contract c = getContract( s );
-					assertTrue( s.isReadOnly( c ) );
-					assertEquals( "gavin", c.getCustomerName() );
-					assertEquals( 2, c.getVariations().size() );
-					Iterator<ContractVariation> it = c.getVariations().iterator();
-					ContractVariation cv1 = it.next();
-					assertEquals( "expensive", cv1.getText() );
-					ContractVariation cv2 = it.next();
-					assertEquals( "more expensive", cv2.getText() );
-					assertTrue( s.isReadOnly( cv1 ) );
-					assertTrue( s.isReadOnly( cv2 ) );
-					s.delete( c );
+					s.remove( c );
 
 					assertAllContractAndVariationsAreDeleted( s );
 				}
@@ -399,7 +354,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 
 		inTransaction(
 				s -> {
-					s.saveOrUpdate( contract );
+					s.persist( contract );
 					assertTrue( s.isReadOnly( contract ) );
 					assertTrue( s.isReadOnly( contractVariation1 ) );
 					assertTrue( s.isReadOnly( contractVariation2 ) );
@@ -456,7 +411,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 
 		inTransaction(
 				s -> {
-					s.delete( contract );
+					s.remove( contract );
 
 					assertAllContractAndVariationsAreDeleted( s );
 				}
@@ -532,7 +487,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 					assertEquals( "more expensive", cv2.getText() );
 					assertTrue( s.isReadOnly( cv1 ) );
 					assertTrue( s.isReadOnly( cv2 ) );
-					s.delete( c );
+					s.remove( c );
 
 					assertAllContractAndVariationsAreDeleted( s );
 				}
@@ -608,7 +563,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 					assertEquals( "more expensive", cv2.getText() );
 					assertTrue( s.isReadOnly( cv1 ) );
 					assertTrue( s.isReadOnly( cv2 ) );
-					s.delete( c );
+					s.remove( c );
 
 					assertAllContractAndVariationsAreDeleted( s );
 
@@ -649,7 +604,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 					assertTrue( s.isReadOnly( cv1 ) );
 					assertTrue( s.isReadOnly( cv2 ) );
 					c.setCustomerName( "Sherman" );
-					s.delete( c );
+					s.remove( c );
 
 					assertAllContractAndVariationsAreDeleted( s );
 				}
@@ -689,7 +644,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 					assertTrue( s.isReadOnly( cv1 ) );
 					assertTrue( s.isReadOnly( cv2 ) );
 					c.setCustomerName( "Sherman" );
-					s.delete( c );
+					s.remove( c );
 
 					assertAllContractAndVariationsAreDeleted( s );
 
@@ -718,7 +673,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 
 		inTransaction(
 				s -> {
-					s.delete( contract );
+					s.remove( contract );
 					Contract c = getContract( s );
 					assertNull( c );
 				}
@@ -747,7 +702,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 		inTransaction(
 				s -> {
 					contract.setCustomerName( "sherman" );
-					s.delete( contract );
+					s.remove( contract );
 				}
 		);
 
@@ -777,14 +732,14 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 					try {
 						s.beginTransaction();
 						contract.setCustomerName( "foo bar" );
-						s.update( contract );
-						assertTrue( s.isReadOnly( contract ) );
-						for ( Iterator<ContractVariation> it = contract.getVariations().iterator(); it.hasNext(); ) {
+						Contract merged = s.merge( contract );
+						assertTrue( s.isReadOnly( merged ) );
+						for ( Iterator<ContractVariation> it = merged.getVariations().iterator(); it.hasNext(); ) {
 							assertTrue( s.contains( it.next() ) );
 						}
 						s.getTransaction().commit();
-						assertTrue( s.isReadOnly( contract ) );
-						for ( Iterator<ContractVariation> it = contract.getVariations().iterator(); it.hasNext(); ) {
+						assertTrue( s.isReadOnly( merged ) );
+						for ( Iterator<ContractVariation> it = merged.getVariations().iterator(); it.hasNext(); ) {
 							ContractVariation cv = it.next();
 							assertTrue( s.contains( cv ) );
 							assertTrue( s.isReadOnly( cv ) );
@@ -811,7 +766,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 					assertEquals( "expensive", cv1.getText() );
 					ContractVariation cv2 = it.next();
 					assertEquals( "more expensive", cv2.getText() );
-					s.delete( c );
+					s.remove( c );
 					assertAllContractAndVariationsAreDeleted( s );
 
 				}
@@ -843,14 +798,13 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 						s.beginTransaction();
 						ContractVariation cv1 = contract.getVariations().iterator().next();
 						cv1.setText( "blah blah" );
-						s.update( contract );
-						assertTrue( s.isReadOnly( contract ) );
-						assertTrue( s.contains( cv1 ) );
-						assertTrue( s.contains( contractVariation2 ) );
+						Contract merged = s.merge( contract );
+						assertTrue( s.isReadOnly( merged ) );
+						assertEquals( 2, merged.getVariations().size() );
 						s.getTransaction().commit();
-						assertTrue( s.isReadOnly( contract ) );
-						assertTrue( s.isReadOnly( cv1 ) );
-						assertTrue( s.isReadOnly( contractVariation2 ) );
+						assertTrue( s.isReadOnly( merged ) );
+						assertTrue( s.isReadOnly( merged.getVariations().get( 0 ) ) );
+						assertTrue( s.isReadOnly( merged.getVariations().get( 1 ) ) );
 					}
 					catch (Exception e) {
 						if ( s.getTransaction().isActive() ) {
@@ -873,7 +827,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 					assertEquals( "expensive", cv1.getText() );
 					ContractVariation cv2 = it.next();
 					assertEquals( "more expensive", cv2.getText() );
-					s.delete( c );
+					s.remove( c );
 					assertAllContractAndVariationsAreDeleted( s );
 
 				}
@@ -902,8 +856,8 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 				s -> {
 					s.beginTransaction();
 					contract.getVariations().add( new ContractVariation( 3, contract ) );
-					s.update( contract );
 					try {
+						s.merge( contract );
 						s.getTransaction().commit();
 						fail( "should have failed because reassociated object has a dirty collection" );
 					}
@@ -931,7 +885,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 					assertEquals( "expensive", cv1.getText() );
 					ContractVariation cv2 = it.next();
 					assertEquals( "more expensive", cv2.getText() );
-					s.delete( c );
+					s.remove( c );
 
 					assertAllContractAndVariationsAreDeleted( s );
 
@@ -984,7 +938,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 					assertEquals( "expensive", cv1.getText() );
 					ContractVariation cv2 = it.next();
 					assertEquals( "more expensive", cv2.getText() );
-					s.delete( c );
+					s.remove( c );
 					assertAllContractAndVariationsAreDeleted( s );
 				}
 		);
@@ -1035,7 +989,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 					assertEquals( "expensive", cv1.getText() );
 					ContractVariation cv2 = it.next();
 					assertEquals( "more expensive", cv2.getText() );
-					s.delete( c );
+					s.remove( c );
 					assertAllContractAndVariationsAreDeleted( s );
 
 				}
@@ -1088,7 +1042,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 					assertEquals( "expensive", cv1.getText() );
 					ContractVariation cv2 = it.next();
 					assertEquals( "more expensive", cv2.getText() );
-					s.delete( c );
+					s.remove( c );
 					assertAllContractAndVariationsAreDeleted( s );
 				}
 		);
@@ -1140,7 +1094,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 					assertEquals( "expensive", cv1.getText() );
 					ContractVariation cv2 = it.next();
 					assertEquals( "more expensive", cv2.getText() );
-					s.delete( c );
+					s.remove( c );
 					assertAllContractAndVariationsAreDeleted( s );
 
 				}
@@ -1148,53 +1102,6 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 
 		assertUpdateCount( 0 );
 		assertDeleteCount( 3 );
-	}
-
-	@Test
-	public void testNewEntityViaImmutableEntityWithImmutableCollectionUsingSaveOrUpdate() {
-		Contract contract = new Contract( null, "gavin", "phone" );
-		ContractVariation contractVariation1 = new ContractVariation( 1, contract );
-		contractVariation1.setText( "expensive" );
-		ContractVariation contractVariation2 = new ContractVariation( 2, contract );
-		contractVariation2.setText( "more expensive" );
-
-		clearCounts();
-
-		inTransaction( s -> s.persist( contract ) );
-
-		assertInsertCount( 3 );
-		assertUpdateCount( 0 );
-		clearCounts();
-
-		inTransaction(
-				s -> {
-					contractVariation1.getInfos().add( new Info( "cv1 info" ) );
-					s.saveOrUpdate( contract );
-				}
-		);
-
-		assertInsertCount( 1 );
-		assertUpdateCount( 0 );
-
-		inTransaction(
-				s -> {
-					Contract c = getContract( s );
-					assertEquals( "gavin", c.getCustomerName() );
-					assertEquals( 2, c.getVariations().size() );
-					Iterator<ContractVariation> it = c.getVariations().iterator();
-					ContractVariation cv1 = it.next();
-					assertEquals( "expensive", cv1.getText() );
-					assertEquals( 1, cv1.getInfos().size() );
-					assertEquals( "cv1 info", ( (Info) cv1.getInfos().iterator().next() ).getText() );
-					ContractVariation cv2 = it.next();
-					assertEquals( "more expensive", cv2.getText() );
-					s.delete( c );
-					assertAllContractAndVariationsAreDeleted( s );
-				}
-		);
-
-		assertUpdateCount( 0 );
-		assertDeleteCount( 4 );
 	}
 
 	@Test
@@ -1235,61 +1142,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 					assertEquals( "cv1 info", ( (Info) cv1.getInfos().iterator().next() ).getText() );
 					ContractVariation cv2 = it.next();
 					assertEquals( "more expensive", cv2.getText() );
-					s.delete( c );
-					assertAllContractAndVariationsAreDeleted( s );
-
-				}
-		);
-
-		assertUpdateCount( 0 );
-		assertDeleteCount( 4 );
-	}
-
-	@Test
-	public void testUpdatedEntityViaImmutableEntityWithImmutableCollectionUsingSaveOrUpdate() {
-		clearCounts();
-
-		Contract contract = new Contract( null, "gavin", "phone" );
-		ContractVariation contractVariation1 = new ContractVariation( 1, contract );
-		contractVariation1.setText( "expensive" );
-		Info cv1Info = new Info( "cv1 info" );
-		contractVariation1.getInfos().add( cv1Info );
-		ContractVariation contractVariation2 = new ContractVariation( 2, contract );
-		contractVariation2.setText( "more expensive" );
-
-		inTransaction( s -> s.persist( contract ) );
-
-
-		assertInsertCount( 4 );
-		assertUpdateCount( 0 );
-		clearCounts();
-
-		inTransaction(
-				s -> {
-					cv1Info.setText( "new cv1 info" );
-					s.saveOrUpdate( contract );
-				}
-		);
-
-
-		assertInsertCount( 0 );
-		assertUpdateCount( 1 );
-		clearCounts();
-
-		inTransaction(
-				s -> {
-					Contract c = getContract( s );
-					assertEquals( "gavin", c.getCustomerName() );
-					assertEquals( c.getVariations().size(), 2 );
-					Iterator<ContractVariation> it = c.getVariations().iterator();
-					ContractVariation cv1 = it.next();
-					assertEquals( "expensive", cv1.getText() );
-					assertEquals( 1, cv1.getInfos().size() );
-					assertEquals( "new cv1 info", ( (Info) cv1.getInfos().iterator().next() ).getText() );
-					ContractVariation cv2 = it.next();
-					assertEquals( "more expensive", cv2.getText() );
-					s.delete( c );
-
+					s.remove( c );
 					assertAllContractAndVariationsAreDeleted( s );
 
 				}
@@ -1340,7 +1193,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 					assertEquals( "new cv1 info", ( (Info) cv1.getInfos().iterator().next() ).getText() );
 					ContractVariation cv2 = it.next();
 					assertEquals( "more expensive", cv2.getText() );
-					s.delete( c );
+					s.remove( c );
 					assertAllContractAndVariationsAreDeleted( s );
 				}
 		);
@@ -1371,10 +1224,10 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 		assertUpdateCount( 0 );
 		clearCounts();
 
-		inTransaction(
+		Contract merged = fromTransaction(
 				s -> {
 					contract.addParty( new Party( "a new party" ) );
-					s.update( contract );
+					return s.merge( contract );
 				}
 		);
 
@@ -1384,8 +1237,8 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 
 		inTransaction(
 				s -> {
-					contract.addParty( party );
-					s.update( contract );
+					merged.addParty( party );
+					s.merge( merged );
 				}
 		);
 
@@ -1400,7 +1253,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 					ContractVariation cv2 = it.next();
 					assertEquals( "more expensive", cv2.getText() );
 					//assertEquals( 2, c.getParties().size() );
-					s.delete( c );
+					s.remove( c );
 
 					assertAllContractAndVariationsAreDeleted( s );
 				}
@@ -1431,7 +1284,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 		party = (Party) contract.getParties().iterator().next();
 		contract.removeParty( party );
 
-		inTransaction( s -> s.update( contract ) );
+		inTransaction( s -> s.merge( contract ) );
 
 		assertUpdateCount( 0 );
 		clearCounts();
@@ -1447,7 +1300,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 					ContractVariation cv2 = it.next();
 					assertEquals( "more expensive", cv2.getText() );
 					//assertEquals( 0, c.getParties().size() );
-					s.delete( c );
+					s.remove( c );
 
 					assertAllContractAndVariationsAreDeleted( s );
 				}
@@ -1482,7 +1335,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 				s -> {
 					try {
 						s.beginTransaction();
-						s.delete( party );
+						s.remove( party );
 						s.getTransaction().commit();
 					}
 					catch (Exception e) {
@@ -1510,7 +1363,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 					ContractVariation cv2 = it.next();
 					assertEquals( "more expensive", cv2.getText() );
 					assertEquals( 0, c.getParties().size() );
-					s.delete( c );
+					s.remove( c );
 					assertAllContractAndVariationsAreDeleted( s );
 				}
 		);
@@ -1543,7 +1396,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 		inSession( s -> {
 			try {
 				s.beginTransaction();
-				s.update( p );
+				s.merge( p );
 				s.getTransaction().commit();
 			}
 			catch (Exception e) {
@@ -1578,7 +1431,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 					Party p1 = (Party) c.getParties().iterator().next();
 					assertEquals( "party1", p1.getName() );
 					assertSame( c, p1.getContract() );
-					s.delete( c );
+					s.remove( c );
 
 					assertAllContractAndVariationsAreDeleted( s );
 				}

@@ -8,11 +8,14 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy.HHH_10708;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -33,6 +36,7 @@ import java.util.Set;
 )
 @SessionFactory
 @BytecodeEnhanced
+@ServiceRegistry(settings = @Setting(name = AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY, value = "true"))
 public class UnexpectedDeleteTest2 {
 
     private Bar myBar;
@@ -43,9 +47,9 @@ public class UnexpectedDeleteTest2 {
             Bar bar = new Bar();
             Foo foo1 = new Foo();
             Foo foo2 = new Foo();
-            s.save( bar );
-            s.save( foo1 );
-            s.save( foo2 );
+            s.persist( bar );
+            s.persist( foo1 );
+            s.persist( foo2 );
 
             bar.foos.add( foo1 );
             bar.foos.add( foo2 );

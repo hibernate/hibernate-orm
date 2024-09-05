@@ -8,6 +8,7 @@ package org.hibernate.jpa.internal;
 
 import java.io.Serializable;
 import jakarta.persistence.PersistenceUnitUtil;
+import jakarta.persistence.metamodel.Attribute;
 
 import org.hibernate.Hibernate;
 import org.hibernate.MappingException;
@@ -55,10 +56,40 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 	}
 
 	@Override
+	public <E> boolean isLoaded(E entity, Attribute<? super E, ?> attribute) {
+		return Hibernate.isPropertyInitialized( entity, attribute.getName() );
+	}
+
+	@Override
 	public boolean isLoaded(Object entity) {
 		// added log message to help with HHH-7454, if state == LoadState,NOT_LOADED, returning true or false is not accurate.
 		log.debug( "PersistenceUnitUtil#isLoaded is not always accurate; consider using EntityManager#contains instead" );
 		return getLoadState( entity ) != NOT_LOADED;
+	}
+
+	@Override
+	public void load(Object entity, String attributeName) {
+		Hibernate.initializeProperty( entity, attributeName );
+	}
+
+	@Override
+	public <E> void load(E entity, Attribute<? super E, ?> attribute) {
+		load( entity, attribute.getName() );
+	}
+
+	@Override
+	public void load(Object entity) {
+		Hibernate.initialize( entity );
+	}
+
+	@Override
+	public boolean isInstance(Object entity, Class<?> entityClass) {
+		return entityClass.isAssignableFrom( Hibernate.getClassLazy( entity ) );
+	}
+
+	@Override
+	public <T> Class<? extends T> getClass(T entity) {
+		return Hibernate.getClassLazy( entity );
 	}
 
 	@Override
@@ -92,6 +123,30 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 		}
 	}
 
+	@Override
+	public Object getVersion(Object entity) {
+		if ( entity == null ) {
+			throw new IllegalArgumentException( "Passed entity cannot be null" );
+		}
+
+		final LazyInitializer lazyInitializer = extractLazyInitializer( entity );
+		if ( lazyInitializer != null ) {
+			return getVersionFromPersister( lazyInitializer.getImplementation() );
+		}
+		else if ( isManagedEntity( entity ) ) {
+			final EntityEntry entityEntry = asManagedEntity( entity ).$$_hibernate_getEntityEntry();
+			if ( entityEntry != null ) {
+				return entityEntry.getVersion();
+			}
+			else {
+				return getVersionFromPersister( entity );
+			}
+		}
+		else {
+			return getVersionFromPersister( entity );
+		}
+	}
+
 	private Object getIdentifierFromPersister(Object entity) {
 		final Class<?> entityClass = Hibernate.getClass( entity );
 		final EntityPersister persister;
@@ -107,6 +162,23 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 			throw new IllegalArgumentException( entityClass.getName() + " is not an entity", ex );
 		}
 		return persister.getIdentifier( entity, null );
+	}
+
+	private Object getVersionFromPersister(Object entity) {
+		final Class<?> entityClass = Hibernate.getClass( entity );
+		final EntityPersister persister;
+		try {
+			persister = sessionFactory.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( entityClass );
+			if ( persister == null ) {
+				throw new IllegalArgumentException( entityClass.getName() + " is not an entity" );
+			}
+		}
+		catch (MappingException ex) {
+			throw new IllegalArgumentException( entityClass.getName() + " is not an entity", ex );
+		}
+		return persister.getVersion( entity );
 	}
 
 }

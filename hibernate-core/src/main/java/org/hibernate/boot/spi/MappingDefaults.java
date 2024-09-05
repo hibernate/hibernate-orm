@@ -31,6 +31,8 @@ public interface MappingDefaults {
 	 * Identifies the database schema name to use if none specified in the mapping.
 	 *
 	 * @return The implicit schema name; may be {@code null}
+	 *
+	 * @see org.hibernate.cfg.MappingSettings#DEFAULT_SCHEMA
 	 */
 	String getImplicitSchemaName();
 
@@ -38,6 +40,8 @@ public interface MappingDefaults {
 	 * Identifies the database catalog name to use if none specified in the mapping.
 	 *
 	 * @return The implicit catalog name; may be {@code null}
+	 *
+	 * @see org.hibernate.cfg.MappingSettings#DEFAULT_CATALOG
 	 */
 	String getImplicitCatalogName();
 
@@ -99,10 +103,7 @@ public interface MappingDefaults {
 	String getImplicitCascadeStyleName();
 
 	/**
-	 * Identifies the default {@link org.hibernate.property.access.spi.PropertyAccessStrategy} name to use if none specified in the
-	 * mapping.
-	 *
-	 * @return The implicit property accessor name
+	 * The default {@link org.hibernate.property.access.spi.PropertyAccessStrategy} to use if none specified in the mapping.
 	 *
 	 * @see org.hibernate.property.access.spi.PropertyAccessStrategy
 	 */

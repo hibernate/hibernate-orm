@@ -23,10 +23,10 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
@@ -101,7 +101,7 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB silently converts a boolean to string types")
 	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB silently converts a boolean to string types")
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "HANA silently converts a boolean to string types")
+	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA silently converts a boolean to string types")
 	@SkipForDialect(dialectClass = CockroachDialect.class, matchSubTypes = true, reason = "Cockroach silently converts a boolean to string types")
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "PostgresPlus silently converts a boolean to string types")
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird silently converts a boolean to string")
@@ -158,7 +158,7 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server silently converts a boolean to integral types")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase silently converts a boolean to integral types")
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "HANA silently converts a boolean to integral types")
+	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA silently converts a boolean to integral types")
 	@SkipForDialect(dialectClass = FirebirdDialect.class, matchSubTypes = true, reason = "Firebird silently converts a boolean to integral types")
 	public void testNumericMismatch(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {

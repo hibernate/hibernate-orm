@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 
@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class StatelessSessionQueryTest {
 
 	@Test
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
+	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testHQL(SessionFactoryScope scope) {
 		scope.inStatelessSession(
 				session ->
@@ -53,7 +53,7 @@ public class StatelessSessionQueryTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-13194")
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
+	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testNewQueryApis(SessionFactoryScope scope) {
 
 		final String queryString = "from Contact c join fetch c.org o join fetch o.country";
@@ -80,15 +80,15 @@ public class StatelessSessionQueryTest {
 		scope.inTransaction(
 				session -> {
 					Country usa = new Country();
-					session.save( usa );
+					session.persist( usa );
 					list.add( usa );
 					Org disney = new Org();
 					disney.setCountry( usa );
-					session.save( disney );
+					session.persist( disney );
 					list.add( disney );
 					Contact waltDisney = new Contact();
 					waltDisney.setOrg( disney );
-					session.save( waltDisney );
+					session.persist( waltDisney );
 					list.add( waltDisney );
 				}
 		);
@@ -99,7 +99,7 @@ public class StatelessSessionQueryTest {
 		scope.inTransaction(
 				session -> {
 					for ( Object obj : list ) {
-						session.delete( obj );
+						session.remove( obj );
 					}
 				}
 		);

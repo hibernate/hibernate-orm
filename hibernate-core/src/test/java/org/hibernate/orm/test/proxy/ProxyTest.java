@@ -66,7 +66,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.clear();
 
-		dp = s.load(DataPoint.class, dp.getId());
+		dp = s.getReference(DataPoint.class, dp.getId());
 		assertFalse( Hibernate.isInitialized(dp) );
 
 		try {
@@ -76,7 +76,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		}
 		catch (NoSuchMethodException e) {}
 
-		s.delete(dp);
+		s.remove(dp);
 		t.commit();
 		s.close();
 
@@ -94,7 +94,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.clear();
 
-		dp = s.load( DataPoint.class, dp.getId() );
+		dp = s.getReference( DataPoint.class, dp.getId() );
 		assertFalse( Hibernate.isInitialized(dp) );
 
 		try {
@@ -104,7 +104,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		catch (Exception e) {
 			assertTrue( e.getClass()==Exception.class );
 		}
-		s.delete(dp);
+		s.remove(dp);
 		t.commit();
 		s.close();
 	}
@@ -131,7 +131,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		catch (Exception e) {
 			assertTrue( e.getClass()==Exception.class );
 		}
-		s.delete(dp);
+		s.remove(dp);
 		t.commit();
 		s.close();
 	}
@@ -158,7 +158,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		catch (Exception e) {
 			assertTrue( e.getClass()==Exception.class );
 		}
-		s.delete(dp);
+		s.remove(dp);
 		t.commit();
 		s.close();
 	}
@@ -175,14 +175,14 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.clear();
 
-		dp = s.load( DataPoint.class, dp.getId());
+		dp = s.getReference( DataPoint.class, dp.getId());
 		assertFalse( Hibernate.isInitialized(dp) );
 		s.close();
 		SerializationHelper.clone( dp );
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete( dp );
+		s.remove( dp );
 		t.commit();
 		s.close();
 	}
@@ -199,7 +199,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.clear();
 
-		dp = s.load( DataPoint.class, dp.getId());
+		dp = s.getReference( DataPoint.class, dp.getId());
 		assertFalse( Hibernate.isInitialized(dp) );
 		Hibernate.initialize( dp );
 		assertTrue( Hibernate.isInitialized(dp) );
@@ -208,7 +208,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete( dp );
+		s.remove( dp );
 		t.commit();
 		s.close();
 	}
@@ -225,13 +225,13 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.clear();
 
-		dp = s.load( DataPoint.class, dp.getId());
+		dp = s.getReference( DataPoint.class, dp.getId());
 		assertFalse( Hibernate.isInitialized(dp) );
 		dp.getId();
 		assertFalse( Hibernate.isInitialized(dp) );
 		dp.getDescription();
 		assertTrue( Hibernate.isInitialized(dp) );
-		Object none = s.load( DataPoint.class, 666L);
+		Object none = s.getReference( DataPoint.class, 666L);
 		assertFalse( Hibernate.isInitialized(none) );
 
 		t.commit();
@@ -249,14 +249,14 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 
 		t = sclone.beginTransaction();
 
-		DataPoint sdp = sclone.load( DataPoint.class, dp.getId());
+		DataPoint sdp = sclone.getReference( DataPoint.class, dp.getId());
 		assertSame(dp, sdp);
 		assertFalse(sdp instanceof HibernateProxy);
-		Object snone = sclone.load( DataPoint.class, 666L);
+		Object snone = sclone.getReference( DataPoint.class, 666L);
 		assertSame(none, snone);
 		assertTrue(snone instanceof HibernateProxy);
 
-		sclone.delete(dp);
+		sclone.remove(dp);
 
 		t.commit();
 		sclone.close();
@@ -275,40 +275,40 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.clear();
 
-		dp = s.load( DataPoint.class, dp.getId());
+		dp = s.getReference( DataPoint.class, dp.getId());
 		assertFalse( Hibernate.isInitialized(dp) );
 		DataPoint dp2 = s.get( DataPoint.class, dp.getId());
 		assertSame(dp, dp2);
 		assertTrue( Hibernate.isInitialized(dp) );
 		s.clear();
 
-		dp = s.load( DataPoint.class, dp.getId());
+		dp = s.getReference( DataPoint.class, dp.getId());
 		assertFalse( Hibernate.isInitialized(dp) );
-		dp2 = s.load( DataPoint.class, dp.getId(), LockMode.NONE );
+		dp2 = s.getReference( DataPoint.class, dp.getId() );
 		assertSame(dp, dp2);
 		assertFalse( Hibernate.isInitialized(dp) );
 		s.clear();
 
-		dp = s.load( DataPoint.class, dp.getId());
+		dp = s.getReference( DataPoint.class, dp.getId());
 		assertFalse( Hibernate.isInitialized(dp) );
-		dp2 = s.load( DataPoint.class, dp.getId(), LockMode.READ );
-		assertSame(dp, dp2);
-		assertTrue( Hibernate.isInitialized(dp) );
-		s.clear();
-
-		dp = s.load( DataPoint.class, dp.getId());
-		assertFalse( Hibernate.isInitialized(dp) );
-		dp2 = s.byId( DataPoint.class ).with( LockOptions.READ ).load( dp.getId() );
+		dp2 = s.get( DataPoint.class, dp.getId(), LockMode.READ );
 		assertSame(dp, dp2);
 		assertTrue( Hibernate.isInitialized(dp) );
 		s.clear();
 
-		dp = s.load( DataPoint.class, dp.getId());
+		dp = s.getReference( DataPoint.class, dp.getId());
+		assertFalse( Hibernate.isInitialized(dp) );
+		dp2 = s.byId( DataPoint.class ).with( LockOptions.READ ).getReference( dp.getId() );
+		assertSame(dp, dp2);
+		assertTrue( Hibernate.isInitialized(dp) );
+		s.clear();
+
+		dp = s.getReference( DataPoint.class, dp.getId());
 		assertFalse( Hibernate.isInitialized(dp) );
 		dp2 = (DataPoint) s.createQuery("from DataPoint").uniqueResult();
 		assertSame(dp, dp2);
 		assertTrue( Hibernate.isInitialized(dp) );
-		s.delete( dp );
+		s.remove( dp );
 		t.commit();
 		s.close();
 	}
@@ -348,7 +348,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 
 		dp = s.getReference( DataPoint.class, dp.getId() );
 		assertFalse( Hibernate.isInitialized(dp) );
-		dp2 = s.byId( DataPoint.class ).with( LockOptions.READ ).load( dp.getId() );
+		dp2 = s.byId( DataPoint.class ).with( LockOptions.READ ).getReference( dp.getId() );
 		assertSame(dp, dp2);
 		assertTrue( Hibernate.isInitialized(dp) );
 		s.clear();
@@ -358,7 +358,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		dp2 = (DataPoint) s.createQuery("from DataPoint").uniqueResult();
 		assertSame(dp, dp2);
 		assertTrue( Hibernate.isInitialized(dp) );
-		s.delete( dp );
+		s.remove( dp );
 		t.commit();
 		s.close();
 	}
@@ -368,7 +368,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 
-		DataPoint proxy = s.load( DataPoint.class, (long) -1);
+		DataPoint proxy = s.getReference( DataPoint.class, (long) -1);
 		assertFalse( Hibernate.isInitialized( proxy ) );
 		try {
 			proxy.getDescription();
@@ -406,13 +406,13 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		container.setInfo( new Info( "blah blah blah" ) );
 		container.getDataPoints().add( new DataPoint( new BigDecimal( 1 ), new BigDecimal( 1 ), "first data point" ) );
 		container.getDataPoints().add( new DataPoint( new BigDecimal( 2 ), new BigDecimal( 2 ), "second data point" ) );
-		s.save( container );
+		s.persist( container );
 		t.commit();
 		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
-		Container c = s.load( Container.class, container.getId() );
+		Container c = s.getReference( Container.class, container.getId() );
 		assertFalse( Hibernate.isInitialized( c ) );
 		s.evict( c );
 		try {
@@ -423,7 +423,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 			// expected result
 		}
 
-		c = s.load( Container.class, container.getId() );
+		c = s.getReference( Container.class, container.getId() );
 		assertFalse( Hibernate.isInitialized( c ) );
 		Info i = c.getInfo();
 		assertTrue( Hibernate.isInitialized( c ) );
@@ -437,7 +437,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 			// expected result
 		}
 
-		s.delete( c );
+		s.remove( c );
 
 		t.commit();
 		s.close();
@@ -463,7 +463,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 				dp.setY( new BigDecimal( dp_indx ) );
 				container.getDataPoints().add( dp );
 			}
-			s.save( container );
+			s.persist( container );
 			lastContainerId = container.getId();
 		}
 		t.commit();
@@ -473,14 +473,14 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		s.setHibernateFlushMode( FlushMode.MANUAL );
 		t = s.beginTransaction();
 		// load the last container as a proxy
-		Container proxy = s.load( Container.class, lastContainerId );
+		Container proxy = s.getReference( Container.class, lastContainerId );
 		assertFalse( Hibernate.isInitialized( proxy ) );
 		// load the rest back into the PC
 		List all = s.createQuery( "from Container as c inner join fetch c.owner inner join fetch c.dataPoints where c.id <> :l" )
 				.setParameter( "l", lastContainerId.longValue() )
 				.list();
 		Container container = ( Container ) all.get( 0 );
-		s.delete( container );
+		s.remove( container );
 		// force a snapshot retrieval of the proxied container
 		SessionImpl sImpl = ( SessionImpl ) s;
         sImpl.getPersistenceContext().getDatabaseSnapshot(
@@ -526,14 +526,14 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		Transaction t = s.beginTransaction();
 		DataPoint dp = newPersistentDataPoint( s );
 
-		dp = s.load( DataPoint.class, dp.getId());
+		dp = s.getReference( DataPoint.class, dp.getId());
 		dp.getX();
 		assertTrue( Hibernate.isInitialized( dp ) );
 
 		s.refresh( dp, LockOptions.UPGRADE );
 		assertSame( LockOptions.UPGRADE.getLockMode(), s.getCurrentLockMode( dp ) );
 
-		s.delete( dp );
+		s.remove( dp );
 		t.commit();
 		s.close();
 	}
@@ -545,13 +545,13 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		Transaction t = s.beginTransaction();
 		DataPoint dp = newPersistentDataPoint( s );
 
-		dp = s.load( DataPoint.class, dp.getId());
+		dp = s.getReference( DataPoint.class, dp.getId());
 		assertFalse( Hibernate.isInitialized( dp ) );
 
 		s.refresh( dp, LockOptions.UPGRADE );
 		assertSame( LockOptions.UPGRADE.getLockMode(), s.getCurrentLockMode( dp ) );
 
-		s.delete( dp );
+		s.remove( dp );
 		t.commit();
 		s.close();
 	}
@@ -574,13 +574,13 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		Transaction t = s.beginTransaction();
 		DataPoint dp = newPersistentDataPoint( s );
 
-		dp = s.load( DataPoint.class, dp.getId());
+		dp = s.getReference( DataPoint.class, dp.getId());
 		assertFalse( Hibernate.isInitialized( dp ) );
 		s.refresh( dp, LockOptions.UPGRADE );
 		dp.getX();
 		assertSame( LockOptions.UPGRADE.getLockMode(), s.getCurrentLockMode( dp ) );
 
-		s.delete( dp );
+		s.remove( dp );
 		t.commit();
 		s.close();
 	}
@@ -591,12 +591,12 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		Transaction t = s.beginTransaction();
 		DataPoint dp = newPersistentDataPoint( s );
 
-		dp = s.load( DataPoint.class, dp.getId());
+		dp = s.getReference( DataPoint.class, dp.getId());
 		assertFalse( Hibernate.isInitialized( dp ) );
-		s.buildLockRequest( LockOptions.UPGRADE ).lock( dp );
+		s.lock( dp, LockOptions.UPGRADE );
 		assertSame( LockOptions.UPGRADE.getLockMode(), s.getCurrentLockMode( dp ) );
 
-		s.delete( dp );
+		s.remove( dp );
 		t.commit();
 		s.close();
 	}

@@ -35,6 +35,8 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.EventType;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -125,8 +127,8 @@ public class PooledHiLoSequenceIdentifierTest {
 						statement = connection.prepareStatement( "INSERT INTO sequenceIdentifier VALUES (?,?)" );
 						statement.setObject(
 								1,
-								sfi.getIdentifierGenerator( SequenceIdentifier.class.getName() )
-										.generate( si, null )
+								((BeforeExecutionGenerator) sfi.getGenerator( SequenceIdentifier.class.getName() ))
+										.generate( si, null, null, EventType.INSERT )
 						);
 						statement.setString( 2,"name" );
 						statement.executeUpdate();

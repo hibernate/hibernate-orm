@@ -21,6 +21,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -34,7 +36,7 @@ public class CockroachDialectVersionTest {
 	@RegisterExtension
 	public LoggerInspectionExtension logger = LoggerInspectionExtension
 			.builder().setLogger(
-					Logger.getMessageLogger( CoreMessageLogger.class, CockroachDialect.class.getName()  )
+					Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, CockroachDialect.class.getName()  )
 			).build();
 
 	@BeforeEach

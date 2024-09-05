@@ -60,9 +60,9 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 					Female daughter = new Female( 3, parent );
 					daughter.setName( "Fab" );
 
-					session.save( parent );
-					session.save( son );
-					session.save( daughter );
+					session.persist( parent );
+					session.persist( son );
+					session.persist( daughter );
 				} );
 	}
 

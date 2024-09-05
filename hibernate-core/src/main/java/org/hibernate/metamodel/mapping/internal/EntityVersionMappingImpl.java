@@ -54,11 +54,9 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	private final Integer scale;
 	private final Integer temporalPrecision;
 
-	private final BasicType versionBasicType;
+	private final BasicType<?> versionBasicType;
 
 	private final VersionValue unsavedValueStrategy;
-
-	private BasicAttributeMapping attributeMapping;
 
 	public EntityVersionMappingImpl(
 			RootClass bootEntityDescriptor,
@@ -72,8 +70,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 			Integer scale,
 			Integer temporalPrecision,
 			BasicType<?> versionBasicType,
-			EntityMappingType declaringType,
-			MappingModelCreationProcess creationProcess) {
+			EntityMappingType declaringType) {
 		this.attributeName = attributeName;
 		this.columnDefinition = columnDefinition;
 		this.length = length;
@@ -90,15 +87,10 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 		unsavedValueStrategy = UnsavedValueFactory.getUnsavedVersionValue(
 				(KeyValue) bootEntityDescriptor.getVersion().getValue(),
 				(VersionJavaType<?>) versionBasicType.getJavaTypeDescriptor(),
-				length,
-				precision,
-				scale,
-				declaringType
-						.getRepresentationStrategy()
+				declaringType.getRepresentationStrategy()
 						.resolvePropertyAccess( bootEntityDescriptor.getVersion() )
 						.getGetter(),
-				templateInstanceAccess,
-				creationProcess.getCreationContext().getSessionFactory()
+				templateInstanceAccess
 		);
 	}
 

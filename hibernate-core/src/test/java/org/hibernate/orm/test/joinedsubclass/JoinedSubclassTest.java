@@ -14,9 +14,12 @@ import jakarta.persistence.criteria.Root;
 
 import org.hibernate.LockMode;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -34,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		xmlMappings = "org/hibernate/orm/test/joinedsubclass/Person.hbm.xml"
 )
 @SessionFactory
+@ServiceRegistry(settings = @Setting(name = AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY, value = "true"))
 public class JoinedSubclassTest {
 
 	@AfterEach
@@ -56,7 +60,7 @@ public class JoinedSubclassTest {
 					e.setName( "Steve" );
 					e.setSex( 'M' );
 					e.setTitle( "grand poobah" );
-					session.save( e );
+					session.persist( e );
 				}
 		);
 
@@ -79,7 +83,7 @@ public class JoinedSubclassTest {
 
 		scope.inTransaction(
 				session -> {
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}
@@ -124,8 +128,8 @@ public class JoinedSubclassTest {
 		assertEquals( result.size(), 1 );
 		assertEquals( result.get(0), new BigDecimal(1000) );*/
 
-			s.delete( p );
-			s.delete( q );
+			s.remove( p );
+			s.remove( q );
 		} );
 	}
 
@@ -150,8 +154,8 @@ public class JoinedSubclassTest {
 				session -> {
 					session.lock( p, LockMode.PESSIMISTIC_WRITE );
 					session.lock( q, LockMode.PESSIMISTIC_WRITE );
-					session.delete( p );
-					session.delete( q );
+					session.remove( p );
+					session.remove( q );
 				}
 		);
 	}

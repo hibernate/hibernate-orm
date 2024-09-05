@@ -2,13 +2,23 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
 package org.hibernate.orm.test.annotations.xml.ejb3;
 
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
+import org.hibernate.annotations.JoinColumnOrFormula;
+import org.hibernate.annotations.JoinColumnsOrFormulas;
+import org.hibernate.annotations.JoinFormula;
+import org.hibernate.boot.internal.Target;
+import org.hibernate.models.spi.MemberDetails;
+
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.Test;
+
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -18,30 +28,26 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.UniqueConstraint;
 
-import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-@TestForIssue(jiraKey = "HHH-14529")
+@JiraKey("HHH-14529")
 public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 	@Test
-	public void testNoJoins() throws Exception {
-		reader = getReader( Entity1.class, "field1", "many-to-one.orm1.xml" );
-		assertAnnotationPresent( ManyToOne.class );
-		assertAnnotationNotPresent( JoinColumn.class );
-		assertAnnotationNotPresent( JoinColumns.class );
-		assertAnnotationNotPresent( JoinTable.class );
-		assertAnnotationNotPresent( Id.class );
-		assertAnnotationNotPresent( MapsId.class );
-		assertAnnotationNotPresent( Access.class );
-		ManyToOne relAnno = reader.getAnnotation( ManyToOne.class );
-		assertEquals( 0, relAnno.cascade().length );
-		assertEquals( FetchType.EAGER, relAnno.fetch() );
-		assertTrue( relAnno.optional() );
-		assertEquals( void.class, relAnno.targetEntity() );
+	public void testNoJoins() {
+		final MemberDetails memberDetails = getAttributeMember( Entity1.class, "field1", "many-to-one.orm1.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ManyToOne.class ) ).isTrue();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( JoinColumn.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( JoinColumns.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( JoinTable.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( Id.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapsId.class ) ).isFalse();
+
+		final ManyToOne manyToOneUsage = memberDetails.getDirectAnnotationUsage( ManyToOne.class );
+		assertThat( manyToOneUsage.cascade() ).isEmpty();
+		assertThat( manyToOneUsage.fetch() ).isEqualTo( FetchType.EAGER );
+		assertThat( manyToOneUsage.optional() ).isTrue();
+		assertThat( manyToOneUsage.targetEntity() ).isEqualTo( void.class );
 	}
 
 	/**
@@ -49,170 +55,214 @@ public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 	 * annotation.
 	 */
 	@Test
-	public void testSingleJoinColumn() throws Exception {
-		reader = getReader( Entity1.class, "field1", "many-to-one.orm2.xml" );
-		assertAnnotationPresent( ManyToOne.class );
-		assertAnnotationNotPresent( JoinColumn.class );
-		assertAnnotationPresent( JoinColumns.class );
-		assertAnnotationNotPresent( JoinTable.class );
-		JoinColumns joinColumnsAnno = reader.getAnnotation( JoinColumns.class );
-		JoinColumn[] joinColumns = joinColumnsAnno.value();
-		assertEquals( 1, joinColumns.length );
-		assertEquals( "col1", joinColumns[0].name() );
-		assertEquals( "col2", joinColumns[0].referencedColumnName() );
-		assertEquals( "table1", joinColumns[0].table() );
+	public void testSingleJoinColumn() {
+		final MemberDetails memberDetails = getAttributeMember( Entity1.class, "field1", "many-to-one.orm2.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ManyToOne.class ) ).isTrue();
+		assertThat( memberDetails.hasDirectAnnotationUsage( JoinColumnsOrFormulas.class ) ).isTrue();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( JoinColumnOrFormula.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( JoinColumns.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( JoinColumn.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( JoinFormula.class ) ).isFalse();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( JoinTable.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( Id.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapsId.class ) ).isFalse();
+
+		final JoinColumnsOrFormulas joinColumnsOrFormulasUsage = memberDetails.getDirectAnnotationUsage( JoinColumnsOrFormulas.class );
+		final JoinColumn joinColumnUsage = joinColumnsOrFormulasUsage.value()[0].column();
+		assertThat( joinColumnUsage.name() ).isEqualTo( "col1" );
+		assertThat( joinColumnUsage.referencedColumnName() ).isEqualTo( "col2" );
+		assertThat( joinColumnUsage.table() ).isEqualTo( "table1" );
 	}
 
 	@Test
-	public void testMultipleJoinColumns() throws Exception {
-		reader = getReader( Entity1.class, "field1", "many-to-one.orm3.xml" );
-		assertAnnotationPresent( ManyToOne.class );
-		assertAnnotationNotPresent( JoinColumn.class );
-		assertAnnotationPresent( JoinColumns.class );
-		assertAnnotationNotPresent( JoinTable.class );
-		JoinColumns joinColumnsAnno = reader.getAnnotation( JoinColumns.class );
-		JoinColumn[] joinColumns = joinColumnsAnno.value();
-		assertEquals( 2, joinColumns.length );
-		assertEquals( "", joinColumns[0].name() );
-		assertEquals( "", joinColumns[0].referencedColumnName() );
-		assertEquals( "", joinColumns[0].table() );
-		assertEquals( "", joinColumns[0].columnDefinition() );
-		assertTrue( joinColumns[0].insertable() );
-		assertTrue( joinColumns[0].updatable() );
-		assertTrue( joinColumns[0].nullable() );
-		assertFalse( joinColumns[0].unique() );
-		assertEquals( "col1", joinColumns[1].name() );
-		assertEquals( "col2", joinColumns[1].referencedColumnName() );
-		assertEquals( "table1", joinColumns[1].table() );
-		assertEquals( "int", joinColumns[1].columnDefinition() );
-		assertFalse( joinColumns[1].insertable() );
-		assertFalse( joinColumns[1].updatable() );
-		assertFalse( joinColumns[1].nullable() );
-		assertTrue( joinColumns[1].unique() );
+	public void testMultipleJoinColumns() {
+		final MemberDetails memberDetails = getAttributeMember( Entity1.class, "field1", "many-to-one.orm3.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ManyToOne.class ) ).isTrue();
+		assertThat( memberDetails.hasDirectAnnotationUsage( JoinColumnsOrFormulas.class ) ).isTrue();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( JoinColumnOrFormula.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( JoinFormula.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( JoinColumn.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( JoinTable.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( Id.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapsId.class ) ).isFalse();
+
+		final JoinColumnsOrFormulas joinColumnsOrFormulasUsage = memberDetails.getDirectAnnotationUsage( JoinColumnsOrFormulas.class );
+		final JoinColumnOrFormula[] joinColumnOrFormulaUsages = joinColumnsOrFormulasUsage.value();
+		assertThat( joinColumnOrFormulaUsages ).hasSize( 2 );
+
+		final JoinColumn joinColumnUsage0 = joinColumnOrFormulaUsages[0].column();
+		assertThat( joinColumnUsage0.name() ).isEmpty();
+		assertThat( joinColumnUsage0.referencedColumnName() ).isEmpty();
+		assertThat( joinColumnUsage0.table() ).isEmpty();
+		assertThat( joinColumnUsage0.columnDefinition() ).isEmpty();
+		assertThat( joinColumnUsage0.insertable() ).isTrue();
+		assertThat( joinColumnUsage0.updatable() ).isTrue();
+		assertThat( joinColumnUsage0.nullable() ).isTrue();
+		assertThat( joinColumnUsage0.unique() ).isFalse();
+
+		final JoinColumn joinColumnUsage1 = joinColumnOrFormulaUsages[1].column();
+		assertThat( joinColumnUsage1.name() ).isEqualTo( "col1" );
+		assertThat( joinColumnUsage1.referencedColumnName() ).isEqualTo( "col2" );
+		assertThat( joinColumnUsage1.table() ).isEqualTo( "table1" );
+		assertThat( joinColumnUsage1.columnDefinition() ).isEqualTo( "int" );
+		assertThat( joinColumnUsage1.insertable() ).isFalse();
+		assertThat( joinColumnUsage1.updatable() ).isFalse();
+		assertThat( joinColumnUsage1.nullable() ).isFalse();
+		assertThat( joinColumnUsage1.unique() ).isTrue();
 	}
 
 	@Test
-	public void testJoinTableNoChildren() throws Exception {
-		reader = getReader( Entity1.class, "field1", "many-to-one.orm4.xml" );
-		assertAnnotationPresent( ManyToOne.class );
-		assertAnnotationNotPresent( JoinColumn.class );
-		assertAnnotationNotPresent( JoinColumns.class );
-		assertAnnotationPresent( JoinTable.class );
-		JoinTable joinTableAnno = reader.getAnnotation( JoinTable.class );
-		assertEquals( "", joinTableAnno.catalog() );
-		assertEquals( "", joinTableAnno.name() );
-		assertEquals( "", joinTableAnno.schema() );
-		assertEquals( 0, joinTableAnno.joinColumns().length );
-		assertEquals( 0, joinTableAnno.inverseJoinColumns().length );
-		assertEquals( 0, joinTableAnno.uniqueConstraints().length );
+	public void testJoinTableNoChildren() {
+		final MemberDetails memberDetails = getAttributeMember( Entity1.class, "field1", "many-to-one.orm4.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ManyToOne.class ) ).isTrue();
+		assertThat( memberDetails.hasDirectAnnotationUsage( JoinTable.class ) ).isTrue();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( JoinColumns.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( JoinColumn.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( Id.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapsId.class ) ).isFalse();
+
+		final JoinTable joinTableUsage = memberDetails.getDirectAnnotationUsage( JoinTable.class );
+		assertThat( joinTableUsage.catalog() ).isEmpty();
+		assertThat( joinTableUsage.schema() ).isEmpty();
+		assertThat( joinTableUsage.name() ).isEmpty();
+		assertThat( joinTableUsage.joinColumns() ).isEmpty();
+		assertThat( joinTableUsage.inverseJoinColumns() ).isEmpty();
+		assertThat( joinTableUsage.uniqueConstraints() ).isEmpty();
 	}
 
 	@Test
-	public void testJoinTableAllChildren() throws Exception {
-		reader = getReader( Entity1.class, "field1", "many-to-one.orm5.xml" );
-		assertAnnotationPresent( ManyToOne.class );
-		assertAnnotationNotPresent( JoinColumn.class );
-		assertAnnotationNotPresent( JoinColumns.class );
-		assertAnnotationPresent( JoinTable.class );
-		JoinTable joinTableAnno = reader.getAnnotation( JoinTable.class );
-		assertEquals( "cat1", joinTableAnno.catalog() );
-		assertEquals( "table1", joinTableAnno.name() );
-		assertEquals( "schema1", joinTableAnno.schema() );
+	public void testJoinTableAllChildren() {
+		final MemberDetails memberDetails = getAttributeMember( Entity1.class, "field1", "many-to-one.orm5.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ManyToOne.class ) ).isTrue();
+		assertThat( memberDetails.hasDirectAnnotationUsage( JoinTable.class ) ).isTrue();
 
+		assertThat( memberDetails.hasDirectAnnotationUsage( JoinColumns.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( JoinColumn.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( Id.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapsId.class ) ).isFalse();
+
+		final JoinTable joinTableUsage = memberDetails.getDirectAnnotationUsage( JoinTable.class );
+		assertThat( joinTableUsage.catalog() ).isEqualTo( "cat1" );
+		assertThat( joinTableUsage.schema() ).isEqualTo( "schema1" );
+		assertThat( joinTableUsage.name() ).isEqualTo( "table1" );
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// JoinColumns
-		JoinColumn[] joinColumns = joinTableAnno.joinColumns();
-		assertEquals( 2, joinColumns.length );
-		assertEquals( "", joinColumns[0].name() );
-		assertEquals( "", joinColumns[0].referencedColumnName() );
-		assertEquals( "", joinColumns[0].table() );
-		assertEquals( "", joinColumns[0].columnDefinition() );
-		assertTrue( joinColumns[0].insertable() );
-		assertTrue( joinColumns[0].updatable() );
-		assertTrue( joinColumns[0].nullable() );
-		assertFalse( joinColumns[0].unique() );
-		assertEquals( "col1", joinColumns[1].name() );
-		assertEquals( "col2", joinColumns[1].referencedColumnName() );
-		assertEquals( "table2", joinColumns[1].table() );
-		assertEquals( "int", joinColumns[1].columnDefinition() );
-		assertFalse( joinColumns[1].insertable() );
-		assertFalse( joinColumns[1].updatable() );
-		assertFalse( joinColumns[1].nullable() );
-		assertTrue( joinColumns[1].unique() );
+		final JoinColumn[] joinColumnUsages = joinTableUsage.joinColumns();
+		assertThat( joinColumnUsages ).hasSize( 2 );
 
+		final JoinColumn joinColumnUsage0 = joinColumnUsages[0];
+		assertThat( joinColumnUsage0.name() ).isEmpty();
+		assertThat( joinColumnUsage0.referencedColumnName() ).isEmpty();
+		assertThat( joinColumnUsage0.table() ).isEmpty();
+		assertThat( joinColumnUsage0.columnDefinition() ).isEmpty();
+		assertThat( joinColumnUsage0.insertable() ).isTrue();
+		assertThat( joinColumnUsage0.updatable() ).isTrue();
+		assertThat( joinColumnUsage0.nullable() ).isTrue();
+		assertThat( joinColumnUsage0.unique() ).isFalse();
+
+		final JoinColumn joinColumnUsage1 = joinColumnUsages[1];
+		assertThat( joinColumnUsage1.name() ).isEqualTo( "col1" );
+		assertThat( joinColumnUsage1.referencedColumnName() ).isEqualTo( "col2" );
+		assertThat( joinColumnUsage1.table() ).isEqualTo( "table2" );
+		assertThat( joinColumnUsage1.columnDefinition() ).isEqualTo( "int" );
+		assertThat( joinColumnUsage1.insertable() ).isFalse();
+		assertThat( joinColumnUsage1.updatable() ).isFalse();
+		assertThat( joinColumnUsage1.nullable() ).isFalse();
+		assertThat( joinColumnUsage1.unique() ).isTrue();
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// InverseJoinColumns
-		JoinColumn[] inverseJoinColumns = joinTableAnno.inverseJoinColumns();
-		assertEquals( 2, inverseJoinColumns.length );
-		assertEquals( "", inverseJoinColumns[0].name() );
-		assertEquals( "", inverseJoinColumns[0].referencedColumnName() );
-		assertEquals( "", inverseJoinColumns[0].table() );
-		assertEquals( "", inverseJoinColumns[0].columnDefinition() );
-		assertTrue( inverseJoinColumns[0].insertable() );
-		assertTrue( inverseJoinColumns[0].updatable() );
-		assertTrue( inverseJoinColumns[0].nullable() );
-		assertFalse( inverseJoinColumns[0].unique() );
-		assertEquals( "col3", inverseJoinColumns[1].name() );
-		assertEquals( "col4", inverseJoinColumns[1].referencedColumnName() );
-		assertEquals( "table3", inverseJoinColumns[1].table() );
-		assertEquals( "int", inverseJoinColumns[1].columnDefinition() );
-		assertFalse( inverseJoinColumns[1].insertable() );
-		assertFalse( inverseJoinColumns[1].updatable() );
-		assertFalse( inverseJoinColumns[1].nullable() );
-		assertTrue( inverseJoinColumns[1].unique() );
+		final JoinColumn[] inverseJoinColumnUsages = joinTableUsage.inverseJoinColumns();
+		assertThat( inverseJoinColumnUsages ).hasSize( 2 );
 
+		final JoinColumn inverseJoinColumnUsage0 = inverseJoinColumnUsages[0];
+		assertThat( inverseJoinColumnUsage0.name() ).isEmpty();
+		assertThat( inverseJoinColumnUsage0.referencedColumnName() ).isEmpty();
+		assertThat( inverseJoinColumnUsage0.table() ).isEmpty();
+		assertThat( inverseJoinColumnUsage0.columnDefinition() ).isEmpty();
+		assertThat( inverseJoinColumnUsage0.insertable() ).isTrue();
+		assertThat( inverseJoinColumnUsage0.updatable() ).isTrue();
+		assertThat( inverseJoinColumnUsage0.nullable() ).isTrue();
+		assertThat( inverseJoinColumnUsage0.unique() ).isFalse();
+
+		final JoinColumn inverseJoinColumnUsage1 = inverseJoinColumnUsages[1];
+		assertThat( inverseJoinColumnUsage1.name() ).isEqualTo( "col3" );
+		assertThat( inverseJoinColumnUsage1.referencedColumnName() ).isEqualTo( "col4" );
+		assertThat( inverseJoinColumnUsage1.table() ).isEqualTo( "table3" );
+		assertThat( inverseJoinColumnUsage1.columnDefinition() ).isEqualTo( "int" );
+		assertThat( inverseJoinColumnUsage1.insertable() ).isFalse();
+		assertThat( inverseJoinColumnUsage1.updatable() ).isFalse();
+		assertThat( inverseJoinColumnUsage1.nullable() ).isFalse();
+		assertThat( inverseJoinColumnUsage1.unique() ).isTrue();
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// UniqueConstraints
-		UniqueConstraint[] uniqueConstraints = joinTableAnno
-				.uniqueConstraints();
-		assertEquals( 2, uniqueConstraints.length );
-		assertEquals( "", uniqueConstraints[0].name() );
-		assertEquals( 1, uniqueConstraints[0].columnNames().length );
-		assertEquals( "col5", uniqueConstraints[0].columnNames()[0] );
-		assertEquals( "uq1", uniqueConstraints[1].name() );
-		assertEquals( 2, uniqueConstraints[1].columnNames().length );
-		assertEquals( "col6", uniqueConstraints[1].columnNames()[0] );
-		assertEquals( "col7", uniqueConstraints[1].columnNames()[1] );
+		final UniqueConstraint[] uniqueConstraintUsages = joinTableUsage.uniqueConstraints();
+		assertThat( uniqueConstraintUsages ).hasSize( 2 );
+
+		final UniqueConstraint uniqueConstraintUsage0 = uniqueConstraintUsages[0];
+		assertThat( uniqueConstraintUsage0.name() ).isEmpty();
+		assertThat( uniqueConstraintUsage0.columnNames() ).containsExactly( "col5" );
+
+		final UniqueConstraint uniqueConstraintUsage1 = uniqueConstraintUsages[1];
+		assertThat( uniqueConstraintUsage1.name() ).isEqualTo( "uq1" );
+		assertThat( uniqueConstraintUsage1.columnNames() ).containsExactly( "col6", "col7" );
 	}
 
 	@Test
-	public void testAllAttributes() throws Exception {
-		reader = getReader( Entity1.class, "field1", "many-to-one.orm6.xml" );
-		assertAnnotationPresent( ManyToOne.class );
-		assertAnnotationNotPresent( JoinColumn.class );
-		assertAnnotationNotPresent( JoinColumns.class );
-		assertAnnotationNotPresent( JoinTable.class );
-		assertAnnotationPresent( Id.class );
-		assertAnnotationPresent( MapsId.class );
-		assertAnnotationPresent( Access.class );
-		ManyToOne relAnno = reader.getAnnotation( ManyToOne.class );
-		assertEquals( 0, relAnno.cascade().length );
-		assertEquals( FetchType.LAZY, relAnno.fetch() );
-		assertFalse( relAnno.optional() );
-		assertEquals( Entity3.class, relAnno.targetEntity() );
-		assertEquals( "col1", reader.getAnnotation( MapsId.class ).value() );
-		assertEquals(
-				AccessType.PROPERTY, reader.getAnnotation( Access.class )
-				.value()
+	public void testAllAttributes() {
+		final MemberDetails memberDetails = getAttributeMember( Entity1.class, "field1", "many-to-one.orm6.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ManyToOne.class ) ).isTrue();
+		assertThat( memberDetails.hasDirectAnnotationUsage( Id.class ) ).isTrue();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapsId.class ) ).isTrue();
+		assertThat( memberDetails.hasDirectAnnotationUsage( Access.class ) ).isTrue();
+
+		final ManyToOne manyToOneUsage = memberDetails.getDirectAnnotationUsage( ManyToOne.class );
+		assertThat( manyToOneUsage.cascade() ).isEmpty();
+		assertThat( manyToOneUsage.fetch() ).isEqualTo( FetchType.LAZY );
+		assertThat( manyToOneUsage.optional() ).isFalse();
+		assertThat( manyToOneUsage.targetEntity() ).isEqualTo( void.class );
+
+		final Target targetUsage = memberDetails.getDirectAnnotationUsage( Target.class );
+		assertThat( targetUsage.value() ).isEqualTo( Entity3.class.getName() );
+
+		final MapsId mapsIdUsage = memberDetails.getDirectAnnotationUsage( MapsId.class );
+		assertThat( mapsIdUsage.value() ).isEqualTo( "col1" );
+
+		final Access accessUsage = memberDetails.getDirectAnnotationUsage( Access.class );
+		assertThat( accessUsage.value() ).isEqualTo( AccessType.PROPERTY );
+	}
+
+	@Test
+	public void testCascadeAll() {
+		final MemberDetails memberDetails = getAttributeMember( Entity1.class, "field1", "many-to-one.orm7.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ManyToOne.class ) ).isTrue();
+
+		final ManyToOne manyToOneUsage = memberDetails.getDirectAnnotationUsage( ManyToOne.class );
+		assertThat( manyToOneUsage.cascade() ).isEmpty();
+
+		final Cascade cascadeUsage = memberDetails.getDirectAnnotationUsage( Cascade.class );
+		assertThat( cascadeUsage.value() ).containsExactly( CascadeType.ALL );
+	}
+
+	@Test
+	public void testCascadeSomeWithDefaultPersist() {
+		final MemberDetails memberDetails = getAttributeMember( Entity1.class, "field1", "many-to-one.orm8.xml" );
+		final ManyToOne manyToOneUsage = memberDetails.getDirectAnnotationUsage( ManyToOne.class );
+		assertThat( manyToOneUsage.cascade() ).isEmpty();
+
+		final Cascade cascadeUsage = memberDetails.getDirectAnnotationUsage( Cascade.class );
+		assertThat( cascadeUsage.value() ).containsOnly(
+				CascadeType.PERSIST,
+				CascadeType.REMOVE,
+				CascadeType.REFRESH,
+				CascadeType.DETACH
 		);
-	}
-
-	@Test
-	public void testCascadeAll() throws Exception {
-		reader = getReader( Entity1.class, "field1", "many-to-one.orm7.xml" );
-		assertAnnotationPresent( ManyToOne.class );
-		ManyToOne relAnno = reader.getAnnotation( ManyToOne.class );
-		assertEquals( 1, relAnno.cascade().length );
-		assertEquals( CascadeType.ALL, relAnno.cascade()[0] );
-	}
-
-	@Test
-	public void testCascadeSomeWithDefaultPersist() throws Exception {
-		reader = getReader( Entity1.class, "field1", "many-to-one.orm8.xml" );
-		assertAnnotationPresent( ManyToOne.class );
-		ManyToOne relAnno = reader.getAnnotation( ManyToOne.class );
-		assertEquals( 4, relAnno.cascade().length );
-		assertEquals( CascadeType.REMOVE, relAnno.cascade()[0] );
-		assertEquals( CascadeType.REFRESH, relAnno.cascade()[1] );
-		assertEquals( CascadeType.DETACH, relAnno.cascade()[2] );
-		assertEquals( CascadeType.PERSIST, relAnno.cascade()[3] );
 	}
 
 	/**
@@ -221,17 +271,20 @@ public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 	 * cascade settings.
 	 */
 	@Test
-	public void testCascadeAllPlusMore() throws Exception {
-		reader = getReader( Entity1.class, "field1", "many-to-one.orm9.xml" );
-		assertAnnotationPresent( ManyToOne.class );
-		ManyToOne relAnno = reader.getAnnotation( ManyToOne.class );
-		assertEquals( 6, relAnno.cascade().length );
-		assertEquals( CascadeType.ALL, relAnno.cascade()[0] );
-		assertEquals( CascadeType.PERSIST, relAnno.cascade()[1] );
-		assertEquals( CascadeType.MERGE, relAnno.cascade()[2] );
-		assertEquals( CascadeType.REMOVE, relAnno.cascade()[3] );
-		assertEquals( CascadeType.REFRESH, relAnno.cascade()[4] );
-		assertEquals( CascadeType.DETACH, relAnno.cascade()[5] );
+	public void testCascadeAllPlusMore() {
+		final MemberDetails memberDetails = getAttributeMember( Entity1.class, "field1", "many-to-one.orm9.xml" );
+		final ManyToOne manyToOneUsage = memberDetails.getDirectAnnotationUsage( ManyToOne.class );
+		assertThat( manyToOneUsage.cascade() ).isEmpty();
+
+		final Cascade cascadeUsage = memberDetails.getDirectAnnotationUsage( Cascade.class );
+		assertThat( cascadeUsage.value() ).containsOnly(
+				CascadeType.ALL,
+				CascadeType.PERSIST,
+				CascadeType.MERGE,
+				CascadeType.REMOVE,
+				CascadeType.REFRESH,
+				CascadeType.DETACH
+		);
 	}
 
 }

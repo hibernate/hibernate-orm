@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model.internal;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Map;
 
 import org.hibernate.MappingException;
@@ -27,7 +28,7 @@ import org.jboss.logging.Logger;
  */
 public abstract class CollectionSecondPass implements SecondPass {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionSecondPass.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, CollectionSecondPass.class.getName() );
 
 	private final Collection collection;
 

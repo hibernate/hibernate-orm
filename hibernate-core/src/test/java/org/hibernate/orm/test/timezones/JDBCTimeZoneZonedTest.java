@@ -6,9 +6,11 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.type.descriptor.DateTimeUtils;
 
@@ -34,12 +36,17 @@ public class JDBCTimeZoneZonedTest {
 	@Test void test(SessionFactoryScope scope) {
 		final ZonedDateTime nowZoned;
 		final OffsetDateTime nowOffset;
-		if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseDialect ) {
+		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+		if ( dialect instanceof SybaseDialect || dialect instanceof MySQLDialect ) {
 			// Sybase has 1/300th sec precision
 			nowZoned = ZonedDateTime.now().withZoneSameInstant( ZoneId.of("CET") )
 					.with( ChronoField.NANO_OF_SECOND, 0L );
 			nowOffset = OffsetDateTime.now().withOffsetSameInstant( ZoneOffset.ofHours(3) )
 					.with( ChronoField.NANO_OF_SECOND, 0L );
+		}
+		else if ( dialect.getDefaultTimestampPrecision() == 6 ) {
+			nowZoned = ZonedDateTime.now().withZoneSameInstant( ZoneId.of("CET") ).truncatedTo( ChronoUnit.MICROS );
+			nowOffset = OffsetDateTime.now().withOffsetSameInstant( ZoneOffset.ofHours(3) ).truncatedTo( ChronoUnit.MICROS );
 		}
 		else {
 			nowZoned = ZonedDateTime.now().withZoneSameInstant( ZoneId.of("CET") );
@@ -56,14 +63,17 @@ public class JDBCTimeZoneZonedTest {
 			Zoned z = s.find(Zoned.class, id);
 			ZoneId systemZone = ZoneId.systemDefault();
 			ZoneOffset systemOffset = systemZone.getRules().getOffset( Instant.now() );
-			final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+			Instant expected = DateTimeUtils.adjustToDefaultPrecision( nowZoned.toInstant(), dialect );
+			Instant actual = DateTimeUtils.adjustToDefaultPrecision( z.zonedDateTime.toInstant(), dialect );
 			assertEquals(
-					DateTimeUtils.roundToDefaultPrecision( nowZoned.toInstant(), dialect ),
-					DateTimeUtils.roundToDefaultPrecision( z.zonedDateTime.toInstant(), dialect )
+					expected,
+					actual
 			);
+			expected = DateTimeUtils.adjustToDefaultPrecision( nowOffset.toInstant(), dialect );
+			actual = DateTimeUtils.adjustToDefaultPrecision( z.offsetDateTime.toInstant(), dialect );
 			assertEquals(
-					DateTimeUtils.roundToDefaultPrecision( nowOffset.toInstant(), dialect ),
-					DateTimeUtils.roundToDefaultPrecision( z.offsetDateTime.toInstant(), dialect )
+					expected,
+					actual
 			);
 			assertEquals( systemZone, z.zonedDateTime.getZone() );
 			assertEquals( systemOffset, z.offsetDateTime.getOffset() );

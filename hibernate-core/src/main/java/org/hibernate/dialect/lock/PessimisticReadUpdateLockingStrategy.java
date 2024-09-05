@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect.lock;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -17,7 +18,7 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Update;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -38,11 +39,12 @@ import org.jboss.logging.Logger;
  */
 public class PessimisticReadUpdateLockingStrategy implements LockingStrategy {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			PessimisticReadUpdateLockingStrategy.class.getName()
 	);
 
-	private final Lockable lockable;
+	private final EntityPersister lockable;
 	private final LockMode lockMode;
 	private final String sql;
 
@@ -53,7 +55,7 @@ public class PessimisticReadUpdateLockingStrategy implements LockingStrategy {
 	 * @param lockMode Indicates the type of lock to be acquired.  Note that
 	 * read-locks are not valid for this strategy.
 	 */
-	public PessimisticReadUpdateLockingStrategy(Lockable lockable, LockMode lockMode) {
+	public PessimisticReadUpdateLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		this.lockable = lockable;
 		this.lockMode = lockMode;
 		if ( lockMode.lessThan( LockMode.PESSIMISTIC_READ ) ) {

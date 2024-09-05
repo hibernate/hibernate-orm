@@ -64,10 +64,10 @@ public class UnspecifiedEnumTypeTest extends BaseEnversFunctionalTestCase {
 
 		// Revision 2
 		session.getTransaction().begin();
-		entity = (UnspecifiedEnumTypeEntity) session.get( UnspecifiedEnumTypeEntity.class, entity.getId() );
+		entity = session.get( UnspecifiedEnumTypeEntity.class, entity.getId() );
 		entity.setEnum1( UnspecifiedEnumTypeEntity.E1.Y );
 		entity.setEnum2( UnspecifiedEnumTypeEntity.E2.B );
-		session.update( entity );
+		session.merge( entity );
 		session.getTransaction().commit();
 
 		session.close();

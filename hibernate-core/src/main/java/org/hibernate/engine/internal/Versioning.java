@@ -6,7 +6,6 @@
  */
 package org.hibernate.engine.internal;
 
-import org.hibernate.Remove;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
@@ -14,6 +13,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.descriptor.java.VersionJavaType;
 
 import org.jboss.logging.Logger;
+
+import java.lang.invoke.MethodHandles;
 
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.generator.EventType.UPDATE;
@@ -25,6 +26,7 @@ import static org.hibernate.generator.EventType.UPDATE;
  */
 public final class Versioning {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			Versioning.class.getName()
 	);
@@ -87,43 +89,12 @@ public final class Versioning {
 	}
 
 	/**
-	 * Create an initial optimistic locking value according the {@link VersionJavaType}
-	 * contract for the version property <em>if required</em> and inject it into the
-	 * snapshot state.
-	 *
-	 * @param fields The current snapshot state
-	 * @param versionProperty The index of the version property
-	 * @param versionMapping The version mapping
-	 * @param session The originating session
-	 * @return True if we injected a new version value into the fields array; false
-	 * otherwise.
-	 *
-	 * @deprecated Use {@link #seedVersion(Object, Object[], EntityPersister, SharedSessionContractImplementor)}
-	 */
-	@Deprecated(since = "6.2") @Remove
-	public static boolean seedVersion(
-			Object[] fields,
-			int versionProperty,
-			EntityVersionMapping versionMapping,
-			SharedSessionContractImplementor session) {
-		final Object initialVersion = fields[versionProperty];
-		if ( isNullInitialVersion( initialVersion ) ) {
-			fields[versionProperty] = seed( versionMapping, session );
-			return true;
-		}
-		else {
-			LOG.tracev( "Using initial version: {0}", initialVersion );
-			return false;
-		}
-	}
-
-	/**
 	 * Determines if the value of the assigned  version property should be considered
 	 * a "null" value, that is, if it is literally {@code null}, or if it is a negative
 	 * integer.
 	 *
 	 * @param initialVersion The value initially assigned to a version property
-	 * @return {@code} if the value shoudl be considered null for this purpose
+	 * @return {@code} if the value should be considered null for this purpose
 	 */
 	public static boolean isNullInitialVersion(Object initialVersion) {
 		return initialVersion == null

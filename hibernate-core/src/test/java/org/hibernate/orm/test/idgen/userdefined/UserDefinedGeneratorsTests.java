@@ -15,11 +15,12 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.Generator;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.id.factory.internal.StandardIdentifierGeneratorFactory;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.BeanContainer.LifecycleOptions;
@@ -28,6 +29,7 @@ import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
@@ -50,6 +52,7 @@ import static org.mockito.Mockito.times;
  * @author Yanming Zhou
  */
 @TestForIssue(jiraKey = "HHH-14688")
+@FailureExpected(reason = "functionality has been removed for now")
 @BaseUnitTest
 public class UserDefinedGeneratorsTests {
 
@@ -74,28 +77,18 @@ public class UserDefinedGeneratorsTests {
 					.addAnnotatedClass( Entity2.class )
 					.buildMetadata();
 
-			final IdentifierGeneratorFactory generatorFactory = new StandardIdentifierGeneratorFactory( ssr );
-
 			final PersistentClass entityBinding1 = metadata.getEntityBinding( Entity1.class.getName() );
 			final PersistentClass entityBinding2 = metadata.getEntityBinding( Entity2.class.getName() );
-			final IdentifierGenerator generator1 = entityBinding1.getRootClass()
-					.getIdentifier()
-					.createIdentifierGenerator(
-							generatorFactory,
-							new H2Dialect(),
-							"",
-							"",
-							entityBinding1.getRootClass()
-					);
-			final IdentifierGenerator generator2 = entityBinding2.getRootClass()
-					.getIdentifier()
-					.createIdentifierGenerator(
-							generatorFactory,
-							new H2Dialect(),
-							"",
-							"",
-							entityBinding2.getRootClass()
-					);
+			KeyValue keyValue1 = entityBinding1.getRootClass()
+					.getIdentifier();
+			Dialect dialect1 = new H2Dialect();
+			final Generator generator3 = keyValue1.createGenerator(dialect1, entityBinding1.getRootClass());
+			final IdentifierGenerator generator1 = generator3 instanceof IdentifierGenerator ? (IdentifierGenerator) generator3 : null;
+			KeyValue keyValue = entityBinding2.getRootClass()
+					.getIdentifier();
+			Dialect dialect = new H2Dialect();
+			final Generator generator = keyValue.createGenerator( dialect, entityBinding2.getRootClass());
+			final IdentifierGenerator generator2 = generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null;
 
 			then( beanContainer ).should( times( 2 ) ).getBean( same( TestIdentifierGenerator.class ),
 																any( LifecycleOptions.class ),

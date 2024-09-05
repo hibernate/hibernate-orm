@@ -65,7 +65,7 @@ public class LazyPersistWithDetachedAssociationTest {
 		Address loadedAddress = scope.fromTransaction(
 				session -> {
 					// first load the address
-					Address _loadedAddress = session.load(
+					Address _loadedAddress = session.getReference(
 							Address.class,
 							1L
 					);

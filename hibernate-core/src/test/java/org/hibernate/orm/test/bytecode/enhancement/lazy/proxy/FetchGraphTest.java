@@ -107,7 +107,7 @@ public class FetchGraphTest {
 
 		scope.inSession(
 				session -> {
-					final DEntity entityD = session.load( DEntity.class, 1L );
+					final DEntity entityD = session.getReference( DEntity.class, 1L );
 					assertThat( stats.getPrepareStatementCount(), is( 0L ) );
 					assert !Hibernate.isPropertyInitialized( entityD, "a" );
 					assert !Hibernate.isPropertyInitialized( entityD, "c" );
@@ -141,7 +141,7 @@ public class FetchGraphTest {
 
 		scope.inSession(
 				session -> {
-					final EEntity entityE = session.load( EEntity.class, 17L );
+					final EEntity entityE = session.getReference( EEntity.class, 17L );
 					assertThat( stats.getPrepareStatementCount(), is( 0L ) );
 					assert !Hibernate.isPropertyInitialized( entityE, "d" );
 
@@ -356,7 +356,7 @@ public class FetchGraphTest {
 				session -> {
 					final AEntity entityA = session.get( AEntity.class, 1L );
 
-					final DEntity entityD = session.load( DEntity.class, 1L );
+					final DEntity entityD = session.getReference( DEntity.class, 1L );
 					assert !Hibernate.isInitialized( entityD );
 					Hibernate.initialize( entityD );
 					assert Hibernate.isPropertyInitialized( entityD, "a" );
@@ -383,7 +383,7 @@ public class FetchGraphTest {
 					// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 					// Load a D
 
-					final DEntity entityD = session.load( DEntity.class, 1L );
+					final DEntity entityD = session.getReference( DEntity.class, 1L );
 
 					assertThat( entityD instanceof HibernateProxy, is( false ) );
 					assertThat( entityD instanceof PersistentAttributeInterceptable, is( true ) );
@@ -594,13 +594,13 @@ public class FetchGraphTest {
 							DEntity.class
 					).list();
 					result.forEach( entity -> {
-						session.delete( entity );
-						session.delete( entity.getE() );
-						session.delete( entity.getA() );
+						session.remove( entity );
+						session.remove( entity.getE() );
+						session.remove( entity.getA() );
 						Set<BEntity> bs = entity.getBs();
-						bs.forEach( bEntity -> session.delete( bEntity ) );
-						session.delete( entity.getC() );
-						session.delete( entity.getG() );
+						bs.forEach( bEntity -> session.remove( bEntity ) );
+						session.remove( entity.getC() );
+						session.remove( entity.getG() );
 
 					} );
 				}
@@ -611,14 +611,14 @@ public class FetchGraphTest {
 	public void testLoadAndDeleteDEntity(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					DEntity entity = session.load( DEntity.class, 1L );
-					session.delete( entity );
-					session.delete( entity.getE() );
-					session.delete( entity.getA() );
+					DEntity entity = session.getReference( DEntity.class, 1L );
+					session.remove( entity );
+					session.remove( entity.getE() );
+					session.remove( entity.getA() );
 					Set<BEntity> bs = entity.getBs();
-					bs.forEach( bEntity -> session.delete( bEntity ) );
-					session.delete( entity.getC() );
-					session.delete( entity.getG() );
+					bs.forEach( bEntity -> session.remove( bEntity ) );
+					session.remove( entity.getC() );
+					session.remove( entity.getG() );
 				}
 		);
 	}
@@ -628,13 +628,13 @@ public class FetchGraphTest {
 		scope.inTransaction(
 				session -> {
 					DEntity entity = session.get( DEntity.class, 1L );
-					session.delete( entity );
-					session.delete( entity.getE() );
-					session.delete( entity.getA() );
+					session.remove( entity );
+					session.remove( entity.getE() );
+					session.remove( entity.getA() );
 					Set<BEntity> bs = entity.getBs();
-					bs.forEach( bEntity -> session.delete( bEntity ) );
-					session.delete( entity.getC() );
-					session.delete( entity.getG() );
+					bs.forEach( bEntity -> session.remove( bEntity ) );
+					session.remove( entity.getC() );
+					session.remove( entity.getG() );
 				}
 		);
 	}
@@ -644,8 +644,8 @@ public class FetchGraphTest {
 		scope.inTransaction(
 				session -> {
 					EEntity entity = session.get( EEntity.class, 17L );
-					session.delete( entity );
-					session.delete( entity.getD() );
+					session.remove( entity );
+					session.remove( entity.getD() );
 				}
 		);
 	}
@@ -654,9 +654,9 @@ public class FetchGraphTest {
 	public void testLoadAndDeleteEEntity(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					EEntity entity = session.load( EEntity.class, 17L );
-					session.delete( entity );
-					session.delete( entity.getD() );
+					EEntity entity = session.getReference( EEntity.class, 17L );
+					session.remove( entity );
+					session.remove( entity.getD() );
 				}
 		);
 	}
@@ -670,8 +670,8 @@ public class FetchGraphTest {
 							EEntity.class
 					).list();
 					result.forEach( entity -> {
-						session.delete( entity );
-						session.delete( entity.getD() );
+						session.remove( entity );
+						session.remove( entity.getD() );
 					} );
 				}
 		);
@@ -733,13 +733,13 @@ public class FetchGraphTest {
 					d.setG( g );
 
 
-					session.save( b1 );
-					session.save( b2 );
-					session.save( a );
-					session.save( c );
-					session.save( g );
-					session.save( d );
-					session.save( e );
+					session.persist( b1 );
+					session.persist( b2 );
+					session.persist( a );
+					session.persist( c );
+					session.persist( g );
+					session.persist( d );
+					session.persist( e );
 
 
 					// create a slew of Activity objects, some with Instruction reference
@@ -750,17 +750,17 @@ public class FetchGraphTest {
 						if ( i % 2 == 0 ) {
 							final Instruction instr = new Instruction( i, "Instruction #" + i );
 							activity.setInstruction( instr );
-							session.save( instr );
+							session.persist( instr );
 						}
 						else {
 							final WebApplication webApplication = new WebApplication( i, "http://" + i + ".com" );
 							webApplication.setName( "name #" + i );
 							activity.setWebApplication( webApplication );
 							webApplication.getActivities().add( activity );
-							session.save( webApplication );
+							session.persist( webApplication );
 						}
 
-						session.save( activity );
+						session.persist( activity );
 					}
 
 					RoleEntity roleEntity = new RoleEntity();
@@ -781,10 +781,10 @@ public class FetchGraphTest {
 					roleEntity.setKey( specializedKey );
 					roleEntity.setSpecializedKey( moreSpecializedKey );
 					moreSpecializedKey.addRole( roleEntity );
-					session.save( specializedEntity );
-					session.save( roleEntity );
-					session.save( specializedKey );
-					session.save( moreSpecializedKey );
+					session.persist( specializedEntity );
+					session.persist( roleEntity );
+					session.persist( specializedKey );
+					session.persist( moreSpecializedKey );
 				}
 		);
 	}

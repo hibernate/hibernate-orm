@@ -57,7 +57,7 @@ public class OneToManyEmptyCollectionTest {
 		scope.inTransaction(
 				session -> {
 					Order order = new Order();
-					session.save( order );
+					session.persist( order );
 				}
 		);
 

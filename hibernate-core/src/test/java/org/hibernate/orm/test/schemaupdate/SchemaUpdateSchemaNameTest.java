@@ -20,6 +20,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.MySQLDialect;
 
+import org.hibernate.tool.schema.internal.StandardTableMigrator;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -29,7 +30,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
 /**
- * Test to illustrate that the {@link org.hibernate.mapping.Table#sqlAlterStrings} method
+ * Test to illustrate that the {@link StandardTableMigrator#sqlAlterStrings} method
  * uses legacy logic for building table names and doesn't adequately specify the catalog
  * or schema name properly.
  *

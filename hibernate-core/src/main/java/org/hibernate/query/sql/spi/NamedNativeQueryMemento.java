@@ -8,22 +8,17 @@ package org.hibernate.query.sql.spi;
 
 import java.util.Set;
 
-import jakarta.persistence.SqlResultSetMapping;
-
-import org.hibernate.boot.query.NamedNativeQueryDefinition;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.named.AbstractNamedQueryMemento;
 import org.hibernate.query.named.NamedQueryMemento;
-import org.hibernate.query.sql.internal.NamedNativeQueryMementoImpl;
+
+import jakarta.persistence.SqlResultSetMapping;
 
 /**
  * Descriptor for a named native query in the runtime environment
  *
  * @author Steve Ebersole
  */
-public interface NamedNativeQueryMemento extends NamedQueryMemento {
+public interface NamedNativeQueryMemento<E> extends NamedQueryMemento<E> {
 	/**
 	 * Informational access to the SQL query string
 	 */
@@ -48,7 +43,9 @@ public interface NamedNativeQueryMemento extends NamedQueryMemento {
 	/**
 	 * An implicit entity mapping by entity class
 	 */
-	Class<?> getResultMappingClass();
+	default Class<?> getResultMappingClass() {
+		return getResultType();
+	}
 
 	Integer getFirstResult();
 
@@ -58,7 +55,7 @@ public interface NamedNativeQueryMemento extends NamedQueryMemento {
 	 * Convert the memento into an untyped executable query
 	 */
 	@Override
-	<T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session);
+	NativeQueryImplementor<E> toQuery(SharedSessionContractImplementor session);
 
 	/**
 	 * Convert the memento into a typed executable query
@@ -72,88 +69,6 @@ public interface NamedNativeQueryMemento extends NamedQueryMemento {
 	<T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session, String resultSetMapping);
 
 	@Override
-	NamedNativeQueryMemento makeCopy(String name);
+	NamedNativeQueryMemento<E> makeCopy(String name);
 
-	/**
-	 * Delegate used in creating named HQL query mementos.
-	 *
-	 * @see NamedNativeQueryDefinition
-	 */
-	class Builder extends AbstractNamedQueryMemento.AbstractBuilder<Builder> {
-		protected String queryString;
-
-		protected Integer firstResult;
-		protected Integer maxResults;
-
-		protected Set<String> querySpaces;
-
-		protected String resultSetMappingName;
-		protected String resultSetMappingClassName;
-
-
-		public Builder(String name) {
-			super( name );
-		}
-
-		@Override
-		protected Builder getThis() {
-			return this;
-		}
-
-		public Builder setQuery(String queryString) {
-			this.queryString = queryString;
-			return this;
-		}
-
-		public Builder setCacheable(boolean cacheable) {
-			this.cacheable = cacheable;
-			return this;
-		}
-
-		public Builder setFirstResult(Integer firstResult) {
-			this.firstResult = firstResult;
-			return this;
-		}
-
-		public Builder setMaxResults(Integer maxResults) {
-			this.maxResults = maxResults;
-			return this;
-		}
-
-		public void setQuerySpaces(Set<String> querySpaces) {
-			this.querySpaces = querySpaces;
-		}
-
-		public void setResultSetMappingName(String resultSetMappingName) {
-			this.resultSetMappingName = resultSetMappingName;
-		}
-
-		public void setResultSetMappingClassName(String resultSetMappingClassName) {
-			this.resultSetMappingClassName = resultSetMappingClassName;
-		}
-
-		public NamedNativeQueryMemento build(SessionFactoryImplementor sessionFactory) {
-			return new NamedNativeQueryMementoImpl(
-					name,
-					queryString,
-					queryString,
-					resultSetMappingName,
-					sessionFactory.getServiceRegistry()
-							.requireService( ClassLoaderService.class )
-							.classForName( resultSetMappingClassName ),
-					querySpaces,
-					cacheable,
-					cacheRegion,
-					cacheMode,
-					flushMode,
-					readOnly,
-					timeout,
-					fetchSize,
-					comment,
-					firstResult,
-					maxResults,
-					hints
-			);
-		}
-	}
 }

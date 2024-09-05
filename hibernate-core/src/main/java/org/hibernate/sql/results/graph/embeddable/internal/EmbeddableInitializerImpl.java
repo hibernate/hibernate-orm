@@ -27,6 +27,7 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerData;
@@ -43,6 +44,8 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
+import static org.hibernate.sql.results.graph.embeddable.EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER;
 import static org.hibernate.sql.results.graph.entity.internal.BatchEntityInsideEmbeddableSelectFetchInitializer.BATCH_PROPERTY;
 
 /**
@@ -57,14 +60,13 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 	private final @Nullable InitializerParent<InitializerData> parent;
 	private final boolean isResultInitializer;
 	private final boolean isPartOfKey;
-	private final boolean createEmptyCompositesEnabled;
 	private final SessionFactoryImplementor sessionFactory;
 
 	protected final DomainResultAssembler<?>[][] assemblers;
 	protected final BasicResultAssembler<?> discriminatorAssembler;
 	protected final @Nullable Initializer<InitializerData>[][] subInitializers;
 	protected final @Nullable Initializer<InitializerData>[][] subInitializersForResolveFromInitialized;
-//	protected final BitSet eagerSubInitializers;
+	protected final @Nullable Initializer<InitializerData>[][] collectionContainingSubInitializers;
 	protected final boolean lazyCapable;
 	protected final boolean hasLazySubInitializer;
 
@@ -116,45 +118,84 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 
 		this.isPartOfKey = embedded.isEntityIdentifierMapping() || Initializer.isPartOfKey( navigablePath, parent );
 		// We never want to create empty composites for the FK target or PK, otherwise collections would break
-		this.createEmptyCompositesEnabled = !isPartOfKey && embeddableMappingType.isCreateEmptyCompositesEnabled();
 		this.sessionFactory = creationState.getSqlAstCreationContext().getSessionFactory();
-		this.assemblers = createAssemblers(
-				resultDescriptor,
-				creationState,
-				embeddableMappingType
-		);
-		this.discriminatorAssembler = discriminatorFetch != null ?
-				(BasicResultAssembler<?>) discriminatorFetch.createAssembler( this, creationState ) :
-				null;
-		this.subInitializers = createInitializers( assemblers );
+		final Collection<EmbeddableMappingType.ConcreteEmbeddableType> concreteEmbeddableTypes = embeddableMappingType.getConcreteEmbeddableTypes();
+		final DomainResultAssembler<?>[][] assemblers = new DomainResultAssembler[concreteEmbeddableTypes.isEmpty() ? 1 : concreteEmbeddableTypes.size()][];
+		final @Nullable Initializer<InitializerData>[][] subInitializers = new Initializer[assemblers.length][];
 		final @Nullable Initializer<InitializerData>[][] eagerSubInitializers = new Initializer[subInitializers.length][];
+		final @Nullable Initializer<InitializerData>[][] collectionContainingSubInitializers = new Initializer[subInitializers.length][];
+		final int numberOfFetchables = embeddableMappingType.getNumberOfFetchables();
+
+		Arrays.fill( subInitializers, Initializer.EMPTY_ARRAY );
 		Arrays.fill( eagerSubInitializers, Initializer.EMPTY_ARRAY );
-//		final BitSet eagerSubInitializers = new BitSet(subInitializers.length * embeddableMappingType.getNumberOfFetchables());
+		Arrays.fill( collectionContainingSubInitializers, Initializer.EMPTY_ARRAY );
+		for (int i = 0; i < assemblers.length; i++ ) {
+			assemblers[i] = new DomainResultAssembler[numberOfFetchables];
+		}
+
 		boolean lazyCapable = false;
 		boolean hasLazySubInitializers = false;
-		for ( int subclassId = 0; subclassId < subInitializers.length; subclassId++ ) {
-			final Initializer<InitializerData>[] subInitializer = subInitializers[subclassId];
-			for ( int i = 0; i < subInitializer.length; i++ ) {
-				final Initializer<InitializerData> initializer = subInitializer[i];
-				if ( initializer != null ) {
-					if ( initializer.isEager() ) {
+		for ( int stateArrayPosition = 0; stateArrayPosition < numberOfFetchables; stateArrayPosition++ ) {
+			final Fetchable stateArrayContributor = embeddableMappingType.getFetchable( stateArrayPosition );
+			final Fetch fetch = resultDescriptor.findFetch( stateArrayContributor );
+
+			final DomainResultAssembler<?> stateAssembler = fetch == null
+					? new NullValueAssembler<>( stateArrayContributor.getJavaType() )
+					: fetch.createAssembler( this, creationState );
+
+			if ( concreteEmbeddableTypes.isEmpty() ) {
+				assemblers[0][stateArrayPosition] = stateAssembler;
+			}
+			else {
+				for ( EmbeddableMappingType.ConcreteEmbeddableType concreteEmbeddableType : concreteEmbeddableTypes ) {
+					if ( concreteEmbeddableType.declaresAttribute( stateArrayPosition ) ) {
+						assemblers[concreteEmbeddableType.getSubclassId()][stateArrayPosition] = stateAssembler;
+					}
+				}
+			}
+
+			//noinspection unchecked
+			final Initializer<InitializerData> subInitializer = (Initializer<InitializerData>) stateAssembler.getInitializer();
+			if ( subInitializer != null ) {
+				for (int subclassId = 0; subclassId < assemblers.length; subclassId++ ) {
+					if ( subInitializers[subclassId] == Initializer.EMPTY_ARRAY ) {
+						subInitializers[subclassId] = new Initializer[numberOfFetchables];
+					}
+					subInitializers[subclassId][stateArrayPosition] = subInitializer;
+
+					if ( subInitializer.isEager() ) {
 						if ( eagerSubInitializers[subclassId] == Initializer.EMPTY_ARRAY ) {
-							eagerSubInitializers[subclassId] = new Initializer[subInitializer.length];
+							eagerSubInitializers[subclassId] = new Initializer[numberOfFetchables];
 						}
-						eagerSubInitializers[subclassId][i] = initializer;
-						hasLazySubInitializers = hasLazySubInitializers || initializer.hasLazySubInitializers();
+						eagerSubInitializers[subclassId][stateArrayPosition] = subInitializer;
+						hasLazySubInitializers = hasLazySubInitializers || subInitializer.hasLazySubInitializers();
+
+						assert fetch != null;
+						final FetchParent fetchParent;
+						if ( ( fetchParent = fetch.asFetchParent() ) != null && fetchParent.containsCollectionFetches()
+								|| subInitializer.isCollectionInitializer() ) {
+							if ( collectionContainingSubInitializers[subclassId] == Initializer.EMPTY_ARRAY ) {
+								collectionContainingSubInitializers[subclassId] = new Initializer[numberOfFetchables];
+							}
+							collectionContainingSubInitializers[subclassId][stateArrayPosition] = subInitializer;
+						}
 					}
 					else {
 						hasLazySubInitializers = true;
 					}
-					lazyCapable = lazyCapable || initializer.isLazyCapable();
+					lazyCapable = lazyCapable || subInitializer.isLazyCapable();
 				}
 			}
 		}
-
+		this.assemblers = assemblers;
+		this.discriminatorAssembler = discriminatorFetch != null
+				? (BasicResultAssembler<?>) discriminatorFetch.createAssembler( this, creationState )
+				: null;
+		this.subInitializers = subInitializers;
 		this.subInitializersForResolveFromInitialized = isEnhancedForLazyLoading( embeddableMappingType )
 				? subInitializers
 				: eagerSubInitializers;
+		this.collectionContainingSubInitializers = collectionContainingSubInitializers;
 		this.lazyCapable = lazyCapable;
 		this.hasLazySubInitializer = hasLazySubInitializers;
 	}
@@ -163,61 +204,6 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 		return ManagedTypeHelper.isPersistentAttributeInterceptableType(
 				embeddableMappingType.getRepresentationStrategy().getMappedJavaType().getJavaTypeClass()
 		);
-	}
-
-	protected DomainResultAssembler<?>[][] createAssemblers(
-			EmbeddableResultGraphNode resultDescriptor,
-			AssemblerCreationState creationState,
-			EmbeddableMappingType embeddableTypeDescriptor) {
-		final int size = embeddableTypeDescriptor.getNumberOfFetchables();
-		final DomainResultAssembler<?>[] overallAssemblers = new DomainResultAssembler[size];
-		for ( int i = 0; i < size; i++ ) {
-			final Fetchable stateArrayContributor = embeddableTypeDescriptor.getFetchable( i );
-			final Fetch fetch = resultDescriptor.findFetch( stateArrayContributor );
-
-			final DomainResultAssembler<?> stateAssembler = fetch == null
-					? new NullValueAssembler<>( stateArrayContributor.getJavaType() )
-					: fetch.createAssembler( this, creationState );
-
-			overallAssemblers[i] = stateAssembler;
-		}
-		if ( embeddableTypeDescriptor.isPolymorphic() ) {
-			final Collection<EmbeddableMappingType.ConcreteEmbeddableType> concreteEmbeddableTypes = embeddableTypeDescriptor.getConcreteEmbeddableTypes();
-			final DomainResultAssembler<?>[][] assemblers = new DomainResultAssembler[concreteEmbeddableTypes.size()][];
-			for ( EmbeddableMappingType.ConcreteEmbeddableType concreteEmbeddableType : concreteEmbeddableTypes ) {
-				final DomainResultAssembler<?>[] subAssemblers = new DomainResultAssembler[overallAssemblers.length];
-				for ( int i = 0; i < overallAssemblers.length; i++ ) {
-					if ( concreteEmbeddableType.declaresAttribute( i ) ) {
-						subAssemblers[i] = overallAssemblers[i];
-					}
-				}
-				assemblers[concreteEmbeddableType.getSubclassId()] = subAssemblers;
-			}
-			return assemblers;
-		}
-		return new DomainResultAssembler[][] { overallAssemblers };
-	}
-
-	protected static @Nullable Initializer<InitializerData>[][] createInitializers(DomainResultAssembler<?>[][] assemblers) {
-		@Nullable Initializer<?>[][] subInitializers = new Initializer<?>[assemblers.length][];
-		for ( int i = 0; i < assemblers.length; i++ ) {
-			final DomainResultAssembler<?>[] subAssemblers = assemblers[i];
-			final @Nullable Initializer<?>[] initializers = new Initializer[subAssemblers.length];
-			boolean empty = true;
-			for ( int j = 0; j < subAssemblers.length; j++ ) {
-				final DomainResultAssembler<?> assembler = subAssemblers[j];
-				if ( assembler != null ) {
-					final Initializer<?> initializer = assembler.getInitializer();
-					if ( initializer != null ) {
-						initializers[j] = initializer;
-						empty = false;
-					}
-				}
-			}
-			subInitializers[i] = empty ? Initializer.EMPTY_ARRAY : initializers;
-		}
-		//noinspection unchecked
-		return (Initializer<InitializerData>[][]) subInitializers;
 	}
 
 	@Override
@@ -271,7 +257,6 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 		if ( data.getState() != State.UNINITIALIZED ) {
 			return;
 		}
-		// We need to possibly wrap the processing state if the embeddable is within an aggregate
 		data.setInstance( null );
 		if ( discriminatorAssembler != null ) {
 			assert embeddableMappingType.getDiscriminatorMapping() != null;
@@ -293,6 +278,23 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 		}
 		else {
 			super.resolveKey( data );
+		}
+	}
+
+	@Override
+	public void resetResolvedEntityRegistrations(RowProcessingState rowProcessingState) {
+		final EmbeddableInitializerData data = getData( rowProcessingState );
+		for ( Initializer<InitializerData> initializer : subInitializers[data.getSubclassId()] ) {
+			if ( initializer != null ) {
+				final EntityInitializer<?> entityInitializer = initializer.asEntityInitializer();
+				final EmbeddableInitializer<?> embeddableInitializer;
+				if ( entityInitializer != null ) {
+					entityInitializer.resetResolvedEntityRegistrations( rowProcessingState );
+				}
+				else if ( ( embeddableInitializer = initializer.asEmbeddableInitializer() ) != null ) {
+					embeddableInitializer.resetResolvedEntityRegistrations( rowProcessingState );
+				}
+			}
 		}
 	}
 
@@ -318,7 +320,8 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 			}
 			else {
 				final RowProcessingState rowProcessingState = data.getRowProcessingState();
-				for ( Initializer<InitializerData> initializer : subInitializers[data.getSubclassId()] ) {
+				// When a previous row initialized this entity already, we only need to process collections
+				for ( Initializer<InitializerData> initializer : collectionContainingSubInitializers[data.getSubclassId()] ) {
 					if ( initializer != null ) {
 						initializer.resolveFromPreviousRow( rowProcessingState );
 					}
@@ -471,6 +474,8 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 		if ( data.getInstance() == null ) {
 			data.setInstance( createCompositeInstance( data ) );
 		}
+
+		EMBEDDED_LOAD_LOGGER.debugf( "Created composite instance [%s]", navigablePath );
 	}
 
 	private void extractRowState(EmbeddableInitializerData data) {
@@ -512,11 +517,7 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 
 	private Object createCompositeInstance(EmbeddableInitializerData data) {
 		if ( data.getState() == State.MISSING ) {
-			// todo (6.0) : should we initialize the composite instance if it has a parent attribute?
-//			if ( !createEmptyCompositesEnabled && embedded.getParentInjectionAttributePropertyAccess() == null ) {
-			if ( !createEmptyCompositesEnabled ) {
-				return null;
-			}
+			return null;
 		}
 
 		final EmbeddableInstantiator instantiator = data.concreteEmbeddableType == null
@@ -524,6 +525,7 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 				: data.concreteEmbeddableType.getInstantiator();
 		final Object instance = instantiator.instantiate( data, sessionFactory );
 		data.setState( State.RESOLVED );
+		EMBEDDED_LOAD_LOGGER.debugf( "Created composite instance [%s] : %s", navigablePath, instance );
 		return instance;
 	}
 

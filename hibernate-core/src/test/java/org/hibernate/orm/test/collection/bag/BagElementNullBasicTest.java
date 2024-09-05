@@ -64,7 +64,7 @@ public class BagElementNullBasicTest {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
 					assertEquals( 0, getCollectionElementRows( entityId, scope ).size() );
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}
@@ -93,7 +93,7 @@ public class BagElementNullBasicTest {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
 					assertEquals( 0, getCollectionElementRows( entityId, scope ).size() );
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}
@@ -136,7 +136,7 @@ public class BagElementNullBasicTest {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
 					assertEquals( 0, getCollectionElementRows( entityId, scope ).size() );
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}
@@ -168,7 +168,7 @@ public class BagElementNullBasicTest {
 					assertEquals( 1, e.aCollection.size() );
 					assertEquals( 1, getCollectionElementRows( e.id, scope ).size() );
 					assertEquals( "ghi", e.aCollection.get( 0 ) );
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}

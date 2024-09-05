@@ -8,21 +8,9 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy.group;
 
 import java.util.ArrayList;
 import java.util.List;
-import jakarta.persistence.Basic;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.LazyGroup;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.proxy.HibernateProxy;
 
@@ -34,18 +22,29 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Basic;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( "HHH-11155" )
 @DomainModel(
         annotatedClasses = {
@@ -83,8 +82,8 @@ public class LazyGroupTest {
             c2.alternateParent = p1;
             p1.alternateChildren.add( c2 );
 
-            s.save( p1 );
-            s.save( p2 );
+            s.persist( p1 );
+            s.persist( p2 );
         } );
     }
 
@@ -257,11 +256,9 @@ public class LazyGroupTest {
         String nickName;
 
         @ManyToOne( cascade = CascadeType.ALL, fetch = FetchType.LAZY )
-        @LazyToOne( LazyToOneOption.NO_PROXY )
         Parent parent;
 
         @ManyToOne( cascade = CascadeType.ALL, fetch = FetchType.LAZY )
-        @LazyToOne( LazyToOneOption.NO_PROXY )
         @LazyGroup( "SECONDARY" )
         Parent alternateParent;
 

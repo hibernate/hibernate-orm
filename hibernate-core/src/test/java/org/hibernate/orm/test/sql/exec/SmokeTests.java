@@ -73,11 +73,11 @@ public class SmokeTests {
 					simpleEntity.setName( "Fab" );
 					simpleEntity.setGender2( Gender.MALE );
 					simpleEntity.setComponent( new Component( "a1", "a2" ) );
-					session.save( simpleEntity );
+					session.persist( simpleEntity );
 					OtherEntity otherEntity = new OtherEntity();
 					otherEntity.setId( 2 );
 					otherEntity.setName( "Bar" );
-					session.save( otherEntity );
+					session.persist( otherEntity );
 				}
 		);
 	}
@@ -236,7 +236,7 @@ public class SmokeTests {
 					simpleEntity.setName( "Andrea" );
 					simpleEntity.setGender2( Gender.FEMALE );
 					simpleEntity.setComponent( new Component( "b1", "b2" ) );
-					session.save( simpleEntity );
+					session.persist( simpleEntity );
 				}
 		);
 
@@ -271,7 +271,7 @@ public class SmokeTests {
 					simpleEntity.setName( "Andrea" );
 					simpleEntity.setGender2( Gender.FEMALE );
 					simpleEntity.setComponent( new Component( "b1", "b2" ) );
-					session.save( simpleEntity );
+					session.persist( simpleEntity );
 				}
 		);
 

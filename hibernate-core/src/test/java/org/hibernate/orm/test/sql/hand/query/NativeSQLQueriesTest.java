@@ -24,7 +24,6 @@ import org.hibernate.Hibernate;
 import org.hibernate.QueryException;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.orm.test.sql.hand.Dimension;
@@ -79,6 +78,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		xmlMappings = { "org/hibernate/orm/test/sql/hand/query/NativeSQLQueries.hbm.xml" }
 )
 @SessionFactory
+@SuppressWarnings({"deprecation", "unused", "rawtypes", "unchecked"})
 public class NativeSQLQueriesTest {
 
 	protected String getOrganizationFetchJoinEmploymentSQL() {
@@ -176,7 +176,7 @@ public class NativeSQLQueriesTest {
 					assertEquals( 1, session.getSessionFactory().getStatistics().getEntityInsertCount() );
 
 					// clean up
-					session.delete( jboss );
+					session.remove( jboss );
 				}
 		);
 	}
@@ -240,10 +240,10 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					session.delete(emp);
-					session.delete(gavin);
-					session.delete(ifa);
-					session.delete(jboss);
+					session.remove(emp);
+					session.remove(gavin);
+					session.remove(ifa);
+					session.remove(jboss);
 				}
 		);
 	}
@@ -269,10 +269,10 @@ public class NativeSQLQueriesTest {
 					l = session.createNativeQuery( getOrgEmpPersonSQL(), "org-emp-person" ).list();
 					assertEquals( 1, l.size() );
 
-					session.delete(emp);
-					session.delete(gavin);
-					session.delete(ifa);
-					session.delete(jboss);
+					session.remove(emp);
+					session.remove(gavin);
+					session.remove(ifa);
+					session.remove(jboss);
 				}
 		);
 	}
@@ -298,10 +298,10 @@ public class NativeSQLQueriesTest {
 					l = session.createNativeQuery( getOrgEmpPersonSQL(), "org-emp-person", Object[].class ).list();
 					assertEquals( 1, l.size() );
 
-					session.delete(emp);
-					session.delete(gavin);
-					session.delete(ifa);
-					session.delete(jboss);
+					session.remove(emp);
+					session.remove(gavin);
+					session.remove(ifa);
+					session.remove(jboss);
 				}
 		);
 	}
@@ -311,8 +311,15 @@ public class NativeSQLQueriesTest {
 		Organization ifa = new Organization( "IFA" );
 		Organization jboss = new Organization( "JBoss" );
 
-		Object idIfa = scope.fromTransaction( session -> session.save( ifa ) );
-		Object idJBoss = scope.fromTransaction( session -> session.save( jboss ) );
+		Object idIfa = scope.fromTransaction( session -> {
+			session.persist( ifa );
+			return ifa.getId();
+		} );
+		Object idJBoss = scope.fromTransaction( session -> {
+			session.persist( jboss );
+			return jboss.getId();
+
+		} );
 
 		scope.inTransaction(
 				session -> {
@@ -370,14 +377,13 @@ public class NativeSQLQueriesTest {
 					assertEquals( o[1], "JBoss" );
 					assertEquals( o[0], idJBoss );
 
-					session.delete( ifa );
-					session.delete( jboss );
+					session.remove( ifa );
+					session.remove( jboss );
 				}
 		);
 	}
 
 	@Test
-	@SuppressWarnings( {"deprecation", "UnusedDeclaration"})
 	public void testMappedAliasStrategy(SessionFactoryScope scope) {
 		Organization ifa = new Organization("IFA");
 		Organization jboss = new Organization("JBoss");
@@ -386,10 +392,10 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					Object orgId = session.save(jboss);
-					Object orgId2 = session.save(ifa);
-					session.save(gavin);
-					session.save(emp);
+					session.persist(jboss);
+					session.persist(ifa);
+					session.persist(gavin);
+					session.persist(emp);
 				}
 		);
 
@@ -450,16 +456,15 @@ public class NativeSQLQueriesTest {
 					assertEquals(2, objs.length);
 					Employment emp2 = (Employment) objs[0];
 					Person _gavin = (Person) objs[1];
-					session.delete(emp2);
-					session.delete(jboss);
-					session.delete(_gavin);
-					session.delete(ifa);
+					session.remove(emp2);
+					session.remove(jboss);
+					session.remove(_gavin);
+					session.remove(ifa);
 				}
 		);
 	}
 
 	@Test
-	@SuppressWarnings( {"unchecked"})
 	@FailureExpected( jiraKey = "unknown" )
 	public void testCompositeIdJoins(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -482,9 +487,9 @@ public class NativeSQLQueriesTest {
 					order.setProduct( product );
 					order.setPerson( person );
 
-					session.save( product );
-					session.save( order);
-					session.save( person );
+					session.persist( product );
+					session.persist( order);
+					session.persist( person );
 				}
 		);
 
@@ -528,7 +533,6 @@ public class NativeSQLQueriesTest {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnusedDeclaration", "deprecation", "UnusedAssignment"})
 	public void testAutoDetectAliasing(SessionFactoryScope scope) {
 		Organization ifa = new Organization("IFA");
 		Organization jboss = new Organization("JBoss");
@@ -537,10 +541,10 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					Object orgId = session.save(jboss);
-					Object orgId2 = session.save(ifa);
-					session.save(gavin);
-					session.save(emp);
+					session.persist(jboss);
+					session.persist(ifa);
+					session.persist(gavin);
+					session.persist(emp);
 				}
 		);
 
@@ -630,20 +634,20 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					session.delete(emp2);
+					session.remove(emp2);
 
-					session.delete(jboss);
-					session.delete(gavin);
-					session.delete(ifa);
+					session.remove(jboss);
+					session.remove(gavin);
+					session.remove(ifa);
 				}
 		);
 
 		scope.inTransaction(
 				session -> {
 					Dimension dim = new Dimension( 3, 30 );
-					session.save( dim );
+					session.persist( dim );
 					List list = session.createNativeQuery( "select d_len * d_width as surface, d_len * d_width * 10 as volume from Dimension" ).list();
-					session.delete( dim );
+					session.remove( dim );
 				}
 		);
 
@@ -655,7 +659,7 @@ public class NativeSQLQueriesTest {
 					enterprise.setSpeed( 50d );
 					Dimension d = new Dimension(45, 10);
 					enterprise.setDimensions( d );
-					session.save( enterprise );
+					session.persist( enterprise );
 					session.flush();
 					Object[] result = (Object[]) session.getNamedQuery( "spaceship" ).uniqueResult();
 					assertEquals( 3, result.length, "expecting 3 result values" );
@@ -663,13 +667,12 @@ public class NativeSQLQueriesTest {
 					assertTrue(50d == enterprise.getSpeed() );
 					assertTrue( 450d == extractDoubleValue( result[1] ) );
 					assertTrue( 4500d == extractDoubleValue( result[2] ) );
-					session.delete( enterprise );
+					session.remove( enterprise );
 				}
 		);
 	}
 
 	@Test
-	@SuppressWarnings( {"UnusedDeclaration"})
 	public void testExplicitReturnAPI(SessionFactoryScope scope) {
 		Organization jboss = new Organization( "JBoss" );
 		Person me = new Person( "Steve" );
@@ -677,9 +680,9 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					Object jbossId = session.save( jboss );
-					session.save( me );
-					session.save( emp );
+					session.persist( jboss );
+					session.persist( me );
+					session.persist( emp );
 				}
 		);
 
@@ -740,9 +743,9 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					session.delete( emp );
-					session.delete( jboss );
-					session.delete( me );
+					session.remove( emp );
+					session.remove( jboss );
+					session.remove( me );
 				}
 		);
 	}
@@ -780,7 +783,6 @@ public class NativeSQLQueriesTest {
 	}
 
 	@Test
-	@SuppressWarnings( {"unchecked", "UnusedDeclaration"})
 	public void testAddJoinForManyToMany(SessionFactoryScope scope) {
 		Person gavin = new Person( "Gavin" );
 		Person max = new Person( "Max" );
@@ -806,7 +808,7 @@ public class NativeSQLQueriesTest {
 					session.flush();
 					session.clear();
 
-					// todo : see http://opensource.atlassian.com/projects/hibernate/browse/HHH-3908
+					// todo : see HHH-3908
 //		String sqlStr = "SELECT {groupp.*} , {gp.*} " +
 //				"FROM GROUPP groupp, GROUP_PERSON gp, PERSON person WHERE groupp.ID = gp.GROUP_ID and person.PERID = gp.PERSON_ID";
 //
@@ -827,11 +829,11 @@ public class NativeSQLQueriesTest {
 					hibernate.getPersons().remove( gavin );
 					hibernate.getPersons().remove( max );
 
-					session.delete( seam );
-					session.delete( hibernate );
-					session.delete( gavin );
-					session.delete( max );
-					session.delete( pete );
+					session.remove( seam );
+					session.remove( hibernate );
+					session.remove( gavin );
+					session.remove( max );
+					session.remove( pete );
 				}
 		);
 	}
@@ -863,7 +865,7 @@ public class NativeSQLQueriesTest {
 						}
 					}
 					assertEquals( description, descriptionRead );
-					session.delete( holder );
+					session.remove( holder );
 				}
 		);
 	}
@@ -895,7 +897,7 @@ public class NativeSQLQueriesTest {
 						}
 					}
 					assertTrue( Arrays.equals( photo, photoRead ) );
-					session.delete( holder );
+					session.remove( holder );
 				}
 		);
 	}
@@ -927,7 +929,7 @@ public class NativeSQLQueriesTest {
 							.setResultTransformer( Transformers.aliasToBean( HashMap.class ) )
 							.uniqueResult();
 					assertEquals( "Gavin", result.get( "NAME" ) == null ? result.get( "name" ) : result.get( "NAME" ) );
-					session.delete( gavin );
+					session.remove( gavin );
 				}
 		);
 	}

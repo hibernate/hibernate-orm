@@ -78,7 +78,7 @@ public class PersistentBagContainsTest {
 
 		scope.inTransaction( session -> {
 			Order order = session.find( Order.class, _order.getId() );
-			session.delete( order );
+			session.remove( order );
 		} );
 	}
 

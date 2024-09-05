@@ -83,7 +83,7 @@ public class LoadANonExistingNotFoundLazyBatchEntityTest {
 		scope.inTransaction( (session) -> {
 			List<Employee> employees = new ArrayList<>( NUMBER_OF_ENTITIES );
 			for ( int i = 0 ; i < NUMBER_OF_ENTITIES ; i++ ) {
-				employees.add( session.load( Employee.class, i + 1 ) );
+				employees.add( session.getReference( Employee.class, i + 1 ) );
 			}
 			for ( int i = 0 ; i < NUMBER_OF_ENTITIES ; i++ ) {
 				Hibernate.initialize( employees.get( i ) );

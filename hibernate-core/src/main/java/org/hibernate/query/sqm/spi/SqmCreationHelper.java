@@ -6,10 +6,18 @@
  */
 package org.hibernate.query.sqm.spi;
 
+import java.util.List;
+
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
-import org.hibernate.spi.NavigablePath;
+import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.predicate.SqmJunctionPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.spi.NavigablePath;
+
+import jakarta.persistence.criteria.Predicate;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -66,6 +74,87 @@ public class SqmCreationHelper {
 			navigablePath = navigablePath.append( CollectionPart.Nature.ELEMENT.getName() );
 		}
 		return buildSubNavigablePath( navigablePath, subNavigable, alias );
+	}
+
+	public static SqmPredicate combinePredicates(SqmPredicate baseRestriction, List<SqmPredicate> incomingRestrictions) {
+		if ( CollectionHelper.isEmpty( incomingRestrictions ) ) {
+			return baseRestriction;
+		}
+
+		SqmPredicate combined = combinePredicates( null, baseRestriction );
+		for ( int i = 0; i < incomingRestrictions.size(); i++ ) {
+			combined = combinePredicates( combined, incomingRestrictions.get(i) );
+		}
+		return combined;
+	}
+
+	public static SqmPredicate combinePredicates(SqmPredicate baseRestriction, JpaPredicate... incomingRestrictions) {
+		if ( CollectionHelper.isEmpty( incomingRestrictions ) ) {
+			return baseRestriction;
+		}
+
+		SqmPredicate combined = combinePredicates( null, baseRestriction );
+		for ( int i = 0; i < incomingRestrictions.length; i++ ) {
+			combined = combinePredicates( combined, incomingRestrictions[i] );
+		}
+		return combined;
+	}
+
+	public static SqmPredicate combinePredicates(SqmPredicate baseRestriction, Predicate... incomingRestrictions) {
+		if ( CollectionHelper.isEmpty( incomingRestrictions ) ) {
+			return baseRestriction;
+		}
+
+		SqmPredicate combined = combinePredicates( null, baseRestriction );
+		for ( int i = 0; i < incomingRestrictions.length; i++ ) {
+			combined = combinePredicates( combined, incomingRestrictions[i] );
+		}
+		return combined;
+	}
+
+
+	public static SqmPredicate combinePredicates(SqmPredicate baseRestriction, SqmPredicate incomingRestriction) {
+		if ( baseRestriction == null ) {
+			return incomingRestriction;
+		}
+
+		if ( incomingRestriction == null ) {
+			return baseRestriction;
+		}
+
+		final SqmJunctionPredicate combinedPredicate;
+
+		if ( baseRestriction instanceof SqmJunctionPredicate ) {
+			// we already had multiple before
+			final SqmJunctionPredicate junction = (SqmJunctionPredicate) baseRestriction;
+			if ( junction.getPredicates().isEmpty() ) {
+				return incomingRestriction;
+			}
+
+			if ( junction.getOperator() == Predicate.BooleanOperator.AND ) {
+				combinedPredicate = junction;
+			}
+			else {
+				combinedPredicate = new SqmJunctionPredicate(
+						Predicate.BooleanOperator.AND,
+						baseRestriction.getExpressible(),
+						baseRestriction.nodeBuilder()
+				);
+				combinedPredicate.getPredicates().add( baseRestriction );
+			}
+		}
+		else {
+			combinedPredicate = new SqmJunctionPredicate(
+					Predicate.BooleanOperator.AND,
+					baseRestriction.getExpressible(),
+					baseRestriction.nodeBuilder()
+			);
+			combinedPredicate.getPredicates().add( baseRestriction );
+		}
+
+		combinedPredicate.getPredicates().add( incomingRestriction );
+
+		return combinedPredicate;
 	}
 
 	private SqmCreationHelper() {

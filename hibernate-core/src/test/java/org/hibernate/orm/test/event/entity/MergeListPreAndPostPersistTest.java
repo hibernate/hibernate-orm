@@ -63,7 +63,7 @@ public class MergeListPreAndPostPersistTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.getTransaction().begin();
-		s.delete( order );
+		s.remove( order );
 		s.getTransaction().commit();
 		s.close();
 	}

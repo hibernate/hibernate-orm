@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model.internal;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -16,11 +17,8 @@ import org.hibernate.annotations.Check;
 import org.hibernate.annotations.Checks;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.ColumnTransformer;
-import org.hibernate.annotations.ColumnTransformers;
 import org.hibernate.annotations.FractionalSeconds;
 import org.hibernate.annotations.GeneratedColumn;
-import org.hibernate.annotations.Index;
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
@@ -32,6 +30,8 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
@@ -40,12 +40,14 @@ import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.boot.model.internal.BinderHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
+import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
@@ -67,7 +69,7 @@ import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
  */
 public class AnnotatedColumn {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, AnnotatedColumn.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, AnnotatedColumn.class.getName() );
 
 	private Column mappingColumn;
 	private boolean insertable = true;
@@ -95,6 +97,10 @@ public class AnnotatedColumn {
 	private final List<CheckConstraint> checkConstraints = new ArrayList<>();
 
 	private AnnotatedColumns parent;
+
+	private String options;
+
+	private String comment;
 
 	public AnnotatedColumns getParent() {
 		return parent;
@@ -213,6 +219,10 @@ public class AnnotatedColumn {
 		checkConstraints.add( new CheckConstraint( name, constraint ) );
 	}
 
+	public void addCheckConstraint(String name, String constraint, String options) {
+		checkConstraints.add( new CheckConstraint( name, constraint, options ) );
+	}
+
 //	public String getComment() {
 //		return comment;
 //	}
@@ -258,9 +268,11 @@ public class AnnotatedColumn {
 			for ( CheckConstraint constraint : checkConstraints ) {
 				mappingColumn.addCheckConstraint( constraint );
 			}
-//			if ( isNotEmpty( comment ) ) {
-//				mappingColumn.setComment( comment );
-//			}
+			mappingColumn.setOptions( options );
+
+			if ( isNotEmpty( comment ) ) {
+				mappingColumn.setComment( comment );
+			}
 			if ( generatedAs != null ) {
 				mappingColumn.setGeneratedAs( generatedAs );
 			}
@@ -308,6 +320,8 @@ public class AnnotatedColumn {
 				mappingColumn.addCheckConstraint( constraint );
 			}
 			mappingColumn.setDefaultValue( defaultValue );
+			mappingColumn.setOptions( options );
+			mappingColumn.setComment( comment );
 
 			if ( writeExpression != null ) {
 				final int numberOfJdbcParams = StringHelper.count( writeExpression, '?' );
@@ -386,9 +400,9 @@ public class AnnotatedColumn {
 		);
 
 		// HHH-6005 magic
-		if ( implicitName.getText().contains( "_collection&&element_" ) ) {
+		if ( implicitName.getText().contains( "_{element}_" ) ) {
 			implicitName = Identifier.toIdentifier(
-					implicitName.getText().replace( "_collection&&element_", "_" ),
+					implicitName.getText().replace( "_{element}_", "_" ),
 					implicitName.isQuoted()
 			);
 		}
@@ -533,7 +547,7 @@ public class AnnotatedColumn {
 
 	public static AnnotatedColumns buildColumnFromAnnotation(
 			jakarta.persistence.Column column,
-			org.hibernate.annotations.FractionalSeconds fractionalSeconds,
+			FractionalSeconds fractionalSeconds,
 //			Comment commentAnn,
 			Nullability nullability,
 			PropertyHolder propertyHolder,
@@ -602,7 +616,7 @@ public class AnnotatedColumn {
 	public static AnnotatedColumns buildColumnOrFormulaFromAnnotation(
 			jakarta.persistence.Column column,
 			org.hibernate.annotations.Formula formulaAnn,
-			org.hibernate.annotations.FractionalSeconds fractionalSeconds,
+			FractionalSeconds fractionalSeconds,
 //			Comment commentAnn,
 			Nullability nullability,
 			PropertyHolder propertyHolder,
@@ -610,7 +624,7 @@ public class AnnotatedColumn {
 			Map<String, Join> secondaryTables,
 			MetadataBuildingContext context) {
 		return buildColumnsOrFormulaFromAnnotation(
-				column==null ? null : new jakarta.persistence.Column[] { column },
+				column==null ? null : new jakarta.persistence.Column[] {column},
 				formulaAnn,
 				fractionalSeconds,
 //				commentAnn,
@@ -626,7 +640,7 @@ public class AnnotatedColumn {
 	public static AnnotatedColumns buildColumnsOrFormulaFromAnnotation(
 			jakarta.persistence.Column[] columns,
 			org.hibernate.annotations.Formula formulaAnn,
-			org.hibernate.annotations.FractionalSeconds fractionalSeconds,
+			FractionalSeconds fractionalSeconds,
 //			Comment comment,
 			Nullability nullability,
 			PropertyHolder propertyHolder,
@@ -651,8 +665,8 @@ public class AnnotatedColumn {
 			return parent;
 		}
 		else {
-			final jakarta.persistence.Column[]  actualColumns = overrideColumns( columns, propertyHolder, inferredData );
-			if ( actualColumns == null ) {
+			final jakarta.persistence.Column[] actualColumns = overrideColumns( columns, propertyHolder, inferredData );
+			if ( ArrayHelper.isEmpty( actualColumns ) ) {
 				return buildImplicitColumn(
 						fractionalSeconds,
 						inferredData,
@@ -696,7 +710,7 @@ public class AnnotatedColumn {
 						+ " columns (every column must have exactly one '@AttributeOverride')" );
 			}
 			LOG.debugf( "Column(s) overridden for property %s", inferredData.getPropertyName() );
-			return overriddenCols.length == 0 ? null : overriddenCols;
+			return ArrayHelper.isEmpty( overriddenCols ) ? null : overriddenCols;
 		}
 		else {
 			return columns;
@@ -737,20 +751,29 @@ public class AnnotatedColumn {
 					column,
 					fractionalSeconds,
 					sqlType,
-					tableName
+					tableName,
+					context.getMetadataCollector().getSourceModelBuildingContext()
 			);
 		}
 		return parent;
 	}
 
-	private static String getTableName(jakarta.persistence.Column column, Database database) {
-		return column.table().isEmpty() ? ""
-				: database.getJdbcEnvironment().getIdentifierHelper().toIdentifier( column.table() ).render();
+	private static String getTableName(
+			jakarta.persistence.Column column,
+			Database database) {
+		final String table = column.table();
+		return table.isEmpty()
+				? ""
+				: database.getJdbcEnvironment().getIdentifierHelper().toIdentifier( table ).render();
 	}
 
-	private static String getSqlType(MetadataBuildingContext context, jakarta.persistence.Column column) {
-		return column.columnDefinition().isEmpty() ? null
-				: context.getObjectNameNormalizer().applyGlobalQuoting( column.columnDefinition() );
+	private static String getSqlType(
+			MetadataBuildingContext context,
+			jakarta.persistence.Column column) {
+		final String columnDefinition = column.columnDefinition();
+		return columnDefinition.isEmpty()
+				? null
+				: context.getObjectNameNormalizer().applyGlobalQuoting( columnDefinition );
 	}
 
 	private static AnnotatedColumn buildColumn(
@@ -764,7 +787,8 @@ public class AnnotatedColumn {
 			jakarta.persistence.Column column,
 			FractionalSeconds fractionalSeconds,
 			String sqlType,
-			String tableName) {
+			String tableName,
+			SourceModelBuildingContext sourceModelContext) {
 		final String columnName = logicalColumnName( inferredData, suffixForDefaultColumnName, database, column );
 		final AnnotatedColumn annotatedColumn = new AnnotatedColumn();
 		annotatedColumn.setLogicalColumnName( columnName );
@@ -776,33 +800,35 @@ public class AnnotatedColumn {
 		}
 		else {
 			annotatedColumn.setPrecision( column.precision() );
+			// The passed annotation could also be a MapKeyColumn
+			Integer secondPrecision = column.annotationType() == jakarta.persistence.Column.class
+					? column.secondPrecision()
+					: null;
+			annotatedColumn.setTemporalPrecision( secondPrecision == null || secondPrecision == -1 ? null : secondPrecision );
 		}
 		annotatedColumn.setScale( column.scale() );
 		annotatedColumn.handleArrayLength( inferredData );
-//		annotatedColumn.setPropertyHolder( propertyHolder );
-//		annotatedColumn.setPropertyName( getRelativePath( propertyHolder, inferredData.getPropertyName() ) );
-		annotatedColumn.setNullable( column.nullable() ); //TODO force to not null if available? This is a (bad) user choice.
-//		if ( comment != null ) {
-//			annotatedColumn.setComment( comment.value() );
-//		}
+		annotatedColumn.setNullable( column.nullable() );
 		annotatedColumn.setUnique( column.unique() );
 		annotatedColumn.setInsertable( column.insertable() );
 		annotatedColumn.setUpdatable( column.updatable() );
 		annotatedColumn.setExplicitTableName( tableName );
-//		annotatedColumn.setJoins( secondaryTables );
-//		annotatedColumn.setBuildingContext( context );
 		annotatedColumn.setParent( parent );
 		annotatedColumn.applyColumnDefault( inferredData, numberOfColumns );
 		annotatedColumn.applyGeneratedAs( inferredData, numberOfColumns );
+		annotatedColumn.applyColumnCheckConstraint( column );
+		annotatedColumn.applyColumnOptions( column );
+		annotatedColumn.applyColumnComment(column);
 		annotatedColumn.applyCheckConstraint( inferredData, numberOfColumns );
-		annotatedColumn.extractDataFromPropertyData( propertyHolder, inferredData );
+		annotatedColumn.extractDataFromPropertyData( propertyHolder, inferredData, sourceModelContext );
 		annotatedColumn.bind();
 		return annotatedColumn;
 	}
 
 	private void handleArrayLength(PropertyData inferredData) {
-		if ( inferredData.getProperty().isAnnotationPresent(Array.class) ) {
-			setArrayLength( inferredData.getProperty().getAnnotation(Array.class).length() );
+		final Array arrayAnn = inferredData.getAttributeMember().getDirectAnnotationUsage( Array.class );
+		if ( arrayAnn != null ) {
+			setArrayLength( arrayAnn.length() );
 		}
 	}
 
@@ -819,19 +845,24 @@ public class AnnotatedColumn {
 	}
 
 	private static String getColumnName(Database database, jakarta.persistence.Column column) {
-		return column.name().isEmpty() ? null
-				: database.getJdbcEnvironment().getIdentifierHelper().toIdentifier( column.name() ).render();
+		final String name = column.name();
+		return name.isEmpty()
+				? null
+				: database.getJdbcEnvironment().getIdentifierHelper().toIdentifier( name ).render();
 	}
 
 	void applyColumnDefault(PropertyData inferredData, int length) {
-		final XProperty property = inferredData.getProperty();
-		if ( property != null ) {
-			final ColumnDefault columnDefault =
-					getOverridableAnnotation( property, ColumnDefault.class, getBuildingContext() );
+		final MemberDetails attributeMember = inferredData.getAttributeMember();
+		if ( attributeMember != null ) {
+			final ColumnDefault columnDefault = getOverridableAnnotation(
+					attributeMember,
+					ColumnDefault.class,
+					getBuildingContext()
+			);
 			if ( columnDefault != null ) {
 				if ( length != 1 ) {
 					throw new AnnotationException( "'@ColumnDefault' may only be applied to single-column mappings but '"
-							+ property.getName() + "' maps to " + length + " columns" );
+							+ attributeMember.getName() + "' maps to " + length + " columns" );
 				}
 				setDefaultValue( columnDefault.value() );
 			}
@@ -842,14 +873,17 @@ public class AnnotatedColumn {
 	}
 
 	void applyGeneratedAs(PropertyData inferredData, int length) {
-		final XProperty property = inferredData.getProperty();
-		if ( property != null ) {
-			final GeneratedColumn generatedColumn =
-					getOverridableAnnotation( property, GeneratedColumn.class, getBuildingContext() );
+		final MemberDetails attributeMember = inferredData.getAttributeMember();
+		if ( attributeMember != null ) {
+			final GeneratedColumn generatedColumn = getOverridableAnnotation(
+					attributeMember,
+					GeneratedColumn.class,
+					getBuildingContext()
+			);
 			if ( generatedColumn != null ) {
 				if (length!=1) {
 					throw new AnnotationException("'@GeneratedColumn' may only be applied to single-column mappings but '"
-							+ property.getName() + "' maps to " + length + " columns" );
+							+ attributeMember.getName() + "' maps to " + length + " columns" );
 				}
 				setGeneratedAs( generatedColumn.value() );
 			}
@@ -859,23 +893,41 @@ public class AnnotatedColumn {
 		}
 	}
 
-	private void applyCheckConstraint(PropertyData inferredData, int length) {
-		final XProperty property = inferredData.getProperty();
-		if ( property != null ) {
-			if ( property.isAnnotationPresent( Checks.class ) ) {
-				// if there are multiple annotations, they're not overrideable
-				for ( Check check : property.getAnnotation( Checks.class ).value() ) {
-					addCheckConstraint( check.name().isEmpty() ? null : check.name(), check.constraints() );
+	private void applyColumnCheckConstraint(jakarta.persistence.Column column) {
+		applyCheckConstraints( column.check() );
+	}
+
+	void applyCheckConstraints(jakarta.persistence.CheckConstraint[] checkConstraintAnnotationUsages) {
+		if ( CollectionHelper.isNotEmpty( checkConstraintAnnotationUsages ) ) {
+			for ( jakarta.persistence.CheckConstraint checkConstraintAnnotationUsage : checkConstraintAnnotationUsages ) {
+				addCheckConstraint(
+						checkConstraintAnnotationUsage.name(),
+						checkConstraintAnnotationUsage.constraint(),
+						checkConstraintAnnotationUsage.options()
+				);
+			}
+		}
+	}
+
+	void applyCheckConstraint(PropertyData inferredData, int length) {
+		final MemberDetails attributeMember = inferredData.getAttributeMember();
+		if ( attributeMember != null ) {
+			// if there are multiple annotations, they're not overrideable
+			final Checks checksAnn = attributeMember.getDirectAnnotationUsage( Checks.class );
+			if ( checksAnn != null ) {
+				final Check[] checkAnns = checksAnn.value();
+				for ( Check checkAnn : checkAnns ) {
+					addCheckConstraint( checkAnn.name(), checkAnn.constraints() );
 				}
 			}
 			else {
-				final Check check = getOverridableAnnotation( property, Check.class, getBuildingContext() );
-				if ( check != null ) {
+				final Check checkAnn = getOverridableAnnotation( attributeMember, Check.class, getBuildingContext() );
+				if ( checkAnn != null ) {
 					if ( length != 1 ) {
 						throw new AnnotationException("'@Check' may only be applied to single-column mappings but '"
-								+ property.getName() + "' maps to " + length + " columns (use a table-level '@Check')" );
+								+ attributeMember.getName() + "' maps to " + length + " columns (use a table-level '@Check')" );
 					}
-					addCheckConstraint( check.name().isEmpty() ? null : check.name(), check.constraints() );
+					addCheckConstraint( nullIfEmpty( checkAnn.name() ), checkAnn.constraints() );
 				}
 			}
 		}
@@ -885,32 +937,34 @@ public class AnnotatedColumn {
 	}
 
 	//must only be called after all setters are defined and before binding
-	private void extractDataFromPropertyData(PropertyHolder propertyHolder, PropertyData inferredData) {
+	private void extractDataFromPropertyData(
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			SourceModelBuildingContext context) {
 		if ( inferredData != null ) {
-			final XProperty property = inferredData.getProperty();
-			if ( property != null ) {
+			final MemberDetails attributeMember = inferredData.getAttributeMember();
+			if ( attributeMember != null ) {
 				if ( propertyHolder.isComponent() ) {
 					processColumnTransformerExpressions( propertyHolder.getOverriddenColumnTransformer( logicalColumnName ) );
 				}
-				processColumnTransformerExpressions( property.getAnnotation( ColumnTransformer.class ) );
-				final ColumnTransformers annotations = property.getAnnotation( ColumnTransformers.class );
-				if ( annotations != null ) {
-					for ( ColumnTransformer annotation : annotations.value() ) {
-						processColumnTransformerExpressions( annotation );
-					}
-				}
+
+
+				attributeMember.forEachAnnotationUsage( ColumnTransformer.class, context, this::processColumnTransformerExpressions );
 			}
 		}
 	}
 
 	private void processColumnTransformerExpressions(ColumnTransformer annotation) {
-		if ( annotation != null ) {
-			if ( isEmpty( annotation.forColumn() )
-					// "" is the default value for annotations
-					|| annotation.forColumn().equals( logicalColumnName != null ? logicalColumnName : "" ) ) {
-				readExpression = nullIfEmpty( annotation.read() );
-				writeExpression = nullIfEmpty( annotation.write() );
-			}
+		if ( annotation == null ) {
+			// nothing to process
+			return;
+		}
+
+		final String targetColumnName = annotation.forColumn();
+		if ( isEmpty( targetColumnName )
+				|| targetColumnName.equals( logicalColumnName != null ? logicalColumnName : "" ) ) {
+			readExpression = nullIfEmpty( annotation.read() );
+			writeExpression = nullIfEmpty( annotation.write() );
 		}
 	}
 
@@ -935,7 +989,7 @@ public class AnnotatedColumn {
 //		}
 		//not following the spec but more clean
 		if ( nullability != Nullability.FORCED_NULL
-				&& !PropertyBinder.isOptional( inferredData.getProperty(), propertyHolder ) ) {
+				&& !PropertyBinder.isOptional( inferredData.getAttributeMember(), propertyHolder ) ) {
 			column.setNullable( false );
 		}
 		final String propertyName = inferredData.getPropertyName();
@@ -953,41 +1007,13 @@ public class AnnotatedColumn {
 		column.applyColumnDefault( inferredData, 1 );
 		column.applyGeneratedAs( inferredData, 1 );
 		column.applyCheckConstraint( inferredData, 1 );
-		column.extractDataFromPropertyData( propertyHolder, inferredData );
+		column.extractDataFromPropertyData( propertyHolder, inferredData, context.getMetadataCollector().getSourceModelBuildingContext() );
 		column.handleArrayLength( inferredData );
 		if ( fractionalSeconds != null ) {
 			column.setTemporalPrecision( fractionalSeconds.value() );
 		}
 		column.bind();
 		return columns;
-	}
-
-	public void addIndex(Index index, boolean inSecondPass) {
-		if ( index != null ) {
-			addIndex( index.name(), inSecondPass );
-		}
-	}
-
-	void addIndex(String indexName, boolean inSecondPass) {
-		final IndexOrUniqueKeySecondPass secondPass =
-				new IndexOrUniqueKeySecondPass( indexName, this, getBuildingContext(), false );
-		if ( inSecondPass ) {
-			secondPass.doSecondPass( getBuildingContext().getMetadataCollector().getEntityBindingMap() );
-		}
-		else {
-			getBuildingContext().getMetadataCollector().addSecondPass( secondPass );
-		}
-	}
-
-	void addUniqueKey(String uniqueKeyName, boolean inSecondPass) {
-		final IndexOrUniqueKeySecondPass secondPass =
-				new IndexOrUniqueKeySecondPass( uniqueKeyName, this, getBuildingContext(), true );
-		if ( inSecondPass ) {
-			secondPass.doSecondPass( getBuildingContext().getMetadataCollector().getEntityBindingMap() );
-		}
-		else {
-			getBuildingContext().getMetadataCollector().addSecondPass( secondPass );
-		}
 	}
 
 	@Override
@@ -1010,4 +1036,19 @@ public class AnnotatedColumn {
 	MetadataBuildingContext getBuildingContext() {
 		return getParent().getBuildingContext();
 	}
+
+	private void applyColumnOptions(jakarta.persistence.Column column) {
+		options = column.options();
+	}
+
+	private void applyColumnComment(jakarta.persistence.Column column) {
+		if ( !column.comment().isEmpty() ) {
+			comment = column.comment();
+		}
+	}
+
+	void setOptions(String options){
+		this.options = options;
+	}
+
 }

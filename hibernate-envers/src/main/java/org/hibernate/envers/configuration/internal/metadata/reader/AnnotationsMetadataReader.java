@@ -8,7 +8,6 @@ package org.hibernate.envers.configuration.internal.metadata.reader;
 
 import java.lang.annotation.Annotation;
 
-import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.envers.AuditTable;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
@@ -16,6 +15,7 @@ import org.hibernate.envers.SecondaryAuditTable;
 import org.hibernate.envers.SecondaryAuditTables;
 import org.hibernate.envers.boot.spi.EnversMetadataBuildingContext;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.models.spi.ClassDetails;
 
 /**
  * A helper class to read versioning meta-data from annotations on a persistent class.
@@ -31,8 +31,8 @@ public final class AnnotationsMetadataReader {
 		this.metadataBuildingContext = metadataBuildingContext;
 	}
 
-	private RelationTargetAuditMode getDefaultAudited(XClass clazz) {
-		final Audited defaultAudited = clazz.getAnnotation( Audited.class );
+	private RelationTargetAuditMode getDefaultAudited(ClassDetails classDetails) {
+		final Audited defaultAudited = classDetails.getDirectAnnotationUsage( Audited.class );
 
 		if ( defaultAudited != null ) {
 			return defaultAudited.targetAuditMode();
@@ -42,8 +42,8 @@ public final class AnnotationsMetadataReader {
 		}
 	}
 
-	private void addAuditTable(ClassAuditingData auditData, XClass clazz) {
-		final AuditTable auditTable = clazz.getAnnotation( AuditTable.class );
+	private void addAuditTable(ClassAuditingData auditData, ClassDetails classDetails) {
+		final AuditTable auditTable = classDetails.getDirectAnnotationUsage( AuditTable.class );
 		if ( auditTable != null ) {
 			auditData.setAuditTable( auditTable );
 		}
@@ -52,9 +52,9 @@ public final class AnnotationsMetadataReader {
 		}
 	}
 
-	private void addAuditSecondaryTables(ClassAuditingData auditData, XClass clazz) {
+	private void addAuditSecondaryTables(ClassAuditingData auditData, ClassDetails classDetails) {
 		// Getting information on secondary tables
-		final SecondaryAuditTable secondaryVersionsTable1 = clazz.getAnnotation( SecondaryAuditTable.class );
+		final SecondaryAuditTable secondaryVersionsTable1 = classDetails.getDirectAnnotationUsage( SecondaryAuditTable.class );
 		if ( secondaryVersionsTable1 != null ) {
 			auditData.getSecondaryTableDictionary().put(
 					secondaryVersionsTable1.secondaryTableName(),
@@ -62,7 +62,7 @@ public final class AnnotationsMetadataReader {
 			);
 		}
 
-		final SecondaryAuditTables secondaryAuditTables = clazz.getAnnotation( SecondaryAuditTables.class );
+		final SecondaryAuditTables secondaryAuditTables = classDetails.getDirectAnnotationUsage( SecondaryAuditTables.class );
 		if ( secondaryAuditTables != null ) {
 			for ( SecondaryAuditTable secondaryAuditTable2 : secondaryAuditTables.value() ) {
 				auditData.getSecondaryTableDictionary().put(
@@ -75,21 +75,23 @@ public final class AnnotationsMetadataReader {
 
 	public ClassAuditingData getAuditData(PersistentClass persistentClass) {
 		final ClassAuditingData auditData = new ClassAuditingData( persistentClass );
-		final XClass xclass = metadataBuildingContext.getReflectionManager().toXClass( persistentClass.getMappedClass() );
+		final ClassDetails classDetails = metadataBuildingContext.getClassDetailsRegistry().resolveClassDetails(
+				persistentClass.getClassName()
+		);
 
-		final RelationTargetAuditMode auditMode = getDefaultAudited( xclass );
+		final RelationTargetAuditMode auditMode = getDefaultAudited( classDetails );
 		if ( auditMode != null ) {
 			auditData.setDefaultAudited( true );
 		}
 
 		new AuditedPropertiesReader(
 				metadataBuildingContext,
-				PersistentPropertiesSource.forClass( persistentClass, xclass ),
+				PersistentPropertiesSource.forClass( persistentClass, classDetails ),
 				auditData
 		).read();
 
-		addAuditTable( auditData, xclass );
-		addAuditSecondaryTables( auditData, xclass );
+		addAuditTable( auditData, classDetails );
+		addAuditSecondaryTables( auditData, classDetails );
 
 		return auditData;
 	}

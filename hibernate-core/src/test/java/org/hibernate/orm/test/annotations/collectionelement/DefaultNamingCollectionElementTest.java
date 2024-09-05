@@ -111,7 +111,7 @@ public class DefaultNamingCollectionElementTest {
 							"select boy from Boy boy join boy.nickNames names where names = :name" )
 							.setParameter( "name", "Thing" ).list();
 					assertEquals( 1, result.size() );
-					session.delete( boy );
+					session.remove( boy );
 				}
 		);
 	}
@@ -141,7 +141,7 @@ public class DefaultNamingCollectionElementTest {
 					assertTrue( boy.getFavoriteToys().contains( toy ) );
 					Toy next = boy.getFavoriteToys().iterator().next();
 					assertEquals( boy, next.getOwner(), "@Parent is failing" );
-					session.delete( boy );
+					session.remove( boy );
 				}
 		);
 	}
@@ -171,8 +171,8 @@ public class DefaultNamingCollectionElementTest {
 					session.beginTransaction();
 					boy = session.get( Boy.class, boy.getId() );
 					assertTrue( boy.getCountryAttitudes().contains( attitude ) );
-					session.delete( boy );
-					session.delete( session.get( Country.class, country.getId() ) );
+					session.remove( boy );
+					session.remove( session.get( Country.class, country.getId() ) );
 				}
 		);
 	}
@@ -220,7 +220,7 @@ public class DefaultNamingCollectionElementTest {
 							"select boy from Boy boy join boy.nickNames names where names = :name" )
 							.setParameter( "name", "Thing" ).list();
 					assertEquals( 1, result.size() );
-					session.delete( boy );
+					session.remove( boy );
 				}
 		);
 	}
@@ -234,7 +234,7 @@ public class DefaultNamingCollectionElementTest {
 					LocalizedString title = new LocalizedString( "title in english" );
 					title.getVariations().put( Locale.FRENCH.getLanguage(), "title en francais" );
 					test.setTitle( title );
-					session.save( test );
+					session.persist( test );
 
 					session.flush();
 					session.clear();

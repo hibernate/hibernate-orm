@@ -53,7 +53,7 @@ public class OutsideTransactionTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Test(expected = TransactionRequiredException.class)
-	public void testUpdateOutsideActiveTransaction() {
+	public void testMergeOutsideActiveTransaction() {
 		Session session = openSession();
 
 		// Revision 1
@@ -64,7 +64,7 @@ public class OutsideTransactionTest extends BaseEnversFunctionalTestCase {
 
 		// Illegal modification of entity state outside of active transaction.
 		entity.setStr( "modified data" );
-		session.update( entity );
+		session.merge( entity );
 		session.flush();
 
 		session.close();
@@ -81,7 +81,7 @@ public class OutsideTransactionTest extends BaseEnversFunctionalTestCase {
 		session.getTransaction().commit();
 
 		// Illegal removal of entity outside of active transaction.
-		session.delete( entity );
+		session.remove( entity );
 		session.flush();
 
 		session.close();
@@ -97,12 +97,12 @@ public class OutsideTransactionTest extends BaseEnversFunctionalTestCase {
 		Name name = new Name();
 		name.setName( "Name" );
 		person.getNames().add( name );
-		session.saveOrUpdate( person );
+		session.persist( person );
 		session.getTransaction().commit();
 
 		// Illegal collection update outside of active transaction.
 		person.getNames().remove( name );
-		session.saveOrUpdate( person );
+		session.merge( person );
 		session.flush();
 
 		session.close();
@@ -118,12 +118,12 @@ public class OutsideTransactionTest extends BaseEnversFunctionalTestCase {
 		Name name = new Name();
 		name.setName( "Name" );
 		person.getNames().add( name );
-		session.saveOrUpdate( person );
+		session.persist( person );
 		session.getTransaction().commit();
 
 		// Illegal collection removal outside of active transaction.
 		person.setNames( null );
-		session.saveOrUpdate( person );
+		session.merge( person );
 		session.flush();
 
 		session.close();

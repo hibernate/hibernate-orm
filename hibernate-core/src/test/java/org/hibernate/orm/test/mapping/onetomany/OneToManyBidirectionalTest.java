@@ -60,16 +60,16 @@ public class OneToManyBidirectionalTest {
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Item i = new Item( 1L );
-			session.save( i );
+			session.persist( i );
 
 			Item i2 = new Item( 2L );
-			session.save( i2 );
+			session.persist( i2 );
 
 			Order o = new Order( 3L );
 			o.addItem( i );
 			o.addItem( i2 );
 
-			session.save( o );
+			session.persist( o );
 		} );
 	}
 

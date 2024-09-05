@@ -11,7 +11,6 @@ import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -33,10 +32,10 @@ public abstract class CachedMutableNaturalIdTest {
 	public void dropTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					session.createQuery( "delete from Another" ).executeUpdate();
-					session.createQuery( "delete from AllCached" ).executeUpdate();
-					session.createQuery( "delete from SubClass" ).executeUpdate();
-					session.createQuery( "delete from A" ).executeUpdate();
+					session.createMutationQuery( "delete from Another" ).executeUpdate();
+					session.createMutationQuery( "delete from AllCached" ).executeUpdate();
+					session.createMutationQuery( "delete from SubClass" ).executeUpdate();
+					session.createMutationQuery( "delete from A" ).executeUpdate();
 				}
 		);
 
@@ -47,7 +46,7 @@ public abstract class CachedMutableNaturalIdTest {
 	@Test
 	public void testNaturalIdChangedWhileAttached(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.save( new Another( "it" ) )
+				(session) -> session.persist( new Another( "it" ) )
 		);
 
 		scope.inTransaction(
@@ -72,7 +71,7 @@ public abstract class CachedMutableNaturalIdTest {
 	@Test
 	public void testNaturalIdChangedWhileDetached(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.save( new Another( "it" ) )
+				(session) -> session.persist( new Another( "it" ) )
 		);
 
 		final Another detached = scope.fromTransaction(
@@ -86,7 +85,7 @@ public abstract class CachedMutableNaturalIdTest {
 		detached.setName( "it2" );
 
 		scope.inTransaction(
-				(session) -> session.update( detached )
+				(session) -> session.merge( detached )
 		);
 
 		scope.inTransaction(
@@ -107,7 +106,7 @@ public abstract class CachedMutableNaturalIdTest {
 		final Integer id = scope.fromTransaction(
 				(session) -> {
 					Another it = new Another( "it" );
-					session.save( it );
+					session.persist( it );
 					return it.getId();
 				}
 		);
@@ -135,13 +134,13 @@ public abstract class CachedMutableNaturalIdTest {
 	}
 	
 	@Test
-	@TestForIssue( jiraKey = "HHH-7245" )
+	@JiraKey( "HHH-7245" )
 	public void testNaturalIdChangeAfterResolveEntityFrom2LCache(SessionFactoryScope scope) {
 
 		final Integer id = scope.fromTransaction(
 				(session) -> {
 					AllCached it = new AllCached( "it" );
-					session.save( it );
+					session.persist( it );
 					return it.getId();
 				}
 		);
@@ -161,10 +160,10 @@ public abstract class CachedMutableNaturalIdTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12657" )
+	@JiraKey( "HHH-12657" )
 	public void testBySimpleNaturalIdResolveEntityFrom2LCacheSubClass(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.save( new SubClass( "it" ) )
+				(session) -> session.persist( new SubClass( "it" ) )
 		);
 
 		scope.inTransaction(
@@ -181,7 +180,7 @@ public abstract class CachedMutableNaturalIdTest {
 	}
 	
 	@Test
-	@TestForIssue( jiraKey = "HHH-16557" )
+	@JiraKey( "HHH-16557" )
 	public void testCreateDeleteRecreate(SessionFactoryScope scope) {
 
 		final Integer id = scope.fromTransaction(
@@ -296,9 +295,9 @@ public abstract class CachedMutableNaturalIdTest {
 		scope.inTransaction(
 				(session) -> {
 					// HHH-7513 failure during reattachment
-					session.buildLockRequest( LockOptions.NONE ).lock( created );
-					session.delete( created.assA );
-					session.delete( created );
+					session.lock( created, LockOptions.NONE );
+					session.remove( created.assA );
+					session.remove( created );
 				}
 		);
 

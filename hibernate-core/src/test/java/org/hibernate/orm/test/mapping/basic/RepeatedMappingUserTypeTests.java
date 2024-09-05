@@ -129,8 +129,7 @@ public class RepeatedMappingUserTypeTests {
 		public SortedSet<Integer> nullSafeGet(
 				ResultSet rs,
 				int position,
-				SharedSessionContractImplementor session,
-				Object owner) throws SQLException {
+				SharedSessionContractImplementor session) throws SQLException {
 			return convertToEntityAttribute( rs.getString( position ) );
 		}
 

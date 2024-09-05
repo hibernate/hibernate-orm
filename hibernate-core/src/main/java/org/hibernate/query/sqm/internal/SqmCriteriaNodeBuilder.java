@@ -58,6 +58,7 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaCriteriaSelect;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaFunction;
@@ -77,6 +78,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.UnaryArithmeticOperator;
@@ -102,6 +104,8 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedSingularJoin;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmByUnit;
@@ -168,16 +172,20 @@ import org.hibernate.type.spi.TypeConfiguration;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CollectionJoin;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.ListJoin;
 import jakarta.persistence.criteria.MapJoin;
+import jakarta.persistence.criteria.Nulls;
+import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.criteria.TemporalField;
 import jakarta.persistence.metamodel.Bindable;
 
 import static java.util.Arrays.asList;
@@ -402,13 +410,57 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
+	public <T> JpaCriteriaSelect<T> union(CriteriaSelect<? extends T> left, CriteriaSelect<? extends T> right) {
+		if ( left instanceof Subquery<?> ) {
+			assert right instanceof Subquery<?>;
+			//noinspection unchecked
+			return setOperation( SetOperator.UNION, (Subquery<T>) left, (Subquery<T>) right );
+		}
+		//noinspection unchecked
+		return setOperation( SetOperator.UNION, (JpaCriteriaQuery<T>) left, (JpaCriteriaQuery<T>) right );
+	}
+
+	@Override
 	public <T> JpaSubQuery<T> union(boolean all, Subquery<? extends T> query1, Subquery<?>... queries) {
 		return setOperation( all ? SetOperator.UNION_ALL : SetOperator.UNION, query1, queries );
 	}
 
 	@Override
+	public <T> CriteriaSelect<T> unionAll(CriteriaSelect<? extends T> left, CriteriaSelect<? extends T> right) {
+		if ( left instanceof Subquery<?> ) {
+			assert right instanceof Subquery<?>;
+			//noinspection unchecked
+			return setOperation( SetOperator.UNION_ALL, (Subquery<T>) left, (Subquery<T>) right );
+		}
+		//noinspection unchecked
+		return setOperation( SetOperator.UNION_ALL, (JpaCriteriaQuery<T>) left, (JpaCriteriaQuery<T>) right );
+	}
+
+	@Override
 	public <T> JpaSubQuery<T> intersect(boolean all, Subquery<? extends T> query1, Subquery<?>... queries) {
 		return setOperation( all ? SetOperator.INTERSECT_ALL : SetOperator.INTERSECT, query1, queries );
+	}
+
+	@Override
+	public <T> CriteriaSelect<T> except(CriteriaSelect<T> left, CriteriaSelect<?> right) {
+		if ( left instanceof Subquery<?> ) {
+			assert right instanceof Subquery<?>;
+			//noinspection unchecked
+			return setOperation( SetOperator.EXCEPT, (Subquery<T>) left, (Subquery<T>) right );
+		}
+		//noinspection unchecked
+		return setOperation( SetOperator.EXCEPT, (JpaCriteriaQuery<T>) left, (JpaCriteriaQuery<T>) right );
+	}
+
+	@Override
+	public <T> CriteriaSelect<T> exceptAll(CriteriaSelect<T> left, CriteriaSelect<?> right) {
+		if ( left instanceof Subquery<?> ) {
+			assert right instanceof Subquery<?>;
+			//noinspection unchecked
+			return setOperation( SetOperator.EXCEPT_ALL, (Subquery<T>) left, (Subquery<T>) right );
+		}
+		//noinspection unchecked
+		return setOperation( SetOperator.EXCEPT_ALL, (JpaCriteriaQuery<T>) left, (JpaCriteriaQuery<T>) right );
 	}
 
 	@Override
@@ -528,7 +580,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			throw new FunctionArgumentException( "Path '" + path + "' does not refer to a single-valued association" );
 		}
 
-		return new SqmFkExpression<>( (SqmEntityValuedSimplePath<?>) path, this );
+		return new SqmFkExpression<>( (SqmEntityValuedSimplePath<?>) path );
 	}
 
 	@Override
@@ -538,12 +590,146 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <X, T extends X> SqmRoot<T> treat(Root<X> root, Class<T> type) {
-		return ( (SqmRoot<X>) root ).treatAs( type );
+		//noinspection unchecked
+		return (SqmTreatedRoot) ( (SqmRoot<X>) root ).treatAs( type );
+	}
+
+	@Override
+	public <T> JpaCriteriaQuery<T> union(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
+		return createUnionSet( SetOperator.UNION, left, right );
+	}
+
+	@Override
+	public <T> JpaCriteriaQuery<T> unionAll(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
+		return createUnionSet( SetOperator.UNION_ALL, left, right );
+	}
+
+	@Override
+	public <T> CriteriaSelect<T> intersect(CriteriaSelect<? super T> left, CriteriaSelect<? super T> right) {
+		if ( left instanceof Subquery<?> ) {
+			assert right instanceof Subquery<?>;
+			//noinspection unchecked
+			return setOperation( SetOperator.INTERSECT, (Subquery<T>) left, (Subquery<T>) right );
+		}
+		//noinspection unchecked
+		return setOperation( SetOperator.INTERSECT, (JpaCriteriaQuery<T>) left, (JpaCriteriaQuery<T>) right );
+	}
+
+	@Override
+	public <T> CriteriaSelect<T> intersectAll(CriteriaSelect<? super T> left, CriteriaSelect<? super T> right) {
+		if ( left instanceof Subquery<?> ) {
+			assert right instanceof Subquery<?>;
+			//noinspection unchecked
+			return setOperation( SetOperator.INTERSECT_ALL, (Subquery<T>) left, (Subquery<T>) right );
+		}
+		//noinspection unchecked
+		return setOperation( SetOperator.INTERSECT_ALL, (JpaCriteriaQuery<T>) left, (JpaCriteriaQuery<T>) right );
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private static <T> JpaCriteriaQuery<T> createUnionSet(
+			SetOperator operator,
+			CriteriaQuery<? extends T> left,
+			CriteriaQuery<? extends T> right) {
+		assert operator == SetOperator.UNION || operator == SetOperator.UNION_ALL;
+		assert left instanceof SqmSelectStatement;
+		assert right instanceof SqmSelectStatement;
+		final SqmSelectStatement<? extends T> leftSqm = (SqmSelectStatement<? extends T>) left;
+		final SqmSelectStatement<? extends T> rightSqm = (SqmSelectStatement<? extends T>) right;
+
+		// SqmQueryGroup is the UNION ALL between the two
+		final SqmQueryGroup sqmQueryGroup = new SqmQueryGroup(
+				leftSqm.nodeBuilder(),
+				operator,
+				List.of( leftSqm.getQueryPart(), rightSqm.getQueryPart() )
+		);
+
+		final SqmSelectStatement sqmSelectStatement = new SqmSelectStatement<>(
+				leftSqm.getResultType(),
+				SqmQuerySource.CRITERIA,
+				leftSqm.nodeBuilder()
+		);
+		sqmSelectStatement.setQueryPart( sqmQueryGroup );
+		return sqmSelectStatement;
+	}
+
+	@Override
+	public <T> JpaCriteriaQuery<T> intersect(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right) {
+		return createIntersectSet( SetOperator.INTERSECT, left, right );
+	}
+
+	@Override
+	public <T> JpaCriteriaQuery<T> intersectAll(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right) {
+		return createIntersectSet( SetOperator.INTERSECT_ALL, left, right );
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private static <T> JpaCriteriaQuery<T> createIntersectSet(
+			SetOperator operator,
+			CriteriaQuery<? super T> left,
+			CriteriaQuery<? super T> right) {
+		assert operator == SetOperator.INTERSECT || operator == SetOperator.INTERSECT_ALL;
+		assert left instanceof SqmSelectStatement;
+		assert right instanceof SqmSelectStatement;
+		final SqmSelectStatement<? extends T> leftSqm = (SqmSelectStatement<? extends T>) left;
+		final SqmSelectStatement<? extends T> rightSqm = (SqmSelectStatement<? extends T>) right;
+
+		// SqmQueryGroup is the UNION ALL between the two
+		final SqmQueryGroup sqmQueryGroup = new SqmQueryGroup(
+				leftSqm.nodeBuilder(),
+				operator,
+				List.of( leftSqm.getQueryPart(), rightSqm.getQueryPart() )
+		);
+
+		final SqmSelectStatement sqmSelectStatement = new SqmSelectStatement<>(
+				leftSqm.getResultType(),
+				SqmQuerySource.CRITERIA,
+				leftSqm.nodeBuilder()
+		);
+		sqmSelectStatement.setQueryPart( sqmQueryGroup );
+		return sqmSelectStatement;
+	}
+
+	@Override
+	public <T> JpaCriteriaQuery<T> except(CriteriaQuery<T> left, CriteriaQuery<?> right) {
+		return createExceptSet( SetOperator.EXCEPT, left, right );
+	}
+
+	@Override
+	public <T> JpaCriteriaQuery<T> exceptAll(CriteriaQuery<T> left, CriteriaQuery<?> right) {
+		return createExceptSet( SetOperator.EXCEPT_ALL, left, right );
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private static <T> JpaCriteriaQuery<T> createExceptSet(
+			SetOperator operator,
+			CriteriaQuery<T> left,
+			CriteriaQuery<?> right) {
+		assert operator == SetOperator.EXCEPT || operator == SetOperator.EXCEPT_ALL;
+		assert left instanceof SqmSelectStatement;
+		assert right instanceof SqmSelectStatement;
+		final SqmSelectStatement<? extends T> leftSqm = (SqmSelectStatement<? extends T>) left;
+		final SqmSelectStatement<? extends T> rightSqm = (SqmSelectStatement<? extends T>) right;
+
+		// SqmQueryGroup is the UNION ALL between the two
+		final SqmQueryGroup sqmQueryGroup = new SqmQueryGroup(
+				leftSqm.nodeBuilder(),
+				operator,
+				List.of( leftSqm.getQueryPart(), rightSqm.getQueryPart() )
+		);
+
+		final SqmSelectStatement sqmSelectStatement = new SqmSelectStatement<>(
+				leftSqm.getResultType(),
+				SqmQuerySource.CRITERIA,
+				leftSqm.nodeBuilder()
+		);
+		sqmSelectStatement.setQueryPart( sqmQueryGroup );
+		return sqmSelectStatement;
 	}
 
 	@Override
 	public <X, T, V extends T> SqmSingularJoin<X, V> treat(Join<X, T> join, Class<V> type) {
-		return ( (SqmSingularJoin<X, T>) join ).treatAs( type );
+		return (SqmTreatedSingularJoin<X,T,V>) ( (SqmSingularJoin<X, T>) join ).treatAs( type );
 	}
 
 	@Override
@@ -567,12 +753,16 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public SqmSortSpecification sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
+	public SqmSortSpecification sort(JpaExpression<?> sortExpression, SortDirection sortOrder, Nulls nullPrecedence) {
 		return new SqmSortSpecification( (SqmExpression<?>) sortExpression, sortOrder, nullPrecedence );
 	}
 
 	@Override
-	public SqmSortSpecification sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence, boolean ignoreCase) {
+	public SqmSortSpecification sort(
+			JpaExpression<?> sortExpression,
+			SortDirection sortOrder,
+			Nulls nullPrecedence,
+			boolean ignoreCase) {
 		return new SqmSortSpecification( (SqmExpression<?>) sortExpression, sortOrder, nullPrecedence, ignoreCase );
 	}
 
@@ -594,6 +784,16 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public SqmSortSpecification desc(Expression<?> x) {
 		return new SqmSortSpecification( (SqmExpression<?>) x, SortDirection.DESCENDING );
+	}
+
+	@Override
+	public Order asc(Expression<?> expression, Nulls nullPrecedence) {
+		return new SqmSortSpecification( (SqmExpression<?>) expression, SortDirection.ASCENDING, NullPrecedence.fromJpaValue( nullPrecedence ) );
+	}
+
+	@Override
+	public Order desc(Expression<?> expression, Nulls nullPrecedence) {
+		return new SqmSortSpecification( (SqmExpression<?>) expression, SortDirection.DESCENDING, NullPrecedence.fromJpaValue( nullPrecedence ) );
 	}
 
 	@Override
@@ -659,16 +859,15 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public JpaCompoundSelection<Tuple> tuple(Selection<?>[] selections) {
-		//noinspection unchecked
-		return tuple( (List<SqmSelectableNode<?>>) (List<?>) Arrays.asList( selections ) );
+		return tuple( Arrays.asList( selections ) );
 	}
 
 	@Override
-	public JpaCompoundSelection<Tuple> tuple(List<? extends JpaSelection<?>> selections) {
+	public JpaCompoundSelection<Tuple> tuple(List<Selection<?>> selections) {
 		checkMultiselect( selections );
-		//noinspection unchecked
+		//noinspection unchecked,rawtypes
 		return new SqmJpaCompoundSelection<>(
-				(List<SqmSelectableNode<?>>) selections,
+				(List) selections,
 				getTypeConfiguration().getJavaTypeRegistry().getDescriptor( Tuple.class ),
 				this
 		);
@@ -704,13 +903,13 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public JpaCompoundSelection<Object[]> array(Selection<?>[] selections) {
-		//noinspection unchecked
-		return array( (List<SqmSelectableNode<?>>) (List<?>) Arrays.asList( selections ) );
+		return array( Arrays.asList( selections ) );
 	}
 
 	@Override
-	public JpaCompoundSelection<Object[]> array(List<? extends JpaSelection<?>> selections) {
-		return array( Object[].class, selections );
+	public JpaCompoundSelection<Object[]> array(List<Selection<?>> selections) {
+		//noinspection unchecked,rawtypes
+		return array( Object[].class, (List) selections );
 	}
 
 	@Override
@@ -721,7 +920,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, List<? extends JpaSelection<?>> selections) {
-		checkMultiselect( selections );
+		//noinspection rawtypes,unchecked
+		checkMultiselect( (List) selections );
 		final JavaType<Y> javaType = getTypeConfiguration().getJavaTypeRegistry().getDescriptor( resultClass );
 		//noinspection unchecked
 		return new SqmJpaCompoundSelection<>( (List<SqmSelectableNode<?>>) selections, javaType, this );
@@ -735,7 +935,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, List<? extends JpaSelection<?>> arguments) {
-		checkMultiselect( arguments );
+		//noinspection unchecked,rawtypes
+		checkMultiselect( (List) arguments );
 		final SqmDynamicInstantiation<Y> instantiation;
 		if ( List.class.equals( resultClass ) ) {
 			//noinspection unchecked
@@ -770,10 +971,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	 * <i>&quot;An argument to the multiselect method must not be a tuple-
 	 * or array-valued compound selection item.&quot;</i>
 	 */
-	void checkMultiselect(List<? extends JpaSelection<?>> selections) {
+	void checkMultiselect(List<Selection<?>> selections) {
 		final HashSet<String> aliases = new HashSet<>( CollectionHelper.determineProperSizing( selections.size() ) );
 
-		for ( JpaSelection<?> selection : selections ) {
+		for ( Selection<?> it : selections ) {
+			final JpaSelection<?> selection = (JpaSelection<?>) it;
 			if ( selection.isCompoundSelection() ) {
 				if ( selection.getJavaType().isArray() ) {
 					throw new IllegalArgumentException(
@@ -1443,6 +1645,16 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
+	public SqmExpression<String> concat(List<Expression<String>> expressions) {
+		//noinspection unchecked
+		return getFunctionDescriptor( "concat" ).generateSqmExpression(
+				(List<? extends SqmTypedNode<?>>) (List<?>) expressions,
+				null,
+				getQueryEngine()
+		);
+	}
+
+	@Override
 	public SqmExpression<String> concat(Expression<String> x, Expression<String> y) {
 		final SqmExpression<String> xSqmExpression = (SqmExpression<String>) x;
 		final SqmExpression<String> ySqmExpression = (SqmExpression<String>) y;
@@ -2066,6 +2278,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
+	public SqmPredicate and(List<Predicate> restrictions) {
+		if ( restrictions == null || restrictions.isEmpty() ) {
+			return conjunction();
+		}
+
+		final List<SqmPredicate> predicates = new ArrayList<>( restrictions.size() );
+		for ( Predicate expression : restrictions ) {
+			predicates.add( (SqmPredicate) expression );
+		}
+		return new SqmJunctionPredicate( Predicate.BooleanOperator.AND, predicates, this );
+	}
+
+	@Override
 	public SqmPredicate or(Expression<Boolean> x, Expression<Boolean> y) {
 		return new SqmJunctionPredicate(
 				Predicate.BooleanOperator.OR,
@@ -2082,6 +2307,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		}
 
 		final List<SqmPredicate> predicates = new ArrayList<>( restrictions.length );
+		for ( Predicate expression : restrictions ) {
+			predicates.add( (SqmPredicate) expression );
+		}
+		return new SqmJunctionPredicate( Predicate.BooleanOperator.OR, predicates, this );
+	}
+
+	@Override
+	public SqmPredicate or(List<Predicate> restrictions) {
+		if ( restrictions == null || restrictions.isEmpty() ) {
+			return disjunction();
+		}
+
+		final List<SqmPredicate> predicates = new ArrayList<>( restrictions.size() );
 		for ( Predicate expression : restrictions ) {
 			predicates.add( (SqmPredicate) expression );
 		}
@@ -2755,6 +2993,51 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 				null,
 				getQueryEngine()
 		);
+	}
+
+	@Override
+	public <N, T extends Temporal> SqmExpression<N> extract(TemporalField<N, T> field, Expression<T> temporal) {
+		Class<?> resultType = Integer.class;
+		final TemporalUnit temporalUnit;
+		switch ( field.toString() ) {
+			case "year":
+				temporalUnit = TemporalUnit.YEAR;
+				break;
+			case "quarter":
+				temporalUnit = TemporalUnit.QUARTER;
+				break;
+			case "month":
+				temporalUnit = TemporalUnit.MONTH;
+				break;
+			case "week":
+				temporalUnit = TemporalUnit.WEEK;
+				break;
+			case "day":
+				temporalUnit = TemporalUnit.DAY;
+				break;
+			case "hour":
+				temporalUnit = TemporalUnit.HOUR;
+				break;
+			case "minute":
+				temporalUnit = TemporalUnit.MINUTE;
+				break;
+			case "second":
+				temporalUnit = TemporalUnit.SECOND;
+				resultType = Double.class;
+				break;
+			case "date":
+				temporalUnit = TemporalUnit.DATE;
+				resultType = LocalDate.class;
+				break;
+			case "time":
+				temporalUnit = TemporalUnit.TIME;
+				resultType = LocalTime.class;
+				break;
+			default:
+				throw new IllegalArgumentException( "Invalid temporal field [" + field + "]" );
+		}
+		//noinspection unchecked
+		return extract( temporal, temporalUnit, (Class<N>) resultType );
 	}
 
 	private <T> SqmFunction<T> extract(

@@ -61,10 +61,10 @@ public class HQLTypeTest {
 				Vehicle vehicle2 = new Vehicle();
 				vehicle2.setContract( vehicleTrackContract );
 
-				session.save( vehicle1 );
-				session.save( vehicle2 );
-				session.save( vehicleContract );
-				session.save( vehicleTrackContract );
+				session.persist( vehicle1 );
+				session.persist( vehicle2 );
+				session.persist( vehicleContract );
+				session.persist( vehicleTrackContract );
 				if ( i == 0 ) {
 					firstCotract = vehicleContract;
 				}

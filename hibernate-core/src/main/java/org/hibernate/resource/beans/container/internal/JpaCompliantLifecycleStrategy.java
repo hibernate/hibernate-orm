@@ -6,7 +6,6 @@
  */
 package org.hibernate.resource.beans.container.internal;
 
-import java.util.Set;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.spi.AnnotatedType;
 import jakarta.enterprise.inject.spi.Bean;
@@ -23,12 +22,12 @@ import org.jboss.logging.Logger;
 /**
  * A {@link BeanLifecycleStrategy} to use when JPA compliance is required
  * (i.e. when the bean lifecycle is to be managed by the JPA runtime, not the CDI runtime).
- *
+ * <p>
  * The main characteristic of this strategy is that each requested bean is instantiated directly
  * and guaranteed to not be shared in the CDI context.
- *
- * In particular, @Singleton-scoped or @ApplicationScoped beans are instantiated directly by this strategy,
- * even if there is already an instance in the CDI context.
+ * <p>
+ * In particular, {@code @Singleton}-scoped or {@code @ApplicationScoped} beans are instantiated
+ * directly by this strategy, even if there is already an instance in the CDI context.
  * This means singletons are not really singletons, but this seems to be the behavior required by
  * the JPA 2.2 spec.
  */
@@ -128,10 +127,10 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 			}
 
 			try {
-				this.injectionTarget = beanManager.getInjectionTargetFactory( annotatedType ).createInjectionTarget( (Bean) null );
-				this.creationalContext = beanManager.createCreationalContext( null );
+				injectionTarget = beanManager.getInjectionTargetFactory( annotatedType ).createInjectionTarget( null );
+				creationalContext = beanManager.createCreationalContext( null );
 
-				this.beanInstance = this.injectionTarget.produce( creationalContext );
+				beanInstance = injectionTarget.produce( creationalContext );
 				injectionTarget.inject( beanInstance, creationalContext );
 
 				injectionTarget.postConstruct( beanInstance );
@@ -141,7 +140,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 			}
 			catch (Exception e) {
 				log.debugf( "Error resolving CDI bean [%s] - using fallback", beanType.getName() );
-				this.beanInstance = fallbackProducer.produceBeanInstance( beanType );
+				beanInstance = fallbackProducer.produceBeanInstance( beanType );
 
 				try {
 					if ( this.creationalContext != null ) {
@@ -151,11 +150,11 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 				catch (Exception ignore) {
 				}
 
-				this.creationalContext = null;
-				this.injectionTarget = null;
+				creationalContext = null;
+				injectionTarget = null;
 			}
 
-			this.beanManager = null;
+			beanManager = null;
 		}
 
 		@Override
@@ -171,15 +170,15 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 				}
 				injectionTarget.preDestroy( beanInstance );
 				injectionTarget.dispose( beanInstance );
-				this.creationalContext.release();
+				creationalContext.release();
 			}
 			catch (Exception ignore) {
 
 			}
 			finally {
-				this.beanInstance = null;
-				this.creationalContext = null;
-				this.injectionTarget = null;
+				beanInstance = null;
+				creationalContext = null;
+				injectionTarget = null;
 			}
 		}
 	}
@@ -239,31 +238,31 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 			}
 
 			try {
-				this.creationalContext = beanManager.createCreationalContext( null );
+				creationalContext = beanManager.createCreationalContext( null );
 			}
 			catch (Exception e) {
 				throw new NotYetReadyException( e );
 			}
 
 			try {
-				Set<Bean<?>> beans = beanManager.getBeans( beanType, new NamedBeanQualifier( beanName ) );
-				this.bean = (Bean<B>) beanManager.resolve( beans );
-				this.beanInstance = bean.create( creationalContext );
+				bean = (Bean<B>) beanManager.resolve( beanManager.getBeans( beanType,
+						new NamedBeanQualifier( beanName ) ) );
+				beanInstance = bean.create( creationalContext );
 			}
 			catch (Exception e) {
 				log.debugf( "Error resolving CDI bean [%s] - using fallback", beanName );
-				this.beanInstance = fallbackProducer.produceBeanInstance( beanName, beanType );
+				beanInstance = fallbackProducer.produceBeanInstance( beanName, beanType );
 
 				try {
-					if ( this.creationalContext != null ) {
-						this.creationalContext.release();
+					if ( creationalContext != null ) {
+						creationalContext.release();
 					}
 				}
 				catch (Exception ignore) {
 				}
 
-				this.creationalContext = null;
-				this.bean = null;
+				creationalContext = null;
+				bean = null;
 			}
 		}
 
@@ -291,10 +290,10 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 					}
 				}
 
-				this.beanInstance = null;
-				this.creationalContext = null;
-				this.bean = null;
-				this.beanManager = null;
+				beanInstance = null;
+				creationalContext = null;
+				bean = null;
+				beanManager = null;
 			}
 		}
 

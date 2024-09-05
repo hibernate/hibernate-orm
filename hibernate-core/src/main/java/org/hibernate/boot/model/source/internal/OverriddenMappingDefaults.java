@@ -6,7 +6,10 @@
  */
 package org.hibernate.boot.model.source.internal;
 
-import org.hibernate.boot.spi.MappingDefaults;
+import java.util.EnumSet;
+
+import org.hibernate.annotations.CascadeType;
+import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.CollectionClassification;
@@ -16,7 +19,7 @@ import org.hibernate.metamodel.CollectionClassification;
  *
  * @author Steve Ebersole
  */
-public class OverriddenMappingDefaults implements MappingDefaults {
+public class OverriddenMappingDefaults implements EffectiveMappingDefaults {
 	private final String implicitSchemaName;
 	private final String implicitCatalogName;
 	private final boolean implicitlyQuoteIdentifiers;
@@ -25,11 +28,12 @@ public class OverriddenMappingDefaults implements MappingDefaults {
 	private final String implicitDiscriminatorColumnName;
 	private final String implicitPackageName;
 	private final boolean autoImportEnabled;
-	private final String implicitCascadeStyleName;
+	private final jakarta.persistence.AccessType implicitPropertyAccessType;
 	private final String implicitPropertyAccessorName;
 	private final boolean entitiesImplicitlyLazy;
 	private final boolean pluralAttributesImplicitlyLazy;
 	private final AccessType implicitCacheAccessType;
+	private final EnumSet<CascadeType> cascadeTypes;
 	private final CollectionClassification implicitListClassification;
 
 	public OverriddenMappingDefaults(
@@ -41,7 +45,8 @@ public class OverriddenMappingDefaults implements MappingDefaults {
 			String implicitDiscriminatorColumnName,
 			String implicitPackageName,
 			boolean autoImportEnabled,
-			String implicitCascadeStyleName,
+			EnumSet<CascadeType> cascadeTypes,
+			jakarta.persistence.AccessType implicitPropertyAccessType,
 			String implicitPropertyAccessorName,
 			boolean entitiesImplicitlyLazy,
 			boolean pluralAttributesImplicitlyLazy,
@@ -55,7 +60,8 @@ public class OverriddenMappingDefaults implements MappingDefaults {
 		this.implicitDiscriminatorColumnName = implicitDiscriminatorColumnName;
 		this.implicitPackageName = implicitPackageName;
 		this.autoImportEnabled = autoImportEnabled;
-		this.implicitCascadeStyleName = implicitCascadeStyleName;
+		this.cascadeTypes = cascadeTypes;
+		this.implicitPropertyAccessType = implicitPropertyAccessType;
 		this.implicitPropertyAccessorName = implicitPropertyAccessorName;
 		this.entitiesImplicitlyLazy = entitiesImplicitlyLazy;
 		this.pluralAttributesImplicitlyLazy = pluralAttributesImplicitlyLazy;
@@ -64,72 +70,77 @@ public class OverriddenMappingDefaults implements MappingDefaults {
 	}
 
 	@Override
-	public String getImplicitSchemaName() {
+	public String getDefaultSchemaName() {
 		return implicitSchemaName;
 	}
 
 	@Override
-	public String getImplicitCatalogName() {
+	public String getDefaultCatalogName() {
 		return implicitCatalogName;
 	}
 
 	@Override
-	public boolean shouldImplicitlyQuoteIdentifiers() {
+	public boolean isDefaultQuoteIdentifiers() {
 		return implicitlyQuoteIdentifiers;
 	}
 
 	@Override
-	public String getImplicitIdColumnName() {
+	public String getDefaultIdColumnName() {
 		return implicitIdColumnName;
 	}
 
 	@Override
-	public String getImplicitTenantIdColumnName() {
-		return implicitTenantIdColumnName;
-	}
-
-	@Override
-	public String getImplicitDiscriminatorColumnName() {
+	public String getDefaultDiscriminatorColumnName() {
 		return implicitDiscriminatorColumnName;
 	}
 
 	@Override
-	public String getImplicitPackageName() {
+	public String getDefaultTenantIdColumnName() {
+		return implicitTenantIdColumnName;
+	}
+
+	@Override
+	public String getDefaultPackageName() {
 		return implicitPackageName;
 	}
 
 	@Override
-	public boolean isAutoImportEnabled() {
+	public boolean isDefaultAutoImport() {
 		return autoImportEnabled;
 	}
 
 	@Override
-	public String getImplicitCascadeStyleName() {
-		return implicitCascadeStyleName;
+	public EnumSet<CascadeType> getDefaultCascadeTypes() {
+		return cascadeTypes;
 	}
 
 	@Override
-	public String getImplicitPropertyAccessorName() {
+	public jakarta.persistence.AccessType getDefaultPropertyAccessType() {
+		return implicitPropertyAccessType;
+	}
+
+	@Override
+	public String getDefaultAccessStrategyName() {
 		return implicitPropertyAccessorName;
 	}
 
 	@Override
-	public boolean areEntitiesImplicitlyLazy() {
+	public boolean isDefaultEntityLaziness() {
 		return entitiesImplicitlyLazy;
 	}
 
 	@Override
-	public boolean areCollectionsImplicitlyLazy() {
+	public boolean isDefaultCollectionLaziness() {
 		return pluralAttributesImplicitlyLazy;
 	}
 
 	@Override
-	public AccessType getImplicitCacheAccessType() {
+	public AccessType getDefaultCacheAccessType() {
 		return implicitCacheAccessType;
 	}
 
 	@Override
-	public CollectionClassification getImplicitListClassification() {
+	public CollectionClassification getDefaultListClassification() {
 		return implicitListClassification;
 	}
 
@@ -142,28 +153,29 @@ public class OverriddenMappingDefaults implements MappingDefaults {
 		private String implicitDiscriminatorColumnName;
 		private String implicitPackageName;
 		private boolean autoImportEnabled;
-		private String implicitCascadeStyleName;
+		private EnumSet<CascadeType> implicitCascadeTypes;
+		private jakarta.persistence.AccessType implicitPropertyAccessType;
 		private String implicitPropertyAccessorName;
 		private boolean entitiesImplicitlyLazy;
 		private boolean pluralAttributesImplicitlyLazy;
 		private AccessType implicitCacheAccessType;
 		private CollectionClassification implicitListClassification;
 
-		public Builder(MappingDefaults parentDefaults) {
-			this.implicitSchemaName = parentDefaults.getImplicitSchemaName();
-			this.implicitCatalogName = parentDefaults.getImplicitCatalogName();
-			this.implicitlyQuoteIdentifiers = parentDefaults.shouldImplicitlyQuoteIdentifiers();
-			this.implicitIdColumnName = parentDefaults.getImplicitIdColumnName();
-			this.implicitTenantIdColumnName = parentDefaults.getImplicitTenantIdColumnName();
-			this.implicitDiscriminatorColumnName = parentDefaults.getImplicitDiscriminatorColumnName();
-			this.implicitPackageName = parentDefaults.getImplicitPackageName();
-			this.autoImportEnabled = parentDefaults.isAutoImportEnabled();
-			this.implicitCascadeStyleName = parentDefaults.getImplicitCascadeStyleName();
-			this.implicitPropertyAccessorName = parentDefaults.getImplicitPropertyAccessorName();
-			this.entitiesImplicitlyLazy = parentDefaults.areEntitiesImplicitlyLazy();
-			this.pluralAttributesImplicitlyLazy = parentDefaults.areCollectionsImplicitlyLazy();
-			this.implicitCacheAccessType = parentDefaults.getImplicitCacheAccessType();
-			this.implicitListClassification = parentDefaults.getImplicitListClassification();
+		public Builder(EffectiveMappingDefaults parentDefaults) {
+			this.implicitSchemaName = parentDefaults.getDefaultSchemaName();
+			this.implicitCatalogName = parentDefaults.getDefaultCatalogName();
+			this.implicitlyQuoteIdentifiers = parentDefaults.isDefaultQuoteIdentifiers();
+			this.implicitIdColumnName = parentDefaults.getDefaultIdColumnName();
+			this.implicitTenantIdColumnName = parentDefaults.getDefaultTenantIdColumnName();
+			this.implicitDiscriminatorColumnName = parentDefaults.getDefaultDiscriminatorColumnName();
+			this.implicitPackageName = parentDefaults.getDefaultPackageName();
+			this.autoImportEnabled = parentDefaults.isDefaultAutoImport();
+
+			this.implicitCascadeTypes = parentDefaults.getDefaultCascadeTypes();
+			this.implicitPropertyAccessorName = parentDefaults.getDefaultAccessStrategyName();
+			this.entitiesImplicitlyLazy = parentDefaults.isDefaultEntityLaziness();
+			this.pluralAttributesImplicitlyLazy = parentDefaults.isDefaultCollectionLaziness();
+			this.implicitCacheAccessType = parentDefaults.getDefaultCacheAccessType();
 		}
 
 		public Builder setImplicitSchemaName(String implicitSchemaName) {
@@ -218,9 +230,16 @@ public class OverriddenMappingDefaults implements MappingDefaults {
 			return this;
 		}
 
-		public Builder setImplicitCascadeStyleName(String implicitCascadeStyleName) {
-			if ( StringHelper.isNotEmpty( implicitCascadeStyleName ) ) {
-				this.implicitCascadeStyleName = implicitCascadeStyleName;
+//		public Builder setImplicitCascadeStyleName(String implicitCascadeStyleName) {
+//			if ( StringHelper.isNotEmpty( implicitCascadeStyleName ) ) {
+//				this.implicitCascadeStyleName = implicitCascadeStyleName;
+//			}
+//			return this;
+//		}
+
+		public Builder setImplicitPropertyAccessType(jakarta.persistence.AccessType accessType) {
+			if ( accessType != null ) {
+				this.implicitPropertyAccessType = accessType;
 			}
 			return this;
 		}
@@ -270,7 +289,8 @@ public class OverriddenMappingDefaults implements MappingDefaults {
 					implicitDiscriminatorColumnName,
 					implicitPackageName,
 					autoImportEnabled,
-					implicitCascadeStyleName,
+					implicitCascadeTypes,
+					implicitPropertyAccessType,
 					implicitPropertyAccessorName,
 					entitiesImplicitlyLazy,
 					pluralAttributesImplicitlyLazy,

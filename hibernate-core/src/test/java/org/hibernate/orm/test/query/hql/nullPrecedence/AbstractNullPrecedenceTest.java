@@ -30,14 +30,14 @@ abstract class AbstractNullPrecedenceTest {
 		scope.inTransaction( session -> {
 			ExampleEntity entity1 = new ExampleEntity( 1L );
 			entity1.setName( "name1" );
-			session.save( entity1 );
+			session.persist( entity1 );
 
 			ExampleEntity entity2 = new ExampleEntity( 2L );
-			session.save( entity2 );
+			session.persist( entity2 );
 
 			ExampleEntity entity3 = new ExampleEntity( 3L );
 			entity3.setName( "name3" );
-			session.save( entity3 );
+			session.persist( entity3 );
 
 		} );
 	}

@@ -11,30 +11,30 @@ package org.hibernate.orm.test.annotations.join;
 import java.io.Serializable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.SecondaryTable;
-import jakarta.persistence.SecondaryTables;
+import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
-import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.Index;
 import org.hibernate.annotations.SQLInsert;
-import org.hibernate.annotations.Table;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
-@SecondaryTables({
-@SecondaryTable(name = "`Cat nbr1`"),
-@SecondaryTable(name = "Cat2", uniqueConstraints = {@UniqueConstraint(columnNames = {"storyPart2"})})
-		})
-@Table(appliesTo = "Cat", indexes = @Index(name = "secondname",
-		columnNames = "secondName"), comment = "My cat table" )
-@Table(appliesTo = "Cat2", foreignKey = @ForeignKey(name="FK_CAT2_CAT"), fetch = FetchMode.SELECT,
-		sqlInsert=@SQLInsert(sql="insert into Cat2(storyPart2, id) values(upper(?), ?)") )
+@Table(name = "Cat",
+		indexes = {@Index(name = "secondname", columnList = "secondName"),
+				@Index(name = "nameindex", columnList = "name")},
+		comment = "My cat table")
+@SecondaryTable(name = "`Cat nbr1`",
+		indexes = @Index(name = "story1index", columnList = "storyPart1"))
+@SecondaryTable(name = "Cat2",
+		uniqueConstraints = @UniqueConstraint(columnNames = {"storyPart2"}),
+		foreignKey = @ForeignKey(name="FK_CAT2_CAT"))
+@SQLInsert(table = "Cat2", sql="insert into Cat2(storyPart2, id) values(upper(?), ?)")
 public class Cat implements Serializable {
 
 	private Integer id;
@@ -49,7 +49,6 @@ public class Cat implements Serializable {
 		return id;
 	}
 
-	@Index(name = "nameindex")
 	public String getName() {
 		return name;
 	}
@@ -82,7 +81,6 @@ public class Cat implements Serializable {
 //	}
 
 	@Column(table = "`Cat nbr1`")
-	@Index(name = "story1index")
 	public String getStoryPart1() {
 		return storyPart1;
 	}

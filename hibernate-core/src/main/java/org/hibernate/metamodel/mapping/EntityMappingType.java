@@ -18,7 +18,6 @@ import org.hibernate.Filter;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.annotations.ConcreteProxy;
-import org.hibernate.boot.jaxb.mapping.JaxbEntity;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -66,7 +65,7 @@ public interface EntityMappingType
 	 * <p/>
 	 * For most entities, this will be the fully-qualified name
 	 * of the entity class.  The alternative is an explicit
-	 * {@linkplain JaxbEntity#getName() entity-name} which takes precedence if provided
+	 * {@linkplain org.hibernate.boot.jaxb.mapping.spi.JaxbEntity#getName() entity-name} which takes precedence if provided
 	 *
 	 * @apiNote Different from {@link Entity#name()}, which is just a glorified
 	 * SQM "import" name
@@ -233,7 +232,10 @@ public interface EntityMappingType
 
 	/**
 	 * Is this class explicit polymorphism only?
+	 *
+	 * @deprecated No longer supported
 	 */
+	@Deprecated
 	boolean isExplicitPolymorphism();
 
 	/**
@@ -281,37 +283,6 @@ public interface EntityMappingType
 	default void pruneForSubclasses(TableGroup tableGroup, Map<String, EntityNameUse> entityNameUses) {
 	}
 
-	/**
-	 * Adapts the table group and its table reference as well as table reference joins
-	 * in a way such that unnecessary tables or joins are omitted if possible,
-	 * based on the given treated entity names.
-	 *
-	 * The goal is to e.g. remove join inheritance "branches" or union selects that are impossible.
-	 *
-	 * Consider the following example:
-	 * <code>
-	 *     class BaseEntity {}
-	 *     class Sub1 extends BaseEntity {}
-	 *     class Sub1Sub1 extends Sub1 {}
-	 *     class Sub1Sub2 extends Sub1 {}
-	 *     class Sub2 extends BaseEntity {}
-	 *     class Sub2Sub1 extends Sub2 {}
-	 *     class Sub2Sub2 extends Sub2 {}
-	 * </code>
-	 *
-	 * If the <code>treatedEntityNames</code> only contains <code>Sub1</code> or any of its subtypes,
-	 * this means that <code>Sub2</code> and all subtypes are impossible,
-	 * thus the joins/selects for these types shall be omitted in the given table group.
-	 *
-	 * @param tableGroup The table group to prune subclass tables for
-	 * @param treatedEntityNames The entity names for which path usages were registered
-	 * @deprecated Use {@link #pruneForSubclasses(TableGroup, Map)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	default void pruneForSubclasses(TableGroup tableGroup, Set<String> treatedEntityNames) {
-	}
-
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Special model parts - identifier, discriminator, etc
 
@@ -320,6 +291,14 @@ public interface EntityMappingType
 	 * entity mappings within an inheritance hierarchy.
 	 */
 	EntityIdentifierMapping getIdentifierMapping();
+
+	/**
+	 * Mapping details for the entity's identifier.  This is shared across all
+	 * entity mappings within an inheritance hierarchy.
+	 */
+	default EntityIdentifierMapping getIdentifierMappingForJoin() {
+		return getIdentifierMapping();
+	}
 
 	/**
 	 * Mapping details for the entity's discriminator.  This is shared across all

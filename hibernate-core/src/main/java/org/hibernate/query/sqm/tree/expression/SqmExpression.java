@@ -11,6 +11,7 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.function.Consumer;
 import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.Internal;
@@ -90,10 +91,10 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 	SqmPredicate isNotNull();
 
 	@Override
-	SqmPredicate equalTo(Expression<T> that);
+	SqmPredicate equalTo(Expression<?> value);
 
 	@Override
-	SqmPredicate equalTo(T that);
+	SqmPredicate equalTo(Object value);
 
 	@Override
 	SqmPredicate in(Object... values);
@@ -130,4 +131,9 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( type ) );
 	}
 
+	@Override
+	Predicate notEqualTo(Expression<?> value);
+
+	@Override
+	Predicate notEqualTo(Object value);
 }

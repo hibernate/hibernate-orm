@@ -114,7 +114,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 		CollectionCacheEntry cachedData = fromSession(
 				session -> {
 					// Force a collection into the second level cache, with its non-filtered elements
-					Salesperson sp = session.load( Salesperson.class, testData.steveId );
+					Salesperson sp = session.getReference( Salesperson.class, testData.steveId );
 					Hibernate.initialize( sp.getOrders() );
 					assertTrue( "No cache for collection", persister.hasCache() );
 					Object cacheKey = cache.generateCacheKey(
@@ -156,7 +156,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 		inSession(
 				session -> {
 					session.enableFilter( "fulfilledOrders" ).setParameter( "asOfDate", testData.lastMonth.getTime() );
-					Salesperson sp = session.load( Salesperson.class, testData.steveId );
+					Salesperson sp = session.getReference( Salesperson.class, testData.steveId );
 					assertEquals( "Filtered-collection not bypassing 2L-cache", 1, sp.getOrders().size() );
 				}
 		);
@@ -164,7 +164,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 		// Finally, make sure that the original cached version did not get over-written
 		inSession(
 				session -> {
-					Salesperson sp = session.load( Salesperson.class, testData.steveId );
+					Salesperson sp = session.getReference( Salesperson.class, testData.steveId );
 					assertEquals( "Actual cached version got over-written", 2, sp.getOrders().size() );
 				}
 		);
@@ -705,7 +705,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 					session.enableFilter( "region" ).setParameter( "region", "NA" );
 					int count = session.createQuery( "delete from Salesperson" ).executeUpdate();
 					assertEquals( 1, count );
-					session.delete( sp2 );
+					session.remove( sp2 );
 				}
 		);
 	}
@@ -730,7 +730,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 					session.enableFilter( "region" ).setParameter( "region", "NA" );
 					int count = session.createQuery( "delete from Salesperson" ).executeUpdate();
 					assertEquals( 1, count );
-					session.delete( sp2 );
+					session.remove( sp2 );
 				}
 		);
 	}
@@ -767,7 +767,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 							.setParameter( "asOfDate", testData.lastMonth.getTime() );
 
 					log.info( "Performing load of Department..." );
-					Department department = session.load( Department.class, testData.deptId );
+					Department department = session.getReference( Department.class, testData.deptId );
 					Set salespersons = department.getSalespersons();
 					assertEquals( "Incorrect salesperson count", 1, salespersons.size() );
 
@@ -1019,7 +1019,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 						Department dept = new Department();
 						dept.setName( "Sales" );
 
-						session.save( dept );
+						session.persist( dept );
 						deptId = dept.getId();
 						entitiesToCleanUp.add( dept );
 
@@ -1039,8 +1039,8 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 						max.setDepartment( dept );
 						dept.getSalespersons().add( max );
 
-						session.save( steve );
-						session.save( max );
+						session.persist( steve );
+						session.persist( max );
 						entitiesToCleanUp.add( steve );
 						entitiesToCleanUp.add( max );
 
@@ -1059,7 +1059,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 						product1.addCategory( cat1 );
 						product1.addCategory( cat2 );
 
-						session.save( product1 );
+						session.persist( product1 );
 						entitiesToCleanUp.add( product1 );
 						prod1Id = product1.getId();
 
@@ -1071,7 +1071,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 						order1.setSalesperson( steve );
 						order1.addLineItem( product1, 500 );
 
-						session.save( order1 );
+						session.persist( order1 );
 						entitiesToCleanUp.add( order1 );
 
 						Product product2 = new Product();
@@ -1084,13 +1084,13 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 						Category cat3 = new Category( "test cat 2", sixMonthsAgo.getTime(), new Date() );
 						product2.addCategory( cat3 );
 
-						session.save( product2 );
+						session.persist( product2 );
 						entitiesToCleanUp.add( product2 );
 
 						// An uncategorized product
 						Product product3 = new Product();
 						product3.setName( "Uncategorized product" );
-						session.save( product3 );
+						session.persist( product3 );
 						entitiesToCleanUp.add( product3 );
 
 						Order order2 = new Order();
@@ -1100,7 +1100,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 						order2.setSalesperson( steve );
 						order2.addLineItem( product2, -1 );
 
-						session.save( order2 );
+						session.persist( order2 );
 						entitiesToCleanUp.add( order2 );
 					}
 			);
@@ -1110,7 +1110,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 			inTransaction(
 					session -> {
 						for ( Object o : entitiesToCleanUp ) {
-							session.delete( o );
+							session.remove( o );
 						}
 					}
 			);

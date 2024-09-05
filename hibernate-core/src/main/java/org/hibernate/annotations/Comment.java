@@ -13,6 +13,8 @@ import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import jakarta.persistence.Table;
+
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
@@ -49,13 +51,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author Yanming Zhou
  * @author Gavin King
  *
- * @remove JPA 3.2 adds a comment attribute to {@linkplain jakarta.persistence.Table}
+ * @deprecated Prefer {@linkplain Table#comment()}
  */
 @TypeBinderType(binder = CommentBinder.class)
 @AttributeBinderType(binder = CommentBinder.class)
 @Target({METHOD, FIELD, TYPE})
 @Retention(RUNTIME)
 @Repeatable(Comments.class)
+@Deprecated(since="7")
 @Remove
 public @interface Comment {
 	/**

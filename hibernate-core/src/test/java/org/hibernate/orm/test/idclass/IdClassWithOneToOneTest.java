@@ -36,7 +36,7 @@ public class IdClassWithOneToOneTest {
         scope.inTransaction(
                 session -> {
                     Task task = new Task(new TaskText("en", "Localized in en"));
-                    session.save( task );
+                    session.persist( task );
                 }
         );
     }

@@ -102,32 +102,7 @@ public class TransactionExceptionHandlingTest extends BaseExceptionHandlingTest 
 		t.begin();
 		Thread.sleep( 1000 );
 		try {
-			s.save( new A() );
-			fail( "should have thrown an exception" );
-		}
-		catch (RuntimeException expected){
-			exceptionExpectations.onTransactionExceptionOnSaveAndSaveOrUpdate( expected );
-		}
-		finally {
-			t.rollback();
-			s.close();
-		}
-	}
-
-	@Test
-	public void testSaveOrUpdateWithGeneratedValue() throws Exception {
-		Session s = openSession();
-		// Get the transaction and set the timeout BEFORE calling begin()
-		Transaction t = s.getTransaction();
-		t.setTimeout( 1 );
-		assertEquals(
-				-1,
-				( (SessionImplementor) s ).getJdbcCoordinator().determineRemainingTransactionTimeOutPeriod()
-		);
-		t.begin();
-		Thread.sleep( 1000 );
-		try {
-			s.saveOrUpdate( new A() );
+			s.persist( new A() );
 			fail( "should have thrown an exception" );
 		}
 		catch (RuntimeException expected){

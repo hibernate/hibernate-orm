@@ -24,18 +24,18 @@ import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.BaselineSessionEventsListenerBuilder;
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.spi.QueryEngineOptions;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.stat.Statistics;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.ObjectJavaType;
 import org.hibernate.type.format.FormatMapper;
+
+import jakarta.persistence.criteria.Nulls;
 
 /**
  * Aggregator of special options used to build the {@link org.hibernate.SessionFactory}.
@@ -84,10 +84,10 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	}
 
 	/**
-	 * The name to be used for the SessionFactory.  This is used both in:<ul>
-	 *     <li>in-VM serialization</li>
-	 *     <li>JNDI binding, depending on {@link #isSessionFactoryNameAlsoJndiName}</li>
-	 * </ul>
+	 * The name to be used for the SessionFactory.  This is used during in-VM serialization; see
+	 * {@link org.hibernate.internal.SessionFactoryRegistry}.
+	 * May also be used as a JNDI name depending on {@value org.hibernate.cfg.PersistenceSettings#SESSION_FACTORY_JNDI_NAME}
+	 * and {@value org.hibernate.cfg.PersistenceSettings#SESSION_FACTORY_NAME_IS_JNDI}.
 	 *
 	 * @return The SessionFactory name
 	 */
@@ -99,7 +99,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @return {@code true} if the SessionFactory name is also a JNDI name; {@code false} otherwise.
 	 */
-	boolean isSessionFactoryNameAlsoJndiName();
+	Boolean isSessionFactoryNameAlsoJndiName();
 
 	boolean isFlushBeforeCompletionEnabled();
 
@@ -135,12 +135,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 	TempTableDdlTransactionHandling getTempTableDdlTransactionHandling();
 
-	/**
-	 * @deprecated : No longer used internally
-	 */
-	@Deprecated(since = "6.0")
-	BatchFetchStyle getBatchFetchStyle();
-
 	boolean isDelayBatchFetchLoaderCreationsEnabled();
 
 	int getDefaultBatchFetchSize();
@@ -149,7 +143,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 	boolean isSubselectFetchEnabled();
 
-	NullPrecedence getDefaultNullPrecedence();
+	Nulls getDefaultNullPrecedence();
 
 	boolean isOrderUpdatesEnabled();
 

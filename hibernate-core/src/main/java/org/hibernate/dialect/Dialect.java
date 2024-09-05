@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.lang.invoke.MethodHandles;
 import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Clob;
@@ -109,6 +110,7 @@ import org.hibernate.internal.util.MathHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.ast.spi.MultiKeyLoadSizingStrategy;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
@@ -117,7 +119,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
@@ -204,7 +206,7 @@ import static java.lang.Math.log;
 import static org.hibernate.cfg.AvailableSettings.NON_CONTEXTUAL_LOB_CREATION;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
-import static org.hibernate.internal.util.StringHelper.parseCommaSeparatedString;
+import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
@@ -237,8 +239,10 @@ import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
+import static org.hibernate.type.SqlTypes.isCharacterType;
 import static org.hibernate.type.SqlTypes.isEnumType;
 import static org.hibernate.type.SqlTypes.isFloatOrRealOrDouble;
+import static org.hibernate.type.SqlTypes.isIntegral;
 import static org.hibernate.type.SqlTypes.isNumericOrDecimal;
 import static org.hibernate.type.SqlTypes.isVarbinaryType;
 import static org.hibernate.type.SqlTypes.isVarcharType;
@@ -310,7 +314,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	private static final Pattern ESCAPE_CLOSING_COMMENT_PATTERN = Pattern.compile( "\\*/" );
 	private static final Pattern ESCAPE_OPENING_COMMENT_PATTERN = Pattern.compile( "/\\*" );
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, Dialect.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, Dialect.class.getName() );
 
 	//needed for converting precision from decimal to binary digits
 	protected static final double LOG_BASE2OF10 = log(10)/log(2);
@@ -662,7 +666,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @see java.sql.DatabaseMetaData#getSQLKeywords()
 	 */
 	protected void registerKeywords(DialectResolutionInfo info) {
-		for ( String keyword : parseCommaSeparatedString( info.getSQLKeywords() ) ) {
+		for ( String keyword : splitAtCommas( info.getSQLKeywords() ) ) {
 			registerKeyword( keyword );
 		}
 	}
@@ -848,7 +852,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return a SQL expression that will occur in a {@code check} constraint
 	 * @deprecated use {@link #getCheckCondition(String, Long[])} instead
 	 */
-	@Deprecated(forRemoval = true)
+	@Deprecated(since="6.5", forRemoval = true)
 	public String getCheckCondition(String columnName, long[] values) {
 		Long[] boxedValues = new Long[values.length];
 		for ( int i = 0; i<values.length; i++ ) {
@@ -875,6 +879,39 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				continue;
 			}
 			check.append( separator ).append( value );
+			separator = ",";
+		}
+		check.append( ')' );
+		if ( nullIsValid ) {
+			check.append( " or " ).append( columnName ).append( " is null" );
+		}
+		return check.toString();
+	}
+
+	/**
+	 * Generate a check condition for column with the given set of values.
+	 *
+	 * @apiNote Only supports TINYINT, SMALLINT and (VAR)CHAR
+	 */
+	public String getCheckCondition(String columnName, Set<?> valueSet, JdbcType jdbcType) {
+		final boolean isCharacterJdbcType = isCharacterType( jdbcType.getJdbcTypeCode() );
+		assert isCharacterJdbcType || isIntegral( jdbcType.getJdbcTypeCode() );
+
+		StringBuilder check = new StringBuilder();
+		check.append( columnName ).append( " in (" );
+		String separator = "";
+		boolean nullIsValid = false;
+		for ( Object value : valueSet ) {
+			if ( value == null ) {
+				nullIsValid = true;
+				continue;
+			}
+			if ( isCharacterJdbcType ) {
+				check.append( separator ).append('\'').append( value ).append('\'');
+			}
+			else {
+				check.append( separator ).append( value );
+			}
 			separator = ",";
 		}
 		check.append( ')' );
@@ -1505,22 +1542,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * Obtain a pattern for the SQL equivalent to a
 	 * {@code trim()} function call. The resulting
 	 * pattern must contain a ?1 placeholder for the
-	 * argument of type {@link String}.
-	 *
-	 * @param specification {@code leading} or {@code trailing}
-	 * @param character the character to trim
-	 *
-	 * @deprecated Use {@link #trimPattern(TrimSpec, boolean)} instead.
-	 */
-	@Deprecated( forRemoval = true )
-	public String trimPattern(TrimSpec specification, char character) {
-		return trimPattern( specification, character == ' ' );
-	}
-
-	/**
-	 * Obtain a pattern for the SQL equivalent to a
-	 * {@code trim()} function call. The resulting
-	 * pattern must contain a ?1 placeholder for the
 	 * argument of type {@link String} and a ?2 placeholder
 	 * for the trim character if {@code isWhitespace}
 	 * was false.
@@ -2006,28 +2027,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * If this dialect supports specifying lock timeouts, are those timeouts
-	 * rendered into the {@code SQL} string as parameters? The implication
-	 * is that Hibernate will need to bind the timeout value as a parameter
-	 * in the {@link PreparedStatement}. If true, the parameter position
-	 * is always handled as the last parameter; if the dialect specifies the
-	 * lock timeout elsewhere in the {@code SQL} statement then the timeout
-	 * value should be directly rendered into the statement and this method
-	 * should return false.
-	 *
-	 * @return True if the lock timeout is rendered into the {@code SQL}
-	 *         string as a parameter; false otherwise.
-	 *
-	 * @deprecated This is never called, and since at least Hibernate 5 has
-	 *             just returned {@code false} in every dialect. It will be
-	 *             removed.
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	public boolean isLockTimeoutParameterized() {
-		return false;
-	}
-
-	/**
 	 * A {@link LockingStrategy} which is able to acquire a database-level
 	 * lock with the specified {@linkplain LockMode level}.
 	 *
@@ -2037,7 +2036,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *
 	 * @since 3.2
 	 */
-	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
+	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		switch ( lockMode ) {
 			case PESSIMISTIC_FORCE_INCREMENT:
 				return new PessimisticForceIncrementLockingStrategy( lockable, lockMode );
@@ -3689,22 +3688,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Does this dialect support parameters within the {@code SELECT} clause
-	 * of {@code INSERT ... SELECT ...} statements?
-	 *
-	 * @return True if this is supported; false otherwise.
-	 *
-	 * @since 3.2
-	 *
-	 * @deprecated This seems to be supported on all platforms, and we don't
-	 *             call this except in test suite
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	public boolean supportsParametersInInsertSelect() {
-		return true;
-	}
-
-	/**
 	 * Does this dialect support references to result variables
 	 * (i.e, select items) by column positions (1-origin) as defined
 	 * by the select clause?
@@ -4601,16 +4584,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * @deprecated This is no longer called
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	public String inlineLiteral(String literal) {
-		final StringBuilder sb = new StringBuilder( literal.length() + 2 );
-		appendLiteral( new StringBuilderSqlAppender( sb ), literal );
-		return sb.toString();
-	}
-
-	/**
 	 * Append a literal string to the given {@link SqlAppender}.
 	 *
 	 * @apiNote Needed because MySQL has nonstandard escape characters
@@ -5235,6 +5208,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				Integer precision,
 				Integer scale,
 				Long length);
+
+		default Size resolveSize(
+				JdbcType jdbcType,
+				JavaType<?> javaType,
+				Size size) {
+			return resolveSize( jdbcType, javaType, size.getPrecision(), size.getScale(), size.getLength() );
+		}
 	}
 
 	public class SizeStrategyImpl implements SizeStrategy {
@@ -5625,6 +5605,40 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
 		return FunctionalDependencyAnalysisSupportImpl.NONE;
+	}
+
+	/**
+	 * Render a SQL check condition for {@link CheckConstraint}
+	 *
+	 * @return a SQL expression representing the {@link CheckConstraint}
+	 */
+	public String getCheckConstraintString(CheckConstraint checkConstraint) {
+		final String constraintName = checkConstraint.getName();
+		String constraint = constraintName == null
+				? " check (" + checkConstraint.getConstraint() + ")"
+				: " constraint " + constraintName + " check (" + checkConstraint.getConstraint() + ")";
+		return appendCheckConstraintOptions( checkConstraint, constraint );
+	}
+
+	/**
+	 * Append the {@link CheckConstraint} options to SQL check sqlCheckConstraint
+	 *
+	 * @param checkConstraint an instance of {@link CheckConstraint}
+	 * @param sqlCheckConstraint the SQL to append the {@link CheckConstraint} options
+	 *
+	 * @return a SQL expression
+	 */
+	public String appendCheckConstraintOptions(CheckConstraint checkConstraint, String sqlCheckConstraint) {
+		return sqlCheckConstraint;
+	}
+
+	/**
+	 * Does this dialect support appending table options SQL fragment at the end of the SQL Table creation statement?
+	 *
+	 *  @return {@code true} indicates it does; {@code false} indicates it does not;
+	 */
+	public boolean supportsTableOptions(){
+		return false;
 	}
 
 }

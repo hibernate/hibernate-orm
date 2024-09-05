@@ -7,8 +7,6 @@
 package org.hibernate.event.spi;
 
 import java.lang.reflect.Field;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,9 +31,6 @@ public final class EventType<T> {
 
 	public static final EventType<InitializeCollectionEventListener> INIT_COLLECTION = create( "load-collection", InitializeCollectionEventListener.class );
 
-	public static final EventType<SaveOrUpdateEventListener> SAVE_UPDATE = create( "save-update", SaveOrUpdateEventListener.class );
-	public static final EventType<SaveOrUpdateEventListener> UPDATE = create( "update", SaveOrUpdateEventListener.class );
-	public static final EventType<SaveOrUpdateEventListener> SAVE = create( "save", SaveOrUpdateEventListener.class );
 	public static final EventType<PersistEventListener> PERSIST = create( "create", PersistEventListener.class );
 	public static final EventType<PersistEventListener> PERSIST_ONFLUSH = create( "create-onflush", PersistEventListener.class );
 
@@ -85,24 +80,23 @@ public final class EventType<T> {
 	 * Maintain a map of {@link EventType} instances keyed by name for lookup by name as well as {@link #values()}
 	 * resolution.
 	 */
-	private static final Map<String,EventType<?>> STANDARD_TYPE_BY_NAME_MAP = AccessController.doPrivileged(
-			(PrivilegedAction<Map<String, EventType<?>>>) () -> {
-				final Map<String, EventType<?>> typeByNameMap = new HashMap<>();
-				for ( Field field : EventType.class.getDeclaredFields() ) {
-					if ( EventType.class.isAssignableFrom( field.getType() ) ) {
-						try {
-							final EventType<?> typeField = (EventType<?>) field.get( null );
-							typeByNameMap.put( typeField.eventName(), typeField );
-						}
-						catch (Exception t) {
-							throw new HibernateException( "Unable to initialize EventType map", t );
-						}
-					}
-				}
+	private static final Map<String,EventType<?>> STANDARD_TYPE_BY_NAME_MAP = initStandardTypeNameMap();
 
-				return Collections.unmodifiableMap( typeByNameMap );
+	private static Map<String, EventType<?>> initStandardTypeNameMap() {
+		final Map<String, EventType<?>> typeByNameMap = new HashMap<>();
+		for ( Field field : EventType.class.getDeclaredFields() ) {
+			if ( EventType.class.isAssignableFrom( field.getType() ) ) {
+				try {
+					final EventType<?> typeField = (EventType<?>) field.get( null );
+					typeByNameMap.put( typeField.eventName(), typeField );
+				}
+				catch ( Exception t ) {
+					throw new HibernateException( "Unable to initialize EventType map", t );
+				}
 			}
-	);
+		}
+		return Collections.unmodifiableMap( typeByNameMap );
+	}
 
 	private static <T> EventType<T> create(String name, Class<T> listenerRole) {
 		return new EventType<>( name, listenerRole, STANDARD_TYPE_COUNTER.getAndIncrement(), true );

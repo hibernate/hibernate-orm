@@ -42,8 +42,8 @@ public class ManyToOneBidirectionalCircularityTest {
 					EntityTest2 entity2 = new EntityTest2( 2, "e2" );
 					entity.setEntity2( entity2 );
 					entity2.setEntity( entity );
-					session.save( entity2 );
-					session.save( entity );
+					session.persist( entity2 );
+					session.persist( entity );
 				}
 		);
 	}

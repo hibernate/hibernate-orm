@@ -56,7 +56,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.hql.HqlTranslator;
@@ -286,11 +286,6 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
-	public String trimPattern(TrimSpec specification, char character) {
-		return wrapped.trimPattern( specification, character );
-	}
-
-	@Override
 	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
 		return wrapped.trimPattern( specification, isWhitespace );
 	}
@@ -406,13 +401,7 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
-	@Deprecated(since = "6", forRemoval = true)
-	public boolean isLockTimeoutParameterized() {
-		return wrapped.isLockTimeoutParameterized();
-	}
-
-	@Override
-	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
+	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		return wrapped.getLockingStrategy( lockable, lockMode );
 	}
 
@@ -1047,12 +1036,6 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
-	@Deprecated(since = "6", forRemoval = true)
-	public boolean supportsParametersInInsertSelect() {
-		return wrapped.supportsParametersInInsertSelect();
-	}
-
-	@Override
 	public boolean supportsOrdinalSelectItemReference() {
 		return wrapped.supportsOrdinalSelectItemReference();
 	}
@@ -1365,12 +1348,6 @@ public class DialectDelegateWrapper extends Dialect {
 	@Override
 	public boolean supportsWait() {
 		return wrapped.supportsWait();
-	}
-
-	@Override
-	@Deprecated(since = "6", forRemoval = true)
-	public String inlineLiteral(String literal) {
-		return wrapped.inlineLiteral( literal );
 	}
 
 	@Override

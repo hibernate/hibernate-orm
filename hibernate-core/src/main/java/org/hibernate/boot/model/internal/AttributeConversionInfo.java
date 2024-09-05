@@ -6,7 +6,7 @@
  */
 package org.hibernate.boot.model.internal;
 
-import org.hibernate.annotations.common.reflection.XAnnotatedElement;
+import org.hibernate.models.spi.AnnotationTarget;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Convert;
@@ -22,29 +22,28 @@ import jakarta.persistence.Convert;
 public class AttributeConversionInfo {
 	private final Class<? extends AttributeConverter<?,?>> converterClass;
 	private final boolean conversionDisabled;
-
 	private final String attributeName;
 
-	private final XAnnotatedElement source;
+	private final AnnotationTarget source;
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public AttributeConversionInfo(
-			Class<? extends AttributeConverter<?,?>> converterClass,
+			Class<? extends AttributeConverter> converterClass,
 			boolean conversionDisabled,
 			String attributeName,
-			XAnnotatedElement source) {
-		this.converterClass = converterClass;
+			AnnotationTarget source) {
+		this.converterClass = (Class<? extends AttributeConverter<?, ?>>) converterClass;
 		this.conversionDisabled = conversionDisabled;
 		this.attributeName = attributeName;
 		this.source = source;
 	}
 
-	@SuppressWarnings("unchecked")
-	public AttributeConversionInfo(Convert convertAnnotation, XAnnotatedElement xAnnotatedElement) {
+	public AttributeConversionInfo(Convert convertAnnotation, AnnotationTarget source) {
 		this(
 				convertAnnotation.converter(),
 				convertAnnotation.disableConversion(),
 				convertAnnotation.attributeName(),
-				xAnnotatedElement
+				source
 		);
 	}
 
@@ -74,7 +73,7 @@ public class AttributeConversionInfo {
 	/**
 	 * The annotated element
 	 */
-	public XAnnotatedElement getSource() {
+	public AnnotationTarget getSource() {
 		return source;
 	}
 }

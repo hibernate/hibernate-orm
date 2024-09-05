@@ -10,7 +10,6 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.SessionException;
-import org.hibernate.TransientObjectException;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -372,7 +371,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 
 	private void errorIfReadOnlySettingNotAvailable() {
 		if ( session == null ) {
-			throw new TransientObjectException(
+			throw new IllegalStateException(
 					"Proxy for [" + entityName + "#" + id + "] is not associated with a session"
 							+ " (the read-only/modifiable setting is only accessible when the proxy is associated with an open session)"
 			);

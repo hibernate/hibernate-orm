@@ -19,8 +19,8 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.jpa.HibernateHints;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.TestForIssue;
@@ -62,8 +62,8 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Override
-	public Map<Class, String> getCachedClasses() {
-		Map<Class, String> result = new HashMap<Class, String>();
+	public Map<Class<?>, String> getCachedClasses() {
+		Map<Class<?>, String> result = new HashMap<>();
 		result.put( Item.class, "read-write" );
 		return result;
 	}
@@ -333,7 +333,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 			// success
 		}
 
-		assertTrue( properties.containsKey( org.hibernate.cfg.AvailableSettings.FLUSH_MODE ) );
+		assertTrue( properties.containsKey(HibernateHints.HINT_FLUSH_MODE) );
 	}
 
 	@Test
@@ -346,7 +346,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		em.getTransaction().commit();
 
 		em.clear();
-		assertEquals( em.getProperties().get( org.hibernate.cfg.AvailableSettings.FLUSH_MODE ), "AUTO" );
+		assertEquals( em.getProperties().get(HibernateHints.HINT_FLUSH_MODE), "AUTO" );
 		assertNotNull(
 				"With default settings the entity should be persisted on commit.",
 				em.find( Wallet.class, wallet.getSerial() )
@@ -373,7 +373,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 				"With a flush mode of manual the entity should not have been persisted.",
 				em.find( Wallet.class, wallet.getSerial() )
 		);
-		assertEquals( "MANUAL", em.getProperties().get( AvailableSettings.FLUSH_MODE ) );
+		assertEquals( "MANUAL", em.getProperties().get(HibernateHints.HINT_FLUSH_MODE) );
 		em.close();
 	}
 

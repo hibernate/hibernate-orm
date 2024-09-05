@@ -10,7 +10,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 
-import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
@@ -75,6 +74,7 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 				column.setLogicalColumnName( discriminatorColumn.name() );
 			}
 			column.setNullable( false );
+			column.setOptions( discriminatorColumn.options() );
 		}
 		else {
 			discriminatorType = DiscriminatorType.STRING;
@@ -82,8 +82,10 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 		}
 		if ( columnOverride != null ) {
 			column.setLogicalColumnName( columnOverride.name() );
-			if ( !columnOverride.columnDefinition().isEmpty() ) {
-				column.setSqlType( columnOverride.columnDefinition() );
+
+			final String columnDefinition = columnOverride.columnDefinition();
+			if ( !columnDefinition.isEmpty() ) {
+				column.setSqlType( columnDefinition );
 			}
 		}
 		setDiscriminatorType( discriminatorType, discriminatorColumn, columnOverride, column );

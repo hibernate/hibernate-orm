@@ -8,9 +8,9 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.MappingException;
@@ -91,6 +91,11 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 	@Override
 	public int getSubclassId() {
 		return 0;
+	}
+
+	@Override
+	public Collection<ConcreteEmbeddableType> getConcreteEmbeddableTypes() {
+		return Collections.singleton( this );
 	}
 
 	@Override

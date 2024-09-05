@@ -7,10 +7,10 @@
 package org.hibernate.engine.transaction.internal;
 
 import jakarta.transaction.Synchronization;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
-import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.internal.AbstractSharedSessionContract;
 import org.hibernate.internal.CoreLogging;
@@ -187,8 +187,17 @@ public class TransactionImpl implements TransactionImplementor {
 	}
 
 	@Override
-	public int getTimeout() {
-		return this.transactionCoordinator.getTimeOut();
+	public void setTimeout(@Nullable Integer seconds) {
+		this.transactionCoordinator.setTimeOut( seconds == null ? -1 : seconds );
+	}
+
+	@Override
+	public @Nullable Integer getTimeout() {
+		final int timeOut = this.transactionCoordinator.getTimeOut();
+		if ( timeOut == -1 ) {
+			return null;
+		}
+		return timeOut;
 	}
 
 	@Override

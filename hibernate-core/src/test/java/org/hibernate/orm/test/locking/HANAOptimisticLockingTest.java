@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.locking;
 
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 )
 @SessionFactory
 @TestForIssue(jiraKey = "HHH-11656")
-@RequiresDialect(AbstractHANADialect.class)
+@RequiresDialect(HANADialect.class)
 public class HANAOptimisticLockingTest {
 
 	@Test
@@ -50,7 +50,11 @@ public class HANAOptimisticLockingTest {
 	private void testWithSpecifiedLockMode(SessionFactoryScope scope, LockModeType lockModeType) {
 		// makes sure we have an entity to actually query
 		Object id = scope.fromTransaction(
-				session -> session.save( new SomeEntity() )
+				session -> {
+					SomeEntity someEntity = new SomeEntity();
+					session.persist( someEntity );
+					return someEntity.getId();
+				}
 		);
 
 		// tests that both the query execution doesn't throw a SQL syntax (which is the main bug) and that

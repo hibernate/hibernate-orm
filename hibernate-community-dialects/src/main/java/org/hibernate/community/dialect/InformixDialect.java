@@ -7,6 +7,9 @@
 package org.hibernate.community.dialect;
 
 import java.sql.Types;
+import java.time.temporal.TemporalAccessor;
+import java.util.Date;
+import java.util.TimeZone;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
@@ -23,6 +26,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
+import org.hibernate.dialect.VarcharUUIDJdbcType;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -38,7 +42,11 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
+import org.hibernate.mapping.PrimaryKey;
+import org.hibernate.mapping.Table;
+import org.hibernate.mapping.UniqueKey;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.spi.QueryOptions;
@@ -66,13 +74,17 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.internal.StandardForeignKeyExporter;
+import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
+import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.type.SqlTypes.BIGINT;
@@ -86,8 +98,17 @@ import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
+import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
+import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE;
+import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME;
+import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIMESTAMP;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
 
 /**
  * Dialect for Informix 7.31.UD3 with Informix
@@ -119,6 +140,30 @@ public class InformixDialect extends Dialect {
 				}
 			}
 			return results;
+		}
+	};
+	private final StandardTableExporter informixTableExporter = new StandardTableExporter( this ) {
+		@Override
+		protected String primaryKeyString(PrimaryKey key) {
+			final StringBuilder constraint = new StringBuilder();
+			constraint.append( "primary key (" );
+			boolean first = true;
+			for ( Column column : key.getColumns() ) {
+				if ( first ) {
+					first = false;
+				}
+				else {
+					constraint.append(", ");
+				}
+				constraint.append( column.getQuotedName( dialect ) );
+			}
+			constraint.append(')');
+			final UniqueKey orderingUniqueKey = key.getOrderingUniqueKey();
+			if ( orderingUniqueKey != null && orderingUniqueKey.isNameExplicit() ) {
+				constraint.append( " constraint " )
+						.append( orderingUniqueKey.getName() ).append( ' ' );
+			}
+			return constraint.toString();
 		}
 	};
 
@@ -203,6 +248,7 @@ public class InformixDialect extends Dialect {
 						.withTypeCapacity( getMaxNVarcharLength(), columnType( NVARCHAR ) )
 						.build()
 		);
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "char(36)", this ) );
 	}
 
 	@Override
@@ -232,6 +278,11 @@ public class InformixDialect extends Dialect {
 	public int getDefaultTimestampPrecision() {
 		//the maximum
 		return 5;
+	}
+
+	@Override
+	public boolean doesRoundTemporalOnOverflow() {
+		return false;
 	}
 
 	@Override
@@ -641,6 +692,11 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public Exporter<Table> getTableExporter() {
+		return this.informixTableExporter;
+	}
+
+	@Override
 	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
 		appender.appendSql( bool ? "'t'" : "'f'" );
 	}
@@ -659,6 +715,11 @@ public class InformixDialect extends Dialect {
 	public void appendDatetimeFormat(SqlAppender appender, String format) {
 		//Informix' own variation of MySQL
 		appender.appendSql( datetimeFormat( format ).result() );
+	}
+
+	@Override
+	public boolean supportsStandardCurrentTimestampFunction() {
+		return false;
 	}
 
 	public static Replacer datetimeFormat(String format) {
@@ -714,6 +775,56 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			TemporalAccessor temporalAccessor,
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( JDBC_ESCAPE_START_DATE );
+				appendAsDate( appender, temporalAccessor );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			case TIME:
+				appender.appendSql( JDBC_ESCAPE_START_TIME );
+				appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( JDBC_ESCAPE_START_TIMESTAMP );
+				appendAsTimestampWithMicros( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	@Override
+	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( JDBC_ESCAPE_START_DATE );
+				appendAsDate( appender, date );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			case TIME:
+				appender.appendSql( JDBC_ESCAPE_START_TIME );
+				appendAsLocalTime( appender, date );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( JDBC_ESCAPE_START_TIMESTAMP );
+				appendAsTimestampWithMicros( appender, date, jdbcTimeZone );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	@Override
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
 		DdlType descriptor = typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType );
 		if ( descriptor == null ) {
@@ -743,5 +854,6 @@ public class InformixDialect extends Dialect {
 		super.contributeTypes( typeContributions, serviceRegistry );
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
 		jdbcTypeRegistry.addDescriptor( Types.NCLOB, ClobJdbcType.DEFAULT );
+		typeContributions.contributeJdbcType( VarcharUUIDJdbcType.INSTANCE );
 	}
 }

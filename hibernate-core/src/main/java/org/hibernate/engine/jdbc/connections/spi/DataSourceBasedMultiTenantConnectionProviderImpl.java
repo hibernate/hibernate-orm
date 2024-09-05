@@ -22,19 +22,20 @@ import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 
+import static org.hibernate.cfg.JdbcSettings.DATASOURCE;
 import static org.hibernate.cfg.MultiTenancySettings.TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY;
 
 /**
- * A concrete implementation of the {@link MultiTenantConnectionProvider} contract bases on a number of
- * reasonable assumptions.  We assume that:<ul>
+ * A concrete implementation of the {@link MultiTenantConnectionProvider} contract bases on
+ * a number of reasonable assumptions. We assume that:<ul>
  *     <li>
- *         The {@link DataSource} instances are all available from JNDI named by the tenant identifier relative
- *         to a single base JNDI context
+ *         The {@link DataSource} instances are all available from JNDI named by the tenant
+ *         identifier relative to a single base JNDI context.
  *     </li>
  *     <li>
  *         {@value AvailableSettings#DATASOURCE} is a string naming either the {@literal any}
- *         data source or the base JNDI context.  If the latter, {@link MultiTenancySettings#TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY} must
- *         also be set.
+ *         data source or the base JNDI context. If the latter,
+ *         {@link MultiTenancySettings#TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY} must also be set.
  *     </li>
  * </ul>
  *
@@ -44,10 +45,11 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 		extends AbstractDataSourceBasedMultiTenantConnectionProviderImpl<T>
 		implements ServiceRegistryAwareService, Stoppable {
 
-	private Map<T, DataSource> dataSourceMap;
+	private final Map<T, DataSource> dataSourceMap = new ConcurrentHashMap<>();
 	private JndiService jndiService;
 	private T tenantIdentifierForAny;
 	private String baseJndiNamespace;
+	private String jndiName;
 
 	@Override
 	protected DataSource selectAnyDataSource() {
@@ -65,21 +67,17 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 	}
 
 	private Map<T, DataSource> dataSourceMap() {
-		if ( dataSourceMap == null ) {
-			dataSourceMap = new ConcurrentHashMap<>();
-		}
 		return dataSourceMap;
 	}
 
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
-		final Object dataSourceConfigValue =
-				serviceRegistry.requireService( ConfigurationService.class )
-						.getSettings().get( AvailableSettings.DATASOURCE );
+		final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
+		final Object dataSourceConfigValue = configurationService.getSettings().get( DATASOURCE );
 		if ( !(dataSourceConfigValue instanceof String) ) {
-			throw new HibernateException( "Improper set up of DataSourceBasedMultiTenantConnectionProviderImpl" );
+			throw new HibernateException( "illegal value for configuration setting '" + DATASOURCE + "'" );
 		}
-		final String jndiName = (String) dataSourceConfigValue;
+		jndiName = (String) dataSourceConfigValue;
 
 		jndiService = serviceRegistry.getService( JndiService.class );
 		if ( jndiService == null ) {
@@ -91,17 +89,18 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 			throw new HibernateException( "JNDI name [" + jndiName + "] could not be resolved" );
 		}
 
-		if ( namedObject instanceof DataSource ) {
+		if ( namedObject instanceof DataSource datasource ) {
 			final int loc = jndiName.lastIndexOf( '/' );
-			this.baseJndiNamespace = jndiName.substring( 0, loc );
-			this.tenantIdentifierForAny = (T) jndiName.substring( loc + 1 );
-			dataSourceMap().put( tenantIdentifierForAny, (DataSource) namedObject );
+			baseJndiNamespace = jndiName.substring( 0, loc );
+			final String prefix = jndiName.substring(loc + 1);
+			tenantIdentifierForAny = (T) prefix;
+			dataSourceMap().put( tenantIdentifierForAny, datasource );
 		}
 		else if ( namedObject instanceof Context ) {
-			this.baseJndiNamespace = jndiName;
-			this.tenantIdentifierForAny = (T) serviceRegistry.requireService( ConfigurationService.class )
-					.getSettings()
-					.get( TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY );
+			baseJndiNamespace = jndiName;
+			final Object configuredTenantId =
+					configurationService.getSettings().get( TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY );
+			tenantIdentifierForAny = (T) configuredTenantId;
 			if ( tenantIdentifierForAny == null ) {
 				throw new HibernateException( "JNDI name named a Context, but tenant identifier to use for ANY was not specified" );
 			}
@@ -116,23 +115,24 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 
 	@Override
 	public void stop() {
-		if ( dataSourceMap != null ) {
-			dataSourceMap.clear();
-			dataSourceMap = null;
-		}
+		dataSourceMap.clear();
 	}
 
 	@Override
 	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
 		return new DatabaseConnectionInfoImpl(
-				"Multi-tenant - " + tenantIdentifierForAny,
+				null,
 				null,
 				dialect.getVersion(),
 				null,
 				null,
 				null,
 				null
-		);
+		) {
+			@Override
+			public String toInfoString() {
+				return "\tMulti-tenant datasource JNDI name [" + jndiName + ']';
+			}
+		};
 	}
-
 }

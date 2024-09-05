@@ -13,12 +13,11 @@ import org.hibernate.engine.jdbc.Size;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.converter.internal.EnumHelper;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -29,6 +28,7 @@ import java.util.Arrays;
 
 import static java.util.Collections.emptySet;
 import static org.hibernate.type.SqlTypes.NAMED_ORDINAL_ENUM;
+import static org.hibernate.type.descriptor.converter.internal.EnumHelper.getEnumeratedValues;
 
 /**
  * Represents a named {@code enum} type on Oracle 23ai+.
@@ -93,12 +93,9 @@ public class OracleOrdinalEnumJdbcType extends OracleEnumJdbcType {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				final int value = rs.getInt( paramIndex );
-				if(rs.wasNull()) {
-					return getJavaType().wrap(null, options);
-				}
-				else {
-					return getJavaType().wrap(value - 1, options);
-				}
+				return rs.wasNull()
+						? getJavaType().wrap(null, options)
+						: getJavaType().wrap(value - 1, options);
 			}
 
 			@Override
@@ -114,50 +111,8 @@ public class OracleOrdinalEnumJdbcType extends OracleEnumJdbcType {
 	}
 
 	@Override
-	public void addAuxiliaryDatabaseObjects(
-			JavaType<?> javaType,
-			Size columnSize,
-			Database database,
-			JdbcTypeIndicators context) {
-		addAuxiliaryDatabaseObjects( javaType, database, false );
+	String[] getCreateEnumTypeCommand(String name, String[] enumeratedValues, Dialect dialect) {
+		return dialect.getCreateEnumTypeCommand( name, enumeratedValues );
 	}
 
-	@Override
-	public void addAuxiliaryDatabaseObjects(
-			JavaType<?> javaType,
-			Size columnSize,
-			Database database,
-			TypeConfiguration typeConfiguration) {
-		addAuxiliaryDatabaseObjects( javaType, database, false );
-	}
-
-	private void addAuxiliaryDatabaseObjects(
-			JavaType<?> javaType,
-			Database database,
-			boolean sortEnumValues) {
-		final Dialect dialect = database.getDialect();
-		final Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) javaType.getJavaType();
-		final String enumTypeName = enumClass.getSimpleName();
-		final String[] enumeratedValues = EnumHelper.getEnumeratedValues( enumClass );
-		if ( sortEnumValues ) {
-			Arrays.sort( enumeratedValues );
-		}
-		final String[] create = dialect.getCreateEnumTypeCommand(
-				javaType.getJavaTypeClass().getSimpleName(),
-				enumeratedValues
-		);
-		final String[] drop = dialect.getDropEnumTypeCommand( enumClass );
-		if ( create != null && create.length > 0 ) {
-			database.addAuxiliaryDatabaseObject(
-					new NamedAuxiliaryDatabaseObject(
-							enumTypeName,
-							database.getDefaultNamespace(),
-							create,
-							drop,
-							emptySet(),
-							true
-					)
-			);
-		}
-	}
 }

@@ -9,7 +9,6 @@ package org.hibernate.processor.util.xml;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import javax.tools.FileObject;
@@ -23,9 +22,10 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
+import org.hibernate.boot.jaxb.cfg.spi.ObjectFactory;
+
 import org.hibernate.processor.Context;
 import org.hibernate.processor.util.NullnessUtil;
-import org.hibernate.processor.xml.jaxb.ObjectFactory;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.xml.sax.SAXException;

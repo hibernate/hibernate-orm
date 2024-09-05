@@ -7,7 +7,6 @@
 package org.hibernate.cfg;
 
 import org.hibernate.Incubating;
-import org.hibernate.Remove;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.annotations.Nationalized;
@@ -422,22 +421,6 @@ public interface MappingSettings {
 	String COLUMN_ORDERING_STRATEGY = "hibernate.column_ordering_strategy";
 
 	/**
-	 * Specifies the order in which metadata sources should be processed, is a delimited list
-	 * of values defined by {@link MetadataSourceType}.
-	 *
-	 * @settingDefault {@code "hbm,class"}, which indicates that {@code hbm.xml} files
-	 * should be processed first, followed by annotations and {@code orm.xml} files.
-	 *
-	 * @see MetadataSourceType
-	 * @see org.hibernate.boot.MetadataBuilder#applySourceProcessOrdering(MetadataSourceType...)
-	 *
-	 * @deprecated {@code hbm.xml} mappings are no longer supported, making this attribute irrelevant
-	 */
-	@SuppressWarnings("DeprecatedIsStillUsed")
-	@Deprecated(since = "6", forRemoval = true)
-	String ARTIFACT_PROCESSING_ORDER = "hibernate.mapping.precedence";
-
-	/**
 	 * Whether XML mappings should be processed.
 	 *
 	 * @apiNote This is a performance optimization appropriate when mapping details
@@ -468,51 +451,6 @@ public interface MappingSettings {
 	 * @see org.hibernate.annotations.Bag
 	 */
 	String DEFAULT_LIST_SEMANTICS = "hibernate.mapping.default_list_semantics";
-
-	/**
-	 * Enable instantiation of composite/embedded objects when all attribute values
-	 * are {@code null}. The default (and historical) behavior is that a {@code null}
-	 * reference will be used to represent the composite value when all of its
-	 * attributes are {@code null}.
-	 *
-	 * @apiNote This is an experimental feature that has known issues. It should not
-	 *          be used in production until it is stabilized. See Hibernate JIRA issue
-	 *          HHH-11936 for details.
-	 *
-	 * @deprecated It makes no sense at all to enable this at the global level for a
-	 *             persistence unit. If anything, it could be a setting specific to
-	 *             a given embeddable class. But, four years after the introduction of
-	 *             this feature, it's still marked experimental and has multiple known
-	 *             unresolved bugs. It's therefore time for those who advocated for
-	 *             this feature to accept defeat.
-	 *
-	 * @since 5.1
-	 */
-	@Incubating
-	@Deprecated(since = "6")
-	String CREATE_EMPTY_COMPOSITES_ENABLED = "hibernate.create_empty_composites.enabled";
-
-	/**
-	 * The {@link org.hibernate.annotations.Where @Where} annotation specifies a
-	 * restriction on the table rows which are visible as entity class instances or
-	 * collection elements.
-	 * <p>
-	 * This setting controls whether the restriction applied to an entity should be
-	 * applied to association fetches (for one-to-one, many-to-one, one-to-many, and
-	 * many-to-many associations) which target the entity.
-	 *
-	 * @apiNote The setting is very misnamed - it applies across all entity associations,
-	 *          not only to collections.
-	 *
-	 * @implSpec Enabled ({@code true}) by default, meaning the restriction is applied.
-	 *           When this setting is explicitly disabled ({@code false}), the restriction
-	 *           is not applied.
-	 *
-	 * @deprecated Originally added as a backwards compatibility flag
-	 */
-	@Remove
-	@Deprecated( forRemoval = true, since = "6.2" )
-	String USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS = "hibernate.use_entity_where_clause_for_collections";
 
 	/**
 	 * Whether XML should be validated against their schema as Hibernate reads them.

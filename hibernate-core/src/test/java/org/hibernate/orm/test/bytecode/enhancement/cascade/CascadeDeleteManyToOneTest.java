@@ -6,20 +6,7 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.cascade;
 
-import jakarta.persistence.Basic;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.proxy.HibernateProxy;
 
@@ -32,6 +19,17 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Basic;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.jdbc.SQLStatementInspector.extractFromSession;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -42,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Luis Barreiro
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey("HHH-10252")
 @DomainModel(
 		annotatedClasses = {
@@ -86,7 +85,7 @@ public class CascadeDeleteManyToOneTest {
 					assertThat( managedChild.getParent() ).isNotInstanceOf( HibernateProxy.class );
 					assertFalse( Hibernate.isInitialized( managedChild.getParent() ) );
 
-					s.delete( managedChild );
+					s.remove( managedChild );
 				}
 		);
 
@@ -123,7 +122,7 @@ public class CascadeDeleteManyToOneTest {
 
 		// Delete the detached Child with initialized parent
 		scope.inTransaction(
-				(s) -> s.delete( detachedChild )
+				(s) -> s.remove( detachedChild )
 		);
 
 		// Explicitly check that both got deleted
@@ -145,7 +144,7 @@ public class CascadeDeleteManyToOneTest {
 
 		// Delete the Child
 		scope.inTransaction( s -> {
-					s.delete( originalChild );
+					s.remove( originalChild );
 				}
 		);
 		// Explicitly check that both got deleted
@@ -208,7 +207,6 @@ public class CascadeDeleteManyToOneTest {
 				CascadeType.REMOVE
 		}, fetch = FetchType.LAZY)
 		@JoinColumn(name = "parent_id")
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		Parent parent;
 
 		@Basic(fetch = FetchType.LAZY)

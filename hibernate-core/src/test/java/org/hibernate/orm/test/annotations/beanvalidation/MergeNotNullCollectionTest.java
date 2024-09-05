@@ -66,7 +66,7 @@ public class MergeNotNullCollectionTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete( parent );
+		s.remove( parent );
 		t.commit();
 		s.close();
 	}
@@ -84,7 +84,7 @@ public class MergeNotNullCollectionTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete( parent );
+		s.remove( parent );
 		t.commit();
 		s.close();
 	}

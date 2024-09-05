@@ -21,17 +21,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import org.hibernate.Internal;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
+import org.hibernate.boot.internal.RootMappingDefaults;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
-import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
-import org.hibernate.boot.jaxb.spi.BindableMappingDescriptor;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
@@ -40,29 +43,45 @@ import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.source.internal.annotations.AnnotationMetadataSourceProcessorImpl;
+import org.hibernate.boot.model.source.internal.annotations.DomainModelSource;
 import org.hibernate.boot.model.source.internal.hbm.EntityHierarchyBuilder;
 import org.hibernate.boot.model.source.internal.hbm.EntityHierarchySourceImpl;
 import org.hibernate.boot.model.source.internal.hbm.HbmMetadataSourceProcessorImpl;
 import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.model.source.internal.hbm.ModelBinder;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
+import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
+import org.hibernate.boot.models.internal.OrmAnnotationHelper;
+import org.hibernate.boot.models.xml.spi.XmlPreProcessingResult;
+import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
+import org.hibernate.boot.models.xml.spi.XmlProcessingResult;
+import org.hibernate.boot.models.xml.spi.XmlProcessor;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.spi.AdditionalJaxbMappingProducer;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
-import org.hibernate.boot.spi.MetadataContributor;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.mapping.Table;
+import org.hibernate.models.internal.jandex.JandexClassDetails;
+import org.hibernate.models.internal.jandex.JandexIndexerHelper;
+import org.hibernate.models.internal.jdk.JdkBuilders;
+import org.hibernate.models.spi.AnnotationDescriptorRegistry;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ClassDetailsRegistry;
+import org.hibernate.models.spi.ClassLoading;
+import org.hibernate.models.spi.RegistryPrimer;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
@@ -82,11 +101,15 @@ import org.hibernate.type.internal.NamedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.CompositeIndex;
 import org.jboss.jandex.IndexView;
+import org.jboss.jandex.Indexer;
 import org.jboss.logging.Logger;
 
 import jakarta.persistence.AttributeConverter;
 
+import static org.hibernate.internal.util.collections.CollectionHelper.mutableJoin;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForArray;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForDuration;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForInstant;
@@ -168,45 +191,72 @@ public class MetadataBuildingProcess {
 			final ManagedResources managedResources,
 			final BootstrapContext bootstrapContext,
 			final MetadataBuildingOptions options) {
-		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl(
-				bootstrapContext,
-				options
-		);
+
+		final ClassLoaderService classLoaderService = bootstrapContext.getServiceRegistry().getService( ClassLoaderService.class );
+		assert classLoaderService != null;
+		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext, options );
 
 		handleTypes( bootstrapContext, options, metadataCollector );
 
-		final ClassLoaderService classLoaderService =
-				options.getServiceRegistry().requireService( ClassLoaderService.class );
+		final DomainModelSource domainModelSource = processManagedResources(
+				managedResources,
+				metadataCollector,
+				bootstrapContext,
+				options.getMappingDefaults()
+		);
 
 		final MetadataBuildingContextRootImpl rootMetadataBuildingContext = new MetadataBuildingContextRootImpl(
 				"orm",
 				bootstrapContext,
 				options,
-				metadataCollector
+				metadataCollector,
+				domainModelSource.getEffectiveMappingDefaults()
 		);
 
 		managedResources.getAttributeConverterDescriptors().forEach( metadataCollector::addAttributeConverter );
 
 		bootstrapContext.getTypeConfiguration().scope( rootMetadataBuildingContext );
 
-
-		final IndexView jandexView = bootstrapContext.getJandexView();
-
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Set up the processors and start binding
 		//		NOTE : this becomes even more simplified after we move purely
 		// 		to unified model
+		final IndexView jandexView = domainModelSource.getJandexIndex();
 
+		coordinateProcessors(
+				managedResources,
+				options,
+				rootMetadataBuildingContext,
+				domainModelSource,
+				classLoaderService,
+				metadataCollector,
+				jandexView
+		);
+
+		processAdditionalMappingContributions( metadataCollector, options, classLoaderService, rootMetadataBuildingContext );
+
+		applyExtraQueryImports( managedResources, metadataCollector );
+
+		return metadataCollector.buildMetadataInstance( rootMetadataBuildingContext );
+	}
+
+	private static void coordinateProcessors(
+			ManagedResources managedResources,
+			MetadataBuildingOptions options,
+			MetadataBuildingContextRootImpl rootMetadataBuildingContext,
+			DomainModelSource domainModelSource,
+			ClassLoaderService classLoaderService,
+			InFlightMetadataCollectorImpl metadataCollector,
+			IndexView jandexView) {
 		final MetadataSourceProcessor processor = new MetadataSourceProcessor() {
-			private final MetadataSourceProcessor hbmProcessor =
-						options.isXmlMappingEnabled()
-							? new HbmMetadataSourceProcessorImpl( managedResources, rootMetadataBuildingContext )
-							: new NoOpMetadataSourceProcessorImpl();
+			private final MetadataSourceProcessor hbmProcessor = options.isXmlMappingEnabled()
+					? new HbmMetadataSourceProcessorImpl( managedResources, rootMetadataBuildingContext )
+					: new NoOpMetadataSourceProcessorImpl();
 
 			private final AnnotationMetadataSourceProcessorImpl annotationProcessor = new AnnotationMetadataSourceProcessorImpl(
 					managedResources,
-					rootMetadataBuildingContext,
-					jandexView
+					domainModelSource,
+					rootMetadataBuildingContext
 			);
 
 			@Override
@@ -259,41 +309,20 @@ public class MetadataBuildingProcess {
 
 			@Override
 			public void prepareForEntityHierarchyProcessing() {
-				for ( MetadataSourceType metadataSourceType : options.getSourceProcessOrdering() ) {
-					if ( metadataSourceType == MetadataSourceType.HBM ) {
-						hbmProcessor.prepareForEntityHierarchyProcessing();
-					}
-
-					if ( metadataSourceType == MetadataSourceType.CLASS ) {
-						annotationProcessor.prepareForEntityHierarchyProcessing();
-					}
-				}
+				hbmProcessor.prepareForEntityHierarchyProcessing();
+				annotationProcessor.prepareForEntityHierarchyProcessing();
 			}
 
 			@Override
 			public void processEntityHierarchies(Set<String> processedEntityNames) {
-				for ( MetadataSourceType metadataSourceType : options.getSourceProcessOrdering() ) {
-					if ( metadataSourceType == MetadataSourceType.HBM ) {
-						hbmProcessor.processEntityHierarchies( processedEntityNames );
-					}
-
-					if ( metadataSourceType == MetadataSourceType.CLASS ) {
-						annotationProcessor.processEntityHierarchies( processedEntityNames );
-					}
-				}
+				hbmProcessor.processEntityHierarchies( processedEntityNames );
+				annotationProcessor.processEntityHierarchies( processedEntityNames );
 			}
 
 			@Override
 			public void postProcessEntityHierarchies() {
-				for ( MetadataSourceType metadataSourceType : options.getSourceProcessOrdering() ) {
-					if ( metadataSourceType == MetadataSourceType.HBM ) {
-						hbmProcessor.postProcessEntityHierarchies();
-					}
-
-					if ( metadataSourceType == MetadataSourceType.CLASS ) {
-						annotationProcessor.postProcessEntityHierarchies();
-					}
-				}
+				hbmProcessor.postProcessEntityHierarchies();
+				annotationProcessor.postProcessEntityHierarchies();
 			}
 
 			@Override
@@ -326,24 +355,211 @@ public class MetadataBuildingProcess {
 
 		processor.processResultSetMappings();
 
-		for ( MetadataContributor contributor : classLoaderService.loadJavaServices( MetadataContributor.class ) ) {
-			log.tracef( "Calling MetadataContributor : %s", contributor );
-			contributor.contribute( metadataCollector, jandexView );
-		}
-
 		metadataCollector.processSecondPasses( rootMetadataBuildingContext );
 
 		// Make sure collections are fully bound before processing named queries as hbm result set mappings require it
 		processor.processNamedQueries();
 
 		processor.finishUp();
+	}
 
-		processAdditionalMappingContributions( metadataCollector, options, classLoaderService, rootMetadataBuildingContext );
-		processAdditionalJaxbMappingProducer( metadataCollector, options, jandexView, classLoaderService, rootMetadataBuildingContext );
+	@Internal
+	public static DomainModelSource processManagedResources(
+			ManagedResources managedResources,
+			InFlightMetadataCollector metadataCollector,
+			BootstrapContext bootstrapContext,
+			MappingDefaults optionDefaults) {
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// 	- pre-process the XML
+		// 	- collect all known classes
+		// 	- resolve (possibly building) Jandex index
+		// 	- build the SourceModelBuildingContext
+		//
+		// INPUTS:
+		//		- serviceRegistry
+		//		- managedResources
+		//		- bootstrapContext (supplied Jandex index, if one)
+		//
+		// OUTPUTS:
+		//		- xmlPreProcessingResult
+		//		- allKnownClassNames (technically could be included in xmlPreProcessingResult)
+		//		- sourceModelBuildingContext
 
-		applyExtraQueryImports( managedResources, metadataCollector );
+		final SourceModelBuildingContext sourceModelBuildingContext = metadataCollector.getSourceModelBuildingContext();
+		final XmlPreProcessingResult xmlPreProcessingResult = XmlPreProcessor.preProcessXmlResources(
+				managedResources,
+				metadataCollector.getPersistenceUnitMetadata()
+		);
 
-		return metadataCollector.buildMetadataInstance( rootMetadataBuildingContext );
+		assert metadataCollector.getPersistenceUnitMetadata() == xmlPreProcessingResult.getPersistenceUnitMetadata();
+
+		//noinspection unchecked
+		final List<String> allKnownClassNames = mutableJoin(
+				managedResources.getAnnotatedClassReferences().stream().map( Class::getName ).collect( Collectors.toList() ),
+				managedResources.getAnnotatedClassNames(),
+				xmlPreProcessingResult.getMappedClasses()
+		);
+		managedResources.getAnnotatedPackageNames().forEach( (packageName) -> {
+			try {
+				final Class<?> packageInfoClass = sourceModelBuildingContext.getClassLoading().classForName( packageName + ".package-info" );
+				allKnownClassNames.add( packageInfoClass.getName() );
+			}
+			catch (ClassLoadingException classLoadingException) {
+				// no package-info, so there can be no annotations... just skip it
+			}
+		} );
+		managedResources.getAnnotatedClassReferences().forEach( (clazz) -> allKnownClassNames.add( clazz.getName() ) );
+
+		// At this point we know all managed class names across all sources.
+		// Resolve the Jandex Index and build the SourceModelBuildingContext.
+		final IndexView jandexIndex = resolveJandexIndex( allKnownClassNames, bootstrapContext.getJandexView(), sourceModelBuildingContext.getClassLoading() );
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// 	- process metadata-complete XML
+		//	- collect overlay XML
+		//	- process annotations (including those from metadata-complete XML)
+		//	- apply overlay XML
+		//
+		// INPUTS:
+		//		- "options" (areIdGeneratorsGlobal, etc)
+		//		- xmlPreProcessingResult
+		//		- sourceModelBuildingContext
+		//
+		// OUTPUTS
+		//		- rootEntities
+		//		- mappedSuperClasses
+		//  	- embeddables
+
+		// JPA id generator global-ity thing
+		final boolean areIdGeneratorsGlobal = true;
+		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
+				areIdGeneratorsGlobal,
+				metadataCollector.getGlobalRegistrations(),
+				jandexIndex,
+				sourceModelBuildingContext
+		);
+
+		final RootMappingDefaults rootMappingDefaults = new RootMappingDefaults(
+				optionDefaults,
+				xmlPreProcessingResult.getPersistenceUnitMetadata()
+		);
+		final XmlProcessingResult xmlProcessingResult = XmlProcessor.processXml(
+				xmlPreProcessingResult,
+				modelCategorizationCollector,
+				sourceModelBuildingContext,
+				bootstrapContext,
+				rootMappingDefaults
+		);
+
+		final HashSet<String> categorizedClassNames = new HashSet<>();
+		allKnownClassNames.forEach( (className) -> applyKnownClass(
+				className,
+				categorizedClassNames,
+				classDetailsRegistry,
+				modelCategorizationCollector
+		) );
+		xmlPreProcessingResult.getMappedNames().forEach( (className) -> applyKnownClass(
+				className,
+				categorizedClassNames,
+				classDetailsRegistry,
+				modelCategorizationCollector
+		) );
+
+		xmlProcessingResult.apply( xmlPreProcessingResult.getPersistenceUnitMetadata() );
+
+		return new DomainModelSource(
+				classDetailsRegistry.makeImmutableCopy(),
+				jandexIndex,
+				allKnownClassNames,
+				modelCategorizationCollector.getGlobalRegistrations(),
+				rootMappingDefaults,
+				xmlPreProcessingResult.getPersistenceUnitMetadata()
+		);
+	}
+
+	private static void applyKnownClass(
+			String className,
+			HashSet<String> categorizedClassNames,
+			ClassDetailsRegistry classDetailsRegistry,
+			DomainModelCategorizationCollector modelCategorizationCollector) {
+		if ( categorizedClassNames.add( className ) ) {
+			final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( className );
+			applyKnownClass( classDetails, categorizedClassNames,classDetailsRegistry, modelCategorizationCollector );
+		}
+	}
+
+	private static void applyKnownClass(
+			ClassDetails classDetails,
+			HashSet<String> categorizedClassNames,
+			ClassDetailsRegistry classDetailsRegistry,
+			DomainModelCategorizationCollector modelCategorizationCollector) {
+		modelCategorizationCollector.apply( classDetails );
+		if ( classDetails.getSuperClass() != null
+				&& classDetails.getSuperClass() != ClassDetails.OBJECT_CLASS_DETAILS ) {
+			if ( categorizedClassNames.add( classDetails.getSuperClass().getClassName() ) ) {
+				applyKnownClass( classDetails.getSuperClass(), categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
+			}
+		}
+	}
+
+	public static IndexView resolveJandexIndex(
+			List<String> allKnownClassNames,
+			IndexView suppliedJandexIndex,
+			ClassLoading classLoading) {
+		// todo : we could build a new Jandex (Composite)Index that includes the `managedResources#getAnnotatedClassNames`
+		// 		and all classes from `managedResources#getXmlMappingBindings`.  Only really worth it in the case
+		//		of runtime enhancement.  This would definitely need to be toggle-able.
+		//		+
+		//		For now, let's not as it does not matter for this PoC
+		if ( 1 == 1 ) {
+			return suppliedJandexIndex;
+		}
+
+		final Indexer jandexIndexer = new Indexer();
+		for ( String knownClassName : allKnownClassNames ) {
+			JandexIndexerHelper.apply( knownClassName, jandexIndexer, classLoading );
+		}
+
+		if ( suppliedJandexIndex == null ) {
+			return jandexIndexer.complete();
+		}
+
+		return CompositeIndex.create( suppliedJandexIndex, jandexIndexer.complete() );
+	}
+
+	public static void preFillRegistries(RegistryPrimer.Contributions contributions, SourceModelBuildingContext buildingContext) {
+		OrmAnnotationHelper.forEachOrmAnnotation( contributions::registerAnnotation );
+
+		final IndexView jandexIndex = buildingContext.getJandexIndex();
+		if ( jandexIndex == null ) {
+			return;
+		}
+
+		final ClassDetailsRegistry classDetailsRegistry = buildingContext.getClassDetailsRegistry();
+		final AnnotationDescriptorRegistry annotationDescriptorRegistry = buildingContext.getAnnotationDescriptorRegistry();
+
+		for ( ClassInfo knownClass : jandexIndex.getKnownClasses() ) {
+			final String className = knownClass.name().toString();
+
+			if ( knownClass.isAnnotation() ) {
+				// it is always safe to load the annotation classes - we will never be enhancing them
+				//noinspection rawtypes
+				final Class annotationClass = buildingContext
+						.getClassLoading()
+						.classForName( className );
+				//noinspection unchecked
+				annotationDescriptorRegistry.resolveDescriptor(
+						annotationClass,
+						(t) -> JdkBuilders.buildAnnotationDescriptor( annotationClass, buildingContext )
+				);
+			}
+
+			classDetailsRegistry.resolveClassDetails(
+					className,
+					(name) -> new JandexClassDetails( knownClass, buildingContext )
+			);
+		}
 	}
 
 	private static void processAdditionalMappingContributions(
@@ -358,11 +574,6 @@ public class MetadataBuildingProcess {
 					new MappingBinder.Options() {
 						@Override
 						public boolean validateMappings() {
-							return false;
-						}
-
-						@Override
-						public boolean transformHbmMappings() {
 							return false;
 						}
 					}
@@ -406,7 +617,8 @@ public class MetadataBuildingProcess {
 		private final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
 
 		private List<Class<?>> additionalEntityClasses;
-		private List<JaxbEntityMappings> additionalJaxbMappings;
+		private List<ClassDetails> additionalClassDetails;
+		private List<JaxbEntityMappingsImpl> additionalJaxbMappings;
 		private boolean extraHbmXml = false;
 
 		private String currentContributor;
@@ -435,21 +647,32 @@ public class MetadataBuildingProcess {
 		}
 
 		@Override
+		public void contributeManagedClass(ClassDetails classDetails) {
+			if ( additionalClassDetails == null ) {
+				additionalClassDetails = new ArrayList<>();
+			}
+			additionalClassDetails.add( classDetails );
+			metadataCollector.getSourceModelBuildingContext()
+					.getClassDetailsRegistry()
+					.addClassDetails( classDetails.getName(), classDetails );
+		}
+
+		@Override
 		public void contributeBinding(InputStream xmlStream) {
 			final Origin origin = new Origin( SourceType.INPUT_STREAM, null );
-			final Binding<BindableMappingDescriptor> binding = mappingBinder.bind( xmlStream, origin );
+			final Binding<JaxbBindableMappingDescriptor> binding = mappingBinder.bind( xmlStream, origin );
 
-			final BindableMappingDescriptor bindingRoot = binding.getRoot();
+			final JaxbBindableMappingDescriptor bindingRoot = binding.getRoot();
 			if ( bindingRoot instanceof JaxbHbmHibernateMapping ) {
 				contributeBinding( (JaxbHbmHibernateMapping) bindingRoot );
 			}
 			else {
-				contributeBinding( (JaxbEntityMappings) bindingRoot );
+				contributeBinding( (JaxbEntityMappingsImpl) bindingRoot );
 			}
 		}
 
 		@Override
-		public void contributeBinding(JaxbEntityMappings mappingJaxbBinding) {
+		public void contributeBinding(JaxbEntityMappingsImpl mappingJaxbBinding) {
 			if ( ! options.isXmlMappingEnabled() ) {
 				return;
 			}
@@ -500,13 +723,20 @@ public class MetadataBuildingProcess {
 			metadataCollector.addAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
 		}
 
+		@Override
+		public EffectiveMappingDefaults getEffectiveMappingDefaults() {
+			return rootMetadataBuildingContext.getEffectiveDefaults();
+		}
+
 		public void complete() {
 			// annotations / orm.xml
-			if ( additionalEntityClasses != null || additionalJaxbMappings != null ) {
+			if ( additionalEntityClasses != null || additionalClassDetails != null || additionalJaxbMappings != null ) {
 				AnnotationMetadataSourceProcessorImpl.processAdditionalMappings(
 						additionalEntityClasses,
+						additionalClassDetails,
 						additionalJaxbMappings,
-						rootMetadataBuildingContext
+						rootMetadataBuildingContext,
+						options
 				);
 			}
 
@@ -520,51 +750,6 @@ public class MetadataBuildingProcess {
 		}
 	}
 
-	private static void processAdditionalJaxbMappingProducer(
-			InFlightMetadataCollectorImpl metadataCollector,
-			MetadataBuildingOptions options,
-			IndexView jandexView,
-			ClassLoaderService classLoaderService,
-			MetadataBuildingContextRootImpl rootMetadataBuildingContext) {
-		if ( options.isXmlMappingEnabled() ) {
-			final Iterable<AdditionalJaxbMappingProducer> producers = classLoaderService.loadJavaServices( AdditionalJaxbMappingProducer.class );
-			if ( producers != null ) {
-				final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
-				final MappingBinder mappingBinder = new MappingBinder(
-						classLoaderService,
-						new MappingBinder.Options() {
-							@Override
-							public boolean validateMappings() {
-								return false;
-							}
-
-							@Override
-							public boolean transformHbmMappings() {
-								return false;
-							}
-						}
-				);
-				//noinspection deprecation
-				for ( AdditionalJaxbMappingProducer producer : producers ) {
-					log.tracef( "Calling AdditionalJaxbMappingProducer : %s", producer );
-					Collection<MappingDocument> additionalMappings = producer.produceAdditionalMappings(
-							metadataCollector,
-							jandexView,
-							mappingBinder,
-							rootMetadataBuildingContext
-					);
-					for ( MappingDocument mappingDocument : additionalMappings ) {
-						hierarchyBuilder.indexMappingDocument( mappingDocument );
-					}
-				}
-
-				ModelBinder binder = ModelBinder.prepare( rootMetadataBuildingContext );
-				for ( EntityHierarchySourceImpl entityHierarchySource : hierarchyBuilder.buildHierarchies() ) {
-					binder.bindEntityHierarchy( entityHierarchySource );
-				}
-			}
-		}
-	}
 
 	private static void applyExtraQueryImports(
 			ManagedResources managedResources,

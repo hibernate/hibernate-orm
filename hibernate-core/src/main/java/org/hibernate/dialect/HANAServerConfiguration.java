@@ -14,6 +14,7 @@ import java.sql.Statement;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
 import static org.hibernate.cfg.DialectSpecificSettings.HANA_MAX_LOB_PREFETCH_SIZE;
@@ -86,7 +87,7 @@ public class HANAServerConfiguration {
 		if ( versionString == null ) {
 			return HANADialect.MINIMUM_VERSION;
 		}
-		final String[] components = versionString.split( "\\." );
+		final String[] components = StringHelper.split( ".", versionString );
 		if ( components.length >= 3 ) {
 			try {
 				majorVersion = Integer.parseInt( components[0] );

@@ -11,6 +11,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
@@ -22,28 +23,29 @@ import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * Test to ensure that the existing post commit behavior when using plain PostXEventListeners fire on both success and failure.
- * 
+ *
  * @author ShawnClowater
  */
 public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
-	private PostInsertEventListener postCommitInsertEventListener = new LegacyPostCommitInsertEventListener();
-	private PostDeleteEventListener postCommitDeleteEventListener = new LegacyPostCommitDeleteEventListener();
-	private PostUpdateEventListener postCommitUpdateEventListener = new LegacyPostCommitUpdateEventListener();
+	private final PostInsertEventListener postCommitInsertEventListener = new LegacyPostCommitInsertEventListener();
+	private final PostDeleteEventListener postCommitDeleteEventListener = new LegacyPostCommitDeleteEventListener();
+	private final PostUpdateEventListener postCommitUpdateEventListener = new LegacyPostCommitUpdateEventListener();
 
 	@Override
 	protected void prepareTest() throws Exception {
-		((LegacyPostCommitInsertEventListener) postCommitInsertEventListener).fired = 0;
-		((LegacyPostCommitDeleteEventListener) postCommitDeleteEventListener).fired = 0;
-		((LegacyPostCommitUpdateEventListener) postCommitUpdateEventListener).fired = 0;
+		( (LegacyPostCommitInsertEventListener) postCommitInsertEventListener ).fired = 0;
+		( (LegacyPostCommitDeleteEventListener) postCommitDeleteEventListener ).fired = 0;
+		( (LegacyPostCommitUpdateEventListener) postCommitUpdateEventListener ).fired = 0;
 	}
 
 	@Override
@@ -54,12 +56,13 @@ public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
 					@Override
 					public void integrate(
 							Metadata metadata,
-							SessionFactoryImplementor sessionFactory,
-							SessionFactoryServiceRegistry serviceRegistry) {
-						integrate( serviceRegistry );
+							BootstrapContext bootstrapContext,
+							SessionFactoryImplementor sessionFactory) {
+						integrate( sessionFactory );
 					}
 
-					private void integrate(SessionFactoryServiceRegistry serviceRegistry) {
+					private void integrate(SessionFactoryImplementor sessionFactory) {
+						final ServiceRegistryImplementor serviceRegistry = sessionFactory.getServiceRegistry();
 						serviceRegistry.getService( EventListenerRegistry.class ).getEventListenerGroup(
 								EventType.POST_COMMIT_DELETE
 						).appendListener( postCommitDeleteEventListener );
@@ -70,17 +73,12 @@ public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
 								EventType.POST_COMMIT_INSERT
 						).appendListener( postCommitInsertEventListener );
 					}
-
-					@Override
-					public void disintegrate(
-							SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
-					}
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1582")
+	@JiraKey("HHH-1582")
 	public void testPostCommitInsertListenerSuccess() {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();
@@ -88,16 +86,16 @@ public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		IrrelevantEntity irrelevantEntity = new IrrelevantEntity();
 		irrelevantEntity.setName( "Irrelevant" );
 
-		session.save( irrelevantEntity );
+		session.persist( irrelevantEntity );
 		session.flush();
 		transaction.commit();
 		session.close();
 
-		Assert.assertEquals( 1, ((LegacyPostCommitInsertEventListener) postCommitInsertEventListener).fired );
+		Assert.assertEquals( 1, ( (LegacyPostCommitInsertEventListener) postCommitInsertEventListener ).fired );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1582")
+	@JiraKey("HHH-1582")
 	public void testPostCommitInsertListenerRollback() {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();
@@ -105,17 +103,17 @@ public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		IrrelevantEntity irrelevantEntity = new IrrelevantEntity();
 		irrelevantEntity.setName( "Irrelevant" );
 
-		session.save( irrelevantEntity );
+		session.persist( irrelevantEntity );
 		session.flush();
 		transaction.rollback();
 		session.close();
 
 		//the legacy implementation fires the listener on failure as well 
-		Assert.assertEquals( 1, ((LegacyPostCommitInsertEventListener) postCommitInsertEventListener).fired );
+		Assert.assertEquals( 1, ( (LegacyPostCommitInsertEventListener) postCommitInsertEventListener ).fired );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1582")
+	@JiraKey("HHH-1582")
 	public void testPostCommitUpdateListenerSuccess() {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();
@@ -123,24 +121,24 @@ public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		IrrelevantEntity irrelevantEntity = new IrrelevantEntity();
 		irrelevantEntity.setName( "Irrelevant" );
 
-		session.save( irrelevantEntity );
+		session.persist( irrelevantEntity );
 		session.flush();
 		transaction.commit();
 
 		session = openSession();
 		transaction = session.beginTransaction();
 		irrelevantEntity.setName( "Irrelevant 2" );
-		session.update( irrelevantEntity );
+		session.merge( irrelevantEntity );
 		session.flush();
 		transaction.commit();
 
 		session.close();
 
-		Assert.assertEquals( 1, ((LegacyPostCommitUpdateEventListener) postCommitUpdateEventListener).fired );
+		Assert.assertEquals( 1, ( (LegacyPostCommitUpdateEventListener) postCommitUpdateEventListener ).fired );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1582")
+	@JiraKey("HHH-1582")
 	public void testPostCommitUpdateListenerRollback() {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();
@@ -148,7 +146,7 @@ public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		IrrelevantEntity irrelevantEntity = new IrrelevantEntity();
 		irrelevantEntity.setName( "Irrelevant" );
 
-		session.save( irrelevantEntity );
+		session.persist( irrelevantEntity );
 		session.flush();
 		transaction.commit();
 		session.close();
@@ -156,18 +154,18 @@ public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		session = openSession();
 		transaction = session.beginTransaction();
 		irrelevantEntity.setName( "Irrelevant 2" );
-		session.update( irrelevantEntity );
+		session.merge( irrelevantEntity );
 		session.flush();
 		transaction.rollback();
 
 		session.close();
 
 		//the legacy implementation fires the listener on failure as well
-		Assert.assertEquals( 1, ((LegacyPostCommitUpdateEventListener) postCommitUpdateEventListener).fired );
+		Assert.assertEquals( 1, ( (LegacyPostCommitUpdateEventListener) postCommitUpdateEventListener ).fired );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1582")
+	@JiraKey("HHH-1582")
 	public void testPostCommitDeleteListenerSuccess() {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();
@@ -175,24 +173,24 @@ public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		IrrelevantEntity irrelevantEntity = new IrrelevantEntity();
 		irrelevantEntity.setName( "Irrelevant" );
 
-		session.save( irrelevantEntity );
+		session.persist( irrelevantEntity );
 		session.flush();
 		transaction.commit();
 		session.close();
 
 		session = openSession();
 		transaction = session.beginTransaction();
-		session.delete( irrelevantEntity );
+		session.remove( irrelevantEntity );
 		session.flush();
 		transaction.commit();
 
 		session.close();
 
-		Assert.assertEquals( 1, ((LegacyPostCommitDeleteEventListener) postCommitDeleteEventListener).fired );
+		Assert.assertEquals( 1, ( (LegacyPostCommitDeleteEventListener) postCommitDeleteEventListener ).fired );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-1582")
+	@JiraKey("HHH-1582")
 	public void testPostCommitDeleteListenerRollback() {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();
@@ -200,24 +198,24 @@ public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		IrrelevantEntity irrelevantEntity = new IrrelevantEntity();
 		irrelevantEntity.setName( "Irrelevant" );
 
-		session.save( irrelevantEntity );
+		session.persist( irrelevantEntity );
 		session.flush();
 		transaction.commit();
 		session.close();
 
 		session = openSession();
 		transaction = session.beginTransaction();
-		session.delete( irrelevantEntity );
+		session.remove( irrelevantEntity );
 		session.flush();
 		transaction.rollback();
 
 		session.close();
 
 		//the legacy implementation fires the listener on failure as well
-		Assert.assertEquals( 1, ((LegacyPostCommitDeleteEventListener) postCommitDeleteEventListener).fired );
+		Assert.assertEquals( 1, ( (LegacyPostCommitDeleteEventListener) postCommitDeleteEventListener ).fired );
 	}
 
-	private class LegacyPostCommitDeleteEventListener implements PostDeleteEventListener {
+	private static class LegacyPostCommitDeleteEventListener implements PostDeleteEventListener {
 		int fired;
 
 		@Override
@@ -231,7 +229,7 @@ public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	private class LegacyPostCommitUpdateEventListener implements PostUpdateEventListener {
+	private static class LegacyPostCommitUpdateEventListener implements PostUpdateEventListener {
 		int fired;
 
 		@Override
@@ -245,7 +243,7 @@ public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	private class LegacyPostCommitInsertEventListener implements PostInsertEventListener {
+	private static class LegacyPostCommitInsertEventListener implements PostInsertEventListener {
 		int fired;
 
 		@Override
@@ -261,6 +259,6 @@ public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {IrrelevantEntity.class};
+		return new Class[] { IrrelevantEntity.class };
 	}
 }

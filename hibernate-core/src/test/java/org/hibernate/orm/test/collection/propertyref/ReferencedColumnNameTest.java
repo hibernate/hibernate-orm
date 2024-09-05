@@ -63,7 +63,7 @@ public class ReferencedColumnNameTest {
 				session -> {
 					user.addMail( "test" );
 					user.addMail( "test" );
-					session.save( user );
+					session.persist( user );
 				}
 		);
 

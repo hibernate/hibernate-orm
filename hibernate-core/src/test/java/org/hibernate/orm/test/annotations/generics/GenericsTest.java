@@ -10,7 +10,7 @@ package org.hibernate.orm.test.annotations.generics;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @ServiceRegistry(settings = @Setting(name = Environment.AUTO_CLOSE_SESSION, value = "true"))
 public class GenericsTest {
 
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "known bug in HANA: rs.next() returns false for org.hibernate.id.enhanced.SequenceStructure$1.getNextValue() for this test")
+	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "known bug in HANA: rs.next() returns false for org.hibernate.id.enhanced.SequenceStructure$1.getNextValue() for this test")
 	@Test
 	public void testManyToOneGenerics(SessionFactoryScope scope) {
 		Paper white = new Paper();
@@ -69,10 +69,10 @@ public class GenericsTest {
 			s = scope.getSessionFactory().openSession();
 			tx = s.beginTransaction();
 			white = s.get( Paper.class, white.getId() );
-			s.delete( white.getType() );
-			s.delete( white.getOwner() );
-			s.delete( white.getValue() );
-			s.delete( white );
+			s.remove( white.getType() );
+			s.remove( white.getOwner() );
+			s.remove( white.getValue() );
+			s.remove( white );
 			tx.commit();
 			//s.close();
 			assertFalse( s.isOpen() );

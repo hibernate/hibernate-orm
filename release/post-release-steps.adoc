@@ -12,6 +12,7 @@ there are a number of "post" release steps that need to be performed...
 ... Create a directory `orm/documentation/${family_name}` and create a file named `index.adoc`.  E.g. for 4.3.0.Final you'd be adding orm/documentation/4.3/index.adoc
 ... If this new series is to support a new JPA release, also be sure to update `orm/releases/index.adoc`
 .. Create a release-specific yml file in `_data/projects/orm/releases/${family_name}`.  E.g. for 4.3.0.Final you'd add _data/projects/orm/releases/4.3/4.3.0.Final.yml
+.. Add/update the XSD descriptor(s)
 4. Announce the release
 .. on the hibernate-dev and hibernate-announce mailing lists
 .. on Twitter (use hibernate account not the dev one)

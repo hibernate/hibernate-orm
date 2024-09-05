@@ -79,13 +79,13 @@ public class ElementCollectionTests {
 
 		sfScope.inTransaction(
 				(session) -> {
-					session.save( entity );
+					session.persist( entity );
 				}
 		);
 
 		sfScope.inTransaction(
 				(session) -> {
-					TheEntity retrieved = (TheEntity) session.load( TheEntity.class, 1 );
+					TheEntity retrieved = (TheEntity) session.getReference( TheEntity.class, 1 );
 					assertEquals( 1, retrieved.getSet().size() );
 					assertEquals( new ValueType( "set_value" ), retrieved.getSet().iterator().next() );
 					assertEquals( 1, retrieved.getMap().size() );

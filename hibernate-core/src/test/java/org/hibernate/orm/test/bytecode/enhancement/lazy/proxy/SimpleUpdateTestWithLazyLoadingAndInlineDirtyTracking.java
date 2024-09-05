@@ -108,7 +108,7 @@ public class SimpleUpdateTestWithLazyLoadingAndInlineDirtyTracking {
 		String updatedName = "Barrabas_";
 		scope.inTransaction( s -> {
 			stats.clear();
-			Child loadedChild = s.load( Child.class, lastChildID );
+			Child loadedChild = s.getReference( Child.class, lastChildID );
 
 			final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) loadedChild;
 			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
@@ -124,7 +124,7 @@ public class SimpleUpdateTestWithLazyLoadingAndInlineDirtyTracking {
 		assertEquals( 2, stats.getPrepareStatementCount() );
 
 		scope.inTransaction( s -> {
-			Child loadedChild = s.load( Child.class, lastChildID );
+			Child loadedChild = s.getReference( Child.class, lastChildID );
 			assertThat( loadedChild.getName(), is( updatedName ) );
 		} );
 	}
@@ -136,7 +136,7 @@ public class SimpleUpdateTestWithLazyLoadingAndInlineDirtyTracking {
 		scope.inTransaction( s -> {
 			final Statistics stats = scope.getSessionFactory().getStatistics();
 			stats.clear();
-			Child loadedChild = s.load( Child.class, lastChildID );
+			Child loadedChild = s.getReference( Child.class, lastChildID );
 
 			loadedChild.setName( updatedName );
 
@@ -148,11 +148,11 @@ public class SimpleUpdateTestWithLazyLoadingAndInlineDirtyTracking {
 			assertEquals( 1, stats.getPrepareStatementCount() );
 			assertThat( loadedChild.getParent().getName(), is( parentName ) );
 			assertEquals( 1, stats.getPrepareStatementCount() );
-			s.save( parent );
+			s.persist( parent );
 		} );
 
 		scope.inTransaction( s -> {
-			Child loadedChild = s.load( Child.class, lastChildID );
+			Child loadedChild = s.getReference( Child.class, lastChildID );
 			assertThat( loadedChild.getName(), is( updatedName ) );
 			assertThat( loadedChild.getParent().getName(), is( parentName ) );
 		} );
@@ -163,7 +163,7 @@ public class SimpleUpdateTestWithLazyLoadingAndInlineDirtyTracking {
 		scope.inTransaction( s -> {
 			final Statistics stats = scope.getSessionFactory().getStatistics();
 			stats.clear();
-			Child loadedChild = s.load( Child.class, lastChildID );
+			Child loadedChild = s.getReference( Child.class, lastChildID );
 
 			assertEquals( 0, stats.getPrepareStatementCount() );
 			Person relative = new Person();
@@ -177,7 +177,7 @@ public class SimpleUpdateTestWithLazyLoadingAndInlineDirtyTracking {
 		} );
 
 		scope.inTransaction( s -> {
-			Child loadedChild = s.load( Child.class, lastChildID );
+			Child loadedChild = s.getReference( Child.class, lastChildID );
 			assertThat( loadedChild.getRelatives().size(), is( 2 ) );
 		} );
 	}

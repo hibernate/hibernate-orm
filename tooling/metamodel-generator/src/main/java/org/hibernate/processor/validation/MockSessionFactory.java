@@ -27,6 +27,7 @@ import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
@@ -43,13 +44,10 @@ import org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.id.factory.internal.StandardIdentifierGeneratorFactory;
 import org.hibernate.internal.FastSessionServices;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
-import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.CollectionClassification;
@@ -565,11 +563,6 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
-	public BatchFetchStyle getBatchFetchStyle() {
-		return BatchFetchStyle.LEGACY;
-	}
-
-	@Override
 	public boolean isDelayBatchFetchLoaderCreationsEnabled() {
 		return false;
 	}
@@ -774,13 +767,13 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
-	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
-		return new StandardIdentifierGeneratorFactory(serviceRegistry, true);
+	public MappingDefaults getMappingDefaults() {
+		return new MockMappingDefaults();
 	}
 
 	@Override
-	public MappingDefaults getMappingDefaults() {
-		return new MockMappingDefaults();
+	public EffectiveMappingDefaults getEffectiveDefaults() {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -794,19 +787,13 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public <X> EntityDomainType<X> entity(String entityName) {
+		public EntityDomainType<?> entity(String entityName) {
 			if ( isEntityDefined(entityName) ) {
 				return new MockEntityDomainType<>(entityName);
 			}
 			else {
 				return null;
 			}
-		}
-
-		@Override
-		public <X> ManagedDomainType<X> managedType(String typeName) {
-			final String entityName = findEntityName( typeName );
-			return entityName == null ? null : entity( entityName );
 		}
 
 		@Override
@@ -818,6 +805,13 @@ public abstract class MockSessionFactory
 				return qualifyName(queryName);
 			}
 			return null;
+		}
+
+		@Override
+		public <X> ManagedDomainType<X> managedType(String typeName) {
+			final String entityName = qualifyName( typeName );
+			//noinspection unchecked
+			return entityName == null ? null : (ManagedDomainType<X>) entity( entityName );
 		}
 
 		@Override

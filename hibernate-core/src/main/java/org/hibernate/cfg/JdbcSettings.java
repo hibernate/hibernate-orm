@@ -526,8 +526,9 @@ public interface JdbcSettings extends C3p0Settings, ProxoolSettings, AgroalSetti
 	/**
 	 * @see javax.sql.DataSource
 	 *
-	 * @deprecated The JPA-standard {@link #JAKARTA_JTA_DATASOURCE} or {@link #JAKARTA_JTA_DATASOURCE} setting
-	 * is now preferred.
+	 * @deprecated The JPA-standard {@value #JAKARTA_JTA_DATASOURCE} or
+	 *             {@value #JAKARTA_NON_JTA_DATASOURCE} setting are now
+	 *             preferred.
 	 */
 	@Deprecated
 	String DATASOURCE = "hibernate.connection.datasource";

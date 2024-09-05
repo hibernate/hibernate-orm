@@ -19,7 +19,6 @@ public interface JpaComplianceSettings {
 	 *
 	 * @see #JPA_TRANSACTION_COMPLIANCE
 	 * @see #JPA_QUERY_COMPLIANCE
-	 * @see #JPA_LIST_COMPLIANCE
 	 * @see #JPA_ORDER_BY_MAPPING_COMPLIANCE
 	 * @see #JPA_CLOSED_COMPLIANCE
 	 * @see #JPA_PROXY_COMPLIANCE
@@ -63,45 +62,11 @@ public interface JpaComplianceSettings {
 	String JPA_QUERY_COMPLIANCE = "hibernate.jpa.compliance.query";
 
 	/**
-	 * Controls whether Hibernate applies cascade
-	 * {@link jakarta.persistence.CascadeType#PERSIST} or
-	 * {@link org.hibernate.annotations.CascadeType#SAVE_UPDATE}
-	 * at flush time. If enabled, Hibernate will cascade the standard
-	 * JPA {@code PERSIST} operation. Otherwise, Hibernate will cascade
-	 * the legacy {@code SAVE_UPDATE} operation.
-	 *
-	 * @settingDefault {@link #JPA_COMPLIANCE}
-	 *
-	 * @since 6.6
+	 * @deprecated No longer has any effect.  Since 7.0 (and removal of save/update processing),
+	 * Hibernate always cascades {@linkplain  jakarta.persistence.CascadeType#PERSIST PERSIST}
 	 */
+	@Deprecated
 	String JPA_CASCADE_COMPLIANCE = "hibernate.jpa.compliance.cascade";
-
-	/**
-	 * Controls whether Hibernate should treat what it would usually consider a
-	 * {@linkplain org.hibernate.collection.spi.PersistentBag "bag"}, that is, a
-	 * list with no index column, whose element order is not persistent, as a true
-	 * {@link org.hibernate.collection.spi.PersistentList list} with an index column
-	 * and a persistent element order.
-	 *
-	 * @apiNote If enabled, Hibernate will recognize it as a list where the
-	 * {@link jakarta.persistence.OrderColumn} annotation is simply missing
-	 * (and its defaults will apply).
-	 *
-	 * @settingDefault {@link #JPA_COMPLIANCE}
-	 *
-	 * @see org.hibernate.jpa.spi.JpaCompliance#isJpaListComplianceEnabled()
-	 * @see org.hibernate.boot.SessionFactoryBuilder#enableJpaListCompliance(boolean)
-	 *
-	 * @since 5.3
-	 *
-	 * @deprecated Use {@link MappingSettings#DEFAULT_LIST_SEMANTICS} instead. The specification
-	 * actually leaves this behavior undefined, saying that portable applications
-	 * should not rely on any specific behavior for a {@link java.util.List} with
-	 * no {@code @OrderColumn}.
-	 */
-	@Deprecated( since = "6.0" )
-	@SuppressWarnings("DeprecatedIsStillUsed")
-	String JPA_LIST_COMPLIANCE	= "hibernate.jpa.compliance.list";
 
 	/**
 	 * JPA specifies that items occurring in {@link jakarta.persistence.OrderBy}

@@ -108,7 +108,7 @@ public class MutableNaturalIdTest {
 		scope.inTransaction(
 				(session) -> {
 					try {
-						session.update( created );
+						session.merge( created );
 						final User loaded = session
 								.byNaturalId( User.class )
 								.using( "name", "Gavin" )
@@ -148,7 +148,7 @@ public class MutableNaturalIdTest {
 		scope.inTransaction(
 				(session) -> {
 					try {
-						session.buildLockRequest( LockOptions.NONE ).lock( created );
+						session.lock( created, LockOptions.NONE );
 
 						name.set( created, "Gavin" );
 						final User loaded = session
@@ -249,7 +249,7 @@ public class MutableNaturalIdTest {
 					final User user = session.bySimpleNaturalId( User.class )
 							.load( new Object[] { "steve", "hb" } );
 					assertNotNull( user );
-					session.delete( user );
+					session.remove( user );
 				}
 		);
 
@@ -282,7 +282,7 @@ public class MutableNaturalIdTest {
 							.load();
 					assertNotNull( user );
 
-					session.delete( user );
+					session.remove( user );
 				}
 		);
 	}

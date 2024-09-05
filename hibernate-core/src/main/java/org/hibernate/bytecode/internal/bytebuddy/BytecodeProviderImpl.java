@@ -68,7 +68,6 @@ import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
-import net.bytebuddy.pool.TypePool;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class BytecodeProviderImpl implements BytecodeProvider {

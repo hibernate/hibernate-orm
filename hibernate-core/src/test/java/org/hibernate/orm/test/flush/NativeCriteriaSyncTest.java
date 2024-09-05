@@ -39,7 +39,7 @@ public class NativeCriteriaSyncTest extends BaseCoreFunctionalTestCase {
 		e1.getManyToManyAssociatedEntities().add( e2 );
 
 		doInHibernate( this::sessionFactory, session -> {
-			session.save( e1 );
+			session.persist( e1 );
 
 			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 			CriteriaQuery<SimpleEntityWithAssociation> criteria = criteriaBuilder.createQuery( SimpleEntityWithAssociation.class );

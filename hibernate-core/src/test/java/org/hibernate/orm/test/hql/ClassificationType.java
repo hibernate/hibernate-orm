@@ -59,7 +59,8 @@ public class ClassificationType implements EnhancedUserType<Classification>, Val
 	}
 
 	@Override
-	public Classification nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public Classification nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+			throws SQLException {
 		final int intValue = rs.getInt( position );
 		if ( rs.wasNull() ) {
 			return null;
@@ -68,7 +69,8 @@ public class ClassificationType implements EnhancedUserType<Classification>, Val
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Classification value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
+	public void nullSafeSet(PreparedStatement st, Classification value, int index, SharedSessionContractImplementor session)
+			throws SQLException {
 		if ( value == null ) {
 			st.setNull( index, Types.INTEGER );
 		}

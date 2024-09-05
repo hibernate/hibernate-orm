@@ -325,7 +325,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public boolean effectivelyBatchLoadable(CollectionPersister persister) {
-		return batchSize > 1 || persister.isBatchLoadable();
+		return persister.isBatchLoadable() || effectiveBatchSize( persister ) > 1;
 	}
 
 	public int effectiveBatchSize(EntityPersister persister) {
@@ -336,7 +336,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public boolean effectivelyBatchLoadable(EntityPersister persister) {
-		return batchSize > 1 || persister.isBatchLoadable();
+		return persister.isBatchLoadable() || effectiveBatchSize( persister ) > 1;
 	}
 
 	public boolean getSubselectFetchEnabled() {

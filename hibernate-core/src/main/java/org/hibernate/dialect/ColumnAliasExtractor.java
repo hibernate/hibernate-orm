@@ -39,6 +39,6 @@ public interface ColumnAliasExtractor {
 	/**
 	 * An extractor which uses {@link ResultSetMetaData#getColumnName}
 	 */
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	ColumnAliasExtractor COLUMN_NAME_EXTRACTOR = ResultSetMetaData::getColumnName;
 }

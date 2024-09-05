@@ -10,10 +10,10 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
-import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**
  * @author Andrea Boriero
@@ -26,15 +26,9 @@ public class DtoIntegratorProvider implements IntegratorProvider {
 					@Override
 					public void integrate(
 							Metadata metadata,
-							SessionFactoryImplementor sessionFactory,
-							SessionFactoryServiceRegistry serviceRegistry) {
+							BootstrapContext bootstrapContext,
+							SessionFactoryImplementor sessionFactory) {
 						metadata.getImports().put( "PersonDto", PersonDto.class.getName() );
-					}
-
-					@Override
-					public void disintegrate(
-							SessionFactoryImplementor sessionFactory,
-							SessionFactoryServiceRegistry serviceRegistry) {
 					}
 				}
 		);

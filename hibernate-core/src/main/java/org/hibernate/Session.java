@@ -9,18 +9,20 @@ package org.hibernate;
 import java.util.List;
 import java.util.function.Consumer;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.jdbc.Work;
 import org.hibernate.query.Query;
 import org.hibernate.stat.SessionStatistics;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.ConnectionConsumer;
+import jakarta.persistence.ConnectionFunction;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
@@ -404,8 +406,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * changes are not persisted.
 	 * <p>
 	 * When a proxy is initialized, the loaded entity will have the same
-	 * read-only/modifiable setting as the uninitialized
-	 * proxy has, regardless of the session's current setting.
+	 * read-only/modifiable setting as the uninitialized proxy has,
+	 * regardless of the session's current setting.
 	 * <p>
 	 * To change the read-only/modifiable setting for a particular entity
 	 * or proxy that already belongs to this session use
@@ -474,115 +476,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void evict(Object object);
 
 	/**
-	 * Return the persistent instance of the given entity class with the given identifier,
-	 * obtaining the specified lock mode, assuming the instance exists.
-	 * <p>
-	 * Convenient form of {@link #load(Class, Object, LockOptions)}.
-	 *
-	 * @param theClass a persistent class
-	 * @param id a valid identifier of an existing persistent instance of the class
-	 * @param lockMode the lock level
-	 *
-	 * @return the persistent instance or proxy
-	 *
-	 * @see #load(Class, Object, LockOptions)
-	 *
-	 * @deprecated use {@link #get(Class, Object, LockMode)}
-	 */
-	@Deprecated(since = "6.0")
-	<T> T load(Class<T> theClass, Object id, LockMode lockMode);
-
-	/**
-	 * Return the persistent instance of the given entity class with the given identifier,
-	 * obtaining the specified lock mode, assuming the instance exists.
-	 *
-	 * @param theClass a persistent class
-	 * @param id a valid identifier of an existing persistent instance of the class
-	 * @param lockOptions contains the lock level
-	 * @return the persistent instance or proxy
-	 *
-	 * @deprecated use {@link #get(Class, Object, LockOptions)}
-	 */
-	@Deprecated(since = "6.0")
-	<T> T load(Class<T> theClass, Object id, LockOptions lockOptions);
-
-	/**
-	 * Return the persistent instance of the given entity class with the given identifier,
-	 * obtaining the specified lock mode, assuming the instance exists.
-	 * <p>
-	 * Convenient form of {@link #load(String, Object, LockOptions)}.
-	 *
-	 * @param entityName the entity name
-	 * @param id a valid identifier of an existing persistent instance of the class
-	 * @param lockMode the lock level
-	 *
-	 * @return the persistent instance or proxy
-	 *
-	 * @see #load(String, Object, LockOptions)
-	 *
-	 * @deprecated use {@link #get(String, Object, LockMode)}
-	 */
-	@Deprecated(since = "6.0")
-	Object load(String entityName, Object id, LockMode lockMode);
-
-	/**
-	 * Return the persistent instance of the given entity class with the given identifier,
-	 * obtaining the specified lock mode, assuming the instance exists.
-	 *
-	 * @param entityName the entity name
-	 * @param id a valid identifier of an existing persistent instance of the class
-	 * @param lockOptions contains the lock level
-	 *
-	 * @return the persistent instance or proxy
-	 *
-	 * @deprecated use {@link #get(String, Object, LockOptions)}
-	 */
-	@Deprecated(since = "6.0")
-	Object load(String entityName, Object id, LockOptions lockOptions);
-
-	/**
-	 * Return the persistent instance of the given entity class with the given identifier,
-	 * making the assumption that the instance exists in the database. This method might
-	 * return a proxied instance that is initialized on-demand, when a non-identifier method
-	 * is accessed.
-	 * <p>
-	 * You should not use this method to determine if an instance exists in the database
-	 * (use {@code get()} instead). Use this only to retrieve an instance that you assume
-	 * exists, where non-existence would be an actual error.
-	 * <p>
-	 * This operation is very similar to {@link #getReference(Class, Object)}.
-	 *
-	 * @param theClass a persistent class
-	 * @param id a valid identifier of an existing persistent instance of the class
-	 *
-	 * @return the persistent instance or proxy
-	 *
-	 * @deprecated use {@link #getReference(Class, Object)}
-	 */
-	@Deprecated(since = "6.0")
-	<T> T load(Class<T> theClass, Object id);
-
-	/**
-	 * Return the persistent instance of the given entity class with the given identifier,
-	 * making the assumption that the instance exists in the database. This method might
-	 * return a proxied instance that is initialized on-demand, when a non-identifier
-	 * method is accessed.
-	 * <p>
-	 * You should not use this method to determine if an instance exists in the database
-	 * (use {@code get()} instead). Use this only to retrieve an instance that you assume
-	 * exists, where non-existence would be an actual error.
-	 *
-	 * @param entityName the entity name
-	 * @param id a valid identifier of an existing persistent instance of the class
-	 *
-	 * @return the persistent instance or proxy
-	 *
-	 * @deprecated use {@link #getReference(String, Object)}
-	 */
-	@Deprecated(since = "6.0")
-	Object load(String entityName, Object id);
-
-	/**
 	 * Read the persistent state associated with the given identifier into the given
 	 * transient instance.
 	 */
@@ -597,7 +490,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param object a detached instance of a persistent class
 	 * @param replicationMode the replication mode to use
 	 *
-	 * @deprecated With no real replacement
+	 * @deprecated With no real replacement. For some use cases try
+	 *             {@link StatelessSession#upsert(Object)}.
 	 */
 	@Deprecated( since = "6.0" )
 	void replicate(Object object, ReplicationMode replicationMode);
@@ -612,110 +506,11 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param object a detached instance of a persistent class
 	 * @param replicationMode the replication mode to use
 	 *
-	 * @deprecated With no real replacement
+	 * @deprecated With no real replacement. For some use cases try
+	 *             {@link StatelessSession#upsert(Object)}.
 	 */
 	@Deprecated( since = "6.0" )
 	void replicate(String entityName, Object object, ReplicationMode replicationMode) ;
-
-	/**
-	 * Persist the given transient instance, first assigning a generated identifier.
-	 * (Or using the current value of the identifier property if the {@code assigned}
-	 * generator is used.) This operation cascades to associated instances if the
-	 * association is mapped with
-	 * {@link org.hibernate.annotations.CascadeType#SAVE_UPDATE}.
-	 * <p>
-	 * This operation is very similar to {@link #persist(Object)}.
-	 *
-	 * @param object a transient instance of a persistent class
-	 *
-	 * @return the generated identifier
-	 *
-	 * @deprecated use {@link #persist(Object)}
-	 */
-	@Deprecated(since = "6.0")
-	Object save(Object object);
-
-	/**
-	 * Persist the given transient instance, first assigning a generated identifier.
-	 * (Or using the current value of the identifier property if the {@code assigned}
-	 * generator is used.)  This operation cascades to associated instances if the
-	 * association is mapped with {@link org.hibernate.annotations.CascadeType#SAVE_UPDATE}.
-	 *
-	 * @param entityName the entity name
-	 * @param object a transient instance of a persistent class
-	 *
-	 * @return the generated identifier
-	 *
-	 * @deprecated use {@link #persist(String, Object)}
-	 */
-	@Deprecated(since = "6.0")
-	Object save(String entityName, Object object);
-
-	/**
-	 * Either {@link #save(Object)} or {@link #update(Object)} the given
-	 * instance, depending upon resolution of the unsaved-value checks (see the
-	 * manual for discussion of unsaved-value checking).
-	 * <p>
-	 * This operation cascades to associated instances if the association is mapped
-	 * with {@link org.hibernate.annotations.CascadeType#SAVE_UPDATE}.
-	 *
-	 * @param object a transient or detached instance containing new or updated state
-	 *
-	 * @see Session#save(Object)
-	 * @see Session#update(Object object)
-	 *
-	 * @deprecated use {@link #merge(String, Object)} or {@link #persist(Object)}
-	 */
-	@Deprecated(since = "6.0")
-	void saveOrUpdate(Object object);
-
-	/**
-	 * Either {@link #save(String, Object)} or {@link #update(String, Object)}
-	 * the given instance, depending upon resolution of the unsaved-value checks
-	 * (see the manual for discussion of unsaved-value checking).
-	 * <p>
-	 * This operation cascades to associated instances if the association is mapped
-	 * with {@link org.hibernate.annotations.CascadeType#SAVE_UPDATE}.
-	 *
-	 * @param entityName the entity name
-	 * @param object a transient or detached instance containing new or updated state
-	 *
-	 * @see Session#save(String,Object)
-	 * @see Session#update(String,Object)
-	 *
-	 * @deprecated use {@link #merge(String, Object)} or {@link #persist(String, Object)}
-	 */
-	@Deprecated(since = "6.0")
-	void saveOrUpdate(String entityName, Object object);
-
-	/**
-	 * Update the persistent instance with the identifier of the given detached
-	 * instance. If there is a persistent instance with the same identifier,
-	 * an exception is thrown. This operation cascades to associated instances
-	 * if the association is mapped with
-	 * {@link org.hibernate.annotations.CascadeType#SAVE_UPDATE}.
-	 *
-	 * @param object a detached instance containing updated state
-	 *
-	 * @deprecated use {@link #merge(Object)}
-	 */
-	@Deprecated(since = "6.0")
-	void update(Object object);
-
-	/**
-	 * Update the persistent instance with the identifier of the given detached
-	 * instance. If there is a persistent instance with the same identifier,
-	 * an exception is thrown. This operation cascades to associated instances
-	 * if the association is mapped with
-	 * {@link org.hibernate.annotations.CascadeType#SAVE_UPDATE}.
-	 *
-	 * @param entityName the entity name
-	 * @param object a detached instance containing updated state
-	 *
-	 * @deprecated use {@link #merge(String, Object)}
-	 */
-	@Deprecated(since = "6.0")
-	void update(String entityName, Object object);
 
 	/**
 	 * Copy the state of the given object onto the persistent object with the same
@@ -778,35 +573,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void persist(String entityName, Object object);
 
 	/**
-	 * Remove a persistent instance from the datastore. The argument may be
-	 * an instance associated with the receiving {@code Session} or a transient
-	 * instance with an identifier associated with existing persistent state.
-	 * This operation cascades to associated instances if the association is
-	 * mapped with {@link jakarta.persistence.CascadeType#REMOVE}.
-	 *
-	 * @param object the instance to be removed
-	 *
-	 * @deprecated use {@link #remove(Object)}
-	 */
-	@Deprecated(since = "6.0")
-	void delete(Object object);
-
-	/**
-	 * Remove a persistent instance from the datastore. The second argument may
-	 * be an instance associated with the receiving {@code Session} or a transient
-	 * instance with an identifier associated with existing persistent state.
-	 * This operation cascades to associated instances if the association is
-	 * mapped with {@link jakarta.persistence.CascadeType#REMOVE}.
-	 *
-	 * @param entityName the entity name for the instance to be removed.
-	 * @param object the instance to be removed
-	 *
-	 * @deprecated use {@link #remove(Object)}
-	 */
-	@Deprecated(since = "6.0")
-	void delete(String entityName, Object object);
-
-	/**
 	 * Obtain the specified lock level on the given managed instance associated
 	 * with this session. This operation may be used to:
 	 * <ul>
@@ -831,7 +597,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * The modes {@link LockMode#WRITE} and {@link LockMode#UPGRADE_SKIPLOCKED}
 	 * are not legal arguments to {@code lock()}.
 	 *
-	 * @param object a persistent instance
+	 * @param object a persistent instance associated with this session
 	 * @param lockMode the lock level
 	 */
 	void lock(Object object, LockMode lockMode);
@@ -843,57 +609,12 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * This operation cascades to associated instances if the association is
 	 * mapped with {@link org.hibernate.annotations.CascadeType#LOCK}.
 	 *
-	 * @param object a persistent instance
+	 * @param object a persistent instance associated with this session
 	 * @param lockOptions the lock options
 	 *
 	 * @since 6.2
 	 */
 	void lock(Object object, LockOptions lockOptions);
-
-	/**
-	 * Obtain the specified lock level on the given managed instance associated
-	 * with this session. This may be used to:
-	 * <ul>
-	 * <li>perform a version check with {@link LockMode#READ}, or
-	 * <li>upgrade to a pessimistic lock with {@link LockMode#PESSIMISTIC_WRITE}).
-	 * </ul>
-	 * <p>
-	 * This operation cascades to associated instances if the association is
-	 * mapped with {@link org.hibernate.annotations.CascadeType#LOCK}.
-	 *
-	 * @param entityName the name of the entity
-	 * @param object a persistent instance associated with this session
-	 * @param lockMode the lock level
-	 *
-	 * @deprecated use {@link #lock(Object, LockMode)}
-	 */
-	@Deprecated(since = "6.2")
-	void lock(String entityName, Object object, LockMode lockMode);
-
-	/**
-	 * Build a new {@linkplain LockRequest lock request} that specifies:
-	 * <ul>
-	 * <li>the {@link LockMode} to use,
-	 * <li>the {@linkplain LockRequest#setTimeOut(int) pessimistic lock timeout},
-	 *     and
-	 * <li>the {@linkplain LockRequest#setLockScope(PessimisticLockScope) scope}
-	 *     that is, whether the lock extends to rows of owned collections.
-	 * </ul>
-	 * <p>
-	 * Timeout and scope are ignored if the specified {@code LockMode} represents
-	 * a flavor of {@linkplain LockMode#OPTIMISTIC optimistic} locking.
-	 * <p>
-	 * Call {@link LockRequest#lock(Object)} to actually obtain the requested lock
-	 * on a managed entity instance.
-	 *
-	 * @param lockOptions contains the lock level
-	 *
-	 * @return a {@link LockRequest} that can be used to lock any given object.
-	 *
-	 * @deprecated use {@link #lock(Object, LockOptions)}
-	 */
-	@Deprecated(since = "6.2")
-	LockRequest buildLockRequest(LockOptions lockOptions);
 
 	/**
 	 * Reread the state of the given managed instance associated with this session
@@ -918,29 +639,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void refresh(Object object);
 
 	/**
-	 * Reread the state of the given managed instance associated with this session
-	 * from the underlying database. This may be useful:
-	 * <ul>
-	 * <li>when a database trigger alters the object state upon insert or update,
-	 * <li>after {@linkplain #createMutationQuery(String) executing} any HQL update
-	 *     or delete statement,
-	 * <li>after {@linkplain #createNativeMutationQuery(String) executing} a native
-	 *     SQL statement, or
-	 * <li>after inserting a {@link java.sql.Blob} or {@link java.sql.Clob}.
-	 * </ul>
-	 * <p>
-	 * This operation cascades to associated instances if the association is mapped
-	 * with {@link jakarta.persistence.CascadeType#REFRESH}.
-	 *
-	 * @param entityName the name of the entity
-	 * @param object a persistent instance associated with this session
-	 *
-	 * @deprecated use {@link #refresh(Object)}
-	 */
-	@Deprecated(since = "6.0")
-	void refresh(String entityName, Object object);
-
-	/**
 	 * Reread the state of the given managed instance from the underlying database,
 	 * obtaining the given {@link LockMode}.
 	 * <p>
@@ -963,24 +661,15 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void refresh(Object object, LockOptions lockOptions);
 
 	/**
-	 * Reread the state of the given managed instance from the underlying database,
-	 * obtaining the given {@link LockMode}.
-	 *
-	 * @param entityName the name of the entity
-	 * @param object a persistent instance associated with this session
-	 * @param lockOptions contains the lock mode to use
-	 *
-	 * @deprecated use {@link #refresh(Object, LockOptions)}
-	 */
-	@Deprecated(since = "6.0")
-	void refresh(String entityName, Object object, LockOptions lockOptions);
-
-	/**
 	 * Mark a persistence instance associated with this session for removal from
 	 * the underlying database. Ths operation cascades to associated instances if
 	 * the association is mapped {@link jakarta.persistence.CascadeType#REMOVE}.
+	 * <p>
+	 * Except when operating in fully JPA-compliant mode, this operation does,
+	 * contrary to the JPA specification, accept a detached entity instance.
 	 *
-	 * @param object the managed persistent instance to remove
+	 * @param object the managed persistent instance to remove, or a detached
+	 *               instance unless operating in fully JPA-compliant mode
 	 */
 	@Override
 	void remove(Object object);
@@ -1429,125 +1118,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	SharedSessionBuilder sessionWithOptions();
 
 	/**
-	 * A set of {@linkplain LockOptions locking options} attached
-	 * to the session.
-	 *
-	 * @deprecated simply construct a {@link LockOptions} and pass
-	 *             it to {@link #lock(Object, LockOptions)}.
-	 */
-	@Deprecated(since = "6.2")
-	interface LockRequest {
-		/**
-		 * A timeout value indicating that the database should not
-		 * wait at all to acquire a pessimistic lock which is not
-		 * immediately available. This has the same effect as
-		 * {@link LockMode#UPGRADE_NOWAIT}.
-		 */
-		int PESSIMISTIC_NO_WAIT = LockOptions.NO_WAIT;
-
-		/**
-		 * A timeout value indicating that attempting to acquire
-		 * that there is no timeout for the lock acquisition.
-		 */
-		int PESSIMISTIC_WAIT_FOREVER = LockOptions.WAIT_FOREVER;
-
-		/**
-		 * Get the lock mode.
-		 *
-		 * @return the lock mode.
-		 */
-		LockMode getLockMode();
-
-		/**
-		 * Specify the {@link LockMode} to be used. The default is {@link LockMode#NONE}.
-		 *
-		 * @param lockMode the lock mode to use for this request
-		 *
-		 * @return this {@code LockRequest} instance for operation chaining.
-		 */
-		LockRequest setLockMode(LockMode lockMode);
-
-		/**
-		 * Get the timeout setting.
-		 *
-		 * @return timeout in milliseconds, -1 for indefinite wait and 0 for no wait.
-		 */
-		int getTimeOut();
-
-		/**
-		 * Specify the pessimistic lock timeout. The default pessimistic lock
-		 * behavior is to wait forever for the lock. Lock timeout support is
-		 * not available in every {@link org.hibernate.dialect.Dialect dialect}
-		 * of SQL.
-		 *
-		 * @param timeout is time in milliseconds to wait for lock.
-		 *                -1 means wait forever and 0 means no wait.
-		 *
-		 * @return this {@code LockRequest} instance for operation chaining.
-		 */
-		LockRequest setTimeOut(int timeout);
-
-		/**
-		 * Check if locking extends to owned collections and associated entities.
-		 *
-		 * @return true if locking will be extended to owned collections and associated entities
-		 *
-		 * @deprecated use {@link #getLockScope()}
-		 */
-		@Deprecated(since = "6.2")
-		boolean getScope();
-
-		/**
-		 * Obtain the {@link PessimisticLockScope}, which determines if locking
-		 * extends to owned collections and associated entities.
-		 */
-		default PessimisticLockScope getLockScope() {
-			return getScope() ? PessimisticLockScope.EXTENDED : PessimisticLockScope.NORMAL;
-		}
-
-		/**
-		 * Specify whether the {@link LockMode} should extend to owned collections
-		 * and associated entities. An association must be mapped with
-		 * {@link org.hibernate.annotations.CascadeType#LOCK} for this setting to
-		 * have any effect.
-		 *
-		 * @param scope {@code true} to cascade locks; {@code false} to not.
-		 *
-		 * @return {@code this}, for method chaining
-		 *
-		 * @deprecated use {@link #setLockScope(PessimisticLockScope)}
-		 */
-		@Deprecated(since = "6.2")
-		LockRequest setScope(boolean scope);
-
-		/**
-		 * Set the {@link PessimisticLockScope}, which determines if locking
-		 * extends to owned collections and associated entities.
-		 */
-		default LockRequest setLockScope(PessimisticLockScope scope) {
-			return setScope( scope == PessimisticLockScope.EXTENDED );
-		}
-
-		/**
-		 * Perform the requested locking.
-		 *
-		 * @param entityName the name of the entity to lock
-		 * @param object the instance of the entity to lock
-		 *
-		 * @deprecated use {@link #lock(Object)}
-		 */
-		@Deprecated(since = "6.2")
-		void lock(String entityName, Object object);
-
-		/**
-		 * Perform the requested locking.
-		 *
-		 * @param object the instance of the entity to lock
-		 */
-		void lock(Object object);
-	}
-
-	/**
 	 * Add one or more listeners to the Session
 	 *
 	 * @param listeners the listener(s) to add
@@ -1571,6 +1141,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	@Override
 	<R> Query<R> createQuery(String queryString, Class<R> resultClass);
+
+	@Override
+	<R> Query<R> createQuery(TypedQueryReference<R> typedQueryReference);
 
 	@Override @Deprecated @SuppressWarnings("rawtypes")
 	Query createQuery(String queryString);
@@ -1599,4 +1172,32 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 */
 	@Override @Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
 	Query createQuery(CriteriaUpdate updateQuery);
+
+
+	@Override
+	default <C> void runWithConnection(ConnectionConsumer<C> action) {
+		doWork( connection -> {
+			try {
+				//noinspection unchecked
+				action.accept( (C) connection );
+			}
+			catch (Exception e) {
+				throw new RuntimeException( e );
+			}
+		} );
+	}
+
+	@Override
+	default <C, T> T callWithConnection(ConnectionFunction<C, T> function) {
+		return doReturningWork( (connection) -> {
+			try {
+				//noinspection unchecked
+				return function.apply( (C) connection );
+			}
+			catch (Exception e) {
+				throw new RuntimeException( e );
+			}
+		} );
+	}
+
 }

@@ -51,31 +51,7 @@ public class ConstraintViolationExceptionHandlingTest extends BaseExceptionHandl
 		try {
 			AInfo anotherAInfo = new AInfo();
 			anotherAInfo.uniqueString = "unique";
-			s.save( anotherAInfo );
-			fail( "should have thrown an exception" );
-		}
-		catch (RuntimeException expected) {
-			exceptionExpectations.onConstraintViolationOnSaveAndSaveOrUpdate( expected );
-		}
-		finally {
-			tx.rollback();
-			s.close();
-		}
-	}
-
-	@Test
-	public void testConstraintViolationOnSaveOrUpdate() {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		AInfo aInfo = new AInfo();
-		aInfo.uniqueString = "unique";
-		s.persist( aInfo );
-		s.flush();
-		s.clear();
-		try {
-			AInfo anotherAInfo = new AInfo();
-			anotherAInfo.uniqueString = "unique";
-			s.saveOrUpdate( anotherAInfo );
+			s.persist( anotherAInfo );
 			fail( "should have thrown an exception" );
 		}
 		catch (RuntimeException expected) {

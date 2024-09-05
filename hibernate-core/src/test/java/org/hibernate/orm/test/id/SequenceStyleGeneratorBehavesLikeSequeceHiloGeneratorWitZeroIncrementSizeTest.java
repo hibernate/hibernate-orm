@@ -11,16 +11,23 @@ import java.util.Properties;
 import org.hibernate.Session;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.PersistentIdentifierGenerator;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.RootClass;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.Type;
 
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -28,6 +35,7 @@ import org.hibernate.testing.orm.junit.DialectFeatureChecks.SupportsSequences;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.hibernate.testing.util.uuid.IdGeneratorCreationContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -63,17 +71,52 @@ public class SequenceStyleGeneratorBehavesLikeSequeceHiloGeneratorWitZeroIncreme
 		properties.setProperty( SequenceStyleGenerator.SEQUENCE_PARAM, TEST_SEQUENCE );
 		properties.setProperty( SequenceStyleGenerator.OPT_PARAM, "legacy-hilo" );
 		properties.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "0" ); // JPA allocationSize of 1
-		properties.put(
-				PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER,
-				buildingContext.getObjectNameNormalizer()
-		);
 		generator.configure(
-				buildingContext.getBootstrapContext()
-						.getTypeConfiguration()
-						.getBasicTypeRegistry()
-						.resolve( StandardBasicTypes.LONG ),
-				properties,
-				serviceRegistry
+				new GeneratorCreationContext() {
+					@Override
+					public Database getDatabase() {
+						return buildingContext.getMetadataCollector().getDatabase();
+					}
+
+					@Override
+					public ServiceRegistry getServiceRegistry() {
+						return serviceRegistry;
+					}
+
+					@Override
+					public String getDefaultCatalog() {
+						return "";
+					}
+
+					@Override
+					public String getDefaultSchema() {
+						return "";
+					}
+
+					@Override
+					public PersistentClass getPersistentClass() {
+						return null;
+					}
+
+					@Override
+					public RootClass getRootClass() {
+						return null;
+					}
+
+					@Override
+					public Property getProperty() {
+						return null;
+					}
+
+					@Override
+					public Type getType() {
+						return buildingContext.getBootstrapContext()
+								.getTypeConfiguration()
+								.getBasicTypeRegistry()
+								.resolve( StandardBasicTypes.LONG );
+					}
+				},
+				properties
 		);
 
 		final Metadata metadata = new MetadataSources( serviceRegistry ).buildMetadata();

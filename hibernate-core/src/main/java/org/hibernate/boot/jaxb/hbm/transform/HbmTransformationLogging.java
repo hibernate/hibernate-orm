@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.jaxb.hbm.transform;
 
+import org.hibernate.boot.BootLogging;
 import org.hibernate.boot.jaxb.JaxbLogger;
 
 import org.jboss.logging.Logger;
@@ -16,9 +17,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class HbmTransformationLogging {
-	public static final String TRANSFORMATION_LOGGER_NAME = JaxbLogger.LOGGER_NAME + ".hbm-transformation";
+	public static final String TRANSFORMATION_LOGGER_NAME = BootLogging.NAME + ".models.hbm-transform";
 	public static final Logger TRANSFORMATION_LOGGER = Logger.getLogger( TRANSFORMATION_LOGGER_NAME );
-
-	public static final boolean TRACE_ENABLED = TRANSFORMATION_LOGGER.isTraceEnabled();
-	public static final boolean DEBUG_ENABLED = TRANSFORMATION_LOGGER.isDebugEnabled();
 }

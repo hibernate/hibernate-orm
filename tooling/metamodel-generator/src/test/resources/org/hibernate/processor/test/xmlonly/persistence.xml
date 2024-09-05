@@ -6,9 +6,9 @@
   ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
   -->
 
-<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+<persistence xmlns="http://www.hibernate.org/xsd/orm/configuration"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xsi:schemaLocation="http://java.sun.com/xml/ns/persistence persistence.xsd" version="2.0">
+             version="3.2">
     <persistence-unit name="annotation-processor" transaction-type="JTA">
         <mapping-file>/org/hibernate/processor/test/xmlonly/xmlonly.xml</mapping-file>
     </persistence-unit>

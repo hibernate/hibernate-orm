@@ -14,7 +14,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import jakarta.persistence.FindOption;
 import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.RefreshOption;
 import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryOptions;
 
@@ -51,7 +53,7 @@ import static java.util.Collections.unmodifiableSet;
  *
  * @author Scott Marlow
  */
-public class LockOptions implements Serializable {
+public class LockOptions implements FindOption, RefreshOption, Serializable {
 	/**
 	 * Represents {@link LockMode#NONE}, to which timeout and scope are
 	 * not applicable.
@@ -138,7 +140,7 @@ public class LockOptions implements Serializable {
 	private final boolean immutable;
 	private LockMode lockMode;
 	private int timeout;
-	private boolean scope;
+	private boolean extendedScope;
 	private Boolean followOnLocking;
 	private Map<String, LockMode> aliasSpecificLockModes;
 
@@ -189,7 +191,7 @@ public class LockOptions implements Serializable {
 		immutable = false;
 		this.lockMode = lockMode;
 		this.timeout = timeout;
-		this.scope = scope == PessimisticLockScope.EXTENDED;
+		this.extendedScope = scope == PessimisticLockScope.EXTENDED;
 	}
 
 	/**
@@ -210,7 +212,7 @@ public class LockOptions implements Serializable {
 		return lockMode == LockMode.NONE
 			&& timeout == WAIT_FOREVER
 			&& followOnLocking == null
-			&& !scope
+			&& !extendedScope
 			&& !hasAliasSpecificLockModes();
 	}
 
@@ -413,7 +415,7 @@ public class LockOptions implements Serializable {
 	 * @return the current {@link PessimisticLockScope}
 	 */
 	public PessimisticLockScope getLockScope() {
-		return scope ? PessimisticLockScope.EXTENDED : PessimisticLockScope.NORMAL;
+		return extendedScope ? PessimisticLockScope.EXTENDED : PessimisticLockScope.NORMAL;
 	}
 
 	/**
@@ -448,9 +450,9 @@ public class LockOptions implements Serializable {
 	 *
 	 * @deprecated use {@link #getLockScope()}
 	 */
-	@Deprecated(since = "6.2")
+	@Deprecated(since = "6.2", forRemoval = true)
 	public boolean getScope() {
-		return scope;
+		return extendedScope;
 	}
 
 	/**
@@ -467,12 +469,12 @@ public class LockOptions implements Serializable {
 	 *
 	 * @deprecated use {@link #setLockScope(PessimisticLockScope)}
 	 */
-	@Deprecated(since = "6.2")
+	@Deprecated(since = "6.2", forRemoval = true)
 	public LockOptions setScope(boolean scope) {
 		if ( immutable ) {
 			throw new UnsupportedOperationException("immutable global instance of LockMode");
 		}
-		this.scope = scope;
+		this.extendedScope = scope;
 		return this;
 	}
 
@@ -577,13 +579,12 @@ public class LockOptions implements Serializable {
 		if ( this == object ) {
 			return true;
 		}
-		else if ( !(object instanceof LockOptions) ) {
+		else if ( !(object instanceof LockOptions that) ) {
 			return false;
 		}
 		else {
-			final LockOptions that = (LockOptions) object;
 			return timeout == that.timeout
-				&& scope == that.scope
+				&& extendedScope == that.extendedScope
 				&& lockMode == that.lockMode
 				&& Objects.equals( aliasSpecificLockModes, that.aliasSpecificLockModes )
 				&& Objects.equals( followOnLocking, that.followOnLocking );
@@ -592,6 +593,6 @@ public class LockOptions implements Serializable {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( lockMode, timeout, aliasSpecificLockModes, followOnLocking, scope );
+		return Objects.hash( lockMode, timeout, aliasSpecificLockModes, followOnLocking, extendedScope);
 	}
 }

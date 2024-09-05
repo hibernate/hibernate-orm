@@ -63,8 +63,8 @@ public class EntityWithManyToOneJoinTableTest {
 		entity.setOther( other );
 
 		scope.inTransaction( session -> {
-			session.save( entity );
-			session.save( other );
+			session.persist( entity );
+			session.persist( other );
 		} );
 	}
 
@@ -95,11 +95,11 @@ public class EntityWithManyToOneJoinTableTest {
 		entity.setOther( other );
 
 		scope.inTransaction( session -> {
-			session.save( other );
+			session.persist( other );
 		} );
 
 		scope.inTransaction( session -> {
-			session.save( entity );
+			session.persist( entity );
 		} );
 
 		scope.inTransaction(
@@ -153,7 +153,7 @@ public class EntityWithManyToOneJoinTableTest {
 
 					result.setLazyOther( basicEntity );
 
-					session.save( basicEntity );
+					session.persist( basicEntity );
 				}
 		);
 
@@ -284,7 +284,7 @@ public class EntityWithManyToOneJoinTableTest {
 
 					result.setLazyOther( basicEntity );
 
-					session.save( basicEntity );
+					session.persist( basicEntity );
 				}
 		);
 
@@ -334,8 +334,8 @@ public class EntityWithManyToOneJoinTableTest {
 		entity.setOther( other );
 
 		scope.inTransaction( session -> {
-			session.save( other );
-			session.save( entity );
+			session.persist( other );
+			session.persist( entity );
 		} );
 
 		SimpleEntity anOther = new SimpleEntity(
@@ -351,7 +351,7 @@ public class EntityWithManyToOneJoinTableTest {
 				session -> {
 					final EntityWithManyToOneJoinTable loaded = session.get( EntityWithManyToOneJoinTable.class, 2 );
 					assert loaded != null;
-					session.save( anOther );
+					session.persist( anOther );
 					loaded.setOther( anOther );
 				}
 		);

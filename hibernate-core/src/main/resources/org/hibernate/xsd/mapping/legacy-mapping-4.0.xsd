@@ -84,11 +84,9 @@
     <xs:complexType name="ToolingHintType" mixed="true">
         <xs:annotation>
             <xs:documentation><![CDATA[
-                <meta.../> is used to assign meta-level attributes to a class
+                Used to assign meta-level attributes to a class
                 or property.  Is currently used by tooling as a placeholder for
                 values that is not directly related to OR mappings.
-
-                Example: <meta attribute="someHintName">the-hint-value</meta>
             ]]></xs:documentation>
         </xs:annotation>
         <xs:simpleContent>
@@ -495,7 +493,9 @@
                         <xs:group ref="NamedQueryGroup"/>
                     </xs:choice>
                 </xs:sequence>
-                <xs:attributeGroup ref="table-information-group"/>
+                <xs:attribute name="schema" type="xs:string"/>
+                <xs:attribute name="catalog" type="xs:string"/>
+                <xs:attribute name="table" type="xs:string"/>
                 <xs:attribute name="check" type="xs:string"/>
                 <xs:attribute name="discriminator-value" type="xs:string" />
             </xs:extension>
@@ -544,7 +544,9 @@
                         <xs:group ref="NamedQueryGroup"/>
                     </xs:choice>
                 </xs:sequence>
-                <xs:attributeGroup ref="table-information-group"/>
+                <xs:attribute name="schema" type="xs:string"/>
+                <xs:attribute name="catalog" type="xs:string"/>
+                <xs:attribute name="table" type="xs:string"/>
                 <xs:attribute name="check" type="xs:string"/>
             </xs:extension>
         </xs:complexContent>
@@ -748,7 +750,9 @@
                     <xs:group ref="CustomSqlDmlCollectionGroup"/>
                     <xs:element name="filter" minOccurs="0" maxOccurs="unbounded" type="filter-type"/>
                 </xs:sequence>
-                <xs:attributeGroup ref="table-information-group"/>
+                <xs:attribute name="schema" type="xs:string"/>
+                <xs:attribute name="catalog" type="xs:string"/>
+                <xs:attribute name="table" type="xs:string"/>
                 <xs:attributeGroup ref="plural-basic-attribute-group"/>
                 <xs:attribute name="embed-xml" type="xs:boolean"/>
                 <xs:attribute name="fetch" type="FetchStyleWithSubselectEnum"/>
@@ -794,7 +798,9 @@
                     <xs:group ref="CustomSqlDmlCollectionGroup"/>
                     <xs:element name="filter" minOccurs="0" maxOccurs="unbounded" type="filter-type"/>
                 </xs:sequence>
-                <xs:attributeGroup ref="table-information-group"/>
+                <xs:attribute name="schema" type="xs:string"/>
+                <xs:attribute name="catalog" type="xs:string"/>
+                <xs:attribute name="table" type="xs:string"/>
                 <xs:attribute name="access" type="xs:string"/>
                 <xs:attribute name="batch-size" default="-1" type="xs:int"/>
                 <xs:attribute name="cascade" type="xs:string"/>
@@ -834,7 +840,9 @@
                     <xs:group ref="CustomSqlDmlCollectionGroup"/>
                     <xs:element name="filter" minOccurs="0" maxOccurs="unbounded" type="filter-type"/>
                 </xs:sequence>
-                <xs:attributeGroup ref="table-information-group"/>
+                <xs:attribute name="schema" type="xs:string"/>
+                <xs:attribute name="catalog" type="xs:string"/>
+                <xs:attribute name="table" type="xs:string"/>
                 <xs:attributeGroup ref="plural-basic-attribute-group"/>
                 <xs:attribute name="embed-xml" type="xs:boolean"/>
                 <xs:attribute name="fetch" type="FetchStyleWithSubselectEnum"/>
@@ -866,7 +874,9 @@
                     <xs:group ref="CustomSqlDmlCollectionGroup"/>
                     <xs:element name="filter" minOccurs="0" maxOccurs="unbounded" type="filter-type"/>
                 </xs:sequence>
-                <xs:attributeGroup ref="table-information-group"/>
+                <xs:attribute name="schema" type="xs:string"/>
+                <xs:attribute name="catalog" type="xs:string"/>
+                <xs:attribute name="table" type="xs:string"/>
                 <xs:attributeGroup ref="plural-basic-attribute-group"/>
                 <xs:attribute name="embed-xml" type="xs:boolean"/>
                 <xs:attribute name="fetch" type="FetchStyleWithSubselectEnum"/>
@@ -901,7 +911,9 @@
                     <xs:group ref="CustomSqlDmlCollectionGroup"/>
                     <xs:element name="filter" minOccurs="0" maxOccurs="unbounded" type="filter-type"/>
                 </xs:sequence>
-                <xs:attributeGroup ref="table-information-group"/>
+                <xs:attribute name="schema" type="xs:string"/>
+                <xs:attribute name="catalog" type="xs:string"/>
+                <xs:attribute name="table" type="xs:string"/>
                 <xs:attributeGroup ref="plural-basic-attribute-group"/>
                 <xs:attribute name="embed-xml" type="xs:boolean"/>
                 <xs:attribute name="fetch" type="FetchStyleWithSubselectEnum"/>
@@ -931,7 +943,9 @@
                     <xs:group ref="CustomSqlDmlCollectionGroup"/>
                     <xs:element name="filter" minOccurs="0" maxOccurs="unbounded" type="filter-type"/>
                 </xs:sequence>
-                <xs:attributeGroup ref="table-information-group"/>
+                <xs:attribute name="schema" type="xs:string"/>
+                <xs:attribute name="catalog" type="xs:string"/>
+                <xs:attribute name="table" type="xs:string"/>
                 <xs:attributeGroup ref="plural-basic-attribute-group"/>
                 <xs:attribute name="embed-xml" type="xs:boolean"/>
                 <xs:attribute name="fetch" type="FetchStyleWithSubselectEnum"/>
@@ -964,7 +978,7 @@
         <xs:attribute name="embed-xml" type="xs:boolean"/>
         <xs:attribute name="entity-name" type="xs:string"/>
         <xs:attribute name="node" type="xs:string"/>
-        <xs:attribute name="not-found" default="exception" type="NotFoundEnum"/>
+        <xs:attribute name="not-found" type="NotFoundEnum"/>
     </xs:complexType>
 
     <xs:complexType name="OneToOneType">
@@ -1014,7 +1028,7 @@
                 <xs:attribute name="lazy" type="LazyWithNoProxyEnum"/>
                 <xs:attribute name="name" use="required" type="xs:string"/>
                 <xs:attribute name="node" type="xs:string"/>
-                <xs:attribute name="not-found" default="exception" type="NotFoundEnum"/>
+                <xs:attribute name="not-found" type="NotFoundEnum"/>
                 <xs:attribute name="not-null" type="xs:boolean"/>
                 <xs:attribute name="optimistic-lock" default="true" type="xs:boolean"/>
                 <!-- only supported for properties of a class (not component) -->
@@ -1046,7 +1060,7 @@
                 <xs:attribute name="formula" type="xs:string"/>
                 <xs:attribute name="lazy" type="LazyEnum"/>
                 <xs:attribute name="node" type="xs:string"/>
-                <xs:attribute name="not-found" default="exception" type="NotFoundEnum"/>
+                <xs:attribute name="not-found" type="NotFoundEnum"/>
                 <xs:attribute name="order-by" type="xs:string"/>
                 <xs:attribute name="outer-join" type="OuterJoinEnum"/>
                 <xs:attribute name="property-ref" type="xs:string"/>
@@ -1388,7 +1402,9 @@
             </xs:choice>
             <xs:group ref="CustomSqlDmlGroup"/>
         </xs:sequence>
-        <xs:attributeGroup ref="table-information-group"/>
+        <xs:attribute name="schema" type="xs:string"/>
+        <xs:attribute name="catalog" type="xs:string"/>
+        <xs:attribute name="table" type="xs:string"/>
         <xs:attribute name="fetch" default="join" type="FetchStyleEnum"/>
         <xs:attribute name="inverse" default="false" type="xs:boolean"/>
         <xs:attribute name="optional" default="false" type="xs:boolean"/>
@@ -1636,7 +1652,9 @@
                     <xs:element name="loader" minOccurs="0" type="loader-type"/>
                     <xs:group ref="CustomSqlDmlCollectionGroup"/>
                 </xs:sequence>
-                <xs:attributeGroup ref="table-information-group"/>
+                <xs:attribute name="schema" type="xs:string"/>
+                <xs:attribute name="catalog" type="xs:string"/>
+                <xs:attribute name="table" type="xs:string"/>
                 <xs:attribute name="access" type="xs:string"/>
                 <xs:attribute name="batch-size" default="-1" type="xs:int"/>
                 <xs:attribute name="check" type="xs:string"/>
@@ -1855,15 +1873,6 @@
         <xs:attribute name="collection-type" type="xs:string"/>
         <xs:attribute name="persister" type="ClassNameType"/>
     </xs:attributeGroup>
-    <xs:attributeGroup name="table-information-group">
-        <xs:attribute name="schema" type="xs:string"/>
-        <xs:attribute name="catalog" type="xs:string"/>
-        <xs:attribute name="table" type="xs:string"/>
-        <!-- default: unqualified class name -->
-        <xs:attribute name="subselect" type="xs:string"/>
-    </xs:attributeGroup>
-
-
 
     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
     <!-- Enums -->

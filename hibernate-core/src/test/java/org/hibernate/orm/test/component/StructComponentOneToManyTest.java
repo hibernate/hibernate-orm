@@ -48,14 +48,14 @@ public class StructComponentOneToManyTest {
 					book1.title = "Hibernate 3";
 					book1.author = new Author( "Gavin", null );
 
-					session.save( book1 );
+					session.persist( book1 );
 
 					Book book2 = new Book();
 					book2.id = 2L;
 					book2.title = "Hibernate 6";
 					book2.author = new Author( "Steve", book1 );
 
-					session.save( book2 );
+					session.persist( book2 );
 				}
 		);
 	}

@@ -8,6 +8,7 @@ package org.hibernate.orm.test.tool.schema;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -69,7 +70,7 @@ public class IndividuallySchemaValidatorImplConnectionTest extends BaseUnitTestC
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, IndividuallySchemaValidatorImplConnectionTest.class.getName() ) );
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, IndividuallySchemaValidatorImplConnectionTest.class.getName() ) );
 
 	private StandardServiceRegistry ssr;
 

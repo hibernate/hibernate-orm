@@ -7,13 +7,12 @@
 package org.hibernate.testing.orm.jpa;
 
 import java.net.URL;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
+import jakarta.persistence.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
 
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
@@ -44,7 +43,12 @@ public class PersistenceUnitDescriptorAdapter implements PersistenceUnitDescript
 	}
 
 	@Override
-	public PersistenceUnitTransactionType getTransactionType() {
+	public PersistenceUnitTransactionType getPersistenceUnitTransactionType() {
+		return null;
+	}
+
+	@Override @SuppressWarnings("removal")
+	public jakarta.persistence.spi.PersistenceUnitTransactionType getTransactionType() {
 		return null;
 	}
 

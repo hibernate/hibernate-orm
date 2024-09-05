@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.proxy.AbstractLazyInitializer;
@@ -59,8 +60,8 @@ public class MapProxySerializationTest {
 			c1.put( "id", 1L );
 			c1.put( "parent", entity );
 
-			s.save( "SimpleEntity", entity );
-			s.save( "ChildEntity", c1 );
+			s.persist( "SimpleEntity", entity );
+			s.persist( "ChildEntity", c1 );
 		} );
 	}
 
@@ -72,7 +73,7 @@ public class MapProxySerializationTest {
 	@TestForIssue(jiraKey = "HHH-7686")
 	public void testInitializedProxySerializationIfTargetInPersistenceContext(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
-			final Map<String, Object> child = (Map<String, Object>) s.load( "ChildEntity", 1L );
+			final Map<String, Object> child = (Map<String, Object>) s.getReference( "ChildEntity", 1L );
 
 			final Map<String, Object> parent = (Map<String, Object>) child.get( "parent" );
 
@@ -104,7 +105,7 @@ public class MapProxySerializationTest {
 	@TestForIssue(jiraKey = "HHH-7686")
 	public void testUninitializedProxySerializationIfTargetInPersistenceContext(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
-			final Map<String, Object> child = (Map<String, Object>) s.load( "ChildEntity", 1L );
+			final Map<String, Object> child = (Map<String, Object>) s.getReference( "ChildEntity", 1L );
 
 			final Map<String, Object> parent = (Map<String, Object>) child.get( "parent" );
 
@@ -115,14 +116,14 @@ public class MapProxySerializationTest {
 			// Load the target of the proxy without the proxy being made aware of it
 			s.detach( parent );
 			s.byId( "SimpleEntity" ).load( 1L );
-			s.update( parent );
+			Map<String, Object> merged = s.merge( parent );
 
-			// assert we still have an uninitialized proxy
+			assertTrue( Hibernate.isInitialized( merged ) );
 			assertFalse( Hibernate.isInitialized( parent ) );
 
 			// serialize/deserialize the proxy
 			final Map<String, Object> deserializedParent =
-					(Map<String, Object>) SerializationHelper.clone( (Serializable) parent );
+					(Map<String, Object>) SerializationHelper.clone( (Serializable) merged );
 
 			// assert the deserialized object is no longer a proxy, but the target of the proxy
 			assertFalse( deserializedParent instanceof HibernateProxy );
@@ -139,7 +140,7 @@ public class MapProxySerializationTest {
 	@Test
 	public void testProxyInitializationWithoutTX(SessionFactoryScope scope) {
 		final Map<String, Object> parent = scope.fromTransaction( s -> {
-			final Map<String, Object> child = (Map<String, Object>) s.load( "ChildEntity", 1L );
+			final Map<String, Object> child = (Map<String, Object>) s.getReference( "ChildEntity", 1L );
 			return (Map<String, Object>) child.get( "parent" );
 		});
 		// assert we have an uninitialized proxy
@@ -162,7 +163,7 @@ public class MapProxySerializationTest {
 	@TestForIssue(jiraKey = "HHH-7686")
 	public void testProxyInitializationWithoutTXAfterDeserialization(SessionFactoryScope scope) {
 		final Map<String, Object> deserializedParent = scope.fromTransaction( s -> {
-			final Map<String, Object> child = (Map<String, Object>) s.load( "ChildEntity", 1L );
+			final Map<String, Object> child = (Map<String, Object>) s.getReference( "ChildEntity", 1L );
 			final Map<String, Object> parent = (Map<String, Object>) child.get( "parent" );
 
 			// destroy AbstractLazyInitializer internal state

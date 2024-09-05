@@ -21,6 +21,8 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.VersionJavaType;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 
+import static org.hibernate.engine.internal.Versioning.isNullInitialVersion;
+
 /**
  * Helper for dealing with unsaved value handling
  *
@@ -55,20 +57,19 @@ public class UnsavedValueFactory {
 				return IdentifierValue.NULL;
 			}
 		}
-		else if ( "null".equals( unsavedValue ) ) {
-			return IdentifierValue.NULL;
-		}
-		else if ( "undefined".equals( unsavedValue ) ) {
-			return IdentifierValue.UNDEFINED;
-		}
-		else if ( "none".equals( unsavedValue ) ) {
-			return IdentifierValue.NONE;
-		}
-		else if ( "any".equals( unsavedValue ) ) {
-			return IdentifierValue.ANY;
-		}
 		else {
-			return new IdentifierValue( idJtd.fromString( unsavedValue ) );
+			switch (unsavedValue) {
+				case "null":
+					return IdentifierValue.NULL;
+				case "undefined":
+					return IdentifierValue.UNDEFINED;
+				case "none":
+					return IdentifierValue.NONE;
+				case "any":
+					return IdentifierValue.ANY;
+				default:
+					return new IdentifierValue( idJtd.fromString( unsavedValue ) );
+			}
 		}
 	}
 
@@ -82,25 +83,20 @@ public class UnsavedValueFactory {
 	public static <T> VersionValue getUnsavedVersionValue(
 			KeyValue bootVersionMapping,
 			VersionJavaType<T> jtd,
-			Long length,
-			Integer precision,
-			Integer scale,
 			Getter getter,
-			Supplier<?> templateInstanceAccess,
-			SessionFactoryImplementor sessionFactory) {
+			Supplier<?> templateInstanceAccess) {
 		final String unsavedValue = bootVersionMapping.getNullValue();
 		if ( unsavedValue == null ) {
 			if ( getter != null && templateInstanceAccess != null ) {
-				Object templateInstance = templateInstanceAccess.get();
+				final Object templateInstance = templateInstanceAccess.get();
 				@SuppressWarnings("unchecked")
 				final T defaultValue = (T) getter.get( templateInstance );
-
-				// if the version of a newly instantiated object is not the same
-				// as the version seed value, use that as the unsaved-value
-				final T seedValue = jtd.seed( length, precision, scale, mockSession( sessionFactory ) );
-				return jtd.areEqual( seedValue, defaultValue )
-						? VersionValue.UNDEFINED
-						: new VersionValue( defaultValue );
+				// if the version of a newly instantiated object is null
+				// or a negative number, use that value as the unsaved-value,
+				// otherwise assume it's the initial version set by program
+				return isNullInitialVersion( defaultValue )
+						? new VersionValue( defaultValue )
+						: VersionValue.UNDEFINED;
 			}
 			else {
 				return VersionValue.UNDEFINED;

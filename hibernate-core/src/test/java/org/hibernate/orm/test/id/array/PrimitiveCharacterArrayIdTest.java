@@ -73,8 +73,8 @@ public class PrimitiveCharacterArrayIdTest {
 				session -> {
 					Query query = session.createQuery( "SELECT s FROM PrimitiveCharacterArrayIdTest$DemoEntity s" );
 					List results = query.list();
-					session.delete( results.get( 0 ) );
-					session.delete( results.get( 1 ) );
+					session.remove( results.get( 0 ) );
+					session.remove( results.get( 1 ) );
 				}
 		);
 

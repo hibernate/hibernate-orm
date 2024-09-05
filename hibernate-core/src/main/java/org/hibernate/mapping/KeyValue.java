@@ -7,8 +7,6 @@
 package org.hibernate.mapping;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.generator.Generator;
 
 /**
@@ -29,42 +27,11 @@ public interface KeyValue extends Value {
 	
 	boolean isUpdateable();
 
-	Generator createGenerator(
-			IdentifierGeneratorFactory identifierGeneratorFactory,
-			Dialect dialect,
-			RootClass rootClass);
-
-	/**
-	 * @deprecated Use {@link #createGenerator(IdentifierGeneratorFactory, Dialect, RootClass)} instead.
-	 *             No longer used except in legacy tests.
-	 *
-	 * @return {@code null} if the {@code Generator} returned by {@link #createGenerator} is not an instance
-	 *         of {@link IdentifierGenerator}.
-	 */
-	@Deprecated(since="6.2", forRemoval = true)
-	default IdentifierGenerator createIdentifierGenerator(
-			IdentifierGeneratorFactory identifierGeneratorFactory,
-			Dialect dialect,
-			String defaultCatalog,
-			String defaultSchema,
-			RootClass rootClass) {
-		final Generator generator = createGenerator( identifierGeneratorFactory, dialect, rootClass );
-		return generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null;
+	@Deprecated(since = "7.0")
+	default Generator createGenerator(Dialect dialect, RootClass rootClass) {
+		return createGenerator( dialect, rootClass, null );
 	}
 
-	/**
-	 * @deprecated Use {@link #createGenerator(IdentifierGeneratorFactory, Dialect, RootClass)} instead.
-	 *             No longer used except in legacy tests.
-	 *
-	 * @return {@code null} if the {@code Generator} returned by {@link #createGenerator} is not an instance
-	 *         of {@link IdentifierGenerator}.
-	 */
-	@Deprecated(since="6.2", forRemoval = true)
-	default IdentifierGenerator createIdentifierGenerator(
-			IdentifierGeneratorFactory identifierGeneratorFactory,
-			Dialect dialect,
-			RootClass rootClass) {
-		final Generator generator = createGenerator( identifierGeneratorFactory, dialect, rootClass );
-		return generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null;
-	}
+	Generator createGenerator(Dialect dialect, RootClass rootClass, Property property);
+
 }

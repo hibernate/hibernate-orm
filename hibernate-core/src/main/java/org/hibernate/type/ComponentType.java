@@ -18,15 +18,12 @@ import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
-import org.hibernate.Remove;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.generator.Generator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;
@@ -72,11 +69,6 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	private boolean hasNullProperty;
 
 	private EmbeddableValuedModelPart mappingModelPart;
-
-	@Deprecated(forRemoval = true)
-	public ComponentType(Component component, int[] originalPropertyOrder, MetadataBuildingContext context) {
-		this( component, originalPropertyOrder );
-	}
 
 	public ComponentType(Component component, int[] originalPropertyOrder) {
 		this( component, originalPropertyOrder,
@@ -462,11 +454,6 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	@Override
 	public Type[] getSubtypes() {
 		return propertyTypes;
-	}
-
-	@Deprecated(since = "6.2") @Remove
-	public Generator[] getPropertyValueGenerationStrategies() {
-		return null;
 	}
 
 	@Override

@@ -10,6 +10,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+
+import org.hibernate.annotations.SortComparator;
+import org.hibernate.annotations.SortNatural;
+
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -22,11 +26,6 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
-import org.hibernate.annotations.SortComparator;
-import org.hibernate.annotations.SortNatural;
 
 /**
  * @author Steve Ebersole
@@ -94,11 +93,6 @@ public class EntityOfSets {
 	@ElementCollection
 	@CollectionTable( name = "EntityOfSet_comp1")
 	private Set<SimpleComponent> setOfComponents;
-
-	@ElementCollection
-	@LazyCollection( LazyCollectionOption.EXTRA )
-	@CollectionTable( name = "EntityOfSet_comp2")
-	private Set<SimpleComponent> extraLazySetOfComponents;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Entity associations
@@ -283,25 +277,6 @@ public class EntityOfSets {
 			setOfComponents = new HashSet<>();
 		}
 		setOfComponents.add( value );
-	}
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// setOfExtraLazyComponents
-
-	public Set<SimpleComponent> getExtraLazySetOfComponents() {
-		return extraLazySetOfComponents;
-	}
-
-	public void setExtraLazySetOfComponents(Set<SimpleComponent> extraLazySetOfComponents) {
-		this.extraLazySetOfComponents = extraLazySetOfComponents;
-	}
-
-	public void addExtraLazyComponent(SimpleComponent value) {
-		if ( extraLazySetOfComponents == null ) {
-			extraLazySetOfComponents = new HashSet<>();
-		}
-		extraLazySetOfComponents.add( value );
 	}
 
 

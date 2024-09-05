@@ -43,7 +43,7 @@ public class NotNullManyToOneTest extends BaseCoreFunctionalTestCase {
 		inTransaction(
 				session -> {
 					Parent parent = new Parent( new Child() );
-					session.save( parent );
+					session.persist( parent );
 				}
 		);
 	}
@@ -53,7 +53,7 @@ public class NotNullManyToOneTest extends BaseCoreFunctionalTestCase {
 		inTransaction(
 				session -> {
 					Child child = new Child();
-					session.save( child );
+					session.persist( child );
 				}
 		);
 	}

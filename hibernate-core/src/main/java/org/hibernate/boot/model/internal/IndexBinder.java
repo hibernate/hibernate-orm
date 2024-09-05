@@ -6,7 +6,11 @@
  */
 package org.hibernate.boot.model.internal;
 
-import jakarta.persistence.UniqueConstraint;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.StringTokenizer;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
@@ -23,10 +27,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.StringTokenizer;
+import jakarta.persistence.UniqueConstraint;
 
 import static java.util.Collections.emptyList;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
@@ -112,7 +113,7 @@ class IndexBinder {
 		return new Column( physicalName );
 	}
 
-	private Selectable[] selectables(Table table, String name, final String[] columnNames) {
+	private Selectable[] selectables(Table table, String name, String[] columnNames) {
 		final int size = columnNames.length;
 		if ( size == 0 ) {
 			throw new AnnotationException( "Index"
@@ -202,8 +203,15 @@ class IndexBinder {
 			initializeColumns( columnExpressions, ordering, parsed );
 			final String name = index.name();
 			final boolean unique = index.unique();
-			createIndexOrUniqueKey( table, name, !name.isEmpty(), columnExpressions, ordering, unique,
-					selectables( table, name, columnExpressions ) );
+			createIndexOrUniqueKey(
+					table,
+					name,
+					!name.isEmpty(),
+					columnExpressions,
+					ordering,
+					unique,
+					selectables( table, name, columnExpressions )
+			);
 		}
 	}
 
@@ -211,8 +219,15 @@ class IndexBinder {
 		for ( UniqueConstraint constraint : constraints ) {
 			final String name = constraint.name();
 			final String[] columnNames = constraint.columnNames();
-			createIndexOrUniqueKey( table, name, !name.isEmpty(), columnNames, null, true,
-					columns( table, name, columnNames ) );
+			createIndexOrUniqueKey(
+					table,
+					name,
+					!name.isEmpty(),
+					columnNames,
+					null,
+					true,
+					columns( table, name, columnNames )
+			);
 		}
 	}
 

@@ -9,29 +9,33 @@ package org.hibernate.query.sqm.tree.domain;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
-import org.hibernate.query.hql.spi.SqmCreationProcessingState;
+import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
 import org.hibernate.spi.NavigablePath;
+
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> implements SqmTreatedPath<T,S> {
-	private final SqmBagJoin<O, T> wrappedPath;
-	private final TreatableDomainType<S> treatTarget;
+public class SqmTreatedBagJoin<L, R, R1 extends R> extends SqmBagJoin<L, R1> implements SqmTreatedAttributeJoin<L, R, R1> {
+	private final SqmBagJoin<L, R> wrappedPath;
+	private final TreatableDomainType<R1> treatTarget;
 
 	public SqmTreatedBagJoin(
-			SqmBagJoin<O, T> wrappedPath,
-			TreatableDomainType<S> treatTarget,
+			SqmBagJoin<L, R> wrappedPath,
+			TreatableDomainType<R1> treatTarget,
 			String alias) {
 		this( wrappedPath, treatTarget, alias, false );
 	}
 
 	public SqmTreatedBagJoin(
-			SqmBagJoin<O, T> wrappedPath,
-			TreatableDomainType<S> treatTarget,
+			SqmBagJoin<L, R> wrappedPath,
+			TreatableDomainType<R1> treatTarget,
 			String alias,
 			boolean fetched) {
 		//noinspection unchecked
@@ -40,7 +44,7 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 				wrappedPath.getNavigablePath()
 						.append( CollectionPart.Nature.ELEMENT.getName() )
 						.treatAs( treatTarget.getTypeName(), alias ),
-				(BagPersistentAttribute<O, S>) wrappedPath.getAttribute(),
+				(BagPersistentAttribute<L, R1>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
 				fetched,
@@ -52,15 +56,15 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 
 	private SqmTreatedBagJoin(
 			NavigablePath navigablePath,
-			SqmBagJoin<O, T> wrappedPath,
-			TreatableDomainType<S> treatTarget,
+			SqmBagJoin<L, R> wrappedPath,
+			TreatableDomainType<R1> treatTarget,
 			String alias,
 			boolean fetched) {
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
 				navigablePath,
-				(BagPersistentAttribute<O, S>) wrappedPath.getAttribute(),
+				(BagPersistentAttribute<L, R1>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
 				wrappedPath.isFetched(),
@@ -71,12 +75,12 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 	}
 
 	@Override
-	public SqmTreatedBagJoin<O, T, S> copy(SqmCopyContext context) {
-		final SqmTreatedBagJoin<O, T, S> existing = context.getCopy( this );
+	public SqmTreatedBagJoin<L, R, R1> copy(SqmCopyContext context) {
+		final SqmTreatedBagJoin<L, R, R1> existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmTreatedBagJoin<O, T, S> path = context.registerCopy(
+		final SqmTreatedBagJoin<L, R, R1> path = context.registerCopy(
 				this,
 				new SqmTreatedBagJoin<>(
 						getNavigablePath(),
@@ -91,22 +95,22 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 	}
 
 	@Override
-	public SqmBagJoin<O,T> getWrappedPath() {
+	public SqmBagJoin<L, R> getWrappedPath() {
 		return wrappedPath;
 	}
 
 	@Override
-	public TreatableDomainType<S> getTreatTarget() {
+	public TreatableDomainType<R1> getTreatTarget() {
 		return treatTarget;
 	}
 
 	@Override
-	public SqmPathSource<S> getNodeType() {
+	public SqmPathSource<R1> getNodeType() {
 		return treatTarget;
 	}
 
 	@Override
-	public TreatableDomainType<S> getReferencedPathSource() {
+	public TreatableDomainType<R1> getReferencedPathSource() {
 		return treatTarget;
 	}
 
@@ -116,16 +120,31 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 	}
 
 	@Override
-	public SqmAttributeJoin<O, S> makeCopy(SqmCreationProcessingState creationProcessingState) {
-		return new SqmTreatedBagJoin<>( wrappedPath, treatTarget, getAlias() );
-	}
-
-	@Override
 	public void appendHqlString(StringBuilder sb) {
 		sb.append( "treat(" );
 		wrappedPath.appendHqlString( sb );
 		sb.append( " as " );
 		sb.append( treatTarget.getTypeName() );
 		sb.append( ')' );
+	}
+
+	@Override
+	public SqmTreatedBagJoin<L,R,R1> on(JpaExpression<Boolean> restriction) {
+		return (SqmTreatedBagJoin<L, R, R1>) super.on( restriction );
+	}
+
+	@Override
+	public SqmTreatedBagJoin<L,R,R1> on(Expression<Boolean> restriction) {
+		return (SqmTreatedBagJoin<L, R, R1>) super.on( restriction );
+	}
+
+	@Override
+	public SqmTreatedBagJoin<L,R,R1> on(JpaPredicate... restrictions) {
+		return (SqmTreatedBagJoin<L, R, R1>) super.on( restrictions );
+	}
+
+	@Override
+	public SqmTreatedBagJoin<L,R,R1> on(Predicate... restrictions) {
+		return (SqmTreatedBagJoin<L, R, R1>) super.on( restrictions );
 	}
 }

@@ -9,12 +9,14 @@ package org.hibernate.query.criteria;
 import java.util.Collection;
 import java.util.Map;
 
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.spi.NavigablePath;
 
 /**
@@ -36,7 +38,7 @@ public interface JpaPath<T> extends JpaExpression<T>, Path<T> {
 	/**
 	 * Support for JPA's explicit (TREAT) down-casting.
 	 */
-	<S extends T> JpaPath<S> treatAs(Class<S> treatJavaType);
+	<S extends T> JpaTreatedPath<T,S> treatAs(Class<S> treatJavaType);
 
 	/**
 	 * Support for JPA's explicit (TREAT) down-casting.
@@ -55,10 +57,10 @@ public interface JpaPath<T> extends JpaExpression<T>, Path<T> {
 	<Y> JpaPath<Y> get(SingularAttribute<? super T, Y> attribute);
 
 	@Override
-	<E, C extends Collection<E>> JpaExpression<C> get(PluralAttribute<T, C, E> collection);
+	<E, C extends Collection<E>> Expression<C> get(PluralAttribute<? super T, C, E> collection);
 
 	@Override
-	<K, V, M extends Map<K, V>> JpaExpression<M> get(MapAttribute<T, K, V> map);
+	<K, V, M extends Map<K, V>> Expression<M> get(MapAttribute<? super T, K, V> map);
 
 	@Override
 	JpaExpression<Class<? extends T>> type();

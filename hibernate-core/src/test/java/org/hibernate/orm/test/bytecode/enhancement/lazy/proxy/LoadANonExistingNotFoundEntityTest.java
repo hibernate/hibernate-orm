@@ -75,7 +75,7 @@ public class LoadANonExistingNotFoundEntityTest {
 		statistics.clear();
 
 		scope.inTransaction( session -> {
-					Employee employee = session.load( Employee.class, 1 );
+					Employee employee = session.getReference( Employee.class, 1 );
 					Hibernate.initialize( employee );
 					assertNull( employee.employer );
 				}

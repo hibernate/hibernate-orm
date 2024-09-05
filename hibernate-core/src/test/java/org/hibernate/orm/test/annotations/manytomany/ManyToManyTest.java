@@ -245,7 +245,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		er = s.load( Employer.class, er.getId() );
+		er = s.getReference( Employer.class, er.getId() );
 		assertNotNull( er );
 		assertNotNull( er.getEmployees() );
 		assertEquals( 1, er.getEmployees().size() );
@@ -269,8 +269,8 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( ee );
 		er = ee.getEmployers().iterator().next();
 		assertTrue( "second join non lazy", Hibernate.isInitialized( er ) );
-		s.delete( er );
-		s.delete( ee );
+		s.remove( er );
+		s.remove( ee );
 		tx.commit();
 		s.close();
 	}
@@ -384,7 +384,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		er = s.load( Employer.class, er.getId() );
+		er = s.getReference( Employer.class, er.getId() );
 		assertNotNull( er );
 		assertNotNull( er.getEmployees() );
 		assertEquals( 2, er.getEmployees().size() );
@@ -415,8 +415,8 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		er = ee.getEmployers().iterator().next();
 		assertTrue( "second join non lazy", Hibernate.isInitialized( er ) );
 		assertEquals( 1, er.getEmployees().size() );
-		s.delete( er );
-		s.delete( ee );
+		s.remove( er );
+		s.remove( ee );
 		tx.commit();
 		s.close();
 	}
@@ -441,7 +441,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		f = s.load( Friend.class, f.getId() );
+		f = s.getReference( Friend.class, f.getId() );
 		assertNotNull( f );
 		assertNotNull( f.getFriends() );
 		assertEquals( 1, f.getFriends().size() );
@@ -509,10 +509,10 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		m1 = s.load( Man.class, m1pk );
+		m1 = s.getReference( Man.class, m1pk );
 		assertFalse( m1.getWomens().isEmpty() );
 		assertEquals( 1, m1.getWomens().size() );
-		w1 = s.load( Woman.class, w1pk );
+		w1 = s.getReference( Woman.class, w1pk );
 		assertFalse( w1.getMens().isEmpty() );
 		assertEquals( 2, w1.getMens().size() );
 
@@ -620,8 +620,8 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		Zone a = new Zone();
 		InspectorPrefixes ip = new InspectorPrefixes( "dgi" );
 		Transaction tx = s.beginTransaction();
-		s.save( a );
-		s.save( ip );
+		s.persist( a );
+		s.persist( ip );
 		ip.getAreas().add( a );
 		tx.commit();
 		s.close();
@@ -631,8 +631,8 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( ip );
 		assertEquals( 1, ip.getAreas().size() );
 		assertEquals( a.getId(), ip.getAreas().get( 0 ).getId() );
-		s.delete( ip );
-		s.delete( ip.getAreas().get( 0 ) );
+		s.remove( ip );
+		s.remove( ip.getAreas().get( 0 ) );
 		tx.commit();
 		s.close();
 	}
@@ -644,8 +644,8 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		InspectorPrefixes ip = new InspectorPrefixes( "dgi" );
 		ip.setName( "Inspector" );
 		Transaction tx = s.beginTransaction();
-		s.save( a );
-		s.save( ip );
+		s.persist( a );
+		s.persist( ip );
 		ip.getDesertedAreas().add( a );
 		tx.commit();
 		s.close();
@@ -655,8 +655,8 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( ip );
 		assertEquals( 1, ip.getDesertedAreas().size() );
 		assertEquals( a.getId(), ip.getDesertedAreas().get( 0 ).getId() );
-		s.delete( ip );
-		s.delete( ip.getDesertedAreas().get( 0 ) );
+		s.remove( ip );
+		s.remove( ip.getDesertedAreas().get( 0 ) );
 		tx.commit();
 		s.close();
 	}

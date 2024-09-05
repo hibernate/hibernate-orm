@@ -135,10 +135,8 @@ public class SqmFromClause implements Serializable {
 					sb.append( " cross join " );
 					break;
 			}
-			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
-				final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) sqmJoin;
-				if ( sqmFrom instanceof SqmTreatedPath<?, ?> ) {
-					final SqmTreatedPath<?, ?> treatedPath = (SqmTreatedPath<?, ?>) sqmFrom;
+			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> attributeJoin ) {
+				if ( sqmFrom instanceof SqmTreatedPath<?, ?> treatedPath ) {
 					sb.append( "treat(" );
 					sb.append( treatedPath.getWrappedPath().resolveAlias() );
 					sb.append( " as " ).append( treatedPath.getTreatTarget().getTypeName() ).append( ')' );
@@ -154,13 +152,12 @@ public class SqmFromClause implements Serializable {
 				}
 				appendJoins( sqmJoin, sb );
 			}
-			else if ( sqmJoin instanceof SqmCrossJoin<?> ) {
-				sb.append( ( (SqmCrossJoin<?>) sqmJoin ).getEntityName() );
-				sb.append( ' ' ).append( sqmJoin.resolveAlias() );
+			else if ( sqmJoin instanceof SqmCrossJoin<?> sqmCrossJoin ) {
+				sb.append( sqmCrossJoin.getEntityName() );
+				sb.append( ' ' ).append( sqmCrossJoin.resolveAlias() );
 				appendJoins( sqmJoin, sb );
 			}
-			else if ( sqmJoin instanceof SqmEntityJoin<?> ) {
-				final SqmEntityJoin<?> sqmEntityJoin = (SqmEntityJoin<?>) sqmJoin;
+			else if ( sqmJoin instanceof SqmEntityJoin<?, ?> sqmEntityJoin ) {
 				sb.append( ( sqmEntityJoin ).getEntityName() );
 				sb.append( ' ' ).append( sqmJoin.resolveAlias() );
 				if ( sqmEntityJoin.getJoinPredicate() != null ) {

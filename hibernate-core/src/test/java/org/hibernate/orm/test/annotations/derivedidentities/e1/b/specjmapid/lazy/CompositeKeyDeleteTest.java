@@ -22,12 +22,12 @@ public class CompositeKeyDeleteTest extends BaseCoreFunctionalTestCase {
 
    @Override
    protected String getBaseForMappings() {
-      return "org/hibernate/orm/test/";
+      return "";
    }
 
    @Override
    public String[] getMappings() {
-      return new String[] { "annotations/derivedidentities/e1/b/specjmapid/lazy/order_orm.xml" };
+      return new String[] { "org/hibernate/orm/test/annotations/derivedidentities/e1/b/specjmapid/lazy/order_orm.xml" };
    }
 
    public CompositeKeyDeleteTest() {
@@ -89,7 +89,7 @@ public class CompositeKeyDeleteTest extends BaseCoreFunctionalTestCase {
       Assert.assertEquals(2, list.size());
       CustomerInventoryTwo ci = list.get(1);
       list.remove(ci);
-      s.delete(ci);
+      s.remove(ci);
       s.flush();
       
       tx.commit();//fail

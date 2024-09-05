@@ -6,41 +6,15 @@
  */
 package org.hibernate.id;
 
-import java.util.Properties;
-
-import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.factory.spi.StandardGenerator;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.Type;
-
 /**
- * An {@link IdentifierGenerator} that returns the current identifier assigned
- * to an instance.
+ * An {@link IdentifierGenerator} that returns the current identifier assigned to an instance.
  *
  * @author Gavin King
  *
  * @implNote This also implements the {@code assigned} generation type in {@code hbm.xml} mappings.
+ *
+ * @deprecated replaced by {@link org.hibernate.generator.Assigned}
  */
-public class Assigned implements IdentifierGenerator, StandardGenerator {
-	private String entityName;
-
-	public Object generate(SharedSessionContractImplementor session, Object obj) throws HibernateException {
-		//TODO: cache the persister, this shows up in yourkit
-		final Object id = session.getEntityPersister( entityName, obj ).getIdentifier( obj, session );
-		if ( id == null ) {
-			throw new IdentifierGenerationException( "Identifier for entity '" + entityName
-					+ "' must be manually assigned before making the entity persistent" );
-		}
-		return id;
-	}
-
-	@Override
-	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
-		entityName = parameters.getProperty( ENTITY_NAME );
-		if ( entityName == null ) {
-			throw new MappingException("no entity name");
-		}
-	}
+@Deprecated(since = "7.0", forRemoval = true)
+public class Assigned extends org.hibernate.generator.Assigned {
 }

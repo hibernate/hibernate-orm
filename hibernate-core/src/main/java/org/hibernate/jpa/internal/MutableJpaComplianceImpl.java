@@ -17,7 +17,6 @@ import org.hibernate.jpa.spi.MutableJpaCompliance;
  * @author Steve Ebersole
  */
 public class MutableJpaComplianceImpl implements MutableJpaCompliance {
-	private boolean listCompliance;
 	private boolean orderByMappingCompliance;
 	private boolean proxyCompliance;
 	private boolean generatorNameScopeCompliance;
@@ -26,7 +25,6 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	private boolean closedCompliance;
 	private boolean cachingCompliance;
 	private boolean loadByIdCompliance;
-	private boolean cascadeCompliance;
 
 	public MutableJpaComplianceImpl(Map<?,?> configurationSettings) {
 		this(
@@ -39,17 +37,6 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	public MutableJpaComplianceImpl(Map<?,?> configurationSettings, boolean jpaByDefault) {
 		final Object legacyQueryCompliance = configurationSettings.get( AvailableSettings.JPAQL_STRICT_COMPLIANCE );
 
-		cascadeCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_CASCADE_COMPLIANCE,
-				configurationSettings,
-				jpaByDefault
-		);
-		//noinspection deprecation
-		listCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_LIST_COMPLIANCE,
-				configurationSettings,
-				jpaByDefault
-		);
 		proxyCompliance = ConfigurationHelper.getBoolean(
 				AvailableSettings.JPA_PROXY_COMPLIANCE,
 				configurationSettings,
@@ -103,12 +90,7 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	}
 
 	public boolean isJpaCascadeComplianceEnabled() {
-		return cascadeCompliance;
-	}
-
-	@Override
-	public boolean isJpaListComplianceEnabled() {
-		return listCompliance;
+		return true;
 	}
 
 	@Override
@@ -145,13 +127,7 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	// Mutators
 
 	@Override
-	public void setListCompliance(boolean listCompliance) {
-		this.listCompliance = listCompliance;
-	}
-
-	@Override
 	public void setCascadeCompliance(boolean cascadeCompliance) {
-		this.cascadeCompliance = cascadeCompliance;
 	}
 
 	@Override
@@ -196,9 +172,7 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	@Override
 	public JpaCompliance immutableCopy() {
 		JpaComplianceImpl.JpaComplianceBuilder builder = new JpaComplianceImpl.JpaComplianceBuilder();
-		builder = builder.setListCompliance( listCompliance )
-				.setCascadeCompliance( cascadeCompliance )
-				.setProxyCompliance( proxyCompliance )
+		builder = builder.setProxyCompliance( proxyCompliance )
 				.setOrderByMappingCompliance( orderByMappingCompliance )
 				.setGlobalGeneratorNameCompliance( generatorNameScopeCompliance )
 				.setQueryCompliance( queryCompliance )

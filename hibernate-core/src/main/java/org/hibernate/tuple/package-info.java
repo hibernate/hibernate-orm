@@ -9,8 +9,7 @@
  * Most contracts here have been replaced by the new runtime
  * {@linkplain org.hibernate.metamodel.mapping mapping model}.
  * <p>
- * Value-generation related contracts have been replaced by
- * {@link org.hibernate.generator}
+ * @apiNote This entire package (and sub-packages) is considered deprecated
  */
 @Remove
 package org.hibernate.tuple;

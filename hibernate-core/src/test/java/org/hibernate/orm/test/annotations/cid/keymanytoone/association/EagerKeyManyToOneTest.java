@@ -51,8 +51,8 @@ public class EagerKeyManyToOneTest {
 		scope.inTransaction(
 				session -> {
 					Card card = session.get( Card.class, CARD_ID );
-					session.delete( card.getField());
-					session.delete( card );
+					session.remove( card.getField());
+					session.remove( card );
 				}
 		);
 	}

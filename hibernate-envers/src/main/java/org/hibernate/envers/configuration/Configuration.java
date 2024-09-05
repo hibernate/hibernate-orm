@@ -11,10 +11,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 
-import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.envers.RevisionListener;
@@ -96,7 +95,7 @@ public class Configuration {
 
 	private final RevisionInfoConfiguration revisionInfo;
 
-	public Configuration(Properties properties, EnversService enversService, MetadataImplementor metadata) {
+	public Configuration(Properties properties, EnversService enversService, InFlightMetadataCollector metadata) {
 		this.enversService = enversService;
 
 		final ConfigurationProperties configProps = new ConfigurationProperties( properties );
@@ -183,13 +182,7 @@ public class Configuration {
 		revisionPropertyBasePath = originalIdPropertyName + "." + revisionFieldName + ".";
 		revisionNumberPath = revisionPropertyBasePath + "id";
 
-		// todo: there are places that need bits built from the revinfo entity configuration
-		//          this exists here as a way to pass it down in an immutable way to any consumer of this class
-		final ReflectionManager reflectionManager =
-				metadata.getMetadataBuildingOptions().getTypeConfiguration()
-						.getMetadataBuildingContext().getBootstrapContext()
-						.getReflectionManager();
-		this.revisionInfo = new RevisionInfoConfiguration( this, metadata, reflectionManager );
+		this.revisionInfo = new RevisionInfoConfiguration( this, metadata );
 	}
 
 	public boolean isGenerateRevisionsForCollections() {

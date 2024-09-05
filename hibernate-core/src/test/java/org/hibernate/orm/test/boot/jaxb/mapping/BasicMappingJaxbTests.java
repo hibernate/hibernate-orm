@@ -12,7 +12,7 @@ import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventReader;
 
 import org.hibernate.boot.jaxb.internal.stax.MappingEventReader;
-import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.xsd.MappingXsdSupport;
 import org.hibernate.orm.test.boot.jaxb.JaxbHelper;
@@ -36,6 +36,12 @@ public class BasicMappingJaxbTests {
 	public void simpleUnifiedJaxbTest(ServiceRegistryScope scope) {
 		scope.withService( ClassLoaderService.class, (cls) -> {
 			verify( "xml/jaxb/mapping/basic/unified.xml", cls, scope );
+		} );
+	}
+
+	@Test
+	public void ormBaselineTest(ServiceRegistryScope scope) {
+		scope.withService( ClassLoaderService.class, (cls) -> {
 			verify( "xml/jaxb/mapping/basic/orm.xml", cls, scope );
 		} );
 	}
@@ -46,8 +52,12 @@ public class BasicMappingJaxbTests {
 				final XMLEventFactory xmlEventFactory = XMLEventFactory.newInstance();
 				final XMLEventReader reader = new MappingEventReader( staxEventReader, xmlEventFactory );
 				try {
-					final JAXBContext jaxbCtx = JAXBContext.newInstance( org.hibernate.boot.jaxb.mapping.JaxbEntityMappings.class );
-					final JaxbEntityMappings entityMappings = JaxbHelper.VALIDATING.jaxb( reader, MappingXsdSupport._310.getSchema(), jaxbCtx );
+					final JAXBContext jaxbCtx = JAXBContext.newInstance( JaxbEntityMappingsImpl.class );
+					final JaxbEntityMappingsImpl entityMappings = JaxbHelper.VALIDATING.jaxb(
+							reader,
+							MappingXsdSupport.latestDescriptor().getSchema(),
+							jaxbCtx
+					);
 					assertThat( entityMappings ).isNotNull();
 					assertThat( entityMappings.getEntities() ).hasSize( 1 );
 				}

@@ -15,22 +15,16 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Steve Ebersole
  */
 public class StatsHelper {
-	/**
-	 * Singleton access
-	 */
-	public static final StatsHelper INSTANCE = new StatsHelper();
 
-	public NavigableRole getRootEntityRole(EntityPersister entityDescriptor) {
+	public static NavigableRole getRootEntityRole(EntityPersister entityDescriptor) {
 		final String rootEntityName = entityDescriptor.getRootEntityName();
 		if ( entityDescriptor.getEntityName().equals( rootEntityName ) ) {
 			return entityDescriptor.getNavigableRole();
 		}
 		else {
-			final EntityPersister rootEntityDescriptor = entityDescriptor.getFactory()
-					.getRuntimeMetamodels()
-					.getMappingMetamodel()
-					.getEntityDescriptor( rootEntityName );
-			return rootEntityDescriptor.getNavigableRole();
+			return entityDescriptor.getFactory().getMappingMetamodel()
+					.getEntityDescriptor( rootEntityName )
+					.getNavigableRole();
 		}
 	}
 

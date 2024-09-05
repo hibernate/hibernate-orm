@@ -8,6 +8,7 @@ package org.hibernate.id;
 
 import java.util.Properties;
 
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
@@ -15,7 +16,7 @@ import org.hibernate.type.Type;
  * An {@link IdentifierGenerator} that requires creation of database objects.
  * <p>
  * All instances have access to a special mapping parameter in their
- * {@link #configure(Type, Properties, ServiceRegistry)} method: schema
+ * {@link #configure(GeneratorCreationContext, Properties)} method: schema
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -53,6 +54,14 @@ public interface PersistentIdentifierGenerator extends OptimizableGenerator {
 
 	/**
 	 * The key under which to find the {@link org.hibernate.boot.model.naming.ObjectNameNormalizer} in the config param map.
+	 *
+	 * @deprecated no longer set, use {@link org.hibernate.engine.jdbc.env.spi.JdbcEnvironment#getIdentifierHelper}
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	String IDENTIFIER_NORMALIZER = "identifier_normalizer";
+
+	/**
+	 * The configuration parameter holding the generator options.
+	 */
+	String OPTIONS = "options";
 }

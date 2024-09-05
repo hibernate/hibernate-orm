@@ -27,7 +27,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.spi.NavigablePath;
@@ -49,6 +48,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingResolution;
 import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.results.spi.RowTransformer;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.type.EntityType;
 
 /**
  * @author Steve Ebersole
@@ -204,8 +204,8 @@ public class ResultsHelper {
 		);
 
 		boolean isPutFromLoad = true;
-		if ( collectionDescriptor.getElementType().isAssociationType() ) {
-			final EntityPersister entityPersister = ( (QueryableCollection) collectionDescriptor ).getElementPersister();
+		if ( collectionDescriptor.getElementType() instanceof EntityType ) {
+			final EntityPersister entityPersister = collectionDescriptor.getElementPersister();
 			for ( Object id : entry.getState() ) {
 				if ( persistenceContext.wasInsertedDuringTransaction( entityPersister, id ) ) {
 					isPutFromLoad = false;

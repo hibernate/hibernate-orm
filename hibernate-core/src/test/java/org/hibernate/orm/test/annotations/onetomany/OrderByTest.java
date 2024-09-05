@@ -33,7 +33,6 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.Query;
 import org.hibernate.sql.SimpleSelect;
@@ -139,11 +138,11 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 		// Cleanup data.
 		session.getTransaction().begin();
-		session.delete( tiger1 );
-		session.delete( tiger2 );
-		session.delete( monkey1 );
-		session.delete( monkey2 );
-		session.delete( zoo );
+		session.remove( tiger1 );
+		session.remove( tiger2 );
+		session.remove( monkey1 );
+		session.remove( monkey2 );
+		session.remove( zoo );
 		session.getTransaction().commit();
 
 		session.close();
@@ -174,10 +173,10 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		zoo.getVisitors().add( visitor1 );
 		zoo.getVisitors().add( visitor2 );
 		zoo.getVisitors().add( visitor3 );
-		session.save( zoo );
-		session.save( visitor1 );
-		session.save( visitor2 );
-		session.save( visitor3 );
+		session.persist( zoo );
+		session.persist( visitor1 );
+		session.persist( visitor2 );
+		session.persist( visitor3 );
 		session.getTransaction().commit();
 
 		session.clear();
@@ -195,10 +194,10 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 		// Cleanup data.
 		session.getTransaction().begin();
-		session.delete( visitor1 );
-		session.delete( visitor2 );
-		session.delete( visitor3 );
-		session.delete( zoo );
+		session.remove( visitor1 );
+		session.remove( visitor2 );
+		session.remove( visitor3 );
+		session.remove( zoo );
 		session.getTransaction().commit();
 
 		session.close();
@@ -236,8 +235,8 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 		// Cleanup data.
 		session.getTransaction().begin();
-		session.delete( zoo1 );
-		session.delete( zoo2 );
+		session.remove( zoo1 );
+		session.remove( zoo2 );
 		session.getTransaction().commit();
 
 		session.close();
@@ -277,10 +276,10 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 		// Cleanup data.
 		session.getTransaction().begin();
-		session.delete( item1 );
-		session.delete( item2 );
-		session.delete( item3 );
-		session.delete( box1 );
+		session.remove( item1 );
+		session.remove( item2 );
+		session.remove( item3 );
+		session.remove( box1 );
 		session.getTransaction().commit();
 
 		session.close();
@@ -301,7 +300,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		account.addTransaction( "zzzzz" );
 		account.addTransaction( "aaaaa" );
 		account.addTransaction( "mmmmm" );
-		s.save( account );
+		s.persist( account );
 		s.getTransaction().commit();
 
 		s.close();
@@ -310,9 +309,8 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().begin();
 		
 		try {
-			final QueryableCollection queryableCollection = (QueryableCollection) transactionsPersister;
 			SimpleSelect select = new SimpleSelect( sessionFactory() )
-					.setTableName( queryableCollection.getTableName() )
+					.setTableName( transactionsPersister.getTableName() )
 					.addColumn( "code" )
 					.addColumn( "transactions_index" );
 			final String sql = select.toStatementString();
@@ -415,9 +413,9 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		computer2.setComputerName( "Alice's computer" );
 		computer2.setEmployee( employee );
 
-		s.save( employee );
-		s.save( computer2 );
-		s.save( computer );
+		s.persist( employee );
+		s.persist( computer2 );
+		s.persist( computer );
 
 		s.flush();
 		s.clear();
@@ -492,7 +490,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "c21", b2cs.get( 0 ).getName() );
 		assertEquals( "c22", b2cs.get( 1 ).getName() );
 
-		s.delete( a );
+		s.remove( a );
 
 		s.getTransaction().commit();
 		s.close();

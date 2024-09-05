@@ -43,15 +43,18 @@ import javax.sql.DataSource;
 
 import org.hibernate.jpa.HibernatePersistenceProvider;
 
+import static java.lang.Thread.currentThread;
+
 /**
  * TODO : javadoc
  *
  * @author Steve Ebersole
  */
 public class PersistenceUnitInfoPropertiesWrapper implements PersistenceUnitInfo {
-	private Properties properties;
+	private final Properties properties;
 
 	public PersistenceUnitInfoPropertiesWrapper() {
+		properties = new Properties();
 	}
 
 	public PersistenceUnitInfoPropertiesWrapper(Properties properties) {
@@ -66,6 +69,17 @@ public class PersistenceUnitInfoPropertiesWrapper implements PersistenceUnitInfo
 		return HibernatePersistenceProvider.class.getName();
 	}
 
+	@Override
+	public String getScopeAnnotationName() {
+		return null;
+	}
+
+	@Override
+	public List<String> getQualifierAnnotationNames() {
+		return List.of();
+	}
+
+	@SuppressWarnings("removal")
 	public PersistenceUnitTransactionType getTransactionType() {
 		return null;
 	}
@@ -107,9 +121,6 @@ public class PersistenceUnitInfoPropertiesWrapper implements PersistenceUnitInfo
 	}
 
 	public Properties getProperties() {
-		if ( properties == null ) {
-			properties = new Properties();
-		}
 		return properties;
 	}
 
@@ -118,7 +129,7 @@ public class PersistenceUnitInfoPropertiesWrapper implements PersistenceUnitInfo
 	}
 
 	public ClassLoader getClassLoader() {
-		return Thread.currentThread().getContextClassLoader();
+		return currentThread().getContextClassLoader();
 	}
 
 	public void addTransformer(ClassTransformer transformer) {

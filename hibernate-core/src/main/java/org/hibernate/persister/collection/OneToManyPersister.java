@@ -55,9 +55,7 @@ import org.hibernate.persister.collection.mutation.UpdateRowsCoordinator;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorOneToMany;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorTablePerSubclass;
-import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
-import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -102,14 +100,6 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	private final boolean keyIsNullable;
 	private final MutationExecutorService mutationExecutorService;
-
-	@Deprecated(since = "6.0")
-	public OneToManyPersister(
-			Collection collectionBinding,
-			CollectionDataAccess cacheAccessStrategy,
-			PersisterCreationContext creationContext) throws MappingException, CacheException {
-		this( collectionBinding, cacheAccessStrategy, (RuntimeModelCreationContext) creationContext );
-	}
 
 	public OneToManyPersister(
 			Collection collectionBinding,
@@ -255,14 +245,6 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	}
 
-	public boolean consumesEntityAlias() {
-		return true;
-	}
-
-	public boolean consumesCollectionAlias() {
-		return true;
-	}
-
 	public boolean isOneToMany() {
 		return true;
 	}
@@ -274,7 +256,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	@Override
 	public String getTableName() {
-		return ( (Joinable) getElementPersister() ).getTableName();
+		return getElementPersister().getTableName();
 	}
 
 	protected void applyWhereFragments(

@@ -6,19 +6,19 @@
  */
 package org.hibernate.envers.boot.internal;
 
-import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.boot.spi.MappingDefaults;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.envers.boot.spi.EnversMetadataBuildingContext;
 import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.configuration.internal.MappingCollector;
 import org.hibernate.envers.configuration.internal.metadata.AuditEntityConfigurationRegistry;
 import org.hibernate.envers.configuration.internal.metadata.AuditEntityNameRegister;
+import org.hibernate.models.spi.ClassDetailsRegistry;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -30,6 +30,7 @@ public class EnversMetadataBuildingContextImpl implements EnversMetadataBuilding
 
 	private final Configuration configuration;
 	private final InFlightMetadataCollector metadataCollector;
+	private final EffectiveMappingDefaults effectiveMappingDefaults;
 	private final MappingCollector mappingCollector;
 	private final ObjectNameNormalizer objectNameNormalizer;
 	private final AuditEntityNameRegister auditEntityNameRegistry;
@@ -38,19 +39,16 @@ public class EnversMetadataBuildingContextImpl implements EnversMetadataBuilding
 	public EnversMetadataBuildingContextImpl(
 			Configuration configuration,
 			InFlightMetadataCollector metadataCollector,
+			EffectiveMappingDefaults effectiveMappingDefaults,
 			MappingCollector mappingCollector) {
 		this.configuration = configuration;
 		this.metadataCollector = metadataCollector;
+		this.effectiveMappingDefaults = effectiveMappingDefaults;
 		this.mappingCollector = mappingCollector;
 		this.auditEntityNameRegistry = new AuditEntityNameRegister();
 		this.auditEntityConfigurationRegistry = new AuditEntityConfigurationRegistry();
 
-		this.objectNameNormalizer = new ObjectNameNormalizer() {
-			@Override
-			protected MetadataBuildingContext getBuildingContext() {
-				return EnversMetadataBuildingContextImpl.this;
-			}
-		};
+		this.objectNameNormalizer = new ObjectNameNormalizer(this);
 	}
 
 	@Override
@@ -64,8 +62,8 @@ public class EnversMetadataBuildingContextImpl implements EnversMetadataBuilding
 	}
 
 	@Override
-	public MappingDefaults getMappingDefaults() {
-		return metadataCollector.getMetadataBuildingOptions().getMappingDefaults();
+	public EffectiveMappingDefaults getEffectiveDefaults() {
+		return effectiveMappingDefaults;
 	}
 
 	@Override
@@ -104,8 +102,13 @@ public class EnversMetadataBuildingContextImpl implements EnversMetadataBuilding
 	}
 
 	@Override
-	public ReflectionManager getReflectionManager() {
-		return metadataCollector.getBootstrapContext().getReflectionManager();
+	public SourceModelBuildingContext getSourceModelBuildingContext() {
+		return metadataCollector.getSourceModelBuildingContext();
+	}
+
+	@Override
+	public ClassDetailsRegistry getClassDetailsRegistry() {
+		return metadataCollector.getClassDetailsRegistry();
 	}
 
 	@Override

@@ -13,7 +13,6 @@ import java.net.URL;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.Database;
@@ -48,6 +47,8 @@ import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.SqlScriptCommandExtractor;
 
+import static org.hibernate.internal.util.StringHelper.splitAtCommas;
+
 /**
  * Helper methods.
  *
@@ -56,7 +57,6 @@ import org.hibernate.tool.schema.spi.SqlScriptCommandExtractor;
 public class Helper {
 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( Helper.class );
-	private static final Pattern COMMA_PATTERN = Pattern.compile( "\\s*,\\s*" );
 
 	public static ScriptSourceInput interpretScriptSourceSetting(
 			Object scriptSourceSetting, //Reader or String URL
@@ -69,7 +69,7 @@ public class Helper {
 			final String scriptSourceSettingString = scriptSourceSetting.toString();
 			log.debugf( "Attempting to resolve script source setting : %s", scriptSourceSettingString );
 
-			final String[] paths = COMMA_PATTERN.split( scriptSourceSettingString );
+			final String[] paths = splitAtCommas( scriptSourceSettingString );
 			if ( paths.length == 1 ) {
 				return interpretScriptSourceSetting( scriptSourceSettingString, classLoaderService, charsetName );
 			}

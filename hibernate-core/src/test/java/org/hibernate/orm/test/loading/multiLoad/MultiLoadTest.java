@@ -24,6 +24,7 @@ import org.hibernate.stat.Statistics;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -71,7 +72,7 @@ public class MultiLoadTest {
 				session -> {
 					session.setCacheMode( CacheMode.IGNORE );
 					for ( int i = 1; i <= 60; i++ ) {
-						session.save( new SimpleEntity( i, "Entity #" + i ) );
+						session.persist( new SimpleEntity( i, "Entity #" + i ) );
 					}
 				}
 		);
@@ -121,13 +122,13 @@ public class MultiLoadTest {
 		scope.inTransaction(
 				session -> {
 					// delete one of them (but do not flush)...
-					SimpleEntity s4 = session.load(SimpleEntity.class, 5);
-					session.delete( s4 );
+					SimpleEntity s4 = session.getReference(SimpleEntity.class, 5);
+					session.remove( s4 );
 
 					assertFalse( Hibernate.isInitialized( s4 ) );
 
 					// as a baseline, assert based on how load() handles it
-					SimpleEntity s5 = session.load( SimpleEntity.class, 5 );
+					SimpleEntity s5 = session.getReference( SimpleEntity.class, 5 );
 					assertNotNull( s5 );
 					assertFalse( Hibernate.isInitialized( s5 ) );
 				}
@@ -140,12 +141,12 @@ public class MultiLoadTest {
 		scope.inTransaction(
 				session -> {
 					// delete one of them (but do not flush)...
-					SimpleEntity s4 = session.load( SimpleEntity.class, 5 );
+					SimpleEntity s4 = session.getReference( SimpleEntity.class, 5 );
 					Hibernate.initialize( s4 );
-					session.delete( s4 );
+					session.remove( s4 );
 
 					// as a baseline, assert based on how load() handles it
-					SimpleEntity s5 = session.load( SimpleEntity.class, 5 );
+					SimpleEntity s5 = session.getReference( SimpleEntity.class, 5 );
 					assertNotNull( s5 );
 				}
 		);
@@ -157,9 +158,9 @@ public class MultiLoadTest {
 		scope.inTransaction(
 				session -> {
 					// delete one of them (but do not flush)...
-					SimpleEntity s4 = session.load( SimpleEntity.class, 5 );
+					SimpleEntity s4 = session.getReference( SimpleEntity.class, 5 );
 					Hibernate.initialize( s4 );
-					session.delete( s4 );
+					session.remove( s4 );
 
 					// and then, assert how get() handles it
 					SimpleEntity s5 = session.get( SimpleEntity.class, 5 );
@@ -174,9 +175,9 @@ public class MultiLoadTest {
 		scope.inTransaction(
 				session -> {
 					// delete one of them (but do not flush)...
-					SimpleEntity s4 = session.load( SimpleEntity.class, 5 );
+					SimpleEntity s4 = session.getReference( SimpleEntity.class, 5 );
 					Hibernate.initialize( s4 );
-					session.delete( s4 );
+					session.remove( s4 );
 
 					// finally assert how multiLoad handles it
 					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids( 56 ) );
@@ -191,7 +192,7 @@ public class MultiLoadTest {
 		scope.inTransaction(
 				session -> {
 					// delete one of them (but do not flush)...
-					session.delete( session.load( SimpleEntity.class, 5 ) );
+					session.remove( session.getReference( SimpleEntity.class, 5 ) );
 
 					// and then, assert how get() handles it
 					SimpleEntity s5 = session.get( SimpleEntity.class, 5 );
@@ -264,6 +265,36 @@ public class MultiLoadTest {
 		scope.inTransaction(
 				session -> {
 					SimpleEntity first = session.byId( SimpleEntity.class ).load( 1 );
+					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class )
+							.enableSessionCheck( true )
+							.multiLoad( ids( 56 ) );
+					assertEquals( 56, list.size() );
+					// this check is HIGHLY specific to implementation in the batch loader
+					// which puts existing managed entities first...
+					assertSame( first, list.get( 0 ) );
+				}
+		);
+	}
+
+	@Test @FailureExpected(jiraKey = "HHH-18544")
+	public void testBasicMultiLoadWithManagedAndNoCheckingProxied(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					SimpleEntity first = session.byId( SimpleEntity.class ).getReference( 1 );
+					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids( 56 ) );
+					assertEquals( 56, list.size() );
+					// this check is HIGHLY specific to implementation in the batch loader
+					// which puts existing managed entities first...
+					assertSame( first, list.get( 0 ) );
+				}
+		);
+	}
+
+	@Test @FailureExpected(jiraKey = "HHH-18544")
+	public void testBasicMultiLoadWithManagedAndCheckingProxied(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					SimpleEntity first = session.byId( SimpleEntity.class ).getReference( 1 );
 					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class )
 							.enableSessionCheck( true )
 							.multiLoad( ids( 56 ) );

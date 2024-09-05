@@ -16,23 +16,21 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.Index;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.annotations.ParamDef;
-import org.hibernate.annotations.Polymorphism;
-import org.hibernate.annotations.PolymorphismType;
-import org.hibernate.annotations.SelectBeforeUpdate;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 import jakarta.persistence.Convert;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
 
 /**
  * Use hibernate specific annotations
@@ -41,16 +39,13 @@ import jakarta.persistence.Lob;
  */
 @Entity
 @BatchSize(size = 5)
-@SelectBeforeUpdate
 @DynamicInsert @DynamicUpdate
 @OptimisticLocking(type = OptimisticLockType.ALL)
-@Polymorphism(type = PolymorphismType.EXPLICIT)
-@Where(clause = "1=1")
+@SQLRestriction("1=1")
 @FilterDef(name = "minLength", parameters = {@ParamDef(name = "minLength", type = Integer.class)})
 @Filter(name = "betweenLength")
 @Filter(name = "minLength", condition = ":minLength <= length")
-@org.hibernate.annotations.Table(appliesTo = "Forest",
-		indexes = {@Index(name = "idx", columnNames = {"name", "length"})})
+@Table(indexes = @Index(name = "idx", columnList = "name, length"))
 public class Forest {
 	private Integer id;
 	private String name;

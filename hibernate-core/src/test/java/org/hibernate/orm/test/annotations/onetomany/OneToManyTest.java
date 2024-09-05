@@ -87,7 +87,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.clear();
 
 		Transaction tx = s.beginTransaction();
-		s.delete( s.get( PoliticalParty.class, dream.getName() ) );
+		s.remove( s.get( PoliticalParty.class, dream.getName() ) );
 		tx.commit();
 		s.close();
 	}
@@ -166,7 +166,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		trainer = ( Trainer ) s.get( Trainer.class, trainer.getId() );
+		trainer = s.get( Trainer.class, trainer.getId() );
 		assertNotNull( trainer );
 		assertNotNull( trainer.getTrainedTigers() );
 		assertEquals( 2, trainer.getTrainedTigers().size() );
@@ -177,7 +177,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 		tx = s.beginTransaction();
 		trainer = new Trainer();
 		trainer.setName( "new trainer" );
-		trainer.setTrainedTigers( new HashSet<Tiger>() );
+		trainer.setTrainedTigers( new HashSet<>() );
 		trainer.getTrainedTigers().add( whiteTiger );
 		try {
 			s.persist( trainer );
@@ -220,14 +220,14 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		trainer = ( Trainer ) s.get( Trainer.class, trainer.getId() );
+		trainer = s.get( Trainer.class, trainer.getId() );
 		assertNotNull( trainer );
 		assertNotNull( trainer.getTrainedMonkeys() );
 		assertEquals( 2, trainer.getTrainedMonkeys().size() );
 
 		//test suppression of trainer wo monkey
 		final Set<Monkey> monkeySet = new HashSet( trainer.getTrainedMonkeys() );
-		s.delete( trainer );
+		s.remove( trainer );
 		s.flush();
 		tx.commit();
 
@@ -242,7 +242,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 		//clean up
 		for ( Monkey m : monkeySet ) {
 			final Object managedMonkey = s.get( Monkey.class, m.getId() );
-			s.delete(managedMonkey);
+			s.remove(managedMonkey);
 		}
 		s.flush();
 		tx.commit();
@@ -269,7 +269,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		t = ( Troop ) s.get( Troop.class, t.getId() );
+		t = s.get( Troop.class, t.getId() );
 		assertNotNull( t.getSoldiers() );
 		assertFalse( Hibernate.isInitialized( t.getSoldiers() ) );
 		assertEquals( 2, t.getSoldiers().size() );
@@ -287,7 +287,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		rambo = ( Soldier ) s.get( Soldier.class, rambo.getId() );
+		rambo = s.get( Soldier.class, rambo.getId() );
 		assertTrue( Hibernate.isInitialized( rambo.getTroop() ) );
 		tx.commit();
 		s.close();
@@ -317,7 +317,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.close();
 		s = openSession();
 		tx = s.beginTransaction();
-		Troop troop = ( Troop ) s.get( Troop.class, disney.getId() );
+		Troop troop = s.get( Troop.class, disney.getId() );
 		Soldier soldier = troop.getSoldiers().iterator().next();
 		tx.commit();
 		s.close();
@@ -329,10 +329,10 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.close();
 		s = openSession();
 		tx = s.beginTransaction();
-		soldier = ( Soldier ) s.get( Soldier.class, mickey.getId() );
+		soldier = s.get( Soldier.class, mickey.getId() );
 		assertNull( "delete-orphan should work", soldier );
-		troop = ( Troop ) s.get( Troop.class, disney.getId() );
-		s.delete( troop );
+		troop = s.get( Troop.class, disney.getId() );
+		s.remove( troop );
 		tx.commit();
 		s.close();
 	}
@@ -353,8 +353,8 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.close();
 		s = openSession();
 		tx = s.beginTransaction();
-		Troop troop = ( Troop ) s.get( Troop.class, disney.getId() );
-		s.delete( troop );
+		Troop troop = s.get( Troop.class, disney.getId() );
+		s.remove( troop );
 		tx.commit();
 		s.close();
 		s = openSession();
@@ -428,7 +428,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		c = ( Customer ) s.load( Customer.class, c.getId() );
+		c = ( Customer ) s.getReference( Customer.class, c.getId() );
 		assertNotNull( c );
 		assertTrue( Hibernate.isInitialized( c.getTickets() ) );
 		assertNotNull( c.getTickets() );
@@ -458,7 +458,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		c = ( Customer ) s.load( Customer.class, c.getId() );
+		c = ( Customer ) s.getReference( Customer.class, c.getId() );
 		assertNotNull( c );
 		assertFalse( Hibernate.isInitialized( c.getDiscountTickets() ) );
 		assertNotNull( c.getDiscountTickets() );

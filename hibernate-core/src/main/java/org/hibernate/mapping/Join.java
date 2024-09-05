@@ -8,7 +8,6 @@ package org.hibernate.mapping;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -84,11 +83,6 @@ public class Join implements AttributeContainer, Serializable {
 		return properties.contains( property );
 	}
 
-	@Deprecated(since = "6.0")
-	public Iterator<Property> getPropertyIterator() {
-		return properties.iterator();
-	}
-
 	public Table getTable() {
 		return table;
 	}
@@ -152,14 +146,6 @@ public class Join implements AttributeContainer, Serializable {
 		return customInsertCallable;
 	}
 
-	/**
-	 * @deprecated use {@link #getInsertExpectation()}
-	 */
-	@Deprecated(since = "6.5", forRemoval = true)
-	public ExecuteUpdateResultCheckStyle getCustomSQLInsertCheckStyle() {
-		return insertCheckStyle;
-	}
-
 	public void setCustomSQLUpdate(String customSQLUpdate, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLUpdate = customSQLUpdate;
 		this.customUpdateCallable = callable;
@@ -175,14 +161,6 @@ public class Join implements AttributeContainer, Serializable {
 		return customUpdateCallable;
 	}
 
-	/**
-	 * @deprecated use {@link #getUpdateExpectation()}
-	 */
-	@Deprecated(since = "6.5", forRemoval = true)
-	public ExecuteUpdateResultCheckStyle getCustomSQLUpdateCheckStyle() {
-		return updateCheckStyle;
-	}
-
 	public void setCustomSQLDelete(String customSQLDelete, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLDelete = customSQLDelete;
 		this.customDeleteCallable = callable;
@@ -196,14 +174,6 @@ public class Join implements AttributeContainer, Serializable {
 
 	public boolean isCustomDeleteCallable() {
 		return customDeleteCallable;
-	}
-
-	/**
-	 * @deprecated use {@link #getDeleteExpectation()}
-	 */
-	@Deprecated(since = "6.5", forRemoval = true)
-	public ExecuteUpdateResultCheckStyle getCustomSQLDeleteCheckStyle() {
-		return deleteCheckStyle;
 	}
 
 	public boolean isInverse() {

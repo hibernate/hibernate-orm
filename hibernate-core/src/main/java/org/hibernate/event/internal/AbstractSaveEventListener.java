@@ -25,7 +25,6 @@ import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.id.Assigned;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.internal.CoreLogging;
@@ -51,9 +50,7 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  *
  * @author Steve Ebersole.
  */
-public abstract class AbstractSaveEventListener<C>
-		extends AbstractReassociateEventListener
-		implements CallbackRegistryConsumer {
+public abstract class AbstractSaveEventListener<C> implements CallbackRegistryConsumer {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractSaveEventListener.class );
 
 	private CallbackRegistry callbackRegistry;
@@ -114,7 +111,7 @@ public abstract class AbstractSaveEventListener<C>
 			// and is not yet available
 			generatedId = null;
 		}
-		else if ( generator instanceof Assigned ) {
+		else if ( !generator.generatesOnInsert() ) {
 			// get it from the entity later, since we need
 			// the @PrePersist callback to happen first
 			generatedId = null;
@@ -201,13 +198,11 @@ public abstract class AbstractSaveEventListener<C>
 		processIfManagedEntity( entity, (managedEntity) -> managedEntity.$$_hibernate_setUseTracker( true ) );
 
 		final Generator generator = persister.getGenerator();
-		if ( generator instanceof Assigned || generator instanceof CompositeNestedGeneratedValueGenerator ) {
+		if ( !generator.generatesOnInsert() || generator instanceof CompositeNestedGeneratedValueGenerator ) {
 			id = persister.getIdentifier( entity, source );
 			if ( id == null ) {
-				throw new IdentifierGenerationException(
-						"Identifier of entity '" + persister.getEntityName()
-								+ "' must be manually assigned before calling 'persist()'"
-				);
+				throw new IdentifierGenerationException( "Identifier of entity '" + persister.getEntityName()
+						+ "' must be manually assigned before calling 'persist()'" );
 			}
 		}
 

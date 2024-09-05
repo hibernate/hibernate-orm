@@ -27,15 +27,19 @@ import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedFrom;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
- * Models a Bindable's inclusion in the {@code FROM} clause.
+ * Models a SqmPathSource's inclusion in the {@code FROM} clause.
+ *
+ * @param <L> The from-element's "left hand side".  It may be the same as {@code R} for roots.
+ * @param <R> The from-element's "right hand side".  For joins, this is the target side.
  *
  * @author Steve Ebersole
  */
-public interface SqmFrom<O,T> extends SqmVisitableNode, SqmPath<T>, JpaFrom<O, T> {
+public interface SqmFrom<L, R> extends SqmVisitableNode, SqmPath<R>, JpaFrom<L, R> {
 	/**
 	 * The Navigable for an SqmFrom will always be a NavigableContainer
 	 *
@@ -43,79 +47,88 @@ public interface SqmFrom<O,T> extends SqmVisitableNode, SqmPath<T>, JpaFrom<O, T
 	 * @return
 	 */
 	@Override
-	SqmPathSource<T> getReferencedPathSource();
+	SqmPathSource<R> getReferencedPathSource();
 
 	boolean hasJoins();
 
 	/**
 	 * The joins associated with this SqmFrom
 	 */
-	List<SqmJoin<T,?>> getSqmJoins();
+	List<SqmJoin<R,?>> getSqmJoins();
 
 	/**
 	 * Add an associated join
 	 */
-	void addSqmJoin(SqmJoin<T, ?> join);
+	void addSqmJoin(SqmJoin<R, ?> join);
 
 	/**
 	 * Visit all associated joins
 	 */
-	void visitSqmJoins(Consumer<SqmJoin<T, ?>> consumer);
+	void visitSqmJoins(Consumer<SqmJoin<R, ?>> consumer);
 
 	/**
 	 * The treats associated with this SqmFrom
 	 */
-	List<SqmFrom<?, ?>> getSqmTreats();
+	List<SqmTreatedFrom<?,?,?>> getSqmTreats();
 
 	default boolean hasTreats() {
 		return !isEmpty( getSqmTreats() );
 	}
 
 	@Override
-	<S extends T> SqmFrom<?, S> treatAs(Class<S> treatAsType);
+	<S extends R> SqmTreatedFrom<L,R,S> treatAs(Class<S> treatJavaType);
 
 	@Override
-	<S extends T> SqmFrom<?, S> treatAs(EntityDomainType<S> treatAsType);
+	<S extends R> SqmTreatedFrom<L,R,S> treatAs(EntityDomainType<S> treatTarget);
 
-	<S extends T> SqmFrom<?, S> treatAs(Class<S> treatJavaType, String alias);
+	@Override
+	<S extends R> SqmTreatedFrom<L,R,S> treatAs(Class<S> treatJavaType, String alias);
 
-	<S extends T> SqmFrom<?, S> treatAs(EntityDomainType<S> treatTarget, String alias);
+	@Override
+	<S extends R> SqmTreatedFrom<L,R,S> treatAs(EntityDomainType<S> treatTarget, String alias);
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA
 
 	@Override
-	SqmFrom<O, T> getCorrelationParent();
+	SqmFrom<L, R> getCorrelationParent();
 
 	@Override
-	<A> SqmSingularJoin<T, A> join(SingularAttribute<? super T, A> attribute);
+	<Y> SqmEntityJoin<R, Y> join(Class<Y> entityClass);
 
 	@Override
-	<A> SqmSingularJoin<T, A> join(SingularAttribute<? super T, A> attribute, JoinType jt);
+	<Y> SqmEntityJoin<R, Y> join(Class<Y> entityClass, JoinType joinType);
 
 	@Override
-	<E> SqmBagJoin<T, E> join(CollectionAttribute<? super T, E> attribute);
+	<A> SqmSingularJoin<R, A> join(SingularAttribute<? super R, A> attribute);
 
 	@Override
-	<E> SqmBagJoin<T, E> join(CollectionAttribute<? super T, E> attribute, JoinType jt);
+	<A> SqmSingularJoin<R, A> join(SingularAttribute<? super R, A> attribute, JoinType jt);
 
 	@Override
-	<E> SqmSetJoin<T, E> join(SetAttribute<? super T, E> set);
+	<E> SqmBagJoin<R, E> join(CollectionAttribute<? super R, E> attribute);
 
 	@Override
-	<E> SqmSetJoin<T, E> join(SetAttribute<? super T, E> set, JoinType jt);
+	<E> SqmBagJoin<R, E> join(CollectionAttribute<? super R, E> attribute, JoinType jt);
 
 	@Override
-	<E> SqmListJoin<T, E> join(ListAttribute<? super T, E> list);
+	<E> SqmSetJoin<R, E> join(SetAttribute<? super R, E> set);
 
 	@Override
-	<E> SqmListJoin<T, E> join(ListAttribute<? super T, E> list, JoinType jt);
+	<E> SqmSetJoin<R, E> join(SetAttribute<? super R, E> set, JoinType jt);
 
 	@Override
-	<K, V> SqmMapJoin<T, K, V> join(MapAttribute<? super T, K, V> map);
+	<E> SqmListJoin<R, E> join(ListAttribute<? super R, E> list);
 
 	@Override
-	<K, V> SqmMapJoin<T, K, V> join(MapAttribute<? super T, K, V> map, JoinType jt);
+	<E> SqmListJoin<R, E> join(ListAttribute<? super R, E> list, JoinType jt);
+
+	@Override
+	<K, V> SqmMapJoin<R, K, V> join(MapAttribute<? super R, K, V> map);
+
+	@Override
+	<K, V> SqmMapJoin<R, K, V> join(MapAttribute<? super R, K, V> map, JoinType jt);
 
 	@Override
 	<X, Y> SqmAttributeJoin<X, Y> join(String attributeName);
@@ -148,5 +161,5 @@ public interface SqmFrom<O,T> extends SqmVisitableNode, SqmPath<T>, JpaFrom<O, T
 	<X, K, V> SqmMapJoin<X, K, V> joinMap(String attributeName, JoinType jt);
 
 	@Override
-	SqmFrom<O, T> copy(SqmCopyContext context);
+	SqmFrom<L, R> copy(SqmCopyContext context);
 }

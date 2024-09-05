@@ -79,10 +79,10 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 		// clean up test data
 		s = openSession();
 		s.getTransaction().begin();
-		s.delete( petCat );
-		s.delete( petDog );
-		s.delete( wildDog );
-		s.delete( owner );
+		s.remove( petCat );
+		s.remove( petDog );
+		s.remove( wildDog );
+		s.remove( owner );
 		s.getTransaction().commit();
 		s.close();
 	}

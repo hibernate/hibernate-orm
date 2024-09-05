@@ -2,9 +2,15 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
 package org.hibernate.orm.test.annotations.xml.ejb3;
+
+import org.hibernate.boot.internal.Target;
+import org.hibernate.models.spi.MemberDetails;
+
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.Test;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
@@ -34,162 +40,165 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
 
-import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-@TestForIssue(jiraKey = "HHH-14529")
+@SuppressWarnings("deprecation")
+@JiraKey("HHH-14529")
 public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 	@Test
-	public void testNoChildren() throws Exception {
-		reader = getReader( Entity2.class, "field1", "element-collection.orm1.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationNotPresent( OrderBy.class );
-		assertAnnotationNotPresent( OrderColumn.class );
-		assertAnnotationNotPresent( MapKey.class );
-		assertAnnotationNotPresent( MapKeyClass.class );
-		assertAnnotationNotPresent( MapKeyTemporal.class );
-		assertAnnotationNotPresent( MapKeyEnumerated.class );
-		assertAnnotationNotPresent( MapKeyColumn.class );
-		assertAnnotationNotPresent( MapKeyJoinColumns.class );
-		assertAnnotationNotPresent( MapKeyJoinColumn.class );
-		assertAnnotationNotPresent( Column.class );
-		assertAnnotationNotPresent( Temporal.class );
-		assertAnnotationNotPresent( Enumerated.class );
-		assertAnnotationNotPresent( Lob.class );
-		assertAnnotationNotPresent( AttributeOverride.class );
-		assertAnnotationNotPresent( AttributeOverrides.class );
-		assertAnnotationNotPresent( AssociationOverride.class );
-		assertAnnotationNotPresent( AssociationOverrides.class );
-		assertAnnotationNotPresent( CollectionTable.class );
-		assertAnnotationNotPresent( Access.class );
-		ElementCollection relAnno = reader.getAnnotation( ElementCollection.class );
-		assertEquals( FetchType.LAZY, relAnno.fetch() );
-		assertEquals( void.class, relAnno.targetClass() );
+	public void testNoChildren() {
+		final MemberDetails memberDetails = getAttributeMember( Entity2.class, "field1", "element-collection.orm1.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( OrderBy.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( OrderColumn.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKey.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyClass.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyTemporal.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyEnumerated.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyColumn.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyJoinColumns.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyJoinColumn.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( Column.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( Temporal.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( Enumerated.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( Lob.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( AttributeOverrides.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( AttributeOverride.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( AssociationOverride.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( AssociationOverrides.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( CollectionTable.class ) ).isFalse();
+
+		final ElementCollection elementCollectionUsage = memberDetails.getDirectAnnotationUsage( ElementCollection.class );
+		assertThat( elementCollectionUsage.fetch() ).isEqualTo( FetchType.LAZY );
+		assertThat( elementCollectionUsage.targetClass() ).isEqualTo( void.class );
 	}
 
 	@Test
-	public void testOrderBy() throws Exception {
-		reader = getReader( Entity2.class, "field1", "element-collection.orm2.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationPresent( OrderBy.class );
-		assertAnnotationNotPresent( OrderColumn.class );
-		assertEquals(
-				"col1 ASC, col2 DESC", reader.getAnnotation( OrderBy.class )
-				.value()
-		);
+	public void testOrderBy() {
+		final MemberDetails memberDetails = getAttributeMember( Entity2.class, "field1", "element-collection.orm2.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+		assertThat( memberDetails.hasDirectAnnotationUsage( OrderBy.class ) ).isTrue();
+		assertThat( memberDetails.hasDirectAnnotationUsage( OrderColumn.class ) ).isFalse();
+
+		final OrderBy orderByUsage = memberDetails.getDirectAnnotationUsage( OrderBy.class );
+		assertThat( orderByUsage.value() ).isEqualTo( "col1 ASC, col2 DESC" );
 	}
 
 	@Test
-	public void testOrderColumnNoAttributes() throws Exception {
-		reader = getReader( Entity2.class, "field1", "element-collection.orm3.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationNotPresent( OrderBy.class );
-		assertAnnotationPresent( OrderColumn.class );
-		OrderColumn orderColumnAnno = reader.getAnnotation( OrderColumn.class );
-		assertEquals( "", orderColumnAnno.columnDefinition() );
-		assertEquals( "", orderColumnAnno.name() );
-		assertTrue( orderColumnAnno.insertable() );
-		assertTrue( orderColumnAnno.nullable() );
-		assertTrue( orderColumnAnno.updatable() );
+	public void testOrderColumnNoAttributes() {
+		final MemberDetails memberDetails = getAttributeMember( Entity2.class, "field1", "element-collection.orm3.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+		assertThat( memberDetails.hasDirectAnnotationUsage( OrderColumn.class ) ).isTrue();
+		assertThat( memberDetails.hasDirectAnnotationUsage( OrderBy.class ) ).isFalse();
+
+		final OrderColumn orderColumnUsage = memberDetails.getDirectAnnotationUsage( OrderColumn.class );
+		assertThat( orderColumnUsage.name() ).isEmpty();
+		assertThat( orderColumnUsage.columnDefinition() ).isEmpty();
+		assertThat( orderColumnUsage.insertable() ).isTrue();
+		assertThat( orderColumnUsage.updatable() ).isTrue();
+		assertThat( orderColumnUsage.nullable() ).isTrue();
 	}
 
 	@Test
-	public void testOrderColumnAllAttributes() throws Exception {
-		reader = getReader( Entity2.class, "field1", "element-collection.orm4.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationNotPresent( OrderBy.class );
-		assertAnnotationPresent( OrderColumn.class );
-		OrderColumn orderColumnAnno = reader.getAnnotation( OrderColumn.class );
-		assertEquals( "int", orderColumnAnno.columnDefinition() );
-		assertEquals( "col1", orderColumnAnno.name() );
-		assertFalse( orderColumnAnno.insertable() );
-		assertFalse( orderColumnAnno.nullable() );
-		assertFalse( orderColumnAnno.updatable() );
+	public void testOrderColumnAllAttributes() {
+		final MemberDetails memberDetails = getAttributeMember( Entity2.class, "field1", "element-collection.orm4.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+		assertThat( memberDetails.hasDirectAnnotationUsage( OrderColumn.class ) ).isTrue();
+		assertThat( memberDetails.hasDirectAnnotationUsage( OrderBy.class ) ).isFalse();
+
+		final OrderColumn orderColumnUsage = memberDetails.getDirectAnnotationUsage( OrderColumn.class );
+
+		assertThat( orderColumnUsage.name() ).isEqualTo( "col1" );
+		assertThat( orderColumnUsage.columnDefinition() ).isEqualTo( "int" );
+		assertThat( orderColumnUsage.insertable() ).isFalse();
+		assertThat( orderColumnUsage.updatable() ).isFalse();
+		assertThat( orderColumnUsage.nullable() ).isFalse();
 	}
 
 	@Test
-	public void testMapKeyNoAttributes() throws Exception {
-		reader = getReader( Entity3.class, "field1", "element-collection.orm5.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationPresent( MapKey.class );
-		assertAnnotationNotPresent( MapKeyClass.class );
-		assertAnnotationNotPresent( MapKeyTemporal.class );
-		assertAnnotationNotPresent( MapKeyEnumerated.class );
-		assertAnnotationNotPresent( MapKeyColumn.class );
-		assertAnnotationNotPresent( MapKeyJoinColumns.class );
-		assertAnnotationNotPresent( MapKeyJoinColumn.class );
-		assertEquals( "", reader.getAnnotation( MapKey.class ).name() );
+	public void testMapKeyNoAttributes() {
+		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm5.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKey.class ) ).isTrue();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyClass.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyTemporal.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyEnumerated.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyColumn.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyJoinColumns.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyJoinColumn.class ) ).isFalse();
+
+		final MapKey mapKeyUsage = memberDetails.getDirectAnnotationUsage( MapKey.class );
+		assertThat( mapKeyUsage.name() ).isEmpty();
 	}
 
 	@Test
-	public void testMapKeyAllAttributes() throws Exception {
-		reader = getReader( Entity3.class, "field1", "element-collection.orm6.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationPresent( MapKey.class );
-		assertAnnotationNotPresent( MapKeyClass.class );
-		assertAnnotationNotPresent( MapKeyTemporal.class );
-		assertAnnotationNotPresent( MapKeyEnumerated.class );
-		assertAnnotationNotPresent( MapKeyColumn.class );
-		assertAnnotationNotPresent( MapKeyJoinColumns.class );
-		assertAnnotationNotPresent( MapKeyJoinColumn.class );
-		assertEquals( "field2", reader.getAnnotation( MapKey.class ).name() );
+	public void testMapKeyAllAttributes() {
+		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm6.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKey.class ) ).isTrue();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyClass.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyTemporal.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyEnumerated.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyColumn.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyJoinColumns.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyJoinColumn.class ) ).isFalse();
+
+		final MapKey mapKeyUsage = memberDetails.getDirectAnnotationUsage( MapKey.class );
+		assertThat( mapKeyUsage.name() ).isEqualTo( "field2" );
 	}
 
 	@Test
-	public void testMapKeyClass() throws Exception {
-		reader = getReader( Entity3.class, "field1", "element-collection.orm7.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationNotPresent( MapKey.class );
-		assertAnnotationPresent( MapKeyClass.class );
-		assertAnnotationNotPresent( MapKeyTemporal.class );
-		assertAnnotationNotPresent( MapKeyEnumerated.class );
-		assertAnnotationNotPresent( MapKeyColumn.class );
-		assertAnnotationNotPresent( MapKeyJoinColumns.class );
-		assertAnnotationNotPresent( MapKeyJoinColumn.class );
-		assertEquals(
-				Entity2.class, reader.getAnnotation( MapKeyClass.class )
-				.value()
-		);
+	public void testMapKeyClass() {
+		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm7.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyClass.class ) ).isTrue();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKey.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyTemporal.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyEnumerated.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyColumn.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyJoinColumns.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyJoinColumn.class ) ).isFalse();
+
+		final MapKeyClass mapKeyClassUsage = memberDetails.getDirectAnnotationUsage( MapKeyClass.class );
+		assertThat( mapKeyClassUsage.value() ).isEqualTo( Entity2.class );
 	}
 
 	@Test
-	public void testMapKeyTemporal() throws Exception {
-		reader = getReader( Entity3.class, "field1", "element-collection.orm8.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationNotPresent( MapKey.class );
-		assertAnnotationNotPresent( MapKeyClass.class );
-		assertAnnotationPresent( MapKeyTemporal.class );
-		assertAnnotationNotPresent( MapKeyEnumerated.class );
-		assertAnnotationNotPresent( MapKeyColumn.class );
-		assertAnnotationNotPresent( MapKeyJoinColumns.class );
-		assertAnnotationNotPresent( MapKeyJoinColumn.class );
-		assertEquals(
-				TemporalType.DATE, reader.getAnnotation(
-				MapKeyTemporal.class
-		).value()
-		);
+	public void testMapKeyTemporal() {
+		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm8.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyTemporal.class ) ).isTrue();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKey.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyClass.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyEnumerated.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyColumn.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyJoinColumns.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyJoinColumn.class ) ).isFalse();
+
+		final MapKeyTemporal mapKeyTemporalUsage = memberDetails.getDirectAnnotationUsage( MapKeyTemporal.class );
+		assertThat( mapKeyTemporalUsage.value() ).isEqualTo( TemporalType.DATE );
 	}
 
 	@Test
-	public void testMapKeyEnumerated() throws Exception {
-		reader = getReader( Entity3.class, "field1", "element-collection.orm9.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationNotPresent( MapKey.class );
-		assertAnnotationNotPresent( MapKeyClass.class );
-		assertAnnotationNotPresent( MapKeyTemporal.class );
-		assertAnnotationPresent( MapKeyEnumerated.class );
-		assertAnnotationNotPresent( MapKeyColumn.class );
-		assertAnnotationNotPresent( MapKeyJoinColumns.class );
-		assertAnnotationNotPresent( MapKeyJoinColumn.class );
-		assertEquals(
-				EnumType.STRING, reader.getAnnotation(
-				MapKeyEnumerated.class
-		).value()
-		);
+	public void testMapKeyEnumerated() {
+		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm9.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyEnumerated.class ) ).isTrue();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKey.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyClass.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyTemporal.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyColumn.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyJoinColumns.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyJoinColumn.class ) ).isFalse();
+
+		final MapKeyEnumerated mapKeyEnumeratedUsage = memberDetails.getDirectAnnotationUsage( MapKeyEnumerated.class );
+		assertThat( mapKeyEnumeratedUsage.value() ).isEqualTo( EnumType.STRING );
 	}
 
 	/**
@@ -197,113 +206,97 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 	 * an AttributeOverrides annotation.
 	 */
 	@Test
-	public void testSingleMapKeyAttributeOverride() throws Exception {
-		reader = getReader( Entity3.class, "field1", "element-collection.orm10.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationNotPresent( MapKey.class );
-		assertAnnotationNotPresent( MapKeyClass.class );
-		assertAnnotationNotPresent( MapKeyTemporal.class );
-		assertAnnotationNotPresent( MapKeyEnumerated.class );
-		assertAnnotationNotPresent( MapKeyColumn.class );
-		assertAnnotationNotPresent( MapKeyJoinColumns.class );
-		assertAnnotationNotPresent( MapKeyJoinColumn.class );
-		assertAnnotationNotPresent( AttributeOverride.class );
-		assertAnnotationPresent( AttributeOverrides.class );
-		AttributeOverrides overridesAnno = reader
-				.getAnnotation( AttributeOverrides.class );
-		AttributeOverride[] overrides = overridesAnno.value();
-		assertEquals( 1, overrides.length );
-		assertEquals( "field1", overrides[0].name() );
-		assertEquals( "col1", overrides[0].column().name() );
+	public void testSingleMapKeyAttributeOverride() {
+		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm10.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+		assertThat( memberDetails.hasDirectAnnotationUsage( AttributeOverride.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( AttributeOverrides.class ) ).isTrue();
+
+
+		final AttributeOverrides overridesUsage = memberDetails.getDirectAnnotationUsage( AttributeOverrides.class );
+		final AttributeOverride overrideUsage = overridesUsage.value()[0];
+		assertThat( overrideUsage.name() ).isEqualTo( "key.field1" );
+
+		final Column nestedColumnUsage = overrideUsage.column();
+		assertThat( nestedColumnUsage.name() ).isEqualTo( "col1" );
 	}
 
 	@Test
-	public void testMultipleMapKeyAttributeOverrides() throws Exception {
-		reader = getReader( Entity3.class, "field1", "element-collection.orm11.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationNotPresent( MapKey.class );
-		assertAnnotationNotPresent( MapKeyClass.class );
-		assertAnnotationNotPresent( MapKeyTemporal.class );
-		assertAnnotationNotPresent( MapKeyEnumerated.class );
-		assertAnnotationNotPresent( MapKeyColumn.class );
-		assertAnnotationNotPresent( MapKeyJoinColumns.class );
-		assertAnnotationNotPresent( MapKeyJoinColumn.class );
-		assertAnnotationNotPresent( AttributeOverride.class );
-		assertAnnotationPresent( AttributeOverrides.class );
-		AttributeOverrides overridesAnno = reader
-				.getAnnotation( AttributeOverrides.class );
-		AttributeOverride[] overrides = overridesAnno.value();
-		assertEquals( 2, overrides.length );
-		assertEquals( "field1", overrides[0].name() );
-		assertEquals( "", overrides[0].column().name() );
-		assertFalse( overrides[0].column().unique() );
-		assertTrue( overrides[0].column().nullable() );
-		assertTrue( overrides[0].column().insertable() );
-		assertTrue( overrides[0].column().updatable() );
-		assertEquals( "", overrides[0].column().columnDefinition() );
-		assertEquals( "", overrides[0].column().table() );
-		assertEquals( 255, overrides[0].column().length() );
-		assertEquals( 0, overrides[0].column().precision() );
-		assertEquals( 0, overrides[0].column().scale() );
-		assertEquals( "field2", overrides[1].name() );
-		assertEquals( "col1", overrides[1].column().name() );
-		assertTrue( overrides[1].column().unique() );
-		assertFalse( overrides[1].column().nullable() );
-		assertFalse( overrides[1].column().insertable() );
-		assertFalse( overrides[1].column().updatable() );
-		assertEquals( "int", overrides[1].column().columnDefinition() );
-		assertEquals( "table1", overrides[1].column().table() );
-		assertEquals( 50, overrides[1].column().length() );
-		assertEquals( 2, overrides[1].column().precision() );
-		assertEquals( 1, overrides[1].column().scale() );
+	public void testMultipleMapKeyAttributeOverrides() {
+		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm11.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+		assertThat( memberDetails.hasDirectAnnotationUsage( AttributeOverrides.class ) ).isTrue();
+
+		final AttributeOverrides attributeOverridesUsage = memberDetails.getDirectAnnotationUsage( AttributeOverrides.class );
+		final AttributeOverride[] attributeOverrideUsages = attributeOverridesUsage.value();
+		assertThat( attributeOverrideUsages ).hasSize( 2 );
+
+		final AttributeOverride attributeOverrideUsage0 = attributeOverrideUsages[0];
+		assertThat( attributeOverrideUsage0.name() ).isEqualTo( "key.field1" );
+		final Column nestedColumnUsage0 = attributeOverrideUsage0.column();
+		assertThat( nestedColumnUsage0.name() ).isEmpty();
+		assertThat( nestedColumnUsage0.insertable() ).isTrue();
+		assertThat( nestedColumnUsage0.updatable() ).isTrue();
+		assertThat( nestedColumnUsage0.nullable() ).isTrue();
+		assertThat( nestedColumnUsage0.unique() ).isFalse();
+		assertThat( nestedColumnUsage0.columnDefinition() ).isEmpty();
+		assertThat( nestedColumnUsage0.table() ).isEmpty();
+		assertThat( nestedColumnUsage0.length() ).isEqualTo( 255 );
+		assertThat( nestedColumnUsage0.precision() ).isEqualTo( 0 );
+		assertThat( nestedColumnUsage0.scale() ).isEqualTo( 0 );
+
+
+		final AttributeOverride attributeOverrideUsage1 = attributeOverrideUsages[1];
+		assertThat( attributeOverrideUsage1.name() ).isEqualTo( "key.field2" );
+		final Column nestedColumnUsage1 = attributeOverrideUsage1.column();
+		assertThat( nestedColumnUsage1.name() ).isEqualTo( "col1" );
+		assertThat( nestedColumnUsage1.insertable() ).isFalse();
+		assertThat( nestedColumnUsage1.updatable() ).isFalse();
+		assertThat( nestedColumnUsage1.nullable() ).isFalse();
+		assertThat( nestedColumnUsage1.unique() ).isTrue();
+		assertThat( nestedColumnUsage1.columnDefinition() ).isEqualTo( "int" );
+		assertThat( nestedColumnUsage1.table() ).isEqualTo( "table1" );
+		assertThat( nestedColumnUsage1.length() ).isEqualTo( 50 );
+		assertThat( nestedColumnUsage1.precision() ).isEqualTo( 2 );
+		assertThat( nestedColumnUsage1.scale() ).isEqualTo( 1 );
 	}
 
 	@Test
-	public void testMapKeyColumnNoAttributes() throws Exception {
-		reader = getReader( Entity3.class, "field1", "element-collection.orm12.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationNotPresent( MapKey.class );
-		assertAnnotationNotPresent( MapKeyClass.class );
-		assertAnnotationNotPresent( MapKeyTemporal.class );
-		assertAnnotationNotPresent( MapKeyEnumerated.class );
-		assertAnnotationPresent( MapKeyColumn.class );
-		assertAnnotationNotPresent( MapKeyJoinColumns.class );
-		assertAnnotationNotPresent( MapKeyJoinColumn.class );
-		MapKeyColumn keyColAnno = reader.getAnnotation( MapKeyColumn.class );
-		assertEquals( "", keyColAnno.columnDefinition() );
-		assertEquals( "", keyColAnno.name() );
-		assertEquals( "", keyColAnno.table() );
-		assertFalse( keyColAnno.nullable() );
-		assertTrue( keyColAnno.insertable() );
-		assertFalse( keyColAnno.unique() );
-		assertTrue( keyColAnno.updatable() );
-		assertEquals( 255, keyColAnno.length() );
-		assertEquals( 0, keyColAnno.precision() );
-		assertEquals( 0, keyColAnno.scale() );
+	public void testMapKeyColumnNoAttributes() {
+		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm12.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyColumn.class ) ).isTrue();
+
+		final MapKeyColumn mapKeyColumnUsage = memberDetails.getDirectAnnotationUsage( MapKeyColumn.class );
+		assertThat( mapKeyColumnUsage.name() ).isEmpty();
+		assertThat( mapKeyColumnUsage.table() ).isEmpty();
+		assertThat( mapKeyColumnUsage.columnDefinition() ).isEmpty();
+		assertThat( mapKeyColumnUsage.nullable() ).isFalse();
+		assertThat( mapKeyColumnUsage.insertable() ).isTrue();
+		assertThat( mapKeyColumnUsage.updatable() ).isTrue();
+		assertThat( mapKeyColumnUsage.unique() ).isFalse();
+		assertThat( mapKeyColumnUsage.length() ).isEqualTo( 255 );
+		assertThat( mapKeyColumnUsage.precision() ).isEqualTo( 0 );
+		assertThat( mapKeyColumnUsage.scale() ).isEqualTo( 0 );
 	}
 
 	@Test
-	public void testMapKeyColumnAllAttributes() throws Exception {
-		reader = getReader( Entity3.class, "field1", "element-collection.orm13.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationNotPresent( MapKey.class );
-		assertAnnotationNotPresent( MapKeyClass.class );
-		assertAnnotationNotPresent( MapKeyTemporal.class );
-		assertAnnotationNotPresent( MapKeyEnumerated.class );
-		assertAnnotationPresent( MapKeyColumn.class );
-		assertAnnotationNotPresent( MapKeyJoinColumns.class );
-		assertAnnotationNotPresent( MapKeyJoinColumn.class );
-		MapKeyColumn keyColAnno = reader.getAnnotation( MapKeyColumn.class );
-		assertEquals( "int", keyColAnno.columnDefinition() );
-		assertEquals( "col1", keyColAnno.name() );
-		assertEquals( "table1", keyColAnno.table() );
-		assertTrue( keyColAnno.nullable() );
-		assertFalse( keyColAnno.insertable() );
-		assertTrue( keyColAnno.unique() );
-		assertFalse( keyColAnno.updatable() );
-		assertEquals( 50, keyColAnno.length() );
-		assertEquals( 2, keyColAnno.precision() );
-		assertEquals( 1, keyColAnno.scale() );
+	public void testMapKeyColumnAllAttributes() {
+		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm13.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyColumn.class ) ).isTrue();
+
+		final MapKeyColumn mapKeyColumnUsage = memberDetails.getDirectAnnotationUsage( MapKeyColumn.class );
+		assertThat( mapKeyColumnUsage.name() ).isEqualTo( "col1" );
+		assertThat( mapKeyColumnUsage.table() ).isEqualTo( "table1" );
+		assertThat( mapKeyColumnUsage.columnDefinition() ).isEqualTo( "int" );
+		assertThat( mapKeyColumnUsage.nullable() ).isTrue();
+		assertThat( mapKeyColumnUsage.insertable() ).isFalse();
+		assertThat( mapKeyColumnUsage.updatable() ).isFalse();
+		assertThat( mapKeyColumnUsage.unique() ).isTrue();
+		assertThat( mapKeyColumnUsage.length() ).isEqualTo( 50 );
+		assertThat( mapKeyColumnUsage.precision() ).isEqualTo( 2 );
+		assertThat( mapKeyColumnUsage.scale() ).isEqualTo( 1 );
 	}
 
 	/**
@@ -311,127 +304,129 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 	 * MapKeyJoinColumns annotation.
 	 */
 	@Test
-	public void testSingleMapKeyJoinColumn() throws Exception {
-		reader = getReader( Entity3.class, "field1", "element-collection.orm14.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationNotPresent( MapKey.class );
-		assertAnnotationNotPresent( MapKeyClass.class );
-		assertAnnotationNotPresent( MapKeyTemporal.class );
-		assertAnnotationNotPresent( MapKeyEnumerated.class );
-		assertAnnotationNotPresent( MapKeyColumn.class );
-		assertAnnotationPresent( MapKeyJoinColumns.class );
-		assertAnnotationNotPresent( MapKeyJoinColumn.class );
-		MapKeyJoinColumns joinColumnsAnno = reader
-				.getAnnotation( MapKeyJoinColumns.class );
-		MapKeyJoinColumn[] joinColumns = joinColumnsAnno.value();
-		assertEquals( 1, joinColumns.length );
-		assertEquals( "col1", joinColumns[0].name() );
+	public void testSingleMapKeyJoinColumn() {
+		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm14.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyJoinColumn.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyJoinColumns.class ) ).isTrue();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKey.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyClass.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyTemporal.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyEnumerated.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyColumn.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyColumn.class ) ).isFalse();
+
+		final MapKeyJoinColumns joinColumnsUsage = memberDetails.getDirectAnnotationUsage( MapKeyJoinColumns.class );
+		final MapKeyJoinColumn joinColumnUsage = joinColumnsUsage.value()[0];
+		assertThat( joinColumnUsage.name() ).isEqualTo( "col1" );
 	}
 
 	@Test
-	public void testMultipleMapKeyJoinColumns() throws Exception {
-		reader = getReader( Entity3.class, "field1", "element-collection.orm15.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationNotPresent( MapKey.class );
-		assertAnnotationNotPresent( MapKeyClass.class );
-		assertAnnotationNotPresent( MapKeyTemporal.class );
-		assertAnnotationNotPresent( MapKeyEnumerated.class );
-		assertAnnotationNotPresent( MapKeyColumn.class );
-		assertAnnotationPresent( MapKeyJoinColumns.class );
-		assertAnnotationNotPresent( MapKeyJoinColumn.class );
-		MapKeyJoinColumns joinColumnsAnno = reader
-				.getAnnotation( MapKeyJoinColumns.class );
-		MapKeyJoinColumn[] joinColumns = joinColumnsAnno.value();
-		assertEquals( 2, joinColumns.length );
-		assertEquals( "", joinColumns[0].name() );
-		assertEquals( "", joinColumns[0].referencedColumnName() );
-		assertFalse( joinColumns[0].unique() );
-		assertFalse( joinColumns[0].nullable() );
-		assertTrue( joinColumns[0].insertable() );
-		assertTrue( joinColumns[0].updatable() );
-		assertEquals( "", joinColumns[0].columnDefinition() );
-		assertEquals( "", joinColumns[0].table() );
-		assertEquals( "col1", joinColumns[1].name() );
-		assertEquals( "col2", joinColumns[1].referencedColumnName() );
-		assertTrue( joinColumns[1].unique() );
-		assertTrue( joinColumns[1].nullable() );
-		assertFalse( joinColumns[1].insertable() );
-		assertFalse( joinColumns[1].updatable() );
-		assertEquals( "int", joinColumns[1].columnDefinition() );
-		assertEquals( "table1", joinColumns[1].table() );
+	public void testMultipleMapKeyJoinColumns() {
+		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm15.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyJoinColumn.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyJoinColumns.class ) ).isTrue();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKey.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyClass.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyTemporal.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyEnumerated.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyColumn.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyColumn.class ) ).isFalse();
+
+		final MapKeyJoinColumns joinColumnsUsage = memberDetails.getDirectAnnotationUsage( MapKeyJoinColumns.class );
+		final MapKeyJoinColumn[] joinColumnUsages = joinColumnsUsage.value();
+		assertThat( joinColumnUsages ).hasSize( 2 );
+
+		final MapKeyJoinColumn joinColumnUsage0 = joinColumnUsages[0];
+		assertThat( joinColumnUsage0.name() ).isEmpty();
+		assertThat( joinColumnUsage0.referencedColumnName() ).isEmpty();
+		assertThat( joinColumnUsage0.unique() ).isFalse();
+		assertThat( joinColumnUsage0.nullable() ).isFalse();
+		assertThat( joinColumnUsage0.insertable() ).isTrue();
+		assertThat( joinColumnUsage0.updatable() ).isTrue();
+		assertThat( joinColumnUsage0.columnDefinition() ).isEmpty();
+		assertThat( joinColumnUsage0.table() ).isEmpty();
+
+		final MapKeyJoinColumn joinColumnUsage1 = joinColumnUsages[1];
+		assertThat( joinColumnUsage1.name() ).isEqualTo( "col1" );
+		assertThat( joinColumnUsage1.referencedColumnName() ).isEqualTo( "col2" );
+		assertThat( joinColumnUsage1.unique() ).isTrue();
+		assertThat( joinColumnUsage1.nullable() ).isTrue();
+		assertThat( joinColumnUsage1.insertable() ).isFalse();
+		assertThat( joinColumnUsage1.updatable() ).isFalse();
+		assertThat( joinColumnUsage1.columnDefinition() ).isEqualTo( "int" );
+		assertThat( joinColumnUsage1.table() ).isEqualTo( "table1" );
 	}
 
 	@Test
-	public void testColumnNoAttributes() throws Exception {
-		reader = getReader( Entity3.class, "field1", "element-collection.orm16.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationPresent( Column.class );
-		Column column = reader.getAnnotation( Column.class );
-		assertEquals( "", column.name() );
-		assertFalse( column.unique() );
-		assertTrue( column.nullable() );
-		assertTrue( column.insertable() );
-		assertTrue( column.updatable() );
-		assertEquals( "", column.columnDefinition() );
-		assertEquals( "", column.table() );
-		assertEquals( 255, column.length() );
-		assertEquals( 0, column.precision() );
-		assertEquals( 0, column.scale() );
+	public void testColumnNoAttributes() {
+		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm16.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( Column.class ) ).isTrue();
+		final Column columnUsage = memberDetails.getDirectAnnotationUsage( Column.class );
+		assertThat( columnUsage.name() ).isEmpty();
+		assertThat( columnUsage.unique() ).isFalse();
+		assertThat( columnUsage.nullable() ).isTrue();
+		assertThat( columnUsage.insertable() ).isTrue();
+		assertThat( columnUsage.updatable() ).isTrue();
+		assertThat( columnUsage.columnDefinition() ).isEmpty();
+		assertThat( columnUsage.table() ).isEmpty();
+		assertThat( columnUsage.length() ).isEqualTo( 255 );
+		assertThat( columnUsage.precision() ).isEqualTo( 0 );
+		assertThat( columnUsage.scale() ).isEqualTo( 0 );
 	}
 
 	@Test
-	public void testColumnAllAttributes() throws Exception {
-		reader = getReader( Entity3.class, "field1", "element-collection.orm17.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationPresent( Column.class );
-		Column column = reader.getAnnotation( Column.class );
-		assertEquals( "col1", column.name() );
-		assertTrue( column.unique() );
-		assertFalse( column.nullable() );
-		assertFalse( column.insertable() );
-		assertFalse( column.updatable() );
-		assertEquals( "int", column.columnDefinition() );
-		assertEquals( "table1", column.table() );
-		assertEquals( 50, column.length() );
-		assertEquals( 2, column.precision() );
-		assertEquals( 1, column.scale() );
+	public void testColumnAllAttributes() {
+		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm17.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( Column.class ) ).isTrue();
+		final Column columnUsage = memberDetails.getDirectAnnotationUsage( Column.class );
+		assertThat( columnUsage.name() ).isEqualTo( "col1" );
+		assertThat( columnUsage.unique() ).isTrue();
+		assertThat( columnUsage.nullable() ).isFalse();
+		assertThat( columnUsage.insertable() ).isFalse();
+		assertThat( columnUsage.updatable() ).isFalse();
+		assertThat( columnUsage.columnDefinition() ).isEqualTo( "int" );
+		assertThat( columnUsage.table() ).isEqualTo( "table1" );
+		assertThat( columnUsage.length() ).isEqualTo( 50 );
+		assertThat( columnUsage.precision() ).isEqualTo( 2 );
+		assertThat( columnUsage.scale() ).isEqualTo( 1 );
 	}
 
 	@Test
-	public void testTemporal() throws Exception {
-		reader = getReader( Entity3.class, "field1", "element-collection.orm18.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationPresent( Temporal.class );
-		assertAnnotationNotPresent( Enumerated.class );
-		assertAnnotationNotPresent( Lob.class );
-		assertEquals(
-				TemporalType.DATE, reader.getAnnotation(
-				Temporal.class
-		).value()
-		);
+	public void testTemporal() {
+		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm18.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( Temporal.class ) ).isTrue();
+		final Temporal temporalUsage = memberDetails.getDirectAnnotationUsage( Temporal.class );
+		assertThat( temporalUsage.value() ).isEqualTo( TemporalType.DATE );
 	}
 
 	@Test
-	public void testEnumerated() throws Exception {
-		reader = getReader( Entity3.class, "field1", "element-collection.orm19.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationNotPresent( Temporal.class );
-		assertAnnotationPresent( Enumerated.class );
-		assertAnnotationNotPresent( Lob.class );
-		assertEquals(
-				EnumType.STRING, reader.getAnnotation(
-				Enumerated.class
-		).value()
-		);
+	public void testEnumerated() {
+		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm19.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( Enumerated.class ) ).isTrue();
+		final Enumerated enumeratedUsage = memberDetails.getDirectAnnotationUsage( Enumerated.class );
+		assertThat( enumeratedUsage.value() ).isEqualTo( EnumType.STRING );
 	}
 
 	@Test
-	public void testLob() throws Exception {
-		reader = getReader( Entity3.class, "field1", "element-collection.orm20.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationNotPresent( Temporal.class );
-		assertAnnotationNotPresent( Enumerated.class );
-		assertAnnotationPresent( Lob.class );
+	public void testLob() {
+		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm20.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( Lob.class ) ).isTrue();
 	}
 
 	/**
@@ -439,51 +434,60 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 	 * AttributeOverrides annotation.
 	 */
 	@Test
-	public void testSingleAttributeOverride() throws Exception {
-		reader = getReader( Entity3.class, "field1", "element-collection.orm21.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationNotPresent( AttributeOverride.class );
-		assertAnnotationPresent( AttributeOverrides.class );
-		AttributeOverrides overridesAnno = reader
-				.getAnnotation( AttributeOverrides.class );
-		AttributeOverride[] overrides = overridesAnno.value();
-		assertEquals( 1, overrides.length );
-		assertEquals( "field1", overrides[0].name() );
-		assertEquals( "col1", overrides[0].column().name() );
+	public void testSingleAttributeOverride() {
+		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm21.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( AttributeOverride.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( AttributeOverrides.class ) ).isTrue();
+
+		final AttributeOverrides overridesUsage = memberDetails.getDirectAnnotationUsage( AttributeOverrides.class );
+		final AttributeOverride overrideUsage = overridesUsage.value()[0];
+		assertThat( overrideUsage.name() ).isEqualTo( "value.field1" );
+
+		final Column overrideColumnUsage = overrideUsage.column();
+		assertThat( overrideColumnUsage.name() ).isEqualTo( "col1" );
 	}
 
 	@Test
-	public void testMultipleAttributeOverrides() throws Exception {
-		reader = getReader( Entity3.class, "field1", "element-collection.orm22.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationNotPresent( AttributeOverride.class );
-		assertAnnotationPresent( AttributeOverrides.class );
-		AttributeOverrides overridesAnno = reader
-				.getAnnotation( AttributeOverrides.class );
-		AttributeOverride[] overrides = overridesAnno.value();
-		assertEquals( 2, overrides.length );
-		assertEquals( "field1", overrides[0].name() );
-		assertEquals( "", overrides[0].column().name() );
-		assertFalse( overrides[0].column().unique() );
-		assertTrue( overrides[0].column().nullable() );
-		assertTrue( overrides[0].column().insertable() );
-		assertTrue( overrides[0].column().updatable() );
-		assertEquals( "", overrides[0].column().columnDefinition() );
-		assertEquals( "", overrides[0].column().table() );
-		assertEquals( 255, overrides[0].column().length() );
-		assertEquals( 0, overrides[0].column().precision() );
-		assertEquals( 0, overrides[0].column().scale() );
-		assertEquals( "field2", overrides[1].name() );
-		assertEquals( "col1", overrides[1].column().name() );
-		assertTrue( overrides[1].column().unique() );
-		assertFalse( overrides[1].column().nullable() );
-		assertFalse( overrides[1].column().insertable() );
-		assertFalse( overrides[1].column().updatable() );
-		assertEquals( "int", overrides[1].column().columnDefinition() );
-		assertEquals( "table1", overrides[1].column().table() );
-		assertEquals( 50, overrides[1].column().length() );
-		assertEquals( 2, overrides[1].column().precision() );
-		assertEquals( 1, overrides[1].column().scale() );
+	public void testMultipleAttributeOverrides() {
+		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm22.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( AttributeOverride.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( AttributeOverrides.class ) ).isTrue();
+
+		final AttributeOverrides overridesUsage = memberDetails.getDirectAnnotationUsage( AttributeOverrides.class );
+		final AttributeOverride[] overrideUsages = overridesUsage.value();
+		assertThat( overrideUsages ).hasSize( 2 );
+
+		final AttributeOverride overrideUsage0 = overrideUsages[0];
+		assertThat( overrideUsage0.name() ).isEqualTo( "value.field1" );
+		final Column overrideColumnUsage0 = overrideUsage0.column();
+		assertThat( overrideColumnUsage0.name() ).isEmpty();
+		assertThat( overrideColumnUsage0.unique() ).isFalse();
+		assertThat( overrideColumnUsage0.nullable() ).isTrue();
+		assertThat( overrideColumnUsage0.insertable() ).isTrue();
+		assertThat( overrideColumnUsage0.updatable() ).isTrue();
+		assertThat( overrideColumnUsage0.columnDefinition() ).isEmpty();
+		assertThat( overrideColumnUsage0.table() ).isEmpty();
+		assertThat( overrideColumnUsage0.length() ).isEqualTo( 255 );
+		assertThat( overrideColumnUsage0.precision() ).isEqualTo( 0 );
+		assertThat( overrideColumnUsage0.scale() ).isEqualTo( 0 );
+
+		final AttributeOverride overrideUsage1 = overrideUsages[1];
+		assertThat( overrideUsage1.name() ).isEqualTo( "value.field2" );
+		final Column overrideColumnUsage1 = overrideUsage1.column();
+		assertThat( overrideColumnUsage1.name() ).isEqualTo( "col1" );
+		assertThat( overrideColumnUsage1.unique() ).isTrue();
+		assertThat( overrideColumnUsage1.nullable() ).isFalse();
+		assertThat( overrideColumnUsage1.insertable() ).isFalse();
+		assertThat( overrideColumnUsage1.updatable() ).isFalse();
+		assertThat( overrideColumnUsage1.columnDefinition() ).isEqualTo( "int" );
+		assertThat( overrideColumnUsage1.table() ).isEqualTo( "table1" );
+		assertThat( overrideColumnUsage1.length() ).isEqualTo( 50 );
+		assertThat( overrideColumnUsage1.precision() ).isEqualTo( 2 );
+		assertThat( overrideColumnUsage1.scale() ).isEqualTo( 1 );
 	}
 
 	/**
@@ -491,19 +495,26 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 	 * both end up in the AttributeOverrides annotation.
 	 */
 	@Test
-	public void testMixedAttributeOverrides() throws Exception {
-		reader = getReader( Entity3.class, "field1", "element-collection.orm23.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationNotPresent( AttributeOverride.class );
-		assertAnnotationPresent( AttributeOverrides.class );
-		AttributeOverrides overridesAnno = reader
-				.getAnnotation( AttributeOverrides.class );
-		AttributeOverride[] overrides = overridesAnno.value();
-		assertEquals( 2, overrides.length );
-		assertEquals( "field1", overrides[0].name() );
-		assertEquals( "col1", overrides[0].column().name() );
-		assertEquals( "field2", overrides[1].name() );
-		assertEquals( "col2", overrides[1].column().name() );
+	public void testMixedAttributeOverrides() {
+		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm23.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( AttributeOverride.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( AttributeOverrides.class ) ).isTrue();
+
+		final AttributeOverrides overridesUsage = memberDetails.getDirectAnnotationUsage( AttributeOverrides.class );
+		final AttributeOverride[] overrideUsages = overridesUsage.value();
+		assertThat( overrideUsages ).hasSize( 2 );
+
+		final AttributeOverride overrideUsage0 = overrideUsages[0];
+		assertThat( overrideUsage0.name() ).isEqualTo( "key.field1" );
+		final Column overrideColumnUsage0 = overrideUsage0.column();
+		assertThat( overrideColumnUsage0.name() ).isEqualTo( "col1" );
+
+		final AttributeOverride overrideUsage1 = overrideUsages[1];
+		assertThat( overrideUsage1.name() ).isEqualTo( "value.field2" );
+		final Column overrideColumnUsage1 = overrideUsage1.column();
+		assertThat( overrideColumnUsage1.name() ).isEqualTo( "col2" );
 	}
 
 	/**
@@ -511,198 +522,213 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 	 * AssociationOverrides annotation.
 	 */
 	@Test
-	public void testSingleAssociationOverride() throws Exception {
-		reader = getReader( Entity3.class, "field1", "element-collection.orm24.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationNotPresent( AssociationOverride.class );
-		assertAnnotationPresent( AssociationOverrides.class );
-		AssociationOverrides overridesAnno = reader.getAnnotation( AssociationOverrides.class );
-		AssociationOverride[] overrides = overridesAnno.value();
-		assertEquals( 1, overrides.length );
-		assertEquals( "association1", overrides[0].name() );
-		assertEquals( 0, overrides[0].joinColumns().length );
-		assertEquals( "", overrides[0].joinTable().name() );
+	public void testSingleAssociationOverride() {
+		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm24.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( AssociationOverride.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( AssociationOverrides.class ) ).isTrue();
+
+		final AssociationOverrides overridesUsage = memberDetails.getDirectAnnotationUsage( AssociationOverrides.class );
+		final AssociationOverride overrideUsage = overridesUsage.value()[0];
+		assertThat( overrideUsage.name() ).isEqualTo( "association1" );
+		assertThat( overrideUsage.joinColumns() ).isEmpty();
+		final JoinTable joinTableUsage = overrideUsage.joinTable();
+		assertThat( joinTableUsage.name() ).isEmpty();
 	}
 
 	@Test
-	public void testMultipleAssociationOverridesJoinColumns() throws Exception {
-		reader = getReader( Entity3.class, "field1", "element-collection.orm25.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationNotPresent( AssociationOverride.class );
-		assertAnnotationPresent( AssociationOverrides.class );
-		AssociationOverrides overridesAnno = reader.getAnnotation( AssociationOverrides.class );
-		AssociationOverride[] overrides = overridesAnno.value();
-		assertEquals( 2, overrides.length );
-		//First, an association using join table
-		assertEquals( "association1", overrides[0].name() );
-		assertEquals( 0, overrides[0].joinColumns().length );
+	public void testMultipleAssociationOverridesJoinColumns() {
+		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm25.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
 
-		JoinTable joinTableAnno = overrides[0].joinTable();
-		assertEquals( "catalog1", joinTableAnno.catalog() );
-		assertEquals( "table1", joinTableAnno.name() );
-		assertEquals( "schema1", joinTableAnno.schema() );
+		assertThat( memberDetails.hasDirectAnnotationUsage( AssociationOverride.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( AssociationOverrides.class ) ).isTrue();
+
+		final AssociationOverrides overridesUsage = memberDetails.getDirectAnnotationUsage( AssociationOverrides.class );
+		final AssociationOverride[] overrideUsages = overridesUsage.value();
+		assertThat( overrideUsages ).hasSize( 2 );
+
+		{
+			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			// First, an association using join table
+			final AssociationOverride overrideUsage = overrideUsages[0];
+			assertThat( overrideUsage.name() ).isEqualTo( "association1" );
+			assertThat( overrideUsage.joinColumns() ).isEmpty();
+
+			JoinTable joinTableUsage = overrideUsage.joinTable();
+			assertThat( joinTableUsage.name() ).isEqualTo( "table1" );
+			assertThat( joinTableUsage.catalog() ).isEqualTo( "catalog1" );
+			assertThat( joinTableUsage.schema() ).isEqualTo( "schema1" );
+
+			//JoinColumns
+			final JoinColumn[] joinColumUsages = joinTableUsage.joinColumns();
+			assertThat( joinColumUsages ).hasSize( 2 );
+
+			final JoinColumn joinColumnUsage0 = joinColumUsages[0];
+			assertThat( joinColumnUsage0.name() ).isEmpty();
+			assertThat( joinColumnUsage0.referencedColumnName() ).isEmpty();
+			assertThat( joinColumnUsage0.table() ).isEmpty();
+			assertThat( joinColumnUsage0.columnDefinition() ).isEmpty();
+			assertThat( joinColumnUsage0.insertable() ).isTrue();
+			assertThat( joinColumnUsage0.updatable() ).isTrue();
+			assertThat( joinColumnUsage0.nullable() ).isTrue();
+			assertThat( joinColumnUsage0.unique() ).isFalse();
+
+			final JoinColumn joinColumnUsage1 = joinColumUsages[1];
+			assertThat( joinColumnUsage1.name() ).isEqualTo( "col1" );
+			assertThat( joinColumnUsage1.referencedColumnName() ).isEqualTo( "col2" );
+			assertThat( joinColumnUsage1.table() ).isEqualTo( "table2" );
+			assertThat( joinColumnUsage1.columnDefinition() ).isEqualTo( "int" );
+			assertThat( joinColumnUsage1.insertable() ).isFalse();
+			assertThat( joinColumnUsage1.updatable() ).isFalse();
+			assertThat( joinColumnUsage1.nullable() ).isFalse();
+			assertThat( joinColumnUsage1.unique() ).isTrue();
+
+			//InverseJoinColumns
+			final JoinColumn[] inverseJoinColumnUsages = joinTableUsage.inverseJoinColumns();
+			assertThat( inverseJoinColumnUsages ).hasSize( 2 );
+
+			final JoinColumn inverseJoinColumnUsage0 = inverseJoinColumnUsages[0];
+			assertThat( inverseJoinColumnUsage0.name() ).isEmpty();
+			assertThat( inverseJoinColumnUsage0.referencedColumnName() ).isEmpty();
+			assertThat( inverseJoinColumnUsage0.table() ).isEmpty();
+			assertThat( inverseJoinColumnUsage0.columnDefinition() ).isEmpty();
+			assertThat( inverseJoinColumnUsage0.insertable() ).isTrue();
+			assertThat( inverseJoinColumnUsage0.updatable() ).isTrue();
+			assertThat( inverseJoinColumnUsage0.nullable() ).isTrue();
+			assertThat( inverseJoinColumnUsage0.unique() ).isFalse();
+
+			final JoinColumn inverseJoinColumnUsage1 = inverseJoinColumnUsages[1];
+			assertThat( inverseJoinColumnUsage1.name() ).isEqualTo( "col3" );
+			assertThat( inverseJoinColumnUsage1.referencedColumnName() ).isEqualTo( "col4" );
+			assertThat( inverseJoinColumnUsage1.table() ).isEqualTo( "table3" );
+			assertThat( inverseJoinColumnUsage1.columnDefinition() ).isEqualTo( "int" );
+			assertThat( inverseJoinColumnUsage1.insertable() ).isFalse();
+			assertThat( inverseJoinColumnUsage1.updatable() ).isFalse();
+			assertThat( inverseJoinColumnUsage1.nullable() ).isFalse();
+			assertThat( inverseJoinColumnUsage1.unique() ).isTrue();
+
+			//UniqueConstraints
+			final UniqueConstraint[] uniqueConstraintUsages = joinTableUsage.uniqueConstraints();
+			assertThat( uniqueConstraintUsages ).hasSize( 2 );
+
+			final UniqueConstraint uniqueConstraintUsage0 = uniqueConstraintUsages[0];
+			assertThat( uniqueConstraintUsage0.name() ).isEmpty();
+			assertThat( uniqueConstraintUsage0.columnNames() ).containsOnly( "col5" );
+
+			final UniqueConstraint uniqueConstraintUsage1 = uniqueConstraintUsages[1];
+			assertThat( uniqueConstraintUsage1.name() ).isEqualTo( "uq1" );
+			assertThat( uniqueConstraintUsage1.columnNames() ).containsOnly( "col6", "col7" );
+		}
+
+		{
+			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			// Second, an association using join columns
+			final AssociationOverride overrideUsage = overrideUsages[1];
+			assertThat( overrideUsage.name() ).isEqualTo( "association2" );
+
+			//JoinColumns
+			final JoinColumn[] joinColumUsages = overrideUsage.joinColumns();
+			assertThat( joinColumUsages ).hasSize( 2 );
+
+			final JoinColumn joinColumnUsage0 = joinColumUsages[0];
+			assertThat( joinColumnUsage0.name() ).isEmpty();
+			assertThat( joinColumnUsage0.referencedColumnName() ).isEmpty();
+			assertThat( joinColumnUsage0.table() ).isEmpty();
+			assertThat( joinColumnUsage0.columnDefinition() ).isEmpty();
+			assertThat( joinColumnUsage0.insertable() ).isTrue();
+			assertThat( joinColumnUsage0.updatable() ).isTrue();
+			assertThat( joinColumnUsage0.nullable() ).isTrue();
+			assertThat( joinColumnUsage0.unique() ).isFalse();
+
+			final JoinColumn joinColumnUsage1 = joinColumUsages[1];
+			assertThat( joinColumnUsage1.name() ).isEqualTo( "col8" );
+			assertThat( joinColumnUsage1.referencedColumnName() ).isEqualTo( "col9" );
+			assertThat( joinColumnUsage1.table() ).isEqualTo( "table4" );
+			assertThat( joinColumnUsage1.columnDefinition() ).isEqualTo( "int" );
+			assertThat( joinColumnUsage1.insertable() ).isFalse();
+			assertThat( joinColumnUsage1.updatable() ).isFalse();
+			assertThat( joinColumnUsage1.nullable() ).isFalse();
+			assertThat( joinColumnUsage1.unique() ).isTrue();
+		}
+	}
+
+	@Test
+	public void testCollectionTableNoChildren() {
+		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm26.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( CollectionTable.class ) ).isTrue();
+		final CollectionTable collectionTableUsage = memberDetails.getDirectAnnotationUsage( CollectionTable.class );
+		assertThat( collectionTableUsage.name() ).isEmpty();
+		assertThat( collectionTableUsage.catalog() ).isEmpty();
+		assertThat( collectionTableUsage.schema() ).isEmpty();
+		assertThat( collectionTableUsage.joinColumns() ).isEmpty();
+		assertThat( collectionTableUsage.uniqueConstraints() ).isEmpty();
+	}
+
+	@Test
+	public void testCollectionTableAllChildren() {
+		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm27.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
+
+		assertThat( memberDetails.hasDirectAnnotationUsage( CollectionTable.class ) ).isTrue();
+		final CollectionTable collectionTableUsage = memberDetails.getDirectAnnotationUsage( CollectionTable.class );
+		assertThat( collectionTableUsage.name() ).isEqualTo( "table1" );
+		assertThat( collectionTableUsage.catalog() ).isEqualTo( "catalog1" );
+		assertThat( collectionTableUsage.schema() ).isEqualTo( "schema1" );
 
 		//JoinColumns
-		JoinColumn[] joinColumns = joinTableAnno.joinColumns();
-		assertEquals( 2, joinColumns.length );
-		assertEquals( "", joinColumns[0].name() );
-		assertEquals( "", joinColumns[0].referencedColumnName() );
-		assertEquals( "", joinColumns[0].table() );
-		assertEquals( "", joinColumns[0].columnDefinition() );
-		assertTrue( joinColumns[0].insertable() );
-		assertTrue( joinColumns[0].updatable() );
-		assertTrue( joinColumns[0].nullable() );
-		assertFalse( joinColumns[0].unique() );
-		assertEquals( "col1", joinColumns[1].name() );
-		assertEquals( "col2", joinColumns[1].referencedColumnName() );
-		assertEquals( "table2", joinColumns[1].table() );
-		assertEquals( "int", joinColumns[1].columnDefinition() );
-		assertFalse( joinColumns[1].insertable() );
-		assertFalse( joinColumns[1].updatable() );
-		assertFalse( joinColumns[1].nullable() );
-		assertTrue( joinColumns[1].unique() );
+		final JoinColumn[] joinColumnUsages = collectionTableUsage.joinColumns();
+		assertThat( joinColumnUsages ).hasSize( 2 );
 
-		//InverseJoinColumns
-		JoinColumn[] inverseJoinColumns = joinTableAnno.inverseJoinColumns();
-		assertEquals( 2, inverseJoinColumns.length );
-		assertEquals( "", inverseJoinColumns[0].name() );
-		assertEquals( "", inverseJoinColumns[0].referencedColumnName() );
-		assertEquals( "", inverseJoinColumns[0].table() );
-		assertEquals( "", inverseJoinColumns[0].columnDefinition() );
-		assertTrue( inverseJoinColumns[0].insertable() );
-		assertTrue( inverseJoinColumns[0].updatable() );
-		assertTrue( inverseJoinColumns[0].nullable() );
-		assertFalse( inverseJoinColumns[0].unique() );
-		assertEquals( "col3", inverseJoinColumns[1].name() );
-		assertEquals( "col4", inverseJoinColumns[1].referencedColumnName() );
-		assertEquals( "table3", inverseJoinColumns[1].table() );
-		assertEquals( "int", inverseJoinColumns[1].columnDefinition() );
-		assertFalse( inverseJoinColumns[1].insertable() );
-		assertFalse( inverseJoinColumns[1].updatable() );
-		assertFalse( inverseJoinColumns[1].nullable() );
-		assertTrue( inverseJoinColumns[1].unique() );
+		final JoinColumn joinColumnUsage0 = joinColumnUsages[0];
+		assertThat( joinColumnUsage0.name() ).isEmpty();
+		assertThat( joinColumnUsage0.referencedColumnName() ).isEmpty();
+		assertThat( joinColumnUsage0.table() ).isEmpty();
+		assertThat( joinColumnUsage0.columnDefinition() ).isEmpty();
+		assertThat( joinColumnUsage0.insertable() ).isTrue();
+		assertThat( joinColumnUsage0.updatable() ).isTrue();
+		assertThat( joinColumnUsage0.nullable() ).isTrue();
+		assertThat( joinColumnUsage0.unique() ).isFalse();
+
+		final JoinColumn joinColumnUsage1 = joinColumnUsages[1];
+		assertThat( joinColumnUsage1.name() ).isEqualTo( "col1" );
+		assertThat( joinColumnUsage1.referencedColumnName() ).isEqualTo( "col2" );
+		assertThat( joinColumnUsage1.table() ).isEqualTo( "table2" );
+		assertThat( joinColumnUsage1.columnDefinition() ).isEqualTo( "int" );
+		assertThat( joinColumnUsage1.insertable() ).isFalse();
+		assertThat( joinColumnUsage1.updatable() ).isFalse();
+		assertThat( joinColumnUsage1.nullable() ).isFalse();
+		assertThat( joinColumnUsage1.unique() ).isTrue();
 
 		//UniqueConstraints
-		UniqueConstraint[] uniqueConstraints = joinTableAnno
-				.uniqueConstraints();
-		assertEquals( 2, uniqueConstraints.length );
-		assertEquals( "", uniqueConstraints[0].name() );
-		assertEquals( 1, uniqueConstraints[0].columnNames().length );
-		assertEquals( "col5", uniqueConstraints[0].columnNames()[0] );
-		assertEquals( "uq1", uniqueConstraints[1].name() );
-		assertEquals( 2, uniqueConstraints[1].columnNames().length );
-		assertEquals( "col6", uniqueConstraints[1].columnNames()[0] );
-		assertEquals( "col7", uniqueConstraints[1].columnNames()[1] );
+		final UniqueConstraint[] uniqueConstraintUsages = collectionTableUsage.uniqueConstraints();
+		assertThat( uniqueConstraintUsages ).hasSize( 2 );
 
-		//Second, an association using join columns
-		assertEquals( "association2", overrides[1].name() );
+		final UniqueConstraint uniqueConstraintUsage0 = uniqueConstraintUsages[0];
+		assertThat( uniqueConstraintUsage0.name() ).isEmpty();
+		assertThat( uniqueConstraintUsage0.columnNames() ).containsOnly( "col3" );
 
-		//JoinColumns
-		joinColumns = overrides[1].joinColumns();
-		assertEquals( 2, joinColumns.length );
-		assertEquals( "", joinColumns[0].name() );
-		assertEquals( "", joinColumns[0].referencedColumnName() );
-		assertEquals( "", joinColumns[0].table() );
-		assertEquals( "", joinColumns[0].columnDefinition() );
-		assertTrue( joinColumns[0].insertable() );
-		assertTrue( joinColumns[0].updatable() );
-		assertTrue( joinColumns[0].nullable() );
-		assertFalse( joinColumns[0].unique() );
-		assertEquals( "col8", joinColumns[1].name() );
-		assertEquals( "col9", joinColumns[1].referencedColumnName() );
-		assertEquals( "table4", joinColumns[1].table() );
-		assertEquals( "int", joinColumns[1].columnDefinition() );
-		assertFalse( joinColumns[1].insertable() );
-		assertFalse( joinColumns[1].updatable() );
-		assertFalse( joinColumns[1].nullable() );
-		assertTrue( joinColumns[1].unique() );
+		final UniqueConstraint uniqueConstraintUsage1 = uniqueConstraintUsages[1];
+		assertThat( uniqueConstraintUsage1.name() ).isEqualTo( "uq1" );
+		assertThat( uniqueConstraintUsage1.columnNames() ).containsOnly( "col4", "col5" );
 	}
 
 	@Test
-	public void testCollectionTableNoChildren() throws Exception {
-		reader = getReader( Entity3.class, "field1", "element-collection.orm26.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationPresent( CollectionTable.class );
-		CollectionTable tableAnno = reader.getAnnotation( CollectionTable.class );
-		assertEquals( "", tableAnno.name() );
-		assertEquals( "", tableAnno.catalog() );
-		assertEquals( "", tableAnno.schema() );
-		assertEquals( 0, tableAnno.joinColumns().length );
-		assertEquals( 0, tableAnno.uniqueConstraints().length );
-	}
+	public void testAllAttributes() {
+		final MemberDetails memberDetails = getAttributeMember( Entity2.class, "field1", "element-collection.orm28.xml" );
+		assertThat( memberDetails.hasDirectAnnotationUsage( ElementCollection.class ) ).isTrue();
 
-	@Test
-	public void testCollectionTableAllChildren() throws Exception {
-		reader = getReader( Entity3.class, "field1", "element-collection.orm27.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationPresent( CollectionTable.class );
-		CollectionTable tableAnno = reader.getAnnotation( CollectionTable.class );
-		assertEquals( "table1", tableAnno.name() );
-		assertEquals( "catalog1", tableAnno.catalog() );
-		assertEquals( "schema1", tableAnno.schema() );
+		final ElementCollection elementCollectionUsage = memberDetails.getDirectAnnotationUsage( ElementCollection.class );
+		assertThat( elementCollectionUsage.fetch() ).isEqualTo( FetchType.EAGER );
 
-		//JoinColumns
-		JoinColumn[] joinColumns = tableAnno.joinColumns();
-		assertEquals( 2, joinColumns.length );
-		assertEquals( "", joinColumns[0].name() );
-		assertEquals( "", joinColumns[0].referencedColumnName() );
-		assertEquals( "", joinColumns[0].table() );
-		assertEquals( "", joinColumns[0].columnDefinition() );
-		assertTrue( joinColumns[0].insertable() );
-		assertTrue( joinColumns[0].updatable() );
-		assertTrue( joinColumns[0].nullable() );
-		assertFalse( joinColumns[0].unique() );
-		assertEquals( "col1", joinColumns[1].name() );
-		assertEquals( "col2", joinColumns[1].referencedColumnName() );
-		assertEquals( "table2", joinColumns[1].table() );
-		assertEquals( "int", joinColumns[1].columnDefinition() );
-		assertFalse( joinColumns[1].insertable() );
-		assertFalse( joinColumns[1].updatable() );
-		assertFalse( joinColumns[1].nullable() );
-		assertTrue( joinColumns[1].unique() );
+		final Access accessUsage = memberDetails.getDirectAnnotationUsage( Access.class );
+		assertThat( accessUsage.value() ).isEqualTo( AccessType.PROPERTY );
 
-		//UniqueConstraints
-		UniqueConstraint[] uniqueConstraints = tableAnno.uniqueConstraints();
-		assertEquals( 2, uniqueConstraints.length );
-		assertEquals( "", uniqueConstraints[0].name() );
-		assertEquals( 1, uniqueConstraints[0].columnNames().length );
-		assertEquals( "col3", uniqueConstraints[0].columnNames()[0] );
-		assertEquals( "uq1", uniqueConstraints[1].name() );
-		assertEquals( 2, uniqueConstraints[1].columnNames().length );
-		assertEquals( "col4", uniqueConstraints[1].columnNames()[0] );
-		assertEquals( "col5", uniqueConstraints[1].columnNames()[1] );
-	}
-
-	@Test
-	public void testAllAttributes() throws Exception {
-		reader = getReader( Entity2.class, "field1", "element-collection.orm28.xml" );
-		assertAnnotationPresent( ElementCollection.class );
-		assertAnnotationNotPresent( OrderBy.class );
-		assertAnnotationNotPresent( OrderColumn.class );
-		assertAnnotationNotPresent( MapKey.class );
-		assertAnnotationNotPresent( MapKeyClass.class );
-		assertAnnotationNotPresent( MapKeyTemporal.class );
-		assertAnnotationNotPresent( MapKeyEnumerated.class );
-		assertAnnotationNotPresent( MapKeyColumn.class );
-		assertAnnotationNotPresent( MapKeyJoinColumns.class );
-		assertAnnotationNotPresent( MapKeyJoinColumn.class );
-		assertAnnotationNotPresent( Column.class );
-		assertAnnotationNotPresent( Temporal.class );
-		assertAnnotationNotPresent( Enumerated.class );
-		assertAnnotationNotPresent( Lob.class );
-		assertAnnotationNotPresent( AttributeOverride.class );
-		assertAnnotationNotPresent( AttributeOverrides.class );
-		assertAnnotationNotPresent( AssociationOverride.class );
-		assertAnnotationNotPresent( AssociationOverrides.class );
-		assertAnnotationNotPresent( CollectionTable.class );
-		assertAnnotationPresent( Access.class );
-		ElementCollection relAnno = reader.getAnnotation( ElementCollection.class );
-		assertEquals( FetchType.EAGER, relAnno.fetch() );
-		assertEquals( Entity3.class, relAnno.targetClass() );
-		assertEquals(
-				AccessType.PROPERTY, reader.getAnnotation( Access.class )
-				.value()
-		);
+		final Target targetUsage = memberDetails.getDirectAnnotationUsage( Target.class );
+		assertThat( targetUsage.value() ).isEqualTo( Entity3.class.getName() );
 	}
 
 }

@@ -82,7 +82,7 @@ public abstract class BaseUserTypeSupport<T> implements UserType<T> {
 	}
 
 	@Override
-	public T nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public T nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session) throws SQLException {
 		ensureResolved();
 		return jdbcValueExtractor.extract( rs, position, session );
 	}

@@ -24,7 +24,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -302,7 +301,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		if ( original == null ) {
 			return null;
 		}
-		Object cached = copyCache.get( original );
+		final Object cached = copyCache.get( original );
 		if ( cached != null ) {
 			return cached;
 		}
@@ -497,7 +496,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			// we need to dig a little deeper, as that property might also be
 			// an entity type, in which case we need to resolve its identifier
 			final Type type = entityPersister.getPropertyType( uniqueKeyPropertyName );
-			if ( type.isEntityType() ) {
+			if ( type instanceof EntityType ) {
 				return ( (EntityType) type ).getIdentifier( propertyValue, session );
 			}
 			else {
@@ -522,7 +521,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			// we need to dig a little deeper, as that property might also be
 			// an entity type, in which case we need to resolve its identifier
 			final Type type = entityPersister.getPropertyType( uniqueKeyPropertyName );
-			if ( type.isEntityType() ) {
+			if ( type instanceof EntityType ) {
 				return ( (EntityType) type ).getIdentifier( propertyValue, sessionFactory );
 			}
 			else {
@@ -647,7 +646,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 		else {
 			final Type type = factory.getReferencedPropertyType( getAssociatedEntityName(), uniqueKeyPropertyName );
-			if ( type.isEntityType() ) {
+			if ( type instanceof EntityType ) {
 				return ( (EntityType) type ).getIdentifierOrUniqueKeyType( factory );
 			}
 			else {
@@ -738,10 +737,9 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			Object key,
 			SharedSessionContractImplementor session) throws HibernateException {
 		final SessionFactoryImplementor factory = session.getFactory();
-		final UniqueKeyLoadable persister = (UniqueKeyLoadable) factory
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityName );
+		final EntityPersister persister =
+				factory.getMappingMetamodel()
+						.getEntityDescriptor( entityName );
 
 		//TODO: implement 2nd level caching?! natural id caching ?! proxies?!
 

@@ -19,6 +19,7 @@ import org.hibernate.boot.model.internal.QueryHintDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.procedure.internal.NamedCallableQueryMementoImpl;
 import org.hibernate.procedure.internal.Util;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
@@ -51,6 +52,7 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 		this.registeredName = annotation.name();
 		this.procedureName = annotation.procedureName();
 		this.hints = new QueryHintDefinition( registeredName, annotation.hints() ).getHintsMap();
+
 		this.resultClasses = annotation.resultClasses();
 		this.resultSetMappings = annotation.resultSetMappings();
 
@@ -137,12 +139,14 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 		private final ParameterDefinition<?>[] parameterDefinitions;
 
 		ParameterDefinitions(StoredProcedureParameter[] parameters) {
-			if ( parameters == null || parameters.length == 0 ) {
+			if ( CollectionHelper.isEmpty( parameters ) ) {
 				parameterStrategy = ParameterStrategy.POSITIONAL;
 				parameterDefinitions = new ParameterDefinition[0];
 			}
 			else {
-				parameterStrategy = StringHelper.isNotEmpty( parameters[0].name() )
+				final StoredProcedureParameter parameterAnn = parameters[0];
+				final boolean firstParameterHasName = StringHelper.isNotEmpty( parameterAnn.name() );
+				parameterStrategy = firstParameterHasName
 						? ParameterStrategy.NAMED
 						: ParameterStrategy.POSITIONAL;
 				parameterDefinitions = new ParameterDefinition[ parameters.length ];
@@ -173,12 +177,12 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 		private final ParameterMode parameterMode;
 		private final Class<T> type;
 
-		@SuppressWarnings("unchecked")
 		ParameterDefinition(int position, StoredProcedureParameter annotation) {
 			this.position = position;
 			this.name = normalize( annotation.name() );
 			this.parameterMode = annotation.mode();
-			this.type = annotation.type();
+			//noinspection unchecked
+			this.type = (Class<T>) annotation.type();
 		}
 
 		public ParameterMemento toMemento(SessionFactoryImplementor sessionFactory) {

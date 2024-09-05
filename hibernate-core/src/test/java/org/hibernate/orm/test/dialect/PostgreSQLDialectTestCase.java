@@ -23,7 +23,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.dialect.unique.AlterTableUniqueDelegate;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.mapping.Table;
@@ -157,11 +156,6 @@ public class PostgreSQLDialectTestCase extends BaseUnitTestCase {
 
 		@Override
 		public Dialect getDialect() {
-			return null;
-		}
-
-		@Override
-		public IdentifierHelper getIdentifierHelper() {
 			return null;
 		}
 

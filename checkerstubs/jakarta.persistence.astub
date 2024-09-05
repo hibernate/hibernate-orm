@@ -17,6 +17,9 @@ public interface EntityManager extends AutoCloseable {
 public interface EntityManagerFactory extends AutoCloseable {
 	public @Nullable Cache getCache();
 }
+public interface EntityTransaction {
+	@Nullable Integer getTimeout();
+}
 public interface Parameter {
 	public @Nullable String getName();
 	public @Nullable Integer getPosition();

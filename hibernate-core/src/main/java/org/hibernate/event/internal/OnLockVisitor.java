@@ -15,10 +15,12 @@ import org.hibernate.type.CollectionType;
 
 /**
  * When a transient entity is passed to lock(), we must inspect all its collections and
- * 1. associate any uninitialized PersistentCollections with this session
- * 2. associate any initialized PersistentCollections with this session, using the
- * existing snapshot
- * 3. throw an exception for each "new" collection
+ * <ol>
+ * <li> associate any uninitialized PersistentCollections with this session
+ * <li> associate any initialized PersistentCollections with this session, using the
+ *      existing snapshot
+ * <li> throw an exception for each "new" collection
+ * </ol>
  *
  * @author Gavin King
  */
@@ -35,13 +37,10 @@ public class OnLockVisitor extends ReattachVisitor {
 		}
 
 		final SessionImplementor session = getSession();
-		final CollectionPersister persister = session.getFactory()
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getCollectionDescriptor( type.getRole() );
-
-		if ( collection instanceof PersistentCollection ) {
-			final PersistentCollection<?> persistentCollection = (PersistentCollection<?>) collection;
+		final CollectionPersister persister =
+				session.getFactory().getMappingMetamodel()
+						.getCollectionDescriptor( type.getRole() );
+		if ( collection instanceof PersistentCollection<?> persistentCollection ) {
 			if ( persistentCollection.setCurrentSession( session ) ) {
 				if ( isOwnerUnchanged( persister, extractCollectionKeyFromOwner( persister ), persistentCollection ) ) {
 					// a "detached" collection that originally belonged to the same entity
@@ -67,7 +66,6 @@ public class OnLockVisitor extends ReattachVisitor {
 			//TODO: or an array!! we can't lock objects with arrays now??
 			throw new HibernateException( "re-associated object has dirty collection reference (or an array)" );
 		}
-
 		return null;
 	}
 

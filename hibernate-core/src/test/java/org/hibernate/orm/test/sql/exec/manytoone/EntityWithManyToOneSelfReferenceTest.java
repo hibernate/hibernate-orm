@@ -56,8 +56,8 @@ public class EntityWithManyToOneSelfReferenceTest {
 		);
 
 		scope.inTransaction( session -> {
-			session.save( entity1 );
-			session.save( entity2 );
+			session.persist( entity1 );
+			session.persist( entity2 );
 		} );
 	}
 

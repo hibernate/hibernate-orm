@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.Incubating;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCoalesce;
@@ -56,22 +56,26 @@ import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.criteria.JpaValues;
 import org.hibernate.query.criteria.JpaWindow;
 import org.hibernate.query.criteria.JpaWindowFrame;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.TemporalUnit;
 
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CollectionJoin;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.ListJoin;
 import jakarta.persistence.criteria.MapJoin;
+import jakarta.persistence.criteria.Nulls;
+import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.criteria.TemporalField;
 
 public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilder {
 	private final HibernateCriteriaBuilder criteriaBuilder;
@@ -209,8 +213,18 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public <T> JpaSubQuery<T> unionAll(Subquery<? extends T> query1, Subquery<?>... queries) {
-		return criteriaBuilder.unionAll( query1, queries );
+	public <T> CriteriaSelect<T> union(CriteriaSelect<? extends T> left, CriteriaSelect<? extends T> right) {
+		return criteriaBuilder.union( left, right );
+	}
+
+	@Override
+	public <T> JpaSubQuery<T> unionAll(JpaSubQuery<? extends T> query1, JpaSubQuery<? extends T> query2) {
+		return criteriaBuilder.unionAll( query1, query2 );
+	}
+
+	@Override
+	public <T> CriteriaSelect<T> unionAll(CriteriaSelect<? extends T> left, CriteriaSelect<? extends T> right) {
+		return criteriaBuilder.unionAll( left, right );
 	}
 
 	@Override
@@ -239,6 +253,16 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public <T> CriteriaSelect<T> except(CriteriaSelect<T> left, CriteriaSelect<?> right) {
+		return criteriaBuilder.except( left, right );
+	}
+
+	@Override
+	public <T> CriteriaSelect<T> exceptAll(CriteriaSelect<T> left, CriteriaSelect<?> right) {
+		return criteriaBuilder.exceptAll( left, right );
+	}
+
+	@Override
 	public <T> JpaSubQuery<T> exceptAll(Subquery<? extends T> query1, Subquery<?>... queries) {
 		return criteriaBuilder.exceptAll( query1, queries );
 	}
@@ -252,6 +276,8 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	public <T> JpaSubQuery<T> except(boolean all, Subquery<? extends T> query1, Subquery<?>... queries) {
 		return criteriaBuilder.except( all, query1, queries );
 	}
+
+
 
 	@Override
 	public JpaExpression<Integer> sign(Expression<? extends Number> x) {
@@ -314,6 +340,11 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public <N, T extends Temporal> JpaExpression<N> extract(TemporalField<N, T> field, Expression<T> temporal) {
+		return null;
+	}
+
+	@Override
 	public <P, F> JpaExpression<F> fk(Path<P> path) {
 		return criteriaBuilder.fk( path );
 	}
@@ -326,6 +357,46 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Override
 	public <X, T extends X> JpaRoot<T> treat(Root<X> root, Class<T> type) {
 		return criteriaBuilder.treat( root, type );
+	}
+
+	@Override
+	public <T> JpaCriteriaQuery<T> union(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
+		return criteriaBuilder.union( left, right );
+	}
+
+	@Override
+	public <T> JpaCriteriaQuery<T> unionAll(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
+		return criteriaBuilder.unionAll( left, right );
+	}
+
+	@Override
+	public <T> CriteriaSelect<T> intersect(CriteriaSelect<? super T> left, CriteriaSelect<? super T> right) {
+		return criteriaBuilder.intersect( left, right );
+	}
+
+	@Override
+	public <T> CriteriaSelect<T> intersectAll(CriteriaSelect<? super T> left, CriteriaSelect<? super T> right) {
+		return criteriaBuilder.intersectAll( left, right );
+	}
+
+	@Override
+	public <T> JpaCriteriaQuery<T> intersect(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right) {
+		return criteriaBuilder.intersect( left, right );
+	}
+
+	@Override
+	public <T> JpaCriteriaQuery<T> intersectAll(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right) {
+		return criteriaBuilder.intersectAll( left, right );
+	}
+
+	@Override
+	public <T> JpaCriteriaQuery<T> except(CriteriaQuery<T> left, CriteriaQuery<?> right) {
+		return criteriaBuilder.except( left, right );
+	}
+
+	@Override
+	public <T> JpaCriteriaQuery<T> exceptAll(CriteriaQuery<T> left, CriteriaQuery<?> right) {
+		return criteriaBuilder.exceptAll( left, right );
 	}
 
 	@Override
@@ -369,7 +440,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public JpaCompoundSelection<Tuple> tuple(List<? extends JpaSelection<?>> selections) {
+	public JpaCompoundSelection<Tuple> tuple(List<Selection<?>> selections) {
 		return criteriaBuilder.tuple( selections );
 	}
 
@@ -379,7 +450,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public JpaCompoundSelection<Object[]> array(List<? extends JpaSelection<?>> selections) {
+	public JpaCompoundSelection<Object[]> array(List<Selection<?>> selections) {
 		return criteriaBuilder.array( selections );
 	}
 
@@ -824,12 +895,22 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public JpaPredicate and(List<Predicate> restrictions) {
+		return criteriaBuilder.and( restrictions );
+	}
+
+	@Override
 	public JpaPredicate or(Expression<Boolean> x, Expression<Boolean> y) {
 		return criteriaBuilder.or( x, y );
 	}
 
 	@Override
 	public JpaPredicate or(Predicate... restrictions) {
+		return criteriaBuilder.or( restrictions );
+	}
+
+	@Override
+	public JpaPredicate or(List<Predicate> restrictions) {
 		return criteriaBuilder.or( restrictions );
 	}
 
@@ -1130,6 +1211,11 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public JpaExpression<String> concat(List<Expression<String>> expressions) {
+		return criteriaBuilder.concat( expressions );
+	}
+
+	@Override
 	public JpaPredicate notIlike(Expression<String> x, Expression<String> pattern) {
 		return criteriaBuilder.notIlike( x, pattern );
 	}
@@ -1220,6 +1306,20 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, Nulls nullPrecedence) {
+		return criteriaBuilder.sort( sortExpression, sortOrder, nullPrecedence );
+	}
+
+	@Override
+	public JpaOrder sort(
+			JpaExpression<?> sortExpression,
+			SortDirection sortOrder,
+			Nulls nullPrecedence,
+			boolean ignoreCase) {
+		return criteriaBuilder.sort( sortExpression, sortOrder, nullPrecedence, ignoreCase );
+	}
+
+	@Override
 	public JpaOrder sort(JpaExpression<?> sortExpression) {
 		return criteriaBuilder.sort( sortExpression );
 	}
@@ -1232,6 +1332,16 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Override
 	public JpaOrder desc(Expression<?> x) {
 		return criteriaBuilder.desc( x );
+	}
+
+	@Override
+	public Order asc(Expression<?> expression, Nulls nullPrecedence) {
+		return criteriaBuilder.asc( expression, nullPrecedence );
+	}
+
+	@Override
+	public Order desc(Expression<?> expression, Nulls nullPrecedence) {
+		return criteriaBuilder.desc( expression, nullPrecedence );
 	}
 
 	@Override

@@ -7,6 +7,7 @@
 package org.hibernate.bytecode.enhance.spi.interceptor;
 
 import org.hibernate.mapping.Property;
+import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 
 /**
@@ -21,7 +22,7 @@ public class LazyAttributeDescriptor {
 			int lazyIndex) {
 		String fetchGroupName = property.getLazyGroup();
 		if ( fetchGroupName == null ) {
-			fetchGroupName = property.getType().isCollectionType()
+			fetchGroupName = property.getType() instanceof CollectionType
 					? property.getName()
 					: "DEFAULT";
 		}

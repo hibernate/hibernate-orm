@@ -31,12 +31,12 @@ public class BaselineSessionEventsListenerBuilder {
 		this.autoListener = autoListener;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public boolean isLogSessionMetrics() {
 		return logSessionMetrics;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public Class<? extends SessionEventListener> getAutoListener() {
 		return autoListener;
 	}

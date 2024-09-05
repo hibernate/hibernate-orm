@@ -52,8 +52,8 @@ public class SQLServerNationalizedScalarQueryTest {
 		User user2 = new User( 2, "Steve" );
 
 		scope.inTransaction( session -> {
-			session.save( user1 );
-			session.save( user2 );
+			session.persist( user1 );
+			session.persist( user2 );
 		} );
 
 		scope.inTransaction( session -> {

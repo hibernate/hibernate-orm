@@ -8,20 +8,19 @@ package org.hibernate.persister.internal;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Locale;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
-import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterClassResolver;
-import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -67,28 +66,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 			EntityDataAccess entityCacheAccessStrategy,
 			NaturalIdDataAccess naturalIdCacheAccessStrategy,
 			RuntimeModelCreationContext creationContext) {
-		// If the metadata for the entity specified an explicit persister class, use it...
-		Class<? extends EntityPersister> persisterClass = entityBinding.getEntityPersisterClass();
-		if ( persisterClass == null ) {
-			// Otherwise, use the persister class indicated by the PersisterClassResolver service
-			persisterClass = persisterClassResolver.getEntityPersisterClass( entityBinding );
-		}
-
-		return createEntityPersister(
-				persisterClass,
-				entityBinding,
-				entityCacheAccessStrategy,
-				naturalIdCacheAccessStrategy,
-				creationContext
-		);
-	}
-
-	private EntityPersister createEntityPersister(
-			Class<? extends EntityPersister> persisterClass,
-			PersistentClass entityBinding,
-			EntityDataAccess entityCacheAccessStrategy,
-			NaturalIdDataAccess naturalIdCacheAccessStrategy,
-			RuntimeModelCreationContext creationContext) {
+		final Class<? extends EntityPersister> persisterClass = persisterClassResolver.getEntityPersisterClass( entityBinding );
 		final Constructor<? extends EntityPersister> constructor = resolveEntityPersisterConstructor( persisterClass );
 		try {
 			return constructor.newInstance( entityBinding, entityCacheAccessStrategy, naturalIdCacheAccessStrategy, creationContext );
@@ -102,11 +80,27 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 				throw (HibernateException) target;
 			}
 			else {
-				throw new MappingException( "Could not instantiate persister " + persisterClass.getName(), target );
+				throw new MappingException(
+						String.format(
+								Locale.ROOT,
+								"Could not instantiate persister %s (%s)",
+								persisterClass.getName(),
+								entityBinding.getEntityName()
+						),
+						target
+				);
 			}
 		}
 		catch (Exception e) {
-			throw new MappingException( "Could not instantiate persister " + persisterClass.getName(), e );
+			throw new MappingException(
+					String.format(
+							Locale.ROOT,
+							"Could not instantiate persister %s (%s)",
+							persisterClass.getName(),
+							entityBinding.getEntityName()
+					),
+					e
+			);
 		}
 	}
 
@@ -115,28 +109,6 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 			return persisterClass.getConstructor( ENTITY_PERSISTER_CONSTRUCTOR_ARGS );
 		}
 		catch (NoSuchMethodException noConstructorException) {
-			// we could not find the constructor...
-			//
-			// until we drop support for the legacy constructor signature, see if they define a
-			// constructor using that signature and use it if so
-			try {
-				final Constructor<? extends EntityPersister> constructor = persisterClass.getConstructor( LEGACY_ENTITY_PERSISTER_CONSTRUCTOR_ARGS );
-				// they do use the legacy signature...
-
-				// warn them
-				DeprecationLogger.DEPRECATION_LOGGER.debugf(
-						"EntityPersister implementation defined constructor using legacy signature using `%s`; use `%s` instead",
-						PersisterCreationContext.class.getName(),
-						RuntimeModelCreationContext.class.getName()
-				);
-
-				// but use it
-				return constructor;
-			}
-			catch (NoSuchMethodException noLegacyConstructorException) {
-				// fall through to below
-			}
-
 			throw new MappingException( "Could not find appropriate constructor for " + persisterClass.getName(), noConstructorException );
 		}
 
@@ -147,21 +119,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 			Collection collectionBinding,
 			@Nullable CollectionDataAccess cacheAccessStrategy,
 			RuntimeModelCreationContext creationContext) {
-		// If the metadata for the collection specified an explicit persister class, use it
-		Class<? extends CollectionPersister> persisterClass = collectionBinding.getCollectionPersisterClass();
-		if ( persisterClass == null ) {
-			// Otherwise, use the persister class indicated by the PersisterClassResolver service
-			persisterClass = persisterClassResolver.getCollectionPersisterClass( collectionBinding );
-		}
-
-		return createCollectionPersister( persisterClass, collectionBinding, cacheAccessStrategy, creationContext );
-	}
-
-	private CollectionPersister createCollectionPersister(
-			Class<? extends CollectionPersister> persisterClass,
-			Collection collectionBinding,
-			@Nullable CollectionDataAccess cacheAccessStrategy,
-			@SuppressWarnings("deprecation") PersisterCreationContext creationContext) {
+		final Class<? extends CollectionPersister> persisterClass = persisterClassResolver.getCollectionPersisterClass( collectionBinding );
 		final Constructor<? extends CollectionPersister> constructor = resolveCollectionPersisterConstructor( persisterClass );
 		try {
 			return constructor.newInstance( collectionBinding, cacheAccessStrategy, creationContext );
@@ -170,7 +128,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 			throw e;
 		}
 		catch (InvocationTargetException e) {
-			Throwable target = e.getTargetException();
+			final Throwable target = e.getTargetException();
 			if ( target instanceof HibernateException ) {
 				throw (HibernateException) target;
 			}
@@ -195,90 +153,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 			return persisterClass.getConstructor( COLLECTION_PERSISTER_CONSTRUCTOR_ARGS );
 		}
 		catch (NoSuchMethodException noConstructorException) {
-			// we could not find the constructor...
-			//
-			// until we drop support for the legacy constructor signature, see if they define a
-			// constructor using that signature and use it if so
-			try {
-				final Constructor<? extends CollectionPersister> constructor = persisterClass.getConstructor( LEGACY_COLLECTION_PERSISTER_CONSTRUCTOR_ARGS );
-				// they do use the legacy signature...
-
-				// warn them
-				DeprecationLogger.DEPRECATION_LOGGER.debugf(
-						"CollectionPersister implementation defined constructor using legacy signature using `%s`; use `%s` instead",
-						PersisterCreationContext.class.getName(),
-						RuntimeModelCreationContext.class.getName()
-				);
-
-				// but use it
-				return constructor;
-			}
-			catch (NoSuchMethodException noLegacyConstructorException) {
-				// fall through to below
-			}
-
 			throw new MappingException( "Could not find appropriate constructor for " + persisterClass.getName(), noConstructorException );
 		}
-	}
-
-
-	/**
-	 * The legacy constructor signature for {@link EntityPersister} implementations
-	 *
-	 * @deprecated use {@link #ENTITY_PERSISTER_CONSTRUCTOR_ARGS} instead
-	 */
-	@Deprecated(since = "6.0")
-	private static final Class<?>[] LEGACY_ENTITY_PERSISTER_CONSTRUCTOR_ARGS = new Class[] {
-			PersistentClass.class,
-			EntityDataAccess.class,
-			NaturalIdDataAccess.class,
-			PersisterCreationContext.class
-	};
-
-	@Override
-	public EntityPersister createEntityPersister(
-			PersistentClass entityBinding,
-			EntityDataAccess entityCacheAccessStrategy,
-			NaturalIdDataAccess naturalIdCacheAccessStrategy,
-			@SuppressWarnings("deprecation") PersisterCreationContext creationContext) {
-		DeprecationLogger.DEPRECATION_LOGGER.debugf(
-				"Encountered use of deprecated `PersisterFactory#createEntityPersister` form accepting `%s`; use form accepting `%s` instead",
-				PersisterCreationContext.class.getName(),
-				RuntimeModelCreationContext.class.getName()
-		);
-
-		return createEntityPersister(
-				entityBinding,
-				entityCacheAccessStrategy,
-				naturalIdCacheAccessStrategy,
-				(RuntimeModelCreationContext) creationContext
-		);
-	}
-
-	/**
-	 * The constructor signature for {@link CollectionPersister} implementations
-	 *
-	 * @deprecated use {@link #COLLECTION_PERSISTER_CONSTRUCTOR_ARGS} instead
-	 */
-	@Deprecated(since = "6.0")
-	private static final Class<?>[] LEGACY_COLLECTION_PERSISTER_CONSTRUCTOR_ARGS = new Class[] {
-			Collection.class,
-			CollectionDataAccess.class,
-			PersisterCreationContext.class
-	};
-
-
-	@Override
-	public CollectionPersister createCollectionPersister(
-			Collection collectionBinding,
-			CollectionDataAccess cacheAccessStrategy,
-			@SuppressWarnings("deprecation") PersisterCreationContext creationContext) throws HibernateException {
-		DeprecationLogger.DEPRECATION_LOGGER.debugf(
-				"Encountered use of deprecated `PersisterFactory#createCollectionPersister` form accepting `%s`; use form accepting `%s` instead",
-				PersisterCreationContext.class.getName(),
-				RuntimeModelCreationContext.class.getName()
-		);
-
-		return createCollectionPersister( collectionBinding, cacheAccessStrategy, (RuntimeModelCreationContext) creationContext );
 	}
 }

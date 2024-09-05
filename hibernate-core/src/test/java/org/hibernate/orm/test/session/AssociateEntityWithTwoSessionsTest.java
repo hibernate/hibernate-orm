@@ -12,7 +12,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
+import org.hibernate.LockMode;
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.proxy.AbstractLazyInitializer;
 
@@ -22,10 +24,13 @@ import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.Rule;
 import org.junit.jupiter.api.Test;
 
 import org.jboss.logging.Logger;
+
+import java.lang.invoke.MethodHandles;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -33,15 +38,14 @@ import static org.junit.Assert.fail;
 /**
  * @author Vlad Mihalcea
  */
-@Jpa(annotatedClasses = {
-		AssociateEntityWithTwoSessionsTest.Location.class,
-		AssociateEntityWithTwoSessionsTest.Event.class
-})
+@Jpa(annotatedClasses = {AssociateEntityWithTwoSessionsTest.Location.class,
+						AssociateEntityWithTwoSessionsTest.Event.class},
+		properties = @Setting(name = AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY, value = "true"))
 public class AssociateEntityWithTwoSessionsTest {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, AbstractLazyInitializer.class.getName() ) );
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, AbstractLazyInitializer.class.getName() ) );
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12216" )
@@ -62,12 +66,12 @@ public class AssociateEntityWithTwoSessionsTest {
 		triggerable.reset();
 
 		scope.inTransaction( entityManager -> {
-			Event event1 = entityManager.find( Event.class, event.id );
-			Location location1 = event1.getLocation();
+			Event e = entityManager.find( Event.class, event.id );
+			Location location1 = e.getLocation();
 
 			try {
 				scope.inTransaction( _entityManager -> {
-					_entityManager.unwrap( Session.class ).update( location1 );
+					_entityManager.unwrap( Session.class ).lock( location1, LockMode.NONE );
 				} );
 
 				fail("Should have thrown a HibernateException");

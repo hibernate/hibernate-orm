@@ -12,8 +12,6 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
@@ -38,13 +36,8 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.MergeContext;
-import org.hibernate.event.spi.PersistContext;
-import org.hibernate.event.spi.RefreshContext;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jdbc.ReturningWork;
@@ -63,12 +56,19 @@ import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.stat.SessionStatistics;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.FindOption;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.LockOption;
+import jakarta.persistence.RefreshOption;
+import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.metamodel.Metamodel;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -309,6 +309,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public void lock(Object entity, LockModeType lockMode, LockOption... options) {
+		delegate.lock( entity, lockMode, options );
+	}
+
+	@Override
 	public void flush() {
 		delegate.flush();
 	}
@@ -500,6 +505,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public <T> QueryImplementor<T> createQuery(CriteriaSelect<T> selectQuery) {
+		return delegate.createQuery( selectQuery );
+	}
+
+	@Override
 	public <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
 		return delegate.getEntityGraphs( entityClass );
 	}
@@ -545,6 +555,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override @SuppressWarnings("rawtypes")
 	public QueryImplementor createQuery(CriteriaDelete deleteQuery) {
 		return queryDelegate().createQuery( deleteQuery );
+	}
+
+	@Override
+	public <T> QueryImplementor<T> createQuery(TypedQueryReference<T> typedQueryReference) {
+		return queryDelegate().createQuery( typedQueryReference );
 	}
 
 	@Override @SuppressWarnings("rawtypes")
@@ -794,36 +809,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> T load(Class<T> theClass, Object id, LockMode lockMode) {
-		return delegate.load( theClass, id, lockMode );
-	}
-
-	@Override
-	public <T> T load(Class<T> theClass, Object id, LockOptions lockOptions) {
-		return delegate.load( theClass, id, lockOptions );
-	}
-
-	@Override
-	public Object load(String entityName, Object id, LockMode lockMode) {
-		return delegate.load( entityName, id, lockMode );
-	}
-
-	@Override
-	public Object load(String entityName, Object id, LockOptions lockOptions) {
-		return delegate.load( entityName, id, lockOptions );
-	}
-
-	@Override
-	public <T> T load(Class<T> theClass, Object id) {
-		return delegate.load( theClass, id );
-	}
-
-	@Override
-	public Object load(String entityName, Object id) {
-		return delegate.load( entityName, id );
-	}
-
-	@Override
 	public void load(Object object, Object id) {
 		delegate.load( object, id );
 	}
@@ -836,36 +821,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void replicate(String entityName, Object object, ReplicationMode replicationMode) {
 		delegate.replicate( entityName, object, replicationMode );
-	}
-
-	@Override
-	public Object save(Object object) {
-		return delegate.save( object );
-	}
-
-	@Override
-	public Object save(String entityName, Object object) {
-		return delegate.save( entityName, object );
-	}
-
-	@Override
-	public void saveOrUpdate(Object object) {
-		delegate.saveOrUpdate( object );
-	}
-
-	@Override
-	public void saveOrUpdate(String entityName, Object object) {
-		delegate.saveOrUpdate( entityName, object );
-	}
-
-	@Override
-	public void update(Object object) {
-		delegate.update( object );
-	}
-
-	@Override
-	public void update(String entityName, Object object) {
-		delegate.update( entityName, object );
 	}
 
 	@Override
@@ -909,6 +864,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public <T> T find(Class<T> entityClass, Object primaryKey, FindOption... options) {
+		return delegate.find( entityClass, primaryKey, options );
+	}
+
+	@Override
+	public <T> T find(EntityGraph<T> entityGraph, Object primaryKey, FindOption... options) {
+		return delegate.find( entityGraph, primaryKey, options );
+	}
+
+	@Override
 	public <T> T getReference(Class<T> entityClass, Object id) {
 		return delegate.getReference( entityClass, id );
 	}
@@ -924,23 +889,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void delete(Object object) {
-		delegate.delete( object );
-	}
-
-	@Override
-	public void delete(String entityName, Object object) {
-		delegate.delete( entityName, object );
-	}
-
-	@Override
 	public void lock(Object object, LockMode lockMode) {
 		delegate.lock( object, lockMode );
-	}
-
-	@Override
-	public void lock(String entityName, Object object, LockMode lockMode) {
-		delegate.lock( entityName, object, lockMode );
 	}
 
 	@Override
@@ -951,11 +901,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void lock(Object object, LockOptions lockOptions) {
 		delegate.lock( object, lockOptions );
-	}
-
-	@Override @Deprecated
-	public LockRequest buildLockRequest(LockOptions lockOptions) {
-		return delegate.buildLockRequest( lockOptions );
 	}
 
 	@Override
@@ -979,8 +924,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void refresh(String entityName, Object object) {
-		delegate.refresh( entityName, object );
+	public void refresh(Object entity, RefreshOption... options) {
+		delegate.refresh( entity, options );
 	}
 
 	@Override
@@ -991,11 +936,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void refresh(Object object, LockOptions lockOptions) {
 		delegate.refresh( object, lockOptions );
-	}
-
-	@Override
-	public void refresh(String entityName, Object object, LockOptions lockOptions) {
-		delegate.refresh( entityName, object, lockOptions );
 	}
 
 	@Override
@@ -1186,36 +1126,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void forceFlush(EntityKey e) throws HibernateException {
 		delegate.forceFlush( e );
-	}
-
-	@Override
-	public void merge(String entityName, Object object, MergeContext copiedAlready) throws HibernateException {
-		delegate.merge( entityName, object, copiedAlready );
-	}
-
-	@Override
-	public void persist(String entityName, Object object, PersistContext createdAlready) throws HibernateException {
-		delegate.persist( entityName, object, createdAlready );
-	}
-
-	@Override
-	public void persistOnFlush(String entityName, Object object, PersistContext copiedAlready) {
-		delegate.persistOnFlush( entityName, object, copiedAlready );
-	}
-
-	@Override
-	public void refresh(String entityName, Object object, RefreshContext refreshedAlready) throws HibernateException {
-		delegate.refresh( entityName, object, refreshedAlready );
-	}
-
-	@Override
-	public void delete(String entityName, Object child, boolean isCascadeDeleteEnabled, DeleteContext transientEntities) {
-		delegate.delete( entityName, child, isCascadeDeleteEnabled, transientEntities );
-	}
-
-	@Override
-	public void removeOrphanBeforeUpdates(String entityName, Object child) {
-		delegate.removeOrphanBeforeUpdates( entityName, child );
 	}
 
 	@Override

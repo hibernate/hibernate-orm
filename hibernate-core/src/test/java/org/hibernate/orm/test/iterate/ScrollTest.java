@@ -61,8 +61,8 @@ public class ScrollTest {
 						assertThat( i1.getName(), is( "foo" ) );
 						assertThat( i2.getName(), is( "bar" ) );
 						assertFalse( sr.next() );
-						s.delete( i1 );
-						s.delete( i2 );
+						s.remove( i1 );
+						s.remove( i2 );
 					}
 
 					assertTrue( s.getPersistenceContext().getLoadContexts().isLoadingFinished() );

@@ -42,7 +42,8 @@ public class MyDateUserType implements UserType<MyDate> {
 	}
 
 	@Override
-	public MyDate nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public MyDate nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+			throws SQLException {
 		return new MyDate( rs.getDate( position ) );
 	}
 
@@ -51,7 +52,7 @@ public class MyDateUserType implements UserType<MyDate> {
 			PreparedStatement st,
 			MyDate value,
 			int index,
-			SharedSessionContractImplementor session) throws HibernateException, SQLException {
+			SharedSessionContractImplementor session) throws SQLException {
 		st.setDate(index, new java.sql.Date(value.getDate().getTime()));
 	}
 

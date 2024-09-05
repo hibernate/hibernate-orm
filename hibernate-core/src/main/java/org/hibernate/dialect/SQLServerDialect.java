@@ -7,6 +7,7 @@
 package org.hibernate.dialect;
 
 import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.ChronoField;
@@ -40,6 +41,7 @@ import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.engine.jdbc.dialect.spi.BasicSQLExceptionConverter;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -52,6 +54,9 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.procedure.internal.SQLServerCallableStatementSupport;
@@ -89,6 +94,7 @@ import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.cfg.DialectSpecificSettings.SQL_SERVER_COMPATIBILITY_LEVEL;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
@@ -174,8 +180,36 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	public SQLServerDialect(DialectResolutionInfo info) {
-		super(info);
-		exporter = createSequenceExporter(info);
+		this( determineDatabaseVersion( info ) );
+		registerKeywords( info );
+	}
+
+	private static DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
+		final Integer compatibilityLevel = getCompatibilityLevel( info );
+		if ( compatibilityLevel != null ) {
+			final int majorVersion = compatibilityLevel / 10;
+			final int minorVersion = compatibilityLevel % 10;
+			return DatabaseVersion.make( majorVersion, minorVersion );
+		}
+		return info.makeCopyOrDefault( MINIMUM_VERSION );
+	}
+
+	private static Integer getCompatibilityLevel(DialectResolutionInfo info) {
+		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
+		if ( databaseMetaData != null ) {
+			try ( java.sql.Statement statement = databaseMetaData.getConnection().createStatement() ) {
+				final ResultSet rs = statement.executeQuery( "SELECT compatibility_level FROM sys.databases where name = db_name();" );
+				if ( rs.next() ) {
+					return rs.getInt( 1 );
+				}
+			}
+			catch (SQLException e) {
+				throw BasicSQLExceptionConverter.INSTANCE.convert( e );
+			}
+		}
+
+		// default to the dialect-specific configuration setting
+		return ConfigurationHelper.getInteger( SQL_SERVER_COMPATIBILITY_LEVEL, info.getConfigurationValues() );
 	}
 
 	private StandardSequenceExporter createSequenceExporter(DatabaseVersion version) {
@@ -783,18 +817,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		};
 	}
 
-	/**
-	 * SQL server supports up to 7 decimal digits of
-	 * fractional second precision in a datetime2,
-	 * but since its duration arithmetic functions
-	 * try to fit durations into an int,
-	 * which is impossible with such high precision,
-	 * so default to generating {@code datetime2(3)}
-	 * columns.
-	 */
 	@Override
 	public int getDefaultTimestampPrecision() {
-		return 6; //microseconds!
+		return 7;
 	}
 
 	/**
@@ -1170,4 +1195,20 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		return SQLServerCallableStatementSupport.INSTANCE;
 	}
 
+	@Override
+	public String getCheckConstraintString(CheckConstraint checkConstraint) {
+		final String constraintName = checkConstraint.getName();
+		return constraintName == null
+				?
+				" check " + getCheckConstraintOptions( checkConstraint ) + "(" + checkConstraint.getConstraint() + ")"
+				:
+				" constraint " + constraintName + " check " + getCheckConstraintOptions( checkConstraint ) + "(" + checkConstraint.getConstraint() + ")";
+	}
+
+	private String getCheckConstraintOptions(CheckConstraint checkConstraint) {
+		if ( StringHelper.isNotEmpty( checkConstraint.getOptions() ) ) {
+			return checkConstraint.getOptions() + " ";
+		}
+		return "";
+	}
 }

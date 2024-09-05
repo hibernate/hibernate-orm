@@ -10,6 +10,8 @@ import org.hibernate.internal.CoreMessageLogger;
 
 import org.jboss.logging.Logger;
 
+import java.lang.invoke.MethodHandles;
+
 /**
  * Indicates an attempt to access unfetched data outside the context
  * of an open stateful {@link Session}.
@@ -24,6 +26,7 @@ import org.jboss.logging.Logger;
 public class LazyInitializationException extends HibernateException {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			LazyInitializationException.class.getName()
 	);

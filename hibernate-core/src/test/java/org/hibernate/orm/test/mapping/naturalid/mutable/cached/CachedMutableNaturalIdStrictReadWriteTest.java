@@ -18,6 +18,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
+import static org.hibernate.cfg.AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY;
 import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
 import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
 import static org.hibernate.testing.cache.CachingRegionFactory.DEFAULT_ACCESSTYPE;
@@ -29,7 +30,8 @@ import static org.junit.Assert.assertNull;
 		settings = {
 				@Setting( name = USE_SECOND_LEVEL_CACHE, value = "true" ),
 				@Setting( name = DEFAULT_ACCESSTYPE, value = "nonstrict-read-write" ),
-				@Setting( name = GENERATE_STATISTICS, value = "true" )
+				@Setting( name = GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = ALLOW_REFRESH_DETACHED_ENTITY, value = "true" )
 		}
 )
 @DomainModel( annotatedClasses = {A.class, Another.class, AllCached.class, B.class, SubClass.class} )
@@ -43,7 +45,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 		statistics.clear();
 
 		scope.inTransaction(
-				(session) -> session.save( new AllCached( "IT" ) )
+				(session) -> session.persist( new AllCached( "IT" ) )
 		);
 
 		final NaturalIdStatistics naturalIdStatistics = statistics.getNaturalIdStatistics( AllCached.class.getName() );
@@ -57,7 +59,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 		statistics.clear();
 
 		scope.inTransaction(
-				(session) -> session.save( new Another( "it" ) )
+				(session) -> session.persist( new Another( "it" ) )
 		);
 
 		scope.inTransaction(
@@ -80,7 +82,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 					final Transaction transaction = session.getTransaction();
 					transaction.begin();
 
-					session.save( new Another( "it" ) );
+					session.persist( new Another( "it" ) );
 					session.flush();
 
 					transaction.rollback();
@@ -103,7 +105,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 		statistics.clear();
 
 		scope.inTransaction(
-				(session) -> session.save( new Another( "it" ) )
+				(session) -> session.persist( new Another( "it" ) )
 		);
 
 		scope.inTransaction(
@@ -134,7 +136,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 		statistics.clear();
 
 		scope.inTransaction(
-				(session) -> session.save( new Another( "it" ) )
+				(session) -> session.persist( new Another( "it" ) )
 		);
 
 		scope.inTransaction(
@@ -173,7 +175,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 				(session) -> {
 					Another it = new Another( "it" );
 					// schedules an InsertAction
-					session.save( it );
+					session.persist( it );
 
 					// schedules an UpdateAction
 					// 	- without bug-fix this will re-cache natural-id with identical key and at same time invalidate it
@@ -199,7 +201,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 
 		scope.inTransaction(
 				(session) -> {
-					session.save( new Another( "IT" ) );
+					session.persist( new Another( "IT" ) );
 				}
 		);
 

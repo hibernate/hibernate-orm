@@ -68,4 +68,22 @@ public @interface TimeZoneColumn {
 	 */
 	String table() default "";
 
+	/**
+	 * (Optional) The SQL fragment that is used when
+	 * 	generating the DDL for the column.
+	 * <p>
+	 * The DDL must be written in the native SQL dialect
+	 * of the target database (it is not portable across databases).
+	 *
+	 * @since 7.0
+	 */
+	String options() default "";
+
+	/**
+	 * (Optional) A comment to be applied to the column.
+	 *
+	 * @since 7.0
+	 */
+	String comment() default "";
+
 }

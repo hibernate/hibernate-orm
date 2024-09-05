@@ -28,10 +28,10 @@ import org.hibernate.Transaction;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -49,7 +49,6 @@ import org.hibernate.orm.test.any.hbm.StringPropertyValue;
 import org.hibernate.query.Query;
 import org.hibernate.query.SyntaxException;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -116,79 +115,79 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		inTransaction(
 				(session) -> {
 					session.createQuery( "from Animal" ).list().forEach(
-							(animal) -> session.delete( animal )
+							(animal) -> session.remove( animal )
 					);
 					session.createQuery( "from User" ).list().forEach(
-							(animal) -> session.delete( animal )
+							(animal) -> session.remove( animal )
 					);
 					session.createQuery( "from Zoo" ).list().forEach(
-							(animal) -> session.delete( animal )
+							(animal) -> session.remove( animal )
 					);
 					session.createQuery( "from StateProvince" ).list().forEach(
-							(animal) -> session.delete( animal )
+							(animal) -> session.remove( animal )
 					);
 					session.createQuery( "from Joiner" ).list().forEach(
-							(animal) -> session.delete( animal )
+							(animal) -> session.remove( animal )
 					);
 					session.createQuery( "from Foo" ).list().forEach(
-							(animal) -> session.delete( animal )
+							(animal) -> session.remove( animal )
 					);
 					session.createQuery( "from One" ).list().forEach(
-							(animal) -> session.delete( animal )
+							(animal) -> session.remove( animal )
 					);
 					session.createQuery( "from Many" ).list().forEach(
-							(animal) -> session.delete( animal )
+							(animal) -> session.remove( animal )
 					);
 					session.createQuery( "from SimpleAssociatedEntity" ).list().forEach(
-							(animal) -> session.delete( animal )
+							(animal) -> session.remove( animal )
 					);
 					session.createQuery( "from SimpleEntityWithAssociation" ).list().forEach(
-							(animal) -> session.delete( animal )
+							(animal) -> session.remove( animal )
 					);
 					session.createQuery( "from HeresAnotherCrazyIdFieldName" ).list().forEach(
-							(animal) -> session.delete( animal )
+							(animal) -> session.remove( animal )
 					);
 					session.createQuery( "from MoreCrazyIdFieldNameStuffEntity" ).list().forEach(
-							(animal) -> session.delete( animal )
+							(animal) -> session.remove( animal )
 					);
 					session.createQuery( "from Image" ).list().forEach(
-							(animal) -> session.delete( animal )
+							(animal) -> session.remove( animal )
 					);
 					session.createQuery( "from ComponentContainer" ).list().forEach(
-							(animal) -> session.delete( animal )
+							(animal) -> session.remove( animal )
 					);
 					session.createQuery( "from VariousKeywordPropertyEntity" ).list().forEach(
-							(animal) -> session.delete( animal )
+							(animal) -> session.remove( animal )
 					);
 					session.createQuery( "from Constructor" ).list().forEach(
-							(animal) -> session.delete( animal )
+							(animal) -> session.remove( animal )
 					);
 					session.createQuery( "from ProductLine" ).list().forEach(
-							(animal) -> session.delete( animal )
+							(animal) -> session.remove( animal )
 					);
 					session.createQuery( "from Model" ).list().forEach(
-							(animal) -> session.delete( animal )
+							(animal) -> session.remove( animal )
 					);
 					session.createQuery( "from LineItem" ).list().forEach(
-							(animal) -> session.delete( animal )
+							(animal) -> session.remove( animal )
 					);
 					session.createQuery( "from Product" ).list().forEach(
-							(animal) -> session.delete( animal )
+							(animal) -> session.remove( animal )
 					);
 					session.createQuery( "from Order" ).list().forEach(
-							(animal) -> session.delete( animal )
+							(animal) -> session.remove( animal )
 					);
 					session.createQuery( "from Customer" ).list().forEach(
-							(animal) -> session.delete( animal )
+							(animal) -> session.remove( animal )
 					);
 					session.createQuery( "from PropertySet" ).list().forEach(
-							(animal) -> session.delete( animal )
+							(animal) -> session.remove( animal )
 					);
 					session.createQuery( "from Commento" ).list().forEach(
-							(animal) -> session.delete( animal )
+							(animal) -> session.remove( animal )
 					);
 					session.createQuery( "from Marelo" ).list().forEach(
-							(animal) -> session.delete( animal )
+							(animal) -> session.remove( animal )
 					);
 				}
 		);
@@ -268,7 +267,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 					Address address = new Address();
 					Zoo zoo = new Zoo( "ZOO 1", address );
 					address.setCity( "City 1" );
-					session.save( zoo );
+					session.persist( zoo );
 				}
 		);
 
@@ -289,7 +288,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		final Constructor created = fromTransaction(
 				(session) -> {
 					final Constructor constructor = new Constructor();
-					session.save( constructor );
+					session.persist( constructor );
 					return constructor;
 				}
 		);
@@ -363,7 +362,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 									new ComponentContainer.Address.Zip( 12345, 6789 )
 							)
 					);
-					s.save( root );
+					s.persist( root );
 				}
 		);
 
@@ -398,9 +397,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 					address.setCity( "City 1" );
 					StateProvince stateProvince = new StateProvince();
 					stateProvince.setName( "Illinois" );
-					session.save( stateProvince );
+					session.persist( stateProvince );
 					address.setStateProvince( stateProvince );
-					session.save( zoo );
+					session.persist( zoo );
 				}
 		);
 
@@ -469,8 +468,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		me.setName( new Name( "Joe", null, "Ebersole" ) );
 		me.setFamily( new HashMap() );
 		me.getFamily().put( "son", joe );
-		s.save( me );
-		s.save( joe );
+		s.persist( me );
+		s.persist( joe );
 		s.getTransaction().commit();
 		s.close();
 
@@ -522,8 +521,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		s.delete( me );
-		s.delete( joe );
+		s.remove( me );
+		s.remove( joe );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -539,8 +538,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		me.setName( new Name( "Joe", null, "Ebersole" ) );
 		me.setFamily( new HashMap() );
 		me.getFamily().put( "son", joe );
-		s.save( me );
-		s.save( joe );
+		s.persist( me );
+		s.persist( joe );
 		s.getTransaction().commit();
 		s.close();
 
@@ -580,8 +579,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		s.delete( me );
-		s.delete( joe );
+		s.remove( me );
+		s.remove( joe );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -597,8 +596,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		me.setName( new Name( "Joe", null, "Ebersole" ) );
 		me.setFamily( new HashMap() );
 		me.getFamily().put( "son", joe );
-		s.save( me );
-		s.save( joe );
+		s.persist( me );
+		s.persist( joe );
 		s.getTransaction().commit();
 		s.close();
 
@@ -654,8 +653,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		s.delete( me );
-		s.delete( joe );
+		s.remove( me );
+		s.remove( joe );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -667,7 +666,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		Human h = new Human();
 		h.setName( new Name( "Steve", null, "Ebersole" ) );
-		s.save( h );
+		s.persist( h );
 		s.getTransaction().commit();
 		s.close();
 
@@ -680,7 +679,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		s.delete( h );
+		s.remove( h );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -694,7 +693,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		Human human = new Human();
 		human.setName( new Name( "Lukasz", null, "Antoniak" ) );
 		human.setNickName( "NONE" );
-		session.save( human );
+		session.persist( human );
 		session.getTransaction().commit();
 		session.close();
 
@@ -707,7 +706,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		session.delete( human );
+		session.remove( human );
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -720,7 +719,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		Human human = new Human();
 		human.setName( new Name( "Lukasz", null, "Antoniak" ) );
 		human.setNickName( "NONE" );
-		session.save( human );
+		session.persist( human );
 		session.getTransaction().commit();
 		session.close();
 
@@ -735,7 +734,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		session.delete( human );
+		session.remove( human );
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -747,20 +746,20 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		Human h = new Human();
 		h.setName( new Name( "Johnny", 'B', "Goode" ) );
-		s.save( h );
+		s.persist( h );
 		h = new Human();
 		h.setName( new Name( "Steve", null, "Ebersole" ) );
-		s.save( h );
+		s.persist( h );
 		h = new Human();
 		h.setName( new Name( "Bono", null, null ) );
-		s.save( h );
+		s.persist( h );
 		h = new Human();
 		h.setName( new Name( "Steve", 'Z', "Johnny" ) );
 		h.setIntValue( 1 );
-		s.save( h );
+		s.persist( h );
 		h = new Human();
 		h.setName( new Name( null, null, null ) );
-		s.save( h );
+		s.persist( h );
 		s.getTransaction().commit();
 		s.close();
 
@@ -826,16 +825,16 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		Human h = new Human();
 		h.setName( new Name( "Johnny", 'B', "Goode" ) );
-		s.save( h );
+		s.persist( h );
 		h = new Human();
 		h.setName( new Name( "Steve", null, "Ebersole" ) );
-		s.save( h );
+		s.persist( h );
 		h = new Human();
 		h.setName( new Name( "Bono", null, null ) );
-		s.save( h );
+		s.persist( h );
 		h = new Human();
 		h.setName( new Name( null, null, null ) );
-		s.save( h );
+		s.persist( h );
 		s.getTransaction().commit();
 		s.close();
 
@@ -1061,7 +1060,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 			s.createQuery( "from Animal where lower(upper('foo') || upper(:bar)) like 'f%'" ).setParameter( "bar", "xyz" ).list();
 		}
 
-		if ( getDialect() instanceof AbstractHANADialect ) {
+		if ( getDialect() instanceof HANADialect ) {
 			s.createQuery( "from Animal where abs(cast(1 as double) - cast(:param as double)) = 1.0" ).setParameter( "param", 1 ).list();
 		}
 		else if ( !( getDialect() instanceof PostgreSQLDialect || getDialect() instanceof MySQLDialect ) ) {
@@ -1080,9 +1079,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		MoreCrazyIdFieldNameStuffEntity other = new MoreCrazyIdFieldNameStuffEntity( "other" );
 		Session s = openSession();
 		s.beginTransaction();
-		s.save( next );
-		s.save( top );
-		s.save( other );
+		s.persist( next );
+		s.persist( top );
+		s.persist( other );
 		s.flush();
 
 		List results = s.createQuery( "select e.heresAnotherCrazyIdFieldName from MoreCrazyIdFieldNameStuffEntity e where e.heresAnotherCrazyIdFieldName is not null" ).list();
@@ -1100,9 +1099,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		results = s.createQuery( "select e.heresAnotherCrazyIdFieldName from MoreCrazyIdFieldNameStuffEntity e" ).list();
 		assertEquals( 1, results.size() );
 
-		s.delete( top );
-		s.delete( next );
-		s.delete( other );
+		s.remove( top );
+		s.remove( next );
+		s.remove( other );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -1121,9 +1120,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		SimpleEntityWithAssociation owner = new SimpleEntityWithAssociation( "owner" );
 		SimpleAssociatedEntity e1 = new SimpleAssociatedEntity( "thing one", owner );
 		SimpleAssociatedEntity e2 = new SimpleAssociatedEntity( "thing two" );
-		s.save( e1 );
-		s.save( e2 );
-		s.save( owner );
+		s.persist( e1 );
+		s.persist( e2 );
+		s.persist( owner );
 		s.getTransaction().commit();
 		s.close();
 
@@ -1141,9 +1140,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	 	s = openSession();
 		s.beginTransaction();
-		s.delete( e1 );
-		s.delete( e2 );
-		s.delete( owner );
+		s.remove( e1 );
+		s.remove( e2 );
+		s.remove( owner );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -1157,28 +1156,28 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		product.setNumberAvailable( 10 );
 		product.setPrice( new BigDecimal( 123 ) );
 		product.setProductId( "4321" );
-		s.save( product );
+		s.persist( product );
 
 
 		Customer customer = new Customer();
 		customer.setCustomerId( "123456789" );
 		customer.setName( "My customer" );
 		customer.setAddress( "somewhere" );
-		s.save( customer );
+		s.persist( customer );
 
 		Order order = customer.generateNewOrder( new BigDecimal( 1234 ) );
-		s.save( order );
+		s.persist( order );
 
 		LineItem li = order.generateLineItem( product, 5 );
-		s.save( li );
+		s.persist( li );
 		product = new Product();
 		product.setDescription( "My Product" );
 		product.setNumberAvailable( 10 );
 		product.setPrice( new BigDecimal( 123 ) );
 		product.setProductId( "1234" );
-		s.save( product );
+		s.persist( product );
 		li = order.generateLineItem( product, 10 );
-		s.save( li );
+		s.persist( li );
 
 		s.flush();
 		Query query = s.createQuery( "from LineItem l where l.id in (:idList)" );
@@ -1218,9 +1217,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		SimpleEntityWithAssociation owner = new SimpleEntityWithAssociation( "owner" );
 		SimpleAssociatedEntity e1 = new SimpleAssociatedEntity( "thing one", owner );
 		SimpleAssociatedEntity e2 = new SimpleAssociatedEntity( "thing two" );
-		s.save( e1 );
-		s.save( e2 );
-		s.save( owner );
+		s.persist( e1 );
+		s.persist( e2 );
+		s.persist( owner );
 		s.getTransaction().commit();
 		s.close();
 
@@ -1234,9 +1233,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	 	s = openSession();
 		s.beginTransaction();
-		s.delete( e1 );
-		s.delete( e2 );
-		s.delete( owner );
+		s.remove( e1 );
+		s.remove( e2 );
+		s.remove( owner );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -1276,11 +1275,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		Human h = new Human();
 		h.setName( new Name( "Gail", null, "Badner" ) );
-		s.save( h );
+		s.persist( h );
 		User u = new User();
 		u.setUserName( "gbadner" );
 		u.setHuman( h );
-		s.save( u );
+		s.persist( u );
 		s.getTransaction().commit();
 		s.close();
 
@@ -1331,11 +1330,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().begin();
 		Department department = (Department) s.createQuery( "select e.department from Employee e inner join e.department" ).uniqueResult();
 		assertEquals( employee1.getDepartment().getDeptName(), department.getDeptName() );
-		s.delete( employee1 );
-		s.delete( title1 );
-		s.delete( department );
-		s.delete( employee2 );
-		s.delete( title2 );
+		s.remove( employee1 );
+		s.remove( title1 );
+		s.remove( department );
+		s.remove( employee2 );
+		s.remove( title2 );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -1381,11 +1380,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 			assertNull( list.get( 1 ) );
 		}
 		assertEquals( dept1.getDeptName(), dept.getDeptName() );
-		s.delete( employee1 );
-		s.delete( title1 );
-		s.delete( dept );
-		s.delete( employee2 );
-		s.delete( title2 );
+		s.remove( employee1 );
+		s.remove( title1 );
+		s.remove( dept );
+		s.remove( employee2 );
+		s.remove( title2 );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -1427,11 +1426,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertEquals( employee1.getLastName(), result[1] );
 		assertEquals( employee1.getTitle().getDescription(), result[2] );
 		assertEquals( employee1.getDepartment().getDeptName(), ( (Department) result[3] ).getDeptName() );
-		s.delete( employee1 );
-		s.delete( title1 );
-		s.delete( result[3] );
-		s.delete( employee2 );
-		s.delete( title2 );
+		s.remove( employee1 );
+		s.remove( title1 );
+		s.remove( result[3] );
+		s.remove( employee2 );
+		s.remove( title2 );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -1641,7 +1640,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		ps.getGeneralProperties().put( "the loneliest number", loneliestNumberValue );
 		ps.getGeneralProperties().put( "i like", new StringPropertyValue( "pina coladas" ) );
 		ps.getGeneralProperties().put( "i also like", new StringPropertyValue( "getting caught in the rain" ) );
-		s.save( ps );
+		s.persist( ps );
 
 		s.getTransaction().commit();
 		id = ps.getId();
@@ -1657,7 +1656,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		s.createQuery( "from PropertySet p join p.generalProperties gp where gp.id is not null" ).list();
 
-		s.delete( s.load( PropertySet.class, id ) );
+		s.remove( s.getReference( PropertySet.class, id ) );
 
 		s.getTransaction().commit();
 		s.close();
@@ -1899,9 +1898,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		s.delete( tiger );
-		s.delete( mother );
-		s.delete( zoo );
+		s.remove( tiger );
+		s.remove( mother );
+		s.remove( zoo );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -1991,7 +1990,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		// note: simply performing syntax and column/table resolution checking in the db
 		Session s = openSession();
 		s.beginTransaction();
-		if ( getDialect() instanceof AbstractHANADialect ) {
+		if ( getDialect() instanceof HANADialect ) {
 			s.createQuery( "from Animal where mother is null" ).list();
 		}
 		else {
@@ -2072,7 +2071,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertEquals(result4, 4);
 		assertEquals(result5, 2);
 		assertEquals(result6, 4);
-		s.delete(zoo);
+		s.remove(zoo);
 		t.commit();
 		s.close();
 	}
@@ -2112,8 +2111,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.createQuery("select (select max(z.id) from a.zoo z where z.name=:name) from Animal a")
 			.setParameter("name", "Melbourne Zoo").list();
 
-		s.delete( plat );
-		s.delete(zoo);
+		s.remove( plat );
+		s.remove(zoo);
 		t.commit();
 		s.close();
 	}
@@ -2128,12 +2127,12 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.persist( plat );
 		s.flush();
 		s.clear();
-		plat = (Mammal) s.load(Mammal.class, plat.getId() );
+		plat = (Mammal) s.getReference(Mammal.class, plat.getId() );
 		assertFalse( Hibernate.isInitialized(plat) );
 		Object plat2 = s.createQuery("from Animal a").uniqueResult();
 		assertSame( plat, plat2 );
 		assertTrue( Hibernate.isInitialized( plat ) );
-		s.delete( plat );
+		s.remove( plat );
 		t.commit();
 		s.close();
 	}
@@ -2167,8 +2166,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertEquals( zoo.getMammals().size(), 1 );
 		assertEquals( zoo.getAnimals().size(), 1 );
 		s.clear();
-		s.delete(plat);
-		s.delete(zoo);
+		s.remove(plat);
+		s.remove(zoo);
 		t.commit();
 		s.close();
 	}
@@ -2242,11 +2241,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, zoos.get( 1 ).getMammals().size() );
 		assertEquals( 1, zoos.get( 1 ).getAnimals().size() );
 		s.clear();
-		s.delete(plat);
-		s.delete( zebra );
-		s.delete( elephant );
-		s.delete(zoo);
-		s.delete( otherZoo );
+		s.remove(plat);
+		s.remove( zebra );
+		s.remove( elephant );
+		s.remove(zoo);
+		s.remove( otherZoo );
 		t.commit();
 		s.close();
 	}
@@ -2306,11 +2305,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, zoos.get( 1 ).getMammals().size() );
 		assertEquals( 1, zoos.get( 1 ).getAnimals().size() );
 		s.clear();
-		s.delete(plat);
-		s.delete( zebra );
-		s.delete( elephant );
-		s.delete(zoo);
-		s.delete( otherZoo );
+		s.remove(plat);
+		s.remove( zebra );
+		s.remove( elephant );
+		s.remove(zoo);
+		s.remove( otherZoo );
 		t.commit();
 		s.close();
 	}
@@ -2344,8 +2343,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertEquals( zoo.getMammals().size(), 1 );
 		assertEquals( zoo.getAnimals().size(), 1 );
 		s.clear();
-		s.delete(plat);
-		s.delete(zoo);
+		s.remove(plat);
+		s.remove(zoo);
 		t.commit();
 		s.close();
 	}
@@ -2355,8 +2354,12 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 
-		Long id1 = ( Long ) s.save( genSimpleHuman( "John", "Jacob" ) );
-		Long id2 = ( Long ) s.save( genSimpleHuman( "Jingleheimer", "Schmidt" ) );
+		Human human1 = genSimpleHuman( "John", "Jacob" );
+		s.persist( human1 );
+		Long id1 =  human1.getId();
+		Human human2 = genSimpleHuman( "Jingleheimer", "Schmidt" );
+		s.persist( human2 );
+		Long id2 = human2.getId();
 
 		s.flush();
 
@@ -2370,8 +2373,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "Incorrect ordering", id2, h1.getId() );
 		assertEquals( "Incorrect ordering", id1, h2.getId() );
 
-		s.delete( h1 );
-		s.delete( h2 );
+		s.remove( h1 );
+		s.remove( h2 );
 
 		t.commit();
 		s.close();
@@ -2383,10 +2386,10 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		Transaction t = s.beginTransaction();
 		SimpleEntityWithAssociation first = new SimpleEntityWithAssociation();
 		first.setNegatedNumber( 1 );
-		s.save( first );
+		s.persist( first );
 		SimpleEntityWithAssociation second = new SimpleEntityWithAssociation();
 		second.setNegatedNumber(2);
-		s.save( second );
+		s.persist( second );
 		s.flush();
 
 		// Check order via SQL. Numbers are negated in the DB, so second comes first.
@@ -2401,8 +2404,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertEquals(first.getId(), ((SimpleEntityWithAssociation)listViaHql.get(0)).getId());
 		assertEquals(second.getId(), ((SimpleEntityWithAssociation)listViaHql.get(1)).getId());
 
-		s.delete( first );
-		s.delete( second );
+		s.remove( first );
+		s.remove( second );
 		t.commit();
 		s.close();
 	}
@@ -2414,15 +2417,15 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		SimpleEntityWithAssociation first = new SimpleEntityWithAssociation();
 		first.setNegatedNumber(5);
 		first.setName( "simple" );
-		s.save(first);
+		s.persist(first);
 		SimpleEntityWithAssociation second = new SimpleEntityWithAssociation();
 		second.setNegatedNumber( 10 );
 		second.setName("simple");
-		s.save(second);
+		s.persist(second);
 		SimpleEntityWithAssociation third = new SimpleEntityWithAssociation();
 		third.setNegatedNumber( 20 );
 		third.setName( "complex" );
-		s.save( third );
+		s.persist( third );
 		s.flush();
 
 		// Check order via HQL. Now first comes first b/c the read negates the DB negation.
@@ -2430,9 +2433,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 				"group by name having sum(negatedNumber) < 20").uniqueResult();
 		assertEquals(r.intValue(), 15);
 
-		s.delete(first);
-		s.delete(second);
-		s.delete(third);
+		s.remove(first);
+		s.remove(second);
+		s.remove(third);
 		t.commit();
 		s.close();
 
@@ -2463,13 +2466,13 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		final double NEW_SIZE_IN_KB = 2048d;
 		final double NEW_SIZE_IN_MB = NEW_SIZE_IN_KB / 1024d;
 		image.setSizeKb( NEW_SIZE_IN_KB );
-		s.update( image );
+		Image merged = s.merge( image );
 		s.flush();
 
 		sizeViaSql = ( (Number)s.createNativeQuery("select size_mb from image").uniqueResult() ).doubleValue();
 		assertEquals(NEW_SIZE_IN_MB, sizeViaSql, 0.01d);
 
-		s.delete(image);
+		s.remove( merged );
 		t.commit();
 		s.close();
 	}
@@ -2500,7 +2503,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		Object literal = s.createQuery("select cast(10000000 as big_integer) from Animal").uniqueResult();
 		assertTrue( BigInteger.class.isInstance( literal ) );
 		assertEquals( BigInteger.valueOf( 10000000 ), literal );
-		s.delete(a);
+		s.remove(a);
 		t.commit();
 		s.close();
 	}
@@ -2607,7 +2610,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertTrue( "int * BigDecimal", BigDecimal.class.isInstance( result ) );
 		assertEquals( BigDecimal.valueOf( 1 ), result );
 
-		s.delete(a);
+		s.remove(a);
 		t.commit();
 		s.close();
 	}
@@ -2644,7 +2647,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertThat( selections.get( 1 ).getSelectableNode(), instanceOf( SqmFunction.class ) );
 		assertThat( ( (SqmFunction) selections.get( 1 ).getSelectableNode() ).getFunctionName(), is( "avg" ) );
 
-		s.delete(a);
+		s.remove(a);
 		t.commit();
 		s.close();
 	}
@@ -2727,7 +2730,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertEquals(avg.doubleValue(), 120.5, 0.01);
 		Long id = (Long) s.createQuery("select max(a.id) from Animal a").uniqueResult();
 		assertNotNull( id );
-		s.delete( h );
+		s.remove( h );
 		s.getTransaction().commit();
 		s.close();
 
@@ -2755,8 +2758,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		// avg() should return a double
 		assertTrue( Double.class.isInstance( results[3] ) );
 		assertEquals( 1.5D, results[3] );
-		s.delete(h);
-		s.delete(h2);
+		s.remove(h);
+		s.remove(h2);
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -2776,7 +2779,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertEquals(name, "gavin");
 		String result = (String) s.createQuery("select case when bodyWeight > 100 then 'fat' else 'skinny' end from Human").uniqueResult();
 		assertEquals(result, "skinny");
-		s.delete(h);
+		s.remove(h);
 		t.commit();
 		s.close();
 	}
@@ -2792,12 +2795,12 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		product.setNumberAvailable( 10 );
 		product.setPrice( new BigDecimal( 123 ) );
 		product.setProductId( "4321" );
-		s.save( product );
+		s.persist( product );
 
 		List list = s.createQuery("from java.lang.Object").list();
 		assertEquals( list.size(), 1 );
 
-		s.delete(product);
+		s.remove(product);
 
 		list = s.createQuery("from java.lang.Object").list();
 		assertEquals( list.size(), 0 );
@@ -2841,7 +2844,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 			}
 			assertEquals( dp1[i], dp2[i] );
 		}
-		session.delete(an);
+		session.remove(an);
 		txn.commit();
 		session.close();
 	}
@@ -2875,7 +2878,6 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SkipForDialect(value = CockroachDialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/41943")
-	@SuppressWarnings( {"UnusedAssignment", "UnusedDeclaration"})
 	public void testSelectExpressions() {
 		createTestBaseData();
 		Session session = openSession();
@@ -2903,7 +2905,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		results = session.createQuery("select lower(upper('foo')) from Animal").list();
 		results = session.createQuery("select lower(upper('foo') || upper('bar')) from Animal").list();
 		results = session.createQuery("select sum(abs(bodyWeight - 1.0) * abs(length('ffobar')-3)) from Animal").list();
-		session.delete(h);
+		session.remove(h);
 		txn.commit();
 		session.close();
 		destroyTestBaseData();
@@ -2917,14 +2919,14 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		m1.setBodyWeight( 11f );
 		m1.setDescription( "Mammal #1" );
 
-		session.save( m1 );
+		session.persist( m1 );
 
 		Mammal m2 = new Mammal();
 		m2.setBodyWeight( 9f );
 		m2.setDescription( "Mammal #2" );
 		m2.setMother( m1 );
 
-		session.save( m2 );
+		session.persist( m2 );
 
 		txn.commit();
 		session.close();
@@ -2938,8 +2940,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		Transaction txn = session.beginTransaction();
 
 		for ( Long createdAnimalId : createdAnimalIds ) {
-			Animal animal = session.load( Animal.class, createdAnimalId );
-			session.delete( animal );
+			Animal animal = session.getReference( Animal.class, createdAnimalId );
+			session.remove( animal );
 		}
 
 		txn.commit();
@@ -2967,9 +2969,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertEquals( list.size(), 2 );
 		list = session.createQuery("from Animal a where a.mother.bodyWeight > 2.0 and a.mother.bodyWeight > 9.0").list();
 		assertEquals( list.size(), 2 );
-		session.delete(b);
-		session.delete(a);
-		session.delete(mother);
+		session.remove(b);
+		session.remove(a);
+		session.remove(mother);
 		t.commit();
 		session.close();
 	}
@@ -3103,8 +3105,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		Session session = openSession();
 		Transaction txn = session.beginTransaction();
-		session.save( mammal );
-		session.save( zoo );
+		session.persist( mammal );
+		session.persist( zoo );
 		txn.commit();
 		session.close();
 
@@ -3118,8 +3120,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertTrue( Hibernate.isInitialized( zooRead.getMammals() ) );
 		Mammal mammalRead = ( Mammal ) zooRead.getMammals().get( "zebra" );
 		assertEquals( mammal, mammalRead );
-		session.delete( mammalRead );
-		session.delete( zooRead );
+		session.remove( mammalRead );
+		session.remove( zooRead );
 		txn.commit();
 		session.close();
 	}
@@ -3136,8 +3138,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		Session session = openSession();
 		Transaction txn = session.beginTransaction();
-		session.save( mammal );
-		session.save( zoo );
+		session.persist( mammal );
+		session.persist( zoo );
 		txn.commit();
 		session.close();
 
@@ -3151,8 +3153,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		Mammal mammalRead = ( Mammal ) resultObjects[ 1 ];
 		assertEquals( zoo, zooRead );
 		assertEquals( mammal, mammalRead );
-		session.delete( mammalRead );
-		session.delete( zooRead );
+		session.remove( mammalRead );
+		session.remove( zooRead );
 		txn.commit();
 		session.close();
 	}
@@ -3169,8 +3171,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		Session session = openSession();
 		Transaction txn = session.beginTransaction();
-		session.save( mammal );
-		session.save( zoo );
+		session.persist( mammal );
+		session.persist( zoo );
 		txn.commit();
 		session.close();
 
@@ -3184,8 +3186,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		Mammal mammalRead = ( Mammal ) resultObjects[ 1 ];
 		assertEquals( zoo, zooRead );
 		assertEquals( mammal, mammalRead );
-		session.delete( mammalRead );
-		session.delete( zooRead );
+		session.remove( mammalRead );
+		session.remove( zooRead );
 		txn.commit();
 		session.close();
 	}
@@ -3226,7 +3228,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( result[0] );
 		assertNotNull( result[1] );
 		assertNotNull( result[2] );
-		session.delete(p);
+		session.remove(p);
 		t.commit();
 		session.close();
 	}
@@ -3404,17 +3406,17 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.getTransaction().begin();
-		s.delete( employee1 );
-		s.delete( title1 );
-		s.delete( dept1 );
-		s.delete( employee2 );
-		s.delete( title2 );
+		s.remove( employee1 );
+		s.remove( title1 );
+		s.remove( dept1 );
+		s.remove( employee2 );
+		s.remove( title2 );
 		s.getTransaction().commit();
 		s.close();
 	}
 
 	@Test
-	@SuppressWarnings( {"UnusedAssignment"})
+	@SuppressWarnings("unused")
 	public void testCachedJoinedAndJoinFetchedManyToOne() throws Exception {
 		Animal a = new Animal();
 		a.setDescription( "an animal" );
@@ -3436,10 +3438,10 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		s.save( mother );
-		s.save( a );
-		s.save( offspring1 );
-		s.save( offspring2 );
+		s.persist( mother );
+		s.persist( a );
+		s.persist( offspring1 );
+		s.persist( offspring2 );
 		t.commit();
 		s.close();
 
@@ -3459,14 +3461,13 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 2, sessionFactory().getStatistics().getQueryCachePutCount() );
 		list = s.createQuery( "from Animal" ).list();
 		for(Object obj : list){
-			s.delete( obj );
+			s.remove( obj );
 		}
 		t.commit();
 		s.close();
 	}
 
 	@Test
-	@SuppressWarnings( {"UnusedAssignment", "UnusedDeclaration"})
 	public void testCachedJoinedAndJoinFetchedOneToMany() throws Exception {
 		Animal a = new Animal();
 		a.setDescription( "an animal" );
@@ -3488,10 +3489,10 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		s.save( mother );
-		s.save( a );
-		s.save( offspring1 );
-		s.save( offspring2 );
+		s.persist( mother );
+		s.persist( a );
+		s.persist( offspring1 );
+		s.persist( offspring2 );
 		t.commit();
 		s.close();
 
@@ -3508,7 +3509,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 2, sessionFactory().getStatistics().getQueryCachePutCount() );
 		list = s.createQuery( "from Animal" ).list();
 		for ( Object obj : list ) {
-			s.delete( obj );
+			s.remove( obj );
 		}
 		t.commit();
 		s.close();

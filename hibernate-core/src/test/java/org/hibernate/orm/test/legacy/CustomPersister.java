@@ -43,7 +43,6 @@ import org.hibernate.internal.StaticFilterAliasGenerator;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.AttributeMappingsMap;
@@ -55,22 +54,25 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.entity.DiscriminatorMetadata;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyEntry;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
-import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.model.MutationOperationGroup;
+import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.tuple.entity.EntityMetamodel;
@@ -96,7 +98,7 @@ public class CustomPersister implements EntityPersister {
 			PersistentClass model,
 			EntityDataAccess cacheAccessStrategy,
 			NaturalIdDataAccess naturalIdRegionAccessStrategy,
-			PersisterCreationContext creationContext) {
+			RuntimeModelCreationContext creationContext) {
 		this.factory = creationContext.getSessionFactory();
 		this.entityMetamodel = new EntityMetamodel( model, this, creationContext );
 	}
@@ -642,10 +644,6 @@ public class CustomPersister implements EntityPersister {
 		return new String[] { "CUSTOMS" };
 	}
 
-	public ClassMetadata getClassMetadata() {
-		return null;
-	}
-
 	public boolean[] getPropertyUpdateability() {
 		return MUTABILITY;
 	}
@@ -1004,5 +1002,185 @@ public class CustomPersister implements EntityPersister {
 	@Override
 	public GeneratedValuesMutationDelegate getUpdateDelegate() {
 		return null;
+	}
+
+	@Override
+	public String getTableName() {
+		return "";
+	}
+
+	@Override
+	public String[] getIdentifierAliases(String suffix) {
+		return new String[0];
+	}
+
+	@Override
+	public String getRootTableName() {
+		return "";
+	}
+
+	@Override
+	public String[] getRootTableIdentifierColumnNames() {
+		return new String[0];
+	}
+
+	@Override
+	public String getVersionColumnName() {
+		return "";
+	}
+
+	@Override
+	public String[] getPropertyAliases(String suffix, int i) {
+		return new String[0];
+	}
+
+	@Override
+	public String getDiscriminatorAlias(String suffix) {
+		return "";
+	}
+
+	@Override
+	public String getDiscriminatorColumnName() {
+		return "";
+	}
+
+	@Override
+	public Type getDiscriminatorType() {
+		return null;
+	}
+
+	@Override
+	public boolean hasRowId() {
+		return false;
+	}
+
+	@Override
+	public String[] getSubclassPropertyColumnAliases(String propertyName, String suffix) {
+		return new String[0];
+	}
+
+	@Override
+	public String[] getPropertyColumnNames(String propertyPath) {
+		return new String[0];
+	}
+
+	@Override
+	public String selectFragment(String alias, String suffix) {
+		return "";
+	}
+
+	@Override
+	public DiscriminatorMetadata getTypeDiscriminatorMetadata() {
+		return null;
+	}
+
+	@Override
+	public String[] toColumns(String propertyName) {
+		return new String[0];
+	}
+
+	@Override
+	public boolean[] getNonLazyPropertyUpdateability() {
+		return new boolean[0];
+	}
+
+	@Override
+	public boolean hasMultipleTables() {
+		return false;
+	}
+
+	@Override
+	public String[] getTableNames() {
+		return new String[0];
+	}
+
+	@Override
+	public String getTableName(int j) {
+		return "";
+	}
+
+	@Override
+	public String[] getKeyColumns(int j) {
+		return new String[0];
+	}
+
+	@Override
+	public int getTableSpan() {
+		return 0;
+	}
+
+	@Override
+	public boolean isInverseTable(int j) {
+		return false;
+	}
+
+	@Override
+	public boolean isNullableTable(int j) {
+		return false;
+	}
+
+	@Override
+	public boolean hasDuplicateTables() {
+		return false;
+	}
+
+	@Override
+	public int getSubclassTableSpan() {
+		return 0;
+	}
+
+	@Override
+	public String getSubclassTableName(int j) {
+		return "";
+	}
+
+	@Override
+	public String getTableNameForColumn(String columnName) {
+		return "";
+	}
+
+	@Override
+	public String[] getSubclassPropertyColumnNames(int i) {
+		return new String[0];
+	}
+
+	@Override
+	public int countSubclassProperties() {
+		return 0;
+	}
+
+	@Override
+	public boolean isSharedColumn(String columnExpression) {
+		return false;
+	}
+
+	@Override
+	public String[][] getConstraintOrderedTableKeyColumnClosure() {
+		return new String[0][];
+	}
+
+	@Override
+	public EntityTableMapping[] getTableMappings() {
+		return new EntityTableMapping[0];
+	}
+
+	@Override
+	public String physicalTableNameForMutation(SelectableMapping selectableMapping) {
+		return "";
+	}
+
+	@Override
+	public void addDiscriminatorToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
+
+	}
+
+	@Override
+	public void addSoftDeleteToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
+
+	}
+
+	@Override
+	public String getAttributeMutationTableName(int i) {
+		return "";
 	}
 }

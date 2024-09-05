@@ -15,8 +15,11 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				"org/hibernate/orm/test/readonly/TextHolder.hbm.xml"
 		}
 )
+@ServiceRegistry(settings = @Setting(name = AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY, value = "true"))
 public class ReadOnlyTest extends AbstractReadOnlyTest {
 
 	@Test
@@ -50,7 +54,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 							BigDecimal.ROUND_DOWN
 					) );
 					dp.setDescription( "original" );
-					session.save( dp );
+					session.persist( dp );
 					return dp.getId();
 				}
 		);
@@ -61,7 +65,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 
 		scope.inTransaction(
 				session -> {
-					DataPoint dp = session.load( DataPoint.class, new Long( dpId ) );
+					DataPoint dp = session.getReference( DataPoint.class, new Long( dpId ) );
 					assertFalse( Hibernate.isInitialized( dp ), "was initialized" );
 					session.setReadOnly( dp, true );
 					assertFalse( Hibernate.isInitialized( dp ), "was initialized during setReadOnly" );
@@ -101,7 +105,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 								19,
 								BigDecimal.ROUND_DOWN
 						) );
-						session.save( dp );
+						session.persist( dp );
 					}
 				}
 		);
@@ -167,7 +171,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 								19,
 								BigDecimal.ROUND_DOWN
 						) );
-						session.save( dp );
+						session.persist( dp );
 					}
 
 					assertInsertCount( 0, scope );
@@ -184,7 +188,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 						while ( sr.next() ) {
 							DataPoint dp = (DataPoint) sr.get();
 							assertFalse( session.isReadOnly( dp ) );
-							session.delete( dp );
+							session.remove( dp );
 						}
 					}
 				}
@@ -207,7 +211,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 							19,
 							BigDecimal.ROUND_DOWN
 					) );
-					session.save( d );
+					session.persist( d );
 					session.setReadOnly( d, true );
 					d.setDescription( "different" );
 				}
@@ -239,7 +243,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 						session.beginTransaction();
 						dp = session.get( DataPoint.class, dp.getId() );
 						assertEquals( "original", dp.getDescription() );
-						session.delete( dp );
+						session.remove( dp );
 						session.getTransaction().commit();
 					}
 					finally {
@@ -268,7 +272,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 							19,
 							BigDecimal.ROUND_DOWN
 					) );
-					session.save( d );
+					session.persist( d );
 				}
 		);
 
@@ -299,7 +303,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 						session.beginTransaction();
 						dp = session.get( DataPoint.class, dp.getId() );
 						assertEquals( "original", dp.getDescription() );
-						session.delete( dp );
+						session.remove( dp );
 						session.getTransaction().commit();
 					}
 					finally {
@@ -325,7 +329,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		dp.setDescription( "original" );
 		dp.setX( new BigDecimal( 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
 		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-		s.save( dp );
+		s.persist( dp );
 		t.commit();
 		s.close();
 
@@ -356,7 +360,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		t = s.beginTransaction();
 		dp = (DataPoint) s.get( DataPoint.class, dp.getId() );
 		assertEquals( "original", dp.getDescription() );
-		s.delete( dp );
+		s.remove( dp );
 		t.commit();
 		s.close();
 
@@ -373,7 +377,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		DataPoint dp = new DataPoint();
 		dp.setX( new BigDecimal( 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
 		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-		s.save( dp );
+		s.persist( dp );
 		t.commit();
 		s.close();
 
@@ -383,9 +387,9 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 
 		s = openSession( scope );
 		t = s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dp.getId() );
+		dp = s.get( DataPoint.class, dp.getId() );
 		s.setReadOnly( dp, true );
-		s.delete( dp );
+		s.remove( dp );
 		t.commit();
 		s.close();
 
@@ -410,7 +414,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		DataPoint dp = new DataPoint();
 		dp.setX( new BigDecimal( 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
 		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-		s.save( dp );
+		s.persist( dp );
 		t.commit();
 		s.close();
 
@@ -420,10 +424,10 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 
 		s = openSession( scope );
 		t = s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dp.getId() );
+		dp = s.get( DataPoint.class, dp.getId() );
 		s.setReadOnly( dp, true );
 		dp.setDescription( "a DataPoint" );
-		s.delete( dp );
+		s.remove( dp );
 		t.commit();
 		s.close();
 
@@ -450,7 +454,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 			dp = new DataPoint();
 			dp.setX( new BigDecimal( i * 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
 			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-			s.save( dp );
+			s.persist( dp );
 		}
 		t.commit();
 		s.close();
@@ -512,7 +516,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 			dp = new DataPoint();
 			dp.setX( new BigDecimal( i * 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
 			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-			s.save( dp );
+			s.persist( dp );
 		}
 		t.commit();
 		s.close();
@@ -578,7 +582,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		Session s = openSession( scope );
 		s.beginTransaction();
 		TextHolder holder = new TextHolder( origText );
-		s.save( holder );
+		s.persist( holder );
 		Long id = holder.getId();
 		s.getTransaction().commit();
 		s.close();
@@ -589,7 +593,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 
 		s = openSession( scope );
 		s.beginTransaction();
-		holder = (TextHolder) s.get( TextHolder.class, id );
+		holder = s.get( TextHolder.class, id );
 		s.setReadOnly( holder, true );
 		holder.setTheText( newText );
 		s.flush();
@@ -600,9 +604,9 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 
 		s = openSession( scope );
 		s.beginTransaction();
-		holder = (TextHolder) s.get( TextHolder.class, id );
+		holder = s.get( TextHolder.class, id );
 		assertEquals( origText, holder.getTheText(), "change written to database" );
-		s.delete( holder );
+		s.remove( holder );
 		s.getTransaction().commit();
 		s.close();
 
@@ -619,7 +623,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		DataPoint dp = new DataPoint();
 		dp.setX( new BigDecimal( 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
 		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-		s.save( dp );
+		s.persist( dp );
 		t.commit();
 		s.close();
 
@@ -631,9 +635,9 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 
 		s = openSession( scope );
 		t = s.beginTransaction();
-		DataPoint dpManaged = (DataPoint) s.get( DataPoint.class, new Long( dp.getId() ) );
+		DataPoint dpManaged = s.get( DataPoint.class, new Long( dp.getId() ) );
 		s.setReadOnly( dpManaged, true );
-		DataPoint dpMerged = (DataPoint) s.merge( dp );
+		DataPoint dpMerged = s.merge( dp );
 		assertSame( dpManaged, dpMerged );
 		t.commit();
 		s.close();
@@ -642,9 +646,9 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 
 		s = openSession( scope );
 		t = s.beginTransaction();
-		dpManaged = (DataPoint) s.get( DataPoint.class, new Long( dp.getId() ) );
+		dpManaged = s.get( DataPoint.class, new Long( dp.getId() ) );
 		assertNull( dpManaged.getDescription() );
-		s.delete( dpManaged );
+		s.remove( dpManaged );
 		t.commit();
 		s.close();
 

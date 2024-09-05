@@ -6,10 +6,10 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
-import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmJoinable;
@@ -18,31 +18,32 @@ import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Predicate;
 
 /**
  * Models a join based on a mapped attribute reference.
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractSqmAttributeJoin<O,T>
-		extends AbstractSqmQualifiedJoin<O,T>
-		implements SqmAttributeJoin<O,T> {
+public abstract class AbstractSqmAttributeJoin<L, R>
+		extends AbstractSqmJoin<L, R>
+		implements SqmAttributeJoin<L, R> {
 
 	private boolean fetched;
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public AbstractSqmAttributeJoin(
-			SqmFrom<?,O> lhs,
+			SqmFrom<?, L> lhs,
 			SqmJoinable joinedNavigable,
 			String alias,
 			SqmJoinType joinType,
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
+		//noinspection StringEquality
 		this(
 				lhs,
 				joinedNavigable.createNavigablePath( lhs, alias ),
@@ -54,8 +55,9 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 		);
 	}
 
+	@SuppressWarnings("rawtypes")
 	protected AbstractSqmAttributeJoin(
-			SqmFrom<?,O> lhs,
+			SqmFrom<?, L> lhs,
 			NavigablePath navigablePath,
 			SqmJoinable joinedNavigable,
 			String alias,
@@ -65,7 +67,7 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 		//noinspection unchecked
 		super(
 				navigablePath,
-				(SqmPathSource<T>) joinedNavigable,
+				(SqmPathSource<R>) joinedNavigable,
 				lhs,
 				alias,
 				joinType,
@@ -76,13 +78,12 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 	}
 
 	@Override
-	public SqmFrom<?, O> getLhs() {
-		//noinspection unchecked
-		return (SqmFrom<?, O>) super.getLhs();
+	public SqmFrom<?, L> getLhs() {
+		return super.getLhs();
 	}
 
 	@Override
-	public JavaType<T> getNodeJavaType() {
+	public JavaType<R> getNodeJavaType() {
 		return getJavaTypeDescriptor();
 	}
 
@@ -92,9 +93,9 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 	}
 
 	@Override
-	public JpaSelection<T> alias(String name) {
+	public SqmAttributeJoin<L,R> alias(String name) {
 		validateFetchAlias( name );
-		return super.alias( name );
+		return (SqmAttributeJoin<L, R>) super.alias( name );
 	}
 
 	@Override
@@ -120,37 +121,23 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 	// JPA
 
 	@Override
-	public PersistentAttribute<? super O, ?> getAttribute() {
+	public PersistentAttribute<? super L, ?> getAttribute() {
 		//noinspection unchecked
-		return (PersistentAttribute<? super O, ?>) getReferencedPathSource();
+		return (PersistentAttribute<? super L, ?>) getReferencedPathSource();
 	}
 
 	@Override
-	public SqmAttributeJoin<O, T> on(JpaExpression<Boolean> restriction) {
-		super.on( restriction );
-		return this;
+	public SqmAttributeJoin<L, R> on(JpaExpression<Boolean> restriction) {
+		return (SqmAttributeJoin<L, R>) super.on( restriction );
 	}
 
 	@Override
-	public SqmAttributeJoin<O, T> on(Expression<Boolean> restriction) {
-		super.on( restriction );
-		return this;
+	public SqmAttributeJoin<L, R> on(JpaPredicate... restrictions) {
+		return (SqmAttributeJoin<L, R>) super.on( restrictions );
 	}
 
 	@Override
-	public SqmAttributeJoin<O, T> on(JpaPredicate... restrictions) {
-		super.on( restrictions );
-		return this;
-	}
-
-	@Override
-	public SqmAttributeJoin<O, T> on(Predicate... restrictions) {
-		super.on( restrictions );
-		return this;
-	}
-
-	@Override
-	public SqmFrom<?, O> getParent() {
+	public SqmFrom<?, L> getParent() {
 		return getLhs();
 	}
 
@@ -158,4 +145,24 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 	public JoinType getJoinType() {
 		return getSqmJoinType().getCorrespondingJpaJoinType();
 	}
+
+	@Override
+	public abstract <S extends R> SqmTreatedAttributeJoin<L,R,S> treatAs(Class<S> treatJavaType);
+
+	@Override
+	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(EntityDomainType<S> treatTarget);
+
+	@Override
+	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(Class<S> treatJavaType, String alias);
+
+	@Override
+	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(EntityDomainType<S> treatTarget, String alias);
+
+	@Override
+	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(Class<S> treatJavaType, String alias, boolean fetched);
+
+	@Override
+	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetched);
+
+
 }

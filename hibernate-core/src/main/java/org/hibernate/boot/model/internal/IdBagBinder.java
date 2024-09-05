@@ -26,6 +26,7 @@ import org.hibernate.usertype.UserCollectionType;
 
 import jakarta.persistence.Column;
 
+import static org.hibernate.boot.model.internal.BinderHelper.isGlobalGeneratorNameGlobal;
 import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdGenerator;
 
 /**
@@ -51,7 +52,7 @@ public class IdBagBinder extends BagBinder {
 	protected boolean bindStarToManySecondPass(Map<String, PersistentClass> persistentClasses) {
 		boolean result = super.bindStarToManySecondPass( persistentClasses );
 
-		final CollectionId collectionIdAnn = property.getAnnotation( CollectionId.class );
+		final CollectionId collectionIdAnn = property.getDirectAnnotationUsage( CollectionId.class );
 		if ( collectionIdAnn == null ) {
 			throw new MappingException( "idbag mapping missing '@CollectionId' annotation" );
 		}
@@ -59,16 +60,17 @@ public class IdBagBinder extends BagBinder {
 		final PropertyData propertyData = new WrappedInferredData(
 				new PropertyInferredData(
 						null,
+						declaringClass,
 						property,
 						//default access should not be useful
 						null,
-						buildingContext.getBootstrapContext().getReflectionManager()
+						buildingContext
 				),
 				"id"
 		);
 
 		final AnnotatedColumns idColumns = AnnotatedColumn.buildColumnsFromAnnotations(
-				new Column[] { collectionIdAnn.column() },
+				new Column[]{collectionIdAnn.column()},
 //				null,
 				null,
 				Nullability.FORCED_NOT_NULL,
@@ -130,9 +132,7 @@ public class IdBagBinder extends BagBinder {
 			generatorName = namedGenerator;
 		}
 
-		id.setIdentifierGeneratorStrategy( generatorType );
-
-		if ( buildingContext.getBootstrapContext().getJpaCompliance().isGlobalGeneratorScopeEnabled() ) {
+		if ( isGlobalGeneratorNameGlobal( buildingContext ) ) {
 			SecondPass secondPass = new IdGeneratorResolverSecondPass(
 					id,
 					property,

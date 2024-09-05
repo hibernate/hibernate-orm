@@ -32,11 +32,8 @@ public class CommaDelimitedStringsMapType extends StaticUserTypeSupport<Map<Stri
     }
 
     @Override
-    public Map<String,String> nullSafeGet(
-            ResultSet rs,
-            int position,
-            SharedSessionContractImplementor session,
-            Object owner) throws SQLException {
+    public Map<String,String> nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+            throws SQLException {
         final Object extracted = getJdbcValueExtractor().extract( rs, position, session );
         if ( extracted == null ) {
             return null;
@@ -46,7 +43,8 @@ public class CommaDelimitedStringsMapType extends StaticUserTypeSupport<Map<Stri
     }
 
     @Override
-    public void nullSafeSet(PreparedStatement st, Map<String,String> value, int index, SharedSessionContractImplementor session) throws SQLException {
+    public void nullSafeSet(PreparedStatement st, Map<String,String> value, int index, SharedSessionContractImplementor session)
+            throws SQLException {
         final String stringValue = getJavaType().toString( value );
         getJdbcValueBinder().bind( st, stringValue, index, session );
     }

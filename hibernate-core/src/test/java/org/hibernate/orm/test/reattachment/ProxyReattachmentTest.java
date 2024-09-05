@@ -39,24 +39,23 @@ public class ProxyReattachmentTest {
 		scope.inTransaction(
 				session -> {
 					Parent p = new Parent( "p" );
-					session.save( p );
+					session.persist( p );
 				}
 		);
 
 		Parent parent = scope.fromTransaction(
 				session -> {
-					Parent p = session.load( Parent.class, "p" );
+					Parent p = session.getReference( Parent.class, "p" );
 					// evict...
 					session.evict( p );
 					// now try to reattach...
-					session.update( p );
-					return p;
+					return session.merge( p );
 				}
 		);
 
 		scope.inTransaction(
 				session ->
-						session.delete( parent )
+						session.remove( parent )
 		);
 	}
 
@@ -65,24 +64,23 @@ public class ProxyReattachmentTest {
 		scope.inTransaction(
 				session -> {
 					Parent p = new Parent( "p" );
-					session.save( p );
+					session.persist( p );
 				}
 		);
 
 		Parent parent = scope.fromTransaction(
 				session -> {
-					Parent p = session.load( Parent.class, "p" );
+					Parent p = session.getReference( Parent.class, "p" );
 					// clear...
 					session.clear();
 					// now try to reattach...
-					session.update( p );
-					return p;
+					return session.merge( p );
 				}
 		);
 
 		scope.inTransaction(
 				session ->
-						session.delete( parent )
+						session.remove( parent )
 		);
 	}
 
@@ -99,8 +97,8 @@ public class ProxyReattachmentTest {
 
 		scope.inTransaction(
 				session -> {
-					Parent parent = session.load( Parent.class, p.getName() );
-					session.delete( parent );
+					Parent parent = session.getReference( Parent.class, p.getName() );
+					session.remove( parent );
 					// re-attach
 					session.persist( parent );
 				}

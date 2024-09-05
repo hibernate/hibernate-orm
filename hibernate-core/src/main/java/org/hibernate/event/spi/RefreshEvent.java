@@ -6,6 +6,7 @@
  */
 package org.hibernate.event.spi;
 
+import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 
@@ -49,6 +50,11 @@ public class RefreshEvent extends AbstractEvent {
 		}
 		this.lockOptions = lockOptions;
 	}
+
+	/**
+	 * @deprecated use {@link #RefreshEvent(Object, LockOptions, EventSource)} instead.
+	 */
+	@Deprecated(since = "7.0")
 	public RefreshEvent(String entityName, Object object, LockOptions lockOptions, EventSource source){
 		this(object,lockOptions,source);
 		this.entityName = entityName;
@@ -75,10 +81,10 @@ public class RefreshEvent extends AbstractEvent {
 	}
 
 	public int getLockTimeout() {
-		return this.lockOptions.getTimeOut();
+		return lockOptions.getTimeOut();
 	}
 
 	public boolean getLockScope() {
-		return this.lockOptions.getScope();
+		return lockOptions.getLockScope() == PessimisticLockScope.EXTENDED;
 	}
 }

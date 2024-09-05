@@ -44,7 +44,7 @@ public class NationalizedLobFieldTest {
 				session -> {
 					MyEntity e = new MyEntity( 1L );
 					e.setState( "UK" );
-					session.save( e );
+					session.persist( e );
 				}
 		);
 	}

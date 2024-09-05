@@ -99,7 +99,7 @@ public class MappedSuperclassWithGenericsTest {
 		private String keyThree;
 	}
 
-	@SuppressWarnings( "UnusedDeclaration" )
+	@SuppressWarnings("unused")
 	public static class PK implements Serializable {
 		private String keyOne;
 		private String keyTwo;

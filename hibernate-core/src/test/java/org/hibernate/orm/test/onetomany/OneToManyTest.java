@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SessionFactory
 public class OneToManyTest {
 
-	@SuppressWarnings({ "unchecked", "UnusedAssignment" })
+	@SuppressWarnings("unchecked")
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTemporaryTable.class)
 	public void testOneToManyLinkTable(SessionFactoryScope scope) {
@@ -49,6 +49,7 @@ public class OneToManyTest {
 				}
 		);
 
+		@SuppressWarnings("unused")
 		Child merged = scope.fromTransaction(
 				session -> {
 					c.setParent( null );
@@ -67,6 +68,7 @@ public class OneToManyTest {
 
 		scope.inTransaction(
 				session -> {
+					@SuppressWarnings("unused")
 					Child child = (Child) session.createQuery( "from Child" ).uniqueResult();
 					session.createQuery( "from Child c left join fetch c.parent" ).list();
 					session.createQuery( "from Child c inner join fetch c.parent" ).list();

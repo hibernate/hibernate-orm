@@ -44,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 @BaseUnitTest
 public class SimpleNationalizedTest {
 
-	@SuppressWarnings({ "UnusedDeclaration", "SpellCheckingInspection" })
+	@SuppressWarnings("unused")
 	@Entity(name = "NationalizedEntity")
 	public static class NationalizedEntity {
 		@Id

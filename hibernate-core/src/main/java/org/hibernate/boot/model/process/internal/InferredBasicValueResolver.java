@@ -36,6 +36,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.SerializableJavaType;
 import org.hibernate.type.descriptor.java.TemporalJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
+import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
@@ -74,9 +75,10 @@ public class InferredBasicValueResolver {
 
 		final JavaType<T> reflectedJtd = reflectedJtdResolver.get();
 
-		// NOTE : the distinction that is made below wrt `explicitJavaType` and `reflectedJtd` is
-		//		needed temporarily to trigger "legacy resolution" versus "ORM6 resolution.  Yes, it
-		//		makes the code a little more complicated but the benefit is well worth it - saving memory
+		// NOTE: the distinction that is made below wrt `explicitJavaType` and `reflectedJtd`
+		//       is needed temporarily to trigger "legacy resolution" versus "ORM6 resolution.
+		//       Yes, it makes the code a little more complicated but the benefit is well worth
+		//       it - saving memory
 
 		final BasicType<T> jdbcMapping;
 
@@ -141,8 +143,8 @@ public class InferredBasicValueResolver {
 				);
 			}
 			else {
-				// see if there is a registered BasicType for this JavaType and, if so, use it.
-				// this mimics the legacy handling
+				// see if there is a registered BasicType for this JavaType and,
+				// if so, use it. This mimics the legacy handling.
 				final BasicType registeredType;
 				if ( reflectedJtd instanceof BasicPluralJavaType<?> ) {
 					final BasicPluralJavaType<?> containerJtd = (BasicPluralJavaType<?>) reflectedJtd;
@@ -198,9 +200,26 @@ public class InferredBasicValueResolver {
 					jdbcMapping = resolveSqlTypeIndicators( stdIndicators, registeredType, reflectedJtd );
 				}
 				else {
-					// there was not a "legacy" BasicType registration,  so use `JavaType#getRecommendedJdbcType`, if
-					// one, to create a mapping
-					final JdbcType recommendedJdbcType = reflectedJtd.getRecommendedJdbcType( stdIndicators );
+					// there was not a "legacy" BasicType registration,
+					// so use `JavaType#getRecommendedJdbcType`, if one,
+					// to create a mapping
+					final JdbcType recommendedJdbcType;
+					try {
+						recommendedJdbcType = reflectedJtd.getRecommendedJdbcType( stdIndicators );
+					}
+					catch (JdbcTypeRecommendationException jtre) {
+						if ( buildingContext.getMetadataCollector()
+								.getEntityBindingMap().values().stream()
+								.anyMatch( pc -> pc.getMappedClass().equals(resolvedJavaType) ) ) {
+							throw new MappingException( "Incorrect use of entity type '"
+									+ resolvedJavaType.getTypeName()
+									+  "' (possibly due to missing association mapping annotation)",
+									jtre );
+						}
+						else {
+							throw jtre;
+						}
+					}
 					if ( recommendedJdbcType != null ) {
 						jdbcMapping = resolveSqlTypeIndicators(
 								stdIndicators,
@@ -222,7 +241,7 @@ public class InferredBasicValueResolver {
 		else {
 			if ( explicitJdbcType != null ) {
 				// we have an explicit STD, but no JTD - infer JTD
-				//		- NOTE : yes its an odd case, but its easy to implement here, so...
+				// NOTE : yes it's an odd case, but easy to implement here, so...
 				Integer length = null;
 				Integer scale = null;
 				if ( selectable instanceof Column ) {
@@ -251,7 +270,6 @@ public class InferredBasicValueResolver {
 			}
 			else {
 				// we have neither a JTD nor STD
-
 				throw new MappingException(
 						"Could not determine JavaType nor JdbcType to use" +
 								" for BasicValue: owner = " + ownerName +

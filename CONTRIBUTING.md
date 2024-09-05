@@ -78,7 +78,7 @@ Do your thing!
 ## Commit
 
 * Make commits of logical units
-* Be sure to **use the JIRA issue key** in the commit message.  This is how JIRA will pick
+* Be sure to start each commit message using the **JIRA issue key**, this is how JIRA will pick
 up the related commits and display them on the JIRA issue
 * Make sure you have added the necessary tests for your changes
 * Run _all_ the tests to ensure nothing else was accidentally broken

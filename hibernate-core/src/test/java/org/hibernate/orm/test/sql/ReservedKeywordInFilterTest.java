@@ -10,15 +10,15 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.annotations.CompositeType;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.type.descriptor.java.LocalDateJavaType;
+
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -27,7 +27,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapKey;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -35,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		annotatedClasses = ReservedKeywordInFilterTest.SimpleValue.class
 )
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-18570")
+@JiraKey( "HHH-18570" )
 public class ReservedKeywordInFilterTest {
 
 	@Test
@@ -43,7 +42,7 @@ public class ReservedKeywordInFilterTest {
 
 		scope.inTransaction(
 				session -> {
-					SimpleValue value = new SimpleValue( 1 );
+					SimpleValue value = new SimpleValue( 1, LocalDate.now() );
 					session.persist( value );
 				}
 		);
@@ -57,7 +56,8 @@ public class ReservedKeywordInFilterTest {
 					
 					// Check that the generated SQL executes by loading some entities and associations
 					List<SimpleValue> values = session.createQuery( "select v from SimpleValue v", SimpleValue.class ).list();
-					
+
+					assertTrue( values.size() == 1 );
 					for (SimpleValue value : values) {
 						assertTrue( value.getChildren().isEmpty() );
 					}
@@ -84,8 +84,9 @@ public class ReservedKeywordInFilterTest {
 		public SimpleValue() {
 		}
 
-		public SimpleValue(Integer id) {
+		public SimpleValue(Integer id, LocalDate date) {
 			this.id = id;
+			this.date = date;
 		}
 
 		@Id

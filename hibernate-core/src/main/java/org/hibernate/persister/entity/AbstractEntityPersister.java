@@ -5284,8 +5284,7 @@ public abstract class AbstractEntityPersister
 				column.getScale(),
 				column.getTemporalPrecision(),
 				basicTypeResolution.getLegacyResolvedBasicType(),
-				entityPersister,
-				creationProcess
+				entityPersister
 		);
 	}
 

@@ -58,8 +58,6 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 
 	private final VersionValue unsavedValueStrategy;
 
-	private BasicAttributeMapping attributeMapping;
-
 	public EntityVersionMappingImpl(
 			RootClass bootEntityDescriptor,
 			Supplier<?> templateInstanceAccess,
@@ -72,8 +70,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 			Integer scale,
 			Integer temporalPrecision,
 			BasicType<?> versionBasicType,
-			EntityMappingType declaringType,
-			MappingModelCreationProcess creationProcess) {
+			EntityMappingType declaringType) {
 		this.attributeName = attributeName;
 		this.columnDefinition = columnDefinition;
 		this.length = length;

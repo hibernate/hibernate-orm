@@ -18,7 +18,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -35,7 +34,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @implNote `discriminatorType` represents the mapping to Class, whereas `discriminatorType.getUnderlyingType()`
- * represents the "raw" JDBC mapping (String, Integer, etc)
+ * represents the "raw" JDBC mapping (String, Integer, etc.)
  *
  * @author Steve Ebersole
  */
@@ -53,7 +52,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 		this.underlyingJdbcMapping = underlyingJdbcMapping;
 		this.mappingType = mappingType;
 
-		this.role = mappingType.getNavigableRole().append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME );
+		this.role = mappingType.getNavigableRole().append( DISCRIMINATOR_ROLE_NAME );
 
 		this.discriminatorType = discriminatorType;
 	}
@@ -242,12 +241,6 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return value;
-	}
-
-	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
-		consumer.accept( offset, this );
-		return getJdbcTypeCount();
 	}
 
 }

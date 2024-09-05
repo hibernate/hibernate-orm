@@ -170,6 +170,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	/*
 	 * Used by Hibernate Reactive
 	 */
+	@SuppressWarnings("unused")
 	protected SimpleForeignKeyDescriptor(SimpleForeignKeyDescriptor original) {
 		keySide = original.keySide;
 		targetSide = original.targetSide;

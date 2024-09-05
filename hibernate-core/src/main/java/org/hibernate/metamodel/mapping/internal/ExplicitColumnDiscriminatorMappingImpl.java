@@ -76,8 +76,8 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 	}
 
 	@Override
-	public DiscriminatorType getMappedType() {
-		return (DiscriminatorType) super.getMappedType();
+	public DiscriminatorType<?> getMappedType() {
+		return (DiscriminatorType<?>) super.getMappedType();
 	}
 
 	@Override

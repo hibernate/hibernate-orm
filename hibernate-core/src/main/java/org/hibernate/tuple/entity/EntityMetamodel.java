@@ -24,7 +24,6 @@ import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataPojoImpl;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
@@ -477,8 +476,7 @@ public class EntityMetamodel implements Serializable {
 
 	private void verifyNaturalIdProperty(Property property) {
 		final Value value = property.getValue();
-		if ( value instanceof ManyToOne ) {
-			final ManyToOne toOne = (ManyToOne) value;
+		if ( value instanceof ManyToOne toOne ) {
 			if ( toOne.getNotFoundAction() == NotFoundAction.IGNORE ) {
 				throw new MappingException(
 						"Attribute marked as natural-id can not also be a not-found association - "
@@ -486,8 +484,7 @@ public class EntityMetamodel implements Serializable {
 				);
 			}
 		}
-		else if ( value instanceof Component ) {
-			final Component component = (Component) value;
+		else if ( value instanceof Component component ) {
 			for ( Property componentProperty : component.getProperties() ) {
 				verifyNaturalIdProperty( componentProperty );
 			}
@@ -514,10 +511,9 @@ public class EntityMetamodel implements Serializable {
 				return generator;
 			}
 		}
-		if ( mappingProperty.getValue() instanceof Component ) {
-			final Dialect dialect = context.getDialect();
-			final CompositeGeneratorBuilder builder = new CompositeGeneratorBuilder( entityName, mappingProperty, dialect );
-			final Component component = (Component) mappingProperty.getValue();
+		if ( mappingProperty.getValue() instanceof Component component ) {
+			final CompositeGeneratorBuilder builder =
+					new CompositeGeneratorBuilder( entityName, mappingProperty, context.getDialect() );
 			for ( Property property : component.getProperties() ) {
 				builder.add( property.createGenerator( context ) );
 			}
@@ -536,8 +532,7 @@ public class EntityMetamodel implements Serializable {
 
 	private void mapPropertyToIndex(Property property, int i) {
 		propertyIndexes.put( property.getName(), i );
-		if ( property.getValue() instanceof Component ) {
-			Component composite = (Component) property.getValue();
+		if ( property.getValue() instanceof Component composite ) {
 			for ( Property subproperty : composite.getProperties() ) {
 				propertyIndexes.put(
 						property.getName() + '.' + subproperty.getName(),
@@ -600,8 +595,7 @@ public class EntityMetamodel implements Serializable {
 	}
 
 	private static boolean indicatesOwnedCollection(Type type, MetadataImplementor metadata) {
-		if ( type instanceof CollectionType ) {
-			final CollectionType collectionType = (CollectionType) type;
+		if ( type instanceof CollectionType collectionType ) {
 			return !metadata.getCollectionBinding( collectionType.getRole() ).isInverse();
 		}
 		else if ( type.isComponentType() ) {

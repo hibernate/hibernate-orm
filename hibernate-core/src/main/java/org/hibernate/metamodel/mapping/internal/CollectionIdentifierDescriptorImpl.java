@@ -19,7 +19,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.NavigablePath;
@@ -205,12 +204,6 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 				creationState,
 				selectionConsumer
 		);
-	}
-
-	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
-		consumer.accept( offset, this );
-		return getJdbcTypeCount();
 	}
 
 	@Override

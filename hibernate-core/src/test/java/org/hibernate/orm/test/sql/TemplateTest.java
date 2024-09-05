@@ -7,13 +7,9 @@
 package org.hibernate.orm.test.sql;
 
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.sql.Template;
-import org.hibernate.type.spi.TypeConfiguration;
 
-import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -23,23 +19,33 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SessionFactory
-@DomainModel(standardModels = StandardDomainModel.GAMBIT)
+@DomainModel
 public class TemplateTest {
 
 	@Test
 	@JiraKey("HHH-18256")
 	public void templateLiterals(SessionFactoryScope scope) {
-		assertWhereStringTemplate( "N'a'", scope.getSessionFactory() );
-		assertWhereStringTemplate( "X'a'", scope.getSessionFactory() );
-		assertWhereStringTemplate( "BX'a'", scope.getSessionFactory() );
-		assertWhereStringTemplate( "VARBYTE'a'", scope.getSessionFactory() );
-		assertWhereStringTemplate( "bytea 'a'", scope.getSessionFactory() );
-		assertWhereStringTemplate( "bytea  'a'", scope.getSessionFactory() );
-		assertWhereStringTemplate( "date 'a'", scope.getSessionFactory() );
-		assertWhereStringTemplate( "time 'a'", scope.getSessionFactory() );
-		assertWhereStringTemplate( "timestamp 'a'", scope.getSessionFactory() );
-		assertWhereStringTemplate( "timestamp with time zone 'a'", scope.getSessionFactory() );
-		assertWhereStringTemplate( "time with time zone 'a'", scope.getSessionFactory() );
+		SessionFactoryImplementor factory = scope.getSessionFactory();
+		assertWhereStringTemplate( "N'a'", factory );
+		assertWhereStringTemplate( "X'a'", factory );
+		assertWhereStringTemplate( "BX'a'", factory);
+		assertWhereStringTemplate( "VARBYTE'a'", factory );
+		assertWhereStringTemplate( "bytea 'a'", factory );
+		assertWhereStringTemplate( "bytea  'a'", factory );
+		assertWhereStringTemplate( "date 'a'", factory );
+		assertWhereStringTemplate( "time 'a'", factory );
+		assertWhereStringTemplate( "timestamp 'a'", factory );
+		assertWhereStringTemplate( "timestamp with time zone 'a'", factory );
+		assertWhereStringTemplate( "time with time zone 'a'", factory );
+		assertWhereStringTemplate( "date", "$PlaceHolder$.date", factory );
+		assertWhereStringTemplate( "time", "$PlaceHolder$.time", factory );
+		assertWhereStringTemplate( "zone", "$PlaceHolder$.zone", factory );
+		assertWhereStringTemplate("select date from thetable",
+				"select $PlaceHolder$.date from thetable", factory );
+		assertWhereStringTemplate("select date '2000-12-1' from thetable",
+				"select date '2000-12-1' from thetable", factory );
+		assertWhereStringTemplate("where date between date '2000-12-1' and date '2002-12-2'",
+				"where $PlaceHolder$.date between date '2000-12-1' and date '2002-12-2'", factory );
 	}
 
 	private static void assertWhereStringTemplate(String sql, SessionFactoryImplementor sf) {
@@ -50,6 +56,16 @@ public class TemplateTest {
 				sf.getQueryEngine().getSqmFunctionRegistry()
 		);
 		assertEquals( sql, template );
+	}
+
+	private static void assertWhereStringTemplate(String sql, String result, SessionFactoryImplementor sf) {
+		final String template = Template.renderWhereStringTemplate(
+				sql,
+				sf.getJdbcServices().getDialect(),
+				sf.getTypeConfiguration(),
+				sf.getQueryEngine().getSqmFunctionRegistry()
+		);
+		assertEquals( result, template );
 	}
 
 }

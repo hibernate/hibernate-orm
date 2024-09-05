@@ -206,7 +206,7 @@ public final class Template {
 								nextToken = tokens.nextToken();
 							} while ( nextToken != null && Character.isWhitespace( nextToken.charAt( 0 ) ) );
 						} while ( nextToken != null && possibleNextToken.isToken( nextToken ) );
-						if ( "'".equals( nextToken ) ) {
+						if ( "'".equals( nextToken ) || isFunctionOrKeyword( nextToken, null, dialect, typeConfiguration, functionRegistry ) ) {
 							// Don't prefix a literal
 							result.append( token );
 							result.append( additionalTokens );

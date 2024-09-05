@@ -41,7 +41,7 @@ public abstract class AbstractArchiveDescriptor implements ArchiveDescriptor {
 		return entryBasePrefix.startsWith( "/" ) ? entryBasePrefix.substring( 1 ) : entryBasePrefix;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	protected ArchiveDescriptorFactory getArchiveDescriptorFactory() {
 		return archiveDescriptorFactory;
 	}

@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Burkhard Graves
  * @author Gail Badner
  */
-@SuppressWarnings({ "UnusedDeclaration" })
+@SuppressWarnings("unused")
 public abstract class AbstractRecursiveBidirectionalOneToManyTest extends BaseSessionFactoryFunctionalTest {
 
 	@Override

@@ -676,7 +676,7 @@ public class NativeSQLQueriesTest {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@SuppressWarnings("unused")
 	public void testExplicitReturnAPI(SessionFactoryScope scope) {
 		Organization jboss = new Organization( "JBoss" );
 		Person me = new Person( "Steve" );

@@ -329,7 +329,7 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 	}
 
 	@AfterClassOnce
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	protected void releaseSessionFactory() {
 		if ( sessionFactory == null ) {
 			return;

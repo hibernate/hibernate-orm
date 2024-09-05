@@ -16,7 +16,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings( {"UnusedDeclaration"})
+@SuppressWarnings("unused")
 public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
 	public String getCacheConcurrencyStrategy() {
 		return null;

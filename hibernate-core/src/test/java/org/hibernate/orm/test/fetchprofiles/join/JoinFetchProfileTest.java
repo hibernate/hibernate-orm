@@ -50,7 +50,7 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 		cfg.setProperty( Environment.GENERATE_STATISTICS, true );
 	}
 
-	@SuppressWarnings({ "UnusedDeclaration" })
+	@SuppressWarnings("unused")
 	private interface TestData {
 		Long getStudentId();
 

@@ -71,7 +71,6 @@ public enum ReplicationMode {
 	/**
 	 * Determine whether the mode dictates that the data being replicated should overwrite the data found.
 	 *
-	 * @param entity The entity being replicated
 	 * @param currentVersion The version currently on the target database table.
 	 * @param newVersion The replicating version
 	 * @param versionType The version type

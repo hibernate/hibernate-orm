@@ -33,7 +33,7 @@ public class PersistentSortedSet<E> extends PersistentSet<E> implements SortedSe
 	/**
 	 * Constructs a PersistentSortedSet.  This form needed for SOAP libraries, etc
 	 */
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public PersistentSortedSet() {
 	}
 

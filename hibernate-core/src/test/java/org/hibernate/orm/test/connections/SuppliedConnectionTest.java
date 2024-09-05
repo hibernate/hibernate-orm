@@ -41,13 +41,13 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 	private Connection connectionUnderTest;
 
 	@BeforeClassOnce
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	private void prepareConnectionProvider() {
 		cp = ConnectionProviderBuilder.buildConnectionProvider();
 	}
 
 	@AfterClassOnce
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	private void releaseConnectionProvider() {
 		try {
 			if ( cp instanceof Stoppable ) {

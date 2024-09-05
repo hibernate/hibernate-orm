@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings({ "UnusedDeclaration" })
+@SuppressWarnings("unused")
 @SessionFactory
 public abstract class LongStringTest {
 	private static final int LONG_STRING_SIZE = 10000;

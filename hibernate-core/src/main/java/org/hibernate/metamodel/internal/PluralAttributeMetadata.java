@@ -15,7 +15,7 @@ import org.hibernate.metamodel.CollectionClassification;
  * @param <C> The attribute type (the collection type)
  * @param <E> The collection element type
  */
-@SuppressWarnings("UnusedDeclaration")
+@SuppressWarnings("unused")
 public interface PluralAttributeMetadata<O, C, E> extends AttributeMetadata<O, C> {
 	/**
 	 * The classification of the collection, indicating the collection semantics

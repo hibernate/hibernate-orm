@@ -89,7 +89,7 @@ public class ReferenceCacheTest extends BaseCoreFunctionalTestCase {
 	@Immutable
 	@Cacheable
 	@Cache( usage = CacheConcurrencyStrategy.READ_ONLY )
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public static class MyReferenceData {
 		@Id
 		private Integer id;

@@ -2878,7 +2878,6 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SkipForDialect(value = CockroachDialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/41943")
-	@SuppressWarnings( {"UnusedAssignment", "UnusedDeclaration"})
 	public void testSelectExpressions() {
 		createTestBaseData();
 		Session session = openSession();
@@ -3417,7 +3416,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnusedAssignment"})
+	@SuppressWarnings("unused")
 	public void testCachedJoinedAndJoinFetchedManyToOne() throws Exception {
 		Animal a = new Animal();
 		a.setDescription( "an animal" );
@@ -3469,7 +3468,6 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnusedAssignment", "UnusedDeclaration"})
 	public void testCachedJoinedAndJoinFetchedOneToMany() throws Exception {
 		Animal a = new Animal();
 		a.setDescription( "an animal" );

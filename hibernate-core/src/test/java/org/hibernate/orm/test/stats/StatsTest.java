@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class StatsTest {
 
 //	@Test
-//	@SuppressWarnings( {"UnusedAssignment"})
+//	@SuppressWarnings("unused")
 //	public void testCollectionFetchVsLoad() throws Exception {
 //		SessionFactory sf = buildBaseConfiguration()
 //				.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" )

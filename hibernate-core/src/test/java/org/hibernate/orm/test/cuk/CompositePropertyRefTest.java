@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class CompositePropertyRefTest {
 
 	@Test
-	@SuppressWarnings({ "unchecked", "UnusedAssignment" })
+	@SuppressWarnings({ "unchecked", "unused" })
 	public void testOneToOnePropertyRef(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

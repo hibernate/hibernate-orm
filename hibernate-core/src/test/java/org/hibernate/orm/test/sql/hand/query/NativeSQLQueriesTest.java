@@ -24,7 +24,6 @@ import org.hibernate.Hibernate;
 import org.hibernate.QueryException;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.orm.test.sql.hand.Dimension;
@@ -79,6 +78,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		xmlMappings = { "org/hibernate/orm/test/sql/hand/query/NativeSQLQueries.hbm.xml" }
 )
 @SessionFactory
+@SuppressWarnings({"deprecation", "unused", "rawtypes", "unchecked"})
 public class NativeSQLQueriesTest {
 
 	protected String getOrganizationFetchJoinEmploymentSQL() {
@@ -384,7 +384,6 @@ public class NativeSQLQueriesTest {
 	}
 
 	@Test
-	@SuppressWarnings( {"deprecation", "UnusedDeclaration"})
 	public void testMappedAliasStrategy(SessionFactoryScope scope) {
 		Organization ifa = new Organization("IFA");
 		Organization jboss = new Organization("JBoss");
@@ -466,7 +465,6 @@ public class NativeSQLQueriesTest {
 	}
 
 	@Test
-	@SuppressWarnings( {"unchecked"})
 	@FailureExpected( jiraKey = "unknown" )
 	public void testCompositeIdJoins(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -535,7 +533,6 @@ public class NativeSQLQueriesTest {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnusedDeclaration", "deprecation", "UnusedAssignment"})
 	public void testAutoDetectAliasing(SessionFactoryScope scope) {
 		Organization ifa = new Organization("IFA");
 		Organization jboss = new Organization("JBoss");
@@ -676,7 +673,6 @@ public class NativeSQLQueriesTest {
 	}
 
 	@Test
-	@SuppressWarnings("unused")
 	public void testExplicitReturnAPI(SessionFactoryScope scope) {
 		Organization jboss = new Organization( "JBoss" );
 		Person me = new Person( "Steve" );
@@ -787,7 +783,6 @@ public class NativeSQLQueriesTest {
 	}
 
 	@Test
-	@SuppressWarnings( {"unchecked", "UnusedDeclaration"})
 	public void testAddJoinForManyToMany(SessionFactoryScope scope) {
 		Person gavin = new Person( "Gavin" );
 		Person max = new Person( "Max" );
@@ -813,7 +808,7 @@ public class NativeSQLQueriesTest {
 					session.flush();
 					session.clear();
 
-					// todo : see http://opensource.atlassian.com/projects/hibernate/browse/HHH-3908
+					// todo : see HHH-3908
 //		String sqlStr = "SELECT {groupp.*} , {gp.*} " +
 //				"FROM GROUPP groupp, GROUP_PERSON gp, PERSON person WHERE groupp.ID = gp.GROUP_ID and person.PERID = gp.PERSON_ID";
 //

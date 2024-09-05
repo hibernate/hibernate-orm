@@ -310,7 +310,7 @@ public class MergeTest extends AbstractOperationTestCase {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked", "UnusedAssignment", "UnusedDeclaration" })
+	@SuppressWarnings({"unchecked", "unused"})
 	public void testNoExtraUpdatesOnPersistentMergeVersionedWithCollection(SessionFactoryScope scope) {
 		VersionedEntity parent = new VersionedEntity( "parent", "parent" );
 		VersionedEntity child = new VersionedEntity( "child", "child" );
@@ -337,7 +337,7 @@ public class MergeTest extends AbstractOperationTestCase {
 					VersionedEntity persistentChild = (VersionedEntity) persistentParent.getChildren()
 							.iterator()
 							.next();
-					return (VersionedEntity) session.merge( persistentParent ); // <-- This merge leads to failure
+					return session.merge( persistentParent ); // <-- This merge leads to failure
 				}
 		);
 

@@ -55,7 +55,9 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 			boolean[] discriminatorAbstract,
 			DiscriminatorType<?> incomingDiscriminatorType) {
 		//noinspection unchecked
-		super( entityDescriptor, (DiscriminatorType<Object>) incomingDiscriminatorType, (BasicType<Object>) incomingDiscriminatorType.getUnderlyingJdbcMapping() );
+		super( entityDescriptor,
+				(DiscriminatorType<Object>) incomingDiscriminatorType,
+				(BasicType<Object>) incomingDiscriminatorType.getUnderlyingJdbcMapping() );
 
 		for ( int i = 0; i < discriminatorValues.length; i++ ) {
 			if ( !discriminatorAbstract[i] ) {

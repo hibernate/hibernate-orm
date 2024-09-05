@@ -109,12 +109,9 @@ public class BasicAttributeMapping
 		this.tableExpression = tableExpression;
 		this.mappedColumnExpression = mappedColumnExpression;
 		this.temporalPrecision = temporalPrecision;
-		if ( selectablePath == null ) {
-			this.selectablePath = new SelectablePath( mappedColumnExpression );
-		}
-		else {
-			this.selectablePath = selectablePath;
-		}
+		this.selectablePath = selectablePath == null
+				? new SelectablePath( mappedColumnExpression )
+				: selectablePath;
 		this.isFormula = isFormula;
 		this.columnDefinition = columnDefinition;
 		this.length = length;
@@ -153,8 +150,7 @@ public class BasicAttributeMapping
 		String attributeName = null;
 		int stateArrayPosition = 0;
 		AttributeMetadata attributeMetadata;
-		if ( original instanceof SingleAttributeIdentifierMapping ) {
-			final SingleAttributeIdentifierMapping mapping = (SingleAttributeIdentifierMapping) original;
+		if ( original instanceof SingleAttributeIdentifierMapping mapping ) {
 			attributeName = mapping.getAttributeName();
 			attributeMetadata = new SimpleAttributeMetadata(
 					propertyAccess,
@@ -166,8 +162,7 @@ public class BasicAttributeMapping
 					true
 			);
 		}
-		else if ( original instanceof SingularAttributeMapping ) {
-			final SingularAttributeMapping mapping = (SingularAttributeMapping) original;
+		else if ( original instanceof SingularAttributeMapping mapping ) {
 			attributeName = mapping.getAttributeName();
 			stateArrayPosition = mapping.getStateArrayPosition();
 			attributeMetadata = mapping.getAttributeMetadata();

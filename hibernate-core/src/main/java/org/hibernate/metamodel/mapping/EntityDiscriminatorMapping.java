@@ -8,14 +8,7 @@ package org.hibernate.metamodel.mapping;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchOptions;
-import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.basic.BasicFetch;
 
 /**
  * Details about the discriminator for an entity hierarchy.

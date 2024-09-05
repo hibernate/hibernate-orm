@@ -245,7 +245,7 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 	}
 
 	@Override
-	public BasicFetch generateFetch(
+	public BasicFetch<?> generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,

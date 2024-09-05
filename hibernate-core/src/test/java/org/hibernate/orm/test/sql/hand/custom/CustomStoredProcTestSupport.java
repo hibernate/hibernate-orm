@@ -29,7 +29,7 @@ import static org.junit.Assert.fail;
  *
  * @author Gail Badner
  */
-@SuppressWarnings( {"UnusedDeclaration"})
+@SuppressWarnings("unused")
 public abstract class CustomStoredProcTestSupport extends CustomSQLTestSupport {
 
 	@Override

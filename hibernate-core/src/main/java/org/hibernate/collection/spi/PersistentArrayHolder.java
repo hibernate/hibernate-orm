@@ -125,7 +125,7 @@ public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 		attributeMapping.getPropertyAccess().getSetter().set( getOwner(), array );
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public Object getArray() {
 		return array;
 	}

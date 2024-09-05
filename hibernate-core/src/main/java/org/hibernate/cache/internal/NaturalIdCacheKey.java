@@ -64,17 +64,17 @@ public class NaturalIdCacheKey implements Serializable {
 		return from( naturalIdValues, persister, persister.getRootEntityName(), session );
 	}
 
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@SuppressWarnings("unused")
 	public String getEntityName() {
 		return entityName;
 	}
 
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@SuppressWarnings("unused")
 	public String getTenantId() {
 		return tenantId;
 	}
 
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@SuppressWarnings("unused")
 	public Object getNaturalIdValues() {
 		return naturalIdValues;
 	}

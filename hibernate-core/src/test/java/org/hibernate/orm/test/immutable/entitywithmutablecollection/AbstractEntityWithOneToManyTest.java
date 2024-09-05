@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Gail Badner
  */
-@SuppressWarnings({ "UnusedDeclaration" })
+@SuppressWarnings("unused")
 @SessionFactory(generateStatistics = true)
 public abstract class AbstractEntityWithOneToManyTest {
 	private boolean isContractPartiesInverse;

@@ -58,7 +58,7 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	}
 
 	@InjectService( required = false )
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void setJndiService(JndiService jndiService) {
 		this.jndiService = jndiService;
 	}

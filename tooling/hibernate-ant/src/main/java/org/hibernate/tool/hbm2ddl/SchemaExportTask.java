@@ -73,7 +73,7 @@ public class SchemaExportTask extends MatchingTask {
 	private String implicitNamingStrategy;
 	private String physicalNamingStrategy;
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void addFileset(FileSet set) {
 		fileSets.add(set);
 	}
@@ -105,7 +105,7 @@ public class SchemaExportTask extends MatchingTask {
 	 * written to standard out.
 	 * @param quiet true to enable quiet mode
 	 */
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void setQuiet(boolean quiet) {
 		this.quiet = quiet;
 	}
@@ -141,7 +141,7 @@ public class SchemaExportTask extends MatchingTask {
 	 * Set the end of statement delimiter for the generated script
 	 * @param delimiter the delimiter
 	 */
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void setDelimiter(String delimiter) {
 		this.delimiter = delimiter;
 	}
@@ -163,17 +163,17 @@ public class SchemaExportTask extends MatchingTask {
 		DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedNamingStrategyAntArgument();
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void setImplicitNamingStrategy(String implicitNamingStrategy) {
 		this.implicitNamingStrategy = implicitNamingStrategy;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void setPhysicalNamingStrategy(String physicalNamingStrategy) {
 		this.physicalNamingStrategy = physicalNamingStrategy;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void setHaltonerror(boolean haltOnError) {
 		this.haltOnError = haltOnError;
 	}

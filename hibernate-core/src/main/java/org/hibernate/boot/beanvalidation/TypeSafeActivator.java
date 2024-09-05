@@ -68,7 +68,7 @@ class TypeSafeActivator {
 	 *
 	 * @param object The supplied ValidatorFactory instance.
 	 */
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public static void validateSuppliedFactory(Object object) {
 		if ( !(object instanceof ValidatorFactory) ) {
 			throw new IntegrationException(
@@ -78,7 +78,7 @@ class TypeSafeActivator {
 		}
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public static void activate(ActivationContext activationContext) {
 		final ValidatorFactory factory;
 		try {

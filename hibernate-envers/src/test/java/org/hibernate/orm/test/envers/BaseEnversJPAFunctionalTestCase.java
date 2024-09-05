@@ -81,7 +81,7 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 	}
 
 	@BeforeClassOnce
-	@SuppressWarnings({"UnusedDeclaration"})
+	@SuppressWarnings("unused")
 	public void buildEntityManagerFactory() throws Exception {
 		log.trace( "Building EntityManagerFactory" );
 
@@ -223,7 +223,7 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 	}
 
 	@After
-	@SuppressWarnings({"UnusedDeclaration"})
+	@SuppressWarnings("unused")
 	public void releaseUnclosedEntityManagers() {
 		releaseUnclosedEntityManager( this.em );
 		auditReader = null;

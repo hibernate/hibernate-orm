@@ -54,7 +54,7 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 	/**
 	 * Constructs a PersistentIdentifierBag.  This form needed for SOAP libraries, etc
 	 */
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public PersistentIdentifierBag() {
 	}
 

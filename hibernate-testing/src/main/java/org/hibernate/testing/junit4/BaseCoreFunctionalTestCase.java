@@ -335,7 +335,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	@AfterClassOnce
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	protected void releaseSessionFactory() {
 		if ( sessionFactory == null ) {
 			return;
@@ -358,7 +358,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	@OnFailure
 	@OnExpectedFailure
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void onFailure() {
 		if ( rebuildSessionFactoryOnError() ) {
 			rebuildSessionFactory();

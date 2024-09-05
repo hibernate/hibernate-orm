@@ -36,7 +36,7 @@ public class PersistentSortedMap<K,E> extends PersistentMap<K,E> implements Sort
 	/**
 	 * Constructs a PersistentSortedMap.  This form needed for SOAP libraries, etc
 	 */
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public PersistentSortedMap() {
 	}
 

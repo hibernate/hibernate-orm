@@ -35,12 +35,12 @@ public class SequenceIdTrackingModifiedEntitiesRevisionEntity extends SequenceId
 	@ModifiedEntityNames
 	private Set<String> modifiedEntityNames = new HashSet<>();
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public Set<String> getModifiedEntityNames() {
 		return modifiedEntityNames;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void setModifiedEntityNames(Set<String> modifiedEntityNames) {
 		this.modifiedEntityNames = modifiedEntityNames;
 	}

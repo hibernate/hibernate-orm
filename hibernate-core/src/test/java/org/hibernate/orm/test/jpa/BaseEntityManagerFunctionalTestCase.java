@@ -275,7 +275,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 
 
 	@After
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@SuppressWarnings("unused")
 	public void releaseResources() {
 		try {
 			releaseUnclosedEntityManagers();

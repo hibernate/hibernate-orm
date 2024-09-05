@@ -227,7 +227,7 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 	@Immutable
 	@Cacheable
 	@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public static class MyEnhancedReferenceData implements ManagedEntity {
 		@Id
 		private Integer id;

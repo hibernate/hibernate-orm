@@ -387,7 +387,7 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	@AfterClassOnce
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	protected void shutDown() {
 		releaseResources();
 	}
@@ -420,7 +420,7 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	@OnFailure
 	@OnExpectedFailure
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void onFailure() {
 		if ( rebuildSessionFactoryOnError() ) {
 			rebuildSessionFactory();

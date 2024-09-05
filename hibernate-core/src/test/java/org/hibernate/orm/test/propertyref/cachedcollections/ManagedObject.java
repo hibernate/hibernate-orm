@@ -12,7 +12,7 @@ import java.util.Set;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings({"UnusedDeclaration"})
+@SuppressWarnings("unused")
 public class ManagedObject {
 	private Long moid;
 	private int version;

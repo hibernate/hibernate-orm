@@ -332,7 +332,7 @@ public abstract class AbstractQuery<R>
 	// JPA hint handling
 
 
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@SuppressWarnings("unused")
 	public Set<String> getSupportedHints() {
 		return AvailableHints.getDefinedHints();
 	}

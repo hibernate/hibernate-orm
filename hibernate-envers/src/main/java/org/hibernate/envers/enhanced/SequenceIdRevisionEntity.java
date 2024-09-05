@@ -63,7 +63,7 @@ public class SequenceIdRevisionEntity implements Serializable {
 		return timestamp;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void setTimestamp(long timestamp) {
 		this.timestamp = timestamp;
 	}

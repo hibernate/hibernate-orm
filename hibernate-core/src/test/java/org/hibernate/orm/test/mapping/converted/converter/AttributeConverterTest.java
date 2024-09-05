@@ -525,7 +525,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	// Entity declarations used in the test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Entity(name = "T1")
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public static class Tester {
 		@Id
 		private Long id;
@@ -541,7 +541,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	}
 
 	@Entity(name = "T2")
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public static class Tester2 {
 		@Id
 		private Long id;
@@ -550,7 +550,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	}
 
 	@Entity(name = "T3")
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public static class Tester3 {
 		@Id
 		private Long id;
@@ -559,7 +559,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	}
 
 	@Entity(name = "T4")
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public static class Tester4 {
 		@Id
 		private Long id;
@@ -587,7 +587,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	}
 
 	@Entity(name = "T5")
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public static class Tester5 {
 		@Id
 		private Long id;
@@ -606,7 +606,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 	@Entity
 	@Table(name = "irrelevantInstantEntity")
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public static class IrrelevantInstantEntity {
 		@Id
 		private Long id;

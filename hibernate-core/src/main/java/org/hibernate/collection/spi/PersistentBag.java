@@ -49,7 +49,7 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 	/**
 	 * Constructs a PersistentBag.  Needed for SOAP libraries, etc
 	 */
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public PersistentBag() {
 	}
 
@@ -497,7 +497,7 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 	 *
 	 * @return The number of occurrences.
 	 */
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public int occurrences(Object o) {
 		read();
 		final Iterator<E> itr = bag.iterator();

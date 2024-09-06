@@ -139,7 +139,7 @@ public class EmbeddableCollectionElementWithLazyManyToOneTest {
 		scope.inTransaction(
 				session ->
 						assertFalse( session.createQuery(
-								"from Parent p join p.containedChildren c where c.child.id is not null" )
+								"from Parent p join p.containedChildren c where c.child.id is not null", Parent.class )
 											 .getResultList()
 											 .isEmpty() )
 

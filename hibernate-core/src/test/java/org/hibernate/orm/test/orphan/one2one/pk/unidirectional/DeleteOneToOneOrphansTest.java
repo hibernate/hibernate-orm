@@ -61,7 +61,7 @@ public class DeleteOneToOneOrphansTest {
 					assertEquals( 1, results.size() );
 					Employee emp = (Employee) results.get( 0 );
 					assertNotNull( emp.getInfo() );
-					results = session.createQuery( "from Employee e, EmployeeInfo i where e.info = i" ).list();
+					results = session.createQuery( "from Employee e, EmployeeInfo i where e.info = i", Object[].class ).list();
 					assertEquals( 1, results.size() );
 					Object[] result = (Object[]) results.get( 0 );
 					emp = (Employee) result[0];

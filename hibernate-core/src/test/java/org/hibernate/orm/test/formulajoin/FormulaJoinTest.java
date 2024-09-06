@@ -63,7 +63,7 @@ public class FormulaJoinTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		List l = s.createQuery("from Root m left join m.detail d").list();
+		List l = s.createQuery("from Root m left join m.detail d", Object[].class).list();
 		assertEquals( l.size(), 1 );
 		tx.commit();
 		s.close();

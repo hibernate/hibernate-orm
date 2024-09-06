@@ -85,7 +85,7 @@ public class IdBagTest {
 					session.persist( plebs );
 					session.persist( admins );
 
-					List l = session.createQuery( "from User u join u.groups g" ).list();
+					List l = session.createQuery( "from User u join u.groups g", User.class ).list();
 					assertEquals( 1, l.size() );
 
 					session.clear();

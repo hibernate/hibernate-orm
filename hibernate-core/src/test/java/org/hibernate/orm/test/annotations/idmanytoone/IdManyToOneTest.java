@@ -56,7 +56,7 @@ public class IdManyToOneTest extends BaseCoreFunctionalTestCase {
 	@TestForIssue( jiraKey = "HHH-7767" )
     public void testCriteriaRestrictionOnIdManyToOne() {
 		inTransaction( s -> {
-			s.createQuery( "from Course c join c.students cs join cs.student s where s.name = 'Foo'" ).list();
+			s.createQuery( "from Course c join c.students cs join cs.student s where s.name = 'Foo'", Object[].class ).list();
 
 			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 			CriteriaQuery<Course> criteria = criteriaBuilder.createQuery( Course.class );

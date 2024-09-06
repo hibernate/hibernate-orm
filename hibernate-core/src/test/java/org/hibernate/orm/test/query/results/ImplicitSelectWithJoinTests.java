@@ -16,6 +16,7 @@ import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.retail.Product;
 import org.hibernate.testing.orm.domain.retail.Vendor;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -34,10 +35,32 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 @JiraKey( "HHH-15133" )
 public class ImplicitSelectWithJoinTests {
 	private static final String HQL = "from Product p join p.vendor v where v.name like '%Steve%'";
+	private static final String HQL0 = "from Product this join this.vendor v where v.name like '%Steve%'";
 	private static final String HQL2 = "select p " + HQL;
 	private static final String HQL3 = "from Product q join q.vendor w, Product p join p.vendor v where v.name like '%Steve%' and w.name like '%Gavin%'";
 
 	@Test
+	public void testNoExpectedTypeWithThis(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			final SelectionQuery<?> query = session.createSelectionQuery( HQL0 );
+
+			{
+				final List<?> results = query.list();
+				assertThat( results ).hasSize( 1 );
+				final Object result = results.get( 0 );
+				assertThat( result ).isInstanceOf( Product.class );
+			}
+
+			try (ScrollableResults<?> results = query.scroll()) {
+				assertThat( results.next() ).isTrue();
+				final Object result = results.get();
+				assertThat( result ).isInstanceOf( Product.class );
+				assertThat( results.next() ).isFalse();
+			}
+		} );
+	}
+
+	@Test @FailureExpected(reason = "this functionality was disabled, and an exception is now thrown")
 	public void testNoExpectedType(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final SelectionQuery<?> query = session.createSelectionQuery( HQL );
@@ -79,7 +102,7 @@ public class ImplicitSelectWithJoinTests {
 		} );
 	}
 
-	@Test
+	@Test @FailureExpected(reason = "this functionality was disabled, and an exception is now thrown")
 	public void testArrayResultNoResultType(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final SelectionQuery<?> query = session.createSelectionQuery( HQL3 );

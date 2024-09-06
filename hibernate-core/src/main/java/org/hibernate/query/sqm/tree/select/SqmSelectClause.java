@@ -10,13 +10,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
  * The semantic select clause.  Defined as a list of individual selections.
@@ -40,7 +41,7 @@ public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpres
 			NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
 		this.distinct = distinct;
-		this.selections = CollectionHelper.arrayList( expectedNumberOfSelections );
+		this.selections = arrayList( expectedNumberOfSelections );
 	}
 
 	@Override

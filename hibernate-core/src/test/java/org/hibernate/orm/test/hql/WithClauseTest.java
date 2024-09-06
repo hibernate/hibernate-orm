@@ -80,29 +80,29 @@ public class WithClauseTest {
 		scope.inTransaction(
 				(session) -> {
 					// one-to-many
-					List list = session.createQuery( "from Human h inner join h.offspring as o with o.bodyWeight < :someLimit" )
+					List list = session.createQuery( "from Human h inner join h.offspring as o with o.bodyWeight < :someLimit", Human.class )
 							.setParameter( "someLimit", 1 )
 							.list();
 					assertTrue( list.isEmpty(), "ad-hoc on did not take effect" );
 
 					// many-to-one
-					list = session.createQuery( "from Animal a inner join a.mother as m with m.bodyWeight < :someLimit" )
+					list = session.createQuery( "from Animal a inner join a.mother as m with m.bodyWeight < :someLimit", Animal.class )
 							.setParameter( "someLimit", 1 )
 							.list();
 					assertTrue( list.isEmpty(), "ad-hoc on did not take effect" );
 
-					list = session.createQuery( "from Human h inner join h.friends f with f.bodyWeight < :someLimit" )
+					list = session.createQuery( "from Human h inner join h.friends f with f.bodyWeight < :someLimit", Human.class )
 							.setParameter( "someLimit", 25 )
 							.list();
 					assertTrue( !list.isEmpty(), "ad-hoc on did take effect" );
 
 					// many-to-many
-					list = session.createQuery( "from Human h inner join h.friends as f with f.nickName like 'bubba'" )
+					list = session.createQuery( "from Human h inner join h.friends as f with f.nickName like 'bubba'", Human.class )
 							.list();
 					assertTrue( list.isEmpty(), "ad-hoc on did not take effect" );
 
 					// http://opensource.atlassian.com/projects/hibernate/browse/HHH-1930
-					list = session.createQuery( "from Human h inner join h.nickNames as nicknames with nicknames = 'abc'" )
+					list = session.createQuery( "from Human h inner join h.nickNames as nicknames with nicknames = 'abc'", Human.class )
 							.list();
 					assertTrue( list.isEmpty(), "ad-hoc on did not take effect" );
 
@@ -114,7 +114,7 @@ public class WithClauseTest {
 	public void testWithClauseWithImplicitJoin(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					List list = session.createQuery( "from Human h inner join h.offspring o with o.mother.father = :cousin" )
+					List list = session.createQuery( "from Human h inner join h.offspring o with o.mother.father = :cousin", Object[].class )
 							.setParameter( "cousin", session.getReference( Human.class, Long.valueOf( "123" ) ) )
 							.list();
 					assertTrue( list.isEmpty(), "ad-hoc did take effect" );
@@ -167,7 +167,7 @@ public class WithClauseTest {
 				(session) -> {
 					// Since friends has a join table, we will first left join all friends and then do the WITH clause on the target entity table join
 					// Normally this produces 2 results which is wrong and can only be circumvented by converting the join table and target entity table join to a subquery
-					List list = session.createQuery( "from Human h left join h.friends as f with f.nickName like 'bubba' where h.description = 'father'" )
+					List list = session.createQuery( "from Human h left join h.friends as f with f.nickName like 'bubba' where h.description = 'father'", Object[].class )
 							.list();
 					assertEquals( 1, list.size(), "subquery rewriting of join table did not take effect" );
 				}
@@ -180,7 +180,7 @@ public class WithClauseTest {
 		scope.inTransaction(
 				(session) -> {
 					// Like testWithClauseAsSubquery but uses equal operator since it render differently in SQL
-					List list = session.createQuery( "from Human h left join h.friends as f with f.nickName = 'bubba' where h.description = 'father'" )
+					List list = session.createQuery( "from Human h left join h.friends as f with f.nickName = 'bubba' where h.description = 'father'", Object[].class )
 							.list();
 					assertEquals( 1, list.size(), "subquery rewriting of join table did not take effect" );
 				}
@@ -194,7 +194,7 @@ public class WithClauseTest {
 				(session) -> {
 					// Since family has a join table, we will first left join all family members and then do the WITH clause on the target entity table join
 					// Normally this produces 2 results which is wrong and can only be circumvented by converting the join table and target entity table join to a subquery
-					List list = session.createQuery( "from Human h left join h.family as f with key(f) like 'son1' where h.description = 'father'" )
+					List list = session.createQuery( "from Human h left join h.family as f with key(f) like 'son1' where h.description = 'father'", Object[].class )
 							.list();
 					assertEquals( 1, list.size(), "subquery rewriting of join table did not take effect" );
 				}

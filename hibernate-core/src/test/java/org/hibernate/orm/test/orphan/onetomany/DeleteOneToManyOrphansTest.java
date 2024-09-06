@@ -75,7 +75,7 @@ public class DeleteOneToManyOrphansTest {
 
 		scope.inTransaction(
 				session -> {
-					Product product = ( session.get( Product.class, p.getId() ) );
+					Product product = session.get( Product.class, p.getId() );
 					assertEquals( 0, product.getFeatures().size() );
 					List results = session.createQuery( "from Feature" ).list();
 					assertEquals( 0, results.size() );

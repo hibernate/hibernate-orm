@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -1327,20 +1326,61 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		final NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
 
-		final SqmSelectClause selectClause;
-		final boolean singleEntityResult;
+		for ( SqmRoot<?> sqmRoot : fromClause.getRoots() ) {
+			if ( "this".equals( sqmRoot.getExplicitAlias() ) ) {
+				// we found an entity with the alias 'this'
+				// assigned explicitly, JPA says we should
+				// infer the select list 'select this'
+				SqmSelectClause selectClause = new SqmSelectClause( false, 1, nodeBuilder );
+				selectClause.addSelection( new SqmSelection<>( sqmRoot, "this", nodeBuilder) );
+				return selectClause;
+			}
+		}
+
 		if ( expectedResultType == null ) {
-			// no result type was specified
-			// - if there is a single root entity return the entity,
-			//   even if it has non-fetch joins (ugh!)
-			// - otherwise, return all entities in an Object[] array,
-			//   including non-fetch joins
-			selectClause = new SqmSelectClause( false, nodeBuilder );
-			singleEntityResult = fromClause.getNumberOfRoots() == 1;
+			if ( processingStateStack.getCurrent().getProcessingQuery() instanceof SqmSubQuery ) {
+				// a subquery ... the following is a bit arbitrary
+				final SqmSelectClause selectClause = new SqmSelectClause( false, nodeBuilder );
+				fromClause.visitRoots( sqmRoot -> {
+					selectClause.addSelection( new SqmSelection<>( sqmRoot, sqmRoot.getAlias(), nodeBuilder) );
+					applyJoinsToInferredSelectClause( sqmRoot, selectClause );
+				} );
+				return selectClause;
+			}
+			else {
+				// no result type was specified (and this isn't a subquery)
+				// if there's a single root entity with no non-fetch joins,
+				// we may safely assume the query returns that entity
+				if ( fromClause.getNumberOfRoots() == 1 ) {
+					final SqmRoot<?> sqmRoot = fromClause.getRoots().get(0);
+					if ( sqmRoot.hasTrueJoin() ) {
+						// the entity has joins, and doesn't explicitly have
+						// the alias 'this', so the 'select' list cannot be
+						// inferred
+						throw new SemanticException( "Query has no 'select' clause, and joins, but no result type was given"
+								+ " (pass an explicit result type to 'createQuery()')", query );
+					}
+					// exactly one root entity, and no joins - this includes
+					// the case where JPA says the entity has an implicit alias
+					// 'this', and that we should infer 'select this', but we
+					// accept even the case where the entity has an explicit
+					// alias, and infer 'select explicit_alias'
+					SqmSelectClause selectClause = new SqmSelectClause( false, 1, nodeBuilder );
+					selectClause.addSelection( new SqmSelection<>( sqmRoot, sqmRoot.getAlias(), nodeBuilder) );
+					return selectClause;
+				}
+				else {
+					// there's more than one entity, and no entity is 'this',
+					// therefore the 'select' list cannot be inferred
+					throw new SemanticException( "Query has no 'select' clause, and multiple root entities, but no result type was given"
+							+ " (pass an explicit result type to 'createQuery()')", query );
+				}
+			}
 		}
 		else {
-			singleEntityResult = creationContext.getJpaMetamodel().findEntityType( expectedResultType ) != null;
-			if ( singleEntityResult ) {
+			// we have an explicit result type, so we can use that to
+			// help infer the 'select' list
+			if ( creationContext.getJpaMetamodel().findEntityType( expectedResultType ) != null ) {
 				// the result type is an entity class
 				if ( fromClause.getNumberOfRoots() > 1 ) {
 					// multiple root entities
@@ -1358,29 +1398,30 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					else {
 						// exactly one root entity, return it
 						// (joined entities are not returned)
-						selectClause = new SqmSelectClause( false, 1, nodeBuilder );
+						final SqmSelectClause selectClause = new SqmSelectClause( false, 1, nodeBuilder );
+						selectClause.addSelection( new SqmSelection<>( sqmRoot, sqmRoot.getAlias(), nodeBuilder) );
+						return selectClause;
 					}
 				}
 			}
 			else {
-				// the result type is not an entity class
-				// return all root entities and non-fetch joins
-				selectClause = new SqmSelectClause( false, nodeBuilder );
+				// the result type is not an entity class, and so
+				// it must be some sort of object which packages
+				// a multi-element projection list - let's return
+				// all root entities and non-fetch joins, and see
+				// later on if the result type can really hold them
+				final SqmSelectClause selectClause = new SqmSelectClause( false, nodeBuilder );
+				fromClause.visitRoots( sqmRoot -> {
+					selectClause.addSelection( new SqmSelection<>( sqmRoot, sqmRoot.getAlias(), nodeBuilder) );
+					applyJoinsToInferredSelectClause( sqmRoot, selectClause );
+				} );
+				return selectClause;
 			}
 		}
-
-		fromClause.visitRoots( (sqmRoot) -> {
-			selectClause.addSelection( new SqmSelection<>( sqmRoot, sqmRoot.getAlias(), nodeBuilder) );
-			if ( !singleEntityResult ) {
-				applyJoinsToInferredSelectClause( sqmRoot, selectClause );
-			}
-		} );
-
-		return selectClause;
 	}
 
 	private void applyJoinsToInferredSelectClause(SqmFrom<?,?> sqm, SqmSelectClause selectClause) {
-		sqm.visitSqmJoins( (sqmJoin) -> {
+		sqm.visitSqmJoins( sqmJoin -> {
 			if ( sqmJoin.isImplicitlySelectable() ) {
 				selectClause.addSelection( new SqmSelection<>( sqmJoin, sqmJoin.getAlias(), creationContext.getNodeBuilder() ) );
 				applyJoinsToInferredSelectClause( sqmJoin, selectClause );

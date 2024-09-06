@@ -81,9 +81,9 @@ public class TernaryTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		List l = s.createQuery("from Employee e join e.managerBySite m where m.name='Bob'").list();
+		List l = s.createQuery("from Employee e join e.managerBySite m where m.name='Bob'", Object[].class).list();
 		assertEquals( l.size(), 0 );
-		l = s.createQuery("from Employee e join e.managerBySite m where m.name='Tom'").list();
+		l = s.createQuery("from Employee e join e.managerBySite m where m.name='Tom'", Object[].class).list();
 		assertEquals( l.size(), 2 );
 		t.commit();
 		s.close();
@@ -103,7 +103,7 @@ public class TernaryTest extends BaseCoreFunctionalTestCase {
 		}
 		assertTrue(total==3);
 
-		l = s.createQuery("from Employee e left join e.managerBySite m left join m.managerBySite m2").list();
+		l = s.createQuery("from Employee e left join e.managerBySite m left join m.managerBySite m2", Object[].class).list();
 
 		// clean up...
 		l = s.createQuery("from Employee e left join fetch e.managerBySite").list();
@@ -124,7 +124,7 @@ public class TernaryTest extends BaseCoreFunctionalTestCase {
 	public void testIndexRelatedFunctions() {
 		Session session = openSession();
 		session.beginTransaction();
-		session.createQuery( "from Employee e join e.managerBySite as m where index(m) is not null" )
+		session.createQuery( "from Employee e join e.managerBySite as m where index(m) is not null", Object[].class )
 				.list();
 		session.createQuery( "from Employee e where minIndex(e.managerBySite) is not null" )
 				.list();

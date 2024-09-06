@@ -944,10 +944,10 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 			inTransaction(
 					s,
 					session -> {
-						s.createQuery( "from Animal a join a.offspring o where o.description = 'xyz'" ).list();
-						s.createQuery( "from Animal a join a.offspring o where o.father.description = 'xyz'" ).list();
-						s.createQuery( "from Animal a join a.offspring o order by o.description" ).list();
-						s.createQuery( "from Animal a join a.offspring o order by o.father.description" ).list();
+						s.createQuery( "from Animal a join a.offspring o where o.description = 'xyz'", Object[].class ).list();
+						s.createQuery( "from Animal a join a.offspring o where o.father.description = 'xyz'", Object[].class ).list();
+						s.createQuery( "from Animal a join a.offspring o order by o.description", Object[].class ).list();
+						s.createQuery( "from Animal a join a.offspring o order by o.father.description", Object[].class ).list();
 					}
 			);
 
@@ -1285,7 +1285,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		Object [] result = ( Object [] ) s.createQuery( "from User u, Human h where u.human = h" ).uniqueResult();
+		Object [] result = s.createQuery( "from User u, Human h where u.human = h", Object[].class ).uniqueResult();
 		assertNotNull( result );
 		assertEquals( u.getUserName(), ( (User) result[0] ).getUserName() );
 		assertEquals( h.getName().getFirst(), ( (Human) result[1] ).getName().getFirst() );
@@ -1650,11 +1650,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		// TODO : setEntity() currently will not work here, but that would be *very* nice
 		// does not work because the corresponding EntityType is then used as the "bind type" rather
 		// than the "discovered" AnyType...
-		s.createQuery( "from PropertySet p where p.someSpecificProperty = :ssp" ).setParameter( "ssp", redValue ).list();
+		s.createQuery( "from PropertySet p where p.someSpecificProperty = :ssp", PropertySet.class ).setParameter( "ssp", redValue ).list();
 
-		s.createQuery( "from PropertySet p where p.someSpecificProperty.id is not null" ).list();
+		s.createQuery( "from PropertySet p where p.someSpecificProperty.id is not null", PropertySet.class ).list();
 
-		s.createQuery( "from PropertySet p join p.generalProperties gp where gp.id is not null" ).list();
+		s.createQuery( "from PropertySet p join p.generalProperties gp where gp.id is not null", PropertySet.class ).list();
 
 		s.remove( s.getReference( PropertySet.class, id ) );
 
@@ -3803,7 +3803,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		public SyntaxChecker checkList() {
 			Session s = openSession();
 			s.beginTransaction();
-			Query query = s.createQuery( hql );
+			Query query = s.createQuery( hql, Object[].class );
 			preparer.prepare( query );
 			query.list();
 			s.getTransaction().commit();
@@ -3814,7 +3814,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		public SyntaxChecker checkScroll() {
 			Session s = openSession();
 			s.beginTransaction();
-			Query query = s.createQuery( hql );
+			Query query = s.createQuery( hql, Object[].class );
 			preparer.prepare( query );
 			query.scroll().close();
 			s.getTransaction().commit();

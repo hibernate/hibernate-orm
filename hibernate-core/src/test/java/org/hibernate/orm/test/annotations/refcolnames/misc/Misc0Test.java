@@ -29,7 +29,7 @@ public class Misc0Test {
             s.persist(a);
             s.persist(b);
 
-            s.createQuery("from B join entityA").getSingleResult();
+            s.createQuery("from B join entityA", EntityB.class).getSingleResult();
         });
     }
 

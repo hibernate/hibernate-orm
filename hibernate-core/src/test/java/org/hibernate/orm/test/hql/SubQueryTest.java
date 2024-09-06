@@ -17,7 +17,6 @@ import jakarta.persistence.Table;
 
 import org.hibernate.Session;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -114,7 +113,7 @@ public class SubQueryTest extends BaseCoreFunctionalTestCase {
 		String qry = "from Root as r " +
 				"where r.branch.branchName = 'branch' " +
 				"  and exists( from r.branch.leaves as s where s.leafName = 'leaf1')";
-		Root rootQueried = (Root) s.createQuery( qry ).uniqueResult();
+		Root rootQueried = s.createQuery( qry, Root.class ).uniqueResult();
 		assertEquals( root.rootName, rootQueried.rootName );
 		assertEquals( root.branch.branchName, rootQueried.branch.branchName );
 		assertEquals( leaf1.leafName, rootQueried.branch.leaves.get( 0 ).leafName );

@@ -62,7 +62,7 @@ public class ABCTest {
 					getCache( scope ).evictEntityData( D.class );
 					getCache( scope ).evictEntityData( A.class );
 					assertThat(
-							session.createQuery( "from D d join d.reverse r join d.inverse i where i = r" )
+							session.createQuery( "from D d join d.reverse r join d.inverse i where i = r", Object[].class )
 									.list().size(),
 							is( 1 )
 					);

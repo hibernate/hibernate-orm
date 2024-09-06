@@ -177,7 +177,7 @@ public class PropertyRefTest {
 					}
 					session.clear();
 
-					l = session.createQuery( "from Person p left join p.accounts a" ).list();
+					l = session.createQuery( "from Person p left join p.accounts a", Person.class ).list();
 					for ( int i = 0; i < 2; i++ ) {
 						Person px = (Person) l.get( i );
 						assertFalse( Hibernate.isInitialized( px.getAccounts() ) );

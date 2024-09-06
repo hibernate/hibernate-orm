@@ -87,7 +87,7 @@ public class MultiInheritanceImplicitDowncastTest {
 	public void testIllegalBaseJoin(SessionFactoryScope scope) {
 		try {
 			scope.inSession(
-					s -> s.createQuery( "from PolymorphicPropertyBase p left join p.base b left join b.relation1" )
+					s -> s.createQuery( "from PolymorphicPropertyBase p left join p.base b left join b.relation1", PolymorphicPropertyBase.class )
 			);
 		}
 		catch (IllegalArgumentException ex) {

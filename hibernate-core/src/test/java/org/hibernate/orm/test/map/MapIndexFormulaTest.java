@@ -43,16 +43,16 @@ public class MapIndexFormulaTest {
 	public void testIndexFunctionOnManyToManyMap(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from Group g join g.users u where g.name = 'something' and index(u) = 'nada'" )
+					session.createQuery( "from Group g join g.users u where g.name = 'something' and index(u) = 'nada'", Group.class )
 							.list();
 					session.createQuery(
-									"from Group g where g.name = 'something' and minindex(g.users) = 'nada'" )
+									"from Group g where g.name = 'something' and minindex(g.users) = 'nada'", Group.class )
 							.list();
 					session.createQuery(
-									"from Group g where g.name = 'something' and maxindex(g.users) = 'nada'" )
+									"from Group g where g.name = 'something' and maxindex(g.users) = 'nada'", Group.class )
 							.list();
 					session.createQuery(
-									"from Group g where g.name = 'something' and maxindex(g.users) = 'nada' and maxindex(g.users) = 'nada'" )
+									"from Group g where g.name = 'something' and maxindex(g.users) = 'nada' and maxindex(g.users) = 'nada'", Group.class )
 							.list();
 				}
 		);

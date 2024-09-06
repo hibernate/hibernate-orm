@@ -60,6 +60,7 @@ import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SetAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 
+import static org.hibernate.metamodel.AttributeClassification.EMBEDDED;
 import static org.hibernate.query.sqm.internal.SqmUtil.findCompatibleFetchJoin;
 
 /**
@@ -298,10 +299,18 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	@Override
 	public Set<Join<T, ?>> getJoins() {
-		//noinspection unchecked
-		return (Set<Join<T, ?>>) (Set<?>) getSqmJoins().stream()
-				.filter( sqmJoin -> sqmJoin instanceof SqmAttributeJoin && !( (SqmAttributeJoin<?, ?>) sqmJoin ).isFetched() )
+		return getSqmJoins().stream()
+				.filter( sqmJoin -> sqmJoin instanceof SqmAttributeJoin<?,?> attributeJoin
+						&& !attributeJoin.isFetched() )
 				.collect( Collectors.toSet() );
+	}
+
+	@Override
+	public boolean hasTrueJoin() {
+		return getSqmJoins().stream()
+				.anyMatch( sqmJoin -> sqmJoin instanceof SqmAttributeJoin<?,?> attributeJoin
+						&& !attributeJoin.isFetched()
+						&& attributeJoin.getAttribute().getAttributeClassification()!=EMBEDDED );
 	}
 
 	@Override
@@ -644,7 +653,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	public Set<Fetch<T, ?>> getFetches() {
 		//noinspection unchecked
 		return (Set<Fetch<T, ?>>) (Set<?>) getSqmJoins().stream()
-				.filter( sqmJoin -> sqmJoin instanceof SqmAttributeJoin && ( (SqmAttributeJoin<?, ?>) sqmJoin ).isFetched() )
+				.filter( sqmJoin -> sqmJoin instanceof SqmAttributeJoin<?,?> attributeJoin
+						&& attributeJoin.isFetched() )
 				.collect( Collectors.toSet() );
 	}
 

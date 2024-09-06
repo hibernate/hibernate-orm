@@ -14,8 +14,8 @@ import org.junit.jupiter.api.Test;
 public class FieldWithUnderscoreTest {
 
     @Test void test(SessionFactoryScope scope) {
-        scope.inSession(s -> s.createSelectionQuery("from B join _a").getResultList());
-        scope.inSession(s -> s.createSelectionQuery("from B left join fetch _a").getResultList());
+        scope.inSession(s -> s.createSelectionQuery("from B join _a", B.class).getResultList());
+        scope.inSession(s -> s.createSelectionQuery("from B left join fetch _a", B.class).getResultList());
     }
 
     @Entity(name = "A")

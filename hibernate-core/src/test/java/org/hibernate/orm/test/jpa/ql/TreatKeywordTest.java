@@ -23,11 +23,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.Session;
-import org.hibernate.Transaction;
 
 import org.junit.Test;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -54,13 +52,13 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 		// todo : assert invalid naming of non-subclasses in TREAT statement
 		Session s = openSession();
 
-		s.createQuery( "from DiscriminatorEntity e join treat(e.other as DiscriminatorEntitySubclass) o" ).list();
-		s.createQuery( "from DiscriminatorEntity e join treat(e.other as DiscriminatorEntitySubSubclass) o" ).list();
-		s.createQuery( "from DiscriminatorEntitySubclass e join treat(e.other as DiscriminatorEntitySubSubclass) o" ).list();
+		s.createQuery( "from DiscriminatorEntity e join treat(e.other as DiscriminatorEntitySubclass) o", Object[].class ).list();
+		s.createQuery( "from DiscriminatorEntity e join treat(e.other as DiscriminatorEntitySubSubclass) o", Object[].class ).list();
+		s.createQuery( "from DiscriminatorEntitySubclass e join treat(e.other as DiscriminatorEntitySubSubclass) o", Object[].class ).list();
 
-		s.createQuery( "from JoinedEntity e join treat(e.other as JoinedEntitySubclass) o" ).list();
-		s.createQuery( "from JoinedEntity e join treat(e.other as JoinedEntitySubSubclass) o" ).list();
-		s.createQuery( "from JoinedEntitySubclass e join treat(e.other as JoinedEntitySubSubclass) o" ).list();
+		s.createQuery( "from JoinedEntity e join treat(e.other as JoinedEntitySubclass) o", Object[].class ).list();
+		s.createQuery( "from JoinedEntity e join treat(e.other as JoinedEntitySubSubclass) o", Object[].class ).list();
+		s.createQuery( "from JoinedEntitySubclass e join treat(e.other as JoinedEntitySubSubclass) o", Object[].class ).list();
 
 		s.close();
 	}
@@ -81,19 +79,19 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 
 		// in select clause
-		List result = s.createQuery( "select e from DiscriminatorEntity e" ).list();
+		List result = s.createQuery( "select e from DiscriminatorEntity e", Object[].class ).list();
 		assertEquals( 2, result.size() );
-		result = s.createQuery( "select treat (e as DiscriminatorEntitySubclass) from DiscriminatorEntity e" ).list();
+		result = s.createQuery( "select treat (e as DiscriminatorEntitySubclass) from DiscriminatorEntity e", Object[].class ).list();
 		assertEquals( 1, result.size() );
-		result = s.createQuery( "select treat (e as DiscriminatorEntitySubSubclass) from DiscriminatorEntity e" ).list();
+		result = s.createQuery( "select treat (e as DiscriminatorEntitySubSubclass) from DiscriminatorEntity e", Object[].class ).list();
 		assertEquals( 0, result.size() );
 
 		// in join
-		result = s.createQuery( "from DiscriminatorEntity e inner join e.other" ).list();
+		result = s.createQuery( "from DiscriminatorEntity e inner join e.other", DiscriminatorEntity.class ).list();
 		assertEquals( 1, result.size() );
-		result = s.createQuery( "from DiscriminatorEntity e inner join treat (e.other as DiscriminatorEntitySubclass)" ).list();
+		result = s.createQuery( "from DiscriminatorEntity e inner join treat (e.other as DiscriminatorEntitySubclass)", DiscriminatorEntity.class ).list();
 		assertEquals( 0, result.size() );
-		result = s.createQuery( "from DiscriminatorEntity e inner join treat (e.other as DiscriminatorEntitySubSubclass)" ).list();
+		result = s.createQuery( "from DiscriminatorEntity e inner join treat (e.other as DiscriminatorEntitySubSubclass)", DiscriminatorEntity.class ).list();
 		assertEquals( 0, result.size() );
 
 		s.close();
@@ -133,11 +131,11 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 0, result.size() );
 
 		// in join
-		result = s.createQuery( "from JoinedEntity e inner join e.other" ).list();
+		result = s.createQuery( "from JoinedEntity e inner join e.other", JoinedEntity.class ).list();
 		assertEquals( 1, result.size() );
-		result = s.createQuery( "from JoinedEntity e inner join treat (e.other as JoinedEntitySubclass)" ).list();
+		result = s.createQuery( "from JoinedEntity e inner join treat (e.other as JoinedEntitySubclass)", JoinedEntity.class ).list();
 		assertEquals( 0, result.size() );
-		result = s.createQuery( "from JoinedEntity e inner join treat (e.other as JoinedEntitySubSubclass)" ).list();
+		result = s.createQuery( "from JoinedEntity e inner join treat (e.other as JoinedEntitySubSubclass)", JoinedEntity.class ).list();
 		assertEquals( 0, result.size() );
 
 		s.close();

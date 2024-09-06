@@ -65,7 +65,7 @@ public class NonPkAssociationEqualityPredicateTest {
 		scope.inTransaction(
 				entityManager -> {
 					// This fails because we compare a ToOne with non-PK to something with a EntityValuedModelPart which defaults to the PK mapping
-					entityManager.createQuery( "from Order o, Customer c where o.customer = c" ).getResultList();
+					entityManager.createQuery( "from Order o, Customer c where o.customer = c", Object[].class ).getResultList();
 				}
 		);
 	}

@@ -31,9 +31,9 @@ public class EmbeddableWithMany2OneTest {
 	public void testJoinAcrossEmbedded(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from Person p join p.address as a join a.country as c where c.name = 'US'" )
+					session.createQuery( "from Person p join p.address as a join a.country as c where c.name = 'US'", Person.class )
 							.list();
-					session.createQuery( "from Person p join p.address as a join a.country as c where c.id = 'US'" )
+					session.createQuery( "from Person p join p.address as a join a.country as c where c.id = 'US'", Person.class )
 							.list();
 				}
 		);

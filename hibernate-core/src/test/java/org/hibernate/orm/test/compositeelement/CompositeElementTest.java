@@ -126,7 +126,7 @@ public class CompositeElementTest extends BaseNonConfigCoreFunctionalTestCase {
 			c = (Child) p.getChildren().iterator().next();
 			assertEquals( 1, c.getPosition() );
 
-			p = (Parent) s.createQuery( "from Parent p join p.children c where c.position = 1" ).uniqueResult();
+			p = s.createQuery( "from Parent p join p.children c where c.position = 1", Parent.class ).uniqueResult();
 			c = (Child) p.getChildren().iterator().next();
 			assertEquals( 1, c.getPosition() );
 

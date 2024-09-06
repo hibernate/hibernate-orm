@@ -109,4 +109,16 @@ public interface Filter {
 	 * @return The flag value
 	 */
 	boolean isAppliedToLoadByKey();
+
+	/**
+	 * Obtain the argument currently bound to the filter parameter
+	 * with the given name.
+	 *
+	 * @param name the name of the filter parameter
+	 * @return the value currently set
+	 *
+	 * @since 7
+	 */
+	@Incubating
+	Object getParameterValue(String name);
 }

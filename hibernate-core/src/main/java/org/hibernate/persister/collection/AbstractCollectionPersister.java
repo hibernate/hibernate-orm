@@ -332,8 +332,7 @@ public abstract class AbstractCollectionPersister
 			sqlWhereStringTemplate = Template.renderWhereStringTemplate(
 					sqlWhereString,
 					dialect,
-					creationContext.getTypeConfiguration(),
-					creationContext.getFunctionRegistry()
+					creationContext.getTypeConfiguration()
 			);
 		}
 		else {
@@ -575,8 +574,7 @@ public abstract class AbstractCollectionPersister
 			manyToManyWhereTemplate = Template.renderWhereStringTemplate(
 					manyToManyWhereString,
 					creationContext.getDialect(),
-					creationContext.getTypeConfiguration(),
-					creationContext.getFunctionRegistry()
+					creationContext.getTypeConfiguration()
 			);
 		}
 

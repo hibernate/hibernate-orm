@@ -83,8 +83,7 @@ public class FilterHelper {
 						filter.getCondition(),
 						FilterImpl.MARKER,
 						factory.getJdbcServices().getDialect(),
-						factory.getTypeConfiguration(),
-						factory.getQueryEngine().getSqmFunctionRegistry()
+						factory.getTypeConfiguration()
 				);
 				filterConditions[filterCount] = safeInterning( autoAliasedCondition );
 				filterAutoAliasFlags[filterCount] = true;

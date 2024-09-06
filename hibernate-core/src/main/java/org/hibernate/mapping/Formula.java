@@ -43,7 +43,7 @@ public class Formula implements Selectable, Serializable {
 
 	@Override
 	public String getTemplate(Dialect dialect, TypeConfiguration typeConfiguration, SqmFunctionRegistry registry) {
-		final String template = renderWhereStringTemplate( formula, dialect, typeConfiguration, registry );
+		final String template = renderWhereStringTemplate( formula, dialect, typeConfiguration );
 		return safeInterning( replace( template, "{alias}", TEMPLATE ) );
 	}
 

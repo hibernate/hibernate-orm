@@ -1016,20 +1016,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			String subselectFragment,
 			Table includedTable,
 			MetadataBuildingContext buildingContext) throws DuplicateMappingException {
-		final Namespace namespace = getDatabase().locateNamespace(
-				getDatabase().toIdentifier( catalogName ),
-				getDatabase().toIdentifier( schemaName )
-		);
+		final Database db = getDatabase();
+		final Namespace namespace =
+				db.locateNamespace( db.toIdentifier( catalogName ), db.toIdentifier( schemaName ) );
 
 		// annotation binding depends on the "table name" for @Subselect bindings
 		// being set into the generated table (mainly to avoid later NPE), but for now we need to keep that :(
-		final Identifier logicalName;
-		if ( name != null ) {
-			logicalName = getDatabase().toIdentifier( name );
-		}
-		else {
-			logicalName = null;
-		}
+		final Identifier logicalName = name != null ? db.toIdentifier( name ) : null;
 
 		if ( subselectFragment != null ) {
 			return namespace.createDenormalizedTable(
@@ -1045,12 +1038,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			);
 		}
 		else {
-			Table table = namespace.locateTable( logicalName );
-			if ( table != null ) {
+			if ( namespace.locateTable( logicalName ) != null ) {
+				assert logicalName != null;
 				throw new DuplicateMappingException( DuplicateMappingException.Type.TABLE, logicalName.toString() );
 			}
 			else {
-				table = namespace.createDenormalizedTable(
+				return namespace.createDenormalizedTable(
 						logicalName,
 						(physicalTableName) -> new DenormalizedTable(
 								buildingContext.getCurrentContributorName(),
@@ -1061,7 +1054,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 						)
 				);
 			}
-			return table;
 		}
 	}
 
@@ -1080,23 +1072,23 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 
 	@Override
 	public String getIdentifierPropertyName(String entityName) throws MappingException {
-		final PersistentClass pc = entityBindingMap.get( entityName );
-		if ( pc == null ) {
+		final PersistentClass persistentClass = entityBindingMap.get( entityName );
+		if ( persistentClass == null ) {
 			throw new MappingException( "persistent class not known: " + entityName );
 		}
-		if ( !pc.hasIdentifierProperty() ) {
+		if ( !persistentClass.hasIdentifierProperty() ) {
 			return null;
 		}
-		return pc.getIdentifierProperty().getName();
+		return persistentClass.getIdentifierProperty().getName();
 	}
 
 	@Override
 	public org.hibernate.type.Type getReferencedPropertyType(String entityName, String propertyName) throws MappingException {
-		final PersistentClass pc = entityBindingMap.get( entityName );
-		if ( pc == null ) {
+		final PersistentClass persistentClass = entityBindingMap.get( entityName );
+		if ( persistentClass == null ) {
 			throw new MappingException( "persistent class not known: " + entityName );
 		}
-		Property prop = pc.getReferencedProperty( propertyName );
+		Property prop = persistentClass.getReferencedProperty( propertyName );
 		if ( prop == null ) {
 			throw new MappingException(
 					"property not known: " +
@@ -1265,6 +1257,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			}
 		}
 
+		assert table != null;
 		throw new MappingException( "Unable to find column with logical name " + logicalName.render()
 				+ " in table " + table.getName() );
 	}
@@ -1300,6 +1293,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		}
 
 		if ( logicalName == null ) {
+			assert table != null;
 			throw new MappingException( "Unable to find column with physical name '"
 					+ physicalNameString + "' in table '" + table.getName() + "'" );
 		}
@@ -1429,10 +1423,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			propertiesAnnotatedWithIdAndToOne = new HashMap<>();
 		}
 
-		final Map<String, PropertyData> map = propertiesAnnotatedWithIdAndToOne.computeIfAbsent(
-				entityType,
-				k -> new HashMap<>()
-		);
+		final Map<String, PropertyData> map =
+				propertiesAnnotatedWithIdAndToOne.computeIfAbsent( entityType, k -> new HashMap<>() );
 		map.put( property.getPropertyName(), property );
 	}
 
@@ -2008,6 +2000,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			endOfQueueFkSecondPasses = failingSecondPasses;
 		}
 		if ( !endOfQueueFkSecondPasses.isEmpty() ) {
+			assert originalException != null;
 			throw originalException;
 		}
 	}
@@ -2108,15 +2101,15 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 							"Cache override referenced an unknown entity : " + cacheRegionDefinition.getRole()
 					);
 				}
-				if ( !( entityBinding instanceof RootClass ) ) {
+				if ( !( entityBinding instanceof RootClass rootClass ) ) {
 					throw new HibernateException(
 							"Cache override referenced a non-root entity : " + cacheRegionDefinition.getRole()
 					);
 				}
 				entityBinding.setCached( true );
-				( (RootClass) entityBinding ).setCacheRegionName( cacheRegionDefinition.getRegion() );
-				( (RootClass) entityBinding ).setCacheConcurrencyStrategy( cacheRegionDefinition.getUsage() );
-				( (RootClass) entityBinding ).setLazyPropertiesCacheable( cacheRegionDefinition.isCacheLazy() );
+				rootClass.setCacheRegionName( cacheRegionDefinition.getRegion() );
+				rootClass.setCacheConcurrencyStrategy( cacheRegionDefinition.getUsage() );
+				rootClass.setLazyPropertiesCacheable( cacheRegionDefinition.isCacheLazy() );
 			}
 			else if ( cacheRegionDefinition.getRegionType() == CacheRegionDefinition.CacheRegionType.COLLECTION ) {
 				final Collection collectionBinding = getCollectionBinding( cacheRegionDefinition.getRole() );
@@ -2181,36 +2174,26 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		final Dialect dialect = getDatabase().getJdbcEnvironment().getDialect();
 
 		for ( PersistentClass entityBinding : entityBindingMap.values() ) {
-			entityBinding.assignCheckConstraintsToTable(
-					dialect,
-					bootstrapContext.getTypeConfiguration(),
-					bootstrapContext.getFunctionRegistry()
-			);
-
-			if ( entityBinding.isInherited() ) {
-				continue;
+			entityBinding.assignCheckConstraintsToTable( dialect, bootstrapContext.getTypeConfiguration() );
+			if ( entityBinding instanceof RootClass rootClass ) {
+				handleIdentifierValueBinding(
+						entityBinding.getIdentifier(),
+						dialect,
+						rootClass,
+						entityBinding.getIdentifierProperty()
+				);
 			}
-
-			handleIdentifierValueBinding(
-					entityBinding.getIdentifier(),
-					dialect,
-					(RootClass) entityBinding,
-					entityBinding.getIdentifierProperty()
-			);
-
 		}
 
 		for ( Collection collection : collectionBindingMap.values() ) {
-			if ( !( collection instanceof IdentifierCollection ) ) {
-				continue;
+			if ( collection instanceof IdentifierCollection identifierCollection ) {
+				handleIdentifierValueBinding(
+						identifierCollection.getIdentifier(),
+						dialect,
+						null,
+						null
+				);
 			}
-
-			handleIdentifierValueBinding(
-					( (IdentifierCollection) collection ).getIdentifier(),
-					dialect,
-					null,
-					null
-			);
 		}
 	}
 
@@ -2222,8 +2205,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		//		it could be done better
 		try {
 			final Generator generator = identifierValueBinding.createGenerator( dialect, entityBinding, identifierProperty );
-			if ( generator instanceof ExportableProducer ) {
-				( (ExportableProducer) generator ).registerExportables( getDatabase() );
+			if ( generator instanceof ExportableProducer exportableProducer ) {
+				exportableProducer.registerExportables( getDatabase() );
 			}
 		}
 		catch (MappingException e) {

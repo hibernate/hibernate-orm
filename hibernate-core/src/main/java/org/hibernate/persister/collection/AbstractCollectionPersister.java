@@ -1483,11 +1483,6 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public boolean isBatchLoadable() {
-		return batchSize > 1;
-	}
-
-	@Override
 	public String getMappedByProperty() {
 		return mappedByProperty;
 	}

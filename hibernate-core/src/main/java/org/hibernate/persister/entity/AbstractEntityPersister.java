@@ -1681,11 +1681,6 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public boolean isBatchLoadable() {
-		return batchSize > 1;
-	}
-
-	@Override
 	public int getBatchSize() {
 		return batchSize;
 	}

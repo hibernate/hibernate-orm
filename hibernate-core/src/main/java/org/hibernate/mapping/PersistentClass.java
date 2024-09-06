@@ -1005,9 +1005,9 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		this.superMappedSuperclass = superMappedSuperclass;
 	}
 
-	public void assignCheckConstraintsToTable(Dialect dialect, TypeConfiguration types, SqmFunctionRegistry functions) {
+	public void assignCheckConstraintsToTable(Dialect dialect, TypeConfiguration types) {
 		for ( CheckConstraint checkConstraint : checkConstraints ) {
-			container( collectColumnNames( checkConstraint.getConstraint(), dialect, types, functions ) )
+			container( collectColumnNames( checkConstraint.getConstraint(), dialect, types ) )
 					.getTable().addCheck( checkConstraint );
 		}
 	}

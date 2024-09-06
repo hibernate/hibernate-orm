@@ -64,8 +64,8 @@ public class SqmFunctionRegistry {
 	}
 
 	/**
-	 * Find a SqmFunctionTemplate by name.  Returns {@code null} if
-	 * no such function is found.
+	 * Find a {@link SqmFunctionDescriptor} by name.
+	 * Returns {@code null} if no such function is found.
 	 */
 	public SqmFunctionDescriptor findFunctionDescriptor(String functionName) {
 		SqmFunctionDescriptor found = null;

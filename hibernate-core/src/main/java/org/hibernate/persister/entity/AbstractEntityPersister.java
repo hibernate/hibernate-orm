@@ -556,9 +556,9 @@ public abstract class AbstractEntityPersister
 		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
 		final SqmFunctionRegistry functionRegistry = creationContext.getFunctionRegistry();
 
-		List<Column> columns = persistentClass.getIdentifier().getColumns();
+		final List<Column> columns = persistentClass.getIdentifier().getColumns();
 		for (int i = 0; i < columns.size(); i++ ) {
-			Column column = columns.get(i);
+			final Column column = columns.get(i);
 			rootTableKeyColumnNames[i] = column.getQuotedName( dialect );
 			rootTableKeyColumnReaders[i] = column.getReadExpr( dialect );
 			rootTableKeyColumnReaderTemplates[i] = column.getTemplate(
@@ -594,8 +594,7 @@ public abstract class AbstractEntityPersister
 			sqlWhereStringTemplate = Template.renderWhereStringTemplate(
 					"(" + persistentClass.getWhere() + ")",
 					dialect,
-					typeConfiguration,
-					functionRegistry
+					typeConfiguration
 			);
 		}
 

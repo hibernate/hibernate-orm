@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.query.common.JoinType;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaDerivedJoin;
@@ -16,7 +17,6 @@ import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.InterpretationException;
-import org.hibernate.query.sqm.tree.SqmJoinType;
 
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -143,7 +143,7 @@ public class SubQueryInFromTests {
 					subquery.orderBy( cb.asc( address.get( "line1" ) ) );
 					subquery.fetch( 1 );
 
-					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, SqmJoinType.INNER );
+					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, JoinType.INNER );
 
 					cq.multiselect( root.get( "name" ), a.get( "address" ) );
 
@@ -230,7 +230,7 @@ public class SubQueryInFromTests {
 					subquery.orderBy( cb.asc( address.get( "line1" ) ) );
 					subquery.fetch( 1 );
 
-					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, SqmJoinType.INNER );
+					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, JoinType.INNER );
 
 					cq.multiselect( root.get( "name" ), a.get( "zip" ) );
 
@@ -313,7 +313,7 @@ public class SubQueryInFromTests {
 					subquery.orderBy( cb.asc( alternativeContact.get( "name" ).get( "first" ) ) );
 					subquery.fetch( 1 );
 
-					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, SqmJoinType.LEFT );
+					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, JoinType.LEFT );
 
 					cq.multiselect( root.get( "name" ), a.get( "contact" ).get( "id" ) );
 					cq.where( cb.equal( root.get( "id" ), 1 ) );
@@ -359,7 +359,7 @@ public class SubQueryInFromTests {
 					subquery.orderBy( cb.desc( alternativeContact.get( "name" ).get( "first" ) ) );
 					subquery.fetch( 1 );
 
-					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, SqmJoinType.LEFT );
+					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, JoinType.LEFT );
 					final Join<Object, Object> alt = a.join( "contact" );
 
 					cq.multiselect( root.get( "name" ), alt.get( "name" ) );
@@ -407,7 +407,7 @@ public class SubQueryInFromTests {
 					subquery.orderBy( cb.desc( alternativeContact.get( "name" ).get( "first" ) ) );
 					subquery.fetch( 1 );
 
-					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, SqmJoinType.LEFT );
+					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, JoinType.LEFT );
 
 					cq.multiselect( root.get( "name" ), a.get( "contact" ).get( "name" ) );
 					cq.where( cb.equal( root.get( "id" ), 1 ) );

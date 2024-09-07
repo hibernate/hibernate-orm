@@ -7,7 +7,7 @@
 package org.hibernate.query.criteria;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.sqm.FrameKind;
+import org.hibernate.query.common.FrameKind;
 
 import jakarta.persistence.criteria.Expression;
 

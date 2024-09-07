@@ -23,8 +23,8 @@ import java.util.Set;
 import org.hibernate.Incubating;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
-import org.hibernate.query.sqm.FrameKind;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.FrameKind;
+import org.hibernate.query.common.TemporalUnit;
 
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.AbstractQuery;
@@ -527,7 +527,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * A literal {@link Duration}, for example, "five days" or "30 minutes".
 	 * @since 6.3
 	 */
-	@Incubating // layer breaker (leaks SQM type)
+	@Incubating
 	JpaExpression<Duration> duration(long magnitude, TemporalUnit unit);
 
 	/**
@@ -537,7 +537,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @return the magnitude of the duration measured in the given units
 	 * @since 6.3
 	 */
-	@Incubating // layer breaker (leaks SQM type)
+	@Incubating
 	JpaExpression<Long> durationByUnit(TemporalUnit unit, Expression<Duration> duration);
 
 	/**
@@ -1200,7 +1200,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaFunction<String> format(Expression<? extends TemporalAccessor> datetime, String pattern);
 
 	/**
-	 * Extracts the {@link org.hibernate.query.sqm.TemporalUnit#YEAR} of a date, time, or datetime expression.
+	 * Extracts the {@link TemporalUnit#YEAR} of a date, time, or datetime expression.
 	 *
 	 * @param datetime the date, time, or datetime to extract the value from
 	 *
@@ -1210,7 +1210,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaFunction<Integer> year(Expression<? extends TemporalAccessor> datetime);
 
 	/**
-	 * Extracts the {@link org.hibernate.query.sqm.TemporalUnit#MONTH} of a date, time, or datetime expression.
+	 * Extracts the {@link TemporalUnit#MONTH} of a date, time, or datetime expression.
 	 *
 	 * @param datetime the date, time, or datetime to extract the value from
 	 *
@@ -1220,7 +1220,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaFunction<Integer> month(Expression<? extends TemporalAccessor> datetime);
 
 	/**
-	 * Extracts the {@link org.hibernate.query.sqm.TemporalUnit#DAY} of a date, time, or datetime expression.
+	 * Extracts the {@link TemporalUnit#DAY} of a date, time, or datetime expression.
 	 *
 	 * @param datetime the date, time, or datetime to extract the value from
 	 *
@@ -1230,7 +1230,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaFunction<Integer> day(Expression<? extends TemporalAccessor> datetime);
 
 	/**
-	 * Extracts the {@link org.hibernate.query.sqm.TemporalUnit#HOUR} of a date, time, or datetime expression.
+	 * Extracts the {@link TemporalUnit#HOUR} of a date, time, or datetime expression.
 	 *
 	 * @param datetime the date, time, or datetime to extract the value from
 	 *
@@ -1240,7 +1240,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaFunction<Integer> hour(Expression<? extends TemporalAccessor> datetime);
 
 	/**
-	 * Extracts the {@link org.hibernate.query.sqm.TemporalUnit#MINUTE} of a date, time, or datetime expression.
+	 * Extracts the {@link TemporalUnit#MINUTE} of a date, time, or datetime expression.
 	 *
 	 * @param datetime the date, time, or datetime to extract the value from
 	 *
@@ -1250,7 +1250,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaFunction<Integer> minute(Expression<? extends TemporalAccessor> datetime);
 
 	/**
-	 * Extracts the {@link org.hibernate.query.sqm.TemporalUnit#SECOND} of a date, time, or datetime expression.
+	 * Extracts the {@link TemporalUnit#SECOND} of a date, time, or datetime expression.
 	 *
 	 * @param datetime the date, time, or datetime to extract the value from
 	 *

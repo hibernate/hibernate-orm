@@ -31,7 +31,7 @@ import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.type.SqlTypes;
 

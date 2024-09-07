@@ -8,8 +8,7 @@ package org.hibernate.query.criteria;
 
 import java.util.List;
 
-import org.hibernate.query.sqm.FetchClauseType;
-import org.hibernate.query.sqm.SetOperator;
+import org.hibernate.query.common.FetchClauseType;
 
 /**
  * A query group i.e. query parts connected with a set operator.
@@ -19,10 +18,6 @@ import org.hibernate.query.sqm.SetOperator;
 public interface JpaQueryGroup<T> extends JpaQueryPart<T> {
 
 	List<? extends JpaQueryPart<T>> getQueryParts();
-
-	SetOperator getSetOperator();
-
-	void setSetOperator(SetOperator setOperator);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides

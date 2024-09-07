@@ -23,7 +23,7 @@ import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.FailureExpected;

@@ -7,7 +7,7 @@
 package org.hibernate.query.criteria;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.sqm.FrameExclusion;
+import org.hibernate.query.common.FrameExclusion;
 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Order;

@@ -8,7 +8,7 @@ package org.hibernate.query.criteria;
 
 import java.util.List;
 
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 
 /**
  * Models a query part i.e. the commonalities between a query group and a query specification.

@@ -4,15 +4,14 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.sqm;
 
 /**
- * @author Christian Beikov
+ * Common APIs used internally, in the SQL tree,
+ * in the dialects, and in the criteria query API.
+ *
+ * @see org.hibernate.query.common.TemporalUnit
  */
-public enum FrameKind {
-	UNBOUNDED_PRECEDING,
-	OFFSET_PRECEDING,
-	CURRENT_ROW,
-	OFFSET_FOLLOWING,
-	UNBOUNDED_FOLLOWING
-}
+@Incubating
+package org.hibernate.query.common;
+
+import org.hibernate.Incubating;

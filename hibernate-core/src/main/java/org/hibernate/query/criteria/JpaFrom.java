@@ -35,6 +35,11 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	@Override
 	<Y> JpaEntityJoin<T, Y> join(Class<Y> entityClass, JoinType joinType);
 
+	/**
+	 * @deprecated This method is a layer-breaker, leaking the SQM type
+	 *             {@link SqmJoinType} onto an API. It will be removed.
+	 */
+	@Deprecated(since="7", forRemoval = true)
 	default <X> JpaEntityJoin<T, X> join(Class<X> entityJavaType, SqmJoinType joinType) {
 		return join( entityJavaType, joinType.getCorrespondingJpaJoinType() );
 	}
@@ -47,27 +52,48 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 
 	<X> JpaEntityJoin<T,X> join(EntityDomainType<X> entity);
 
+	/**
+	 * @deprecated This method is a layer-breaker, leaking the SQM type
+	 *             {@link SqmJoinType} onto an API. It will be removed.
+	 */
+	@Deprecated(since = "7", forRemoval = true)
 	<X> JpaEntityJoin<T,X> join(EntityDomainType<X> entity, SqmJoinType joinType);
 
 	@Incubating
 	<X> JpaDerivedJoin<X> join(Subquery<X> subquery);
 
-	@Incubating
+	/**
+	 * @deprecated This method is a layer-breaker, leaking the SQM type
+	 *             {@link SqmJoinType} onto an API. It will be removed.
+	 */
+	@Incubating @Deprecated(since = "7", forRemoval = true)
 	<X> JpaDerivedJoin<X> join(Subquery<X> subquery, SqmJoinType joinType);
 
 	@Incubating
 	<X> JpaDerivedJoin<X> joinLateral(Subquery<X> subquery);
 
-	@Incubating
+	/**
+	 * @deprecated This method is a layer-breaker, leaking the SQM type
+	 *             {@link SqmJoinType} onto an API. It will be removed.
+	 */
+	@Incubating @Deprecated(since = "7", forRemoval = true)
 	<X> JpaDerivedJoin<X> joinLateral(Subquery<X> subquery, SqmJoinType joinType);
 
-	@Incubating
+	/**
+	 * @deprecated This method is a layer-breaker, leaking the SQM type
+	 *             {@link SqmJoinType} onto an API. It will be removed.
+	 */
+	@Incubating @Deprecated(since = "7", forRemoval = true)
 	<X> JpaDerivedJoin<X> join(Subquery<X> subquery, SqmJoinType joinType, boolean lateral);
 
 	@Incubating
 	<X> JpaJoin<?, X> join(JpaCteCriteria<X> cte);
 
-	@Incubating
+	/**
+	 * @deprecated This method is a layer-breaker, leaking the SQM type
+	 *             {@link SqmJoinType} onto an API. It will be removed.
+	 */
+	@Incubating @Deprecated(since = "7", forRemoval = true)
 	<X> JpaJoin<?, X> join(JpaCteCriteria<X> cte, SqmJoinType joinType);
 
 	@Incubating

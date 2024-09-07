@@ -12,7 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.query.criteria.JpaExpression;
@@ -101,12 +101,10 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 		return Collections.unmodifiableList( queryParts );
 	}
 
-	@Override
 	public SetOperator getSetOperator() {
 		return setOperator;
 	}
 
-	@Override
 	public void setSetOperator(SetOperator setOperator) {
 		if ( setOperator == null ) {
 			throw new IllegalArgumentException();

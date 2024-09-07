@@ -12,9 +12,9 @@ import java.util.List;
 import org.hibernate.Incubating;
 import org.hibernate.query.criteria.JpaWindow;
 import org.hibernate.query.criteria.JpaWindowFrame;
-import org.hibernate.query.sqm.FrameExclusion;
-import org.hibernate.query.sqm.FrameKind;
-import org.hibernate.query.sqm.FrameMode;
+import org.hibernate.query.common.FrameExclusion;
+import org.hibernate.query.common.FrameKind;
+import org.hibernate.query.common.FrameMode;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
@@ -25,12 +25,12 @@ import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Order;
 
-import static org.hibernate.query.sqm.FrameExclusion.NO_OTHERS;
-import static org.hibernate.query.sqm.FrameKind.CURRENT_ROW;
-import static org.hibernate.query.sqm.FrameKind.UNBOUNDED_PRECEDING;
-import static org.hibernate.query.sqm.FrameMode.GROUPS;
-import static org.hibernate.query.sqm.FrameMode.RANGE;
-import static org.hibernate.query.sqm.FrameMode.ROWS;
+import static org.hibernate.query.common.FrameExclusion.NO_OTHERS;
+import static org.hibernate.query.common.FrameKind.CURRENT_ROW;
+import static org.hibernate.query.common.FrameKind.UNBOUNDED_PRECEDING;
+import static org.hibernate.query.common.FrameMode.GROUPS;
+import static org.hibernate.query.common.FrameMode.RANGE;
+import static org.hibernate.query.common.FrameMode.ROWS;
 
 /**
  * @author Marco Belladelli

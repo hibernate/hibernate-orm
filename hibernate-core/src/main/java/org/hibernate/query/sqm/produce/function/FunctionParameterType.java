@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.produce.function;
 
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 
 /**
  * A mini-"type system" for HQL function parameters.

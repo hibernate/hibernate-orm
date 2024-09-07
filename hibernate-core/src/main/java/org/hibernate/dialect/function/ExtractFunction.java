@@ -9,7 +9,7 @@ package org.hibernate.dialect.function;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
@@ -36,7 +36,7 @@ import java.util.List;
 
 import static java.util.Arrays.asList;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.*;
-import static org.hibernate.query.sqm.TemporalUnit.*;
+import static org.hibernate.query.common.TemporalUnit.*;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL_UNIT;
 import static org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME;

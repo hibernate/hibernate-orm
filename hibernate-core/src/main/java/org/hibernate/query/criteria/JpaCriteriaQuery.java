@@ -9,7 +9,7 @@ package org.hibernate.query.criteria;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Expression;

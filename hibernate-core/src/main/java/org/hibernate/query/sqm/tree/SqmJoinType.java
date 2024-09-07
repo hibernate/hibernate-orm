@@ -6,92 +6,102 @@
  */
 package org.hibernate.query.sqm.tree;
 
+import org.hibernate.query.common.JoinType;
 import org.hibernate.sql.ast.SqlAstJoinType;
 
 /**
  * Represents a canonical join type.
- * <p>
- * Note that currently HQL really only supports inner and left outer joins
- * (though cross joins can also be achieved).  This is because joins in HQL
- * are always defined in relation to a mapped association.  However, when we
- * start allowing users to specify ad-hoc joins this may need to change to
- * allow the full spectrum of join types.  Thus the others are provided here
- * currently just for completeness and for future expansion.
  *
  * @author Steve Ebersole
+ *
+ * @see JoinType
+ * @see SqlAstJoinType
  */
 public enum SqmJoinType {
 	/**
 	 * Represents an inner join.
 	 */
-	INNER( "inner", SqlAstJoinType.INNER, jakarta.persistence.criteria.JoinType.INNER ),
+	INNER,
 
 	/**
 	 * Represents a left outer join.
 	 */
-	LEFT( "left outer", SqlAstJoinType.LEFT, jakarta.persistence.criteria.JoinType.LEFT ),
+	LEFT,
 
 	/**
 	 * Represents a right outer join.
 	 */
-	RIGHT( "right outer", SqlAstJoinType.RIGHT, jakarta.persistence.criteria.JoinType.RIGHT ),
+	RIGHT,
 
 	/**
 	 * Represents a cross join (aka a cartesian product).
 	 */
-	CROSS( "cross", SqlAstJoinType.CROSS, null ),
+	CROSS,
 
 	/**
 	 * Represents a full join.
 	 */
-	FULL( "full", SqlAstJoinType.FULL, null );
-
-	private final String text;
-	private final SqlAstJoinType correspondingSqlAstJoinType;
-	private final jakarta.persistence.criteria.JoinType correspondingJpaJoinType;
-
-	SqmJoinType(
-			String text,
-			SqlAstJoinType correspondingSqlAstJoinType,
-			jakarta.persistence.criteria.JoinType correspondingJpaJoinType) {
-		this.text = text;
-		this.correspondingSqlAstJoinType = correspondingSqlAstJoinType;
-		this.correspondingJpaJoinType = correspondingJpaJoinType;
-	}
+	FULL;
 
 	@Override
 	public String toString() {
-		return text;
+		return getText();
 	}
 
 	public String getText() {
-		return text;
+		return switch (this) {
+			case RIGHT -> "right outer";
+			case LEFT -> "left outer";
+			case INNER -> "inner";
+			case FULL -> "full";
+			case CROSS -> "cross";
+		};
 	}
 
 	public SqlAstJoinType getCorrespondingSqlJoinType() {
-		return correspondingSqlAstJoinType;
+		return switch (this) {
+			case RIGHT -> SqlAstJoinType.RIGHT;
+			case LEFT -> SqlAstJoinType.LEFT;
+			case INNER -> SqlAstJoinType.INNER;
+			case FULL -> SqlAstJoinType.FULL;
+			case CROSS -> SqlAstJoinType.CROSS;
+		};
 	}
 
 	public jakarta.persistence.criteria.JoinType getCorrespondingJpaJoinType() {
-		return correspondingJpaJoinType;
+		return switch (this) {
+			case RIGHT -> jakarta.persistence.criteria.JoinType.RIGHT;
+			case LEFT -> jakarta.persistence.criteria.JoinType.LEFT;
+			case INNER -> jakarta.persistence.criteria.JoinType.INNER;
+			default -> null;
+		};
 	}
 
-	@SuppressWarnings("DuplicateBranchesInSwitch")
+	public JoinType getCorrespondingJoinType() {
+		return switch (this) {
+			case RIGHT -> JoinType.RIGHT;
+			case LEFT -> JoinType.LEFT;
+			case INNER -> JoinType.INNER;
+			case FULL -> JoinType.FULL;
+			case CROSS -> JoinType.CROSS;
+		};
+	}
+
+	public static SqmJoinType from(JoinType joinType) {
+		return switch ( joinType ) {
+			case INNER -> INNER;
+			case LEFT -> LEFT;
+			case RIGHT -> RIGHT;
+			case CROSS -> CROSS;
+			case FULL -> FULL;
+		};
+	}
+
 	public static SqmJoinType from(jakarta.persistence.criteria.JoinType jpaJoinType) {
-		switch ( jpaJoinType ) {
-			case INNER: {
-				return INNER;
-			}
-			case LEFT: {
-				return LEFT;
-			}
-			case RIGHT: {
-				return RIGHT;
-			}
-			default: {
-				// generally speaking, the default for JPA JoinType is INNER
-				return INNER;
-			}
-		}
+		return switch ( jpaJoinType ) {
+			case INNER -> INNER;
+			case LEFT -> LEFT;
+			case RIGHT -> RIGHT;
+		};
 	}
 }

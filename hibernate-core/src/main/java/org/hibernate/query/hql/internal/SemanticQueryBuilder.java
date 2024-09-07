@@ -1286,10 +1286,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 	}
 
-	@SuppressWarnings("rawtypes")
 	private EntityDomainType<R> getResultEntity() {
 		final JpaMetamodelImplementor jpaMetamodel = creationContext.getJpaMetamodel();
 		if ( expectedResultEntity != null ) {
+			@SuppressWarnings("rawtypes")
 			final EntityDomainType entityDescriptor = jpaMetamodel.entity( expectedResultEntity );
 			if ( entityDescriptor == null ) {
 				throw new SemanticException( "Query has no 'from' clause, and the result type '"
@@ -1331,7 +1331,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				// we found an entity with the alias 'this'
 				// assigned explicitly, JPA says we should
 				// infer the select list 'select this'
-				SqmSelectClause selectClause = new SqmSelectClause( false, 1, nodeBuilder );
+				final SqmSelectClause selectClause =
+						new SqmSelectClause( false, 1, nodeBuilder );
 				selectClause.addSelection( new SqmSelection<>( sqmRoot, "this", nodeBuilder) );
 				return selectClause;
 			}
@@ -1353,7 +1354,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				// we may safely assume the query returns that entity
 				if ( fromClause.getNumberOfRoots() == 1 ) {
 					final SqmRoot<?> sqmRoot = fromClause.getRoots().get(0);
-					if ( sqmRoot.hasTrueJoin() ) {
+					if ( sqmRoot.hasImplicitlySelectableJoin() ) {
 						// the entity has joins, and doesn't explicitly have
 						// the alias 'this', so the 'select' list cannot be
 						// inferred
@@ -1365,7 +1366,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					// 'this', and that we should infer 'select this', but we
 					// accept even the case where the entity has an explicit
 					// alias, and infer 'select explicit_alias'
-					SqmSelectClause selectClause = new SqmSelectClause( false, 1, nodeBuilder );
+					final SqmSelectClause selectClause =
+							new SqmSelectClause( false, 1, nodeBuilder );
 					selectClause.addSelection( new SqmSelection<>( sqmRoot, sqmRoot.getAlias(), nodeBuilder) );
 					return selectClause;
 				}
@@ -1398,7 +1400,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					else {
 						// exactly one root entity, return it
 						// (joined entities are not returned)
-						final SqmSelectClause selectClause = new SqmSelectClause( false, 1, nodeBuilder );
+						final SqmSelectClause selectClause =
+								new SqmSelectClause( false, 1, nodeBuilder );
 						selectClause.addSelection( new SqmSelection<>( sqmRoot, sqmRoot.getAlias(), nodeBuilder) );
 						return selectClause;
 					}

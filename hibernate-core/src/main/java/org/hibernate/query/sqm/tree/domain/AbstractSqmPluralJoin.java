@@ -35,7 +35,15 @@ public abstract class AbstractSqmPluralJoin<L,C,E>
 			SqmJoinType joinType,
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
-		super( lhs, joinedNavigable, alias, joinType, fetched, nodeBuilder );
+		super(
+				lhs,
+				joinedNavigable.createNavigablePath( lhs, alias ),
+				joinedNavigable,
+				alias,
+				joinType,
+				fetched,
+				nodeBuilder
+		);
 	}
 
 	protected AbstractSqmPluralJoin(

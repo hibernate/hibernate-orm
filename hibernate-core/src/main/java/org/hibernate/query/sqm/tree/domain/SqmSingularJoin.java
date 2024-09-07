@@ -15,7 +15,6 @@ import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -25,6 +24,7 @@ import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
  * @author Steve Ebersole
  */
 public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implements SqmSingularValuedJoin<O,T> {
+
 	public SqmSingularJoin(
 			SqmFrom<?,O> lhs,
 			SingularPersistentAttribute<O, T> joinedNavigable,
@@ -32,17 +32,15 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 			SqmJoinType joinType,
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
-		super( lhs, joinedNavigable, alias, joinType, fetched, nodeBuilder );
-	}
-
-	public SqmSingularJoin(
-			SqmFrom<?,O> lhs,
-			SqmJoinable<? extends O, T> joinedNavigable,
-			String alias,
-			SqmJoinType joinType,
-			boolean fetched,
-			NodeBuilder nodeBuilder) {
-		super( lhs, joinedNavigable, alias, joinType, fetched, nodeBuilder );
+		super(
+				lhs,
+				joinedNavigable.createNavigablePath( lhs, alias ),
+				joinedNavigable,
+				alias,
+				joinType,
+				fetched,
+				nodeBuilder
+		);
 	}
 
 	@Override

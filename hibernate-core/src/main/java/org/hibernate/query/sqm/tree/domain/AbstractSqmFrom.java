@@ -60,7 +60,6 @@ import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SetAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 
-import static org.hibernate.metamodel.AttributeClassification.EMBEDDED;
 import static org.hibernate.query.sqm.internal.SqmUtil.findCompatibleFetchJoin;
 
 /**
@@ -163,9 +162,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		SqmPath<?> resolvedPath = null;
 		for ( SqmJoin<?, ?> sqmJoin : getSqmJoins() ) {
 			// We can only match singular joins here, as plural path parts are interpreted like sub-queries
-			if ( sqmJoin instanceof SqmSingularJoin<?, ?>
+			if ( sqmJoin instanceof SqmSingularJoin<?, ?> attributeJoin
 					&& name.equals( sqmJoin.getReferencedPathSource().getPathName() ) ) {
-				final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) sqmJoin;
 				if ( attributeJoin.getOn() == null ) {
 					// todo (6.0): to match the expectation of the JPA spec I think we also have to check
 					//  that the join type is INNER or the default join type for the attribute,
@@ -223,8 +221,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	public void removeLeftFetchJoins() {
 		if ( joins != null ) {
 			for ( SqmJoin<T, ?> join : new ArrayList<>(joins) ) {
-				if ( join instanceof SqmAttributeJoin ) {
-					final SqmAttributeJoin<T, ?> attributeJoin = (SqmAttributeJoin<T, ?>) join;
+				if ( join instanceof SqmAttributeJoin<T, ?> attributeJoin ) {
 					if ( attributeJoin.isFetched() ) {
 						if ( join.getSqmJoinType() == SqmJoinType.LEFT ) {
 							joins.remove( join );
@@ -306,11 +303,10 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	public boolean hasTrueJoin() {
+	public boolean hasImplicitlySelectableJoin() {
 		return getSqmJoins().stream()
 				.anyMatch( sqmJoin -> sqmJoin instanceof SqmAttributeJoin<?,?> attributeJoin
-						&& !attributeJoin.isFetched()
-						&& attributeJoin.getAttribute().getAttributeClassification()!=EMBEDDED );
+						&& attributeJoin.isImplicitlySelectable() );
 	}
 
 	@Override
@@ -642,8 +638,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	@Override
 	public <X> JpaCrossJoin<X> crossJoin(EntityDomainType<X> entity) {
-		//noinspection unchecked
-		final SqmCrossJoin<X> crossJoin = new SqmCrossJoin<>( entity, null, (SqmRoot<X>) findRoot() );
+		final SqmCrossJoin<X> crossJoin = new SqmCrossJoin<>( entity, null, findRoot() );
 		// noinspection unchecked
 		addSqmJoin( (SqmJoin<T, ?>) crossJoin );
 		return crossJoin;

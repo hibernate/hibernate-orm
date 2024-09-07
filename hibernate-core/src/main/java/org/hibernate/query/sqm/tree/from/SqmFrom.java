@@ -102,7 +102,7 @@ public interface SqmFrom<L, R> extends SqmVisitableNode, SqmPath<R>, JpaFrom<L, 
 	<Y> SqmEntityJoin<R, Y> join(Class<Y> entityClass, JoinType joinType);
 
 	@Incubating
-	boolean hasTrueJoin();
+	boolean hasImplicitlySelectableJoin();
 
 	@Override
 	<A> SqmSingularJoin<R, A> join(SingularAttribute<? super R, A> attribute);

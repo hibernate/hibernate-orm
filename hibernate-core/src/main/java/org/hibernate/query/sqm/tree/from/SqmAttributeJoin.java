@@ -30,7 +30,7 @@ public interface SqmAttributeJoin<O,T> extends SqmJoin<O,T>, JpaFetch<O,T>, JpaJ
 
 	@Override
 	default boolean isImplicitlySelectable() {
-		return !isFetched();
+		return !isFetched() && !isImplicitJoin();
 	}
 
 	@Override
@@ -39,7 +39,15 @@ public interface SqmAttributeJoin<O,T> extends SqmJoin<O,T>, JpaFetch<O,T>, JpaJ
 	@Override
 	JavaType<T> getJavaTypeDescriptor();
 
+	/**
+	 * Is this a fetch join?
+	 */
 	boolean isFetched();
+
+	/**
+	 * Is this an implicit join inferred from a path expression?
+	 */
+	boolean isImplicitJoin();
 
 	@Internal
 	void clearFetched();

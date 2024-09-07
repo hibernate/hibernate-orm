@@ -63,6 +63,7 @@ import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaFunction;
 import org.hibernate.query.criteria.JpaOrder;
+import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSearchOrder;
 import org.hibernate.query.criteria.JpaSelection;
@@ -1642,6 +1643,17 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 						? new MultiValueParameterType<>( (Class<T>) Collection.class )
 						: basicType;
 		return new JpaCriteriaParameter<>( name, parameterType, notBasic, this );
+	}
+
+	@Override
+	public <T> JpaParameterExpression<List<T>> parameterList(Class<T> paramClass) {
+		return parameterList( paramClass, null );
+	}
+
+	@Override
+	public <T> JpaParameterExpression<List<T>> parameterList(Class<T> paramClass, String name) {
+		final BindableType<List<T>> parameterType = new MultiValueParameterType<>( (Class<List<T>>) (Class) List.class );
+		return new JpaCriteriaParameter<>( name, parameterType, true, this );
 	}
 
 	@Override

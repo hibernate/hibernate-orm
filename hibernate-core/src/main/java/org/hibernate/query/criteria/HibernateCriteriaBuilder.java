@@ -25,7 +25,6 @@ import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.sqm.FrameKind;
 import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.AbstractQuery;
@@ -639,6 +638,25 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	@Override
 	<T> JpaParameterExpression<T> parameter(Class<T> paramClass, String name);
+
+	/**
+	 * Create a multivalued parameter accepting multiple arguments
+	 * packaged together as a {@link List}.
+	 * @param paramClass the type of each argument to the parameter
+	 * @param <T> the type of each argument to the parameter
+	 * @since 7.0
+	 */
+	<T> JpaParameterExpression<List<T>> parameterList(Class<T> paramClass);
+
+	/**
+	 * Create a multivalued parameter accepting multiple arguments
+	 * packaged together as a {@link List}.
+	 * @param paramClass the type of each argument to the parameter
+	 * @param name the parameter name
+	 * @param <T> the type of each argument to the parameter
+	 * @since 7.0
+	 */
+	<T> JpaParameterExpression<List<T>> parameterList(Class<T> paramClass, String name);
 
 	@Override
 	JpaExpression<String> concat(Expression<String> x, Expression<String> y);

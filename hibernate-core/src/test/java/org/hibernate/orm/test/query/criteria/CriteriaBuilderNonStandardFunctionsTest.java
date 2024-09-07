@@ -16,6 +16,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 
+import jakarta.persistence.criteria.ParameterExpression;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -512,6 +513,22 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 			assertEquals( eob.getTheLocalDateTime().truncatedTo( ChronoUnit.HOURS ), result.get( 4 ) );
 			assertEquals( eob.getTheLocalDateTime().truncatedTo( ChronoUnit.MINUTES ), result.get( 5 ) );
 			assertEquals( eob.getTheLocalDateTime().truncatedTo( ChronoUnit.SECONDS ), result.get( 6 ) );
+		} );
+	}
+
+	@Test
+	@JiraKey("HHH-16954")
+	public void testParameterList(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+			CriteriaQuery<Tuple> query = cb.createTupleQuery();
+			Root<EntityOfBasics> from = query.from(EntityOfBasics.class);
+			ParameterExpression<List<Integer>> ids = cb.parameterList(Integer.class);
+			query.where( from.get("id").in(ids));
+			assertEquals(3,
+					session.createQuery( query )
+							.setParameter(ids, List.of(2, 3, 5))
+							.getResultCount());
 		} );
 	}
 }

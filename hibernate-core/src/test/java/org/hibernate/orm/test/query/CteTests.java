@@ -24,7 +24,6 @@ import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
 
-import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -32,19 +31,14 @@ import org.hibernate.testing.orm.domain.contacts.Address;
 import org.hibernate.testing.orm.domain.contacts.Contact;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Tuple;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.Subquery;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -510,8 +504,7 @@ public class CteTests {
 		scope.inTransaction(
 				session -> {
 					final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
-					//noinspection unchecked
-					final JpaParameterExpression<List<Integer>> param = cb.parameter( (Class<List<Integer>>) (Class<?>) List.class );
+					final JpaParameterExpression<List<Integer>> param = cb.parameterList( Integer.class );
 					final JpaCriteriaQuery<Tuple> cq = cb.createTupleQuery();
 
 					final JpaCriteriaQuery<Tuple> baseQuery = cb.createTupleQuery();

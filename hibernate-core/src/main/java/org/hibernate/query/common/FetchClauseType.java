@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.query.sqm;
+package org.hibernate.query.common;
 
 /**
  * The kind of fetch to use for the {@code FETCH} clause.

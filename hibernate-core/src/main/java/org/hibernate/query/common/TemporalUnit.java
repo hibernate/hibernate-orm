@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.query.sqm;
+package org.hibernate.query.common;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.query.SemanticException;
@@ -28,6 +28,8 @@ import org.hibernate.query.SemanticException;
  * according to capabilities of the database platform.
  *
  * @see Dialect#extractPattern(TemporalUnit)
+ * @see org.hibernate.query.criteria.HibernateCriteriaBuilder#duration(long, TemporalUnit)
+ * @see org.hibernate.query.criteria.HibernateCriteriaBuilder#durationByUnit(TemporalUnit, jakarta.persistence.criteria.Expression)
  *
  * @author Gavin King
  */

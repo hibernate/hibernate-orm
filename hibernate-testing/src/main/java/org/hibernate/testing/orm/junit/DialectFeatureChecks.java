@@ -87,7 +87,7 @@ import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.query.named.NamedObjectRepository;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;

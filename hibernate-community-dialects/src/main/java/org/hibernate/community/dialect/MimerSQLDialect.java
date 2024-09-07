@@ -20,7 +20,7 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;

@@ -5,6 +5,7 @@
 package org.hibernate.query;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.BasicLogger;
@@ -30,6 +31,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 		name = QueryLogging.LOGGER_NAME,
 		description = "Logging related to Query processing"
 )
+@Internal
 public interface QueryLogging extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".query";
 

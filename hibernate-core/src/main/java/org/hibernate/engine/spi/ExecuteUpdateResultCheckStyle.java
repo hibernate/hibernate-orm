@@ -4,7 +4,6 @@
  */
 package org.hibernate.engine.spi;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.ResultCheckStyle;
 
 import org.checkerframework.checker.nullness.qual.Nullable;

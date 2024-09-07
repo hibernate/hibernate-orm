@@ -115,8 +115,54 @@ String isDefault();
 ----
 
 
+[[create-query]]
+== Queries with implicit `select` list and no explicit result type
+
+In previous versions, Hibernate allowed a query with no `select` list to be passed to the overload of `createQuery()` with no explicit result type parameter, for example:
+
+[source,java]
+List query =
+        session.createQuery("from X, Y")
+                .getResultList()
+
+or:
+
+[source,java]
+List query =
+        session.createQuery("from X join y")
+                .getResultList()
+
+The select list was inferred based on the `from` clause.
+
+In Hibernate 6 we decided to deprecate this overload of `createQuery()`, since:
+
+- it returns a raw type, resulting in compiler warnings in client code, and
+- the second query is truly ambiguous, with no obviously intuitive interpretation.
+
+As of Hibernate 7, the method is remains deprecated, and potentially-ambiguous queries _are no longer accepted_.
+Migration paths include:
+
+1. explicitly specify the `select` list,
+2. add `X.class` or `Object[].class` as a second argument, to disambiguate the interpretation of the query, or
+3. in the case where the query should return exactly one entity, explicitly assign the alias `this` to that entity.
+
+For example, the queries above may be migrated via:
+
+[source,java]
+List<Object[]> result =
+        session.createQuery("from X, Y", Object[].class)
+                .getResultList()
+
+or:
+
+[source,java]
+List<X> result =
+        session.createQuery("from X join y", X.class)
+                .getResultList()
+
+
 [[proxy-annotation]]
-== Replace @Proxy
+== Replace `@Proxy`
 
 Applications will need to replace usages of the removed `@Proxy` annotation.
 

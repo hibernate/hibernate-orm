@@ -197,7 +197,7 @@ public final class Hibernate {
 	 * @param collection a persistent collection associated with an open session
 	 * @return {@code true} if the collection is empty
 	 *
-	 * @since 6.6.1
+	 * @since 7.0
 	 */
 	public static boolean isEmpty(Collection<?> collection) {
 		return collection instanceof PersistentCollection

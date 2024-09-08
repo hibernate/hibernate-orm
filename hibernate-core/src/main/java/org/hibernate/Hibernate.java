@@ -191,6 +191,21 @@ public final class Hibernate {
 	}
 
 	/**
+	 * Determine is the given persistent collection is {@linkplain Collection#isEmpty() empty},
+	 * without fetching its state from the database.
+	 *
+	 * @param collection a persistent collection associated with an open session
+	 * @return {@code true} if the collection is empty
+	 *
+	 * @since 7.0
+	 */
+	public static boolean isEmpty(Collection<?> collection) {
+		return collection instanceof PersistentCollection
+				? ((PersistentCollection<?>) collection).getSize() == 0
+				: collection.isEmpty();
+	}
+
+	/**
 	 * Determine if the given persistent collection {@linkplain Collection#contains(Object) contains}
 	 * the given element, without fetching its state from the database.
 	 *

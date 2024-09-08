@@ -1383,9 +1383,7 @@ public abstract class AbstractCollectionPersister
 	public int getSize(Object key, SharedSessionContractImplementor session) {
 		try {
 			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
-			PreparedStatement st = jdbcCoordinator
-					.getStatementPreparer()
-					.prepareStatement( sqlSelectSizeString );
+			final PreparedStatement st = jdbcCoordinator.getStatementPreparer().prepareStatement( sqlSelectSizeString );
 			try {
 				getKeyType().nullSafeSet( st, key, 1, session );
 				ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st, sqlSelectSizeString );

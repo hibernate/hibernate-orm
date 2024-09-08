@@ -34,27 +34,35 @@ public class OracleArrayContainsFunction extends AbstractArrayContainsFunction {
 		final Expression needleExpression = (Expression) sqlAstArguments.get( 1 );
 		final JdbcMappingContainer needleTypeContainer = needleExpression.getExpressionType();
 		final JdbcMapping needleType = needleTypeContainer == null ? null : needleTypeContainer.getSingleJdbcMapping();
-		final String arrayTypeName = DdlTypeHelper.getTypeName(
-				haystackExpression.getExpressionType(),
-				walker.getSessionFactory().getTypeConfiguration()
-		);
-		sqlAppender.appendSql( arrayTypeName );
 		if ( needleType == null || needleType instanceof BasicPluralType<?, ?> ) {
 			LOG.deprecatedArrayContainsWithArray();
-			sqlAppender.append( "_includes(" );
-			haystackExpression.accept( walker );
-			sqlAppender.append( ',' );
-			sqlAstArguments.get( 1 ).accept( walker );
-			sqlAppender.append( ',' );
-			sqlAppender.append( nullable ? "1" : "0" );
-			sqlAppender.append( ")>0" );
+			if ( nullable ) {
+				final String arrayTypeName = DdlTypeHelper.getTypeName(
+						haystackExpression.getExpressionType(),
+						walker.getSessionFactory().getTypeConfiguration()
+						);
+				sqlAppender.appendSql( arrayTypeName );
+				sqlAppender.append( "_includes(" );
+				haystackExpression.accept( walker );
+				sqlAppender.append( ',' );
+				sqlAstArguments.get( 1 ).accept( walker );
+				sqlAppender.append( ',' );
+				sqlAppender.append( "1" );
+				sqlAppender.append( ")>0" );
+			}
+			else {
+				sqlAppender.append( " exists (select 1 from (table (" );
+				needleExpression.accept( walker );
+				sqlAppender.append( ") join (table (" );
+				haystackExpression.accept( walker );
+				sqlAppender.append( ")) using (column_value)))" );
+			}
 		}
 		else {
-			sqlAppender.append( "_position(" );
-			haystackExpression.accept( walker );
-			sqlAppender.append( ',' );
 			needleExpression.accept( walker );
-			sqlAppender.append( ")>0" );
+			sqlAppender.append( " in (select column_value from table(" );
+			haystackExpression.accept( walker );
+			sqlAppender.append( "))" );
 		}
 	}
 }

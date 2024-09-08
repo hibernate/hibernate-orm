@@ -28,18 +28,27 @@ public class OracleArrayIntersectsFunction extends AbstractArrayIntersectsFuncti
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		final Expression haystackExpression = (Expression) sqlAstArguments.get( 0 );
-		final String arrayTypeName = DdlTypeHelper.getTypeName(
-				haystackExpression.getExpressionType(),
-				walker.getSessionFactory().getTypeConfiguration()
-		);
-		sqlAppender.appendSql( arrayTypeName );
-		sqlAppender.append( "_intersects(" );
-		haystackExpression.accept( walker );
-		sqlAppender.append( ',' );
-		sqlAstArguments.get( 1 ).accept( walker );
-		sqlAppender.append( ',' );
-		sqlAppender.append( nullable ? "1" : "0" );
-		sqlAppender.append( ")>0" );
+		if ( nullable ) {
+			final String arrayTypeName = DdlTypeHelper.getTypeName(
+					haystackExpression.getExpressionType(),
+					walker.getSessionFactory().getTypeConfiguration()
+					);
+			sqlAppender.appendSql( arrayTypeName );
+			sqlAppender.append( "_intersects(" );
+			haystackExpression.accept( walker );
+			sqlAppender.append( ',' );
+			sqlAstArguments.get( 1 ).accept( walker );
+			sqlAppender.append( ',' );
+			sqlAppender.append( "1" );
+			sqlAppender.append( ")>0" );
+		}
+		else {
+			sqlAppender.append( " exists (select 1 from (table (" );
+			sqlAstArguments.get( 1 ).accept( walker );
+			sqlAppender.append( ") join (table (" );
+			haystackExpression.accept( walker );
+			sqlAppender.append( ")) using (column_value)))" );
+		}
 	}
 
 }

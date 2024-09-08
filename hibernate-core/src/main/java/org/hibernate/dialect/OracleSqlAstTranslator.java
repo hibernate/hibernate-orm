@@ -42,6 +42,7 @@ import org.hibernate.sql.ast.tree.from.ValuesTableReference;
 import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
+import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
@@ -121,6 +122,15 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	@Override
 	protected boolean needsRecursiveKeywordInWithClause() {
 		return false;
+	}
+
+	@Override
+	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
+		// column in (select column_value from(?) )
+		inArrayPredicate.getTestExpression().accept( this );
+		appendSql( " in (select column_value from table(" );
+		inArrayPredicate.getArrayParameter().accept( this );
+		appendSql( "))" );
 	}
 
 	@Override

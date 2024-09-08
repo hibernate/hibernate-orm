@@ -56,8 +56,11 @@ public class MutationExecutorSingleBatched extends AbstractSingleMutationExecuto
 	}
 
 	@Override
-	protected void performBatchedOperations(ValuesAnalysis valuesAnalysis, TableInclusionChecker inclusionChecker) {
-		resolveBatch().addToBatch( getJdbcValueBindings(), inclusionChecker );
+	protected void performBatchedOperations(
+			ValuesAnalysis valuesAnalysis,
+			TableInclusionChecker inclusionChecker,
+			Batch.StaleStateMapper staleStateMapper) {
+		resolveBatch().addToBatch( getJdbcValueBindings(), inclusionChecker, staleStateMapper );
 	}
 
 	@Override

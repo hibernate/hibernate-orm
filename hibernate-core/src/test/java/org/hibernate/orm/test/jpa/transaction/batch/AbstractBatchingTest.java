@@ -116,6 +116,11 @@ public abstract class AbstractBatchingTest {
 		}
 
 		@Override
+		public void addToBatch(JdbcValueBindings jdbcValueBindings, TableInclusionChecker inclusionChecker, StaleStateMapper staleStateMapper) {
+			addToBatch( jdbcValueBindings, inclusionChecker );
+		}
+
+		@Override
 		public void addToBatch(JdbcValueBindings jdbcValueBindings, TableInclusionChecker inclusionChecker) {
 			numberOfBatches++;
 			wrapped.addToBatch( jdbcValueBindings, inclusionChecker );

@@ -23,4 +23,15 @@ public class StaleStateException extends HibernateException {
 	public StaleStateException(String message) {
 		super( message );
 	}
+
+	/**
+	 * Constructs a {@code StaleStateException} using the supplied message
+	 * and cause.
+	 *
+	 * @param message The message explaining the exception condition
+	 * @param cause An exception to wrap
+	 */
+	public StaleStateException(String message, Exception cause) {
+		super( message, cause );
+	}
 }

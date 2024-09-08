@@ -40,6 +40,19 @@ public class StaleObjectStateException extends StaleStateException {
 		this.identifier = identifier;
 	}
 
+	/**
+	 * Constructs a {@code StaleObjectStateException} using the supplied information
+	 * and cause.
+	 *
+	 * @param entityName The name of the entity
+	 * @param identifier The identifier of the entity
+	 */
+	public StaleObjectStateException(String entityName, Object identifier, StaleStateException cause) {
+		super( cause.getMessage(), cause );
+		this.entityName = entityName;
+		this.identifier = identifier;
+	}
+
 	public String getEntityName() {
 		return entityName;
 	}

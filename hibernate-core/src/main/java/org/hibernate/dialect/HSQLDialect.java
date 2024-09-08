@@ -32,7 +32,6 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.CastType;
@@ -58,6 +57,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.type.SqlTypes.DOUBLE;
 import static org.hibernate.type.SqlTypes.NCLOB;
 
@@ -108,22 +108,19 @@ public class HSQLDialect extends Dialect {
 		// But using these types results in schema validation issue as
 		// described in HHH-9693.
 
-		switch ( sqlTypeCode ) {
+		return switch (sqlTypeCode) {
 			//HSQL has no 'nclob' type, but 'clob' is Unicode (See HHH-10364)
-			case NCLOB:
-				return "clob";
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+			case NCLOB -> "clob";
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
 	protected Integer resolveSqlTypeCode(String typeName, String baseTypeName, TypeConfiguration typeConfiguration) {
-		switch ( baseTypeName ) {
-			case "DOUBLE":
-				return DOUBLE;
-		}
-		return super.resolveSqlTypeCode( typeName, baseTypeName, typeConfiguration );
+		return switch (baseTypeName) {
+			case "DOUBLE" -> DOUBLE;
+			default -> super.resolveSqlTypeCode( typeName, baseTypeName, typeConfiguration );
+		};
 	}
 
 	@Override
@@ -288,10 +285,10 @@ public class HSQLDialect extends Dialect {
 		return super.castPattern( from, to );
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		StringBuilder pattern = new StringBuilder();
-		boolean castTo = temporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
+		final StringBuilder pattern = new StringBuilder();
+		final boolean castTo = temporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:
@@ -308,7 +305,7 @@ public class HSQLDialect extends Dialect {
 			default:
 				pattern.append("dateadd('?1',?2,");
 		}
-		if (castTo) {
+		if ( castTo ) {
 			pattern.append("cast(?3 as timestamp)");
 		}
 		else {
@@ -318,11 +315,11 @@ public class HSQLDialect extends Dialect {
 		return pattern.toString();
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		StringBuilder pattern = new StringBuilder();
-		boolean castFrom = fromTemporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
-		boolean castTo = toTemporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
+		final StringBuilder pattern = new StringBuilder();
+		final boolean castFrom = fromTemporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
+		final boolean castTo = toTemporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:
@@ -356,12 +353,9 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		if ( unit == TemporalUnit.EPOCH ) {
-			return "unix_timestamp(?2)";
-		}
-		else {
-			return super.extractPattern(unit);
-		}
+		return unit == TemporalUnit.EPOCH
+				? "unix_timestamp(?2)"
+				: super.extractPattern( unit );
 	}
 
 	@Override
@@ -419,72 +413,43 @@ public class HSQLDialect extends Dialect {
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR_20 =
 			// messages may be localized, therefore use the common, non-locale element " table: "
-			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				switch ( JdbcExceptionHelper.extractErrorCode( sqle ) ) {
-					case -8:
-					case -9:
-					case -104:
-					case -177:
-						return extractUsingTemplate(
-								"; ", " table: ",
-								sqle.getMessage()
-						);
-				}
-				return null;
-			} );
+			new TemplatedViolatedConstraintNameExtractor( sqle ->
+					switch ( extractErrorCode( sqle ) ) {
+						case -8, -9, -104, -177 -> extractUsingTemplate( "; ", " table: ", sqle.getMessage() );
+						default -> null;
+					});
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		return (sqlException, message, sql) -> {
-			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
-			final String constraintName;
-
-			switch ( errorCode ) {
-				case -104:
-					// Unique constraint violation
-					constraintName = getViolatedConstraintNameExtractor().extractConstraintName(sqlException);
-					return new ConstraintViolationException(
-							message,
-							sqlException,
-							sql,
-							ConstraintViolationException.ConstraintKind.UNIQUE,
-							constraintName
-					);
-			}
-
-			return null;
-		};
+		return (sqlException, message, sql) ->
+				switch ( extractErrorCode( sqlException ) ) {
+					case -104 ->
+						// Unique constraint violation
+							new ConstraintViolationException(
+									message,
+									sqlException,
+									sql,
+									ConstraintViolationException.ConstraintKind.UNIQUE,
+									getViolatedConstraintNameExtractor().extractConstraintName(sqlException)
+							);
+					default -> null;
+				};
 	}
 
 	@Override
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
-		switch ( sqlType ) {
-			case Types.LONGVARCHAR:
-			case Types.VARCHAR:
-			case Types.CHAR:
-				return "cast(null as varchar(100))";
-			case Types.LONGVARBINARY:
-			case Types.VARBINARY:
-			case Types.BINARY:
-				return "cast(null as varbinary(100))";
-			case Types.CLOB:
-				return "cast(null as clob)";
-			case Types.BLOB:
-				return "cast(null as blob)";
-			case Types.DATE:
-				return "cast(null as date)";
-			case Types.TIMESTAMP:
-			case Types.TIMESTAMP_WITH_TIMEZONE:
-				return "cast(null as timestamp)";
-			case Types.BOOLEAN:
-				return "cast(null as boolean)";
-			case Types.BIT:
-				return "cast(null as bit)";
-			case Types.TIME:
-				return "cast(null as time)";
-			default:
-				return "cast(null as int)";
-		}
+		return switch (sqlType) {
+			case Types.LONGVARCHAR, Types.VARCHAR, Types.CHAR -> "cast(null as varchar(100))";
+			case Types.LONGVARBINARY, Types.VARBINARY, Types.BINARY -> "cast(null as varbinary(100))";
+			case Types.CLOB -> "cast(null as clob)";
+			case Types.BLOB -> "cast(null as blob)";
+			case Types.DATE -> "cast(null as date)";
+			case Types.TIMESTAMP, Types.TIMESTAMP_WITH_TIMEZONE -> "cast(null as timestamp)";
+			case Types.BOOLEAN -> "cast(null as boolean)";
+			case Types.BIT -> "cast(null as bit)";
+			case Types.TIME -> "cast(null as time)";
+			default -> "cast(null as int)";
+		};
 	}
 
 	@Override

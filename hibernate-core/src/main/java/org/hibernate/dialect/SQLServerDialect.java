@@ -82,7 +82,6 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntAsSmallIntJdbcType;
@@ -96,6 +95,9 @@ import jakarta.persistence.TemporalType;
 
 import static org.hibernate.cfg.DialectSpecificSettings.SQL_SERVER_COMPATIBILITY_LEVEL;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -153,20 +155,12 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				Integer precision,
 				Integer scale,
 				Long length) {
-			switch ( jdbcType.getDdlTypeCode() ) {
-				case BLOB:
-				case CLOB:
-				case NCLOB:
-					return super.resolveSize(
-							jdbcType,
-							javaType,
-							precision,
-							scale,
-							length == null ? getDefaultLobLength() : length
-					);
-				default:
-					return super.resolveSize( jdbcType, javaType, precision, scale, length );
-			}
+			return switch ( jdbcType.getDdlTypeCode() ) {
+				case BLOB, CLOB, NCLOB ->
+						super.resolveSize( jdbcType, javaType, precision, scale,
+								length == null ? getDefaultLobLength() : length );
+				default -> super.resolveSize( jdbcType, javaType, precision, scale, length );
+			};
 		}
 	};
 
@@ -230,54 +224,35 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
+		return switch (sqlTypeCode) {
 			// there is no 'double' type in SQL server
 			// but 'float' is double precision by default
-			case DOUBLE:
-				return "float";
+			case DOUBLE -> "float";
 			// Prefer 'varchar(max)' and 'varbinary(max)' to
 			// the deprecated TEXT and IMAGE types. Note that
 			// the length of a VARCHAR or VARBINARY column must
 			// be either between 1 and 8000 or exactly MAX, and
 			// the length of an NVARCHAR column must be either
 			// between 1 and 4000 or exactly MAX. (HHH-3965)
-			case CLOB:
-				return "varchar(max)";
-			case NCLOB:
-				return "nvarchar(max)";
-			case BLOB:
-				return "varbinary(max)";
-			case DATE:
-				return "date";
-			case TIME:
-				return "time";
-			case TIMESTAMP:
-				return "datetime2($p)";
-			case TIME_WITH_TIMEZONE:
-			case TIMESTAMP_WITH_TIMEZONE:
-				return "datetimeoffset($p)";
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+			case CLOB -> "varchar(max)";
+			case NCLOB -> "nvarchar(max)";
+			case BLOB -> "varbinary(max)";
+			case DATE -> "date";
+			case TIME -> "time";
+			case TIMESTAMP -> "datetime2($p)";
+			case TIME_WITH_TIMEZONE, TIMESTAMP_WITH_TIMEZONE -> "datetimeoffset($p)";
+			default -> super.columnType(sqlTypeCode);
+		};
 	}
 
 	@Override
 	protected String castType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case VARCHAR:
-			case LONG32VARCHAR:
-			case CLOB:
-				return "varchar(max)";
-			case NVARCHAR:
-			case LONG32NVARCHAR:
-			case NCLOB:
-				return "nvarchar(max)";
-			case VARBINARY:
-			case LONG32VARBINARY:
-			case BLOB:
-				return "varbinary(max)";
-		}
-		return super.castType( sqlTypeCode );
+		return switch (sqlTypeCode) {
+			case VARCHAR, LONG32VARCHAR, CLOB -> "varchar(max)";
+			case NVARCHAR, LONG32NVARCHAR, NCLOB -> "nvarchar(max)";
+			case VARBINARY, LONG32VARBINARY, BLOB -> "varbinary(max)";
+			default -> super.castType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -299,10 +274,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			JdbcTypeRegistry jdbcTypeRegistry) {
 		switch ( jdbcTypeCode ) {
 			case OTHER:
-				switch ( columnTypeName ) {
-					case "uniqueidentifier":
-						jdbcTypeCode = UUID;
-						break;
+				if ( columnTypeName.equals("uniqueidentifier") ) {
+					jdbcTypeCode = UUID;
 				}
 				break;
 			case GEOMETRY_TYPE_CODE:
@@ -463,21 +436,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
 		if ( getVersion().isSameOrAfter( 16 ) ) {
-			switch ( specification ) {
-				case BOTH:
-					return isWhitespace
-							? "trim(?1)"
-							: "trim(?2 from ?1)";
-				case LEADING:
-					return isWhitespace
-							? "ltrim(?1)"
-							: "ltrim(?1,?2)";
-				case TRAILING:
-					return isWhitespace
-							? "rtrim(?1)"
-							: "rtrim(?1,?2)";
-			}
-			throw new UnsupportedOperationException( "Unsupported specification: " + specification );
+			return switch (specification) {
+				case BOTH -> isWhitespace ? "trim(?1)" : "trim(?2 from ?1)";
+				case LEADING -> isWhitespace ? "ltrim(?1)" : "ltrim(?1,?2)";
+				case TRAILING -> isWhitespace ? "rtrim(?1)" : "rtrim(?1,?2)";
+			};
 		}
 		return super.trimPattern( specification, isWhitespace );
 	}
@@ -520,8 +483,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(
-			IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData) throws SQLException {
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+			throws SQLException {
 
 		if ( dbMetaData == null ) {
 			// TODO: if DatabaseMetaData != null, unquoted case strategy is set to IdentifierCaseStrategy.UPPER
@@ -580,18 +543,12 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsIfExistsBeforeTableName() {
-		if ( getVersion().isSameOrAfter( 16 ) ) {
-			return true;
-		}
-		return super.supportsIfExistsBeforeTableName();
+		return getVersion().isSameOrAfter( 16 ) || super.supportsIfExistsBeforeTableName();
 	}
 
 	@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
-		if ( getVersion().isSameOrAfter( 16 ) ) {
-			return true;
-		}
-		return super.supportsIfExistsBeforeConstraintName();
+		return getVersion().isSameOrAfter( 16 ) || super.supportsIfExistsBeforeConstraintName();
 	}
 
 	@Override
@@ -602,7 +559,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public String appendLockHint(LockOptions lockOptions, String tableName) {
 		LockMode lockMode = lockOptions.getAliasSpecificLockMode( tableName );
-		if (lockMode == null) {
+		if ( lockMode == null ) {
 			lockMode = lockOptions.getLockMode();
 		}
 
@@ -612,19 +569,14 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		final String noWaitStr = lockOptions.getTimeOut() == LockOptions.NO_WAIT ? ",nowait" : "";
 		final String skipLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? ",readpast" : "";
 
-		switch ( lockMode ) {
-			case PESSIMISTIC_WRITE:
-			case WRITE:
-				return tableName + " with (" + writeLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
-			case PESSIMISTIC_READ:
-				return tableName + " with (" + readLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
-			case UPGRADE_SKIPLOCKED:
-				return tableName + " with (updlock,rowlock,readpast" + noWaitStr + ")";
-			case UPGRADE_NOWAIT:
-				return tableName + " with (updlock,holdlock,rowlock,nowait)";
-			default:
-				return tableName;
-		}
+		return switch (lockMode) {
+			case PESSIMISTIC_WRITE, WRITE ->
+					tableName + " with (" + writeLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
+			case PESSIMISTIC_READ -> tableName + " with (" + readLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
+			case UPGRADE_SKIPLOCKED -> tableName + " with (updlock,rowlock,readpast" + noWaitStr + ")";
+			case UPGRADE_NOWAIT -> tableName + " with (updlock,holdlock,rowlock,nowait)";
+			default -> tableName;
+		};
 	}
 
 
@@ -704,12 +656,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		if ( getVersion().isSameOrAfter( 16 ) ) {
-			return SQLServer16SequenceSupport.INSTANCE;
-		}
-		else {
-			return SQLServerSequenceSupport.INSTANCE;
-		}
+		return getVersion().isSameOrAfter( 16 )
+				? SQLServer16SequenceSupport.INSTANCE
+				: SQLServerSequenceSupport.INSTANCE;
 	}
 
 	@Override
@@ -720,9 +669,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String getQueryHintString(String sql, String hints) {
-		final StringBuilder buffer = new StringBuilder(
-				sql.length() + hints.length() + 12
-		);
+		final StringBuilder buffer =
+				new StringBuilder( sql.length() + hints.length() + 12 );
 		final int pos = sql.indexOf( ';' );
 		if ( pos > -1 ) {
 			buffer.append( sql, 0, pos );
@@ -735,7 +683,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			buffer.append( ";" );
 		}
 		sql = buffer.toString();
-
 		return sql;
 	}
 
@@ -773,7 +720,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return new TemplatedViolatedConstraintNameExtractor(
 				sqle -> {
-					switch ( JdbcExceptionHelper.extractErrorCode( sqle ) ) {
+					switch ( extractErrorCode( sqle ) ) {
 						case 2627:
 						case 2601:
 							String message = sqle.getMessage();
@@ -793,27 +740,22 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
-			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+			final String sqlState = extractSqlState( sqlException );
 			if ( "HY008".equals( sqlState ) ) {
 				return new QueryTimeoutException( message, sqlException, sql );
 			}
 
-			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
-			switch ( errorCode ) {
-				case 1222:
-					return new LockTimeoutException( message, sqlException, sql );
-				case 2627:
-				case 2601:
-					return new ConstraintViolationException(
-							message,
-							sqlException,
-							sql,
-							ConstraintViolationException.ConstraintKind.UNIQUE,
-							getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
-					);
-				default:
-					return null;
-			}
+			return switch ( extractErrorCode( sqlException ) ) {
+				case 1222 -> new LockTimeoutException( message, sqlException, sql );
+				case 2627, 2601 -> new ConstraintViolationException(
+						message,
+						sqlException,
+						sql,
+						ConstraintViolationException.ConstraintKind.UNIQUE,
+						getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
+				);
+				default -> null;
+			};
 		};
 	}
 
@@ -835,47 +777,38 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		switch (unit) {
-			case TIMEZONE_HOUR:
-				return "(datepart(tz,?2)/60)";
-			case TIMEZONE_MINUTE:
-				return "(datepart(tz,?2)%60)";
-			//currently Dialect.extract() doesn't need
-			//to handle NANOSECOND (might change that?)
-//			case NANOSECOND:
-//				//this should evaluate to a bigint type
-//				return "(datepart(second,?2)*1000000000+datepart(nanosecond,?2))";
-			case SECOND:
+		return switch (unit) {
+			case TIMEZONE_HOUR -> "(datepart(tz,?2)/60)";
+			case TIMEZONE_MINUTE -> "(datepart(tz,?2)%60)";
+			// currently Dialect.extract() doesn't need
+			// to handle NANOSECOND (might change that?)
+//			case NANOSECOND ->
+//				// this should evaluate to a bigint type
+//					"(datepart(second,?2)*1000000000+datepart(nanosecond,?2))";
+			case SECOND ->
 				//this should evaluate to a floating point type
-				return "(datepart(second,?2)+datepart(nanosecond,?2)/1000000000)";
-			case EPOCH:
-				return "datediff_big(second, '1970-01-01', ?2)";
-			default:
-				return "datepart(?1,?2)";
-		}
+					"(datepart(second,?2)+datepart(nanosecond,?2)/1000000000)";
+			case EPOCH -> "datediff_big(second, '1970-01-01', ?2)";
+			default -> "datepart(?1,?2)";
+		};
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		// dateadd() supports only especially small magnitudes
 		// since it casts its argument to int (and unfortunately
 		// there's no dateadd_big()) so here we need to use two
 		// calls to dateadd() to add a whole duration
-		switch (unit) {
-			case NANOSECOND: //use nanosecond as the "native" precision
-			case NATIVE:
-				return "dateadd(nanosecond,?2%1000000000,dateadd(second,?2/1000000000,?3))";
-//			case NATIVE:
-//				// we could in principle use 1/10th microsecond as the "native" precision
-//				return "dateadd(nanosecond,?2%10000000,dateadd(second,?2/10000000,?3))";
-			case SECOND:
-				return "dateadd(nanosecond,cast(?2*1e9 as bigint)%1000000000,dateadd(second,?2,?3))";
-			default:
-				return "dateadd(?1,?2,?3)";
-		}
+		return switch (unit) { //use nanosecond as the "native" precision
+			case NANOSECOND, NATIVE -> "dateadd(nanosecond,?2%1000000000,dateadd(second,?2/1000000000,?3))";
+			// we could, in principle, use 1/10th microsecond as the "native" precision
+//			case NATIVE -> "dateadd(nanosecond,?2%10000000,dateadd(second,?2/10000000,?3))";
+			case SECOND -> "dateadd(nanosecond,cast(?2*1e9 as bigint)%1000000000,dateadd(second,?2,?3))";
+			default -> "dateadd(?1,?2,?3)";
+		};
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		if ( unit == TemporalUnit.NATIVE ) {
 			//use nanosecond as the "native" precision
@@ -894,22 +827,19 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public String translateDurationField(TemporalUnit unit) {
 		//use nanosecond as the "native" precision
-		if ( unit == TemporalUnit.NATIVE ) {
-			return "nanosecond";
-		}
-		else {
-			return super.translateDurationField( unit );
-		}
+		return unit == TemporalUnit.NATIVE
+				? "nanosecond"
+				: super.translateDurationField( unit );
 	}
 
 	@Override
 	public String translateExtractField(TemporalUnit unit) {
-		switch ( unit ) {
+		return switch (unit) {
 			//the ISO week number (behavior of "week" depends on a system property)
-			case WEEK: return "isowk";
-			case OFFSET: return "tz";
-			default: return super.translateExtractField(unit);
-		}
+			case WEEK -> "isowk";
+			case OFFSET -> "tz";
+			default -> super.translateExtractField( unit );
+		};
 	}
 
 	@Override
@@ -956,12 +886,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
-		appender.appendSql( "0x" );
-		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
-	}
-
-	@Override
 	public void appendUUIDLiteral(SqlAppender appender, java.util.UUID literal) {
 		appender.appendSql( "cast('" );
 		appender.appendSql( literal.toString() );
@@ -972,6 +896,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
+			@SuppressWarnings("deprecation")
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
@@ -1004,7 +929,12 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Date date,
+			@SuppressWarnings("deprecation")
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
 			case DATE:
 				appender.appendSql( "cast('" );
@@ -1031,6 +961,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			Calendar calendar,
+			@SuppressWarnings("deprecation")
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
@@ -1057,25 +988,18 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String getCreateTemporaryTableColumnAnnotation(int sqlTypeCode) {
-		switch (sqlTypeCode) {
-			case Types.CHAR:
-			case Types.NCHAR:
-			case Types.VARCHAR:
-			case Types.NVARCHAR:
-			case Types.LONGVARCHAR:
-			case Types.LONGNVARCHAR:
-				return "collate database_default";
-			default:
-				return "";
-		}
+		return switch (sqlTypeCode) {
+			case Types.CHAR, Types.NCHAR, Types.VARCHAR, Types.NVARCHAR, Types.LONGVARCHAR, Types.LONGNVARCHAR ->
+					"collate database_default";
+			default -> "";
+		};
 	}
 
 	@Override
 	public String[] getDropSchemaCommand(String schemaName) {
-		if ( getVersion().isSameOrAfter( 13 ) ) {
-			return new String[] { "drop schema if exists " + schemaName };
-		}
-		return super.getDropSchemaCommand( schemaName );
+		return getVersion().isSameOrAfter( 13 )
+				? new String[] { "drop schema if exists " + schemaName }
+				: super.getDropSchemaCommand( schemaName );
 	}
 
 	@Override
@@ -1087,11 +1011,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String getCreateIndexTail(boolean unique, List<Column> columns) {
-		if (unique) {
-			StringBuilder tail = new StringBuilder();
+		if ( unique ) {
+			final StringBuilder tail = new StringBuilder();
 			for ( Column column : columns ) {
 				if ( column.isNullable() ) {
-					tail.append( tail.length() == 0 ? " where " : " and " )
+					tail.append( tail.isEmpty() ? " where " : " and " )
 							.append( column.getQuotedName( this ) )
 							.append( " is not null" );
 				}
@@ -1125,10 +1049,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public Exporter<Sequence> getSequenceExporter() {
-		if ( exporter == null ) {
-			return super.getSequenceExporter();
-		}
-		return exporter;
+		return exporter == null ? super.getSequenceExporter() : exporter;
 	}
 
 	private static class SqlServerSequenceExporter extends StandardSequenceExporter {
@@ -1176,7 +1097,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			EntityMutationTarget mutationTarget,
 			OptionalTableUpdate optionalTableUpdate,
 			SessionFactoryImplementor factory) {
-		final SQLServerSqlAstTranslator<JdbcOperation> translator = new SQLServerSqlAstTranslator<>( factory, optionalTableUpdate );
+		final SQLServerSqlAstTranslator<JdbcOperation> translator =
+				new SQLServerSqlAstTranslator<>( factory, optionalTableUpdate );
 		return translator.createMergeOperation( optionalTableUpdate );
 	}
 
@@ -1199,16 +1121,13 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	public String getCheckConstraintString(CheckConstraint checkConstraint) {
 		final String constraintName = checkConstraint.getName();
 		return constraintName == null
-				?
-				" check " + getCheckConstraintOptions( checkConstraint ) + "(" + checkConstraint.getConstraint() + ")"
-				:
-				" constraint " + constraintName + " check " + getCheckConstraintOptions( checkConstraint ) + "(" + checkConstraint.getConstraint() + ")";
+				? " check " + getCheckConstraintOptions( checkConstraint )
+						+ "(" + checkConstraint.getConstraint() + ")"
+				: " constraint " + constraintName + " check " + getCheckConstraintOptions( checkConstraint )
+						+ "(" + checkConstraint.getConstraint() + ")";
 	}
 
 	private String getCheckConstraintOptions(CheckConstraint checkConstraint) {
-		if ( StringHelper.isNotEmpty( checkConstraint.getOptions() ) ) {
-			return checkConstraint.getOptions() + " ";
-		}
-		return "";
+		return isNotEmpty( checkConstraint.getOptions() ) ? checkConstraint.getOptions() + " " : "";
 	}
 }

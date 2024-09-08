@@ -190,67 +190,47 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case TINYINT:
-				// no tinyint, not even in Postgres 11
-				return "smallint";
+		return switch (sqlTypeCode) {
+			// no tinyint, not even in Postgres 11
+			case TINYINT -> "smallint";
 
 			// there are no nchar/nvarchar types in Postgres
-			case NCHAR:
-				return columnType( CHAR );
-			case NVARCHAR:
-				return columnType( VARCHAR );
+			case NCHAR -> columnType( CHAR );
+			case NVARCHAR -> columnType( VARCHAR );
 
 			// since there's no real difference between TEXT and VARCHAR,
 			// except for the length limit, we can just use 'text' for the
 			// "long" string types
-			case LONG32VARCHAR:
-			case LONG32NVARCHAR:
-				return "text";
+			case LONG32VARCHAR, LONG32NVARCHAR -> "text";
 
-			case BLOB:
-			case CLOB:
-			case NCLOB:
-				// use oid as the blob/clob type on Postgres because
-				// the JDBC driver doesn't allow using bytea/text via
-				// LOB APIs
-				return "oid";
+			// use oid as the blob/clob type on Postgres because
+			// the JDBC driver doesn't allow using bytea/text via
+			// LOB APIs
+			case BLOB, CLOB, NCLOB -> "oid";
 
 			// use bytea as the "long" binary type (that there is no
 			// real VARBINARY type in Postgres, so we always use this)
-			case BINARY:
-			case VARBINARY:
-			case LONG32VARBINARY:
-				return "bytea";
+			case BINARY, VARBINARY, LONG32VARBINARY -> "bytea";
 
-			// We do not use the time with timezone type because PG deprecated it and it lacks certain operations like subtraction
+			// We do not use the 'time with timezone' type because PG
+			// deprecated it, and it lacks certain operations like
+			// subtraction
 //			case TIME_UTC:
 //				return columnType( TIME_WITH_TIMEZONE );
 
-			case TIMESTAMP_UTC:
-				return columnType( TIMESTAMP_WITH_TIMEZONE );
+			case TIMESTAMP_UTC -> columnType( TIMESTAMP_WITH_TIMEZONE );
 
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
 	protected String castType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case CHAR:
-			case NCHAR:
-			case VARCHAR:
-			case NVARCHAR:
-			case LONG32VARCHAR:
-			case LONG32NVARCHAR:
-				return "text";
-			case BINARY:
-			case VARBINARY:
-			case LONG32VARBINARY:
-				return "bytea";
-		}
-		return super.castType( sqlTypeCode );
+		return switch (sqlTypeCode) {
+			case CHAR, NCHAR, VARCHAR, NVARCHAR, LONG32VARCHAR, LONG32NVARCHAR -> "text";
+			case BINARY, VARBINARY, LONG32VARBINARY -> "bytea";
+			default -> super.castType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -387,22 +367,15 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	protected Integer resolveSqlTypeCode(String columnTypeName, TypeConfiguration typeConfiguration) {
-		switch ( columnTypeName ) {
-			case "bool":
-				return Types.BOOLEAN;
-			case "float4":
-				// Use REAL instead of FLOAT to get Float as recommended Java type
-				return Types.REAL;
-			case "float8":
-				return Types.DOUBLE;
-			case "int2":
-				return Types.SMALLINT;
-			case "int4":
-				return Types.INTEGER;
-			case "int8":
-				return Types.BIGINT;
-		}
-		return super.resolveSqlTypeCode( columnTypeName, typeConfiguration );
+		return switch (columnTypeName) {
+			case "bool" -> Types.BOOLEAN;
+			case "float4" -> Types.REAL; // Use REAL instead of FLOAT to get Float as recommended Java type
+			case "float8" -> Types.DOUBLE;
+			case "int2" -> Types.SMALLINT;
+			case "int4" -> Types.INTEGER;
+			case "int8" -> Types.BIGINT;
+			default -> super.resolveSqlTypeCode( columnTypeName, typeConfiguration );
+		};
 	}
 
 	@Override
@@ -459,12 +432,10 @@ public class PostgreSQLDialect extends Dialect {
 	 */
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		switch ( unit ) {
-			case DAY_OF_WEEK:
-				return "(" + super.extractPattern(unit) + "+1)";
-			default:
-				return super.extractPattern(unit);
-		}
+		return switch (unit) {
+			case DAY_OF_WEEK -> "(" + super.extractPattern( unit ) + "+1)";
+			default -> super.extractPattern(unit);
+		};
 	}
 
 	/**
@@ -480,7 +451,7 @@ public class PostgreSQLDialect extends Dialect {
 		return 1_000_000_000; //seconds
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		return intervalType != null
 				? "(?2+?3)"
@@ -488,21 +459,16 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	private static String intervalPattern(TemporalUnit unit) {
-		switch (unit) {
-			case NANOSECOND:
-				return "(?2)/1e3*interval '1 microsecond'";
-			case NATIVE:
-				return "(?2)*interval '1 second'";
-			case QUARTER: //quarter is not supported in interval literals
-				return "(?2)*interval '3 month'";
-			case WEEK: //week is not supported in interval literals
-				return "(?2)*interval '7 day'";
-			default:
-				return "(?2)*interval '1 " + unit + "'";
-		}
+		return switch (unit) {
+			case NANOSECOND -> "(?2)/1e3*interval '1 microsecond'";
+			case NATIVE -> "(?2)*interval '1 second'";
+			case QUARTER -> "(?2)*interval '3 month'"; // quarter is not supported in interval literals
+			case WEEK -> "(?2)*interval '7 day'"; // week is not supported in interval literals
+			default -> "(?2)*interval '1 " + unit + "'";
+		};
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		if ( unit == null ) {
 			return "(?3-?2)";
@@ -511,39 +477,25 @@ public class PostgreSQLDialect extends Dialect {
 			// special case: subtraction of two dates
 			// results in an integer number of days
 			// instead of an INTERVAL
-			switch ( unit ) {
-				case YEAR:
-				case MONTH:
-				case QUARTER:
-					return "extract(" + translateDurationField( unit ) + " from age(?3,?2))";
-				default:
-					return "(?3-?2)" + DAY.conversionFactor( unit, this );
-			}
+			return switch (unit) {
+				case YEAR, MONTH, QUARTER -> "extract(" + translateDurationField( unit ) + " from age(?3,?2))";
+				default -> "(?3-?2)" + DAY.conversionFactor( unit, this );
+			};
 		}
 		else {
-			switch ( unit ) {
-				case YEAR:
-					return "extract(year from ?3-?2)";
-				case QUARTER:
-					return "(extract(year from ?3-?2)*4+extract(month from ?3-?2)/3)";
-				case MONTH:
-					return "(extract(year from ?3-?2)*12+extract(month from ?3-?2))";
-				case WEEK: //week is not supported by extract() when the argument is a duration
-					return "(extract(day from ?3-?2)/7)";
-				case DAY:
-					return "extract(day from ?3-?2)";
-				//in order to avoid multiple calls to extract(),
-				//we use extract(epoch from x - y) * factor for
-				//all the following units:
-				case HOUR:
-				case MINUTE:
-				case SECOND:
-				case NANOSECOND:
-				case NATIVE:
-					return "extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this );
-				default:
-					throw new SemanticException( "Unrecognized field: " + unit );
-			}
+			return switch (unit) {
+				case YEAR -> "extract(year from ?3-?2)";
+				case QUARTER -> "(extract(year from ?3-?2)*4+extract(month from ?3-?2)/3)";
+				case MONTH -> "(extract(year from ?3-?2)*12+extract(month from ?3-?2))";
+				case WEEK -> "(extract(day from ?3-?2)/7)"; // week is not supported by extract() when the argument is a duration
+				case DAY -> "extract(day from ?3-?2)";
+				// in order to avoid multiple calls to extract(),
+				// we use extract(epoch from x - y) * factor for
+				// all the following units:
+				case HOUR, MINUTE, SECOND, NANOSECOND, NATIVE ->
+						"extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this );
+				default -> throw new SemanticException( "Unrecognized field: " + unit );
+			};
 		}
 	}
 
@@ -819,27 +771,16 @@ public class PostgreSQLDialect extends Dialect {
 			}
 		}
 		LockMode lockMode = lockOptions.getAliasSpecificLockMode( aliases );
-		if (lockMode == null ) {
+		if ( lockMode == null ) {
 			lockMode = lockOptions.getLockMode();
 		}
-		switch ( lockMode ) {
-			case PESSIMISTIC_READ: {
-				return getReadLockString( aliases, lockOptions.getTimeOut() );
-			}
-			case PESSIMISTIC_WRITE: {
-				return getWriteLockString( aliases, lockOptions.getTimeOut() );
-			}
-			case UPGRADE_NOWAIT:
-			case PESSIMISTIC_FORCE_INCREMENT: {
-				return getForUpdateNowaitString(aliases);
-			}
-			case UPGRADE_SKIPLOCKED: {
-				return getForUpdateSkipLockedString(aliases);
-			}
-			default: {
-				return "";
-			}
-		}
+		return switch (lockMode) {
+			case PESSIMISTIC_READ -> getReadLockString( aliases, lockOptions.getTimeOut() );
+			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, lockOptions.getTimeOut() );
+			case UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT -> getForUpdateNowaitString( aliases );
+			case UPGRADE_SKIPLOCKED -> getForUpdateSkipLockedString( aliases );
+			default -> "";
+		};
 	}
 
 	@Override
@@ -1141,13 +1082,13 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public String translateExtractField(TemporalUnit unit) {
-		switch ( unit ) {
+		return switch (unit) {
 			//WEEK means the ISO week number on Postgres
-			case DAY_OF_MONTH: return "day";
-			case DAY_OF_YEAR: return "doy";
-			case DAY_OF_WEEK: return "dow";
-			default: return super.translateExtractField( unit );
-		}
+			case DAY_OF_MONTH -> "day";
+			case DAY_OF_YEAR -> "doy";
+			case DAY_OF_WEEK -> "dow";
+			default -> super.translateExtractField( unit );
+		};
 	}
 
 	@Override
@@ -1166,6 +1107,7 @@ public class PostgreSQLDialect extends Dialect {
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
+			@SuppressWarnings("deprecation")
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
@@ -1203,7 +1145,12 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Date date,
+			@SuppressWarnings("deprecation")
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
 			case DATE:
 				appender.appendSql( "date '" );
@@ -1229,6 +1176,7 @@ public class PostgreSQLDialect extends Dialect {
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			Calendar calendar,
+			@SuppressWarnings("deprecation")
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
@@ -1253,14 +1201,11 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	private String withTimeout(String lockString, int timeout) {
-		switch (timeout) {
-			case LockOptions.NO_WAIT:
-				return supportsNoWait() ? lockString + " nowait" : lockString;
-			case LockOptions.SKIP_LOCKED:
-				return supportsSkipLocked() ? lockString + " skip locked" : lockString;
-			default:
-				return lockString;
-		}
+		return switch (timeout) {
+			case LockOptions.NO_WAIT -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case LockOptions.SKIP_LOCKED -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
+			default -> lockString;
+		};
 	}
 
 	@Override
@@ -1353,16 +1298,11 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
-		switch ( type ) {
-			case ROWS_ONLY:
-				return true;
-			case PERCENT_ONLY:
-			case PERCENT_WITH_TIES:
-				return false;
-			case ROWS_WITH_TIES:
-				return getVersion().isSameOrAfter( 13 );
-		}
-		return false;
+		return switch (type) {
+			case ROWS_ONLY -> true;
+			case PERCENT_ONLY, PERCENT_WITH_TIES -> false;
+			case ROWS_WITH_TIES -> getVersion().isSameOrAfter(13);
+		};
 	}
 
 	@Override
@@ -1489,7 +1429,7 @@ public class PostgreSQLDialect extends Dialect {
 		if ( commentsEnabled && queryOptions.getComment() != null ) {
 			sql = prependComment( sql, queryOptions.getComment() );
 		}
-		if ( queryOptions.getDatabaseHints() != null && queryOptions.getDatabaseHints().size() > 0 ) {
+		if ( queryOptions.getDatabaseHints() != null && !queryOptions.getDatabaseHints().isEmpty() ) {
 			sql = getQueryHintString( sql, queryOptions.getDatabaseHints() );
 		}
 		return sql;

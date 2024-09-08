@@ -148,14 +148,10 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 			int scale,
 			int displaySize) {
 		// Sybase jconnect driver reports the "actual" precision in the display size
-		switch ( jdbcTypeCode ) {
-			case Types.CHAR:
-			case Types.VARCHAR:
-			case Types.REAL:
-			case Types.DOUBLE:
-				return displaySize;
-		}
-		return super.resolveSqlTypeLength( columnTypeName, jdbcTypeCode, precision, scale, displaySize );
+		return switch (jdbcTypeCode) {
+			case Types.CHAR, Types.VARCHAR, Types.REAL, Types.DOUBLE -> displaySize;
+			default -> super.resolveSqlTypeLength( columnTypeName, jdbcTypeCode, precision, scale, displaySize );
+		};
 	}
 
 	@Override
@@ -265,7 +261,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry(functionContributions);
+		super.initializeFunctionRegistry( functionContributions );
 
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 
@@ -355,6 +351,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
+			@SuppressWarnings("deprecation")
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
@@ -379,7 +376,12 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Date date,
+			@SuppressWarnings("deprecation")
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
 			case DATE:
 				appender.appendSql( "convert(date,'" );
@@ -405,6 +407,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			Calendar calendar,
+			@SuppressWarnings("deprecation")
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
@@ -430,21 +433,17 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String translateExtractField(TemporalUnit unit) {
-		switch ( unit ) {
-			case WEEK: return "calweekofyear"; //the ISO week number I think
-			default: return super.translateExtractField(unit);
-		}
+		return switch (unit) {
+			case WEEK -> "calweekofyear"; // the ISO week number I think
+			default -> super.translateExtractField(unit);
+		};
 	}
 
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		if ( unit == TemporalUnit.EPOCH ) {
-			return "datediff(second, '1970-01-01 00:00:00', ?2)";
-		}
-		else {
-			//TODO!!
-			return "datepart(?1,?2)";
-		}
+		return unit == TemporalUnit.EPOCH
+				? "datediff(second, '1970-01-01 00:00:00', ?2)"
+				: "datepart(?1,?2)"; //TODO!
 	}
 
 	@Override
@@ -452,13 +451,13 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		return false;
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		//TODO!!
 		return "dateadd(?1,?2,?3)";
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		//TODO!!
 		return "datediff(?1,?2,?3)";
@@ -477,7 +476,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	@Override
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
 			throws SQLException {
-		// Default to MIXED because the jconn driver doesn't seem to report anything useful
+		// Default to MIXED because the jconnect driver doesn't seem to report anything useful
 		builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		if ( dbMetaData == null ) {
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
@@ -498,9 +497,9 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public CallableStatementSupport getCallableStatementSupport() {
-		return driverKind == SybaseDriverKind.JTDS ?
-				JTDSCallableStatementSupport.INSTANCE :
-				SybaseCallableStatementSupport.INSTANCE;
+		return driverKind == SybaseDriverKind.JTDS
+				? JTDSCallableStatementSupport.INSTANCE
+				: SybaseCallableStatementSupport.INSTANCE;
 	}
 
 	@Override

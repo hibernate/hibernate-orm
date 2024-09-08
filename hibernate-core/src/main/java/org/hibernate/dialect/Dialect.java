@@ -651,11 +651,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @see AnsiSqlKeywords
 	 */
 	protected void registerDefaultKeywords() {
-		AnsiSqlKeywords keywords = new AnsiSqlKeywords();
-		//Not using #registerKeyword as:
-		// # these are already lowercase
-		// # better efficiency of addAll as it can pre-size the collections
-		sqlKeywords.addAll( keywords.sql2003() );
+		// Not using #registerKeyword() since these are already lowercase,
+		// better efficiency with addAll() as it can pre-size the collection
+		sqlKeywords.addAll( new AnsiSqlKeywords().sql2003() );
 	}
 
 	/**
@@ -692,13 +690,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	protected Integer resolveSqlTypeCode(String columnTypeName, TypeConfiguration typeConfiguration) {
 		final int parenthesisIndex = columnTypeName.lastIndexOf( '(' );
-		final String baseTypeName;
-		if ( parenthesisIndex == -1 ) {
-			baseTypeName = columnTypeName;
-		}
-		else {
-			baseTypeName = columnTypeName.substring( 0, parenthesisIndex ).trim();
-		}
+		final String baseTypeName =
+				parenthesisIndex == -1
+						? columnTypeName
+						: columnTypeName.substring( 0, parenthesisIndex ).trim();
 		return resolveSqlTypeCode( columnTypeName, baseTypeName, typeConfiguration );
 	}
 
@@ -812,7 +807,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return a SQL expression that will occur in a {@code check} constraint
 	 */
 	public String getCheckCondition(String columnName, String[] values) {
-		StringBuilder check = new StringBuilder();
+		final StringBuilder check = new StringBuilder();
 		check.append( columnName ).append( " in (" );
 		String separator = "";
 		boolean nullIsValid = false;
@@ -854,7 +849,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	@Deprecated(since="6.5", forRemoval = true)
 	public String getCheckCondition(String columnName, long[] values) {
-		Long[] boxedValues = new Long[values.length];
+		final Long[] boxedValues = new Long[values.length];
 		for ( int i = 0; i<values.length; i++ ) {
 			boxedValues[i] = values[i];
 		}
@@ -869,7 +864,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return a SQL expression that will occur in a {@code check} constraint
 	 */
 	public String getCheckCondition(String columnName, Long[] values) {
-		StringBuilder check = new StringBuilder();
+		final StringBuilder check = new StringBuilder();
 		check.append( columnName ).append( " in (" );
 		String separator = "";
 		boolean nullIsValid = false;
@@ -897,7 +892,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		final boolean isCharacterJdbcType = isCharacterType( jdbcType.getJdbcTypeCode() );
 		assert isCharacterJdbcType || isIntegral( jdbcType.getJdbcTypeCode() );
 
-		StringBuilder check = new StringBuilder();
+		final StringBuilder check = new StringBuilder();
 		check.append( columnName ).append( " in (" );
 		String separator = "";
 		boolean nullIsValid = false;
@@ -1546,18 +1541,24 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * for the trim character if {@code isWhitespace}
 	 * was false.
 	 *
-	 * @param specification {@linkplain TrimSpec#LEADING leading}, {@linkplain TrimSpec#TRAILING trailing}
+	 * @param specification
+	 * {@linkplain TrimSpec#LEADING leading},
+	 * {@linkplain TrimSpec#TRAILING trailing},
 	 * or {@linkplain TrimSpec#BOTH both}
-	 * @param isWhitespace {@code true} if the trim character is a whitespace and can be omitted,
-	 * {@code false} if it must be explicit and a ?2 placeholder should be included in the pattern
+	 *
+	 * @param isWhitespace
+	 * {@code true} if trimming whitespace, and the ?2
+	 * placeholder for the trim character should be omitted,
+	 * {@code false} if the trim character is explicit and
+	 * the ?2 placeholder must be included in the pattern
 	 */
 	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
 		return "trim(" + specification + ( isWhitespace ? "" : " ?2" ) + " from ?1)";
 	}
 
 	/**
-	 * Whether the database supports adding a fractional interval to a timestamp,
-	 * for example {@code timestamp + 0.5 second}.
+	 * Whether the database supports adding a fractional interval
+	 * to a timestamp, for example {@code timestamp + 0.5 second}.
 	 */
 	public boolean supportsFractionalTimestampArithmetic() {
 		return true;

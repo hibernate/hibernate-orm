@@ -124,22 +124,19 @@ public final class Hibernate {
 	 * for example, if the {@code Session} was closed
 	 */
 	public static void initialize(Object proxy) throws HibernateException {
-		if ( proxy == null ) {
-			return;
-		}
-
-		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
-		if ( lazyInitializer != null ) {
-			lazyInitializer.initialize();
-		}
-		else if ( proxy instanceof LazyInitializable ) {
-			( (LazyInitializable) proxy ).forceInitialization();
-		}
-		else if ( isPersistentAttributeInterceptable( proxy ) ) {
-			final PersistentAttributeInterceptor interceptor =
-					asPersistentAttributeInterceptable( proxy ).$$_hibernate_getInterceptor();
-			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-				( (EnhancementAsProxyLazinessInterceptor) interceptor ).forceInitialize( proxy, null );
+		if ( proxy != null ) {
+			final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
+			if ( lazyInitializer != null ) {
+				lazyInitializer.initialize();
+			}
+			else if ( proxy instanceof LazyInitializable lazyInitializable ) {
+				lazyInitializable.forceInitialization();
+			}
+			else if ( isPersistentAttributeInterceptable( proxy ) ) {
+				if ( getAttributeInterceptor( proxy )
+						instanceof EnhancementAsProxyLazinessInterceptor enhancementInterceptor ) {
+					enhancementInterceptor.forceInitialize( proxy, null );
+				}
 			}
 		}
 	}
@@ -158,17 +155,14 @@ public final class Hibernate {
 			return !lazyInitializer.isUninitialized();
 		}
 		else if ( isPersistentAttributeInterceptable( proxy ) ) {
-			final PersistentAttributeInterceptor interceptor =
-					asPersistentAttributeInterceptable( proxy ).$$_hibernate_getInterceptor();
-			if (interceptor instanceof EnhancementAsProxyLazinessInterceptor) {
-				return ( (EnhancementAsProxyLazinessInterceptor) interceptor ).isInitialized();
-			}
-			else {
-				return true;
-			}
+			final boolean uninitialized =
+					getAttributeInterceptor( proxy )
+							instanceof EnhancementAsProxyLazinessInterceptor enhancementInterceptor
+					&& !enhancementInterceptor.isInitialized();
+			return !uninitialized;
 		}
-		else if ( proxy instanceof LazyInitializable ) {
-			return ( (LazyInitializable) proxy ).wasInitialized();
+		else if ( proxy instanceof LazyInitializable lazyInitializable ) {
+			return lazyInitializable.wasInitialized();
 		}
 		else {
 			return true;
@@ -185,8 +179,8 @@ public final class Hibernate {
 	 * @since 6.1.1
 	 */
 	public static int size(Collection<?> collection) {
-		return collection instanceof PersistentCollection
-				? ((PersistentCollection<?>) collection).getSize()
+		return collection instanceof PersistentCollection<?> persistentCollection
+				? persistentCollection.getSize()
 				: collection.size();
 	}
 
@@ -200,8 +194,8 @@ public final class Hibernate {
 	 * @since 7.0
 	 */
 	public static boolean isEmpty(Collection<?> collection) {
-		return collection instanceof PersistentCollection
-				? ((PersistentCollection<?>) collection).getSize() == 0
+		return collection instanceof PersistentCollection<?> persistentCollection
+				? persistentCollection.getSize() == 0
 				: collection.isEmpty();
 	}
 
@@ -215,9 +209,9 @@ public final class Hibernate {
 	 * @since 6.1.1
 	 */
 	public static <T> boolean contains(Collection<? super T> collection, T element) {
-		return collection instanceof PersistentCollection
-				? ((PersistentCollection<?>) collection).elementExists(element)
-				: collection.contains(element);
+		return collection instanceof PersistentCollection<?> persistentCollection
+				? persistentCollection.elementExists( element )
+				: collection.contains( element );
 	}
 
 	/**
@@ -230,10 +224,11 @@ public final class Hibernate {
 	 *
 	 * @since 6.1.1
 	 */
+	@SuppressWarnings("unchecked")
 	public static <K,V> V get(Map<? super K, V> map, K key) {
-		return map instanceof PersistentCollection
-				? (V) ((PersistentCollection<?>) map).elementByIndex(key)
-				: map.get(key);
+		return map instanceof PersistentCollection<?> persistentCollection
+				? (V) persistentCollection.elementByIndex( key )
+				: map.get( key );
 	}
 
 	/**
@@ -246,10 +241,11 @@ public final class Hibernate {
 	 *
 	 * @since 6.1.1
 	 */
+	@SuppressWarnings("unchecked")
 	public static <T> T get(List<T> list, int key) {
-		return list instanceof PersistentCollection
-				? (T) ((PersistentCollection<?>) list).elementByIndex(key)
-				: list.get(key);
+		return list instanceof PersistentCollection<?> persistentCollection
+				? (T) persistentCollection.elementByIndex( key )
+				: list.get( key );
 	}
 
 	/**
@@ -261,16 +257,11 @@ public final class Hibernate {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T> Class<? extends T> getClass(T proxy) {
-		Class<?> result;
 		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
-		if ( lazyInitializer != null ) {
-			result = lazyInitializer
-					.getImplementation()
-					.getClass();
-		}
-		else {
-			result = proxy.getClass();
-		}
+		final Class<?> result =
+				lazyInitializer != null
+						? lazyInitializer.getImplementation().getClass()
+						: proxy.getClass();
 		return (Class<? extends T>) result;
 	}
 
@@ -289,14 +280,11 @@ public final class Hibernate {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T> Class<? extends T> getClassLazy(T proxy) {
-		Class<?> result;
 		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
-		if ( lazyInitializer != null ) {
-			result = lazyInitializer.getImplementationClass();
-		}
-		else {
-			result = proxy.getClass();
-		}
+		final Class<?> result =
+				lazyInitializer != null
+						? lazyInitializer.getImplementationClass()
+						: proxy.getClass();
 		return (Class<? extends T>) result;
 	}
 
@@ -353,15 +341,12 @@ public final class Hibernate {
 			entity = proxy;
 		}
 
-		if ( isPersistentAttributeInterceptable( entity ) ) {
-			PersistentAttributeInterceptor interceptor =
-					asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
-			if ( interceptor instanceof BytecodeLazyAttributeInterceptor ) {
-				return ( (BytecodeLazyAttributeInterceptor) interceptor ).isAttributeLoaded( attributeName );
-			}
-		}
-
-		return true;
+		final boolean attributeUnloaded =
+				isPersistentAttributeInterceptable( entity )
+						&& getAttributeInterceptor( entity )
+								instanceof BytecodeLazyAttributeInterceptor lazyAttributeInterceptor
+						&& !lazyAttributeInterceptor.isAttributeLoaded( attributeName );
+		return !attributeUnloaded;
 	}
 
 	/**
@@ -373,19 +358,10 @@ public final class Hibernate {
 	 * @param attributeName the name of a persistent attribute of the object
 	 */
 	public static void initializeProperty(Object proxy, String attributeName) {
-		final Object entity;
 		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
-		if ( lazyInitializer != null ) {
-			entity = lazyInitializer.getImplementation();
-		}
-		else {
-			entity = proxy;
-		}
-
+		final Object entity = lazyInitializer != null ? lazyInitializer.getImplementation() : proxy;
 		if ( isPersistentAttributeInterceptable( entity ) ) {
-			PersistentAttributeInterceptor interceptor =
-					asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
-			interceptor.readObject( entity, attributeName, null );
+			getAttributeInterceptor( entity ).readObject( entity, attributeName, null );
 		}
 	}
 
@@ -402,12 +378,7 @@ public final class Hibernate {
      */
 	public static Object unproxy(Object proxy) {
 		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
-		if ( lazyInitializer != null ) {
-			return lazyInitializer.getImplementation();
-		}
-		else {
-			return proxy;
-		}
+		return lazyInitializer != null ? lazyInitializer.getImplementation() : proxy;
 	}
 
 	/**
@@ -444,14 +415,14 @@ public final class Hibernate {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <E> E createDetachedProxy(SessionFactory sessionFactory, Class<E> entityClass, Object id) {
-		final EntityPersister persister = sessionFactory.unwrap(SessionFactoryImplementor.class)
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.findEntityDescriptor(entityClass);
-		if (persister==null) {
+		final EntityPersister persister =
+				sessionFactory.unwrap( SessionFactoryImplementor.class )
+						.getMappingMetamodel()
+						.findEntityDescriptor( entityClass );
+		if ( persister == null ) {
 			throw new UnknownEntityTypeException("unknown entity type");
 		}
-		return (E) persister.createProxy(id, null);
+		return (E) persister.createProxy( id, null );
 	}
 
 	/**
@@ -599,5 +570,9 @@ public final class Hibernate {
 		else {
 			throw new IllegalArgumentException("illegal collection interface type");
 		}
+	}
+
+	private static PersistentAttributeInterceptor getAttributeInterceptor(Object entity) {
+		return asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
 	}
 }

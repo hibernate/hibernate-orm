@@ -70,10 +70,12 @@ public class DenormalizedTable extends Table {
 			if ( foreignKey.getReferencedTable() == null ) {
 				foreignKey.setReferencedTable( referencedClass.getTable() );
 			}
+
+			final ForeignKey denormalizedForeignKey = createDenormalizedForeignKey( foreignKey );
 			createForeignKey(
 					context.getBuildingOptions()
 							.getImplicitNamingStrategy()
-							.determineForeignKeyName( new ForeignKeyNameSource( foreignKey, this, context ) )
+							.determineForeignKeyName( new ForeignKeyNameSource( denormalizedForeignKey, this, context ) )
 							.render( context.getMetadataCollector().getDatabase().getDialect() ),
 					foreignKey.getColumns(),
 					foreignKey.getReferencedEntityName(),
@@ -81,6 +83,18 @@ public class DenormalizedTable extends Table {
 					foreignKey.getReferencedColumns()
 			);
 		}
+	}
+
+	private ForeignKey createDenormalizedForeignKey(ForeignKey includedTableFk) {
+		final ForeignKey denormalizedForeignKey = new ForeignKey();
+		denormalizedForeignKey.setReferencedEntityName( includedTableFk.getReferencedEntityName() );
+		denormalizedForeignKey.setKeyDefinition( includedTableFk.getKeyDefinition() );
+		denormalizedForeignKey.setReferencedTable( includedTableFk.getReferencedTable() );
+		denormalizedForeignKey.addReferencedColumns( includedTableFk.getReferencedColumns() );
+		for ( Column keyColumn : includedTableFk.getColumns() ) {
+			denormalizedForeignKey.addColumn( keyColumn );
+		}
+		return denormalizedForeignKey;
 	}
 
 	@Override

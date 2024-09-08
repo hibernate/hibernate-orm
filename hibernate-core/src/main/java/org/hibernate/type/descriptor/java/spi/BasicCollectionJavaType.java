@@ -387,8 +387,7 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			}
 		}
 
-		if ( value instanceof Object[] ) {
-			final Object[] raw = (Object[]) value;
+		if ( value instanceof Object[] raw ) {
 			final C wrapped = semantics.instantiateRaw( raw.length, null );
 			if ( componentJavaType.getJavaTypeClass().isAssignableFrom( value.getClass().getComponentType() ) ) {
 				for ( Object o : raw ) {

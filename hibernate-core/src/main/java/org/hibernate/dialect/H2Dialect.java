@@ -40,7 +40,6 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -80,6 +79,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.query.sqm.TemporalUnit.SECOND;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -193,38 +193,25 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
+		return switch (sqlTypeCode) {
 			// h2 recognizes NCHAR and NCLOB as aliases
 			// but, according to the docs, not NVARCHAR
 			// so just normalize all these types
-			case NCHAR:
-				return columnType( CHAR );
-			case NVARCHAR:
-				return columnType( VARCHAR );
-			case NCLOB:
-				return columnType( CLOB );
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+			case NCHAR -> columnType( CHAR );
+			case NVARCHAR -> columnType( VARCHAR );
+			case NCLOB -> columnType( CLOB );
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
 	protected String castType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case CHAR:
-			case NCHAR:
-				return "char";
-			case VARCHAR:
-			case NVARCHAR:
-			case LONG32VARCHAR:
-			case LONG32NVARCHAR:
-				return "varchar";
-			case BINARY:
-			case VARBINARY:
-			case LONG32VARBINARY:
-				return "varbinary";
-		}
-		return super.castType( sqlTypeCode );
+		return switch (sqlTypeCode) {
+			case CHAR, NCHAR -> "char";
+			case VARCHAR, NVARCHAR, LONG32VARCHAR, LONG32NVARCHAR -> "varchar";
+			case BINARY, VARBINARY, LONG32VARBINARY -> "varbinary";
+			default -> super.castType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -366,12 +353,11 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	protected Integer resolveSqlTypeCode(String columnTypeName, TypeConfiguration typeConfiguration) {
-		switch ( columnTypeName ) {
-			case "FLOAT(24)":
-				// Use REAL instead of FLOAT to get Float as recommended Java type
-				return Types.REAL;
-		}
-		return super.resolveSqlTypeCode( columnTypeName, typeConfiguration );
+		return switch (columnTypeName) {
+			// Use REAL instead of FLOAT to get Float as recommended Java type
+			case "FLOAT(24)" -> Types.REAL;
+			default -> super.resolveSqlTypeCode( columnTypeName, typeConfiguration );
+		};
 	}
 
 	@Override
@@ -402,11 +388,10 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	protected Integer resolveSqlTypeCode(String typeName, String baseTypeName, TypeConfiguration typeConfiguration) {
-		switch ( baseTypeName ) {
-			case "CHARACTER VARYING":
-				return VARCHAR;
-		}
-		return super.resolveSqlTypeCode( typeName, baseTypeName, typeConfiguration );
+		return switch (baseTypeName) {
+			case "CHARACTER VARYING" -> VARCHAR;
+			default -> super.resolveSqlTypeCode( typeName, baseTypeName, typeConfiguration );
+		};
 	}
 
 	@Override
@@ -453,7 +438,7 @@ public class H2Dialect extends Dialect {
 				: super.extractPattern(unit);
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		if ( intervalType != null ) {
 			return "(?2+?3)";
@@ -465,7 +450,7 @@ public class H2Dialect extends Dialect {
 				: "dateadd(?1,?2,?3)";
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		if ( unit == null ) {
 			return "(?3-?2)";
@@ -477,6 +462,7 @@ public class H2Dialect extends Dialect {
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
+			@SuppressWarnings("deprecation")
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
@@ -514,7 +500,12 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Date date,
+			@SuppressWarnings("deprecation")
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
 			case DATE:
 				appender.appendSql( "date '" );
@@ -546,6 +537,7 @@ public class H2Dialect extends Dialect {
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			Calendar calendar,
+			@SuppressWarnings("deprecation")
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
@@ -745,37 +737,31 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		return (sqlException, message, sql) -> {
-			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
-			final String constraintName;
-
-			switch (errorCode) {
-				case 23505:
-					// Unique constraint violation
-					constraintName = getViolatedConstraintNameExtractor().extractConstraintName(sqlException);
-					return new ConstraintViolationException(
-							message,
-							sqlException,
-							sql,
-							ConstraintViolationException.ConstraintKind.UNIQUE,
-							constraintName
-					);
-				case 40001:
-					// DEADLOCK DETECTED
-					return new LockAcquisitionException(message, sqlException, sql);
-				case 50200:
-					// LOCK NOT AVAILABLE
-					return new PessimisticLockException(message, sqlException, sql);
-				case 90006:
-					// NULL not allowed for column [90006-145]
-					constraintName = getViolatedConstraintNameExtractor().extractConstraintName(sqlException);
-					return new ConstraintViolationException(message, sqlException, sql, constraintName);
-				case 57014:
-					return new QueryTimeoutException( message, sqlException, sql );
-			}
-
-			return null;
-		};
+		return (sqlException, message, sql) ->
+				switch ( extractErrorCode( sqlException ) ) {
+					case 23505 ->
+						// Unique constraint violation
+							new ConstraintViolationException(
+									message,
+									sqlException,
+									sql,
+									ConstraintViolationException.ConstraintKind.UNIQUE,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
+							);
+					case 40001 ->
+						// DEADLOCK DETECTED
+							new LockAcquisitionException(message, sqlException, sql);
+					case 50200 ->
+						// LOCK NOT AVAILABLE
+							new PessimisticLockException(message, sqlException, sql);
+					case 90006 ->
+						// NULL not allowed for column [90006-145]
+							new ConstraintViolationException( message, sqlException, sql,
+									getViolatedConstraintNameExtractor().extractConstraintName(sqlException) );
+					case 57014 ->
+							new QueryTimeoutException( message, sqlException, sql );
+					default -> null;
+				};
 	}
 
 	@Override
@@ -898,11 +884,11 @@ public class H2Dialect extends Dialect {
 	}
 
 	public String translateExtractField(TemporalUnit unit) {
-		switch ( unit ) {
-			case DAY_OF_MONTH: return "day";
-			case WEEK: return "iso_week";
-			default: return unit.toString();
-		}
+		return switch (unit) {
+			case DAY_OF_MONTH -> "day";
+			case WEEK -> "iso_week";
+			default -> unit.toString();
+		};
 	}
 
 	@Override

@@ -295,12 +295,12 @@ public class DialectDelegateWrapper extends Dialect {
 		return wrapped.supportsFractionalTimestampArithmetic();
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		return wrapped.timestampdiffPattern( unit, fromTemporalType, toTemporalType );
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		return wrapped.timestampaddPattern( unit, temporalType, intervalType );
 	}
@@ -1566,13 +1566,19 @@ public class DialectDelegateWrapper extends Dialect {
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
+			@SuppressWarnings("deprecation")
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
 		wrapped.appendDateTimeLiteral( appender, temporalAccessor, precision, jdbcTimeZone );
 	}
 
 	@Override
-	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Date date,
+			@SuppressWarnings("deprecation")
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
 		wrapped.appendDateTimeLiteral( appender, date, precision, jdbcTimeZone );
 	}
 
@@ -1580,6 +1586,7 @@ public class DialectDelegateWrapper extends Dialect {
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			Calendar calendar,
+			@SuppressWarnings("deprecation")
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
 		wrapped.appendDateTimeLiteral( appender, calendar, precision, jdbcTimeZone );

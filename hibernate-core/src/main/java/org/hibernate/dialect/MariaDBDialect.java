@@ -129,10 +129,8 @@ public class MariaDBDialect extends MySQLDialect {
 			JdbcTypeRegistry jdbcTypeRegistry) {
 		switch ( jdbcTypeCode ) {
 			case OTHER:
-				switch ( columnTypeName ) {
-					case "uuid":
-						jdbcTypeCode = UUID;
-						break;
+				if ( columnTypeName.equals("uuid") ) {
+					jdbcTypeCode = UUID;
 				}
 				break;
 			case VARBINARY:

@@ -285,11 +285,12 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 	@Override
 	protected void performBatchedOperations(
 			ValuesAnalysis valuesAnalysis,
-			TableInclusionChecker inclusionChecker) {
+			TableInclusionChecker inclusionChecker,
+			Batch.StaleStateMapper staleStateMapper) {
 		if ( batch == null ) {
 			return;
 		}
-		batch.addToBatch( valueBindings, inclusionChecker );
+		batch.addToBatch( valueBindings, inclusionChecker, staleStateMapper );
 	}
 
 	@Override

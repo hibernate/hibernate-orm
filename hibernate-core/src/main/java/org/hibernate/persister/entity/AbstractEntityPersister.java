@@ -2549,7 +2549,7 @@ public abstract class AbstractEntityPersister
 				if ( statistics.isStatisticsEnabled() ) {
 					statistics.optimisticFailure( getEntityName() );
 				}
-				throw new StaleObjectStateException( getEntityName(), id );
+				throw new StaleObjectStateException( getEntityName(), id, e );
 			}
 			return false;
 		}

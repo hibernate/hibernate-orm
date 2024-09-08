@@ -16,7 +16,7 @@ import org.hibernate.boot.spi.SessionFactoryBuilderService;
  */
 public final class DefaultSessionFactoryBuilderService implements SessionFactoryBuilderService {
 
-	protected static final DefaultSessionFactoryBuilderService INSTANCE = new DefaultSessionFactoryBuilderService();
+	static final DefaultSessionFactoryBuilderService INSTANCE = new DefaultSessionFactoryBuilderService();
 
 	private DefaultSessionFactoryBuilderService() {
 	}

@@ -662,45 +662,41 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
 			final ConfigurationService configService = serviceRegistry.requireService( ConfigurationService.class );
 
-			this.mappingDefaults = new MappingDefaultsImpl( serviceRegistry );
+			mappingDefaults = new MappingDefaultsImpl( serviceRegistry );
 
-			this.defaultTimezoneStorage = resolveTimeZoneStorageStrategy( configService );
-			this.wrapperArrayHandling = resolveWrapperArrayHandling( configService, serviceRegistry );
-			this.multiTenancyEnabled = JdbcEnvironmentImpl.isMultiTenancyEnabled( serviceRegistry );
+			defaultTimezoneStorage = resolveTimeZoneStorageStrategy( configService );
+			wrapperArrayHandling = resolveWrapperArrayHandling( configService, serviceRegistry );
+			multiTenancyEnabled = JdbcEnvironmentImpl.isMultiTenancyEnabled( serviceRegistry );
 
-			this.xmlMappingEnabled = configService.getSetting(
+			xmlMappingEnabled = configService.getSetting(
 					AvailableSettings.XML_MAPPING_ENABLED,
 					BOOLEAN,
 					true
 			);
 
-			this.implicitDiscriminatorsForJoinedInheritanceSupported = configService.getSetting(
+			implicitDiscriminatorsForJoinedInheritanceSupported = configService.getSetting(
 					AvailableSettings.IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS,
 					BOOLEAN,
 					false
 			);
 
-			this.explicitDiscriminatorsForJoinedInheritanceSupported = !configService.getSetting(
+			explicitDiscriminatorsForJoinedInheritanceSupported = !configService.getSetting(
 					AvailableSettings.IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS,
 					BOOLEAN,
 					false
 			);
 
-			this.implicitlyForceDiscriminatorInSelect = configService.getSetting(
+			implicitlyForceDiscriminatorInSelect = configService.getSetting(
 					AvailableSettings.FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT,
 					BOOLEAN,
 					false
 			);
 
-			this.sharedCacheMode = configService.getSetting(
+			sharedCacheMode = configService.getSetting(
 					AvailableSettings.JAKARTA_SHARED_CACHE_MODE,
-					value -> {
-						if ( value instanceof SharedCacheMode ) {
-							return (SharedCacheMode) value;
-						}
-
-						return SharedCacheMode.valueOf( value.toString() );
-					},
+					value -> value instanceof SharedCacheMode cacheMode
+							? cacheMode
+							: SharedCacheMode.valueOf( value.toString() ),
 					configService.getSetting(
 							AvailableSettings.JPA_SHARED_CACHE_MODE,
 							value -> {
@@ -713,52 +709,48 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 										AvailableSettings.JAKARTA_SHARED_CACHE_MODE
 								);
 
-								if ( value instanceof SharedCacheMode ) {
-									return (SharedCacheMode) value;
-								}
-
-								return SharedCacheMode.valueOf( value.toString() );
+								return value instanceof SharedCacheMode cacheMode
+										? cacheMode
+										: SharedCacheMode.valueOf( value.toString() );
 							},
 							SharedCacheMode.UNSPECIFIED
 					)
 			);
 
-			this.defaultCacheAccessType = configService.getSetting(
+			final RegionFactory regionFactory =  serviceRegistry.getService( RegionFactory.class );
+			defaultCacheAccessType = configService.getSetting(
 					AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY,
 					value -> {
 						if ( value == null ) {
 							return null;
 						}
-
-						if ( value instanceof CacheConcurrencyStrategy ) {
-							return ( (CacheConcurrencyStrategy) value ).toAccessType();
+						else if ( value instanceof CacheConcurrencyStrategy cacheConcurrencyStrategy ) {
+							return cacheConcurrencyStrategy.toAccessType();
 						}
-
-						if ( value instanceof AccessType ) {
-							return (AccessType) value;
+						else if ( value instanceof AccessType accessType ) {
+							return accessType;
 						}
-
-						return AccessType.fromExternalName( value.toString() );
+						else {
+							return AccessType.fromExternalName( value.toString() );
+						}
 					},
 					// by default, see if the defined RegionFactory (if one) defines a default
-					serviceRegistry.getService( RegionFactory.class ) == null
-							? null
-							: serviceRegistry.requireService( RegionFactory.class ).getDefaultAccessType()
+					regionFactory == null ? null : regionFactory.getDefaultAccessType()
 			);
 
-			this.specjProprietarySyntaxEnabled = configService.getSetting(
+			specjProprietarySyntaxEnabled = configService.getSetting(
 					"hibernate.enable_specj_proprietary_syntax",
 					BOOLEAN,
 					false
 			);
 
-			this.noConstraintByDefault = ConstraintMode.NO_CONSTRAINT.name().equalsIgnoreCase( configService.getSetting(
+			noConstraintByDefault = ConstraintMode.NO_CONSTRAINT.name().equalsIgnoreCase( configService.getSetting(
 					AvailableSettings.HBM2DDL_DEFAULT_CONSTRAINT_MODE,
 					String.class,
 					null
 			) );
 
-			this.implicitNamingStrategy = strategySelector.resolveDefaultableStrategy(
+			implicitNamingStrategy = strategySelector.resolveDefaultableStrategy(
 					ImplicitNamingStrategy.class,
 					configService.getSettings().get( AvailableSettings.IMPLICIT_NAMING_STRATEGY ),
 					new Callable<>() {
@@ -773,13 +765,13 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					}
 			);
 
-			this.physicalNamingStrategy = strategySelector.resolveDefaultableStrategy(
+			physicalNamingStrategy = strategySelector.resolveDefaultableStrategy(
 					PhysicalNamingStrategy.class,
 					configService.getSettings().get( AvailableSettings.PHYSICAL_NAMING_STRATEGY ),
 					PhysicalNamingStrategyStandardImpl.INSTANCE
 			);
 
-			this.columnOrderingStrategy = strategySelector.resolveDefaultableStrategy(
+			columnOrderingStrategy = strategySelector.resolveDefaultableStrategy(
 					ColumnOrderingStrategy.class,
 					configService.getSettings().get( AvailableSettings.COLUMN_ORDERING_STRATEGY ),
 					new Callable<>() {
@@ -794,13 +786,13 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					}
 			);
 
-			this.useNationalizedCharacterData = configService.getSetting(
+			useNationalizedCharacterData = configService.getSetting(
 					AvailableSettings.USE_NATIONALIZED_CHARACTER_DATA,
 					BOOLEAN,
 					false
 			);
 
-			this.schemaCharset = configService.getSetting(
+			schemaCharset = configService.getSetting(
 					AvailableSettings.HBM2DDL_CHARSET_NAME,
 					String.class,
 					null
@@ -841,45 +833,33 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		private TimeZoneStorageStrategy toTimeZoneStorageStrategy(TimeZoneSupport timeZoneSupport) {
-			switch ( defaultTimezoneStorage ) {
-				case NATIVE:
+			return switch (defaultTimezoneStorage) {
+				case NATIVE -> {
 					if ( timeZoneSupport != TimeZoneSupport.NATIVE ) {
 						throw new HibernateException( "The configured time zone storage type NATIVE is not supported with the configured dialect" );
 					}
-					return TimeZoneStorageStrategy.NATIVE;
-				case COLUMN:
-					return TimeZoneStorageStrategy.COLUMN;
-				case NORMALIZE:
-					return TimeZoneStorageStrategy.NORMALIZE;
-				case NORMALIZE_UTC:
-					return TimeZoneStorageStrategy.NORMALIZE_UTC;
-				case AUTO:
-					switch (timeZoneSupport) {
-						case NATIVE:
+					yield TimeZoneStorageStrategy.NATIVE;
+				}
+				case COLUMN -> TimeZoneStorageStrategy.COLUMN;
+				case NORMALIZE -> TimeZoneStorageStrategy.NORMALIZE;
+				case NORMALIZE_UTC -> TimeZoneStorageStrategy.NORMALIZE_UTC;
+				case AUTO -> switch (timeZoneSupport) {
+					case NATIVE ->
 							// if the db has native support for timezones, we use that, not a column
-							return TimeZoneStorageStrategy.NATIVE;
-						case NORMALIZE:
-						case NONE:
+							TimeZoneStorageStrategy.NATIVE;
+					case NORMALIZE, NONE ->
 							// otherwise we use a separate column
-							return TimeZoneStorageStrategy.COLUMN;
-						default:
-							throw new HibernateException( "Unsupported time zone support: " + timeZoneSupport);
-					}
-				case DEFAULT:
-					switch (timeZoneSupport) {
-						case NATIVE:
+							TimeZoneStorageStrategy.COLUMN;
+				};
+				case DEFAULT -> switch (timeZoneSupport) {
+					case NATIVE ->
 							// if the db has native support for timezones, we use that, and don't normalize
-							return TimeZoneStorageStrategy.NATIVE;
-						case NORMALIZE:
-						case NONE:
+							TimeZoneStorageStrategy.NATIVE;
+					case NORMALIZE, NONE ->
 							// otherwise we normalize things to UTC
-							return TimeZoneStorageStrategy.NORMALIZE_UTC;
-						default:
-							throw new HibernateException( "Unsupported time zone support: " + timeZoneSupport);
-					}
-				default:
-					throw new HibernateException( "Unsupported time zone storage type: " + defaultTimezoneStorage );
-			}
+							TimeZoneStorageStrategy.NORMALIZE_UTC;
+				};
+			};
 		}
 
 		@Override
@@ -1047,12 +1027,13 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 						|| dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.SQLXML ) ) {
 				return WrapperArrayHandling.ALLOW;
 			}
-
-			return WrapperArrayHandling.LEGACY;
+			else {
+				return WrapperArrayHandling.LEGACY;
+			}
 		}
 
 		return setting;
-	};
+	}
 
 	private static WrapperArrayHandling resolveFallbackWrapperArrayHandling(
 			ConfigurationService configService) {
@@ -1060,7 +1041,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			// JPA compliance was enabled.  Use PICK
 			return WrapperArrayHandling.PICK;
 		}
-
-		return WrapperArrayHandling.DISALLOW;
+		else {
+			return WrapperArrayHandling.DISALLOW;
+		}
 	}
 }

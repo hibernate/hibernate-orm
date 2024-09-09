@@ -7,7 +7,6 @@
 package org.hibernate.internal;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -32,8 +31,6 @@ import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.event.spi.PostDeleteEvent;
@@ -71,7 +68,6 @@ import org.hibernate.tuple.entity.EntityMetamodel;
 import jakarta.persistence.EntityGraph;
 import jakarta.transaction.SystemException;
 
-import static java.util.Arrays.asList;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.Versioning.incrementVersion;
@@ -760,11 +756,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 		}
 		else if ( isPersistentAttributeInterceptable( association ) ) {
-			final PersistentAttributeInterceptable interceptable = asPersistentAttributeInterceptable( association );
-			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
-			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-				final EnhancementAsProxyLazinessInterceptor proxyInterceptor =
-						(EnhancementAsProxyLazinessInterceptor) interceptor;
+			if ( asPersistentAttributeInterceptable( association ).$$_hibernate_getInterceptor()
+					instanceof EnhancementAsProxyLazinessInterceptor proxyInterceptor ) {
 				proxyInterceptor.setSession( this );
 				try {
 					proxyInterceptor.forceInitialize( association, null );
@@ -778,8 +771,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				}
 			}
 		}
-		else if ( association instanceof PersistentCollection ) {
-			final PersistentCollection<?> persistentCollection = (PersistentCollection<?>) association;
+		else if ( association instanceof PersistentCollection<?> persistentCollection ) {
 			if ( !persistentCollection.wasInitialized() ) {
 				final CollectionPersister collectionDescriptor = getFactory().getMappingMetamodel()
 						.getCollectionDescriptor( persistentCollection.getRole() );

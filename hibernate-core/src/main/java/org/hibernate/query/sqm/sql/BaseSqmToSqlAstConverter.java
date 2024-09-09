@@ -7425,12 +7425,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 	}
 
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Override
 	public Object visitFieldLiteral(SqmFieldLiteral<?> sqmFieldLiteral) {
-		return new QueryLiteral<>(
-				sqmFieldLiteral.getValue(),
-				(BasicValuedMapping) determineValueMapping( sqmFieldLiteral )
-		);
+		final BasicValuedMapping valueMapping = (BasicValuedMapping) determineValueMapping( sqmFieldLiteral );
+		final Object value = sqmFieldLiteral.getValue();
+		final BasicValueConverter converter = valueMapping.getJdbcMapping().getValueConverter();
+		return new QueryLiteral<>( converter != null ? sqlLiteralValue( converter, value ) : value, valueMapping );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

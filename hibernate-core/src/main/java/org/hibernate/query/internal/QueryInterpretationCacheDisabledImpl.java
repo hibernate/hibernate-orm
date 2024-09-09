@@ -20,6 +20,7 @@ import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
@@ -27,10 +28,12 @@ import org.hibernate.stat.spi.StatisticsImplementor;
  */
 public class QueryInterpretationCacheDisabledImpl implements QueryInterpretationCache {
 
-	private final Supplier<StatisticsImplementor> statisticsSupplier;
+	private final ServiceRegistry serviceRegistry;
 
-	public QueryInterpretationCacheDisabledImpl(Supplier<StatisticsImplementor> statisticsSupplier) {
-		this.statisticsSupplier = statisticsSupplier;
+	private StatisticsImplementor statistics;
+
+	public QueryInterpretationCacheDisabledImpl(ServiceRegistry serviceRegistry) {
+		this.serviceRegistry = serviceRegistry;
 	}
 
 	@Override
@@ -43,9 +46,16 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 		return 0;
 	}
 
+	private StatisticsImplementor getStatistics() {
+		if ( statistics == null ) {
+			statistics = serviceRegistry.requireService( StatisticsImplementor.class );
+		}
+		return statistics;
+	}
+
 	@Override
 	public <R> SelectQueryPlan<R> resolveSelectQueryPlan(Key key, Supplier<SelectQueryPlan<R>> creator) {
-		final StatisticsImplementor statistics = statisticsSupplier.get();
+		final StatisticsImplementor statistics = getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
 			statistics.queryPlanCacheMiss( key.getQueryString() );
 		}
@@ -64,7 +74,7 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 	@Override
 	public <R> HqlInterpretation<R> resolveHqlInterpretation(
 			String queryString, Class<R> expectedResultType, HqlTranslator translator) {
-		final StatisticsImplementor statistics = statisticsSupplier.get();
+		final StatisticsImplementor statistics = getStatistics();
 		final boolean stats = statistics.isStatisticsEnabled();
 		final long startTime = stats ? System.nanoTime() : 0L;
 

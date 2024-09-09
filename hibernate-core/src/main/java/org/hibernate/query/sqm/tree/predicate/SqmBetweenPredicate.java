@@ -34,8 +34,8 @@ public class SqmBetweenPredicate extends AbstractNegatableSqmPredicate {
 		this.lowerBound = lowerBound;
 		this.upperBound = upperBound;
 
-		assertComparable( expression, lowerBound, nodeBuilder.getSessionFactory() );
-		assertComparable( expression, upperBound, nodeBuilder.getSessionFactory() );
+		assertComparable( expression, lowerBound, nodeBuilder );
+		assertComparable( expression, upperBound, nodeBuilder );
 
 		final SqmExpressible<?> expressibleType = QueryHelper.highestPrecedenceType(
 				expression.getExpressible(),

@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
@@ -37,10 +36,8 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.ParameterExpression;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -135,12 +132,11 @@ public class SqmUpdateStatement<T>
 	}
 
 	private void verifyImmutableEntityUpdate(String hql) {
-		final SessionFactoryImplementor factory = nodeBuilder().getSessionFactory();
 		final EntityPersister persister =
-				factory.getMappingMetamodel().getEntityDescriptor( getTarget().getEntityName() );
+				nodeBuilder().getMappingMetamodel().getEntityDescriptor( getTarget().getEntityName() );
 		if ( !persister.isMutable() ) {
 			final ImmutableEntityUpdateQueryHandlingMode mode =
-					factory.getSessionFactoryOptions().getImmutableEntityUpdateQueryHandlingMode();
+					nodeBuilder().getImmutableEntityUpdateQueryHandlingMode();
 			final String querySpaces = Arrays.toString( persister.getQuerySpaces() );
 			switch ( mode ) {
 				case WARNING:
@@ -155,13 +151,12 @@ public class SqmUpdateStatement<T>
 	}
 
 	private void verifyUpdateTypesMatch() {
-		final SessionFactoryImplementor factory = nodeBuilder().getSessionFactory();
 		final List<SqmAssignment<?>> assignments = getSetClause().getAssignments();
 		for ( int i = 0; i < assignments.size(); i++ ) {
 			final SqmAssignment<?> assignment = assignments.get( i );
 			final SqmPath<?> targetPath = assignment.getTargetPath();
 			final SqmExpression<?> expression = assignment.getValue();
-			assertAssignable( null, targetPath, expression, factory );
+			assertAssignable( null, targetPath, expression, nodeBuilder() );
 		}
 	}
 
@@ -207,7 +202,7 @@ public class SqmUpdateStatement<T>
 		else {
 			expression = (SqmExpression) nodeBuilder().value( value );
 		}
-		assertAssignable( null, sqmPath, expression, nodeBuilder().getSessionFactory() );
+		assertAssignable( null, sqmPath, expression, nodeBuilder() );
 		applyAssignment( sqmPath, expression );
 		return this;
 	}

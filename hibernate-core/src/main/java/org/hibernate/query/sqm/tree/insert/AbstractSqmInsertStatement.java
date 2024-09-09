@@ -90,11 +90,11 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 					null
 			);
 		}
-		final SessionFactoryImplementor factory = nodeBuilder().getSessionFactory();
+
 		for ( int i = 0; i < expressionsSize; i++ ) {
 			final SqmTypedNode<?> expression = expressions.get( i );
 			final SqmPath<?> targetPath = insertionTargetPaths.get(i);
-			assertAssignable( null, targetPath, expression, factory );
+			assertAssignable( null, targetPath, expression, nodeBuilder() );
 //			if ( expression.getNodeJavaType() == null ) {
 //				continue;
 //			}

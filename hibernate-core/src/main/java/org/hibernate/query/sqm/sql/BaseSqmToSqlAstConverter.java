@@ -6162,7 +6162,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 
-		final SqmExpressible<?> paramSqmType = paramType.resolveExpressible( creationContext.getSessionFactory() );
+		final SqmExpressible<?> paramSqmType = paramType.resolveExpressible( creationContext );
 
 		if ( paramSqmType instanceof SqmPath ) {
 			final MappingModelExpressible<?> modelPart = determineValueMapping( (SqmPath<?>) paramSqmType );

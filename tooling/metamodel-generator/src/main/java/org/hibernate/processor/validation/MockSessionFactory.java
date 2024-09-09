@@ -82,7 +82,6 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.internal.StandardHqlTranslator;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
@@ -151,6 +150,8 @@ public abstract class MockSessionFactory
 
 	private final MetadataImplementor bootModel;
 	private final MetadataContext metadataContext;
+
+	private final NodeBuilder nodeBuilder;
 
 	public MockSessionFactory() {
 
@@ -222,6 +223,8 @@ public abstract class MockSessionFactory
 		functionFactory.hypotheticalOrderedSetAggregates();
 		functionFactory.windowFunctions();
 		typeConfiguration.scope((SessionFactoryImplementor) this);
+
+		nodeBuilder = new SqmCriteriaNodeBuilder("", "", this, this, this);
 	}
 
 	@Override
@@ -460,7 +463,7 @@ public abstract class MockSessionFactory
 
 	@Override
 	public QueryInterpretationCache getInterpretationCache() {
-		return new QueryInterpretationCacheDisabledImpl(this::getStatistics);
+		return new QueryInterpretationCacheDisabledImpl( serviceRegistry );
 	}
 
 	@Override
@@ -475,14 +478,7 @@ public abstract class MockSessionFactory
 
 	@Override
 	public NodeBuilder getCriteriaBuilder() {
-		return new SqmCriteriaNodeBuilder(
-				"",
-				"",
-				this,
-				false,
-				ValueHandlingMode.INLINE,
-				() -> MockSessionFactory.this
-		);
+		return nodeBuilder;
 	}
 
 	@Override

@@ -25,7 +25,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.BaselineSessionEventsListenerBuilder;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.spi.QueryEngineOptions;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -241,10 +240,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	JpaCompliance getJpaCompliance();
 
 	boolean isFailOnPaginationOverCollectionFetchEnabled();
-
-	default ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
-		return ImmutableEntityUpdateQueryHandlingMode.WARNING;
-	}
 
 	/**
 	 * The default catalog to use in generated SQL when a catalog wasn't specified in the mapping,

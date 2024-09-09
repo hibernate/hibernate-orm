@@ -42,7 +42,7 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 		this.testExpression = testExpression;
 		this.subQueryExpression = subQueryExpression;
 
-		assertComparable( testExpression, subQueryExpression, nodeBuilder.getSessionFactory() );
+		assertComparable( testExpression, subQueryExpression, nodeBuilder );
 
 		final SqmExpressible<?> expressibleType = QueryHelper.highestPrecedenceType2(
 				testExpression.getExpressible(),

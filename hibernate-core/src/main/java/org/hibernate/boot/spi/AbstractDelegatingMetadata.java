@@ -259,8 +259,8 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	}
 
 	@Override
-	public NamedObjectRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory) {
-		return delegate().buildNamedQueryRepository( sessionFactory );
+	public NamedObjectRepository buildNamedQueryRepository() {
+		return delegate().buildNamedQueryRepository();
 	}
 
 	@Override

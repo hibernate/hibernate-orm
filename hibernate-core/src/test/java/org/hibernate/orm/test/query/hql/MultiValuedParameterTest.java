@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.query.hql;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ import jakarta.persistence.Id;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Andrea Boriero
@@ -100,6 +102,20 @@ public class MultiValuedParameterTest extends BaseSessionFactoryFunctionalTest {
 			assertThat( resultList.size(), is( 3 ) );
 			assertThat( resultList, is( ids ) );
 		} );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18575" )
+	void testMultiValuedBigDecimals() {
+		inTransaction( session -> {
+			assertEquals(
+					1,
+					session.createQuery("SELECT 1 WHERE :value IN (:list)", Integer.class)
+							.setParameter( "value", BigDecimal.valueOf( 2.0))
+							.setParameter("list", List.of(BigDecimal.valueOf(2.0), BigDecimal.valueOf(3.0)))
+							.getSingleResult()
+			);
+		});
 	}
 
 	@AfterAll

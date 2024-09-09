@@ -10,9 +10,9 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryArgumentException;
+import org.hibernate.query.BindingContext;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -28,22 +28,22 @@ public class QueryParameterBindingValidator {
 	private QueryParameterBindingValidator() {
 	}
 
-	public void validate(BindableType<?> paramType, Object bind, SessionFactoryImplementor sessionFactory) {
-		validate( paramType, bind, null, sessionFactory );
+	public void validate(BindableType<?> paramType, Object bind, BindingContext bindingContext) {
+		validate( paramType, bind, null, bindingContext);
 	}
 
 	public void validate(
 			BindableType<?> paramType,
 			Object bind,
 			TemporalType temporalPrecision,
-			SessionFactoryImplementor sessionFactory) {
+			BindingContext bindingContext) {
 		if ( bind == null || paramType == null ) {
 			// nothing we can check
 			return;
 		}
 
 		final Class<?> parameterJavaType;
-		final SqmExpressible<?> sqmExpressible = paramType.resolveExpressible( sessionFactory );
+		final SqmExpressible<?> sqmExpressible = paramType.resolveExpressible(bindingContext);
 		if ( paramType.getBindableJavaType() != null ) {
 			parameterJavaType = paramType.getBindableJavaType();
 		}

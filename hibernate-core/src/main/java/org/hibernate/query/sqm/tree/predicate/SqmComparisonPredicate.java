@@ -43,7 +43,7 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 		this.rightHandExpression = rightHandExpression;
 		this.operator = operator;
 
-		assertComparable( leftHandExpression, rightHandExpression, nodeBuilder.getSessionFactory() );
+		assertComparable( leftHandExpression, rightHandExpression, nodeBuilder );
 
 		final SqmExpressible<?> expressibleType = QueryHelper.highestPrecedenceType(
 				leftHandExpression.getExpressible(),
@@ -59,7 +59,7 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 		this.leftHandExpression = affirmativeForm.leftHandExpression;
 		this.rightHandExpression = affirmativeForm.rightHandExpression;
 		this.operator = affirmativeForm.operator;
-		assertComparable( leftHandExpression, rightHandExpression, nodeBuilder().getSessionFactory() );
+		assertComparable( leftHandExpression, rightHandExpression, nodeBuilder() );
 	}
 
 	@Override

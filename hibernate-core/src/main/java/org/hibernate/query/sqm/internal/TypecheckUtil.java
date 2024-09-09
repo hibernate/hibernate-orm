@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.internal;
 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.metamodel.EntityType;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
@@ -16,6 +15,7 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.TupleType;
 import org.hibernate.metamodel.model.domain.internal.EntityDiscriminatorSqmPathSource;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.BindingContext;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.SqmExpressible;
@@ -29,7 +29,6 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.QueryParameterJavaObjectType;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import java.time.temporal.Temporal;
@@ -77,8 +76,8 @@ import static org.hibernate.type.descriptor.java.JavaTypeHelper.isUnknown;
  * function application) is legal only when the entity types belong to the same mapped
  * entity hierarchy.
  *
- * @see #assertComparable(Expression, Expression, SessionFactoryImplementor)
- * @see #assertAssignable(String, SqmPath, SqmTypedNode, SessionFactoryImplementor)
+ * @see #assertComparable(Expression, Expression, BindingContext)
+ * @see #assertAssignable(String, SqmPath, SqmTypedNode, BindingContext)
  *
  * @author Gavin King
  */
@@ -100,12 +99,12 @@ public class TypecheckUtil {
 	 * @param lhsType the type of the expression on the LHS of the comparison operator
 	 * @param rhsType the type of the expression on the RHS of the comparison operator
 	 *
-	 * @see #isTypeAssignable(SqmPathSource, SqmExpressible, SessionFactoryImplementor)
+	 * @see #isTypeAssignable(SqmPathSource, SqmExpressible, BindingContext)
 	 */
 	public static boolean areTypesComparable(
 			SqmExpressible<?> lhsType,
 			SqmExpressible<?> rhsType,
-			SessionFactoryImplementor factory) {
+			BindingContext bindingContext) {
 		if ( lhsType == null || rhsType == null || lhsType == rhsType ) {
 			return true;
 		}
@@ -139,7 +138,7 @@ public class TypecheckUtil {
 		// for tuple constructors, we must check each element
 
 		if ( lhsDomainType instanceof TupleType && rhsDomainType instanceof TupleType ) {
-			return areTupleTypesComparable( factory, (TupleType<?>) lhsDomainType, (TupleType<?>) rhsDomainType );
+			return areTupleTypesComparable(bindingContext, (TupleType<?>) lhsDomainType, (TupleType<?>) rhsDomainType );
 		}
 
 		// allow comparing an embeddable against a tuple literal
@@ -153,17 +152,17 @@ public class TypecheckUtil {
 		// entities can be compared if they belong to the same inheritance hierarchy
 
 		if ( lhsDomainType instanceof EntityType && rhsDomainType instanceof EntityType ) {
-			return areEntityTypesComparable( (EntityType<?>) lhsDomainType, (EntityType<?>) rhsDomainType, factory );
+			return areEntityTypesComparable( (EntityType<?>) lhsDomainType, (EntityType<?>) rhsDomainType, bindingContext);
 		}
 
 		// entities can be compared to discriminators if they belong to
 		// the same inheritance hierarchy
 
 		if ( lhsDomainType instanceof EntityDiscriminatorSqmPathSource ) {
-			return isDiscriminatorTypeComparable( (EntityDiscriminatorSqmPathSource<?>) lhsDomainType, rhsDomainType, factory );
+			return isDiscriminatorTypeComparable( (EntityDiscriminatorSqmPathSource<?>) lhsDomainType, rhsDomainType, bindingContext);
 		}
 		if ( rhsDomainType instanceof EntityDiscriminatorSqmPathSource ) {
-			return isDiscriminatorTypeComparable( (EntityDiscriminatorSqmPathSource<?>) rhsDomainType, lhsDomainType, factory );
+			return isDiscriminatorTypeComparable( (EntityDiscriminatorSqmPathSource<?>) rhsDomainType, lhsDomainType, bindingContext);
 		}
 
 		// Treat the expressions as comparable if they belong to the same
@@ -173,7 +172,7 @@ public class TypecheckUtil {
 		// enums, user-defined types, etc.
 
 		if ( lhsDomainType instanceof JdbcMapping && rhsDomainType instanceof JdbcMapping ) {
-			if ( areJdbcMappingsComparable(  (JdbcMapping) lhsDomainType, (JdbcMapping) rhsDomainType, factory ) ) {
+			if ( areJdbcMappingsComparable(  (JdbcMapping) lhsDomainType, (JdbcMapping) rhsDomainType, bindingContext) ) {
 				return true;
 			}
 		}
@@ -195,14 +194,14 @@ public class TypecheckUtil {
 	private static boolean areJdbcMappingsComparable(
 			JdbcMapping lhsJdbcMapping,
 			JdbcMapping rhsJdbcMapping,
-			SessionFactoryImplementor factory) {
+			BindingContext bindingContext) {
 		if ( areJdbcTypesComparable( lhsJdbcMapping.getJdbcType(), rhsJdbcMapping.getJdbcType() ) ) {
 			return true;
 		}
 		// converters are implicitly applied to the other side when its domain type is compatible
 		else if ( lhsJdbcMapping.getValueConverter() != null || rhsJdbcMapping.getValueConverter() != null ) {
-			final JdbcMapping lhsDomainMapping = getDomainJdbcType( lhsJdbcMapping, factory );
-			final JdbcMapping rhsDomainMapping = getDomainJdbcType( rhsJdbcMapping, factory );
+			final JdbcMapping lhsDomainMapping = getDomainJdbcType( lhsJdbcMapping, bindingContext);
+			final JdbcMapping rhsDomainMapping = getDomainJdbcType( rhsJdbcMapping, bindingContext);
 			return lhsDomainMapping != null && rhsDomainMapping != null && areJdbcTypesComparable(
 					lhsDomainMapping.getJdbcType(),
 					rhsDomainMapping.getJdbcType()
@@ -220,11 +219,11 @@ public class TypecheckUtil {
 				|| lhsJdbcType.isNumber() && rhsJdbcType.isNumber();
 	}
 
-	private static JdbcMapping getDomainJdbcType(JdbcMapping jdbcMapping, SessionFactoryImplementor factory) {
+	private static JdbcMapping getDomainJdbcType(JdbcMapping jdbcMapping, BindingContext bindingContext) {
 		if ( jdbcMapping.getValueConverter() != null ) {
-			final BasicType<?> basicType = factory.getTypeConfiguration().getBasicTypeForJavaType(
-					jdbcMapping.getValueConverter().getDomainJavaType().getJavaType()
-			);
+			final BasicType<?> basicType =
+					bindingContext.getTypeConfiguration()
+							.getBasicTypeForJavaType( jdbcMapping.getValueConverter().getDomainJavaType().getJavaType() );
 			if ( basicType != null ) {
 				return basicType.getJdbcMapping();
 			}
@@ -255,7 +254,7 @@ public class TypecheckUtil {
 	}
 
 	private static boolean areTupleTypesComparable(
-			SessionFactoryImplementor factory,
+			BindingContext bindingContext,
 			TupleType<?> lhsTuple,
 			TupleType<?> rhsTuple) {
 		if ( rhsTuple.componentCount() != lhsTuple.componentCount() ) {
@@ -263,7 +262,7 @@ public class TypecheckUtil {
 		}
 		else {
 			for ( int i = 0; i < lhsTuple.componentCount(); i++ ) {
-				if ( !areTypesComparable( lhsTuple.get(i), rhsTuple.get(i), factory ) ) {
+				if ( !areTypesComparable( lhsTuple.get(i), rhsTuple.get(i), bindingContext) ) {
 					return false;
 				}
 			}
@@ -273,32 +272,32 @@ public class TypecheckUtil {
 
 	private static boolean areEntityTypesComparable(
 			EntityType<?> lhsType, EntityType<?> rhsType,
-			SessionFactoryImplementor factory) {
-		EntityPersister lhsEntity = getEntityDescriptor( factory, lhsType.getName() );
-		EntityPersister rhsEntity = getEntityDescriptor( factory, rhsType.getName() );
+			BindingContext bindingContext) {
+		EntityPersister lhsEntity = getEntityDescriptor(bindingContext, lhsType.getName() );
+		EntityPersister rhsEntity = getEntityDescriptor(bindingContext, rhsType.getName() );
 		return lhsEntity.getRootEntityName().equals( rhsEntity.getRootEntityName() );
 	}
 
 	private static boolean isDiscriminatorTypeComparable(
 			EntityDiscriminatorSqmPathSource<?> lhsDiscriminator, SqmExpressible<?> rhsType,
-			SessionFactoryImplementor factory) {
+			BindingContext bindingContext) {
 		String entityName = lhsDiscriminator.getEntityDomainType().getHibernateEntityName();
-		EntityPersister lhsEntity = factory.getMappingMetamodel().getEntityDescriptor( entityName );
+		EntityPersister lhsEntity = bindingContext.getMappingMetamodel().getEntityDescriptor( entityName );
 		if ( rhsType instanceof EntityType ) {
 			String rhsEntityName = ((EntityType<?>) rhsType).getName();
-			EntityPersister rhsEntity = getEntityDescriptor( factory, rhsEntityName );
+			EntityPersister rhsEntity = getEntityDescriptor(bindingContext, rhsEntityName );
 			return lhsEntity.getRootEntityName().equals( rhsEntity.getRootEntityName() );
 		}
 		else if ( rhsType instanceof EntityDiscriminatorSqmPathSource ) {
 			EntityDiscriminatorSqmPathSource<?> discriminator = (EntityDiscriminatorSqmPathSource<?>) rhsType;
 			String rhsEntityName = discriminator.getEntityDomainType().getHibernateEntityName();
-			EntityPersister rhsEntity = factory.getMappingMetamodel().getEntityDescriptor( rhsEntityName );
+			EntityPersister rhsEntity = bindingContext.getMappingMetamodel().getEntityDescriptor( rhsEntityName );
 			return rhsEntity.getRootEntityName().equals( lhsEntity.getRootEntityName() );
 		}
 		else  {
 			BasicType<?> discriminatorType = (BasicType<?>)
 					lhsDiscriminator.getEntityMapping().getDiscriminatorMapping().getMappedType();
-			return areTypesComparable( discriminatorType, rhsType, factory );
+			return areTypesComparable( discriminatorType, rhsType, bindingContext);
 		}
 	}
 
@@ -306,11 +305,11 @@ public class TypecheckUtil {
 	 * @param targetType the type of the path expression to which a value is assigned
 	 * @param expressionType the type of the value expression being assigned to the path
 	 *
-	 * @see #areTypesComparable(SqmExpressible, SqmExpressible, SessionFactoryImplementor)
+	 * @see #areTypesComparable(SqmExpressible, SqmExpressible, BindingContext)
 	 */
 	private static boolean isTypeAssignable(
 			SqmPathSource<?> targetType, SqmExpressible<?> expressionType,
-			SessionFactoryImplementor factory) {
+			BindingContext bindingContext) {
 
 		if ( targetType == null || expressionType == null || targetType == expressionType ) {
 			return true;
@@ -319,7 +318,7 @@ public class TypecheckUtil {
 		// entities can be assigned if they belong to the same inheritance hierarchy
 
 		if ( targetType instanceof EntityType && expressionType instanceof EntityType ) {
-			return isEntityTypeAssignable( (EntityType<?>) targetType, (EntityType<?>) expressionType, factory );
+			return isEntityTypeAssignable( (EntityType<?>) targetType, (EntityType<?>) expressionType, bindingContext);
 		}
 
 		// Treat the expression as assignable to the target path if they belong
@@ -367,21 +366,21 @@ public class TypecheckUtil {
 
 	private static boolean isEntityTypeAssignable(
 			EntityType<?> lhsType, EntityType<?> rhsType,
-			SessionFactoryImplementor factory) {
-		EntityPersister lhsEntity = getEntityDescriptor( factory, lhsType.getName() );
-		EntityPersister rhsEntity = getEntityDescriptor( factory, rhsType.getName() );
+			BindingContext bindingContext) {
+		EntityPersister lhsEntity = getEntityDescriptor(bindingContext, lhsType.getName() );
+		EntityPersister rhsEntity = getEntityDescriptor(bindingContext, rhsType.getName() );
 		return lhsEntity.isSubclassEntityName( rhsEntity.getEntityName() );
 	}
 
-	private static EntityPersister getEntityDescriptor(SessionFactoryImplementor factory, String name) {
-		return factory.getMappingMetamodel()
-				.getEntityDescriptor( factory.getJpaMetamodel().qualifyImportableName( name ) );
+	private static EntityPersister getEntityDescriptor(BindingContext bindingContext, String name) {
+		return bindingContext.getMappingMetamodel()
+				.getEntityDescriptor( bindingContext.getJpaMetamodel().qualifyImportableName( name ) );
 	}
 
 	/**
-	 * @see TypecheckUtil#assertAssignable(String, SqmPath, SqmTypedNode, SessionFactoryImplementor)
+	 * @see TypecheckUtil#assertAssignable(String, SqmPath, SqmTypedNode, BindingContext)
 	 */
-	public static void assertComparable(Expression<?> x, Expression<?> y, SessionFactoryImplementor factory) {
+	public static void assertComparable(Expression<?> x, Expression<?> y, BindingContext bindingContext) {
 		final SqmExpression<?> left = (SqmExpression<?>) x;
 		final SqmExpression<?> right = (SqmExpression<?>) y;
 		final Integer leftTupleLength = left.getTupleLength();
@@ -401,7 +400,7 @@ public class TypecheckUtil {
 		if ( !( left instanceof SqmLiteralNull ) && !( right instanceof SqmLiteralNull ) ) {
 			final SqmExpressible<?> leftType = left.getExpressible();
 			final SqmExpressible<?> rightType = right.getExpressible();
-			if ( !areTypesComparable( leftType, rightType, factory ) ) {
+			if ( !areTypesComparable( leftType, rightType, bindingContext) ) {
 				throw new SemanticException(
 						String.format(
 								"Cannot compare left expression of type '%s' with right expression of type '%s'",
@@ -414,12 +413,12 @@ public class TypecheckUtil {
 	}
 
 	/**
-	 * @see TypecheckUtil#assertComparable(Expression, Expression, SessionFactoryImplementor)
+	 * @see TypecheckUtil#assertComparable(Expression, Expression, BindingContext)
 	 */
 	public static void assertAssignable(
 			String hqlString,
 			SqmPath<?> targetPath, SqmTypedNode<?> expression,
-			SessionFactoryImplementor factory) {
+			BindingContext bindingContext) {
 		// allow assigning literal null to things
 		if ( expression instanceof SqmLiteralNull ) {
 			// TODO: check that the target path is nullable
@@ -427,7 +426,7 @@ public class TypecheckUtil {
 		else {
 			SqmPathSource<?> targetType = targetPath.getNodeType();
 			SqmExpressible<?> expressionType = expression.getNodeType();
-			if ( !isTypeAssignable( targetType, expressionType, factory ) ) {
+			if ( !isTypeAssignable( targetType, expressionType, bindingContext) ) {
 				throw new SemanticException(
 						String.format(
 								"Cannot assign expression of type '%s' to target path '%s' of type '%s'",

@@ -71,6 +71,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.cfg.AvailableSettings.EVENT_LISTENER_PREFIX;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
+import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 
 /**
  * Container for configuration data collected during binding the metamodel.
@@ -356,12 +357,12 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public NamedObjectRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory) {
+	public NamedObjectRepository buildNamedQueryRepository() {
 		return new NamedObjectRepositoryImpl(
-				CollectionHelper.mapOfSize( namedQueryMap.size() ),
-				CollectionHelper.mapOfSize( namedNativeQueryMap.size() ),
-				CollectionHelper.mapOfSize( namedProcedureCallMap.size() ),
-				CollectionHelper.mapOfSize( sqlResultSetMappingMap.size() )
+				mapOfSize( namedQueryMap.size() ),
+				mapOfSize( namedNativeQueryMap.size() ),
+				mapOfSize( namedProcedureCallMap.size() ),
+				mapOfSize( sqlResultSetMappingMap.size() )
 		);
 	}
 

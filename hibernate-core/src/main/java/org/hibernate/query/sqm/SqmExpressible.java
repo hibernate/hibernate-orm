@@ -6,9 +6,9 @@
  */
 package org.hibernate.query.sqm;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.BindingContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -36,7 +36,7 @@ public interface SqmExpressible<J> extends BindableType<J> {
 	}
 
 	@Override
-	default SqmExpressible<J> resolveExpressible(SessionFactoryImplementor sessionFactory) {
+	default SqmExpressible<J> resolveExpressible(BindingContext bindingContext) {
 		return this;
 	}
 

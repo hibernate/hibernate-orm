@@ -17,9 +17,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.BindingContext;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCoalesce;
@@ -78,7 +80,7 @@ import jakarta.persistence.criteria.Subquery;
  * @author Steve Ebersole
  */
 @SuppressWarnings("unchecked")
-public interface NodeBuilder extends HibernateCriteriaBuilder {
+public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 	JpaMetamodel getDomainModel();
 
 	TypeConfiguration getTypeConfiguration();
@@ -1194,5 +1196,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 
 	BasicType<Character> getCharacterType();
 
-	SessionFactoryImplementor getSessionFactory();
+	JpaCompliance getJpaCompliance();
+
+	ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode();
 }

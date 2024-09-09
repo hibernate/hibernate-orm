@@ -46,7 +46,7 @@ public interface MetadataImplementor extends Metadata {
 	 */
 	SqmFunctionRegistry getFunctionRegistry();
 
-	NamedObjectRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory);
+	NamedObjectRepository buildNamedQueryRepository();
 
 	@Incubating
 	void orderColumns(boolean forceOrdering);

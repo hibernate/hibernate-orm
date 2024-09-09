@@ -15,9 +15,9 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetTime;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.BindingContext;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
@@ -37,26 +37,18 @@ import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
  */
 public class SqmExpressionHelper {
 	public static <T> SqmExpressible<T> toSqmType(BindableType<T> parameterType, SqmCreationState creationState) {
-		return toSqmType( parameterType, creationState.getCreationContext().getNodeBuilder().getSessionFactory() );
+		return toSqmType( parameterType, creationState.getCreationContext() );
 	}
 
-	public static <T> SqmExpressible<T> toSqmType(BindableType<T> anticipatedType, NodeBuilder nodeBuilder) {
-		return toSqmType( anticipatedType, nodeBuilder.getSessionFactory() );
-	}
-
-//	public static <T> SqmExpressible<T> toSqmType(BindableType<T> anticipatedType, TypeConfiguration typeConfiguration) {
-//		return toSqmType( anticipatedType, typeConfiguration.getSessionFactory() );
-//	}
-
-	public static <T> SqmExpressible<T> toSqmType(BindableType<T> anticipatedType, SessionFactoryImplementor sessionFactory) {
+	public static <T> SqmExpressible<T> toSqmType(
+			BindableType<T> anticipatedType, BindingContext bindingContext) {
 		if ( anticipatedType == null ) {
 			return null;
 		}
-		final SqmExpressible<T> sqmExpressible = anticipatedType.resolveExpressible( sessionFactory );
+		final SqmExpressible<T> sqmExpressible = anticipatedType.resolveExpressible(bindingContext);
 		assert sqmExpressible != null;
 
 		return sqmExpressible;
-
 	}
 
 	public static SqmLiteral<Timestamp> timestampLiteralFrom(String literalText, SqmCreationState creationState) {

@@ -227,7 +227,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		settings = getSettings( options, serviceRegistry );
 		maskOutSensitiveInformation( settings );
 		deprecationCheck( settings );
-		LOG.debugf( "Instantiating SessionFactory with settings: %s", settings);
+		LOG.debugf( "Instantiating SessionFactory with settings: %s", settings );
 
 		sqlStringGenerationContext = createSqlStringGenerationContext( bootMetamodel, options, jdbcServices );
 
@@ -280,7 +280,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			// created, then we can split creation of QueryEngine
 			// and SqmFunctionRegistry, instantiating just the
 			// registry here, and doing the engine later
-			queryEngine = QueryEngineImpl.from( this, bootMetamodel );
+			queryEngine = QueryEngineImpl.from( bootMetamodel, options, this, serviceRegistry, settings, name );
 
 			// create runtime metamodels (mapping and JPA)
 			final RuntimeMetamodelsImpl runtimeMetamodelsImpl = new RuntimeMetamodelsImpl();

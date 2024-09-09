@@ -24,6 +24,7 @@ import java.util.function.Function;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.Bindable;
@@ -307,17 +308,15 @@ public class SqmUtil {
 			} while (declaringType.getPersistenceType() != Type.PersistenceType.ENTITY );
 			pathBuilder.insert(0, '.');
 			pathBuilder.insert( 0, attribute.getName() );
-			final EntityPersister entityDescriptor = sqmJoin.nodeBuilder()
-					.getSessionFactory()
-					.getMappingMetamodel()
-					.getEntityDescriptor( ( (EntityDomainType<?>) declaringType ).getHibernateEntityName() );
+			final EntityPersister entityDescriptor =
+					sqmJoin.nodeBuilder().getMappingMetamodel()
+							.getEntityDescriptor( ( (EntityDomainType<?>) declaringType ).getHibernateEntityName() );
 			return (EntityAssociationMapping) entityDescriptor.findByPath( pathBuilder.toString() );
 		}
 		else {
-			final EntityPersister entityDescriptor = sqmJoin.nodeBuilder()
-					.getSessionFactory()
-					.getMappingMetamodel()
-					.getEntityDescriptor( ( (EntityDomainType<?>) declaringType ).getHibernateEntityName() );
+			final EntityPersister entityDescriptor =
+					sqmJoin.nodeBuilder().getMappingMetamodel()
+							.getEntityDescriptor( ( (EntityDomainType<?>) declaringType ).getHibernateEntityName() );
 			return (EntityAssociationMapping) entityDescriptor.findAttributeMapping( attribute.getName() );
 		}
 	}
@@ -999,7 +998,7 @@ public class SqmUtil {
 	}
 
 	private static void checkQueryReturnType(SqmQuerySpec<?> querySpec, Class<?> expectedResultClass) {
-		final SessionFactoryImplementor sessionFactory = querySpec.nodeBuilder().getSessionFactory();
+		final JpaCompliance jpaCompliance = querySpec.nodeBuilder().getJpaCompliance();
 		final List<SqmSelection<?>> selections = querySpec.getSelectClause().getSelections();
 		if ( selections == null || selections.isEmpty() ) {
 			// make sure there is at least one root
@@ -1009,7 +1008,7 @@ public class SqmUtil {
 			}
 			// if there is a single root, use that as the selection
 			if ( sqmRoots.size() == 1 ) {
-				verifySingularSelectionType( expectedResultClass, sessionFactory, sqmRoots.get( 0 ) );
+				verifySingularSelectionType( expectedResultClass, jpaCompliance, sqmRoots.get( 0 ) );
 			}
 			else {
 				throw new IllegalArgumentException( "Criteria has multiple query roots" );
@@ -1023,17 +1022,17 @@ public class SqmUtil {
 						? expectedResultClass.getComponentType()
 						: expectedResultClass;
 				for ( JpaSelection<?> selection : selectableNode.getSelectionItems() ) {
-					verifySelectionType( expectedSelectItemType, sessionFactory, (SqmSelectableNode<?>) selection );
+					verifySelectionType( expectedSelectItemType, jpaCompliance, (SqmSelectableNode<?>) selection );
 				}
 			}
 			else {
-				verifySingularSelectionType( expectedResultClass, sessionFactory, sqmSelection.getSelectableNode() );
+				verifySingularSelectionType( expectedResultClass, jpaCompliance, sqmSelection.getSelectableNode() );
 			}
 		}
 		else if ( expectedResultClass.isArray() ) {
 			final Class<?> componentType = expectedResultClass.getComponentType();
 			for ( SqmSelection<?> selection : selections ) {
-				verifySelectionType( componentType, sessionFactory, selection.getSelectableNode() );
+				verifySelectionType( componentType, jpaCompliance, selection.getSelectableNode() );
 			}
 		}
 	}
@@ -1050,10 +1049,10 @@ public class SqmUtil {
 	 */
 	private static void verifySingularSelectionType(
 			Class<?> expectedResultClass,
-			SessionFactoryImplementor sessionFactory,
+			JpaCompliance jpaCompliance,
 			SqmSelectableNode<?> selectableNode) {
 		try {
-			verifySelectionType( expectedResultClass, sessionFactory, selectableNode );
+			verifySelectionType( expectedResultClass, jpaCompliance, selectableNode );
 		}
 		catch (QueryTypeMismatchException mismatchException) {
 			// Check for special case of a single selection item and implicit instantiation.
@@ -1084,7 +1083,7 @@ public class SqmUtil {
 
 	private static <T> void verifySelectionType(
 			Class<T> expectedResultClass,
-			SessionFactoryImplementor sessionFactory,
+			JpaCompliance jpaCompliance,
 			SqmSelectableNode<?> selection) {
 		// special case for parameters in the select list
 		if ( selection instanceof SqmParameter ) {
@@ -1097,18 +1096,18 @@ public class SqmUtil {
 			}
 		}
 
-		if ( !sessionFactory.getSessionFactoryOptions().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+		if ( !jpaCompliance.isJpaQueryComplianceEnabled() ) {
 			verifyResultType( expectedResultClass, selection.getExpressible() );
 		}
 	}
 
 	public static boolean isResultTypeAlwaysAllowed(Class<?> expectedResultClass) {
 		return expectedResultClass == null
-				|| expectedResultClass == Object.class
-				|| expectedResultClass == Object[].class
-				|| expectedResultClass == List.class
-				|| expectedResultClass == Map.class
-				|| expectedResultClass == Tuple.class;
+			|| expectedResultClass == Object.class
+			|| expectedResultClass == Object[].class
+			|| expectedResultClass == List.class
+			|| expectedResultClass == Map.class
+			|| expectedResultClass == Tuple.class;
 	}
 
 	protected static void verifyResultType(Class<?> resultClass, @Nullable SqmExpressible<?> selectionExpressible) {

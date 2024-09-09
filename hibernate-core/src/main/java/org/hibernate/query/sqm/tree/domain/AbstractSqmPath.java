@@ -196,7 +196,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	@SuppressWarnings("unchecked")
 	public SqmPath<?> get(String attributeName) {
 		final SqmPathSource<?> subNavigable =
-				getResolvedModel().getSubPathSource( attributeName, nodeBuilder().getSessionFactory().getJpaMetamodel() );
+				getResolvedModel().getSubPathSource( attributeName, nodeBuilder().getJpaMetamodel() );
 		return resolvePath( attributeName, subNavigable );
 	}
 

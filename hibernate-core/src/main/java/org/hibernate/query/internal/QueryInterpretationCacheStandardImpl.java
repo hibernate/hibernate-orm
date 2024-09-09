@@ -23,6 +23,7 @@ import org.hibernate.query.spi.SimpleHqlInterpretationImpl;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.jboss.logging.Logger;
@@ -40,17 +41,19 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	 */
 	private final BoundedConcurrentHashMap<Key, QueryPlan> queryPlanCache;
 
+	private final ServiceRegistry serviceRegistry;
 	private final BoundedConcurrentHashMap<Object, HqlInterpretation<?>> hqlInterpretationCache;
 	private final BoundedConcurrentHashMap<String, ParameterInterpretation> nativeQueryParamCache;
-	private final Supplier<StatisticsImplementor> statisticsSupplier;
 
-	public QueryInterpretationCacheStandardImpl(int maxQueryPlanCount, Supplier<StatisticsImplementor> statisticsSupplier) {
+	private StatisticsImplementor statistics;
+
+	public QueryInterpretationCacheStandardImpl(int maxQueryPlanCount, ServiceRegistry serviceRegistry) {
 		log.debugf( "Starting QueryInterpretationCache(%s)", maxQueryPlanCount );
 
 		this.queryPlanCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
 		this.hqlInterpretationCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
 		this.nativeQueryParamCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
-		this.statisticsSupplier = statisticsSupplier;
+		this.serviceRegistry = serviceRegistry;
 	}
 
 	@Override
@@ -63,12 +66,19 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 		return queryPlanCache.size();
 	}
 
+	private StatisticsImplementor getStatistics() {
+		if ( statistics == null ) {
+			statistics = serviceRegistry.requireService( StatisticsImplementor.class );
+		}
+		return statistics;
+	}
+	
 	@Override
 	public <R> SelectQueryPlan<R> resolveSelectQueryPlan(
 			Key key,
 			Supplier<SelectQueryPlan<R>> creator) {
 		log.tracef( "QueryPlan#getSelectQueryPlan(%s)", key );
-		final StatisticsImplementor statistics = statisticsSupplier.get();
+		final StatisticsImplementor statistics = getStatistics();
 		final boolean stats = statistics.isStatisticsEnabled();
 
 		@SuppressWarnings("unchecked")
@@ -105,7 +115,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			Class<R> expectedResultType,
 			HqlTranslator translator) {
 		log.tracef( "QueryPlan#resolveHqlInterpretation( `%s` )", queryString );
-		final StatisticsImplementor statistics = statisticsSupplier.get();
+		final StatisticsImplementor statistics = getStatistics();
 
 		final Object cacheKey = expectedResultType != null
 				? new HqlInterpretationCacheKey( queryString, expectedResultType )

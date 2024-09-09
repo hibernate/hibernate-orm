@@ -83,18 +83,12 @@ public enum FlushMode {
 	}
 
 	private int level() {
-		switch (this) {
-			case ALWAYS:
-				return 20;
-			case AUTO:
-				return 10;
-			case COMMIT:
-				return 5;
-			case MANUAL:
-				return 0;
-			default:
-				throw new AssertionFailure("Impossible FlushMode");
-		}
+		return switch (this) {
+			case ALWAYS -> 20;
+			case AUTO -> 10;
+			case COMMIT -> 5;
+			case MANUAL -> 0;
+		};
 	}
 
 	public static FlushMode fromJpaFlushMode(FlushModeType flushModeType) {

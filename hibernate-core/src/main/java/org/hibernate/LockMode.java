@@ -245,27 +245,15 @@ public enum LockMode implements FindOption, RefreshOption {
 	 * forced version increment will occur.
 	 */
 	private int level() {
-		switch (this) {
-			case NONE:
-				return 0;
-			case READ:
-				return 1;
-			case OPTIMISTIC:
-				return 2;
-			case OPTIMISTIC_FORCE_INCREMENT:
-				return 3;
-			case PESSIMISTIC_READ:
-				return 4;
-			case UPGRADE_NOWAIT:
-			case UPGRADE_SKIPLOCKED:
-			case PESSIMISTIC_WRITE:
-				return 5;
-			case PESSIMISTIC_FORCE_INCREMENT:
-			case WRITE:
-				return 6;
-			default:
-				throw new AssertionFailure( "Unrecognized LockMode: " + this );
-		}
+		return switch (this) {
+			case NONE -> 0;
+			case READ -> 1;
+			case OPTIMISTIC -> 2;
+			case OPTIMISTIC_FORCE_INCREMENT -> 3;
+			case PESSIMISTIC_READ -> 4;
+			case UPGRADE_NOWAIT, UPGRADE_SKIPLOCKED, PESSIMISTIC_WRITE -> 5;
+			case PESSIMISTIC_FORCE_INCREMENT, WRITE -> 6;
+		};
 	}
 
 	public static LockMode fromExternalForm(String externalForm) {
@@ -291,29 +279,17 @@ public enum LockMode implements FindOption, RefreshOption {
 	 *         all other settings defaulted.
 	 */
 	public LockOptions toLockOptions() {
-		switch (this) {
-			case NONE:
-				return LockOptions.NONE;
-			case READ:
-				return LockOptions.READ;
-			case OPTIMISTIC:
-				return LockOptions.OPTIMISTIC;
-			case OPTIMISTIC_FORCE_INCREMENT:
-				return LockOptions.OPTIMISTIC_FORCE_INCREMENT;
-			case UPGRADE_NOWAIT:
-				return LockOptions.UPGRADE_NOWAIT;
-			case UPGRADE_SKIPLOCKED:
-				return LockOptions.UPGRADE_SKIPLOCKED;
-			case PESSIMISTIC_READ:
-				return LockOptions.PESSIMISTIC_READ;
-			case PESSIMISTIC_WRITE:
-				return LockOptions.PESSIMISTIC_WRITE;
-			case PESSIMISTIC_FORCE_INCREMENT:
-				return LockOptions.PESSIMISTIC_FORCE_INCREMENT;
-			case WRITE:
-				throw new UnsupportedOperationException("WRITE is not a valid LockMode as an argument");
-			default:
-				throw new AssertionFailure( "Unrecognized LockMode: " + this );
-		}
+		return switch (this) {
+			case NONE -> LockOptions.NONE;
+			case READ -> LockOptions.READ;
+			case OPTIMISTIC -> LockOptions.OPTIMISTIC;
+			case OPTIMISTIC_FORCE_INCREMENT -> LockOptions.OPTIMISTIC_FORCE_INCREMENT;
+			case UPGRADE_NOWAIT -> LockOptions.UPGRADE_NOWAIT;
+			case UPGRADE_SKIPLOCKED -> LockOptions.UPGRADE_SKIPLOCKED;
+			case PESSIMISTIC_READ -> LockOptions.PESSIMISTIC_READ;
+			case PESSIMISTIC_WRITE -> LockOptions.PESSIMISTIC_WRITE;
+			case PESSIMISTIC_FORCE_INCREMENT -> LockOptions.PESSIMISTIC_FORCE_INCREMENT;
+			case WRITE -> throw new UnsupportedOperationException( "WRITE is not a valid LockMode as an argument" );
+		};
 	}
 }

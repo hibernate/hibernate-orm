@@ -25,13 +25,9 @@ public enum FetchTiming {
 	DELAYED;
 
 	public static FetchTiming forType(FetchType type) {
-		switch ( type ) {
-			case EAGER:
-				return IMMEDIATE;
-			case LAZY:
-				return DELAYED;
-			default:
-				throw new IllegalArgumentException( "Unknown FetchType" );
-		}
+		return switch (type) {
+			case EAGER -> IMMEDIATE;
+			case LAZY -> DELAYED;
+		};
 	}
 }

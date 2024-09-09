@@ -66,8 +66,8 @@ public enum OnDeleteAction {
 			return null;
 		}
 
-		if ( value instanceof OnDeleteAction ) {
-			return (OnDeleteAction) value;
+		if ( value instanceof OnDeleteAction onDeleteAction ) {
+			return onDeleteAction;
 		}
 
 		final String valueString = value.toString();

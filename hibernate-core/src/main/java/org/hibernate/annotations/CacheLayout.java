@@ -42,5 +42,5 @@ public enum CacheLayout {
 	 * Stores the full state into the query cache.
 	 * This is useful when the chances for the object being part of the second level cache are very low.
 	 */
-	FULL;
+	FULL
 }

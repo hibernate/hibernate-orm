@@ -162,30 +162,17 @@ public enum CacheMode implements FindOption {
 			retrieveMode = CacheRetrieveMode.BYPASS;
 		}
 
-		switch ( storeMode ) {
-			case USE: {
-				switch ( retrieveMode ) {
-					case USE:
-						return NORMAL;
-					case BYPASS:
-						return PUT;
-				}
-			}
-			case BYPASS: {
-				switch ( retrieveMode ) {
-					case USE:
-						return GET;
-					case BYPASS:
-						return IGNORE;
-				}
-			}
-			case REFRESH: {
-				// technically should combo CacheStoreMode#REFRESH and CacheRetrieveMode#USE be illegal?
-				return REFRESH;
-			}
-			default: {
-				throw new AssertionFailure( "Unrecognized CacheStoreMode: " + storeMode );
-			}
-		}
+		return switch (storeMode) {
+			case USE -> switch (retrieveMode) {
+				case USE -> NORMAL;
+				case BYPASS -> PUT;
+			};
+			case BYPASS -> switch (retrieveMode) {
+				case USE -> GET;
+				case BYPASS -> IGNORE;
+			};
+			// technically should combo CacheStoreMode#REFRESH and CacheRetrieveMode#USE be illegal?
+			case REFRESH -> REFRESH;
+		};
 	}
 }

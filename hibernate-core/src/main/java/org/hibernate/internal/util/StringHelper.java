@@ -174,13 +174,13 @@ public final class StringHelper {
 		if ( template == null ) {
 			return null;
 		}
-		int loc = indexOfPlaceHolder( template, placeholder, wholeWords );
+		final int loc = indexOfPlaceHolder( template, placeholder, wholeWords );
 		if ( loc < 0 ) {
 			return template;
 		}
 		else {
-			String beforePlaceholder = template.substring( 0, loc );
-			String afterPlaceholder = template.substring( loc + placeholder.length() );
+			final String beforePlaceholder = template.substring( 0, loc );
+			final String afterPlaceholder = template.substring( loc + placeholder.length() );
 			return replace(
 					beforePlaceholder,
 					afterPlaceholder,
@@ -201,7 +201,7 @@ public final class StringHelper {
 			boolean encloseInParensIfNecessary) {
 		final boolean actuallyReplace =
 				!wholeWords
-						|| afterPlaceholder.length() == 0
+						|| afterPlaceholder.isEmpty()
 						|| !Character.isJavaIdentifierPart( afterPlaceholder.charAt( 0 ) );
 		// We only need to check the left param to determine if the placeholder is already
 		// enclosed in parentheses (HHH-10383)
@@ -214,13 +214,13 @@ public final class StringHelper {
 		// We need to check the placeholder is not used in `Order By FIELD(...)` (HHH-10502)
 		// Examples:
 		// " ... Order By FIELD(id,?1)",  after expand parameters, the sql is "... Order By FIELD(id,?,?,?)"
-		boolean encloseInParens =
+		final boolean encloseInParens =
 				actuallyReplace
 						&& encloseInParensIfNecessary
 						&& !( getLastNonWhitespaceCharacter( beforePlaceholder ) == '(' ) &&
 						!( getLastNonWhitespaceCharacter( beforePlaceholder ) == ',' && getFirstNonWhitespaceCharacter(
 								afterPlaceholder ) == ')' );
-		StringBuilder buf = new StringBuilder( beforePlaceholder );
+		final StringBuilder buf = new StringBuilder( beforePlaceholder );
 		if ( encloseInParens ) {
 			buf.append( '(' );
 		}

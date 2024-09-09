@@ -8,10 +8,8 @@ package org.hibernate.sql.ast.tree.predicate;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
-import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.internal.FilterImpl;
+import org.hibernate.Filter;
 import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -37,7 +35,7 @@ public class FilterPredicate implements Predicate {
 		fragments.add( predicate );
 	}
 
-	public void applyFragment(String processedFragment, FilterImpl filter, List<String> parameterNames) {
+	public void applyFragment(String processedFragment, Filter filter, List<String> parameterNames) {
 		fragments.add( new FilterFragmentPredicate( processedFragment, filter, parameterNames ) );
 	}
 
@@ -102,11 +100,11 @@ public class FilterPredicate implements Predicate {
 	}
 
 	public static class FilterFragmentPredicate implements Predicate {
-		private final FilterImpl filter;
+		private final Filter filter;
 		private final String sqlFragment;
 		private final List<FilterFragmentParameter> parameters;
 
-		public FilterFragmentPredicate(String sqlFragment, FilterImpl filter, List<String> parameterNames) {
+		public FilterFragmentPredicate(String sqlFragment, Filter filter, List<String> parameterNames) {
 			this.filter = filter;
 			this.sqlFragment = sqlFragment;
 
@@ -117,16 +115,15 @@ public class FilterPredicate implements Predicate {
 				parameters = CollectionHelper.arrayList( parameterNames.size() );
 				for ( int i = 0; i < parameterNames.size(); i++ ) {
 					final String paramName = parameterNames.get( i );
-					final Object paramValue = retrieveParamValue(filter, paramName);
-					final FilterDefinition filterDefinition = filter.getFilterDefinition();
-					final JdbcMapping jdbcMapping = filterDefinition.getParameterJdbcMapping( paramName );
+					final Object paramValue = filter.getParameterValue( paramName );
+					final JdbcMapping jdbcMapping = filter.getFilterDefinition().getParameterJdbcMapping( paramName );
 
 					parameters.add( new FilterFragmentParameter( filter.getName(), paramName, jdbcMapping, paramValue ) );
 				}
 			}
 		}
 
-		public FilterImpl getFilter() {
+		public Filter getFilter() {
 			return filter;
 		}
 
@@ -155,16 +152,6 @@ public class FilterPredicate implements Predicate {
 		@Override
 		public boolean isEmpty() {
 			return false;
-		}
-
-		private Object retrieveParamValue(FilterImpl filter, String paramName) {
-			Object value = filter.getParameter(paramName);
-			if (value != null) {
-				return value;
-			}
-
-			final Supplier<?> filterParamResolver = filter.getParameterResolver( paramName );
-			return filterParamResolver == null ? null : filterParamResolver.get();
 		}
 	}
 }

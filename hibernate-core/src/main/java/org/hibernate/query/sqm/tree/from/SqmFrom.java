@@ -16,6 +16,7 @@ import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.SetAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 
+import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaFrom;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -99,6 +100,9 @@ public interface SqmFrom<L, R> extends SqmVisitableNode, SqmPath<R>, JpaFrom<L, 
 
 	@Override
 	<Y> SqmEntityJoin<R, Y> join(Class<Y> entityClass, JoinType joinType);
+
+	@Incubating
+	boolean hasImplicitlySelectableJoin();
 
 	@Override
 	<A> SqmSingularJoin<R, A> join(SingularAttribute<? super R, A> attribute);

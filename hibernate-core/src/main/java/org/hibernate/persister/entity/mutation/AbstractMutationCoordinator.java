@@ -95,7 +95,7 @@ public abstract class AbstractMutationCoordinator {
 				int outputIndex = 0;
 				int skipped = 0;
 				for ( int i = 0; i < mutationGroup.getNumberOfTableMutations(); i++ ) {
-					final TableMutation tableMutation = mutationGroup.getTableMutation( i );
+					final TableMutation<?> tableMutation = mutationGroup.getTableMutation( i );
 					final MutationOperation operation = tableMutation.createMutationOperation( valuesAnalysis, factory );
 					if ( operation != null ) {
 						operations[outputIndex++] = operation;

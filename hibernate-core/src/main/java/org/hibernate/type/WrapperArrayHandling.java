@@ -63,8 +63,8 @@ public enum WrapperArrayHandling {
 			throw new IllegalArgumentException( "Null value passed to convert" );
 		}
 
-		return value instanceof WrapperArrayHandling
-				? (WrapperArrayHandling) value
+		return value instanceof WrapperArrayHandling wrapperArrayHandling
+				? wrapperArrayHandling
 				: valueOf( value.toString().toUpperCase( Locale.ROOT ) );
 	}
 
@@ -77,8 +77,8 @@ public enum WrapperArrayHandling {
 			return null;
 		}
 
-		return value instanceof WrapperArrayHandling
-				? (WrapperArrayHandling) value
+		return value instanceof WrapperArrayHandling wrapperArrayHandling
+				? wrapperArrayHandling
 				: valueOf( value.toString().toUpperCase( Locale.ROOT ) );
 	}
 }

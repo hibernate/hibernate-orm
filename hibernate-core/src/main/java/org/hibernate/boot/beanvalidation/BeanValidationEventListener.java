@@ -24,7 +24,6 @@ import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.event.spi.PreUpsertEvent;
 import org.hibernate.event.spi.PreUpsertEventListener;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -33,9 +32,11 @@ import org.jboss.logging.Logger;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.TraversableResolver;
-import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+
+import static jakarta.validation.Validation.buildDefaultValidatorFactory;
+import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 
 /**
  * Event listener used to enable Bean Validation for insert/update/delete events.
@@ -71,8 +72,7 @@ public class BeanValidationEventListener
 
 	public void initialize(Map<String,Object> settings, ClassLoaderService classLoaderService) {
 		if ( !initialized ) {
-			ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-			init( factory, settings, classLoaderService );
+			init( buildDefaultValidatorFactory(), settings, classLoaderService );
 		}
 	}
 
@@ -138,15 +138,15 @@ public class BeanValidationEventListener
 		final Class<?>[] groups = groupsPerOperation.get( operation );
 		if ( groups.length > 0 ) {
 			final Set<ConstraintViolation<T>> constraintViolations = validator.validate( object, groups );
-			if ( constraintViolations.size() > 0 ) {
-				Set<ConstraintViolation<?>> propagatedViolations = CollectionHelper.setOfSize( constraintViolations.size() );
-				Set<String> classNames = new HashSet<>();
+			if ( !constraintViolations.isEmpty() ) {
+				final Set<ConstraintViolation<?>> propagatedViolations = setOfSize( constraintViolations.size() );
+				final Set<String> classNames = new HashSet<>();
 				for ( ConstraintViolation<?> violation : constraintViolations ) {
 					LOG.trace( violation );
 					propagatedViolations.add( violation );
 					classNames.add( violation.getLeafBean().getClass().getName() );
 				}
-				StringBuilder builder = new StringBuilder();
+				final StringBuilder builder = new StringBuilder();
 				builder.append( "Validation failed for classes " );
 				builder.append( classNames );
 				builder.append( " during " );
@@ -154,20 +154,18 @@ public class BeanValidationEventListener
 				builder.append( " time for groups " );
 				builder.append( toString( groups ) );
 				builder.append( "\nList of constraint violations:[\n" );
-				for (ConstraintViolation<?> violation : constraintViolations) {
+				for ( ConstraintViolation<?> violation : constraintViolations ) {
 					builder.append( "\t" ).append( violation.toString() ).append("\n");
 				}
 				builder.append( "]" );
 
-				throw new ConstraintViolationException(
-						builder.toString(), propagatedViolations
-				);
+				throw new ConstraintViolationException( builder.toString(), propagatedViolations );
 			}
 		}
 	}
 
 	private String toString(Class<?>[] groups) {
-		StringBuilder toString = new StringBuilder( "[" );
+		final StringBuilder toString = new StringBuilder( "[" );
 		for ( Class<?> group : groups ) {
 			toString.append( group.getName() ).append( ", " );
 		}

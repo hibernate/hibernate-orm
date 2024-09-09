@@ -12,10 +12,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.hibernate.StaleObjectStateException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.dialect.OracleDialect;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -109,9 +107,9 @@ public class BatchOptimisticLockingTest extends
 				);
 			}
 			else {
-				assertEquals(
-						"Batch update returned unexpected row count from update [1]; actual row count: 0; expected: 1; statement executed: update Person set name=?,version=? where id=? and version=?",
+				assertTrue(
 						expected.getMessage()
+								.startsWith("Batch update returned unexpected row count from update 1 (expected row count 1 but was 0) [update Person set name=?,version=? where id=? and version=?]")
 				);
 			}
 		}

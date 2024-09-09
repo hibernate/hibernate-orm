@@ -182,12 +182,11 @@ public class TiDBDialect extends MySQLDialect {
 		return FunctionalDependencyAnalysisSupportImpl.TABLE_REFERENCE;
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		if ( unit == TemporalUnit.SECOND && intervalType == null ) {
-			// TiDB doesn't natively support adding fractional seconds
-			return "timestampadd(microsecond,?2*1e6,?3)";
-		}
-		return super.timestampaddPattern( unit, temporalType, intervalType );
+		// TiDB doesn't natively support adding fractional seconds
+		return unit == TemporalUnit.SECOND && intervalType == null
+				? "timestampadd(microsecond,?2*1e6,?3)"
+				: super.timestampaddPattern(unit, temporalType, intervalType);
 	}
 }

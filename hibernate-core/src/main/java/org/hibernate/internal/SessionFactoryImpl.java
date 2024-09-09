@@ -27,6 +27,7 @@ import java.util.function.Supplier;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
@@ -93,13 +94,11 @@ import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.internal.QueryEngineImpl;
 import org.hibernate.query.named.NamedObjectRepository;
-import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.relational.SchemaManager;
 import org.hibernate.relational.internal.SchemaManagerImpl;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -923,8 +922,8 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	public void addNamedQuery(String name, Query query) {
 		validateNotClosed();
 
-		// NOTE : we use Query#unwrap here (rather than direct type checking) to account for possibly wrapped
-		// query implementations
+		// NOTE : we use Query#unwrap here (rather than direct type checking)
+		//        to account for possibly wrapped query implementations
 
 		// first, handle StoredProcedureQuery
 		final NamedObjectRepository namedObjectRepository = getQueryEngine().getNamedObjectRepository();
@@ -941,23 +940,24 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 		// then try as a native-SQL or JPQL query
 		try {
-			final QueryImplementor<?> hibernateQuery = query.unwrap( QueryImplementor.class );
-			if ( hibernateQuery != null ) {
+			final QueryImplementor<?> queryImplementor = query.unwrap( QueryImplementor.class );
+			if ( queryImplementor != null ) {
 				// create and register the proper NamedQueryDefinition...
-				if ( hibernateQuery instanceof NativeQueryImplementor ) {
+				if ( queryImplementor instanceof NativeQueryImplementor<?> nativeQueryImplementor ) {
 					namedObjectRepository.registerNativeQueryMemento(
 							name,
-							( (NativeQueryImplementor<?>) hibernateQuery ).toMemento( name )
+							nativeQueryImplementor.toMemento( name )
 					);
 
 				}
-				else {
-					final NamedQueryMemento namedQueryMemento =
-							( (SqmQueryImplementor<?>) hibernateQuery ).toMemento( name );
+				else if ( queryImplementor instanceof SqmQueryImplementor<?> sqmQueryImplementor ) {
 					namedObjectRepository.registerSqmQueryMemento(
 							name,
-							(NamedSqmQueryMemento) namedQueryMemento
+							sqmQueryImplementor.toMemento( name )
 					);
+				}
+				else {
+					throw new AssertionFailure("unknown QueryImplementor");
 				}
 				return;
 			}

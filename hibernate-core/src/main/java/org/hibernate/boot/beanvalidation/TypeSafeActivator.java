@@ -279,10 +279,9 @@ class TypeSafeActivator {
 			final long min = minConstraint.getAnnotation().value();
 
 			for ( Selectable selectable : property.getSelectables() ) {
-				if ( selectable instanceof Column ) {
-					Column col = (Column) selectable;
-					String checkConstraint = col.getQuotedName(dialect) + ">=" + min;
-					applySQLCheck( col, checkConstraint );
+				if ( selectable instanceof Column column ) {
+					final String checkConstraint = column.getQuotedName( dialect ) + ">=" + min;
+					applySQLCheck( column, checkConstraint );
 				}
 			}
 		}
@@ -295,10 +294,9 @@ class TypeSafeActivator {
 			final long max = maxConstraint.getAnnotation().value();
 
 			for ( Selectable selectable : property.getSelectables() ) {
-				if ( selectable instanceof Column ) {
-					Column col = (Column) selectable;
-					String checkConstraint = col.getQuotedName( dialect ) + "<=" + max;
-					applySQLCheck( col, checkConstraint );
+				if ( selectable instanceof Column column ) {
+					final String checkConstraint = column.getQuotedName( dialect ) + "<=" + max;
+					applySQLCheck( column, checkConstraint );
 				}
 			}
 		}
@@ -354,10 +352,9 @@ class TypeSafeActivator {
 			int fractionalDigits = digitsConstraint.getAnnotation().fraction();
 
 			for ( Selectable selectable : property.getSelectables() ) {
-				if ( selectable instanceof Column ) {
-					Column col = (Column) selectable;
-					col.setPrecision( integerDigits + fractionalDigits );
-					col.setScale( fractionalDigits );
+				if ( selectable instanceof Column column ) {
+					column.setPrecision( integerDigits + fractionalDigits );
+					column.setScale( fractionalDigits );
 				}
 			}
 
@@ -387,10 +384,9 @@ class TypeSafeActivator {
 			int max = (Integer) descriptor.getAttributes().get( "max" );
 
 			for ( Selectable selectable : property.getSelectables() ) {
-				if ( selectable instanceof Column ) {
-					Column col = (Column) selectable;
+				if ( selectable instanceof Column column ) {
 					if ( max < Integer.MAX_VALUE ) {
-						col.setLength( max );
+						column.setLength( max );
 					}
 				}
 			}

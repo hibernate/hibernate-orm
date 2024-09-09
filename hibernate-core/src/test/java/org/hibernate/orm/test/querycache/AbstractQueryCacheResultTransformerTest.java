@@ -21,7 +21,6 @@ import org.hibernate.PropertyNotFoundException;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.Query;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
@@ -79,9 +78,10 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 
 		@Override
 		protected Object getResults(Session s, boolean isSingleResult) {
-			Query query = getQuery( s ).setCacheable( getQueryCacheMode() != CacheMode.IGNORE ).setCacheMode(
-					getQueryCacheMode() );
-			return ( isSingleResult ? query.uniqueResult() : query.list() );
+			Query query = getQuery( s )
+					.setCacheable( getQueryCacheMode() != CacheMode.IGNORE )
+					.setCacheMode( getQueryCacheMode() );
+			return isSingleResult ? query.uniqueResult() : query.list();
 		}
 	}
 
@@ -258,8 +258,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 		HqlExecutor hqlExecutor = new HqlExecutor() {
 			@Override
 			public Query getQuery(Session s) {
-				return s.createQuery(
-								"from Student s left join s.enrolments e left join e.course c order by s.studentNumber" )
+				return s.createQuery("from Student s left join s.enrolments e left join e.course c order by s.studentNumber", Student.class )
 						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
 			}
 		};
@@ -312,8 +311,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 		HqlExecutor hqlExecutor = new HqlExecutor() {
 			@Override
 			public Query getQuery(Session s) {
-				return s.createQuery(
-								"from Student s left join s.preferredCourse p left join s.addresses a order by s.studentNumber" )
+				return s.createQuery("from Student s left join s.preferredCourse p left join s.addresses a order by s.studentNumber", Student.class )
 						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
 			}
 		};
@@ -377,8 +375,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 		HqlExecutor hqlExecutor = new HqlExecutor() {
 			@Override
 			public Query getQuery(Session s) {
-				return s.createQuery(
-								"from Student s left join s.addresses a left join s.preferredCourse order by s.studentNumber" )
+				return s.createQuery("from Student s left join s.addresses a left join s.preferredCourse order by s.studentNumber", Student.class )
 						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
 			}
 		};
@@ -910,8 +907,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 		HqlExecutor hqlExecutor = new HqlExecutor() {
 			@Override
 			public Query getQuery(Session s) {
-				return s.createQuery(
-						"select s, pc from Student s left join fetch s.enrolments left join s.preferredCourse pc order by s.studentNumber" );
+				return s.createQuery("select s, pc from Student s left join fetch s.enrolments left join s.preferredCourse pc order by s.studentNumber", Object[].class );
 			}
 		};
 		ResultChecker checker = results -> {
@@ -963,9 +959,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 		HqlExecutor hqlSelectNewMapExecutor = new HqlExecutor() {
 			@Override
 			public Query getQuery(Session s) {
-				return s.createQuery(
-						"select pc, s from Student s left join fetch s.enrolments left join s.preferredCourse pc order by s.studentNumber"
-				);
+				return s.createQuery("select pc, s from Student s left join fetch s.enrolments left join s.preferredCourse pc order by s.studentNumber", Object[].class);
 			}
 		};
 		ResultChecker checker = results -> {
@@ -1075,7 +1069,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 		HqlExecutor hqlExecutor = new HqlExecutor() {
 			@Override
 			public Query getQuery(Session s) {
-				return s.createQuery( "from Student s left join fetch s.enrolments e order by s.studentNumber" );
+				return s.createQuery( "from Student s left join fetch s.enrolments e order by s.studentNumber", Student.class );
 			}
 		};
 
@@ -1129,14 +1123,14 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 		HqlExecutor hqlExecutorUnaliased = new HqlExecutor() {
 			@Override
 			public Query getQuery(Session s) {
-				return s.createQuery( "from Student s left join fetch s.addresses order by s.studentNumber" );
+				return s.createQuery( "from Student s left join fetch s.addresses order by s.studentNumber", Student.class );
 			}
 		};
 
 		HqlExecutor hqlExecutorAliased = new HqlExecutor() {
 			@Override
 			public Query getQuery(Session s) {
-				return s.createQuery( "from Student s left join fetch s.addresses a order by s.studentNumber" );
+				return s.createQuery( "from Student s left join fetch s.addresses a order by s.studentNumber", Student.class );
 			}
 		};
 
@@ -1188,7 +1182,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 		HqlExecutor hqlExecutorUnaliased = new HqlExecutor() {
 			@Override
 			public Query getQuery(Session s) {
-				return s.createQuery( "from Student s left join fetch s.preferredCourse order by s.studentNumber" );
+				return s.createQuery( "from Student s left join fetch s.preferredCourse order by s.studentNumber", Student.class );
 			}
 		};
 
@@ -1196,7 +1190,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery(
-						"from Student s left join fetch s.preferredCourse pCourse order by s.studentNumber" );
+						"from Student s left join fetch s.preferredCourse pCourse order by s.studentNumber", Student.class );
 			}
 		};
 
@@ -1363,7 +1357,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery(
-						"select s.name, s from Enrolment e left join e.student s left join fetch s.preferredCourse order by s.studentNumber"
+						"select s.name, s from Enrolment e left join e.student s left join fetch s.preferredCourse order by s.studentNumber", Object[].class
 				);
 			}
 		};
@@ -1418,13 +1412,13 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery(
-						"select s, s.enrolments from Student s left join s.enrolments order by s.studentNumber" );
+						"select s, s.enrolments from Student s left join s.enrolments order by s.studentNumber", Object[].class );
 			}
 		};
 		HqlExecutor hqlExecutorAliased = new HqlExecutor() {
 			@Override
 			public Query getQuery(Session s) {
-				return s.createQuery( "select s, e from Student s left join s.enrolments e order by s.studentNumber" );
+				return s.createQuery( "select s, e from Student s left join s.enrolments e order by s.studentNumber", Object[].class );
 			}
 		};
 		ResultChecker checker = results -> {
@@ -1467,13 +1461,13 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 		HqlExecutor hqlExecutorUnaliased = new HqlExecutor() {
 			@Override
 			public Query getQuery(Session s) {
-				return s.createQuery( "from Student s left join s.addresses order by s.studentNumber" );
+				return s.createQuery( "from Student s left join s.addresses order by s.studentNumber", Student.class );
 			}
 		};
 		HqlExecutor hqlExecutorAliased = new HqlExecutor() {
 			@Override
 			public Query getQuery(Session s) {
-				return s.createQuery( "from Student s left join s.addresses a order by s.studentNumber" );
+				return s.createQuery( "from Student s left join s.addresses a order by s.studentNumber", Student.class );
 			}
 		};
 		ResultChecker checker = results -> {
@@ -1524,7 +1518,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 			@Override
 			protected Query getQuery(Session s) {
 				return s.createQuery(
-						"select s, p from Student s left join s.preferredCourse p order by s.studentNumber" );
+						"select s, p from Student s left join s.preferredCourse p order by s.studentNumber", Object[].class );
 			}
 		};
 		ResultChecker checker = results -> {
@@ -1563,7 +1557,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 		HqlExecutor hqlExecutor = new HqlExecutor() {
 			@Override
 			public Query getQuery(Session s) {
-				return s.createQuery( "select e.student as student from Enrolment e order by e.studentNumber" )
+				return s.createQuery( "select e.student as student from Enrolment e order by e.studentNumber", Student.class )
 						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
 			}
 		};
@@ -1624,7 +1618,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery(
-								"select e.student as student, e.semester as semester, e.year as year, e.course as course from Enrolment e order by e.studentNumber" )
+								"select e.student as student, e.semester as semester, e.year as year, e.course as course from Enrolment e order by e.studentNumber", Object[].class )
 						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
 			}
 		};
@@ -1689,7 +1683,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery(
-								"select e.student as student, e.semester, e.year, e.course as course from Enrolment e order by e.studentNumber" )
+								"select e.student as student, e.semester, e.year, e.course as course from Enrolment e order by e.studentNumber", Object.class )
 						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
 			}
 		};
@@ -1745,7 +1739,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery(
-								"select min( e.studentNumber ) as minStudentNumber, max( e.studentNumber ) as maxStudentNumber from Enrolment e" )
+								"select min( e.studentNumber ) as minStudentNumber, max( e.studentNumber ) as maxStudentNumber from Enrolment e", Object[].class )
 						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
 			}
 		};
@@ -1996,7 +1990,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery(
-								"select e.student, e.semester, e.year, e.course from Enrolment e  where e.studentNumber = :studentNumber" )
+								"select e.student, e.semester, e.year, e.course from Enrolment e  where e.studentNumber = :studentNumber", Object[].class )
 						.setParameter( "studentNumber", shermanEnrolmentExpected.getStudentNumber() );
 			}
 		};
@@ -2057,7 +2051,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery(
-						"select e.student, e.semester, e.year, e.course from Enrolment e order by e.studentNumber" );
+						"select e.student, e.semester, e.year, e.course from Enrolment e order by e.studentNumber", Object[].class );
 			}
 		};
 		ResultChecker checker = results -> {
@@ -2123,7 +2117,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery(
-						"select e.student as st, e.semester as sem, e.year as yr, e.course as c from Enrolment e order by e.studentNumber" );
+						"select e.student as st, e.semester as sem, e.year as yr, e.course as c from Enrolment e order by e.studentNumber", Object[].class );
 			}
 		};
 		ResultChecker checker = results -> {
@@ -2214,7 +2208,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery(
-						"select min( e.studentNumber ) as minStudentNumber, max( e.studentNumber ) as maxStudentNumber from Enrolment e" );
+						"select min( e.studentNumber ) as minStudentNumber, max( e.studentNumber ) as maxStudentNumber from Enrolment e", Object[].class );
 			}
 		};
 		ResultChecker checker = results -> {
@@ -2257,7 +2251,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 		HqlExecutor hqlExecutor = new HqlExecutor() {
 			@Override
 			public Query getQuery(Session s) {
-				return s.createQuery( "select st.name as studentName from Student st order by st.studentNumber" )
+				return s.createQuery( "select st.name as studentName from Student st order by st.studentNumber", PersonName.class )
 						.setResultTransformer( Transformers.aliasToBean( StudentDTO.class ) );
 			}
 		};
@@ -2315,8 +2309,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 		HqlExecutor hqlExecutor = new HqlExecutor() {
 			@Override
 			public Query getQuery(Session s) {
-				return s.createQuery(
-								"select st.name as studentName, co.description as courseDescription from Enrolment e join e.student st join e.course co order by e.studentNumber" )
+				return s.createQuery("select st.name as studentName, co.description as courseDescription from Enrolment e join e.student st join e.course co order by e.studentNumber", Object[].class )
 						.setResultTransformer( Transformers.aliasToBean( StudentDTO.class ) );
 			}
 		};
@@ -2370,8 +2363,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 		HqlExecutor hqlExecutor = new HqlExecutor() {
 			@Override
 			public Query getQuery(Session s) {
-				return s.createQuery(
-						"select st.name as studentName, co.description as courseDescription from Enrolment e join e.student st join e.course co order by e.studentNumber" );
+				return s.createQuery("select st.name as studentName, co.description as courseDescription from Enrolment e join e.student st join e.course co order by e.studentNumber", Object[].class );
 			}
 		};
 		ResultChecker checker = results -> {
@@ -2437,8 +2429,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 		HqlExecutor hqlExecutor = new HqlExecutor() {
 			@Override
 			public Query getQuery(Session s) {
-				return s.createQuery(
-								"select st.name as studentName, 'lame description' as courseDescription from Enrolment e join e.student st join e.course co order by e.studentNumber" )
+				return s.createQuery("select st.name as studentName, 'lame description' as courseDescription from Enrolment e join e.student st join e.course co order by e.studentNumber", Object[].class )
 						.setResultTransformer( Transformers.aliasToBean( StudentDTO.class ) );
 			}
 		};
@@ -2494,8 +2485,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 		HqlExecutor hqlExecutor = new HqlExecutor() {
 			@Override
 			public Query getQuery(Session s) {
-				return s.createQuery(
-								"select st.name as studentName, co.description as courseDescription from Enrolment e join e.student st join e.course co order by e.studentNumber" )
+				return s.createQuery("select st.name as studentName, co.description as courseDescription from Enrolment e join e.student st join e.course co order by e.studentNumber", Object[].class )
 						.setResultTransformer( Transformers.aliasToBean( StudentDTO.class ) );
 			}
 		};
@@ -2545,8 +2535,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 		HqlExecutor hqlExecutor = new HqlExecutor() {
 			@Override
 			public Query getQuery(Session s) {
-				return s.createQuery(
-						"select new org.hibernate.orm.test.querycache.StudentDTO(s.name) from Student s order by s.studentNumber" );
+				return s.createQuery("select new org.hibernate.orm.test.querycache.StudentDTO(s.name) from Student s order by s.studentNumber", StudentDTO.class );
 			}
 		};
 		ResultChecker checker = results -> {
@@ -2596,8 +2585,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 		HqlExecutor hqlExecutor = new HqlExecutor() {
 			@Override
 			public Query getQuery(Session s) {
-				return s.createQuery(
-						"select new org.hibernate.orm.test.querycache.StudentDTO(s.name) from Student s order by s.studentNumber" );
+				return s.createQuery("select new org.hibernate.orm.test.querycache.StudentDTO(s.name) from Student s order by s.studentNumber", StudentDTO.class );
 			}
 		};
 		ResultChecker checker = results -> {
@@ -2653,8 +2641,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 		HqlExecutor hqlExecutor = new HqlExecutor() {
 			@Override
 			public Query getQuery(Session s) {
-				return s.createQuery(
-						"select new Student(s.studentNumber, s.name) from Student s order by s.studentNumber" );
+				return s.createQuery("select new Student(s.studentNumber, s.name) from Student s order by s.studentNumber", Student.class );
 			}
 		};
 		ResultChecker checker = results -> {
@@ -2710,7 +2697,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 		HqlExecutor hqlExecutor = new HqlExecutor() {
 			@Override
 			public Query getQuery(Session s) {
-				return s.createQuery( "select new Student(555L, s.name) from Student s order by s.studentNumber" );
+				return s.createQuery( "select new Student(555L, s.name) from Student s order by s.studentNumber", Student.class );
 			}
 		};
 		ResultChecker checker = results -> {
@@ -2761,7 +2748,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 		HqlExecutor hqlExecutor = new HqlExecutor() {
 			@Override
 			public Query getQuery(Session s) {
-				return s.createQuery( "select new list(s.studentNumber, s.name) from Student s order by s.studentNumber" );
+				return s.createQuery( "select new list(s.studentNumber, s.name) from Student s order by s.studentNumber", List.class );
 			}
 		};
 		ResultChecker checker = results -> {
@@ -2808,8 +2795,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 		HqlExecutor hqlExecutor = new HqlExecutor() {
 			@Override
 			public Query getQuery(Session s) {
-				return s.createQuery(
-						"select new map(s.studentNumber as sNumber, s.name as sName) from Student s order by s.studentNumber" );
+				return s.createQuery("select new map(s.studentNumber as sNumber, s.name as sName) from Student s order by s.studentNumber", Map.class );
 			}
 		};
 		ResultChecker checker = results -> {
@@ -2858,8 +2844,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 		HqlExecutor hqlSelectNewMapExecutor = new HqlExecutor() {
 			@Override
 			public Query getQuery(Session s) {
-				return s.createQuery(
-						"select new map(s as s, pc as pc) from Student s left join s.preferredCourse pc left join fetch s.enrolments order by s.studentNumber" );
+				return s.createQuery("select new map(s as s, pc as pc) from Student s left join s.preferredCourse pc left join fetch s.enrolments order by s.studentNumber", Map.class );
 			}
 		};
 		ResultChecker checker = results -> {

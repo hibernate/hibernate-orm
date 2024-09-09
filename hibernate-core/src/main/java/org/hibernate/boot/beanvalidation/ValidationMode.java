@@ -10,44 +10,50 @@ import java.util.Locale;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
+
+import static org.hibernate.internal.util.StringHelper.split;
+import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 
 /**
- * Duplicates the jakarta.validation enum (because javax validation might not be on the runtime classpath)
+ * Duplicates the {@code jakarta.validation} enumeration.
+ * (Because Jakarta Validation might not be on the runtime classpath.)
  *
  * @author Steve Ebersole
  */
 public enum ValidationMode {
-	AUTO( "auto" ),
-	CALLBACK( "callback" ),
-	NONE( "none" ),
-	DDL( "ddl" );
+	AUTO,
+	CALLBACK,
+	NONE,
+	DDL;
 
-	private final String externalForm;
-
-	ValidationMode(String externalForm) {
-		this.externalForm = externalForm;
+	private String externalForm() {
+		return switch (this) {
+			case AUTO -> "auto";
+			case CALLBACK -> "callback";
+			case NONE -> "none";
+			case DDL -> "ddl";
+		};
 	}
 
 	public static Set<ValidationMode> getModes(Object modeProperty) {
-		Set<ValidationMode> modes = CollectionHelper.setOfSize( 3);
-		if (modeProperty == null) {
+		final Set<ValidationMode> modes = setOfSize( 3);
+		if ( modeProperty == null ) {
 			modes.add( ValidationMode.AUTO );
 		}
 		else {
-			for ( String modeInString : StringHelper.split( ",", modeProperty.toString() ) ) {
+			for ( String modeInString : split( ",", modeProperty.toString() ) ) {
 				modes.add( getMode(modeInString) );
 			}
 		}
-		if ( modes.size() > 1 && ( modes.contains( ValidationMode.AUTO ) || modes.contains( ValidationMode.NONE ) ) ) {
+		if ( modes.size() > 1
+				&& ( modes.contains( ValidationMode.AUTO ) || modes.contains( ValidationMode.NONE ) ) ) {
 			throw new HibernateException( "Incompatible validation modes mixed: " +  loggable( modes ) );
 		}
 		return modes;
 	}
 
 	private static ValidationMode getMode(String modeProperty) {
-		if (modeProperty == null || modeProperty.length() == 0) {
+		if ( modeProperty == null || modeProperty.isEmpty() ) {
 			return AUTO;
 		}
 		else {
@@ -55,7 +61,9 @@ public enum ValidationMode {
 				return valueOf( modeProperty.trim().toUpperCase(Locale.ROOT) );
 			}
 			catch ( IllegalArgumentException e ) {
-				throw new HibernateException( "Unknown validation mode in " + BeanValidationIntegrator.JAKARTA_MODE_PROPERTY + ": " + modeProperty );
+				throw new HibernateException( "Unknown validation mode in "
+						+ BeanValidationIntegrator.JAKARTA_MODE_PROPERTY
+						+ ": " + modeProperty );
 			}
 		}
 	}
@@ -64,12 +72,12 @@ public enum ValidationMode {
 		if ( modes == null || modes.isEmpty() ) {
 			return "[<empty>]";
 		}
-		StringBuilder buffer = new StringBuilder( "[" );
+		final StringBuilder result = new StringBuilder( "[" );
 		String sep = "";
 		for ( ValidationMode mode : modes ) {
-			buffer.append( sep ).append( mode.externalForm );
+			result.append( sep ).append( mode.externalForm() );
 			sep = ", ";
 		}
-		return buffer.append( "]" ).toString();
+		return result.append( "]" ).toString();
 	}
 }

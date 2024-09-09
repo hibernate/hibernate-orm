@@ -32,5 +32,5 @@ public enum SourceType {
      * For a generated timestamp, the {@code current_timestamp} function
 	 * might be the source.
 	 */
-	DB;
+	DB
 }

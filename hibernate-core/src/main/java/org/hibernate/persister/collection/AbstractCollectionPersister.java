@@ -332,8 +332,7 @@ public abstract class AbstractCollectionPersister
 			sqlWhereStringTemplate = Template.renderWhereStringTemplate(
 					sqlWhereString,
 					dialect,
-					creationContext.getTypeConfiguration(),
-					creationContext.getFunctionRegistry()
+					creationContext.getTypeConfiguration()
 			);
 		}
 		else {
@@ -575,8 +574,7 @@ public abstract class AbstractCollectionPersister
 			manyToManyWhereTemplate = Template.renderWhereStringTemplate(
 					manyToManyWhereString,
 					creationContext.getDialect(),
-					creationContext.getTypeConfiguration(),
-					creationContext.getFunctionRegistry()
+					creationContext.getTypeConfiguration()
 			);
 		}
 
@@ -1385,9 +1383,7 @@ public abstract class AbstractCollectionPersister
 	public int getSize(Object key, SharedSessionContractImplementor session) {
 		try {
 			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
-			PreparedStatement st = jdbcCoordinator
-					.getStatementPreparer()
-					.prepareStatement( sqlSelectSizeString );
+			final PreparedStatement st = jdbcCoordinator.getStatementPreparer().prepareStatement( sqlSelectSizeString );
 			try {
 				getKeyType().nullSafeSet( st, key, 1, session );
 				ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st, sqlSelectSizeString );
@@ -1480,11 +1476,6 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public int getBatchSize() {
 		return batchSize;
-	}
-
-	@Override
-	public boolean isBatchLoadable() {
-		return batchSize > 1;
 	}
 
 	@Override

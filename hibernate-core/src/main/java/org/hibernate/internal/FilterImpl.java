@@ -204,4 +204,16 @@ public class FilterImpl implements Filter, Serializable {
 	private boolean hasArgument(String parameterName) {
 		return parameters != null && parameters.containsKey(parameterName);
 	}
+
+	@Override
+	public Object getParameterValue(String paramName) {
+		final Object value = getParameter( paramName );
+		if ( value != null ) {
+			return value;
+		}
+		else {
+			final Supplier<?> filterParamResolver = getParameterResolver( paramName );
+			return filterParamResolver == null ? null : filterParamResolver.get();
+		}
+	}
 }

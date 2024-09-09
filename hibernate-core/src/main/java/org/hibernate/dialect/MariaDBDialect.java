@@ -112,6 +112,15 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	protected void registerKeyword(String word) {
+		// The MariaDB driver reports that "STRING" is a keyword, but
+		// it's not a reserved word, and a column may be named STRING
+		if ( !"string".equalsIgnoreCase(word) ) {
+			super.registerKeyword(word);
+		}
+	}
+
+	@Override
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -120,10 +129,8 @@ public class MariaDBDialect extends MySQLDialect {
 			JdbcTypeRegistry jdbcTypeRegistry) {
 		switch ( jdbcTypeCode ) {
 			case OTHER:
-				switch ( columnTypeName ) {
-					case "uuid":
-						jdbcTypeCode = UUID;
-						break;
+				if ( columnTypeName.equals("uuid") ) {
+					jdbcTypeCode = UUID;
 				}
 				break;
 			case VARBINARY:

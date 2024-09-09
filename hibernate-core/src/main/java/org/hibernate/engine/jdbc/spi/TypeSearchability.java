@@ -44,22 +44,12 @@ public enum TypeSearchability {
 	 * @return The corresponding enum.
 	 */
 	public static TypeSearchability interpret(short code) {
-		switch ( code ) {
-			case DatabaseMetaData.typeSearchable: {
-				return FULL;
-			}
-			case DatabaseMetaData.typePredNone: {
-				return NONE;
-			}
-			case DatabaseMetaData.typePredBasic: {
-				return BASIC;
-			}
-			case DatabaseMetaData.typePredChar: {
-				return CHAR;
-			}
-			default: {
-				throw new IllegalArgumentException( "Unknown type searchability code [" + code + "] encountered" );
-			}
-		}
+		return switch (code) {
+			case DatabaseMetaData.typeSearchable -> FULL;
+			case DatabaseMetaData.typePredNone -> NONE;
+			case DatabaseMetaData.typePredBasic -> BASIC;
+			case DatabaseMetaData.typePredChar -> CHAR;
+			default -> throw new IllegalArgumentException( "Unknown type searchability code [" + code + "] encountered" );
+		};
 	}
 }

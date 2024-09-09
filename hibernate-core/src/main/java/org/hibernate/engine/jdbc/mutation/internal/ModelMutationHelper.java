@@ -72,7 +72,7 @@ public class ModelMutationHelper {
 				if ( statistics.isStatisticsEnabled() ) {
 					statistics.optimisticFailure( mutationTarget.getNavigableRole().getFullPath() );
 				}
-				throw new StaleObjectStateException( mutationTarget.getNavigableRole().getFullPath(), id );
+				throw new StaleObjectStateException( mutationTarget.getNavigableRole().getFullPath(), id, e );
 			}
 			return false;
 		}

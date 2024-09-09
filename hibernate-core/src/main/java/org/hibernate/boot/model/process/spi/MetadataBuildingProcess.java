@@ -51,7 +51,6 @@ import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.model.source.internal.hbm.ModelBinder;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
-import org.hibernate.boot.models.internal.OrmAnnotationHelper;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessingResult;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
 import org.hibernate.boot.models.xml.spi.XmlProcessingResult;
@@ -73,14 +72,10 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.mapping.Table;
-import org.hibernate.models.internal.jandex.JandexClassDetails;
 import org.hibernate.models.internal.jandex.JandexIndexerHelper;
-import org.hibernate.models.internal.jdk.JdkBuilders;
-import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.ClassLoading;
-import org.hibernate.models.spi.RegistryPrimer;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
@@ -101,11 +96,9 @@ import org.hibernate.type.internal.NamedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 
-import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.CompositeIndex;
 import org.jboss.jandex.IndexView;
 import org.jboss.jandex.Indexer;
-import org.jboss.logging.Logger;
 
 import jakarta.persistence.AttributeConverter;
 
@@ -135,7 +128,6 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferre
  * @author Steve Ebersole
  */
 public class MetadataBuildingProcess {
-	private static final Logger log = Logger.getLogger( MetadataBuildingProcess.class );
 
 	/**
 	 * Unified single phase for MetadataSources to Metadata process
@@ -221,16 +213,14 @@ public class MetadataBuildingProcess {
 		// Set up the processors and start binding
 		//		NOTE : this becomes even more simplified after we move purely
 		// 		to unified model
-		final IndexView jandexView = domainModelSource.getJandexIndex();
+//		final IndexView jandexView = domainModelSource.getJandexIndex();
 
 		coordinateProcessors(
 				managedResources,
 				options,
 				rootMetadataBuildingContext,
 				domainModelSource,
-				classLoaderService,
-				metadataCollector,
-				jandexView
+				metadataCollector
 		);
 
 		processAdditionalMappingContributions( metadataCollector, options, classLoaderService, rootMetadataBuildingContext );
@@ -245,19 +235,18 @@ public class MetadataBuildingProcess {
 			MetadataBuildingOptions options,
 			MetadataBuildingContextRootImpl rootMetadataBuildingContext,
 			DomainModelSource domainModelSource,
-			ClassLoaderService classLoaderService,
-			InFlightMetadataCollectorImpl metadataCollector,
-			IndexView jandexView) {
+			InFlightMetadataCollectorImpl metadataCollector) {
 		final MetadataSourceProcessor processor = new MetadataSourceProcessor() {
 			private final MetadataSourceProcessor hbmProcessor = options.isXmlMappingEnabled()
 					? new HbmMetadataSourceProcessorImpl( managedResources, rootMetadataBuildingContext )
 					: new NoOpMetadataSourceProcessorImpl();
 
-			private final AnnotationMetadataSourceProcessorImpl annotationProcessor = new AnnotationMetadataSourceProcessorImpl(
-					managedResources,
-					domainModelSource,
-					rootMetadataBuildingContext
-			);
+			private final AnnotationMetadataSourceProcessorImpl annotationProcessor =
+					new AnnotationMetadataSourceProcessorImpl(
+							managedResources,
+							domainModelSource,
+							rootMetadataBuildingContext
+					);
 
 			@Override
 			public void prepare() {
@@ -527,66 +516,51 @@ public class MetadataBuildingProcess {
 
 		return CompositeIndex.create( suppliedJandexIndex, jandexIndexer.complete() );
 	}
-
-	public static void preFillRegistries(RegistryPrimer.Contributions contributions, SourceModelBuildingContext buildingContext) {
-		OrmAnnotationHelper.forEachOrmAnnotation( contributions::registerAnnotation );
-
-		final IndexView jandexIndex = buildingContext.getJandexIndex();
-		if ( jandexIndex == null ) {
-			return;
-		}
-
-		final ClassDetailsRegistry classDetailsRegistry = buildingContext.getClassDetailsRegistry();
-		final AnnotationDescriptorRegistry annotationDescriptorRegistry = buildingContext.getAnnotationDescriptorRegistry();
-
-		for ( ClassInfo knownClass : jandexIndex.getKnownClasses() ) {
-			final String className = knownClass.name().toString();
-
-			if ( knownClass.isAnnotation() ) {
-				// it is always safe to load the annotation classes - we will never be enhancing them
-				//noinspection rawtypes
-				final Class annotationClass = buildingContext
-						.getClassLoading()
-						.classForName( className );
-				//noinspection unchecked
-				annotationDescriptorRegistry.resolveDescriptor(
-						annotationClass,
-						(t) -> JdkBuilders.buildAnnotationDescriptor( annotationClass, buildingContext )
-				);
-			}
-
-			classDetailsRegistry.resolveClassDetails(
-					className,
-					(name) -> new JandexClassDetails( knownClass, buildingContext )
-			);
-		}
-	}
+//
+//	public static void preFillRegistries(RegistryPrimer.Contributions contributions, SourceModelBuildingContext buildingContext) {
+//		OrmAnnotationHelper.forEachOrmAnnotation( contributions::registerAnnotation );
+//
+//		final IndexView jandexIndex = buildingContext.getJandexIndex();
+//		if ( jandexIndex == null ) {
+//			return;
+//		}
+//
+//		final ClassDetailsRegistry classDetailsRegistry = buildingContext.getClassDetailsRegistry();
+//		final AnnotationDescriptorRegistry annotationDescriptorRegistry = buildingContext.getAnnotationDescriptorRegistry();
+//
+//		for ( ClassInfo knownClass : jandexIndex.getKnownClasses() ) {
+//			final String className = knownClass.name().toString();
+//
+//			if ( knownClass.isAnnotation() ) {
+//				// it is always safe to load the annotation classes - we will never be enhancing them
+//				//noinspection rawtypes
+//				final Class annotationClass = buildingContext
+//						.getClassLoading()
+//						.classForName( className );
+//				//noinspection unchecked
+//				annotationDescriptorRegistry.resolveDescriptor(
+//						annotationClass,
+//						(t) -> JdkBuilders.buildAnnotationDescriptor( annotationClass, buildingContext )
+//				);
+//			}
+//
+//			classDetailsRegistry.resolveClassDetails(
+//					className,
+//					(name) -> new JandexClassDetails( knownClass, buildingContext )
+//			);
+//		}
+//	}
 
 	private static void processAdditionalMappingContributions(
 			InFlightMetadataCollectorImpl metadataCollector,
 			MetadataBuildingOptions options,
 			ClassLoaderService classLoaderService,
 			MetadataBuildingContextRootImpl rootMetadataBuildingContext) {
-		final MappingBinder mappingBinder;
-		if ( options.isXmlMappingEnabled() ) {
-			mappingBinder = new MappingBinder(
-					classLoaderService,
-					new MappingBinder.Options() {
-						@Override
-						public boolean validateMappings() {
-							return false;
-						}
-					}
-			);
-		}
-		else {
-			mappingBinder = null;
-		}
 
 		final AdditionalMappingContributionsImpl contributions = new AdditionalMappingContributionsImpl(
 				metadataCollector,
 				options,
-				mappingBinder,
+				options.isXmlMappingEnabled() ? new MappingBinder( classLoaderService, () -> false ) : null,
 				rootMetadataBuildingContext
 		);
 
@@ -1016,29 +990,27 @@ public class MetadataBuildingProcess {
 	}
 
 	private static JdbcType getTimeWithTimeZoneOverride(MetadataBuildingOptions options, JdbcTypeRegistry jdbcTypeRegistry) {
-		switch ( options.getDefaultTimeZoneStorage() ) {
-			case NORMALIZE:
+		return switch ( options.getDefaultTimeZoneStorage() ) {
+			case NORMALIZE ->
 				// For NORMALIZE, we replace the standard types that use TIME_WITH_TIMEZONE to use TIME
-				return jdbcTypeRegistry.getDescriptor( Types.TIME );
-			case NORMALIZE_UTC:
+					jdbcTypeRegistry.getDescriptor( Types.TIME );
+			case NORMALIZE_UTC ->
 				// For NORMALIZE_UTC, we replace the standard types that use TIME_WITH_TIMEZONE to use TIME_UTC
-				return jdbcTypeRegistry.getDescriptor( SqlTypes.TIME_UTC );
-			default:
-				return null;
-		}
+					jdbcTypeRegistry.getDescriptor( SqlTypes.TIME_UTC );
+			default -> null;
+		};
 	}
 
 	private static JdbcType getTimestampWithTimeZoneOverride(MetadataBuildingOptions options, JdbcTypeRegistry jdbcTypeRegistry) {
-		switch ( options.getDefaultTimeZoneStorage() ) {
-			case NORMALIZE:
+		return switch (options.getDefaultTimeZoneStorage()) {
+			case NORMALIZE ->
 				// For NORMALIZE, we replace the standard types that use TIMESTAMP_WITH_TIMEZONE to use TIMESTAMP
-				return jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP );
-			case NORMALIZE_UTC:
+					jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP );
+			case NORMALIZE_UTC ->
 				// For NORMALIZE_UTC, we replace the standard types that use TIMESTAMP_WITH_TIMEZONE to use TIMESTAMP_UTC
-				return jdbcTypeRegistry.getDescriptor( SqlTypes.TIMESTAMP_UTC );
-			default:
-				return null;
-		}
+					jdbcTypeRegistry.getDescriptor( SqlTypes.TIMESTAMP_UTC );
+			default -> null;
+		};
 	}
 
 	private static void addFallbackIfNecessary(

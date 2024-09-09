@@ -608,7 +608,7 @@ public class EmbeddedTest {
 		scope.inTransaction(
 				session -> {
 					InternetProvider internetProviderQueried =
-							(InternetProvider) session.createQuery( "from InternetProvider" ).uniqueResult();
+							session.createQuery( "from InternetProvider", InternetProvider.class ).uniqueResult();
 					assertFalse( Hibernate.isInitialized( internetProviderQueried.getOwner().getTopManagement() ) );
 
 				}
@@ -617,8 +617,7 @@ public class EmbeddedTest {
 		scope.inTransaction(
 				session -> {
 					InternetProvider internetProviderQueried =
-							(InternetProvider) session.createQuery(
-									"from InternetProvider i join fetch i.owner.topManagement" )
+							session.createQuery( "from InternetProvider i join fetch i.owner.topManagement", InternetProvider.class )
 									.uniqueResult();
 					assertTrue( Hibernate.isInitialized( internetProviderQueried.getOwner().getTopManagement() ) );
 

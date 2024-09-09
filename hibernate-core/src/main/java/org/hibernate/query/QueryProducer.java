@@ -36,32 +36,36 @@ public interface QueryProducer {
 	 * is inferred:
 	 * <ul>
 	 * <li>if there is exactly one root entity in the {@code from}
-	 *     clause, then that root entity is the only element of the
-	 *     select list, or
-	 * <li>otherwise, if there are multiple root entities in the
-	 *     {@code from} clause, then the select list contains every
-	 *     root entity and every non-{@code fetch} joined entity.
+	 *     clause, and it has no non-{@code fetch} joins, then that
+	 *     root entity is the only element of the select list, or
+	 * <li>if there is an entity with the alias {@code this}, then
+	 *     that entity is the only element of the select list, or
+	 * <li>otherwise, the query is considered ambiguous, and this
+	 *     method throws a {@link SemanticException}.
 	 * </ul>
+	 * <p>
+	 * The query must have an explicit {@code from} clause, which
+	 * can never be inferred.
+	 *
+	 * @deprecated The overloaded form
+	 * {@link #createQuery(String, Class)} which takes a result type
+	 * is strongly recommended in preference to this method, since it
+	 * returns a typed {@code Query} object, and because it is able to
+	 * use the given result type to infer the {@code select} list, and
+	 * even sometimes the {@code from} clause. Alternatively,
+	 * {@link #createSelectionQuery(String, Class)} is preferred for
+	 * queries, and {@link #createMutationQuery(String)} for insert,
+	 * update, and delete statements.
 	 *
 	 * @apiNote Returns a raw {@code Query} type instead of a wildcard
 	 * type {@code Query<?>}, to match the signature of the JPA method
 	 * {@link jakarta.persistence.EntityManager#createQuery(String)}.
-	 *
-	 * @implNote This method interprets some queries with an implicit
-	 * {@code select} list in a quite unintuitive way. In some future
-	 * release, this method will be modified to throw an exception
-	 * when passed a query with a missing {@code select}. For now, use
-	 * {@link #createQuery(String, Class)} to avoid ambiguity.
 	 *
 	 * @param queryString The HQL query
 	 *
 	 * @return The {@link Query} instance for manipulation and execution
 	 *
 	 * @see jakarta.persistence.EntityManager#createQuery(String)
-	 *
-	 * @deprecated use {@link #createQuery(String, Class)},
-	 * {@link #createSelectionQuery(String, Class)}, or
-	 * {@link #createMutationQuery(String)} depending on intention
 	 */
 	@Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
 	Query createQuery(String queryString);
@@ -95,11 +99,21 @@ public interface QueryProducer {
 	 *     as specified above.
 	 * </ul>
 	 * <p>
+	 * If a query has no explicit {@code from} clause, and the given
+	 * result type is an entity type, the root entity is inferred to
+	 * be the result type.
+	 * <p>
+	 * Passing {@code Object.class} as the query result type is not
+	 * recommended. In this special case, this method has the same
+	 * semantics as the overload {@link #createQuery(String)}.
+	 * <p>
 	 * The returned {@code Query} may be executed by calling
 	 * {@link Query#getResultList()} or {@link Query#getSingleResult()}.
 	 *
 	 * @param queryString The HQL query
-	 * @param resultClass The type of the query result
+	 * @param resultClass The {@link Class} object representing the
+	 *                    query result type, which should not be
+	 *                    {@code Object.class}
 	 * @return The {@link Query} instance for manipulation and execution
 	 *
 	 * @see jakarta.persistence.EntityManager#createQuery(String,Class)
@@ -247,23 +261,28 @@ public interface QueryProducer {
 	 * select list is inferred:
 	 * <ul>
 	 * <li>if there is exactly one root entity in the {@code from}
-	 *     clause, then that root entity is the only element of the
-	 *     select list, or
-	 * <li>otherwise, if there are multiple root entities in the
-	 *     {@code from} clause, then the select list contains every
-	 *     root entity and every non-{@code fetch} joined entity.
+	 *     clause, and it has no non-{@code fetch} joins, then that
+	 *     root entity is the only element of the select list, or
+	 * <li>if there is an entity with the alias {@code this}, then
+	 *     that entity is the only element of the select list, or
+	 * <li>otherwise, the query is considered ambiguous, and this
+	 *     method throws a {@link SemanticException}.
 	 * </ul>
+	 * <p>
+	 * The query must have an explicit {@code from} clause, which
+	 * can never be inferred.
 	 *
-	 * @implNote This method interprets some queries with an implicit
-	 * {@code select} list in a quite unintuitive way. In some future
-	 * release, this method will be modified to throw an exception
-	 * when passed a query with a missing {@code select}. For now, use
-	 * {@link #createSelectionQuery(String, Class)} to avoid ambiguity.
+	 * @deprecated The overloaded form
+	 * {@link #createSelectionQuery(String, Class)} which takes a
+	 * result type is strongly recommended in preference to this
+	 * method, since it returns a typed {@code SelectionQuery} object,
+	 * and because it is able to use the given result type to infer
+	 * the {@code select} list, and even sometimes the {@code from}
+	 * clause.
 	 *
 	 * @throws IllegalSelectQueryException if the given HQL query
-	 * is an insert, update or delete query
-	 *
-	 * @deprecated Use {@link #createSelectionQuery(String, Class)}
+	 *         is an {@code insert}, {@code update} or {@code delete}
+	 *         statement
 	 */
 	@Deprecated(since = "6.3")
 	SelectionQuery<?> createSelectionQuery(String hqlString);
@@ -297,17 +316,27 @@ public interface QueryProducer {
 	 *     as specified above.
 	 * </ul>
 	 * <p>
+	 * If a query has no explicit {@code from} clause, and the given
+	 * result type is an entity type, the root entity is inferred to
+	 * be the result type.
+	 * <p>
+	 * Passing {@code Object.class} as the query result type is not
+	 * recommended. In this special case, this method has the same
+	 * semantics as the overload {@link #createSelectionQuery(String)}.
+	 * <p>
 	 * The returned {@code Query} may be executed by calling
 	 * {@link Query#getResultList()} or {@link Query#getSingleResult()}.
 
-	 * @param hqlString The HQL query as a string
+	 * @param hqlString The HQL {@code select} query as a string
 	 * @param resultType The {@link Class} object representing the
-	 *                   query result type
+	 *                   query result type, which should not be
+	 *                   {@code Object.class}
 	 *
 	 * @see jakarta.persistence.EntityManager#createQuery(String)
 	 *
 	 * @throws IllegalSelectQueryException if the given HQL query
-	 * is an insert, update or delete query
+	 *         is an {@code insert}, {@code update} or {@code delete}
+	 *         statement
 	 */
 	<R> SelectionQuery<R> createSelectionQuery(String hqlString, Class<R> resultType);
 
@@ -323,8 +352,11 @@ public interface QueryProducer {
 	 * Create a {@link MutationQuery} reference for the given HQL insert,
 	 * update, or delete statement.
 	 *
+	 * @param hqlString The HQL {@code insert}, {@code update}, or
+	 *                  {@code delete} statement
+	 *
 	 * @throws IllegalMutationQueryException if the given HQL query
-	 * is a select query
+	 *         is a {@code select} query
 	 */
 	MutationQuery createMutationQuery(String hqlString);
 

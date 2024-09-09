@@ -404,7 +404,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SessionFactoryBuilder enableJpaCascadeCompliance(boolean enabled) {
 		this.optionsBuilder.enableJpaCascadeCompliance( enabled );
 		return this;

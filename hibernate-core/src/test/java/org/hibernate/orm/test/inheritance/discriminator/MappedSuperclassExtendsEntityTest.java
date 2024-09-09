@@ -64,7 +64,7 @@ public class MappedSuperclassExtendsEntityTest {
 		scope.inTransaction(
 				s ->
 						s.createQuery(
-								"FROM TestEntity e JOIN e.parents p1 JOIN p1.entities JOIN p1.entities2 JOIN e.parents2 p2 JOIN p2.entities JOIN p2.entities2" )
+								"FROM TestEntity e JOIN e.parents p1 JOIN p1.entities JOIN p1.entities2 JOIN e.parents2 p2 JOIN p2.entities JOIN p2.entities2", Object[].class )
 								.getResultList()
 		);
 	}
@@ -75,7 +75,7 @@ public class MappedSuperclassExtendsEntityTest {
 		// Make sure that the produced query for th
 		scope.inTransaction(
 				s ->
-						s.createQuery( "from TestEntity" ).list()
+						s.createQuery( "from TestEntity", TestEntity.class ).list()
 		);
 	}
 

@@ -135,7 +135,7 @@ public class CompositeIdTest {
 					}
 					statementInspector.assertExecutedCount( 1 );
 					statementInspector.clear();
-					iter = session.createQuery( "from Order o join o.lineItems li" ).list().iterator();
+					iter = session.createQuery( "from Order o join o.lineItems li", Order.class ).list().iterator();
 					statementInspector.assertExecutedCount( 2 );
 					statementInspector.clear();
 					while ( iter.hasNext() ) {

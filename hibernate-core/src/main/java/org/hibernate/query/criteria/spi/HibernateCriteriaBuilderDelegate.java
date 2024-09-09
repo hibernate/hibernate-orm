@@ -680,6 +680,16 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public <T> JpaParameterExpression<List<T>> parameterList(Class<T> paramClass) {
+		return criteriaBuilder.parameterList( paramClass );
+	}
+
+	@Override
+	public <T> JpaParameterExpression<List<T>> parameterList(Class<T> paramClass, String name) {
+		return criteriaBuilder.parameterList( paramClass, name );
+	}
+
+	@Override
 	public JpaExpression<String> concat(Expression<String> x, String y) {
 		return criteriaBuilder.concat( x, y );
 	}

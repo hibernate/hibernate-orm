@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.LinkedHashSet;
 
 import org.hibernate.HibernateException;
+import org.hibernate.StaleStateException;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchObserver;
@@ -50,6 +51,7 @@ public class BatchImpl implements Batch {
 
 	private int batchPosition;
 	private boolean batchExecuted;
+	private StaleStateMapper[] staleStateMappers;
 
 	public BatchImpl(
 			BatchKey key,
@@ -95,6 +97,19 @@ public class BatchImpl implements Batch {
 	@Override
 	public void addObserver(BatchObserver observer) {
 		observers.add( observer );
+	}
+
+	@Override
+	public void addToBatch(
+			JdbcValueBindings jdbcValueBindings, TableInclusionChecker inclusionChecker,
+			StaleStateMapper staleStateMapper) {
+		if ( staleStateMapper != null ) {
+			if ( staleStateMappers == null ) {
+				staleStateMappers = new StaleStateMapper[batchSizeToUse];
+			}
+			staleStateMappers[batchPosition] = staleStateMapper;
+		}
+		addToBatch( jdbcValueBindings, inclusionChecker );
 	}
 
 	@Override
@@ -304,7 +319,8 @@ public class BatchImpl implements Batch {
 		}
 	}
 
-	private void checkRowCounts(int[] rowCounts, PreparedStatementDetails statementDetails) throws SQLException, HibernateException {
+	private void checkRowCounts(int[] rowCounts, PreparedStatementDetails statementDetails)
+			throws SQLException, HibernateException {
 		final int numberOfRowCounts = rowCounts.length;
 		if ( batchPosition != 0 ) {
 			if ( numberOfRowCounts != batchPosition ) {
@@ -317,7 +333,15 @@ public class BatchImpl implements Batch {
 		}
 
 		for ( int i = 0; i < numberOfRowCounts; i++ ) {
-			statementDetails.getExpectation().verifyOutcome( rowCounts[i], statementDetails.getStatement(), i, statementDetails.getSqlString() );
+			try {
+				statementDetails.getExpectation()
+						.verifyOutcome( rowCounts[i], statementDetails.getStatement(), i, statementDetails.getSqlString() );
+			}
+			catch ( StaleStateException staleStateException ) {
+				if ( staleStateMappers != null ) {
+					throw staleStateMappers[i].map( staleStateException );
+				}
+			}
 		}
 	}
 

@@ -76,17 +76,15 @@ public class Expectations {
 			default:
 				if ( expectedRowCount > rowCount ) {
 					throw new StaleStateException(
-							"Batch update returned unexpected row count from update ["
-									+ batchPosition + "]; actual row count: " + rowCount
-									+ "; expected: " + expectedRowCount + "; statement executed: "
-									+ sql
+							"Batch update returned unexpected row count from update " + batchPosition
+									+ actualVsExpected( expectedRowCount, rowCount )
+									+ " [" + sql + "]"
 					);
 				}
 				else if ( expectedRowCount < rowCount ) {
 					throw new BatchedTooManyRowsAffectedException(
-							"Batch update returned unexpected row count from update [" +
-							batchPosition + "]; actual row count: " + rowCount +
-							"; expected: " + expectedRowCount,
+							"Batch update returned unexpected row count from update " + batchPosition
+									+ actualVsExpected( expectedRowCount, rowCount ),
 							expectedRowCount, rowCount, batchPosition );
 				}
 		}
@@ -95,16 +93,22 @@ public class Expectations {
 	static void checkNonBatched(int expectedRowCount, int rowCount, String sql) {
 		if ( expectedRowCount > rowCount ) {
 			throw new StaleStateException(
-					"Unexpected row count: " + rowCount + "; expected: " + expectedRowCount
-							+ "; statement executed: " + sql
+					"Unexpected row count"
+							+ actualVsExpected( expectedRowCount, rowCount )
+							+ " [" + sql + "]"
 			);
 		}
 		if ( expectedRowCount < rowCount ) {
 			throw new TooManyRowsAffectedException(
-					"Unexpected row count: " + rowCount + "; expected: " + expectedRowCount,
+					"Unexpected row count"
+							+ actualVsExpected( expectedRowCount, rowCount ),
 					1, rowCount
 			);
 		}
+	}
+
+	private static String actualVsExpected(int expectedRowCount, int rowCount) {
+		return " (expected row count " + expectedRowCount + " but was " + rowCount + ")";
 	}
 
 	// Various Expectation instances ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

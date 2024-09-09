@@ -16,8 +16,6 @@ import java.util.regex.Pattern;
 import org.hibernate.Filter;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.Restrictable;
 import org.hibernate.persister.entity.EntityNameUse;
 import org.hibernate.sql.Template;
@@ -26,17 +24,21 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 
+import static org.hibernate.internal.FilterImpl.MARKER;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.replace;
 import static org.hibernate.internal.util.StringHelper.safeInterning;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
- * Implementation of FilterHelper.
+ * Utility methods for dealing with {@linkplain FilterConfiguration filters}.
  *
  * @author Steve Ebersole
  * @author Rob Worsnop
  * @author Nathan Xu
  */
 public class FilterHelper {
-	private static final Pattern FILTER_PARAMETER_PATTERN = Pattern.compile( ":(\\S+)(\\w+)" );
+	private static final Pattern FILTER_PARAMETER_PATTERN = Pattern.compile( ":((\\S+)(\\w+))" );
 
 	private final String[] filterNames;
 	private final String[] filterConditions;
@@ -76,47 +78,49 @@ public class FilterHelper {
 			filterAliasTableMaps[filterCount] = filter.getAliasTableMap( factory );
 			filterAutoAliasFlags[filterCount] = false;
 
-			if ( ( filterAliasTableMaps[filterCount].isEmpty()
-					|| isTableFromPersistentClass( filterAliasTableMaps[filterCount] ) )
-					&& filter.useAutoAliasInjection() ) {
-				final String autoAliasedCondition = Template.renderWhereStringTemplate(
-						filter.getCondition(),
-						FilterImpl.MARKER,
-						factory.getJdbcServices().getDialect(),
-						factory.getTypeConfiguration(),
-						factory.getQueryEngine().getSqmFunctionRegistry()
-				);
-				filterConditions[filterCount] = safeInterning( autoAliasedCondition );
-				filterAutoAliasFlags[filterCount] = true;
-			}
-
-			// look for parameters in the condition.  for each parameter, we:
-			//		1) keep track of the name for later
-			//		2) // we replace `:{param-name} ` with `:{filter-name}.{param-name} ` in the condition
-			final Matcher matcher = FILTER_PARAMETER_PATTERN.matcher( filterConditions[filterCount] );
-
-			String copy = filterConditions[filterCount];
-			final List<String> filterParamNames = new ArrayList<>();
-			parameterNames[filterCount] = filterParamNames;
-			boolean foundAny = false;
-
-			// handle any subsequent matched parameters
-			while( matcher.find() ) {
-				final String parameterLabel = filterConditions[filterCount].substring( matcher.start() + 1, matcher.end() );
-				filterParamNames.add( parameterLabel );
-				copy = copy.replace(
-						":" + parameterLabel,
-						":" + filterName + "." + parameterLabel
-				);
-				foundAny = true;
-			}
-
-			if ( foundAny ) {
-				filterConditions[filterCount] = safeInterning( copy );
-			}
+			injectAliases( factory, filter, filterCount );
+			qualifyParameterNames( filterCount, filterName );
 
 			filterCount++;
 		}
+	}
+
+	private void injectAliases(SessionFactoryImplementor factory, FilterConfiguration filter, int filterCount) {
+		if ( ( filterAliasTableMaps[filterCount].isEmpty()
+				|| isTableFromPersistentClass( filterAliasTableMaps[filterCount] ) )
+				&& filter.useAutoAliasInjection() ) {
+			final String autoAliasedCondition = Template.renderWhereStringTemplate(
+					filter.getCondition(),
+					MARKER,
+					factory.getJdbcServices().getDialect(),
+					factory.getTypeConfiguration()
+			);
+			filterConditions[filterCount] = safeInterning( autoAliasedCondition );
+			filterAutoAliasFlags[filterCount] = true;
+		}
+	}
+
+	/**
+	 * Look for parameters in the given condition. For each parameter, we:
+	 * <ol>
+	 *     <li>keep track of the name for later</li>
+	 *     <li>replace {@code :{param-name}} with {@code :{filter-name}.{param-name}}
+	 *     in the condition</li>
+	 * </ol>
+	 */
+	private void qualifyParameterNames(int filterCount, String filterName) {
+		final List<String> parameterNames = new ArrayList<>();
+		boolean foundAny = false;
+		final Matcher matcher = FILTER_PARAMETER_PATTERN.matcher( filterConditions[filterCount] );
+		while ( matcher.find() ) {
+			parameterNames.add( matcher.group(1) );
+			foundAny = true;
+		}
+		if ( foundAny ) {
+			filterConditions[filterCount] =
+					safeInterning( matcher.replaceAll(":" + filterName +  ".$1") );
+		}
+		this.parameterNames[filterCount] = parameterNames;
 	}
 
 	private static boolean isTableFromPersistentClass(Map<String, String> aliasTableMap) {
@@ -187,8 +191,7 @@ public class FilterHelper {
 		final FilterPredicate filterPredicate = new FilterPredicate();
 
 		for ( int i = 0, max = filterNames.length; i < max; i++ ) {
-			final String filterName = filterNames[i];
-			final FilterImpl enabledFilter = (FilterImpl) enabledFilters.get( filterName );
+			final Filter enabledFilter = enabledFilters.get( filterNames[i] );
 			if ( enabledFilter != null && ( !onlyApplyLoadByKeyFilters || enabledFilter.isAppliedToLoadByKey() ) ) {
 				filterPredicate.applyFragment( render( aliasGenerator, i, tableGroup, creationState ), enabledFilter, parameterNames[i] );
 			}
@@ -202,23 +205,21 @@ public class FilterHelper {
 	}
 
 	public String render(FilterAliasGenerator aliasGenerator, Map<String, Filter> enabledFilters) {
-		StringBuilder buffer = new StringBuilder();
+		final StringBuilder buffer = new StringBuilder();
 		render( buffer, aliasGenerator, enabledFilters );
 		return buffer.toString();
 	}
 
 	public void render(StringBuilder buffer, FilterAliasGenerator aliasGenerator, Map<String, Filter> enabledFilters) {
-		if ( CollectionHelper.isEmpty( filterNames ) ) {
-			return;
-		}
-		for ( int i = 0, max = filterNames.length; i < max; i++ ) {
-			if ( enabledFilters.containsKey( filterNames[i] ) ) {
-				final String condition = filterConditions[i];
-				if ( StringHelper.isNotEmpty( condition ) ) {
-					if ( buffer.length() > 0 ) {
-						buffer.append( " and " );
+		if ( isNotEmpty( filterNames ) ) {
+			for ( int i = 0, max = filterNames.length; i < max; i++ ) {
+				if ( enabledFilters.containsKey( filterNames[i] ) ) {
+					if ( isNotEmpty( filterConditions[i] ) ) {
+						if ( !buffer.isEmpty() ) {
+							buffer.append( " and " );
+						}
+						buffer.append( render( aliasGenerator, i, null, null ) );
 					}
-					buffer.append( render( aliasGenerator, i, null, null ) );
 				}
 			}
 		}
@@ -229,70 +230,71 @@ public class FilterHelper {
 			int filterIndex,
 			TableGroup tableGroup,
 			SqlAstCreationState creationState) {
-		Map<String, String> aliasTableMap = filterAliasTableMaps[filterIndex];
-		String condition = filterConditions[filterIndex];
+		final String condition = filterConditions[filterIndex];
 		if ( aliasGenerator == null ) {
-			return StringHelper.replace( condition, FilterImpl.MARKER + ".", "");
-		}
-		if ( filterAutoAliasFlags[filterIndex] ) {
-			final String tableName = aliasTableMap.get( null );
-			final String newCondition = StringHelper.replace(
-					condition,
-					FilterImpl.MARKER,
-					aliasGenerator.getAlias( tableName )
-			);
-			if ( creationState != null && tableToEntityName != null && !newCondition.equals( condition ) ) {
-				creationState.registerEntityNameUsage(
-						tableGroup,
-						EntityNameUse.EXPRESSION,
-						tableToEntityName.get(
-								tableName == null
-										? tableGroup.getPrimaryTableReference().getTableId()
-										: tableName
-						)
-				);
-			}
-			return newCondition;
-		}
-		else if ( isTableFromPersistentClass( aliasTableMap ) ) {
-			final String tableName = aliasTableMap.get( null );
-			final String newCondition = StringHelper.replace(
-					condition,
-					"{alias}",
-					aliasGenerator.getAlias( tableName )
-			);
-			if ( creationState != null && !newCondition.equals( condition ) ) {
-				creationState.registerEntityNameUsage(
-						tableGroup,
-						EntityNameUse.EXPRESSION,
-						tableToEntityName.get(
-								tableName == null
-										? tableGroup.getPrimaryTableReference().getTableId()
-										: tableName
-						)
-				);
-			}
-			return newCondition;
+			return replace( condition, MARKER + ".", "");
 		}
 		else {
-			for ( Map.Entry<String, String> entry : aliasTableMap.entrySet() ) {
-				final String tableName = entry.getValue();
-				final String newCondition = StringHelper.replace(
-						condition,
-						"{" + entry.getKey() + "}",
-						aliasGenerator.getAlias( tableName )
-				);
-				if ( creationState != null && !newCondition.equals( condition ) ) {
-					creationState.registerEntityNameUsage(
-							tableGroup,
-							EntityNameUse.EXPRESSION,
-							tableToEntityName.get( tableName )
-					);
-				}
-				condition = newCondition;
+			final Map<String, String> aliasTableMap = filterAliasTableMaps[filterIndex];
+			if ( filterAutoAliasFlags[filterIndex] ) {
+				final String tableName = aliasTableMap.get( null );
+				return replaceMarker( tableGroup, creationState, condition,
+						aliasGenerator.getAlias( tableName ),
+						tableName( tableGroup, tableName ) );
 			}
-			return condition;
+			else if ( isTableFromPersistentClass( aliasTableMap ) ) {
+				final String tableName = aliasTableMap.get( null );
+				return replaceAlias( tableGroup, creationState, condition,
+						"{alias}",
+						aliasGenerator.getAlias( tableName ),
+						tableName( tableGroup, tableName ) );
+			}
+			else {
+				String newCondition = condition;
+				for ( Map.Entry<String, String> entry : aliasTableMap.entrySet() ) {
+					final String tableName = entry.getValue();
+					newCondition =
+							replaceAlias( tableGroup, creationState, newCondition,
+									"{" + entry.getKey() + "}",
+									aliasGenerator.getAlias( tableName ),
+									tableName );
+				}
+				return newCondition;
+			}
 		}
 	}
 
+	private String replaceMarker(
+			TableGroup tableGroup, SqlAstCreationState creationState,
+			String condition, String alias, String tableName) {
+		final String newCondition = replace( condition, MARKER, alias );
+		if ( creationState != null
+				&& tableToEntityName != null
+				&& !newCondition.equals(condition) ) {
+			registerEntityNameUsage( tableGroup, creationState, tableName );
+		}
+		return newCondition;
+	}
+
+	private String replaceAlias(
+			TableGroup tableGroup, SqlAstCreationState creationState,
+			String condition, String placeholder, String alias, String tableName) {
+		final String newCondition = replace( condition, placeholder, alias );
+		if ( creationState != null
+				&& !newCondition.equals(condition) ) {
+			registerEntityNameUsage( tableGroup, creationState, tableName );
+		}
+		return newCondition;
+	}
+
+	private void registerEntityNameUsage(TableGroup tableGroup, SqlAstCreationState creationState, String tableName) {
+		creationState.registerEntityNameUsage( tableGroup, EntityNameUse.EXPRESSION,
+				tableToEntityName.get( tableName ) );
+	}
+
+	private static String tableName(TableGroup tableGroup, String tableName) {
+		return tableName == null
+				? tableGroup.getPrimaryTableReference().getTableId()
+				: tableName;
+	}
 }

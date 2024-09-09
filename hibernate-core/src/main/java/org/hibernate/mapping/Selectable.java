@@ -8,10 +8,8 @@ package org.hibernate.mapping;
 
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

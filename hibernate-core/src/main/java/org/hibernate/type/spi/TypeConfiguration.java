@@ -7,6 +7,7 @@
 package org.hibernate.type.spi;
 
 import java.io.InvalidObjectException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -32,6 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
@@ -499,7 +501,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 				return sessionFactory.getServiceRegistry();
 			}
 			else {
-				return null;
+				throw new AssertionFailure( "No service registry available" );
 			}
 		}
 
@@ -574,6 +576,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Custom serialization hook
 
+		@Serial
 		private Object readResolve() throws InvalidObjectException {
 			if ( sessionFactory == null ) {
 				if ( sessionFactoryName != null || sessionFactoryUuid != null ) {
@@ -633,7 +636,8 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 		@Override
 		public boolean equals(Object o) {
-			return Arrays.equals( components, ((ArrayCacheKey) o).components );
+			return o instanceof ArrayCacheKey key
+				&& Arrays.equals( components, key.components );
 		}
 
 		@Override
@@ -799,6 +803,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		);
 	}
 
+	@SuppressWarnings("deprecation")
 	public TemporalType getSqlTemporalType(SqmExpressible<?> type) {
 		if ( type == null ) {
 			return null;
@@ -806,15 +811,18 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return getSqlTemporalType( type.getRelationalJavaType().getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() ) );
 	}
 
+	@SuppressWarnings("deprecation")
 	public static TemporalType getSqlTemporalType(JdbcMapping jdbcMapping) {
 		return getSqlTemporalType( jdbcMapping.getJdbcType() );
 	}
 
+	@SuppressWarnings("deprecation")
 	public static TemporalType getSqlTemporalType(JdbcMappingContainer jdbcMappings) {
 		assert jdbcMappings.getJdbcTypeCount() == 1;
 		return getSqlTemporalType( jdbcMappings.getSingleJdbcMapping().getJdbcType() );
 	}
 
+	@SuppressWarnings("deprecation")
 	public static TemporalType getSqlTemporalType(MappingModelExpressible<?> type) {
 		if ( type instanceof BasicValuedMapping basicValuedMapping ) {
 			return getSqlTemporalType( basicValuedMapping.getJdbcMapping().getJdbcType() );
@@ -838,25 +846,22 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	public static TemporalType getSqlTemporalType(JdbcType descriptor) {
 		return getSqlTemporalType( descriptor.getDefaultSqlTypeCode() );
 	}
 
+	@SuppressWarnings("deprecation")
 	protected static TemporalType getSqlTemporalType(int jdbcTypeCode) {
-		switch ( jdbcTypeCode ) {
-			case SqlTypes.TIMESTAMP:
-			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
-			case SqlTypes.TIMESTAMP_UTC:
-				return TemporalType.TIMESTAMP;
-			case SqlTypes.TIME:
-			case SqlTypes.TIME_WITH_TIMEZONE:
-			case SqlTypes.TIME_UTC:
-				return TemporalType.TIME;
-			case SqlTypes.DATE:
-				return TemporalType.DATE;
-			default:
-				return null;
-		}
+		return switch ( jdbcTypeCode ) {
+			case SqlTypes.TIMESTAMP, SqlTypes.TIMESTAMP_WITH_TIMEZONE, SqlTypes.TIMESTAMP_UTC
+					-> TemporalType.TIMESTAMP;
+			case SqlTypes.TIME, SqlTypes.TIME_WITH_TIMEZONE, SqlTypes.TIME_UTC
+					-> TemporalType.TIME;
+			case SqlTypes.DATE
+					-> TemporalType.DATE;
+			default -> null;
+		};
 	}
 
 	public static IntervalType getSqlIntervalType(JdbcMappingContainer jdbcMappings) {
@@ -869,12 +874,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	protected static IntervalType getSqlIntervalType(int jdbcTypeCode) {
-		switch ( jdbcTypeCode ) {
-			case SqlTypes.INTERVAL_SECOND:
-				return IntervalType.SECOND;
-			default:
-				return null;
-		}
+		return jdbcTypeCode == SqlTypes.INTERVAL_SECOND ? IntervalType.SECOND : null;
 	}
 
 	public static boolean isJdbcTemporalType(SqmExpressible<?> type) {

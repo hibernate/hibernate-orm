@@ -115,7 +115,9 @@ import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_AUTONOMOUS_DATABA
 import static org.hibernate.dialect.OracleJdbcHelper.getArrayJdbcTypeConstructor;
 import static org.hibernate.dialect.OracleJdbcHelper.getNestedTableJdbcTypeConstructor;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.TemporalUnit.HOUR;
 import static org.hibernate.query.sqm.TemporalUnit.MINUTE;
@@ -561,37 +563,26 @@ public class OracleDialect extends Dialect {
 	 */
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		switch (unit) {
-			case DAY_OF_WEEK:
-				return "to_number(to_char(?2,'D'))";
-			case DAY_OF_MONTH:
-				return "to_number(to_char(?2,'DD'))";
-			case DAY_OF_YEAR:
-				return "to_number(to_char(?2,'DDD'))";
-			case WEEK:
-				return "to_number(to_char(?2,'IW'))"; //the ISO week number
-			case WEEK_OF_YEAR:
-				return "to_number(to_char(?2,'WW'))";
+		return switch (unit) {
+			case DAY_OF_WEEK -> "to_number(to_char(?2,'D'))";
+			case DAY_OF_MONTH -> "to_number(to_char(?2,'DD'))";
+			case DAY_OF_YEAR -> "to_number(to_char(?2,'DDD'))";
+			case WEEK -> "to_number(to_char(?2,'IW'))"; // the ISO week number
+			case WEEK_OF_YEAR -> "to_number(to_char(?2,'WW'))";
 			// Oracle doesn't support extracting the quarter
-			case QUARTER:
-				return "to_number(to_char(?2,'Q'))";
+			case QUARTER -> "to_number(to_char(?2,'Q'))";
 			// Oracle can't extract time parts from a date column, so we need to cast to timestamp
 			// This is because Oracle treats date as ANSI SQL date which has no time part
 			// Also see https://docs.oracle.com/cd/B28359_01/server.111/b28286/functions052.htm#SQLRF00639
-			case HOUR:
-				return "to_number(to_char(?2,'HH24'))";
-			case MINUTE:
-				return "to_number(to_char(?2,'MI'))";
-			case SECOND:
-				return "to_number(to_char(?2,'SS'))";
-			case EPOCH:
-				return "trunc((cast(?2 at time zone 'UTC' as date) - date '1970-1-1')*86400)";
-			default:
-				return super.extractPattern(unit);
-		}
+			case HOUR -> "to_number(to_char(?2,'HH24'))";
+			case MINUTE -> "to_number(to_char(?2,'MI'))";
+			case SECOND -> "to_number(to_char(?2,'SS'))";
+			case EPOCH -> "trunc((cast(?2 at time zone 'UTC' as date) - date '1970-1-1')*86400)";
+			default -> super.extractPattern(unit);
+		};
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		final StringBuilder pattern = new StringBuilder();
 		switch ( unit ) {
@@ -634,7 +625,7 @@ public class OracleDialect extends Dialect {
 		return pattern.toString();
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		final StringBuilder pattern = new StringBuilder();
 		final boolean hasTimePart = toTemporalType != TemporalType.DATE || fromTemporalType != TemporalType.DATE;
@@ -1106,74 +1097,58 @@ public class OracleDialect extends Dialect {
 	}
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
-			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				switch ( JdbcExceptionHelper.extractErrorCode( sqle ) ) {
-					case 1:
-					case 2291:
-					case 2292:
-						return extractUsingTemplate( "(", ")", sqle.getMessage() );
-					case 1400:
-						// simple nullability constraint
-						return null;
-					default:
-						return null;
-				}
-			} );
+			new TemplatedViolatedConstraintNameExtractor( sqle ->
+					switch ( extractErrorCode( sqle ) ) {
+						case 1, 2291, 2292 -> extractUsingTemplate( "(", ")", sqle.getMessage() );
+						case 1400 -> null; // simple nullability constraint
+						default -> null;
+					});
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
-			final String constraintName;
-			// interpreting Oracle exceptions is much much more precise based on their specific vendor codes.
-			switch ( JdbcExceptionHelper.extractErrorCode( sqlException ) ) {
-
+			// interpreting Oracle exceptions is much more precise based on their specific vendor codes
+			return switch ( extractErrorCode( sqlException ) ) {
 				// lock timeouts ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-				case 30006:
+				case 30006 ->
 					// ORA-30006: resource busy; acquire with WAIT timeout expired
-					return new LockTimeoutException(message, sqlException, sql);
-				case 54:
+						new LockTimeoutException( message, sqlException, sql );
+				case 54 ->
 					// ORA-00054: resource busy and acquire with NOWAIT specified or timeout expired
-					return new LockTimeoutException(message, sqlException, sql);
-				case 4021:
+						new LockTimeoutException( message, sqlException, sql );
+				case 4021 ->
 					// ORA-04021 timeout occurred while waiting to lock object
-					return new LockTimeoutException(message, sqlException, sql);
+						new LockTimeoutException (message, sqlException, sql );
 
 				// deadlocks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-				case 60:
+				case 60 ->
 					// ORA-00060: deadlock detected while waiting for resource
-					return new LockAcquisitionException( message, sqlException, sql );
-				case 4020:
+						new LockAcquisitionException( message, sqlException, sql );
+				case 4020 ->
 					// ORA-04020 deadlock detected while trying to lock object
-					return new LockAcquisitionException( message, sqlException, sql );
+						new LockAcquisitionException( message, sqlException, sql );
 
 				// query cancelled ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-				case 1013:
+				case 1013 ->
 					// ORA-01013: user requested cancel of current operation
-					return new QueryTimeoutException(  message, sqlException, sql );
+						new QueryTimeoutException( message, sqlException, sql );
 
 				// data integrity violation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-				case 1:
+				case 1 ->
 					// ORA-00001: unique constraint violated
-					constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
-					return new ConstraintViolationException(
-							message,
-							sqlException,
-							sql,
-							ConstraintViolationException.ConstraintKind.UNIQUE,
-							constraintName
-					);
-				case 1407:
+						new ConstraintViolationException(
+								message,
+								sqlException,
+								sql,
+								ConstraintViolationException.ConstraintKind.UNIQUE,
+								getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
+						);
+				case 1407 ->
 					// ORA-01407: cannot update column to NULL
-					constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
-					return new ConstraintViolationException( message, sqlException, sql, constraintName );
-
-				default:
-					return null;
-			}
+						new ConstraintViolationException( message, sqlException, sql,
+								getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+				default -> null;
+			};
 		};
 	}
 
@@ -1281,10 +1256,10 @@ public class OracleDialect extends Dialect {
 		}
 
 		return DISTINCT_KEYWORD_PATTERN.matcher( sql ).find()
-				|| GROUP_BY_KEYWORD_PATTERN.matcher( sql ).find()
-				|| UNION_KEYWORD_PATTERN.matcher( sql ).find()
-				|| ORDER_BY_KEYWORD_PATTERN.matcher( sql ).find() && queryOptions.hasLimit()
-				|| queryOptions.hasLimit() && queryOptions.getLimit().getFirstRow() != null;
+			|| GROUP_BY_KEYWORD_PATTERN.matcher( sql ).find()
+			|| UNION_KEYWORD_PATTERN.matcher( sql ).find()
+			|| ORDER_BY_KEYWORD_PATTERN.matcher( sql ).find() && queryOptions.hasLimit()
+			|| queryOptions.hasLimit() && queryOptions.getLimit().getFirstRow() != null;
 	}
 
 	@Override
@@ -1422,16 +1397,12 @@ public class OracleDialect extends Dialect {
 	}
 
 	private String withTimeout(String lockString, int timeout) {
-		switch ( timeout ) {
-			case NO_WAIT:
-				return supportsNoWait() ? lockString + " nowait" : lockString;
-			case SKIP_LOCKED:
-				return supportsSkipLocked() ? lockString + " skip locked" : lockString;
-			case WAIT_FOREVER:
-				return lockString;
-			default:
-				return supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
-		}
+		return switch (timeout) {
+			case NO_WAIT -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case SKIP_LOCKED -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
+			case WAIT_FOREVER -> lockString;
+			default -> supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
+		};
 	}
 
 	@Override
@@ -1464,13 +1435,19 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public void appendDateTimeLiteral(SqlAppender appender, TemporalAccessor temporalAccessor, TemporalType precision, TimeZone jdbcTimeZone) {
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			TemporalAccessor temporalAccessor,
+			@SuppressWarnings("deprecation")
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
 		// we usually use the JDBC escape-based syntax
 		// because we want to let the JDBC driver handle
 		// TIME (a concept which does not exist in Oracle)
 		// but for the special case of timestamps with an
 		// offset we need to use the ANSI syntax
-		if ( precision == TemporalType.TIMESTAMP && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+		if ( precision == TemporalType.TIMESTAMP
+				&& temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
 			appender.appendSql( "timestamp '" );
 			appendAsTimestampWithNanos( appender, temporalAccessor, true, jdbcTimeZone, false );
 			appender.appendSql( '\'' );
@@ -1488,8 +1465,8 @@ public class OracleDialect extends Dialect {
 	}
 
 	public static Replacer datetimeFormat(String format, boolean useFm, boolean resetFm) {
-		String fm = useFm ? "fm" : "";
-		String fmReset = resetFm ? fm : "";
+		final String fm = useFm ? "fm" : "";
+		final String fmReset = resetFm ? fm : "";
 		return new Replacer( format, "'", "\"" )
 				//era
 				.replace("GG", "AD")
@@ -1602,8 +1579,8 @@ public class OracleDialect extends Dialect {
 	@Override
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
 			throws SQLException {
-		builder.setAutoQuoteInitialUnderscore(true);
-		return super.buildIdentifierHelper(builder, dbMetaData);
+		builder.setAutoQuoteInitialUnderscore( true );
+		return super.buildIdentifierHelper( builder, dbMetaData );
 	}
 
 	@Override
@@ -1641,7 +1618,8 @@ public class OracleDialect extends Dialect {
 			EntityMutationTarget mutationTarget,
 			OptionalTableUpdate optionalTableUpdate,
 			SessionFactoryImplementor factory) {
-		final OracleSqlAstTranslator<?> translator = new OracleSqlAstTranslator<>( factory, optionalTableUpdate );
+		final OracleSqlAstTranslator<?> translator =
+				new OracleSqlAstTranslator<>( factory, optionalTableUpdate );
 		return translator.createMergeOperation( optionalTableUpdate );
 	}
 
@@ -1665,7 +1643,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String getEnumTypeDeclaration(String name, String[] values) {
-		return getVersion().isSameOrAfter(23) ? name : super.getEnumTypeDeclaration(name, values);
+		return getVersion().isSameOrAfter( 23 ) ? name : super.getEnumTypeDeclaration( name, values );
 	}
 
 	@Override
@@ -1718,9 +1696,8 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String appendCheckConstraintOptions(CheckConstraint checkConstraint, String sqlCheckConstraint) {
-		if ( StringHelper.isNotEmpty( checkConstraint.getOptions() ) ) {
-			return sqlCheckConstraint + " " + checkConstraint.getOptions();
-		}
-		return sqlCheckConstraint;
+		return isNotEmpty( checkConstraint.getOptions() )
+				? sqlCheckConstraint + " " + checkConstraint.getOptions()
+				: sqlCheckConstraint;
 	}
 }

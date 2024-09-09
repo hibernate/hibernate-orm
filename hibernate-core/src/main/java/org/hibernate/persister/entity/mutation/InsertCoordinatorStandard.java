@@ -6,6 +6,7 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +18,7 @@ import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
+import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
@@ -192,15 +194,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 					object,
 					insertValuesAnalysis,
 					tableInclusionChecker,
-					(statementDetails, affectedRowCount, batchPosition) -> {
-						statementDetails.getExpectation().verifyOutcome(
-								affectedRowCount,
-								statementDetails.getStatement(),
-								batchPosition,
-								statementDetails.getSqlString()
-						);
-						return true;
-					},
+					InsertCoordinatorStandard::verifyOutcome,
 					session
 			);
 		}
@@ -300,7 +294,8 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			SharedSessionContractImplementor session,
 			boolean forceIdentifierBinding) {
 		final boolean[] insertability = getPropertiesToInsert( values );
-		final MutationOperationGroup insertGroup = generateDynamicInsertSqlGroup( insertability, object, session, forceIdentifierBinding );
+		final MutationOperationGroup insertGroup =
+				generateDynamicInsertSqlGroup( insertability, object, session, forceIdentifierBinding );
 
 		final MutationExecutor mutationExecutor = executor( session, insertGroup, true );
 
@@ -315,21 +310,24 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 					object,
 					insertValuesAnalysis,
 					tableInclusionChecker,
-					(statementDetails, affectedRowCount, batchPosition) -> {
-						statementDetails.getExpectation().verifyOutcome(
-								affectedRowCount,
-								statementDetails.getStatement(),
-								batchPosition,
-								statementDetails.getSqlString()
-						);
-						return true;
-					},
+					InsertCoordinatorStandard::verifyOutcome,
 					session
 			);
 		}
 		finally {
 			mutationExecutor.release();
 		}
+	}
+
+	private static boolean verifyOutcome(PreparedStatementDetails statementDetails, int affectedRowCount, int batchPosition)
+			throws SQLException {
+		statementDetails.getExpectation().verifyOutcome(
+				affectedRowCount,
+				statementDetails.getStatement(),
+				batchPosition,
+				statementDetails.getSqlString()
+		);
+		return true;
 	}
 
 	private MutationExecutor executor(SharedSessionContractImplementor session, MutationOperationGroup group, boolean dynamicUpdate) {
@@ -415,7 +413,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 							attributeInclusions[attributeIndex] = true;
 							attributeMapping.forEachInsertable( insertGroupBuilder );
 						}
-						else if ( isValueGenerationInSql( generator, factory().getJdbcServices().getDialect() ) ) {
+						else if ( isValueGenerationInSql( generator, factory.getJdbcServices().getDialect() ) ) {
 							handleValueGeneration( attributeMapping, insertGroupBuilder, (OnExecutionGenerator) generator );
 						}
 					}

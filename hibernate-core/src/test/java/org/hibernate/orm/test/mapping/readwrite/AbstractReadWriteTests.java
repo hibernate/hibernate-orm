@@ -64,7 +64,7 @@ public abstract class AbstractReadWriteTests {
 
 		scope.inTransaction(
 				(session) -> {
-					session.createQuery( "from ReadWriteEntity a, ReadWriteEntity b" ).list();
+					session.createQuery( "from ReadWriteEntity a, ReadWriteEntity b", Object[].class ).list();
 				}
 		);
 	}

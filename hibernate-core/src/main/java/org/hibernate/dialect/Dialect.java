@@ -457,17 +457,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	protected boolean isLob(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case LONG32VARBINARY:
-			case LONG32VARCHAR:
-			case LONG32NVARCHAR:
-			case BLOB:
-			case CLOB:
-			case NCLOB:
-				return true;
-			default:
-				return false;
-		}
+		return switch (sqlTypeCode) {
+			case LONG32VARBINARY, LONG32VARCHAR, LONG32NVARCHAR, BLOB, CLOB, NCLOB -> true;
+			default -> false;
+		};
 	}
 
 	private DdlTypeImpl simpleSqlType(int sqlTypeCode) {
@@ -542,96 +535,71 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @see SqlTypes
 	 */
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case ROWID:
-				return "rowid";
+		return switch (sqlTypeCode) {
+			case ROWID -> "rowid";
 
-			case BOOLEAN:
-				return "boolean";
+			case BOOLEAN -> "boolean";
 
-			case TINYINT:
-				return "tinyint";
-			case SMALLINT:
-				return "smallint";
-			case INTEGER:
-				return "integer";
-			case BIGINT:
-				return "bigint";
+			case TINYINT -> "tinyint";
+			case SMALLINT -> "smallint";
+			case INTEGER -> "integer";
+			case BIGINT -> "bigint";
 
-			case FLOAT:
+			case FLOAT ->
 				// this is the floating point type we prefer!
-				return "float($p)";
-			case REAL:
+					"float($p)";
+			case REAL ->
 				// this type has very unclear semantics in ANSI SQL,
 				// so we avoid it and prefer float with an explicit
 				// precision
-				return "real";
-			case DOUBLE:
+					"real";
+			case DOUBLE ->
 				// this is just a more verbose way to write float(19)
-				return "double precision";
+					"double precision";
 
 			// these are pretty much synonyms, but are considered
 			// separate types by the ANSI spec, and in some dialects
-			case NUMERIC:
-				return "numeric($p,$s)";
-			case DECIMAL:
-				return "decimal($p,$s)";
+			case NUMERIC -> "numeric($p,$s)";
+			case DECIMAL -> "decimal($p,$s)";
 
-			case DATE:
-				return "date";
-			case TIME:
-				return "time($p)";
-			case TIME_WITH_TIMEZONE:
+			case DATE -> "date";
+			case TIME -> "time($p)";
+			case TIME_WITH_TIMEZONE ->
 				// type included here for completeness but note that
 				// very few databases support it, and the general
 				// advice is to caution against its use (for reasons,
 				// check the comments in the Postgres documentation).
-				return "time($p) with time zone";
-			case TIMESTAMP:
-				return "timestamp($p)";
-			case TIMESTAMP_WITH_TIMEZONE:
-				return "timestamp($p) with time zone";
-			case TIME_UTC:
-				return getTimeZoneSupport() == TimeZoneSupport.NATIVE
-						? columnType( TIME_WITH_TIMEZONE )
-						: columnType( TIME );
-			case TIMESTAMP_UTC:
-				return getTimeZoneSupport() == TimeZoneSupport.NATIVE
-						? columnType( TIMESTAMP_WITH_TIMEZONE )
-						: columnType( TIMESTAMP );
+					"time($p) with time zone";
+			case TIMESTAMP -> "timestamp($p)";
+			case TIMESTAMP_WITH_TIMEZONE -> "timestamp($p) with time zone";
+			case TIME_UTC ->
+					getTimeZoneSupport() == TimeZoneSupport.NATIVE
+							? columnType( TIME_WITH_TIMEZONE )
+							: columnType( TIME );
+			case TIMESTAMP_UTC ->
+					getTimeZoneSupport() == TimeZoneSupport.NATIVE
+							? columnType( TIMESTAMP_WITH_TIMEZONE )
+							: columnType( TIMESTAMP );
 
-			case CHAR:
-				return "char($l)";
-			case VARCHAR:
-				return "varchar($l)";
-			case CLOB:
-				return "clob";
+			case CHAR -> "char($l)";
+			case VARCHAR -> "varchar($l)";
+			case CLOB -> "clob";
 
-			case NCHAR:
-				return "nchar($l)";
-			case NVARCHAR:
-				return "nvarchar($l)";
-			case NCLOB:
-				return "nclob";
+			case NCHAR -> "nchar($l)";
+			case NVARCHAR -> "nvarchar($l)";
+			case NCLOB -> "nclob";
 
-			case BINARY:
-				return "binary($l)";
-			case VARBINARY:
-				return "varbinary($l)";
-			case BLOB:
-				return "blob";
+			case BINARY -> "binary($l)";
+			case VARBINARY -> "varbinary($l)";
+			case BLOB -> "blob";
 
 			// by default use the LOB mappings for the "long" types
-			case LONG32VARCHAR:
-				return columnType( CLOB );
-			case LONG32NVARCHAR:
-				return columnType( NCLOB );
-			case LONG32VARBINARY:
-				return columnType( BLOB );
+			case LONG32VARCHAR -> columnType( CLOB );
+			case LONG32NVARCHAR -> columnType( NCLOB );
+			case LONG32VARBINARY -> columnType( BLOB );
 
-			default:
-				throw new IllegalArgumentException( "unknown type: " + sqlTypeCode );
-		}
+			default -> throw new IllegalArgumentException( "unknown type: " + sqlTypeCode );
+		};
 	}
 
 	/**
@@ -1574,6 +1542,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *                      a timestamp, false if a date
 	 * @param toTemporalType true if the second argument is
 	 */
+	@SuppressWarnings("deprecation")
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		throw new UnsupportedOperationException( "`" + getClass().getName() + "` does not yet support #timestampdiffPattern" );
 	}
@@ -1588,6 +1557,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @param temporalType The type of the temporal
 	 * @param intervalType The type of interval to add or null if it's not a native interval
 	 */
+	@SuppressWarnings("deprecation")
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		throw new UnsupportedOperationException( "`" + getClass().getName() + "` does not yet support #timestampaddPattern" );
 	}
@@ -1637,21 +1607,18 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * and migration.
 	 */
 	private boolean isCompatibleIntegralType(int typeCode1, int typeCode2) {
-		switch (typeCode1) {
-			case TINYINT:
-				return typeCode2 == TINYINT
+		return switch (typeCode1) {
+			case TINYINT -> typeCode2 == TINYINT
 					|| typeCode2 == SMALLINT
 					|| typeCode2 == INTEGER
 					|| typeCode2 == BIGINT;
-			case SMALLINT:
-				return typeCode2 == SMALLINT
+			case SMALLINT -> typeCode2 == SMALLINT
 					|| typeCode2 == INTEGER
 					|| typeCode2 == BIGINT;
-			case INTEGER:
-				return typeCode2 == INTEGER
+			case INTEGER -> typeCode2 == INTEGER
 					|| typeCode2 == BIGINT;
-		}
-		return false;
+			default -> false;
+		};
 	}
 
 	private boolean sameColumnType(int typeCode1, int typeCode2) {
@@ -2037,25 +2004,23 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @since 3.2
 	 */
 	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
-		switch ( lockMode ) {
-			case PESSIMISTIC_FORCE_INCREMENT:
-				return new PessimisticForceIncrementLockingStrategy( lockable, lockMode );
-			case UPGRADE_NOWAIT:
-			case UPGRADE_SKIPLOCKED:
-			case PESSIMISTIC_WRITE:
-				return new PessimisticWriteSelectLockingStrategy( lockable, lockMode );
-			case PESSIMISTIC_READ:
-				return new PessimisticReadSelectLockingStrategy( lockable, lockMode );
-			case OPTIMISTIC_FORCE_INCREMENT:
-				return new OptimisticForceIncrementLockingStrategy( lockable, lockMode );
-			case OPTIMISTIC:
-				return new OptimisticLockingStrategy( lockable, lockMode );
-			case READ:
-				return new SelectLockingStrategy( lockable, lockMode );
-			default:
+		return switch (lockMode) {
+			case PESSIMISTIC_FORCE_INCREMENT ->
+					new PessimisticForceIncrementLockingStrategy( lockable, lockMode );
+			case UPGRADE_NOWAIT, UPGRADE_SKIPLOCKED, PESSIMISTIC_WRITE ->
+					new PessimisticWriteSelectLockingStrategy( lockable, lockMode );
+			case PESSIMISTIC_READ ->
+					new PessimisticReadSelectLockingStrategy( lockable, lockMode );
+			case OPTIMISTIC_FORCE_INCREMENT ->
+					new OptimisticForceIncrementLockingStrategy( lockable, lockMode );
+			case OPTIMISTIC ->
+					new OptimisticLockingStrategy( lockable, lockMode );
+			case READ ->
+					new SelectLockingStrategy( lockable, lockMode );
+			default ->
 				// WRITE, NONE are not allowed here
-				throw new IllegalArgumentException( "Unsupported lock mode" );
-		}
+					throw new IllegalArgumentException( "Unsupported lock mode" );
+		};
 	}
 
 	/**
@@ -2080,24 +2045,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return The appropriate {@code for update} fragment.
 	 */
 	private String getForUpdateString(LockMode lockMode, int timeout) {
-		switch ( lockMode ) {
-			case PESSIMISTIC_READ: {
-				return getReadLockString( timeout );
-			}
-			case PESSIMISTIC_WRITE: {
-				return getWriteLockString( timeout );
-			}
-			case UPGRADE_NOWAIT:
-			case PESSIMISTIC_FORCE_INCREMENT: {
-				return getForUpdateNowaitString();
-			}
-			case UPGRADE_SKIPLOCKED: {
-				return getForUpdateSkipLockedString();
-			}
-			default: {
-				return "";
-			}
-		}
+		return switch (lockMode) {
+			case PESSIMISTIC_READ -> getReadLockString( timeout );
+			case PESSIMISTIC_WRITE -> getWriteLockString( timeout );
+			case UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT -> getForUpdateNowaitString();
+			case UPGRADE_SKIPLOCKED -> getForUpdateSkipLockedString();
+			default -> "";
+		};
 	}
 
 	/**
@@ -2657,7 +2611,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	/**
 	 * Some dialects require a not null primaryTable filter.
 	 * Sometimes a wildcard entry is sufficient for the like condition.
-	 * @return
 	 */
 	public String getCrossReferenceParentTableFilter(){
 		return null;
@@ -3387,16 +3340,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * The command to create a temporary table.
 	 */
 	public String getTemporaryTableCreateCommand() {
-		final TemporaryTableKind kind = getSupportedTemporaryTableKind();
-		switch ( kind ) {
-			case PERSISTENT:
-				return "create table";
-			case LOCAL:
-				return "create local temporary table";
-			case GLOBAL:
-				return "create global temporary table";
-		}
-		throw new UnsupportedOperationException( "Unsupported kind: " + kind );
+		return switch ( getSupportedTemporaryTableKind() ) {
+			case PERSISTENT -> "create table";
+			case LOCAL -> "create local temporary table";
+			case GLOBAL -> "create global temporary table";
+		};
 	}
 
 	/**
@@ -5005,20 +4953,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * Obtain a {@link RowLockStrategy} for the given {@link LockMode}.
 	 */
 	public RowLockStrategy getLockRowIdentifier(LockMode lockMode) {
-		switch ( lockMode ) {
-			case PESSIMISTIC_READ:
-				return getReadRowLockStrategy();
-			case WRITE:
-			case PESSIMISTIC_FORCE_INCREMENT:
-			case PESSIMISTIC_WRITE:
-			case UPGRADE_SKIPLOCKED:
-			case UPGRADE_NOWAIT: {
-				return getWriteRowLockStrategy();
-			}
-			default: {
-				return RowLockStrategy.NONE;
-			}
-		}
+		return switch (lockMode) {
+			case PESSIMISTIC_READ ->
+					getReadRowLockStrategy();
+			case WRITE, PESSIMISTIC_FORCE_INCREMENT, PESSIMISTIC_WRITE, UPGRADE_SKIPLOCKED, UPGRADE_NOWAIT ->
+					getWriteRowLockStrategy();
+			default -> RowLockStrategy.NONE;
+		};
 	}
 
 	/**
@@ -5121,9 +5062,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public String[] getTruncateTableStatements(String[] tableNames) {
 		if ( canBatchTruncate() ) {
-			StringBuilder builder = new StringBuilder();
+			final StringBuilder builder = new StringBuilder();
 			for ( String tableName : tableNames ) {
-				if ( builder.length() > 0 ) {
+				if ( !builder.isEmpty() ) {
 					builder.append(", ");
 				}
 				builder.append( tableName );
@@ -5131,7 +5072,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			return new String[] { getTruncateTableStatement( builder.toString() ) };
 		}
 		else {
-			String[] statements = new String[tableNames.length];
+			final String[] statements = new String[tableNames.length];
 			for ( int i = 0; i < tableNames.length; i++ ) {
 				statements[i] = getTruncateTableStatement( tableNames[i] );
 			}
@@ -5364,25 +5305,18 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * {@link ExtractFunction}.
 	 */
 	public String translateExtractField(TemporalUnit unit) {
-		switch ( unit ) {
-			case DAY_OF_MONTH: return "dd";
-			case DAY_OF_YEAR: return "dy";
-			case DAY_OF_WEEK: return "dw";
+		return switch (unit) {
+			case DAY_OF_MONTH -> "dd";
+			case DAY_OF_YEAR -> "dy";
+			case DAY_OF_WEEK -> "dw";
 
-			//all the following fields are desugared
-			//by ExtractFunction, so we should never
-			//see them here!
-			case OFFSET:
-			case NATIVE:
-			case NANOSECOND:
-			case DATE:
-			case TIME:
-			case WEEK_OF_MONTH:
-			case WEEK_OF_YEAR:
-				throw new IllegalArgumentException("illegal field: " + unit);
-
-			default: return unit.toString();
-		}
+			// all the following fields are desugared
+			// by ExtractFunction, so we should never
+			// see them here!
+			case OFFSET, NATIVE, NANOSECOND, DATE, TIME, WEEK_OF_MONTH, WEEK_OF_YEAR ->
+					throw new IllegalArgumentException( "illegal field: " + unit );
+			default -> unit.toString();
+		};
 	}
 
 	/**
@@ -5408,22 +5342,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * which are not units of duration.
 	 */
 	public String translateDurationField(TemporalUnit unit) {
-		switch ( unit ) {
-			case DAY_OF_MONTH:
-			case DAY_OF_YEAR:
-			case DAY_OF_WEEK:
-			case OFFSET:
-			case TIMEZONE_HOUR:
-			case TIMEZONE_MINUTE:
-			case DATE:
-			case TIME:
-			case WEEK_OF_MONTH:
-			case WEEK_OF_YEAR:
-				throw new IllegalArgumentException("illegal unit: " + unit);
-
-			case NATIVE: return "nanosecond"; //default to nanosecond for now
-			default: return unit.toString();
-		}
+		return switch (unit) {
+			case NATIVE -> "nanosecond"; // default to nanosecond for now
+			case DAY_OF_MONTH, DAY_OF_YEAR, DAY_OF_WEEK, WEEK_OF_MONTH, WEEK_OF_YEAR, OFFSET, TIMEZONE_HOUR, TIMEZONE_MINUTE, DATE, TIME ->
+					throw new IllegalArgumentException( "illegal unit: " + unit );
+			default -> unit.toString();
+		};
 	}
 
 	/**
@@ -5433,6 +5357,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
+			@SuppressWarnings("deprecation")
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
@@ -5460,7 +5385,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * Append a datetime literal representing the given {@link Date}
 	 * value to the given {@link SqlAppender}.
 	 */
-	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Date date,
+			@SuppressWarnings("deprecation")
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
 			case DATE:
 				appender.appendSql( JDBC_ESCAPE_START_DATE );
@@ -5489,6 +5419,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			Calendar calendar,
+			@SuppressWarnings("deprecation")
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
@@ -5614,7 +5545,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public String getCheckConstraintString(CheckConstraint checkConstraint) {
 		final String constraintName = checkConstraint.getName();
-		String constraint = constraintName == null
+		final String constraint = constraintName == null
 				? " check (" + checkConstraint.getConstraint() + ")"
 				: " constraint " + constraintName + " check (" + checkConstraint.getConstraint() + ")";
 		return appendCheckConstraintOptions( checkConstraint, constraint );

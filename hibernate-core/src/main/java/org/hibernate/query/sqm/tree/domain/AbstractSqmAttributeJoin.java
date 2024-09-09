@@ -12,7 +12,6 @@ import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -33,48 +32,38 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 		extends AbstractSqmJoin<L, R>
 		implements SqmAttributeJoin<L, R> {
 
-	private boolean fetched;
+	private final boolean implicitJoin;
+	private boolean fetchJoin;
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public AbstractSqmAttributeJoin(
-			SqmFrom<?, L> lhs,
-			SqmJoinable joinedNavigable,
-			String alias,
-			SqmJoinType joinType,
-			boolean fetched,
-			NodeBuilder nodeBuilder) {
-		//noinspection StringEquality
-		this(
-				lhs,
-				joinedNavigable.createNavigablePath( lhs, alias ),
-				joinedNavigable,
-				alias == SqmCreationHelper.IMPLICIT_ALIAS ? null : alias,
-				joinType,
-				fetched,
-				nodeBuilder
-		);
-	}
-
-	@SuppressWarnings("rawtypes")
 	protected AbstractSqmAttributeJoin(
 			SqmFrom<?, L> lhs,
 			NavigablePath navigablePath,
-			SqmJoinable joinedNavigable,
+			SqmPathSource<R> joinedNavigable,
 			String alias,
 			SqmJoinType joinType,
-			boolean fetched,
+			boolean fetchJoin,
 			NodeBuilder nodeBuilder) {
-		//noinspection unchecked
 		super(
 				navigablePath,
-				(SqmPathSource<R>) joinedNavigable,
+				joinedNavigable,
 				lhs,
-				alias,
+				isImplicitAlias( alias ) ? null : alias,
 				joinType,
 				nodeBuilder
 		);
-		this.fetched = fetched;
+		this.fetchJoin = fetchJoin;
 		validateFetchAlias( alias );
+		implicitJoin = isImplicitAlias( alias ); //TODO: add a parameter
+	}
+
+	@SuppressWarnings("StringEquality")
+	private static boolean isImplicitAlias(String alias) {
+		return alias == SqmCreationHelper.IMPLICIT_ALIAS;
+	}
+
+	@Override
+	public boolean isImplicitJoin() {
+		return implicitJoin;
 	}
 
 	@Override
@@ -89,7 +78,7 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 
 	@Override
 	public boolean isFetched() {
-		return fetched;
+		return fetchJoin;
 	}
 
 	@Override
@@ -100,11 +89,11 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 
 	@Override
 	public void clearFetched() {
-		fetched = false;
+		fetchJoin = false;
 	}
 
 	private void validateFetchAlias(String alias) {
-		if ( fetched && alias != null && nodeBuilder().isJpaQueryComplianceEnabled() ) {
+		if ( fetchJoin && alias != null && nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			throw new IllegalStateException(
 					"The JPA specification does not permit specifying an alias for fetch joins."
 			);

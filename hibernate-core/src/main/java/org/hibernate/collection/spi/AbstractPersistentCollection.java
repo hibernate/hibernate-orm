@@ -175,22 +175,24 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		return false;
 	}
 
-	public int  getSize() {
+	public int getSize() {
 		if ( cachedSize>=0 ) {
 			return cachedSize;
 		}
-		final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( this );
-		if ( entry == null ) {
-			throwLazyInitializationExceptionIfNotConnected();
-			throwLazyInitializationException("collection not associated with session");
-			throw new AssertionFailure("impossible");
-		}
 		else {
-			if ( hasQueuedOperations() ) {
-				session.flush();
+			final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( this );
+			if ( entry == null ) {
+				throwLazyInitializationExceptionIfNotConnected();
+				throwLazyInitializationException("collection not associated with session");
+				throw new AssertionFailure("impossible");
 			}
-			cachedSize = entry.getLoadedPersister().getSize( entry.getLoadedKey(), session );
-			return cachedSize;
+			else {
+				if ( hasQueuedOperations() ) {
+					session.flush();
+				}
+				cachedSize = entry.getLoadedPersister().getSize( entry.getLoadedKey(), session );
+				return cachedSize;
+			}
 		}
 	}
 

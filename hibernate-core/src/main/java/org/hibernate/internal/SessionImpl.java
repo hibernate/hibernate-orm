@@ -948,7 +948,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public <E> List<E> findAll(Class<E> entityType, Object... ids) {
+	public <E> List<E> findAll(Class<E> entityType, List<Object> ids) {
 		return this.byMultipleIds( entityType ).multiLoad( ids );
 	}
 

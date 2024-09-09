@@ -513,7 +513,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public <T> List<T> getAll(Class<T> entityClass, Object... ids) {
+	public <T> List<T> getAll(Class<T> entityClass, List<Object> ids) {
 		for (Object id : ids) {
 			if ( id == null ) {
 				throw new IllegalArgumentException("Null id");
@@ -522,13 +522,13 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		final EntityPersister persister = getEntityPersister( entityClass.getName() );
 		final JpaCriteriaQuery<T> query = getCriteriaBuilder().createQuery(entityClass);
 		final JpaRoot<T> from = query.from(entityClass);
-		query.where( from.get(persister.getIdentifierPropertyName()).in(ids) );
+		query.where( from.get( persister.getIdentifierPropertyName() ).in(ids) );
 		final List<T> resultList = createSelectionQuery(query).getResultList();
-		final List<Object> idList = new ArrayList<>(resultList.size());
+		final List<Object> idList = new ArrayList<>( resultList.size() );
 		for (T entity : resultList) {
 			idList.add( persister.getIdentifier(entity, this) );
 		}
-		final List<T> list = new ArrayList<>(ids.length);
+		final List<T> list = new ArrayList<>( ids.size() );
 		for (Object id : ids) {
 			final int pos = idList.indexOf(id);
 			list.add( pos < 0 ? null : resultList.get(pos) );

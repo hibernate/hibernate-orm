@@ -21,7 +21,7 @@ public class GetAllTest {
             s.insert(new Record(456L,"hello mars"));
         });
         scope.inStatelessTransaction(s-> {
-            List<Record> all = s.getAll(Record.class, 456L, 123L, 2L);
+            List<Record> all = s.getAll(Record.class, List.of(456L, 123L, 2L));
             assertEquals("hello mars",all.get(0).message);
             assertEquals("hello earth",all.get(1).message);
             assertNull(all.get(2));

@@ -1211,4 +1211,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		}
 		return "";
 	}
+
+	@Override
+	public boolean supportsBindingNullForSetObject() {
+		return true;
+	}
 }

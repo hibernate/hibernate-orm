@@ -5635,9 +5635,31 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	/**
 	 * Does this dialect support appending table options SQL fragment at the end of the SQL Table creation statement?
 	 *
-	 *  @return {@code true} indicates it does; {@code false} indicates it does not;
+	 * @return {@code true} indicates it does; {@code false} indicates it does not;
 	 */
-	public boolean supportsTableOptions(){
+	public boolean supportsTableOptions() {
+		return false;
+	}
+
+	/**
+	 * Does this dialect support binding {@link Types#NULL} for {@link PreparedStatement#setNull(int, int)}?
+	 * if it does, then call of {@link PreparedStatement#getParameterMetaData()} could be eliminated for better performance.
+	 *
+	 * @return {@code true} indicates it does; {@code false} indicates it does not;
+	 * @see org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcType
+	 */
+	public boolean supportsBindingNullSqlTypeForSetNull() {
+		return false;
+	}
+
+	/**
+	 * Does this dialect support binding {@code null} for {@link PreparedStatement#setObject(int, Object)}?
+	 * if it does, then call of {@link PreparedStatement#getParameterMetaData()} could be eliminated for better performance.
+	 *
+	 * @return {@code true} indicates it does; {@code false} indicates it does not;
+	 * @see org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcType
+	 */
+	public boolean supportsBindingNullForSetObject() {
 		return false;
 	}
 

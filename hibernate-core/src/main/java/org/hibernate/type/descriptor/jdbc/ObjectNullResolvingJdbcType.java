@@ -42,13 +42,27 @@ public class ObjectNullResolvingJdbcType extends ObjectJdbcType {
 			@Override
 			protected void doBindNull(PreparedStatement st, int index, WrapperOptions options)
 					throws SQLException {
-				st.setNull( index, st.getParameterMetaData().getParameterType( index ) );
+				if ( options.getDialect().supportsBindingNullForSetObject() ) {
+					st.setObject( index, null );
+				}
+				else {
+					final int sqlType = options.getDialect().supportsBindingNullSqlTypeForSetNull() ? Types.NULL
+							: st.getParameterMetaData().getParameterType( index );
+					st.setNull( index, sqlType );
+				}
 			}
 
 			@Override
 			protected void doBindNull(CallableStatement st, String name, WrapperOptions options)
 					throws SQLException {
-				st.setNull( name, Types.JAVA_OBJECT );
+				if ( options.getDialect().supportsBindingNullForSetObject() ) {
+					st.setObject( name, null );
+				}
+				else {
+					final int sqlType = options.getDialect().supportsBindingNullSqlTypeForSetNull() ? Types.NULL
+							: Types.JAVA_OBJECT;
+					st.setNull( name, sqlType );
+				}
 			}
 
 			@Override

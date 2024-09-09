@@ -1581,4 +1581,9 @@ public class MySQLDialect extends Dialect {
 		}
 		return sqlCheckConstraint;
 	}
+
+	@Override
+	public boolean supportsBindingNullSqlTypeForSetNull() {
+		return true;
+	}
 }

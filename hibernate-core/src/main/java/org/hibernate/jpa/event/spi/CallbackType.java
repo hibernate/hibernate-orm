@@ -25,8 +25,7 @@ public enum CallbackType {
 	POST_PERSIST( PostPersist.class ),
 	PRE_REMOVE( PreRemove.class ),
 	POST_REMOVE( PostRemove.class ),
-	POST_LOAD( PostLoad.class )
-	;
+	POST_LOAD( PostLoad.class );
 
 	private final Class<? extends Annotation> callbackAnnotation;
 

@@ -9,7 +9,6 @@ package org.hibernate.tuple;
 import java.util.EnumSet;
 import java.util.Locale;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.generator.EventType;
 
 /**
@@ -55,31 +54,21 @@ public enum GenerationTiming {
 	}
 
 	public boolean includes(GenerationTiming timing) {
-		switch (this) {
-			case NEVER:
-				return timing == NEVER;
-			case INSERT:
-				return timing.includesInsert();
-			case UPDATE:
-				return timing.includesUpdate();
-			case ALWAYS:
-				return true;
-			default:
-				throw new AssertionFailure("unknown timing");
-		}
+		return switch (this) {
+			case NEVER -> timing == NEVER;
+			case INSERT -> timing.includesInsert();
+			case UPDATE -> timing.includesUpdate();
+			case ALWAYS -> true;
+		};
 	}
 
 	public static GenerationTiming parseFromName(String name) {
-		switch ( name.toLowerCase(Locale.ROOT) ) {
-			case "insert":
-				return INSERT;
-			case "update":
-				return UPDATE;
-			case "always":
-				return ALWAYS;
-			default:
-				return NEVER;
-		}
+		return switch (name.toLowerCase(Locale.ROOT)) {
+			case "insert" -> INSERT;
+			case "update" -> UPDATE;
+			case "always" -> ALWAYS;
+			default -> NEVER;
+		};
 	}
 
 	/**

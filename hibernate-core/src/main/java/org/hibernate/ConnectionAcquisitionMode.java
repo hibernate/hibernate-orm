@@ -6,7 +6,7 @@
  */
 package org.hibernate;
 
-import org.hibernate.internal.util.StringHelper;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
  * Indicates the manner in which JDBC {@linkplain java.sql.Connection connections}
@@ -32,11 +32,9 @@ public enum ConnectionAcquisitionMode {
 	AS_NEEDED;
 
 	public static ConnectionAcquisitionMode interpret(String value) {
-		if ( "immediate".equalsIgnoreCase( value ) || "immediately".equalsIgnoreCase( value ) ) {
-			return IMMEDIATELY;
-		}
-
-		return AS_NEEDED;
+		return "immediate".equalsIgnoreCase( value ) || "immediately".equalsIgnoreCase( value )
+				? IMMEDIATELY
+				: AS_NEEDED;
 	}
 
 	public static ConnectionAcquisitionMode interpret(Object setting) {
@@ -44,12 +42,12 @@ public enum ConnectionAcquisitionMode {
 			return null;
 		}
 
-		if ( setting instanceof ConnectionAcquisitionMode ) {
-			return (ConnectionAcquisitionMode) setting;
+		if ( setting instanceof ConnectionAcquisitionMode mode ) {
+			return mode;
 		}
 
 		final String value = setting.toString();
-		if ( StringHelper.isEmpty( value ) ) {
+		if ( isEmpty( value ) ) {
 			return null;
 		}
 

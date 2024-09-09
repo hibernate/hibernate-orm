@@ -42,8 +42,9 @@ public class FlushModeTypeHelper {
 		else if ( flushMode == FlushMode.AUTO ) {
 			return FlushModeType.AUTO;
 		}
-
-		throw new AssertionFailure( "unhandled FlushMode " + flushMode );
+		else {
+			throw new AssertionFailure( "unhandled FlushMode " + flushMode );
+		}
 	}
 
 	public static FlushMode getFlushMode(FlushModeType flushModeType) {
@@ -53,26 +54,27 @@ public class FlushModeTypeHelper {
 		else if ( flushModeType == FlushModeType.COMMIT ) {
 			return FlushMode.COMMIT;
 		}
-
-		throw new AssertionFailure( "unhandled FlushModeType " + flushModeType );
+		else {
+			throw new AssertionFailure( "unhandled FlushModeType " + flushModeType );
+		}
 	}
 
 	public static FlushMode interpretFlushMode(Object value) {
 		if ( value == null ) {
 			return FlushMode.AUTO;
 		}
-		if (value instanceof FlushMode) {
-			return (FlushMode) value;
+		if ( value instanceof FlushMode flushMode ) {
+			return flushMode;
 		}
-		else if (value instanceof FlushModeType) {
-			return getFlushMode( (FlushModeType) value );
+		else if ( value instanceof FlushModeType flushModeType ) {
+			return getFlushMode( flushModeType );
 		}
-		else if (value instanceof String) {
-			return interpretExternalSetting( (String) value );
+		else if ( value instanceof String string ) {
+			return interpretExternalSetting( string );
 		}
-
-		throw new IllegalArgumentException( "Unknown FlushMode source : " + value );
-
+		else {
+			throw new IllegalArgumentException( "Unknown FlushMode source : " + value );
+		}
 	}
 
 	public static FlushMode interpretExternalSetting(String externalName) {

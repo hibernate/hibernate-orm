@@ -404,6 +404,7 @@ public class OracleDialect extends Dialect {
 		functionFactory.arrayToString_oracle();
 
 		functionFactory.jsonValue_oracle();
+		functionFactory.jsonQuery_oracle();
 		functionFactory.jsonExists_oracle();
 		functionFactory.jsonObject_oracle();
 		functionFactory.jsonArray_oracle();

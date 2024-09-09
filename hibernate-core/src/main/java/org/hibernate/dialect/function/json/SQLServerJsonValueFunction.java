@@ -41,7 +41,7 @@ public class SQLServerJsonValueFunction extends JsonValueFunction {
 			arguments.returningType().accept( walker );
 		}
 		else {
-			sqlAppender.appendSql( "varchar(max)" );
+			sqlAppender.appendSql( "nvarchar(max)" );
 		}
 		sqlAppender.appendSql( ' ' );
 		final JsonPathPassingClause passingClause = arguments.passingClause();

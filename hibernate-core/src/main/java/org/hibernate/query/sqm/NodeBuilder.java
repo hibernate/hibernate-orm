@@ -28,7 +28,6 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaExpression;
-import org.hibernate.query.criteria.JpaJsonExistsExpression;
 import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.criteria.JpaPredicate;
@@ -48,6 +47,7 @@ import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmJsonExistsExpression;
+import org.hibernate.query.sqm.tree.expression.SqmJsonQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJsonValueExpression;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
@@ -632,6 +632,12 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 
 	@Override
 	SqmJsonValueExpression<String> jsonValue(Expression<?> jsonDocument, String jsonPath);
+
+	@Override
+	SqmJsonQueryExpression jsonQuery(Expression<?> jsonDocument, Expression<String> jsonPath);
+
+	@Override
+	SqmJsonQueryExpression jsonQuery(Expression<?> jsonDocument, String jsonPath);
 
 	@Override
 	SqmJsonExistsExpression jsonExists(Expression<?> jsonDocument, Expression<String> jsonPath);

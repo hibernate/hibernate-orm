@@ -36,7 +36,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 @Incubating
 public class SqmJsonExistsExpression extends AbstractSqmJsonPathExpression<Boolean> implements JpaJsonExistsExpression {
-	private @Nullable ErrorBehavior errorBehavior;
+	private ErrorBehavior errorBehavior = ErrorBehavior.UNSPECIFIED;
 
 	public SqmJsonExistsExpression(
 			SqmFunctionDescriptor descriptor,
@@ -69,7 +69,7 @@ public class SqmJsonExistsExpression extends AbstractSqmJsonPathExpression<Boole
 			NodeBuilder nodeBuilder,
 			String name,
 			@Nullable Map<String, SqmExpression<?>> passingExpressions,
-			@Nullable ErrorBehavior errorBehavior) {
+			ErrorBehavior errorBehavior) {
 		super(
 				descriptor,
 				renderer,
@@ -159,18 +159,10 @@ public class SqmJsonExistsExpression extends AbstractSqmJsonPathExpression<Boole
 		if ( jsonPathPassingClause != null ) {
 			arguments.add( jsonPathPassingClause );
 		}
-		if ( errorBehavior != null ) {
-			switch ( errorBehavior ) {
-				case ERROR:
-					arguments.add( JsonExistsErrorBehavior.ERROR );
-					break;
-				case TRUE:
-					arguments.add( JsonExistsErrorBehavior.TRUE );
-					break;
-				case FALSE:
-					arguments.add( JsonExistsErrorBehavior.FALSE );
-					break;
-			}
+		switch ( errorBehavior ) {
+			case ERROR -> arguments.add( JsonExistsErrorBehavior.ERROR );
+			case TRUE -> arguments.add( JsonExistsErrorBehavior.TRUE );
+			case FALSE -> arguments.add( JsonExistsErrorBehavior.FALSE );
 		}
 		return new SelfRenderingFunctionSqlAstExpression(
 				getFunctionName(),
@@ -189,18 +181,10 @@ public class SqmJsonExistsExpression extends AbstractSqmJsonPathExpression<Boole
 		getArguments().get( 1 ).appendHqlString( sb );
 
 		appendPassingExpressionHqlString( sb );
-		if ( errorBehavior != null ) {
-			switch ( errorBehavior ) {
-				case ERROR:
-					sb.append( " error on error" );
-					break;
-				case TRUE:
-					sb.append( " true on error" );
-					break;
-				case FALSE:
-					sb.append( " false on error" );
-					break;
-			}
+		switch ( errorBehavior ) {
+			case ERROR -> sb.append( " error on error" );
+			case TRUE -> sb.append( " true on error" );
+			case FALSE -> sb.append( " false on error" );
 		}
 		sb.append( ')' );
 	}

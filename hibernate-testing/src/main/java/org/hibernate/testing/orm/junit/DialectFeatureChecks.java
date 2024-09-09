@@ -734,6 +734,21 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsJsonQuery implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "json_query" );
+		}
+	}
+
+	public static class SupportsJsonQueryNestedPath implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "json_query" )
+					&& !( dialect instanceof SQLServerDialect )
+					&& !( dialect instanceof H2Dialect )
+					&& !( dialect instanceof CockroachDialect );
+		}
+	}
+
 	public static class SupportsJsonExists implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesFunction( dialect, "json_exists" );

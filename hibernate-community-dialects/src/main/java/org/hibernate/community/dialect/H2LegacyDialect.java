@@ -405,6 +405,7 @@ public class H2LegacyDialect extends Dialect {
 
 				if ( getVersion().isSameOrAfter( 2, 2, 220 ) ) {
 					functionFactory.jsonValue_h2();
+					functionFactory.jsonQuery_h2();
 					functionFactory.jsonExists_h2();
 				}
 			}

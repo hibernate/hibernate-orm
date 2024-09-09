@@ -404,6 +404,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 		if ( getVersion().isSameOrAfter( 13 ) ) {
 			functionFactory.jsonValue_sqlserver();
+			functionFactory.jsonQuery_sqlserver();
 			functionFactory.jsonExists_sqlserver();
 			functionFactory.jsonObject_sqlserver();
 			functionFactory.jsonArray_sqlserver();

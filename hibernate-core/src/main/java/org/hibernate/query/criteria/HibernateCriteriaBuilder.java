@@ -3716,6 +3716,20 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	<T> JpaJsonValueExpression<T> jsonValue(Expression<?> jsonDocument, Expression<String> jsonPath, Class<T> returningType);
 
 	/**
+	 * @see #jsonQuery(Expression, Expression)
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaJsonQueryExpression jsonQuery(Expression<?> jsonDocument, String jsonPath);
+
+	/**
+	 * Queries values by JSON path from a JSON document.
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaJsonQueryExpression jsonQuery(Expression<?> jsonDocument, Expression<String> jsonPath);
+
+	/**
 	 * Checks if a JSON document contains a node for the given JSON path.
 	 *
 	 * @since 7.0

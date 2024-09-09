@@ -53,7 +53,7 @@ public class JsonValueFunction extends AbstractSqmSelfRenderingFunctionDescripto
 				"json_value",
 				FunctionKind.NORMAL,
 				StandardArgumentsValidators.composite(
-						new ArgumentTypesValidator( StandardArgumentsValidators.between( 2, 5 ), IMPLICIT_JSON, STRING, ANY, ANY, ANY )
+						new ArgumentTypesValidator( StandardArgumentsValidators.between( 2, 3 ), IMPLICIT_JSON, STRING, ANY )
 				),
 				new CastTargetReturnTypeResolver( typeConfiguration ),
 				StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, JSON, STRING )

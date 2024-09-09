@@ -433,6 +433,7 @@ public class DB2LegacyDialect extends Dialect {
 
 			if ( getDB2Version().isSameOrAfter( 11 ) ) {
 				functionFactory.jsonValue_no_passing();
+				functionFactory.jsonQuery_no_passing();
 				functionFactory.jsonExists_no_passing();
 				functionFactory.jsonObject_db2();
 				functionFactory.jsonArray_db2();

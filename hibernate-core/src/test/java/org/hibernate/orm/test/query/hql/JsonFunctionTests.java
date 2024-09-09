@@ -6,12 +6,15 @@
  */
 package org.hibernate.orm.test.query.hql;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.type.SqlTypes;
 
 import org.hibernate.testing.orm.junit.DialectContext;
@@ -21,11 +24,21 @@ import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.BeforeAll;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.BinaryNode;
+import com.fasterxml.jackson.databind.node.BooleanNode;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.NumericNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Tuple;
@@ -44,7 +57,7 @@ public class JsonFunctionTests {
 
 	JsonHolder entity;
 
-	@BeforeAll
+	@BeforeEach
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				em -> {
@@ -58,8 +71,23 @@ public class JsonFunctionTests {
 					entity.json.put( "theNull", null );
 					entity.json.put( "theArray", new String[] { "a", "b", "c" } );
 					entity.json.put( "theObject", new HashMap<>( entity.json ) );
+					entity.json.put(
+							"theNestedObjects",
+							List.of(
+									Map.of( "id", 1, "name", "val1" ),
+									Map.of( "id", 2, "name", "val2" ),
+									Map.of( "id", 3, "name", "val3" )
+							)
+					);
 					em.persist(entity);
 				}
+		);
+	}
+
+	@AfterEach
+	public void cleanupData(SessionFactoryScope scope) {
+		scope.inTransaction(
+				em -> em.createMutationQuery( "delete from JsonHolder" ).executeUpdate()
 		);
 	}
 
@@ -110,6 +138,48 @@ public class JsonFunctionTests {
 							Tuple.class
 					).setParameter( "idx", 0 ).getSingleResult();
 					assertEquals( "1", tuple.get( 0 ) );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonQuery.class)
+	public void testJsonQuery(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Tuple tuple = session.createQuery(
+							"select " +
+									"json_query(e.json, '$.theArray'), " +
+									"json_query(e.json, '$.theNestedObjects'), " +
+									"json_query(e.json, '$.theNestedObjects[$idx]' passing :idx as idx with wrapper) " +
+									"from JsonHolder e " +
+									"where e.id = 1L",
+							Tuple.class
+					).setParameter( "idx", 0 ).getSingleResult();
+					assertEquals( parseJson( "[\"a\",\"b\",\"c\"]" ), parseJson( tuple.get( 0, String.class ) ) );
+					assertEquals(
+							parseJson(
+									"[{\"id\":1,\"name\":\"val1\"},{\"id\":2,\"name\":\"val2\"},{\"id\":3,\"name\":\"val3\"}]" ),
+							parseJson( tuple.get( 1, String.class ) )
+					);
+					assertEquals( parseJson( "[{\"id\":1,\"name\":\"val1\"}]" ), parseJson( tuple.get( 2, String.class ) ) );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonQueryNestedPath.class)
+	public void testJsonQueryNested(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Tuple tuple = session.createQuery(
+							"select " +
+									"json_query(e.json, '$.theNestedObjects[*].id' with wrapper) " +
+									"from JsonHolder e " +
+									"where e.id = 1L",
+							Tuple.class
+					).getSingleResult();
+					assertEquals( parseJson( "[1,2,3]" ), parseJson( tuple.get( 0, String.class ) ) );
 				}
 		);
 	}
@@ -224,6 +294,7 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonExists.class)
+	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 21, matchSubTypes = true, reason = "Oracle bug in versions before 23")
 	public void testJsonExists(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -263,6 +334,52 @@ public class JsonFunctionTests {
 		}
 		catch (JsonProcessingException e) {
 			throw new RuntimeException( e );
+		}
+	}
+
+	private static Object parseJson(String json) {
+		try {
+			return toJavaNode( MAPPER.readTree( json ) );
+		}
+		catch (JsonProcessingException e) {
+			throw new RuntimeException( e );
+		}
+	}
+
+	private static Object toJavaNode(JsonNode jsonNode) {
+		if ( jsonNode instanceof ArrayNode arrayNode ) {
+			final var list = new ArrayList<>( arrayNode.size() );
+			for ( JsonNode node : arrayNode ) {
+				list.add( toJavaNode( node ) );
+			}
+			return list;
+		}
+		else if ( jsonNode instanceof ObjectNode object ) {
+			final var map = new HashMap<>( object.size() );
+			final Iterator<Map.Entry<String, JsonNode>> iter = object.fields();
+			while ( iter.hasNext() ) {
+				final Map.Entry<String, JsonNode> entry = iter.next();
+				map.put( entry.getKey(), toJavaNode( entry.getValue() ) );
+			}
+			return map;
+		}
+		else if ( jsonNode instanceof NullNode ) {
+			return null;
+		}
+		else if ( jsonNode instanceof NumericNode numericNode ) {
+			return numericNode.numberValue();
+		}
+		else if ( jsonNode instanceof BooleanNode booleanNode ) {
+			return booleanNode.booleanValue();
+		}
+		else if ( jsonNode instanceof TextNode textNode ) {
+			return textNode.textValue();
+		}
+		else if ( jsonNode instanceof BinaryNode binaryNode ) {
+			return binaryNode.binaryValue();
+		}
+		else {
+			throw new UnsupportedOperationException( "Unsupported node type: " +  jsonNode.getClass().getName() );
 		}
 	}
 

@@ -64,7 +64,6 @@ import org.hibernate.usertype.UserType;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.SharedCacheMode;
 
-import static java.util.Collections.emptyList;
 
 /**
  * A convenience API making it easier to bootstrap an instance of Hibernate.
@@ -199,11 +198,10 @@ public class Configuration {
 	}
 
 	private static BootstrapServiceRegistry getBootstrapRegistry(ServiceRegistry serviceRegistry) {
-		if ( serviceRegistry instanceof BootstrapServiceRegistry ) {
-			return (BootstrapServiceRegistry) serviceRegistry;
+		if ( serviceRegistry instanceof BootstrapServiceRegistry bootstrapServiceRegistry ) {
+			return bootstrapServiceRegistry;
 		}
-		else if ( serviceRegistry instanceof StandardServiceRegistry ) {
-			final StandardServiceRegistry ssr = (StandardServiceRegistry) serviceRegistry;
+		else if ( serviceRegistry instanceof StandardServiceRegistry ssr ) {
 			return (BootstrapServiceRegistry) ssr.getParentServiceRegistry();
 		}
 
@@ -669,7 +667,7 @@ public class Configuration {
 	 * @throws MappingException Indicates problems locating the resource or
 	 * processing the contained mapping document.
 	 */
-	public Configuration addClass(Class entityClass) throws MappingException {
+	public Configuration addClass(Class<?> entityClass) throws MappingException {
 		if ( entityClass == null ) {
 			throw new IllegalArgumentException( "The specified class cannot be null" );
 		}
@@ -688,7 +686,7 @@ public class Configuration {
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	public Configuration addAnnotatedClass(Class annotatedClass) {
+	public Configuration addAnnotatedClass(Class<?> annotatedClass) {
 		metadataSources.addAnnotatedClass( annotatedClass );
 		return this;
 	}
@@ -1153,7 +1151,7 @@ public class Configuration {
 	}
 
 	public java.util.Collection<NamedEntityGraphDefinition> getNamedEntityGraphs() {
-		return namedEntityGraphMap == null ? emptyList() : namedEntityGraphMap.values();
+		return namedEntityGraphMap.values();
 	}
 
 

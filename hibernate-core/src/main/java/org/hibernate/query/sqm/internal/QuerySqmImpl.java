@@ -55,7 +55,6 @@ import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.internal.DelegatingDomainQueryExecutionContext;
 import org.hibernate.query.internal.ParameterMetadataImpl;
-import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.DelegatingQueryOptions;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.HqlInterpretation;
@@ -70,6 +69,7 @@ import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKeySource;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -890,7 +890,7 @@ public class QuerySqmImpl<R>
 	// Named query externalization
 
 	@Override
-	public NamedQueryMemento<R> toMemento(String name) {
+	public NamedSqmQueryMemento<R> toMemento(String name) {
 		if ( CRITERIA_HQL_STRING.equals( getQueryString() ) ) {
 			final SqmStatement<R> sqmStatement;
 			if ( !getSession().isCriteriaCopyTreeEnabled() ) {

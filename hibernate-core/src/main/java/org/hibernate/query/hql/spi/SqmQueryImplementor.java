@@ -23,10 +23,10 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.named.NameableQuery;
-import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.SqmQuery;
+import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.transform.ResultTransformer;
 
@@ -42,7 +42,7 @@ import jakarta.persistence.TemporalType;
  */
 public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, NameableQuery {
 	@Override
-	NamedQueryMemento<R> toMemento(String name);
+	NamedSqmQueryMemento<R> toMemento(String name);
 
 	@Override
 	ParameterMetadataImplementor getParameterMetadata();

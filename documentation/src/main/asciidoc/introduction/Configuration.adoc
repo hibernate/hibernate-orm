@@ -2,11 +2,11 @@
 == Configuration and bootstrap
 
 We would love to make this section short.
-Unfortunately, there's several distinct ways to configure and bootstrap Hibernate, and we're going to have to describe at least two of them in detail.
+Unfortunately, there are several distinct ways to configure and bootstrap Hibernate, and we're going to have to describe at least two of them in detail.
 
 The four basic ways to obtain an instance of Hibernate are shown in the following table:
 
-[%breakable,cols="50,50"]
+[%breakable,cols="50,50",number=0]
 |===
 
 | Using the standard JPA-defined XML, and the operation `Persistence.createEntityManagerFactory()`
@@ -65,13 +65,13 @@ driver for your database.
 | MySQL or TiDB             | `com.mysql:mysql-connector-j:{version}`
 | MariaDB                   | `org.mariadb.jdbc:mariadb-java-client:{version}`
 | DB2                       | `com.ibm.db2:jcc:{version}`
-| SQL Server                | `com.microsoft.sqlserver:mssql-jdbc:${version}`
-| Oracle                    | `com.oracle.database.jdbc:ojdbc11:${version}`
+| SQL Server                | `com.microsoft.sqlserver:mssql-jdbc:{version}`
+| Oracle                    | `com.oracle.database.jdbc:ojdbc11:{version}`
 | H2                        | `com.h2database:h2:{version}`
 | HSQLDB                    | `org.hsqldb:hsqldb:{version}`
 |===
 
-Where `{version}` is the latest version of the JDBC driver for your databse.
+Where `{version}` is the latest version of the JDBC driver for your database.
 
 [[optional-dependencies]]
 === Optional dependencies
@@ -310,7 +310,7 @@ jakarta.persistence.database-major-version=15
 jakarta.persistence.database-minor-version=7
 ----
 
-The product name is the value returned by `java.sql.DatabaseMetaData.getDatabaseProductName()`, for example, `PostgreSQL`, `MySQL` `H2`, `Oracle`, `EnterpriseDB`, `MariaDB`, or `Microsoft SQL Server`.
+The product name is the value returned by `java.sql.DatabaseMetaData.getDatabaseProductName()`, for example, `PostgreSQL`, `MySQL`, `H2`, `Oracle`, `EnterpriseDB`, `MariaDB`, or `Microsoft SQL Server`.
 
 .Settings needed when database is inaccessible at startup
 [%breakable,cols="50,~"]
@@ -424,7 +424,7 @@ Persistence.generateSchema("org.hibernate.example",
 
 To see the generated SQL as it's sent to the database, you have two options.
 
-One way is to set the property `hibernate.show_sql` to `true`, and Hibernate will log SQL direct to the console.
+One way is to set the property `hibernate.show_sql` to `true`, and Hibernate will log SQL directly to the console.
 You can make the output much more readable by enabling formatting or highlighting.
 These settings really help when troubleshooting the generated SQL statements.
 

@@ -576,7 +576,7 @@ interface Queries {
 }
 ----
 
-This gives some dynamic control over query execution, but what if would like direct control over the `Query` object?
+This gives some dynamic control over query execution, but what if we would like direct control over the `Query` object?
 Well, let's talk about the return type.
 
 [[key-based-paging]]

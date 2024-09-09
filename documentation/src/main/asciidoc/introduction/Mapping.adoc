@@ -711,7 +711,7 @@ In principle, the `Blob` and `Clob` objects provide efficient ways to read or st
 ----
 Book book = session.find(Book.class, bookId);
 String text = book.text.getSubString(1, textLength);
-InputStream bytes = book.images.getBinaryStream();
+InputStream bytes = book.coverArt.getBinaryStream();
 ----
 
 Of course, the behavior here depends very much on the JDBC driver, and so we really can't promise that this is a sensible thing to do on your database.
@@ -1035,7 +1035,7 @@ But it's common to need to:
 
 We've <<join-column-mappings,already seen>> how to use `@ForeignKey` to specify the name of a foreign key constraint.
 
-There's two ways to add a unique constraint to a table:
+There are two ways to add a unique constraint to a table:
 
 - using `@Column(unique=true)` to indicate a single-column unique key, or
 - using the `@UniqueConstraint` annotation to define a uniqueness constraint on a combination of columns.

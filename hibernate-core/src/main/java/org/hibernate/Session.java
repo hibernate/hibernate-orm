@@ -705,16 +705,13 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * {@link MultiIdentifierLoadAccess}.
 	 *
 	 * @param entityType the entity type
-	 * @param ids the identifiers
-	 *
+	 * @param ids        the identifiers
 	 * @return an ordered list of persistent instances, with null elements representing missing
-	 *         entities
-	 *
-	 * @since 7.0
-	 *
+	 * entities
 	 * @see #byMultipleIds(Class)
+	 * @since 7.0
 	 */
-	<E> List<E> findAll(Class<E> entityType, Object... ids);
+	<E> List<E> findAll(Class<E> entityType, List<Object> ids);
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
@@ -925,7 +922,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @throws HibernateException If the given class does not resolve as a mapped entity
 	 *
-	 * @see #findAll(Class, Object...)
+	 * @see #findAll(Class, List)
 	 */
 	<T> MultiIdentifierLoadAccess<T> byMultipleIds(Class<T> entityClass);
 

@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.Internal;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.NullPrecedence;
@@ -86,7 +87,8 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 
 	QueryEngine getQueryEngine();
 
-	void setCriteriaValueHandlingMode(ValueHandlingMode criteriaValueHandlingMode);
+	@Internal
+	ValueHandlingMode setCriteriaValueHandlingMode(ValueHandlingMode criteriaValueHandlingMode);
 
 	<R> SqmTuple<R> tuple(
 			Class<R> tupleType,

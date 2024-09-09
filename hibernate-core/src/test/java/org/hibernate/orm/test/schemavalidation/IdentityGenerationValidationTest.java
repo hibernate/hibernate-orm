@@ -13,7 +13,7 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
@@ -27,7 +27,7 @@ import jakarta.persistence.Table;
 /**
  * @author Jan Schatteman
  */
-@TestForIssue( jiraKey = "HHH-13106" )
+@JiraKey( value = "HHH-13106" )
 @RequiresDialect( value = PostgreSQLDialect.class )
 public class IdentityGenerationValidationTest extends BaseCoreFunctionalTestCase {
 

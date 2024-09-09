@@ -16,7 +16,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -31,7 +31,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Andreas Berger
  */
-@TestForIssue(jiraKey = "HHH-4910")
+@JiraKey(value = "HHH-4910")
 public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -254,7 +254,7 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10631")
+	@JiraKey(value = "HHH-10631")
 	public void testCollectionCacheEvictionUpdateWhenChildIsSetToNull() {
 		Session s = openSession();
 		s.beginTransaction();

@@ -19,7 +19,7 @@ import org.hibernate.orm.test.envers.entities.onetomany.OneToManyNotAuditedNullE
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -124,7 +124,7 @@ public class ProxyIdentifier extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8174" )
+	@JiraKey( value = "HHH-8174" )
 	public void testNullReferenceWithNotFoundActionIgnore() {
 		ManyToOneNotAuditedNullEntity mtoRev2 = getAuditReader().find( ManyToOneNotAuditedNullEntity.class, mtonane1.getId(), 2 );
 		Assert.assertEquals( mtonane1, mtoRev2 );
@@ -140,7 +140,7 @@ public class ProxyIdentifier extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8912" )
+	@JiraKey( value = "HHH-8912" )
 	public void testNullReferenceWithNotFoundActionIgnoreInParent() {
 		ExtManyToOneNotAuditedNullEntity emtoRev2 = getAuditReader().find( ExtManyToOneNotAuditedNullEntity.class, emtonane1.getId(), 2 );
 		Assert.assertEquals( emtonane1, emtoRev2 );

@@ -11,7 +11,7 @@ import java.io.Serializable;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -40,7 +40,7 @@ public class OneToOneEagerDerivedIdFetchModeSelectTest {
 	private Foo foo;
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14390")
+	@JiraKey(value = "HHH-14390")
 	public void testQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Bar newBar = (Bar) session.createQuery( "SELECT b FROM Bar b WHERE b.foo.id = :id" )
@@ -54,7 +54,7 @@ public class OneToOneEagerDerivedIdFetchModeSelectTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14390")
+	@JiraKey(value = "HHH-14390")
 	public void testQueryById(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Bar newBar = (Bar) session.createQuery( "SELECT b FROM Bar b WHERE b.foo = :foo" )
@@ -68,7 +68,7 @@ public class OneToOneEagerDerivedIdFetchModeSelectTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14390")
+	@JiraKey(value = "HHH-14390")
 	public void testFindByPrimaryKey(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Bar newBar = session.find( Bar.class, foo.getId() );

@@ -24,7 +24,7 @@ import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -140,7 +140,7 @@ public class LazyElementCollectionBasicNonUniqueIdWhereTest extends BaseCoreFunc
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12937")
+	@JiraKey( value = "HHH-12937")
 	public void testInitializeFromUniqueAssociationTable() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -160,7 +160,7 @@ public class LazyElementCollectionBasicNonUniqueIdWhereTest extends BaseCoreFunc
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12937")
+	@JiraKey( value = "HHH-12937")
 	public void testInitializeFromNonUniqueAssociationTable() {
 		Session session = openSession();
 		session.beginTransaction();

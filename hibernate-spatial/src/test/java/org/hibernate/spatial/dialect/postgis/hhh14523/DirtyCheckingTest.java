@@ -23,7 +23,7 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import org.geolatte.geom.codec.Wkt;
@@ -33,7 +33,7 @@ import org.locationtech.jts.geom.Point;
 
 import static org.junit.Assert.assertEquals;
 
-@TestForIssue(jiraKey = "HHH-14523")
+@JiraKey(value = "HHH-14523")
 @RequiresDialect(PostgreSQLDialect.class)
 public class DirtyCheckingTest extends BaseEntityManagerFunctionalTestCase {
 

@@ -21,7 +21,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.collection.spi.PersistentCollection;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -160,7 +160,7 @@ public class ListAddTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10375")
+	@JiraKey(value = "HHH-10375")
 	public void testAddQuestionAfterSessionIsClosed(SessionFactoryScope scope) {
 		Quizz quizz = scope.fromTransaction(
 				session -> {

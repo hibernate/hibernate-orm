@@ -9,7 +9,7 @@ package org.hibernate.orm.test.refresh;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.refresh.TestEntity;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-11188")
+@JiraKey(value = "HHH-11188")
 @DomainModel(
 		annotatedClasses = TestEntity.class
 )

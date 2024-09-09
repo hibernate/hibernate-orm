@@ -34,7 +34,7 @@ import org.hibernate.envers.Audited;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
@@ -42,7 +42,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-11770")
+@JiraKey(value = "HHH-11770")
 public class OneToManyCompositeKeyTest extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

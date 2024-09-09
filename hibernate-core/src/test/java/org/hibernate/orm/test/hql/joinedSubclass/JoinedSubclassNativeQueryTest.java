@@ -10,7 +10,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.SqlTypes;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -58,7 +58,7 @@ public class JoinedSubclassNativeQueryTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-16180")
+	@JiraKey( value = "HHH-16180")
 	public void testJoinedInheritanceNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

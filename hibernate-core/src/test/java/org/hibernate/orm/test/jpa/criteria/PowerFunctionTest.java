@@ -8,7 +8,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,7 +25,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @Jpa(
 		annotatedClasses = PowerFunctionTest.Person.class
 )
-@TestForIssue(jiraKey = "HHH-15395")
+@JiraKey(value = "HHH-15395")
 public class PowerFunctionTest {
 
 	@BeforeEach

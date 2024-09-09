@@ -11,14 +11,14 @@ import java.util.Map;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.id.SequenceMismatchStrategy;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-12973")
+@JiraKey(value = "HHH-12973")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSequences.class)
 public class SequenceMismatchStrategyExceptionEnumTest extends SequenceMismatchStrategyDefaultExceptionTest {
 

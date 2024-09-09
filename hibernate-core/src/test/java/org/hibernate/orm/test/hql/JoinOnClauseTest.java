@@ -8,7 +8,7 @@ package org.hibernate.orm.test.hql;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -53,7 +53,7 @@ public class JoinOnClauseTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11437")
+	@JiraKey(value = "HHH-11437")
 	public void testOnClauseUsesSuperclassAttribute() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			List<Book> result = entityManager.createQuery( "SELECT DISTINCT b1 FROM Book b1 JOIN Book b2 ON b1.price = b2.price", Book.class )
@@ -63,7 +63,7 @@ public class JoinOnClauseTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11435")
+	@JiraKey(value = "HHH-11435")
 	public void testOnClauseUsesNonDrivingTableAlias() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			try {

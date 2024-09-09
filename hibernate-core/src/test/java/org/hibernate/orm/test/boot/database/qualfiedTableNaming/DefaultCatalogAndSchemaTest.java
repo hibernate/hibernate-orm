@@ -62,8 +62,9 @@ import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.CustomParameterized;
+import org.hibernate.testing.orm.junit.JiraKeyGroup;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -88,7 +89,12 @@ import jakarta.persistence.TableGenerator;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(CustomParameterized.class)
-@TestForIssue(jiraKey = { "HHH-14921", "HHH-14922", "HHH-15212", "HHH-16177" })
+@JiraKeyGroup( value = {
+		@JiraKey( value = "HHH-14921" ),
+		@JiraKey( value = "HHH-14922" ),
+		@JiraKey( value = "HHH-15212" ),
+		@JiraKey( value = "HHH-16177" )
+} )
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 public class DefaultCatalogAndSchemaTest {
 

@@ -15,14 +15,14 @@ import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 import junit.framework.Assert;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-5411")
+@JiraKey(value = "HHH-5411")
 public class PropertyNotUpdatableTest extends BaseEnversJPAFunctionalTestCase {
 	private Long id = null;
 

@@ -5,13 +5,13 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.orm.test.annotations.fetchprofile.mappedby.Address;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
 
-@TestForIssue( jiraKey = "HHH-14071" )
+@JiraKey( value = "HHH-14071" )
 public class MappedByFetchProfileFunctionTest extends BaseCoreFunctionalTestCase {
 
 	@Test

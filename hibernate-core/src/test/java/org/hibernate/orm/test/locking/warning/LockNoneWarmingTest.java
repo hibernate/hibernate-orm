@@ -23,7 +23,7 @@ import org.hibernate.Session;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
@@ -40,7 +40,7 @@ import static org.junit.Assert.assertFalse;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10513")
+@JiraKey(value = "HHH-10513")
 public class LockNoneWarmingTest extends BaseCoreFunctionalTestCase {
 
 	private Triggerable triggerable;

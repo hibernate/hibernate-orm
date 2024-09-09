@@ -15,7 +15,7 @@ import java.util.List;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-11614")
+@JiraKey(value = "HHH-11614")
 @RequiresDialect(PostgreSQLDialect.class)
 @DomainModel(
 		annotatedClasses = PostgreSqlLobStringTest.TestEntity.class

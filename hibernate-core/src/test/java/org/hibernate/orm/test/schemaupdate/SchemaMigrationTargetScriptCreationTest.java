@@ -28,7 +28,7 @@ import org.junit.After;
 import org.junit.Test;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hamcrest.core.Is.is;
@@ -83,7 +83,7 @@ public class SchemaMigrationTargetScriptCreationTest extends BaseCoreFunctionalT
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10684")
+	@JiraKey(value = "HHH-10684")
 	public void testTargetScriptIsCreated() throws Exception {
 		String fileContent = new String( Files.readAllBytes( output.toPath() ) );
 		Pattern fileContentPattern = Pattern.compile( "create( (column|row))? table test_entity" );

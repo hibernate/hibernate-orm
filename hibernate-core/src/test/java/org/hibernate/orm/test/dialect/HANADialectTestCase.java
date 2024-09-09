@@ -18,7 +18,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -81,7 +81,7 @@ public class HANADialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13239")
+	@JiraKey(value = "HHH-13239")
 	public void testLockWaitTimeout() {
 		HANADialect dialect = new HANADialect();
 

@@ -3,7 +3,7 @@ package org.hibernate.orm.test.annotations.collectionelement;
 import java.io.Serializable;
 import java.util.Set;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		}
 
 )
-@TestForIssue(jiraKey = "HHH-15759")
+@JiraKey(value = "HHH-15759")
 public class ElementCollectionWithEntityAndFKForElementTest {
 
 

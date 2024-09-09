@@ -15,14 +15,14 @@ import org.hibernate.annotations.JoinColumnsOrFormulas;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-@TestForIssue(jiraKey = "HHH-14223")
+@JiraKey(value = "HHH-14223")
 @Jpa(annotatedClasses = {
         JoinFormulaImplicitJoinTest.Person.class, JoinFormulaImplicitJoinTest.PersonVersion.class
 }, properties = {

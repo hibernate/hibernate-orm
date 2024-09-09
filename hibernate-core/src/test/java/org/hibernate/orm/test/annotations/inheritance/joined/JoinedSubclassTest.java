@@ -10,7 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -143,7 +143,7 @@ public class JoinedSubclassTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4250")
+	@JiraKey(value = "HHH-4250")
 	public void testManyToOneWithJoinTable(SessionFactoryScope scope) {
 		//HHH-4250 : @ManyToOne - @OneToMany doesn't work with @Inheritance(strategy= InheritanceType.JOINED)
 		scope.inTransaction(
@@ -184,7 +184,7 @@ public class JoinedSubclassTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4240")
+	@JiraKey(value = "HHH-4240")
 	public void testSecondaryTables(SessionFactoryScope scope) {
 		// HHH-4240 - SecondaryTables not recognized when using JOINED inheritance
 		Company company = new Company();

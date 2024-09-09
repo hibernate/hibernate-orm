@@ -23,7 +23,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -44,7 +44,7 @@ import static org.junit.Assert.assertTrue;
 public class ParameterizedAttributeConverterParameterTypeTest {
 	
 	@Test
-	@TestForIssue(jiraKey = "HHH-8804")
+	@JiraKey(value = "HHH-8804")
 	public void testGenericTypeParameters() {
 		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl();
 		try {
@@ -59,7 +59,7 @@ public class ParameterizedAttributeConverterParameterTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10050" )
+	@JiraKey( value = "HHH-10050" )
 	public void testNestedTypeParameterAutoApplication(ServiceRegistryScope scope) {
 		final Metadata metadata = new MetadataSources( scope.getRegistry() )
 				.addAnnotatedClass( SampleEntity.class )

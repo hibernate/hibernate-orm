@@ -19,7 +19,7 @@ import org.hibernate.Session;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.NativeQuery;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.After;
 import org.junit.Before;
@@ -39,7 +39,7 @@ import org.assertj.core.api.InstanceOfAssertFactories;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-11092")
+@JiraKey(value = "HHH-11092")
 public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	private static final String[] GAME_TITLES = { "Halo", "Grand Theft Auto", "NetHack" };
@@ -169,7 +169,7 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12621")
+	@JiraKey(value = "HHH-12621")
 	public void testNativeQueriesFromNamedQueriesDoNotShareQuerySpaces() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Query originalQuery = entityManager.createNativeQuery( "select g from Game g where title = ?1" );
@@ -188,7 +188,7 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11413")
+	@JiraKey(value = "HHH-11413")
 	public void testNamedNativeQueryExceptionNoResultDefined() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			assertThrows(
@@ -200,7 +200,7 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11413")
+	@JiraKey(value = "HHH-11413")
 	public void testNamedQueryAddedFromTypedNativeQuery() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			final Query query = entityManager.createNativeQuery(
@@ -273,7 +273,7 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14816")
+	@JiraKey(value = "HHH-14816")
 	public void testQueryHintLockMode() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 					 Query query = entityManager.createNamedQuery( "NamedNativeQuery" );

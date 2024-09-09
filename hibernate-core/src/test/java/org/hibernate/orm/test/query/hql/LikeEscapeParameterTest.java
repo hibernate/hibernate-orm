@@ -2,7 +2,7 @@ package org.hibernate.orm.test.query.hql;
 
 import org.hibernate.query.SemanticException;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -55,7 +55,7 @@ public class LikeEscapeParameterTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15745")
+	@JiraKey(value = "HHH-15745")
 	public void testStringLiteralInSubQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

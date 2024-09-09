@@ -8,7 +8,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.ReaderInputStream;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
@@ -16,7 +16,7 @@ import org.junit.Test;
 /**
  * @author Koen Aers
  */
-@TestForIssue( jiraKey = "HHH-10223" )
+@JiraKey( value = "HHH-10223" )
 @RequiresDialect( H2Dialect.class )
 public class NamedQueryTest extends BaseUnitTestCase {
 	

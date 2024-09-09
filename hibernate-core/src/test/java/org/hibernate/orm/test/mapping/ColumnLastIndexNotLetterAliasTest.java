@@ -12,7 +12,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.mapping.Column;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -29,7 +29,7 @@ public class ColumnLastIndexNotLetterAliasTest {
 	private static final Dialect DIALECT = new PostgreSQLDialect();
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14720")
+	@JiraKey(value = "HHH-14720")
 	public void testColumnNameEndinWithNonCharacter() {
 		test( "aColumn1" );
 		test( "aColumn_" );

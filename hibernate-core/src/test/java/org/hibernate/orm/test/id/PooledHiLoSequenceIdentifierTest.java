@@ -37,7 +37,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-9287")
+@JiraKey(value = "HHH-9287")
 @DomainModel(
 		annotatedClasses = PooledHiLoSequenceIdentifierTest.SequenceIdentifier.class
 )

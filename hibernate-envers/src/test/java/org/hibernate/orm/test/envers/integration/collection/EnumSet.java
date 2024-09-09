@@ -28,7 +28,7 @@ import org.hibernate.orm.test.envers.entities.collection.EnumSetEntity.E1;
 import org.hibernate.orm.test.envers.entities.collection.EnumSetEntity.E2;
 import org.hibernate.orm.test.envers.tools.TestTools;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.type.SqlTypes;
 import org.junit.Test;
 
@@ -114,7 +114,7 @@ public class EnumSet extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7780")
+	@JiraKey(value = "HHH-7780")
 	public void testEnumRepresentation() {
 		EntityManager entityManager = getEntityManager();
 

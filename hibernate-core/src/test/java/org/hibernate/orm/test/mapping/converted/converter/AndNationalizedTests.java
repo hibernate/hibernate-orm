@@ -23,7 +23,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.PersistentClass;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
@@ -38,7 +38,7 @@ import static org.junit.Assert.assertEquals;
 @SkipForDialect(value = DB2Dialect.class, comment = "DB2 jdbc driver doesn't support setNString")
 public class AndNationalizedTests extends BaseUnitTestCase {
 	@Test
-	@TestForIssue( jiraKey = "HHH-9599")
+	@JiraKey( value = "HHH-9599")
 	public void basicTest() {
 		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {

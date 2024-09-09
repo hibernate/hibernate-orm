@@ -34,7 +34,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -115,7 +115,7 @@ public class EntityJoinTest {
     }
 
     @Test
-    @TestForIssue(jiraKey = "HHH-11337")
+    @JiraKey(value = "HHH-11337")
     @SkipForDialect(dialectClass = SybaseDialect.class)
     public void testLeftOuterEntityJoinsWithImplicitInnerJoinInSelectClause(SessionFactoryScope scope) {
         scope.inTransaction(
@@ -142,7 +142,7 @@ public class EntityJoinTest {
     }
 
     @Test
-    @TestForIssue(jiraKey = "HHH-11340")
+    @JiraKey(value = "HHH-11340")
     public void testJoinOnEntityJoinNode(SessionFactoryScope scope) {
         scope.inTransaction(
                 (session) -> {
@@ -169,7 +169,7 @@ public class EntityJoinTest {
     }
 
     @Test
-    @TestForIssue(jiraKey = "HHH-11538")
+    @JiraKey(value = "HHH-11538")
     public void testNoImpliedJoinGeneratedForEqualityComparison(SessionFactoryScope scope) {
         final String qry = "select r.id, cust.name " +
                 "from FinancialRecord r " +

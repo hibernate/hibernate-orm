@@ -12,7 +12,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class GetLoadJpaComplianceTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12034")
+	@JiraKey(value = "HHH-12034")
 	public void testLoadIdNotFound_FieldBasedAccess(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {
@@ -67,7 +67,7 @@ public class GetLoadJpaComplianceTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12034")
+	@JiraKey(value = "HHH-12034")
 	public void testReferenceIdNotFound_FieldBasedAccess(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {
@@ -93,7 +93,7 @@ public class GetLoadJpaComplianceTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12034")
+	@JiraKey(value = "HHH-12034")
 	public void testLoadIdNotFound_PropertyBasedAccess(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {
@@ -120,7 +120,7 @@ public class GetLoadJpaComplianceTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12034")
+	@JiraKey(value = "HHH-12034")
 	public void testReferenceIdNotFound_PropertyBasedAccess(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {

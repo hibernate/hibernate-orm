@@ -15,7 +15,7 @@ import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -73,7 +73,7 @@ public class MultiLoadSubSelectCollectionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12740")
+	@JiraKey(value = "HHH-12740")
 	public void testSubselect(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -30,7 +30,7 @@ import jakarta.persistence.criteria.Root;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 /**
@@ -47,7 +47,7 @@ public class BasicSimpleCaseTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9343")
+	@JiraKey(value = "HHH-9343")
 	public void testCaseStringResult() {
 		EntityManager em = getOrCreateEntityManager();
 		CriteriaBuilder builder = em.getCriteriaBuilder();
@@ -67,7 +67,7 @@ public class BasicSimpleCaseTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9343")
+	@JiraKey(value = "HHH-9343")
 	public void testCaseIntegerResult() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -89,7 +89,7 @@ public class BasicSimpleCaseTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9343")
+	@JiraKey(value = "HHH-9343")
 	public void testCaseLiteralResult() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -109,7 +109,7 @@ public class BasicSimpleCaseTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9343")
+	@JiraKey(value = "HHH-9343")
 	public void testCaseLiteralResult2() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -173,7 +173,7 @@ public class BasicSimpleCaseTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13016")
+	@JiraKey(value = "HHH-13016")
 	@FailureExpected(jiraKey = "HHH-13016")
 	public void testCaseEnumResult() {
 		doInJPA( this::entityManagerFactory, em -> {
@@ -214,7 +214,7 @@ public class BasicSimpleCaseTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13199")
+	@JiraKey(value = "HHH-13199")
 	public void testCaseEnumInSum() throws Exception {
 		doInJPA( this::entityManagerFactory, em -> {
 			// create entities

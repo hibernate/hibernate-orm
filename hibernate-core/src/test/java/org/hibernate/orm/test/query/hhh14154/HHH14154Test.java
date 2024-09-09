@@ -11,7 +11,7 @@ import jakarta.persistence.criteria.Root;
 import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -22,7 +22,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  * @author Nathan Xu
  */
 @RequiresDialect( H2Dialect.class )
-@TestForIssue( jiraKey = "HHH-14154" )
+@JiraKey( value = "HHH-14154" )
 public class HHH14154Test extends BaseCoreFunctionalTestCase {
 
 	@Override

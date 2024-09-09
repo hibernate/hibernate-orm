@@ -28,7 +28,7 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.DynamicUpdate;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author Artem K.
  * @author Nathan Xu
  */
-@TestForIssue(jiraKey = "HHH-14178")
+@JiraKey(value = "HHH-14178")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 @DomainModel(
 		annotatedClasses = {

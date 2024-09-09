@@ -22,7 +22,7 @@ import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -132,7 +132,7 @@ public class EagerKeyManyToOneTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-2277")
+	@JiraKey(value = "HHH-2277")
 	public void testLoadEntityWithEagerFetchingToKeyManyToOneReferenceBackToSelf(SessionFactoryScope scope) {
 		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();

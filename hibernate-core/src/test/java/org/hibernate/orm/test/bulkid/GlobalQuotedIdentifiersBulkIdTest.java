@@ -16,7 +16,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.sqm.mutation.internal.inline.InlineMutationStrategy;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -26,7 +26,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-12561" )
+@JiraKey( value = "HHH-12561" )
 public class GlobalQuotedIdentifiersBulkIdTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

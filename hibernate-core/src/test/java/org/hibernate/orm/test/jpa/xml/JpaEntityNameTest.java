@@ -10,8 +10,9 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKeyGroup;
 import org.hibernate.testing.orm.junit.Jpa;
 
 import org.junit.jupiter.api.Test;
@@ -19,7 +20,10 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Strong Liu
  */
-@TestForIssue( jiraKey = "HHH-6039, HHH-6100" )
+@JiraKeyGroup( value = {
+		@JiraKey( value = "HHH-6039" ),
+		@JiraKey( value = "HHH-6100" )
+} )
 @Jpa(
 		xmlMappings = {"org/hibernate/orm/test/jpa/xml/Qualifier.hbm.xml"}
 )

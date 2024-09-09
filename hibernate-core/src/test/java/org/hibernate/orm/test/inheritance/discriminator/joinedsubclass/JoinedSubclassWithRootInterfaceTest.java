@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.inheritance.discriminator.joinedsubclass;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 public class JoinedSubclassWithRootInterfaceTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11554")
+	@JiraKey(value = "HHH-11554")
 	public void testIt(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final TestEntityImpl testEntity = new TestEntityImpl();

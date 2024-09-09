@@ -11,7 +11,7 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.CoreMessageLogger;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
 import org.junit.jupiter.api.Assertions;
@@ -46,7 +46,7 @@ public class CockroachDialectVersionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15511")
+	@JiraKey(value = "HHH-15511")
 	public void testCockroachDialectVersionParsing() {
 		String failMsg = "HHH000511: The database version version for the Cockroach Dialect could not be determined ... should have been logged";
 

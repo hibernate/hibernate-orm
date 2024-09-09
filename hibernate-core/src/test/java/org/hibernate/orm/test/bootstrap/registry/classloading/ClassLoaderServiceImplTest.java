@@ -15,7 +15,7 @@ import java.util.List;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -146,7 +146,7 @@ public class ClassLoaderServiceImplTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13551")
+	@JiraKey(value = "HHH-13551")
 	public void testServiceFromIncompatibleClassLoader() {
 		ClassLoaderServiceImpl classLoaderService = new ClassLoaderServiceImpl(
 				Arrays.asList(

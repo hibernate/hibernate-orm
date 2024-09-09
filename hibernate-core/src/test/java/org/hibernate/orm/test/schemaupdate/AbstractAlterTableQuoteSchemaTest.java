@@ -8,14 +8,14 @@ package org.hibernate.orm.test.schemaupdate;
 
 import org.hibernate.dialect.Dialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.DialectContext;
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-12939")
+@JiraKey(value = "HHH-12939")
 public abstract class AbstractAlterTableQuoteSchemaTest extends BaseSessionFactoryFunctionalTest {
 
 	private final Dialect dialect = DialectContext.getDialect();

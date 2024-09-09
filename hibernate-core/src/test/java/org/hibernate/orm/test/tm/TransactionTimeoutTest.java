@@ -13,7 +13,7 @@ import org.hibernate.TransactionException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jdbc.Person;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Lukasz Antoniak
  */
-@TestForIssue(jiraKey = "HHH-6780")
+@JiraKey(value = "HHH-6780")
 @ServiceRegistry(
 		settings = {
 				@Setting( name = AvailableSettings.IMPLICIT_NAMING_STRATEGY, value = "legacy-hbm" )

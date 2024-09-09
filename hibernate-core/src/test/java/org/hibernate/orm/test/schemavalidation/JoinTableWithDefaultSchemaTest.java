@@ -24,7 +24,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
@@ -39,7 +39,7 @@ import org.junit.Test;
 public class JoinTableWithDefaultSchemaTest extends BaseUnitTestCase {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10978")
+	@JiraKey(value = "HHH-10978")
 	@RequiresDialect(SQLServerDialect.class)
 	public void testGetTableDataForJoinTableWithDefaultSchema() {
 		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()

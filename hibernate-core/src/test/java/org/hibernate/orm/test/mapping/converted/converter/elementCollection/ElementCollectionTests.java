@@ -19,7 +19,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -52,7 +52,7 @@ import static org.junit.Assert.assertNotNull;
  * @author Markus Heiden
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-9495" )
+@JiraKey( value = "HHH-9495" )
 @DomainModel(
 		annotatedClasses = ElementCollectionTests.TheEntity.class
 )

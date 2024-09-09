@@ -9,7 +9,7 @@ package org.hibernate.envers.test.integration.manytoone.lazy;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.junit.Test;
@@ -28,7 +28,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Luke Chen
  */
-@TestForIssue(jiraKey = "HHH-13945")
+@JiraKey(value = "HHH-13945")
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 public class ManyToOneLazyDeleteTest extends BaseEnversFunctionalTestCase {
     private Long shipmentId;

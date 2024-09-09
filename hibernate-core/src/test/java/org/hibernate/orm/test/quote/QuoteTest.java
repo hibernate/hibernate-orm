@@ -22,7 +22,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.Session;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -56,7 +56,7 @@ public class QuoteTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 	
 	@Test
-	@TestForIssue(jiraKey = "HHH-8464")
+	@JiraKey(value = "HHH-8464")
 	public void testDoubleQuoteJoinColumn() {
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -81,7 +81,7 @@ public class QuoteTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 	
 	@Test
-	@TestForIssue(jiraKey = "HHH-2988")
+	@JiraKey(value = "HHH-2988")
 	public void testUnionSubclassEntityQuoting() {
 		Session s = openSession();
 		s.beginTransaction();

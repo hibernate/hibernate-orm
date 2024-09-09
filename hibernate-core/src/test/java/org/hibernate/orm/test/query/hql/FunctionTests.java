@@ -24,7 +24,7 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
@@ -115,7 +115,7 @@ public class FunctionTests {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15711")
+	@JiraKey( value = "HHH-15711")
 	public void testLowerUpperFunctionsWithEnums(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -128,7 +128,7 @@ public class FunctionTests {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15711")
+	@JiraKey( value = "HHH-15711")
 	public void testLowerUpperFunctionsWithConvertedEnums(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -141,7 +141,7 @@ public class FunctionTests {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15711")
+	@JiraKey(value = "HHH-15711")
 	public void testLowerFunctionsOrdinalEnumsShouldFail(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session ->

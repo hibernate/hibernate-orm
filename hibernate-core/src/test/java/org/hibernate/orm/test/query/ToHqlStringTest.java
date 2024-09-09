@@ -2,7 +2,7 @@ package org.hibernate.orm.test.query;
 
 import org.hibernate.query.spi.SqmQuery;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -31,7 +31,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 				ToHqlStringTest.TestEntitySub.class
 		}
 )
-@TestForIssue( jiraKey = "HHH-15389")
+@JiraKey( value = "HHH-15389")
 public class ToHqlStringTest {
 
 	@Test

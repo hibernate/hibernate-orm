@@ -30,7 +30,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -39,7 +39,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-11037")
+@JiraKey(value = "HHH-11037")
 @DomainModel(
 		annotatedClasses = {
 				JoinedSubclassWithEmbeddableTest.Person.class, JoinedSubclassWithEmbeddableTest.Employee.class

@@ -16,7 +16,7 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.components.Component1;
 import org.hibernate.orm.test.envers.entities.components.ComponentSetTestEntity;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -81,7 +81,7 @@ public class CollectionOfComponents extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8968")
+	@JiraKey(value = "HHH-8968")
 	public void testCollectionOfEmbeddableWithNullValue() {
 		final Component1 componentV1 = new Component1( "string1", null );
 		final ComponentSetTestEntity entityV1 = getAuditReader().find( ComponentSetTestEntity.class, id2, 1 );

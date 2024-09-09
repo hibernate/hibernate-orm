@@ -14,7 +14,7 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.mapping.Table;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Lukasz Antoniak
  */
-@TestForIssue(jiraKey = "HHH-6068")
+@JiraKey(value = "HHH-6068")
 @RequiresDialect(value = H2Dialect.class)
 @DomainModel(
 		annotatedClasses = HibernateSequenceEntity.class,

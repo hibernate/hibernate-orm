@@ -16,7 +16,7 @@ import jakarta.persistence.criteria.Root;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -155,7 +155,7 @@ public class CompositeIdTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10476")
+	@JiraKey(value = "HHH-10476")
 	public void testManyToOneInCompositePkInPC(SessionFactoryScope scope) {
 		ParentPk ppk = new ParentPk();
 		ChildPk cpk = new ChildPk();
@@ -295,7 +295,7 @@ public class CompositeIdTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10476")
+	@JiraKey(value = "HHH-10476")
 	public void testManyToOneInCompositeIdClassInPC(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -329,7 +329,7 @@ public class CompositeIdTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10476")
+	@JiraKey(value = "HHH-10476")
 	public void testGetWithUpdatedDetachedEntityInCompositeID(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -367,7 +367,7 @@ public class CompositeIdTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10476")
+	@JiraKey(value = "HHH-10476")
 	public void testGetWithDetachedEntityInCompositeIDWithManagedCopy(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

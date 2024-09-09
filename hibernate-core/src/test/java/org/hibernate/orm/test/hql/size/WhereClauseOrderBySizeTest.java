@@ -19,7 +19,7 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import jakarta.persistence.CascadeType;
@@ -34,7 +34,7 @@ import jakarta.persistence.TypedQuery;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 
-@TestForIssue(jiraKey = "HHH-14585")
+@JiraKey(value = "HHH-14585")
 @RequiresDialect(value = PostgreSQLDialect.class, comment = "Other databases may not support boolean data types")
 @RequiresDialect(value = H2Dialect.class, comment = "Other databases may not support boolean data types")
 public class WhereClauseOrderBySizeTest extends BaseEntityManagerFunctionalTestCase {

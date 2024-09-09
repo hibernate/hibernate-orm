@@ -12,7 +12,7 @@ import jakarta.persistence.criteria.Root;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
 
@@ -23,7 +23,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-11549")
+@JiraKey(value = "HHH-11549")
 public class HbmMappingMappedSuperclassWithVersionTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

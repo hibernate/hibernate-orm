@@ -23,7 +23,7 @@ import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
@@ -34,7 +34,7 @@ import org.junit.Test;
 @RequiresDialectFeature( value = {DialectChecks.SupportCatalogCreation.class})
 public class ForeignKeyMigrationTest extends BaseUnitTestCase {
 	@Test
-	@TestForIssue( jiraKey = "HHH-9716" )
+	@JiraKey( value = "HHH-9716" )
 //	@FailureExpected( jiraKey = "HHH-9716" )
 	public void testMigrationOfForeignKeys() {
 		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();

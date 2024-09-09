@@ -20,7 +20,7 @@ import org.hibernate.Session;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.query.Query;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -64,7 +64,7 @@ public class HANADecimalTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12995")
+	@JiraKey(value = "HHH-12995")
 	public void testDecimalTypeTrue() throws Exception {
 		rebuildSessionFactory( configuration -> {
 			configuration.setProperty( "hibernate.dialect.hana.treat_double_typed_fields_as_decimal", Boolean.TRUE.toString() );

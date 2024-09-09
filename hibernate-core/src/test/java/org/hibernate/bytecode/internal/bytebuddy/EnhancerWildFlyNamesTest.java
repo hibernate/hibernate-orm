@@ -14,7 +14,7 @@ import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -26,7 +26,7 @@ import org.junit.Test;
 public class EnhancerWildFlyNamesTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12545" )
+	@JiraKey( value = "HHH-12545" )
 	public void test() {
 		Enhancer enhancer = createByteBuddyEnhancer();
 		String internalName = SimpleEntity.class.getName().replace( '.', '/' );

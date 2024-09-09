@@ -12,7 +12,7 @@ import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.TestingEntityManagerFactoryGenerator;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
 
@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-5024" )
+@JiraKey( value = "HHH-5024" )
 @BaseUnitTest
 public class MappedSuperclassWithAttributesTest {
 	@Test

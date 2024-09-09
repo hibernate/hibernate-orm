@@ -30,7 +30,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 
@@ -47,7 +47,7 @@ import static org.junit.Assert.assertThat;
  *
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-10277" )
+@JiraKey( value = "HHH-10277" )
 @ServiceRegistry
 public class CollectionCompositeElementExplicitConversionTest {
 	private Field simpleValueAttributeConverterDescriptorField;

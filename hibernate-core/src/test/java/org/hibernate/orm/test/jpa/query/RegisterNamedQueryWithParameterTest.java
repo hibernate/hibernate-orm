@@ -2,7 +2,7 @@ package org.hibernate.orm.test.jpa.query;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeAll;
@@ -19,7 +19,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @Jpa(
 		annotatedClasses = RegisterNamedQueryWithParameterTest.TestEntity.class
 )
-@TestForIssue(jiraKey = "HHH-15653")
+@JiraKey(value = "HHH-15653")
 public class RegisterNamedQueryWithParameterTest {
 
 	private static final String QUERY_NAME = "ENTITY_BY_NAME";

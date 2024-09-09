@@ -3,7 +3,7 @@ package org.hibernate.orm.test.query.hhh14156;
 import java.io.Serializable;
 import java.util.Objects;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -16,7 +16,7 @@ import jakarta.persistence.Table;
  * @author Nathan Xu
  * @author Christian Beikov
  */
-@TestForIssue( jiraKey = "HHH-14156" )
+@JiraKey( value = "HHH-14156" )
 public class HHH14156Test extends BaseCoreFunctionalTestCase {
 
 	@Override

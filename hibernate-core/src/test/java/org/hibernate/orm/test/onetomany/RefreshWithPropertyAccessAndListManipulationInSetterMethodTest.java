@@ -3,7 +3,7 @@ package org.hibernate.orm.test.onetomany;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -27,7 +27,7 @@ import jakarta.persistence.Table;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-16272")
+@JiraKey(value = "HHH-16272")
 public class RefreshWithPropertyAccessAndListManipulationInSetterMethodTest {
 
 	@Test

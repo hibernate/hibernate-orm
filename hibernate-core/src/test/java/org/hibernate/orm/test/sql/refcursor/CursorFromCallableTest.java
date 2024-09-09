@@ -22,7 +22,7 @@ import org.hibernate.jdbc.Work;
 import org.hibernate.procedure.ProcedureCall;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Assert;
@@ -63,7 +63,7 @@ public class CursorFromCallableTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8022" )
+	@JiraKey( value = "HHH-8022" )
 	public void testReadResultSetFromRefCursor() {
 		Session session = openSession();
 		session.getTransaction().begin();
@@ -78,7 +78,7 @@ public class CursorFromCallableTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7984" )
+	@JiraKey( value = "HHH-7984" )
 	public void testStatementClosing() {
 		Session session = openSession();
 		session.getTransaction().begin();

@@ -20,7 +20,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -28,7 +28,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-@TestForIssue( jiraKey = "HHH-13737")
+@JiraKey( value = "HHH-13737")
 @RequiresDialect(H2Dialect.class)
 public class NonActiveTransactionSessionFindJdbcExceptionHandlingTest extends BaseEntityManagerFunctionalTestCase {
 

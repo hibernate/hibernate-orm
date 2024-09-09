@@ -38,7 +38,7 @@ import org.hibernate.query.Query;
 import org.hibernate.sql.SimpleSelect;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
 import org.junit.Test;
@@ -86,7 +86,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-465")
+	@JiraKey(value = "HHH-465")
 	@RequiresDialect(value = H2Dialect.class,
 			comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression.")
 	@RequiresDialect(value = MySQLDialect.class,
@@ -151,7 +151,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-465")
+	@JiraKey(value = "HHH-465")
 	@RequiresDialect(value = H2Dialect.class,
 			comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression.")
 	@RequiresDialect(value = MySQLDialect.class,
@@ -204,7 +204,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-465")
+	@JiraKey(value = "HHH-465")
 	@RequiresDialect(value = H2Dialect.class,
 			comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression.")
 	@RequiresDialect(value = MySQLDialect.class,
@@ -243,7 +243,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7608" )
+	@JiraKey( value = "HHH-7608" )
 	@RequiresDialect(H2Dialect.class)
 	@RequiresDialect(OracleDialect.class)
 	public void testOrderByReferencingFormulaColumn() {
@@ -286,7 +286,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 	}
 	
 	@Test
-	@TestForIssue(jiraKey = "HHH-5732")
+	@JiraKey(value = "HHH-5732")
 	public void testInverseIndex() {
         final CollectionPersister transactionsPersister = sessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
@@ -339,7 +339,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 	}
 	
 	@Test
-	@TestForIssue( jiraKey = "HHH-8083" )
+	@JiraKey( value = "HHH-8083" )
 	public void testInverseIndexCascaded() {
 		final Session s = openSession();
 		s.getTransaction().begin();
@@ -397,7 +397,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 	}
   
 	@Test
-	@TestForIssue(jiraKey = "HHH-8794")
+	@JiraKey(value = "HHH-8794")
 	public void testOrderByNoElement() {
 
 		final Session s = openSession();
@@ -429,7 +429,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9002" )
+	@JiraKey( value = "HHH-9002" )
 	public void testOrderByOneToManyWithJoinTable() {
 		A a = new A();
 		a.setName( "a" );
@@ -497,7 +497,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-14148" )
+	@JiraKey( value = "HHH-14148" )
 	@RequiresDialect(value = H2Dialect.class,
 			comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression.")
 	@RequiresDialect(value = MySQLDialect.class,

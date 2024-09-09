@@ -2,7 +2,7 @@ package org.hibernate.orm.test.annotations.inheritance;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeAll;
@@ -36,7 +36,7 @@ import jakarta.persistence.Version;
 				SingleTableInheritanceEagerAssociationTest.Message.class,
 		}
 )
-@TestForIssue(jiraKey = "HHH-15969")
+@JiraKey(value = "HHH-15969")
 public class SingleTableInheritanceEagerAssociationTest {
 
 	@BeforeAll

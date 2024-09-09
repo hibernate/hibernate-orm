@@ -2,7 +2,7 @@ package org.hibernate.orm.test.annotations.generics;
 
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -28,7 +28,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15646")
+@JiraKey(value = "HHH-15646")
 public class TypeVariableTest {
 
 	@BeforeEach

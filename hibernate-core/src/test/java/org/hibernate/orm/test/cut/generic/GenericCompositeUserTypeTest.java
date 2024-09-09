@@ -1,6 +1,6 @@
 package org.hibernate.orm.test.cut.generic;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
 
-@TestForIssue(jiraKey = "HHH-17019")
+@JiraKey(value = "HHH-17019")
 @DomainModel(
 		annotatedClasses = {
 				GenericCompositeUserTypeEntity.class

@@ -13,14 +13,14 @@ import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.tools.TestTools;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-3843")
+@JiraKey(value = "HHH-3843")
 public class ParentReferencingChildTest extends BaseEnversJPAFunctionalTestCase {
 	Person expLukaszRev1 = null;
 	Role expAdminRev1 = null;

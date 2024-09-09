@@ -31,13 +31,17 @@ import org.hibernate.envers.AuditMappedBy;
 import org.hibernate.envers.Audited;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.JiraKeyGroup;
 import org.junit.Test;
 
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-12826 and HHH-12846")
+@JiraKeyGroup( value = {
+		@JiraKey(value = "HHH-12826"),
+		@JiraKey(value = "HHH-12846")
+} )
 public class CommitFlushCollectionTest extends BaseEnversJPAFunctionalTestCase {
 
 	@MappedSuperclass

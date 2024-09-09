@@ -8,7 +8,7 @@ package org.hibernate.orm.test.annotations.collectionelement;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -49,7 +49,7 @@ public class QueryTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5209")
+	@JiraKey(value = "HHH-5209")
 	public void testMemberOfSyntax(SessionFactoryScope scope) {
 		// performs syntax checking of the MEMBER OF predicate against a basic collection
 		scope.inSession(

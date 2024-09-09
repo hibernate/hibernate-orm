@@ -20,7 +20,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.metamodel.CollectionClassification;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
@@ -63,7 +63,7 @@ public class ComponentNamingStrategyTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-6005" )
+	@JiraKey( value = "HHH-6005" )
 	public void testComponentSafeNamingStrategy() {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG )

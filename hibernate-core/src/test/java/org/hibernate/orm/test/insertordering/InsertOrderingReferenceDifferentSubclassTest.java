@@ -9,14 +9,14 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToOne;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.Test;
 
 /**
  * @author Normunds Gavars
  * @author Nathan Xu
  */
-@TestForIssue(jiraKey = "HHH-14227")
+@JiraKey(value = "HHH-14227")
 public class InsertOrderingReferenceDifferentSubclassTest extends BaseInsertOrderingTest {
 
 	@Override

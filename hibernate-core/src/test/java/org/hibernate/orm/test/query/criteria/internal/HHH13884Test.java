@@ -12,7 +12,7 @@ import jakarta.persistence.criteria.Order;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -24,7 +24,7 @@ import static org.mockito.Mockito.mock;
 /**
  * @author seregamorph
  */
-@TestForIssue(jiraKey = "HHH-13884")
+@JiraKey(value = "HHH-13884")
 public class HHH13884Test {
 
 	@Test

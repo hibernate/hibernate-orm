@@ -14,14 +14,14 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.integration.basic.BasicTestEntity1;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-11582")
+@JiraKey(value = "HHH-11582")
 public class HasChangedInsertUpdateSameTransactionTest extends AbstractModifiedFlagsEntityTest {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

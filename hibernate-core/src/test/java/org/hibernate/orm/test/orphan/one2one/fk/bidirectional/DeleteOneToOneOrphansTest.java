@@ -8,7 +8,7 @@ package org.hibernate.orm.test.orphan.one2one.fk.bidirectional;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -79,7 +79,7 @@ public class DeleteOneToOneOrphansTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6484")
+	@JiraKey(value = "HHH-6484")
 	public void testReplacedWhileManaged(SessionFactoryScope scope) {
 
 		Employee e = scope.fromTransaction(

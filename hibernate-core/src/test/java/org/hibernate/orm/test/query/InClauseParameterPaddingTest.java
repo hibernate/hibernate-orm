@@ -10,7 +10,7 @@ import java.util.Arrays;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -27,7 +27,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-12469")
+@JiraKey(value = "HHH-12469")
 @Jpa(
 		annotatedClasses = { InClauseParameterPaddingTest.Person.class },
 		integrationSettings = {

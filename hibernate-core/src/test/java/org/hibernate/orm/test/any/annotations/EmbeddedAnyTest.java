@@ -13,7 +13,7 @@ import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyKeyJavaClass;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -83,7 +83,7 @@ public class EmbeddedAnyTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-16732")
+	@JiraKey( value = "HHH-16732")
 	public void testEmbeddedIdHql(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -94,7 +94,7 @@ public class EmbeddedAnyTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15323")
+	@JiraKey( value = "HHH-15323")
 	public void testEmbeddedTypeHql(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -105,7 +105,7 @@ public class EmbeddedAnyTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15323")
+	@JiraKey( value = "HHH-15323")
 	public void testEmbeddedTypeHql2(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

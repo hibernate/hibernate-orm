@@ -30,7 +30,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.service.ServiceRegistry;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.CustomParameterized;
@@ -117,7 +117,7 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13266")
+	@JiraKey(value = "HHH-13266")
 	public void writeThenRead() {
 		withDefaultTimeZone( () -> {
 			inTransaction( session -> {
@@ -135,7 +135,7 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13266")
+	@JiraKey(value = "HHH-13266")
 	public void writeThenNativeRead() {
 		assumeNoJdbcTimeZone();
 
@@ -166,7 +166,7 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13266")
+	@JiraKey(value = "HHH-13266")
 	public void nativeWriteThenRead() {
 		assumeNoJdbcTimeZone();
 

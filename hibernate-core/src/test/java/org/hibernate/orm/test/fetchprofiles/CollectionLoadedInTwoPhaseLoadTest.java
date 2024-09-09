@@ -23,7 +23,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.metamodel.CollectionClassification;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
 import org.junit.Test;
@@ -33,7 +33,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-@TestForIssue( jiraKey = "HHH-12297")
+@JiraKey( value = "HHH-12297")
 public class CollectionLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCase {
 
 	// NOTE

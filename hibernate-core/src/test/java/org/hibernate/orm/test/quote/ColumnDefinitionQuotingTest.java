@@ -24,7 +24,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Selectable;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Assert;
@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ColumnDefinitionQuotingTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9491" )
+	@JiraKey( value = "HHH-9491" )
 	public void testExplicitQuoting() {
 		withStandardServiceRegistry(
 				false,
@@ -66,7 +66,7 @@ public class ColumnDefinitionQuotingTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9491" )
+	@JiraKey( value = "HHH-9491" )
 	public void testExplicitQuotingSkippingColumnDef() {
 		withStandardServiceRegistry(
 				false,
@@ -104,7 +104,7 @@ public class ColumnDefinitionQuotingTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9491" )
+	@JiraKey( value = "HHH-9491" )
 	public void testGlobalQuotingNotSkippingColumnDef() {
 		withStandardServiceRegistry(
 				true,
@@ -131,7 +131,7 @@ public class ColumnDefinitionQuotingTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9491" )
+	@JiraKey( value = "HHH-9491" )
 	public void testGlobalQuotingSkippingColumnDef() {
 		withStandardServiceRegistry(
 				true,

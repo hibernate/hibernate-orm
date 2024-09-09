@@ -17,8 +17,9 @@ import jakarta.persistence.Table;
 
 import org.hibernate.Session;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKeyGroup;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -71,7 +72,7 @@ public class SubQueryTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9090" )
+	@JiraKey( value = "HHH-9090" )
 	public void testCorrelatedJoin() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -157,7 +158,10 @@ public class SubQueryTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-1689, SQM-30" )
+	@JiraKeyGroup( value = {
+			@JiraKey( value = "HHH-1689" ),
+			@JiraKey( value = "SQM-30" )
+	} )
 	public void testSubQueryAsSearchedCaseResultExpression() {
 		final String query = "SELECT CASE WHEN l.id IS NOT NULL THEN (SELECT COUNT(r.id) FROM Root r) ELSE 0 END FROM Leaf l";
 		// simple syntax check
@@ -169,7 +173,10 @@ public class SubQueryTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-1689, SQM-30" )
+	@JiraKeyGroup( value = {
+			@JiraKey( value = "HHH-1689" ),
+			@JiraKey( value = "SQM-30" )
+	} )
 	public void testSubQueryAsSearchedCaseExpression() {
 		final String query = "SELECT CASE WHEN (SELECT COUNT(r.id) FROM Root r) > 1 THEN 1 ELSE 0 END FROM Leaf l";
 		// simple syntax check
@@ -181,7 +188,10 @@ public class SubQueryTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-1689, SQM-30" )
+	@JiraKeyGroup( value = {
+			@JiraKey( value = "HHH-1689" ),
+			@JiraKey( value = "SQM-30" )
+	} )
 	public void testSubQueryAsCaseElseResultExpression() {
 		final String query = "SELECT CASE WHEN  l.id > 1 THEN 1 ELSE (SELECT COUNT(r.id) FROM Root r) END FROM Leaf l";
 		// simple syntax check
@@ -193,7 +203,10 @@ public class SubQueryTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-1689, SQM-30" )
+	@JiraKeyGroup( value = {
+			@JiraKey( value = "HHH-1689" ),
+			@JiraKey( value = "SQM-30" )
+	} )
 	public void testSubQueryAsSimpleCaseTestExpression() {
 		final String query = "SELECT CASE (SELECT COUNT(r.id) FROM Root r) WHEN  1 THEN 1 ELSE 0 END FROM Leaf l";
 		// simple syntax check
@@ -205,7 +218,10 @@ public class SubQueryTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-1689, SQM-30" )
+	@JiraKeyGroup( value = {
+			@JiraKey( value = "HHH-1689" ),
+			@JiraKey( value = "SQM-30" )
+	} )
 	public void testSubQueryAsSimpleCaseWhenExpression() {
 		final String query = "SELECT CASE l.id WHEN (SELECT COUNT(r.id) FROM Root r) THEN 1 ELSE 0 END FROM Leaf l";
 		// simple syntax check

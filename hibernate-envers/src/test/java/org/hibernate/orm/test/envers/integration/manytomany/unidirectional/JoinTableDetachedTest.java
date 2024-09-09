@@ -14,7 +14,7 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 import org.hibernate.orm.test.envers.entities.manytomany.unidirectional.JoinTableEntity;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -23,7 +23,7 @@ import jakarta.persistence.EntityManager;
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-8087")
+@JiraKey(value = "HHH-8087")
 public class JoinTableDetachedTest extends BaseEnversJPAFunctionalTestCase {
 	private Long collectionEntityId = null;
 	private Integer element1Id = null;

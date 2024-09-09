@@ -14,7 +14,7 @@ import jakarta.persistence.Id;
 
 import org.hibernate.type.descriptor.JdbcBindingLogging;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Logger;
 import org.hibernate.testing.orm.junit.MessageKeyInspection;
@@ -58,7 +58,7 @@ public class OrdinalEnumTypeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12978")
+	@JiraKey(value = "HHH-12978")
 	public void testEnumAsBindParameterAndExtract(SessionFactoryScope scope, MessageKeyWatcher loggingWatcher) {
 		scope.inTransaction(
 				(session) -> {
@@ -86,7 +86,7 @@ public class OrdinalEnumTypeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10282")
+	@JiraKey(value = "HHH-10282")
 	public void hqlTestEnumShortHandSyntax(SessionFactoryScope scope, MessageKeyWatcher loggingWatcher) {
 		scope.inTransaction(
 				(session) -> {
@@ -100,7 +100,7 @@ public class OrdinalEnumTypeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10282")
+	@JiraKey(value = "HHH-10282")
 	public void hqlTestEnumQualifiedShortHandSyntax(SessionFactoryScope scope, MessageKeyWatcher loggingWatcher) {
 		final String qry = "select id from Person where originalHairColor = HairColor.BLONDE";
 		scope.inTransaction(
@@ -113,7 +113,7 @@ public class OrdinalEnumTypeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10282")
+	@JiraKey(value = "HHH-10282")
 	public void hqlTestEnumShortHandSyntaxInPredicate(SessionFactoryScope scope, MessageKeyWatcher loggingWatcher) {
 		scope.inTransaction(
 				(session) -> {
@@ -126,7 +126,7 @@ public class OrdinalEnumTypeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10282")
+	@JiraKey(value = "HHH-10282")
 	public void hqlTestEnumQualifiedShortHandSyntaxInPredicate(SessionFactoryScope scope, MessageKeyWatcher loggingWatcher) {
 		scope.inTransaction(
 				(session) -> {

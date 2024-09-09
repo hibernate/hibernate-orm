@@ -18,7 +18,7 @@ import org.hibernate.orm.test.envers.entities.collection.MultipleCollectionEntit
 import org.hibernate.orm.test.envers.entities.collection.MultipleCollectionRefEntity1;
 import org.hibernate.orm.test.envers.entities.collection.MultipleCollectionRefEntity2;
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import org.hibernate.Hibernate;
@@ -28,7 +28,7 @@ import org.hibernate.envers.AuditReaderFactory;
 /**
  * @author Fabricio Gregorio
  */
-@TestForIssue(jiraKey = "HHH-15522")
+@JiraKey(value = "HHH-15522")
 @SkipForDialect(value = OracleDialect.class, comment = "Oracle does not support identity key generation")
 @SkipForDialect(value = AltibaseDialect.class, comment = "Altibase does not support identity key generation")
 public class IsCollectionInitializedTest extends BaseEnversJPAFunctionalTestCase {

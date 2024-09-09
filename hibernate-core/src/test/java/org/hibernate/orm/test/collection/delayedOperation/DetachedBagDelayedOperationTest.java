@@ -27,7 +27,7 @@ import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
 import org.hibernate.type.CollectionType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.LoggingInspections;
 import org.hibernate.testing.orm.junit.LoggingInspectionsScope;
@@ -114,7 +114,7 @@ public class DetachedBagDelayedOperationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11209")
+	@JiraKey(value = "HHH-11209")
 	public void testMergeDetachedCollectionWithQueuedOperations(
 			SessionFactoryScope scope,
 			LoggingInspectionsScope loggingScope) {
@@ -220,7 +220,7 @@ public class DetachedBagDelayedOperationTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11209")
+	@JiraKey(value = "HHH-11209")
 	public void testCollectionWithQueuedOperationsOnRollback(
 			SessionFactoryScope scope,
 			LoggingInspectionsScope loggingScope) {

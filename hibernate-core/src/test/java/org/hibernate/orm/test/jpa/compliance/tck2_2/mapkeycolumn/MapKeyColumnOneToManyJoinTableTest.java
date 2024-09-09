@@ -18,7 +18,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.boot.MetadataSources;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -30,7 +30,7 @@ import static junit.framework.Assert.assertEquals;
 public class MapKeyColumnOneToManyJoinTableTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12150" )
+	@JiraKey( value = "HHH-12150" )
 	public void testReferenceToAlreadyMappedColumn() {
 		inTransaction(
 				session -> {
@@ -64,7 +64,7 @@ public class MapKeyColumnOneToManyJoinTableTest extends BaseNonConfigCoreFunctio
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12150" )
+	@JiraKey( value = "HHH-12150" )
 	public void testReferenceToNonMappedColumn() {
 		inTransaction(
 				session -> {

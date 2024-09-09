@@ -20,7 +20,7 @@ import org.hibernate.id.SequenceMismatchStrategy;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -29,7 +29,7 @@ import org.junit.Test;
  * is going to skip loading the sequence information from the database.
  */
 @RequiresDialect( H2Dialect.class )
-@TestForIssue( jiraKey = "HHH-14667")
+@JiraKey( value = "HHH-14667")
 public class SkipLoadingSequenceInformationTest extends BaseCoreFunctionalTestCase {
 
 	@Override

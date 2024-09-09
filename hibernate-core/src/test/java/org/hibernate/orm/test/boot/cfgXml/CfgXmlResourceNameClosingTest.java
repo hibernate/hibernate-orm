@@ -18,7 +18,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
@@ -33,7 +33,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-10120" )
+@JiraKey( value = "HHH-10120" )
 public class CfgXmlResourceNameClosingTest extends BaseUnitTestCase {
 	private static class InputStreamWrapper extends InputStream {
 		private final InputStream wrapped;

@@ -5,7 +5,7 @@ import java.util.Objects;
 
 import org.hibernate.cfg.Environment;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
@@ -28,7 +28,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 		},
 		integrationSettings = { @Setting(name = Environment.DEFAULT_BATCH_FETCH_SIZE, value = "2") }
 )
-@TestForIssue( jiraKey = "HHH-15695")
+@JiraKey( value = "HHH-15695")
 public class EmbeddableWithNullValuesExceptForAssociationsTest {
 
 	private static final EntityB ENTITY_B = new EntityB( 2, "d" );

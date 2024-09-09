@@ -11,7 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -30,7 +30,7 @@ import static org.junit.Assert.assertThat;
 		GetAndIsVariantGetterWithTransientAnnotationTest.TestEntity.class,
 		GetAndIsVariantGetterWithTransientAnnotationTest.SecondTestEntity.class
 })
-@TestForIssue(jiraKey = "HHH-11716")
+@JiraKey(value = "HHH-11716")
 public class GetAndIsVariantGetterWithTransientAnnotationTest {
 
 	@Test

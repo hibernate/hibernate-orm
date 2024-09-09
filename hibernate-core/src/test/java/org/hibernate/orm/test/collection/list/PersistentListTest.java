@@ -19,7 +19,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.sql.ComparisonRestriction;
 import org.hibernate.sql.SimpleSelect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -41,7 +41,7 @@ import static org.junit.Assert.assertTrue;
 public class PersistentListTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5732")
+	@JiraKey(value = "HHH-5732")
 	public void testInverseListIndex(SessionFactoryScope scope) {
 		// make sure no one changes the mapping
 		SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
@@ -106,7 +106,7 @@ public class PersistentListTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5732")
+	@JiraKey(value = "HHH-5732")
 	public void testInverseListIndex2(SessionFactoryScope scope) {
 		// make sure no one changes the mapping
 		SessionFactoryImplementor sessionFactory = scope.getSessionFactory();

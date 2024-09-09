@@ -22,14 +22,14 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.Table;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 /**
  * @author Yanming Zhou
  */
-@TestForIssue(jiraKey = "HHH-14230")
+@JiraKey(value = "HHH-14230")
 public class HHH14230 {
 
 	private static final String TABLE_NAME = "test_entity";

@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.onetoone.jointable;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class OneToOneJoinTableTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9188")
+	@JiraKey(value = "HHH-9188")
 	public void test(SessionFactoryScope scope) throws Exception {
 		Long id = scope.fromTransaction( s -> {
 			Event childEvent = new Event();

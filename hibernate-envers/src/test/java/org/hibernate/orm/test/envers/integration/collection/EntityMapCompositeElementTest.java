@@ -20,7 +20,7 @@ import org.hibernate.orm.test.envers.Priority;
 import org.junit.Test;
 
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.transaction.TransactionUtil;
 
 import static org.junit.Assert.assertEquals;
@@ -29,7 +29,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-11841")
+@JiraKey(value = "HHH-11841")
 public class EntityMapCompositeElementTest extends BaseEnversJPAFunctionalTestCase {
 
 	private Category category;

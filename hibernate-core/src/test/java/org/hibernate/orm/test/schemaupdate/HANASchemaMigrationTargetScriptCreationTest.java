@@ -31,7 +31,7 @@ import org.junit.After;
 import org.junit.Test;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hamcrest.core.Is.is;
@@ -97,7 +97,7 @@ public class HANASchemaMigrationTargetScriptCreationTest extends BaseCoreFunctio
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12302")
+	@JiraKey(value = "HHH-12302")
 	public void testTargetScriptIsCreatedStringTypeDefault() throws Exception {
 		this.rebuildSessionFactory();
 		String fileContent = new String( Files.readAllBytes( this.output.toPath() ) );
@@ -110,7 +110,7 @@ public class HANASchemaMigrationTargetScriptCreationTest extends BaseCoreFunctio
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12302")
+	@JiraKey(value = "HHH-12302")
 	public void testTargetScriptIsCreatedStringTypeNVarchar() throws Exception {
 		this.rebuildSessionFactory( config -> {
 			config.setProperty( "hibernate.dialect.hana.use_unicode_string_types", "true" );
@@ -125,7 +125,7 @@ public class HANASchemaMigrationTargetScriptCreationTest extends BaseCoreFunctio
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12302")
+	@JiraKey(value = "HHH-12302")
 	public void testTargetScriptIsCreatedStringTypeVarchar() throws Exception {
 		this.rebuildSessionFactory( config -> {
 			config.setProperty( "hibernate.dialect.hana.use_unicode_string_types", "false" );
@@ -140,7 +140,7 @@ public class HANASchemaMigrationTargetScriptCreationTest extends BaseCoreFunctio
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12132")
+	@JiraKey(value = "HHH-12132")
 	public void testTargetScriptIsCreatedBooleanTypeDefault() throws Exception {
 		this.rebuildSessionFactory();
 		String fileContent = new String( Files.readAllBytes( this.output.toPath() ) );
@@ -153,7 +153,7 @@ public class HANASchemaMigrationTargetScriptCreationTest extends BaseCoreFunctio
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12132")
+	@JiraKey(value = "HHH-12132")
 	public void testTargetScriptIsCreatedBooleanTypeLegacy() throws Exception {
 		this.rebuildSessionFactory( config -> {
 			config.setProperty( "hibernate.dialect.hana.use_legacy_boolean_type", "true" );
@@ -168,7 +168,7 @@ public class HANASchemaMigrationTargetScriptCreationTest extends BaseCoreFunctio
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12132")
+	@JiraKey(value = "HHH-12132")
 	public void testTargetScriptIsCreatedBooleanType() throws Exception {
 		this.rebuildSessionFactory( config -> {
 			config.setProperty( "hibernate.dialect.hana.use_legacy_boolean_type", "false" );

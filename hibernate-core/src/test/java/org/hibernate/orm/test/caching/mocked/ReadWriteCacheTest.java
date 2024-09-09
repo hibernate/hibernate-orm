@@ -25,7 +25,7 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
 import org.junit.Test;
@@ -93,7 +93,7 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13792")
+	@JiraKey(value = "HHH-13792")
 	public void testDeleteHQL() throws InterruptedException {
 		bookId = 2L;
 
@@ -119,7 +119,7 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13792")
+	@JiraKey(value = "HHH-13792")
 	public void testDeleteNativeQuery() throws InterruptedException {
 		bookId = 3L;
 
@@ -174,7 +174,7 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13792")
+	@JiraKey(value = "HHH-13792")
 	public void testUpdateHQL() throws InterruptedException {
 		bookId = 5L;
 
@@ -201,7 +201,7 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13792")
+	@JiraKey(value = "HHH-13792")
 	public void testUpdateNativeQuery() throws InterruptedException {
 		bookId = 6L;
 

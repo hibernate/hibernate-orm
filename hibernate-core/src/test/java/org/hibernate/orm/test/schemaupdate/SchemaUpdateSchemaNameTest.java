@@ -26,7 +26,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
 /**
@@ -37,7 +37,7 @@ import org.hibernate.testing.util.ServiceRegistryUtil;
  * @author Chris Cranford
  */
 @RequiresDialect( value = MySQLDialect.class, majorVersion = 5 )
-@TestForIssue(jiraKey = "HHH-11455")
+@JiraKey(value = "HHH-11455")
 public class SchemaUpdateSchemaNameTest {
 
 	@BeforeAll

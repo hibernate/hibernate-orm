@@ -19,7 +19,7 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -33,7 +33,7 @@ public class RegisterUserEventListenersTest extends BaseEnversFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7478")
+	@JiraKey(value = "HHH-7478")
 	public void testTransactionProcessSynchronization() {
 		final EventListenerRegistry registry = sessionFactory().getServiceRegistry()
 				.getService( EventListenerRegistry.class );

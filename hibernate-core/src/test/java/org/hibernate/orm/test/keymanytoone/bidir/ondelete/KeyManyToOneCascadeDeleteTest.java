@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.keymanytoone.bidir.ondelete;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -39,7 +39,7 @@ public class KeyManyToOneCascadeDeleteTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7807")
+	@JiraKey(value = "HHH-7807")
 	public void testEmbeddedCascadeRemoval(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

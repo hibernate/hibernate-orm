@@ -29,7 +29,7 @@ import jakarta.persistence.criteria.Root;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -44,7 +44,7 @@ public class MapJoinTestWithEmbeddable extends BaseEntityManagerFunctionalTestCa
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10455" )
+	@JiraKey( value = "HHH-10455" )
 	public void testSelectingKeyOfMapJoin() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -61,7 +61,7 @@ public class MapJoinTestWithEmbeddable extends BaseEntityManagerFunctionalTestCa
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10229" )
+	@JiraKey( value = "HHH-10229" )
 	public void testSelectingValueOfMapJoin() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();

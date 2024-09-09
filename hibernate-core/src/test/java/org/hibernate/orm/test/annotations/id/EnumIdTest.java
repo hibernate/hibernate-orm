@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.annotations.id;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  *
  * @author Hardy Ferentschik
  */
-@TestForIssue(jiraKey = "ANN-744")
+@JiraKey(value = "ANN-744")
 @DomainModel(
 		annotatedClasses = PlanetCheatSheet.class
 )

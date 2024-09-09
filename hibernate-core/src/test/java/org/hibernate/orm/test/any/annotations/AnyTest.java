@@ -11,7 +11,7 @@ import java.util.List;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.query.spi.QueryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -131,7 +131,7 @@ public class AnyTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-16732")
+	@JiraKey( value = "HHH-16732")
 	public void testHqlAnyIdQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -149,7 +149,7 @@ public class AnyTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15323")
+	@JiraKey( value = "HHH-15323")
 	public void testHqlCollectionTypeQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -177,7 +177,7 @@ public class AnyTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15442")
+	@JiraKey( value = "HHH-15442")
 	public void testHqlCollectionTypeQueryWithParameters(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -209,7 +209,7 @@ public class AnyTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15323")
+	@JiraKey( value = "HHH-15323")
 	public void testHqlTypeQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -232,7 +232,7 @@ public class AnyTest {
 
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15442")
+	@JiraKey( value = "HHH-15442")
 	public void testHqlTypeQueryWithParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

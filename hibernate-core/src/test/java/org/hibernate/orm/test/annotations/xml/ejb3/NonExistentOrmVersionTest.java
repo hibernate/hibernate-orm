@@ -11,13 +11,17 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.JiraKeyGroup;
 import org.junit.Test;
 
 import static org.junit.Assert.fail;
 
-@TestForIssue(jiraKey = {"HHH-6271", "HHH-14529"})
+@JiraKeyGroup( value = {
+		@JiraKey( value = "HHH-6271" ),
+		@JiraKey( value = "HHH-14529" )
+} )
 public class NonExistentOrmVersionTest extends BaseUnitTestCase {
 	@Test
 	public void testNonExistentOrmVersion() {

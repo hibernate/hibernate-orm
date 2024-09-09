@@ -25,7 +25,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Test;
  * @author Chris Cranford
  */
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
-@TestForIssue(jiraKey = "HHH-13053")
+@JiraKey(value = "HHH-13053")
 @Jpa(
 		annotatedClasses = {
 				UpdateOrderingIdentityIdentifierTest.Animal.class, UpdateOrderingIdentityIdentifierTest.Zoo.class

@@ -14,7 +14,7 @@ import jakarta.persistence.Id;
 import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.transaction.TransactionUtil2;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,7 +49,7 @@ public class QueryExceptionHandlingTest extends BaseExceptionHandlingTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12666")
+	@JiraKey(value = "HHH-12666")
 	public void testInvalidQuery() {
 		try {
 			TransactionUtil2.inSession( sessionFactory(), s -> {
@@ -76,7 +76,7 @@ public class QueryExceptionHandlingTest extends BaseExceptionHandlingTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13300")
+	@JiraKey(value = "HHH-13300")
 	public void testGetSingleResultWithMultipleResults() {
 		try {
 			TransactionUtil2.inSession( sessionFactory(), s -> {
@@ -90,7 +90,7 @@ public class QueryExceptionHandlingTest extends BaseExceptionHandlingTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13300")
+	@JiraKey(value = "HHH-13300")
 	public void testGetSingleResultWithNoResults() {
 		try {
 			TransactionUtil2.inSession( sessionFactory(), s -> {
@@ -104,7 +104,7 @@ public class QueryExceptionHandlingTest extends BaseExceptionHandlingTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13300")
+	@JiraKey(value = "HHH-13300")
 	public void testExecuteUpdateWithConstraintViolation() {
 		try {
 			TransactionUtil2.inTransaction( sessionFactory(), s -> {

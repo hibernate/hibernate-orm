@@ -8,7 +8,7 @@ import jakarta.persistence.OptimisticLockException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class BatchUpdateAndVersionTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-16394")
+	@JiraKey(value = "HHH-16394")
 	public void testUpdate(SessionFactoryScope scope) {
 		scope.getSessionFactory().getSchemaManager().truncate();
 		scope.inTransaction(

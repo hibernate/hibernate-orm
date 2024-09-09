@@ -20,7 +20,7 @@ import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
@@ -31,7 +31,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10373")
+@JiraKey(value = "HHH-10373")
 @RequiresDialectFeature(DialectChecks.SupportsSequences.class)
 public class IdBagSequenceTest extends BaseUnitTestCase {
 

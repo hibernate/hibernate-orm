@@ -12,7 +12,7 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-11625")
+@JiraKey(value = "HHH-11625")
 public class NamespaceTest {
 
 	private static final String EXPECTED_CATALOG_PHYSICAL_NAME = "catalog";

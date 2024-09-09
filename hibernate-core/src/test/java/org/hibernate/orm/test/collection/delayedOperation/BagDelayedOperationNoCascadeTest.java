@@ -20,7 +20,7 @@ import jakarta.persistence.OneToMany;
 import org.hibernate.Hibernate;
 import org.hibernate.collection.spi.AbstractPersistentCollection;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -87,7 +87,7 @@ public class BagDelayedOperationNoCascadeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5855")
+	@JiraKey(value = "HHH-5855")
 	public void testSimpleAddManaged(SessionFactoryScope scope) {
 		// Add 2 Child entities
 		Child c1 = new Child( "Darwin" );
@@ -143,7 +143,7 @@ public class BagDelayedOperationNoCascadeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11209")
+	@JiraKey(value = "HHH-11209")
 	public void testMergeInitializedBagAndRemerge(SessionFactoryScope scope) {
 		Parent parent = scope.fromTransaction(
 				session -> {

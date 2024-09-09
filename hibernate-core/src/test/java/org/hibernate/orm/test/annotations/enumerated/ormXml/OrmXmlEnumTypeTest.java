@@ -13,7 +13,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.junit4.ExtraAssertions;
 import org.hibernate.type.internal.BasicTypeImpl;
@@ -26,7 +26,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-7645" )
+@JiraKey( value = "HHH-7645" )
 public class OrmXmlEnumTypeTest extends BaseUnitTestCase {
 	@Test
 	public void testOrmXmlDefinedEnumType() {

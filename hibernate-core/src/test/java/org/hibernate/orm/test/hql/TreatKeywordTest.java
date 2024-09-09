@@ -11,7 +11,7 @@ import java.util.List;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -37,7 +37,7 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9342" )
+	@JiraKey( value = "HHH-9342" )
 	public void memberOfTreatTest() {
 		// prepare test data
 		Session s = openSession();

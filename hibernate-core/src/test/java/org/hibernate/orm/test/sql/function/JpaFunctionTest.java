@@ -16,7 +16,7 @@ import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.query.SyntaxException;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -26,7 +26,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-11233")
+@JiraKey( value = "HHH-11233")
 @RequiresDialect(H2Dialect.class)
 public class JpaFunctionTest extends BaseEntityManagerFunctionalTestCase {
 

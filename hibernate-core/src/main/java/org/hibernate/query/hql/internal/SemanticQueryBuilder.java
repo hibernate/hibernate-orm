@@ -146,6 +146,7 @@ import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmJsonExistsExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJsonNullBehavior;
+import org.hibernate.query.sqm.tree.expression.SqmJsonQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJsonValueExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
@@ -2743,6 +2744,79 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			}
 		}
 		return jsonValue;
+	}
+
+	@Override
+	public SqmExpression<?> visitJsonQueryFunction(HqlParser.JsonQueryFunctionContext ctx) {
+		final SqmExpression<?> jsonDocument = (SqmExpression<?>) ctx.expression( 0 ).accept( this );
+		final SqmExpression<?> jsonPath = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
+		final SqmJsonQueryExpression jsonQuery = (SqmJsonQueryExpression) getFunctionDescriptor( "json_query" ).<String>generateSqmExpression(
+				asList( jsonDocument, jsonPath ),
+				null,
+				creationContext.getQueryEngine()
+		);
+		final HqlParser.JsonQueryWrapperClauseContext wrapperClause = ctx.jsonQueryWrapperClause();
+		if ( wrapperClause != null ) {
+			final TerminalNode firstToken = (TerminalNode) wrapperClause.getChild( 0 );
+			if ( firstToken.getSymbol().getType() == HqlParser.WITH ) {
+				final TerminalNode secondToken = (TerminalNode) wrapperClause.getChild( 1 );
+				if ( wrapperClause.getChildCount() > 2 && secondToken.getSymbol().getType() == HqlParser.CONDITIONAL ) {
+					jsonQuery.withConditionalWrapper();
+				}
+				else {
+					jsonQuery.withWrapper();
+				}
+			}
+			else {
+				jsonQuery.withoutWrapper();
+			}
+		}
+		for ( HqlParser.JsonQueryOnErrorOrEmptyClauseContext subCtx : ctx.jsonQueryOnErrorOrEmptyClause() ) {
+			final TerminalNode firstToken = (TerminalNode) subCtx.getChild( 0 );
+			final TerminalNode lastToken = (TerminalNode) subCtx.getChild( subCtx.getChildCount() - 1 );
+			if ( lastToken.getSymbol().getType() == HqlParser.ERROR ) {
+				switch ( firstToken.getSymbol().getType() ) {
+					case HqlParser.NULL -> jsonQuery.nullOnError();
+					case HqlParser.ERROR -> jsonQuery.errorOnError();
+					case HqlParser.EMPTY -> {
+						final TerminalNode secondToken = (TerminalNode) subCtx.getChild( 1 );
+						if ( secondToken.getSymbol().getType() == HqlParser.OBJECT ) {
+							jsonQuery.emptyObjectOnError();
+						}
+						else {
+							jsonQuery.emptyArrayOnError();
+						}
+					}
+				}
+			}
+			else {
+				switch ( firstToken.getSymbol().getType() ) {
+					case HqlParser.NULL -> jsonQuery.nullOnEmpty();
+					case HqlParser.ERROR -> jsonQuery.errorOnEmpty();
+					case HqlParser.EMPTY -> {
+						final TerminalNode secondToken = (TerminalNode) subCtx.getChild( 1 );
+						if ( secondToken.getSymbol().getType() == HqlParser.OBJECT ) {
+							jsonQuery.emptyObjectOnEmpty();
+						}
+						else {
+							jsonQuery.emptyArrayOnEmpty();
+						}
+					}
+				}
+			}
+		}
+		final HqlParser.JsonPassingClauseContext passingClause = ctx.jsonPassingClause();
+		if ( passingClause != null ) {
+			final List<HqlParser.ExpressionOrPredicateContext> expressionContexts = passingClause.expressionOrPredicate();
+			final List<HqlParser.IdentifierContext> identifierContexts = passingClause.identifier();
+			for ( int i = 0; i < expressionContexts.size(); i++ ) {
+				jsonQuery.passing(
+						visitIdentifier( identifierContexts.get( i ) ),
+						(SqmExpression<?>) expressionContexts.get( i ).accept( this )
+				);
+			}
+		}
+		return jsonQuery;
 	}
 
 	@Override

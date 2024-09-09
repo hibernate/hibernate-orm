@@ -39,6 +39,7 @@ import org.hibernate.query.criteria.JpaFunction;
 import org.hibernate.query.criteria.JpaInPredicate;
 import org.hibernate.query.criteria.JpaJoin;
 import org.hibernate.query.criteria.JpaJsonExistsExpression;
+import org.hibernate.query.criteria.JpaJsonQueryExpression;
 import org.hibernate.query.criteria.JpaJsonValueExpression;
 import org.hibernate.query.criteria.JpaListJoin;
 import org.hibernate.query.criteria.JpaMapJoin;
@@ -3374,6 +3375,18 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			Expression<String> jsonPath,
 			Class<T> returningType) {
 		return criteriaBuilder.jsonValue( jsonDocument, jsonPath, returningType );
+	}
+
+	@Override
+	@Incubating
+	public JpaJsonQueryExpression jsonQuery(Expression<?> jsonDocument, String jsonPath) {
+		return criteriaBuilder.jsonQuery( jsonDocument, jsonPath );
+	}
+
+	@Override
+	@Incubating
+	public JpaJsonQueryExpression jsonQuery(Expression<?> jsonDocument, Expression<String> jsonPath) {
+		return criteriaBuilder.jsonQuery( jsonDocument, jsonPath );
 	}
 
 	@Override

@@ -3,7 +3,7 @@ package org.hibernate.orm.test.batch;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -29,7 +29,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 				@Setting(name = "hibernate.temp.use_jdbc_metadata_defaults", value = "false")
 		}
 )
-@TestForIssue(jiraKey = "HHH-15281")
+@JiraKey(value = "HHH-15281")
 @RequiresDialect(H2Dialect.class)
 public class BatchNoUseJdbcMetadataTest {
 

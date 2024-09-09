@@ -2,7 +2,7 @@ package org.hibernate.orm.test.batch;
 
 import org.hibernate.annotations.BatchSize;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -25,7 +25,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 				BatchingInheritanceTest.Smell.class,
 		}
 )
-@TestForIssue( jiraKey = "HHH-15694")
+@JiraKey( value = "HHH-15694")
 public class BatchingInheritanceTest {
 
 	@BeforeEach

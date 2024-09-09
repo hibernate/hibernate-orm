@@ -15,13 +15,13 @@ import org.hibernate.boot.jaxb.spi.Binding;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@TestForIssue(jiraKey = "HHH-14530")
+@JiraKey(value = "HHH-14530")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 public class PreParsedHbmXmlTest extends BaseSessionFactoryFunctionalTest {
 

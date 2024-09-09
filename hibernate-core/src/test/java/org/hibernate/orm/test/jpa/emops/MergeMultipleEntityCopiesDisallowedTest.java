@@ -10,7 +10,7 @@ import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
 
@@ -21,7 +21,7 @@ import org.hibernate.testing.orm.junit.Setting;
  *
  * @author Gail Badner
  */
-@TestForIssue( jiraKey = "HHH-9106")
+@JiraKey( value = "HHH-9106")
 @Jpa(
 		annotatedClasses = {
 				Category.class,

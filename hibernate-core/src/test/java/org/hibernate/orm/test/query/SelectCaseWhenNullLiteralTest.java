@@ -2,7 +2,7 @@ package org.hibernate.orm.test.query;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 		annotatedClasses = { SelectCaseWhenNullLiteralTest.Person.class }
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15343")
+@JiraKey(value = "HHH-15343")
 public class SelectCaseWhenNullLiteralTest {
 
 	@BeforeEach

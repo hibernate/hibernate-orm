@@ -28,7 +28,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.testing.util.uuid.IdGeneratorCreationContext;
 import org.junit.jupiter.api.Test;
@@ -39,7 +39,7 @@ import static org.junit.Assert.assertThat;
 
 public class Db2GenerationTest {
 	@Test
-	@TestForIssue( jiraKey = "HHH-9850" )
+	@JiraKey( value = "HHH-9850" )
 	public void testNewGeneratorTableCreationOnDb2() {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, DB2Dialect.class.getName() )

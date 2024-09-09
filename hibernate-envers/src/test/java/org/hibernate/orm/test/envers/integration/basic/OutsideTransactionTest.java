@@ -18,13 +18,13 @@ import org.hibernate.orm.test.envers.integration.collection.norevision.Name;
 import org.hibernate.orm.test.envers.integration.collection.norevision.Person;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-5565")
+@JiraKey(value = "HHH-5565")
 @SkipForDialect(value = MySQLDialect.class, comment = "The test hangs on")
 public class OutsideTransactionTest extends BaseEnversFunctionalTestCase {
 	@Override

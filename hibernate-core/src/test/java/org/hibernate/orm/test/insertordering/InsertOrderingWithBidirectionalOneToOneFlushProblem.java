@@ -15,11 +15,11 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.Test;
 
 
-@TestForIssue(jiraKey = "HHH-12105")
+@JiraKey(value = "HHH-12105")
 public class InsertOrderingWithBidirectionalOneToOneFlushProblem extends BaseInsertOrderingTest {
 
 	@Test

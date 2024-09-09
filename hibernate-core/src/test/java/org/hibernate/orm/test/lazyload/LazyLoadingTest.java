@@ -22,7 +22,7 @@ import jakarta.persistence.OneToOne;
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.Environment;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -80,7 +80,7 @@ public class LazyLoadingTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7971")
+	@JiraKey(value = "HHH-7971")
 	public void testLazyCollectionLoadingAfterEndTransaction(SessionFactoryScope scope) {
 		Parent loadedParent = scope.fromTransaction(
 				session ->
@@ -113,7 +113,7 @@ public class LazyLoadingTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11838")
+	@JiraKey(value = "HHH-11838")
 	public void testGetIdOneToOne(SessionFactoryScope scope) {
 		final Object clientId = scope.fromTransaction(
 				session -> {
@@ -152,7 +152,7 @@ public class LazyLoadingTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11838")
+	@JiraKey(value = "HHH-11838")
 	public void testGetIdManyToOne(SessionFactoryScope scope) {
 		Serializable accountId = scope.fromTransaction( session -> {
 			Address address = new Address();

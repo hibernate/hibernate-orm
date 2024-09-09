@@ -8,7 +8,7 @@ package org.hibernate.orm.test.query.sqm.param;
 
 import java.util.Collections;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -26,7 +26,7 @@ import jakarta.persistence.OneToOne;
 		EmptyEntityCollectionParameterTests.ContentEntry.class
 })
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15232")
+@JiraKey(value = "HHH-15232")
 class EmptyEntityCollectionParameterTests {
 
 	@Test

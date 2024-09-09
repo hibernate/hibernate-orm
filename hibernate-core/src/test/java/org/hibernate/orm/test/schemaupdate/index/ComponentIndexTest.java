@@ -20,7 +20,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
@@ -31,7 +31,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue( jiraKey = "HHH-11815")
+@JiraKey( value = "HHH-11815")
 public class ComponentIndexTest {
 	private StandardServiceRegistry ssr;
 	private Metadata metadata;

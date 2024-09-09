@@ -23,7 +23,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
@@ -44,7 +44,7 @@ import org.junit.Test;
  * 
  * @author Brett Meyer
  */
-@TestForIssue(jiraKey = "HHH-8364")
+@JiraKey(value = "HHH-8364")
 public class ExcludeUnlistedClassesTest extends BaseUnitTestCase {
 	
 	@Test

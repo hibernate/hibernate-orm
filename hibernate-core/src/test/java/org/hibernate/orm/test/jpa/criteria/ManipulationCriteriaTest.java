@@ -21,7 +21,7 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.orm.test.jpa.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.orm.test.jpa.metamodel.Customer;
 import org.hibernate.orm.test.jpa.metamodel.Customer_;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 
 import org.junit.jupiter.api.Test;
@@ -127,7 +127,7 @@ public class ManipulationCriteriaTest extends AbstractMetamodelSpecificTest {
 	}
 	
 	@Test
-	@TestForIssue(jiraKey = "HHH-8434")
+	@JiraKey(value = "HHH-8434")
 	public void basicMultipleAssignments() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

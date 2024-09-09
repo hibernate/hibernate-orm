@@ -13,7 +13,7 @@ import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.junit.Assert;
 
@@ -24,7 +24,7 @@ import org.junit.Assert;
  * @author Stefan Schulze
  * @author Steve Ebersole
  */
-@TestForIssue(jiraKey = "HHH-7306")
+@JiraKey(value = "HHH-7306")
 @RequiresDialectFeature( value = ConnectionProviderBuilder.class )
 public class CurrentTenantResolverMultiTenancyTest extends SchemaBasedMultiTenancyTest {
 

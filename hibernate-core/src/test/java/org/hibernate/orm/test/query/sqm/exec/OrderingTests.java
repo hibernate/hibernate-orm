@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.query.sqm.exec;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -30,7 +30,7 @@ public class OrderingTests {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-1356" )
+	@JiraKey( value = "HHH-1356" )
 	public void testFunctionBasedOrdering(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -41,7 +41,7 @@ public class OrderingTests {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11688" )
+	@JiraKey( value = "HHH-11688" )
 	public void testSelectAliasOrdering(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -52,7 +52,7 @@ public class OrderingTests {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11688" )
+	@JiraKey( value = "HHH-11688" )
 	public void testSelectPositionOrdering(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

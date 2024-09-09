@@ -30,7 +30,7 @@ import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.testing.util.ExceptionUtil;
 
@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  *
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-5275")
+@JiraKey( value = "HHH-5275")
 @SkipForDialect(dialectClass = SybaseASEDialect.class, majorVersion = 15,
 		reason = "skip this test on Sybase ASE 15.5, but run it on 15.7, see HHH-6820")
 public class LockModeTest extends BaseSessionFactoryFunctionalTest {
@@ -179,7 +179,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-2735")
+	@JiraKey(value = "HHH-2735")
 	public void testQueryLockModeNoneWithAlias() {
 		doInHibernate( this::sessionFactory, session -> {
 			// shouldn't throw an exception
@@ -191,7 +191,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-2735")
+	@JiraKey(value = "HHH-2735")
 	public void testQueryLockModePessimisticWriteWithAlias() {
 		doInHibernate( this::sessionFactory, session -> {
 			// shouldn't throw an exception
@@ -203,7 +203,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12257")
+	@JiraKey(value = "HHH-12257")
 	public void testRefreshLockedEntity() {
 		doInHibernate( this::sessionFactory, session -> {
 			A a = session.get( A.class, id, LockMode.PESSIMISTIC_READ );
@@ -218,7 +218,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12257")
+	@JiraKey(value = "HHH-12257")
 	public void testRefreshWithExplicitLowerLevelLockMode() {
 		doInHibernate( this::sessionFactory, session -> {
 						   A a = session.get( A.class, id, LockMode.PESSIMISTIC_READ );
@@ -234,7 +234,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12257")
+	@JiraKey(value = "HHH-12257")
 	@SkipForDialect( dialectClass = CockroachDialect.class )
 	public void testRefreshWithExplicitHigherLevelLockMode1() {
 		doInHibernate( this::sessionFactory, session -> {
@@ -248,7 +248,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12257")
+	@JiraKey(value = "HHH-12257")
 	@SkipForDialect( dialectClass = CockroachDialect.class )
 	public void testRefreshWithExplicitHigherLevelLockMode2() {
 		doInHibernate( this::sessionFactory, session -> {
@@ -262,7 +262,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12257")
+	@JiraKey(value = "HHH-12257")
 	public void testRefreshAfterUpdate() {
 		doInHibernate( this::sessionFactory, session -> {
 			A a = session.get( A.class, id );

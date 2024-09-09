@@ -22,7 +22,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.junit.jupiter.api.AfterEach;
@@ -78,7 +78,7 @@ public class SchemaCreateDropUtf8WithoutHbm2DdlCharsetNameTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10972")
+	@JiraKey(value = "HHH-10972")
 	public void testEncoding() throws Exception {
 
 		entityManagerFactoryBuilder.generateSchema();

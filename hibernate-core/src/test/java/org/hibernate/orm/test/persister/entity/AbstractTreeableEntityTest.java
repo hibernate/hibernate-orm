@@ -9,7 +9,7 @@ package org.hibernate.orm.test.persister.entity;
 import java.util.Collection;
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DomainModel(annotatedClasses = AbstractTreeableEntityTest.TestEntity.class)
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15822")
+@JiraKey(value = "HHH-15822")
 public class AbstractTreeableEntityTest {
 
 	@Test

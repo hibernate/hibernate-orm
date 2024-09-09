@@ -17,7 +17,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.descriptor.JdbcBindingLogging;
 import org.hibernate.type.descriptor.JdbcExtractingLogging;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
@@ -92,7 +92,7 @@ public class EnumTypeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8153")
+	@JiraKey(value = "HHH-8153")
 	public void hbmEnumTypeTest() {
 		doInHibernate(
 				this::sessionFactory,
@@ -125,7 +125,7 @@ public class EnumTypeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12978")
+	@JiraKey(value = "HHH-12978")
 	public void testEnumAsBindParameterAndExtract() {
 		doInHibernate( this::sessionFactory, s -> {
 			binderTriggerable.reset();

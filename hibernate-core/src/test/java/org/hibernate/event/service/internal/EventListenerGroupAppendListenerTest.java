@@ -17,7 +17,7 @@ import org.hibernate.event.spi.MergeEventListener;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Frank Doherty
  */
-@TestForIssue(jiraKey = "HHH-13070")
+@JiraKey(value = "HHH-13070")
 public class EventListenerGroupAppendListenerTest extends BaseSessionFactoryFunctionalTest {
 
 	private static final DuplicationStrategy DUPLICATION_STRATEGY_REPLACE_ORIGINAL = new DuplicationStrategy() {

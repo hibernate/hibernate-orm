@@ -18,13 +18,13 @@ import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 @RequiresDialect(H2Dialect.class)
-@TestForIssue(jiraKey = "HHH-17791")
+@JiraKey(value = "HHH-17791")
 public class H2DialectDatabaseVersionTest extends BaseUnitTestCase {
 
 	@Test

@@ -14,7 +14,7 @@ import java.util.Optional;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.transaction.TransactionUtil;
 
@@ -31,7 +31,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RequiresDialect(OracleDialect.class)
-@TestForIssue(jiraKey = "HHH-13694")
+@JiraKey(value = "HHH-13694")
 public class OracleDialectSequenceInformationTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	private static final String MIN_SEQUENCE_NAME = "SEQ_MIN_TEST";

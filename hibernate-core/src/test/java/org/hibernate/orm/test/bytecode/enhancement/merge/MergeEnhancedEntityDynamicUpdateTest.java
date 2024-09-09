@@ -12,7 +12,7 @@ import java.util.List;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
@@ -36,7 +36,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Luis Barreiro
  */
-@TestForIssue( jiraKey = "HHH-11459" )
+@JiraKey( value = "HHH-11459" )
 @RunWith( BytecodeEnhancerRunner.class )
 public class MergeEnhancedEntityDynamicUpdateTest extends BaseCoreFunctionalTestCase {
     private Person person;

@@ -9,13 +9,13 @@ package org.hibernate.orm.test.bootstrap.spi.metadatabuildercontributor;
 import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 /**
  * @author Vlad Mihalcea
  */
 @RequiresDialect(H2Dialect.class)
-@TestForIssue( jiraKey = "HHH-12589" )
+@JiraKey( value = "HHH-12589" )
 public class SqlFunctionMetadataBuilderContributorClassNameTest
 		extends AbstractSqlFunctionMetadataBuilderContributorTest {
 

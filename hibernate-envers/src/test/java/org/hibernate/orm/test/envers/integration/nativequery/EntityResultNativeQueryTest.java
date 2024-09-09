@@ -12,7 +12,7 @@ import jakarta.persistence.Query;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
@@ -38,7 +38,7 @@ public class EntityResultNativeQueryTest extends BaseEnversJPAFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12776")
+	@JiraKey(value = "HHH-12776")
 	public void testNativeQueryResultHandling() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Query query = entityManager.createNativeQuery( "select * from SimpleEntity", SimpleEntity.class );

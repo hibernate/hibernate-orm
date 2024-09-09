@@ -8,12 +8,12 @@ package org.hibernate.orm.test.envers.integration.flush;
 
 import java.util.Map;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-7017")
+@JiraKey(value = "HHH-7017")
 public class ManualFlushAutoCommitDisabled extends ManualFlush {
 	@Override
 	protected void addConfigOptions(Map options) {

@@ -3,7 +3,7 @@ package org.hibernate.dialect;
 import java.util.Map;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
@@ -11,7 +11,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 @RequiresDialect(MySQLDialect.class)
-@TestForIssue(jiraKey = "HHH-18518")
+@JiraKey(value = "HHH-18518")
 public class MySQLDialectDatabaseVersionTest extends BaseUnitTestCase {
 
 	@Test

@@ -21,7 +21,7 @@ import org.junit.Test;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -30,7 +30,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-13042")
+@JiraKey(value = "HHH-13042")
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 public class TestFlushModeWithIdentitySelfReferenceTest extends BaseCoreFunctionalTestCase {
 

@@ -10,7 +10,7 @@ package org.hibernate.orm.test.hql;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -330,7 +330,7 @@ public class NaturalIdDereferenceTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13752")
+	@JiraKey(value = "HHH-13752")
 	public void deleteWithNaturalIdBasedJoinTable(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

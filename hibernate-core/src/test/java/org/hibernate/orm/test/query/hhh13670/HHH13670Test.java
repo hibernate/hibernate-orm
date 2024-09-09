@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.query.hhh13670;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,7 +28,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-@TestForIssue(jiraKey = "HHH-13670")
+@JiraKey(value = "HHH-13670")
 public class HHH13670Test extends BaseCoreFunctionalTestCase {
 
     @Before

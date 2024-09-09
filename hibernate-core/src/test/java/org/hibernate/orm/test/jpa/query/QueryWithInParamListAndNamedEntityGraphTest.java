@@ -18,7 +18,7 @@ import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.Table;
 import jakarta.persistence.TypedQuery;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
  *
  * @author Steve Ebersole
  */
-@TestForIssue(jiraKey = "HHH-9230")
+@JiraKey(value = "HHH-9230")
 @Jpa(annotatedClasses = {
 		QueryWithInParamListAndNamedEntityGraphTest.Person.class
 })

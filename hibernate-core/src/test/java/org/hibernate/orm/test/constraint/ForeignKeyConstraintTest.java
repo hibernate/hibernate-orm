@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.mapping.Column;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -64,7 +64,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Christian Beikov
  */
-@TestForIssue( jiraKey = "HHH-11180" )
+@JiraKey( value = "HHH-11180" )
 @DomainModel(
 		annotatedClasses = {
 				ForeignKeyConstraintTest.CreditCard.class,

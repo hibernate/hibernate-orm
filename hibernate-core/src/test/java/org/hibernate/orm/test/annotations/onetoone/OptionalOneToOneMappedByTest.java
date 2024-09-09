@@ -14,7 +14,7 @@ import jakarta.persistence.criteria.Root;
 
 import org.hibernate.id.IdentifierGenerationException;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -127,7 +127,7 @@ public class OptionalOneToOneMappedByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5757")
+	@JiraKey(value = "HHH-5757")
 	public void testBidirQueryEntityProperty() {
 
 		AtomicReference<Person> personHolder = new AtomicReference<>();

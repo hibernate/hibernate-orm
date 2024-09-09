@@ -29,7 +29,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.Table;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
@@ -38,7 +38,7 @@ import org.junit.Test;
  *
  * @author Yanming Zhou
  */
-@TestForIssue(jiraKey = "HHH-14229")
+@JiraKey(value = "HHH-14229")
 public class OneToManyBidirectionalForeignKeyTest {
 
 	private static final String TABLE_NAME_PLAIN = "plain";

@@ -13,7 +13,7 @@ import java.util.Objects;
 
 import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -67,7 +67,7 @@ public class CompositeIdDerivedIdWithIdClassTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11328")
+	@JiraKey(value = "HHH-11328")
 	public void testMergeTransientIdManyToOne(SessionFactoryScope scope) {
 		ShoppingCart transientCart = new ShoppingCart( "cart1" );
 		transientCart.addLineItem( new LineItem( 0, "description2", transientCart ) );
@@ -96,7 +96,7 @@ public class CompositeIdDerivedIdWithIdClassTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10623")
+	@JiraKey(value = "HHH-10623")
 	public void testMergeDetachedIdManyToOne(SessionFactoryScope scope) {
 		ShoppingCart cart = new ShoppingCart( "cart1" );
 
@@ -125,7 +125,7 @@ public class CompositeIdDerivedIdWithIdClassTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12007")
+	@JiraKey(value = "HHH-12007")
 	public void testBindTransientEntityWithTransientKeyManyToOne(SessionFactoryScope scope) {
 
 		ShoppingCart cart = new ShoppingCart( "cart" );
@@ -147,7 +147,7 @@ public class CompositeIdDerivedIdWithIdClassTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12007")
+	@JiraKey(value = "HHH-12007")
 	public void testBindTransientEntityWithPersistentKeyManyToOne(SessionFactoryScope scope) {
 		ShoppingCart cart = new ShoppingCart( "cart" );
 		LineItem item = new LineItem( 0, "desc", cart );
@@ -169,7 +169,7 @@ public class CompositeIdDerivedIdWithIdClassTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12007")
+	@JiraKey(value = "HHH-12007")
 	public void testBindTransientEntityWithDetachedKeyManyToOne(SessionFactoryScope scope) {
 
 		ShoppingCart cart = new ShoppingCart( "cart" );
@@ -191,7 +191,7 @@ public class CompositeIdDerivedIdWithIdClassTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12007")
+	@JiraKey(value = "HHH-12007")
 	public void testBindTransientEntityWithCopiedKeyManyToOne(SessionFactoryScope scope) {
 
 		ShoppingCart cart = new ShoppingCart( "cart" );

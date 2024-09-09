@@ -17,7 +17,7 @@ import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -43,7 +43,7 @@ import static org.junit.Assert.assertTrue;
 @SessionFactory
 public class SessionWithSharedConnectionTest {
 	@Test
-	@TestForIssue( jiraKey = "HHH-7090" )
+	@JiraKey( value = "HHH-7090" )
 	public void testSharedTransactionContextSessionClosing(SessionFactoryScope scope) {
 		Session session = scope.getSessionFactory().openSession();
 		session.getTransaction().begin();
@@ -84,7 +84,7 @@ public class SessionWithSharedConnectionTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7090" )
+	@JiraKey( value = "HHH-7090" )
 	public void testSharedTransactionContextAutoClosing(SessionFactoryScope scope) {
 		Session session = scope.getSessionFactory().openSession();
 		session.getTransaction().begin();
@@ -136,7 +136,7 @@ public class SessionWithSharedConnectionTest {
 	}
 
 //	@Test
-//	@TestForIssue( jiraKey = "HHH-7090" )
+//	@JiraKey( value = "HHH-7090" )
 //	public void testSharedTransactionContextAutoJoining() {
 //		Session session = scope.getSessionFactory().openSession();
 //		session.getTransaction().begin();
@@ -154,7 +154,7 @@ public class SessionWithSharedConnectionTest {
 //	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7090" )
+	@JiraKey( value = "HHH-7090" )
 	public void testSharedTransactionContextFlushBeforeCompletion(SessionFactoryScope scope) {
 		Session session = scope.getSessionFactory().openSession();
 		session.getTransaction().begin();
@@ -190,7 +190,7 @@ public class SessionWithSharedConnectionTest {
 	}
 	
 	@Test
-	@TestForIssue( jiraKey = "HHH-7239" )
+	@JiraKey( value = "HHH-7239" )
 	public void testChildSessionCallsAfterTransactionAction(SessionFactoryScope scope) throws Exception {
 		Session session = scope.getSessionFactory().openSession();
 
@@ -238,7 +238,7 @@ public class SessionWithSharedConnectionTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7239" )
+	@JiraKey( value = "HHH-7239" )
 	public void testChildSessionTwoTransactions(SessionFactoryScope scope) throws Exception {
 		Session session = scope.getSessionFactory().openSession();
 		
@@ -262,7 +262,7 @@ public class SessionWithSharedConnectionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11830")
+	@JiraKey(value = "HHH-11830")
 	public void testSharedSessionTransactionObserver(SessionFactoryScope scope) throws Exception {
 		scope.inTransaction( session -> {
 			Field field = null;

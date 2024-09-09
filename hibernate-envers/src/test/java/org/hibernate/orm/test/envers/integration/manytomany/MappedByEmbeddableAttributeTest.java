@@ -25,7 +25,7 @@ import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -35,7 +35,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-12240")
+@JiraKey(value = "HHH-12240")
 public class MappedByEmbeddableAttributeTest extends BaseEnversJPAFunctionalTestCase {
 
 	@Audited

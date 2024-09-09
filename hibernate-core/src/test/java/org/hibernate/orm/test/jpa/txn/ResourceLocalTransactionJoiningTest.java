@@ -13,7 +13,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.orm.junit.ExtraAssertions;
 import org.hibernate.orm.test.jpa.model.AbstractJPATest;
@@ -38,7 +38,7 @@ public class ResourceLocalTransactionJoiningTest extends AbstractJPATest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9859")
+	@JiraKey(value = "HHH-9859")
 	public void testExpectations() {
 		// JPA spec is very vague on what should happen here.  It does vaguely
 		// imply that jakarta.persistence.EntityManager.joinTransaction() should only be used

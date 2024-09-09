@@ -23,7 +23,7 @@ import org.hibernate.property.access.spi.Setter;
 import org.hibernate.property.access.spi.SetterFieldImpl;
 import org.hibernate.property.access.spi.SetterMethodImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.junit.Assert.assertSame;
 
@@ -36,7 +36,7 @@ import static org.junit.Assert.assertSame;
 public class GetterSetterSerializationTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11202")
+	@JiraKey( value = "HHH-11202")
 	public void testPrivateFieldGetter() throws Exception {
 		final AnEntity entity = new AnEntity( new PK( 1L ) );
 
@@ -58,7 +58,7 @@ public class GetterSetterSerializationTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11202")
+	@JiraKey( value = "HHH-11202")
 	public void testPrivateFieldSetter() throws Exception {
 		AnEntity entity = new AnEntity( new PK( 1L ) );
 
@@ -88,7 +88,7 @@ public class GetterSetterSerializationTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11202")
+	@JiraKey( value = "HHH-11202")
 	public void testProtectedMethodGetter() throws Exception {
 		final AnEntity entity = new AnEntity( new PK( 1L ) );
 
@@ -109,7 +109,7 @@ public class GetterSetterSerializationTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11202")
+	@JiraKey( value = "HHH-11202")
 	public void testProtectedMethodSetter() throws Exception {
 		final AnEntity entity = new AnEntity( new PK( 1L ) );
 

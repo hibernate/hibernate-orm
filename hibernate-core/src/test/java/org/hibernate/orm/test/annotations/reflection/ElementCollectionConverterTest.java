@@ -8,14 +8,18 @@ package org.hibernate.orm.test.annotations.reflection;
 
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKeyGroup;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 
-@TestForIssue(jiraKey = {"HHH-11924", "HHH-14529"})
+@JiraKeyGroup( value = {
+		@JiraKey( value = "HHH-11924" ),
+		@JiraKey( value = "HHH-14529" )
+} )
 public class ElementCollectionConverterTest extends BaseCoreFunctionalTestCase {
 
 	@Override

@@ -17,9 +17,11 @@ import jakarta.persistence.UniqueConstraint;
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.model.internal.EntityBinder;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.JiraKeyGroup;
+
 import org.jboss.logging.Logger;
 import org.junit.Rule;
 import org.junit.jupiter.api.Test;
@@ -32,7 +34,12 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-12609, HHH-12654, HHH-13172")
+@JiraKeyGroup( value = {
+		@JiraKey(value = "HHH-12609"),
+		@JiraKey(value = "HHH-12654"),
+		@JiraKey(value = "HHH-13172")
+} )
+@JiraKey(value = "HHH-12609, HHH-12654, HHH-13172")
 public class EntityInheritanceAttributeOverrideTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Rule

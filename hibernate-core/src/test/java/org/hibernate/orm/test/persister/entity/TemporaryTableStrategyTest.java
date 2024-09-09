@@ -13,7 +13,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -61,7 +61,7 @@ public class TemporaryTableStrategyTest {
 	) );
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15550")
+	@JiraKey(value = "HHH-15550")
 	public void testGlobalTemporaryTableStrategy(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			Bar bar = new Bar();

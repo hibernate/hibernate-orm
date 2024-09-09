@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -42,7 +42,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 				@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true")
 		}
 )
-@TestForIssue(jiraKey = "HHH-16493")
+@JiraKey(value = "HHH-16493")
 public class CacheOneToManyAndIdClassTest {
 
 	public static final Long CONTENT_ID = 200l;

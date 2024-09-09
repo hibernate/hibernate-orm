@@ -17,7 +17,7 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import org.mockito.Mockito;
@@ -77,7 +77,7 @@ public class NamedQueryTransactionFailureTest extends BaseEntityManagerFunctiona
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11997" )
+	@JiraKey( value = "HHH-11997" )
 	public void testNamedQueryWithMarkForRollbackOnlyFailure() {
 		try {
 			doInJPA( this::entityManagerFactory, entityManager -> {

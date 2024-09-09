@@ -33,7 +33,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.dialect.MySQLDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -83,7 +83,7 @@ public class ToManyFetchAndJoinTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9637")
+	@JiraKey( value = "HHH-9637")
 	public void testExplicitJoinBeforeFetchJoins() {
 
 		Session s = openSession();
@@ -121,7 +121,7 @@ public class ToManyFetchAndJoinTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9637")
+	@JiraKey( value = "HHH-9637")
 	public void testExplicitJoinBetweenFetchJoins() {
 
 		Session s = openSession();
@@ -159,7 +159,7 @@ public class ToManyFetchAndJoinTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9637")
+	@JiraKey( value = "HHH-9637")
 	public void testExplicitJoinAfterFetchJoins() {
 
 		Session s = openSession();

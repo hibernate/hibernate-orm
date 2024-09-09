@@ -24,7 +24,7 @@ import org.hibernate.orm.test.jpa.metamodel.Translation;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaExpression;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import org.junit.jupiter.api.Test;
 
@@ -72,7 +72,7 @@ public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTes
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11225" )
+	@JiraKey( value = "HHH-11225" )
 	public void testElementMapIsEmptyHql() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			entityManager.createQuery( "select m from MapEntity m where m.localized is empty" ).getResultList();
@@ -80,7 +80,7 @@ public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTes
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11225" )
+	@JiraKey( value = "HHH-11225" )
 	public void testElementMapIsEmptyCriteria() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			final HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) entityManager.getCriteriaBuilder();
@@ -96,7 +96,7 @@ public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTes
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11225" )
+	@JiraKey( value = "HHH-11225" )
 	public void testEntityMapIsEmptyHql() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			entityManager.createQuery( "select a from Article a where a.translations is empty" ).getResultList();
@@ -104,7 +104,7 @@ public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTes
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11225" )
+	@JiraKey( value = "HHH-11225" )
 	public void testEntityMapIsEmptyCriteria() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			final HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) entityManager.getCriteriaBuilder();
@@ -146,7 +146,7 @@ public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTes
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11225" )
+	@JiraKey( value = "HHH-11225" )
 	public void testElementMapSizeHql() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			entityManager.createQuery( "select m from MapEntity m where size( m.localized ) > 1" ).getResultList();
@@ -154,7 +154,7 @@ public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTes
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11225" )
+	@JiraKey( value = "HHH-11225" )
 	public void testElementMapSizeCriteria() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			final HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) entityManager.getCriteriaBuilder();
@@ -170,7 +170,7 @@ public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTes
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11225" )
+	@JiraKey( value = "HHH-11225" )
 	public void testEntityMapSizeHql() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			entityManager.createQuery( "select a from Article a where size(a.translations) > 1" ).getResultList();
@@ -178,7 +178,7 @@ public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTes
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11225" )
+	@JiraKey( value = "HHH-11225" )
 	public void testEntityMapSizeCriteria() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			final HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) entityManager.getCriteriaBuilder();

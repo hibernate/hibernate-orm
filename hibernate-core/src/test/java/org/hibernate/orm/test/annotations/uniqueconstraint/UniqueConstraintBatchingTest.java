@@ -11,7 +11,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.internal.CoreMessageLogger;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-12688")
+@JiraKey(value = "HHH-12688")
 @RequiresDialect(H2Dialect.class)
 @Jpa(
 		annotatedClasses = {

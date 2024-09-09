@@ -13,7 +13,7 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -41,7 +41,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class BasicStructuredCachingOfConvertedValueTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9615" )
+	@JiraKey( value = "HHH-9615" )
 	@SuppressWarnings("unchecked")
 	public void basicCacheStructureTest(SessionFactoryScope scope) {
 		EntityPersister persister =  scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( Address.class.getName() );

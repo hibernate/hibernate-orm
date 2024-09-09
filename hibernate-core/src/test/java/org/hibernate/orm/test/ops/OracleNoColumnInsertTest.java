@@ -8,7 +8,7 @@ package org.hibernate.orm.test.ops;
 
 import org.hibernate.dialect.OracleDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
  * @author Vlad Mihalcea
  */
 @RequiresDialect(value = OracleDialect.class)
-@TestForIssue(jiraKey = "HHH-13104")
+@JiraKey(value = "HHH-13104")
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/ops/Competition.hbm.xml"
 )

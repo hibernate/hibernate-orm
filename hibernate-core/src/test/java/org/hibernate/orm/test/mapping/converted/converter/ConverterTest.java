@@ -23,7 +23,7 @@ import org.hibernate.query.BindableType;
 import org.hibernate.query.Query;
 import org.hibernate.type.Type;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterEach;
@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 				Employee.class
 		}
 )
-@TestForIssue(jiraKey = "HHH-12662")
+@JiraKey(value = "HHH-12662")
 public class ConverterTest {
 
 	private String tooBigParameter;

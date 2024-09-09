@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryExtraState;
 import org.hibernate.engine.spi.SessionImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -41,7 +41,7 @@ public class ExtraStateTest {
 	private SessionImplementor sessionRef;
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9451")
+	@JiraKey(value = "HHH-9451")
 	public void shouldMaintainExtraStateWhenUsingIdentityIdGenerationStrategy(SessionFactoryScope scope) {
 		scope.inSession(
 				(nonTransactedSession) -> {

@@ -6,7 +6,7 @@ import org.hibernate.query.sql.internal.NativeQueryImpl;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -694,7 +694,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
     }
 
     @Test
-    @TestForIssue(jiraKey = "HHH-11897")
+    @JiraKey(value = "HHH-11897")
     public void testGetElementsShouldNotThrowExceptionWhenResultContainsNullValue() {
         doInJPA(this::entityManagerFactory, entityManager -> {
             User user = entityManager.find(User.class, 1L);

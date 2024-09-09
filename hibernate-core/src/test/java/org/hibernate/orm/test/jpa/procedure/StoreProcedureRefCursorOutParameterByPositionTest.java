@@ -27,7 +27,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,7 +36,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-9286")
+@JiraKey(value = "HHH-9286")
 @RequiresDialect(OracleDialect.class)
 public class StoreProcedureRefCursorOutParameterByPositionTest extends BaseEntityManagerFunctionalTestCase {
 	EntityManagerFactory entityManagerFactory;

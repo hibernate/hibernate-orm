@@ -15,7 +15,7 @@ import org.hibernate.QueryException;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -123,7 +123,7 @@ public class WithClauseTest {
 	}
 	
 	@Test
-	@TestForIssue(jiraKey = "HHH-2772")
+	@JiraKey(value = "HHH-2772")
 	public void testWithJoinRHS(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -161,7 +161,7 @@ public class WithClauseTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9329")
+	@JiraKey(value = "HHH-9329")
 	public void testWithClauseAsSubquery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -175,7 +175,7 @@ public class WithClauseTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11230")
+	@JiraKey(value = "HHH-11230")
 	public void testWithClauseAsSubqueryWithEqualOperator(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -188,7 +188,7 @@ public class WithClauseTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9329")
+	@JiraKey(value = "HHH-9329")
 	public void testWithClauseAsSubqueryWithKey(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -202,7 +202,7 @@ public class WithClauseTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11401")
+	@JiraKey(value = "HHH-11401")
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby does not support cast from INTEGER to VARCHAR")
 	public void testWithClauseAsSubqueryWithKeyAndOtherJoinReference(SessionFactoryScope scope) {
 		scope.inTransaction(

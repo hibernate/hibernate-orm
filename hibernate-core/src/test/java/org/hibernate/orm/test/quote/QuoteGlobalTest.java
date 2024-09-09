@@ -15,7 +15,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -48,7 +48,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class QuoteGlobalTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7890")
+	@JiraKey(value = "HHH-7890")
 	public void testQuotedUniqueConstraint(SessionFactoryScope scope) {
         Iterator<UniqueKey> itr = scope.getMetadataImplementor().getEntityBinding(Person.class.getName())
                 .getTable().getUniqueKeys().values().iterator();
@@ -96,7 +96,7 @@ public class QuoteGlobalTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8520")
+	@JiraKey(value = "HHH-8520")
 	public void testHbmQuoting(SessionFactoryScope scope) {
 		final MetadataImplementor metadataImplementor = scope.getMetadataImplementor();
 		doTestHbmQuoting( DataPoint.class, metadataImplementor );

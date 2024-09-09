@@ -18,7 +18,7 @@ import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyFactory;
 import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyHelper;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -35,7 +35,7 @@ import org.junit.jupiter.params.provider.MethodSource;
  *
  * @author Sanne Grinovero
  */
-@TestForIssue( jiraKey = "HHH-15790" )
+@JiraKey( value = "HHH-15790" )
 public class SuperTypesEnhancementTest {
 
 	private static final ByteBuddyProxyHelper helper = new ByteBuddyProxyHelper( new ByteBuddyState() );

@@ -24,7 +24,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
@@ -53,7 +53,7 @@ public class JtaAfterCompletionTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12448")
+	@JiraKey(value = "HHH-12448")
 	public void testAfterCompletionCallbackExecutedAfterTransactionTimeout() throws Exception {
 		// This makes sure that hbm2ddl runs before we start a transaction for a test
 		// This is important for database that only support SNAPSHOT/SERIALIZABLE isolation,

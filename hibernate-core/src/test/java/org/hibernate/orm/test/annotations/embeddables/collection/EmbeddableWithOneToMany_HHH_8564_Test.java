@@ -23,12 +23,12 @@ import jakarta.validation.constraints.Size;
 
 import org.hibernate.boot.MetadataSources;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-8564")
+@JiraKey(value = "HHH-8564")
 public class EmbeddableWithOneToMany_HHH_8564_Test
 		extends AbstractEmbeddableWithManyToManyTest {
 

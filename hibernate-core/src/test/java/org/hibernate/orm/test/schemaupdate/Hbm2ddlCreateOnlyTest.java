@@ -16,7 +16,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
 import org.hibernate.orm.test.jpa.mapping.ColumnWithExplicitReferenceToPrimaryTableTest.AnEntity;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -33,7 +33,7 @@ public class Hbm2ddlCreateOnlyTest {
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Test
-	@TestForIssue(jiraKey = "HHH-12955")
+	@JiraKey(value = "HHH-12955")
 	public void testColumnAnnotationWithExplicitReferenceToPrimaryTable() {
 		final PersistenceUnitDescriptorAdapter pu = new PersistenceUnitDescriptorAdapter() {
 			@Override

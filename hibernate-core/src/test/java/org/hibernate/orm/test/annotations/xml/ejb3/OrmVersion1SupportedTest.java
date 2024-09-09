@@ -11,10 +11,11 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.internal.CoreMessageLogger;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
+import org.hibernate.testing.orm.junit.JiraKeyGroup;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -25,7 +26,10 @@ import java.lang.invoke.MethodHandles;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-@TestForIssue(jiraKey = {"HHH-6271", "HHH-14529"})
+@JiraKeyGroup( value = {
+		@JiraKey( value = "HHH-6271" ),
+		@JiraKey( value = "HHH-14529" )
+} )
 public class OrmVersion1SupportedTest extends BaseCoreFunctionalTestCase {
 
 	@Override

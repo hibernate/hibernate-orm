@@ -27,7 +27,7 @@ import org.hibernate.resource.beans.container.spi.BeanContainer.LifecycleOptions
 import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -51,7 +51,7 @@ import static org.mockito.Mockito.times;
 /**
  * @author Yanming Zhou
  */
-@TestForIssue(jiraKey = "HHH-14688")
+@JiraKey(value = "HHH-14688")
 @FailureExpected(reason = "functionality has been removed for now")
 @BaseUnitTest
 public class UserDefinedGeneratorsTests {

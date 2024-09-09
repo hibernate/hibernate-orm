@@ -8,7 +8,7 @@ package org.hibernate.orm.test.annotations.query;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -74,7 +74,7 @@ public class NamedQueryTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15263" )
+	@JiraKey( value = "HHH-15263" )
 	public void testNoExceptionThrownForNamedUpdate(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

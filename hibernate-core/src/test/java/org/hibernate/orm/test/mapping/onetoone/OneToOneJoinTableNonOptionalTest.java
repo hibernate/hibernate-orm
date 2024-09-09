@@ -19,7 +19,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.PropertyValueException;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -31,7 +31,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-11596")
+@JiraKey(value = "HHH-11596")
 @DomainModel(
 		annotatedClasses = {
 				OneToOneJoinTableNonOptionalTest.Show.class,

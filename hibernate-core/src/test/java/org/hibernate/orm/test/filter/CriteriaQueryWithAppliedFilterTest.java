@@ -27,7 +27,7 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -48,7 +48,7 @@ import static org.junit.Assert.assertThat;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-10991")
+@JiraKey(value = "HHH-10991")
 public class CriteriaQueryWithAppliedFilterTest extends AbstractStatefulStatelessFilterTest {
 
 	private final static Identifier STUDENT_ID = new Identifier( 2, new Identifier2( 4, 5L ) );

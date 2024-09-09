@@ -13,7 +13,7 @@ import jakarta.persistence.Table;
 import org.hibernate.Session;
 import org.hibernate.annotations.SortNatural;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -29,7 +29,7 @@ public class SortNaturalTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8827" )
+	@JiraKey( value = "HHH-8827" )
 	public void testSortNatural() {
 		Session s = openSession();
 		s.beginTransaction();

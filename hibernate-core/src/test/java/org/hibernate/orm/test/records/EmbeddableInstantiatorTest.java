@@ -6,7 +6,7 @@ import org.hibernate.annotations.EmbeddableInstantiator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.ValueAccess;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -25,7 +25,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-16457")
+@JiraKey(value = "HHH-16457")
 public class EmbeddableInstantiatorTest {
 
 	@Test

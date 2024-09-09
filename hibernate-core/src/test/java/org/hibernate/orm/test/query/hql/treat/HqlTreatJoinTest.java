@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.hibernate.query.spi.QueryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -25,7 +25,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15839")
+@JiraKey(value = "HHH-15839")
 public class HqlTreatJoinTest {
 
 	@BeforeAll

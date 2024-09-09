@@ -25,7 +25,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
@@ -40,7 +40,7 @@ import static org.junit.Assert.fail;
 public class UniqueConstraintUnitTests extends BaseUnitTestCase {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8026" )
+	@JiraKey( value = "HHH-8026" )
 	public void testUnNamedConstraints() {
 		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
@@ -74,7 +74,7 @@ public class UniqueConstraintUnitTests extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8537" )
+	@JiraKey( value = "HHH-8537" )
 	public void testNonExistentColumn() {
 		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 

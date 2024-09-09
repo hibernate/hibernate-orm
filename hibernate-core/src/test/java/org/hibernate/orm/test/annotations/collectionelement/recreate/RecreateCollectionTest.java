@@ -10,7 +10,7 @@ import java.util.Date;
 
 import org.hibernate.BaseSessionEventListener;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -41,7 +41,7 @@ public class RecreateCollectionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9474")
+	@JiraKey(value = "HHH-9474")
 	public void testUpdateCollectionOfElements(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

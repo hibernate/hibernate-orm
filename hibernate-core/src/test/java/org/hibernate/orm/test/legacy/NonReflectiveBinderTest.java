@@ -20,7 +20,7 @@ import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
@@ -109,7 +109,7 @@ public class NonReflectiveBinderTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HBX-718")
+	@JiraKey(value = "HBX-718")
 	public void testNonMutatedInheritance() {
 		PersistentClass cm = metadata.getEntityBinding( "org.hibernate.orm.test.legacy.Wicked" );
 		MetaAttribute metaAttribute = cm.getMetaAttribute( "globalmutated" );

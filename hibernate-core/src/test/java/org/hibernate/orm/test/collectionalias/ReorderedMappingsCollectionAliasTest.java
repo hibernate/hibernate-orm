@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.collectionalias;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 @SessionFactory
 public class ReorderedMappingsCollectionAliasTest {
 
-	@TestForIssue(jiraKey = "HHH-7545")
+	@JiraKey(value = "HHH-7545")
 	@Test
 	public void test(SessionFactoryScope scope) {
 		scope.inTransaction(

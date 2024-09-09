@@ -8,7 +8,7 @@ package org.hibernate.orm.test.jpa.metamodel;
 
 import jakarta.persistence.metamodel.EmbeddableType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * @author Christian Beikov
  */
-@TestForIssue( jiraKey = "HHH-11540" )
+@JiraKey( value = "HHH-11540" )
 @Jpa(annotatedClasses = {
 		Person.class,
 		PersonId.class

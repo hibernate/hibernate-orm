@@ -10,7 +10,7 @@ import org.junit.Test;
 
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.UnknownAccessTypeException;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
@@ -21,7 +21,7 @@ import static org.junit.Assert.fail;
 public class CacheAccessTypeTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9844")
+	@JiraKey( value = "HHH-9844")
 	public void testExplicitExternalNames() {
 		assertSame( AccessType.READ_ONLY, AccessType.fromExternalName( "read-only" ) );
 		assertSame( AccessType.READ_WRITE, AccessType.fromExternalName( "read-write" ) );
@@ -30,7 +30,7 @@ public class CacheAccessTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9844")
+	@JiraKey( value = "HHH-9844")
 	public void testEnumNames() {
 		assertSame( AccessType.READ_ONLY, AccessType.fromExternalName( "READ_ONLY" ) );
 		assertSame( AccessType.READ_WRITE, AccessType.fromExternalName( "READ_WRITE" ) );
@@ -39,7 +39,7 @@ public class CacheAccessTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9844")
+	@JiraKey( value = "HHH-9844")
 	public void testLowerCaseEnumNames() {
 		assertSame( AccessType.READ_ONLY, AccessType.fromExternalName( "read_only" ) );
 		assertSame( AccessType.READ_WRITE, AccessType.fromExternalName( "read_write" ) );
@@ -48,7 +48,7 @@ public class CacheAccessTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9844")
+	@JiraKey( value = "HHH-9844")
 	public void testUpperCaseWithHyphens() {
 		try {
 			AccessType.fromExternalName( "READ-ONLY" );

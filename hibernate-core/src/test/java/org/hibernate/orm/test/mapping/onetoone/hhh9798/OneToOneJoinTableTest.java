@@ -11,7 +11,7 @@ import jakarta.persistence.PersistenceException;
 import org.hibernate.Transaction;
 import org.hibernate.exception.ConstraintViolationException;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.fail;
 
-@TestForIssue(jiraKey = "HHH-9798")
+@JiraKey(value = "HHH-9798")
 @DomainModel( annotatedClasses = { Shipment.class, Item.class } )
 @SessionFactory
 public class OneToOneJoinTableTest {

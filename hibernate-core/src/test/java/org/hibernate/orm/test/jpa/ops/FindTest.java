@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.ops;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -47,7 +47,7 @@ public class FindTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9856")
+	@JiraKey(value = "HHH-9856")
 	public void testNonEntity(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {

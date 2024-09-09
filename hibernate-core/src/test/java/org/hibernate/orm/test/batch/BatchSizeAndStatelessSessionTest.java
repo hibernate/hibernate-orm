@@ -9,7 +9,7 @@ package org.hibernate.orm.test.batch;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.hibernate.query.SelectionQuery;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		annotatedClasses = { BatchSizeAndStatelessSessionTest.TestEntity.class }
 )
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-16249")
+@JiraKey( value = "HHH-16249")
 public class BatchSizeAndStatelessSessionTest {
 
 	private final String countQuery = "select count(id) from TestEntity";

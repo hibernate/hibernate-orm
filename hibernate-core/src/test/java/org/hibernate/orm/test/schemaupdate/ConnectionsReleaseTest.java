@@ -24,7 +24,7 @@ import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -39,7 +39,7 @@ import static org.hamcrest.core.Is.is;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10443")
+@JiraKey(value = "HHH-10443")
 @RequiresDialect( H2Dialect.class )
 public class ConnectionsReleaseTest extends BaseUnitTestCase {
 

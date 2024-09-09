@@ -4,7 +4,7 @@ import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -20,7 +20,7 @@ public class NoCachingRegionFactoryTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12508" )
+	@JiraKey( value = "HHH-12508" )
 	public void testSessionFactoryOptionsConsistent() {
 		assertFalse( sessionFactory().getSessionFactoryOptions().isSecondLevelCacheEnabled() );
 	}

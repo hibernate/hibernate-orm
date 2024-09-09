@@ -26,7 +26,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -44,7 +44,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-4235")
+@JiraKey(value = "HHH-4235")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportSchemaCreation.class)
 @DomainModel(
 		annotatedClasses = {

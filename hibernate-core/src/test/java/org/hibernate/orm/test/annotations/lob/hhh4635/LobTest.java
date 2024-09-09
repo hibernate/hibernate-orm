@@ -10,7 +10,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -20,7 +20,7 @@ import org.junit.Test;
  * @author Brett Meyer
  */
 @RequiresDialect( OracleDialect.class )
-@TestForIssue( jiraKey = "HHH-4635" )
+@JiraKey( value = "HHH-4635" )
 public class LobTest extends BaseCoreFunctionalTestCase {
 
 	@Test

@@ -24,7 +24,7 @@ import org.hibernate.orm.test.envers.entities.ids.MulId;
 import org.hibernate.orm.test.envers.entities.ids.MulIdTestEntity;
 import org.hibernate.orm.test.envers.tools.TestTools;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -365,7 +365,7 @@ public class SimpleQuery extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7800")
+	@JiraKey(value = "HHH-7800")
 	public void testBetweenInsideDisjunction() {
 		List result = getAuditReader().createQuery()
 				.forRevisionsOfEntity( StrIntTestEntity.class, true, true )
@@ -384,7 +384,7 @@ public class SimpleQuery extends BaseEnversJPAFunctionalTestCase {
 	}
 	
 	@Test
-	@TestForIssue(jiraKey = "HHH-8495")
+	@JiraKey(value = "HHH-8495")
 	public void testIlike() {
 		StrIntTestEntity site1 = new StrIntTestEntity( "aBc", 10, id1 );
 		
@@ -397,7 +397,7 @@ public class SimpleQuery extends BaseEnversJPAFunctionalTestCase {
 	}
 	
 	@Test
-	@TestForIssue(jiraKey = "HHH-8495")
+	@JiraKey(value = "HHH-8495")
 	public void testIlikeWithMatchMode() {
 		StrIntTestEntity site1 = new StrIntTestEntity( "aBc", 10, id1 );
 		
@@ -410,7 +410,7 @@ public class SimpleQuery extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8567")
+	@JiraKey(value = "HHH-8567")
 	public void testIdPropertyRestriction() {
 		StrIntTestEntity ver2 = (StrIntTestEntity) getAuditReader().createQuery()
 				.forEntitiesAtRevision( StrIntTestEntity.class, 2 )
@@ -421,7 +421,7 @@ public class SimpleQuery extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8567")
+	@JiraKey(value = "HHH-8567")
 	public void testMultipleIdPropertyRestriction() {
 		MulIdTestEntity ver2 = (MulIdTestEntity) getAuditReader().createQuery()
 				.forEntitiesAtRevision( MulIdTestEntity.class, 2 )
@@ -433,7 +433,7 @@ public class SimpleQuery extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8567")
+	@JiraKey(value = "HHH-8567")
 	public void testEmbeddedIdPropertyRestriction() {
 		EmbIdTestEntity ver2 = (EmbIdTestEntity) getAuditReader().createQuery()
 				.forEntitiesAtRevision( EmbIdTestEntity.class, 2 )

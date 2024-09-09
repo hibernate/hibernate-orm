@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -33,7 +33,7 @@ public class IterateOverListInTheSetMethodTest {
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-16120")
+	@JiraKey(value = "HHH-16120")
 	public void testHqlQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -56,7 +56,7 @@ public class IterateOverListInTheSetMethodTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-16184")
+	@JiraKey(value = "HHH-16184")
 	public void testSelectParentsWithoutChildren(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -77,7 +77,7 @@ public class IterateOverListInTheSetMethodTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-16184")
+	@JiraKey(value = "HHH-16184")
 	public void testScrollParentsWithoutChildren(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -108,7 +108,7 @@ public class IterateOverListInTheSetMethodTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-16184")
+	@JiraKey(value = "HHH-16184")
 	public void testSelectParentsWithoutChildren2(SessionFactoryScope scope) {
 		Integer parentId = 2;
 		scope.inTransaction(
@@ -132,7 +132,7 @@ public class IterateOverListInTheSetMethodTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-16184")
+	@JiraKey(value = "HHH-16184")
 	public void testSelectParentsWithChildren(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

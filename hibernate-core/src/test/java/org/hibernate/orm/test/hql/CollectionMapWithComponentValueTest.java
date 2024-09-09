@@ -15,7 +15,7 @@ import java.util.Set;
 
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -109,7 +109,7 @@ public class CollectionMapWithComponentValueTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10577")
+	@JiraKey(value = "HHH-10577")
 	public void testMapValueExpressionInWhere(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			// JPA form
@@ -183,7 +183,7 @@ public class CollectionMapWithComponentValueTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10577")
+	@JiraKey(value = "HHH-10577")
 	public void testMapKeyExpressionDereferenceInSelect(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			List<String> keyValueNames = s.createQuery(
@@ -197,7 +197,7 @@ public class CollectionMapWithComponentValueTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10537")
+	@JiraKey(value = "HHH-10537")
 	public void testLeftJoinMapAndUseKeyExpression(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			// Assert that a left join is used for joining the map key entity table
@@ -209,7 +209,7 @@ public class CollectionMapWithComponentValueTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11433")
+	@JiraKey(value = "HHH-11433")
 	public void testJoinMapValue(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			// Assert that a left join is used for joining the map key entity table
@@ -221,7 +221,7 @@ public class CollectionMapWithComponentValueTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11433")
+	@JiraKey(value = "HHH-11433")
 	public void testJoinMapKey(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			// Assert that a left join is used for joining the map key entity table
@@ -234,7 +234,7 @@ public class CollectionMapWithComponentValueTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11433")
+	@JiraKey(value = "HHH-11433")
 	public void testJoinMapKeyAssociation(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			List keyValues = s.createQuery(
@@ -246,7 +246,7 @@ public class CollectionMapWithComponentValueTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11433")
+	@JiraKey(value = "HHH-11433")
 	public void testJoinMapKeyAssociationImplicit(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			List keyValues = s.createQuery(

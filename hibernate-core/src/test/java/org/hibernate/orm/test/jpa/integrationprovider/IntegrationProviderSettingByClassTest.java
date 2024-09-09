@@ -9,7 +9,7 @@ package org.hibernate.orm.test.jpa.integrationprovider;
 import java.util.List;
 
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-13614")
+@JiraKey(value = "HHH-13614")
 @Jpa(
 		annotatedClasses = {
 				Person.class

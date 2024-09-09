@@ -14,7 +14,7 @@ import org.hibernate.MappingException;
 import org.hibernate.orm.test.envers.AbstractOneSessionTest;
 import org.hibernate.orm.test.envers.Priority;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -55,7 +55,7 @@ public class SingleDomainObjectToMultipleTablesTest extends AbstractOneSessionTe
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4648")
+	@JiraKey(value = "HHH-4648")
 	public void testSingleDomainObjectToMultipleTablesMapping() {
 		Car carVer1 = getAuditReader().find( Car.class, carId, 1 );
 		Person ownerVer1 = getAuditReader().find( Person.class, "Personaje", ownerId, 1 );

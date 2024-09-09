@@ -17,7 +17,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.metamodel.CollectionClassification;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Cai Chun
  */
-@TestForIssue(jiraKey = "HHH-11826")
+@JiraKey(value = "HHH-11826")
 @BaseUnitTest
 public class ComponentNamingStrategyForJoinColumnTest {
 

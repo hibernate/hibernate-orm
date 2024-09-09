@@ -33,7 +33,7 @@ import org.hibernate.tool.schema.spi.SchemaFilter;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Assert;
@@ -46,7 +46,7 @@ import org.hamcrest.Description;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10937")
+@JiraKey(value = "HHH-10937")
 @RequiresDialect(H2Dialect.class)
 public class SequenceFilterTest extends BaseUnitTestCase {
 	private StandardServiceRegistryImpl serviceRegistry;

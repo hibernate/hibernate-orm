@@ -2,7 +2,7 @@ package org.hibernate.orm.test.hql;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -25,7 +25,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 		}
 )
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-16396")
+@JiraKey( value = "HHH-16396")
 public class EmbeddableSubqueryWithSameAliasOfRootQueryTest {
 
 	private static final Long ENTITY_WITH_ASSOCIATION_ID = 1L;

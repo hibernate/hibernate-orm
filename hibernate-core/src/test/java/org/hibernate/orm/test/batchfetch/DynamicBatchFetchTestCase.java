@@ -11,7 +11,7 @@ import java.util.stream.IntStream;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -35,7 +35,7 @@ import static org.junit.Assert.assertNotNull;
 public class DynamicBatchFetchTestCase {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12835")
+	@JiraKey(value = "HHH-12835")
 	public void batchFetchTest(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			// Having DEFAULT_BATCH_FETCH_SIZE=15

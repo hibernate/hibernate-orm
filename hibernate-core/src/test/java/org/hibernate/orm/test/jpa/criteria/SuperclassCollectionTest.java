@@ -23,7 +23,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import org.junit.Test;
 
@@ -62,7 +62,7 @@ public class SuperclassCollectionTest extends BaseEntityManagerFunctionalTestCas
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10556")
+	@JiraKey( value = "HHH-10556")
 	public void testOtherPerson() {
 		String address = "other-person-super-address";
 		String localAddress = "other-person-local-address";

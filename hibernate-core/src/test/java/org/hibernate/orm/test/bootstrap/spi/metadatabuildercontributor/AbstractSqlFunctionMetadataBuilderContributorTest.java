@@ -16,7 +16,7 @@ import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -26,7 +26,7 @@ import static org.junit.Assert.assertEquals;
  * @author Vlad Mihalcea
  */
 @RequiresDialect(H2Dialect.class)
-@TestForIssue( jiraKey = "HHH-12589" )
+@JiraKey( value = "HHH-12589" )
 public abstract class AbstractSqlFunctionMetadataBuilderContributorTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

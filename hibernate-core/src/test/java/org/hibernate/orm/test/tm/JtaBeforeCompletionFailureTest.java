@@ -19,7 +19,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.resource.transaction.jta.JtaPlatformStandardTestingImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.junit.jupiter.api.AfterEach;
@@ -63,7 +63,7 @@ public class JtaBeforeCompletionFailureTest extends BaseSessionFactoryFunctional
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9888")
+	@JiraKey(value = "HHH-9888")
 	public void testUniqueConstraintViolationDuringManagedFlush() throws Exception {
 		final TransactionManager tm = JtaPlatformStandardTestingImpl.INSTANCE.transactionManager();
 		assertEquals( Status.STATUS_NO_TRANSACTION, tm.getStatus() );

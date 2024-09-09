@@ -18,7 +18,7 @@ import org.hibernate.event.spi.EventEngineContributions;
 import org.hibernate.event.spi.EventEngineContributor;
 import org.hibernate.event.spi.EventType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -29,7 +29,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-13890")
+@JiraKey( value = "HHH-13890")
 public class EventEngineContributionsTests extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override

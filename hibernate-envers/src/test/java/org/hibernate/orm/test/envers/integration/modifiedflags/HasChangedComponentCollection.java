@@ -14,7 +14,7 @@ import org.hibernate.orm.test.envers.entities.collection.EmbeddableListEntity1;
 import org.hibernate.orm.test.envers.entities.components.Component3;
 import org.hibernate.orm.test.envers.entities.components.Component4;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.orm.test.envers.tools.TestTools.extractRevisionNumbers;
@@ -24,7 +24,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-6613")
+@JiraKey(value = "HHH-6613")
 public class HasChangedComponentCollection extends AbstractModifiedFlagsEntityTest {
 	private Integer ele1_id = null;
 

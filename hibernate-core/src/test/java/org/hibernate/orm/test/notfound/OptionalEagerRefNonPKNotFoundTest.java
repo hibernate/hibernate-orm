@@ -20,7 +20,7 @@ import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 /**
  * @author Gail Badner
  */
-@TestForIssue(jiraKey = "HHH-12436")
+@JiraKey(value = "HHH-12436")
 @DomainModel(
 		annotatedClasses = {
 				OptionalEagerRefNonPKNotFoundTest.PersonManyToOneJoinIgnore.class,

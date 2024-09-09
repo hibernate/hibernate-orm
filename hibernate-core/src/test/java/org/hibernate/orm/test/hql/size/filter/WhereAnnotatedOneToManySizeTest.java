@@ -17,13 +17,13 @@ import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-@TestForIssue(jiraKey = "HHH-14585")
+@JiraKey(value = "HHH-14585")
 public class WhereAnnotatedOneToManySizeTest extends BaseCoreFunctionalTestCase {
 
 	@Override

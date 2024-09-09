@@ -23,7 +23,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 import org.hibernate.testing.orm.junit.DialectContext;
@@ -95,7 +95,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12075")
+	@JiraKey(value = "HHH-12075")
 	public void testCreateQuerySetTimeout() {
 		doInHibernate(
 				this::sessionFactory, session -> {
@@ -120,7 +120,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12075")
+	@JiraKey(value = "HHH-12075")
 	public void testCreateQuerySetTimeoutHint() {
 		doInHibernate(
 				this::sessionFactory, session -> {
@@ -145,7 +145,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12075")
+	@JiraKey(value = "HHH-12075")
 	public void testCreateNativeQuerySetTimeout() {
 		doInHibernate(
 				this::sessionFactory, session -> {
@@ -170,7 +170,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12075")
+	@JiraKey(value = "HHH-12075")
 	public void testCreateNativeQuerySetTimeoutHint() {
 		doInHibernate(
 				this::sessionFactory, session -> {
@@ -195,7 +195,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12075")
+	@JiraKey(value = "HHH-12075")
 	public void testCreateSQLQuerySetTimeout() {
 		doInHibernate(
 				this::sessionFactory, session -> {
@@ -220,7 +220,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12075")
+	@JiraKey(value = "HHH-12075")
 	public void testCreateSQLQuerySetTimeoutHint() {
 		doInHibernate(
 				this::sessionFactory, session -> {

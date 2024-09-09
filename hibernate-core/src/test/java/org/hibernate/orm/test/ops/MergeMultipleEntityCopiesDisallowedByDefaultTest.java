@@ -8,7 +8,7 @@ package org.hibernate.orm.test.ops;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  *
  * @author Gail Badner
  */
-@TestForIssue(jiraKey = "HHH-9106")
+@JiraKey(value = "HHH-9106")
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/ops/Hoarder.hbm.xml"
 )

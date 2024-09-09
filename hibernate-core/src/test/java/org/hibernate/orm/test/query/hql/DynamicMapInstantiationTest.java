@@ -3,7 +3,7 @@ package org.hibernate.orm.test.query.hql;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -31,7 +31,7 @@ import java.lang.invoke.MethodHandles;
 		}
 )
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-16061")
+@JiraKey( value = "HHH-16061")
 public class DynamicMapInstantiationTest {
 
 	private Triggerable triggerable;

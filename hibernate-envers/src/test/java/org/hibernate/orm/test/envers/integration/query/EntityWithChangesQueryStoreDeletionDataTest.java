@@ -10,12 +10,12 @@ import java.util.Map;
 
 import org.hibernate.envers.configuration.EnversSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 /**
  * @author Chris Cranford
  */
-@TestForIssue( jiraKey = "HHH-8058" )
+@JiraKey( value = "HHH-8058" )
 public class EntityWithChangesQueryStoreDeletionDataTest extends AbstractEntityWithChangesQueryTest {
 	@Override
 	protected void addConfigOptions(Map options) {

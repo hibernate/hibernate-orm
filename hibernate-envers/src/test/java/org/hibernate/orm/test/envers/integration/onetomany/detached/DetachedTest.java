@@ -14,7 +14,7 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 import org.hibernate.orm.test.envers.entities.onetomany.detached.ListRefCollEntity;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 import junit.framework.Assert;
 
@@ -32,7 +32,7 @@ public class DetachedTest extends BaseEnversFunctionalTestCase {
 
 	@Test
 	@Priority(10)
-	@TestForIssue(jiraKey = "HHH-7543")
+	@JiraKey(value = "HHH-7543")
 	public void testUpdatingDetachedEntityWithRelation() {
 		Session session = getSession();
 

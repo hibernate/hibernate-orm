@@ -12,7 +12,7 @@ import org.hibernate.orm.test.jpa.graphs.Manager;
 import org.hibernate.orm.test.jpa.graphs.Market;
 import org.hibernate.orm.test.jpa.graphs.Student;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -35,7 +35,7 @@ public class FetchGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase 
 	private long companyWithFetchProfileId;
 	
 	@Test
-	@TestForIssue(jiraKey = "HHH-8776")
+	@JiraKey(value = "HHH-8776")
 	public void testFetchGraphByFind() {
 		EntityManager entityManager = getOrCreateEntityManager();
 		entityManager.getTransaction().begin();
@@ -100,7 +100,7 @@ public class FetchGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase 
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8776")
+	@JiraKey(value = "HHH-8776")
 	public void testFetchGraphByFindTakingPrecedenceOverFetchProfile() {
 		EntityManager entityManager = getOrCreateEntityManager();
 		entityManager.getTransaction().begin();

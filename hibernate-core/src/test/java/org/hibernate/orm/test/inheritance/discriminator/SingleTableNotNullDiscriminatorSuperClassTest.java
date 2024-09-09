@@ -19,7 +19,7 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -32,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author lrobot.qq@gmail.com
  * how to run this test case: ./gradlew :hibernate-core:test --tests '*DiscriminatorSuperClassTest'
  */
-@TestForIssue(jiraKey = "HHH-18282")
+@JiraKey(value = "HHH-18282")
 @DomainModel(
 		annotatedClasses = {
 			SingleTableNotNullDiscriminatorSuperClassTest.RootEntity.class,

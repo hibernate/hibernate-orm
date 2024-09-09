@@ -30,7 +30,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -54,7 +54,7 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 	private static int pseudoMutableToDomainCallCount;
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11098" )
+	@JiraKey( value = "HHH-11098" )
 	public void testIt() {
 		// create data and check assertions
 		inTransaction(

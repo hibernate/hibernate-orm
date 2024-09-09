@@ -9,7 +9,7 @@ package org.hibernate.orm.test.mapping.converted.converter;
 import java.time.Year;
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Marco Belladelli
  */
-@TestForIssue( jiraKey = "HHH-15742")
+@JiraKey( value = "HHH-15742")
 public class QueryConvertedAttributeTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override

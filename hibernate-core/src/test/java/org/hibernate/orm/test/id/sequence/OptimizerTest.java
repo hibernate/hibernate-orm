@@ -13,7 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -32,7 +32,7 @@ import static org.hamcrest.core.IsNull.notNullValue;
 public class OptimizerTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10166")
+	@JiraKey(value = "HHH-10166")
 	public void testGenerationPastBound(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

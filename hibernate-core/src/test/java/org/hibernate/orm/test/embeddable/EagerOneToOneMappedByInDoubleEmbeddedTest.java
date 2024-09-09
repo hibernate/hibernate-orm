@@ -2,7 +2,7 @@ package org.hibernate.orm.test.embeddable;
 
 import java.io.Serializable;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -24,7 +24,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 		}
 )
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-15986")
+@JiraKey( value = "HHH-15986")
 public class EagerOneToOneMappedByInDoubleEmbeddedTest {
 
 	@BeforeAll

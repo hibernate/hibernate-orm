@@ -16,7 +16,7 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
@@ -25,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-12063")
+@JiraKey(value = "HHH-12063")
 public class AttributeAccessorTest extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

@@ -7,7 +7,7 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -36,7 +36,7 @@ import static org.hamcrest.Matchers.notNullValue;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15512")
+@JiraKey(value = "HHH-15512")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 public class PersistAndQueryingInSameTransactionTest {
 

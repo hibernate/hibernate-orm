@@ -16,14 +16,14 @@ import jakarta.persistence.criteria.Root;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 /**
  * @author Michiel Haisma
  * @author Nathan Xu
  */
-@TestForIssue( jiraKey = "HHH-13889" )
+@JiraKey( value = "HHH-13889" )
 public class CriteriaStringInlineLiteralTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

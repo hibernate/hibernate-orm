@@ -15,7 +15,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,7 +34,7 @@ public class LimitExpressionTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11278")
+	@JiraKey(value = "HHH-11278")
 	public void testAnEmptyListIsReturnedWhenSetMaxResultsToZero() {
 		TransactionUtil.doInJPA( this::entityManagerFactory, (EntityManager entityManager) -> {
 			final CriteriaQuery<Person> query = entityManager.getCriteriaBuilder().createQuery( Person.class );

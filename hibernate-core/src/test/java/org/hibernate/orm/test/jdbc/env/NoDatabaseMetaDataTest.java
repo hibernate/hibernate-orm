@@ -14,7 +14,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
@@ -31,7 +31,7 @@ import static org.junit.Assert.assertTrue;
 public class NoDatabaseMetaDataTest extends BaseUnitTestCase {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10515" )
+	@JiraKey( value = "HHH-10515" )
 	public void testNoJdbcMetadataDefaultDialect() {
 		final StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( "hibernate.temp.use_jdbc_metadata_defaults", "false" )
@@ -54,7 +54,7 @@ public class NoDatabaseMetaDataTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10515" )
+	@JiraKey( value = "HHH-10515" )
 	public void testNoJdbcMetadataDialectOverride() {
 		final StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( "hibernate.temp.use_jdbc_metadata_defaults", "false" )

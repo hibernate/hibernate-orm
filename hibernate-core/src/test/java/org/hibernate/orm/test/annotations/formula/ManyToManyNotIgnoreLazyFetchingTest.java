@@ -19,9 +19,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
+import org.hibernate.testing.orm.junit.JiraKeyGroup;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -42,7 +43,10 @@ import static org.hibernate.testing.transaction.TransactionUtil2.fromTransaction
 import static org.junit.Assert.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@TestForIssue(jiraKey = {"HHH-12770", "HHH-15545"})
+@JiraKeyGroup( value = {
+				@JiraKey( value = "HHH-12770" ),
+				@JiraKey( value = "HHH-15545" )
+} )
 public class ManyToManyNotIgnoreLazyFetchingTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Rule

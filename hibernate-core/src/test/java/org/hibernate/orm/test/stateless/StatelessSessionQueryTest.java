@@ -14,7 +14,7 @@ import org.hibernate.dialect.HANADialect;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -52,7 +52,7 @@ public class StatelessSessionQueryTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13194")
+	@JiraKey(value = "HHH-13194")
 	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testNewQueryApis(SessionFactoryScope scope) {
 

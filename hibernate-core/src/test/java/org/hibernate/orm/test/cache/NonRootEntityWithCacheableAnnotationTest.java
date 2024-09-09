@@ -19,7 +19,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
@@ -41,7 +41,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gail Badner
  */
-@TestForIssue( jiraKey = "HHH-11143")
+@JiraKey( value = "HHH-11143")
 public class NonRootEntityWithCacheableAnnotationTest {
 
 	@Rule

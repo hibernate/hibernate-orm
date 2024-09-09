@@ -8,7 +8,7 @@ package org.hibernate.orm.test.eviction;
 
 import org.hibernate.Session;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -26,7 +26,7 @@ public class EvictionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7912" )
+	@JiraKey( value = "HHH-7912" )
 	public void testNormalUsage() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -51,7 +51,7 @@ public class EvictionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7912" )
+	@JiraKey( value = "HHH-7912" )
 	public void testEvictingNull() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -66,7 +66,7 @@ public class EvictionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7912" )
+	@JiraKey( value = "HHH-7912" )
 	public void testEvictingTransientEntity() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -76,7 +76,7 @@ public class EvictionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7912" )
+	@JiraKey( value = "HHH-7912" )
 	public void testEvictingDetachedEntity() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -105,7 +105,7 @@ public class EvictionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7912" )
+	@JiraKey( value = "HHH-7912" )
 	public void testEvictingNonEntity() {
 		Session session = openSession();
 		session.beginTransaction();

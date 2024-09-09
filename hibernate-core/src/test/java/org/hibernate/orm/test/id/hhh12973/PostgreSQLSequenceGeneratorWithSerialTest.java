@@ -29,7 +29,7 @@ import org.hibernate.id.SequenceMismatchStrategy;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-12973")
+@JiraKey(value = "HHH-12973")
 @RequiresDialect(value = PostgreSQLDialect.class)
 public class PostgreSQLSequenceGeneratorWithSerialTest extends EntityManagerFactoryBasedFunctionalTest {
 

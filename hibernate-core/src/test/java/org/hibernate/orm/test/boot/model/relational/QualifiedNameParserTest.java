@@ -11,7 +11,7 @@ import org.hibernate.boot.model.relational.QualifiedNameParser;
 
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -20,7 +20,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10174")
+@JiraKey(value = "HHH-10174")
 public class QualifiedNameParserTest {
 
 	private static final Identifier DEFAULT_SCHEMA = Identifier.toIdentifier( "schema" );

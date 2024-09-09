@@ -17,13 +17,13 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import jakarta.enterprise.inject.spi.BeanManager;
 
-@TestForIssue(jiraKey = "HHH-15068")
+@JiraKey(value = "HHH-15068")
 public class ExtendedBeanManagerNotAvailableDuringTypeResolutionTest {
 
 	@Test

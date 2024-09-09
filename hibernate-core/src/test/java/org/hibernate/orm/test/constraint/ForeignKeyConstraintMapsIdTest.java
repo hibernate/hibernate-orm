@@ -18,7 +18,7 @@ import jakarta.persistence.OneToOne;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.mapping.Table;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -28,7 +28,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-12320")
+@JiraKey(value = "HHH-12320")
 public class ForeignKeyConstraintMapsIdTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Entity(name = "Post")
 	public static class Post {

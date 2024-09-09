@@ -8,7 +8,7 @@ package org.hibernate.orm.test.id;
 
 import org.hibernate.dialect.SQLServerDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -38,7 +38,7 @@ public class SQLServer2012SequenceGeneratorTest {
 	 * For this test, the sequence is initialized to 10.
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-8814")
+	@JiraKey(value = "HHH-8814")
 	@RequiresDialect(value = SQLServerDialect.class, majorVersion = 11)
 	public void testStartOfSequence(SessionFactoryScope scope) {
 		final Person person = scope.fromTransaction( session -> {

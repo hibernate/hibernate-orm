@@ -11,7 +11,7 @@ import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-14251")
+@JiraKey(value = "HHH-14251")
 @DomainModel( annotatedClasses = UpdateEntityWithEmbeddedTest.Company.class )
 @SessionFactory
 public class UpdateEntityWithEmbeddedTest {

@@ -7,8 +7,7 @@
 
 package org.hibernate.spatial.geometry;
 
-import org.hibernate.testing.TestForIssue;
-import org.junit.Ignore;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import org.geolatte.geom.codec.Wkt;
@@ -21,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 public class JTSUtilsTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14757")
+	@JiraKey(value = "HHH-14757")
 	public void testGeometryCollection() {
 		Geometry elem2a = JTS.to( Wkt.fromWkt( "GEOMETRYCOLLECTION(POINT(2 3),LINESTRING(2 3,3 4))" ) );
 		Geometry elem2b = JTS.to( Wkt.fromWkt( "GEOMETRYCOLLECTION(POINT(2 3),LINESTRING(2 3,3 4))" ) );

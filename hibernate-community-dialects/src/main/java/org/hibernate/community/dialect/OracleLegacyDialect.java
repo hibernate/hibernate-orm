@@ -323,6 +323,7 @@ public class OracleLegacyDialect extends Dialect {
 
 		if ( getVersion().isSameOrAfter( 12 ) ) {
 			functionFactory.jsonValue_oracle();
+			functionFactory.jsonQuery_oracle();
 			functionFactory.jsonExists_oracle();
 			functionFactory.jsonObject_oracle();
 			functionFactory.jsonArray_oracle();

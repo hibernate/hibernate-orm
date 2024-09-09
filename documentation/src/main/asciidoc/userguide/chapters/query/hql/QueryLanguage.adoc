@@ -1633,6 +1633,7 @@ The following functions deal with SQL JSON types, which are not supported on eve
 | `json_array()` | Constructs a JSON array from arguments
 | `json_value()` | Extracts a value from a JSON document by JSON path
 | `json_exists()` | Checks if a JSON path exists in a JSON document
+| `json_query()` | Queries non-scalar values by JSON path in a JSON document
 |===
 
 
@@ -1712,7 +1713,7 @@ include::{extrasdir}/json_value_bnf.txt[]
 
 The first argument is an expression to a JSON document. The second argument is a JSON path as String expression.
 
-WARNING: Some databases might also return non-scalar values. Beware that this behavior is not portable.
+WARNING: Some databases might also allow extracting non-scalar values. Beware that this behavior is not portable.
 
 NOTE: It is recommended to only us the dot notation for JSON paths instead of the bracket notation,
 since most databases support only that.
@@ -1829,6 +1830,92 @@ It is recommended to specify this clause when the exact error behavior is import
 include::{json-example-dir-hql}/JsonExistsTest.java[tags=hql-json-exists-on-error-example]
 ----
 ====
+
+NOTE: The H2 emulation only supports absolute JSON paths using the dot notation.
+
+[[hql-json-query-function]]
+===== `json_query()`
+
+Queries non-scalar values from a JSON document by a https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html[JSON path].
+
+[[hql-json-query-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/json_query_bnf.txt[]
+----
+
+The first argument is an expression to a JSON document. The second argument is a JSON path as String expression.
+
+WARNING: Some databases might also allow querying scalar values. Beware that this behavior is not portable.
+
+NOTE: It is recommended to only us the dot notation for JSON paths instead of the bracket notation,
+since most databases support only that.
+
+[[hql-json-query-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonQueryTest.java[tags=hql-json-query-example]
+----
+====
+
+The `passing` clause allows to reuse the same JSON path but pass different values for evaluation.
+
+[[hql-json-query-passing-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonQueryTest.java[tags=hql-json-query-passing-example]
+----
+====
+
+The `wrapper` clause allows to specify whether results of a query should be wrapped in brackets `[]` i.e. an array.
+The default behavior is to omit an array wrapper i.e. `without wrapper`.
+It is an error when a `json_query` returns more than a single result and `without wrapper` is used.
+How an error like this should be handled can be controlled with the `on error` clause.
+
+WARNING: Since the default behavior of `on error` is database dependent,
+some databases might return a comma separated list of values even when using `without wrapper`. This is not portable.
+
+[[hql-json-query-wrapper-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonQueryTest.java[tags=hql-json-query-with-wrapper-example]
+----
+====
+
+The `on error` clause defines the behavior when an error occurs while querying with the JSON path.
+Conditions that classify as errors are database dependent, but usual errors which can be handled with this clause are:
+
+* First argument is not a valid JSON document
+* Second argument is not a valid JSON path
+* Multiple `json_query` results when `without wrapper` is used
+
+The default behavior of `on error` is database specific, but usually, `null` is returned on an error.
+It is recommended to specify this clause when the exact error behavior is important.
+
+[[hql-json-query-on-error-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonQueryTest.java[tags=hql-json-query-on-error-example]
+----
+====
+
+The `on empty` clause defines the behavior when the JSON path does not match the JSON document.
+By default, `null` is returned on empty.
+
+[[hql-json-query-on-empty-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonQueryTest.java[tags=hql-json-query-on-empty-example]
+----
+====
+
+To actually receive an error `on empty`, it is necessary to also specify `error on error`.
+Depending on the database, an error might still be thrown even without that, but that is not portable.
 
 NOTE: The H2 emulation only supports absolute JSON paths using the dot notation.
 

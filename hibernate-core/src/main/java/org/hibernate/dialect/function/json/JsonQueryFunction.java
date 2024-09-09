@@ -20,13 +20,17 @@ import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.expression.SqmJsonExistsExpression;
+import org.hibernate.query.sqm.tree.expression.SqmJsonQueryExpression;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JsonExistsErrorBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
+import org.hibernate.sql.ast.tree.expression.JsonQueryEmptyBehavior;
+import org.hibernate.sql.ast.tree.expression.JsonQueryErrorBehavior;
+import org.hibernate.sql.ast.tree.expression.JsonQueryWrapMode;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -37,31 +41,30 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.JSO
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 
 /**
- * Standard json_exists function.
+ * Standard json_query function.
  */
-public class JsonExistsFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
+public class JsonQueryFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	protected final boolean supportsJsonPathExpression;
 	protected final boolean supportsJsonPathPassingClause;
 
-	public JsonExistsFunction(
+	public JsonQueryFunction(
 			TypeConfiguration typeConfiguration,
 			boolean supportsJsonPathExpression,
 			boolean supportsJsonPathPassingClause) {
 		super(
-				"json_exists",
+				"json_query",
 				FunctionKind.NORMAL,
-				new ArgumentTypesValidator( null, IMPLICIT_JSON, STRING ),
-				StandardFunctionReturnTypeResolvers.invariant( typeConfiguration.standardBasicTypeForJavaType( Boolean.class ) ),
+				StandardArgumentsValidators.composite(
+						new ArgumentTypesValidator( StandardArgumentsValidators.between( 2, 3 ), IMPLICIT_JSON, STRING, ANY )
+				),
+				StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.JSON )
+				),
 				StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, JSON, STRING )
 		);
 		this.supportsJsonPathExpression = supportsJsonPathExpression;
 		this.supportsJsonPathPassingClause = supportsJsonPathPassingClause;
-	}
-
-	@Override
-	public boolean isPredicate() {
-		return true;
 	}
 
 	@Override
@@ -70,11 +73,11 @@ public class JsonExistsFunction extends AbstractSqmSelfRenderingFunctionDescript
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		//noinspection unchecked
-		return (SelfRenderingSqmFunction<T>) new SqmJsonExistsExpression(
+		return (SelfRenderingSqmFunction<T>) new SqmJsonQueryExpression(
 				this,
 				this,
 				arguments,
-				(ReturnableType<Boolean>) impliedResultType,
+				(ReturnableType<String>) impliedResultType,
 				getArgumentsValidator(),
 				getReturnTypeResolver(),
 				queryEngine.getCriteriaBuilder(),
@@ -88,27 +91,26 @@ public class JsonExistsFunction extends AbstractSqmSelfRenderingFunctionDescript
 			List<? extends SqlAstNode> sqlAstArguments,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		render( sqlAppender, JsonExistsArguments.extract( sqlAstArguments ), returnType, walker );
+		render( sqlAppender, JsonQueryArguments.extract( sqlAstArguments ), returnType, walker );
 	}
 
 	protected void render(
 			SqlAppender sqlAppender,
-			JsonExistsArguments arguments,
+			JsonQueryArguments arguments,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		sqlAppender.appendSql( "json_exists(" );
+		sqlAppender.appendSql( "json_query(" );
 		arguments.jsonDocument().accept( walker );
 		sqlAppender.appendSql( ',' );
-		final Expression jsonPath = arguments.jsonPath();
 		final JsonPathPassingClause passingClause = arguments.passingClause();
 		if ( supportsJsonPathPassingClause || passingClause == null ) {
 			if ( supportsJsonPathExpression ) {
-				jsonPath.accept( walker );
+				arguments.jsonPath().accept( walker );
 			}
 			else {
 				walker.getSessionFactory().getJdbcServices().getDialect().appendLiteral(
 						sqlAppender,
-						walker.getLiteralValue( jsonPath )
+						walker.getLiteralValue( arguments.jsonPath() )
 				);
 			}
 			if ( passingClause != null ) {
@@ -137,28 +139,46 @@ public class JsonExistsFunction extends AbstractSqmSelfRenderingFunctionDescript
 					walker
 			);
 		}
-		final JsonExistsErrorBehavior errorBehavior = arguments.errorBehavior();
-		if ( errorBehavior != null && errorBehavior != JsonExistsErrorBehavior.FALSE ) {
-			if ( errorBehavior == JsonExistsErrorBehavior.TRUE ) {
-				sqlAppender.appendSql( " true on error" );
+		if ( arguments.wrapMode() != null ) {
+			switch ( arguments.wrapMode() ) {
+				case WITH_WRAPPER -> sqlAppender.appendSql( " with wrapper" );
+				case WITHOUT_WRAPPER -> sqlAppender.appendSql( " without wrapper" );
+				case WITH_CONDITIONAL_WRAPPER -> sqlAppender.appendSql( " with conditional wrapper" );
 			}
-			else {
-				sqlAppender.appendSql( " error on error" );
+		}
+		if ( arguments.errorBehavior() != null ) {
+			switch ( arguments.errorBehavior() ) {
+				case ERROR -> sqlAppender.appendSql( " error on error" );
+				case NULL -> sqlAppender.appendSql( " null on error" );
+				case EMPTY_OBJECT -> sqlAppender.appendSql( " empty object on error" );
+				case EMPTY_ARRAY -> sqlAppender.appendSql( " empty array on error" );
+			}
+		}
+		if ( arguments.emptyBehavior() != null ) {
+			switch ( arguments.emptyBehavior() ) {
+				case ERROR -> sqlAppender.appendSql( " error on empty" );
+				case NULL -> sqlAppender.appendSql( " null on empty" );
+				case EMPTY_OBJECT -> sqlAppender.appendSql( " empty object on empty" );
+				case EMPTY_ARRAY -> sqlAppender.appendSql( " empty array on empty" );
 			}
 		}
 		sqlAppender.appendSql( ')' );
 	}
 
-	protected record JsonExistsArguments(
+	protected record JsonQueryArguments(
 			Expression jsonDocument,
 			Expression jsonPath,
 			boolean isJsonType,
 			@Nullable JsonPathPassingClause passingClause,
-			@Nullable JsonExistsErrorBehavior errorBehavior) {
-		public static JsonExistsArguments extract(List<? extends SqlAstNode> sqlAstArguments) {
+			@Nullable JsonQueryWrapMode wrapMode,
+			@Nullable JsonQueryErrorBehavior errorBehavior,
+			@Nullable JsonQueryEmptyBehavior emptyBehavior) {
+		public static JsonQueryArguments extract(List<? extends SqlAstNode> sqlAstArguments) {
 			int nextIndex = 2;
 			JsonPathPassingClause passingClause = null;
-			JsonExistsErrorBehavior errorBehavior = null;
+			JsonQueryWrapMode wrapMode = null;
+			JsonQueryErrorBehavior errorBehavior = null;
+			JsonQueryEmptyBehavior emptyBehavior = null;
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
 				if ( node instanceof JsonPathPassingClause ) {
@@ -168,21 +188,35 @@ public class JsonExistsFunction extends AbstractSqmSelfRenderingFunctionDescript
 			}
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof JsonExistsErrorBehavior ) {
-					errorBehavior = (JsonExistsErrorBehavior) node;
+				if ( node instanceof JsonQueryWrapMode ) {
+					wrapMode = (JsonQueryWrapMode) node;
 					nextIndex++;
 				}
 			}
+			if ( nextIndex < sqlAstArguments.size() ) {
+				final SqlAstNode node = sqlAstArguments.get( nextIndex );
+				if ( node instanceof JsonQueryErrorBehavior ) {
+					errorBehavior = (JsonQueryErrorBehavior) node;
+					nextIndex++;
+				}
+			}
+			if ( nextIndex < sqlAstArguments.size() ) {
+				final SqlAstNode node = sqlAstArguments.get( nextIndex );
+				if ( node instanceof JsonQueryEmptyBehavior ) {
+					emptyBehavior = (JsonQueryEmptyBehavior) node;
+				}
+			}
 			final Expression jsonDocument = (Expression) sqlAstArguments.get( 0 );
-			return new JsonExistsArguments(
+			return new JsonQueryArguments(
 					jsonDocument,
 					(Expression) sqlAstArguments.get( 1 ),
 					jsonDocument.getExpressionType() != null
 							&& jsonDocument.getExpressionType().getSingleJdbcMapping().getJdbcType().isJson(),
 					passingClause,
-					errorBehavior
+					wrapMode,
+					errorBehavior,
+					emptyBehavior
 			);
 		}
 	}
-
 }

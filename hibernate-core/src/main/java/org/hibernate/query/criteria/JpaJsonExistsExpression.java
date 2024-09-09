@@ -56,7 +56,7 @@ public interface JpaJsonExistsExpression extends JpaExpression<Boolean> {
 	JpaJsonExistsExpression passing(String parameterName, Expression<?> expression);
 
 	/**
-	 * The behavior of the json value expression when a JSON processing error occurs.
+	 * The behavior of the json exists expression when a JSON processing error occurs.
 	 */
 	enum ErrorBehavior {
 		/**

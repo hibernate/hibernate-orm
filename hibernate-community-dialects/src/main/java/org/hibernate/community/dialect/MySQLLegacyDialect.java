@@ -654,6 +654,7 @@ public class MySQLLegacyDialect extends Dialect {
 
 		if ( getMySQLVersion().isSameOrAfter( 5, 7 ) ) {
 			functionFactory.jsonValue_mysql();
+			functionFactory.jsonQuery_mysql();
 			functionFactory.jsonExists_mysql();
 			functionFactory.jsonObject_mysql();
 			functionFactory.jsonArray_mysql();

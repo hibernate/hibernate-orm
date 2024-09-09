@@ -1625,6 +1625,7 @@ jsonFunction
 	: jsonArrayFunction
 	| jsonExistsFunction
 	| jsonObjectFunction
+	| jsonQueryFunction
 	| jsonValueFunction
 	;
 
@@ -1645,6 +1646,21 @@ jsonValueReturningClause
 
 jsonValueOnErrorOrEmptyClause
 	: ( ERROR | NULL | ( DEFAULT expression ) ) ON (ERROR|EMPTY);
+
+/**
+ * The 'json_query()' function
+ */
+jsonQueryFunction
+	: JSON_QUERY LEFT_PAREN expression COMMA expression jsonPassingClause? jsonQueryWrapperClause? jsonQueryOnErrorOrEmptyClause? jsonQueryOnErrorOrEmptyClause? RIGHT_PAREN
+	;
+
+jsonQueryWrapperClause
+	: WITH (CONDITIONAL|UNCONDITIONAL)? ARRAY? WRAPPER
+	| WITHOUT ARRAY? WRAPPER
+	;
+
+jsonQueryOnErrorOrEmptyClause
+	: ( ERROR | NULL | ( EMPTY ( ARRAY | OBJECT )? ) ) ON (ERROR|EMPTY);
 
 /**
  * The 'json_exists()' function
@@ -1699,6 +1715,7 @@ jsonNullClause
 	| ALL
 	| AND
 	| ANY
+	| ARRAY
 	| AS
 	| ASC
 	| AVG
@@ -1710,6 +1727,7 @@ jsonNullClause
 	| CAST
 	| COLLATE
 	| COLUMN
+	| CONDITIONAL
 	| CONFLICT
 	| CONSTRAINT
 	| CONTAINS
@@ -1777,6 +1795,7 @@ jsonNullClause
 	| JSON_ARRAY
 	| JSON_EXISTS
 	| JSON_OBJECT
+	| JSON_QUERY
 	| JSON_VALUE
 	| KEY
 	| KEYS
@@ -1863,6 +1882,7 @@ jsonNullClause
 	| TRUNCATE
 	| TYPE
 	| UNBOUNDED
+	| UNCONDITIONAL
 	| UNION
 	| UPDATE
 	| USING
@@ -1876,6 +1896,7 @@ jsonNullClause
 	| WITH
 	| WITHIN
 	| WITHOUT
+	| WRAPPER
 	| YEAR
 	| ZONED) {
 		logUseOfReservedWordAsIdentifier( getCurrentToken() );

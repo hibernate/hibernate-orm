@@ -1,4 +1,4 @@
-"json_exists(" expression, expression passingClause? onErrorClause? ")"
+"json_exists(" expression "," expression passingClause? onErrorClause? ")"
 
 passingClause
 	: "passing" expression "as" identifier ("," expression "as" identifier)*

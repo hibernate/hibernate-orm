@@ -1202,4 +1202,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		return SQLServerCallableStatementSupport.INSTANCE;
 	}
 
+
+	@Override
+	public boolean supportsBindingNullForSetObject() {
+		return true;
+	}
 }

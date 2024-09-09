@@ -1028,4 +1028,9 @@ public class H2Dialect extends Dialect {
 		return "dual";
 	}
 
+	@Override
+	public boolean supportsBindingNullSqlTypeForSetNull() {
+		return true;
+	}
+
 }

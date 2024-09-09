@@ -9,6 +9,7 @@ package org.hibernate;
 import java.util.List;
 import java.util.function.Consumer;
 
+import jakarta.persistence.FindOption;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.jdbc.Work;
 import org.hibernate.query.Query;
@@ -706,12 +707,13 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @param entityType the entity type
 	 * @param ids        the identifiers
+	 * @param options    options, if any
 	 * @return an ordered list of persistent instances, with null elements representing missing
-	 * entities
+	 *         entities
 	 * @see #byMultipleIds(Class)
 	 * @since 7.0
 	 */
-	<E> List<E> findAll(Class<E> entityType, List<Object> ids);
+	<E> List<E> findAll(Class<E> entityType, List<Object> ids, FindOption... options);
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
@@ -922,7 +924,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @throws HibernateException If the given class does not resolve as a mapped entity
 	 *
-	 * @see #findAll(Class, List)
+	 * @see #findAll(Class, List, FindOption...)
 	 */
 	<T> MultiIdentifierLoadAccess<T> byMultipleIds(Class<T> entityClass);
 

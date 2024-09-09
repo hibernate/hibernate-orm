@@ -63,9 +63,9 @@ public class FractionalSecondsTests {
 		final PersistentClass entityBinding = scope.getEntityBinding( TestEntity.class );
 		checkPrecision( "theInstant", defaultPrecision, entityBinding, domainModel );
 		checkPrecision( "theLocalDateTime", defaultPrecision, entityBinding, domainModel );
-		checkPrecision( "theLocalTime", defaultPrecision, entityBinding, domainModel );
+		checkPrecision( "theLocalTime", 0, entityBinding, domainModel );
 		checkPrecision( "theOffsetDateTime", defaultPrecision, entityBinding, domainModel );
-		checkPrecision( "theOffsetTime", defaultPrecision, entityBinding, domainModel );
+		checkPrecision( "theOffsetTime", 0, entityBinding, domainModel );
 		checkPrecision( "theZonedDateTime", defaultPrecision, entityBinding, domainModel );
 
 		final PersistentClass entityBinding0 = scope.getEntityBinding( TestEntity0.class );

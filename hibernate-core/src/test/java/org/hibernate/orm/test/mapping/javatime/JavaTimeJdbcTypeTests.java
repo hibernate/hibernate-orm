@@ -46,6 +46,7 @@ import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.type.descriptor.DateTimeUtils.adjustToDefaultPrecision;
+import static org.hibernate.type.descriptor.DateTimeUtils.adjustToPrecision;
 
 /**
  * Tests for "direct" JDBC handling of {@linkplain java.time Java Time} types.
@@ -178,7 +179,7 @@ public class JavaTimeJdbcTypeTests {
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase drivers truncate fractional seconds from the LocalTime")
 	void testLocalTime(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
-		final LocalTime startTime = adjustToDefaultPrecision( LocalTime.now(), dialect );
+		final LocalTime startTime = adjustToPrecision( LocalTime.now(), 0, dialect );
 
 		scope.inTransaction( (session) -> {
 			final EntityWithJavaTimeValues entity = new EntityWithJavaTimeValues();

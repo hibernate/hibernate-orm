@@ -166,8 +166,13 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 						getSqmSelectStatement().copy( noParamCopyContext() );
 		final NodeBuilder builder = sqm.nodeBuilder();
 		//TODO: find a better way handle parameters
-		builder.setCriteriaValueHandlingMode(ValueHandlingMode.INLINE);
-		return paginate( keyDefinition, keyValues, sqm, builder );
+		final ValueHandlingMode valueHandlingMode = builder.setCriteriaValueHandlingMode(ValueHandlingMode.INLINE);
+		try {
+			return paginate( keyDefinition, keyValues, sqm, builder );
+		}
+		finally {
+			builder.setCriteriaValueHandlingMode( valueHandlingMode );
+		}
 	}
 
 

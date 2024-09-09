@@ -108,7 +108,7 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 			final HashSet<String> fetchProfiles =
 					influencers.adjustFetchProfiles( disabledFetchProfiles, enabledFetchProfiles );
 			final EffectiveEntityGraph effectiveEntityGraph =
-					session.getLoadQueryInfluencers().applyEntityGraph( rootGraph, graphSemantic);
+					influencers.applyEntityGraph( rootGraph, graphSemantic);
 			try {
 				return executor.get();
 			}

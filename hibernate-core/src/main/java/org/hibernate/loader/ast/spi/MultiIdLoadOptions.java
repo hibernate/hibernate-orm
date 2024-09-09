@@ -6,6 +6,8 @@
  */
 package org.hibernate.loader.ast.spi;
 
+import org.hibernate.engine.spi.SessionImplementor;
+
 /**
  * Encapsulation of the options for loading multiple entities by id
  */
@@ -25,4 +27,9 @@ public interface MultiIdLoadOptions extends MultiLoadOptions {
 	 * @return the session factory cache is checked first
 	 */
 	boolean isSecondLevelCacheCheckingEnabled();
+
+	/**
+	 * Should the entities be loaded in read-only mode?
+	 */
+	Boolean getReadOnly(SessionImplementor session);
 }

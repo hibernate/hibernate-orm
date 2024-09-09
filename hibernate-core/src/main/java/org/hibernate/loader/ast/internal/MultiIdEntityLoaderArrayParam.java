@@ -43,6 +43,7 @@ import org.hibernate.sql.results.spi.ManagedResultConsumer;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+import static java.lang.Boolean.TRUE;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
@@ -193,7 +194,9 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 		session.getJdbcServices().getJdbcSelectExecutor().executeQuery(
 				jdbcSelectOperation,
 				jdbcParameterBindings,
-				new ExecutionContextWithSubselectFetchHandler( session, subSelectFetchableKeysHandler ),
+				new ExecutionContextWithSubselectFetchHandler( session,
+						subSelectFetchableKeysHandler,
+						TRUE.equals( loadOptions.getReadOnly(session) ) ),
 				RowTransformerStandardImpl.instance(),
 				null,
 				idsToLoadFromDatabase.size(),

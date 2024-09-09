@@ -262,7 +262,7 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @param entityClass The class of the entity to retrieve
 	 * @param ids         The ids of the entities to retrieve
 	 * @return an ordered list of detached entity instances, with
-	 * null elements representing missing entities
+	 *         null elements representing missing entities
 	 * @since 7.0
 	 */
 	<T> List<T> getAll(Class<T> entityClass, List<Object> ids);

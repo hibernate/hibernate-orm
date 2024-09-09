@@ -944,22 +944,64 @@ public class SessionImpl
 
 	@Override @Deprecated
 	public Object load(String entityName, Object id) throws HibernateException {
-		return this.byId( entityName ).getReference( id );
+		return byId( entityName ).getReference( id );
+	}
+
+	private <T> MultiIdentifierLoadAccess<T> multiloadAccessWithOptions(Class<T> entityClass, FindOption[] options) {
+		final MultiIdentifierLoadAccess<T> loadAccess = byMultipleIds( entityClass );
+		CacheStoreMode storeMode = getCacheStoreMode();
+		CacheRetrieveMode retrieveMode = getCacheRetrieveMode();
+		LockOptions lockOptions = copySessionLockOptions();
+		for ( FindOption option : options ) {
+			if ( option instanceof CacheStoreMode cacheStoreMode ) {
+				storeMode = cacheStoreMode;
+			}
+			else if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
+				retrieveMode = cacheRetrieveMode;
+			}
+			else if ( option instanceof CacheMode cacheMode ) {
+				storeMode = cacheMode.getJpaStoreMode();
+				retrieveMode = cacheMode.getJpaRetrieveMode();
+			}
+			else if ( option instanceof LockModeType lockModeType ) {
+				lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
+			}
+			else if ( option instanceof LockMode lockMode ) {
+				lockOptions.setLockMode( lockMode );
+			}
+			else if ( option instanceof LockOptions lockOpts ) {
+				lockOptions = lockOpts;
+			}
+			else if ( option instanceof PessimisticLockScope pessimisticLockScope ) {
+				lockOptions.setLockScope( pessimisticLockScope );
+			}
+			else if ( option instanceof Timeout timeout ) {
+				lockOptions.setTimeOut( timeout.milliseconds() );
+			}
+			else if ( option instanceof EnabledFetchProfile enabledFetchProfile ) {
+				loadAccess.enableFetchProfile( enabledFetchProfile.profileName() );
+			}
+			else if ( option instanceof ReadOnlyMode ) {
+				loadAccess.withReadOnly( option == ReadOnlyMode.READ_ONLY );
+			}
+		}
+		loadAccess.with( lockOptions ).with( interpretCacheMode( storeMode, retrieveMode ) );
+		return loadAccess;
 	}
 
 	@Override
-	public <E> List<E> findAll(Class<E> entityType, List<Object> ids) {
-		return this.byMultipleIds( entityType ).multiLoad( ids );
+	public <E> List<E> findAll(Class<E> entityType, List<Object> ids, FindOption... options) {
+		return multiloadAccessWithOptions( entityType, options ).multiLoad( ids );
 	}
 
 	@Override
 	public <T> T get(Class<T> entityClass, Object id) throws HibernateException {
-		return this.byId( entityClass ).load( id );
+		return byId( entityClass ).load( id );
 	}
 
 	@Override
 	public Object get(String entityName, Object id) throws HibernateException {
-		return this.byId( entityName ).load( id );
+		return byId( entityName ).load( id );
 	}
 
 	/**
@@ -2359,6 +2401,10 @@ public class SessionImpl
 			}
 			else if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
 				retrieveMode = cacheRetrieveMode;
+			}
+			else if ( option instanceof CacheMode cacheMode ) {
+				storeMode = cacheMode.getJpaStoreMode();
+				retrieveMode = cacheMode.getJpaRetrieveMode();
 			}
 			else if ( option instanceof LockModeType lockModeType ) {
 				lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );

@@ -5629,40 +5629,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final BasicValuedMapping basicValuedMapping = (BasicValuedMapping) inferableExpressible;
 			final BasicValueConverter valueConverter = basicValuedMapping.getJdbcMapping().getValueConverter();
 			if ( valueConverter != null ) {
-				final Object value = literal.getLiteralValue();
-				final Object sqlLiteralValue;
-				// For converted query literals, we support both, the domain and relational java type
-				if ( value == null || valueConverter.getDomainJavaType().isInstance( value ) ) {
-					sqlLiteralValue = valueConverter.toRelationalValue( value );
-				}
-				else if ( valueConverter.getRelationalJavaType().isInstance( value ) ) {
-					sqlLiteralValue = value;
-				}
-				else if ( Character.class.isAssignableFrom( valueConverter.getRelationalJavaType().getJavaTypeClass() )
-						&& value instanceof CharSequence && ( (CharSequence) value ).length() == 1 ) {
-					sqlLiteralValue = ( (CharSequence) value ).charAt( 0 );
-				}
-				// In HQL, number literals might not match the relational java type exactly,
-				// so we allow coercion between the number types
-				else if ( Number.class.isAssignableFrom( valueConverter.getRelationalJavaType().getJavaTypeClass() )
-						&& value instanceof Number ) {
-					sqlLiteralValue = valueConverter.getRelationalJavaType().coerce(
-							value,
-							creationContext.getSessionFactory()::getTypeConfiguration
-					);
-				}
-				else {
-					throw new SemanticException(
-							String.format(
-									Locale.ROOT,
-									"Literal type '%s' did not match domain type '%s' nor converted type '%s'",
-									value.getClass(),
-									valueConverter.getDomainJavaType().getJavaTypeClass().getName(),
-									valueConverter.getRelationalJavaType().getJavaTypeClass().getName()
-							)
-					);
-				}
-				return new QueryLiteral<>( sqlLiteralValue, basicValuedMapping );
+				return new QueryLiteral<>( sqlLiteralValue( valueConverter, literal.getLiteralValue() ), basicValuedMapping );
 			}
 		}
 
@@ -5775,6 +5742,40 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 											.getJavaType()
 											.getName()
 							)
+			);
+		}
+	}
+
+	private <D> Object sqlLiteralValue(BasicValueConverter<D,?> valueConverter, D value) {
+		// For converted query literals, we support both, the domain and relational java type
+		if ( value == null || valueConverter.getDomainJavaType().isInstance( value ) ) {
+			return valueConverter.toRelationalValue( value );
+		}
+		else if ( valueConverter.getRelationalJavaType().isInstance( value ) ) {
+			return value;
+		}
+		else if ( Character.class.isAssignableFrom( valueConverter.getRelationalJavaType().getJavaTypeClass() )
+				&& value instanceof CharSequence && ( (CharSequence) value ).length() == 1 ) {
+			return ( (CharSequence) value ).charAt( 0 );
+		}
+		// In HQL, number literals might not match the relational java type exactly,
+		// so we allow coercion between the number types
+		else if ( Number.class.isAssignableFrom( valueConverter.getRelationalJavaType().getJavaTypeClass() )
+				&& value instanceof Number ) {
+			return valueConverter.getRelationalJavaType().coerce(
+					value,
+					creationContext.getSessionFactory()::getTypeConfiguration
+			);
+		}
+		else {
+			throw new SemanticException(
+					String.format(
+							Locale.ROOT,
+							"Literal type '%s' did not match domain type '%s' nor converted type '%s'",
+							value.getClass(),
+							valueConverter.getDomainJavaType().getJavaTypeClass().getName(),
+							valueConverter.getRelationalJavaType().getJavaTypeClass().getName()
+					)
 			);
 		}
 	}
@@ -7362,12 +7363,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 	}
 
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Override
 	public Object visitFieldLiteral(SqmFieldLiteral<?> sqmFieldLiteral) {
-		return new QueryLiteral<>(
-				sqmFieldLiteral.getValue(),
-				(BasicValuedMapping) determineValueMapping( sqmFieldLiteral )
-		);
+		final BasicValuedMapping valueMapping = (BasicValuedMapping) determineValueMapping( sqmFieldLiteral );
+		final Object value = sqmFieldLiteral.getValue();
+		final BasicValueConverter converter = valueMapping.getJdbcMapping().getValueConverter();
+		return new QueryLiteral<>( converter != null ? sqlLiteralValue( converter, value ) : value, valueMapping );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

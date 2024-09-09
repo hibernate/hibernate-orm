@@ -349,7 +349,7 @@ public static class Person { ... }
 | link:{doc-javadoc-url}org/hibernate/annotations/SQLSelect.html[`@SQLSelect`] | Overrides a generated SQL `select` statement
 | link:{doc-javadoc-url}org/hibernate/annotations/SQLInsert.html[`@SQLInsert`] | Overrides a generated SQL `insert` statement
 | link:{doc-javadoc-url}org/hibernate/annotations/SQLUpdate.html[`@SQLUpdate`] | Overrides a generated SQL `update` statement
-| link:{doc-javadoc-url}org/hibernate/annotations/SQDelete.html[`@SQDelete`] | Overrides a generated SQL `delete` statement a single rows
+| link:{doc-javadoc-url}org/hibernate/annotations/SQDelete.html[`@SQDelete`] | Overrides a generated SQL `delete` statement for a single row
 | link:{doc-javadoc-url}org/hibernate/annotations/SQDeleteAll.html[`@SQDeleteAll`] | Overrides a generated SQL `delete` statement for multiple rows
 | link:{doc-javadoc-url}org/hibernate/annotations/SQLRestriction.html[`@SQLRestriction`] | Adds a restriction to generated SQL
 | link:{doc-javadoc-url}org/hibernate/annotations/SQLOrder.html[`@SQLOrder`] | Adds an ordering to generated SQL

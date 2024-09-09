@@ -649,7 +649,7 @@ There are two ways to apply a converter:
 - the `@Convert` annotation applies an `AttributeConverter` to a particular entity attribute, or
 - the `@Converter` annotation (or, alternatively, the `@ConverterRegistration` annotation) registers an `AttributeConverter` for automatic application to all attributes of a given type.
 
-For example, the following converter will be automatically applied to any attribute of type `BitSet`, and takes care of persisting the `BitSet` to a column of type `varbinary`:
+For example, the following converter will be automatically applied to any attribute of type `EnumSet<DayOfWeek>`, and takes care of persisting the `EnumSet<DayOfWeek>` to a column of type `INTEGER`:
 
 [source,java]
 ----
@@ -687,9 +687,9 @@ On the other hand, if we _don't_ set `autoapply=true`, then we must explicitly a
 
 [source,java]
 ----
-@Convert(converter = BitSetConverter.class)
+@Convert(converter = EnumSetConverter.class)
 @Basic(optional = false)
-BitSet bitset;
+EnumSet<DayOfWeek> daysOfWeek;
 ----
 
 All this is nice, but it probably won't surprise you that Hibernate goes beyond what is required by JPA.
@@ -738,7 +738,7 @@ Alternatively, the `@JavaTypeRegistration` annotation may be used to register `B
 [discrete]
 ==== JdbcType
 
-A `org.hibernate.type.descriptor.jdbc.JdbcType` is able to read and write a single Java type from and to JDBC.
+An `org.hibernate.type.descriptor.jdbc.JdbcType` is able to read and write a single Java type from and to JDBC.
 
 For example, `VarcharJdbcType` takes care of:
 
@@ -1233,7 +1233,7 @@ class Book {
 
 Remember, if we wish to the modify the collection we must <<bidirectional-problem,change the owning side>>.
 
-We've again used ``Set``s to represent the association.
+We've again used `Set` to represent the association.
 As before, we have the option to use `Collection` or `List`.
 But in this case it _does_ make a difference to the semantics of the association.
 
@@ -1486,7 +1486,7 @@ Let's pause to remember the annotations we've met so far.
 | Annotation | Purpose | JPA-standard
 
 | `@GeneratedValue` | Specify that an identifier is system-generated | &#10004;
-| `@SequenceGenerator` | Define an id generated backed by on a database sequence | &#10004;
+| `@SequenceGenerator` | Define an id generated backed by a database sequence | &#10004;
 | `@TableGenerator` | Define an id generated backed by a database table | &#10004;
 | `@IdGeneratorType`  | Declare an annotation that associates a custom `Generator` with each `@Id` attribute it annotates | &#10006;
 | `@ValueGenerationType` | Declare an annotation that associates a custom `Generator` with each `@Basic` attribute it annotates | &#10006;

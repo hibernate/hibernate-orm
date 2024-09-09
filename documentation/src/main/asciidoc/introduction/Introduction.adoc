@@ -13,7 +13,7 @@ Hibernate makes *relational data* visible to a program written in Java, in a *na
 3. allowing performance optimizations to be made after the basic persistence logic has already been written.
 ****
 
-Here the relational data is the focus, along with the importance of typesafety.
+Here the relational data is the focus, along with the importance of type safety.
 The goal of _object/relational mapping_ (ORM) is to eliminate fragile and untypesafe code, and make large programs easier to maintain in the long run.
 
 ORM takes the pain out of persistence by relieving the developer of the need to hand-write tedious, repetitive, and fragile code for flattening graphs of objects to database tables and rebuilding graphs of objects from flat SQL query result sets.
@@ -409,7 +409,7 @@ public class Main {
 In practice, we never access the database directly from a `main()` method.
 So now let's talk about how to organize persistence logic in a real system.
 The rest of this chapter is not compulsory.
-If you're itching for more details about Hibernate itself, you're quite welcome to skip straight to the <<entities,next chapter>>, and come back later.
+If you're itching for more details about Hibernate itself, you're quite welcome to skip straight to the <<configuration,next chapter>>, and come back later.
 
 [[organizing-persistence]]
 === Organizing persistence logic
@@ -462,7 +462,7 @@ Let's now consider a slightly more complicated case.
 ----
 @Path("/") @Produces("application/json")
 public class BookResource {
-    private static final RESULTS_PER_PAGE = 20;
+    private static final int RESULTS_PER_PAGE = 20;
 
     @GET @Path("books/{titlePattern}/{page:\\d+}")
     public List<Book> findBooks(String titlePattern, int page) {
@@ -497,10 +497,10 @@ static List<Book> findBooksByTitleWithPagination(Session session,
 This is an example of a _query method_, a function which accepts arguments to the parameters of a HQL or SQL query, and executes the query, returning its results to the caller.
 And that's all it does; it doesn't orchestrate additional program logic, and it doesn't perform transaction or session management.
 
-It's even better to specify the query string using the `@NamedQuery` annotation, so that Hibernate can validate the query it at startup time, that is, when the `SessionFactory` is created, instead of when the query is first executed.
+It's even better to specify the query string using the `@NamedQuery` annotation, so that Hibernate can validate the query at startup time, that is, when the `SessionFactory` is created, instead of when the query is first executed.
 Indeed, since we included the <<metamodel-generator,Metamodel Generator>> in our <<build-gradle,Gradle build>>, the query can even be validated at _compile time_.
 
-We need a place to put the annotation, so lets move our query method to a new class:
+We need a place to put the annotation, so let's move our query method to a new class:
 
 [source,java]
 ----
@@ -614,7 +614,7 @@ We do need to be careful here if our persistence code uses native SQL, or if it 
 ====
 
 Whether we're testing against our real database, or against an in-memory Java database, we'll need to export the schema at the beginning of a test suite.
-We _usually_ do this when we create the Hibernate `SessionFactory` or JPA `EntityManager`, and so traditionally we've used a <<automatic-schema-export,configuration property>> for this.
+We _usually_ do this when we create the Hibernate `SessionFactory` or JPA `EntityManagerFactory`, and so traditionally we've used a <<automatic-schema-export,configuration property>> for this.
 
 The JPA-standard property is `jakarta.persistence.schema-generation.database.action`.
 For example, if we're using `Configuration` to configure Hibernate, we could write:
@@ -686,7 +686,7 @@ Then testing persistence logic is now straightforward!
 
 You'll need to:
 
-- bootstrap Hibernate and create a `SessionFactory` or `EntityManagerFactory` and the beginning of your test suite (we've already seen how to do that), and
+- bootstrap Hibernate and create a `SessionFactory` or `EntityManagerFactory` at the beginning of your test suite (we've already seen how to do that), and
 - create a new `Session` or `EntityManager` inside each `@Test` method, using `inTransaction()`, for example.
 
 Actually, some tests might require multiple sessions.
@@ -718,7 +718,7 @@ Let's now consider a different approach to code organization, one we treat with 
 [WARNING]
 ====
 In this section, we're going to give you our _opinion_.
-If you're only interested in facts, or if you prefer not to read things that might undermine the opinion you currently hold, please feel free to skip straight to the <<entities,next chapter>>.
+If you're only interested in facts, or if you prefer not to read things that might undermine the opinion you currently hold, please feel free to skip straight to the <<configuration,next chapter>>.
 ====
 
 Hibernate is an architecture-agnostic library, not a framework, and therefore integrates comfortably with a wide range of Java frameworks and containers.

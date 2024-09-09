@@ -48,7 +48,7 @@ hibernate.agroal.reapTimeout PT10s
 ----
 
 As long as you set at least one property with the prefix `hibernate.agroal`, the `AgroalConnectionProvider` will be selected automatically.
-There's many to choose from:
+There are many to choose from:
 
 .Settings for configuring Agroal
 [%breakable,cols="37,~"]
@@ -583,7 +583,7 @@ If there are multiple implementations on the classpath, we must disambiguate usi
 |===
 | Configuration property name        | Property value
 
-| `hibernate.javax.cache.provider`   a| The implementation of `javax.cache.spiCachingProvider`, for example:
+| `hibernate.javax.cache.provider`   a| The implementation of `javax.cache.spi.CachingProvider`, for example:
 [%breakable,cols="~,20"]
 !===
 ! `org.ehcache.jsr107.EhcacheCachingProvider` ! for EHCache

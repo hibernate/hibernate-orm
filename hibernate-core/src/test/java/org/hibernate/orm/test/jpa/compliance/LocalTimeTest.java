@@ -35,8 +35,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 )
 public class LocalTimeTest {
 
-	private static final LocalTime LOCAL_TIME = DateTimeUtils.adjustToDefaultPrecision(
-			LocalTime.now(),
+	private static final LocalTime LOCAL_TIME = DateTimeUtils.adjustToPrecision(
+			LocalTime.now(), 0,
 			DialectContext.getDialect()
 	);
 

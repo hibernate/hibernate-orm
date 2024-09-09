@@ -1136,4 +1136,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	private String getCheckConstraintOptions(CheckConstraint checkConstraint) {
 		return isNotEmpty( checkConstraint.getOptions() ) ? checkConstraint.getOptions() + " " : "";
 	}
+
+	@Override
+	public boolean supportsBindingNullForSetObject() {
+		return true;
+	}
 }

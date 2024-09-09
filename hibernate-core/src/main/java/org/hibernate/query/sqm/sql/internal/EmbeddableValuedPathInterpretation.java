@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -25,6 +26,8 @@ import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.update.Assignable;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static jakarta.persistence.metamodel.Type.PersistenceType.ENTITY;
 import static org.hibernate.query.sqm.internal.SqmUtil.getTargetMappingIfNeeded;
@@ -79,19 +82,46 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 	}
 
 	private final SqlTuple sqlExpression;
+	private final @Nullable String affectedTableName;
 
 	public EmbeddableValuedPathInterpretation(
 			SqlTuple sqlExpression,
 			NavigablePath navigablePath,
 			EmbeddableValuedModelPart mapping,
 			TableGroup tableGroup) {
+		this( sqlExpression, navigablePath, mapping, tableGroup, determineAffectedTableName( tableGroup, mapping ) );
+	}
+
+	public EmbeddableValuedPathInterpretation(
+				SqlTuple sqlExpression,
+				NavigablePath navigablePath,
+				EmbeddableValuedModelPart mapping,
+				TableGroup tableGroup,
+				@Nullable String affectedTableName) {
 		super( navigablePath, mapping, tableGroup );
 		this.sqlExpression = sqlExpression;
+		this.affectedTableName = affectedTableName;
+	}
+
+	private static @Nullable String determineAffectedTableName(TableGroup tableGroup, EmbeddableValuedModelPart mapping) {
+		final ModelPartContainer modelPart = tableGroup.getModelPart();
+		if ( modelPart instanceof EntityAssociationMapping ) {
+			final EntityAssociationMapping associationMapping = (EntityAssociationMapping) modelPart;
+			if ( !associationMapping.containsTableReference( mapping.getContainingTableExpression() ) ) {
+				return associationMapping.getAssociatedEntityMappingType().getMappedTableDetails().getTableName();
+			}
+		}
+		return null;
 	}
 
 	@Override
 	public SqlTuple getSqlExpression() {
 		return sqlExpression;
+	}
+
+	@Override
+	public @Nullable String getAffectedTableName() {
+		return affectedTableName;
 	}
 
 	@Override

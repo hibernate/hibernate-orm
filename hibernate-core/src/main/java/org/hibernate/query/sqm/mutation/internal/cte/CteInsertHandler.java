@@ -1299,7 +1299,7 @@ public class CteInsertHandler implements InsertHandler {
 		final List<Assignment> assignments = conflictClause.getAssignments();
 		for ( Assignment assignment : assignments ) {
 			for ( ColumnReference targetColumn : dmlStatement.getTargetColumns() ) {
-				if ( targetColumn.equals( assignment.getAssignable() ) ) {
+				if ( assignment.getAssignable().getColumnReferences().contains( targetColumn ) ) {
 					if ( compatibleAssignments == null ) {
 						compatibleAssignments = new ArrayList<>( assignments.size() );
 					}

@@ -9,6 +9,8 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Interpretation of a {@link SqmPath} as part of the translation to SQL AST.  We need specialized handling
  * for path interpretations because it can (and likely) contains multiple SqlExpressions (entity to its columns, e.g.)
@@ -25,5 +27,9 @@ public interface SqmPathInterpretation<T> extends Expression, DomainResultProduc
 
 	default Expression getSqlExpression() {
 		return this;
+	}
+
+	default @Nullable String getAffectedTableName() {
+		return null;
 	}
 }

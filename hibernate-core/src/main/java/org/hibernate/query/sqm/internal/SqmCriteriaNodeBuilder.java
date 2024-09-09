@@ -228,8 +228,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		}
 	}
 
-	public void setCriteriaValueHandlingMode(ValueHandlingMode criteriaValueHandlingMode) {
+	@Override
+	public ValueHandlingMode setCriteriaValueHandlingMode(ValueHandlingMode criteriaValueHandlingMode) {
+		ValueHandlingMode current = this.criteriaValueHandlingMode;
 		this.criteriaValueHandlingMode = criteriaValueHandlingMode;
+		return current;
 	}
 
 	@Override

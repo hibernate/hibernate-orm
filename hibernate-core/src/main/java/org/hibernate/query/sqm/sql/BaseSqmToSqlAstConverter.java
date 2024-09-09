@@ -6293,7 +6293,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					final QueryParameterBinding<?> binding = domainParameterBindings.getBinding(
 							domainParameterXref.getQueryParameter( expression )
 					);
-					final Object bindValue = binding.getBindValue();
+					final Object bindValue;
+					if ( binding.isMultiValued() ) {
+						final Collection<?> bindValues = binding.getBindValues();
+						bindValue = !bindValues.isEmpty() ? bindValues.iterator().next() : null;
+					}
+					else {
+						bindValue = binding.getBindValue();
+					}
 					if ( bindValue != null ) {
 						if ( bindValue instanceof BigInteger ) {
 							int precision = bindValue.toString().length() - ( ( (BigInteger) bindValue ).signum() < 0 ? 1 : 0 );

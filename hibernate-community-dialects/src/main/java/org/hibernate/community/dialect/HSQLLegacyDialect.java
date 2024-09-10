@@ -275,6 +275,7 @@ public class HSQLLegacyDialect extends Dialect {
 		if ( getVersion().isSameOrAfter( 2, 7 ) ) {
 			functionFactory.jsonObject_hsqldb();
 			functionFactory.jsonArray_hsqldb();
+			functionFactory.jsonArrayAgg_hsqldb();
 		}
 
 		//trim() requires parameters to be cast when used as trim character

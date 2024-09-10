@@ -500,6 +500,7 @@ public class HANADialect extends Dialect {
 				// Introduced in 2.0 SPS 04
 				functionFactory.jsonObject_hana();
 				functionFactory.jsonArray_hana();
+				functionFactory.jsonArrayAgg_hana();
 			}
 		}
 	}

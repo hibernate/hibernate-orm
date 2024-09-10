@@ -3777,6 +3777,78 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Incubating
 	JpaExpression<String> jsonArrayWithNulls(Expression<?>... values);
 
+	/**
+	 * Aggregates the given value into a JSON array.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonArrayAgg(Expression<?> value);
+
+	/**
+	 * Aggregates the given value into a JSON array.
+	 * Ordering values based on the given order by items.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonArrayAgg(Expression<?> value, JpaOrder... orderBy);
+
+	/**
+	 * Aggregates the given value into a JSON array.
+	 * Filtering rows that don't match the given filter predicate.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonArrayAgg(Expression<?> value, Predicate filter);
+
+	/**
+	 * Aggregates the given value into a JSON array.
+	 * Filtering rows that don't match the given filter predicate.
+	 * Ordering values based on the given order by items.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonArrayAgg(Expression<?> value, Predicate filter, JpaOrder... orderBy);
+
+	/**
+	 * Aggregates the given value into a JSON array, retaining {@code null} values in the JSON array.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonArrayAggWithNulls(Expression<?> value);
+
+	/**
+	 * Aggregates the given value into a JSON array, retaining {@code null} values in the JSON array.
+	 * Ordering values based on the given order by items.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonArrayAggWithNulls(Expression<?> value, JpaOrder... orderBy);
+
+	/**
+	 * Aggregates the given value into a JSON array, retaining {@code null} values in the JSON array.
+	 * Filtering rows that don't match the given filter predicate.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonArrayAggWithNulls(Expression<?> value, Predicate filter);
+
+	/**
+	 * Aggregates the given value into a JSON array, retaining {@code null} values in the JSON array.
+	 * Filtering rows that don't match the given filter predicate.
+	 * Ordering values based on the given order by items.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonArrayAggWithNulls(Expression<?> value, Predicate filter, JpaOrder... orderBy);
+
 	@Override
 	JpaPredicate and(List<Predicate> restrictions);
 

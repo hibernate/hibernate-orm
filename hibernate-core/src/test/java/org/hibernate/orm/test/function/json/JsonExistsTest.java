@@ -12,6 +12,7 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.sql.exec.ExecutionException;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -70,6 +71,7 @@ public class JsonExistsTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 21, matchSubTypes = true, reason = "Oracle bug in versions before 23")
 	public void testPassing(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-exists-passing-example[]

@@ -329,6 +329,7 @@ public class OracleLegacyDialect extends Dialect {
 			functionFactory.jsonExists_oracle();
 			functionFactory.jsonObject_oracle();
 			functionFactory.jsonArray_oracle();
+			functionFactory.jsonArrayAgg_oracle();
 		}
 	}
 

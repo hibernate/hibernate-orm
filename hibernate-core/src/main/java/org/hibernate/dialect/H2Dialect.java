@@ -350,6 +350,7 @@ public class H2Dialect extends Dialect {
 			functionFactory.jsonValue_h2();
 			functionFactory.jsonQuery_h2();
 			functionFactory.jsonExists_h2();
+			functionFactory.jsonArrayAgg_h2();
 		}
 	}
 

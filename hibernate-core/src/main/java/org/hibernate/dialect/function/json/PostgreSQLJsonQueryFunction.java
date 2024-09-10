@@ -18,6 +18,7 @@ import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
 import org.hibernate.sql.ast.tree.expression.JsonQueryEmptyBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonQueryErrorBehavior;
+import org.hibernate.sql.ast.tree.expression.JsonQueryWrapMode;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -36,14 +37,24 @@ public class PostgreSQLJsonQueryFunction extends JsonQueryFunction {
 			JsonQueryArguments arguments,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		// jsonb_path_query_first errors by default
+		// jsonb_path_query functions error by default
 		if ( arguments.errorBehavior() != null && arguments.errorBehavior() != JsonQueryErrorBehavior.ERROR ) {
 			throw new QueryException( "Can't emulate on error clause on PostgreSQL" );
 		}
 		if ( arguments.emptyBehavior() != null && arguments.emptyBehavior() != JsonQueryEmptyBehavior.NULL ) {
 			throw new QueryException( "Can't emulate on empty clause on PostgreSQL" );
 		}
-		sqlAppender.appendSql( "jsonb_path_query_array(" );
+		final JsonQueryWrapMode wrapMode = arguments.wrapMode();
+
+		if ( wrapMode == JsonQueryWrapMode.WITH_WRAPPER ) {
+			sqlAppender.appendSql( "jsonb_path_query_array(" );
+		}
+		else if ( wrapMode == JsonQueryWrapMode.WITH_CONDITIONAL_WRAPPER ) {
+			sqlAppender.appendSql( "(select case when count(*) over () > 1 then jsonb_agg(t.v) else percentile_disc(0) within group (order by t.v) end from jsonb_path_query(" );
+		}
+		else {
+			sqlAppender.appendSql( "(select t.v from jsonb_path_query(" );
+		}
 		final boolean needsCast = !arguments.isJsonType() && arguments.jsonDocument() instanceof JdbcParameter;
 		if ( needsCast ) {
 			sqlAppender.appendSql( "cast(" );
@@ -75,7 +86,12 @@ public class PostgreSQLJsonQueryFunction extends JsonQueryFunction {
 			}
 			sqlAppender.append( ')' );
 		}
-		// Unquote the value
-		sqlAppender.appendSql( ")#>>'{}'" );
+
+		if ( wrapMode != JsonQueryWrapMode.WITH_WRAPPER ) {
+			sqlAppender.appendSql( ") t(v))" );
+		}
+		else {
+			sqlAppender.appendSql( ')' );
+		}
 	}
 }

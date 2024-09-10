@@ -437,6 +437,7 @@ public class DB2LegacyDialect extends Dialect {
 				functionFactory.jsonExists_no_passing();
 				functionFactory.jsonObject_db2();
 				functionFactory.jsonArray_db2();
+				functionFactory.jsonArrayAgg_db2();
 			}
 		}
 	}

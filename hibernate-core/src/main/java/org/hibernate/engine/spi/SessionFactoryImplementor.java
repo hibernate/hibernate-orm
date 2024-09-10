@@ -111,7 +111,6 @@ public interface SessionFactoryImplementor
 	 *
 	 * @return The factory's ServiceRegistry
 	 */
-	@Override
 	ServiceRegistryImplementor getServiceRegistry();
 
 	/**

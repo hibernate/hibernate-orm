@@ -403,4 +403,9 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	public <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
 		return delegate.findEntityGraphsByType(entityClass);
 	}
+
+	@Override
+	public Class<?> classForName(String className) {
+		return delegate.classForName( className );
+	}
 }

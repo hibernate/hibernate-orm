@@ -17,6 +17,7 @@ import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
+import org.hibernate.query.sqm.function.FunctionRenderer;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
@@ -182,16 +183,15 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 					// '' -> \0 + argumentNumber
 					// In the end, the expression looks like the following:
 					// count(distinct coalesce(nullif(coalesce(col1 || '', '\0'), ''), '\01') || '\0' || coalesce(nullif(coalesce(col2 || '', '\0'), ''), '\02'))
-					final AbstractSqmSelfRenderingFunctionDescriptor chr =
-							(AbstractSqmSelfRenderingFunctionDescriptor) translator.getSessionFactory()
-									.getQueryEngine()
-									.getSqmFunctionRegistry()
-									.findFunctionDescriptor( "chr" );
+					final FunctionRenderer chrFunction =
+							(FunctionRenderer)
+									translator.getSessionFactory().getQueryEngine()
+											.getSqmFunctionRegistry()
+											.findFunctionDescriptor( "chr" );
 					final List<Expression> chrArguments = List.of(
 							new QueryLiteral<>(
 									0,
-									translator.getSessionFactory()
-											.getTypeConfiguration()
+									translator.getSessionFactory().getTypeConfiguration()
 											.getBasicTypeForJavaType( Integer.class )
 							)
 					);
@@ -215,15 +215,15 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 							sqlAppender.appendSql( "''" );
 						}
 						sqlAppender.appendSql( SqlAppender.COMMA_SEPARATOR_CHAR );
-						chr.render( sqlAppender, chrArguments, returnType, translator );
+						chrFunction.render( sqlAppender, chrArguments, returnType, translator );
 						sqlAppender.appendSql( "),'')," );
-						chr.render( sqlAppender, chrArguments, returnType, translator );
+						chrFunction.render( sqlAppender, chrArguments, returnType, translator );
 						sqlAppender.appendSql( concatOperator );
 						sqlAppender.appendSql( "'" );
 						sqlAppender.appendSql( argumentNumber );
 						sqlAppender.appendSql( "')" );
 						sqlAppender.appendSql( concatOperator );
-						chr.render( sqlAppender, chrArguments, returnType, translator );
+						chrFunction.render( sqlAppender, chrArguments, returnType, translator );
 						sqlAppender.appendSql( concatOperator );
 						sqlAppender.appendSql( "coalesce(nullif(coalesce(" );
 						needsConcat = renderCastedArgument( sqlAppender, translator, expressions.get( i ) );
@@ -234,9 +234,9 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 						sqlAppender.appendSql( "''" );
 					}
 					sqlAppender.appendSql( SqlAppender.COMMA_SEPARATOR_CHAR );
-					chr.render( sqlAppender, chrArguments, returnType, translator );
+					chrFunction.render( sqlAppender, chrArguments, returnType, translator );
 					sqlAppender.appendSql( "),'')," );
-					chr.render( sqlAppender, chrArguments, returnType, translator );
+					chrFunction.render( sqlAppender, chrArguments, returnType, translator );
 					sqlAppender.appendSql( concatOperator );
 					sqlAppender.appendSql( "'" );
 					sqlAppender.appendSql( argumentNumber );
@@ -424,8 +424,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	private boolean canReplaceWithStar(SqlAstNode arg, SqlAstTranslator<?> translator) {
 		// To determine if we can replace the argument with a star, we must know if the argument is nullable
-		if ( arg instanceof AbstractSqmPathInterpretation<?> ) {
-			final AbstractSqmPathInterpretation<?> pathInterpretation = (AbstractSqmPathInterpretation<?>) arg;
+		if ( arg instanceof AbstractSqmPathInterpretation<?> pathInterpretation ) {
 			final TableGroup tableGroup = pathInterpretation.getTableGroup();
 			final Expression sqlExpression = pathInterpretation.getSqlExpression();
 			final JdbcMappingContainer expressionType = sqlExpression.getExpressionType();

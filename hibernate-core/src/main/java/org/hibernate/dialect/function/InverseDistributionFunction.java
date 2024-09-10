@@ -8,7 +8,6 @@ package org.hibernate.dialect.function;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Supplier;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;

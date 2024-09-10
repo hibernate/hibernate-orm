@@ -98,9 +98,9 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 	}
 
 	private <T> Class<T> treatTarget(String typeName) {
-		final ManagedDomainType<T> managedType = creationState.getCreationContext()
-				.getJpaMetamodel()
-				.managedType( typeName );
+		final ManagedDomainType<T> managedType =
+				creationState.getCreationContext().getJpaMetamodel()
+						.managedType( typeName );
 		return managedType.getJavaType();
 	}
 
@@ -132,35 +132,23 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 			if ( isBase ) {
 				isBase = false;
 
-				final SqmPathRegistry sqmPathRegistry = creationState.getProcessingStateStack()
-						.getCurrent()
-						.getPathRegistry();
+				final SqmPathRegistry sqmPathRegistry =
+						creationState.getProcessingStateStack().getCurrent()
+								.getPathRegistry();
 
 				final SqmFrom<?,?> pathRootByAlias = sqmPathRegistry.findFromByAlias( identifier, true );
 				if ( pathRootByAlias != null ) {
 					// identifier is an alias (identification variable)
 					validateAsRoot( pathRootByAlias );
-
-					if ( isTerminal ) {
-						return pathRootByAlias;
-					}
-					else {
-						return new DomainPathPart( pathRootByAlias );
-					}
+					return isTerminal ? pathRootByAlias : new DomainPathPart( pathRootByAlias );
 				}
 
 				final SqmFrom<?, ?> pathRootByExposedNavigable = sqmPathRegistry.findFromExposing( identifier );
 				if ( pathRootByExposedNavigable != null ) {
 					// identifier is an "unqualified attribute reference"
 					validateAsRoot( pathRootByExposedNavigable );
-
 					final SqmPath<?> sqmPath = pathRootByExposedNavigable.get( identifier );
-					if ( isTerminal ) {
-						return sqmPath;
-					}
-					else {
-						return new DomainPathPart( sqmPath );
-					}
+					return isTerminal ? sqmPath : new DomainPathPart( sqmPath );
 				}
 			}
 
@@ -176,14 +164,14 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 			//
 			// todo (6.0) : finish this logic.  and see above note in `! isTerminal` block
 
-			final SqmCreationContext creationContext = creationState.getCreationContext();
 
 			if ( ! isTerminal ) {
 				return this;
 			}
 
-			final String path = pathSoFar.toString();
+			final SqmCreationContext creationContext = creationState.getCreationContext();
 			final JpaMetamodel jpaMetamodel = creationContext.getJpaMetamodel();
+			final String path = pathSoFar.toString();
 			final String importableName = jpaMetamodel.qualifyImportableName( path );
 			final NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
 			if ( importableName != null ) {
@@ -197,14 +185,10 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 			}
 
 			final SqmFunctionDescriptor functionDescriptor =
-					creationContext.getQueryEngine()
-							.getSqmFunctionRegistry()
+					creationContext.getQueryEngine().getSqmFunctionRegistry()
 							.findFunctionDescriptor( path );
 			if ( functionDescriptor != null ) {
-				return functionDescriptor.generateSqmExpression(
-						null,
-						creationContext.getQueryEngine()
-				);
+				return functionDescriptor.generateSqmExpression( null, creationContext.getQueryEngine() );
 			}
 
 			// see if it is a named field/enum reference
@@ -212,7 +196,6 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 			if ( splitPosition > 0 ) {
 				final String prefix = path.substring( 0, splitPosition );
 				final String terminal = path.substring( splitPosition + 1 );
-
 				try {
 					final EnumJavaType<?> enumType = jpaMetamodel.getEnumType( prefix );
 					if ( enumType != null ) {

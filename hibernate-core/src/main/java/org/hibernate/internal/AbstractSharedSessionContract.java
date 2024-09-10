@@ -831,8 +831,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	protected <R> HqlInterpretation<R> interpretHql(String hql, Class<R> resultType) {
-		final QueryEngine queryEngine = getFactory().getQueryEngine();
-		return queryEngine.interpretHql( hql, resultType );
+		return getFactory().getQueryEngine().interpretHql( hql, resultType );
 	}
 
 	protected static void checkSelectionQuery(String hql, HqlInterpretation<?> hqlInterpretation) {
@@ -944,8 +943,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	protected NamedResultSetMappingMemento getResultSetMappingMemento(String resultSetMappingName) {
-		final NamedResultSetMappingMemento resultSetMappingMemento = getFactory().getQueryEngine()
-				.getNamedObjectRepository().getResultSetMappingMemento( resultSetMappingName );
+		final NamedResultSetMappingMemento resultSetMappingMemento =
+				getFactory().getQueryEngine().getNamedObjectRepository()
+						.getResultSetMappingMemento( resultSetMappingName );
 		if ( resultSetMappingMemento == null ) {
 			throw new HibernateException( "Could not resolve specified result-set mapping name: "
 					+ resultSetMappingName );
@@ -1053,14 +1053,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	private NamedSqmQueryMemento getSqmQueryMemento(String queryName) {
-		return getFactory().getQueryEngine()
-				.getNamedObjectRepository()
+		return getFactory().getQueryEngine().getNamedObjectRepository()
 				.getSqmQueryMemento( queryName );
 	}
 
 	private NamedNativeQueryMemento getNativeQueryMemento(String queryName) {
-		return getFactory().getQueryEngine()
-				.getNamedObjectRepository()
+		return getFactory().getQueryEngine().getNamedObjectRepository()
 				.getNativeQueryMemento( queryName );
 	}
 
@@ -1327,17 +1325,18 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	@SuppressWarnings("UnnecessaryLocalVariable")
 	public ProcedureCall getNamedProcedureCall(String name) {
 		checkOpen();
 
-		final NamedCallableQueryMemento memento = factory.getQueryEngine()
-				.getNamedObjectRepository().getCallableQueryMemento( name );
+		final NamedCallableQueryMemento memento =
+				factory.getQueryEngine().getNamedObjectRepository()
+						.getCallableQueryMemento( name );
 		if ( memento == null ) {
 			throw new IllegalArgumentException(
 					"Could not find named stored procedure call with that registration name : " + name
 			);
 		}
+		@SuppressWarnings("UnnecessaryLocalVariable")
 		final ProcedureCall procedureCall = memento.makeProcedureCall( this );
 //		procedureCall.setComment( "Named stored procedure call [" + name + "]" );
 		return procedureCall;

@@ -51,25 +51,22 @@ public interface OrderingExpression extends Node {
 			sortExpression = expression;
 		}
 		else {
-			final QueryEngine queryEngine = creationState.getCreationContext()
-					.getSessionFactory()
-					.getQueryEngine();
-			final SqmToSqlAstConverter converter;
-			if ( creationState instanceof SqmToSqlAstConverter ) {
-				converter = (SqmToSqlAstConverter) creationState;
-			}
-			else {
-				converter = new FakeSqmToSqlAstConverter( creationState );
-			}
-			sortExpression = queryEngine
-					.getSqmFunctionRegistry()
-					.findFunctionDescriptor( "collate" )
-					.generateSqmExpression(
-							new SqmSelfRenderingExpression<>( walker -> expression, null, null ),
-							null,
-							queryEngine
-					)
-					.convertToSqlAst( converter );
+			final QueryEngine queryEngine =
+					creationState.getCreationContext().getSessionFactory()
+							.getQueryEngine();
+			final SqmToSqlAstConverter converter =
+					creationState instanceof SqmToSqlAstConverter sqmToSqlAstConverter
+							? sqmToSqlAstConverter
+							: new FakeSqmToSqlAstConverter(creationState);
+			sortExpression =
+					queryEngine.getSqmFunctionRegistry()
+							.findFunctionDescriptor( "collate" )
+							.generateSqmExpression(
+									new SqmSelfRenderingExpression<>( walker -> expression, null, null ),
+									null,
+									queryEngine
+							)
+							.convertToSqlAst( converter );
 		}
 		return sortExpression;
 	}

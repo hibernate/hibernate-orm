@@ -10,8 +10,6 @@ import java.util.Collection;
 
 import jakarta.persistence.metamodel.EntityType;
 
-import org.hibernate.query.sqm.SqmPathSource;
-
 /**
  * Extension to the JPA {@link EntityType} contract.
  *

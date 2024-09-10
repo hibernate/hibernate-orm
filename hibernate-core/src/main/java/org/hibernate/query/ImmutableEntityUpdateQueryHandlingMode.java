@@ -7,16 +7,16 @@
 package org.hibernate.query;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.AvailableSettings;
 
 /**
- * This enum defines how {@link org.hibernate.annotations.Immutable} entities are handled when
- * executing a bulk update statement.
+ * Controls for how {@linkplain org.hibernate.annotations.Immutable immutable} entities
+ * are handled when executing a bulk update statement.
  * <ul>
- *     <li>By default, the {@link ImmutableEntityUpdateQueryHandlingMode#WARNING} mode is used,
- *         and a warning log message is issued when an {@link org.hibernate.annotations.Immutable}
- *         entity is to be updated via a bulk update statement.
- *     <li>If the {@link ImmutableEntityUpdateQueryHandlingMode#EXCEPTION} mode is used, then a
- *         {@link HibernateException} is thrown instead.
+ * <li>By default, the {@link #WARNING} mode is used, and a warning log message is issued
+ *     when an immutable entity is updated via a bulk update statement.
+ * <li>If the {@link #EXCEPTION} mode is configured, then a {@link HibernateException} is
+ *     thrown instead.
  * </ul>
  *
  * @see org.hibernate.cfg.AvailableSettings#IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE
@@ -29,31 +29,32 @@ public enum ImmutableEntityUpdateQueryHandlingMode {
 	EXCEPTION;
 
 	/**
-	 * Interpret the configured {@link ImmutableEntityUpdateQueryHandlingMode} value.
-	 * Valid values are either a {@link ImmutableEntityUpdateQueryHandlingMode} object or
-	 * its string representation. For string values, the matching is case-insensitive,
-	 * so you can use either {@code warning} or {@code exception}.
+	 * Interpret the setting specified via
+	 * {@value AvailableSettings#IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE}.
+	 * <p>
+	 * Valid values are an instance of {@link ImmutableEntityUpdateQueryHandlingMode}
+	 * or its string representation. For string values, the matching is case-insensitive,
+	 * so {@code warning} or {@code exception} are legal values.
 	 *
-	 * @param mode configured {@link ImmutableEntityUpdateQueryHandlingMode} representation
-	 * @return associated {@link ImmutableEntityUpdateQueryHandlingMode} object
+	 * @param setting the configuration setting.
+	 * @return the associated {@link ImmutableEntityUpdateQueryHandlingMode} object
 	 */
-	public static ImmutableEntityUpdateQueryHandlingMode interpret(Object mode) {
-		if ( mode == null ) {
+	public static ImmutableEntityUpdateQueryHandlingMode interpret(Object setting) {
+		if ( setting == null ) {
 			return WARNING;
 		}
-		else if ( mode instanceof ImmutableEntityUpdateQueryHandlingMode ) {
-			return (ImmutableEntityUpdateQueryHandlingMode) mode;
+		else if ( setting instanceof ImmutableEntityUpdateQueryHandlingMode mode ) {
+			return mode;
 		}
-		else if ( mode instanceof String ) {
+		else if ( setting instanceof String string ) {
 			for ( ImmutableEntityUpdateQueryHandlingMode value : values() ) {
-				if ( value.name().equalsIgnoreCase( (String) mode ) ) {
+				if ( value.name().equalsIgnoreCase( string ) ) {
 					return value;
 				}
 			}
 		}
-		throw new HibernateException(
-				"Unrecognized immutable_entity_update_query_handling_mode value : " + mode
-						+ ".  Supported values include 'warning' and 'exception'."
-		);
+		throw new HibernateException( "Unrecognized value '" + setting
+				+ "' specified via '" + AvailableSettings.IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE
+				+ "' (should be 'warning' or 'exception')" );
 	}
 }

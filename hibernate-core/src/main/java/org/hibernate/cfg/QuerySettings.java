@@ -7,7 +7,6 @@
 package org.hibernate.cfg;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.spi.QueryPlan;
 
 import jakarta.persistence.criteria.CriteriaDelete;
@@ -98,13 +97,14 @@ public interface QuerySettings {
 	String CRITERIA_VALUE_HANDLING_MODE = "hibernate.criteria.value_handling_mode";
 
 	/**
-	 * Specifies the default {@linkplain NullPrecedence precedence of null values} in the
-	 * HQL {@code ORDER BY} clause, either {@code none}, {@code first}, or {@code last},
-	 * or an instance of {@link NullPrecedence}.
+	 * Specifies the default {@linkplain jakarta.persistence.criteria.Nulls precedence
+	 * of null values} sorted via the HQL {@code ORDER BY} clause, either {@code none},
+	 * {@code first}, or {@code last}, or an instance of the enumeration
+	 * {@link jakarta.persistence.criteria.Nulls}.
 	 * <p>
 	 * The default is {@code none}.
 	 *
-	 * @see NullPrecedence
+	 * @see jakarta.persistence.criteria.Nulls
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDefaultNullPrecedence(jakarta.persistence.criteria.Nulls)
 	 */
 	String DEFAULT_NULL_ORDERING = "hibernate.order_by.default_null_ordering";
@@ -245,7 +245,7 @@ public interface QuerySettings {
 
 	/**
 	 * For database supporting name parameters this setting allows to use named parameter is the procedure call.
-	 *
+	 * <p>
 	 * By default, this is set to false
 	 */
 	String QUERY_PASS_PROCEDURE_PARAMETER_NAMES = "hibernate.query.pass_procedure_paramater_names";

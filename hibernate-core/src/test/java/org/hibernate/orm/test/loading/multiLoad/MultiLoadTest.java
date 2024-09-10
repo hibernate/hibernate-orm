@@ -276,7 +276,7 @@ public class MultiLoadTest {
 		);
 	}
 
-	@Test @FailureExpected(jiraKey = "HHH-18544")
+	@Test
 	public void testBasicMultiLoadWithManagedAndNoCheckingProxied(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -290,7 +290,7 @@ public class MultiLoadTest {
 		);
 	}
 
-	@Test @FailureExpected(jiraKey = "HHH-18544")
+	@Test
 	public void testBasicMultiLoadWithManagedAndCheckingProxied(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

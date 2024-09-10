@@ -12,6 +12,7 @@ import java.util.List;
 import static org.hibernate.ReadOnlyMode.READ_ONLY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SessionFactory
@@ -34,6 +35,11 @@ public class FindAllTest {
             assertEquals("hello earth",all.get(1).message);
             assertTrue(s.isReadOnly(all.get(0)));
             assertTrue(s.isReadOnly(all.get(1)));
+        });
+        scope.inTransaction(s-> {
+            Record record = s.getReference(Record.class, 456L);
+            List<Record> all = s.findAll(Record.class, List.of(456L, 123L));
+            assertSame(record, all.get(0));
         });
     }
     @Entity

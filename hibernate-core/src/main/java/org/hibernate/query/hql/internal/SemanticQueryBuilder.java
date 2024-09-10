@@ -411,7 +411,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				? ParameterStyle.UNKNOWN
 				: ParameterStyle.MIXED;
 
-		final TypeConfiguration typeConfiguration = creationContext.getNodeBuilder().getTypeConfiguration();
+		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
 		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		this.integerDomainType = typeConfiguration.standardBasicTypeForJavaType( Integer.class );
 		this.listJavaType = javaTypeRegistry.resolveDescriptor( List.class );
@@ -1436,7 +1436,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmSelectClause visitSelectClause(HqlParser.SelectClauseContext ctx) {
 		// todo (6.0) : primer a select-clause-specific SemanticPathPart into the stack
 		final SqmSelectClause selectClause =
-				new SqmSelectClause(ctx.DISTINCT() != null, creationContext.getNodeBuilder() );
+				new SqmSelectClause( ctx.DISTINCT() != null, creationContext.getNodeBuilder() );
 		final HqlParser.SelectionListContext selectionListContext = ctx.selectionList();
 		for ( HqlParser.SelectionContext selectionContext : selectionListContext.selection() ) {
 			selectClause.addSelection( visitSelection( selectionContext ) );

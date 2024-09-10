@@ -202,7 +202,7 @@ import static org.hibernate.query.sqm.TrimSpec.fromCriteriaTrimSpec;
  *
  * @author Steve Ebersole
  */
-public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, Serializable {
+public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SqmCriteriaNodeBuilder.class );
 

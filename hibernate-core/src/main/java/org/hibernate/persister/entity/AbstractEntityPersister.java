@@ -687,6 +687,15 @@ public abstract class AbstractEntityPersister
 		final ArrayList<String[]> propColumnReaderTemplates = new ArrayList<>();
 		final ArrayList<FetchMode> joinedFetchesList = new ArrayList<>();
 
+		if ( persistentClass.hasSubclasses() ) {
+			for ( Selectable selectable : persistentClass.getIdentifier().getSelectables() ) {
+				if ( !selectable.isFormula() ) {
+					// Identifier columns are always shared between subclasses
+					sharedColumnNames.add( ( (Column) selectable ).getQuotedName( dialect ) );
+				}
+			}
+		}
+
 		for ( Property prop : persistentClass.getSubclassPropertyClosure() ) {
 			names.add( prop.getName() );
 			types.add( prop.getType() );

@@ -35,17 +35,15 @@ import org.hibernate.type.descriptor.java.JavaType;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 
 /**
  * @author Steve Ebersole
  */
-public class FullyQualifiedReflectivePathTerminal
+public class FullyQualifiedReflectivePathTerminal<E>
 		extends FullyQualifiedReflectivePath
-		implements SqmExpression {
-	private final @Nullable SqmExpressible<?> expressibleType;
+		implements SqmExpression<E> {
+	private final @Nullable SqmExpressible<E> expressibleType;
 	private final SqmCreationState creationState;
 
 	private final Function<SemanticQueryWalker<?>,?> handler;
@@ -64,7 +62,7 @@ public class FullyQualifiedReflectivePathTerminal
 	}
 
 	@Override
-	public FullyQualifiedReflectivePathTerminal copy(SqmCopyContext context) {
+	public FullyQualifiedReflectivePathTerminal<E> copy(SqmCopyContext context) {
 		return this;
 	}
 
@@ -139,23 +137,23 @@ public class FullyQualifiedReflectivePathTerminal
 	}
 
 	@Override
-	public @Nullable SqmExpressible<?> getNodeType() {
+	public @Nullable SqmExpressible<E> getNodeType() {
 		return expressibleType;
 	}
 
 	@Override
-	public Object accept(SemanticQueryWalker walker) {
-		return handler.apply( walker );
+	public <X> X accept(SemanticQueryWalker<X> walker) {
+		return (X) handler.apply( walker );
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
+	public JavaType<E> getJavaTypeDescriptor() {
 		return expressibleType == null ? null : expressibleType.getExpressibleJavaType();
 	}
 
 
 	@Override
-	public void applyInferableType(@Nullable SqmExpressible type) {
+	public void applyInferableType(@Nullable SqmExpressible<?> type) {
 	}
 
 	@Override
@@ -201,7 +199,7 @@ public class FullyQualifiedReflectivePathTerminal
 	}
 
 	@Override
-	public SqmExpression<?> as(Class type) {
+	public <X> SqmExpression<X> as(Class<X> type) {
 		return null;
 	}
 
@@ -236,7 +234,7 @@ public class FullyQualifiedReflectivePathTerminal
 	}
 
 	@Override
-	public SqmExpression cast(Class type) {
+	public <X> SqmExpression<X> cast(Class<X> type) {
 		return null;
 	}
 
@@ -266,7 +264,7 @@ public class FullyQualifiedReflectivePathTerminal
 	}
 
 	@Override
-	public JpaSelection<?> alias(String name) {
+	public JpaSelection<E> alias(String name) {
 		return null;
 	}
 

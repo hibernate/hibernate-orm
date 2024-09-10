@@ -337,7 +337,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 
 		@Override
 		public void consumeIdentifier(String identifier, boolean isTerminal, boolean allowReuse) {
-			if ( path.length() != 0 ) {
+			if ( !path.isEmpty() ) {
 				path.append( '.' );
 			}
 			path.append( identifier );

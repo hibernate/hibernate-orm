@@ -32,7 +32,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.dialect.function.SqlColumn;
 import org.hibernate.grammars.hql.HqlLexer;
@@ -1553,15 +1552,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private JavaType<?> resolveInstantiationTargetJtd(String className) {
-		final Class<?> targetJavaType = classForName( creationContext.getJpaMetamodel().qualifyImportableName( className ) );
-		return creationContext.getJpaMetamodel()
-				.getTypeConfiguration()
-				.getJavaTypeRegistry()
+		final String qualifiedName = creationContext.getJpaMetamodel().qualifyImportableName( className );
+		final Class<?> targetJavaType = creationContext.classForName( qualifiedName );
+		return creationContext.getTypeConfiguration().getJavaTypeRegistry()
 				.resolveDescriptor( targetJavaType );
-	}
-
-	private Class<?> classForName(String className) {
-		return creationContext.getServiceRegistry().requireService( ClassLoaderService.class ).classForName( className );
 	}
 
 	@Override

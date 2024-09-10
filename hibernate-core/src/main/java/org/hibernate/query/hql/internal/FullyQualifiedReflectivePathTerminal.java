@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.function.Function;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaSelection;
@@ -69,8 +68,6 @@ public class FullyQualifiedReflectivePathTerminal<E>
 	private Function<SemanticQueryWalker<?>, ?> resolveTerminalSemantic() {
 		return semanticQueryWalker -> {
 			final SqmCreationContext creationContext = creationState.getCreationContext();
-			final ClassLoaderService cls =
-					creationContext.getServiceRegistry().requireService( ClassLoaderService.class );
 			final String fullPath = getFullPath();
 
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -85,7 +82,7 @@ public class FullyQualifiedReflectivePathTerminal<E>
 			// See if it is a Class FQN
 
 			try {
-				final Class<?> namedClass = cls.classForName( fullPath );
+				final Class<?> namedClass = creationContext.classForName( fullPath );
 				if ( namedClass != null ) {
 					return semanticQueryWalker.visitFullyQualifiedClass( namedClass );
 				}
@@ -99,7 +96,7 @@ public class FullyQualifiedReflectivePathTerminal<E>
 
 			final String parentFullPath = getParent().getFullPath();
 			try {
-				final Class<?> namedClass = cls.classForName( parentFullPath );
+				final Class<?> namedClass = creationContext.classForName( parentFullPath );
 				if ( namedClass != null ) {
 					return createEnumOrFieldLiteral( namedClass );
 				}

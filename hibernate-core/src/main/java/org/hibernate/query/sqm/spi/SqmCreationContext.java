@@ -10,7 +10,6 @@ import org.hibernate.Incubating;
 import org.hibernate.query.BindingContext;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.service.ServiceRegistry;
 
 /**
  * The context in which all SQM creations occur.
@@ -25,7 +24,10 @@ public interface SqmCreationContext extends BindingContext {
 		return getQueryEngine().getCriteriaBuilder();
 	}
 
-	default ServiceRegistry getServiceRegistry() {
-		return getJpaMetamodel().getServiceRegistry();
-	}
+	/**
+	 * @apiNote Avoid calling this method, since {@link Class}
+	 *          objects are not available to the query validator
+	 *          in Hibernate Processor at compilation time.
+	 */
+	Class<?> classForName(String className);
 }

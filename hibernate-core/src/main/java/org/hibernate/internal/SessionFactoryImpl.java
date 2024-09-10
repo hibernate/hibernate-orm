@@ -458,8 +458,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	private static SessionFactoryServiceRegistry getServiceRegistry(
 			SessionFactoryOptions options,
 			SessionFactoryImplementor self) {
-		return options
-				.getServiceRegistry()
+		return options.getServiceRegistry()
 				.requireService( SessionFactoryServiceRegistryFactory.class )
 				// it is not great how we pass in an instance to
 				// an incompletely-initialized instance here:
@@ -1702,6 +1701,12 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	@Override
 	public SchemaManager getSchemaManager() {
 		return schemaManager;
+	}
+
+	@Override
+	public Class<?> classForName(String className) {
+		return serviceRegistry.requireService( ClassLoaderService.class )
+				.classForName( className );
 	}
 
 	private enum Status {

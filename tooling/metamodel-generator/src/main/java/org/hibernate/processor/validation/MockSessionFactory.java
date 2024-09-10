@@ -24,6 +24,7 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -362,6 +363,12 @@ public abstract class MockSessionFactory
 	@Override
 	public StandardServiceRegistryImpl getServiceRegistry() {
 		return serviceRegistry;
+	}
+
+	@Override
+	public Class<?> classForName(String className) {
+		return serviceRegistry.requireService( ClassLoaderService.class )
+				.classForName( className );
 	}
 
 	@Override

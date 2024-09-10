@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.ObjectStreamException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Locale;
@@ -75,16 +76,13 @@ public class EntityTypeImpl<J>
 				metamodel.getMappingMetamodel()
 						.getEntityDescriptor( getHibernateEntityName() );
 		final DiscriminatorMetadata discriminatorMetadata = entityDescriptor.getTypeDiscriminatorMetadata();
-		final DomainType discriminatorType =
+		final DomainType<?> discriminatorType =
 				discriminatorMetadata != null
-						? (DomainType) discriminatorMetadata.getResolutionType()
+						? (DomainType<?>) discriminatorMetadata.getResolutionType()
 						: metamodel.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING );
 
-		this.discriminatorPathSource = discriminatorType == null ? null : new EntityDiscriminatorSqmPathSource(
-				discriminatorType,
-				this,
-				entityDescriptor
-		);
+		this.discriminatorPathSource = discriminatorType == null ? null
+				: new EntityDiscriminatorSqmPathSource<>( discriminatorType, this, entityDescriptor );
 	}
 
 	public EntityTypeImpl(
@@ -147,16 +145,16 @@ public class EntityTypeImpl<J>
 		if ( attribute != null ) {
 			return (SqmPathSource<?>) attribute;
 		}
-
-		if ( EntityIdentifierMapping.matchesRoleName( name ) ) {
+		else if ( EntityIdentifierMapping.matchesRoleName( name ) ) {
 			return hasSingleIdAttribute() ? findIdAttribute() : getIdentifierDescriptor();
 		}
 
-		if ( EntityDiscriminatorMapping.matchesRoleName( name ) ) {
+		else if ( EntityDiscriminatorMapping.matchesRoleName( name ) ) {
 			return discriminatorPathSource;
 		}
-
-		return null;
+		else {
+			return null;
+		}
 	}
 
 	@Override
@@ -165,29 +163,31 @@ public class EntityTypeImpl<J>
 		if ( attribute != null ) {
 			return (SqmPathSource<?>) attribute;
 		}
-
-		PersistentAttribute<?, ?> subtypeAttribute = findSubtypeAttribute( name, metamodel );
-		if ( subtypeAttribute != null ) {
-			return (SqmPathSource<?>) subtypeAttribute;
+		else {
+			//TODO: eliminate this cast!
+			final PersistentAttribute<?, ?> subtypeAttribute = findSubtypeAttribute( name );
+			if ( subtypeAttribute != null ) {
+				return (SqmPathSource<?>) subtypeAttribute;
+			}
+			else if ( EntityIdentifierMapping.matchesRoleName( name ) ) {
+				return hasSingleIdAttribute() ? findIdAttribute() : getIdentifierDescriptor();
+			}
+			else if ( EntityDiscriminatorMapping.matchesRoleName( name ) ) {
+				return discriminatorPathSource;
+			}
+			else {
+				return null;
+			}
 		}
-
-		if ( EntityIdentifierMapping.matchesRoleName( name ) ) {
-			return hasSingleIdAttribute() ? findIdAttribute() : getIdentifierDescriptor();
-		}
-
-		if ( EntityDiscriminatorMapping.matchesRoleName( name ) ) {
-			return discriminatorPathSource;
-		}
-
-		return null;
 	}
 
-	private PersistentAttribute<?, ?> findSubtypeAttribute(String name, JpaMetamodel metamodel) {
+	private PersistentAttribute<?, ?> findSubtypeAttribute(String name) {
 		PersistentAttribute<?,?> subtypeAttribute = null;
 		for ( ManagedDomainType<?> subtype : getSubTypes() ) {
 			final PersistentAttribute<?,?> candidate = subtype.findSubTypesAttribute( name );
 			if ( candidate != null ) {
-				if ( subtypeAttribute != null && !isCompatible( subtypeAttribute, candidate, metamodel ) ) {
+				if ( subtypeAttribute != null
+						&& !isCompatible( subtypeAttribute, candidate, metamodel.getMappingMetamodel() ) ) {
 					throw new PathException(
 							String.format(
 									Locale.ROOT,
@@ -211,12 +211,12 @@ public class EntityTypeImpl<J>
 		if ( attribute != null ) {
 			return attribute;
 		}
-
-		if ( EntityIdentifierMapping.matchesRoleName( name ) ) {
+		else if ( EntityIdentifierMapping.matchesRoleName( name ) ) {
 			return findIdAttribute();
 		}
-
-		return null;
+		else {
+			return null;
+		}
 	}
 
 	@Override
@@ -255,6 +255,7 @@ public class EntityTypeImpl<J>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Serialization
 
+	@Serial
 	protected Object writeReplace() throws ObjectStreamException {
 		return new SerialForm( metamodel, getHibernateEntityName() );
 	}
@@ -268,6 +269,7 @@ public class EntityTypeImpl<J>
 			this.hibernateEntityName = hibernateEntityName;
 		}
 
+		@Serial
 		private Object readResolve() {
 			return jpaMetamodel.entity( hibernateEntityName );
 		}

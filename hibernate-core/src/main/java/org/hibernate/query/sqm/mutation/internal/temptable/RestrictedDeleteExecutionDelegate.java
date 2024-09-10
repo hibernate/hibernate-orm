@@ -140,7 +140,6 @@ public class RestrictedDeleteExecutionDelegate extends AbstractDeleteExecutionDe
 		if ( needsIdTable ) {
 			return executeWithIdTable(
 					predicateCollector.getPredicate(),
-					deletingTableGroup,
 					getConverter().getJdbcParamsBySqmParam(),
 					getConverter().getSqmParameterMappingModelExpressibleResolutions(),
 					executionContextAdapter
@@ -190,8 +189,6 @@ public class RestrictedDeleteExecutionDelegate extends AbstractDeleteExecutionDe
 						getDomainParameterXref(),
 						() -> restrictionSqmParameterResolutions
 				),
-				getSessionFactory().getRuntimeMetamodels().getMappingMetamodel(),
-				navigablePath -> tableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
 					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
@@ -425,7 +422,6 @@ public class RestrictedDeleteExecutionDelegate extends AbstractDeleteExecutionDe
 
 	private int executeWithIdTable(
 			Predicate predicate,
-			TableGroup deletingTableGroup,
 			Map<SqmParameter<?>, List<List<JdbcParameter>>> restrictionSqmParameterResolutions,
 			Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions,
 			ExecutionContext executionContext) {
@@ -436,8 +432,6 @@ public class RestrictedDeleteExecutionDelegate extends AbstractDeleteExecutionDe
 						getDomainParameterXref(),
 						() -> restrictionSqmParameterResolutions
 				),
-				getSessionFactory().getRuntimeMetamodels().getMappingMetamodel(),
-				navigablePath -> deletingTableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
 					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {

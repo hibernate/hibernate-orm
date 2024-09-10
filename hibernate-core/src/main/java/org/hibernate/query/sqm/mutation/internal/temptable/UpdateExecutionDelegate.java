@@ -19,7 +19,6 @@ import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
@@ -40,7 +39,6 @@ import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -58,11 +56,11 @@ import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
-import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
-import org.hibernate.sql.exec.spi.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 
 /**
  * @author Steve Ebersole
@@ -121,17 +119,12 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 
 
 
-		this.assignmentsByTable = CollectionHelper.mapOfSize( updatingTableGroup.getTableReferenceJoins().size() + 1 );
+		this.assignmentsByTable = mapOfSize( updatingTableGroup.getTableReferenceJoins().size() + 1 );
 
 		jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
-				SqmUtil.generateJdbcParamsXref(
-						domainParameterXref,
-						sqmConverter::getJdbcParamsBySqmParam
-				),
-				sessionFactory.getRuntimeMetamodels().getMappingMetamodel(),
-				navigablePath -> updatingTableGroup,
+				SqmUtil.generateJdbcParamsXref( domainParameterXref, sqmConverter ),
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
 					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {

@@ -37,7 +37,7 @@ import org.jboss.logging.Logger;
 /**
  * Allows the collection cache to be automatically evicted if an element is inserted/removed/updated *without* properly
  * managing both sides of the association (ie, the ManyToOne collection is changed w/o properly managing the OneToMany).
- * 
+ * <p>
  * For this functionality to be used, {@value org.hibernate.cfg.AvailableSettings#AUTO_EVICT_COLLECTION_CACHE} must be
  * enabled.  For performance reasons, it's disabled by default.
  * 
@@ -90,7 +90,8 @@ public class CollectionCacheInvalidator
 			// Nothing to do, if caching is disabled
 			return;
 		}
-		final EventListenerRegistry eventListenerRegistry = sessionFactory.getServiceRegistry().requireService( EventListenerRegistry.class );
+		final EventListenerRegistry eventListenerRegistry =
+				sessionFactory.getServiceRegistry().requireService( EventListenerRegistry.class );
 		eventListenerRegistry.appendListeners( EventType.POST_INSERT, this );
 		eventListenerRegistry.appendListeners( EventType.POST_DELETE, this );
 		eventListenerRegistry.appendListeners( EventType.POST_UPDATE, this );

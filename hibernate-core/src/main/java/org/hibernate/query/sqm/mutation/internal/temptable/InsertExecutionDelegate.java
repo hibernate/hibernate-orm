@@ -39,7 +39,6 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.results.TableGroupImpl;
@@ -51,7 +50,6 @@ import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
@@ -77,7 +75,6 @@ import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
-import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -89,12 +86,9 @@ import static org.hibernate.generator.EventType.INSERT;
  * @author Steve Ebersole
  */
 public class InsertExecutionDelegate implements TableBasedInsertHandler.ExecutionDelegate {
-	private final SqmInsertStatement<?> sqmInsert;
-	private final MultiTableSqmMutationConverter sqmConverter;
 	private final TemporaryTable entityTable;
 	private final AfterUseAction afterUseAction;
 	private final Function<SharedSessionContractImplementor, String> sessionUidAccess;
-	private final DomainParameterXref domainParameterXref;
 	private final TableGroup updatingTableGroup;
 	private final InsertSelectStatement insertStatement;
 	private final ConflictClause conflictClause;
@@ -108,7 +102,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 	private final SessionFactoryImplementor sessionFactory;
 
 	public InsertExecutionDelegate(
-			SqmInsertStatement<?> sqmInsert,
 			MultiTableSqmMutationConverter sqmConverter,
 			TemporaryTable entityTable,
 			AfterUseAction afterUseAction,
@@ -121,12 +114,9 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			ConflictClause conflictClause,
 			JdbcParameter sessionUidParameter,
 			DomainQueryExecutionContext executionContext) {
-		this.sqmInsert = sqmInsert;
-		this.sqmConverter = sqmConverter;
 		this.entityTable = entityTable;
 		this.afterUseAction = afterUseAction;
 		this.sessionUidAccess = sessionUidAccess;
-		this.domainParameterXref = domainParameterXref;
 		this.updatingTableGroup = insertingTableGroup;
 		this.conflictClause = conflictClause;
 		this.sessionUidParameter = sessionUidParameter;
@@ -144,12 +134,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 		jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
-				SqmUtil.generateJdbcParamsXref(
-						domainParameterXref,
-						sqmConverter::getJdbcParamsBySqmParam
-				),
-				sessionFactory.getRuntimeMetamodels().getMappingMetamodel(),
-				navigablePath -> insertingTableGroup,
+				SqmUtil.generateJdbcParamsXref( domainParameterXref, sqmConverter ),
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
 					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
@@ -173,11 +158,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 
 			for ( int c = 0; c < assignmentColumnRefs.size(); c++ ) {
 				final ColumnReference columnReference = assignmentColumnRefs.get( c );
-				final TableReference tableReference = resolveTableReference(
-						columnReference,
-						insertingTableGroup,
-						tableReferenceByAlias
-				);
+				final TableReference tableReference = resolveTableReference( columnReference, tableReferenceByAlias );
 
 				if ( assignmentTableReference != null && assignmentTableReference != tableReference ) {
 					throw new SemanticException( "Assignment referred to columns from multiple tables: " + i );
@@ -274,7 +255,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 
 	private TableReference resolveTableReference(
 			ColumnReference columnReference,
-			TableGroup updatingTableGroup,
 			Map<String, TableReference> tableReferenceByAlias) {
 		if ( columnReference.getQualifier() == null ) {
 			// This happens only for the special row_number column
@@ -566,9 +546,9 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				.translate( null, executionContext.getQueryOptions() );
 
 		if ( generator.generatedOnExecution() ) {
-			final GeneratedValuesMutationDelegate insertDelegate = ( (EntityMutationTarget) entityDescriptor.getEntityPersister() ).getInsertDelegate();
+			final GeneratedValuesMutationDelegate insertDelegate = entityDescriptor.getEntityPersister().getInsertDelegate();
 			// todo 7.0 : InsertGeneratedIdentifierDelegate will be removed once we're going to handle
-			//  generated values within the jdbc insert operaetion itself
+			//            generated values within the jdbc insert operaetion itself
 			final InsertGeneratedIdentifierDelegate identifierDelegate = (InsertGeneratedIdentifierDelegate) insertDelegate;
 			final String finalSql = identifierDelegate.prepareIdentifierGeneratingInsert( jdbcInsert.getSqlString() );
 			final BasicEntityIdentifierMapping identifierMapping =

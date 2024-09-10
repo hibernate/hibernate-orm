@@ -486,10 +486,10 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 	<T> SqmExpression<Collection<T>> collectionFill(T element, Integer elementCount);
 
 	@Override
-	<T> SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression);
+	SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression);
 
 	@Override
-	<T> SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator);
+	SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator);
 
 	@Override
 	<E> SqmPredicate collectionContains(Expression<? extends Collection<E>> collectionExpression, Expression<? extends E> elementExpression);

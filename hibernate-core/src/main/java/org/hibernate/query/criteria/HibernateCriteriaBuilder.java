@@ -3384,7 +3384,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @since 6.4
 	 */
 	@Incubating
-	<T> JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression);
+	JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression);
 
 	/**
 	 * Concatenates the non-null basic collection elements with a separator, as specified by the arguments.
@@ -3392,7 +3392,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @since 6.4
 	 */
 	@Incubating
-	<T> JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator);
+	JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator);
 
 	/**
 	 * Whether a basic collection contains an element.

@@ -30,10 +30,12 @@ public enum SortDirection {
 		if ( value == null ) {
 			return null;
 		}
-		else return switch ( value.toLowerCase(Locale.ROOT) ) {
-			case "asc", "ascending" -> ASCENDING;
-			case "desc", "descending" -> DESCENDING;
-			default -> throw new IllegalArgumentException( "Unknown sort order: " + value );
-		};
+		else {
+			return switch ( value.toLowerCase(Locale.ROOT) ) {
+				case "asc", "ascending" -> ASCENDING;
+				case "desc", "descending" -> DESCENDING;
+				default -> throw new IllegalArgumentException( "Unknown sort order: " + value );
+			};
+		}
 	}
 }

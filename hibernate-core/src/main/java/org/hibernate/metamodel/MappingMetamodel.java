@@ -202,11 +202,11 @@ public interface MappingMetamodel {
 	<T> void addNamedEntityGraph(String graphName, RootGraphImplementor<T> entityGraph);
 	void forEachNamedGraph(Consumer<RootGraph<?>> action);
 	RootGraph<?> defaultGraph(String entityName);
-	RootGraph<?> defaultGraph(Class entityJavaType);
+	RootGraph<?> defaultGraph(Class<?> entityJavaType);
 	RootGraph<?> defaultGraph(EntityPersister entityDescriptor);
 	RootGraph<?> defaultGraph(EntityDomainType<?> entityDomainType);
 
-	List<RootGraph<?>> findRootGraphsForType(Class baseEntityJavaType);
+	List<RootGraph<?>> findRootGraphsForType(Class<?> baseEntityJavaType);
 	List<RootGraph<?>> findRootGraphsForType(String baseEntityName);
 	List<RootGraph<?>> findRootGraphsForType(EntityPersister baseEntityDescriptor);
 }

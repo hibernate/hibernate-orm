@@ -9,7 +9,6 @@ package org.hibernate.query.sqm.mutation.internal.cte;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -101,8 +100,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 
 	@Override
 	public int execute(DomainQueryExecutionContext executionContext) {
-		//noinspection rawtypes
-		final SqmDeleteOrUpdateStatement sqmMutationStatement = getSqmDeleteOrUpdateStatement();
+		final SqmDeleteOrUpdateStatement<?> sqmMutationStatement = getSqmDeleteOrUpdateStatement();
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 		final EntityMappingType entityDescriptor = getEntityDescriptor();
 		final String explicitDmlTargetAlias;
@@ -144,8 +142,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 						true,
 						restriction,
 						sqmConverter,
-						executionContext,
-						factory
+						executionContext
 				),
 				// The id-select cte will be reused multiple times
 				CteMaterialization.MATERIALIZED
@@ -186,8 +183,6 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
 				SqmUtil.generateJdbcParamsXref( domainParameterXref, sqmConverter ),
-				factory.getRuntimeMetamodels().getMappingMetamodel(),
-				navigablePath -> sqmConverter.getMutatingTableGroup(),
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
 					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {

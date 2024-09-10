@@ -47,7 +47,6 @@ import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
-import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
@@ -91,7 +90,6 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
-import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.SqmQuery;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -339,8 +337,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
-	public JpaMetamodelImplementor getJpaMetamodel() {
-		return (JpaMetamodelImplementor) bindingContext.getJpaMetamodel();
+	public JpaMetamodel getJpaMetamodel() {
+		return bindingContext.getJpaMetamodel();
 	}
 
 	@Override
@@ -1669,7 +1667,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public SqmExpression<String> concat(List<Expression<String>> expressions) {
-		//noinspection unchecked
+		//noinspection RedundantCast, unchecked
 		return getFunctionDescriptor( "concat" ).generateSqmExpression(
 				(List<? extends SqmTypedNode<?>>) (List<?>) expressions,
 				null,
@@ -2073,8 +2071,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public <T> SqmExpression<T> value(T value) {
-		if ( value instanceof Duration ) {
-			final Duration duration = (Duration) value;
+		if ( value instanceof Duration duration ) {
 			final JpaExpression<Duration> expression = duration.getNano() == 0
 					? duration( duration.getSeconds(), TemporalUnit.SECOND )
 					: duration( duration.getNano() + duration.getSeconds() * 1_000_000_000, TemporalUnit.NANOSECOND );
@@ -2091,8 +2088,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	private <T> boolean isInstance(BindableType<T> bindableType, T value) {
-		if ( bindableType instanceof SqmExpressible<?> ) {
-			final SqmExpressible<?> expressible = (SqmExpressible<?>) bindableType;
+		if ( bindableType instanceof SqmExpressible<?> expressible ) {
 			return expressible.getExpressibleJavaType().isInstance( value );
 		}
 		else {
@@ -2154,10 +2150,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		BindableType<E> bindableType = null;
 		if ( elementTypeInferenceSource != null ) {
 			if ( elementTypeInferenceSource instanceof BindableType ) {
+				//noinspection unchecked
 				bindableType = (BindableType<E>) elementTypeInferenceSource;
 			}
 			else if ( elementTypeInferenceSource.getNodeType() != null ) {
-				bindableType = (BindableType<E>) elementTypeInferenceSource.getNodeType();
+				bindableType = elementTypeInferenceSource.getNodeType();
 			}
 		}
 		DomainType<E> elementType = null;
@@ -2683,27 +2680,27 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public <E, C extends Collection<E>> SqmPredicate isMember(Expression<E> elem, Expression<C> collection) {
-		return createSqmMemberOfPredicate( (SqmExpression<?>) elem, (SqmPath<?>) collection, false, this );
+		return createSqmMemberOfPredicate( (SqmExpression<?>) elem, (SqmPath<?>) collection, false);
 	}
 
 	@Override
 	public <E, C extends Collection<E>> SqmPredicate isMember(E elem, Expression<C> collection) {
-		return createSqmMemberOfPredicate( value( elem ), (SqmPath<?>) collection, false, this );
+		return createSqmMemberOfPredicate( value( elem ), (SqmPath<?>) collection, false);
 	}
 
 	@Override
 	public <E, C extends Collection<E>> SqmPredicate isNotMember(Expression<E> elem, Expression<C> collection) {
-		return createSqmMemberOfPredicate( (SqmExpression<?>) elem, (SqmPath<?>) collection, true, this );
+		return createSqmMemberOfPredicate( (SqmExpression<?>) elem, (SqmPath<?>) collection, true);
 	}
 
 	@Override
 	public <E, C extends Collection<E>> SqmPredicate isNotMember(E elem, Expression<C> collection) {
-		return createSqmMemberOfPredicate( value( elem ), (SqmPath<?>) collection, true, this );
+		return createSqmMemberOfPredicate( value( elem ), (SqmPath<?>) collection, true);
 	}
 
-	private SqmMemberOfPredicate createSqmMemberOfPredicate(SqmExpression<?> elem, SqmPath<?> collection, boolean negated, NodeBuilder nodeBuilder) {
-		if ( collection instanceof SqmPluralValuedSimplePath ) {
-			return new SqmMemberOfPredicate( elem, (SqmPluralValuedSimplePath) collection, negated, this );
+	private SqmMemberOfPredicate createSqmMemberOfPredicate(SqmExpression<?> elem, SqmPath<?> collection, boolean negated) {
+		if ( collection instanceof SqmPluralValuedSimplePath<?> pluralValuedSimplePath ) {
+			return new SqmMemberOfPredicate( elem, pluralValuedSimplePath, negated, this );
 		}
 		else {
 			throw new SemanticException( "Operand of 'member of' operator must be a plural path" );
@@ -5275,7 +5272,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
-	public <T> SqmExpression<String> collectionToString(
+	public SqmExpression<String> collectionToString(
 			Expression<? extends Collection<?>> collectionExpression,
 			Expression<String> separatorExpression) {
 		return getFunctionDescriptor( "array_to_string" ).generateSqmExpression(
@@ -5286,7 +5283,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
-	public <T> SqmExpression<String> collectionToString(
+	public SqmExpression<String> collectionToString(
 			Expression<? extends Collection<?>> collectionExpression,
 			String separator) {
 		return getFunctionDescriptor( "array_to_string" ).generateSqmExpression(

@@ -30,7 +30,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole
+ *
+ * @deprecated Use the JPA-defined
+ *             {@link jakarta.persistence.CascadeType}
  */
+@Deprecated(since = "7")
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface Cascade {

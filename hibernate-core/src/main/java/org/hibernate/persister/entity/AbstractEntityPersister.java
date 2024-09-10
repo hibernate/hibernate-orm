@@ -747,6 +747,15 @@ public abstract class AbstractEntityPersister
 		final ArrayList<Boolean> definedBySubclass = new ArrayList<>();
 		final ArrayList<Boolean> propNullables = new ArrayList<>();
 
+		if ( persistentClass.hasSubclasses() ) {
+			for ( Selectable selectable : persistentClass.getIdentifier().getSelectables() ) {
+				if ( !selectable.isFormula() ) {
+					// Identifier columns are always shared between subclasses
+					sharedColumnNames.add( ( (Column) selectable ).getQuotedName( dialect ) );
+				}
+			}
+		}
+
 		for ( Property prop : persistentClass.getSubclassPropertyClosure() ) {
 			names.add( prop.getName() );
 			types.add( prop.getType() );

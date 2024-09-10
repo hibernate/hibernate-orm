@@ -59,11 +59,13 @@ public class DomainModelHelper {
 	static boolean isCompatible(
 			PersistentAttribute<?, ?> attribute1,
 			PersistentAttribute<?, ?> attribute2,
-			JpaMetamodelImplementor jpaMetamodel) {
+			JpaMetamodel jpaMetamodel) {
 		if ( attribute1 == attribute2 ) {
 			return true;
 		}
-		final MappingMetamodel runtimeMetamodels = jpaMetamodel.getMappingMetamodel();
+		final MappingMetamodel runtimeMetamodels =
+				//TODO: eliminate this cast!
+				((JpaMetamodelImplementor) jpaMetamodel).getMappingMetamodel();
 		final ModelPart modelPart1 = getEntityAttributeModelPart(
 				attribute1,
 				attribute1.getDeclaringType(),

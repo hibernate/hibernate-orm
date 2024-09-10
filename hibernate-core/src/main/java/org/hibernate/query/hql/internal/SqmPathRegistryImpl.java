@@ -15,7 +15,7 @@ import java.util.function.Function;
 
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.HqlLogging;
@@ -331,7 +331,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 				&& containerType.findSubPathSource( name, getJpaMetamodel() ) != null;
 	}
 
-	private JpaMetamodelImplementor getJpaMetamodel() {
+	private JpaMetamodel getJpaMetamodel() {
 		return associatedProcessingState.getCreationState().getCreationContext().getJpaMetamodel();
 	}
 

@@ -10,9 +10,9 @@ import java.util.Map;
 
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
-import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
@@ -72,7 +72,7 @@ public class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K,
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name, JpaMetamodelImplementor metamodel) {
+	public SqmPathSource<?> findSubPathSource(String name, JpaMetamodel metamodel) {
 		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact( name );
 		if ( nature != null ) {
 			switch ( nature ) {

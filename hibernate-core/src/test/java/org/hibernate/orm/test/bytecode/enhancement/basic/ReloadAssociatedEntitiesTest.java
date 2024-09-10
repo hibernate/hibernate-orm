@@ -9,17 +9,15 @@ package org.hibernate.orm.test.bytecode.enhancement.basic;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.Hibernate;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -45,14 +43,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 				ReloadAssociatedEntitiesTest.AbsTwo.class,
 		}
 )
-@ServiceRegistry(
-		settings = {
-				@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false"),
-				@Setting(name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true"),
-		}
-)
 @SessionFactory
-@BytecodeEnhanced
+@BytecodeEnhanced(runNotEnhancedAsWell = true)
 @JiraKey("HHH-18565")
 public class ReloadAssociatedEntitiesTest {
 
@@ -61,15 +53,13 @@ public class ReloadAssociatedEntitiesTest {
 	private Long simpleOneId;
 	private Long simpleThreeId;
 
-	@BeforeAll
+	@BeforeEach
 	public void before(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
-			final var one = new ConcreteOne();
-			final var two = new ConcreteTwo();
 			final var three = new ConcreteThree();
-			one.setTwo( two );
+			final var two = new ConcreteTwo( "two", three );
+			final var one = new ConcreteOne( "one", two );
 			two.getOnes().add( one );
-			two.setThree( three );
 			three.getTwos().add( two );
 
 			s.persist( one );
@@ -78,13 +68,9 @@ public class ReloadAssociatedEntitiesTest {
 			oneId = one.getId();
 			threeId = three.getId();
 
-			final var simpleOne = new SimpleOne();
-			final var simpleTwo = new SimpleTwo();
-			final var simpleThree = new SimpleThree();
-			simpleOne.setTwo( simpleTwo );
-			simpleTwo.getOnes().add( simpleOne );
-			simpleTwo.setThree( simpleThree );
-			simpleThree.getTwos().add( simpleTwo );
+			final var simpleThree = new SimpleThree( "simple three" );
+			final var simpleTwo = new SimpleTwo( "simple two", simpleThree );
+			final var simpleOne = new SimpleOne( "simple one", simpleTwo );
 
 			s.persist( simpleOne );
 			s.persist( simpleTwo );
@@ -94,7 +80,7 @@ public class ReloadAssociatedEntitiesTest {
 		} );
 	}
 
-	@AfterAll
+	@AfterEach
 	void after(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.createMutationQuery( session.getCriteriaBuilder().createCriteriaDelete( ConcreteOne.class ) )
@@ -106,7 +92,6 @@ public class ReloadAssociatedEntitiesTest {
 		} );
 	}
 
-	//--THIS IS THE REPRODUCER--//
 	@Test
 	public void reloadToOneFromSimpleEntity(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
@@ -116,6 +101,12 @@ public class ReloadAssociatedEntitiesTest {
 					)
 					.setParameter( "oneId", simpleOneId ).getSingleResult();
 
+			assertThat( one ).isNotNull();
+			assertThat( Hibernate.isInitialized( one ) ).isTrue();
+			assertThat( Hibernate.isPropertyInitialized( one, "two" ) ).isTrue();
+			SimpleTwo two = one.getTwo();
+			assertThat( Hibernate.isInitialized( two.getThree() ) ).isFalse();
+
 			SimpleOne one2 = s.createQuery(
 							"select o from SimpleOne o join fetch o.two t join fetch t.three rh where o.id = :oneId",
 							SimpleOne.class
@@ -123,11 +114,15 @@ public class ReloadAssociatedEntitiesTest {
 					.setParameter( "oneId", simpleOneId ).getSingleResult();
 
 			assertThat( one2 ).isNotNull();
+			assertThat( one2 ).isSameAs( one );
+			assertThat( Hibernate.isInitialized( one2 ) ).isTrue();
+			assertThat( Hibernate.isPropertyInitialized( one2, "two" ) ).isTrue();
+			SimpleTwo two2 = one2.getTwo();
+			assertThat( two2 ).isSameAs( two );
+			assertThat( Hibernate.isInitialized( two2.getThree() ) ).isTrue();
 		} );
 	}
-	//--THIS IS THE REPRODUCER--//
 
-	//--FUTURE PROOF--//
 	@Test
 	public void reloadToOneFromParameterizedEntity(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
@@ -137,6 +132,8 @@ public class ReloadAssociatedEntitiesTest {
 					)
 					.setParameter( "oneId", oneId ).getSingleResult();
 
+			assertThat( one ).isNotNull();
+
 			ConcreteOne one2 = s.createQuery(
 							"select o from ConcreteOne o join fetch o.two t join fetch t.three rh where o.id = :oneId",
 							ConcreteOne.class
@@ -144,6 +141,7 @@ public class ReloadAssociatedEntitiesTest {
 					.setParameter( "oneId", oneId ).getSingleResult();
 
 			assertThat( one2 ).isNotNull();
+			assertThat( one2 ).isSameAs( one );
 		} );
 	}
 
@@ -156,6 +154,8 @@ public class ReloadAssociatedEntitiesTest {
 					)
 					.setParameter( "threeId", threeId ).getSingleResult();
 
+			assertThat( three ).isNotNull();
+
 			ConcreteThree three1 = s.createQuery(
 							"select t from ConcreteThree t join fetch t.twos tw join fetch tw.ones o where t.id = :threeId",
 							ConcreteThree.class
@@ -163,6 +163,7 @@ public class ReloadAssociatedEntitiesTest {
 					.setParameter( "threeId", threeId ).getSingleResult();
 
 			assertThat( three1 ).isNotNull();
+			assertThat( three1 ).isSameAs( three );
 		} );
 	}
 
@@ -175,6 +176,8 @@ public class ReloadAssociatedEntitiesTest {
 					)
 					.setParameter( "threeId", simpleThreeId ).getSingleResult();
 
+			assertThat( three ).isNotNull();
+
 			SimpleThree three1 = s.createQuery(
 							"select t from SimpleThree t join fetch t.twos tw join fetch tw.ones o where t.id = :threeId",
 							SimpleThree.class
@@ -182,12 +185,20 @@ public class ReloadAssociatedEntitiesTest {
 					.setParameter( "threeId", simpleThreeId ).getSingleResult();
 
 			assertThat( three1 ).isNotNull();
+			assertThat( three1 ).isSameAs( three );
 		} );
 	}
-	//--FUTURE PROOF--//
 
 	@Entity(name = "ConcreteOne")
 	public static class ConcreteOne extends AbsOne<ConcreteTwo> {
+
+		public ConcreteOne() {
+		}
+
+		public ConcreteOne(String name, ConcreteTwo two) {
+			super( name, two );
+			two.getOnes().add( this );
+		}
 	}
 
 	@MappedSuperclass
@@ -196,29 +207,41 @@ public class ReloadAssociatedEntitiesTest {
 		@GeneratedValue
 		private Long id;
 
+		private String name;
+
 		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumn(name = "two_id")
 		private TWO two;
 
-		public Long getId() {
-			return id;
+		public AbsOne() {
 		}
 
-		public void setId(Long id) {
-			this.id = id;
+		public AbsOne(String name, TWO two) {
+			this.two = two;
+			this.name = name;
+		}
+
+		public Long getId() {
+			return id;
 		}
 
 		public TWO getTwo() {
 			return two;
 		}
 
-		public void setTwo(TWO two) {
-			this.two = two;
+		public String getName() {
+			return name;
 		}
 	}
 
 	@Entity(name = "ConcreteTwo")
 	public static class ConcreteTwo extends AbsTwo<ConcreteOne, ConcreteThree> {
+		public ConcreteTwo() {
+		}
+
+		public ConcreteTwo(String name, ConcreteThree concreteThree) {
+			super( name, concreteThree );
+		}
 	}
 
 	@MappedSuperclass
@@ -227,6 +250,8 @@ public class ReloadAssociatedEntitiesTest {
 		@GeneratedValue
 		private Long id;
 
+		private String name;
+
 		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumn(name = "three_id")
 		private THREE three;
@@ -234,29 +259,28 @@ public class ReloadAssociatedEntitiesTest {
 		@OneToMany(mappedBy = "two")
 		private Set<ONE> ones = new HashSet<>();
 
+		public AbsTwo() {
+		}
+
+		public AbsTwo(String name, THREE three) {
+			this.name = name;
+			this.three = three;
+		}
+
 		public Long getId() {
 			return id;
 		}
 
-		public void setId(Long id) {
-			this.id = id;
-		}
 
 		public THREE getThree() {
 			return three;
 		}
 
-		public void setThree(THREE three) {
-			this.three = three;
-		}
 
 		public Set<ONE> getOnes() {
 			return ones;
 		}
 
-		public void setOnes(Set<ONE> ones) {
-			this.ones = ones;
-		}
 	}
 
 	@Entity(name = "ConcreteThree")
@@ -265,23 +289,29 @@ public class ReloadAssociatedEntitiesTest {
 		@GeneratedValue
 		private Long id;
 
+		private String name;
+
 		@OneToMany(mappedBy = "three")
 		private Set<ConcreteTwo> twos = new HashSet<>();
 
-		public Long getId() {
-			return id;
+		public ConcreteThree() {
 		}
 
-		public void setId(Long id) {
-			this.id = id;
+		public ConcreteThree(String name, Set<ConcreteTwo> twos) {
+			this.name = name;
+			this.twos = twos;
+		}
+
+		public Long getId() {
+			return id;
 		}
 
 		public Set<ConcreteTwo> getTwos() {
 			return twos;
 		}
 
-		public void setTwos(Set<ConcreteTwo> twos) {
-			this.twos = twos;
+		public String getName() {
+			return name;
 		}
 	}
 
@@ -291,25 +321,30 @@ public class ReloadAssociatedEntitiesTest {
 		@GeneratedValue
 		private Long id;
 
+		private String name;
+
 		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumn(name = "two_id")
 		private SimpleTwo two;
+
+		public SimpleOne() {
+		}
+
+		public SimpleOne(String name, SimpleTwo two) {
+			this.name = name;
+			this.two = two;
+			two.ones.add( this );
+		}
 
 		public Long getId() {
 			return id;
 		}
 
-		public void setId(Long id) {
-			this.id = id;
-		}
 
 		public SimpleTwo getTwo() {
 			return two;
 		}
 
-		public void setTwo(SimpleTwo two) {
-			this.two = two;
-		}
 	}
 
 	@Entity(name = "SimpleTwo")
@@ -318,6 +353,8 @@ public class ReloadAssociatedEntitiesTest {
 		@GeneratedValue
 		private Long id;
 
+		private String name;
+
 		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumn(name = "three_id")
 		private SimpleThree three;
@@ -325,29 +362,27 @@ public class ReloadAssociatedEntitiesTest {
 		@OneToMany(mappedBy = "two")
 		private Set<SimpleOne> ones = new HashSet<>();
 
-		public Long getId() {
-			return id;
+		public SimpleTwo() {
 		}
 
-		public void setId(Long id) {
-			this.id = id;
+		public SimpleTwo(String name, SimpleThree three) {
+			this.name = name;
+			this.three = three;
+			three.twos.add( this );
+		}
+
+		public Long getId() {
+			return id;
 		}
 
 		public SimpleThree getThree() {
 			return three;
 		}
 
-		public void setThree(SimpleThree three) {
-			this.three = three;
-		}
-
 		public Set<SimpleOne> getOnes() {
 			return ones;
 		}
 
-		public void setOnes(Set<SimpleOne> ones) {
-			this.ones = ones;
-		}
 	}
 
 	@Entity(name = "SimpleThree")
@@ -356,23 +391,25 @@ public class ReloadAssociatedEntitiesTest {
 		@GeneratedValue
 		private Long id;
 
+		private String name;
+
 		@OneToMany(mappedBy = "three")
 		private Set<SimpleTwo> twos = new HashSet<>();
 
-		public Long getId() {
-			return id;
+		public SimpleThree() {
 		}
 
-		public void setId(Long id) {
-			this.id = id;
+		public SimpleThree(String name) {
+			this.name = name;
+		}
+
+		public Long getId() {
+			return id;
 		}
 
 		public Set<SimpleTwo> getTwos() {
 			return twos;
 		}
 
-		public void setTwos(Set<SimpleTwo> twos) {
-			this.twos = twos;
-		}
 	}
 }

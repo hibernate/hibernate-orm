@@ -277,6 +277,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
+		// starting 23c we support Boolean type natively
 		return getVersion().isSameOrAfter( 23 ) ? super.getPreferredSqlTypeCodeForBoolean() : Types.BIT;
 	}
 
@@ -404,6 +405,7 @@ public class OracleDialect extends Dialect {
 		functionFactory.jsonExists_oracle();
 		functionFactory.jsonObject_oracle();
 		functionFactory.jsonArray_oracle();
+		functionFactory.jsonArrayAgg_oracle();
 	}
 
 	@Override
@@ -810,10 +812,12 @@ public class OracleDialect extends Dialect {
 		ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this, false ) );
 		ddlTypeRegistry.addDescriptor( TABLE, new ArrayDdlTypeImpl( this, false ) );
 
-		if(getVersion().isSameOrAfter(23)) {
-			ddlTypeRegistry.addDescriptor(new NamedNativeEnumDdlTypeImpl(this));
+		if ( getVersion().isSameOrAfter( 23 ) ) {
+			ddlTypeRegistry.addDescriptor( new NamedNativeEnumDdlTypeImpl( this ) );
 			ddlTypeRegistry.addDescriptor( new NamedNativeOrdinalEnumDdlTypeImpl( this ) );
 		}
+		// We need the DDL type during runtime to produce the proper encoding in certain functions
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( BIT, "number(1,0)", this ) );
 	}
 
 	@Override
@@ -953,8 +957,7 @@ public class OracleDialect extends Dialect {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
-		if ( getVersion().isBefore( 23 ) ) {
-			// starting 23c we support Boolean type natively
+		if ( ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry, this ) == BIT ) {
 			typeContributions.contributeJdbcType( OracleBooleanJdbcType.INSTANCE );
 		}
 		typeContributions.contributeJdbcType( OracleXmlJdbcType.INSTANCE );

@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.query.hql;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -17,6 +18,7 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.type.SqlTypes;
 
+import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -50,7 +52,10 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DomainModel( annotatedClasses = JsonFunctionTests.JsonHolder.class)
+@DomainModel( annotatedClasses = {
+		JsonFunctionTests.JsonHolder.class,
+		EntityOfBasics.class
+})
 @SessionFactory
 @Jira("https://hibernate.atlassian.net/browse/HHH-18496")
 public class JsonFunctionTests {
@@ -80,6 +85,16 @@ public class JsonFunctionTests {
 							)
 					);
 					em.persist(entity);
+
+					EntityOfBasics e1 = new EntityOfBasics();
+					e1.setId( 1 );
+					e1.setTheString( "Dog" );
+					EntityOfBasics e2 = new EntityOfBasics();
+					e2.setId( 2 );
+					e2.setTheString( "Cat" );
+
+					em.persist( e1 );
+					em.persist( e2 );
 				}
 		);
 	}
@@ -87,7 +102,10 @@ public class JsonFunctionTests {
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				em -> em.createMutationQuery( "delete from JsonHolder" ).executeUpdate()
+				em -> {
+					em.createMutationQuery( "delete from EntityOfBasics" ).executeUpdate();
+					em.createMutationQuery( "delete from JsonHolder" ).executeUpdate();
+				}
 		);
 	}
 
@@ -312,6 +330,40 @@ public class JsonFunctionTests {
 					assertEquals( true, tuple.get( 1 ) );
 					assertEquals( true, tuple.get( 2 ) );
 					assertEquals( false, tuple.get( 3 ) );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonArrayAgg.class)
+	public void testJsonArrayAgg(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					String jsonArray = session.createQuery(
+							"select json_arrayagg(e.theString) " +
+									"from EntityOfBasics e",
+							String.class
+					).getSingleResult();
+					Object[] array = parseArray( jsonArray );
+					assertEquals( 2, array.length );
+					assertTrue( Arrays.asList( array ).contains( "Cat" ) );
+					assertTrue( Arrays.asList( array ).contains( "Dog" ) );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonArrayAgg.class)
+	public void testJsonArrayAggOrderBy(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					String jsonArray = session.createQuery(
+							"select json_arrayagg(e.theString order by e.theString)" +
+									"from EntityOfBasics e",
+							String.class
+					).getSingleResult();
+					Object[] array = parseArray( jsonArray );
+					assertArrayEquals( new Object[]{ "Cat", "Dog" }, array );
 				}
 		);
 	}

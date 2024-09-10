@@ -92,6 +92,8 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 			);
 			commonFunctionFactory.jsonValue_mariadb();
 			commonFunctionFactory.jsonArray_mariadb();
+			commonFunctionFactory.jsonQuery_mariadb();
+			commonFunctionFactory.jsonArrayAgg_mariadb();
 			if ( getVersion().isSameOrAfter( 10, 3, 3 ) ) {
 				commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
 				functionContributions.getFunctionRegistry().patternDescriptorBuilder( "median", "median(?1) over ()" )

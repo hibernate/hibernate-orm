@@ -779,6 +779,12 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsJsonArrayAgg implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "json_arrayagg" );
+		}
+	}
+
 	public static class IsJtds implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect instanceof SybaseDialect && ( (SybaseDialect) dialect ).getDriverKind() == SybaseDriverKind.JTDS;
@@ -1534,7 +1540,7 @@ abstract public class DialectFeatureChecks {
 		}
 
 		@Override
-		public NamedObjectRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory) {
+		public NamedObjectRepository buildNamedQueryRepository() {
 			return null;
 		}
 

@@ -16,11 +16,11 @@ import org.hibernate.sql.ast.tree.expression.JsonQueryWrapMode;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * MySQL json_query function.
+ * MariaDB json_query function.
  */
-public class MySQLJsonQueryFunction extends JsonQueryFunction {
+public class MariaDBJsonQueryFunction extends JsonQueryFunction {
 
-	public MySQLJsonQueryFunction(TypeConfiguration typeConfiguration) {
+	public MariaDBJsonQueryFunction(TypeConfiguration typeConfiguration) {
 		super( typeConfiguration, true, false );
 	}
 
@@ -44,7 +44,7 @@ public class MySQLJsonQueryFunction extends JsonQueryFunction {
 				sqlAppender.appendSql( "concat('['," );
 			}
 			else if ( decorationMode == DecorationMode.TRIM ) {
-				sqlAppender.appendSql( "cast(trim(leading '[' from trim(trailing ']' from " );
+				sqlAppender.appendSql( "trim(leading '[' from trim(trailing ']' from " );
 			}
 
 			sqlAppender.appendSql( "nullif(json_extract(" );
@@ -61,12 +61,12 @@ public class MySQLJsonQueryFunction extends JsonQueryFunction {
 						passingClause, walker
 				);
 			}
-			sqlAppender.appendSql( "),cast('null' as json))" );
+			sqlAppender.appendSql( "),'null')" );
 			if ( decorationMode == DecorationMode.WRAP ) {
 				sqlAppender.appendSql( ",']')" );
 			}
 			else if ( decorationMode == DecorationMode.TRIM ) {
-				sqlAppender.appendSql( ")) as json)" );
+				sqlAppender.appendSql( "))" );
 			}
 		}
 	}

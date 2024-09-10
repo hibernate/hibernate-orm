@@ -599,6 +599,7 @@ public class PostgreSQLDialect extends Dialect {
 			functionFactory.jsonExists();
 			functionFactory.jsonObject();
 			functionFactory.jsonArray();
+			functionFactory.jsonArrayAgg();
 		}
 		else {
 			functionFactory.jsonValue_postgresql();
@@ -607,10 +608,12 @@ public class PostgreSQLDialect extends Dialect {
 			if ( getVersion().isSameOrAfter( 16 ) ) {
 				functionFactory.jsonObject();
 				functionFactory.jsonArray();
+				functionFactory.jsonArrayAgg();
 			}
 			else {
 				functionFactory.jsonObject_postgresql();
 				functionFactory.jsonArray_postgresql();
+				functionFactory.jsonArrayAgg_postgresql();
 			}
 		}
 

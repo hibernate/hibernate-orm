@@ -190,6 +190,7 @@ import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.criteria.TemporalField;
 import jakarta.persistence.metamodel.Bindable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.util.Arrays.asList;
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
@@ -5382,6 +5383,78 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		//noinspection unchecked
 		return getFunctionDescriptor( "json_array" ).generateSqmExpression(
 				(List<? extends SqmTypedNode<?>>) (List<?>) asList( values ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmExpression<String> jsonArrayAgg(Expression<?> value) {
+		return jsonArrayAgg( (SqmExpression<?>) value, null, null, null );
+	}
+
+	@Override
+	public SqmExpression<String> jsonArrayAgg(Expression<?> value, Predicate filter, JpaOrder... orderBy) {
+		return jsonArrayAgg( (SqmExpression<?>) value, null, (SqmPredicate) filter, orderByClause( orderBy ) );
+	}
+
+	@Override
+	public SqmExpression<String> jsonArrayAgg(Expression<?> value, Predicate filter) {
+		return jsonArrayAgg( (SqmExpression<?>) value, null, (SqmPredicate) filter, null );
+	}
+
+	@Override
+	public SqmExpression<String> jsonArrayAgg(Expression<?> value, JpaOrder... orderBy) {
+		return jsonArrayAgg( (SqmExpression<?>) value, null, null, orderByClause( orderBy ) );
+	}
+
+	@Override
+	public SqmExpression<String> jsonArrayAggWithNulls(Expression<?> value) {
+		return jsonArrayAgg( (SqmExpression<?>) value, SqmJsonNullBehavior.NULL, null, null );
+	}
+
+	@Override
+	public SqmExpression<String> jsonArrayAggWithNulls(Expression<?> value, Predicate filter, JpaOrder... orderBy) {
+		return jsonArrayAgg(
+				(SqmExpression<?>) value,
+				SqmJsonNullBehavior.NULL,
+				(SqmPredicate) filter,
+				orderByClause( orderBy )
+		);
+	}
+
+	@Override
+	public SqmExpression<String> jsonArrayAggWithNulls(Expression<?> value, Predicate filter) {
+		return jsonArrayAgg( (SqmExpression<?>) value, SqmJsonNullBehavior.NULL, (SqmPredicate) filter, null );
+	}
+
+	@Override
+	public SqmExpression<String> jsonArrayAggWithNulls(Expression<?> value, JpaOrder... orderBy) {
+		return jsonArrayAgg( (SqmExpression<?>) value, SqmJsonNullBehavior.NULL, null, orderByClause( orderBy ) );
+	}
+
+	private @Nullable SqmOrderByClause orderByClause(JpaOrder[] orderBy) {
+		if ( orderBy.length == 0 ) {
+			return null;
+		}
+		final SqmOrderByClause sqmOrderByClause = new SqmOrderByClause( orderBy.length );
+		for ( JpaOrder jpaOrder : orderBy ) {
+			sqmOrderByClause.addSortSpecification( (SqmSortSpecification) jpaOrder );
+		}
+		return sqmOrderByClause;
+	}
+
+	private SqmExpression<String> jsonArrayAgg(
+			SqmExpression<?> value,
+			@Nullable SqmJsonNullBehavior nullBehavior,
+			@Nullable SqmPredicate filterPredicate,
+			@Nullable SqmOrderByClause orderByClause) {
+		return getFunctionDescriptor( "json_arrayagg" ).generateOrderedSetAggregateSqmExpression(
+				nullBehavior == null
+						? Collections.singletonList( value )
+						: Arrays.asList( value, SqmJsonNullBehavior.NULL ),
+				filterPredicate,
+				orderByClause,
 				null,
 				queryEngine
 		);

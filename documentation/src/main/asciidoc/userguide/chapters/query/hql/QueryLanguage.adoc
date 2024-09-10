@@ -1634,6 +1634,7 @@ The following functions deal with SQL JSON types, which are not supported on eve
 | `json_value()` | Extracts a value from a JSON document by JSON path
 | `json_exists()` | Checks if a JSON path exists in a JSON document
 | `json_query()` | Queries non-scalar values by JSON path in a JSON document
+| `json_arrayagg()` | Creates a JSON array by aggregating values
 |===
 
 
@@ -1918,6 +1919,49 @@ To actually receive an error `on empty`, it is necessary to also specify `error 
 Depending on the database, an error might still be thrown even without that, but that is not portable.
 
 NOTE: The H2 emulation only supports absolute JSON paths using the dot notation.
+
+[[hql-json-arrayagg-function]]
+===== `json_arrayagg()`
+
+Creates a JSON array by aggregating values.
+
+[[hql-json-arrayagg-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/json_arrayagg_bnf.txt[]
+----
+
+This aggregate function is similar to an <<hql-aggregate-functions-orderedset,_ordered set aggregate function_>>
+since it allows to specify the order in which elements are aggregated, but uses a special syntax.
+
+[[hql-json-arrayagg-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonArrayAggregateTest.java[tags=hql-json-arrayagg-example]
+----
+====
+
+Although database dependent, usually `null` values are `absent` in the resulting JSON array.
+To retain `null` elements, use the `null on null` clause.
+
+[[hql-json-arrayagg-null-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonArrayAggregateTest.java[tags=hql-json-arrayagg-null-example]
+----
+====
+
+The order in which elements are aggregated can be defined by specifying an order by clause.
+
+[[hql-json-arrayagg-order-by-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonArrayAggregateTest.java[tags=hql-json-arrayagg-order-by-example]
+----
+====
 
 [[hql-user-defined-functions]]
 ==== Native and user-defined functions

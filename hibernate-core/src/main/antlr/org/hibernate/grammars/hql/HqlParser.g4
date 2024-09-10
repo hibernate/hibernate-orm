@@ -1627,6 +1627,7 @@ jsonFunction
 	| jsonObjectFunction
 	| jsonQueryFunction
 	| jsonValueFunction
+	| jsonArrayAggFunction
 	;
 
 /**
@@ -1645,7 +1646,8 @@ jsonValueReturningClause
 	;
 
 jsonValueOnErrorOrEmptyClause
-	: ( ERROR | NULL | ( DEFAULT expression ) ) ON (ERROR|EMPTY);
+	: ( ERROR | NULL | ( DEFAULT expression ) ) ON (ERROR|EMPTY)
+	;
 
 /**
  * The 'json_query()' function
@@ -1693,6 +1695,13 @@ jsonObjectFunctionEntries
 
 jsonNullClause
 	: (ABSENT|NULL) ON NULL
+	;
+
+/**
+ * The 'json_arrayagg()' function
+ */
+jsonArrayAggFunction
+	: JSON_ARRAYAGG LEFT_PAREN expressionOrPredicate jsonNullClause? orderByClause? RIGHT_PAREN filterClause?
 	;
 
 /**
@@ -1793,6 +1802,7 @@ jsonNullClause
 	| IS
 	| JOIN
 	| JSON_ARRAY
+	| JSON_ARRAYAGG
 	| JSON_EXISTS
 	| JSON_OBJECT
 	| JSON_QUERY

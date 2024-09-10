@@ -2908,6 +2908,30 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
+	public Object visitJsonArrayAggFunction(HqlParser.JsonArrayAggFunctionContext ctx) {
+		final HqlParser.JsonNullClauseContext jsonNullClauseContext = ctx.jsonNullClause();
+		final ArrayList<SqmTypedNode<?>> arguments = new ArrayList<>( jsonNullClauseContext == null ? 1 : 2 );
+		arguments.add( (SqmTypedNode<?>) ctx.expressionOrPredicate().accept( this ) );
+		if ( jsonNullClauseContext != null ) {
+			final TerminalNode firstToken = (TerminalNode) jsonNullClauseContext.getChild( 0 );
+			arguments.add(
+					firstToken.getSymbol().getType() == HqlParser.ABSENT
+							? SqmJsonNullBehavior.ABSENT
+							: SqmJsonNullBehavior.NULL
+			);
+		}
+		return getFunctionDescriptor( "json_arrayagg" ).generateOrderedSetAggregateSqmExpression(
+				arguments,
+				getFilterExpression( ctx ),
+				ctx.orderByClause() == null
+						? null
+						: visitOrderByClause( ctx.orderByClause(), false ),
+				null,
+				creationContext.getQueryEngine()
+		);
+	}
+
+	@Override
 	public SqmPredicate visitIncludesPredicate(HqlParser.IncludesPredicateContext ctx) {
 		final boolean negated = ctx.NOT() != null;
 		final SqmExpression<?> lhs = (SqmExpression<?>) ctx.expression( 0 ).accept( this );

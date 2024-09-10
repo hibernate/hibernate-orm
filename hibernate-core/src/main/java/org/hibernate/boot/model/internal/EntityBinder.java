@@ -175,7 +175,7 @@ public class EntityBinder {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, EntityBinder.class.getName() );
 	private static final String NATURAL_ID_CACHE_SUFFIX = "##NaturalId";
 
-	private MetadataBuildingContext context;
+	private final MetadataBuildingContext context;
 
 	private String name;
 	private ClassDetails annotatedClass;
@@ -245,13 +245,13 @@ public class EntityBinder {
 		entityBinder.handleIdentifier( holder, inheritanceStates, generators, inheritanceState );
 
 		final InFlightMetadataCollector collector = context.getMetadataCollector();
-		if ( persistentClass instanceof RootClass ) {
-			collector.addSecondPass( new CreateKeySecondPass( (RootClass) persistentClass ) );
-			bindSoftDelete( clazzToProcess, (RootClass) persistentClass, inheritanceState, context );
+		if ( persistentClass instanceof RootClass rootClass ) {
+			collector.addSecondPass( new CreateKeySecondPass( rootClass ) );
+			bindSoftDelete( clazzToProcess, rootClass, context );
 		}
-		if ( persistentClass instanceof Subclass) {
+		if ( persistentClass instanceof Subclass subclass ) {
 			assert superEntity != null;
-			superEntity.addSubclass( (Subclass) persistentClass );
+			superEntity.addSubclass( subclass );
 		}
 		collector.addEntityBinding( persistentClass );
 		// process secondary tables and complementary definitions (ie o.h.a.Table)
@@ -306,12 +306,11 @@ public class EntityBinder {
 	private static void bindSoftDelete(
 			ClassDetails classDetails,
 			RootClass rootClass,
-			InheritanceState inheritanceState,
 			MetadataBuildingContext context) {
 		// todo (soft-delete) : do we assume all package-level registrations are already available?
 		//		or should this be a "second pass"?
 
-		final SoftDelete softDelete = extractSoftDelete( classDetails, inheritanceState, context );
+		final SoftDelete softDelete = extractSoftDelete( classDetails, context );
 		if ( softDelete != null ) {
 			SoftDeleteHelper.bindSoftDeleteIndicator(
 					softDelete,
@@ -322,10 +321,7 @@ public class EntityBinder {
 		}
 	}
 
-	private static SoftDelete extractSoftDelete(
-			ClassDetails classDetails,
-			InheritanceState inheritanceState,
-			MetadataBuildingContext context) {
+	private static SoftDelete extractSoftDelete(ClassDetails classDetails, MetadataBuildingContext context) {
 		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
 		final SoftDelete fromClass = classDetails.getAnnotationUsage( SoftDelete.class, sourceModelContext );
 		if ( fromClass != null ) {
@@ -381,9 +377,10 @@ public class EntityBinder {
 	}
 
 	private void applyTypeBinder(Annotation containingAnnotation, PersistentClass persistentClass) {
-		final Class<? extends TypeBinder<?>> binderClass = containingAnnotation.annotationType()
-				.getAnnotation( TypeBinderType.class )
-				.binder();
+		final Class<? extends TypeBinder<?>> binderClass =
+				containingAnnotation.annotationType()
+						.getAnnotation( TypeBinderType.class )
+						.binder();
 
 		try {
 			//noinspection rawtypes
@@ -1096,7 +1093,7 @@ public class EntityBinder {
 	private static String getMissingPropertiesString(Set<String> propertyNames) {
 		final StringBuilder sb = new StringBuilder();
 		for ( String property : propertyNames ) {
-			if ( sb.length() > 0 ) {
+			if ( !sb.isEmpty() ) {
 				sb.append( ", " );
 			}
 			sb.append( "'" ).append( property ).append( "'" );
@@ -1113,16 +1110,11 @@ public class EntityBinder {
 			return new RootClass( metadataBuildingContext );
 		}
 		else {
-			switch ( inheritanceState.getType() ) {
-				case SINGLE_TABLE:
-					return new SingleTableSubclass( superEntity, metadataBuildingContext );
-				case JOINED:
-					return new JoinedSubclass( superEntity, metadataBuildingContext );
-				case TABLE_PER_CLASS:
-					return new UnionSubclass( superEntity, metadataBuildingContext );
-				default:
-					throw new AssertionFailure( "Unknown inheritance type: " + inheritanceState.getType() );
-			}
+			return switch ( inheritanceState.getType() ) {
+				case SINGLE_TABLE -> new SingleTableSubclass( superEntity, metadataBuildingContext );
+				case JOINED -> new JoinedSubclass( superEntity, metadataBuildingContext );
+				case TABLE_PER_CLASS -> new UnionSubclass( superEntity, metadataBuildingContext );
+			};
 		}
 	}
 
@@ -1684,7 +1676,7 @@ public class EntityBinder {
 			effectiveCache = buildCacheMock( annotatedClass, context );
 			isCached = isCacheable( sharedCacheMode, cacheable );
 		}
-		cacheConcurrentStrategy = resolveCacheConcurrencyStrategy( effectiveCache.usage() );
+		cacheConcurrentStrategy = getCacheConcurrencyStrategy( effectiveCache.usage() );
 		cacheRegion = effectiveCache.region();
 		cacheLazyProperty = isCacheLazy( effectiveCache, annotatedClass );
 
@@ -1721,11 +1713,6 @@ public class EntityBinder {
 				// treat both NONE and UNSPECIFIED the same
 					false;
 		};
-	}
-
-	private static String resolveCacheConcurrencyStrategy(CacheConcurrencyStrategy strategy) {
-		final org.hibernate.cache.spi.access.AccessType accessType = strategy.toAccessType();
-		return accessType == null ? null : accessType.getExternalName();
 	}
 
 	private static Cache buildCacheMock(ClassDetails classDetails, MetadataBuildingContext context) {

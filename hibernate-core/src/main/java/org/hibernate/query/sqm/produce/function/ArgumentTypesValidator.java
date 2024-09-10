@@ -13,7 +13,6 @@ import org.hibernate.Internal;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmCollation;
@@ -132,9 +131,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			FunctionParameterType type,
 			JavaType<?> javaType) {
 		if ( !isUnknown( javaType ) ) {
-			DomainType<?> domainType = argument.getExpressible().getSqmType();
-			if ( domainType instanceof JdbcMapping ) {
-				JdbcMapping jdbcMapping = (JdbcMapping) domainType;
+			if ( argument.getExpressible().getSqmType() instanceof JdbcMapping jdbcMapping ) {
 				checkArgumentType(
 						count, functionName, type,
 						jdbcMapping.getJdbcType(),
@@ -181,8 +178,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	public void validateSqlTypes(List<? extends SqlAstNode> arguments, String functionName) {
 		int count = 0;
 		for ( SqlAstNode argument : arguments ) {
-			if ( argument instanceof Expression ) {
-				final Expression expression = (Expression) argument;
+			if ( argument instanceof Expression expression ) {
 				final JdbcMappingContainer expressionType = expression.getExpressionType();
 				if (expressionType != null) {
 					if ( isUnknownExpressionType( expressionType ) ) {
@@ -240,34 +236,22 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 
 	@Internal
 	private static boolean isCompatible(FunctionParameterType type, JdbcType jdbcType) {
-		switch ( type ) {
-			case COMPARABLE:
-				return jdbcType.isComparable();
-			case STRING:
-				return jdbcType.isStringLikeExcludingClob();
-			case STRING_OR_CLOB:
-				return jdbcType.isString(); // should it be isStringLike()
-			case NUMERIC:
-				return jdbcType.isNumber();
-			case INTEGER:
-				return jdbcType.isInteger();
-			case BOOLEAN:
-				return jdbcType.isBoolean()
+		return switch (type) {
+			case COMPARABLE -> jdbcType.isComparable();
+			case STRING -> jdbcType.isStringLikeExcludingClob();
+			case STRING_OR_CLOB -> jdbcType.isString(); // should it be isStringLike()
+			case NUMERIC -> jdbcType.isNumber();
+			case INTEGER -> jdbcType.isInteger();
+			case BOOLEAN -> jdbcType.isBoolean()
 					// some Dialects map Boolean to SMALLINT or TINYINT
 					// TODO: check with Dialect.getPreferredSqlTypeCodeForBoolean
 					|| jdbcType.isSmallInteger();
-			case TEMPORAL:
-				return jdbcType.isTemporal();
-			case DATE:
-				return jdbcType.hasDatePart();
-			case TIME:
-				return jdbcType.hasTimePart();
-			case SPATIAL:
-				return jdbcType.isSpatial();
-			default:
-				// TODO: should we throw here?
-				return true;
-		}
+			case TEMPORAL -> jdbcType.isTemporal();
+			case DATE -> jdbcType.hasDatePart();
+			case TIME -> jdbcType.hasTimePart();
+			case SPATIAL -> jdbcType.isSpatial();
+			default -> true; // TODO: should we throw here?
+		};
 	}
 
 	private static void throwError(

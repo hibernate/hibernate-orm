@@ -3086,7 +3086,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 
 	@Override
 	@Incubating
-	public <T> JpaExpression<String> collectionToString(
+	public JpaExpression<String> collectionToString(
 			Expression<? extends Collection<?>> collectionExpression,
 			Expression<String> separatorExpression) {
 		return criteriaBuilder.collectionToString( collectionExpression, separatorExpression );
@@ -3094,7 +3094,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 
 	@Override
 	@Incubating
-	public <T> JpaExpression<String> collectionToString(
+	public JpaExpression<String> collectionToString(
 			Expression<? extends Collection<?>> collectionExpression,
 			String separator) {
 		return criteriaBuilder.collectionToString( collectionExpression, separator );

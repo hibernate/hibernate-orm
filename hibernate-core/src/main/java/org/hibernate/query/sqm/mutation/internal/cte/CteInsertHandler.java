@@ -70,7 +70,6 @@ import org.hibernate.sql.ast.tree.cte.CteTableGroup;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -557,7 +556,6 @@ public class CteInsertHandler implements InsertHandler {
 				targetPathColumns,
 				assignsId,
 				sqmConverter,
-				sqmConverter.getJdbcParamsBySqmParam(),
 				factory
 		);
 
@@ -588,9 +586,7 @@ public class CteInsertHandler implements InsertHandler {
 		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
-				SqmUtil.generateJdbcParamsXref(domainParameterXref, sqmConverter),
-				factory.getRuntimeMetamodels().getMappingMetamodel(),
-				navigablePath -> sqmConverter.getMutatingTableGroup(),
+				SqmUtil.generateJdbcParamsXref( domainParameterXref, sqmConverter ),
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
 					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
@@ -631,7 +627,6 @@ public class CteInsertHandler implements InsertHandler {
 			List<Map.Entry<List<CteColumn>, Assignment>> assignments,
 			boolean assignsId,
 			MultiTableSqmMutationConverter sqmConverter,
-			Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions,
 			SessionFactoryImplementor factory) {
 		final TableGroup updatingTableGroup = sqmConverter.getMutatingTableGroup();
 		final EntityMappingType entityDescriptor = getEntityDescriptor();
@@ -672,11 +667,7 @@ public class CteInsertHandler implements InsertHandler {
 
 			for ( int c = 0; c < assignmentColumnRefs.size(); c++ ) {
 				final ColumnReference columnReference = assignmentColumnRefs.get( c );
-				final TableReference tableReference = resolveTableReference(
-						columnReference,
-						updatingTableGroup,
-						tableReferenceByAlias
-				);
+				final TableReference tableReference = resolveTableReference( columnReference, tableReferenceByAlias );
 
 				// TODO: this could be fixed by introducing joins to DML statements
 				if ( assignmentTableReference != null && !assignmentTableReference.equals( tableReference ) ) {
@@ -1372,7 +1363,6 @@ public class CteInsertHandler implements InsertHandler {
 
 	private TableReference resolveTableReference(
 			ColumnReference columnReference,
-			TableGroup updatingTableGroup,
 			Map<String, TableReference> tableReferenceByAlias) {
 		final TableReference tableReferenceByQualifier = tableReferenceByAlias.get( columnReference.getQualifier() );
 		if ( tableReferenceByQualifier != null ) {

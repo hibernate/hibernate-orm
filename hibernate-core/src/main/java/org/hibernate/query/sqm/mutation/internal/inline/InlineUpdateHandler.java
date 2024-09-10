@@ -131,12 +131,7 @@ public class InlineUpdateHandler implements UpdateHandler {
 		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
-				SqmUtil.generateJdbcParamsXref(
-						domainParameterXref,
-						translation::getJdbcParamsBySqmParam
-				),
-				sessionFactory.getRuntimeMetamodels().getMappingMetamodel(),
-				navigablePath -> updatingTableGroup,
+				SqmUtil.generateJdbcParamsXref( domainParameterXref, translation::getJdbcParamsBySqmParam ),
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override
 					@SuppressWarnings("unchecked")

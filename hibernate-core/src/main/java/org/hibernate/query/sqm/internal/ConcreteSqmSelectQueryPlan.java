@@ -443,13 +443,10 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	}
 
 	private JdbcParameterBindings createJdbcParameterBindings(CacheableSqmInterpretation sqmInterpretation, DomainQueryExecutionContext executionContext) {
-		final SharedSessionContractImplementor session = executionContext.getSession();
 		return SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
 				sqmInterpretation.getJdbcParamsXref(),
-				session.getFactory().getRuntimeMetamodels().getMappingMetamodel(),
-				sqmInterpretation.getTableGroupAccess()::findTableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					//this is pretty ugly!
 					@Override @SuppressWarnings("unchecked")
@@ -457,7 +454,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						return (MappingModelExpressible<T>) sqmInterpretation.getSqmParameterMappingModelTypes().get(parameter);
 					}
 				},
-				session
+				executionContext.getSession()
 		);
 	}
 
@@ -494,8 +491,6 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
 				jdbcParamsXref,
-				session.getFactory().getRuntimeMetamodels().getMappingMetamodel(),
-				tableGroupAccess::findTableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
 					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {

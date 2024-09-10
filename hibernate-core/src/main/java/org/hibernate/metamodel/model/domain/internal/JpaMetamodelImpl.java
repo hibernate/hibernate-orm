@@ -12,7 +12,6 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -69,6 +68,8 @@ import jakarta.persistence.metamodel.EmbeddableType;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.ManagedType;
 import jakarta.persistence.metamodel.Type;
+
+import static java.util.Collections.emptySet;
 
 /**
  *
@@ -247,17 +248,12 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	private Collection<ManagedDomainType<?>> getAllManagedTypes() {
-		switch ( jpaMetaModelPopulationSetting ) {
-			case IGNORE_UNSUPPORTED:
-				return managedTypeByClass.values();
-			case ENABLED:
-				return managedTypeByName.values();
-			case DISABLED:
-				return Collections.emptySet();
-			default:
-				// should never happen
-				throw new AssertionError();
-		}
+		// should never happen
+		return switch (jpaMetaModelPopulationSetting) {
+			case IGNORE_UNSUPPORTED -> managedTypeByClass.values();
+			case ENABLED -> managedTypeByName.values();
+			case DISABLED -> emptySet();
+		};
 	}
 
 	@Override
@@ -649,9 +645,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			}
 		}
 
-		typeConfiguration.getJavaTypeRegistry().forEachDescriptor( (descriptor) -> {
-			if ( descriptor instanceof EnumJavaType ) {
-				final EnumJavaType<? extends Enum<?>> enumJavaType = (EnumJavaType<? extends Enum<?>>) descriptor;
+		typeConfiguration.getJavaTypeRegistry().forEachDescriptor( descriptor -> {
+			if ( descriptor instanceof EnumJavaType<? extends Enum<?>> enumJavaType ) {
 				final Class<? extends Enum<?>> enumJavaClass = enumJavaType.getJavaTypeClass();
 				final Enum<?>[] enumConstants = enumJavaClass.getEnumConstants();
 				for ( Enum<?> enumConstant : enumConstants ) {

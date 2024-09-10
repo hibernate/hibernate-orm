@@ -30,18 +30,17 @@ import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * @asciidoc
- *
- * DotIdentifierHandler used to interpret paths outside of any specific
- * context.  This is the handler used at the root of the handler stack.
- *
- * It can recognize any number of types of paths -
- *
- * 		* fully-qualified class names (entity or otherwise)
- * 		* static field references, e.g. `MyClass.SOME_FIELD`
- * 		* enum value references, e.g. `Sex.MALE`
- * 		* navigable-path
- * 		* others?
+ * A {@link DotIdentifierConsumer} used to interpret paths outside any
+ * specific context. This is the handler used at the root of the handler
+ * stack.
+ * <p>
+ * It can recognize any number of types of paths:
+ * <ul>
+ * <li>fully-qualified class names (entity or otherwise)
+ * <li>static field references, e.g. {@code MyClass.SOME_FIELD}
+ * <li>enum value references, e.g. {@code Sex.MALE}
+ * <li>navigable-path
+ * </ul>
  *
  * @author Steve Ebersole
  */
@@ -189,11 +188,11 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 			final NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
 			if ( importableName != null ) {
 				final ManagedDomainType<?> managedType = jpaMetamodel.managedType( importableName );
-				if ( managedType instanceof EntityDomainType<?> ) {
-					return new SqmLiteralEntityType<>( (EntityDomainType<?>) managedType, nodeBuilder );
+				if ( managedType instanceof EntityDomainType<?> entityDomainType ) {
+					return new SqmLiteralEntityType<>( entityDomainType, nodeBuilder );
 				}
-				else if ( managedType instanceof EmbeddableDomainType<?> ) {
-					return new SqmLiteralEmbeddableType<>( (EmbeddableDomainType<?>) managedType, nodeBuilder );
+				else if ( managedType instanceof EmbeddableDomainType<?> embeddableDomainType ) {
+					return new SqmLiteralEmbeddableType<>( embeddableDomainType, nodeBuilder );
 				}
 			}
 
@@ -217,35 +216,49 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 				try {
 					final EnumJavaType<?> enumType = jpaMetamodel.getEnumType( prefix );
 					if ( enumType != null ) {
-						return new SqmEnumLiteral(
-								jpaMetamodel.enumValue( enumType, terminal ),
-								enumType,
-								terminal,
-								nodeBuilder
-						);
+						return sqmEnumLiteral( jpaMetamodel, enumType, terminal, nodeBuilder );
 					}
 
 					final JavaType<?> fieldJtdTest = jpaMetamodel.getJavaConstantType( prefix, terminal );
 					if ( fieldJtdTest != null ) {
-						final Object constantValue = jpaMetamodel.getJavaConstant( prefix, terminal );
-						return new SqmFieldLiteral( constantValue, fieldJtdTest, terminal, nodeBuilder );
-
+						return sqmFieldLiteral( jpaMetamodel, prefix, terminal, fieldJtdTest, nodeBuilder );
 					}
 				}
 				catch (Exception ignore) {
 				}
 			}
 
-			throw new SemanticException(
-					String.format(
-						"Could not interpret path expression '%s'",
-						path
-					)
+			throw new SemanticException( "Could not interpret path expression '" + path + "'" );
+		}
+
+		private static <E> SqmFieldLiteral<E> sqmFieldLiteral(
+				JpaMetamodelImplementor jpaMetamodel,
+				String prefix,
+				String terminal,
+				JavaType<E> fieldJtdTest,
+				NodeBuilder nodeBuilder) {
+			return new SqmFieldLiteral<>(
+					jpaMetamodel.getJavaConstant( prefix, terminal ),
+					fieldJtdTest,
+					terminal,
+					nodeBuilder
+			);
+		}
+
+		private static <E extends Enum<E>> SqmEnumLiteral<E> sqmEnumLiteral(
+				JpaMetamodelImplementor jpaMetamodel,
+				EnumJavaType<E> enumType,
+				String terminal,
+				NodeBuilder nodeBuilder) {
+			return new SqmEnumLiteral<>(
+					jpaMetamodel.enumValue( enumType, terminal ),
+					enumType,
+					terminal,
+					nodeBuilder
 			);
 		}
 
 		protected void validateAsRoot(SqmFrom<?, ?> pathRoot) {
-
 		}
 
 		@Override

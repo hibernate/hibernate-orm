@@ -641,9 +641,9 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			}
 		}
 		final RowProcessingState rowProcessingState = data.getRowProcessingState();
-		assert entityEntry == rowProcessingState.getSession()
-				.getPersistenceContextInternal()
-				.getEntry( data.entityInstanceForNotify );
+		final PersistenceContext persistenceContext = rowProcessingState.getSession()
+				.getPersistenceContextInternal();
+		assert entityEntry == persistenceContext.getEntry( data.entityInstanceForNotify );
 		final Object[] loadedState = entityEntry.getLoadedState();
 		final Object[] state;
 		if ( loadedState == null ) {
@@ -939,9 +939,26 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 					&& ( (ToOneAttributeMapping) referencedModelPart ).getSideNature() == TARGET;
 				return;
 			}
-			// If the entity initializer is null, we know the entity is fully initialized,
-			// otherwise it will be initialized by some other initializer
-			data.setState( data.entityHolder.getEntityInitializer() == null ? State.INITIALIZED : State.RESOLVED );
+			if ( data.concreteDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()
+					&& isPersistentAttributeInterceptable( data.entityInstanceForNotify )
+					&& getAttributeInterceptor( data.entityInstanceForNotify ) instanceof EnhancementAsProxyLazinessInterceptor enhancementInterceptor
+					&& !enhancementInterceptor.isInitialized() ) {
+				data.setState( State.RESOLVED );
+			}
+			else {
+				// If the entity initializer is null, we know the entity is fully initialized,
+				// otherwise it will be initialized by some other initializer
+				data.setState( data.entityHolder.getEntityInitializer() == null ? State.INITIALIZED : State.RESOLVED );
+			}
+
+			if ( data.getState() == State.RESOLVED ) {
+				data.entityHolder = persistenceContext.claimEntityHolderIfPossible(
+						data.entityKey,
+						data.entityInstanceForNotify,
+						rowProcessingState.getJdbcValuesSourceProcessingState(),
+						this
+				);
+			}
 		}
 		else if ( lazyInitializer.isUninitialized() ) {
 			data.setState( State.RESOLVED );
@@ -1749,6 +1766,10 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 				}
 			}
 		}
+	}
+
+	private static PersistentAttributeInterceptor getAttributeInterceptor(Object entity) {
+		return asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
 	}
 
 	@Override

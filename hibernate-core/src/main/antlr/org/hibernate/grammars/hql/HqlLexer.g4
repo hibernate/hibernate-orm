@@ -225,6 +225,7 @@ INTO 				: [iI] [nN] [tT] [oO];
 IS					: [iI] [sS];
 JOIN				: [jJ] [oO] [iI] [nN];
 JSON_ARRAY			: [jJ] [sS] [oO] [nN] '_' [aA] [rR] [rR] [aA] [yY];
+JSON_ARRAYAGG		: [jJ] [sS] [oO] [nN] '_' [aA] [rR] [rR] [aA] [yY] [aA] [gG] [gG];
 JSON_EXISTS			: [jJ] [sS] [oO] [nN] '_' [eE] [xX] [iI] [sS] [tT] [sS];
 JSON_OBJECT			: [jJ] [sS] [oO] [nN] '_' [oO] [bB] [jJ] [eE] [cC] [tT];
 JSON_QUERY			: [jJ] [sS] [oO] [nN] '_' [qQ] [uU] [eE] [rR] [yY];

@@ -658,6 +658,7 @@ public class MySQLLegacyDialect extends Dialect {
 			functionFactory.jsonExists_mysql();
 			functionFactory.jsonObject_mysql();
 			functionFactory.jsonArray_mysql();
+			functionFactory.jsonArrayAgg_mysql();
 		}
 	}
 

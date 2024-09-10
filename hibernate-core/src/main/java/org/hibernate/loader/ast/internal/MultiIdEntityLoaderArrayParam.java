@@ -218,6 +218,9 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 					// the entity is locally deleted, and the options ask that we not return such entities...
 					entity = null;
 				}
+				else {
+					entity = persistenceContext.proxyFor( entity );
+				}
 			}
 			result.set( resultIndex, entity );
 		}

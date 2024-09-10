@@ -21,7 +21,6 @@ import java.util.GregorianCalendar;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -30,6 +29,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
+
+import static org.hibernate.internal.util.CharSequenceHelper.subSequence;
 
 /**
  * Descriptor for {@link Time} handling.
@@ -42,19 +43,8 @@ import jakarta.persistence.TemporalType;
 public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 	public static final JdbcTimeJavaType INSTANCE = new JdbcTimeJavaType();
 
-	public static final String TIME_FORMAT = "HH:mm:ss.SSS";
-
 	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ISO_LOCAL_TIME;
 
-	/**
-	 * Alias for {@link DateTimeFormatter#ISO_LOCAL_TIME}.
-	 *
-	 * Intended for use with logging
-	 *
-	 * @see #LITERAL_FORMATTER
-	 */
-	@SuppressWarnings("unused")
-	public static final DateTimeFormatter LOGGABLE_FORMATTER = DateTimeFormatter.ISO_LOCAL_TIME;
 	private static final DateTimeFormatter ENCODED_FORMATTER = new DateTimeFormatterBuilder()
 			.optionalStart()
 			.append( DateTimeFormatter.ISO_DATE )
@@ -62,6 +52,7 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 			.optionalEnd()
 			.append( DateTimeFormatter.ISO_LOCAL_TIME )
 			.toFormatter();
+
 
 	public JdbcTimeJavaType() {
 		super( Time.class, TimeMutabilityPlan.INSTANCE );
@@ -76,7 +67,7 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 	public boolean isInstance(Object value) {
 		// this check holds true for java.sql.Time as well
 		return value instanceof Date
-				&& !( value instanceof java.sql.Date );
+			&& !( value instanceof java.sql.Date );
 	}
 
 	@Override
@@ -111,9 +102,9 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 		calendar2.setTime( another );
 
 		return calendar1.get( Calendar.HOUR_OF_DAY ) == calendar2.get( Calendar.HOUR_OF_DAY )
-				&& calendar1.get( Calendar.MINUTE ) == calendar2.get( Calendar.MINUTE )
-				&& calendar1.get( Calendar.SECOND ) == calendar2.get( Calendar.SECOND )
-				&& calendar1.get( Calendar.MILLISECOND ) == calendar2.get( Calendar.MILLISECOND );
+			&& calendar1.get( Calendar.MINUTE ) == calendar2.get( Calendar.MINUTE )
+			&& calendar1.get( Calendar.SECOND ) == calendar2.get( Calendar.SECOND )
+			&& calendar1.get( Calendar.MILLISECOND ) == calendar2.get( Calendar.MILLISECOND );
 	}
 
 	@Override
@@ -217,8 +208,8 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 
 	@Override
 	public String toString(Date value) {
-		if ( value instanceof java.sql.Time ) {
-			return LITERAL_FORMATTER.format( ( (java.sql.Time) value ).toLocalTime() );
+		if ( value instanceof java.sql.Time time ) {
+			return LITERAL_FORMATTER.format( time.toLocalTime() );
 		}
 		else {
 			return LITERAL_FORMATTER.format( LocalTime.ofInstant( value.toInstant(), ZoneOffset.systemDefault() ) );
@@ -242,13 +233,7 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 	@Override
 	public Date fromEncodedString(CharSequence charSequence, int start, int end) {
 		try {
-			final TemporalAccessor accessor = ENCODED_FORMATTER.parse(
-					CharSequenceHelper.subSequence(
-							charSequence,
-							start,
-							end
-					)
-			);
+			final TemporalAccessor accessor = ENCODED_FORMATTER.parse( subSequence( charSequence, start, end ) );
 			return java.sql.Time.valueOf( accessor.query( LocalTime::from ) );
 		}
 		catch ( DateTimeParseException pe) {
@@ -258,8 +243,8 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 
 	@Override
 	public void appendEncodedString(SqlAppender sb, Date value) {
-		if ( value instanceof java.sql.Time ) {
-			LITERAL_FORMATTER.formatTo( ( (java.sql.Time) value ).toLocalTime(), sb );
+		if ( value instanceof java.sql.Time time ) {
+			LITERAL_FORMATTER.formatTo( time.toLocalTime(), sb );
 		}
 		else {
 			LITERAL_FORMATTER.formatTo( LocalTime.ofInstant( value.toInstant(), ZoneOffset.systemDefault() ), sb );

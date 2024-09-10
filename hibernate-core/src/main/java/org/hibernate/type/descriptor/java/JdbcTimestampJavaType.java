@@ -25,13 +25,14 @@ import jakarta.persistence.TemporalType;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.internal.util.CharSequenceHelper.subSequence;
 
 /**
  * Descriptor for {@link Timestamp} handling.
@@ -51,7 +52,6 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 	 *
 	 * @see #TIMESTAMP_FORMAT
 	 */
-	@SuppressWarnings("unused")
 	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ofPattern( TIMESTAMP_FORMAT )
 			.withZone( ZoneId.from( ZoneOffset.UTC ) );
 
@@ -231,13 +231,7 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 	@Override
 	public Date fromEncodedString(CharSequence charSequence, int start, int end) {
 		try {
-			final TemporalAccessor accessor = DateTimeUtils.DATE_TIME.parse(
-					CharSequenceHelper.subSequence(
-							charSequence,
-							start,
-							end
-					)
-			);
+			final TemporalAccessor accessor = DateTimeUtils.DATE_TIME.parse( subSequence( charSequence, start, end ) );
 			final Timestamp timestamp;
 			if ( accessor.isSupported( ChronoField.INSTANT_SECONDS ) ) {
 				timestamp = new Timestamp( accessor.getLong( ChronoField.INSTANT_SECONDS ) * 1000L );
@@ -297,11 +291,10 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 		public static final TimestampMutabilityPlan INSTANCE = new TimestampMutabilityPlan();
 		@Override
 		public Date deepCopyNotNull(Date value) {
-			if ( value instanceof Timestamp ) {
+			if ( value instanceof Timestamp timestamp ) {
 				// make sure to get the nanos
-				final Timestamp orig = (Timestamp) value;
-				final Timestamp copy = new Timestamp( orig.getTime() );
-				copy.setNanos( orig.getNanos() );
+				final Timestamp copy = new Timestamp( timestamp.getTime() );
+				copy.setNanos( timestamp.getNanos() );
 				return copy;
 			}
 			else {

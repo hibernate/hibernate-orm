@@ -19,7 +19,6 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.hibernate.HibernateException;
-import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -27,6 +26,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
+
+import static org.hibernate.internal.util.CharSequenceHelper.subSequence;
 
 /**
  * Descriptor for {@link java.sql.Date} handling.
@@ -39,15 +40,13 @@ import jakarta.persistence.TemporalType;
 public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 	public static final JdbcDateJavaType INSTANCE = new JdbcDateJavaType();
 
-	public static final String DATE_FORMAT = "dd MMMM yyyy";
-
 	/**
 	 * Intended for use in reading HQL literals and writing SQL literals
 	 *
-	 * @see #DATE_FORMAT
+	 * @see DateTimeFormatter#ISO_LOCAL_DATE
 	 */
-	@SuppressWarnings("unused")
 	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
+
 	private static final DateTimeFormatter ENCODED_FORMATTER = new DateTimeFormatterBuilder()
 			.append( DateTimeFormatter.ISO_DATE )
 			.optionalStart()
@@ -68,7 +67,7 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 	public boolean isInstance(Object value) {
 		// this check holds true for java.sql.Date as well
 		return value instanceof Date
-				&& !( value instanceof java.sql.Time );
+			&& !( value instanceof java.sql.Time );
 	}
 
 	@Override
@@ -91,8 +90,8 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 		calendar2.setTime( another );
 
 		return calendar1.get( Calendar.MONTH ) == calendar2.get( Calendar.MONTH )
-				&& calendar1.get( Calendar.DAY_OF_MONTH ) == calendar2.get( Calendar.DAY_OF_MONTH )
-				&& calendar1.get( Calendar.YEAR ) == calendar2.get( Calendar.YEAR );
+			&& calendar1.get( Calendar.DAY_OF_MONTH ) == calendar2.get( Calendar.DAY_OF_MONTH )
+			&& calendar1.get( Calendar.YEAR ) == calendar2.get( Calendar.YEAR );
 	}
 
 	@Override
@@ -156,16 +155,15 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 	}
 
 	private LocalDate unwrapLocalDate(Date value) {
-		return value instanceof java.sql.Date
-				? ( (java.sql.Date) value ).toLocalDate()
+		return value instanceof java.sql.Date date
+				? date.toLocalDate()
 				: new java.sql.Date( unwrapDateEpoch( value ) ).toLocalDate();
 	}
 
 	private java.sql.Date unwrapSqlDate(Date value) {
-		if ( value instanceof java.sql.Date ) {
-			final java.sql.Date sqlDate = (java.sql.Date) value;
-			final long dateEpoch = toDateEpoch( sqlDate.getTime() );
-			return dateEpoch == sqlDate.getTime() ? sqlDate : new java.sql.Date( dateEpoch );
+		if ( value instanceof java.sql.Date date ) {
+			final long dateEpoch = toDateEpoch( date.getTime() );
+			return dateEpoch == date.getTime() ? date : new java.sql.Date( dateEpoch );
 		}
 		return new java.sql.Date( unwrapDateEpoch( value ) );
 
@@ -238,13 +236,7 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 	@Override
 	public Date fromEncodedString(CharSequence charSequence, int start, int end) {
 		try {
-			final TemporalAccessor accessor = ENCODED_FORMATTER.parse(
-					CharSequenceHelper.subSequence(
-							charSequence,
-							start,
-							end
-					)
-			);
+			final TemporalAccessor accessor = ENCODED_FORMATTER.parse( subSequence( charSequence, start, end ) );
 			return java.sql.Date.valueOf( accessor.query( LocalDate::from ) );
 		}
 		catch ( DateTimeParseException pe) {

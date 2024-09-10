@@ -204,10 +204,9 @@ public class OneToOneSecondPass implements SecondPass {
 		// HHH-6813
 		// Foo: @Id long id, @OneToOne(mappedBy="foo") Bar bar
 		// Bar: @Id @OneToOne Foo foo
-		final KeyValue targetEntityIdentifier = targetEntity.getIdentifier();
 		boolean referenceToPrimaryKey = mappedBy == null
-				|| targetEntityIdentifier instanceof Component
-						&& ( (Component) targetEntityIdentifier ).matchesAllProperties( mappedBy );
+				|| targetEntity.getIdentifier() instanceof Component compositeId
+						&& compositeId.matchesAllProperties( mappedBy );
 		oneToOne.setReferenceToPrimaryKey( referenceToPrimaryKey );
 
 		final String propertyRef = oneToOne.getReferencedPropertyName();
@@ -293,11 +292,9 @@ public class OneToOneSecondPass implements SecondPass {
 			copy.setValue( key );
 			key.addColumn( copy );
 		}
-		if ( otherSideProperty.getValue() instanceof SortableValue ) {
-			final SortableValue value = (SortableValue) otherSideProperty.getValue();
-			if ( !value.isSorted() ) {
-				key.sortProperties();
-			}
+		if ( otherSideProperty.getValue() instanceof SortableValue value
+				&& !value.isSorted() ) {
+			key.sortProperties();
 		}
 		persistentClass.addJoin( join );
 		return join;

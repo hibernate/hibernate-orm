@@ -180,7 +180,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession(
 				new Interceptor() {
 					@Override
-					public boolean onSave(
+					public boolean onPersist(
 							Object entity,
 							Object id,
 							Object[] state,

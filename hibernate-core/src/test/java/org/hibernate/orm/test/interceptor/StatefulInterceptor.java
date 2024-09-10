@@ -23,7 +23,7 @@ public class StatefulInterceptor implements Interceptor {
 	private List list = new ArrayList();
 
 	@Override
-	public boolean onSave(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
+	public boolean onPersist(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
 		if ( !(entity instanceof Log) ) {
 			list.add( new Log( "insert", (String) id, entity.getClass().getName() ) );
 		}

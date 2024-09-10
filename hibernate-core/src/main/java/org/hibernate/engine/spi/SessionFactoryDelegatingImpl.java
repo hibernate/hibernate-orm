@@ -40,7 +40,7 @@ import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.event.spi.EventEngine;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.FastSessionServices;
-import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
@@ -265,7 +265,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public JpaMetamodelImplementor getJpaMetamodel() {
+	public JpaMetamodel getJpaMetamodel() {
 		return delegate.getJpaMetamodel();
 	}
 

@@ -21,7 +21,11 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 @Incubating
 public interface BindingContext {
-	TypeConfiguration getTypeConfiguration();
 	JpaMetamodel getJpaMetamodel();
+
 	MappingMetamodel getMappingMetamodel();
+
+	default TypeConfiguration getTypeConfiguration() {
+		return getJpaMetamodel().getTypeConfiguration();
+	}
 }

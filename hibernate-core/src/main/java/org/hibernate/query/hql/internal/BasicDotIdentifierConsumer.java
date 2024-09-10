@@ -8,8 +8,8 @@ package org.hibernate.query.hql.internal;
 
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
@@ -183,7 +183,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 			}
 
 			final String path = pathSoFar.toString();
-			final JpaMetamodelImplementor jpaMetamodel = creationContext.getJpaMetamodel();
+			final JpaMetamodel jpaMetamodel = creationContext.getJpaMetamodel();
 			final String importableName = jpaMetamodel.qualifyImportableName( path );
 			final NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
 			if ( importableName != null ) {
@@ -232,7 +232,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 		}
 
 		private static <E> SqmFieldLiteral<E> sqmFieldLiteral(
-				JpaMetamodelImplementor jpaMetamodel,
+				JpaMetamodel jpaMetamodel,
 				String prefix,
 				String terminal,
 				JavaType<E> fieldJtdTest,
@@ -246,7 +246,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 		}
 
 		private static <E extends Enum<E>> SqmEnumLiteral<E> sqmEnumLiteral(
-				JpaMetamodelImplementor jpaMetamodel,
+				JpaMetamodel jpaMetamodel,
 				EnumJavaType<E> enumType,
 				String terminal,
 				NodeBuilder nodeBuilder) {

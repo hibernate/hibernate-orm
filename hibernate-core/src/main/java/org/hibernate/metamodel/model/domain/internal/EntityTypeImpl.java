@@ -160,7 +160,7 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name, JpaMetamodelImplementor metamodel) {
+	public SqmPathSource<?> findSubPathSource(String name, JpaMetamodel metamodel) {
 		final PersistentAttribute<? super J,?> attribute = super.findAttribute( name );
 		if ( attribute != null ) {
 			return (SqmPathSource<?>) attribute;
@@ -182,7 +182,7 @@ public class EntityTypeImpl<J>
 		return null;
 	}
 
-	private PersistentAttribute<?, ?> findSubtypeAttribute(String name, JpaMetamodelImplementor metamodel) {
+	private PersistentAttribute<?, ?> findSubtypeAttribute(String name, JpaMetamodel metamodel) {
 		PersistentAttribute<?,?> subtypeAttribute = null;
 		for ( ManagedDomainType<?> subtype : getSubTypes() ) {
 			final PersistentAttribute<?,?> candidate = subtype.findSubTypesAttribute( name );

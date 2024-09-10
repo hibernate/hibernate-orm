@@ -58,6 +58,7 @@ import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AbstractAttribute;
@@ -908,7 +909,7 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public SqmPathSource<?> findSubPathSource(String name, JpaMetamodelImplementor metamodel) {
+		public SqmPathSource<?> findSubPathSource(String name, JpaMetamodel metamodel) {
 			SqmPathSource<?> source = super.findSubPathSource(name, metamodel);
 			if ( source != null ) {
 				return source;

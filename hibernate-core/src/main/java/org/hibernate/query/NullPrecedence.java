@@ -6,7 +6,6 @@
  */
 package org.hibernate.query;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.dialect.NullOrdering;
 
 import jakarta.persistence.criteria.Nulls;
@@ -24,21 +23,15 @@ public enum NullPrecedence {
 	/**
 	 * Null precedence not specified. Relies on the RDBMS implementation.
 	 */
-	NONE( Nulls.NONE ),
+	NONE,
 	/**
 	 * Null values appear at the beginning of the sorted collection.
 	 */
-	FIRST( Nulls.FIRST ),
+	FIRST,
 	/**
 	 * Null values appear at the end of the sorted collection.
 	 */
-	LAST( Nulls.LAST );
-
-	private final Nulls jpaValue;
-
-	NullPrecedence(Nulls jpaValue) {
-		this.jpaValue = jpaValue;
-	}
+	LAST;
 
 	/**
 	 * Is this null precedence the default for the given sort order and null ordering.
@@ -47,38 +40,21 @@ public enum NullPrecedence {
 	 */
 	@Deprecated(since = "7.0", forRemoval = true)
 	public boolean isDefaultOrdering(SortDirection sortOrder, NullOrdering nullOrdering) {
-		switch (this) {
-			case NONE:
-				return true;
-			case FIRST:
-				switch ( nullOrdering ) {
-					case FIRST:
-						return true;
-					case LAST:
-						return false;
-					case SMALLEST:
-						return sortOrder == SortDirection.ASCENDING;
-					case GREATEST:
-						return sortOrder == SortDirection.DESCENDING;
-					default:
-						throw new AssertionFailure("Unrecognized NullOrdering");
-				}
-			case LAST:
-				switch ( nullOrdering ) {
-					case LAST:
-						return true;
-					case FIRST:
-						return false;
-					case SMALLEST:
-						return sortOrder == SortDirection.DESCENDING;
-					case GREATEST:
-						return sortOrder == SortDirection.ASCENDING;
-					default:
-						throw new AssertionFailure("Unrecognized NullOrdering");
-				}
-			default:
-				throw new AssertionFailure("Unrecognized NullPrecedence");
-		}
+		return switch (this) {
+			case NONE -> true;
+			case FIRST -> switch (nullOrdering) {
+				case FIRST -> true;
+				case LAST -> false;
+				case SMALLEST -> sortOrder == SortDirection.ASCENDING;
+				case GREATEST -> sortOrder == SortDirection.DESCENDING;
+			};
+			case LAST -> switch (nullOrdering) {
+				case LAST -> true;
+				case FIRST -> false;
+				case SMALLEST -> sortOrder == SortDirection.DESCENDING;
+				case GREATEST -> sortOrder == SortDirection.ASCENDING;
+			};
+		};
 	}
 
 	/**
@@ -112,22 +88,19 @@ public enum NullPrecedence {
 	}
 
 	public Nulls getJpaValue() {
-		return jpaValue;
+		return switch (this) {
+			case NONE -> Nulls.NONE;
+			case FIRST -> Nulls.FIRST;
+			case LAST -> Nulls.LAST;
+		};
 	}
 
 	public static NullPrecedence fromJpaValue(Nulls jpaValue) {
-		switch ( jpaValue ) {
-			case NONE: {
-				return NullPrecedence.NONE;
-			}
-			case FIRST: {
-				return NullPrecedence.FIRST;
-			}
-			case LAST: {
-				return NullPrecedence.LAST;
-			}
-		}
+		return switch (jpaValue) {
+			case NONE -> NullPrecedence.NONE;
+			case FIRST -> NullPrecedence.FIRST;
+			case LAST -> NullPrecedence.LAST;
+		};
 
-		throw new IllegalArgumentException( "Unexpected JPA Nulls - " + jpaValue );
 	}
 }

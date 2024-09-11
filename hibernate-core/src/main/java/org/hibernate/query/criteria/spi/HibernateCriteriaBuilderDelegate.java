@@ -3472,4 +3472,55 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	public JpaExpression<String> jsonArrayAggWithNulls(Expression<?> value, Predicate filter, JpaOrder... orderBy) {
 		return criteriaBuilder.jsonArrayAggWithNulls( value, filter, orderBy );
 	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonObjectAgg(Expression<?> key, Expression<?> value) {
+		return criteriaBuilder.jsonObjectAgg( key, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonObjectAggWithNulls(Expression<?> key, Expression<?> value) {
+		return criteriaBuilder.jsonObjectAggWithNulls( key, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonObjectAggWithUniqueKeys(Expression<?> key, Expression<?> value) {
+		return criteriaBuilder.jsonObjectAggWithUniqueKeys( key, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonObjectAggWithUniqueKeysAndNulls(Expression<?> key, Expression<?> value) {
+		return criteriaBuilder.jsonObjectAggWithUniqueKeysAndNulls( key, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonObjectAgg(Expression<?> key, Expression<?> value, Predicate filter) {
+		return criteriaBuilder.jsonObjectAgg( key, value, filter );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonObjectAggWithNulls(Expression<?> key, Expression<?> value, Predicate filter) {
+		return criteriaBuilder.jsonObjectAggWithNulls( key, value, filter );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonObjectAggWithUniqueKeys(Expression<?> key, Expression<?> value, Predicate filter) {
+		return criteriaBuilder.jsonObjectAggWithUniqueKeys( key, value, filter );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonObjectAggWithUniqueKeysAndNulls(
+			Expression<?> key,
+			Expression<?> value,
+			Predicate filter) {
+		return criteriaBuilder.jsonObjectAggWithUniqueKeysAndNulls( key, value, filter );
+	}
 }

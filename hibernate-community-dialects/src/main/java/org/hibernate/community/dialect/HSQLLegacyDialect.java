@@ -274,6 +274,7 @@ public class HSQLLegacyDialect extends Dialect {
 			functionFactory.jsonObject_hsqldb();
 			functionFactory.jsonArray_hsqldb();
 			functionFactory.jsonArrayAgg_hsqldb();
+			functionFactory.jsonObjectAgg_h2();
 		}
 
 		//trim() requires parameters to be cast when used as trim character

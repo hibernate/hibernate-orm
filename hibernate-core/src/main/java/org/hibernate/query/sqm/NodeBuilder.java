@@ -679,6 +679,30 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 	@Override
 	SqmExpression<String> jsonArrayAgg(Expression<?> value, JpaOrder... orderBy);
 
+	@Override
+	SqmExpression<String> jsonObjectAggWithUniqueKeysAndNulls(Expression<?> key, Expression<?> value);
+
+	@Override
+	SqmExpression<String> jsonObjectAggWithUniqueKeys(Expression<?> key, Expression<?> value);
+
+	@Override
+	SqmExpression<String> jsonObjectAggWithNulls(Expression<?> key, Expression<?> value);
+
+	@Override
+	SqmExpression<String> jsonObjectAgg(Expression<?> key, Expression<?> value);
+
+	@Override
+	SqmExpression<String> jsonObjectAggWithUniqueKeysAndNulls(Expression<?> key, Expression<?> value, Predicate filter);
+
+	@Override
+	SqmExpression<String> jsonObjectAggWithUniqueKeys(Expression<?> key, Expression<?> value, Predicate filter);
+
+	@Override
+	SqmExpression<String> jsonObjectAggWithNulls(Expression<?> key, Expression<?> value, Predicate filter);
+
+	@Override
+	SqmExpression<String> jsonObjectAgg(Expression<?> key, Expression<?> value, Predicate filter);
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides
 

@@ -1,0 +1,9 @@
+"json_objectagg(" expressionOrPredicate ("value"|":") expressionOrPredicate jsonNullClause? uniqueKeysClause? ")" filterClause?
+
+jsonNullClause
+	: ("absent"|"null") "on null"
+	;
+
+uniqueKeysClause
+	: ("with"|"without") "unique keys"
+	;

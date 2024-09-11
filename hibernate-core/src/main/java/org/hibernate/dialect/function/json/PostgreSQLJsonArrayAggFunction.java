@@ -27,8 +27,11 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class PostgreSQLJsonArrayAggFunction extends JsonArrayAggFunction {
 
-	public PostgreSQLJsonArrayAggFunction(TypeConfiguration typeConfiguration) {
+	private final boolean supportsStandard;
+
+	public PostgreSQLJsonArrayAggFunction(boolean supportsStandard, TypeConfiguration typeConfiguration) {
 		super( true, typeConfiguration );
+		this.supportsStandard = supportsStandard;
 	}
 
 	@Override
@@ -39,64 +42,61 @@ public class PostgreSQLJsonArrayAggFunction extends JsonArrayAggFunction {
 			List<SortSpecification> withinGroup,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
-		final boolean caseWrapper = filter != null && !supportsFilter;
-		final String jsonTypeName = translator.getSessionFactory().getTypeConfiguration().getDdlTypeRegistry()
-				.getTypeName( SqlTypes.JSON, translator.getSessionFactory().getJdbcServices().getDialect() );
-		sqlAppender.appendSql( jsonTypeName );
-		sqlAppender.appendSql( "_agg" );
-		final JsonNullBehavior nullBehavior;
-		if ( sqlAstArguments.size() > 1 ) {
-			nullBehavior = (JsonNullBehavior) sqlAstArguments.get( 1 );
+		if ( supportsStandard ) {
+			super.render( sqlAppender, sqlAstArguments, filter, withinGroup, returnType, translator );
 		}
 		else {
-			nullBehavior = JsonNullBehavior.ABSENT;
-		}
-		if ( nullBehavior != JsonNullBehavior.NULL ) {
-			sqlAppender.appendSql( "_strict" );
-		}
-		sqlAppender.appendSql( '(' );
-		final SqlAstNode firstArg = sqlAstArguments.get( 0 );
-		final Expression arg;
-		if ( firstArg instanceof Distinct ) {
-			sqlAppender.appendSql( "distinct " );
-			arg = ( (Distinct) firstArg ).getExpression();
-		}
-		else {
-			arg = (Expression) firstArg;
-		}
-		if ( caseWrapper ) {
-			if ( nullBehavior != JsonNullBehavior.ABSENT ) {
-				throw new QueryException( "Can't emulate json_arrayagg filter clause when using 'null on null' clause." );
+			final String jsonTypeName = translator.getSessionFactory().getTypeConfiguration().getDdlTypeRegistry()
+					.getTypeName( SqlTypes.JSON, translator.getSessionFactory().getJdbcServices().getDialect() );
+			sqlAppender.appendSql( jsonTypeName );
+			sqlAppender.appendSql( "_agg" );
+			final JsonNullBehavior nullBehavior;
+			if ( sqlAstArguments.size() > 1 ) {
+				nullBehavior = (JsonNullBehavior) sqlAstArguments.get( 1 );
 			}
-			translator.getCurrentClauseStack().push( Clause.WHERE );
-			sqlAppender.appendSql( "case when " );
-			filter.accept( translator );
-			translator.getCurrentClauseStack().pop();
-			sqlAppender.appendSql( " then " );
-			renderArgument( sqlAppender, arg, nullBehavior, translator );
-			sqlAppender.appendSql( " else null end)" );
-		}
-		else {
-			renderArgument( sqlAppender, arg, nullBehavior, translator );
-		}
-		if ( withinGroup != null && !withinGroup.isEmpty() ) {
-			translator.getCurrentClauseStack().push( Clause.WITHIN_GROUP );
-			sqlAppender.appendSql( " order by " );
-			withinGroup.get( 0 ).accept( translator );
-			for ( int i = 1; i < withinGroup.size(); i++ ) {
-				sqlAppender.appendSql( ',' );
-				withinGroup.get( i ).accept( translator );
+			else {
+				nullBehavior = JsonNullBehavior.ABSENT;
 			}
-			translator.getCurrentClauseStack().pop();
-		}
-		sqlAppender.appendSql( ')' );
-
-		if ( !caseWrapper && filter != null ) {
-			translator.getCurrentClauseStack().push( Clause.WHERE );
-			sqlAppender.appendSql( " filter (where " );
-			filter.accept( translator );
+			sqlAppender.appendSql( '(' );
+			final SqlAstNode firstArg = sqlAstArguments.get( 0 );
+			final Expression arg;
+			if ( firstArg instanceof Distinct ) {
+				sqlAppender.appendSql( "distinct " );
+				arg = ( (Distinct) firstArg ).getExpression();
+			}
+			else {
+				arg = (Expression) firstArg;
+			}
+			renderArgument( sqlAppender, arg, nullBehavior, translator );
+			if ( withinGroup != null && !withinGroup.isEmpty() ) {
+				translator.getCurrentClauseStack().push( Clause.WITHIN_GROUP );
+				sqlAppender.appendSql( " order by " );
+				withinGroup.get( 0 ).accept( translator );
+				for ( int i = 1; i < withinGroup.size(); i++ ) {
+					sqlAppender.appendSql( ',' );
+					withinGroup.get( i ).accept( translator );
+				}
+				translator.getCurrentClauseStack().pop();
+			}
 			sqlAppender.appendSql( ')' );
-			translator.getCurrentClauseStack().pop();
+
+			if ( filter != null ) {
+				translator.getCurrentClauseStack().push( Clause.WHERE );
+				sqlAppender.appendSql( " filter (where " );
+				filter.accept( translator );
+				if ( nullBehavior != JsonNullBehavior.NULL ) {
+					sqlAppender.appendSql( " and " );
+					arg.accept( translator );
+					sqlAppender.appendSql( " is not null" );
+				}
+				sqlAppender.appendSql( ')' );
+				translator.getCurrentClauseStack().pop();
+			}
+			else if ( nullBehavior != JsonNullBehavior.NULL ) {
+				sqlAppender.appendSql( " filter (where " );
+				arg.accept( translator );
+				sqlAppender.appendSql( " is not null)" );
+			}
 		}
 	}
 }

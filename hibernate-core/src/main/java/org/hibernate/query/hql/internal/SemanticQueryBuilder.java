@@ -146,6 +146,7 @@ import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmJsonExistsExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJsonNullBehavior;
+import org.hibernate.query.sqm.tree.expression.SqmJsonObjectAggUniqueKeysBehavior;
 import org.hibernate.query.sqm.tree.expression.SqmJsonQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJsonValueExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
@@ -2926,6 +2927,38 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				ctx.orderByClause() == null
 						? null
 						: visitOrderByClause( ctx.orderByClause(), false ),
+				null,
+				creationContext.getQueryEngine()
+		);
+	}
+
+	@Override
+	public Object visitJsonObjectAggFunction(HqlParser.JsonObjectAggFunctionContext ctx) {
+		final HqlParser.JsonNullClauseContext jsonNullClauseContext = ctx.jsonNullClause();
+		final HqlParser.JsonUniqueKeysClauseContext jsonUniqueKeysClauseContext = ctx.jsonUniqueKeysClause();
+		final ArrayList<SqmTypedNode<?>> arguments = new ArrayList<>( 4 );
+		for ( HqlParser.ExpressionOrPredicateContext subCtx : ctx.expressionOrPredicate() ) {
+			arguments.add( (SqmTypedNode<?>) subCtx.accept( this ) );
+		}
+		if ( jsonNullClauseContext != null ) {
+			final TerminalNode firstToken = (TerminalNode) jsonNullClauseContext.getChild( 0 );
+			arguments.add(
+					firstToken.getSymbol().getType() == HqlParser.ABSENT
+							? SqmJsonNullBehavior.ABSENT
+							: SqmJsonNullBehavior.NULL
+			);
+		}
+		if ( jsonUniqueKeysClauseContext != null ) {
+			final TerminalNode firstToken = (TerminalNode) jsonUniqueKeysClauseContext.getChild( 0 );
+			arguments.add(
+					firstToken.getSymbol().getType() == HqlParser.WITH
+							? SqmJsonObjectAggUniqueKeysBehavior.WITH
+							: SqmJsonObjectAggUniqueKeysBehavior.WITHOUT
+			);
+		}
+		return getFunctionDescriptor( "json_objectagg" ).generateAggregateSqmExpression(
+				arguments,
+				getFilterExpression( ctx ),
 				null,
 				creationContext.getQueryEngine()
 		);

@@ -3847,6 +3847,70 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Incubating
 	JpaExpression<String> jsonArrayAggWithNulls(Expression<?> value, Predicate filter, JpaOrder... orderBy);
 
+	/**
+	 * Aggregates the given value under the given key into a JSON object.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonObjectAgg(Expression<?> key, Expression<?> value);
+
+	/**
+	 * Aggregates the given value under the given key into a JSON object, retaining {@code null} values in the JSON object.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonObjectAggWithNulls(Expression<?> key, Expression<?> value);
+
+	/**
+	 * Aggregates the given value under the given key into a JSON object.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonObjectAggWithUniqueKeys(Expression<?> key, Expression<?> value);
+
+	/**
+	 * Aggregates the given value under the given key into a JSON object, retaining {@code null} values in the JSON object.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonObjectAggWithUniqueKeysAndNulls(Expression<?> key, Expression<?> value);
+
+	/**
+	 * Aggregates the given value under the given key into a JSON object.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonObjectAgg(Expression<?> key, Expression<?> value, Predicate filter);
+
+	/**
+	 * Aggregates the given value under the given key into a JSON object, retaining {@code null} values in the JSON object.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonObjectAggWithNulls(Expression<?> key, Expression<?> value, Predicate filter);
+
+	/**
+	 * Aggregates the given value under the given key into a JSON object.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonObjectAggWithUniqueKeys(Expression<?> key, Expression<?> value, Predicate filter);
+
+	/**
+	 * Aggregates the given value under the given key into a JSON object, retaining {@code null} values in the JSON object.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonObjectAggWithUniqueKeysAndNulls(Expression<?> key, Expression<?> value, Predicate filter);
+
 	@Override
 	JpaPredicate and(List<Predicate> restrictions);
 

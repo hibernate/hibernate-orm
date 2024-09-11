@@ -499,6 +499,7 @@ public class HANADialect extends Dialect {
 				functionFactory.jsonObject_hana();
 				functionFactory.jsonArray_hana();
 				functionFactory.jsonArrayAgg_hana();
+				functionFactory.jsonObjectAgg_hana();
 			}
 		}
 	}

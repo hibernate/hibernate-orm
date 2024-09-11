@@ -1973,7 +1973,7 @@ public class EntityBinder {
 		join.setKey( key );
 		setForeignKeyNameIfDefined( join );
 		key.setOnDeleteAction( null );
-		bindForeignKey( persistentClass, null, joinColumns, key, false, context );
+		bindForeignKey( persistentClass, null, joinColumns, key, null,false, context );
 		key.sortProperties();
 		join.createPrimaryKey();
 		join.createForeignKey();

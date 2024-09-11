@@ -129,7 +129,7 @@ public class ToOneFkSecondPass extends FkSecondPass {
 						buildingContext
 				);
 			}
-			TableBinder.bindForeignKey( targetEntity, persistentClass, columns, manyToOne, unique, buildingContext );
+			TableBinder.bindForeignKey( targetEntity, persistentClass, columns, manyToOne, null, unique, buildingContext );
 			if ( !manyToOne.isIgnoreNotFound() ) {
 				manyToOne.createPropertyRefConstraints( persistentClasses );
 			}

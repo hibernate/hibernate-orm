@@ -2763,6 +2763,7 @@ public abstract class CollectionBinder {
 				targetEntity,
 				joinColumns,
 				key,
+				null,
 				false,
 				buildingContext
 		);
@@ -2821,9 +2822,14 @@ public abstract class CollectionBinder {
 				collection.getOwner(),
 				joinColumns,
 				value,
+				getIndexColumnForUniqueConstraint(),
 				unique,
 				buildingContext
 		);
+	}
+
+	protected IndexColumn getIndexColumnForUniqueConstraint() {
+		return null;
 	}
 
 	private void bindUnownedManyToManyInverseForeignKey(

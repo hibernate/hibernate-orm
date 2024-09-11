@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.internal;
 
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.AnnotationException;
@@ -557,6 +558,7 @@ public class TableBinder {
 			PersistentClass destinationEntity,
 			AnnotatedJoinColumns joinColumns,
 			SimpleValue value,
+			IndexColumn index,
 			boolean unique,
 			MetadataBuildingContext buildingContext) {
 		final PersistentClass associatedClass;
@@ -591,7 +593,18 @@ public class TableBinder {
 		}
 		value.createForeignKey( referencedEntity, joinColumns );
 		if ( unique ) {
+			createUniqueKey(value, index, buildingContext);
+		}
+	}
+
+	private static void createUniqueKey(SimpleValue value, IndexColumn index, MetadataBuildingContext buildingContext) {
+		if ( index == null ) {
 			value.createUniqueKey( buildingContext );
+		}
+		else if ( !value.hasFormula() && value.getColumnSpan() > 0 ) {
+			final List<Column> columns = new ArrayList<>( value.getConstraintColumns() );
+			columns.add( index.getMappingColumn() );
+			value.getTable().createUniqueKey( columns, buildingContext );
 		}
 	}
 

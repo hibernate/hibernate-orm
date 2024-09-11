@@ -114,4 +114,9 @@ public class ListBinder extends CollectionBinder {
 			referenced.addProperty( backref );
 		}
 	}
+
+	@Override
+	protected IndexColumn getIndexColumnForUniqueConstraint() {
+		return indexColumn;
+	}
 }

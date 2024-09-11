@@ -344,7 +344,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	protected Dialect(DialectResolutionInfo info) {
-		this.version = info.makeCopyOrDefault( getMinimumSupportedVersion() );
+		this.version = determineDatabaseVersion( info );
 		checkVersion();
 		registerDefaultKeywords();
 		registerKeywords(info);
@@ -361,6 +361,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 					minimumVersion.getMajor() + "." + minimumVersion.getMinor() + "." + minimumVersion.getMicro()
 			);
 		}
+	}
+
+	/**
+	 * Determine the database version, as precise as possible and using Dialect-specific techniques,
+	 * from a {@link DialectResolutionInfo} object.
+	 * @param info The dialect resolution info that would be passed by Hibernate ORM
+	 * to the constructor of a Dialect of the same type.
+	 * @return The corresponding database version.
+	 */
+	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
+		return info.makeCopyOrDefault( getMinimumSupportedVersion() );
 	}
 
 	/**

@@ -75,10 +75,10 @@ public class HANAServerConfiguration {
 					MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE
 			);
 		}
-		return new HANAServerConfiguration( createVersion( info ), maxLobPrefetchSize );
+		return new HANAServerConfiguration( staticDetermineDatabaseVersion( info ), maxLobPrefetchSize );
 	}
 
-	private static DatabaseVersion createVersion(DialectResolutionInfo info) {
+	static DatabaseVersion staticDetermineDatabaseVersion(DialectResolutionInfo info) {
 		// Parse the version according to https://answers.sap.com/questions/9760991/hana-sps-version-check.html
 		final String versionString = info.getDatabaseVersion();
 		int majorVersion = 1;

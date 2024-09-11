@@ -202,6 +202,10 @@ public class HANADialect extends Dialect {
 		return MINIMUM_VERSION;
 	}
 
+	@Override
+	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
+		return HANAServerConfiguration.staticDetermineDatabaseVersion( info );
+	}
 
 	// Use column or row tables by default
 	public static final String USE_DEFAULT_TABLE_TYPE_COLUMN = "hibernate.dialect.hana.use_default_table_type_column";

@@ -6,6 +6,8 @@
  */
 package org.hibernate.dialect;
 
+import java.util.Objects;
+
 /**
  * Simple version of DatabaseVersion
  */
@@ -100,5 +102,22 @@ public class SimpleDatabaseVersion implements DatabaseVersion {
 			}
 		}
 		return version.toString();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		SimpleDatabaseVersion that = (SimpleDatabaseVersion) o;
+		return major == that.major && minor == that.minor && micro == that.micro;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( major, minor, micro );
 	}
 }

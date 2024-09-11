@@ -9,7 +9,7 @@ package org.hibernate.id.factory;
 import java.util.Properties;
 
 import org.hibernate.Incubating;
-import org.hibernate.dialect.Dialect;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.spi.GeneratorDefinitionResolver;
 import org.hibernate.service.Service;
@@ -71,5 +71,21 @@ public interface IdentifierGeneratorFactory extends Service {
 	 * @deprecated use {@link #createIdentifierGenerator(GenerationType, String, String, JavaType, Properties, GeneratorDefinitionResolver)}
 	 */
 	@Deprecated(since = "6.0")
-	Generator createIdentifierGenerator(String strategy, Type type, Properties parameters);
+	Generator createIdentifierGenerator(String strategy, Type type, GeneratorCreationContext creationContext, Properties parameters);
+
+	/**
+	 * Given a strategy, retrieve the appropriate identifier generator instance.
+	 *
+	 * @param strategy The generation strategy.
+	 * @param type The mapping type for the identifier values.
+	 * @param parameters Any parameters properties given in the generator mapping.
+	 *
+	 * @return The appropriate generator instance.
+	 *
+	 * @deprecated use {@link #createIdentifierGenerator(GenerationType, String, String, JavaType, Properties, GeneratorDefinitionResolver)}
+	 */
+	@Deprecated(since = "6.0")
+	default Generator createIdentifierGenerator(String strategy, Type type, Properties parameters) {
+		return createIdentifierGenerator( strategy, type, null, parameters );
+	}
 }

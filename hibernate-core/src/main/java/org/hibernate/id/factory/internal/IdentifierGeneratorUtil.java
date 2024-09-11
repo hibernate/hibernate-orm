@@ -6,10 +6,12 @@
  */
 package org.hibernate.id.factory.internal;
 
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
@@ -17,10 +19,13 @@ import org.hibernate.id.enhanced.LegacyNamingStrategy;
 import org.hibernate.id.enhanced.SingleNamingStrategy;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.generator.Generator;
+import org.hibernate.service.ServiceRegistry;
 
 import java.util.Map;
 import java.util.Properties;
@@ -37,6 +42,32 @@ public class IdentifierGeneratorUtil {
 		return identifierGeneratorFactory.createIdentifierGenerator(
 				simpleValue.getIdentifierGeneratorStrategy(),
 				simpleValue.getType(),
+				new GeneratorCreationContext() {
+					@Override
+					public Database getDatabase() {
+						return simpleValue.getMetadata().getDatabase();
+					}
+					@Override
+					public ServiceRegistry getServiceRegistry() {
+						return simpleValue.getServiceRegistry();
+					}
+					@Override
+					public String getDefaultCatalog() {
+						return null;
+					}
+					@Override
+					public String getDefaultSchema() {
+						return null;
+					}
+					@Override
+					public PersistentClass getPersistentClass() {
+						return rootClass;
+					}
+					@Override
+					public Property getProperty() {
+						return rootClass.getIdentifierProperty();
+					}
+				},
 				collectParameters( simpleValue, dialect, defaultCatalog, defaultSchema, rootClass )
 		);
 	}
@@ -48,7 +79,7 @@ public class IdentifierGeneratorUtil {
 			String defaultSchema,
 			RootClass rootClass) {
 		final ConfigurationService configService =
-				simpleValue.getMetadata().getMetadataBuildingOptions().getServiceRegistry()
+				simpleValue.getServiceRegistry()
 						.requireService( ConfigurationService.class );
 
 		final Properties params = new Properties();

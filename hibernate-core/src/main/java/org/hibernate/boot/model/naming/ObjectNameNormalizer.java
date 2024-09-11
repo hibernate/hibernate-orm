@@ -42,10 +42,7 @@ public abstract class ObjectNameNormalizer {
 	}
 
 	public Identifier normalizeIdentifierQuoting(Identifier identifier) {
-		return getBuildingContext().getMetadataCollector()
-				.getDatabase()
-				.getJdbcEnvironment()
-				.getIdentifierHelper()
+		return database().getJdbcEnvironment().getIdentifierHelper()
 				.normalizeQuoting( identifier );
 	}
 

@@ -8,7 +8,6 @@ package org.hibernate.type.descriptor.java;
 
 import java.util.Set;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.boot.model.process.internal.EnumeratedValueConverter;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -47,38 +46,37 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
 		final JdbcTypeRegistry jdbcTypeRegistry = context.getTypeConfiguration().getJdbcTypeRegistry();
 		final EnumType type = context.getEnumeratedType();
-		final boolean preferNativeEnumTypesEnabled = context.isPreferNativeEnumTypesEnabled();
-		int sqlType;
-		switch ( type == null ? ORDINAL : type ) {
+		final int sqlType = getSqlType( context, type, jdbcTypeRegistry );
+		return jdbcTypeRegistry.getDescriptor( sqlType );
+	}
+
+	private int getSqlType(JdbcTypeIndicators context, EnumType type, JdbcTypeRegistry jdbcTypeRegistry) {
+		final boolean preferNativeEnumTypes = context.isPreferNativeEnumTypesEnabled();
+		return switch ( type == null ? ORDINAL : type ) {
 			case ORDINAL:
-				if ( preferNativeEnumTypesEnabled && jdbcTypeRegistry.hasRegisteredDescriptor( ORDINAL_ENUM ) ) {
-					sqlType = ORDINAL_ENUM;
+				if ( preferNativeEnumTypes && jdbcTypeRegistry.hasRegisteredDescriptor( ORDINAL_ENUM ) ) {
+					yield ORDINAL_ENUM;
 				}
-				else if ( preferNativeEnumTypesEnabled && jdbcTypeRegistry.hasRegisteredDescriptor( NAMED_ORDINAL_ENUM ) ) {
-					sqlType = NAMED_ORDINAL_ENUM;
+				else if ( preferNativeEnumTypes && jdbcTypeRegistry.hasRegisteredDescriptor( NAMED_ORDINAL_ENUM ) ) {
+					yield NAMED_ORDINAL_ENUM;
 				}
 				else {
-					sqlType = hasManyValues() ? SMALLINT : TINYINT;
+					yield hasManyValues() ? SMALLINT : TINYINT;
 				}
-				break;
 			case STRING:
 				if ( jdbcTypeRegistry.hasRegisteredDescriptor( ENUM ) ) {
-					sqlType = ENUM;
+					yield ENUM;
 				}
-				else if ( preferNativeEnumTypesEnabled && jdbcTypeRegistry.hasRegisteredDescriptor( NAMED_ENUM ) ) {
-					sqlType = NAMED_ENUM;
+				else if ( preferNativeEnumTypes && jdbcTypeRegistry.hasRegisteredDescriptor( NAMED_ENUM ) ) {
+					yield NAMED_ENUM;
 				}
 				else if ( context.getColumnLength() == 1 ) {
-					sqlType = context.isNationalized() ? NCHAR : CHAR;
+					yield context.isNationalized() ? NCHAR : CHAR;
 				}
 				else {
-					sqlType = context.isNationalized() ? NVARCHAR : VARCHAR;
+					yield context.isNationalized() ? NVARCHAR : VARCHAR;
 				}
-				break;
-			default:
-				throw new AssertionFailure("unknown EnumType");
-		}
-		return jdbcTypeRegistry.getDescriptor( sqlType );
+		};
 	}
 
 	public boolean hasManyValues() {

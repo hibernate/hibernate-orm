@@ -76,17 +76,22 @@ import org.hibernate.dialect.function.array.OracleArrayConstructorFunction;
 import org.hibernate.dialect.function.array.OracleArrayContainsFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayPositionsFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayTrimEmulation;
+import org.hibernate.dialect.function.json.CockroachDBJsonExistsFunction;
+import org.hibernate.dialect.function.json.CockroachDBJsonQueryFunction;
 import org.hibernate.dialect.function.json.CockroachDBJsonValueFunction;
 import org.hibernate.dialect.function.json.DB2JsonArrayAggFunction;
 import org.hibernate.dialect.function.json.DB2JsonArrayFunction;
+import org.hibernate.dialect.function.json.DB2JsonObjectAggFunction;
 import org.hibernate.dialect.function.json.DB2JsonObjectFunction;
 import org.hibernate.dialect.function.json.H2JsonArrayAggFunction;
 import org.hibernate.dialect.function.json.H2JsonExistsFunction;
+import org.hibernate.dialect.function.json.H2JsonObjectAggFunction;
 import org.hibernate.dialect.function.json.H2JsonQueryFunction;
 import org.hibernate.dialect.function.json.H2JsonValueFunction;
 import org.hibernate.dialect.function.json.HANAJsonArrayAggFunction;
 import org.hibernate.dialect.function.json.HANAJsonArrayFunction;
 import org.hibernate.dialect.function.json.HANAJsonExistsFunction;
+import org.hibernate.dialect.function.json.HANAJsonObjectAggFunction;
 import org.hibernate.dialect.function.json.HANAJsonObjectFunction;
 import org.hibernate.dialect.function.json.HSQLJsonArrayAggFunction;
 import org.hibernate.dialect.function.json.HSQLJsonArrayFunction;
@@ -94,16 +99,19 @@ import org.hibernate.dialect.function.json.HSQLJsonObjectFunction;
 import org.hibernate.dialect.function.json.JsonArrayAggFunction;
 import org.hibernate.dialect.function.json.JsonArrayFunction;
 import org.hibernate.dialect.function.json.JsonExistsFunction;
+import org.hibernate.dialect.function.json.JsonObjectAggFunction;
 import org.hibernate.dialect.function.json.JsonObjectFunction;
 import org.hibernate.dialect.function.json.JsonQueryFunction;
 import org.hibernate.dialect.function.json.JsonValueFunction;
 import org.hibernate.dialect.function.json.MariaDBJsonArrayAggFunction;
 import org.hibernate.dialect.function.json.MariaDBJsonArrayFunction;
+import org.hibernate.dialect.function.json.MariaDBJsonObjectAggFunction;
 import org.hibernate.dialect.function.json.MariaDBJsonQueryFunction;
 import org.hibernate.dialect.function.json.MariaDBJsonValueFunction;
 import org.hibernate.dialect.function.json.MySQLJsonArrayAggFunction;
 import org.hibernate.dialect.function.json.MySQLJsonArrayFunction;
 import org.hibernate.dialect.function.json.MySQLJsonExistsFunction;
+import org.hibernate.dialect.function.json.MySQLJsonObjectAggFunction;
 import org.hibernate.dialect.function.json.MySQLJsonObjectFunction;
 import org.hibernate.dialect.function.json.MySQLJsonQueryFunction;
 import org.hibernate.dialect.function.json.MySQLJsonValueFunction;
@@ -113,12 +121,14 @@ import org.hibernate.dialect.function.json.OracleJsonObjectFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonArrayAggFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonArrayFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonExistsFunction;
+import org.hibernate.dialect.function.json.PostgreSQLJsonObjectAggFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonObjectFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonQueryFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonValueFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonArrayAggFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonArrayFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonExistsFunction;
+import org.hibernate.dialect.function.json.SQLServerJsonObjectAggFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonObjectFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonQueryFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonValueFunction;
@@ -3459,6 +3469,13 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * CockroachDB json_query() function
+	 */
+	public void jsonQuery_cockroachdb() {
+		functionRegistry.register( "json_query", new CockroachDBJsonQueryFunction( typeConfiguration ) );
+	}
+
+	/**
 	 * MySQL json_query() function
 	 */
 	public void jsonQuery_mysql() {
@@ -3526,6 +3543,13 @@ public class CommonFunctionFactory {
 	 */
 	public void jsonExists_postgresql() {
 		functionRegistry.register( "json_exists", new PostgreSQLJsonExistsFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * CockroachDB json_exists() function
+	 */
+	public void jsonExists_cockroachdb() {
+		functionRegistry.register( "json_exists", new CockroachDBJsonExistsFunction( typeConfiguration ) );
 	}
 
 	/**
@@ -3662,13 +3686,6 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * Standard json_arrayagg() function
-	 */
-	public void jsonArrayAgg() {
-		functionRegistry.register( "json_arrayagg", new JsonArrayAggFunction( true, typeConfiguration ) );
-	}
-
-	/**
 	 * H2 json_arrayagg() function
 	 */
 	public void jsonArrayAgg_h2() {
@@ -3692,8 +3709,8 @@ public class CommonFunctionFactory {
 	/**
 	 * PostgreSQL json_arrayagg() function
 	 */
-	public void jsonArrayAgg_postgresql() {
-		functionRegistry.register( "json_arrayagg", new PostgreSQLJsonArrayAggFunction( typeConfiguration ) );
+	public void jsonArrayAgg_postgresql(boolean supportsStandard) {
+		functionRegistry.register( "json_arrayagg", new PostgreSQLJsonArrayAggFunction( supportsStandard, typeConfiguration ) );
 	}
 
 	/**
@@ -3729,5 +3746,54 @@ public class CommonFunctionFactory {
 	 */
 	public void jsonArrayAgg_hana() {
 		functionRegistry.register( "json_arrayagg", new HANAJsonArrayAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * json_objectagg() function for H2 and HSQLDB
+	 */
+	public void jsonObjectAgg_h2() {
+		functionRegistry.register( "json_objectagg", new H2JsonObjectAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_objectagg() function
+	 */
+	public void jsonObjectAgg_postgresql(boolean supportsStandard) {
+		functionRegistry.register( "json_objectagg", new PostgreSQLJsonObjectAggFunction( supportsStandard, typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_objectagg() function
+	 */
+	public void jsonObjectAgg_mysql() {
+		functionRegistry.register( "json_objectagg", new MySQLJsonObjectAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MariaDB json_objectagg() function
+	 */
+	public void jsonObjectAgg_mariadb() {
+		functionRegistry.register( "json_objectagg", new MariaDBJsonObjectAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server json_objectagg() function
+	 */
+	public void jsonObjectAgg_sqlserver() {
+		functionRegistry.register( "json_objectagg", new SQLServerJsonObjectAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * HANA json_objectagg() function
+	 */
+	public void jsonObjectAgg_hana() {
+		functionRegistry.register( "json_objectagg", new HANAJsonObjectAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * DB2 json_objectagg() function
+	 */
+	public void jsonObjectAgg_db2() {
+		functionRegistry.register( "json_objectagg", new DB2JsonObjectAggFunction( typeConfiguration ) );
 	}
 }

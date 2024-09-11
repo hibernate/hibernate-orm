@@ -61,6 +61,10 @@ public class PostgreSQLJsonArrayFunction extends JsonArrayFunction {
 					else {
 						sqlAppender.appendSql( "to_jsonb(" );
 						node.accept( walker );
+						if ( node instanceof Literal literal && literal.getJdbcMapping().getJdbcType().isString() ) {
+							// PostgreSQL until version 16 is not smart enough to infer the type of a string literal
+							sqlAppender.appendSql( "::text" );
+						}
 						sqlAppender.appendSql( ')' );
 					}
 					sqlAppender.appendSql( ')' );

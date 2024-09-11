@@ -62,6 +62,10 @@ public class PostgreSQLJsonObjectFunction extends JsonObjectFunction {
 					else {
 						sqlAppender.appendSql( "to_jsonb(" );
 						value.accept( walker );
+						if ( value instanceof Literal literal && literal.getJdbcMapping().getJdbcType().isString() ) {
+							// PostgreSQL until version 16 is not smart enough to infer the type of a string literal
+							sqlAppender.appendSql( "::text" );
+						}
 						sqlAppender.appendSql( ')' );
 					}
 					sqlAppender.appendSql( ')' );

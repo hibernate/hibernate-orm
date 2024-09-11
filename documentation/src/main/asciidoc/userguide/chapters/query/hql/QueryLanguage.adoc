@@ -1635,6 +1635,7 @@ The following functions deal with SQL JSON types, which are not supported on eve
 | `json_exists()` | Checks if a JSON path exists in a JSON document
 | `json_query()` | Queries non-scalar values by JSON path in a JSON document
 | `json_arrayagg()` | Creates a JSON array by aggregating values
+| `json_objectagg()` | Creates a JSON object by aggregating values
 |===
 
 
@@ -1962,6 +1963,52 @@ The order in which elements are aggregated can be defined by specifying an order
 include::{json-example-dir-hql}/JsonArrayAggregateTest.java[tags=hql-json-arrayagg-order-by-example]
 ----
 ====
+
+[[hql-json-objectagg-function]]
+===== `json_objectagg()`
+
+Creates a JSON object by aggregating values.
+
+[[hql-json-arrayagg-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/json_objectagg_bnf.txt[]
+----
+
+The arguments represent the key and the value to be aggregated to the JSON object,
+separated by the `value` keyword or a `:` (colon).
+
+[[hql-json-objectagg-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonObjectAggregateTest.java[tags=hql-json-objectagg-example]
+----
+====
+
+Although database dependent, usually `null` values are `absent` in the resulting JSON array.
+To retain `null` elements, use the `null on null` clause.
+
+[[hql-json-objectagg-null-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonObjectAggregateTest.java[tags=hql-json-objectagg-null-example]
+----
+====
+
+Duplicate keys usually are retained in the resulting string.
+Use `with unique keys` to specify that the encounter of a duplicate key should cause an error.
+
+[[hql-json-objectagg-unique-keys-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonObjectAggregateTest.java[tags=hql-json-objectagg-unique-keys-example]
+----
+====
+
+WARNING: Some databases like e.g. MySQL, SAP HANA, DB2 and SQL Server do not support raising an error on duplicate keys.
 
 [[hql-user-defined-functions]]
 ==== Native and user-defined functions

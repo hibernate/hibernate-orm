@@ -130,6 +130,7 @@ import static org.hibernate.cfg.AvailableSettings.USE_SUBSELECT_FETCH;
 import static org.hibernate.cfg.CacheSettings.QUERY_CACHE_LAYOUT;
 import static org.hibernate.cfg.PersistenceSettings.UNOWNED_ASSOCIATION_TRANSIENT_CHECK;
 import static org.hibernate.cfg.QuerySettings.DEFAULT_NULL_ORDERING;
+import static org.hibernate.cfg.QuerySettings.JSON_FUNCTIONS_ENABLED;
 import static org.hibernate.cfg.QuerySettings.PORTABLE_INTEGER_DIVISION;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.internal.CoreLogging.messageLogger;
@@ -276,6 +277,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private final boolean inClauseParameterPaddingEnabled;
 
 	private final boolean portableIntegerDivisionEnabled;
+	private final boolean jsonFunctionsEnabled;
 
 	private final int queryStatisticsMaxSize;
 
@@ -614,6 +616,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		this.portableIntegerDivisionEnabled = getBoolean(
 				PORTABLE_INTEGER_DIVISION,
+				configurationSettings
+		);
+		this.jsonFunctionsEnabled = getBoolean(
+				JSON_FUNCTIONS_ENABLED,
 				configurationSettings
 		);
 
@@ -1244,6 +1250,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean inClauseParameterPaddingEnabled() {
 		return this.inClauseParameterPaddingEnabled;
+	}
+
+	@Override
+	public boolean isJsonFunctionsEnabled() {
+		return jsonFunctionsEnabled;
 	}
 
 	@Override

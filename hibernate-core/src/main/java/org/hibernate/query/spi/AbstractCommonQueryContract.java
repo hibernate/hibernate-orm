@@ -45,6 +45,7 @@ import org.hibernate.query.TypedParameterValue;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.expression.NullSqmExpressible;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -906,7 +907,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		final QueryParameter<Object> param = binding.getQueryParameter();
 		if ( param.allowsMultiValuedBinding() ) {
 			final BindableType<?> hibernateType = param.getHibernateType();
-			if ( hibernateType == null || isInstance( hibernateType, value ) ) {
+			if ( hibernateType == null || hibernateType instanceof NullSqmExpressible || isInstance( hibernateType, value ) ) {
 				if ( value instanceof Collection && !isRegisteredAsBasicType( value.getClass() ) ) {
 					//noinspection rawtypes
 					return setParameterList( position, (Collection) value );

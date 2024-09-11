@@ -15,8 +15,6 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
-import org.hibernate.engine.internal.CacheHelper;
-import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityHolder;
@@ -35,18 +33,19 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.sql.results.LoadingLogger;
 import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
+import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.Versioning.getVersion;
 import static org.hibernate.loader.ast.internal.LoaderHelper.upgradeLock;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * @author Vlad Mihalcea
@@ -73,10 +72,9 @@ public class CacheEntityLoaderHelper {
 			LockOptions lockOptions,
 			EventSource session) {
 		final Object old = session.getEntityUsingInterceptor( keyToLoad );
-
 		if ( old != null ) {
 			// this object was already loaded
-			EntityEntry oldEntry = session.getPersistenceContext().getEntry( old );
+			final EntityEntry oldEntry = session.getPersistenceContext().getEntry( old );
 			if ( options.isCheckDeleted() ) {
 				if ( oldEntry.getStatus().isDeletedOrGone() ) {
 					LoadingLogger.LOGGER.debug(
@@ -85,10 +83,9 @@ public class CacheEntityLoaderHelper {
 				}
 			}
 			if ( options.isAllowNulls() ) {
-				final EntityPersister persister = session.getFactory()
-						.getRuntimeMetamodels()
-						.getMappingMetamodel()
-						.getEntityDescriptor( keyToLoad.getEntityName() );
+				final EntityPersister persister =
+						session.getFactory().getMappingMetamodel()
+								.getEntityDescriptor( keyToLoad.getEntityName() );
 				if ( ! persister.isInstance( old ) ) {
 					LOG.debugf(
 							"Load request found matching entity in context, but the matched entity was of an inconsistent return type.  " +
@@ -98,10 +95,8 @@ public class CacheEntityLoaderHelper {
 					return new PersistenceContextEntry( old, EntityStatus.INCONSISTENT_RTN_CLASS_MARKER );
 				}
 			}
-
 			upgradeLock( old, oldEntry, lockOptions, session );
 		}
-
 		return new PersistenceContextEntry( old, EntityStatus.MANAGED );
 	}
 
@@ -154,13 +149,11 @@ public class CacheEntityLoaderHelper {
 			final LoadEvent event,
 			final EntityKey keyToLoad,
 			final LoadEventListener.LoadType options) throws HibernateException {
-
-		SessionImplementor session = event.getSession();
-		Object old = session.getEntityUsingInterceptor( keyToLoad );
-
+		final SessionImplementor session = event.getSession();
+		final Object old = session.getEntityUsingInterceptor( keyToLoad );
 		if ( old != null ) {
 			// this object was already loaded
-			EntityEntry oldEntry = session.getPersistenceContext().getEntry( old );
+			final EntityEntry oldEntry = session.getPersistenceContext().getEntry( old );
 			if ( options.isCheckDeleted() ) {
 				if ( oldEntry.getStatus().isDeletedOrGone() ) {
 					LoadingLogger.LOGGER.debug(
@@ -169,10 +162,9 @@ public class CacheEntityLoaderHelper {
 				}
 			}
 			if ( options.isAllowNulls() ) {
-				final EntityPersister persister = event.getFactory()
-						.getRuntimeMetamodels()
-						.getMappingMetamodel()
-						.getEntityDescriptor( keyToLoad.getEntityName() );
+				final EntityPersister persister =
+						event.getFactory().getMappingMetamodel()
+								.getEntityDescriptor( keyToLoad.getEntityName() );
 				if ( !persister.isInstance( old ) ) {
 					LOG.debug(
 							"Load request found matching entity in context, but the matched entity was of an inconsistent return type; returning null"
@@ -182,7 +174,6 @@ public class CacheEntityLoaderHelper {
 			}
 			upgradeLock( old, oldEntry, event.getLockOptions(), event.getSession() );
 		}
-
 		return new PersistenceContextEntry( old, EntityStatus.MANAGED );
 	}
 
@@ -206,14 +197,13 @@ public class CacheEntityLoaderHelper {
 				persister,
 				entityKey
 		);
-
 		if ( entity != null ) {
 			//PostLoad is needed for EJB3
-			final PostLoadEvent postLoadEvent = event.getPostLoadEvent()
-					.setEntity( entity )
-					.setId( event.getEntityId() )
-					.setPersister( persister );
-
+			final PostLoadEvent postLoadEvent =
+					event.getPostLoadEvent()
+							.setEntity( entity )
+							.setId( event.getEntityId() )
+							.setPersister( persister );
 			event.getFactory()
 					.getFastSessionServices()
 					.firePostLoadEvent( postLoadEvent );
@@ -238,24 +228,19 @@ public class CacheEntityLoaderHelper {
 			final LockMode lockMode,
 			final EntityPersister persister,
 			final EntityKey entityKey) {
-
-		final boolean useCache = persister.canReadFromCache()
-				&& source.getCacheMode().isGetEnabled()
-				&& lockMode.lessThan( LockMode.READ );
-
+		final boolean useCache =
+				persister.canReadFromCache()
+						&& source.getCacheMode().isGetEnabled()
+						&& lockMode.lessThan( LockMode.READ );
 		if ( !useCache ) {
 			// we can't use cache here
 			return null;
 		}
-
-		final Object ce = getFromSharedCache( entityKey.getIdentifier(), persister, source );
-
-		if ( ce == null ) {
+		else {
+			final Object ce = getFromSharedCache( entityKey.getIdentifier(), persister, source );
 			// nothing was found in cache
-			return null;
+			return ce == null ? null : processCachedEntry( entity, persister, ce, source, entityKey );
 		}
-
-		return processCachedEntry( entity, persister, ce, source, entityKey );
 	}
 
 
@@ -265,14 +250,13 @@ public class CacheEntityLoaderHelper {
 			SessionImplementor source) {
 		final EntityDataAccess cache = persister.getCacheAccessStrategy();
 		final SessionFactoryImplementor factory = source.getFactory();
-		final Object ck = cache.generateCacheKey(
+		final Object cacheKey = cache.generateCacheKey(
 				entityId,
 				persister,
 				factory,
 				source.getTenantIdentifier()
 		);
-
-		final Object ce = CacheHelper.fromSharedCache( source, ck, persister, persister.getCacheAccessStrategy() );
+		final Object ce = fromSharedCache( source, cacheKey, persister, persister.getCacheAccessStrategy() );
 		final StatisticsImplementor statistics = factory.getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
 			if ( ce == null ) {
@@ -297,8 +281,8 @@ public class CacheEntityLoaderHelper {
 			final Object ce,
 			final EventSource source,
 			final EntityKey entityKey) {
-
-		CacheEntry entry = (CacheEntry) persister.getCacheEntryStructure().destructure( ce, source.getFactory() );
+		final CacheEntry entry = (CacheEntry)
+				persister.getCacheEntryStructure().destructure( ce, source.getFactory() );
 		if ( entry.isReferenceEntry() ) {
 			if ( instanceToLoad != null ) {
 				throw new HibernateException(
@@ -314,8 +298,15 @@ public class CacheEntityLoaderHelper {
 			}
 		}
 		else {
-			Object entity = convertCacheEntryToEntity( entry, entityKey.getIdentifier(), source, persister, instanceToLoad, entityKey );
-
+			final Object entity =
+					convertCacheEntryToEntity(
+							entry,
+							entityKey.getIdentifier(),
+							source,
+							persister,
+							instanceToLoad,
+							entityKey
+					);
 			if ( !persister.isInstance( entity ) ) {
 				// Cleanup the inconsistent return class entity from the persistence context
 				final PersistenceContext persistenceContext = source.getPersistenceContext();
@@ -323,7 +314,6 @@ public class CacheEntityLoaderHelper {
 				persistenceContext.removeEntity( entityKey );
 				return null;
 			}
-
 			return entity;
 		}
 	}
@@ -333,12 +323,8 @@ public class CacheEntityLoaderHelper {
 			SharedSessionContractImplementor session,
 			EntityKey entityKey) {
 		final Object entity = referenceCacheEntry.getReference();
-
 		if ( entity == null ) {
-			throw new IllegalStateException(
-					"Reference cache entry contained null : "
-							+ referenceCacheEntry.toString()
-			);
+			throw new IllegalStateException( "Reference cache entry contained null : " + referenceCacheEntry );
 		}
 		else {
 			makeEntityCircularReferenceSafe( referenceCacheEntry, session, entity, entityKey );
@@ -351,19 +337,13 @@ public class CacheEntityLoaderHelper {
 			SharedSessionContractImplementor session,
 			Object entity,
 			EntityKey entityKey) {
-
 		// make it circular-reference safe
-		final StatefulPersistenceContext statefulPersistenceContext = (StatefulPersistenceContext) session.getPersistenceContext();
-
-		if ( ( isManagedEntity( entity ) ) ) {
-			final EntityHolder entityHolder = statefulPersistenceContext.addEntityHolder(
-					entityKey,
-					entity
-			);
-			final EntityEntry entityEntry = statefulPersistenceContext.addReferenceEntry(
-					entity,
-					Status.READ_ONLY
-			);
+		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		if ( isManagedEntity( entity ) ) {
+			final EntityHolder entityHolder =
+					persistenceContext.addEntityHolder( entityKey, entity );
+			final EntityEntry entityEntry =
+					persistenceContext.addReferenceEntry( entity, Status.READ_ONLY );
 			entityHolder.setEntityEntry( entityEntry );
 		}
 		else {
@@ -376,7 +356,7 @@ public class CacheEntityLoaderHelper {
 					session
 			);
 		}
-		statefulPersistenceContext.initializeNonLazyCollections();
+		persistenceContext.initializeNonLazyCollections();
 	}
 
 	private Object convertCacheEntryToEntity(
@@ -386,9 +366,7 @@ public class CacheEntityLoaderHelper {
 			EntityPersister persister,
 			Object instanceToLoad,
 			EntityKey entityKey) {
-
 		final SessionFactoryImplementor factory = source.getFactory();
-		final EntityPersister subclassPersister;
 
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracef(
@@ -398,11 +376,11 @@ public class CacheEntityLoaderHelper {
 			);
 		}
 
-		final Object entity;
+		final EntityPersister subclassPersister =
+				factory.getRuntimeMetamodels().getMappingMetamodel()
+						.getEntityDescriptor( entry.getSubclass() );
 
-		subclassPersister = factory.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entry.getSubclass() );
+		final Object entity;
 		if ( instanceToLoad != null ) {
 			entity = instanceToLoad;
 		}
@@ -418,14 +396,15 @@ public class CacheEntityLoaderHelper {
 		}
 
 		if ( isPersistentAttributeInterceptable( entity ) ) {
-			PersistentAttributeInterceptor persistentAttributeInterceptor = asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
-			// if we do this after the entity has been initialized the BytecodeLazyAttributeInterceptor#isAttributeLoaded(String fieldName) would return false;
-			if ( persistentAttributeInterceptor == null || persistentAttributeInterceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-				persister.getBytecodeEnhancementMetadata().injectInterceptor(
-						entity,
-						entityId,
-						source
-				);
+			PersistentAttributeInterceptor persistentAttributeInterceptor =
+					asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
+			// if we do this after the entity has been initialized the
+			// BytecodeLazyAttributeInterceptor#isAttributeLoaded(String fieldName)
+			// would return false
+			if ( persistentAttributeInterceptor == null
+					|| persistentAttributeInterceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+				persister.getBytecodeEnhancementMetadata()
+						.injectInterceptor( entity, entityId, source );
 			}
 		}
 
@@ -439,21 +418,17 @@ public class CacheEntityLoaderHelper {
 				source
 		);
 
-		final PersistenceContext persistenceContext = source.getPersistenceContext();
-		final Object[] values;
-		final Object version;
-		final boolean isReadOnly;
-
 		final Type[] types = subclassPersister.getPropertyTypes();
-		// initializes the entity by (desired) side-effect
-		values = ( (StandardCacheEntryImpl) entry ).assemble(
+		// initializes the entity by (desired) side effect
+		final StandardCacheEntryImpl standardCacheEntry = (StandardCacheEntryImpl) entry;
+		final Object[] values = standardCacheEntry.assemble(
 				entity,
 				entityId,
 				subclassPersister,
 				source.getInterceptor(),
 				source
 		);
-		if ( ( (StandardCacheEntryImpl) entry ).isDeepCopyNeeded() ) {
+		if ( standardCacheEntry.isDeepCopyNeeded() ) {
 			TypeHelper.deepCopy(
 					values,
 					types,
@@ -462,22 +437,25 @@ public class CacheEntityLoaderHelper {
 					source
 			);
 		}
-		version = getVersion( values, subclassPersister );
+		final Object version = getVersion( values, subclassPersister );
 		LOG.tracef( "Cached Version : %s", version );
 
+		final PersistenceContext persistenceContext = source.getPersistenceContext();
+
 		final Object proxy = persistenceContext.getProxy( entityKey );
+		final boolean isReadOnly;
 		if ( proxy != null ) {
 			// there is already a proxy for this impl
 			// only set the status to read-only if the proxy is read-only
-			isReadOnly = HibernateProxy.extractLazyInitializer( proxy ).isReadOnly();
+			isReadOnly = extractLazyInitializer( proxy ).isReadOnly();
 		}
 		else {
 			isReadOnly = source.isDefaultReadOnly();
 		}
 
-		EntityEntry entityEntry = persistenceContext.addEntry(
+		final EntityEntry entityEntry = persistenceContext.addEntry(
 				entity,
-				( isReadOnly ? Status.READ_ONLY : Status.MANAGED ),
+				isReadOnly ? Status.READ_ONLY : Status.MANAGED,
 				values,
 				null,
 				entityId,

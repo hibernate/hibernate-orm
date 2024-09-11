@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 public class SerializableTypeTest {
 
 	@Test
-	@SkipForDialect(dialectClass = SybaseASEDialect.class, majorVersion = 15, matchSubTypes = true, reason = "HHH-6425")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "HHH-6425")
 	public void testNewSerializableType(SessionFactoryScope scope) {
 		final String initialPayloadText = "Initial payload";
 		final String changedPayloadText = "Changed payload";

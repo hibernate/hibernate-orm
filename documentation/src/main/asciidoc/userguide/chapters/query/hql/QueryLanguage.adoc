@@ -1625,6 +1625,9 @@ include::{array-example-dir-hql}/ArrayToStringTest.java[tags=hql-array-to-string
 
 The following functions deal with SQL JSON types, which are not supported on every database.
 
+NOTE: The following functions are incubating/tech-preview and to use them in HQL,
+it is necessary to enable the `hibernate.query.hql.json_functions_enabled` configuration setting.
+
 [[hql-json-functions]]
 |===
 | Function | Purpose

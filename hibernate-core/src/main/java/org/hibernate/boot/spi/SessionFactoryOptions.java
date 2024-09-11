@@ -269,6 +269,14 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	}
 
 	/**
+	 * @see org.hibernate.cfg.AvailableSettings#JSON_FUNCTIONS_ENABLED
+	 */
+	@Override
+	default boolean isJsonFunctionsEnabled() {
+		return false;
+	}
+
+	/**
 	 * @see org.hibernate.cfg.AvailableSettings#PORTABLE_INTEGER_DIVISION
 	 */
 	@Override

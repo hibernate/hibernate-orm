@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.cfg.QuerySettings;
 import org.hibernate.dialect.function.SqlColumn;
 import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.grammars.hql.HqlParser;
@@ -2701,6 +2702,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitJsonValueFunction(HqlParser.JsonValueFunctionContext ctx) {
+		checkJsonFunctionsEnabled( ctx );
 		final SqmExpression<?> jsonDocument = (SqmExpression<?>) ctx.expression( 0 ).accept( this );
 		final SqmExpression<?> jsonPath = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
 		final HqlParser.JsonValueReturningClauseContext returningClause = ctx.jsonValueReturningClause();
@@ -2751,6 +2753,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitJsonQueryFunction(HqlParser.JsonQueryFunctionContext ctx) {
+		checkJsonFunctionsEnabled( ctx );
 		final SqmExpression<?> jsonDocument = (SqmExpression<?>) ctx.expression( 0 ).accept( this );
 		final SqmExpression<?> jsonPath = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
 		final SqmJsonQueryExpression jsonQuery = (SqmJsonQueryExpression) getFunctionDescriptor( "json_query" ).<String>generateSqmExpression(
@@ -2824,6 +2827,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitJsonExistsFunction(HqlParser.JsonExistsFunctionContext ctx) {
+		checkJsonFunctionsEnabled( ctx );
 		final SqmExpression<?> jsonDocument = (SqmExpression<?>) ctx.expression( 0 ).accept( this );
 		final SqmExpression<?> jsonPath = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
 
@@ -2857,6 +2861,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitJsonArrayFunction(HqlParser.JsonArrayFunctionContext ctx) {
+		checkJsonFunctionsEnabled( ctx );
 		final HqlParser.JsonNullClauseContext subCtx = ctx.jsonNullClause();
 		final List<HqlParser.ExpressionOrPredicateContext> argumentContexts = ctx.expressionOrPredicate();
 		int count = argumentContexts.size();
@@ -2881,6 +2886,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitJsonObjectFunction(HqlParser.JsonObjectFunctionContext ctx) {
+		checkJsonFunctionsEnabled( ctx );
 		final HqlParser.JsonObjectFunctionEntriesContext entries = ctx.jsonObjectFunctionEntries();
 		final List<SqmTypedNode<?>> arguments;
 		if ( entries == null ) {
@@ -2912,6 +2918,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitJsonArrayAggFunction(HqlParser.JsonArrayAggFunctionContext ctx) {
+		checkJsonFunctionsEnabled( ctx );
 		final HqlParser.JsonNullClauseContext jsonNullClauseContext = ctx.jsonNullClause();
 		final ArrayList<SqmTypedNode<?>> arguments = new ArrayList<>( jsonNullClauseContext == null ? 1 : 2 );
 		arguments.add( (SqmTypedNode<?>) ctx.expressionOrPredicate().accept( this ) );
@@ -2936,6 +2943,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitJsonObjectAggFunction(HqlParser.JsonObjectAggFunctionContext ctx) {
+		checkJsonFunctionsEnabled( ctx );
 		final HqlParser.JsonNullClauseContext jsonNullClauseContext = ctx.jsonNullClause();
 		final HqlParser.JsonUniqueKeysClauseContext jsonUniqueKeysClauseContext = ctx.jsonUniqueKeysClause();
 		final ArrayList<SqmTypedNode<?>> arguments = new ArrayList<>( 4 );
@@ -2964,6 +2972,16 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				null,
 				creationContext.getQueryEngine()
 		);
+	}
+
+	private void checkJsonFunctionsEnabled(ParserRuleContext ctx) {
+		if ( !creationOptions.isJsonFunctionsEnabled() ) {
+			throw new SemanticException(
+					"Can't use function '" + ctx.children.get( 0 ).getText() +
+							"', because tech preview JSON functions are not enabled. To enable, set the '" + QuerySettings.JSON_FUNCTIONS_ENABLED + "' setting to 'true'.",
+					query
+			);
+		}
 	}
 
 	@Override

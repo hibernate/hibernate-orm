@@ -1628,6 +1628,7 @@ jsonFunction
 	| jsonQueryFunction
 	| jsonValueFunction
 	| jsonArrayAggFunction
+	| jsonObjectAggFunction
 	;
 
 /**
@@ -1702,6 +1703,17 @@ jsonNullClause
  */
 jsonArrayAggFunction
 	: JSON_ARRAYAGG LEFT_PAREN expressionOrPredicate jsonNullClause? orderByClause? RIGHT_PAREN filterClause?
+	;
+
+/**
+ * The 'json_objectagg()' function
+ */
+jsonObjectAggFunction
+	: JSON_OBJECTAGG LEFT_PAREN KEY? expressionOrPredicate (VALUE|COLON) expressionOrPredicate jsonNullClause? jsonUniqueKeysClause? RIGHT_PAREN filterClause?
+	;
+
+jsonUniqueKeysClause
+	: (WITH|WITHOUT) UNIQUE KEYS
 	;
 
 /**
@@ -1805,6 +1817,7 @@ jsonArrayAggFunction
 	| JSON_ARRAYAGG
 	| JSON_EXISTS
 	| JSON_OBJECT
+	| JSON_OBJECTAGG
 	| JSON_QUERY
 	| JSON_VALUE
 	| KEY
@@ -1894,6 +1907,7 @@ jsonArrayAggFunction
 	| UNBOUNDED
 	| UNCONDITIONAL
 	| UNION
+	| UNIQUE
 	| UPDATE
 	| USING
 	| VALUE

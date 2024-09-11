@@ -629,7 +629,8 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			functionFactory.jsonExists();
 			functionFactory.jsonObject();
 			functionFactory.jsonArray();
-			functionFactory.jsonArrayAgg();
+			functionFactory.jsonArrayAgg_postgresql( true );
+			functionFactory.jsonObjectAgg_postgresql( true );
 		}
 		else {
 			functionFactory.jsonValue_postgresql();
@@ -638,12 +639,14 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			if ( getVersion().isSameOrAfter( 16 ) ) {
 				functionFactory.jsonObject();
 				functionFactory.jsonArray();
-				functionFactory.jsonArrayAgg();
+				functionFactory.jsonArrayAgg_postgresql( true );
+				functionFactory.jsonObjectAgg_postgresql( true );
 			}
 			else {
 				functionFactory.jsonObject_postgresql();
 				functionFactory.jsonArray_postgresql();
-				functionFactory.jsonArrayAgg_postgresql();
+				functionFactory.jsonArrayAgg_postgresql( false );
+				functionFactory.jsonObjectAgg_postgresql( false );
 			}
 		}
 

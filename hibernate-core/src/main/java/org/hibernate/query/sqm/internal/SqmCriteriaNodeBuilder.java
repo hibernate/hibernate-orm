@@ -125,6 +125,7 @@ import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmJsonExistsExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJsonNullBehavior;
+import org.hibernate.query.sqm.tree.expression.SqmJsonObjectAggUniqueKeysBehavior;
 import org.hibernate.query.sqm.tree.expression.SqmJsonQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJsonValueExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
@@ -5434,6 +5435,72 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public SqmExpression<String> jsonArrayAggWithNulls(Expression<?> value, JpaOrder... orderBy) {
 		return jsonArrayAgg( (SqmExpression<?>) value, SqmJsonNullBehavior.NULL, null, orderByClause( orderBy ) );
+	}
+
+	@Override
+	public SqmExpression<String> jsonObjectAggWithUniqueKeysAndNulls(Expression<?> key, Expression<?> value) {
+		return jsonObjectAgg( key, value, SqmJsonNullBehavior.NULL, SqmJsonObjectAggUniqueKeysBehavior.WITH, null );
+	}
+
+	@Override
+	public SqmExpression<String> jsonObjectAggWithUniqueKeys(Expression<?> key, Expression<?> value) {
+		return jsonObjectAgg( key, value, null, SqmJsonObjectAggUniqueKeysBehavior.WITH, null );
+	}
+
+	@Override
+	public SqmExpression<String> jsonObjectAggWithNulls(Expression<?> key, Expression<?> value) {
+		return jsonObjectAgg( key, value, SqmJsonNullBehavior.NULL, null, null );
+	}
+
+	@Override
+	public SqmExpression<String> jsonObjectAgg(Expression<?> key, Expression<?> value) {
+		return jsonObjectAgg( key, value, null, null, null );
+	}
+
+	@Override
+	public SqmExpression<String> jsonObjectAggWithUniqueKeysAndNulls(
+			Expression<?> key,
+			Expression<?> value,
+			Predicate filter) {
+		return jsonObjectAgg( key, value, SqmJsonNullBehavior.NULL, SqmJsonObjectAggUniqueKeysBehavior.WITH, filter );
+	}
+
+	@Override
+	public SqmExpression<String> jsonObjectAggWithUniqueKeys(Expression<?> key, Expression<?> value, Predicate filter) {
+		return jsonObjectAgg( key, value, null, SqmJsonObjectAggUniqueKeysBehavior.WITH, filter );
+	}
+
+	@Override
+	public SqmExpression<String> jsonObjectAggWithNulls(Expression<?> key, Expression<?> value, Predicate filter) {
+		return jsonObjectAgg( key, value, SqmJsonNullBehavior.NULL, null, filter );
+	}
+
+	@Override
+	public SqmExpression<String> jsonObjectAgg(Expression<?> key, Expression<?> value, Predicate filter) {
+		return jsonObjectAgg( key, value, null, null, filter );
+	}
+
+	private SqmExpression<String> jsonObjectAgg(
+			Expression<?> key,
+			Expression<?> value,
+			@Nullable SqmJsonNullBehavior nullBehavior,
+			@Nullable SqmJsonObjectAggUniqueKeysBehavior uniqueKeysBehavior,
+			@Nullable Predicate filterPredicate) {
+		final ArrayList<SqmTypedNode<?>> arguments = new ArrayList<>( 4 );
+		arguments.add( (SqmTypedNode<?>) key );
+		arguments.add( (SqmTypedNode<?>) value );
+		if ( nullBehavior != null ) {
+			arguments.add( nullBehavior );
+		}
+		if ( uniqueKeysBehavior != null ) {
+			arguments.add( uniqueKeysBehavior );
+		}
+		return getFunctionDescriptor( "json_objectagg" ).generateAggregateSqmExpression(
+				arguments,
+				(SqmPredicate) filterPredicate,
+				null,
+				queryEngine
+		);
 	}
 
 	private @Nullable SqmOrderByClause orderByClause(JpaOrder[] orderBy) {

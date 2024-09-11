@@ -424,6 +424,7 @@ public class DB2Dialect extends Dialect {
 			functionFactory.jsonObject_db2();
 			functionFactory.jsonArray_db2();
 			functionFactory.jsonArrayAgg_db2();
+			functionFactory.jsonObjectAgg_db2();
 		}
 	}
 

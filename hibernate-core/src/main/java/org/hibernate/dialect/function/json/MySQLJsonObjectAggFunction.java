@@ -6,8 +6,6 @@
  */
 package org.hibernate.dialect.function.json;
 
-import java.util.List;
-
 import org.hibernate.QueryException;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.Clause;
@@ -17,71 +15,50 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JsonNullBehavior;
+import org.hibernate.sql.ast.tree.expression.JsonObjectAggUniqueKeysBehavior;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * MySQL json_arrayagg function.
+ * MySQL json_objectagg function.
  */
-public class MySQLJsonArrayAggFunction extends JsonArrayAggFunction {
+public class MySQLJsonObjectAggFunction extends JsonObjectAggFunction {
 
-	public MySQLJsonArrayAggFunction(TypeConfiguration typeConfiguration) {
-		super( false, typeConfiguration );
+	public MySQLJsonObjectAggFunction(TypeConfiguration typeConfiguration) {
+		super( ",", false, typeConfiguration );
 	}
 
 	@Override
-	public void render(
+	protected void render(
 			SqlAppender sqlAppender,
-			List<? extends SqlAstNode> sqlAstArguments,
+			JsonObjectAggArguments arguments,
 			Predicate filter,
-			List<SortSpecification> withinGroup,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
 		final boolean caseWrapper = filter != null;
-		sqlAppender.appendSql( "cast(concat('[',group_concat(" );
-		final JsonNullBehavior nullBehavior;
-		if ( sqlAstArguments.size() > 1 ) {
-			nullBehavior = (JsonNullBehavior) sqlAstArguments.get( 1 );
+		if ( arguments.uniqueKeysBehavior() == JsonObjectAggUniqueKeysBehavior.WITH ) {
+			throw new QueryException( "Can't emulate json_objectagg 'with unique keys' clause." );
 		}
-		else {
-			nullBehavior = JsonNullBehavior.ABSENT;
-		}
-		final SqlAstNode firstArg = sqlAstArguments.get( 0 );
-		final Expression arg;
-		if ( firstArg instanceof Distinct ) {
-			sqlAppender.appendSql( "distinct " );
-			arg = ( (Distinct) firstArg ).getExpression();
-		}
-		else {
-			arg = (Expression) firstArg;
-		}
+		sqlAppender.appendSql( "concat('{',group_concat(concat(json_quote(" );
+		arguments.key().accept( translator );
+		sqlAppender.appendSql( "),':'," );
 		if ( caseWrapper ) {
-			if ( nullBehavior != JsonNullBehavior.ABSENT ) {
-				throw new QueryException( "Can't emulate json_arrayagg filter clause when using 'null on null' clause." );
+			if ( arguments.nullBehavior() != JsonNullBehavior.ABSENT ) {
+				throw new QueryException( "Can't emulate json_objectagg filter clause when using 'null on null' clause." );
 			}
 			translator.getCurrentClauseStack().push( Clause.WHERE );
 			sqlAppender.appendSql( "case when " );
 			filter.accept( translator );
 			translator.getCurrentClauseStack().pop();
 			sqlAppender.appendSql( " then " );
-			renderArgument( sqlAppender, arg, nullBehavior, translator );
+			renderArgument( sqlAppender, arguments.value(), arguments.nullBehavior(), translator );
 			sqlAppender.appendSql( " else null end)" );
 		}
 		else {
-			renderArgument( sqlAppender, arg, nullBehavior, translator );
+			renderArgument( sqlAppender, arguments.value(), arguments.nullBehavior(), translator );
 		}
-		if ( withinGroup != null && !withinGroup.isEmpty() ) {
-			translator.getCurrentClauseStack().push( Clause.WITHIN_GROUP );
-			sqlAppender.appendSql( " order by " );
-			withinGroup.get( 0 ).accept( translator );
-			for ( int i = 1; i < withinGroup.size(); i++ ) {
-				sqlAppender.appendSql( ',' );
-				withinGroup.get( i ).accept( translator );
-			}
-			translator.getCurrentClauseStack().pop();
-		}
-		sqlAppender.appendSql( " separator ','),']') as json)" );
+		sqlAppender.appendSql( ") separator ','),'}')" );
 	}
 
 	@Override

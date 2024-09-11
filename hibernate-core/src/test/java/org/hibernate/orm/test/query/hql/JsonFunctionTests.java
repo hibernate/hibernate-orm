@@ -12,10 +12,19 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
+import org.hibernate.HibernateException;
+import org.hibernate.JDBCException;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.type.SqlTypes;
 
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -49,8 +58,10 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @DomainModel( annotatedClasses = {
 		JsonFunctionTests.JsonHolder.class,
@@ -89,9 +100,12 @@ public class JsonFunctionTests {
 					EntityOfBasics e1 = new EntityOfBasics();
 					e1.setId( 1 );
 					e1.setTheString( "Dog" );
+					e1.setTheInteger( 0 );
+					e1.setTheUuid( UUID.randomUUID() );
 					EntityOfBasics e2 = new EntityOfBasics();
 					e2.setId( 2 );
 					e2.setTheString( "Cat" );
+					e2.setTheInteger( 0 );
 
 					em.persist( e1 );
 					em.persist( e2 );
@@ -266,7 +280,7 @@ public class JsonFunctionTests {
 					assertEquals( entity.json.get( "theFloat" ), Double.parseDouble( nested.get( "theFloat" ).toString() ) );
 					assertEquals( entity.json.get( "theString" ), nested.get( "theString" ) );
 					assertEquals( entity.json.get( "theBoolean" ), nested.get( "theBoolean" ) );
-					// HSQLDB bug
+					// HSQLDB bug: https://sourceforge.net/p/hsqldb/bugs/1720/
 					if ( !( DialectContext.getDialect() instanceof HSQLDialect ) ) {
 						assertFalse( nested.containsKey( "theNull" ) );
 					}
@@ -364,6 +378,86 @@ public class JsonFunctionTests {
 					).getSingleResult();
 					Object[] array = parseArray( jsonArray );
 					assertArrayEquals( new Object[]{ "Cat", "Dog" }, array );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonObjectAgg.class)
+	public void testJsonObjectAgg(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					String jsonArray = session.createQuery(
+							"select json_objectagg(e.theString value e.id) " +
+									"from EntityOfBasics e",
+							String.class
+					).getSingleResult();
+					Map<String, Object> object = parseObject( jsonArray );
+					assertEquals( 2, object.size() );
+					assertEquals( 1, object.get( "Dog" ) );
+					assertEquals( 2, object.get( "Cat" ) );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonObjectAgg.class)
+	public void testJsonObjectAggNullFilter(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					String jsonArray = session.createQuery(
+							"select json_objectagg(e.theString value e.theUuid) " +
+									"from EntityOfBasics e",
+							String.class
+					).getSingleResult();
+					Map<String, Object> object = parseObject( jsonArray );
+					assertEquals( 1, object.size() );
+					assertTrue( object.containsKey( "Dog" ) );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonObjectAgg.class)
+	public void testJsonObjectAggNullClause(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					String jsonArray = session.createQuery(
+							"select json_objectagg(e.theString value e.theUuid null on null) " +
+									"from EntityOfBasics e",
+							String.class
+					).getSingleResult();
+					Map<String, Object> object = parseObject( jsonArray );
+					assertEquals( 2, object.size() );
+					assertNotNull( object.get( "Dog" ) );
+					assertNull( object.get( "Cat" ) );
+					assertTrue( object.containsKey( "Cat" ) );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonObjectAgg.class)
+	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "MySQL has no way to throw an error on duplicate json object keys. The last one always wins.")
+	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server has no way to throw an error on duplicate json object keys.")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA has no way to throw an error on duplicate json object keys.")
+	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 has no way to throw an error on duplicate json object keys.")
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "CockroachDB has no way to throw an error on duplicate json object keys.")
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 15, matchSubTypes = true, reason = "CockroachDB has no way to throw an error on duplicate json object keys.")
+	public void testJsonObjectAggUniqueKeys(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					try {
+						session.createQuery(
+								"select json_objectagg(str(e.theInteger) value e.theString with unique keys) " +
+										"from EntityOfBasics e",
+								String.class
+						).getSingleResult();
+						fail("Should fail because keys are not unique");
+					}
+					catch (HibernateException e) {
+						assertInstanceOf( JDBCException.class, e );
+					}
 				}
 		);
 	}

@@ -408,6 +408,7 @@ public class H2LegacyDialect extends Dialect {
 					functionFactory.jsonQuery_h2();
 					functionFactory.jsonExists_h2();
 					functionFactory.jsonArrayAgg_h2();
+					functionFactory.jsonObjectAgg_h2();
 				}
 			}
 			else {

@@ -91,8 +91,14 @@ public class MariaDBJsonArrayAggFunction extends JsonArrayAggFunction {
 			JsonNullBehavior nullBehavior,
 			SqlAstTranslator<?> translator) {
 		// Convert SQL type to JSON type
+		if ( nullBehavior != JsonNullBehavior.NULL ) {
+			sqlAppender.appendSql( "nullif(" );
+		}
 		sqlAppender.appendSql( "json_extract(json_array(" );
 		arg.accept( translator );
 		sqlAppender.appendSql( "),'$[0]')" );
+		if ( nullBehavior != JsonNullBehavior.NULL ) {
+			sqlAppender.appendSql( ",'null')" );
+		}
 	}
 }

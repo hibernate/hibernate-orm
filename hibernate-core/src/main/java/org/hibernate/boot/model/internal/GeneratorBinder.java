@@ -529,14 +529,20 @@ public class GeneratorBinder {
 
 	private static void callConfigure(GeneratorCreationContext creationContext, Generator generator) {
 		if ( generator instanceof Configurable ) {
+			final Configurable configurable = (Configurable) generator;
 			final Value value = creationContext.getProperty().getValue();
-			( (Configurable) generator ).configure( value.getType(), collectParameters(
-					(SimpleValue) value,
-					creationContext.getDatabase().getDialect(),
-					creationContext.getDefaultCatalog(),
-					creationContext.getDefaultSchema(),
-					creationContext.getPersistentClass().getRootClass()
-			), creationContext.getServiceRegistry() );
+			configurable.create( creationContext );
+			configurable.configure(
+					value.getType(),
+					collectParameters(
+							(SimpleValue) value,
+							creationContext.getDatabase().getDialect(),
+							creationContext.getDefaultCatalog(),
+							creationContext.getDefaultSchema(),
+							creationContext.getPersistentClass().getRootClass()
+					),
+					creationContext.getServiceRegistry()
+			);
 		}
 	}
 

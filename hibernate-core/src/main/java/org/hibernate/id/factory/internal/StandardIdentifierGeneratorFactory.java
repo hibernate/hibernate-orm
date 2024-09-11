@@ -19,6 +19,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.generator.Generator;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.Assigned;
 import org.hibernate.id.Configurable;
 import org.hibernate.id.ForeignGenerator;
@@ -206,7 +207,8 @@ public class StandardIdentifierGeneratorFactory
 	}
 
 	@Override @Deprecated
-	public Generator createIdentifierGenerator(String strategy, Type type, Properties parameters) {
+	public Generator createIdentifierGenerator(
+			String strategy, Type type, GeneratorCreationContext creationContext, Properties parameters) {
 		try {
 			final Class<? extends Generator> clazz = getIdentifierGeneratorClass( strategy );
 			final Generator identifierGenerator;
@@ -222,7 +224,9 @@ public class StandardIdentifierGeneratorFactory
 			}
 
 			if ( identifierGenerator instanceof Configurable ) {
-				( (Configurable) identifierGenerator ).configure( type, parameters, serviceRegistry );
+				final Configurable configurable = (Configurable) identifierGenerator;
+				configurable.create( creationContext );
+				configurable.configure( type, parameters, serviceRegistry );
 			}
 			return identifierGenerator;
 		}

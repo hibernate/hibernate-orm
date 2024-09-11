@@ -11,6 +11,7 @@ import java.util.Properties;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
@@ -21,6 +22,14 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public interface Configurable {
+	/**
+	 * Called before {@link #configure(Type, Properties, ServiceRegistry)},
+	 * with an instance of {@link GeneratorCreationContext}.
+	 *
+	 * @since 6.6
+	 */
+	default void create(GeneratorCreationContext creationContext) throws MappingException {}
+
 	/**
 	 * Configure this instance, given the value of parameters
 	 * specified by the user as XML {@code <param>} elements and

@@ -28,12 +28,14 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.QueryParameterJavaObjectType;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAmount;
+import java.util.Objects;
 
 import static org.hibernate.type.descriptor.java.JavaTypeHelper.isUnknown;
 
@@ -110,7 +112,16 @@ public class TypecheckUtil {
 			return true;
 		}
 
-		// for query with parameters we are unable to resolve the correct JavaType, especially for tuple of parameters
+		// if one of the types is unknown, assume that this is the result
+		// of an error that will be detected / reported elsewhere
+
+		if ( isUnknown( lhsType.getExpressibleJavaType() )
+				|| isUnknown( rhsType.getExpressibleJavaType() ) ) {
+			return true;
+		}
+
+		// for query with parameters we are unable to resolve the correct JavaType,
+		// especially for tuple of parameters
 
 		if ( lhsType instanceof QueryParameterJavaObjectType || rhsType instanceof QueryParameterJavaObjectType) {
 			return true;
@@ -177,18 +188,17 @@ public class TypecheckUtil {
 			return true;
 		}
 
-		// Workaround: these are needed for a handful of slightly "weird" cases
-		// involving Java field literals and converters, where we don't have
-		// access to the correct JDBC type above. However, this is exactly the
-		// sort of hole warned about above, and accepts many things which are
-		// not well-typed.
+		// if one of the types has a ValueConverter, things get really complicated
+		// we do something a bit broken here and check that the Java types
 
-//		// TODO: sort all this out, and remove this branch
-		if ( isSameJavaType( lhsType, rhsType ) ) {
+		if ( ( isConvertedType( lhsType ) || isConvertedType( rhsType ) )
+				&& sameJavaType( lhsType, rhsType ) ) {
 			return true;
 		}
 
-		return false;
+		// if both have the same JDBC type, the assignment is acceptable
+
+		return lhsType.getRelationalJavaType() == rhsType.getRelationalJavaType();
 	}
 
 	private static boolean areJdbcMappingsComparable(
@@ -310,6 +320,14 @@ public class TypecheckUtil {
 			return true;
 		}
 
+		// if one of the types is unknown, assume that this is the result
+		// of an error that will be detected / reported elsewhere
+
+		if ( isUnknown( targetType.getExpressibleJavaType() )
+				|| isUnknown( expressionType.getExpressibleJavaType() ) ) {
+			return true;
+		}
+
 		// entities can be assigned if they belong to the same inheritance hierarchy
 
 		if ( targetType instanceof EntityType<?> targetEntity
@@ -339,25 +357,39 @@ public class TypecheckUtil {
 			}
 		}
 
-		// Workaround: these are needed for a handful of slightly "weird" cases
-		// involving Java field literals and converters, where we don't have
-		// access to the correct JDBC type above. However, this is exactly the
-		// sort of hole warned about above, and accepts many things which are
-		// not well-typed.
+		// if one of the types has a ValueConverter, things get really complicated
+		// we do something a bit broken here and check that the Java types
 
-		// TODO: sort all this out, and remove this branch
-		if ( isSameJavaType( targetType, expressionType ) ) {
+		if ( ( isConvertedType( targetType ) || isConvertedType( expressionType ) )
+				&& sameJavaType( targetType, expressionType ) ) {
 			return true;
 		}
 
-		return false;
+		// if both have the same JDBC type, the assignment is acceptable
+
+		return targetType.getRelationalJavaType() == expressionType.getRelationalJavaType();
 	}
 
-	private static boolean isSameJavaType(SqmExpressible<?> leftType, SqmExpressible<?> rightType) {
-		return isUnknown( leftType.getExpressibleJavaType() ) || isUnknown( rightType.getExpressibleJavaType() )
-			|| leftType.getRelationalJavaType() == rightType.getRelationalJavaType()
-			|| leftType.getExpressibleJavaType() == rightType.getExpressibleJavaType()
-			|| leftType.getBindableJavaType() == rightType.getBindableJavaType();
+	private static boolean sameJavaType(SqmExpressible<?> leftType, SqmExpressible<?> rightType) {
+		return canonicalize( leftType.getBindableJavaType() ) == canonicalize( rightType.getBindableJavaType() );
+	}
+
+	private static boolean isConvertedType(SqmExpressible<?> type) {
+		return type.getSqmType() instanceof ConvertedBasicType<?>;
+	}
+
+	private static Class<?> canonicalize(Class<?> lhs) {
+		return switch (lhs.getCanonicalName()) {
+			case "boolean" -> Boolean.class;
+			case "byte" -> Byte.class;
+			case "short" -> Short.class;
+			case "int" -> Integer.class;
+			case "long" -> Long.class;
+			case "float" -> Float.class;
+			case "double" -> Double.class;
+			case "char" -> Character.class;
+			default -> lhs;
+		};
 	}
 
 	private static boolean isEntityTypeAssignable(
@@ -396,7 +428,19 @@ public class TypecheckUtil {
 		if ( !( left instanceof SqmLiteralNull ) && !( right instanceof SqmLiteralNull ) ) {
 			final SqmExpressible<?> leftType = left.getExpressible();
 			final SqmExpressible<?> rightType = right.getExpressible();
-			if ( !areTypesComparable( leftType, rightType, bindingContext ) ) {
+			if ( leftType != null && rightType != null
+					&& left.isEnum() && right.isEnum() ) {
+				// this is needed by Hibernate Processor due to the weird
+				// handling of enumerated types in the annotation processor
+				if ( !Objects.equals( leftType.getTypeName(), rightType.getTypeName() ) ) {
+					String.format(
+							"Cannot compare left expression of enumerated type '%s' with right expression of enumerated type '%s'",
+							leftType.getTypeName(),
+							rightType.getTypeName()
+					);
+				}
+			}
+			else if ( !areTypesComparable( leftType, rightType, bindingContext ) ) {
 				throw new SemanticException(
 						String.format(
 								"Cannot compare left expression of type '%s' with right expression of type '%s'",
@@ -422,7 +466,18 @@ public class TypecheckUtil {
 		else {
 			final SqmPathSource<?> targetType = targetPath.getNodeType();
 			final SqmExpressible<?> expressionType = expression.getNodeType();
-			if ( !isTypeAssignable( targetType, expressionType, bindingContext) ) {
+			if ( targetType != null && expressionType != null && targetPath.isEnum() ) {
+				// this is needed by Hibernate Processor due to the weird
+				// handling of enumerated types in the annotation processor
+				if ( !Objects.equals( targetType.getTypeName(), expressionType.getTypeName() ) ) {
+					String.format(
+							"Cannot compare left expression of enumerated type '%s' with right expression of enumerated type '%s'",
+							targetType.getTypeName(),
+							expressionType.getTypeName()
+					);
+				}
+			}
+			else if ( !isTypeAssignable( targetType, expressionType, bindingContext) ) {
 				throw new SemanticException(
 						String.format(
 								"Cannot assign expression of type '%s' to target path '%s' of type '%s'",

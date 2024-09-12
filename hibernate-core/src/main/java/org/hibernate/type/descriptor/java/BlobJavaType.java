@@ -131,11 +131,8 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 					return (X) DataHelper.extractBytes( value.getBinaryStream() );
 				}
 			}
-			else if (Blob.class.isAssignableFrom( type )) {
-				final Blob blob =  value instanceof WrappedBlob
-						? ( (WrappedBlob) value ).getWrappedBlob()
-						: getOrCreateBlob(value, options);
-				return (X) blob;
+			else if ( Blob.class.isAssignableFrom( type ) ) {
+				return (X) getOrCreateBlob( value, options );
 			}
 		}
 		catch ( SQLException e ) {
@@ -146,13 +143,16 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 	}
 
 	private Blob getOrCreateBlob(Blob value, WrapperOptions options) throws SQLException {
-		if(options.getDialect().useConnectionToCreateLob()) {
-			if(value.length() == 0) {
+		if ( value instanceof WrappedBlob ) {
+			value = ( (WrappedBlob) value ).getWrappedBlob();
+		}
+		if ( options.getDialect().useConnectionToCreateLob() ) {
+			if ( value.length() == 0 ) {
 				// empty Blob
-				return options.getLobCreator().createBlob(new byte[0]);
+				return options.getLobCreator().createBlob( new byte[0] );
 			}
 			else {
-				return options.getLobCreator().createBlob(value.getBytes(1, (int) value.length()));
+				return options.getLobCreator().createBlob( value.getBytes( 1, (int) value.length() ) );
 			}
 		}
 		else {

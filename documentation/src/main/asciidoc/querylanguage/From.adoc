@@ -131,7 +131,7 @@ select id, total
 from (
     select ord.id as id, sum(item.book.price * item.quantity) as total
     from Order as ord
-        join Item as item
+        join items as item
     group by ord
 )
 where total > 100.0
@@ -347,9 +347,9 @@ An explicit join may narrow the type of the joined entity using `treat()`.
 [source, hql]
 ----
 from Order as ord
-    join treat(ord.payments as CreditCardPayment) as creditCardPayment
-where length(creditCardPayment.cardNumber) between 16 and 20
-select ord.id, creditCardPayment.cardNumber, creditCardPayment.amount
+    join treat(ord.payments as CreditCardPayment) as ccp
+where length(ccp.cardNumber) between 16 and 20
+select ord.id, ccp.cardNumber, ccp.amount
 ----
 
 Here, the identification variable `ccp` declared to the right of `treat()` has the narrowed type `CreditCardPayment`, instead of the declared type `Payment`.
@@ -500,7 +500,7 @@ When a join involves a collection or many-valued association, the declared ident
 select publisher.name, author.name
 from Publisher as publisher
     join publisher.books as book
-    join book.authors author
+    join book.authors as author
 where author.name like :namePattern
 ----
 
@@ -518,7 +518,7 @@ These functions may be applied to the identification variable declared in a coll
 | Often optional.
 | `index()` | Any `List` with an index column | The index of the element in the list
 | For backward compatibility, it's also an alternative to ``key()``, when applied to a map.
-| `key()` | Any `Map` | The key of the entry in the list | If the key is of entity type, it may be further navigated.
+| `key()` | Any `Map` | The key of the entry in the map | If the key is of entity type, it may be further navigated.
 | `entry()` | Any `Map` | The map entry, that is, the `Map.Entry` of key and value.
 | Only legal as a terminal path, and only allowed in the `select` clause.
 |===
@@ -539,7 +539,7 @@ from Book as book
 select publisher.name, leadAuthor.name
 from Publisher as publisher
     join publisher.books as book
-    join book.authors leadAuthor
+    join book.authors as leadAuthor
 where leadAuthor.name like :namePattern
   and index(leadAuthor) == 0
 ----

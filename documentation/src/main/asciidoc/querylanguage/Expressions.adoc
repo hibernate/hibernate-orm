@@ -259,7 +259,7 @@ An element of a compound path referring to a many-to-one or on-to-one associatio
 
 [source,hql]
 ----
-select treat(order.payment as CreditCardPayment).creditCardNumber from Order order
+select treat(order.payment as CreditCardPayment).cardNumber from Order order
 ----
 
 If an element of a compound path refers to a collection or many-valued association, it must have one of <<collection-functions,these special functions>> applied to it.
@@ -363,7 +363,7 @@ This default behavior may be changed using configuration property `hibernate.que
 Setting this property to `true` instructs Hibernate to produce SQL that emulates Java-style integer division (that is, `3/2 = 1`) on platforms where that is not the native semantics.
 ====
 
-When the operands are of different type, one of the operands is implicitly converted to _wider_ type, with wideness given, in decreasing order, by the list below:
+When the operands are of different types, one of the operands is implicitly converted to _wider_ type, with wideness given, in decreasing order, by the list below:
 
 - `Double` (widest)
 - `Float`
@@ -382,7 +382,7 @@ Many more numeric operations are defined below, in <<exp-functions>>.
 Arithmetic involving dates, datetimes, and durations is quite subtle.
 Among the issues to consider are:
 
-- There's two kinds of duration: year-day, and week-nanosecond durations.
+- There are two kinds of duration: year-day, and week-nanosecond durations.
 The first is a difference between dates; the second is a difference between datetimes.
 - We can subtract dates and datetimes, but we can't add them.
 - A Java-style duration has much too much precision, and so in order to use it for anything useful, we must somehow truncate it to something coarser-grained.
@@ -787,7 +787,7 @@ select trunc(local datetime, hour)
 ----
 
 Truncating a date, time or datetime value means obtaining a value of the same type in which all temporal units smaller than `field` have been pruned.
-For hours, minutes and second this means setting them to `00`. For months and days, this means setting them to `01`.
+For hours, minutes and seconds this means setting them to `00`. For months and days, this means setting them to `01`.
 
 [[string-functions]]
 ==== Functions for working with strings
@@ -1019,7 +1019,7 @@ They're interpreted as referring to the collection as a whole.
 | `keys()` | Maps | The keys of a map, collectively | ✖
 | `values()` | Maps | The values of a map, collectively | ✖
 |===
-Application of one of these function produces an implicit subquery or implicit join.
+Application of one of these functions produces an implicit subquery or implicit join.
 
 This query has an implicit join:
 

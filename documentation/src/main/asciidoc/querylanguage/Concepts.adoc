@@ -334,7 +334,7 @@ For example:
 
 [source,hql]
 ----
-delete Author author where is empty author.books
+delete Author author where author.books is empty
 ----
 
 As in SQL, the presence or absence of the `from` keyword has absolutely no effect on the semantics of the `delete` statement.
@@ -419,7 +419,7 @@ The `queryExpression` in an `insert ... select` statement may be any valid `sele
 ====
 This is checked during query compilation rather than allowing the type check to delegate to the database.
 This may cause problems when two Java types map to the same database type.
-For example, an attribute of type `LocalDateTime` and an attribute or type `Timestamp` both map to the SQL type `timestamp`, but are not considered assignable by the query compiler.
+For example, an attribute of type `LocalDateTime` and an attribute of type `Timestamp` both map to the SQL type `timestamp`, but are not considered assignable by the query compiler.
 ====
 
 There are two ways to assign a value to the `@Id` attribute:
@@ -577,7 +577,7 @@ Indeed, a fairly innocent-looking HQL query can easily translate to a SQL statem
 ====
 We need to be a _bit_ careful about that, but actually it's usually a good thing.
 HQL makes it very easy to fetch all the data we need in a single trip to the database, and that's absolutely key to achieving high performance in data access code.
-Typically, it's much worse to fetch exactly the data we need, but in many round trips to the database server, than it is to fetch just a bit more data than what we're going to need, all a single SQL query.
+Typically, it's much worse to fetch exactly the data we need, but in many round trips to the database server, than it is to fetch just a bit more data than what we're going to need, all by a single SQL query.
 ====
 
 When there's no explicit `select` clause, a further abbreviation is sometimes possible.
@@ -609,7 +609,7 @@ The fundamental problem for Java is that it doesn't have tuple types.
 Queries in Hibernate return tables.
 Sure, often a column holds whole entity objects, but we're not restricted to returning a single entity, and we often write queries that return multiple entities in each result, or which return things which aren't entities.
 
-So we're faced with the problem if representing such result sets, and, we're sad to say, there's no fully general and completely satisfying solution.
+So we're faced with the problem of representing such result sets, and, we're sad to say, there's no fully general and completely satisfying solution.
 
 Let's begin with the easy case.
 
@@ -641,7 +641,7 @@ When there are multiple expressions in the select list then, by default, and in 
 [%unbreakable]
 ----
 List<Object[]> results =
-        entityManager.createQuery("select title, left(book.text, 200) from Book",
+        entityManager.createQuery("select title, left(text, 200) from Book",
                                   Object[].class)
             .getResultList();
 for (var result : results) {
@@ -659,7 +659,7 @@ All we have to do is pass the class `Tuple` to `createQuery()`.
 [%unbreakable]
 ----
 List<Tuple> tuples =
-        entityManager.createQuery("select title as title, left(book.text, 200) as preamble from Book",
+        entityManager.createQuery("select title as title, left(text, 200) as preamble from Book",
                                   Tuple.class)
             .getResultList();
 for (Tuple tuple : tuples) {
@@ -677,7 +677,7 @@ As an extension to JPA, and in a similar vein, Hibernate lets us pass `Map` or `
 [%unbreakable]
 ----
 var results =
-        entityManager.createQuery("select title as title, left(book.text, 200) as preamble from Book",
+        entityManager.createQuery("select title as title, left(text, 200) as preamble from Book",
                                   Map.class)
             .getResultList();
 for (var map : results) {
@@ -689,7 +689,7 @@ for (var map : results) {
 [%unbreakable]
 ----
 var results =
-        entityManager.createQuery("select title, left(book.text, 200) from Book",
+        entityManager.createQuery("select title, left(text, 200) from Book",
                                   List.class)
             .getResultList();
 for (var list : results) {
@@ -699,7 +699,7 @@ for (var list : results) {
 ----
 
 Unfortunately, not one of the types `Object[]`, `List`, `Map`, nor `Tuple` lets us access an individual item in a result tuple without a type cast.
-Sure `Tuple` does the type cast for us when we pass a class object to `get()`, but it's logically identical.
+Surely `Tuple` does the type cast for us when we pass a class object to `get()`, but it's logically identical.
 Fortunately there's one more option, as we're about to see.
 
 [NOTE]
@@ -717,7 +717,7 @@ This works extremely nicely with `record` types.
 record BookSummary(String title, String summary) {}
 
 List<BookSummary> results =
-        entityManager.createQuery("select title, left(book.text, 200) from Book",
+        entityManager.createQuery("select title, left(text, 200) from Book",
                                   BookSummary.class)
             .getResultList();
 for (var result : results) {
@@ -762,7 +762,7 @@ For example, the JPA-standard `select new` construct packages the query results 
 record BookSummary(String title, String summary) {}
 
 List<BookSummary> results =
-        entityManager.createQuery("select new BookSummary(title, left(book.text, 200)) from Book",
+        entityManager.createQuery("select new BookSummary(title, left(text, 200)) from Book",
                                   BookSummary.class)
             .getResultList();
 for (var result : results) {

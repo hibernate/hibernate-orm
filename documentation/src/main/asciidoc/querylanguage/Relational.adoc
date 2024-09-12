@@ -110,8 +110,8 @@ select book.isbn,
 from Item
 where book.isbn = :isbn
 group by year(order.dateTime)
-having year(order.dateTime) > 2003
-   and sum(quantity) > 0
+having year > 2003
+   and yearlyTotalSold > 0
 ----
 
 The `having` clause follows the same rules as the `where` clause and is also just a logical predicate.
@@ -141,7 +141,7 @@ But it's better to specify the projection explicitly, except in the simplest cas
 ==== Duplicate removal
 
 The `distinct` keyword helps remove duplicate results from the query result list.
-It's only effect is to add `distinct` to the generated SQL.
+Its only effect is to add `distinct` to the generated SQL.
 
 [[distinct-projection-query-example]]
 [source, hql]
@@ -606,8 +606,8 @@ select book.isbn,
 from Item
 where book.isbn = :isbn
 group by year(order.dateTime)
-having year(order.dateTime) > 2000
-   and sum(quantity) > 0
+having year > 2000
+   and yearlyTotalSold > 0
 order by yearlyTotalSold desc, year desc
 ----
 

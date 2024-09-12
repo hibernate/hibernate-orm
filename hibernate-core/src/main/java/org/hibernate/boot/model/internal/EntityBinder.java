@@ -213,7 +213,6 @@ public class EntityBinder {
 	public static void bindEntityClass(
 			ClassDetails clazzToProcess,
 			Map<ClassDetails, InheritanceState> inheritanceStates,
-			Map<String, IdentifierGeneratorDefinition> generators,
 			MetadataBuildingContext context) {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Binding entity from annotated class: %s", clazzToProcess.getName() );
@@ -242,7 +241,7 @@ public class EntityBinder {
 				inheritanceStates
 		);
 		entityBinder.handleInheritance( inheritanceState, superEntity, holder );
-		entityBinder.handleIdentifier( holder, inheritanceStates, generators, inheritanceState );
+		entityBinder.handleIdentifier( holder, inheritanceStates, inheritanceState );
 
 		final InFlightMetadataCollector collector = context.getMetadataCollector();
 		if ( persistentClass instanceof RootClass rootClass ) {
@@ -396,7 +395,6 @@ public class EntityBinder {
 	private void handleIdentifier(
 			PropertyHolder propertyHolder,
 			Map<ClassDetails, InheritanceState> inheritanceStates,
-			Map<String, IdentifierGeneratorDefinition> generators,
 			InheritanceState inheritanceState) {
 		final ElementsToProcess elementsToProcess = inheritanceState.postProcess( persistentClass, this );
 		final Set<String> idPropertiesIfIdClass = handleIdClass(
@@ -412,7 +410,6 @@ public class EntityBinder {
 				inheritanceState,
 				context,
 				propertyHolder,
-				generators,
 				idPropertiesIfIdClass,
 				elementsToProcess,
 				inheritanceStates
@@ -1032,7 +1029,6 @@ public class EntityBinder {
 			InheritanceState inheritanceState,
 			MetadataBuildingContext context,
 			PropertyHolder propertyHolder,
-			Map<String, IdentifierGeneratorDefinition> generators,
 			Set<String> idPropertiesIfIdClass,
 			ElementsToProcess elementsToProcess,
 			Map<ClassDetails, InheritanceState> inheritanceStates) {
@@ -1063,7 +1059,6 @@ public class EntityBinder {
 									? Nullability.FORCED_NULL
 									: Nullability.NO_CONSTRAINT,
 							propertyAnnotatedElement,
-							generators,
 							this,
 							false,
 							false,

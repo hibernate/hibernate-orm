@@ -87,7 +87,7 @@ public class IdClassAndAssociationsTest {
 	@Table(name = "course_enrollment")
 	public static class CourseEnrollment {
 		@Id
-		@GeneratedValue(strategy = GenerationType.AUTO)
+		@GeneratedValue(strategy = GenerationType.SEQUENCE)
 		private Long id;
 
 		@Column(name = "course")
@@ -123,7 +123,7 @@ public class IdClassAndAssociationsTest {
 	@Table(name = "units")
 	public static class Unit {
 		@Id
-		@GeneratedValue(strategy = GenerationType.AUTO)
+		@GeneratedValue(strategy = GenerationType.SEQUENCE)
 		private Long id;
 
 		private String name;
@@ -140,7 +140,7 @@ public class IdClassAndAssociationsTest {
 	@Table(name = "users")
 	public static class User {
 		@Id
-		@GeneratedValue(strategy = GenerationType.AUTO)
+		@GeneratedValue(strategy = GenerationType.SEQUENCE)
 		private Long id;
 
 		@Column(name = "first_name")

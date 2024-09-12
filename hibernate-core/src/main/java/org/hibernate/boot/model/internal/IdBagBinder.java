@@ -133,7 +133,8 @@ public class IdBagBinder extends BagBinder {
 		}
 
 		if ( isGlobalGeneratorNameGlobal( buildingContext ) ) {
-			SecondPass secondPass = new IdGeneratorResolverSecondPass(
+			SecondPass secondPass = new IdBagIdGeneratorResolverSecondPass(
+					(IdentifierBag) collection,
 					id,
 					property,
 					generatorType,

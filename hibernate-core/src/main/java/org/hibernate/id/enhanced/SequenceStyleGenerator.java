@@ -10,6 +10,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -25,12 +26,14 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.SequenceMismatchStrategy;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.mapping.SimpleValue;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
@@ -38,6 +41,8 @@ import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGroup
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
+
+import jakarta.persistence.SequenceGenerator;
 
 import static java.util.Collections.singleton;
 import static org.hibernate.id.IdentifierGeneratorHelper.getNamingStrategy;
@@ -110,7 +115,7 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
  * @author Lukasz Antoniak
  */
 public class SequenceStyleGenerator
-		implements PersistentIdentifierGenerator, BulkInsertionCapableIdentifierGenerator {
+		implements PersistentIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, BeforeExecutionGenerator {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			MethodHandles.lookup(),
@@ -582,5 +587,28 @@ public class SequenceStyleGenerator
 	private static boolean isDefaultSchema(JdbcEnvironment jdbcEnvironment, Identifier catalog, Identifier schema) {
 		return ( catalog == null || catalog.equals( jdbcEnvironment.getCurrentCatalog() ) )
 			&& ( schema == null || schema.equals( jdbcEnvironment.getCurrentSchema() ) );
+	}
+
+	public static void applyConfiguration(SequenceGenerator generatorConfig, SimpleValue idValue, BiConsumer<String,String> configCollector) {
+		if ( !generatorConfig.sequenceName().isEmpty() ) {
+			configCollector.accept( SEQUENCE_PARAM, generatorConfig.sequenceName() );
+		}
+		if ( !generatorConfig.catalog().isEmpty() ) {
+			configCollector.accept( CATALOG, generatorConfig.catalog() );
+		}
+		if ( !generatorConfig.schema().isEmpty() ) {
+			configCollector.accept( SCHEMA, generatorConfig.schema() );
+		}
+		if ( !generatorConfig.options().isEmpty() ) {
+			configCollector.accept( OPTIONS, generatorConfig.options() );
+		}
+
+		configCollector.accept( INITIAL_PARAM, Integer.toString( generatorConfig.initialValue() ) );
+		if ( generatorConfig.allocationSize() == 50 ) {
+			// don't do anything - assuming a proper default is already set
+		}
+		else {
+			configCollector.accept( INCREMENT_PARAM, Integer.toString( generatorConfig.allocationSize() ) );
+		}
 	}
 }

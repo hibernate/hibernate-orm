@@ -11,10 +11,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import org.hibernate.MappingException;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Imported;
 import org.hibernate.annotations.ParamDef;
@@ -56,6 +58,7 @@ import org.hibernate.boot.models.spi.ConverterRegistration;
 import org.hibernate.boot.models.spi.EmbeddableInstantiatorRegistration;
 import org.hibernate.boot.models.spi.FilterDefRegistration;
 import org.hibernate.boot.models.spi.GenericGeneratorRegistration;
+import org.hibernate.boot.models.spi.GlobalRegistrar;
 import org.hibernate.boot.models.spi.GlobalRegistrations;
 import org.hibernate.boot.models.spi.JavaTypeRegistration;
 import org.hibernate.boot.models.spi.JdbcTypeRegistration;
@@ -81,12 +84,15 @@ import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserCollectionType;
 import org.hibernate.usertype.UserType;
 
 import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.QueryHint;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
@@ -102,6 +108,7 @@ import static org.hibernate.boot.models.HibernateAnnotations.FILTER_DEF;
 import static org.hibernate.boot.models.HibernateAnnotations.GENERIC_GENERATOR;
 import static org.hibernate.boot.models.HibernateAnnotations.JAVA_TYPE_REGISTRATION;
 import static org.hibernate.boot.models.HibernateAnnotations.JDBC_TYPE_REGISTRATION;
+import static org.hibernate.boot.models.JpaAnnotations.ENTITY;
 import static org.hibernate.boot.models.JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY;
 import static org.hibernate.boot.models.JpaAnnotations.SEQUENCE_GENERATOR;
 import static org.hibernate.boot.models.JpaAnnotations.TABLE_GENERATOR;
@@ -113,7 +120,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 /**
  * @author Steve Ebersole
  */
-public class GlobalRegistrationsImpl implements GlobalRegistrations {
+public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegistrar {
 	private final SourceModelBuildingContext sourceModelContext;
 	private final BootstrapContext bootstrapContext;
 
@@ -142,6 +149,12 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	public GlobalRegistrationsImpl(SourceModelBuildingContext sourceModelContext, BootstrapContext bootstrapContext) {
 		this.sourceModelContext = sourceModelContext;
 		this.bootstrapContext = bootstrapContext;
+	}
+
+	@Override
+	public <T> T as(Class<T> type) {
+		//noinspection unchecked
+		return (T) this;
 	}
 
 	@Override
@@ -691,21 +704,71 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	}
 
 	public void collectIdGenerators(ClassDetails classDetails) {
+		if ( !classDetails.getName().endsWith( ".package-info" )
+				&& !bootstrapContext.getJpaCompliance().isGlobalGeneratorScopeEnabled() ) {
+			return;
+		}
+
 		classDetails.forEachRepeatedAnnotationUsages(
 				SEQUENCE_GENERATOR,
 				sourceModelContext,
-				this::collectSequenceGenerator
+				(sequenceGenerator) -> collectSequenceGenerator( classDetails, sequenceGenerator )
 		);
 		classDetails.forEachAnnotationUsage(
 				TABLE_GENERATOR,
 				sourceModelContext,
-				this::collectTableGenerator
+				tableGenerator -> collectTableGenerator( classDetails, tableGenerator )
 		);
 		classDetails.forEachAnnotationUsage(
 				GENERIC_GENERATOR,
 				sourceModelContext,
 				this::collectGenericGenerator
 		);
+	}
+
+	@Override
+	public void collectIdGenerators(MemberDetails memberDetails) {
+		if ( !bootstrapContext.getJpaCompliance().isGlobalGeneratorScopeEnabled() ) {
+			return;
+		}
+
+		memberDetails.forEachRepeatedAnnotationUsages(
+				SEQUENCE_GENERATOR,
+				sourceModelContext,
+				(sequenceGenerator) -> collectSequenceGenerator( memberDetails, sequenceGenerator )
+		);
+		memberDetails.forEachAnnotationUsage(
+				TABLE_GENERATOR,
+				sourceModelContext,
+				tableGenerator -> collectTableGenerator( memberDetails, tableGenerator )
+		);
+		memberDetails.forEachAnnotationUsage(
+				GENERIC_GENERATOR,
+				sourceModelContext,
+				this::collectGenericGenerator
+		);
+	}
+
+	/**
+	 * Account for implicit naming of sequence and table generators when applied to an entity class per JPA 3.2
+	 */
+	private String determineImplicitGeneratorNameBase(ClassDetails classDetails, GenerationType generationType) {
+		if ( classDetails.getName().endsWith( ".package-info" ) ) {
+			throw new MappingException( String.format(
+					Locale.ROOT,
+					"@%s placed on package (%s) specified no name",
+					generationType == GenerationType.SEQUENCE ? SequenceGenerator.class.getSimpleName() : TableGenerator.class.getSimpleName(),
+					StringHelper.qualifier( classDetails.getName() )
+			) );
+		}
+		final Entity entityAnnotation = classDetails.getDirectAnnotationUsage( ENTITY );
+		if ( entityAnnotation != null ) {
+			final String explicitEntityName = entityAnnotation.name();
+			return StringHelper.isNotEmpty( explicitEntityName )
+					? explicitEntityName
+					: StringHelper.unqualify( classDetails.getName() );
+		}
+		return null;
 	}
 
 
@@ -752,9 +815,28 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		} );
 	}
 
-	public void collectSequenceGenerator(SequenceGenerator usage) {
-		collectSequenceGenerator( new SequenceGeneratorRegistration( usage.name(), usage ) );
+	public void collectSequenceGenerator(MemberDetails memberDetails, SequenceGenerator usage) {
+		collectSequenceGenerator( memberDetails.getDeclaringType(), usage );
 	}
+
+
+	public void collectSequenceGenerator(ClassDetails classDetails, SequenceGenerator usage) {
+		final String registrationName;
+		if ( !usage.name().isEmpty() ) {
+			registrationName = usage.name();
+		}
+		else {
+			final Entity entityAnnotation = classDetails.getDirectAnnotationUsage( Entity.class );
+			if ( entityAnnotation != null && !entityAnnotation.name().isEmpty() ) {
+				registrationName = entityAnnotation.name();
+			}
+			else {
+				registrationName = StringHelper.unqualify( classDetails.getName() );
+			}
+		}
+		collectSequenceGenerator( new SequenceGeneratorRegistration( registrationName, usage ) );
+	}
+
 
 	public void collectSequenceGenerator(SequenceGeneratorRegistration generatorRegistration) {
 		checkGeneratorName( generatorRegistration.name() );
@@ -762,7 +844,6 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		if ( sequenceGeneratorRegistrations == null ) {
 			sequenceGeneratorRegistrations = new HashMap<>();
 		}
-
 		sequenceGeneratorRegistrations.put( generatorRegistration.name(), generatorRegistration );
 	}
 
@@ -842,16 +923,57 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		} );
 	}
 
-	public void collectTableGenerator(TableGenerator usage) {
-		collectTableGenerator( new TableGeneratorRegistration( usage.name(), usage ) );
+	public void collectTableGenerator(ClassDetails classDetails, TableGenerator usage) {
+		final TableGeneratorJpaAnnotation generatorAnnotation = new TableGeneratorJpaAnnotation(
+				usage,
+				sourceModelContext
+		);
+
+		final Entity entityAnnotation = classDetails.getDirectAnnotationUsage( Entity.class );
+		final String simpleName;
+		if ( entityAnnotation != null && !entityAnnotation.name().isEmpty() ) {
+			simpleName = entityAnnotation.name();
+		}
+		else {
+			simpleName = StringHelper.unqualify( classDetails.getName() );
+		}
+
+		final String registrationName;
+		if ( !usage.name().isEmpty() ) {
+			registrationName = usage.name();
+		}
+		else {
+			registrationName = simpleName;
+		}
+		generatorAnnotation.name( registrationName );
+		collectTableGenerator( new TableGeneratorRegistration( registrationName, usage ) );
+
+	}
+
+	public void collectTableGenerator(MemberDetails memberDetails, TableGenerator usage) {
+		final String registrationName;
+		if ( !usage.name().isEmpty() ) {
+			registrationName = usage.name();
+		}
+		else {
+			final Entity entityAnnotation = memberDetails.getDeclaringType().getDirectAnnotationUsage( Entity.class );
+			if ( entityAnnotation != null && !entityAnnotation.name().isEmpty() ) {
+				registrationName = entityAnnotation.name();
+			}
+			else {
+				registrationName = StringHelper.unqualify( memberDetails.getDeclaringType().getName() );
+			}
+		}
+		collectTableGenerator( new TableGeneratorRegistration( registrationName, usage ) );
+
 	}
 
 	public void collectTableGenerator(TableGeneratorRegistration generatorRegistration) {
 		checkGeneratorName( generatorRegistration.name() );
+
 		if ( tableGeneratorRegistrations == null ) {
 			tableGeneratorRegistrations = new HashMap<>();
 		}
-
 		tableGeneratorRegistrations.put( generatorRegistration.name(), generatorRegistration );
 	}
 
@@ -879,6 +1001,9 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	}
 
 	public void collectGenericGenerator(GenericGenerator usage) {
+		if ( usage.name().isEmpty() ) {
+			return;
+		}
 		collectGenericGenerator( new GenericGeneratorRegistration( usage.name(), usage ) );
 	}
 
@@ -888,7 +1013,6 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		if ( genericGeneratorRegistrations == null ) {
 			genericGeneratorRegistrations = new HashMap<>();
 		}
-
 		genericGeneratorRegistrations.put( generatorRegistration.name(), generatorRegistration );
 	}
 

@@ -117,9 +117,7 @@ public class DomainModelCategorizationCollector {
 		getGlobalRegistrations().collectEmbeddableInstantiatorRegistrations( classDetails );
 		getGlobalRegistrations().collectFilterDefinitions( classDetails );
 
-		if ( areIdGeneratorsGlobal ) {
-			getGlobalRegistrations().collectIdGenerators( classDetails );
-		}
+		getGlobalRegistrations().collectIdGenerators( classDetails );
 
 		getGlobalRegistrations().collectImportRename( classDetails );
 

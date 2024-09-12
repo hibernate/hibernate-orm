@@ -2190,8 +2190,9 @@ public abstract class CollectionBinder {
 		bindCollectionSecondPass( targetEntity, joinColumns );
 
 		if ( isCollectionOfEntities ) {
+			final AnnotatedJoinColumn firstInverseJoinColumn = inverseJoinColumns.getJoinColumns().get(0);
 			final ManyToOne element = handleCollectionOfEntities( elementType, targetEntity, hqlOrderBy );
-			bindManyToManyInverseForeignKey( targetEntity, inverseJoinColumns, element, oneToMany );
+			bindManyToManyInverseForeignKey( targetEntity, inverseJoinColumns, element, firstInverseJoinColumn.isUnique() );
 		}
 		else if ( isManyToAny ) {
 			handleManyToAny();

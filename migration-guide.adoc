@@ -330,11 +330,13 @@ While most users will never see this change, it might impact integrations which 
 ** Removed `@LazyCollection`
 ** Removed `@IndexColumn`
 ** Replaced uses of `CacheModeType` with `CacheMode`
+** Removed `@TestForIssue` (for testing purposes) -> use `org.hibernate.testing.orm.junit.JiraKey` and `org.hibernate.testing.orm.junit.JiraKeyGroup`
 
 * Classes/interfaces
 ** Removed `SqmQualifiedJoin` (all joins are qualified)
 ** Removed `AdditionalJaxbMappingProducer` -> `AdditionalMappingContributor`
 ** Removed `MetadataContributor` -> `AdditionalMappingContributor`
+** Removed `EmptyInterceptor` -> implement `org.hibernate.Interceptor` directly
 
 * Behavior
 ** Removed `org.hibernate.Session#save` in favor of `org.hibernate.Session#persist`

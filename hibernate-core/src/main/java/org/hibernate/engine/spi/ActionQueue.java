@@ -1167,8 +1167,7 @@ public class ActionQueue {
 				if ( value == null ) {
 					return;
 				}
-				if ( type instanceof EntityType ) {
-					final EntityType entityType = (EntityType) type;
+				if ( type instanceof EntityType entityType ) {
 					final InsertInfo insertInfo = insertInfosByEntity.get( value );
 					if ( insertInfo != null ) {
 						if ( entityType.isOneToOne()
@@ -1188,8 +1187,7 @@ public class ActionQueue {
 						}
 					}
 				}
-				else if ( type instanceof CollectionType ) {
-					CollectionType collectionType = (CollectionType) type;
+				else if ( type instanceof CollectionType collectionType ) {
 					final PluralAttributeMapping pluralAttributeMapping = insertAction.getSession()
 							.getFactory()
 							.getMappingMetamodel()
@@ -1212,9 +1210,8 @@ public class ActionQueue {
 						}
 					}
 				}
-				else if ( type instanceof ComponentType ) {
+				else if ( type instanceof ComponentType compositeType ) {
 					// Support recursive checks of composite type properties for associations and collections.
-					ComponentType compositeType = (ComponentType) type;
 					final SharedSessionContractImplementor session = insertAction.getSession();
 					final Object[] componentValues = compositeType.getPropertyValues( value, session );
 					for ( int j = 0; j < componentValues.length; ++j ) {

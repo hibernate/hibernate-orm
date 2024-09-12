@@ -81,28 +81,29 @@ public interface ManagedEntity extends Managed {
 	/**
 	 * Used to understand if the tracker can be used to detect dirty properties.
 	 *
-	 * E.g:
-	 * 		@Entity
-	 * 		class MyEntity{
-	 * 			@Id Integer id
-	 * 			String name
-	 * 		}
+	 * <pre>
+	 * &#64;Entity
+	 * class MyEntity{
+	 * 	&#64;Id Integer id
+	 * 	String name
+	 * }
 	 *
-	 * 		inSession (
-	 * 			session -> {
-	 * 				MyEntity entity = new MyEntity(1, "Poul");
-	 * 				session.persist(entity);
-	 * 		});
+	 * inSession (
+	 * 	session -> {
+	 * 		MyEntity entity = new MyEntity(1, "Poul");
+	 * 		session.persist(entity);
+	 * });
 	 *
 	 *
-	 * 		inSession (
-	 * 			session -> {
-	 * 				MyEntity entity = new MyEntity(1, null);
-	 * 				session.merge(entity);
-	 * 		});
-	 *
-	 * 		Because the attribute `name` has been set to null the SelfDirtyTracker does not detect any change and
-	 * 		so doesn't mark the attribute as dirty so the merge does not perform any update.
+	 * inSession (
+	 * 	session -> {
+	 * 		MyEntity entity = new MyEntity(1, null);
+	 * 		session.merge(entity);
+	 * });
+	 * </pre>
+	 * Because the attribute `name` has been set to null the SelfDirtyTracker
+	 * does not detect any change and so doesn't mark the attribute as dirty
+	 * so the merge does not perform any update.
 	 *
 	 *
 	 * @param useTracker true if the tracker can be used to detect dirty properties, false otherwise

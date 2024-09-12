@@ -77,7 +77,7 @@ public class Index implements Exportable, Serializable {
 	 */
 	@Deprecated(since = "6.3")
 	public java.util.List<Column> getColumns() {
-		return selectables.stream().map( s -> (Column) s ).toList();
+		return selectables.stream().map( selectable -> (Column) selectable ).toList();
 	}
 
 	/**

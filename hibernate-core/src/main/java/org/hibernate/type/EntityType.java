@@ -668,8 +668,8 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 		else {
 			final Type type = mappingContext.getReferencedPropertyType( getAssociatedEntityName(), uniqueKeyPropertyName );
-			if ( type instanceof EntityType ) {
-				return ( (EntityType) type ).getIdentifierOrUniqueKeyType( mappingContext );
+			if ( type instanceof EntityType entityType ) {
+				return entityType.getIdentifierOrUniqueKeyType( mappingContext );
 			}
 			else {
 				return type;

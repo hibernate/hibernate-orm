@@ -103,11 +103,8 @@ public class NClobJavaType extends AbstractClassJavaType<NClob> {
 					return (X) new CharacterStreamImpl( DataHelper.extractString( value.getCharacterStream() ) );
 				}
 			}
-			else if (NClob.class.isAssignableFrom( type )) {
-				final NClob nclob =  value instanceof WrappedNClob
-						? ( (WrappedNClob) value ).getWrappedNClob()
-						: getOrCreateNClob(value, options);
-				return (X) nclob;
+			else if ( NClob.class.isAssignableFrom( type ) ) {
+				return (X) getOrCreateNClob( value, options );
 			}
 		}
 		catch ( SQLException e ) {
@@ -118,20 +115,22 @@ public class NClobJavaType extends AbstractClassJavaType<NClob> {
 	}
 
 	private NClob getOrCreateNClob(NClob value, WrapperOptions options) throws SQLException {
-		if(options.getDialect().useConnectionToCreateLob()) {
-			if(value.length() == 0) {
+		if ( value instanceof WrappedNClob ) {
+			value = ( (WrappedNClob) value ).getWrappedNClob();
+		}
+		if ( options.getDialect().useConnectionToCreateLob() ) {
+			if ( value.length() == 0 ) {
 				// empty NClob
-				return options.getLobCreator().createNClob("");
+				return options.getLobCreator().createNClob( "" );
 			}
 			else {
-				return options.getLobCreator().createNClob(value.getSubString(1, (int) value.length()));
+				return options.getLobCreator().createNClob( value.getSubString( 1, (int) value.length() ) );
 			}
 		}
 		else {
 			return value;
 		}
 	}
-
 
 	public <X> NClob wrap(X value, WrapperOptions options) {
 		if ( value == null ) {

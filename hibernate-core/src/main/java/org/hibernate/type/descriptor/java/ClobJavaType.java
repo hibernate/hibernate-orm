@@ -104,11 +104,8 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 					return (X) LobStreamDataHelper.extractString( value.getCharacterStream() );
 				}
 			}
-			else if (Clob.class.isAssignableFrom( type )) {
-				final Clob clob =  value instanceof WrappedClob
-						? ( (WrappedClob) value ).getWrappedClob()
-						: getOrCreateClob(value, options);
-				return (X) clob;
+			else if ( Clob.class.isAssignableFrom( type ) ) {
+				return (X) getOrCreateClob( value, options );
 			}
 			else if ( String.class.isAssignableFrom( type ) ) {
 				if (value instanceof ClobImplementer) {
@@ -129,13 +126,16 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 	}
 
 	private Clob getOrCreateClob(Clob value, WrapperOptions options) throws SQLException {
-		if(options.getDialect().useConnectionToCreateLob()) {
-			if(value.length() == 0) {
+		if ( value instanceof WrappedClob ) {
+			value = ( (WrappedClob) value ).getWrappedClob();
+		}
+		if ( options.getDialect().useConnectionToCreateLob() ) {
+			if ( value.length() == 0 ) {
 				// empty Clob
-				return options.getLobCreator().createClob("");
+				return options.getLobCreator().createClob( "" );
 			}
 			else {
-				return options.getLobCreator().createClob(value.getSubString(1, (int) value.length()));
+				return options.getLobCreator().createClob( value.getSubString( 1, (int) value.length() ) );
 			}
 		}
 		else {

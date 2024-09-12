@@ -43,7 +43,18 @@ public class TableGeneratorJpaAnnotation implements TableGenerator, UniqueConstr
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
 	public TableGeneratorJpaAnnotation(SourceModelBuildingContext modelContext) {
-		this.name = "";
+		this( "", modelContext );
+	}
+
+	/**
+	 * Used in creating named, defaulted annotation instances.  Generally this
+	 * is a situation where we have:<ol>
+	 *     <li>{@linkplain GeneratedValue#strategy()} set to {@linkplain jakarta.persistence.GenerationType#TABLE}</li>
+	 *     <li>{@linkplain GeneratedValue#generator()} set to a non-empty String, but with no matching {@linkplain TableGenerator}</li>
+	 * </ol>
+	 */
+	public TableGeneratorJpaAnnotation(String name, SourceModelBuildingContext modelContext) {
+		this.name = name;
 		this.table = "";
 		this.catalog = "";
 		this.schema = "";

@@ -131,7 +131,7 @@ public class HiLoSequenceMismatchStrategyTest {
 	public static class TestEntity {
 
 		@Id
-		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "hilo_sequence_generator")
+		@GeneratedValue(generator = "hilo_sequence_generator")
 		@GenericGenerator(name = "hilo_sequence_generator", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
 				@Parameter(name = "sequence_name", value = sequenceName),
 				@Parameter(name = "initial_value", value = "1"),

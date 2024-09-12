@@ -18,8 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DomainModel(annotatedClasses =
 		{FieldLevelGeneratorTest.EntityWithAnonSequenceGenerator.class,
 		FieldLevelGeneratorTest.EntityWithAnonTableGenerator.class})
-@FailureExpected( reason = "Support for unnamed generators is not implemented yet" )
-@Jira( "https://hibernate.atlassian.net/browse/HHH-18498" )
 public class FieldLevelGeneratorTest {
 	@Test
 	void testAnonGenerator(SessionFactoryScope scope) {
@@ -29,17 +27,19 @@ public class FieldLevelGeneratorTest {
 			s.persist(entity1);
 			s.persist(entity2);
 			assertEquals(42, entity1.id);
-			assertEquals(69, entity2.id);
+			assertEquals(70, entity2.id);
 		});
 	}
-	@Entity
+
+	@Entity(name = "EntityWithAnonSequenceGenerator")
 	static class EntityWithAnonSequenceGenerator {
 		@Id
 		@GeneratedValue
 		@SequenceGenerator(initialValue = 42)
 		long id;
 	}
-	@Entity
+
+	@Entity(name = "EntityWithAnonTableGenerator")
 	static class EntityWithAnonTableGenerator {
 		@Id
 		@GeneratedValue

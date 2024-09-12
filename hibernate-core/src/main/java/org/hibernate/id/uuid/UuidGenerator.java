@@ -19,7 +19,7 @@ import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
 import org.hibernate.generator.GeneratorCreationContext;
-import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.type.descriptor.java.UUIDJavaType;
 import org.hibernate.type.descriptor.java.UUIDJavaType.ValueTransformer;
 
@@ -49,7 +49,47 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 		valueTransformer = determineProperTransformer( memberType );
 	}
 
-	private UuidGenerator(
+	/**
+	 * This form is used when there is no {@code @UuidGenerator} but we know we want this generator
+	 */
+	@Internal
+	public UuidGenerator(
+			org.hibernate.annotations.UuidGenerator config,
+			MemberDetails memberDetails) {
+		generator = determineValueGenerator( config, memberDetails );
+
+		final Class<?> memberType = memberDetails.getType().determineRawClass().toJavaClass();
+		valueTransformer = determineProperTransformer( memberType );
+	}
+
+	private static UuidValueGenerator determineValueGenerator(
+			org.hibernate.annotations.UuidGenerator config,
+			MemberDetails memberDetails) {
+		if ( config != null ) {
+			if ( config.algorithm() != UuidValueGenerator.class ) {
+				if ( config.style() != AUTO ) {
+					throw new MappingException(
+							String.format(
+									Locale.ROOT,
+									"Style [%s] should not be specified with custom UUID value generator : %s.%s",
+									config.style().name(),
+									memberDetails.getDeclaringType().getName(),
+									memberDetails.getName()
+							)
+					);
+				}
+				return instantiateCustomGenerator( config.algorithm() );
+			}
+			else if ( config.style() == TIME ) {
+				return new CustomVersionOneStrategy();
+			}
+		}
+
+		return StandardRandomStrategy.INSTANCE;
+	}
+
+	@Internal
+	public UuidGenerator(
 			org.hibernate.annotations.UuidGenerator config,
 			Member idMember) {
 		if ( config.algorithm() != UuidValueGenerator.class ) {

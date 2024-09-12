@@ -49,7 +49,6 @@ import jakarta.persistence.Table;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.EMBEDDABLE;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.ENTITY;
 import static org.hibernate.boot.model.internal.FilterDefBinder.bindFilterDefs;
-import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
 import static org.hibernate.boot.model.internal.GeneratorParameters.interpretSequenceGenerator;
 import static org.hibernate.boot.model.internal.GeneratorParameters.interpretTableGenerator;
 import static org.hibernate.boot.model.internal.InheritanceState.getInheritanceStateOfSuperEntity;
@@ -132,7 +131,7 @@ public final class AnnotationBinder {
 				sourceContext( context ).getClassDetailsRegistry()
 						.resolveClassDetails( pack.getName() + ".package-info" );
 
-		buildGenerators( packageInfoClassDetails, context );
+		GeneratorBinder.registerGlobalGenerators( packageInfoClassDetails, context );
 
 		bindTypeDescriptorRegistrations( packageInfoClassDetails, context );
 		bindEmbeddableInstantiatorRegistrations( packageInfoClassDetails, context );
@@ -218,9 +217,9 @@ public final class AnnotationBinder {
 		bindConverterRegistrations( classDetails, context );
 
 		// try to find class level generators
-		final Map<String, IdentifierGeneratorDefinition> generators = buildGenerators( classDetails, context );
+//		GeneratorBinder.registerGlobalGenerators( classDetails, context );
 		if ( context.getMetadataCollector().getClassType( classDetails ) == ENTITY ) {
-			EntityBinder.bindEntityClass( classDetails, inheritanceStatePerClass, generators, context );
+			EntityBinder.bindEntityClass( classDetails, inheritanceStatePerClass, context );
 		}
 	}
 

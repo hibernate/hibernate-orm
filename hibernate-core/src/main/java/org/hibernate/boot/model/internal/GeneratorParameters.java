@@ -11,6 +11,8 @@ import jakarta.persistence.TableGenerator;
 import jakarta.persistence.UniqueConstraint;
 import org.hibernate.Internal;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -36,6 +38,18 @@ import org.hibernate.type.Type;
 
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.BiConsumer;
+
+import static org.hibernate.id.IdentifierGenerator.CONTRIBUTOR_NAME;
+import static org.hibernate.id.IdentifierGenerator.ENTITY_NAME;
+import static org.hibernate.id.IdentifierGenerator.JPA_ENTITY_NAME;
+import static org.hibernate.id.OptimizableGenerator.DEFAULT_INITIAL_VALUE;
+import static org.hibernate.id.OptimizableGenerator.IMPLICIT_NAME_BASE;
+import static org.hibernate.id.OptimizableGenerator.INCREMENT_PARAM;
+import static org.hibernate.id.OptimizableGenerator.INITIAL_PARAM;
+import static org.hibernate.id.PersistentIdentifierGenerator.PK;
+import static org.hibernate.id.PersistentIdentifierGenerator.TABLE;
+import static org.hibernate.id.PersistentIdentifierGenerator.TABLES;
 
 /**
  * Responsible for setting up the parameters which are passed to
@@ -57,65 +71,88 @@ public class GeneratorParameters {
 	public static Properties collectParameters(
 			SimpleValue identifierValue,
 			Dialect dialect,
+			RootClass rootClass) {
+		final Properties params = new Properties();
+		collectParameters( identifierValue, dialect, rootClass, params::put );
+		return params;
+	}
+
+	/**
+	 * Collect the parameters which should be passed to
+	 * {@link Configurable#configure(GeneratorCreationContext, Properties)}.
+	 */
+	public static Properties collectParameters(
+			SimpleValue identifierValue,
+			Dialect dialect,
 			RootClass rootClass,
 			Map<String, Object> configuration) {
+		final Properties params = collectParameters( identifierValue, dialect, rootClass );
+		if ( configuration != null ) {
+			params.putAll( configuration );
+		}
+		return params;
+	}
+
+	public static void collectParameters(
+			SimpleValue identifierValue,
+			Dialect dialect,
+			RootClass rootClass,
+			BiConsumer<String,String> parameterCollector) {
+
 		final ConfigurationService configService =
 				identifierValue.getMetadata().getMetadataBuildingOptions().getServiceRegistry()
 						.requireService( ConfigurationService.class );
 
-		final Properties params = new Properties();
 
 		// default initial value and allocation size per-JPA defaults
-		params.setProperty( OptimizableGenerator.INITIAL_PARAM,
-				String.valueOf( OptimizableGenerator.DEFAULT_INITIAL_VALUE ) );
+		parameterCollector.accept( INITIAL_PARAM, String.valueOf( DEFAULT_INITIAL_VALUE ) );
+		parameterCollector.accept( INCREMENT_PARAM,	String.valueOf( defaultIncrement( configService ) ) );
 
-		params.setProperty( OptimizableGenerator.INCREMENT_PARAM,
-				String.valueOf( defaultIncrement( configService ) ) );
 		//init the table here instead of earlier, so that we can get a quoted table name
 		//TODO: would it be better to simply pass the qualified table name, instead of
 		//	  splitting it up into schema/catalog/table names
 		final String tableName = identifierValue.getTable().getQuotedName( dialect );
-		params.setProperty( PersistentIdentifierGenerator.TABLE, tableName );
+		parameterCollector.accept( TABLE, tableName );
 
 		//pass the column name (a generated id almost always has a single column)
-		final Column column = (Column) identifierValue.getSelectables().get(0);
-		final String columnName = column.getQuotedName( dialect );
-		params.setProperty( PersistentIdentifierGenerator.PK, columnName );
+		if ( identifierValue.getColumnSpan() == 1 ) {
+			final Column column = (Column) identifierValue.getSelectables().get( 0 );
+			final String columnName = column.getQuotedName( dialect );
+			parameterCollector.accept( PK, columnName );
+		}
 
 		//pass the entity-name, if not a collection-id
 		if ( rootClass != null ) {
-			params.setProperty( IdentifierGenerator.ENTITY_NAME, rootClass.getEntityName() );
-			params.setProperty( IdentifierGenerator.JPA_ENTITY_NAME, rootClass.getJpaEntityName() );
+			parameterCollector.accept( ENTITY_NAME, rootClass.getEntityName() );
+			parameterCollector.accept( JPA_ENTITY_NAME, rootClass.getJpaEntityName() );
 			// The table name is not really a good default for subselect entities,
 			// so use the JPA entity name which is short
-			params.setProperty( OptimizableGenerator.IMPLICIT_NAME_BASE,
+			parameterCollector.accept(
+					IMPLICIT_NAME_BASE,
 					identifierValue.getTable().isSubselect()
 							? rootClass.getJpaEntityName()
-							: identifierValue.getTable().getName() );
+							: identifierValue.getTable().getName()
+			);
 
-			params.setProperty( PersistentIdentifierGenerator.TABLES,
-					identityTablesString( dialect, rootClass ) );
+			parameterCollector.accept( TABLES, identityTablesString( dialect, rootClass ) );
 		}
 		else {
-			params.setProperty( PersistentIdentifierGenerator.TABLES, tableName );
-			params.setProperty( OptimizableGenerator.IMPLICIT_NAME_BASE, tableName );
+			parameterCollector.accept( TABLES, tableName );
+			parameterCollector.accept( IMPLICIT_NAME_BASE, tableName );
 		}
 
-		params.put( IdentifierGenerator.CONTRIBUTOR_NAME,
-				identifierValue.getBuildingContext().getCurrentContributorName() );
+		parameterCollector.accept( CONTRIBUTOR_NAME, identifierValue.getBuildingContext().getCurrentContributorName() );
 
 		final Map<String, Object> settings = configService.getSettings();
 		if ( settings.containsKey( AvailableSettings.PREFERRED_POOLED_OPTIMIZER ) ) {
-			params.put( AvailableSettings.PREFERRED_POOLED_OPTIMIZER,
-					settings.get( AvailableSettings.PREFERRED_POOLED_OPTIMIZER ) );
+			parameterCollector.accept(
+					AvailableSettings.PREFERRED_POOLED_OPTIMIZER,
+					(String) settings.get( AvailableSettings.PREFERRED_POOLED_OPTIMIZER )
+			);
 		}
-
-		params.putAll( configuration );
-
-		return params;
 	}
 
-	private static String identityTablesString(Dialect dialect, RootClass rootClass) {
+	public static String identityTablesString(Dialect dialect, RootClass rootClass) {
 		final StringBuilder tables = new StringBuilder();
 		for ( Table table : rootClass.getIdentityTables() ) {
 			tables.append( table.getQuotedName( dialect ) );
@@ -126,7 +163,11 @@ public class GeneratorParameters {
 		return tables.toString();
 	}
 
-	private static int defaultIncrement(ConfigurationService configService) {
+	public static int defaultIncrement(MetadataImplementor metadata) {
+		return defaultIncrement( metadata.getMetadataBuildingOptions().getServiceRegistry().requireService( ConfigurationService.class ) );
+	}
+
+	public static int defaultIncrement(ConfigurationService configService) {
 		final String idNamingStrategy =
 				configService.getSetting( AvailableSettings.ID_DB_STRUCTURE_NAMING_STRATEGY,
 						StandardConverters.STRING, null );
@@ -198,13 +239,13 @@ public class GeneratorParameters {
 		}
 
 		definitionBuilder.addParam(
-				org.hibernate.id.enhanced.TableGenerator.INCREMENT_PARAM,
+				INCREMENT_PARAM,
 				String.valueOf( tableGeneratorAnnotation.allocationSize() )
 		);
 
 		// See comment on HHH-4884 wrt initialValue.  Basically initialValue is really the stated value + 1
 		definitionBuilder.addParam(
-				org.hibernate.id.enhanced.TableGenerator.INITIAL_PARAM,
+				INITIAL_PARAM,
 				String.valueOf( tableGeneratorAnnotation.initialValue() + 1 )
 		);
 
@@ -238,11 +279,11 @@ public class GeneratorParameters {
 		}
 
 		definitionBuilder.addParam(
-				SequenceStyleGenerator.INCREMENT_PARAM,
+				INCREMENT_PARAM,
 				String.valueOf( sequenceGeneratorAnnotation.allocationSize() )
 		);
 		definitionBuilder.addParam(
-				SequenceStyleGenerator.INITIAL_PARAM,
+				INITIAL_PARAM,
 				String.valueOf( sequenceGeneratorAnnotation.initialValue() )
 		);
 

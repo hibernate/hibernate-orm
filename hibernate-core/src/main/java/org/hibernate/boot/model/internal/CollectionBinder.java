@@ -169,7 +169,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
 import static org.hibernate.boot.model.internal.BinderHelper.isPrimitive;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
-import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
+import static org.hibernate.boot.model.internal.GeneratorBinder.visitIdGeneratorDefinitions;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
 import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
@@ -263,7 +263,6 @@ public abstract class CollectionBinder {
 			PropertyHolder propertyHolder,
 			Nullability nullability,
 			PropertyData inferredData,
-			Map<String, IdentifierGeneratorDefinition> classGenerators,
 			EntityBinder entityBinder,
 			boolean isIdentifierMapper,
 			MetadataBuildingContext context,
@@ -358,9 +357,26 @@ public abstract class CollectionBinder {
 
 		if ( property.hasAnnotationUsage( CollectionId.class, sourceModelContext ) ) {
 			//do not compute the generators unless necessary
-			final HashMap<String, IdentifierGeneratorDefinition> localGenerators = new HashMap<>(classGenerators);
-			localGenerators.putAll( buildGenerators( property, context ) );
-			collectionBinder.setLocalGenerators( localGenerators );
+			final HashMap<String, IdentifierGeneratorDefinition> availableGenerators = new HashMap<>();
+			visitIdGeneratorDefinitions(
+					property.getDeclaringType(),
+					definition -> {
+						if ( !definition.getName().isEmpty() ) {
+							availableGenerators.put( definition.getName(), definition );
+						}
+					},
+					context
+			);
+			visitIdGeneratorDefinitions(
+					property,
+					definition -> {
+						if ( !definition.getName().isEmpty() ) {
+							availableGenerators.put( definition.getName(), definition );
+						}
+					},
+					context
+			);
+			collectionBinder.setLocalGenerators( availableGenerators );
 
 		}
 		collectionBinder.bind();

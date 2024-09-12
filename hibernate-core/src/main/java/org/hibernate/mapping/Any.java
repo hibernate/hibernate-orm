@@ -394,7 +394,7 @@ public class Any extends SimpleValue {
 		@Override
 		public boolean isValid(MappingContext mappingContext) {
 			return columnName != null
-					&& getType().getColumnSpan( mappingContext ) == 1;
+				&& getType().getColumnSpan( mappingContext ) == 1;
 		}
 	}
 
@@ -463,12 +463,6 @@ public class Any extends SimpleValue {
 			super.addFormula( formula );
 
 			selectableConsumer.accept( formula );
-		}
-
-		@Override
-		public boolean isValid(MappingContext mappingContext) throws MappingException {
-			// check
-			return super.isValid( mappingContext );
 		}
 	}
 }

@@ -146,7 +146,7 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 	}
 
 	@Override
-	public final Class getReturnedClass() {
+	public final Class<?> getReturnedClass() {
 		return converter.getDomainJavaType().getJavaTypeClass();
 	}
 

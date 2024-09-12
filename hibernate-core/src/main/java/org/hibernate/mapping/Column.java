@@ -493,14 +493,14 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		final Type[] subtypes = ( (ComponentType) type ).getSubtypes();
 		int typeStartIndex = 0;
 		for ( Type subtype : subtypes ) {
-			final int columnSpan = subtype.getColumnSpan(mappingContext);
+			final int columnSpan = subtype.getColumnSpan( mappingContext );
 			if ( typeStartIndex + columnSpan > typeIndex ) {
 				final int subtypeIndex = typeIndex - typeStartIndex;
 				if ( subtype instanceof EntityType ) {
-					return getTypeForEntityValue(mappingContext, subtype, subtypeIndex);
+					return getTypeForEntityValue( mappingContext, subtype, subtypeIndex );
 				}
 				if ( subtype instanceof ComponentType ) {
-					return getTypeForComponentValue(mappingContext, subtype, subtypeIndex);
+					return getTypeForComponentValue( mappingContext, subtype, subtypeIndex );
 				}
 				if ( subtypeIndex == 0 ) {
 					return subtype;

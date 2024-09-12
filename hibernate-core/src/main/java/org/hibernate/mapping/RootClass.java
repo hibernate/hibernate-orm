@@ -325,8 +325,7 @@ public class RootClass extends PersistentClass implements TableOwner, SoftDeleta
 	 * <em>correct</em>) we simply log a warning.
 	 */
 	private void checkCompositeIdentifier() {
-		if ( getIdentifier() instanceof Component ) {
-			final Component id = (Component) getIdentifier();
+		if ( getIdentifier() instanceof Component id ) {
 			if ( !id.isDynamic() ) {
 				final Class<?> idClass = id.getComponentClass();
 				if ( idClass != null ) {

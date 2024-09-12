@@ -103,11 +103,6 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 	}
 
 	@Override
-	public Object accept(ValueVisitor visitor) {
-		return visitor.accept(this);
-	}
-
-	@Override
 	public boolean isSame(SimpleValue other) {
 		return other instanceof ToOne && isSame( (ToOne) other );
 	}
@@ -120,7 +115,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 
 	@Override
 	public boolean isValid(MappingContext mappingContext) throws MappingException {
-		if (referencedEntityName==null) {
+		if ( referencedEntityName==null ) {
 			throw new MappingException("association must specify the referenced entity");
 		}
 		return super.isValid( mappingContext );

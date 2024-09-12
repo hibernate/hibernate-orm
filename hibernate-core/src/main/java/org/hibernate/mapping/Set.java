@@ -89,8 +89,7 @@ public class Set extends Collection {
 				pk = new PrimaryKey( getCollectionTable() );
 				pk.addColumns( getKey() );
 				for ( Selectable selectable : getElement().getSelectables() ) {
-					if ( selectable instanceof Column ) {
-						Column col = (Column) selectable;
+					if ( selectable instanceof Column col ) {
 						if ( !col.isNullable() ) {
 							pk.addColumn( col );
 						}

@@ -49,7 +49,7 @@ public abstract class AbstractStandardBasicType<T>
 	private final ValueExtractor<T> jdbcValueExtractor;
 	private final JdbcLiteralFormatter<T> jdbcLiteralFormatter;
 	private final @Nullable Type typeForEqualsHashCode;
-	private final Class javaTypeClass;
+	private final Class<?> javaTypeClass;
 	private final MutabilityPlan<T> mutabilityPlan;
 	private final Comparator<T> javatypeComparator;
 
@@ -124,7 +124,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	public final Class getReturnedClass() {
+	public final Class<?> getReturnedClass() {
 		return javaTypeClass;
 	}
 

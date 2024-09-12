@@ -17,9 +17,8 @@ import org.jboss.logging.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * Think of this as the composite modeling of a graph
- * and the semantic.
- *
+ * Think of this as the composite modeling of a graph and the semantic.
+ * <p>
  * Its graph and semantic can be obtained by {@link #getGraph()} and
  * {@link #getSemantic()}
  *
@@ -100,7 +99,7 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 	 * Apply a graph and semantic based on configuration properties or hints
 	 * based on {@link GraphSemantic#getJpaHintName()} for {@link GraphSemantic#LOAD} or
 	 * {@link GraphSemantic#FETCH}.
-	 *
+	 * <p>
 	 * The semantic is required.  The graph
 	 * may be null, but that should generally be considered mis-use.
 	 *
@@ -114,10 +113,10 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 
 		RootGraphImplementor<?> fetchHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.FETCH.getJpaHintName() );
 		RootGraphImplementor<?> loadHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.LOAD.getJpaHintName() );
-		if (fetchHint == null) {
+		if ( fetchHint == null ) {
 			fetchHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.FETCH.getJakartaHintName() );
 		}
-		if (loadHint == null) {
+		if ( loadHint == null ) {
 			loadHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.LOAD.getJakartaHintName() );
 		}
 

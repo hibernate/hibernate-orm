@@ -85,8 +85,7 @@ public class CheckConstraint {
 
 	@Override
 	public boolean equals(Object object) {
-		if ( object instanceof CheckConstraint ) {
-			CheckConstraint other = (CheckConstraint) object;
+		if ( object instanceof CheckConstraint other ) {
 			return Objects.equals( name, other.name )
 				&& Objects.equals( constraint, other.constraint );
 		}

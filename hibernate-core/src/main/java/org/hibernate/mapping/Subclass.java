@@ -12,7 +12,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.collections.JoinedList;
-import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * A mapping model object that represents a subclass in an entity class
@@ -23,7 +22,6 @@ import org.hibernate.persister.entity.EntityPersister;
 public class Subclass extends PersistentClass {
 
 	private PersistentClass superclass;
-	private Class<? extends EntityPersister> classPersisterClass;
 	private final int subclassId;
 
 	public Subclass(PersistentClass superclass, MetadataBuildingContext buildingContext) {

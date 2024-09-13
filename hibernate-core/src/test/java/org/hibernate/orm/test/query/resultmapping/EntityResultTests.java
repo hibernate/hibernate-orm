@@ -19,12 +19,14 @@ import java.util.Set;
 
 import jakarta.persistence.LockModeType;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
@@ -123,6 +125,10 @@ public class EntityResultTests extends AbstractUsageTest {
 	}
 
 	@Test
+	@RequiresDialect(
+			value = H2Dialect.class,
+			comment = "We don't really care about the execution on the database, just how the result-set is handled.  Some databases (mssql) don't like this query"
+	)
 	public void testImplicitAttributeMappingWithLockMode(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

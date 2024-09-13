@@ -15,8 +15,6 @@ import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 
-import org.jboss.jandex.IndexView;
-
 /**
  * @author Steve Ebersole
  */
@@ -28,13 +26,11 @@ public class CategorizedDomainModelImpl implements CategorizedDomainModel {
 
 	private final ClassDetailsRegistry classDetailsRegistry;
 	private final AnnotationDescriptorRegistry annotationDescriptorRegistry;
-	private final IndexView jandexIndex;
 	private final PersistenceUnitMetadata persistenceUnitMetadata;
 
 	public CategorizedDomainModelImpl(
 			ClassDetailsRegistry classDetailsRegistry,
 			AnnotationDescriptorRegistry annotationDescriptorRegistry,
-			IndexView jandexIndex,
 			PersistenceUnitMetadata persistenceUnitMetadata,
 			Set<EntityHierarchy> entityHierarchies,
 			Map<String, ClassDetails> mappedSuperclasses,
@@ -47,7 +43,6 @@ public class CategorizedDomainModelImpl implements CategorizedDomainModel {
 		this.mappedSuperclasses = mappedSuperclasses;
 		this.embeddables = embeddables;
 		this.globalRegistrations = globalRegistrations;
-		this.jandexIndex = jandexIndex;
 	}
 
 	@Override
@@ -58,11 +53,6 @@ public class CategorizedDomainModelImpl implements CategorizedDomainModel {
 	@Override
 	public AnnotationDescriptorRegistry getAnnotationDescriptorRegistry() {
 		return annotationDescriptorRegistry;
-	}
-
-	@Override
-	public IndexView getJandexIndex() {
-		return jandexIndex;
 	}
 
 	@Override

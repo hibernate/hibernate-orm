@@ -71,10 +71,8 @@ import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.internal.MutableClassDetailsRegistry;
-import org.hibernate.models.jandex.internal.JandexIndexerHelper;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
-import org.hibernate.models.spi.ClassLoading;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
@@ -96,9 +94,6 @@ import org.hibernate.type.internal.NamedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 
-import org.jboss.jandex.CompositeIndex;
-import org.jboss.jandex.IndexView;
-import org.jboss.jandex.Indexer;
 
 import jakarta.persistence.AttributeConverter;
 
@@ -399,10 +394,6 @@ public class MetadataBuildingProcess {
 		} );
 		managedResources.getAnnotatedClassReferences().forEach( (clazz) -> allKnownClassNames.add( clazz.getName() ) );
 
-		// At this point we know all managed class names across all sources.
-		// Resolve the Jandex Index and build the SourceModelBuildingContext.
-		final IndexView jandexIndex = resolveJandexIndex( allKnownClassNames, bootstrapContext.getJandexView(), sourceModelBuildingContext.getClassLoading() );
-
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// 	- process metadata-complete XML
 		//	- collect overlay XML
@@ -425,7 +416,6 @@ public class MetadataBuildingProcess {
 		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
 				areIdGeneratorsGlobal,
 				metadataCollector.getGlobalRegistrations(),
-				jandexIndex,
 				sourceModelBuildingContext
 		);
 
@@ -459,7 +449,6 @@ public class MetadataBuildingProcess {
 
 		return new DomainModelSource(
 				classDetailsRegistry,
-				jandexIndex,
 				allKnownClassNames,
 				modelCategorizationCollector.getGlobalRegistrations(),
 				rootMappingDefaults,
@@ -490,31 +479,6 @@ public class MetadataBuildingProcess {
 				applyKnownClass( classDetails.getSuperClass(), categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
 			}
 		}
-	}
-
-	public static IndexView resolveJandexIndex(
-			List<String> allKnownClassNames,
-			IndexView suppliedJandexIndex,
-			ClassLoading classLoading) {
-		// todo : we could build a new Jandex (Composite)Index that includes the `managedResources#getAnnotatedClassNames`
-		// 		and all classes from `managedResources#getXmlMappingBindings`.  Only really worth it in the case
-		//		of runtime enhancement.  This would definitely need to be toggle-able.
-		//		+
-		//		For now, let's not as it does not matter for this PoC
-		if ( 1 == 1 ) {
-			return suppliedJandexIndex;
-		}
-
-		final Indexer jandexIndexer = new Indexer();
-		for ( String knownClassName : allKnownClassNames ) {
-			JandexIndexerHelper.apply( knownClassName, jandexIndexer, classLoading );
-		}
-
-		if ( suppliedJandexIndex == null ) {
-			return jandexIndexer.complete();
-		}
-
-		return CompositeIndex.create( suppliedJandexIndex, jandexIndexer.complete() );
 	}
 
 	private static void processAdditionalMappingContributions(

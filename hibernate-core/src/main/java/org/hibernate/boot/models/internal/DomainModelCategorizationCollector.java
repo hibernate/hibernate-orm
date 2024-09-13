@@ -24,8 +24,6 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.IndexView;
-
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import jakarta.persistence.Embeddable;
@@ -40,7 +38,6 @@ import jakarta.persistence.MappedSuperclass;
 
 public class DomainModelCategorizationCollector {
 	private final boolean areIdGeneratorsGlobal;
-	private final IndexView jandexIndex;
 
 	private final GlobalRegistrationsImpl globalRegistrations;
 	private final SourceModelBuildingContext modelsContext;
@@ -52,10 +49,8 @@ public class DomainModelCategorizationCollector {
 	public DomainModelCategorizationCollector(
 			boolean areIdGeneratorsGlobal,
 			GlobalRegistrations globalRegistrations,
-			IndexView jandexIndex,
 			SourceModelBuildingContext modelsContext) {
 		this.areIdGeneratorsGlobal = areIdGeneratorsGlobal;
-		this.jandexIndex = jandexIndex;
 		this.globalRegistrations = (GlobalRegistrationsImpl) globalRegistrations;
 		this.modelsContext = modelsContext;
 	}
@@ -176,7 +171,6 @@ public class DomainModelCategorizationCollector {
 		return new CategorizedDomainModelImpl(
 				classDetailsRegistry,
 				annotationDescriptorRegistry,
-				jandexIndex,
 				persistenceUnitMetadata,
 				entityHierarchies,
 				mappedSuperclasses,

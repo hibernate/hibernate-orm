@@ -86,7 +86,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
-import org.jboss.jandex.IndexView;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.ConstraintMode;
@@ -213,7 +212,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public MetadataBuilder applyIndexView(IndexView jandexView) {
+	public MetadataBuilder applyIndexView(Object jandexView) {
 		this.bootstrapContext.injectJandexView( jandexView );
 		return this;
 	}

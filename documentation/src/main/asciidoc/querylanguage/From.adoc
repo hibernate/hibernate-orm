@@ -131,7 +131,7 @@ select id, total
 from (
     select ord.id as id, sum(item.book.price * item.quantity) as total
     from Order as ord
-        join items as item
+        join ord.items as item
     group by ord
 )
 where total > 100.0

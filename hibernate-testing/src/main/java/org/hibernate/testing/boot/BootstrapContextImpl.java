@@ -29,7 +29,6 @@ import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.jboss.jandex.IndexView;
 
 /**
  * @author Andrea Boriero
@@ -121,7 +120,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public IndexView getJandexView() {
+	public Object getJandexView() {
 		return delegate.getJandexView();
 	}
 

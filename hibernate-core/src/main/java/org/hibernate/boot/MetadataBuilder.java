@@ -21,7 +21,6 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.type.BasicType;
 import org.hibernate.usertype.UserType;
 
-import org.jboss.jandex.IndexView;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.SharedCacheMode;
@@ -148,7 +147,7 @@ public interface MetadataBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	MetadataBuilder applyIndexView(IndexView jandexView);
+	MetadataBuilder applyIndexView(Object jandexView);
 
 	/**
 	 * Specify the options to be used in performing scanning.

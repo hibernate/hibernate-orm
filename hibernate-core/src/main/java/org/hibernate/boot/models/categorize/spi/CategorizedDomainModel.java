@@ -15,8 +15,6 @@ import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 
-import org.jboss.jandex.IndexView;
-
 /**
  * The application's domain model, understood at a very rudimentary level - we know
  * a class is an entity, a mapped-superclass, ...  And we know about persistent attributes,
@@ -37,8 +35,6 @@ public interface CategorizedDomainModel {
 	 * Registry of all known {@linkplain java.lang.annotation.Annotation} descriptors (classes)
 	 */
 	AnnotationDescriptorRegistry getAnnotationDescriptorRegistry();
-
-	IndexView getJandexIndex();
 
 	PersistenceUnitMetadata getPersistenceUnitMetadata();
 

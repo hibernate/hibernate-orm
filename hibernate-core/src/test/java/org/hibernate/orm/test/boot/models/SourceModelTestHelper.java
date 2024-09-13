@@ -297,7 +297,6 @@ public class SourceModelTestHelper {
 		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
 				true,
 				globalRegistrations,
-				jandexIndex,
 				sourceModelBuildingContext
 		);
 

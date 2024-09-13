@@ -16,7 +16,6 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.cfg.AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY;
 import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
 import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
 import static org.hibernate.testing.cache.CachingRegionFactory.DEFAULT_ACCESSTYPE;
@@ -28,8 +27,7 @@ import static org.junit.Assert.assertNull;
 		settings = {
 				@Setting( name = USE_SECOND_LEVEL_CACHE, value = "true" ),
 				@Setting( name = DEFAULT_ACCESSTYPE, value = "nonstrict-read-write" ),
-				@Setting( name = GENERATE_STATISTICS, value = "true" ),
-				@Setting( name = ALLOW_REFRESH_DETACHED_ENTITY, value = "true" )
+				@Setting( name = GENERATE_STATISTICS, value = "true" )
 		}
 )
 @DomainModel( annotatedClasses = {A.class, Another.class, AllCached.class, B.class, SubClass.class} )

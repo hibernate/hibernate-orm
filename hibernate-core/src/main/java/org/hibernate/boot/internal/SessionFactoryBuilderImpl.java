@@ -427,11 +427,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public void disableRefreshDetachedEntity() {
-		this.optionsBuilder.disableRefreshDetachedEntity();
-	}
-
-	@Override
 	public void disableJtaTransactionAccess() {
 		this.optionsBuilder.disableJtaTransactionAccess();
 	}

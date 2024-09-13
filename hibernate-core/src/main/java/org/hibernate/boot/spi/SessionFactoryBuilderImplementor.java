@@ -5,6 +5,7 @@
 package org.hibernate.boot.spi;
 
 import org.hibernate.boot.SessionFactoryBuilder;
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
 /**
  * Additional SPI contract for {@link SessionFactoryBuilder}, mainly intended for
@@ -21,10 +22,11 @@ public interface SessionFactoryBuilderImplementor extends SessionFactoryBuilder 
 	void disableJtaTransactionAccess();
 
 	/**
-	 * Called if {@link org.hibernate.cfg.AvailableSettings#ALLOW_REFRESH_DETACHED_ENTITY}
-	 * is not enabled.
+	 * @deprecated with no replacement.
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	default void disableRefreshDetachedEntity() {
+		DEPRECATION_LOGGER.deprecatedRefreshLockDetachedEntity();
 	}
 
 	/**

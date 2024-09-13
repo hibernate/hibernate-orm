@@ -5,15 +5,13 @@
 package org.hibernate.orm.test.bytecode.enhancement.lazy.HHH_10708;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -34,7 +32,6 @@ import java.util.Set;
 )
 @SessionFactory
 @BytecodeEnhanced
-@ServiceRegistry(settings = @Setting(name = AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY, value = "true"))
 public class UnexpectedDeleteTest2 {
 
 	private Bar myBar;
@@ -59,8 +56,10 @@ public class UnexpectedDeleteTest2 {
 	@Test
 	public void test(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
-			s.refresh( myBar );
-			assertFalse( myBar.foos.isEmpty() );
+			assertThrows(IllegalArgumentException.class,
+						() -> s.refresh( myBar ),
+						"Given entity is not associated with the persistence context"
+			);
 
 			// The issue is that currently, for some unknown reason, foos are deleted on flush
 		} );

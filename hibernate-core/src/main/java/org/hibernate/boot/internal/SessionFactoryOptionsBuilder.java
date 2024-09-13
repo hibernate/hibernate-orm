@@ -75,7 +75,6 @@ import org.hibernate.type.format.jaxb.JaxbXmlFormatMapper;
 import jakarta.persistence.criteria.Nulls;
 
 import static org.hibernate.cfg.AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS;
-import static org.hibernate.cfg.AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_UPDATE_OUTSIDE_TRANSACTION;
 import static org.hibernate.cfg.AvailableSettings.AUTO_CLOSE_SESSION;
 import static org.hibernate.cfg.AvailableSettings.AUTO_EVICT_COLLECTION_CACHE;
@@ -176,7 +175,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean jtaTransactionAccessEnabled;
 	private boolean allowOutOfTransactionUpdateOperations;
 	private boolean releaseResourcesOnCloseEnabled;
-	private boolean allowRefreshDetachedEntity;
 
 	// (JTA) transaction handling
 	private boolean jtaTrackByThread;
@@ -333,12 +331,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				ALLOW_JTA_TRANSACTION_ACCESS,
 				BOOLEAN,
 				true
-		);
-
-		this.allowRefreshDetachedEntity = configurationService.getSetting(
-				ALLOW_REFRESH_DETACHED_ENTITY,
-				BOOLEAN,
-				false
 		);
 
 		this.flushBeforeCompletionEnabled = configurationService.getSetting( FLUSH_BEFORE_COMPLETION, BOOLEAN, true );
@@ -904,11 +896,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean isJtaTransactionAccessEnabled() {
 		return jtaTransactionAccessEnabled;
-	}
-
-	@Override
-	public boolean isAllowRefreshDetachedEntity() {
-		return allowRefreshDetachedEntity;
 	}
 
 	@Override
@@ -1622,10 +1609,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void enableCollectionInDefaultFetchGroup(boolean enabled) {
 		this.collectionsInDefaultFetchGroupEnabled = enabled;
-	}
-
-	public void disableRefreshDetachedEntity() {
-		this.allowRefreshDetachedEntity = false;
 	}
 
 	public void disableJtaTransactionAccess() {

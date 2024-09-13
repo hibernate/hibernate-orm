@@ -37,6 +37,8 @@ import org.hibernate.type.format.FormatMapper;
 
 import jakarta.persistence.criteria.Nulls;
 
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
+
 /**
  * Convenience base class for custom implementations of {@link SessionFactoryOptions}
  * using delegation.
@@ -77,8 +79,13 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 		return delegate.isJtaTransactionAccessEnabled();
 	}
 
+	/**
+	 * @deprecated with no replacement.
+	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	@Override
 	public boolean isAllowRefreshDetachedEntity() {
+		DEPRECATION_LOGGER.deprecatedRefreshLockDetachedEntity();
 		return delegate.isAllowRefreshDetachedEntity();
 	}
 

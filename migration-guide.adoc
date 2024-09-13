@@ -245,6 +245,16 @@ parent.addChild( merged );
 ----
 
 
+[[refresh-lock-deteached]]
+== Refreshing/locking detached entities
+
+Traditionally, Hibernate allowed detached entities to be refreshed. However, Jakarta Persistence prohibits this practice and specifies that an `IllegalArgumentException` should be thrown instead. Hibernate now fully aligns with the JPA specification in this regard.
+
+Along the same line of thought, also acquiring a lock on a detached entity is no longer allowed.
+
+To this effect the `hibernate.allow_refresh_detached_entity`, which allowed Hibernate's legacy refresh behaviour to be invoked, has been removed.
+
+
 [[auto-cascade-persist]]
 == Cascading persistence for `@Id` and `@MapsId` fields
 
@@ -377,6 +387,7 @@ While most users will never see this change, it might impact integrations which 
 
 * Settings
 ** Removed `hibernate.mapping.precedence` and friends
+** Removed `hibernate.allow_refresh_detached_entity`
 
 
 

@@ -1479,7 +1479,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 //			builder.applyInterceptor( sessionFactoryInterceptor );
 //		}
 		handleAllowJtaTransactionAccess( builder );
-		handleAllowDetachedEntity( builder );
 		addConfiguredSessionFactoryObserver( builder );
 		builder.addSessionFactoryObservers( ServiceRegistryCloser.INSTANCE );
 		builder.applyEntityNotFoundDelegate( JpaEntityNotFoundDelegate.INSTANCE );
@@ -1497,16 +1496,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 					standardServiceRegistry.requireService( StrategySelector.class )
 							.resolveStrategy( SessionFactoryObserver.class, sessionFactoryObserverSetting );
 			builder.addSessionFactoryObservers( suppliedSessionFactoryObserver );
-		}
-	}
-
-	// will use user override value or default to false if not supplied to follow JPA spec
-	private void handleAllowDetachedEntity(SessionFactoryBuilder builder) {
-		final boolean allowRefreshDetachedEntity =
-				readBooleanConfigurationValue( AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY );
-		if ( !allowRefreshDetachedEntity
-				&& builder instanceof SessionFactoryBuilderImplementor implementor ) {
-			implementor.disableRefreshDetachedEntity();
 		}
 	}
 

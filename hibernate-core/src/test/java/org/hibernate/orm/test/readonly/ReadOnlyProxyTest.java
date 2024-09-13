@@ -10,17 +10,13 @@ import org.hibernate.CacheMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.UnresolvableObjectException;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -42,7 +38,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 				"org/hibernate/orm/test/readonly/TextHolder.hbm.xml"
 		}
 )
-@ServiceRegistry(settings = @Setting(name = AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY, value = "true"))
 public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 
 	@Test
@@ -1156,9 +1151,9 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.flush();
 		try {
 			s.refresh( dp );
-			fail( "should have thrown UnresolvableObjectException" );
+			fail( "should have thrown IllegalArgumentException" );
 		}
-		catch (UnresolvableObjectException ex) {
+		catch (IllegalArgumentException ex) {
 			// expected
 		}
 		finally {
@@ -1182,9 +1177,9 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		assertTrue( Hibernate.isInitialized( dpProxyInit ) );
 		try {
 			s.refresh( dpProxyInit );
-			fail( "should have thrown UnresolvableObjectException" );
+			fail( "should have thrown IllegalArgumentException" );
 		}
-		catch (UnresolvableObjectException ex) {
+		catch (IllegalArgumentException ex) {
 			// expected
 		}
 		finally {
@@ -1199,59 +1194,15 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 			s.refresh( dpProxy );
 			assertFalse( Hibernate.isInitialized( dpProxy ) );
 			Hibernate.initialize( dpProxy );
-			fail( "should have thrown UnresolvableObjectException" );
+			fail( "should have thrown IllegalArgumentException" );
 		}
-		catch (UnresolvableObjectException ex) {
+		catch (IllegalArgumentException ex) {
 			// expected
 		}
 		finally {
 			t.rollback();
 			s.close();
 		}
-	}
-
-	@Test
-	public void testReadOnlyRefreshDetached(SessionFactoryScope scope) {
-		Session s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		Transaction t = s.beginTransaction();
-		DataPoint dp = new DataPoint();
-		dp.setDescription( "original" );
-		dp.setX( new BigDecimal( 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-		s.persist( dp );
-		t.commit();
-		s.close();
-
-		s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		t = s.beginTransaction();
-		dp = s.getReference( DataPoint.class, dp.getId() );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		assertFalse( s.isReadOnly( dp ) );
-		s.setReadOnly( dp, true );
-		assertTrue( s.isReadOnly( dp ) );
-		s.evict( dp );
-		s.refresh( dp );
-		assertTrue( Hibernate.isInitialized( dp ) );
-		assertFalse( s.isReadOnly( dp ) );
-		dp.setDescription( "changed" );
-		assertEquals( "changed", dp.getDescription() );
-		assertTrue( Hibernate.isInitialized( dp ) );
-		s.setReadOnly( dp, true );
-		s.evict( dp );
-		s.refresh( dp );
-		assertEquals( "original", dp.getDescription() );
-		assertFalse( s.isReadOnly( dp ) );
-		t.commit();
-
-		s.clear();
-		t = s.beginTransaction();
-		dp = s.get( DataPoint.class, dp.getId() );
-		assertEquals( "original", dp.getDescription() );
-		s.remove( dp );
-		t.commit();
-		s.close();
 	}
 
 	@Test

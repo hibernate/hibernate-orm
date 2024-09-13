@@ -110,8 +110,8 @@ select book.isbn,
 from Item
 where book.isbn = :isbn
 group by year(order.dateTime)
-having year > 2003
-   and yearlyTotalSold > 0
+having year(order.dateTime) > 2003
+   and sum(quantity) > 0
 ----
 
 The `having` clause follows the same rules as the `where` clause and is also just a logical predicate.
@@ -606,8 +606,8 @@ select book.isbn,
 from Item
 where book.isbn = :isbn
 group by year(order.dateTime)
-having year > 2000
-   and yearlyTotalSold > 0
+having year(order.dateTime) > 2000
+   and sum(quantity) > 0
 order by yearlyTotalSold desc, year desc
 ----
 

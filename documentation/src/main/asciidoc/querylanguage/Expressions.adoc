@@ -787,7 +787,7 @@ select trunc(local datetime, hour)
 ----
 
 Truncating a date, time or datetime value means obtaining a value of the same type in which all temporal units smaller than `field` have been pruned.
-For hours, minutes and seconds this means setting them to `00`. For months and days, this means setting them to `01`.
+For hours, minutes, and seconds this means setting them to `00`. For months and days, this means setting them to `01`.
 
 [[string-functions]]
 ==== Functions for working with strings

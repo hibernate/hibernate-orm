@@ -13,14 +13,11 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -39,7 +36,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				"org/hibernate/orm/test/readonly/TextHolder.hbm.xml"
 		}
 )
-@ServiceRegistry(settings = @Setting(name = AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY, value = "true"))
 public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 
 	@AfterEach
@@ -451,53 +447,6 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 	}
 
 	@Test
-	public void testReadOnlyRefreshDetached(SessionFactoryScope scope) {
-		Session s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		Transaction t = s.beginTransaction();
-		DataPoint dp = new DataPoint();
-		dp.setDescription( "original" );
-		dp.setX( new BigDecimal( 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-		s.persist( dp );
-		t.commit();
-		s.close();
-
-		s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		t = s.beginTransaction();
-		s.setDefaultReadOnly( false );
-		dp.setDescription( "changed" );
-		assertEquals( "changed", dp.getDescription() );
-		s.refresh( dp );
-		assertEquals( "original", dp.getDescription() );
-		assertFalse( s.isReadOnly( dp ) );
-		dp.setDescription( "changed" );
-		assertEquals( "changed", dp.getDescription() );
-		s.evict( dp );
-		s.refresh( dp );
-		assertEquals( "original", dp.getDescription() );
-		assertFalse( s.isReadOnly( dp ) );
-		dp.setDescription( "changed" );
-		assertEquals( "changed", dp.getDescription() );
-		s.setDefaultReadOnly( true );
-		s.evict( dp );
-		s.refresh( dp );
-		assertEquals( "original", dp.getDescription() );
-		assertTrue( s.isReadOnly( dp ) );
-		dp.setDescription( "changed" );
-		t.commit();
-
-		s.clear();
-		t = s.beginTransaction();
-		dp = s.get( DataPoint.class, dp.getId() );
-		assertEquals( "original", dp.getDescription() );
-		s.remove( dp );
-		t.commit();
-		s.close();
-	}
-
-	@Test
 	public void testReadOnlyProxyRefresh(SessionFactoryScope scope) {
 		Session s = openSession( scope );
 		s.setCacheMode( CacheMode.IGNORE );
@@ -552,65 +501,6 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.close();
 
-	}
-
-	@Test
-	public void testReadOnlyProxyRefreshDetached(SessionFactoryScope scope) {
-		Session s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		Transaction t = s.beginTransaction();
-		DataPoint dp = new DataPoint();
-		dp.setDescription( "original" );
-		dp.setX( new BigDecimal( 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-		s.persist( dp );
-		t.commit();
-		s.close();
-
-		s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		t = s.beginTransaction();
-		s.setDefaultReadOnly( true );
-		dp = (DataPoint) s.getReference( DataPoint.class, dp.getId() );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		assertTrue( s.isReadOnly( dp ) );
-		s.evict( dp );
-		s.refresh( dp );
-		assertTrue( Hibernate.isInitialized( dp ) );
-		s.setDefaultReadOnly( false );
-		assertTrue( s.isReadOnly( dp ) );
-		s.evict( dp );
-		s.refresh( dp );
-		assertTrue( Hibernate.isInitialized( dp ) );
-		assertFalse( s.isReadOnly( dp ) );
-		assertFalse( s.isReadOnly( ( (HibernateProxy) dp ).getHibernateLazyInitializer().getImplementation() ) );
-		dp.setDescription( "changed" );
-		assertEquals( "changed", dp.getDescription() );
-		assertTrue( Hibernate.isInitialized( dp ) );
-		s.evict( dp );
-		s.refresh( dp );
-		assertEquals( "original", dp.getDescription() );
-		assertFalse( s.isReadOnly( dp ) );
-		assertFalse( s.isReadOnly( ( (HibernateProxy) dp ).getHibernateLazyInitializer().getImplementation() ) );
-		dp.setDescription( "changed" );
-		assertEquals( "changed", dp.getDescription() );
-		s.setDefaultReadOnly( true );
-		s.evict( dp );
-		s.refresh( dp );
-		assertEquals( "original", dp.getDescription() );
-		assertTrue( s.isReadOnly( dp ) );
-		assertTrue( s.isReadOnly( ( (HibernateProxy) dp ).getHibernateLazyInitializer().getImplementation() ) );
-		dp.setDescription( "changed" );
-		assertEquals( "changed", dp.getDescription() );
-		t.commit();
-
-		s.clear();
-		t = s.beginTransaction();
-		dp = s.get( DataPoint.class, dp.getId() );
-		assertEquals( "original", dp.getDescription() );
-		s.remove( dp );
-		t.commit();
-		s.close();
 	}
 
 	@Test

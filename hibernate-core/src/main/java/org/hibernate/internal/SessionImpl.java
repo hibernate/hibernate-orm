@@ -1245,10 +1245,8 @@ public class SessionImpl
 	}
 
 	private void checkEntityManaged(String entityName, Object entity) {
-		if ( !getSessionFactory().getSessionFactoryOptions().isAllowRefreshDetachedEntity() ) {
-			if ( !managed( entityName, entity ) ) {
-				throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
-			}
+		if ( !managed( entityName, entity ) ) {
+			throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
 		}
 	}
 

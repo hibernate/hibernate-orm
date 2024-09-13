@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.mapping.naturalid.mutable.cached;
 
-import org.hibernate.LockOptions;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -272,40 +271,6 @@ public abstract class CachedMutableNaturalIdTest {
 			person = session.bySimpleNaturalId(AllCached.class).load("John Doe");
 			assertEquals(4, sfi.getStatistics().getNaturalIdCacheHitCount()); // thus hits should not increment
 		});
-	}
-
-	@Test
-	public void testReattachUnmodifiedInstance(SessionFactoryScope scope) {
-		final B created = scope.fromTransaction(
-				(session) -> {
-					A a = new A();
-					B b = new B();
-					b.naturalid = 100;
-					session.persist( a );
-					session.persist( b );
-					b.assA = a;
-					a.assB.add( b );
-
-					return b;
-				}
-		);
-
-		scope.inTransaction(
-				(session) -> {
-					// HHH-7513 failure during reattachment
-					session.lock( created, LockOptions.NONE );
-					session.remove( created.assA );
-					session.remove( created );
-				}
-		);
-
-		scope.inTransaction(
-				(session) -> {
-					// true if the re-attachment worked
-					assertEquals( session.createQuery( "FROM A" ).list().size(), 0 );
-					assertEquals( session.createQuery( "FROM B" ).list().size(), 0 );
-				}
-		);
 	}
 
 }

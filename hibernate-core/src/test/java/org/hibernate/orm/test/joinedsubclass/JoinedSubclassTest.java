@@ -12,12 +12,9 @@ import jakarta.persistence.criteria.Root;
 
 import org.hibernate.LockMode;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -33,16 +30,15 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 		xmlMappings = "org/hibernate/orm/test/joinedsubclass/Person.hbm.xml"
 )
 @SessionFactory
-@ServiceRegistry(settings = @Setting(name = AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY, value = "true"))
 public class JoinedSubclassTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "delete from Employee" ).executeUpdate();
-					session.createQuery( "delete from Customer" ).executeUpdate();
-					session.createQuery( "delete from Person" ).executeUpdate();
+					session.createMutationQuery( "delete from Employee" ).executeUpdate();
+					session.createMutationQuery( "delete from Customer" ).executeUpdate();
+					session.createMutationQuery( "delete from Person" ).executeUpdate();
 				}
 		);
 	}
@@ -63,15 +59,15 @@ public class JoinedSubclassTest {
 
 		Customer c = scope.fromTransaction(
 				session ->
-						session.get( Customer.class, new Long( e.getId() ) )
+						session.get( Customer.class, e.getId() )
 
 		);
 		assertNull( c );
 
 		scope.inTransaction(
 				session -> {
-					Employee employee = session.get( Employee.class, new Long( e.getId() ) );
-					Customer customer = session.get( Customer.class, new Long( e.getId() ) );
+					Employee employee = session.get( Employee.class, e.getId() );
+					Customer customer = session.get( Customer.class, e.getId() );
 					assertNotNull( employee );
 					assertNull( customer );
 				}
@@ -148,8 +144,8 @@ public class JoinedSubclassTest {
 
 		scope.inTransaction(
 				session -> {
-					session.lock( p, LockMode.PESSIMISTIC_WRITE );
-					session.lock( q, LockMode.PESSIMISTIC_WRITE );
+					session.lock( session.get(Person.class, p.getId()), LockMode.PESSIMISTIC_WRITE );
+					session.lock( session.get( Employee.class, q.getId()), LockMode.PESSIMISTIC_WRITE );
 					session.remove( p );
 					session.remove( q );
 				}

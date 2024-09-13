@@ -103,6 +103,14 @@ class Book {
 }
 ----
 
+[[id-generators]]
+=== Identifier Generators
+
+Starting in 7.0 it is no longer valid to combine `GenerationType#SEQUENCE` with anything other than
+`@SequenceGenerator` nor `GenerationType#TABLE` with anything other than `@TableGenerator`.  Previous
+versions did not validate this particularly well.
+
+
 [[java-beans]]
 === JavaBean Conventions
 

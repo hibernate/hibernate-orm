@@ -699,7 +699,7 @@ for (var list : results) {
 ----
 
 Unfortunately, not one of the types `Object[]`, `List`, `Map`, nor `Tuple` lets us access an individual item in a result tuple without a type cast.
-Surely `Tuple` does the type cast for us when we pass a class object to `get()`, but it's logically identical.
+Sure, `Tuple` does the type cast for us when we pass a class object to `get()`, but it's logically identical.
 Fortunately there's one more option, as we're about to see.
 
 [NOTE]

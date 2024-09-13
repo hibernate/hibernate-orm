@@ -577,7 +577,7 @@ Indeed, a fairly innocent-looking HQL query can easily translate to a SQL statem
 ====
 We need to be a _bit_ careful about that, but actually it's usually a good thing.
 HQL makes it very easy to fetch all the data we need in a single trip to the database, and that's absolutely key to achieving high performance in data access code.
-Typically, it's much worse to fetch exactly the data we need, but in many round trips to the database server, than it is to fetch just a bit more data than what we're going to need, all by a single SQL query.
+Typically, it's much worse to fetch exactly the data we need, but in many round trips to the database server, than it is to fetch just a bit more data than what we're going to need, all in a single SQL query.
 ====
 
 When there's no explicit `select` clause, a further abbreviation is sometimes possible.

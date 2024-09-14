@@ -79,9 +79,9 @@ fi
 # Only run checkstyle in the H2 build,
 # so that CI jobs give a more complete report
 # and developers can fix code style and non-H2 DB tests in parallel.
-if [ -n "$goal" ]; then
-  goal="$goal -x checkstyleMain -DPOPULATE_REMOTE=true"
-fi
+#if [ -n "$goal" ]; then
+#  goal="$goal -x checkstyleMain -DPOPULATE_REMOTE=true"
+#fi
 
 function logAndExec() {
   echo 1>&2 "Executing:" "${@}"

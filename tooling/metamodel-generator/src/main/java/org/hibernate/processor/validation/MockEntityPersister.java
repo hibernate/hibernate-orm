@@ -12,6 +12,7 @@ import org.hibernate.persister.entity.DiscriminatorMetadata;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.tuple.entity.EntityMetamodel;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 
 import java.io.Serializable;
@@ -113,27 +114,41 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable, 
 
 	abstract Type createPropertyType(String propertyPath);
 
-	@Override
-	public Type getIdentifierType() {
-		//TODO: propertyType(getIdentifierPropertyName())
-		return typeConfiguration.getBasicTypeForJavaType(Long.class);
-	}
-
+	/**
+	 * Override on subclasses!
+	 */
 	@Override
 	public String getIdentifierPropertyName() {
-		//TODO: return the correct @Id property name
-		return "id";
+		return getRootEntityPersister().identifierPropertyName();
 	}
 
+	protected abstract String identifierPropertyName();
+
+	/**
+	 * Override on subclasses!
+	 */
 	@Override
-	public String getRootEntityName() {
-		for (MockEntityPersister persister : factory.getMockEntityPersisters()) {
-			if (this != persister && !persister.isSamePersister(this)
-					&& persister.isSubclassPersister(this)) {
-				return persister.getRootEntityName();
-			}
-		}
-		return entityName;
+	public Type getIdentifierType() {
+		return getRootEntityPersister().identifierType();
+	}
+
+	protected abstract Type identifierType();
+
+	/**
+	 * Override on subclasses!
+	 */
+	@Override
+	public BasicType<?> getVersionType() {
+		return getRootEntityPersister().versionType();
+	}
+
+	protected abstract BasicType<?> versionType();
+
+	@Override
+	public abstract String getRootEntityName();
+
+	public MockEntityPersister getRootEntityPersister() {
+		return factory.createMockEntityPersister(getRootEntityName());
 	}
 
 	@Override
@@ -195,7 +210,12 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable, 
 
 	@Override
 	public int getVersionProperty() {
-		return -66;
+		return 0;
+	}
+
+	@Override
+	public boolean isVersioned() {
+		return true;
 	}
 
 	@Override

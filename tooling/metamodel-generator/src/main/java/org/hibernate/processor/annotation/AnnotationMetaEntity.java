@@ -71,11 +71,9 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
-import static org.hibernate.grammars.hql.HqlLexer.AS;
 import static org.hibernate.grammars.hql.HqlLexer.FROM;
 import static org.hibernate.grammars.hql.HqlLexer.GROUP;
 import static org.hibernate.grammars.hql.HqlLexer.HAVING;
-import static org.hibernate.grammars.hql.HqlLexer.IDENTIFIER;
 import static org.hibernate.grammars.hql.HqlLexer.ORDER;
 import static org.hibernate.grammars.hql.HqlLexer.WHERE;
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -2408,47 +2406,22 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 		else {
 			final HqlLexer hqlLexer = HqlParseTreeBuilder.INSTANCE.buildHqlLexer( hql );
-			String thisText = "";
 			final List<? extends Token> allTokens = hqlLexer.getAllTokens();
-			for (Token token : allTokens) {
-				if ( token.getType() == IDENTIFIER ) {
-					//TEMPORARY until HQL gets support for 'this'
-					final String text = token.getText();
-					if ( text.equalsIgnoreCase("this") ) {
-						thisText = " as " + text;
-					}
-					break;
-				}
-			}
 			for (int i = 0; i < allTokens.size(); i++) {
 				final Token token = allTokens.get(i);
 				switch ( token.getType() ) {
 					case FROM:
-						return thisText.isEmpty() || hasAlias(i, allTokens) ? hql
-								: new StringBuilder(hql)
-								.insert(allTokens.get(i+1).getStopIndex() + 1, thisText)
-								.toString();
+						return hql;
 					case WHERE:
 					case HAVING:
 					case GROUP:
 					case ORDER:
 						return new StringBuilder(hql)
-								.insert(token.getStartIndex(), "from " + entityType + thisText + " ")
+								.insert(token.getStartIndex(), "from " + entityType + " ")
 								.toString();
 				}
 			}
-			return hql + " from " + entityType + thisText;
-		}
-	}
-
-	private static boolean hasAlias(int i, List<? extends Token> allTokens) {
-		if ( allTokens.size() <= i+2 ) {
-			return false;
-		}
-		else {
-			final int nextTokenType = allTokens.get(i+2).getType();
-			return nextTokenType == IDENTIFIER
-				|| nextTokenType == AS;
+			return hql + " from " + entityType;
 		}
 	}
 

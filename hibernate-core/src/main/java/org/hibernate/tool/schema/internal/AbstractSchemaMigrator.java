@@ -28,7 +28,6 @@ import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
@@ -388,7 +387,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		}
 
 		if ( uniqueConstraintStrategy != SKIP ) {
-			final Exporter<Constraint> exporter = dialect.getUniqueKeyExporter();
+			final Exporter<UniqueKey> exporter = dialect.getUniqueKeyExporter();
 			for ( UniqueKey uniqueKey : table.getUniqueKeys().values() ) {
 				// Skip if index already exists. Most of the time, this
 				// won't work since most Dialects use Constraints. However,

@@ -79,6 +79,7 @@ public class DenormalizedTable extends Table {
 					foreignKey.getColumns(),
 					foreignKey.getReferencedEntityName(),
 					foreignKey.getKeyDefinition(),
+					foreignKey.getOptions(),
 					foreignKey.getReferencedColumns()
 			);
 		}
@@ -88,6 +89,7 @@ public class DenormalizedTable extends Table {
 		final ForeignKey denormalizedForeignKey = new ForeignKey(this);
 		denormalizedForeignKey.setReferencedEntityName( includedTableFk.getReferencedEntityName() );
 		denormalizedForeignKey.setKeyDefinition( includedTableFk.getKeyDefinition() );
+		denormalizedForeignKey.setOptions( includedTableFk.getOptions() );
 		denormalizedForeignKey.setReferencedTable( includedTableFk.getReferencedTable() );
 		denormalizedForeignKey.addReferencedColumns( includedTableFk.getReferencedColumns() );
 		for ( Column keyColumn : includedTableFk.getColumns() ) {

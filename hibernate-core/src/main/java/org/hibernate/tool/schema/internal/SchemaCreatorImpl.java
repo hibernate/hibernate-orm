@@ -96,13 +96,14 @@ public class SchemaCreatorImpl implements SchemaCreator {
 	}
 
 	public SchemaCreatorImpl(ServiceRegistry serviceRegistry, SchemaFilter schemaFilter) {
-		SchemaManagementTool smt = serviceRegistry.getService( SchemaManagementTool.class );
-		if ( !(smt instanceof HibernateSchemaManagementTool) ) {
-			smt = new HibernateSchemaManagementTool();
-			( (HibernateSchemaManagementTool) smt ).injectServices( (ServiceRegistryImplementor) serviceRegistry );
+		if ( serviceRegistry.getService( SchemaManagementTool.class )
+				instanceof HibernateSchemaManagementTool schemaManagementTool ) {
+			tool = schemaManagementTool;
 		}
-
-		this.tool = (HibernateSchemaManagementTool) smt;
+		else {
+			tool = new HibernateSchemaManagementTool();
+			tool.injectServices( (ServiceRegistryImplementor) serviceRegistry );
+		}
 		this.schemaFilter = schemaFilter;
 	}
 

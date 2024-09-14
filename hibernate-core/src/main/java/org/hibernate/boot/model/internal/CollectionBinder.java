@@ -2075,6 +2075,7 @@ public abstract class CollectionBinder {
 				else {
 					key.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
 					key.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
+					key.setForeignKeyOptions( foreignKey.options() );
 					if ( key.getForeignKeyName() == null
 							&& key.getForeignKeyDefinition() == null
 							&& collectionTableAnn.joinColumns().length == 1 ) {
@@ -2082,6 +2083,7 @@ public abstract class CollectionBinder {
 						final ForeignKey nestedForeignKey = joinColumn.foreignKey();
 						key.setForeignKeyName( nullIfEmpty( nestedForeignKey.name() ) );
 						key.setForeignKeyDefinition( nullIfEmpty( nestedForeignKey.foreignKeyDefinition() ) );
+						key.setForeignKeyOptions( nestedForeignKey.options() );
 					}
 				}
 			}
@@ -2091,6 +2093,7 @@ public abstract class CollectionBinder {
 					final ForeignKey foreignKey = joinTableAnn.foreignKey();
 					String foreignKeyName = foreignKey.name();
 					String foreignKeyDefinition = foreignKey.foreignKeyDefinition();
+					String foreignKeyOptions = foreignKey.options();
 					ConstraintMode foreignKeyValue = foreignKey.value();
 					final JoinColumn[] joinColumnAnnotations = joinTableAnn.joinColumns();
 					if ( !ArrayHelper.isEmpty( joinColumnAnnotations ) ) {
@@ -2099,6 +2102,7 @@ public abstract class CollectionBinder {
 						if ( foreignKeyName.isEmpty() ) {
 							foreignKeyName = joinColumnForeignKey.name();
 							foreignKeyDefinition = joinColumnForeignKey.foreignKeyDefinition();
+							foreignKeyOptions = joinColumnForeignKey.options();
 						}
 						if ( foreignKeyValue != NO_CONSTRAINT ) {
 							foreignKeyValue = joinColumnForeignKey.value();
@@ -2111,6 +2115,7 @@ public abstract class CollectionBinder {
 					else {
 						key.setForeignKeyName( nullIfEmpty( foreignKeyName ) );
 						key.setForeignKeyDefinition( nullIfEmpty( foreignKeyDefinition ) );
+						key.setForeignKeyOptions( foreignKeyOptions );
 					}
 				}
 				else {
@@ -2155,6 +2160,7 @@ public abstract class CollectionBinder {
 		else {
 			key.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
 			key.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
+			key.setForeignKeyOptions( foreignKey.options() );
 		}
 	}
 
@@ -2425,6 +2431,7 @@ public abstract class CollectionBinder {
 			final ForeignKey inverseForeignKey = joinTableAnn.inverseForeignKey();
 			String foreignKeyName = inverseForeignKey.name();
 			String foreignKeyDefinition = inverseForeignKey.foreignKeyDefinition();
+			String foreignKeyOptions = inverseForeignKey.options();
 
 			final JoinColumn[] inverseJoinColumns = joinTableAnn.inverseJoinColumns();
 			if ( !ArrayHelper.isEmpty( inverseJoinColumns ) ) {
@@ -2433,6 +2440,7 @@ public abstract class CollectionBinder {
 					final ForeignKey inverseJoinColumnForeignKey = joinColumnAnn.foreignKey();
 					foreignKeyName = inverseJoinColumnForeignKey.name();
 					foreignKeyDefinition = inverseJoinColumnForeignKey.foreignKeyDefinition();
+					foreignKeyOptions = inverseJoinColumnForeignKey.options();
 				}
 			}
 
@@ -2445,6 +2453,7 @@ public abstract class CollectionBinder {
 			else {
 				element.setForeignKeyName( nullIfEmpty( foreignKeyName ) );
 				element.setForeignKeyDefinition( nullIfEmpty( foreignKeyDefinition ) );
+				element.setForeignKeyOptions( foreignKeyOptions );
 			}
 		}
 		return element;

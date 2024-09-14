@@ -17,6 +17,7 @@ import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.tool.schema.spi.Exporter;
 
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
@@ -47,6 +48,9 @@ public class StandardIndexExporter implements Exporter<Index> {
 				.append( " (" );
 		appendColumnList( index, createIndex );
 		createIndex.append( ")" );
+		if ( isNotEmpty( index.getOptions() ) ) {
+			createIndex.append( " " ).append( index.getOptions() );
+		}
 		return new String[] { createIndex.toString() };
 	}
 

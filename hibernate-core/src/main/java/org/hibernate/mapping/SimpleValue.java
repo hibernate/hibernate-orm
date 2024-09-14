@@ -96,6 +96,7 @@ public abstract class SimpleValue implements KeyValue {
 	private Table table;
 	private String foreignKeyName;
 	private String foreignKeyDefinition;
+	private String foreignKeyOptions;
 	private boolean alternateUniqueKey;
 	private OnDeleteAction onDeleteAction;
 	private boolean foreignKeyEnabled = true;
@@ -347,7 +348,8 @@ public abstract class SimpleValue implements KeyValue {
 					getForeignKeyName(),
 					getConstraintColumns(),
 					entityName,
-					getForeignKeyDefinition()
+					getForeignKeyDefinition(),
+					getForeignKeyOptions()
 			);
 			foreignKey.setOnDeleteAction( onDeleteAction );
 			return foreignKey;
@@ -441,6 +443,14 @@ public abstract class SimpleValue implements KeyValue {
 
 	public boolean isConstrained() {
 		return isForeignKeyEnabled() && !hasFormula();
+	}
+
+	public String getForeignKeyOptions() {
+		return foreignKeyOptions;
+	}
+
+	public void setForeignKeyOptions(String foreignKeyOptions) {
+		this.foreignKeyOptions = foreignKeyOptions;
 	}
 
 	public String getForeignKeyDefinition() {

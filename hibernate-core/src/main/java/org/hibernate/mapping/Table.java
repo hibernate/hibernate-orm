@@ -576,8 +576,13 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	public void createForeignKeys(MetadataBuildingContext context) {
 	}
 
+	@Deprecated(since="7.0", forRemoval = true)
 	public ForeignKey createForeignKey(String keyName, List<Column> keyColumns, String referencedEntityName, String keyDefinition) {
-		return createForeignKey( keyName, keyColumns, referencedEntityName, keyDefinition, null );
+		return createForeignKey( keyName, keyColumns, referencedEntityName, keyDefinition, null, null );
+	}
+
+	public ForeignKey createForeignKey(String keyName, List<Column> keyColumns, String referencedEntityName, String keyDefinition, String options) {
+		return createForeignKey( keyName, keyColumns, referencedEntityName, keyDefinition, options, null );
 	}
 
 	public ForeignKey createForeignKey(
@@ -585,6 +590,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			List<Column> keyColumns,
 			String referencedEntityName,
 			String keyDefinition,
+			String options,
 			List<Column> referencedColumns) {
 		final ForeignKeyKey key = new ForeignKeyKey( keyColumns, referencedEntityName, referencedColumns );
 
@@ -593,6 +599,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			foreignKey = new ForeignKey( this );
 			foreignKey.setReferencedEntityName( referencedEntityName );
 			foreignKey.setKeyDefinition( keyDefinition );
+			foreignKey.setOptions( options );
 			for ( Column keyColumn : keyColumns ) {
 				foreignKey.addColumn( keyColumn );
 			}
@@ -773,12 +780,11 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		}
 
 		public boolean equals(Object other) {
-			if ( !( other instanceof ForeignKeyKey ) ) {
+			if ( !(other instanceof ForeignKeyKey foreignKeyKey) ) {
 				return false;
 			}
-			ForeignKeyKey fkk = (ForeignKeyKey) other;
-			return Arrays.equals( fkk.columns, columns )
-					&& Arrays.equals( fkk.referencedColumns, referencedColumns );
+			return Arrays.equals( foreignKeyKey.columns, columns )
+				&& Arrays.equals( foreignKeyKey.referencedColumns, referencedColumns );
 		}
 
 		@Override

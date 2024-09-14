@@ -54,7 +54,6 @@ import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.TypeBinderType;
 import org.hibernate.annotations.View;
 import org.hibernate.binder.TypeBinder;
-import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.internal.InheritanceState.ElementsToProcess;
 import org.hibernate.boot.model.naming.EntityNaming;
@@ -896,6 +895,7 @@ public class EntityBinder {
 			else if ( foreignKey != null ) {
 				key.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
 				key.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
+				key.setForeignKeyOptions( foreignKey.options() );
 			}
 			else if ( noConstraintByDefault ) {
 				key.disableForeignKey();
@@ -904,11 +904,13 @@ public class EntityBinder {
 				final ForeignKey nestedFk = pkJoinColumns.foreignKey();
 				key.setForeignKeyName( nullIfEmpty( nestedFk.name() ) );
 				key.setForeignKeyDefinition( nullIfEmpty( nestedFk.foreignKeyDefinition() ) );
+				key.setForeignKeyOptions( nestedFk.options() );
 			}
 			else if ( pkJoinColumn != null ) {
 				final ForeignKey nestedFk = pkJoinColumn.foreignKey();
 				key.setForeignKeyName( nullIfEmpty( nestedFk.name() ) );
 				key.setForeignKeyDefinition( nullIfEmpty( nestedFk.foreignKeyDefinition() ) );
+				key.setForeignKeyOptions( nestedFk.options() );
 			}
 		}
 	}
@@ -1987,6 +1989,7 @@ public class EntityBinder {
 			else {
 				key.setForeignKeyName( nullIfEmpty( jpaSecondaryTable.foreignKey().name() ) );
 				key.setForeignKeyDefinition( nullIfEmpty( jpaSecondaryTable.foreignKey().foreignKeyDefinition() ) );
+				key.setForeignKeyOptions( jpaSecondaryTable.foreignKey().options() );
 			}
 		}
 	}

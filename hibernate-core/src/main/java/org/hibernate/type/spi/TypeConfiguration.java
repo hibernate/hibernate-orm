@@ -482,6 +482,12 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 					: sessionFactory.getJdbcServices().getDialect();
 		}
 
+		@Override
+		public boolean preferJdbcDatetimeTypes() {
+			return sessionFactory != null
+				&& sessionFactory.getSessionFactoryOptions().isPreferJdbcDatetimeTypesInNativeQueriesEnabled();
+		}
+
 		private Scope(TypeConfiguration typeConfiguration) {
 			this.typeConfiguration = typeConfiguration;
 		}

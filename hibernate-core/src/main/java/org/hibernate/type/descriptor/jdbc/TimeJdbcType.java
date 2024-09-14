@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Types;
+import java.time.LocalTime;
 import java.util.Calendar;
 
 import jakarta.persistence.TemporalType;
@@ -54,7 +55,9 @@ public class TimeJdbcType implements JdbcType {
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return typeConfiguration.getJavaTypeRegistry().getDescriptor( Time.class );
+		return typeConfiguration.getCurrentBaseSqlTypeIndicators().preferJdbcDatetimeTypes()
+				? typeConfiguration.getJavaTypeRegistry().getDescriptor( Time.class )
+				: typeConfiguration.getJavaTypeRegistry().getDescriptor( LocalTime.class );
 	}
 
 	@Override

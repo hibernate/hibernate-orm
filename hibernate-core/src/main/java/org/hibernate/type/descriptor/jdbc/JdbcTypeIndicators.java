@@ -9,7 +9,6 @@ package org.hibernate.type.descriptor.jdbc;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.Incubating;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.dialect.Dialect;
@@ -199,7 +198,7 @@ public interface JdbcTypeIndicators {
 
 	/**
 	 * Resolves the given type code to a possibly different type code, based on context.
-	 *
+	 * <p>
 	 * A database might not support a certain type code in certain scenarios like within a UDT
 	 * and has to resolve to a different type code in such a scenario.
 	 *
@@ -208,6 +207,18 @@ public interface JdbcTypeIndicators {
 	 */
 	default int resolveJdbcTypeCode(int jdbcTypeCode) {
 		return jdbcTypeCode;
+	}
+
+	/**
+	 * Should native queries return JDBC datetime types
+	 * instead of using {@code java.time} types.
+	 *
+	 * @since 7.0
+	 *
+	 * @see org.hibernate.cfg.QuerySettings#NATIVE_PREFER_JDBC_DATETIME_TYPES
+	 */
+	default boolean preferJdbcDatetimeTypes() {
+		return false;
 	}
 
 	/**
@@ -221,47 +232,36 @@ public interface JdbcTypeIndicators {
 
 	/**
 	 * @return the SQL column type used for storing times under the
-	 *         given {@linkplain  TimeZoneStorageStrategy storage strategy}
+	 *         given {@linkplain TimeZoneStorageStrategy storage strategy}
 	 *
 	 * @see SqlTypes#TIME_WITH_TIMEZONE
 	 * @see SqlTypes#TIME
 	 * @see SqlTypes#TIME_UTC
 	 */
 	static int getZonedTimeSqlType(TimeZoneStorageStrategy storageStrategy) {
-		switch ( storageStrategy ) {
-			case NATIVE:
-				return SqlTypes.TIME_WITH_TIMEZONE;
-			case COLUMN:
-			case NORMALIZE:
-				return SqlTypes.TIME;
-			case NORMALIZE_UTC:
-				return SqlTypes.TIME_UTC;
-			default:
-				throw new AssertionFailure( "unknown time zone storage strategy" );
-		}
+		return switch (storageStrategy) {
+			case NATIVE -> SqlTypes.TIME_WITH_TIMEZONE;
+			case COLUMN, NORMALIZE -> SqlTypes.TIME;
+			case NORMALIZE_UTC -> SqlTypes.TIME_UTC;
+		};
 	}
 
 	/**
 	 * @return the SQL column type used for storing datetimes under the
-	 *         given {@linkplain  TimeZoneStorageStrategy storage strategy}
+	 *         given {@linkplain TimeZoneStorageStrategy storage strategy}
 	 *
 	 * @see SqlTypes#TIME_WITH_TIMEZONE
 	 * @see SqlTypes#TIMESTAMP
 	 * @see SqlTypes#TIMESTAMP_UTC
 	 */
 	static int getZonedTimestampSqlType(TimeZoneStorageStrategy storageStrategy) {
-		switch ( storageStrategy ) {
-			case NATIVE:
-				return SqlTypes.TIMESTAMP_WITH_TIMEZONE;
-			case COLUMN:
-			case NORMALIZE:
-				return SqlTypes.TIMESTAMP;
-			case NORMALIZE_UTC:
+		return switch (storageStrategy) {
+			case NATIVE -> SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+			case COLUMN, NORMALIZE -> SqlTypes.TIMESTAMP;
+			case NORMALIZE_UTC ->
 				// sensitive to hibernate.type.preferred_instant_jdbc_type
-				return SqlTypes.TIMESTAMP_UTC;
-			default:
-				throw new AssertionFailure( "unknown time zone storage strategy" );
-		}
+					SqlTypes.TIMESTAMP_UTC;
+		};
 	}
 
 	/**
@@ -286,17 +286,13 @@ public interface JdbcTypeIndicators {
 	 */
 	default int getDefaultZonedTimestampSqlType() {
 		final TemporalType temporalPrecision = getTemporalPrecision();
-		switch ( temporalPrecision == null ? TemporalType.TIMESTAMP : temporalPrecision ) {
-			case TIME:
-				return getZonedTimeSqlType( getDefaultTimeZoneStorageStrategy() );
-			case DATE:
-				return Types.DATE;
-			case TIMESTAMP:
+		return switch (temporalPrecision == null ? TemporalType.TIMESTAMP : temporalPrecision) {
+			case TIME -> getZonedTimeSqlType( getDefaultTimeZoneStorageStrategy() );
+			case DATE -> Types.DATE;
+			case TIMESTAMP ->
 				// sensitive to hibernate.timezone.default_storage
-				return getZonedTimestampSqlType( getDefaultTimeZoneStorageStrategy() );
-			default:
-				throw new IllegalArgumentException( "Unexpected jakarta.persistence.TemporalType : " + temporalPrecision);
-		}
+					getZonedTimestampSqlType( getDefaultTimeZoneStorageStrategy() );
+		};
 	}
 
 	Dialect getDialect();

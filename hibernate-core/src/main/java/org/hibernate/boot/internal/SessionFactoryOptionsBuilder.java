@@ -209,6 +209,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean collectionsInDefaultFetchGroupEnabled = true;
 	private final boolean UnownedAssociationTransientCheck;
 	private final boolean passProcedureParameterNames;
+	private final boolean preferJdbcDatetimeTypes;
 
 	// JPA callbacks
 	private final boolean callbacksEnabled;
@@ -632,6 +633,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		this.passProcedureParameterNames = ConfigurationHelper.getBoolean(
 				AvailableSettings.QUERY_PASS_PROCEDURE_PARAMETER_NAMES,
+				configurationSettings,
+				false
+		);
+
+		this.preferJdbcDatetimeTypes = ConfigurationHelper.getBoolean(
+				AvailableSettings.NATIVE_PREFER_JDBC_DATETIME_TYPES,
 				configurationSettings,
 				false
 		);
@@ -1324,6 +1331,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean isPassProcedureParameterNames() {
 		return passProcedureParameterNames;
+	}
+
+	@Override
+	public boolean isPreferJdbcDatetimeTypesInNativeQueriesEnabled() {
+		return preferJdbcDatetimeTypes;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -25,6 +25,7 @@ public interface QuerySettings {
 	 * @since 6.5
 	 */
 	String PORTABLE_INTEGER_DIVISION = "hibernate.query.hql.portable_integer_division";
+
 	/**
 	 * Specifies a {@link org.hibernate.query.hql.HqlTranslator} to use for HQL query
 	 * translation.
@@ -135,14 +136,27 @@ public interface QuerySettings {
 	String CRITERIA_COPY_TREE = "hibernate.criteria.copy_tree";
 
 	/**
-	 * When set to true, indicates that ordinal parameters (represented by the '?' placeholder) in native queries will be ignored.
+	 * When enabled, ordinal parameters (represented by the {@code ?} placeholder) in
+	 * native queries will be ignored.
 	 * <p>
-	 * By default, this is set to false, i.e. native queries will be checked for ordinal placeholders.
-	 * <p>
+	 * By default, native queries are checked for ordinal placeholders.
 	 *
 	 * @see SessionFactoryOptions#getNativeJdbcParametersIgnored()
 	 */
 	String NATIVE_IGNORE_JDBC_PARAMETERS = "hibernate.query.native.ignore_jdbc_parameters";
+
+	/**
+	 * When enabled, native queries will return {@link java.sql.Date},
+	 * {@link java.sql.Time}, and {@link java.sql.Timestamp} instead of the
+	 * datetime types from {@link java.time}, recovering the behavior of
+	 * native queries in Hibernate 6 and earlier.
+	 * <p>
+	 * By default, native queries return {@link java.time.LocalDate},
+	 * {@link java.time.LocalTime}, and {@link java.time.LocalDateTime}.
+	 *
+	 * @since 7.0
+	 */
+	String NATIVE_PREFER_JDBC_DATETIME_TYPES = "hibernate.query.native.prefer_jdbc_datetime_types";
 
 	/**
 	 * When {@linkplain org.hibernate.query.Query#setMaxResults(int) pagination} is used

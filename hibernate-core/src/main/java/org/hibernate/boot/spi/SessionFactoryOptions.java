@@ -365,4 +365,14 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	}
 
 	boolean isPassProcedureParameterNames();
+
+	/**
+	 * Should native queries return JDBC datetime types
+	 * instead of using {@code java.time} types.
+	 *
+	 * @since 7.0
+	 *
+	 * @see org.hibernate.cfg.QuerySettings#NATIVE_PREFER_JDBC_DATETIME_TYPES
+	 */
+	boolean isPreferJdbcDatetimeTypesInNativeQueriesEnabled();
 }

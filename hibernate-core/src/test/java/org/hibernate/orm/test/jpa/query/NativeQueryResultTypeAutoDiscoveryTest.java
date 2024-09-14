@@ -379,12 +379,11 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 
 	private Map<Object, Object> buildSettings(Class<?> ... entityTypes) {
 		Map<Object, Object> settings = new HashMap<>();
-
-		settings.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO, "create-drop" );
-		settings.put( org.hibernate.cfg.AvailableSettings.DIALECT, DIALECT.getClass().getName() );
+		settings.put( AvailableSettings.NATIVE_PREFER_JDBC_DATETIME_TYPES, "true" );
+		settings.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
+		settings.put( AvailableSettings.DIALECT, DIALECT.getClass().getName() );
 		settings.put( AvailableSettings.LOADED_CLASSES, Arrays.asList( entityTypes ) );
 		ServiceRegistryUtil.applySettings( settings );
-
 		return settings;
 	}
 

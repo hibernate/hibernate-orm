@@ -2397,6 +2397,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return resultType.asElement().getSimpleName().toString();
 	}
 
+	/**
+	 * In the {@code @Query} annotation we tolerate missing {@code from} clauses
+	 * to an extent that ORM core does not. For example, we accept {@code select name, age}
+	 * and {@code select id where year(date)>:year} as a legit queries. (It would be easy to
+	 * change ORM core to also accept these queries.)
+	 */
 	private static String addFromClauseIfNecessary(String hql, @Nullable String entityType) {
 		if ( entityType == null ) {
 			return hql;

@@ -8,12 +8,12 @@ package org.hibernate.internal;
 
 
 /**
- * 
+ *
  * @author Rob Worsnop
  *
  */
 public class StaticFilterAliasGenerator implements FilterAliasGenerator{
-	
+
 	private final String alias;
 
 	public StaticFilterAliasGenerator(String alias) {

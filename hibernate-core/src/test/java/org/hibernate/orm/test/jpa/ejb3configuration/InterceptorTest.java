@@ -16,7 +16,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.boot.spi.Bootstrap;
@@ -46,7 +45,7 @@ public class InterceptorTest {
 				Distributor.class
 		};
 	}
-	
+
 	private EntityManagerFactory entityManagerFactory;
 
 	@AfterEach
@@ -114,7 +113,7 @@ public class InterceptorTest {
 		Map settings = basicSettings();
 		settings.put( org.hibernate.cfg.AvailableSettings.INTERCEPTOR, ExceptionInterceptor.class.getName() );
 		buildEntityManagerFactory( settings );
-		
+
         Item i = new Item();
         i.setName( "Laptop" );
 
@@ -135,7 +134,7 @@ public class InterceptorTest {
 		Map settings = basicSettings();
 		settings.put( org.hibernate.cfg.AvailableSettings.SESSION_SCOPED_INTERCEPTOR, LocalExceptionInterceptor.class.getName() );
 		buildEntityManagerFactory( settings );
-		
+
         Item i = new Item();
         i.setName( "Laptop" );
 
@@ -202,7 +201,7 @@ public class InterceptorTest {
         Map settings = basicSettings();
         settings.put( org.hibernate.cfg.AvailableSettings.SESSION_SCOPED_INTERCEPTOR, (Supplier<Interceptor>) LocalExceptionInterceptor::new);
 		buildEntityManagerFactory( settings );
-        
+
 		Item i = new Item();
 		i.setName( "Laptop" );
 
@@ -223,7 +222,7 @@ public class InterceptorTest {
 		Map settings = basicSettings();
 		settings.put( AvailableSettings.INTERCEPTOR, ExceptionInterceptor.class.getName() );
 		buildEntityManagerFactory( settings );
-		
+
         Item i = new Item();
         i.setName( "Laptop" );
 
@@ -244,7 +243,7 @@ public class InterceptorTest {
 		Map settings = basicSettings();
 		settings.put( AvailableSettings.INTERCEPTOR, new ExceptionInterceptor( true ) );
 		buildEntityManagerFactory( settings );
-		
+
         Item i = new Item();
         i.setName( "Laptop" );
 

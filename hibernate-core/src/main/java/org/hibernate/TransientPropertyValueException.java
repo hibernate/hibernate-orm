@@ -29,9 +29,9 @@ public class TransientPropertyValueException extends TransientObjectException {
 	 * @param propertyName - the property name
 	 */
 	public TransientPropertyValueException(
-			String message, 
-			String transientEntityName, 
-			String propertyOwnerEntityName, 
+			String message,
+			String transientEntityName,
+			String propertyOwnerEntityName,
 			String propertyName) {
 		super( message );
 		this.transientEntityName = transientEntityName;

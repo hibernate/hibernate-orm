@@ -913,4 +913,3 @@ public class SpannerDialect extends Dialect {
 		}
 	}
 }
-

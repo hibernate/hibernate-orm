@@ -19,14 +19,14 @@ import jakarta.persistence.Table;
 @Table(name = "USER_CONFS")
 @IdClass(UserConfId.class)
 public class UserConfEntity implements Serializable{
-	
+
 	private static final long serialVersionUID = 9153314908821604322L;
 
 	@Id
 	@ManyToOne
 	@JoinColumn(name="user_id", nullable = false)
 	private UserEntity user;
-	
+
 	@Id
 	@ManyToOne
 	@JoinColumn(name="cnf_key", referencedColumnName="confKey")

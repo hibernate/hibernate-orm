@@ -69,7 +69,7 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testNaturalIdCached() {
 		saveSomeCitizens();
-		
+
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		State france = this.getState( s, "Ile de France" );
@@ -192,22 +192,22 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.setStatisticsEnabled( true );
 		stats.clear();
-		
+
 		assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
 		assertEquals( "NaturalId Cache Misses", 0, stats.getNaturalIdCacheMissCount() );
 		assertEquals( "NaturalId Cache Puts", 0, stats.getNaturalIdCachePutCount() );
 		assertEquals( "NaturalId Cache Queries", 0, stats.getNaturalIdQueryExecutionCount() );
 
 		saveSomeCitizens();
-		
+
 		assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
 		assertEquals( "NaturalId Cache Misses", 0, stats.getNaturalIdCacheMissCount() );
 		assertEquals( "NaturalId Cache Puts", 2, stats.getNaturalIdCachePutCount() );
 		assertEquals( "NaturalId Cache Queries", 0, stats.getNaturalIdQueryExecutionCount() );
 
-		
+
 		//Try NaturalIdLoadAccess after insert
-		
+
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		State france = this.getState( s, "Ile de France" );
@@ -228,8 +228,8 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 		// cleanup
 		tx.rollback();
 		s.close();
-		
-		
+
+
 		//Try NaturalIdLoadAccess
 
 		s = openSession();
@@ -251,9 +251,9 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 		tx.rollback();
 		s.close();
 
-		
+
 		//Try NaturalIdLoadAccess after load
-		
+
 		s = openSession();
 		tx = s.beginTransaction();
 		france = this.getState( s, "Ile de France" );

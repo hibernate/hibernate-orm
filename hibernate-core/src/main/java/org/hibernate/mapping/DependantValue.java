@@ -59,9 +59,9 @@ public class DependantValue extends SimpleValue implements Resolvable, SortableV
 	@Override
 	public boolean isNullable() {
 		return nullable;
-	
+
 	}
-	
+
 	public void setNullable(boolean nullable) {
 		this.nullable = nullable;
 	}
@@ -70,7 +70,7 @@ public class DependantValue extends SimpleValue implements Resolvable, SortableV
 	public boolean isUpdateable() {
 		return updateable;
 	}
-	
+
 	public void setUpdateable(boolean updateable) {
 		this.updateable = updateable;
 	}

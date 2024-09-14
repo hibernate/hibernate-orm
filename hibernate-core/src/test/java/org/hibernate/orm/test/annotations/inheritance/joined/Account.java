@@ -27,12 +27,12 @@ public class Account implements Serializable {
 
 	@Column(name="fld_number")
 	private String number;
-	
+
 	@OneToMany(mappedBy="account")
 	private Set<Client> clients;
-	
+
 	private double balance;
-	
+
 	public Account() {
 	}
 
@@ -68,8 +68,8 @@ public class Account implements Serializable {
 		clients.add(c);
 		c.setAccount(this);
 	}
-	
-	
+
+
 	public Set<Client> getClients() {
 		return clients;
 	}
@@ -78,8 +78,8 @@ public class Account implements Serializable {
 		this.clients = clients;
 	}
 
-	
-	
-	
+
+
+
 
 }

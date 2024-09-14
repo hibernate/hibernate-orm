@@ -48,5 +48,5 @@ public class IdentifierBag extends IdentifierCollection {
 
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
-	}	
+	}
 }

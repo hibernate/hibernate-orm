@@ -28,16 +28,16 @@ public class Child
 	@ManyToOne(cascade=CascadeType.PERSIST)
 	@JoinColumn(name="parentId", nullable=false)
 	Parent parent;
-	
+
 	/** */
 	public Child() {}
-	
+
 	/** */
 	public Child(Parent p)
 	{
 		this.parent = p;
 	}
-	
+
 	/** */
 	public Parent getParent() { return this.parent; }
 	public void setParent(Parent value) { this.parent = value; }

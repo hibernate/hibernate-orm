@@ -16,8 +16,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
-import static org.hibernate.engine.internal.ManagedTypeHelper.asHibernateProxy;
-import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

@@ -10,7 +10,6 @@ import org.hibernate.query.spi.Limit;
 
 import static org.junit.Assert.assertEquals;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;

@@ -145,7 +145,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testReferenceColumnWithBacktics() {
 		Session s=openSession();
@@ -159,7 +159,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testUniqueConstaintOnSecondaryTable() {
 		Cat cat = new Cat();
@@ -198,7 +198,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.persist( cat );
 		s.flush();
 		s.clear();
-		
+
 		s.get( Cat.class, cat.getId() );
 		//Find a way to test it, I need to define the secondary table on a subclass
 

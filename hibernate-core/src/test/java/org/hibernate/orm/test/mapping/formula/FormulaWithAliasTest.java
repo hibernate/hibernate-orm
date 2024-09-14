@@ -68,7 +68,7 @@ public class FormulaWithAliasTest {
 	void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction( session -> session.createQuery( "delete from Customer" ).executeUpdate() );
 	}
-	
+
 	@Entity(name = "Customer")
 	public static class Customer implements Serializable{
 

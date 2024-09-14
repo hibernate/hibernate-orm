@@ -8,9 +8,9 @@ package org.hibernate.orm.test.cfg.cache;
 
 public class Item {
 	Long id;
-	
+
 	String name;
-	
+
 	public Long getId() {
 		return id;
 	}

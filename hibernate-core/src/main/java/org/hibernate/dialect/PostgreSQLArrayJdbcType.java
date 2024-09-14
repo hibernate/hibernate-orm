@@ -95,4 +95,3 @@ public class PostgreSQLArrayJdbcType extends ArrayJdbcType {
 		return "PostgreSQLArrayTypeDescriptor(" + getElementJdbcType().toString() + ")";
 	}
 }
-

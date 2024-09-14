@@ -29,7 +29,6 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 
 /**
  * A Helper for serializing and deserializing struct, based on an {@link EmbeddableMappingType}.

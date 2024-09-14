@@ -14,7 +14,7 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 /**
  * Allows creation of a new {@link Session} with specific options.
- * 
+ *
  * @author Steve Ebersole
  *
  * @see SessionFactory#withOptions()

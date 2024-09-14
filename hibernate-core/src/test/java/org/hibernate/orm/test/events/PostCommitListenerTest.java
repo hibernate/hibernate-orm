@@ -35,7 +35,7 @@ import org.junit.Test;
 
 /**
  * Test to ensure that the existing post commit behavior when using plain PostXEventListeners fire on both success and failure.
- * 
+ *
  * @author ShawnClowater
  */
 public class PostCommitListenerTest extends BaseCoreFunctionalTestCase {

@@ -11,7 +11,7 @@ import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Occurs after inserting an item in the datastore
- * 
+ *
  * @author Gavin King
  */
 public class PostInsertEvent extends AbstractEvent {
@@ -19,7 +19,7 @@ public class PostInsertEvent extends AbstractEvent {
 	private EntityPersister persister;
 	private Object[] state;
 	private Object id;
-	
+
 	public PostInsertEvent(
 			Object entity,
 			Object id,
@@ -32,7 +32,7 @@ public class PostInsertEvent extends AbstractEvent {
 		this.state = state;
 		this.persister = persister;
 	}
-	
+
 	public Object getEntity() {
 		return entity;
 	}

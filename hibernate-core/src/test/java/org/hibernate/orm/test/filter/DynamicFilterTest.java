@@ -32,7 +32,6 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.transform.ResultTransformer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

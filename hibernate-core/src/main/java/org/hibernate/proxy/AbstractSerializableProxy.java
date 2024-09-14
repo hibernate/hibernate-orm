@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 /**
  * Convenience base class for the serialized form of {@link AbstractLazyInitializer}.
- * 
+ *
  * @author Gail Badner
  */
 public abstract class AbstractSerializableProxy implements Serializable {

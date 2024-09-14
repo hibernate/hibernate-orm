@@ -15,7 +15,7 @@ import jakarta.persistence.FindOption;
  *
  * @since 7.0
  *
- * @see Session#setDefaultReadOnly(boolean) 
+ * @see Session#setDefaultReadOnly(boolean)
  * @see Session#find(Class, Object, FindOption...)
  *
  * @author Gavin King

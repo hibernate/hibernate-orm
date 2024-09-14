@@ -26,18 +26,18 @@ public class A {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Id
 	Long id;
-	
+
 
 	@NotNull
 	String name;
-	
+
     @OneToMany( cascade = CascadeType.ALL)
     @Cascade(org.hibernate.annotations.CascadeType.ALL)
 	@OrderBy("name")
 	java.util.List<B> bs = new ArrayList<B>();
-	
 
-	
+
+
 	public Long getId() {
 		return id;
 	}

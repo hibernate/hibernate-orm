@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests the correctness of the SAP HANA fulltext-search functions.
- * 
+ *
  * @author Jonathan Bregler
  */
 @DomainModel(

@@ -11,11 +11,11 @@ import java.io.Serializable;
 public class Group implements Serializable {
 
 	private String org;
-	
+
 	private String name;
-	
+
 	private String description;
-	
+
 	private Integer groupType;
 
 	public Group(String name, String org) {

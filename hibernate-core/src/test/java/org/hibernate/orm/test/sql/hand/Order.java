@@ -8,7 +8,7 @@ package org.hibernate.orm.test.sql.hand;
 import java.io.Serializable;
 
 public class Order {
-	
+
 	static public class OrderId implements Serializable {
 		String orgid;
 		String ordernumber;
@@ -24,20 +24,20 @@ public class Order {
 		public void setOrgid(String orgid) {
 			this.orgid = orgid;
 		}
-		
-		
+
+
 	}
-	
+
 	OrderId orderId;
-	
+
 	Product product;
 
 	Person person;
-	
+
 	public Person getPerson() {
 		return person;
 	}
-	
+
 	public void setPerson(Person person) {
 		this.person = person;
 	}

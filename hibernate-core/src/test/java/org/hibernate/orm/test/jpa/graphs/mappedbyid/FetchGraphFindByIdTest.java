@@ -1,3 +1,9 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
 package org.hibernate.orm.test.jpa.graphs.mappedbyid;
 
 import org.hibernate.Hibernate;
@@ -31,9 +37,9 @@ import static org.junit.Assert.*;
 public class FetchGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase {
 
 	private long companyId;
-	
+
 	private long companyWithFetchProfileId;
-	
+
 	@Test
 	@JiraKey(value = "HHH-8776")
 	public void testFetchGraphByFind() {
@@ -106,7 +112,7 @@ public class FetchGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase 
 		entityManager.getTransaction().begin();
 
 		entityManager.unwrap( Session.class ).enableFetchProfile("company.location");
-		
+
 		EntityGraph<CompanyFetchProfile> entityGraph = entityManager.createEntityGraph( CompanyFetchProfile.class );
 		entityGraph.addAttributeNodes( "markets" );
 
@@ -208,7 +214,7 @@ public class FetchGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase 
 		companyFetchProfile.phoneNumbers.add( "987-654-3210" );
 		entityManager.persist( companyFetchProfile );
 		companyWithFetchProfileId = companyFetchProfile.id;
-		
+
 		entityManager.getTransaction().commit();
 		entityManager.close();
 	}
@@ -217,5 +223,5 @@ public class FetchGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase 
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { Company.class, CompanyFetchProfile.class, Employee.class, Manager.class, Location.class, Course.class, Student.class };
 	}
-	
+
 }

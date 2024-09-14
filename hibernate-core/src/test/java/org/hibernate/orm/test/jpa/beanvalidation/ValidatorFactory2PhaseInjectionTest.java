@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.jpa.beanvalidation;
 
 import java.net.URL;
-import java.util.Collections;
 
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.validation.Validation;

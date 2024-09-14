@@ -41,11 +41,11 @@ public class UnionSubclass extends Subclass implements TableOwner {
 	protected List<Property> getNonDuplicatedProperties() {
 		return getPropertyClosure();
 	}
-	
+
 	public Table getIdentityTable() {
 		return getTable();
 	}
-	
+
 	public Object accept(PersistentClassVisitor mv) {
 		return mv.accept(this);
 	}

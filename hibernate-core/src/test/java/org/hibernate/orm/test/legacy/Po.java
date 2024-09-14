@@ -4,8 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id: Po.java 4599 2004-09-26 05:18:27Z oneovthafew $
 package org.hibernate.orm.test.legacy;
 import java.util.List;
 import java.util.Set;
@@ -28,7 +26,7 @@ public class Po {
 	public long getId() {
 		return id;
 	}
-	
+
 	/**
 	 * Returns the value.
 	 * @return String
@@ -36,7 +34,7 @@ public class Po {
 	public String getValue() {
 		return value;
 	}
-	
+
 	/**
 	 * Sets the id.
 	 * @param id The id to set
@@ -44,7 +42,7 @@ public class Po {
 	public void setId(long id) {
 		this.id = id;
 	}
-	
+
 	/**
 	 * Sets the value.
 	 * @param value The value to set
@@ -52,7 +50,7 @@ public class Po {
 	public void setValue(String value) {
 		this.value = value;
 	}
-	
+
 	/**
 	 * Returns the set.
 	 * @return Set
@@ -60,7 +58,7 @@ public class Po {
 	public Set getSet() {
 		return set;
 	}
-	
+
 	/**
 	 * Sets the set.
 	 * @param set The set to set
@@ -68,7 +66,7 @@ public class Po {
 	public void setSet(Set set) {
 		this.set = set;
 	}
-	
+
 	/**
 	 * Returns the list.
 	 * @return List
@@ -76,7 +74,7 @@ public class Po {
 	public List getList() {
 		return list;
 	}
-	
+
 	/**
 	 * Sets the list.
 	 * @param list The list to set
@@ -84,7 +82,7 @@ public class Po {
 	public void setList(List list) {
 		this.list = list;
 	}
-	
+
 	public Lower getLower() {
 		return lower;
 	}
@@ -102,9 +100,3 @@ public class Po {
 	}
 
 }
-
-
-
-
-
-

@@ -57,4 +57,3 @@ public class IntegerProperty implements Property<Integer> {
 //tag::associations-any-property-example[]
 }
 //end::associations-any-property-example[]
-

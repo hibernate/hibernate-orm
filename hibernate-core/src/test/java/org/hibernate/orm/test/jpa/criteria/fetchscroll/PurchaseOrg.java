@@ -1,4 +1,9 @@
-
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
 package org.hibernate.orm.test.jpa.criteria.fetchscroll;
 
 import java.util.List;
@@ -12,26 +17,26 @@ public class PurchaseOrg implements Serializable {
 	private static final long serialVersionUID = -6659835148502079000L;
 
 	private Long id;
-	private String name;	
+	private String name;
 	private Customer customer;
 	private List<Facility> facilities;
-	
+
 	@Id
 	@GeneratedValue
 	@Column(name = "PURCHASE_ORG_ID", nullable = false, updatable = false)
 	public Long getId() {
 		return id;
 	}
-	
+
 	public void setId(Long id) {
 		this.id = id;
 	}
-	
+
 	@Column(name = "PURCHASE_ORG_NAME", length = 40, nullable = false, updatable = false)
 	public String getName() {
 		return name;
 	}
-	
+
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -45,19 +50,19 @@ public class PurchaseOrg implements Serializable {
 	public void setCustomer(Customer customer) {
 		this.customer = customer;
 	}
-	
+
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "PURCHASE_FACILITY",
 		joinColumns = @JoinColumn(name = "PURCHASE_ORG_ID"),
 		inverseJoinColumns = @JoinColumn(name = "FACILITY_ID"))
-	public List<Facility> getFacilities() {	
+	public List<Facility> getFacilities() {
 		return facilities;
 	}
-	
+
 	public void setFacilities(List<Facility> facilities) {
 		this.facilities = facilities;
 	}
-		
+
 	@Override
 	public int hashCode() {
 		return 17 * 31 + id.hashCode();
@@ -72,5 +77,5 @@ public class PurchaseOrg implements Serializable {
 		}
 		return result;
 	}
-	
+
 }

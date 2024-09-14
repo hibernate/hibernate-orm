@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.orm.test.sql;
 
@@ -212,7 +212,7 @@ public class OracleStoredProcedureTest {
         scope.inTransaction( entityManager -> {
             //tag::sql-hibernate-call-sp-ref-cursor-oracle-example[]
             Session session = entityManager.unwrap(Session.class);
-            
+
             ProcedureCall call = session.createStoredProcedureCall("sp_person_phones");
             ProcedureParameter<Long> parameter = call.registerParameter(1, Long.class, ParameterMode.IN);
             call.setParameter(parameter, 1L);

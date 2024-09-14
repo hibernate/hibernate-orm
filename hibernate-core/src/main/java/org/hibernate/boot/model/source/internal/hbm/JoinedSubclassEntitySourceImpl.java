@@ -77,7 +77,7 @@ public class JoinedSubclassEntitySourceImpl extends SubclassEntitySourceImpl imp
 	public String getExplicitForeignKeyName() {
 		return jaxbKeyMapping.getForeignKey();
 	}
-	
+
 	@Override
 	public boolean createForeignKeyConstraint() {
 		// TODO: Can HBM do something like JPA's @ForeignKey(NO_CONSTRAINT)?

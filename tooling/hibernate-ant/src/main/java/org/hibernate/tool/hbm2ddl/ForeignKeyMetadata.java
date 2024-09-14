@@ -69,7 +69,7 @@ public class ForeignKeyMetadata {
 		}
 		return false;
 	}
-	
+
 	public String toString() {
 		return "ForeignKeyMetadata(" + name + ')';
 	}

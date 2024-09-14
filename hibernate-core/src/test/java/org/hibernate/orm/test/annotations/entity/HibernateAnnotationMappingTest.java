@@ -22,7 +22,7 @@ import org.junit.Test;
  * @author Guenther Demetz
  */
 public class HibernateAnnotationMappingTest extends BaseUnitTestCase {
-	
+
 	@Test
 	@JiraKey( value = "HHH-7446" )
 	public void testUniqueConstraintAnnotationOnNaturalIds() throws Exception {
@@ -36,7 +36,7 @@ public class HibernateAnnotationMappingTest extends BaseUnitTestCase {
 			sf.close();
 		}
 		catch (ConcurrentModificationException e) {
-			fail(e.toString()); 
+			fail(e.toString());
 		}
 	}
 }

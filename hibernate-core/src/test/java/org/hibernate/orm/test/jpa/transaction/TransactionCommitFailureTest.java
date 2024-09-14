@@ -18,7 +18,6 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.RollbackException;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 
 import org.hibernate.testing.jdbc.ConnectionProviderDelegate;

@@ -8,7 +8,7 @@ package org.hibernate.orm.test.entityname;
 import java.util.HashSet;
 import java.util.Set;
 /**
- * 
+ *
  * @author stliu
  *
  */

@@ -80,7 +80,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	private final LongAdder secondLevelCacheHitCount = new LongAdder();
 	private final LongAdder secondLevelCacheMissCount = new LongAdder();
 	private final LongAdder secondLevelCachePutCount = new LongAdder();
-	
+
 	private final LongAdder naturalIdCacheHitCount = new LongAdder();
 	private final LongAdder naturalIdCacheMissCount = new LongAdder();
 	private final LongAdder naturalIdCachePutCount = new LongAdder();
@@ -156,7 +156,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		secondLevelCacheHitCount.reset();
 		secondLevelCacheMissCount.reset();
 		secondLevelCachePutCount.reset();
-		
+
 		naturalIdCacheHitCount.reset();
 		naturalIdCacheMissCount.reset();
 		naturalIdCachePutCount.reset();

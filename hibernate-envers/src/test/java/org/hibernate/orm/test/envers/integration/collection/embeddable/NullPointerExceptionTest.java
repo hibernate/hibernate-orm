@@ -97,4 +97,3 @@ public class NullPointerExceptionTest extends BaseEnversJPAFunctionalTestCase {
 		assertEquals( new Type( 2, "T2" ), product.getItems().get( 0 ).getType() );
 	}
 }
-

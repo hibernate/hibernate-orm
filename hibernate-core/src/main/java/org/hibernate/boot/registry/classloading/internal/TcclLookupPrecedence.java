@@ -13,7 +13,7 @@ import org.hibernate.cfg.AvailableSettings;
 /**
  * Defines when the lookup in the current thread context {@link ClassLoader} should be
  * done according to the other ones.
- * 
+ *
  * @author Cédric Tabin
  */
 public enum TcclLookupPrecedence {

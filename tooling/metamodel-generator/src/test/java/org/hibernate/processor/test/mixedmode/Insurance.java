@@ -32,6 +32,3 @@ public class Insurance {
 		this.number = number;
 	}
 }
-
-
-

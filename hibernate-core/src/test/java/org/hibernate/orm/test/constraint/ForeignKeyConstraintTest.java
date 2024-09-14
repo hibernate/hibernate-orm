@@ -219,7 +219,7 @@ public class ForeignKeyConstraintTest {
 		@Id
 		public String number;
 	}
-	
+
 	@Entity(name = "Person")
 	@Inheritance( strategy = InheritanceType.JOINED )
 	public static class Person {

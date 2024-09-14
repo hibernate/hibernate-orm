@@ -127,7 +127,7 @@ public class FetchModeSelectTest extends BaseEntityManagerFunctionalTestCase {
 		private Department department;
 
 		//Getters and setters omitted for brevity
-		
+
 	}
 	//end::fetching-strategies-fetch-mode-select-mapping-example[]
 }

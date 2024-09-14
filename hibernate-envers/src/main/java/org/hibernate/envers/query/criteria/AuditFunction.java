@@ -20,7 +20,7 @@ import org.hibernate.envers.query.projection.AuditProjection;
 
 /**
  * Create restrictions or projections using a function.
- * 
+ *
  * @author Felix Feisst (feisst dot felix at gmail dot com)
  */
 public class AuditFunction implements AuditProjection {

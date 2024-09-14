@@ -49,4 +49,3 @@ public class EntityResultNativeQueryTest extends BaseEnversJPAFunctionalTestCase
 	}
 
 }
-

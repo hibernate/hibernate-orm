@@ -28,7 +28,6 @@ import org.hibernate.internal.SessionImpl;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.StandardBasicTypes;

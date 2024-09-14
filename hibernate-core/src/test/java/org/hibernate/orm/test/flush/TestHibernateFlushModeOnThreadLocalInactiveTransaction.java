@@ -16,7 +16,7 @@ import org.junit.Test;
 
 /**
  * Test for issue https://hibernate.atlassian.net/browse/HHH-13663
- * 
+ *
  * @author Luca Domenichini
  */
 @JiraKey(value = "HHH-13663")

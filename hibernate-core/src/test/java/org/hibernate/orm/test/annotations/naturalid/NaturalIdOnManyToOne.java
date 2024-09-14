@@ -17,7 +17,7 @@ import org.hibernate.annotations.NaturalIdCache;
 @NaturalIdCache
 /**
  * Test case for NaturalId annotation - ANN-750
- * 
+ *
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
@@ -30,7 +30,7 @@ class NaturalIdOnManyToOne {
     @NaturalId
     @ManyToOne
     Citizen citizen;
-    
+
 	public int getId() {
 		return id;
 	}
@@ -46,4 +46,4 @@ class NaturalIdOnManyToOne {
 	public void setCitizen(Citizen citizen) {
 		this.citizen = citizen;
 	}
-} 
+}

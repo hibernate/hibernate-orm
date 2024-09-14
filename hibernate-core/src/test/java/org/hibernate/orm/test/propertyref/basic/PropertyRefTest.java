@@ -288,4 +288,3 @@ public class PropertyRefTest {
 		assertTrue( found, "Property ref foreign key not found" );
 	}
 }
-

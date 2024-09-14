@@ -30,4 +30,3 @@ public class PersonWrapper {
     }
 }
 //end::criteria-typedquery-wrapper-example[]
-

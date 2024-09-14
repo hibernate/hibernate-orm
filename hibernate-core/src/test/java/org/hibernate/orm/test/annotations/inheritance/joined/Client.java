@@ -18,15 +18,15 @@ import jakarta.persistence.Table;
 @Table(name = "CLIENT")
 public class Client extends Person implements Serializable {
 	private static final long serialVersionUID = 1L;
-	
+
 	private String street;
-	
+
 	private String code;
-	
+
 	private String city;
-	
+
 	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinTable(name = "CLIENT_ACCOUNT", 
+	@JoinTable(name = "CLIENT_ACCOUNT",
 			joinColumns = {@JoinColumn(name = "FK_CLIENT", referencedColumnName = "ID")},
 			inverseJoinColumns = {@JoinColumn(name = "FK_ACCOUNT", referencedColumnName = "ID")})
 	private Account account;
@@ -66,5 +66,5 @@ public class Client extends Person implements Serializable {
 	public void setCity(String city) {
 		this.city = city;
 	}
-	
+
 }

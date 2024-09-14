@@ -127,4 +127,3 @@ public class BatchOptimisticLockingTest extends
 		private long version;
 	}
 }
-

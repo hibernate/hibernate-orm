@@ -29,21 +29,21 @@ public class Multiple implements Serializable
    @GenericGenerator(name = "increment", strategy = "increment")
    @GeneratedValue(generator = "increment")
    private Long id1;
-   
+
    @Id
    @GeneratedValue(generator = "MULTIPLE_SEQ", strategy = GenerationType.SEQUENCE)
    @SequenceGenerator( name = "MULTIPLE_SEQ", sequenceName = "MULTIPLE_SEQ")
    private Long id2;
-   
+
    @Id
    private Long id3;
    private int quantity;
-   
+
    public Multiple()
    {
-      
+
    }
-   
+
    public Multiple(Long id3, int quantity)
    {
       this.id3 = id3;
@@ -74,6 +74,6 @@ public class Multiple implements Serializable
    {
       this.quantity = quantity;
    }
-   
-   
+
+
 }

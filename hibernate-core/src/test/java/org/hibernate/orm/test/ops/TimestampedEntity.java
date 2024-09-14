@@ -49,4 +49,3 @@ public class TimestampedEntity {
 		this.timestamp = timestamp;
 	}
 }
-

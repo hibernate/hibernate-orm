@@ -25,7 +25,7 @@ import static java.lang.Boolean.TRUE;
 
 /**
  * Initiator for the {@link RegionFactory} service.
- * 
+ *
  * @author Hardy Ferentschik
  * @author Brett Meyer
  */

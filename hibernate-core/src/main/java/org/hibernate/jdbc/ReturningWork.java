@@ -26,7 +26,7 @@ public interface ReturningWork<T> {
 	 * @param connection The connection on which to perform the work.
 	 *
 	 * @return The work result
-	 * 
+	 *
 	 * @throws SQLException Thrown during execution of the underlying JDBC interaction.
 	 * @throws org.hibernate.HibernateException Generally indicates a wrapped SQLException.
 	 */

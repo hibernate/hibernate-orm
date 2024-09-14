@@ -25,10 +25,10 @@ public class Account {
     @Basic( optional = false )
     @NaturalId
     private String shortCode;
-    
+
     protected Account() {
     }
-    
+
     public Account(AccountId accountId, String shortCode) {
         this.accountId = accountId;
         this.shortCode = shortCode;

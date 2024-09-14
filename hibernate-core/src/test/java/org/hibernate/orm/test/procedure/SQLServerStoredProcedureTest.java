@@ -29,7 +29,6 @@ import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.Id;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureQuery;

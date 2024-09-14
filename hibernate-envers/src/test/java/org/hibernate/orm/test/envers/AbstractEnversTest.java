@@ -9,7 +9,6 @@ package org.hibernate.orm.test.envers;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hibernate.testing.cleaner.DatabaseCleaner;
 
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Selectable;

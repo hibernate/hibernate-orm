@@ -36,7 +36,6 @@ import jakarta.persistence.TypedQuery;
 
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @JiraKey("HHH-15086")
 @Jpa(

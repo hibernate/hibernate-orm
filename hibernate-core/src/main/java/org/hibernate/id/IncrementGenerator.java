@@ -25,8 +25,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.Type;
 
 import static org.hibernate.id.IdentifierGeneratorHelper.getIntegralDataTypeHolder;
 import static org.hibernate.id.PersistentIdentifierGenerator.CATALOG;

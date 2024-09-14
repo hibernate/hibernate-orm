@@ -12,8 +12,3 @@ public interface AbstractProxy extends FooProxy {
 	void setTime(java.sql.Time arg0);
 	java.sql.Time getTime();
 }
-
-
-
-
-

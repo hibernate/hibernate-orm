@@ -32,9 +32,9 @@ import static org.junit.Assert.assertNotNull;
  * This test verifies that when a map-based {@link ElementCollection} of {@link Embeddable} objects
  * are audited that the same number of audit rows are generated regardless whether the embeddable
  * implements proper {@code equals} and {@code hashCode} methods.
- * 
+ *
  * The {@link ValidityAuditStrategy} with equals/hashcode.
- * 
+ *
  * +-----+---------+---------------+-----------+--------+--------+
  * | REV | REVTYPE | TESTENTITY_ID | EMBS1_KEY | REVEND | VALUE  |
  * +-----+---------+---------------+-----------+--------+--------+
@@ -43,9 +43,9 @@ import static org.junit.Assert.assertNotNull;
  * | 2   | 0       | 1             | a         | null   | value3 |
  * | 2   | 2       | 1             | a         | null   | value1 |
  * +-----+---------+---------------+-----------+--------+--------+
- * 
+ *
  * The {@link org.hibernate.envers.strategy.DefaultAuditStrategy} with equals/hashcode.
- * 
+ *
  * +-----+---------+---------------+-----------+--------+
  * | REV | REVTYPE | TESTENTITY_ID | EMBS1_KEY | VALUE  |
  * +-----+---------+---------------+-----------+--------+

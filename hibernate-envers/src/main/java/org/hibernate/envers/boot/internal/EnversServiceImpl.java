@@ -131,7 +131,7 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 					}
 				}
 		);
-		
+
 		this.entitiesConfigurations = new EntitiesConfigurator().configure( metadataBuildingContext );
 	}
 

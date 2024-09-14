@@ -108,4 +108,3 @@ public class JdbcTimestampWithoutUTCTimeZoneTest extends BaseSessionFactoryFunct
 		private Timestamp createdOn;
 	}
 }
-

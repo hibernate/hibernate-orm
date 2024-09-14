@@ -10,7 +10,7 @@ public class Person {
 	private long id;
 
 	private Gender gender;
-	
+
 	private HairColor hairColor;
 
 	private HairColor originalHairColor;

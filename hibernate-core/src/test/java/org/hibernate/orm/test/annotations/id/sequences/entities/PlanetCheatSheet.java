@@ -14,7 +14,7 @@ import jakarta.persistence.Id;
 
 /**
  * Test entity for enum type as id.
- * 
+ *
  * @author Hardy Ferentschik
  * @see ANN-744
  */
@@ -68,15 +68,15 @@ public class PlanetCheatSheet {
 	 * Constructs a <code>String</code> with all attributes
 	 * in name = value format.
 	 *
-	 * @return a <code>String</code> representation 
+	 * @return a <code>String</code> representation
 	 * of this object.
 	 */
 	public String toString()
 	{
 	    final String TAB = "    ";
-	    
+
 	    String retValue = "";
-	    
+
 	    retValue = "PlanetCheatSheet ( "
 	        + super.toString() + TAB
 	        + "planet = " + this.planet + TAB
@@ -84,7 +84,7 @@ public class PlanetCheatSheet {
 	        + "radius = " + this.radius + TAB
 	        + "numberOfInhabitants = " + this.numberOfInhabitants + TAB
 	        + " )";
-	
+
 	    return retValue;
-	}	
+	}
 }

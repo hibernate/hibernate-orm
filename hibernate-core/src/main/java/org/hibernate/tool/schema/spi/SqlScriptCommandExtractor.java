@@ -11,7 +11,6 @@ import java.util.List;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.service.Service;
-import org.hibernate.service.ServiceRegistry;
 
 /**
  * Contract for extracting statements from source/import/init scripts.

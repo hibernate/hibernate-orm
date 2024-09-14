@@ -16,7 +16,7 @@ import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Defines an event class for the resolving of an entity id from the entity's natural-id
- * 
+ *
  * @author Eric Dalquist
  * @author Steve Ebersole
  */

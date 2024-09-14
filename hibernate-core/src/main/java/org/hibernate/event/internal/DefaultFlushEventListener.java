@@ -16,7 +16,7 @@ import org.hibernate.event.spi.FlushEventListener;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
- * Defines the default flush event listeners used by hibernate for 
+ * Defines the default flush event listeners used by hibernate for
  * flushing session state in response to generated flush events.
  *
  * @author Steve Ebersole

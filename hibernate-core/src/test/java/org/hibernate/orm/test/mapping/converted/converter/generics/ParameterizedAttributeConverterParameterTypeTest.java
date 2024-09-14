@@ -36,13 +36,13 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test the ability to interpret and understand AttributeConverter impls which
  * use parameterized types as one of (typically the "attribute type") its parameter types.
- * 
+ *
  * @author Svein Baardsen
  * @author Steve Ebersole
  */
 @ServiceRegistry
 public class ParameterizedAttributeConverterParameterTypeTest {
-	
+
 	@Test
 	@JiraKey(value = "HHH-8804")
 	public void testGenericTypeParameters() {

@@ -116,7 +116,7 @@ public interface NaturalIdLoadAccess<T> {
 	/**
 	 * Add a {@link org.hibernate.annotations.NaturalId @NaturalId}
 	 * attribute value.
-	 * 
+	 *
 	 * @param attributeName The name of an attribute of the entity
 	 *                      that is annotated {@code @NaturalId}
 	 * @param value The value of the attribute
@@ -211,7 +211,7 @@ public interface NaturalIdLoadAccess<T> {
 	 * the session, return that instance, initializing it if needed. This
 	 * method never returns an uninitialized instance.
 	 *
-	 * @return The persistent instance or {@code null} 
+	 * @return The persistent instance or {@code null}
 	 */
 	T load();
 

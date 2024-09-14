@@ -40,7 +40,7 @@ public abstract class CollectionProxy<U, T extends Collection<U>> implements Col
 	public final boolean wasInitialized() {
 		return delegate != null;
 	}
-	
+
 	@Override
 	public final void forceInitialization() {
 		checkInit();

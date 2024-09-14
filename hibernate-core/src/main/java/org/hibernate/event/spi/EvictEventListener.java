@@ -15,7 +15,7 @@ import org.hibernate.HibernateException;
  */
 public interface EvictEventListener {
 
-	/** 
+	/**
 	 * Handle the given evict event.
 	 *
 	 * @param event The evict event to be handled.

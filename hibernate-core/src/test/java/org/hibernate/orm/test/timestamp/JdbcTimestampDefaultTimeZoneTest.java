@@ -90,4 +90,3 @@ public class JdbcTimestampDefaultTimeZoneTest
 		private Timestamp createdOn = new Timestamp( 0 );
 	}
 }
-

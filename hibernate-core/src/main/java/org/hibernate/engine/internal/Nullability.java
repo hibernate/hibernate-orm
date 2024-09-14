@@ -24,7 +24,7 @@ import static org.hibernate.engine.spi.CascadingActions.getLoadedElementsIterato
 
 /**
  * Implements the algorithm for validating property values for illegal null values
- * 
+ *
  * @author Gavin King
  */
 public final class Nullability {

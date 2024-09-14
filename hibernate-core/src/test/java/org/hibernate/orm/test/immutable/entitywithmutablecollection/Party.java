@@ -32,7 +32,7 @@ public class Party implements Serializable {
 	public void setVersion(long version) {
 		this.version = version;
 	}
-	
+
 	public String getName() {
 		return name;
 	}

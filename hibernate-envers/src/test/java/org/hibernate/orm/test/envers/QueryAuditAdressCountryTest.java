@@ -20,7 +20,6 @@ import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;

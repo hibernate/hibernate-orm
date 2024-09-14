@@ -13,7 +13,6 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.collection.EnumSetEntity;
 import org.hibernate.orm.test.envers.entities.collection.EnumSetEntity.E1;
 import org.hibernate.orm.test.envers.entities.collection.EnumSetEntity.E2;
-import org.hibernate.orm.test.envers.integration.modifiedflags.AbstractModifiedFlagsEntityTest;
 
 import org.junit.Test;
 

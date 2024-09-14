@@ -20,7 +20,7 @@ public class Attrset {
 	@Id
 	@GeneratedValue
 	private Long id;
-	
+
 	@OneToMany
 	@JoinTable(name = "ATTRSET_X_ATTRVALUE")
 	private Set<Attrvalue> attrvalues = new HashSet<Attrvalue>();

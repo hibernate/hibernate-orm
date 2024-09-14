@@ -1443,7 +1443,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	/**
 	 * Given a property path, return the corresponding column name(s).
-	 * 
+	 *
 	 * @deprecated No longer used in ORM core
 	 */
 	@Deprecated(since = "7.0", forRemoval = true)

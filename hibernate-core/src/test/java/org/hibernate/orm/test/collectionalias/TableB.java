@@ -28,7 +28,7 @@ public class TableB implements Serializable
 	private TableBId id;
 
 	private ATable tablea;
-	
+
 	public TableB() {
 	}
 

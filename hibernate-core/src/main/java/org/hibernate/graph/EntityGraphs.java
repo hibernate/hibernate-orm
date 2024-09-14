@@ -25,20 +25,20 @@ import org.hibernate.graph.spi.RootGraphImplementor;
  * A collection of {@link EntityGraph} utilities.
  *
  * @apiNote These methods really belong inside other classes that we cannot modify.
- * 
+ *
  * @author asusnjar
  */
 public final class EntityGraphs {
 	/**
 	 * Merges multiple entity graphs into a single graph that specifies the
 	 * fetching/loading of all attributes the input graphs specify.
-	 * 
+	 *
 	 * @param <T>      Root entity type of the query and graph.
-	 * 
+	 *
 	 * @param em       EntityManager to use to create the new merged graph.
 	 * @param rootType Root type of the entity for which the graph is being merged.
 	 * @param graphs   Graphs to merge.
-	 * 
+	 *
 	 * @return         The merged graph.
 	 */
 	@SuppressWarnings("unchecked")
@@ -179,11 +179,11 @@ public final class EntityGraphs {
 	/**
 	 * Compares two entity graphs and returns {@code true} if they are equal,
 	 * ignoring attribute order.
-	 * 
+	 *
 	 * @param <T>  Root entity type of BOTH graphs.
 	 * @param a    Graph to compare.
 	 * @param b    Graph to compare.
-	 * 
+	 *
 	 */
 	public static <T> boolean areEqual(EntityGraph<T> a, EntityGraph<T> b) {
 		if ( a == b ) {
@@ -291,7 +291,7 @@ public final class EntityGraphs {
 		if ( aNodes.size() != bNodes.size() ) {
 			return false;
 		}
-		
+
 		for ( AttributeNode<?> aNode : aNodes ) {
 			String attributeName = aNode.getAttributeName();
 			AttributeNode<?> bNode = null;

@@ -36,8 +36,8 @@ public class SysUserOrm {
 	}
 
 	@ManyToMany( fetch = FetchType.LAZY )
-	@JoinTable( name = "SYS_GROUPS_USERS", 
-			joinColumns = @JoinColumn( name = "USERID", referencedColumnName = "`auid`" ), 
+	@JoinTable( name = "SYS_GROUPS_USERS",
+			joinColumns = @JoinColumn( name = "USERID", referencedColumnName = "`auid`" ),
 			inverseJoinColumns = @JoinColumn( name = "GROUPID", referencedColumnName = "GROUPID" ) )
 	public Collection<SysGroupsOrm> getGroups() {
 		return groups;

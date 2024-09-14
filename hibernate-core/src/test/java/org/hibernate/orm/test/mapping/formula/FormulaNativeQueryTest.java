@@ -30,7 +30,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Алексей Макаров

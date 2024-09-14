@@ -42,7 +42,7 @@ public class H2IdentityColumnSupport extends IdentityColumnSupportImpl {
 	public String getIdentityInsertString() {
 		return "default";
 	}
-	
+
 	@FunctionalInterface
 	public interface InsertValuesHandler {
 		void renderInsertValues();

@@ -93,4 +93,3 @@ public class SchemaManagerExplicitSchemaTest {
 		public Book favoriteBook;
 	}
 }
-

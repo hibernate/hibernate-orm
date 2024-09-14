@@ -8,7 +8,6 @@ package org.hibernate.orm.test.envers.integration.naming.quotation;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 import jakarta.persistence.EntityManager;
 
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;

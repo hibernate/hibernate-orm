@@ -123,5 +123,3 @@ public class CompilationRunner extends BlockJUnit4ClassRunner {
 		return !testEntities.isEmpty() || !sources.isEmpty() || !mappingFiles.isEmpty();
 	}
 }
-
-

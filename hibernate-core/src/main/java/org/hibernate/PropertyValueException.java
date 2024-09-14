@@ -17,7 +17,7 @@ import static org.hibernate.internal.util.StringHelper.qualify;
  *     is null, or
  * <li>an association references an unsaved transient instance.
  * </ul>
- * 
+ *
  * @author Gavin King
  */
 public class PropertyValueException extends HibernateException {

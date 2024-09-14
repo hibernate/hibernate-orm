@@ -28,7 +28,7 @@ import static org.hibernate.internal.util.StringHelper.unqualify;
  *     are that two null values are non-unique. So here we need to jump through hoops with the
  *     {@code create unique nonclustered index ... where ...} command.
  * </ul>
- * 
+ *
  * @author Brett Meyer
  */
 public class AlterTableUniqueIndexDelegate extends AlterTableUniqueDelegate {
@@ -73,7 +73,7 @@ public class AlterTableUniqueIndexDelegate extends AlterTableUniqueDelegate {
 			return super.getAlterTableToAddUniqueKeyCommand( uniqueKey, metadata, context );
 		}
 	}
-	
+
 	@Override
 	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
 			SqlStringGenerationContext context) {

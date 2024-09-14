@@ -12,7 +12,6 @@ import org.junit.Test;
 
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;

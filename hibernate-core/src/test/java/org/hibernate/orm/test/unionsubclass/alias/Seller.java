@@ -10,7 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * 
+ *
  * @author Strong Liu
  */
 public class Seller implements Serializable {

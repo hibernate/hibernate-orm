@@ -1,3 +1,9 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
 package org.hibernate.event.jfr;
 
 import java.time.Duration;
@@ -101,14 +107,14 @@ public class JdbcPreparedStatementEventTests {
 					ProcedureCall call = session.createStoredProcedureCall("DB_OBJECT_SQL", String.class)
 							.registerStoredProcedureParameter(1, String.class, ParameterMode.IN)
 							.registerStoredProcedureParameter(2, String.class, ParameterMode.IN)
-							.setParameter(1, "USER")  
+							.setParameter(1, "USER")
 							.setParameter(2, "SA");
 					boolean hasResult = call.execute();
 					assertThat( hasResult ).isTrue();
 					Object createSa = call.getSingleResult();
 					assertThat( createSa ).isInstanceOf( String.class );
 					assertThat( ((String) createSa).toLowerCase( Locale.ROOT ) ).contains( "create user if not exists " );
-					
+
 					final List<RecordedEvent> events = jfrEvents.events()
 							.filter(
 									recordedEvent ->

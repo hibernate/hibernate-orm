@@ -18,7 +18,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * An ordered pair of a value and its Hibernate type.
- * 
+ *
  * @see Type
  * @author Gavin King
  */

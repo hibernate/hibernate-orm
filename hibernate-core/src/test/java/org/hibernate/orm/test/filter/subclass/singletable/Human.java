@@ -23,7 +23,7 @@ import org.hibernate.annotations.ParamDef;
 public class Human extends Mammal {
 	@Column(name="HUMAN_IQ")
 	private int iq;
-	
+
 	public int getIq() {
 		return iq;
 	}

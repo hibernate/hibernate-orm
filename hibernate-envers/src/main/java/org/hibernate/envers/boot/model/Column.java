@@ -28,7 +28,7 @@ public class Column extends Selection<JaxbHbmColumnType> implements Cloneable<Co
 
 	/**
 	 * Create a column with just a name.
-	 * 
+	 *
 	 * @param name the name of the column
 	 */
 	public Column(String name) {

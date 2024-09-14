@@ -26,7 +26,7 @@ public class Forum{
 	private String name;
 	protected List<Comment> posts = new ArrayList<>();
 	protected List<User> users = new ArrayList<>();
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "id", updatable = false, insertable = false)
@@ -37,7 +37,7 @@ public class Forum{
 	public void setId(Long id) {
 		this.id = id;
 	}
-	
+
 	@OneToMany(mappedBy = "forum", cascade = CascadeType.ALL , orphanRemoval = false, fetch = FetchType.LAZY)
 	@OrderColumn(name = "idx2")
 	public List<Comment> getPosts() {
@@ -47,7 +47,7 @@ public class Forum{
 	public void setPosts(List<Comment> children) {
 		this.posts = children;
 	}
-	
+
 	@OneToMany(mappedBy = "forum", cascade = CascadeType.ALL , orphanRemoval = true, fetch = FetchType.LAZY)
 	@OrderColumn(name = "idx3")
 	public List<User> getUsers() {

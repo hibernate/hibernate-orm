@@ -17,11 +17,11 @@ public class ContactDetails {
 	@Id
 	@GeneratedValue
 	private int id;
-		
+
 	private PhoneNumber localPhoneNumber;
 	@Convert( converter = PhoneNumberConverter.class )
 	private OverseasPhoneNumber overseasPhoneNumber;
-	
+
 	public int getId() {
 		return id;
 	}
@@ -40,5 +40,5 @@ public class ContactDetails {
 	public void setOverseasPhoneNumber(OverseasPhoneNumber overseasPhoneNumber) {
 		this.overseasPhoneNumber = overseasPhoneNumber;
 	}
-	
+
 }

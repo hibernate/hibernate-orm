@@ -33,7 +33,7 @@ public class TestFlushJoinTransaction extends BaseNonConfigCoreFunctionalTestCas
 		TestingJtaBootstrap.prepare( settings );
 		settings.put( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta" );
 	}
-	
+
 	@Test
 	public void testFlush() throws Exception {
 		Session session = openSession();
@@ -49,7 +49,7 @@ public class TestFlushJoinTransaction extends BaseNonConfigCoreFunctionalTestCas
 			session.close();
 		}
 	}
-	
+
 	@Test
 	public void testIsConnectedFlush() throws Exception {
 		Session session = openSession();

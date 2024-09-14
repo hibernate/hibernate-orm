@@ -26,7 +26,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public interface ServiceRegistry extends AutoCloseable {
 	/**
 	 * Retrieve this registry's parent registry.
-	 * 
+	 *
 	 * @return The parent registry.  May be null.
 	 */
 	@Nullable ServiceRegistry getParentServiceRegistry();
@@ -39,7 +39,7 @@ public interface ServiceRegistry extends AutoCloseable {
 	 * less likely to cause a {@link NullPointerException} in the client.
 	 *
 	 * @apiNote We cannot return {@code <R extends Service<T>>} here because the service might come from the parent.
-	 * 
+	 *
 	 * @param serviceRole The service role
 	 * @param <R> The service role type
 	 *

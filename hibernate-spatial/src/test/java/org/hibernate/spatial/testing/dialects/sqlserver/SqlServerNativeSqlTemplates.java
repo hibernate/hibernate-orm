@@ -4,7 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
 package org.hibernate.spatial.testing.dialects.sqlserver;
 
 import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
@@ -28,7 +27,6 @@ import static org.hibernate.spatial.CommonSpatialFunction.ST_INTERSECTS;
 import static org.hibernate.spatial.CommonSpatialFunction.ST_ISEMPTY;
 import static org.hibernate.spatial.CommonSpatialFunction.ST_ISSIMPLE;
 import static org.hibernate.spatial.CommonSpatialFunction.ST_OVERLAPS;
-import static org.hibernate.spatial.CommonSpatialFunction.ST_RELATE;
 import static org.hibernate.spatial.CommonSpatialFunction.ST_SRID;
 import static org.hibernate.spatial.CommonSpatialFunction.ST_SYMDIFFERENCE;
 import static org.hibernate.spatial.CommonSpatialFunction.ST_TOUCHES;

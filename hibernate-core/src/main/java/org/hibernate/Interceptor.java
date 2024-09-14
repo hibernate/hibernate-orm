@@ -263,7 +263,7 @@ public interface Interceptor {
 	 * <ul>
 	 * <li>{@code Boolean.TRUE} - the entity is transient
 	 * <li>{@code Boolean.FALSE} - the entity is detached
-	 * <li>{@code null} - Hibernate uses the {@code unsaved-value} mapping and other heuristics to 
+	 * <li>{@code null} - Hibernate uses the {@code unsaved-value} mapping and other heuristics to
 	 * determine if the object is unsaved
 	 * </ul>
 	 *
@@ -355,10 +355,10 @@ public interface Interceptor {
 	default Object getEntity(String entityName, Object id) throws CallbackException {
 		return null;
 	}
-	
+
 	/**
-	 * Called when a Hibernate transaction is begun via the Hibernate {@code Transaction} 
-	 * API. Will not be called if transactions are being controlled via some other 
+	 * Called when a Hibernate transaction is begun via the Hibernate {@code Transaction}
+	 * API. Will not be called if transactions are being controlled via some other
 	 * mechanism (CMT, for example).
 	 *
 	 * @param tx The Hibernate transaction facade object

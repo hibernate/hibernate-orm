@@ -126,4 +126,3 @@ public class JdbcTimestampCustomTimeZoneTest
 		private Timestamp createdOn = new Timestamp( 0 );
 	}
 }
-

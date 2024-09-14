@@ -87,4 +87,3 @@ public class SchemaManagerDefaultSchemaTest {
 		public Book favoriteBook;
 	}
 }
-

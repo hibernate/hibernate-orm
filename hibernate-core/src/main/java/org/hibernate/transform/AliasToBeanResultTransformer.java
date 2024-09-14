@@ -61,7 +61,7 @@ public class AliasToBeanResultTransformer<T> implements ResultTransformer<T>, Ty
 			else {
 				check( aliases );
 			}
-			
+
 			result = resultClass.newInstance();
 
 			for ( int i = 0; i < aliases.length; i++ ) {

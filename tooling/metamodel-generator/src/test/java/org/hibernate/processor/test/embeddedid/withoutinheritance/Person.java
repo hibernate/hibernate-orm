@@ -19,5 +19,3 @@ public class Person {
 
 	private String address;
 }
-
-

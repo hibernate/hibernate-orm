@@ -4,8 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id$
 package org.hibernate.orm.test.annotations.idmanytoone;
 import java.io.Serializable;
 import java.util.Set;
@@ -30,4 +28,3 @@ public class Store implements Serializable {
 
     private static final long serialVersionUID = 1748046699322502790L;
 }
-

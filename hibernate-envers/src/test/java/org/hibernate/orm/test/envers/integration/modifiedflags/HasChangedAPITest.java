@@ -14,7 +14,6 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.integration.auditReader.AuditedTestEntity;
 import org.hibernate.orm.test.envers.integration.auditReader.NotAuditedTestEntity;
 
-import org.hibernate.orm.test.envers.integration.modifiedflags.AbstractModifiedFlagsEntityTest;
 import org.hibernate.orm.test.envers.integration.modifiedflags.entities.EnumEntity;
 import org.hibernate.orm.test.envers.integration.modifiedflags.entities.EnumOption;
 import org.junit.Test;

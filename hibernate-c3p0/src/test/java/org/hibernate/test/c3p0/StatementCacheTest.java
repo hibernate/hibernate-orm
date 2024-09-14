@@ -18,8 +18,8 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.orm.junit.JiraKey;
 
 /**
- * Tests that when using cached prepared statement with batching enabled doesn't bleed over into new transactions. 
- * 
+ * Tests that when using cached prepared statement with batching enabled doesn't bleed over into new transactions.
+ *
  * @author Shawn Clowater
  */
 public class StatementCacheTest extends BaseCoreFunctionalTestCase {

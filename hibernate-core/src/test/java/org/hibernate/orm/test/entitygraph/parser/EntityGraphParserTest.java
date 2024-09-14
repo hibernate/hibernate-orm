@@ -28,7 +28,7 @@ import static org.junit.Assert.assertNotNull;
 
 /**
  * A unit test of {@link GraphParser}.
- * 
+ *
  * @author asusnjar
  */
 public class EntityGraphParserTest extends AbstractEntityGraphTest {
@@ -215,7 +215,7 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 
 		EntityManager entityManager = getOrCreateEntityManager();
 		EntityGraph<GraphParsingTestEntity> graph = entityManager.createEntityGraph( GraphParsingTestEntity.class );
-		
+
 		final String mapAttributeName = "map";
 		Subgraph<GraphParsingTestEntity> keySubgraph = graph.addKeySubgraph( mapAttributeName );
 		Subgraph<GraphParsingTestEntity> valueSubgraph = graph.addSubgraph( mapAttributeName );
@@ -233,7 +233,7 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 				Map<Class, Subgraph> keySubgraphs = node.getKeySubgraphs();
 				Assert.assertTrue( "Missing the key subgraph", !keySubgraphs.isEmpty() );
 				Assert.assertSame( keySubgraph, keySubgraphs.get( GraphParsingTestEntity.class ) );
-				
+
 				@SuppressWarnings("rawtypes")
 				Map<Class, Subgraph> valueSubgraphs = node.getSubgraphs();
 				Assert.assertTrue( "Missing the value subgraph", !valueSubgraphs.isEmpty() );
@@ -247,7 +247,7 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 	public void testHHH12696MapSubgraphsValueFirst() {
 		EntityManager entityManager = getOrCreateEntityManager();
 		EntityGraph<GraphParsingTestEntity> graph = entityManager.createEntityGraph( GraphParsingTestEntity.class );
-		
+
 		final String mapAttributeName = "map";
 		Subgraph<GraphParsingTestEntity> valueSubgraph = graph.addSubgraph( mapAttributeName );
 		Subgraph<GraphParsingTestEntity> keySubgraph = graph.addKeySubgraph( mapAttributeName );

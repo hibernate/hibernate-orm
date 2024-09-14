@@ -10,7 +10,7 @@ import jakarta.persistence.FetchType;
 
 /**
  * Enumeration of values describing <em>when</em> fetching should occur.
- * 
+ *
  * @author Steve Ebersole
  * @see FetchStyle
  */

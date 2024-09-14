@@ -30,7 +30,7 @@ public class Sickness {
 	public void setType(String type) {
 		this.type = type;
 	}
-	
+
 	@Id
 	public String getClassification() {
 		return classification;

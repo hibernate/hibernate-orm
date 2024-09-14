@@ -142,7 +142,7 @@ class SecondaryTableSourceImpl extends AbstractHbmSourceNode implements Secondar
 	public String getExplicitForeignKeyName() {
 		return jaxbSecondaryTableMapping.getKey().getForeignKey();
 	}
-	
+
 	@Override
 	public boolean createForeignKeyConstraint() {
 		// TODO: Can HBM do something like JPA's @ForeignKey(NO_CONSTRAINT)?

@@ -140,7 +140,7 @@ public class MappedByEmbeddableAttributeTest extends BaseEnversJPAFunctionalTest
 			this.aList = aList;
 		}
 	}
-	
+
 	private static class EntityBNameMatcher extends BaseMatcher<EntityB> {
 
 		private final String expectedValue;

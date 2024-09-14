@@ -4,8 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id: AddressId.java 5686 2005-02-12 07:27:32Z steveebersole $
 package org.hibernate.orm.test.typedonetoone;
 import java.io.Serializable;
 
@@ -15,14 +13,14 @@ import java.io.Serializable;
 public class AddressId implements Serializable {
 	private String type;
 	private String customerId;
-	
+
 	public AddressId(String type, String customerId) {
 		this.customerId = customerId;
 		this.type = type;
 	}
-	
+
 	public AddressId() {}
-	
+
 	public String getType() {
 		return type;
 	}

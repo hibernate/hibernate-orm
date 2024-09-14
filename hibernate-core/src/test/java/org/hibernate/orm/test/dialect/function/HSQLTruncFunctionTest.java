@@ -61,7 +61,7 @@ public class HSQLTruncFunctionTest extends BaseEntityManagerFunctionalTestCase {
 
 			assertEquals( 99.5d, score, 0.01 );
 		} );
-		
+
 	}
 
 	@Entity(name = "Person")

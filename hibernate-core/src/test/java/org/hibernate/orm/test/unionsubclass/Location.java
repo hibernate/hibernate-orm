@@ -4,8 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id: Location.java 4357 2004-08-17 09:20:17Z oneovthafew $
 package org.hibernate.orm.test.unionsubclass;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,13 +15,13 @@ public class Location {
 	private long id;
 	private String name;
 	private Collection beings = new ArrayList();
-	
+
 	Location() {}
-	
+
 	public Location(String name) {
 		this.name = name;
 	}
-	
+
 	public void addBeing(Being b) {
 		b.setLocation(this);
 		beings.add(b);

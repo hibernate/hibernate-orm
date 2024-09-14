@@ -25,11 +25,11 @@ import org.hibernate.internal.util.NullnessUtil;
  * @author Nathan Rauh
  */
 public class WebSphereLibertyJtaPlatform extends AbstractJtaPlatform {
-	
+
 	public static final String TMF_CLASS_NAME = "com.ibm.tx.jta.TransactionManagerFactory";
-	
+
 	public static final String UT_NAME = "java:comp/UserTransaction";
-	
+
 	@Override
 	protected TransactionManager locateTransactionManager() {
 		try {
@@ -52,7 +52,7 @@ public class WebSphereLibertyJtaPlatform extends AbstractJtaPlatform {
 	public boolean canRegisterSynchronization() {
 		try {
 			return getCurrentStatus() == Status.STATUS_ACTIVE;
-		} 
+		}
 		catch (SystemException x) {
 			throw new RuntimeException(x);
 		}
@@ -72,7 +72,7 @@ public class WebSphereLibertyJtaPlatform extends AbstractJtaPlatform {
 	public void registerSynchronization(Synchronization synchronization) {
 		try {
 			NullnessUtil.castNonNull( retrieveTransactionManager() ).getTransaction().registerSynchronization(synchronization);
-		} 
+		}
 		catch ( RollbackException | SystemException x ) {
 			throw new RuntimeException(x);
 		}

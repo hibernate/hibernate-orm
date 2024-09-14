@@ -12,15 +12,15 @@ public class B extends A {
 	private int count;
 	private Map map;
 	private String bName = "B Name";
-	
+
 	public int getCount() {
 		return count;
 	}
-	
+
 	public void setCount(int count) {
 		this.count = count;
 	}
-	
+
 	public Map getMap() {
 		return map;
 	}
@@ -37,9 +37,3 @@ public class B extends A {
 		bName = name;
 	}
 }
-
-
-
-
-
-

@@ -23,7 +23,7 @@ public class Dependent {
 	@Id
 	@Column(name = "dep_name")
 	String name; // default column name is overridden
-	
+
 	@Id
 	@JoinColumn(name = "FK1", referencedColumnName = "firstName")
 	@JoinColumn(name = "FK2", referencedColumnName = "lastName")

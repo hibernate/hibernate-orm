@@ -20,7 +20,7 @@ public class TargetStdoutImpl implements GenerationTarget {
 	public TargetStdoutImpl() {
 		this( null );
 	}
-	
+
 	public TargetStdoutImpl(String delimiter) {
 		this( delimiter, FormatStyle.NONE.getFormatter());
 	}

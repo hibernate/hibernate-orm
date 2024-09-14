@@ -12,7 +12,6 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hibernate.dialect.Dialect;
 
 import org.hibernate.testing.jdbc.JdbcProperties;
 import org.hibernate.testing.orm.junit.DialectContext;

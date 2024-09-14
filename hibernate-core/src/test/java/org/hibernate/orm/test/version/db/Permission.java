@@ -4,8 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-// $Id: Permission.java 7736 2005-08-03 20:03:34Z steveebersole $
 package org.hibernate.orm.test.version.db;
 import java.util.Date;
 

@@ -9,7 +9,7 @@ package org.hibernate.orm.test.mapping.usertypes;
 public class TestEntity {
 	private int id;
 	private TestEnum testEnum;
-	
+
 	public void setId(int id) {
 		this.id = id;
 	}

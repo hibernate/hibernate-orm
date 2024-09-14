@@ -40,7 +40,7 @@ class CacheEntryHelper {
 			if ( nonCacheable!=null && nonCacheable[i] ) {
 				disassembled[i] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
 			}
-			else if ( row[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY 
+			else if ( row[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
 					| row[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 				disassembled[i] = (Serializable) row[i];
 			}
@@ -67,7 +67,7 @@ class CacheEntryHelper {
 			final Object owner) {
 		Object[] assembled = new Object[row.length];
 		for ( int i = 0; i < types.length; i++ ) {
-			if ( row[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY 
+			if ( row[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
 					|| row[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 				assembled[i] = row[i];
 			}

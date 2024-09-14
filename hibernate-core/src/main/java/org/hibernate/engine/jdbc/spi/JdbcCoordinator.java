@@ -158,7 +158,7 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 
 	/**
 	 * Register a query statement as being able to be cancelled.
-	 * 
+	 *
 	 * @param statement The cancel-able query statement.
 	 */
 	void registerLastQuery(Statement statement);

@@ -1,11 +1,9 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id: Person.java 10218 2006-08-04 18:24:04Z steve.ebersole@jboss.com $
 package org.hibernate.orm.test.mapping.inheritance.joined;
 
 
@@ -39,7 +37,7 @@ public class Person {
 		this.address.country = string;
 	}
 
-	
+
 	/**
 	 * @return Returns the sex.
 	 */

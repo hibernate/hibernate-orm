@@ -4,8 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id$
 package org.hibernate.orm.test.annotations.indexcoll;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
@@ -20,7 +18,7 @@ public class ExchangeRateKey
         super();
     }
 
-  
+
     public ExchangeRateKey( long date, Currency currency1, Currency currency2) {
         super();
         this.date = date;
@@ -30,13 +28,13 @@ public class ExchangeRateKey
 
     @Column(name="`date`", nullable = false)
     protected long date;
-    
+
     @jakarta.persistence.ManyToOne(fetch = FetchType.LAZY, optional = false)
     protected Currency currency1;
-    
+
     @jakarta.persistence.ManyToOne(fetch = FetchType.LAZY, optional = false)
     protected Currency currency2;
-    
+
 
     @Override
     public boolean equals (Object obj) {

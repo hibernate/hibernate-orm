@@ -13,7 +13,7 @@ import org.hibernate.testing.RequiresDialect;
 
 /**
  * Custom SQL tests for Sybase dialects
- * 
+ *
  * @author Gavin King
  */
 @RequiresDialect(SybaseDialect.class)
@@ -22,4 +22,3 @@ public class SybaseCustomSQLTest extends CustomStoredProcTestSupport {
 		return new String[] { "sql/hand/custom/sybase/Mappings.hbm.xml" };
 	}
 }
-

@@ -13,4 +13,3 @@ import jakarta.persistence.MappedSuperclass;
 public abstract class AttachmentGroupPost<UserRoleType extends UserRole, GroupType extends AttachmentGroup>
 		extends Post<UserRoleType> {
 }
-	

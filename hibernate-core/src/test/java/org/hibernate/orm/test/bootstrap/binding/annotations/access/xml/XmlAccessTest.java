@@ -27,7 +27,6 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.AccessType;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test verifying that it is possible to configure the access type via xml configuration.

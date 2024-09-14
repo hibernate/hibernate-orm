@@ -4,7 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-//$Id: $
 package org.hibernate.orm.test.cascade.circle;
 
 import java.util.HashSet;
@@ -19,22 +18,22 @@ public class Node {
 	private Long nodeID;
 
 	private long version;
-	
+
 	private String name;
-	
+
 	/** the list of orders that are delivered at this node */
 //	@OneToMany(fetch=FetchType.LAZY, cascade={CascadeType.MERGE, CascadeType.REFRESH}, mappedBy="deliveryNode")
 	private Set deliveryTransports = new HashSet();
-	
+
 	/** the list of orders that are picked up at this node */
 //	@OneToMany(fetch=FetchType.LAZY, cascade=CascadeType.ALL, mappedBy="pickupNode")
 	private Set pickupTransports = new HashSet();
-	
+
 	/** the route to which this node belongs */
 //	@ManyToOne(targetEntity=Route.class, optional=false, fetch=FetchType.EAGER)
 //	@JoinColumn(name="ROUTEID", nullable=false, insertable=true, updatable=true)
 	private Route route = null;
-	
+
 	/** the tour this node belongs to, null if this node does not belong to a tour (e.g first node of a route) */
 //	@ManyToOne(targetEntity=Tour.class, cascade={CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH}, optional=true, fetch=FetchType.LAZY)
 //	@JoinColumn(name="TOURID", nullable=true, insertable=true, updatable=true)
@@ -90,7 +89,7 @@ public class Node {
 	public Tour getTour() {
 		return tour;
 	}
-	
+
 	public void setTour(Tour tour) {
 		this.tour = tour;
 	}
@@ -98,7 +97,7 @@ public class Node {
 	public String toString()
 	{
 		StringBuilder buffer = new StringBuilder();
-		
+
 		buffer.append( name + " id: " + nodeID );
 		if ( route != null ) {
 			buffer.append( " route name: " )
@@ -111,13 +110,13 @@ public class Node {
 				buffer.append("Pickup transports: " + it.next());
 			}
 		}
-		
+
 		if ( deliveryTransports != null ) {
 			for (Iterator it = deliveryTransports.iterator(); it.hasNext();) {
 				buffer.append("Delviery transports: " + it.next());
 			}
 		}
-		
+
 		return buffer.toString();
 	}
 

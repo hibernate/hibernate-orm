@@ -9,7 +9,6 @@ package org.hibernate.testing.env;
 import java.util.function.BiConsumer;
 
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;

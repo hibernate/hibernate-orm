@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.orm.test.query.sqm;
 
@@ -37,9 +37,9 @@ import static org.assertj.core.api.Assertions.fail;
 
 /**
  * (Flaky) test for {@link ConcreteSqmSelectQueryPlan#withCacheableSqmInterpretation} not checking for {@link JdbcOperationQuerySelect#dependsOnParameterBindings()}/{@link JdbcOperationQuerySelect#isCompatibleWith(org.hibernate.sql.exec.spi.JdbcParameterBindings, org.hibernate.query.spi.QueryOptions)} in double-lock checking.
- * 
+ *
  * <p>Might cause incorrect SQL to be rendered. In case my MySQL this might cause "limit null,1" statements.
- * 
+ *
  * @see https://hibernate.atlassian.net/browse/HHH-17742
  */
 @RequiresDialect(MySQLDialect.class)
@@ -53,8 +53,8 @@ public class ConcurrentConcreteSqmSelectQueryPlainTest extends BaseCoreFunctiona
 	}
 
 	/**
-	 * First query will generated a "limit ?,?" SQL statement, the following ones only need "limit ?". 
-	 * Due to the race condition, the following ones reuse the cached "limit ?,?" statement, resulting in "limit null,?" being generated. 
+	 * First query will generated a "limit ?,?" SQL statement, the following ones only need "limit ?".
+	 * Due to the race condition, the following ones reuse the cached "limit ?,?" statement, resulting in "limit null,?" being generated.
 	 */
 	@Test
 	public void run() throws InterruptedException {
@@ -89,7 +89,7 @@ public class ConcurrentConcreteSqmSelectQueryPlainTest extends BaseCoreFunctiona
 	private List<SimpleEntity> executeQuery(Session session, int index) {
 		Query<SimpleEntity> query = session.createQuery( QUERY_STRING, SimpleEntity.class )
 				.setMaxResults( 1 );
-		
+
 		if ( index == 0 ) {
 			query.setFirstResult( 1 );
 		} else {
@@ -100,10 +100,10 @@ public class ConcurrentConcreteSqmSelectQueryPlainTest extends BaseCoreFunctiona
 				fail( "sleep interrupted: query " + index, ex );
 			}
 		}
-				
+
 		return query.list();
 	}
-	
+
 	@Override
 	protected Configuration constructAndConfigureConfiguration(BootstrapServiceRegistry bootstrapServiceRegistry) {
 		Configuration cfg = super.constructAndConfigureConfiguration( bootstrapServiceRegistry );
@@ -111,7 +111,7 @@ public class ConcurrentConcreteSqmSelectQueryPlainTest extends BaseCoreFunctiona
 
 		return cfg;
 	}
-	
+
 	@Entity(name = "simple")
 	public static class SimpleEntity {
 
@@ -126,14 +126,14 @@ public class ConcurrentConcreteSqmSelectQueryPlainTest extends BaseCoreFunctiona
 			this.id = id;
 		}
 	}
-	
+
 	public static class DelayingStandardSqmTranslatorFactory extends StandardSqmTranslatorFactory {
-		
+
 		@Override
 		public SqmTranslator<SelectStatement> createSelectTranslator(SqmSelectStatement<?> sqmSelectStatement, QueryOptions queryOptions,
 				DomainParameterXref domainParameterXref, QueryParameterBindings domainParameterBindings, LoadQueryInfluencers loadQueryInfluencers,
 				SqlAstCreationContext creationContext, boolean deduplicateSelectionItems) {
-			
+
 			try {
 				Thread.sleep( 2000L ); // delay to trigger double-lock checking by concurrent queries
 			}
@@ -144,7 +144,7 @@ public class ConcurrentConcreteSqmSelectQueryPlainTest extends BaseCoreFunctiona
 			return super.createSelectTranslator( sqmSelectStatement, queryOptions, domainParameterXref, domainParameterBindings, loadQueryInfluencers, creationContext,
 					deduplicateSelectionItems );
 		}
-		
+
 	}
-	
+
 }

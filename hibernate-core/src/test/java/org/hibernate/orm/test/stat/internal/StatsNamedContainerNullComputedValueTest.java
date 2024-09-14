@@ -14,7 +14,6 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNull;
 
 @JiraKey(value = "HHH-13645")

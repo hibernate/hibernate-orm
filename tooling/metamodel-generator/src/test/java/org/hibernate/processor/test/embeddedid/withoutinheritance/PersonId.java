@@ -32,5 +32,3 @@ public class PersonId {
 		this.snn = snn;
 	}
 }
-
-

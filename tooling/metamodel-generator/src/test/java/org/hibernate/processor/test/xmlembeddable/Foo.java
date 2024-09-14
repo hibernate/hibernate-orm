@@ -17,5 +17,3 @@ public class Foo {
 	@Id
 	long id;
 }
-
-

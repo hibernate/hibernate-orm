@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.sql.ast;
 
@@ -17,9 +17,9 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
  * Another example is a function that renders a function argument into a subquery select and group by item.
  * It can use {@link #INLINE_PARAMETERS} so that a database can match such a select item to a group by item.
  * Without this, such queries would result in a query error.
- * 
+ *
  * @author Christian Beikov
- * @see SqlAstTranslator#render(SqlAstNode, SqlAstNodeRenderingMode) 
+ * @see SqlAstTranslator#render(SqlAstNode, SqlAstNodeRenderingMode)
  */
 public enum SqlAstNodeRenderingMode {
 	/**

@@ -17,5 +17,3 @@ public class Ref extends AbstractRef {
 		super( id );
 	}
 }
-
-

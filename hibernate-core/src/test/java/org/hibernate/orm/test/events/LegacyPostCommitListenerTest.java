@@ -107,7 +107,7 @@ public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		transaction.rollback();
 		session.close();
 
-		//the legacy implementation fires the listener on failure as well 
+		//the legacy implementation fires the listener on failure as well
 		Assert.assertEquals( 1, ( (LegacyPostCommitInsertEventListener) postCommitInsertEventListener ).fired );
 	}
 

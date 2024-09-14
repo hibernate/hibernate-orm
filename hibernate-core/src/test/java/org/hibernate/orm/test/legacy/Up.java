@@ -4,8 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id: Up.java 4599 2004-09-26 05:18:27Z oneovthafew $
 package org.hibernate.orm.test.legacy;
 import java.io.Serializable;
 
@@ -32,7 +30,7 @@ public class Up implements Serializable {
 	public void setId2(long l) {
 		id2 = l;
 	}
-	
+
 	public boolean equals(Object other) {
 		if ( !(other instanceof Up) ) return false;
 		Up that = (Up) other;

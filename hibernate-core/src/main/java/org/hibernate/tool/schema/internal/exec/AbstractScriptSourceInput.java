@@ -10,9 +10,6 @@ import java.io.Reader;
 import java.util.List;
 import java.util.function.Function;
 
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 
 /**

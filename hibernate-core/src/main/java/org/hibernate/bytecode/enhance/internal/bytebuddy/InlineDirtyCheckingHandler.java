@@ -9,7 +9,6 @@ package org.hibernate.bytecode.enhance.internal.bytebuddy;
 import java.util.Collection;
 import java.util.Objects;
 
-import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Id;
 

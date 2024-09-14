@@ -11,5 +11,3 @@ package org.hibernate.processor.test.usertype;
  */
 public class PhoneNumber {
 }
-
-

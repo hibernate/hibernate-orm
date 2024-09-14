@@ -110,7 +110,7 @@ public class NClobJavaType extends AbstractClassJavaType<NClob> {
 		catch ( SQLException e ) {
 			throw new HibernateException( "Unable to access nclob stream", e );
 		}
-		
+
 		throw unknownUnwrap( type );
 	}
 

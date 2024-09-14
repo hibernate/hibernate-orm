@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.jpa.ejb3configuration;
 
 import jakarta.persistence.EntityManagerFactory;
-import java.util.Collections;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;

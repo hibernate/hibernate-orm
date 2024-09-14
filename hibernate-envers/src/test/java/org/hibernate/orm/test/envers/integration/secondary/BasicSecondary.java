@@ -7,12 +7,10 @@
 package org.hibernate.orm.test.envers.integration.secondary;
 
 import java.util.Arrays;
-import java.util.Iterator;
 import jakarta.persistence.EntityManager;
 
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.mapping.Join;
 
 import org.junit.Assert;
 import org.junit.Test;

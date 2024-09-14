@@ -4,8 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$
 package org.hibernate.orm.test.annotations.idmanytoone;
 
 import java.io.Serializable;
@@ -38,7 +36,7 @@ public class ShoppingBaskets implements Serializable {
 
 	@OneToMany(mappedBy="shoppingBaskets", cascade=CascadeType.ALL, targetEntity=BasketItems.class)
 	private java.util.Set items = new java.util.HashSet();
-	
+
 	public void setBasketDatetime(java.util.Date value) {
 		this.basketDatetime = value;
 	}
@@ -64,4 +62,3 @@ public class ShoppingBaskets implements Serializable {
 	}
 
 }
-

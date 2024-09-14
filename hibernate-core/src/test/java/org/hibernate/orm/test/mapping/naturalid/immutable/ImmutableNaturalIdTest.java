@@ -8,7 +8,6 @@ package org.hibernate.orm.test.mapping.naturalid.immutable;
 
 import jakarta.persistence.PersistenceException;
 
-import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;

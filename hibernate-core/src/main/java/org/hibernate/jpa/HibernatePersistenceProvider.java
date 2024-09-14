@@ -41,7 +41,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( HibernatePersistenceProvider.class );
 
 	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
-	
+
 	/**
 	 * {@inheritDoc}
 	 *

@@ -6,11 +6,9 @@
  */
 package org.hibernate.orm.test.bootstrap.spi.delegation;
 
-import java.util.Set;
 
 import org.hibernate.boot.spi.AbstractDelegatingMetadata;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.type.ConvertedBasicType;
 
 /**
  * If this class does not compile anymore due to unimplemented methods, you should probably add the corresponding

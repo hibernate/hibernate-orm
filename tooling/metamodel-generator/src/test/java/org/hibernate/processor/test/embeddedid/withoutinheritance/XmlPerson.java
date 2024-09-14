@@ -13,5 +13,3 @@ public class XmlPerson {
 	private PersonId id;
 	private String address;
 }
-
-

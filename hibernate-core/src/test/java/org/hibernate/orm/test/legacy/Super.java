@@ -17,6 +17,6 @@ public class Super {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 
 }

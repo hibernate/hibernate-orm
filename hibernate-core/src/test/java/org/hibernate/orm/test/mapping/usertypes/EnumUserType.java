@@ -124,4 +124,3 @@ public class EnumUserType<T extends Enum<T>> implements UserType<T>, Parameteriz
 		return x.equals( y );
 	}
 }
-

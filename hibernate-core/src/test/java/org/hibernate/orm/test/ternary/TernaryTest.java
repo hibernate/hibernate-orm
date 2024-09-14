@@ -63,7 +63,7 @@ public class TernaryTest extends BaseCoreFunctionalTestCase {
 		tim.getManagerBySite().put(melb, tom);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		tom = (Employee) s.get(Employee.class, "Tom");
@@ -77,7 +77,7 @@ public class TernaryTest extends BaseCoreFunctionalTestCase {
 		assertTrue( melb.getEmployees().contains(bob) );
 		assertTrue( melb.getManagers().contains(tom) );
 		t.commit();
-		s.close();		
+		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -134,4 +134,3 @@ public class TernaryTest extends BaseCoreFunctionalTestCase {
 		session.close();
 	}
 }
-

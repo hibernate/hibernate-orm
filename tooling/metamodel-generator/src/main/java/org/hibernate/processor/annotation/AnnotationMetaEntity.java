@@ -738,7 +738,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							name,
 							sessionType,
 							getSessionVariableName( sessionType ),
-							dataStore(), 
+							dataStore(),
 							context.addInjectAnnotation(),
 							context.addNonnullAnnotation(),
 							false,

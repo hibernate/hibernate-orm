@@ -4,8 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id$
 package org.hibernate.orm.test.annotations.array;
 
 import jakarta.persistence.CascadeType;
@@ -46,7 +44,7 @@ public class Contest {
 	public void setResults(Competitor[] results) {
 		this.results = results;
 	}
-	
+
 	@ElementCollection
 	@OrderColumn
 	@ListIndexBase( 1 )
@@ -57,8 +55,8 @@ public class Contest {
 	public void setHeldIn(Month[] heldIn) {
 		this.heldIn = heldIn;
 	}
-	
+
 	public enum Month {
 		January, February, March, April, May, June, July, August, September, October, November, December;
-	}; 
+	};
 }

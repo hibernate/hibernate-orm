@@ -24,7 +24,7 @@ public class EntityWithNestedEmbeddables {
 	@Id
 	@GeneratedValue
 	private Integer id;
-	
+
 	@Embedded
 	private EmbeddableA embedA;
 

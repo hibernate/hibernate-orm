@@ -20,7 +20,7 @@ public class Tool extends Helper {
 	private Double cost;
 	public Double getCost( ) { return this.cost; }
 	public void setCost( Double value ) { this.cost = value; }
-	
+
 	@Override
 	public String toString( ) {
 		return "[" + super.toString() + "; Cost: " + this.getCost( ) + "]";

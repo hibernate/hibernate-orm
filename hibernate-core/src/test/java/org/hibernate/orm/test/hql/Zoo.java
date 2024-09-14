@@ -4,8 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id: Zoo.java 10653 2006-10-26 13:38:50Z steve.ebersole@jboss.com $
 package org.hibernate.orm.test.hql;
 import java.util.HashMap;
 import java.util.Map;

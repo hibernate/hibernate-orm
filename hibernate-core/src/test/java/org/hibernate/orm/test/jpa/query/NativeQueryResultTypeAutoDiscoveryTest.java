@@ -664,4 +664,3 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	}
 
 }
-

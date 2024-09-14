@@ -63,9 +63,9 @@ public class SerializationHelperTest extends BaseUnitTestCase {
 
 	public void testSerDeserClassUnknownToCustomLoader() throws Exception {
 		Object instance = LockMode.OPTIMISTIC;
-		assertSame( 
+		assertSame(
 			SerializationHelper.hibernateClassLoader(),
-			instance.getClass().getClassLoader() 
+			instance.getClass().getClassLoader()
 		);
 
 		// SerializableType.toBytes() logic, as called from SerializableType.disassemble()

@@ -129,7 +129,7 @@ public class PolymorphicCacheTest {
 
 			} );
 		} );
-		
+
 		// test deleting
 		scope.inSession( (session) -> {
 			scope.inTransaction( session, (s) -> {

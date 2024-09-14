@@ -192,7 +192,7 @@ public interface StatisticsImplementor extends Statistics, Service {
 	 * Callback indicating a get from natural id cache resulted in a hit.
 	 */
 	void naturalIdCacheHit(NavigableRole rootEntityName, String regionName);
-	
+
 	/**
 	 * Callback indicating a get from natural id cache resulted in a miss.
 	 */

@@ -16,6 +16,3 @@ import jakarta.persistence.MappedSuperclass;
 @MappedSuperclass
 public class EmbeddableAndMappedSuperClass {
 }
-
-
-

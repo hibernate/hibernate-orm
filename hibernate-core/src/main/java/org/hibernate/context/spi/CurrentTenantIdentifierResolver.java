@@ -32,7 +32,7 @@ public interface CurrentTenantIdentifierResolver<T> {
 	 * Should we validate that the tenant identifier of a "current sessions" that
 	 * already exists when {@link CurrentSessionContext#currentSession()} is called
 	 * matches the value returned here from {@link #resolveCurrentTenantIdentifier()}?
-	 * 
+	 *
 	 * @return {@code true} indicates that the extra validation will be performed;
 	 *                      {@code false} indicates it will not.
 	 *

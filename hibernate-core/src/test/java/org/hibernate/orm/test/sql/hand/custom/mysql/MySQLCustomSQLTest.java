@@ -25,4 +25,3 @@ public class MySQLCustomSQLTest extends CustomStoredProcTestSupport {
 		return new String[] { "sql/hand/custom/mysql/Mappings.hbm.xml" };
 	}
 }
-

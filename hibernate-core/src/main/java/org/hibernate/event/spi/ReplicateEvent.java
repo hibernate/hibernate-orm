@@ -21,7 +21,7 @@ public class ReplicateEvent extends AbstractEvent {
 	public ReplicateEvent(Object object, ReplicationMode replicationMode, EventSource source) {
 		this(null, object, replicationMode, source);
 	}
-	
+
 	public ReplicateEvent(String entityName, Object object, ReplicationMode replicationMode, EventSource source) {
 		super(source);
 		this.entityName = entityName;

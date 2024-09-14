@@ -9,7 +9,7 @@ package org.hibernate;
 /**
  * Raised whenever a duplicate for a certain type occurs,
  * such as a duplicate class, table, or property name.
- * 
+ *
  * @author Max Rydahl Andersen
  * @author Steve Ebersole
  */
@@ -95,7 +95,7 @@ public class DuplicateMappingException extends MappingException {
 	public String getType() {
 		return type;
 	}
-	
+
 	public String getName() {
 		return name;
 	}

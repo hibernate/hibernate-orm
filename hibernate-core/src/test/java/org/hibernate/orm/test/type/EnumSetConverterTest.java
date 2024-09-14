@@ -194,7 +194,7 @@ public class EnumSetConverterTest {
 	public enum MySpecialEnum {
 		VALUE1, VALUE2, VALUE3
 	}
-	
+
 	public static class MyEnumConverter implements AttributeConverter<MySpecialEnum, String> {
 		@Override
 		public String convertToDatabaseColumn(MySpecialEnum attribute) {

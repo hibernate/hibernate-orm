@@ -11,7 +11,7 @@ import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Occurs after the datastore is updated
- * 
+ *
  * @author Gavin King
  */
 public class PostUpdateEvent extends AbstractEvent {
@@ -22,7 +22,7 @@ public class PostUpdateEvent extends AbstractEvent {
 	private Object id;
 	//list of dirty properties as computed by Hibernate during a FlushEntityEvent
 	private final int[] dirtyProperties;
-	
+
 	public PostUpdateEvent(
 			Object entity,
 			Object id,
@@ -40,7 +40,7 @@ public class PostUpdateEvent extends AbstractEvent {
 		this.dirtyProperties = dirtyProperties;
 		this.persister = persister;
 	}
-	
+
 	public Object getEntity() {
 		return entity;
 	}

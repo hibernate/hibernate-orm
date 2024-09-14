@@ -211,7 +211,7 @@ public class AuditEntity {
 
 	/**
 	 * Adds a restriction for the type of the current entity.
-	 * 
+	 *
 	 * @param type the entity type to restrict the current alias to
 	 */
 	public static AuditCriterion entityType(final Class<?> type) {

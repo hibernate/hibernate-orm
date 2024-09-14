@@ -1,13 +1,11 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.sql.results.internal;
 
-import java.util.List;
-import java.util.function.Supplier;
 
 import org.hibernate.CacheMode;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
@@ -24,24 +22,10 @@ import org.hibernate.event.spi.EventManager;
 import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.results.ResultsLogger;
-import org.hibernate.sql.results.graph.AssemblerCreationState;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.graph.InitializerParent;
-import org.hibernate.sql.results.graph.InitializerProducer;
-import org.hibernate.sql.results.graph.collection.internal.AbstractImmediateCollectionInitializer;
-import org.hibernate.sql.results.graph.instantiation.DynamicInstantiationResult;
-import org.hibernate.sql.results.jdbc.internal.StandardJdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingResolution;

@@ -160,7 +160,7 @@ public class JoinColumnCollectionMetadataGenerator extends AbstractCollectionMet
 				fakeBidirectionalRelationMapper,
 				fakeBidirectionalRelationIndexMapper,
 				hasCollectionIndex( context )
-		);        
+		);
 	}
 
 	private boolean hasCollectionIndex(CollectionMetadataContext context) {
@@ -172,7 +172,7 @@ public class JoinColumnCollectionMetadataGenerator extends AbstractCollectionMet
 			return context.getPropertyAuditingData().getAuditMappedBy();
 		}
 		return context.getCollection().getMappedByProperty();
-	} 
+	}
 
 	private PropertyMapper getBidirectionalRelationMapper(String entityName, IdMappingData idData, String auditMappedBy) {
 		// Creating a prefixed relation mapper.
@@ -189,7 +189,7 @@ public class JoinColumnCollectionMetadataGenerator extends AbstractCollectionMet
 				false,
 				false
 		);
-	}    
+	}
 
 	private PropertyMapper getBidirectionalRelationIndexMapper(CollectionMetadataContext context, String positionMappedBy) {
 		if ( positionMappedBy != null ) {
@@ -223,5 +223,5 @@ public class JoinColumnCollectionMetadataGenerator extends AbstractCollectionMet
 			return new MiddleComponentData( new MiddleStraightComponentMapper( positionMappedBy ) );
 		}
 		return original;
-	}    
+	}
 }

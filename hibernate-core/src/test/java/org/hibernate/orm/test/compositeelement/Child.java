@@ -4,8 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id: Child.java 6978 2005-06-01 03:29:27Z oneovthafew $
 package org.hibernate.orm.test.compositeelement;
 
 
@@ -67,7 +65,7 @@ public class Child {
 	}
 	public boolean equals(Object other) {
 		Child c = (Child) other;
-		return c.parent.getId().equals(parent.getId()) 
+		return c.parent.getId().equals(parent.getId())
 			&& c.name.equals(name);
 	}
 	public int getBioLength() {

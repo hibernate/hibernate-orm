@@ -2,7 +2,7 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.boot.models.xml.internal;
 
@@ -84,7 +84,7 @@ public enum SimpleTypeInterpretation {
 	DOUBLE( Double.class, DoubleJavaType.class ),
 	FLOAT( Float.class, FloatJavaType.class ),
 	BIG_INTEGER( BigInteger.class, BigIntegerJavaType.class ),
-	BIG_DECIMAL( BigDecimal.class, BigDecimalJavaType.class ),	
+	BIG_DECIMAL( BigDecimal.class, BigDecimalJavaType.class ),
 	CHARACTER( Character.class, CharacterJavaType.class ),
 	STRING( String.class, StringJavaType.class ),
 	INSTANT( Instant.class, InstantJavaType.class ),
@@ -97,7 +97,7 @@ public enum SimpleTypeInterpretation {
 	OFFSET_TIME( OffsetTime.class, OffsetTimeJavaType.class ),
 	ZONED_DATE_TIME( ZonedDateTime.class, ZonedDateTimeJavaType.class ),
 	ZONE_ID( ZoneId.class, ZoneIdJavaType.class ),
-	ZONE_OFFSET( ZoneOffset.class, ZoneOffsetJavaType.class ),	
+	ZONE_OFFSET( ZoneOffset.class, ZoneOffsetJavaType.class ),
 	UUID( UUID .class, UUIDJavaType.class ),
 	URL( java.net.URL.class, UrlJavaType.class ),
 	INET_ADDRESS( InetAddress.class, InetAddressJavaType.class ),
@@ -111,7 +111,7 @@ public enum SimpleTypeInterpretation {
 	JDBC_DATE( Date.class, JdbcDateJavaType.class ),
 	JDBC_TIME( Time.class, JdbcTimeJavaType.class ),
 	CALENDAR( Calendar.class, CalendarJavaType.class ),
-	TIME_ZONE( TimeZone.class, TimeZoneJavaType.class )	
+	TIME_ZONE( TimeZone.class, TimeZoneJavaType.class )
 	;
 
 	SimpleTypeInterpretation(Class<?> javaType, Class<? extends BasicJavaType<?>> javaTypeDescriptorType) {
@@ -129,7 +129,7 @@ public enum SimpleTypeInterpretation {
 	public Class<? extends BasicJavaType<?>> getJavaTypeDescriptorType() {
 		return javaTypeDescriptorType;
 	}
-	
+
 	public static SimpleTypeInterpretation interpret(String name) {
 		assert StringHelper.isNotEmpty( name );
 
@@ -187,7 +187,7 @@ public enum SimpleTypeInterpretation {
 				|| Character.class.getName().equalsIgnoreCase( name ) ) {
 			return CHARACTER;
 		}
-		
+
 		if ( name.equalsIgnoreCase( "string" )
 				|| String.class.getName().equalsIgnoreCase( name ) ) {
 			return STRING;

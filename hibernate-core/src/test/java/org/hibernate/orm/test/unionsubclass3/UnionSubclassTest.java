@@ -187,14 +187,14 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 
 	@Entity(name = "Father")
 	public static class Father extends Parent {
-		
+
 		@Column
 		String fathersDay;
 	}
 
 	@Entity(name = "Mother")
 	public static class Mother extends Parent {
-		
+
 		@Column
 		String mothersDay;
 	}
@@ -206,4 +206,3 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		public Long id;
 	}
 }
-

@@ -4,8 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id: Employment.java 11486 2007-05-08 21:57:24Z steve.ebersole@jboss.com $
 package org.hibernate.orm.test.sql.hand;
 import java.util.Date;
 
@@ -20,7 +18,7 @@ public class Employment {
 	private Date endDate;
 	private String regionCode;
 	private MonetaryAmount salary;
-	
+
 	public Employment() {}
 
 	public Employment(Person employee, Organization employer, String regionCode) {
@@ -102,11 +100,11 @@ public class Employment {
 	public void setRegionCode(String regionCode) {
 		this.regionCode = regionCode;
 	}
-	
+
 	public MonetaryAmount getSalary() {
 		return salary;
 	}
-	
+
 	public void setSalary(MonetaryAmount salary) {
 		this.salary = salary;
 	}

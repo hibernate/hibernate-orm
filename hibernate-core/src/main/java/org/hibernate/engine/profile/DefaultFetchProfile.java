@@ -12,7 +12,6 @@ import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.results.graph.FetchOptions;
-import org.hibernate.tuple.NonIdentifierAttribute;
 
 import java.util.Map;
 

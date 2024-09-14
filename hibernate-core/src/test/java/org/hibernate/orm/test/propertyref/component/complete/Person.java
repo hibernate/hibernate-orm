@@ -11,7 +11,7 @@ package org.hibernate.orm.test.propertyref.component.complete;
 public class Person {
 	private Long id;
 	private Identity identity;
-	
+
 	public Long getId() {
 		return id;
 	}

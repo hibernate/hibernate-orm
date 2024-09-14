@@ -7,13 +7,11 @@
 package org.hibernate.dialect.function.array;
 
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
-import org.hibernate.type.BasicPluralType;
 
 /**
  * A {@link FunctionArgumentTypeResolver} that resolves the argument types for the {@code array_includes} function.

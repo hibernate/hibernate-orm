@@ -46,7 +46,7 @@ public final class GraphParser {
 	 * @param rootType The root entity type
 	 * @param graphText The textual representation of the graph
 	 * @param entityManager The EntityManager
-	 * 
+	 *
 	 * @throws InvalidGraphException if the textual representation is invalid.
 	 */
 	public static <T> RootGraph<T> parse(

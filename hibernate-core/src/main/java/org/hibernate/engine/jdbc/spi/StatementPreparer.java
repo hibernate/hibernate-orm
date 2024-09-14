@@ -29,7 +29,7 @@ public interface StatementPreparer {
 	 * @return the statement
 	 */
 	Statement createStatement();
-	
+
 	/**
 	 * Prepare a statement.
 	 *

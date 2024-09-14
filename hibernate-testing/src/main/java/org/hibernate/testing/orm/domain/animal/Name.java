@@ -14,9 +14,9 @@ public class Name {
 	private String first;
 	private Character initial;
 	private String last;
-	
+
 	public Name() {}
-	
+
 	public Name(String first, Character initial, String last) {
 		this.first = first;
 		this.initial = initial;

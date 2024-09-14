@@ -12,7 +12,7 @@ package org.hibernate.dialect;
  * @author Vlad Mihalcea
  */
 public interface MySQLStorageEngine {
-	
+
 	boolean supportsCascadeDelete();
 
 	String getTableTypeString(String engineKeyword);

@@ -7,10 +7,8 @@
 package org.hibernate.orm.test.where.hbm;
 
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;

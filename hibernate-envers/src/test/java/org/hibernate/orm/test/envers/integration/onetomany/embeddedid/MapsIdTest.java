@@ -12,9 +12,6 @@ import jakarta.persistence.EntityManager;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.orm.test.envers.integration.onetomany.embeddedid.Constant;
-import org.hibernate.orm.test.envers.integration.onetomany.embeddedid.Person;
-import org.hibernate.orm.test.envers.integration.onetomany.embeddedid.PersonTuple;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SkipForDialect;

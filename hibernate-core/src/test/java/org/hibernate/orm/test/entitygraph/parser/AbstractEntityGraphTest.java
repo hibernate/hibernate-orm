@@ -69,7 +69,7 @@ public abstract class AbstractEntityGraphTest extends BaseEntityManagerFunctiona
 		else {
 			Assert.assertNotNull( attrs );
 			Assert.assertTrue( names.length <= attrs.size() );
-	
+
 			for ( String name : names ) {
 				AttributeNode<?> node = null;
 				for ( AttributeNode<?> candidate : attrs ) {
@@ -104,4 +104,3 @@ public abstract class AbstractEntityGraphTest extends BaseEntityManagerFunctiona
 	}
 
 }
-

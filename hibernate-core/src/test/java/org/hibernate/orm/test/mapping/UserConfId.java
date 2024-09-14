@@ -11,13 +11,13 @@ import java.io.Serializable;
 
 
 public class UserConfId  implements Serializable{
-	
+
 	private static final long serialVersionUID = -161134972658451944L;
 
 	private Long user;
 
 	private ConfId conf;
-	
+
 	public UserConfId(){
 	}
 

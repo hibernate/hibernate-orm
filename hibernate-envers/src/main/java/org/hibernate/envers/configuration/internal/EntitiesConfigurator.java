@@ -24,7 +24,6 @@ import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.internal.tools.graph.GraphTopologicalSort;
 import org.hibernate.mapping.PersistentClass;
 
-import org.jboss.logging.Logger;
 
 /**
  * @author Adam Warski (adam at warski dot org)

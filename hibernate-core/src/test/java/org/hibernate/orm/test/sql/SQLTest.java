@@ -35,7 +35,6 @@ import org.hibernate.testing.orm.domain.userguide.WireTransferPayment;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 

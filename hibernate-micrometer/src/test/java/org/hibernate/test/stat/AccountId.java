@@ -15,7 +15,7 @@ public class AccountId implements java.io.Serializable {
     protected AccountId() {
         this.id = 0;
     }
-    
+
     public AccountId(int id) {
         this.id = id;
     }
@@ -40,4 +40,3 @@ public class AccountId implements java.io.Serializable {
         return true;
     }
 }
-

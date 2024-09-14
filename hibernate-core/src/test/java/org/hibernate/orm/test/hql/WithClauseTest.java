@@ -121,7 +121,7 @@ public class WithClauseTest {
 				}
 		);
 	}
-	
+
 	@Test
 	@JiraKey(value = "HHH-2772")
 	public void testWithJoinRHS(SessionFactoryScope scope) {

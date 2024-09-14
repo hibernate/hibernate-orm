@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.orm.test.fetching;
 
@@ -52,7 +52,7 @@ public class GraphParsingTest extends AbstractEntityGraphTest {
 				Ticket.class
 		};
 	}
-	
+
 	@Test
 	public void testParsingExample1() {
 		EntityManager entityManager = getOrCreateEntityManager();
@@ -63,10 +63,10 @@ public class GraphParsingTest extends AbstractEntityGraphTest {
 				entityManager
 		);
 		//end::fetching-strategies-dynamic-fetching-entity-graph-parsing-example-1[]
-		
+
 		Assert.assertNotNull(graph);
 	}
-	
+
 	@Test
 	public void testParsingExample2() {
 		EntityManager entityManager = getOrCreateEntityManager();
@@ -77,7 +77,7 @@ public class GraphParsingTest extends AbstractEntityGraphTest {
 				entityManager
 		);
 		//end::fetching-strategies-dynamic-fetching-entity-graph-parsing-example-2[]
-		
+
 		Assert.assertNotNull(graph);
 	}
 
@@ -108,7 +108,7 @@ public class GraphParsingTest extends AbstractEntityGraphTest {
 
 		Assert.assertNotNull(graph);
 	}
-	
+
 	@Test
 	public void testMergingExample() {
 		EntityManager entityManager = getOrCreateEntityManager();
@@ -116,27 +116,27 @@ public class GraphParsingTest extends AbstractEntityGraphTest {
 		final EntityGraph<Project> a = GraphParser.parse(
 				Project.class, "employees(username)", entityManager
 		);
-	
+
 		final EntityGraph<Project> b = GraphParser.parse(
 				Project.class, "employees(password, accessLevel)", entityManager
 		);
-	
+
 		final EntityGraph<Project> c = GraphParser.parse(
 				Project.class, "employees(department(employees(username)))", entityManager
 		);
-		
+
 		final EntityGraph<Project> all = EntityGraphs.merge(entityManager, Project.class, a, b, c);
 		//end::fetching-strategies-dynamic-fetching-entity-graph-merging-example[]
-		
+
 		final EntityGraph<Project> expected = GraphParser.parse(
 				Project.class,
 				"employees(username, password, accessLevel, department(employees(username)))",
 				entityManager
 		);
-		
+
 		Assert.assertTrue(EntityGraphs.areEqual(expected, all));
 	}
-	
+
 	@Test
 	public void testFindExample() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
@@ -154,20 +154,20 @@ public class GraphParsingTest extends AbstractEntityGraphTest {
 			//end::fetching-strategies-dynamic-fetching-entity-graph-apply-example-find[]
 		});
 	}
-	
+
 	@Test
 	public void testQueryExample() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::fetching-strategies-dynamic-fetching-entity-graph-apply-example-query[]
 			final String graphString = "username, accessLevel";
 			final String queryString = "select e from Employee e where e.id = 1";
-			
+
 			final EntityGraph<Employee> graph = GraphParser.parse(
 					Employee.class,
 					graphString,
 					entityManager
 			);
-			
+
 			TypedQuery<Employee> query1 = entityManager.createQuery(queryString, Employee.class);
 			query1.setHint(
 					GraphSemantic.FETCH.getJakartaHintName(),

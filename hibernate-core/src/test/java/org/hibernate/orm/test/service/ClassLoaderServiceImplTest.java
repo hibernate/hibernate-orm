@@ -20,8 +20,6 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -30,8 +28,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
 
 /**
  * @author Artem V. Navrotskiy
@@ -60,11 +56,11 @@ public class ClassLoaderServiceImplTest {
         Assert.assertSame("Should not return class loaded from the parent classloader of ClassLoaderServiceImpl",
 				objectClass, anotherClass);
     }
-    
+
     /**
      * HHH-8363 discovered multiple leaks within CLS.  Most notably, it wasn't getting GC'd due to holding
      * references to ServiceLoaders.  Ensure that the addition of Stoppable functionality cleans up properly.
-     * 
+     *
      * TODO: Is there a way to test that the ServiceLoader was actually reset?
      */
     @Test
@@ -83,7 +79,7 @@ public class ClassLoaderServiceImplTest {
 		assertThat( contributor1 ).isSameAs( contributor2 );
 
     	StandardServiceRegistryBuilder.destroy( serviceRegistry );
-    	
+
     	try {
 			getTypeContributorServices( serviceRegistry );
     		Assert.fail("Should have thrown an HibernateException -- the ClassLoaderService instance was closed.");
@@ -102,7 +98,7 @@ public class ClassLoaderServiceImplTest {
 	}
 
 	private static class TestClassLoader extends ClassLoader {
-    	
+
     	/**
     	 * testStoppableClassLoaderService() needs a custom JDK service implementation.  Rather than using a real one
     	 * on the test classpath, force it in here.
@@ -114,7 +110,7 @@ public class ClassLoaderServiceImplTest {
 						"org/hibernate/orm/test/service/org.hibernate.boot.model.TypeContributor" );
     			return new Enumeration<URL>() {
         			boolean hasMore = true;
-        			
+
     				@Override
     				public boolean hasMoreElements() {
     					return hasMore;
@@ -131,7 +127,7 @@ public class ClassLoaderServiceImplTest {
     			return java.util.Collections.enumeration( java.util.Collections.<URL>emptyList() );
     		}
         }
-    	
+
         /**
          * Reloading class from binary file.
          *

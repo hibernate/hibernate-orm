@@ -19,7 +19,7 @@ public class Name extends FirstName {
 
 	@Embedded
 	private LastName lastName;
-	
+
 	public Integer getId() {
 		return id;
 	}

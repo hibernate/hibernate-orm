@@ -28,10 +28,10 @@ public class B {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Id
 	Long id;
-	
+
 	@NotNull
-	String name;	
-	
+	String name;
+
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @Cascade(org.hibernate.annotations.CascadeType.ALL)
 	@OrderBy("name")
@@ -52,7 +52,7 @@ public class B {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 
 	public java.util.List<C> getCs() {
 		return cs;

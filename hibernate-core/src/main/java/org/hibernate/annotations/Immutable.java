@@ -21,7 +21,7 @@ import static java.lang.annotation.ElementType.*;
  * Changes made in memory to the state of an immutable entity are never synchronized to
  * the database. The changes are ignored, with no exception thrown.
  * <p>
- * An immutable entity need not be dirty-checked, and so Hibernate does not need to 
+ * An immutable entity need not be dirty-checked, and so Hibernate does not need to
  * maintain a snapshot of its state. This may help reduce memory allocation.
  * Note that it's also possible to obtain an entity in read-only mode in a given session,
  * and this has similar benefits.
@@ -60,10 +60,10 @@ import static java.lang.annotation.ElementType.*;
  * have a type whose values are immutable.
  *
  * @author Emmanuel Bernard
- * 
+ *
  * @see org.hibernate.Session#setDefaultReadOnly(boolean)
- * @see org.hibernate.Session#setReadOnly(Object, boolean) 
- * @see org.hibernate.query.Query#setReadOnly(boolean) 
+ * @see org.hibernate.Session#setReadOnly(Object, boolean)
+ * @see org.hibernate.query.Query#setReadOnly(boolean)
  */
 @Target({TYPE, METHOD, FIELD})
 @Retention( RetentionPolicy.RUNTIME )

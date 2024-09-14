@@ -22,4 +22,3 @@ public class Group implements Serializable {
 	@Column(name = "GROUP_ID")
 	private Long id;
 }
-

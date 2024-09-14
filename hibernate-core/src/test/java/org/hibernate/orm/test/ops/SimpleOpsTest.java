@@ -107,4 +107,3 @@ public class SimpleOpsTest extends AbstractOperationTestCase {
 		assertDeleteCount( 1, scope );
 	}
 }
-

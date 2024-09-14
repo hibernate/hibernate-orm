@@ -47,6 +47,3 @@ public class Superhero {
 		this.superPower = superPower;
 	}
 }
-
-
-

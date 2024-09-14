@@ -20,13 +20,13 @@ import jakarta.persistence.Table;
 // "Transaction" reserved in some Dialects
 @Table( name = "BankTransaction" )
 public class Transaction {
-	
+
 	@Id
 	@GeneratedValue
 	private long id;
-	
+
 	private String code;
-	
+
 	@ManyToOne( cascade = { CascadeType.ALL } )
 	private BankAccount account;
 

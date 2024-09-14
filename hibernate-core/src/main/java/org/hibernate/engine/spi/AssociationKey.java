@@ -14,7 +14,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * Identifies a named association belonging to a particular
  * entity instance. Used to record the fact that an association
  * is null during loading.
- * 
+ *
  * @author Gavin King
  */
 public final class AssociationKey implements Serializable {

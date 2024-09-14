@@ -56,11 +56,11 @@ public class OneToOne extends ToOne {
 	public void setPropertyName(String propertyName) {
 		this.propertyName = propertyName==null ? null : propertyName.intern();
 	}
-	
+
 	public String getEntityName() {
 		return entityName;
 	}
-	
+
 	public Type getType() throws MappingException {
 		if ( getColumnSpan()>0 ) {
 			return MappingHelper.specialOneToOne(

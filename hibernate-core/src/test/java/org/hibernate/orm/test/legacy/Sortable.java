@@ -8,15 +8,15 @@ package org.hibernate.orm.test.legacy;
 
 
 public class Sortable implements Comparable {
-	
+
 	private int id;
 	private String name;
-	
+
 	private Sortable() {}
 	Sortable(String name) {
 		this.name = name;
 	}
-	
+
 	public int compareTo(Object o) {
 		return name.compareTo( ( (Sortable) o).name );
 	}

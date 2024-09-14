@@ -46,7 +46,7 @@ import org.hibernate.tool.schema.internal.script.SqlScriptExtractorInitiator;
 
 /**
  * Central definition of the standard set of service initiators defined by Hibernate.
- * 
+ *
  * @author Steve Ebersole
  */
 public final class StandardServiceInitiators {

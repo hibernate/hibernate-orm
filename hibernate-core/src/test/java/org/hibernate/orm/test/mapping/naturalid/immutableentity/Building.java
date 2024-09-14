@@ -4,8 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id$
 package org.hibernate.orm.test.mapping.naturalid.immutableentity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -25,9 +23,9 @@ public class Building {
 	@Id
 	@GeneratedValue
 	private Integer id;
-	
+
 	private String name;
-	
+
 	@NaturalId
 	private String address;
 	@NaturalId
@@ -121,5 +119,5 @@ public class Building {
 		return "Building [id=" + id + ", name=" + name + ", address=" + address + ", city=" + city + ", state=" + state
 				+ "]";
 	}
-	
+
 }

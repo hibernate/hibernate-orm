@@ -18,5 +18,5 @@ public class OrderLinePk implements Serializable {
     public Order order;
 	@ManyToOne
     @JoinColumn(name = "bar", nullable = false)
-    public Product product;    
+    public Product product;
 }

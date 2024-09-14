@@ -7,7 +7,6 @@
 package org.hibernate.engine.jdbc.batch.internal;
 
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
-import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 
 /**

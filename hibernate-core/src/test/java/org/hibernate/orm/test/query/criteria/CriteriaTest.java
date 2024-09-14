@@ -163,7 +163,7 @@ public class CriteriaTest extends BaseEntityManagerFunctionalTestCase {
 			assertEquals(1, nickNames.size());
 		});
 	}
-	
+
 	@Test
 	public void test_criteria_typedquery_multiselect_explicit_array_example() {
 
@@ -185,7 +185,7 @@ public class CriteriaTest extends BaseEntityManagerFunctionalTestCase {
 			assertEquals(1, idAndNickNames.size());
 		});
 	}
-	
+
 	@Test
 	public void test_criteria_typedquery_multiselect_implicit_array_example() {
 
@@ -263,7 +263,7 @@ public class CriteriaTest extends BaseEntityManagerFunctionalTestCase {
 			assertEquals(1, tuples.size());
 		});
 	}
-	
+
 	@Test
 	public void test_criteria_from_root_example() {
 

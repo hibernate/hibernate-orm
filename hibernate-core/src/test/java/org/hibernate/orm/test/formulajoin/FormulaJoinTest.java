@@ -58,7 +58,7 @@ public class FormulaJoinTest extends BaseCoreFunctionalTestCase {
 		s.persist(current);
 		tx.commit();
 		s.close();
-		
+
 		if ( getDialect() instanceof PostgreSQLDialect ) return;
 
 		s = openSession();
@@ -67,7 +67,7 @@ public class FormulaJoinTest extends BaseCoreFunctionalTestCase {
 		assertEquals( l.size(), 1 );
 		tx.commit();
 		s.close();
-		
+
 		s = openSession();
 		tx = s.beginTransaction();
 		l = s.createQuery("from Root m left join fetch m.detail").list();
@@ -77,14 +77,14 @@ public class FormulaJoinTest extends BaseCoreFunctionalTestCase {
 		assertTrue( m==m.getDetail().getRoot() );
 		tx.commit();
 		s.close();
-		
+
 		s = openSession();
 		tx = s.beginTransaction();
 		l = s.createQuery("from Root m join fetch m.detail").list();
 		assertEquals( l.size(), 1 );
 		tx.commit();
 		s.close();
-		
+
 		s = openSession();
 		tx = s.beginTransaction();
 		l = s.createQuery("from Detail d join fetch d.currentRoot.root").list();
@@ -109,13 +109,12 @@ public class FormulaJoinTest extends BaseCoreFunctionalTestCase {
 		tx = s.beginTransaction();
 		l = s.createQuery("from Detail d join fetch d.root m join fetch m.detail").list();
 		assertEquals( l.size(), 2 );
-		
+
 		s.createQuery("delete from Detail").executeUpdate();
 		s.createQuery("delete from Root").executeUpdate();
-		
+
 		tx.commit();
 		s.close();
 
 	}
 }
-

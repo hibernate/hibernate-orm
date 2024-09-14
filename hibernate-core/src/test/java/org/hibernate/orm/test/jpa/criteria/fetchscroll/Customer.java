@@ -1,4 +1,9 @@
-
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
 package org.hibernate.orm.test.jpa.criteria.fetchscroll;
 
 import java.io.Serializable;
@@ -7,7 +12,7 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "customers")
 public class Customer implements Comparable<Customer>, Serializable {
-	
+
 	private Long id;
 	private String name;
 
@@ -48,7 +53,7 @@ public class Customer implements Comparable<Customer>, Serializable {
 		boolean result = false;
 		if(object instanceof Customer) {
 			Customer other = (Customer) object;
-			result = id.equals(other.id);		
+			result = id.equals(other.id);
 		}
 		return result;
 	}
@@ -59,4 +64,3 @@ public class Customer implements Comparable<Customer>, Serializable {
 	}
 
 }
-

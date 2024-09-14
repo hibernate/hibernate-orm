@@ -19,11 +19,11 @@ public class DollarValue implements Serializable {
 	private BigDecimal amount;
 
 	public DollarValue() {};
-	
+
 	public DollarValue(BigDecimal amount) {
 		this.amount = amount;
 	}
-	
+
 	public BigDecimal getAmount() {
 		return amount;
 	}

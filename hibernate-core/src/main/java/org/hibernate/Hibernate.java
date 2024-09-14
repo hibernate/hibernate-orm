@@ -266,10 +266,10 @@ public final class Hibernate {
 	}
 
 	/**
-	 * Get the true, underlying class of a proxied entity. 
+	 * Get the true, underlying class of a proxied entity.
 	 * <p/>
 	 * Like {@link #getClass}, this operation might initialize a proxy by side effect.
-	 * However, here the initialization is avoided if possible.  If the entity type is 
+	 * However, here the initialization is avoided if possible.  If the entity type is
 	 * defined with subclasses, the proxy will need to be initialized to properly
 	 * determine the class.
 	 *

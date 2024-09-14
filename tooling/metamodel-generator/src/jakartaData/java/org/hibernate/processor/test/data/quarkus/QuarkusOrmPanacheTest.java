@@ -14,7 +14,6 @@ import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 
 import jakarta.inject.Inject;
-import jakarta.persistence.EntityManager;
 
 import static org.hibernate.processor.test.util.TestUtil.getMetamodelClassFor;
 
@@ -34,7 +33,7 @@ public class QuarkusOrmPanacheTest extends CompilationTest {
 		System.out.println( TestUtil.getMetaModelSourceAsString( JakartaDataBookRepository.class ) );
 		Class<?> repositoryClass = getMetamodelClassFor( JakartaDataBookRepository.class );
 		Assertions.assertNotNull( repositoryClass );
-		
+
 		// Make sure it has the proper supertype
 		Class<?> superclass = repositoryClass.getSuperclass();
 		if ( superclass != null ) {
@@ -43,7 +42,7 @@ public class QuarkusOrmPanacheTest extends CompilationTest {
 		Class<?>[] interfaces = repositoryClass.getInterfaces();
 		Assertions.assertEquals( 1, interfaces.length );
 		Assertions.assertEquals( JakartaDataBookRepository.class.getName(), interfaces[0].getName() );
-		
+
 		// Annotated method generates an instance method
 		Method method = repositoryClass.getDeclaredMethod( "hqlBook", String.class );
 		Assertions.assertNotNull( method );
@@ -53,7 +52,7 @@ public class QuarkusOrmPanacheTest extends CompilationTest {
 		method = repositoryClass.getDeclaredMethod( "findBook", String.class );
 		Assertions.assertNotNull( method );
 		Assertions.assertFalse( Modifier.isStatic( method.getModifiers() ) );
-		
+
 		// Make sure we have the proper constructor
 		Constructor<?> constructor = repositoryClass.getDeclaredConstructor( StatelessSession.class );
 		Assertions.assertNotNull( constructor );

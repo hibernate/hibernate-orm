@@ -45,7 +45,7 @@ public class Thing {
 	public String getName() {
 		return name;
 	}
-	
+
 	public void setName(String name) {
 		// intentionally simple dirty tracking (i.e. no checking against previous state)
 		changedValues.put( "name", this.name );

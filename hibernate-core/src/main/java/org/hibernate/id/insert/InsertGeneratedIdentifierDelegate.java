@@ -58,7 +58,7 @@ public interface InsertGeneratedIdentifierDelegate extends GeneratedValuesMutati
 	 * @param insertSQL The {@code insert} statement string
 	 * @param session The session in which we are operating
 	 * @param binder The parameter binder
-	 * 
+	 *
 	 * @return The generated identifier value
 	 */
 	GeneratedValues performInsertReturning(String insertSQL, SharedSessionContractImplementor session, Binder binder);

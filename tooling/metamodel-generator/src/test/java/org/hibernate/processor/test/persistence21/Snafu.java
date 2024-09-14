@@ -20,5 +20,3 @@ public class Snafu {
 		this.id = id;
 	}
 }
-
-

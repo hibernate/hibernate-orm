@@ -29,7 +29,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * This test illustrates the problem when two related (in terms of joins)
  * classes have the same table name in different schemas.
- * 
+ *
  * @author Didier Villevalois
  */
 @JiraKey(value = "HHH-7134")

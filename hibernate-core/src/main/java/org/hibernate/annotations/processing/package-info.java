@@ -72,7 +72,7 @@
  * }
  * </pre>
  * <p>
- * The Metamodel Generator produces this implementation when 
+ * The Metamodel Generator produces this implementation when
  * the interface is compiled:
  * <pre>
  * package org.example;
@@ -86,13 +86,13 @@
  * import org.hibernate.StatelessSession;
  * import org.hibernate.query.Order;
  *
- * &#064;Dependent 
- * &#064;StaticMetamodel(BookRepository.class) 
+ * &#064;Dependent
+ * &#064;StaticMetamodel(BookRepository.class)
  * &#064;Generated("org.hibernate.processor.HibernateProcessor")
  * public class BookRepository_ implements BookRepository {
  *
  *
- *    &#064;Override 
+ *    &#064;Override
  *    public List&lt;Book&gt; booksByTitle(String title, Order&lt;Book&gt; order) {
  *         return session.createQuery(BOOKS_BY_TITLE_String, Book.class)
  *                 .setParameter("title", title)
@@ -100,14 +100,14 @@
  *                 .getResultList();
  *    }
  *
- *    &#064;Override 
+ *    &#064;Override
  *    public Book bookByIsbn(@Nonnull String isbn) {
  *         return session.get(Book.class, isbn);
  *    }
  *
  *     private final @Nonnull StatelessSession session;
  *
- *    &#064;Inject 
+ *    &#064;Inject
  *    public BookRepository_(@Nonnull StatelessSession session) {
  *         this.session = session;
  *    }
@@ -116,7 +116,7 @@
  *         return session;
  *    }
  *
- *    &#064;Override 
+ *    &#064;Override
  *    public List&lt;Book&gt; booksByPublisher(long publisher$id) {
  *         var builder = session.getFactory().getCriteriaBuilder();
  *         var query = builder.createQuery(Book.class);

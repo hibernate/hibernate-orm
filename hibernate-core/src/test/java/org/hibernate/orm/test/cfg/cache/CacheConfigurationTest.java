@@ -14,7 +14,7 @@ import org.junit.Test;
 
 /**
  * Tests using of cacheable configuration files.
- * 
+ *
  * @author Tair Sabirgaliev
  */
 public class CacheConfigurationTest extends BaseUnitTestCase {

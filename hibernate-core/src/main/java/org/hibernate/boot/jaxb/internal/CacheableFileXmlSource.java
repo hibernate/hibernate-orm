@@ -147,7 +147,7 @@ public class CacheableFileXmlSource extends XmlSource {
 				outputFile
 		);
 	}
-	
+
 	private boolean isSerfileObsolete() {
 		return xmlFile.exists() && serFile.exists() && xmlFile.lastModified() > serFile.lastModified();
 	}

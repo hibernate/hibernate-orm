@@ -22,6 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 /**
- * Package for testing JPA converters and the {@link jakarta.persistence.Convert @Convert} annotation. 
+ * Package for testing JPA converters and the {@link jakarta.persistence.Convert @Convert} annotation.
  */
 package org.hibernate.orm.test.jpa.convert;

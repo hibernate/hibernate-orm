@@ -17,7 +17,7 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Gavin King
  */
 public interface EventSource extends SessionImplementor {
-	
+
 	/**
 	 * Get the ActionQueue for this session
 	 */

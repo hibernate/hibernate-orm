@@ -18,5 +18,3 @@ import jakarta.persistence.Embeddable;
 public class EmbeddableEntity {
 	private String foo;
 }
-
-

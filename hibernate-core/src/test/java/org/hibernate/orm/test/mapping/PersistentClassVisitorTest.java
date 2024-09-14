@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Simple smoke style tests to make sure visitors keep working.
- * 
+ *
  * @author max
  */
 @BaseUnitTest

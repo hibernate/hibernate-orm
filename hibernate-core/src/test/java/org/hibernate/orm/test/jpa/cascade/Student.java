@@ -22,15 +22,15 @@ public class Student {
 
 	@Id @GeneratedValue
 	Long id;
-	
+
 	String name;
-	
+
 	@ManyToOne(cascade={CascadeType.MERGE, CascadeType.PERSIST})
 	private Teacher primaryTeacher;
 
 	@OneToOne(cascade={CascadeType.MERGE, CascadeType.PERSIST})
 	private Teacher favoriteTeacher;
-	
+
 	public  Student() {
 	}
 
@@ -49,7 +49,7 @@ public class Student {
 	public void setPrimaryTeacher(Teacher relativeTo) {
 		this.primaryTeacher = relativeTo;
 	}
-	
+
 	public Long getId() {
 		return id;
 	}
@@ -57,7 +57,7 @@ public class Student {
 	public String getName() {
 		return name;
 	}
-	
+
 	public void setName(String name) {
 		this.name = name;
 	}

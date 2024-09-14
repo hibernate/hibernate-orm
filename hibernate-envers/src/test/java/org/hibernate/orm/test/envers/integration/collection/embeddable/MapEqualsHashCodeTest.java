@@ -33,7 +33,7 @@ import static org.junit.Assert.assertNotNull;
  * This test verifies that when a map-based {@link ElementCollection} of {@link Embeddable} objects
  * are audited that the same number of audit rows are generated regardless whether the embeddable
  * implements proper {@code equals} and {@code hashCode} methods.
- * 
+ *
  * The {@link ValidityAuditStrategy} with equals/hashcode.
  *
  * +-----+---------+---------------+-----------+--------+--------+

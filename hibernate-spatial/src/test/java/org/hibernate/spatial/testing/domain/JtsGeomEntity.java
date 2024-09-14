@@ -4,14 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
- */
-
 package org.hibernate.spatial.testing.domain;
 
 import jakarta.persistence.Entity;
@@ -25,7 +17,6 @@ import org.geolatte.geom.codec.Wkt;
 import org.geolatte.geom.codec.WktDecoder;
 import org.geolatte.geom.jts.JTS;
 import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.io.ParseException;
 
 import static org.hibernate.spatial.integration.DecodeUtil.getWktDecoder;
 

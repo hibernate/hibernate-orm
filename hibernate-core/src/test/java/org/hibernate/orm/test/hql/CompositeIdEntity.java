@@ -52,7 +52,7 @@ public class CompositeIdEntity implements Serializable {
 			return true;
 		}
 		if ( !( obj instanceof CompositeIdEntity ) ) {
-			return false; 
+			return false;
 		}
 		CompositeIdEntity other = ( CompositeIdEntity ) obj;
 		if ( key1 == null ? other.key1 != null : !key1.equals( other.key1 ) ) {

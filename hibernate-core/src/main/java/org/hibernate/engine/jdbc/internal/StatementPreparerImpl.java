@@ -63,7 +63,7 @@ class StatementPreparerImpl implements StatementPreparer {
 	protected final SqlExceptionHelper sqlExceptionHelper() {
 		return jdbcServices.getSqlExceptionHelper();
 	}
-	
+
 	@Override
 	public Statement createStatement() {
 		try {

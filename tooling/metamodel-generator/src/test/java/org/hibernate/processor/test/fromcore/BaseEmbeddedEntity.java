@@ -1,4 +1,3 @@
-
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -17,7 +16,7 @@ import java.io.Serializable;
  */
 @MappedSuperclass
 public abstract class BaseEmbeddedEntity<I extends Serializable> implements Serializable {
-    
+
     private I id;
 
     public BaseEmbeddedEntity() {

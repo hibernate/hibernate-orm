@@ -58,7 +58,7 @@ public class SchemaUpdateGeneratingOnlyScriptFileTest {
 					.setDelimiter( ";" )
 					.setFormat( true )
 					.execute( EnumSet.of( TargetType.SCRIPT ), metadata );
-			
+
 			String fileContent = new String( Files.readAllBytes( output.toPath() ) );
 			Pattern fileContentPattern = Pattern.compile( "create( (column|row))? table test_entity" );
 			Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );

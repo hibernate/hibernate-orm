@@ -27,5 +27,3 @@ public class TestEntity implements Serializable {
 	@Column(name = "NAME", insertable = false, updatable = false, unique = true)
 	private String name;
 }
-
-

@@ -38,7 +38,6 @@ import org.junit.Test;
 import static jakarta.persistence.EnumType.STRING;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.isOneOf;
-import static org.junit.Assert.assertEquals;
 
 /**
  * Originally developed to verify/diagnose HHH-10128

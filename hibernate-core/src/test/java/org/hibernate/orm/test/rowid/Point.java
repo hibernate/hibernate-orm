@@ -4,8 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id: Point.java 6477 2005-04-21 07:39:21Z oneovthafew $
 package org.hibernate.orm.test.rowid;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -20,7 +18,7 @@ public class Point implements Serializable {
 	private Object row;
 
 	Point() {}
-	
+
 	public Point(BigDecimal x, BigDecimal y) {
 		this.x = x;
 		this.y = y;

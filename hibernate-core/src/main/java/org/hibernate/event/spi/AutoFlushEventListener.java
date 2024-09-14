@@ -7,7 +7,6 @@
 package org.hibernate.event.spi;
 
 import org.hibernate.HibernateException;
-import org.hibernate.SharedSessionContract;
 
 /**
  * Defines the contract for handling of session auto-flush events.

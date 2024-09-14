@@ -11,7 +11,7 @@ import java.util.List;
 
 /**
  * Base abstract implementation of {@link Identifier}.
- * 
+ *
  * @author Chris Cranford
  */
 public abstract class AbstractIdentifier implements Identifier {

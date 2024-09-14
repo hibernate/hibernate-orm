@@ -27,6 +27,3 @@ public class Car extends Vehicle {
 		this.make = make;
 	}
 }
-
-
-

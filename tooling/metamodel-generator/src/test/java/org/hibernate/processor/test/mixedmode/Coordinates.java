@@ -16,6 +16,3 @@ public class Coordinates {
 	public float longitude;
 	public float latitude;
 }
-
-
-

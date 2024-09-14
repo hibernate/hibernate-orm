@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.query.sqm.function;
 
@@ -178,16 +178,16 @@ public interface SqmFunctionDescriptor {
 	 * <p>
 	 * Instances of this interface are usually used for rendering of functions.
 	 * However, there are cases where Hibernate needs to consume a fragment
-	 * and decide if a token represents a function name.  In cases where the 
+	 * and decide if a token represents a function name.  In cases where the
 	 * token is followed by an opening parenthesis, we can safely assume the
-	 * token is a function name. Bur if the next token is not an opening 
-	 * parenthesis, the token might still represent a function if the function 
+	 * token is a function name. Bur if the next token is not an opening
+	 * parenthesis, the token might still represent a function if the function
 	 * has a "no paren" form in the case of no arguments.
 	 * <p>
-	 * For example, many databases do not require parentheses for functions 
-	 * like {@code current_timestamp} and friends. This method helps account 
+	 * For example, many databases do not require parentheses for functions
+	 * like {@code current_timestamp} and friends. This method helps account
 	 * for those cases.
-	 * 
+	 *
 	 * @apiNote The most common case, by far, is that a function call requires
 	 *          the parentheses. So this method returns true by default.
 	 *

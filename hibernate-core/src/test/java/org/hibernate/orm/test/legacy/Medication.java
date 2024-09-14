@@ -14,7 +14,7 @@ public class Medication extends Intervention {
 
    Drug prescribedDrug;
 
-  
+
   Drug getPrescribedDrug() {
     return prescribedDrug;
   }

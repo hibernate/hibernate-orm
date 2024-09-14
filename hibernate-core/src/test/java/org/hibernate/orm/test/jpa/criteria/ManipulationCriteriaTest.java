@@ -125,7 +125,7 @@ public class ManipulationCriteriaTest extends AbstractMetamodelSpecificTest {
 		em.getTransaction().rollback();
 		em.close();
 	}
-	
+
 	@Test
 	@JiraKey(value = "HHH-8434")
 	public void basicMultipleAssignments() {

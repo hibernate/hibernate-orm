@@ -4,7 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
 package org.hibernate.orm.test.annotations.manytoonewithformula;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -13,16 +12,16 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name="MODEL")
 public class Model {
-	
+
 	private ModelId id;
-	
+
 	private String name;
-	
+
 	public Model(ModelId id, String name) {
 		this.id = id;
 		this.name = name;
 	}
-		
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -50,27 +49,26 @@ public class Model {
 
 	public Model() {
 	}
-	
+
 	@Id
 	public ModelId getId() {
 		return id;
 	}
-	
+
 	public void setId(ModelId id) {
 		this.id = id;
 	}
-	
+
 	public String getName() {
 		return name;
 	}
-	
+
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	@Override
 	public String toString() {
 		return name;
 	}
 }
-

@@ -7,15 +7,12 @@
 package org.hibernate.orm.test.sql.refcursor;
 
 import java.io.Serializable;
-import java.sql.ResultSet;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedStoredProcedureQuery;
-import jakarta.persistence.ParameterMode;
 import jakarta.persistence.QueryHint;
-import jakarta.persistence.StoredProcedureParameter;
 import jakarta.persistence.Table;
 
 @Entity

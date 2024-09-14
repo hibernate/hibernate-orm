@@ -11,7 +11,7 @@ import org.hibernate.id.IdentifierGenerator;
 
 /**
  * Simple {@link IdentifierGenerator} implementation for testing composite-id.
- * 
+ *
  * @author Jacob Robertson
  */
 public class PurchaseRecordIdGenerator implements IdentifierGenerator {
@@ -22,8 +22,8 @@ public class PurchaseRecordIdGenerator implements IdentifierGenerator {
 	@Override
 	public Object generate(SharedSessionContractImplementor s, Object obj) {
 		return new PurchaseRecord.Id(
-				nextPurchaseNumber++, 
+				nextPurchaseNumber++,
 				String.valueOf(nextPurchaseSequence++));
 	}
-	
+
 }

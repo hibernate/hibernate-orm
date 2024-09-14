@@ -20,8 +20,6 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.junit.Test;
 
-import static org.hibernate.engine.internal.ManagedTypeHelper.asHibernateProxy;
-import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 
 /**
  * @author Tomasz Bech

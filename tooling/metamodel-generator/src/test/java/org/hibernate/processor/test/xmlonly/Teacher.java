@@ -12,4 +12,3 @@ public class Teacher {
 	private Long id;
 	private Set<Course> qualifiedFor;
 }
-

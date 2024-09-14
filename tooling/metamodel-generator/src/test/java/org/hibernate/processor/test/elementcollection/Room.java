@@ -33,5 +33,3 @@ public class Room {
 		this.width = width;
 	}
 }
-
-

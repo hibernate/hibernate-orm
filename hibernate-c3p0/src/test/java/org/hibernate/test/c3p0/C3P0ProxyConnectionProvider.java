@@ -1,3 +1,9 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
 package org.hibernate.test.c3p0;
 
 import java.sql.Connection;
@@ -11,7 +17,6 @@ import org.hibernate.c3p0.internal.C3P0ConnectionProvider;
 import org.hibernate.testing.util.ReflectionUtil;
 
 import org.mockito.Answers;
-import org.mockito.MockSettings;
 import org.mockito.Mockito;
 
 /**

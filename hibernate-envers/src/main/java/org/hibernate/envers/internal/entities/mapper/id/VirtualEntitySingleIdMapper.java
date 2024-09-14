@@ -21,8 +21,6 @@ import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.EntityType;
 
-import static org.hibernate.engine.internal.ManagedTypeHelper.asHibernateProxy;
-import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 
 /**
  * An extension to the {@link SingleIdMapper} implementation that supports the use case of an {@code @IdClass}

@@ -52,7 +52,7 @@ public class MySQLRoundFunctionTest extends BaseCoreFunctionalTestCase {
 		assertEquals( BigDecimal.valueOf( 1.3 ) , o );
 		tx.commit();
 		s.close();
-		
+
 	}
 
 }

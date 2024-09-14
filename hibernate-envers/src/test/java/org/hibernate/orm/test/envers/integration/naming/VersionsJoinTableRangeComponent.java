@@ -31,8 +31,8 @@ public final class VersionsJoinTableRangeComponent<T extends VersionsJoinTableRa
 	@org.hibernate.annotations.Fetch(value = FetchMode.SUBSELECT)
 	@org.hibernate.annotations.Cascade(org.hibernate.annotations.CascadeType.DELETE_ORPHAN)
 	@JoinColumn(name = "VJTRCTE_ID", insertable = true, updatable = false, nullable = false)
-//	Note:	If this is processed without override annotation, then we should get a 
-//			org.hibernate.DuplicateMappingException: 
+//	Note:	If this is processed without override annotation, then we should get a
+//			org.hibernate.DuplicateMappingException:
 //			Duplicate class/entity mapping JOIN_TABLE_COMPONENT_1_AUD
 	@org.hibernate.envers.AuditJoinTable(name = "JOIN_TABLE_COMPONENT_1_AUD",
 										 inverseJoinColumns = @JoinColumn(name = "VJTRTE_ID"))

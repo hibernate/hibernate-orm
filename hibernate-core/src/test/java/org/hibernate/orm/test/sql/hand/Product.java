@@ -10,7 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class Product {
-	
+
 	static public class ProductId implements Serializable {
 		String orgid;
 		String productnumber;
@@ -26,29 +26,29 @@ public class Product {
 		public void setOrgid(String orgid) {
 			this.orgid = orgid;
 		}
-		
-		
+
+
 	}
-	
+
 	ProductId productId;
-	
+
 	String name;
 
 	Person person;
-	
+
 	Set orders = new HashSet();
-	
+
 	public Set getOrders() {
 		return orders;
 	}
-	
+
 	public void setOrders(Set orders) {
 		this.orders = orders;
 	}
 	public Person getPerson() {
 		return person;
 	}
-	
+
 	public void setPerson(Person person) {
 		this.person = person;
 	}

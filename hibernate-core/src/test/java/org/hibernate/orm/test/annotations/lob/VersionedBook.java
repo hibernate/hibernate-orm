@@ -20,7 +20,7 @@ import jakarta.persistence.Version;
 public class VersionedBook extends AbstractBook{
 	private Integer id;
 	private Integer version;
-	
+
 	@Id
 	@GeneratedValue
 	public Integer getId() {
@@ -39,5 +39,5 @@ public class VersionedBook extends AbstractBook{
 
 	public void setVersion(Integer i) {
 		version = i;
-	}	
+	}
 }

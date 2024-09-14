@@ -27,6 +27,3 @@ public abstract class AbstractRef implements Serializable {
 		return id;
 	}
 }
-
-
-

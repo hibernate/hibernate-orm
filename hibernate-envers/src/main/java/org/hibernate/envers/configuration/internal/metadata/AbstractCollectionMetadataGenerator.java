@@ -528,7 +528,7 @@ public abstract class AbstractCollectionMetadataGenerator extends AbstractMetada
 
 		// this is never reached, but java requires it
 		throw new AssertionError();
-	}    
+	}
 
 	/**
 	 * Returns whether the collection is a map-type and that the map element is defined as a Clob/NClob type.

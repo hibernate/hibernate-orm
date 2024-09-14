@@ -42,14 +42,14 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		a1.setName( "name1" );
 		s.persist( a1 );
 		newTx.commit();
-		
+
 		newTx = s.beginTransaction();
 		fetchA( s ); // put query-result into cache
 		A a2 = new A();
 		a2.setName( "xxxxxx" );
 		s.persist( a2 );
 		newTx.commit();	  // Invalidates space A in UpdateTimeStamps region
-		
+
 		//Create new session to avoid the session cache which can't be tracked
 		s.close();
 		s = openSession();
@@ -148,7 +148,7 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		a2.setName( "xxxxxx" );
 		s.persist( a2 );
 		newTx.commit();	  // Invalidates space A in UpdateTimeStamps region
-		
+
 		//Create new session to avoid the session cache which can't be tracked
 		s.close();
 		s = openSession();

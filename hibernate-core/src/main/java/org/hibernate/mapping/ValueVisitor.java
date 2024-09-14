@@ -18,7 +18,7 @@ public interface ValueVisitor {
 	Object accept(IdentifierBag bag);
 
 	Object accept(List list);
-	
+
 	Object accept(PrimitiveArray primitiveArray);
 	Object accept(Array list);
 
@@ -37,11 +37,11 @@ public interface ValueVisitor {
 	}
 
 	Object accept(DependantValue value);
-	
+
 	Object accept(Component component);
-	
+
 	Object accept(ManyToOne mto);
 	Object accept(OneToOne oto);
-	
+
 
 }

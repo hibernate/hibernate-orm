@@ -9,7 +9,6 @@ package org.hibernate.orm.test.orphan;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.util.SerializationHelper;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;

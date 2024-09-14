@@ -32,8 +32,8 @@ import static org.junit.Assert.assertSame;
  * @author Gail Badner
  */
 public class FetchStrategyHelperTest extends BaseCoreFunctionalTestCase {
-	
-	
+
+
 	@Test
 	public void testManyToOneDefaultFetch() {
 		final AssociationType associationType = determineAssociationType( AnEntity.class, "otherEntityDefault" );

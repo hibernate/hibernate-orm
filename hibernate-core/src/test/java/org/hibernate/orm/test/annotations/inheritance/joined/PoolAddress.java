@@ -13,7 +13,7 @@ import jakarta.persistence.Embeddable;
 public class PoolAddress {
     @Column(table = "POOL_ADDRESS")
     private String address;
-    
+
     public String getAddress() {
         return address;
     }

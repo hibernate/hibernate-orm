@@ -8,7 +8,7 @@ package org.hibernate.event.spi;
 
 /**
  * Called before updating the datastore
- * 
+ *
  * @author Gavin King
  */
 public interface PreUpdateEventListener {

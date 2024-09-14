@@ -72,7 +72,7 @@ public class NonReflectiveBinderTest {
 		assertThat( metaAttribute.getValues().get( 0 ), is( "java.lang.Observer" ) );
 		assertThat( metaAttribute.getValues().get( 1 ), is( "java.lang.Observer" ) );
 		assertThat( metaAttribute.getValues().get( 2 ), is( "org.foo.BogusVisitor" ) );
-				
+
 		/*Property property = cm.getIdentifierProperty();
 		property.getMetaAttribute(null);*/
 
@@ -115,7 +115,7 @@ public class NonReflectiveBinderTest {
 		MetaAttribute metaAttribute = cm.getMetaAttribute( "globalmutated" );
 
 		assertNotNull( metaAttribute );
-		/*assertEquals( metaAttribute.getValues().size(), 2 );		
+		/*assertEquals( metaAttribute.getValues().size(), 2 );
 		assertEquals( "top level", metaAttribute.getValues().get(0) );*/
 		assertThat( metaAttribute.getValue(), is( "wicked level" ) );
 

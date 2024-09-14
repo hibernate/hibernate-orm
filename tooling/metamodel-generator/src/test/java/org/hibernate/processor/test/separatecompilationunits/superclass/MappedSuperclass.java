@@ -16,5 +16,3 @@ public class MappedSuperclass {
 	@Id
 	private long id;
 }
-
-

@@ -26,6 +26,3 @@ public @interface TestForIssue {
 	 */
 	String jiraKey();
 }
-
-
-

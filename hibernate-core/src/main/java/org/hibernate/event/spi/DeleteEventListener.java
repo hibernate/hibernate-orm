@@ -6,7 +6,6 @@
  */
 package org.hibernate.event.spi;
 
-import java.util.Set;
 
 import org.hibernate.HibernateException;
 

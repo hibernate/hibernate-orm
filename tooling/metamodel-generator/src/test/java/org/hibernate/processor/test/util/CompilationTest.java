@@ -25,5 +25,3 @@ public abstract class CompilationTest {
 		TestUtil.deleteProcessorGeneratedFiles(getClass());
 	}
 }
-
-

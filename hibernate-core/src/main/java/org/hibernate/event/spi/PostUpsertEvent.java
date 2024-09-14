@@ -11,7 +11,7 @@ import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Occurs after the datastore is updated
- * 
+ *
  * @author Gavin King
  */
 public class PostUpsertEvent extends AbstractEvent {
@@ -37,7 +37,7 @@ public class PostUpsertEvent extends AbstractEvent {
 		this.dirtyProperties = dirtyProperties;
 		this.persister = persister;
 	}
-	
+
 	public Object getEntity() {
 		return entity;
 	}

@@ -24,7 +24,7 @@ public class Order implements Serializable
 	@Id
 	@GeneratedValue
 	private Long id;
-	
+
 	@Column(name = "name", length = 20)
 	private String name;
 
@@ -35,7 +35,7 @@ public class Order implements Serializable
 	{
 		return id;
 	}
-	
+
 	public void setId(Long id)
 	{
 		this.id = id;
@@ -61,7 +61,7 @@ public class Order implements Serializable
 		this.lineItems = lineItems;
 	}
 
-	public void addLineItem(Product product, Integer amount) 
+	public void addLineItem(Product product, Integer amount)
 	{
 		OrderLine part = new OrderLine(this, product, amount);
 		lineItems.add(part);

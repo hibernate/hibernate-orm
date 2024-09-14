@@ -95,4 +95,3 @@ public class DataMetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Null
 				: null;
 	}
 }
-

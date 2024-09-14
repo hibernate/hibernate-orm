@@ -28,7 +28,7 @@ public class Animal {
 	@GeneratedValue
 	@Column(name="ANIMAL_ID")
 	private Integer id;
-	
+
 	@Column(name="ANIMAL_NAME")
 	private String name;
 

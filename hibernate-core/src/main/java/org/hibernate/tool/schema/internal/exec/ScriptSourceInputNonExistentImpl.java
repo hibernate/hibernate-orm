@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
-import org.hibernate.tool.schema.spi.ScriptSourceInput;
 
 /**
  * Used in cases where a specified source cannot be found

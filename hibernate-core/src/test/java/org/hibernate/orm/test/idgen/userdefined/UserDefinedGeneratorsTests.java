@@ -58,7 +58,7 @@ public class UserDefinedGeneratorsTests {
 
 	@Test
 	public void testCreateGeneratorsByBeanContainer() {
-		
+
 		final BeanContainer beanContainer = Mockito.mock( BeanContainer.class );
 		given(beanContainer.getBean( any(), any(), any() ) ).willAnswer( invocation -> {
 			LifecycleOptions options = (LifecycleOptions) invocation.getArguments()[1];
@@ -66,7 +66,7 @@ public class UserDefinedGeneratorsTests {
 			assertThat( options.useJpaCompliantCreation(), is( true ) );
 			return (ContainedBean<?>) TestIdentifierGenerator::new;
 		} );
-		
+
 		final StandardServiceRegistryBuilder ssrb = ServiceRegistryUtil.serviceRegistryBuilder();
 		ssrb.applySetting( AvailableSettings.BEAN_CONTAINER, beanContainer )
 				.applySetting( AvailableSettings.ALLOW_EXTENSIONS_IN_CDI, "true" );
@@ -110,7 +110,7 @@ public class UserDefinedGeneratorsTests {
 		@GenericGenerator( name = "test", strategy = "org.hibernate.orm.test.idgen.userdefined.UserDefinedGeneratorsTests$TestIdentifierGenerator" )
 		private Integer id;
 	}
-	
+
 	@Entity( name = "Entity2" )
 	@Table( name = "tbl_2" )
 	public static class Entity2 {

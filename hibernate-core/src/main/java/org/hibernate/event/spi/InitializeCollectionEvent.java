@@ -11,7 +11,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 /**
  * An event that occurs when a collection wants to be
  * initialized
- * 
+ *
  * @author Gavin King
  */
 public class InitializeCollectionEvent extends AbstractCollectionEvent {

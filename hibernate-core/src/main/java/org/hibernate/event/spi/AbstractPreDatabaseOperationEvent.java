@@ -76,4 +76,3 @@ public abstract class AbstractPreDatabaseOperationEvent extends AbstractEvent {
 		return persister.getFactory();
 	}
 }
-

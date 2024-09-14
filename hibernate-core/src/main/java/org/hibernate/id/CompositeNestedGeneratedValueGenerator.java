@@ -24,7 +24,7 @@ import org.hibernate.type.CompositeType;
  * need to happen to "fill" the identifier property(s).
  * <p>
  * This generator is used implicitly for all composite identifier scenarios if an
- * explicit generator is not in place.  So it make sense to discuss the various 
+ * explicit generator is not in place.  So it make sense to discuss the various
  * potential scenarios:<ul>
  * <li>
  * <i>"embedded" composite identifier</i> - this is possible only in HBM mappings

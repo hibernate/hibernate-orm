@@ -4,7 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
 package org.hibernate.oracleucp.internal;
 
 import java.lang.reflect.Method;
@@ -67,20 +66,20 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 			throw new HibernateException( e );
 		}
 	}
-	
+
 	private void configureDataSource(PoolDataSource ucpDS, Properties ucpProps) {
-		
+
 		List<Method> methods = Arrays.asList(PoolDataSource.class.getDeclaredMethods());
-		
+
 		for(String propName : ucpProps.stringPropertyNames()) {
 			String value = ucpProps.getProperty(propName);
-	
+
 			final String methodName = "set" + propName.substring(0, 1).toUpperCase(Locale.ENGLISH) + propName.substring(1);
 			Method writeMethod = methods.stream().filter(m -> m.getName().equals(methodName) && m.getParameterCount() == 1).findFirst().orElse(null);
 			if (writeMethod == null) {
 				throw new RuntimeException("Property " + propName + " does not exist on target " + PoolDataSource.class);
 			}
-	
+
 			try {
 				Class<?> paramClass = writeMethod.getParameterTypes()[0];
 				if (paramClass == int.class) {
@@ -96,7 +95,7 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 					writeMethod.invoke(ucpDS, value.toString());
 				}
 				else {
-					if(propName.equals("connectionProperties") || 
+					if(propName.equals("connectionProperties") ||
 						propName.equals("connectionFactoryProperties")) {
 							if (value != null) {
 								Properties connProps = new Properties();
@@ -126,11 +125,11 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 
 	private Properties getConfiguration(Map<?,?> props) {
 		Properties ucpProps = new Properties();
-		
+
 		copyProperty( AvailableSettings.URL, props, "URL", ucpProps );
 		copyProperty( AvailableSettings.USER, props, "user", ucpProps );
 		copyProperty( AvailableSettings.PASS, props, "password", ucpProps );
-		
+
 		for ( Object keyo : props.keySet() ) {
 			if ( !(keyo instanceof String) ) {
 				continue;
@@ -140,10 +139,10 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 				ucpProps.setProperty( key.substring( CONFIG_PREFIX.length() ), (String) props.get( key ) );
 			}
 		}
-		
+
 		return ucpProps;
 	}
-	
+
 	@SuppressWarnings("rawtypes")
 	private static void copyProperty(String srcKey, Map src, String dstKey, Properties dst) {
 		if ( src.containsKey( srcKey ) ) {
@@ -232,6 +231,5 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 			}
 		}
 	}
-	
-}
 
+}

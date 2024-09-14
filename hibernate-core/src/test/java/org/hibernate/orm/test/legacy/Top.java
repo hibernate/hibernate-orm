@@ -4,8 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id: Top.java 5686 2005-02-12 07:27:32Z steveebersole $
 package org.hibernate.orm.test.legacy;
 
 
@@ -17,14 +15,14 @@ public class Top {
 	private java.util.Date date;
 	private Top other;
 	private Top top;
-	
+
 	public Top(int c) {
 		count=c;
 	}
 
 	public Top() {
 	}
-	
+
 	public void init() {
 		name="Someone With Along Name";
 		address="1234 Some Street, Some City, Victoria, 3000, Austraya";
@@ -45,7 +43,7 @@ public class Top {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	/**
 	 * Gets the address
 	 * @return Returns a String
@@ -60,7 +58,7 @@ public class Top {
 	public void setAddress(String address) {
 		this.address = address;
 	}
-	
+
 	/**
 	 * Gets the count
 	 * @return Returns a int
@@ -75,7 +73,7 @@ public class Top {
 	public void setCount(int count) {
 		this.count = count;
 	}
-	
+
 	/**
 	 * Gets the date
 	 * @return Returns a java.util.Date
@@ -90,7 +88,7 @@ public class Top {
 	public void setDate(java.util.Date date) {
 		this.date = date;
 	}
-	
+
 	/**
 	 * Returns the other.
 	 * @return Simple
@@ -98,7 +96,7 @@ public class Top {
 	public Top getOther() {
 		return other;
 	}
-	
+
 	/**
 	 * Sets the other.
 	 * @param other The other to set
@@ -106,7 +104,7 @@ public class Top {
 	public void setOther(Top other) {
 		this.other = other;
 	}
-	
+
 	public long getId() {
 		return id;
 	}
@@ -116,10 +114,3 @@ public class Top {
 	}
 
 }
-
-
-
-
-
-
-

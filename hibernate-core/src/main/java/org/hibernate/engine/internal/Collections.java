@@ -61,7 +61,7 @@ public final class Collections {
 		if ( loadedPersister != null && LOG.isDebugEnabled() ) {
 			LOG.debugf(
 					"Collection dereferenced: %s",
-					MessageHelper.collectionInfoString( loadedPersister, 
+					MessageHelper.collectionInfoString( loadedPersister,
 							coll, entry.getLoadedKey(), session
 					)
 			);
@@ -118,7 +118,7 @@ public final class Collections {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf(
 					"Found collection with unloaded owner: %s",
-					MessageHelper.collectionInfoString( 
+					MessageHelper.collectionInfoString(
 							entry.getLoadedPersister(),
 							coll,
 							entry.getLoadedKey(),

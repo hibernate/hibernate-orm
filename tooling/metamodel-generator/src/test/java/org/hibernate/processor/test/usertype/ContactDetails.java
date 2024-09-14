@@ -21,5 +21,3 @@ public class ContactDetails {
 	@Basic
 	private PhoneNumber phoneNumber;
 }
-
-

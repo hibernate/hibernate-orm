@@ -13,7 +13,6 @@ import org.hibernate.processor.test.util.WithClasses;
 
 import org.junit.Test;
 
-import jakarta.persistence.metamodel.SetAttribute;
 
 @TestForIssue(jiraKey = "HHH-17253")
 public class CircularTypeVariableTest extends CompilationTest {

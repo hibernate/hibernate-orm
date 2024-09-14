@@ -124,4 +124,3 @@ public class JdbcTimestampCustomSessionLevelTimeZoneTest
 		private Timestamp createdOn = new Timestamp( 0 );
 	}
 }
-

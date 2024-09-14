@@ -504,7 +504,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		public EntityDataAccess getCacheAccessStrategy() {
 			return null;
 		}
-		
+
 		@Override
 		public boolean hasNaturalIdCache() {
 			return false;

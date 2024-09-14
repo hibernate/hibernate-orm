@@ -4,7 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
 package org.hibernate.orm.test.cache;
 
 import jakarta.persistence.Entity;
@@ -24,7 +23,7 @@ public class Company {
 	int id;
 
 	String name;
-	
+
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "company")
 	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 	List<User> users = new ArrayList<User>();
@@ -59,5 +58,5 @@ public class Company {
 	public void setUsers(List<User> users) {
 		this.users = users;
 	}
-	
+
 }

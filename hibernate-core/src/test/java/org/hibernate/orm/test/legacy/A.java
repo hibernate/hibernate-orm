@@ -25,7 +25,7 @@ public class A {
 	public Long getId() {
 		return id;
 	}
-	
+
 	/**
 	 * Returns the name.
 	 * @return String
@@ -33,7 +33,7 @@ public class A {
 	public String getName() {
 		return name;
 	}
-	
+
 	/**
 	 * Sets the id.
 	 * @param id The id to set
@@ -41,7 +41,7 @@ public class A {
 	public void setId(Long id) {
 		this.id = id;
 	}
-	
+
 	/**
 	 * Sets the name.
 	 * @param name The name to set
@@ -49,7 +49,7 @@ public class A {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	public E getForward() {
 		return forward;
 	}
@@ -59,9 +59,3 @@ public class A {
 	}
 
 }
-
-
-
-
-
-

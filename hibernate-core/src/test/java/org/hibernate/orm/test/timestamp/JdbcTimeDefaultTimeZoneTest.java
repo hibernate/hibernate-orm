@@ -97,4 +97,3 @@ public class JdbcTimeDefaultTimeZoneTest
 		private Time createdOn = new Time( 0 );
 	}
 }
-

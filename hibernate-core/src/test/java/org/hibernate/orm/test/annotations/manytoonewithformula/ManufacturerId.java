@@ -4,7 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
 package org.hibernate.orm.test.annotations.manytoonewithformula;
 import java.io.Serializable;
 import jakarta.persistence.Column;
@@ -12,7 +11,7 @@ import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class ManufacturerId implements Serializable {
-	
+
 	private static final long serialVersionUID = 1L;
 
 	private Integer companyCode;
@@ -44,6 +43,5 @@ public class ManufacturerId implements Serializable {
 	public void setManufacturerCode(Integer manufacturerCode) {
 		this.manufacturerCode = manufacturerCode;
 	}
-	
-}
 
+}

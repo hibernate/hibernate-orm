@@ -32,5 +32,5 @@ public interface ModifiedColumnNamingStrategy {
 			Configuration configuration,
 			Value value,
 			AttributeContainer mapping,
-			PropertyAuditingData propertyAuditingData);	
+			PropertyAuditingData propertyAuditingData);
 }

@@ -89,7 +89,7 @@ public class LazyBasicFieldNotInitializedTest {
     }
 
     // --- //
-    
+
     @Entity(name = "TestEntity")
     @Table( name = "TEST_ENTITY" )
     static class TestEntity {

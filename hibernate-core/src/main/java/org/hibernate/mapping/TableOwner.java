@@ -12,7 +12,7 @@ package org.hibernate.mapping;
  * Differentiates entity types that map to their own table ({@link RootClass},
  * {@link UnionSubclass}, and {@link JoinedSubclass}) from those which do not
  * ({@link SingleTableSubclass}).
- * 
+ *
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */

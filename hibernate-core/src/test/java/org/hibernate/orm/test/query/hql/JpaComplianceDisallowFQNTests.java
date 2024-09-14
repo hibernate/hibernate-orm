@@ -1,3 +1,9 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
 package org.hibernate.orm.test.query.hql;
 
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
@@ -26,17 +32,17 @@ public class JpaComplianceDisallowFQNTests extends BaseSqmUnitTest {
 	public void testQuery() {
 		interpretSelect( String.format( "select p from %s p", Person.class.getName() ) );
 	}
-	
+
 	@Test
 	@ExpectedException(StrictJpaComplianceViolation.class)
 	public void testUpdate() {
 		interpretSelect( String.format( "update %s set numberOfToes = 0", Person.class.getName() ) );
 	}
-	
+
 	@Test
 	@ExpectedException(StrictJpaComplianceViolation.class)
 	public void testDelete() {
 		interpretSelect( String.format( "delete %s", Person.class.getName() ) );
 	}
-	
+
 }

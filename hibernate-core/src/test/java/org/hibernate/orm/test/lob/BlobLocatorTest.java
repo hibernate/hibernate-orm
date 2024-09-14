@@ -9,7 +9,6 @@ package org.hibernate.orm.test.lob;
 import java.sql.Blob;
 import java.util.Arrays;
 
-import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.dialect.SybaseDialect;

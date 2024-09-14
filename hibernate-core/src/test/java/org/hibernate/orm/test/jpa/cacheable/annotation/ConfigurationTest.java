@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.jpa.cacheable.annotation;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.SharedCacheMode;

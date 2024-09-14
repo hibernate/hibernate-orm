@@ -11,4 +11,3 @@ import jakarta.persistence.MappedSuperclass;
 @MappedSuperclass
 public abstract class Post<UserRoleType extends UserRole> {
 }
-

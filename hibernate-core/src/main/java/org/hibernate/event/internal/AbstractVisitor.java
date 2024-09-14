@@ -44,7 +44,7 @@ public abstract class AbstractVisitor {
 			}
 		}
 	}
-	
+
 	/**
 	 * Dispatch each property value to processValue().
 	 *
@@ -56,15 +56,15 @@ public abstract class AbstractVisitor {
 			}
 		}
 	}
-	
+
 	void processValue(int i, Object[] values, Type[] types) {
 		processValue( values[i], types[i] );
 	}
-	
+
 	boolean includeEntityProperty(Object[] values, int i) {
 		return includeProperty(values, i);
 	}
-	
+
 	boolean includeProperty(Object[] values, int i) {
 		return values[i]!= LazyPropertyInitializer.UNFETCHED_PROPERTY;
 	}

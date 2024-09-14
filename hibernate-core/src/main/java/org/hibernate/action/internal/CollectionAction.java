@@ -138,7 +138,7 @@ public abstract class CollectionAction implements ComparableExecutable {
 		if ( persister.hasCache() ) {
 			final CollectionDataAccess cache = persister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey(
-					key, 
+					key,
 					persister,
 					session.getFactory(),
 					session.getTenantIdentifier()

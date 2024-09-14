@@ -4,8 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id: LineItem.java 4806 2004-11-25 14:37:00Z steveebersole $
 package org.hibernate.orm.test.cid;
 import java.io.Serializable;
 

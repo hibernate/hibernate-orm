@@ -11,11 +11,11 @@ package org.hibernate.orm.test.hql;
  * @author Rob.Hasselbaum
  */
 public class Image {
-	
+
 	private Long id;
 	private String name;
 	private double sizeKb;
-	
+
 	/**
 	 * @return the id
 	 */

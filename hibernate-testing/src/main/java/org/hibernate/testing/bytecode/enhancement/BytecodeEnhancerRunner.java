@@ -22,7 +22,6 @@ import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
-import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.junit4.CustomRunner;
 import org.junit.runner.Runner;

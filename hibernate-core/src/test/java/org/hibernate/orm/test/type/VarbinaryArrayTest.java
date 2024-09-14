@@ -14,7 +14,6 @@ import java.util.stream.Stream;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.dialect.HANADialect;
-import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.type.SqlTypes;
 

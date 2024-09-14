@@ -59,13 +59,13 @@ public class Result {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	public Result(String n, long a, int c) {
 		name = n;
 		amount = a;
 		count = c;
 	}
-	
+
 	public Result(String n, long a, long c) {
 		name = n;
 		amount = a;

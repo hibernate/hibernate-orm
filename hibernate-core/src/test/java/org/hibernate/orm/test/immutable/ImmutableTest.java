@@ -1492,4 +1492,3 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 }
-

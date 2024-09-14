@@ -22,8 +22,6 @@ import org.hibernate.event.spi.EventManager;
 import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
-import org.hibernate.procedure.internal.ScalarDomainResultBuilder;
-import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.result.Output;
 import org.hibernate.result.Outputs;
@@ -39,12 +37,9 @@ import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateSt
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.RowReader;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 
 import org.jboss.logging.Logger;
 
-import jakarta.persistence.ParameterMode;
 
 /**
  * @author Steve Ebersole

@@ -264,9 +264,9 @@ public final class CollectionEntry implements Serializable {
 	private boolean fromMerge;
 
 	/**
-	 * Reset the stored snapshot for both the persistent collection and this collection entry. 
+	 * Reset the stored snapshot for both the persistent collection and this collection entry.
 	 * Used during the merge of detached collections.
-	 * 
+	 *
 	 * @param collection the persistentcollection to be updated
 	 * @param storedSnapshot the new stored snapshot
 	 */

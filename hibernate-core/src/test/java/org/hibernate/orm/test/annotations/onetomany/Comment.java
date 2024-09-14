@@ -25,12 +25,12 @@ import jakarta.persistence.ManyToOne;
 @DiscriminatorColumn(name = "DTYPE", discriminatorType= DiscriminatorType.STRING, length = 3)
 @DiscriminatorValue(value = "WPT")
 public class Comment {
-	
+
 	private Long id;
 	private Post post;
 	private String name;
 	private Forum forum;
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "id", updatable = false, insertable = false)
@@ -41,7 +41,7 @@ public class Comment {
 	public void setId(Long id) {
 		this.id = id;
 	}
-	
+
 	@ManyToOne(optional=true,fetch=FetchType.LAZY)
 	@JoinColumn(name="FK_PostId", nullable=true, insertable=true,updatable=false)
 	public Post getPost() {

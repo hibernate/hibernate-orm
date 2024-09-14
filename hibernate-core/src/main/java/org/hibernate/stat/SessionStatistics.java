@@ -34,5 +34,5 @@ public interface SessionStatistics {
 	 * currently held within the persistence context.
 	 */
 	Set<?> getCollectionKeys();
-	
+
 }

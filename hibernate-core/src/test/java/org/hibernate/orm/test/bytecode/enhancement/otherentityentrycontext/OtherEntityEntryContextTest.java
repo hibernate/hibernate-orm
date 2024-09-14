@@ -6,8 +6,6 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.otherentityentrycontext;
 
-import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.ManagedEntity;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -20,12 +18,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * This task tests ManagedEntity objects that are already associated with a different PersistenceContext.

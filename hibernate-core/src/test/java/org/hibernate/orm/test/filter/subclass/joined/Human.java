@@ -26,10 +26,10 @@ import org.hibernate.annotations.ParamDef;
 public class Human extends Mammal {
 	@Column(name="HUMAN_IQ")
 	private int iq;
-	
+
 	@ManyToOne
 	private Club club;
-	
+
 	public int getIq() {
 		return iq;
 	}

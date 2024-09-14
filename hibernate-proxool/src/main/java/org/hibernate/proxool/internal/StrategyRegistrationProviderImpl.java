@@ -16,7 +16,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 /**
  * Provides the {@link ProxoolConnectionProvider} to the
  * {@link org.hibernate.boot.registry.selector.spi.StrategySelector} service.
- * 
+ *
  * @author Brett Meyer
  */
 public final class StrategyRegistrationProviderImpl implements StrategyRegistrationProvider {

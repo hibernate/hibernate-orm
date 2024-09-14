@@ -25,5 +25,5 @@ public class ContactInfo {
 	public void setPhoneNumbers(List<PhoneNumber> phoneNumbers) {
 		this.phoneNumbers = phoneNumbers;
 	}
-	
+
 }

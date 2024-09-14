@@ -449,7 +449,7 @@ public class AuditProperty<T> implements AuditProjection {
 	public AuditOrder desc() {
 		return new PropertyAuditOrder( alias, propertyNameGetter, false );
 	}
-	
+
 	@Override
 	public Object convertQueryResult(
 			EnversService enversService,
@@ -459,5 +459,5 @@ public class AuditProperty<T> implements AuditProjection {
 			Object value) {
 		return value;
 	}
-	
+
 }

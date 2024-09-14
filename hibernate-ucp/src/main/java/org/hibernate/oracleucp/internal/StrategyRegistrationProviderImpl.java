@@ -17,7 +17,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 /**
  * Provides the {@link UCPConnectionProvider} to the
  * {@link org.hibernate.boot.registry.selector.spi.StrategySelector} service.
- * 
+ *
  */
 public class StrategyRegistrationProviderImpl implements StrategyRegistrationProvider {
 	private static final List<StrategyRegistration> REGISTRATIONS = Collections.singletonList(
@@ -37,4 +37,3 @@ public class StrategyRegistrationProviderImpl implements StrategyRegistrationPro
 		return REGISTRATIONS;
 	}
 }
-

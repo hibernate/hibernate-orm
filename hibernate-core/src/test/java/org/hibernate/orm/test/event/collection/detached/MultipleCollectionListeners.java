@@ -36,7 +36,7 @@ import org.jboss.logging.Logger;
 /**
  * Support listeners for Test HHH-6361: Collection events may contain wrong
  * stored snapshot after merging a detached entity into the persistencecontext.
- * 
+ *
  * @author Erik-Berndt Scheper
  */
 public class MultipleCollectionListeners {

@@ -660,4 +660,3 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		return scope.getSessionFactory().openSession();
 	}
 }
-

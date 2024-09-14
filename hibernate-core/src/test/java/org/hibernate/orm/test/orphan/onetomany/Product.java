@@ -49,4 +49,3 @@ public class Product {
 		this.features = features;
 	}
 }
-

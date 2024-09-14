@@ -260,7 +260,7 @@ public class MiddleTableCollectionMetadataGenerator extends AbstractCollectionMe
 	private PersistentClass getReferencedEntityMapping(CollectionMetadataContext context) {
 		return getMetadataBuildingContext().getMetadataCollector().getEntityBinding( context.getReferencedEntityName() );
 	}
-	
+
 	private void storeMiddleEntityRelationInformation(
 			CollectionMetadataContext context,
 			String mappedBy,
@@ -307,5 +307,5 @@ public class MiddleTableCollectionMetadataGenerator extends AbstractCollectionMe
 					referencingIdData
 			);
 		}
-	}	
+	}
 }

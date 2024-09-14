@@ -29,7 +29,7 @@ public class OrderLine implements Serializable
 	private Product product;
 	@Column(name = "amount")
 	private Integer amount;
-	
+
 	public OrderLine()
 	{
 		super();

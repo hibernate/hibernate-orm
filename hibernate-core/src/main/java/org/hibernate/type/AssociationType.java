@@ -31,13 +31,13 @@ public interface AssociationType extends Type {
 	 */
 	boolean useLHSPrimaryKey();
 	/**
-	 * Get the name of a property in the owning entity 
+	 * Get the name of a property in the owning entity
 	 * that provides the join key (null if the identifier)
 	 */
 	String getLHSPropertyName();
-	
+
 	/**
-	 * The name of a unique property of the associated entity 
+	 * The name of a unique property of the associated entity
 	 * that provides the join key (null if the identifier of
 	 * an entity, or key of a collection)
 	 */
@@ -48,7 +48,7 @@ public interface AssociationType extends Type {
 	 * collection persister
 	 */
 	Joinable getAssociatedJoinable(SessionFactoryImplementor factory) throws MappingException;
-	
+
 	/**
 	 * Get the entity name of the associated entity
 	 */

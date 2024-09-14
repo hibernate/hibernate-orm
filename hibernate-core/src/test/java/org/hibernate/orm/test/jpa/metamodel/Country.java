@@ -44,4 +44,3 @@ public class Country implements java.io.Serializable {
 		code = v;
 	}
 }
-

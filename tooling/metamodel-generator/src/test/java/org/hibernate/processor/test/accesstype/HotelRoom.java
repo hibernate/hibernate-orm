@@ -14,7 +14,7 @@ import jakarta.persistence.Entity;
  */
 @Entity
 public class HotelRoom extends Room {
-	
+
 	@Embedded
 	private Hotel hotel;
 

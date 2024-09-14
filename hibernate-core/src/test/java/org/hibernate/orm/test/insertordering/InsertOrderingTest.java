@@ -10,8 +10,6 @@ import java.util.Iterator;
 import java.util.function.Supplier;
 
 import org.hibernate.cfg.BatchSettings;
-import org.hibernate.cfg.Environment;
-import org.hibernate.engine.jdbc.batch.internal.BatchBuilderInitiator;
 import org.hibernate.engine.jdbc.batch.internal.BatchImpl;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;

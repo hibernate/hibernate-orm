@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.jpa.emops;
 
-import jakarta.persistence.EntityManager;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;

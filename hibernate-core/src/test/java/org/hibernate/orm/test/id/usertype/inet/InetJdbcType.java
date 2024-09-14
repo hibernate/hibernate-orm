@@ -7,9 +7,7 @@
 package org.hibernate.orm.test.id.usertype.inet;
 
 import org.hibernate.dialect.PostgreSQLInetJdbcType;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 

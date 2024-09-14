@@ -11,12 +11,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.Hibernate;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -39,9 +37,7 @@ import jakarta.persistence.TypedQuery;
 
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @JiraKey("HHH-15086")
 @Jpa(

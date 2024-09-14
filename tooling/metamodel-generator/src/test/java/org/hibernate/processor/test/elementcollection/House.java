@@ -28,5 +28,3 @@ public class House {
 		this.roomsByName = roomsByName;
 	}
 }
-
-

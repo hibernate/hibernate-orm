@@ -15,11 +15,11 @@ public class Child {
 
     private Integer id;
     private Parent daddy;
-    
+
     public Child() {
-        
+
     }
-    
+
     @Id
     public Integer getId() {
         return id;
@@ -35,8 +35,6 @@ public class Child {
     public void setDaddy(Parent daddy) {
         this.daddy = daddy;
     }
-    
-    
+
+
 }
-
-

@@ -4,8 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-// $Id: SerializableData.java 4704 2004-11-04 21:59:22Z steveebersole $
 package org.hibernate.orm.test.lob;
 import java.io.Serializable;
 

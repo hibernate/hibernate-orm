@@ -9,7 +9,6 @@ package org.hibernate.testing;
 import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.PropertiesHelper;

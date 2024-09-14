@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.query.criteria.internal;
 
-import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Order;
 
 import org.hibernate.query.sqm.tree.expression.SqmExpression;

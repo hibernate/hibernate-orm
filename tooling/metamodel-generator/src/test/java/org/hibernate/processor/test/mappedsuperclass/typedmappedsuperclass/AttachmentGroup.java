@@ -19,4 +19,3 @@ public abstract class AttachmentGroup<GroupType extends AttachmentGroup, PostTyp
 	@Id
 	long id;
 }
-

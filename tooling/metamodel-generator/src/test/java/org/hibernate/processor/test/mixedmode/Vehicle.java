@@ -28,6 +28,3 @@ public class Vehicle {
 		this.id = id;
 	}
 }
-
-
-

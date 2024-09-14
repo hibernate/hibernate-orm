@@ -247,7 +247,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 
 	@Override
 	public void execute() throws HibernateException {
-		// nothing to do		
+		// nothing to do
 	}
 
 	private static class EntityCleanup implements Serializable {

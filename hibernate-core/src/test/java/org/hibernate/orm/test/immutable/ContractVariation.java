@@ -4,15 +4,13 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id: ContractVariation.java 7222 2005-06-19 17:22:01Z oneovthafew $
 package org.hibernate.orm.test.immutable;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
 public class ContractVariation implements Serializable {
-	
+
 	private int version;
 	private Contract contract;
 	private String text;

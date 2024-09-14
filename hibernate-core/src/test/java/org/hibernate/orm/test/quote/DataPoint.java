@@ -13,17 +13,17 @@ import java.util.List;
  */
 public class DataPoint {
 	private long id;
-	
+
 	private String fooProp;
-	
+
 	private DataPointEnum fooEnum;
-	
+
 	private List<DataPointEnum> fooEnumList;
-	
+
 	private List<AssociatedDataPoint> oneToMany;
-	
+
 	private List<AssociatedDataPoint> manyToMany;
-	
+
 	public static enum DataPointEnum {
 		FOO1, FOO2, FOO3;
 	}

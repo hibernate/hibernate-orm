@@ -2,7 +2,7 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.persister.collection.mutation;
 
@@ -19,8 +19,8 @@ import org.hibernate.persister.collection.CollectionPersister;
  * <p>
  * A "logical" insertion because the actual SQL used may be an UPDATE in the case of
  * one-to-many mappings to set the foreign-key
- * 
- * @see CollectionPersister#recreate 
+ *
+ * @see CollectionPersister#recreate
  * @see CollectionPersister#insertRows
  * @see RowMutationOperations#getInsertRowOperation()
  * @see RowMutationOperations#getInsertRowValues()

@@ -34,4 +34,3 @@ public class ExceptionCheckingEntity {
 		this.name = name;
 	}
 }
-

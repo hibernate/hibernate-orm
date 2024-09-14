@@ -1,33 +1,24 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
 package org.hibernate.envers.test.integration.customtype;
 
-import java.util.Arrays;
-import java.util.List;
 
-import org.hibernate.annotations.Type;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.CustomType;
-import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import java.time.Duration;
 
 @JiraKey(value = "HHH-17243")
@@ -37,15 +28,15 @@ public class DurationTest extends BaseEnversJPAFunctionalTestCase{
 	@Audited
 	public static class DurationTestEntity {
 		@Id
-		@GeneratedValue 
+		@GeneratedValue
 		private Integer id;
 
 		private Duration duration;
 
                 DurationTestEntity(){
-                    
+
                 }
-                
+
 		DurationTestEntity(Duration aDuration) {
                     this.duration = aDuration;
 		}
@@ -86,5 +77,5 @@ public class DurationTest extends BaseEnversJPAFunctionalTestCase{
 			duration.setDuration(Duration.ofHours(3));
 			entityManager.merge(duration);
 		} );
-	}    
+	}
 }

@@ -18,7 +18,7 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 /**
  * A {@link UniqueDelegate} which uses {@code alter table} commands to create and drop
  * the unique constraint. When possible, prefer {@link CreateTableUniqueDelegate}.
- * 
+ *
  * @author Brett Meyer
  */
 public class AlterTableUniqueDelegate implements UniqueDelegate {
@@ -101,4 +101,3 @@ public class AlterTableUniqueDelegate implements UniqueDelegate {
 	}
 
 }
-

@@ -31,11 +31,11 @@ public class PostLoadEvent extends AbstractEvent {
 	public Object getEntity() {
 		return entity;
 	}
-	
+
 	public EntityPersister getPersister() {
 		return persister;
 	}
-	
+
 	public Object getId() {
 		return id;
 	}
@@ -44,7 +44,7 @@ public class PostLoadEvent extends AbstractEvent {
 		this.entity = entity;
 		return this;
 	}
-	
+
 	public PostLoadEvent setId(Object id) {
 		this.id = id;
 		return this;
@@ -54,5 +54,5 @@ public class PostLoadEvent extends AbstractEvent {
 		this.persister = persister;
 		return this;
 	}
-	
+
 }

@@ -59,7 +59,6 @@ import org.junit.Before;
 
 import static java.lang.Thread.currentThread;
 import static org.hibernate.internal.util.config.ConfigurationHelper.resolvePlaceHolders;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.fail;
 
 /**

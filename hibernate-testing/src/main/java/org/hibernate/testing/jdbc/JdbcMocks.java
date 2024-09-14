@@ -15,7 +15,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.engine.jdbc.env.spi.AnsiSqlKeywords;
-import org.hibernate.internal.util.StringHelper;
 
 /**
  * @author Steve Ebersole

@@ -53,4 +53,3 @@ public class InheritanceTest extends CompilationTest {
 		assertPresenceOfFieldInMetamodelFor( Person.class, "name", "Property 'name' should exist" );
 	}
 }
-

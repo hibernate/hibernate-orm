@@ -18,6 +18,3 @@ public abstract class BusinessEntity<T extends Serializable> implements Serializ
 
 	private BusinessId<T> businessId;
 }
-
-
-

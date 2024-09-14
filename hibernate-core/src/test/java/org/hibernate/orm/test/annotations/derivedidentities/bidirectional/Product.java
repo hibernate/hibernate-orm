@@ -20,7 +20,7 @@ public class Product implements Serializable
 	@Id
 	@GeneratedValue
 	private Long id;
-	
+
 	@Column(name = "name", length = 20)
 	private String name;
 

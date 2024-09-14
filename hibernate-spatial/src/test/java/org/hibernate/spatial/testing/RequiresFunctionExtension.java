@@ -4,14 +4,12 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
 package org.hibernate.spatial.testing;
 
 import java.util.Locale;
 import java.util.Optional;
 
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.spatial.contributor.SpatialFunctionContributor;
 
 import org.hibernate.testing.orm.junit.JUnitHelper;
 import org.hibernate.testing.orm.junit.SessionFactoryExtension;

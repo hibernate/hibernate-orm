@@ -17,9 +17,9 @@ import jakarta.persistence.Id;
 public class Location {
 	@Id @GeneratedValue
 	public long id;
-	
+
 	public String address;
-	
+
 	public int zip;
 
 	public int getZip() {

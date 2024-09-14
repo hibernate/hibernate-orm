@@ -529,11 +529,11 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	}
 
 	/**
-	 * It is only valid to define natural ids at the root of an entity hierarchy.  This method makes sure we are 
+	 * It is only valid to define natural ids at the root of an entity hierarchy.  This method makes sure we are
 	 * using the root persister.
 	 *
 	 * @param persister The persister representing the entity type.
-	 * 
+	 *
 	 * @return The root persister.
 	 */
 	protected EntityPersister locatePersisterForKey(EntityPersister persister) {
@@ -797,7 +797,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			final Resolution cachedNaturalId = new ResolutionImpl( getEntityDescriptor(), naturalIdValues, persistenceContext );
 			pkToNaturalIdMap.put( pk, cachedNaturalId );
 			naturalIdToPkMap.put( cachedNaturalId, pk );
-			
+
 			return true;
 		}
 

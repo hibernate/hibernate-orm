@@ -141,7 +141,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		if ( flushDepth == 0 ) {
 			releasesEnabled = true;
 		}
-		
+
 		afterStatementExecution();
 	}
 
@@ -351,7 +351,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	public void enableReleases() {
 		releasesEnabled = true;
 	}
-	
+
 	@Override
 	public void disableReleases() {
 		releasesEnabled = false;
@@ -360,7 +360,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@SuppressWarnings("unchecked")
 	protected void close(Statement statement) {
 		LOG.tracev( "Closing prepared statement [{0}]", statement );
-		
+
 		// Important for Statement caching -- some DBs (especially Sybase) log warnings on every Statement under
 		// certain situations.
 		sqlExceptionHelper().logAndClearWarnings( statement );

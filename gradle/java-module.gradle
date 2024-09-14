@@ -33,6 +33,7 @@ apply plugin: 'org.hibernate.orm.build.java-module'
 
 apply plugin: 'org.checkerframework'
 apply plugin: 'de.thetaphi.forbiddenapis'
+apply plugin: 'com.diffplug.spotless'
 
 apply plugin: "jacoco"
 apply plugin: 'checkstyle'
@@ -194,6 +195,7 @@ tasks.withType( JavaCompile ) {
 	]
 }
 
+tasks.compileJava.dependsOn spotlessApply
 
 task compile(dependsOn: [compileJava, processResources, compileTestJava, processTestResources] )
 
@@ -465,6 +467,18 @@ task nonFatalCheckstyle(type:Checkstyle) {
 	showViolations = false
 	configFile = rootProject.file( 'shared/config/checkstyle/checkstyle-non-fatal.xml' )
 }
+
+spotless {
+	//Don't fail during the check: rather than enforcing guidelines, we use this plugin to fix mistakes automatically.
+	enforceCheck false
+	java {
+		licenseHeaderFile rootProject.file('spotless.license.java')
+		removeUnusedImports()
+		trimTrailingWhitespace()
+		endWithNewline()
+	}
+}
+
 
 class CompilerStubsArgumentProvider implements CommandLineArgumentProvider {
 

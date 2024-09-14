@@ -76,7 +76,7 @@ public class CreateTableUniqueDelegate extends AlterTableUniqueDelegate {
 		if ( uniqueKey.isNameExplicit() ) {
 			fragment.append( "constraint " ).append( uniqueKey.getName() ).append( " " );
 		}
-		fragment.append( uniqueConstraintSql(uniqueKey) );
+		fragment.append( uniqueConstraintSql( uniqueKey ) );
 	}
 
 	private static boolean isSingleColumnUnique(Table table, UniqueKey uniqueKey) {

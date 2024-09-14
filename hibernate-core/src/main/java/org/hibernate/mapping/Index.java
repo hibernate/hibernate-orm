@@ -18,7 +18,6 @@ import org.hibernate.dialect.Dialect;
 
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
-import static java.util.stream.Collectors.toUnmodifiableList;
 import static java.util.stream.Collectors.toUnmodifiableMap;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -35,6 +34,7 @@ public class Index implements Exportable, Serializable {
 	private Identifier name;
 	private Table table;
 	private boolean unique;
+	private String options = "";
 	private final java.util.List<Selectable> selectables = new ArrayList<>();
 	private final java.util.Map<Selectable, String> selectableOrderMap = new HashMap<>();
 
@@ -54,6 +54,14 @@ public class Index implements Exportable, Serializable {
 		return unique;
 	}
 
+	public String getOptions() {
+		return options;
+	}
+
+	public void setOptions(String options) {
+		this.options = options;
+	}
+
 	public int getColumnSpan() {
 		return selectables.size();
 	}
@@ -71,8 +79,7 @@ public class Index implements Exportable, Serializable {
 	 */
 	@Deprecated(since = "6.3")
 	public java.util.List<Column> getColumns() {
-		return selectables.stream()
-				.map( s -> (Column) s ).collect( toUnmodifiableList() );
+		return selectables.stream().map( s -> (Column) s ).toList();
 	}
 
 	/**

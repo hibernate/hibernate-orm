@@ -609,6 +609,7 @@ public class ToOneBinder {
 				else if ( foreignKey != null ) {
 					value.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
 					value.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
+					value.setForeignKeyOptions( foreignKey.options() );
 				}
 				else if ( noConstraintByDefault ) {
 					value.disableForeignKey();
@@ -617,11 +618,13 @@ public class ToOneBinder {
 					final ForeignKey joinColumnsForeignKey = joinColumns.foreignKey();
 					value.setForeignKeyName( nullIfEmpty( joinColumnsForeignKey.name() ) );
 					value.setForeignKeyDefinition( nullIfEmpty( joinColumnsForeignKey.foreignKeyDefinition() ) );
+					value.setForeignKeyOptions( joinColumnsForeignKey.options() );
 				}
 				else if ( joinColumn != null ) {
 					final ForeignKey joinColumnForeignKey = joinColumn.foreignKey();
 					value.setForeignKeyName( nullIfEmpty( joinColumnForeignKey.name() ) );
 					value.setForeignKeyDefinition( nullIfEmpty( joinColumnForeignKey.foreignKeyDefinition() ) );
+					value.setForeignKeyOptions( joinColumnForeignKey.options() );
 				}
 			}
 		}

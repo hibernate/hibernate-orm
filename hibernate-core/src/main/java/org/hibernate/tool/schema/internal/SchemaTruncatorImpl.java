@@ -39,6 +39,7 @@ import org.jboss.logging.Logger;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_CHARSET_NAME;
@@ -73,9 +74,11 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 			ContributableMatcher contributableInclusionFilter,
 			TargetDescriptor targetDescriptor) {
 
-		final JdbcContext jdbcContext = tool.resolveJdbcContext( options.getConfigurationValues() );
-		final GenerationTarget[] targets = tool.buildGenerationTargets( targetDescriptor, jdbcContext, options.getConfigurationValues(),
-				true ); //we need autocommit on for DB2 at least
+		final Map<String, Object> configurationValues = options.getConfigurationValues();
+		final JdbcContext jdbcContext = tool.resolveJdbcContext(configurationValues);
+		final GenerationTarget[] targets =
+				tool.buildGenerationTargets( targetDescriptor, jdbcContext, configurationValues,
+						true ); //we need autocommit on for DB2 at least
 
 		doTruncate( metadata, options, contributableInclusionFilter, jdbcContext.getDialect(), targets );
 	}
@@ -211,9 +214,7 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 			for ( ForeignKey foreignKey : table.getForeignKeys().values() ) {
 				if ( dialect.canDisableConstraints() ) {
 					applySqlString(
-							dialect.getTableCleaner().getSqlDisableConstraintString( foreignKey, metadata,
-									context
-							),
+							dialect.getTableCleaner().getSqlDisableConstraintString( foreignKey, metadata, context ),
 							formatter,
 							options,
 							targets
@@ -221,9 +222,7 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 				}
 				else if ( !dialect.canBatchTruncate() ) {
 					applySqlStrings(
-							dialect.getForeignKeyExporter().getSqlDropStrings( foreignKey, metadata,
-									context
-							),
+							dialect.getForeignKeyExporter().getSqlDropStrings( foreignKey, metadata, context ),
 							formatter,
 							options,
 							targets
@@ -258,9 +257,7 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 			for ( ForeignKey foreignKey : table.getForeignKeys().values() ) {
 				if ( dialect.canDisableConstraints() ) {
 					applySqlString(
-							dialect.getTableCleaner().getSqlEnableConstraintString( foreignKey, metadata,
-									context
-							),
+							dialect.getTableCleaner().getSqlEnableConstraintString( foreignKey, metadata, context ),
 							formatter,
 							options,
 							targets
@@ -268,9 +265,7 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 				}
 				else if ( !dialect.canBatchTruncate() ) {
 					applySqlStrings(
-							dialect.getForeignKeyExporter().getSqlCreateStrings( foreignKey, metadata,
-									context
-							),
+							dialect.getForeignKeyExporter().getSqlCreateStrings( foreignKey, metadata, context ),
 							formatter,
 							options,
 							targets

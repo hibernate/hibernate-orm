@@ -112,10 +112,10 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.ast.spi.MultiKeyLoadSizingStrategy;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -3274,7 +3274,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Get an {@link Exporter} for {@link UserDefinedType}s,
+	 * Get an {@link Exporter} for {@link UserDefinedType user defined types},
 	 * usually {@link StandardUserDefinedTypeExporter}.
 	 */
 	public Exporter<UserDefinedType> getUserDefinedTypeExporter() {
@@ -3282,7 +3282,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Get an {@link Exporter} for {@link Sequence}s,
+	 * Get an {@link Exporter} for {@linkplain Sequence sequences},
 	 * usually {@link StandardSequenceExporter}.
 	 */
 	public Exporter<Sequence> getSequenceExporter() {
@@ -3290,7 +3290,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Get an {@link Exporter} for {@link Index}es,
+	 * Get an {@link Exporter} for {@linkplain Index indexes},
 	 * usually {@link StandardIndexExporter}.
 	 */
 	public Exporter<Index> getIndexExporter() {
@@ -3298,7 +3298,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Get an {@link Exporter} for {@link ForeignKey}s,
+	 * Get an {@link Exporter} for {@linkplain ForeignKey foreign key} constraints,
 	 * usually {@link StandardForeignKeyExporter}.
 	 */
 	public Exporter<ForeignKey> getForeignKeyExporter() {
@@ -3306,10 +3306,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Get an {@link Exporter} for unique key {@link Constraint}s,
+	 * Get an {@link Exporter} for {@linkplain UniqueKey unique key} constraints,
 	 * usually {@link StandardUniqueKeyExporter}.
 	 */
-	public Exporter<Constraint> getUniqueKeyExporter() {
+	public Exporter<UniqueKey> getUniqueKeyExporter() {
 		return uniqueKeyExporter;
 	}
 

@@ -13,6 +13,8 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+
 /**
  * A {@link UniqueDelegate} which uses {@code alter table} commands to create and drop
  * the unique constraint. When possible, prefer {@link CreateTableUniqueDelegate}.
@@ -68,7 +70,11 @@ public class AlterTableUniqueDelegate implements UniqueDelegate {
 				fragment.append( " " ).append( uniqueKey.getColumnOrderMap().get( column ) );
 			}
 		}
-		return fragment.append( ')' ).toString();
+		fragment.append( ')' );
+		if ( isNotEmpty( uniqueKey.getOptions() ) ) {
+			fragment.append( " " ).append( uniqueKey.getOptions() );
+		}
+		return fragment.toString();
 	}
 
 	@Override

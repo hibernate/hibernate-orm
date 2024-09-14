@@ -24,7 +24,7 @@ public class ManyToOne extends ToOne {
 	private boolean isLogicalOneToOne;
 	private NotFoundAction notFoundAction;
 
-	private Type resolvedType;
+	private transient Type resolvedType;
 
 	public ManyToOne(MetadataBuildingContext buildingContext, Table table) {
 		super( buildingContext, table );
@@ -95,8 +95,8 @@ public class ManyToOne extends ToOne {
 			} 
 			else {
 				// Make sure synthetic properties are sorted
-				if ( property.getValue() instanceof Component ) {
-					( (Component) property.getValue() ).sortProperties();
+				if ( property.getValue() instanceof Component component ) {
+					component.sortProperties();
 				}
 				// todo : if "none" another option is to create the ForeignKey object still	but to set its #disableCreation flag
 				if ( isForeignKeyEnabled() && !hasFormula() ) {
@@ -105,6 +105,7 @@ public class ManyToOne extends ToOne {
 							getConstraintColumns(), 
 							( (EntityType) getType() ).getAssociatedEntityName(), 
 							getForeignKeyDefinition(),
+							getForeignKeyOptions(),
 							new ArrayList<>( property.getColumns() )
 					);
 					foreignKey.setReferencedTable( property.getValue().getTable() );

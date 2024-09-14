@@ -319,6 +319,7 @@ public class MapBinder extends CollectionBinder {
 			else {
 				element.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
 				element.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
+				element.setForeignKeyOptions( foreignKey.options() );
 			}
 		}
 	}
@@ -495,8 +496,7 @@ public class MapBinder extends CollectionBinder {
 
 	private SimpleValue createTargetValue(Table mapKeyTable, SimpleValue sourceValue) {
 		final SimpleValue targetValue;
-		if ( sourceValue instanceof ManyToOne ) {
-			final ManyToOne sourceManyToOne = (ManyToOne) sourceValue;
+		if ( sourceValue instanceof ManyToOne sourceManyToOne ) {
 			final ManyToOne targetManyToOne = new ManyToOne( getBuildingContext(), mapKeyTable);
 			targetManyToOne.setFetchMode( FetchMode.DEFAULT );
 			targetManyToOne.setLazy( true );
